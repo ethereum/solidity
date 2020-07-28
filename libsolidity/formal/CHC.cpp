@@ -1210,7 +1210,7 @@ void CHC::checkVerificationTargets()
 			if (target.type == VerificationTarget::Type::PopEmptyArray)
 			{
 				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-				satMsg = "Empty array \"pop\" detected here";
+				satMsg = "Empty array \"pop\" detected here.";
 				unknownMsg = "Empty array \"pop\" might happen here.";
 				errorReporterId = 2529_error;
 			}
