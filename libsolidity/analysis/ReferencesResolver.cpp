@@ -231,15 +231,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			string(".slot").size() :
 			string(".offset").size()
 		));
-		if (realName.empty())
-		{
-			m_errorReporter.declarationError(
-				4794_error,
-				_identifier.location,
-				"In variable names .slot and .offset can only be used as a suffix."
-			);
-			return;
-		}
+		solAssert(!realName.empty(), "Empty name.");
 		declarations = m_resolver.nameFromCurrentScope(realName);
 		if (!declarations.empty())
 			// To support proper path resolution, we have to use pathFromCurrentScope.
