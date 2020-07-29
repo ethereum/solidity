@@ -116,14 +116,14 @@ Statement Parser::parseStatement()
 	{
 		Statement stmt{createWithLocation<Break>()};
 		checkBreakContinuePosition("break");
-		m_scanner->next();
+		advance();
 		return stmt;
 	}
 	case Token::Continue:
 	{
 		Statement stmt{createWithLocation<Continue>()};
 		checkBreakContinuePosition("continue");
-		m_scanner->next();
+		advance();
 		return stmt;
 	}
 	case Token::Identifier:
@@ -132,7 +132,7 @@ Statement Parser::parseStatement()
 			Statement stmt{createWithLocation<Leave>()};
 			if (!m_insideFunction)
 				m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
-			m_scanner->next();
+			advance();
 			return stmt;
 		}
 		break;
