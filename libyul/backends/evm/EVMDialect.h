@@ -28,6 +28,7 @@
 #include <liblangutil/EVMVersion.h>
 
 #include <map>
+#include <set>
 
 namespace solidity::yul
 {
@@ -70,6 +71,9 @@ struct EVMDialect: public Dialect
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
+	/// @returns true if the identifier is reserved. This includes the builtins too.
+	bool reservedIdentifier(YulString _name) const override;
+
 	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
 	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
 	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
@@ -91,6 +95,7 @@ protected:
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::map<YulString, BuiltinFunctionForEVM> m_functions;
+	std::set<YulString> m_reserved;
 };
 
 /**
