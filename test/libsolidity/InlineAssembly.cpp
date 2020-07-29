@@ -359,12 +359,6 @@ BOOST_AUTO_TEST_CASE(shift_constantinople_warning)
 	CHECK_PARSE_WARNING("{ sar(10, 32) }", TypeError, "The \"sar\" instruction is only available for Constantinople-compatible VMs");
 }
 
-BOOST_AUTO_TEST_CASE(jump_error)
-{
-	CHECK_PARSE_WARNING("{ jump(44) }", DeclarationError, "Function not found.");
-	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", DeclarationError, "Function not found.");
-}
-
 BOOST_AUTO_TEST_SUITE_END() // }}}
 
 BOOST_AUTO_TEST_SUITE_END()
