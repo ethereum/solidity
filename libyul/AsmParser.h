@@ -30,8 +30,6 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ParserBase.h>
 
-#include <libevmasm/Instruction.h>
-
 #include <memory>
 #include <variant>
 #include <vector>
@@ -61,9 +59,6 @@ public:
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
 	std::unique_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
-
-	/// @returns a map of all EVM instructions available to assembly.
-	static std::map<std::string, evmasm::Instruction> const& instructions();
 
 protected:
 	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;

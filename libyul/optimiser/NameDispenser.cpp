@@ -24,10 +24,8 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
-#include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmParser.h>
 
-#include <libevmasm/Instruction.h>
+#include <libsolutil/CommonData.h>
 
 using namespace std;
 using namespace solidity;
@@ -61,7 +59,5 @@ bool NameDispenser::illegalName(YulString _name)
 {
 	if (_name.empty() || m_usedNames.count(_name) || m_dialect.builtin(_name))
 		return true;
-	if (dynamic_cast<EVMDialect const*>(&m_dialect))
-		return Parser::instructions().count(_name.str());
 	return false;
 }
