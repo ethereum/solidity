@@ -84,7 +84,7 @@ protected:
 	Expression parseExpression();
 	/// Parses an elementary operation, i.e. a literal, identifier, instruction or
 	/// builtin functian call (only the name).
-	ElementaryOperation parseElementaryOperation();
+	ElementaryOperation parseLiteralOrIdentifier();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
 	Expression parseCall(ElementaryOperation&& _initialOp);
