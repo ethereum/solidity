@@ -338,12 +338,21 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				_funCall.functionName.name.str() == "datasize" ||
 				_funCall.functionName.name.str() == "dataoffset"
 			)
-				if (!m_dataNames.count(std::get<Literal>(arg).value))
+			{
+				auto const lit = std::get<Literal>(arg);
+				if (lit.kind != LiteralKind::String)
+					m_errorReporter.typeError(
+						9427_error,
+						_funCall.functionName.location,
+						"Data object name is expected to be a string."
+					);
+				else if (!m_dataNames.count(lit.value))
 					m_errorReporter.typeError(
 						3517_error,
 						_funCall.functionName.location,
 						"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
 					);
+			}
 		}
 	}
 	std::reverse(argTypes.begin(), argTypes.end());
