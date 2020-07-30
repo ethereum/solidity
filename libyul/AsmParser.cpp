@@ -265,10 +265,12 @@ Expression Parser::parseExpression()
 	RecursionGuard recursionGuard(*this);
 
 	ElementaryOperation operation = parseElementaryOperation();
-	if (holds_alternative<FunctionCall>(operation) || currentToken() == Token::LParen)
-		return parseCall(std::move(operation));
-	else if (holds_alternative<Identifier>(operation))
+	if (holds_alternative<Identifier>(operation))
+	{
+		if (currentToken() == Token::LParen)
+			return parseCall(std::move(operation));
 		return std::get<Identifier>(operation);
+	}
 	else
 	{
 		yulAssert(holds_alternative<Literal>(operation), "");
@@ -284,16 +286,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	{
 	case Token::Identifier:
 	{
-		YulString literal{currentLiteral()};
-		if (m_dialect.builtin(literal))
-		{
-			Identifier identifier{currentLocation(), literal};
-			advance();
-			expectToken(Token::LParen, false);
-			return FunctionCall{identifier.location, identifier, {}};
-		}
-		else
-			ret = Identifier{currentLocation(), literal};
+		ret = Identifier{currentLocation(), YulString{currentLiteral()}};
 		advance();
 		break;
 	}
@@ -422,16 +415,12 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
-	FunctionCall ret;
-	if (holds_alternative<Identifier>(_initialOp))
-	{
-		ret.functionName = std::move(std::get<Identifier>(_initialOp));
-		ret.location = ret.functionName.location;
-	}
-	else if (holds_alternative<FunctionCall>(_initialOp))
-		ret = std::move(std::get<FunctionCall>(_initialOp));
-	else
+	if (!holds_alternative<Identifier>(_initialOp))
 		fatalParserError(9980_error, "Function name expected.");
+
+	FunctionCall ret;
+	ret.functionName = std::move(std::get<Identifier>(_initialOp));
+	ret.location = ret.functionName.location;
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
