@@ -1413,6 +1413,49 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 		to_string(_offset) +
 		"_" +
 		_type.identifier();
+
+	if (_type.category() == Type::Category::Struct)
+	{
+		solAssert(_offset == 0, "");
+		auto const& structType = dynamic_cast<StructType const&>(_type);
+		solUnimplementedAssert(structType.location() == DataLocation::Memory, "");
+		MemberList::MemberMap structMembers = structType.nativeMembers(nullptr);
+		vector<map<string, string>> memberSetValues(structMembers.size());
+		for (size_t i = 0; i < structMembers.size(); ++i)
+		{
+			auto const& [memberSlotDiff, memberStorageOffset] = structType.storageOffsetsOfMember(structMembers[i].name);
+			bool isStruct = structMembers[i].type->category() == Type::Category::Struct;
+
+			memberSetValues[i]["setMember"] = Whiskers(R"(
+				mstore(add(value, <memberMemoryOffset>), <readFromStorage>(add(slot, <memberSlotDiff>)<?notStruct>, <memberStorageOffset></notStruct>))
+			)")
+			("memberMemoryOffset", structType.memoryOffsetOfMember(structMembers[i].name).str())
+			("memberSlotDiff",  memberSlotDiff.str())
+			("memberStorageOffset", to_string(memberStorageOffset))
+			("readFromStorage",
+				isStruct ?
+					readFromStorage(*structMembers[i].type, memberStorageOffset, true) :
+					readFromStorageDynamic(*structMembers[i].type, true)
+			)
+			("notStruct", !isStruct)
+			.render();
+		}
+
+		return m_functionCollector.createFunction(functionName, [&] {
+			return Whiskers(R"(
+				function <functionName>(slot) -> value {
+					value := <allocStruct>()
+					<#member>
+						<setMember>
+					</member>
+				}
+			)")
+			("functionName", functionName)
+			("allocStruct", allocateMemoryStructFunction(structType))
+			("member", memberSetValues)
+			.render();
+		});
+	}
 	return m_functionCollector.createFunction(functionName, [&] {
 		solAssert(_type.sizeOnStack() == 1, "");
 		return Whiskers(R"(
@@ -1430,6 +1473,7 @@ string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFu
 {
 	if (_type.category() == Type::Category::Function)
 		solUnimplementedAssert(!_splitFunctionTypes, "");
+
 	string functionName =
 		"read_from_storage_dynamic" +
 		string(_splitFunctionTypes ? "split_" : "") +
@@ -2107,13 +2151,27 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 			solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
 			solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
-			solUnimplementedAssert(fromStructType.location() == DataLocation::CallData, "");
+			solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
 
-			body = Whiskers(R"(
-				converted := <abiDecode>(value, calldatasize())
-			)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
-				{&toStructType}
-			)).render();
+			if (fromStructType.location() == DataLocation::CallData)
+			{
+				body = Whiskers(R"(
+					converted := <abiDecode>(value, calldatasize())
+				)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
+					{&toStructType}
+				)).render();
+			}
+			else
+			{
+				solAssert(fromStructType.location() == DataLocation::Storage, "");
+
+				body = Whiskers(R"(
+					converted := <readFromStorage>(value)
+				)")
+				("readFromStorage", readFromStorage(toStructType, 0, true))
+				.render();
+			}
+
 			break;
 		}
 		case Type::Category::FixedBytes:

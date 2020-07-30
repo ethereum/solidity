@@ -222,6 +222,7 @@ public:
 	std::string mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType);
 
 	/// @returns a function that reads a value type from storage.
+	/// Will allocate memory if return type is struct with location set to memory
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
