@@ -14,7 +14,7 @@ SPDX License Identifier
 
 Trust in smart contract can be better established if their source code
 is available. Since making source code available always touches on legal problems
-with regards to copyright, the Solidity compiler encouranges the use
+with regards to copyright, the Solidity compiler encourages the use
 of machine-readable `SPDX license identifiers <https://spdx.org>`_.
 Every source file should start with a comment indicating its license:
 
