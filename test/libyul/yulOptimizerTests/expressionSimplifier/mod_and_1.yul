@@ -5,5 +5,6 @@
 // step: expressionSimplifier
 //
 // {
-//     mstore(0, and(calldataload(0), 255))
+//     let _4 := 0
+//     mstore(_4, and(calldataload(_4), 255))
 // }

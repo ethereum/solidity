@@ -71,51 +71,51 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 {
 	using Word = typename Pattern::Word;
 	using Builtins = typename Pattern::Builtins;
-	return std::vector<SimplificationRule<Pattern>> {
+	return std::vector<SimplificationRule<Pattern>>{
 		// arithmetic on constants
-		{Builtins::ADD(A, B), [=]{ return A.d() + B.d(); }, false},
-		{Builtins::MUL(A, B), [=]{ return A.d() * B.d(); }, false},
-		{Builtins::SUB(A, B), [=]{ return A.d() - B.d(); }, false},
-		{Builtins::DIV(A, B), [=]{ return B.d() == 0 ? 0 : divWorkaround(A.d(), B.d()); }, false},
-		{Builtins::SDIV(A, B), [=]{ return B.d() == 0 ? 0 : s2u(divWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
-		{Builtins::MOD(A, B), [=]{ return B.d() == 0 ? 0 : modWorkaround(A.d(), B.d()); }, false},
-		{Builtins::SMOD(A, B), [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }, false},
-		{Builtins::EXP(A, B), [=]{ return Word(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << Pattern::WordSize)); }, false},
-		{Builtins::NOT(A), [=]{ return ~A.d(); }, false},
-		{Builtins::LT(A, B), [=]() -> Word { return A.d() < B.d() ? 1 : 0; }, false},
-		{Builtins::GT(A, B), [=]() -> Word { return A.d() > B.d() ? 1 : 0; }, false},
-		{Builtins::SLT(A, B), [=]() -> Word { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }, false},
-		{Builtins::SGT(A, B), [=]() -> Word { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }, false},
-		{Builtins::EQ(A, B), [=]() -> Word { return A.d() == B.d() ? 1 : 0; }, false},
-		{Builtins::ISZERO(A), [=]() -> Word { return A.d() == 0 ? 1 : 0; }, false},
-		{Builtins::AND(A, B), [=]{ return A.d() & B.d(); }, false},
-		{Builtins::OR(A, B), [=]{ return A.d() | B.d(); }, false},
-		{Builtins::XOR(A, B), [=]{ return A.d() ^ B.d(); }, false},
+		{Builtins::ADD(A, B), [=]{ return A.d() + B.d(); }},
+		{Builtins::MUL(A, B), [=]{ return A.d() * B.d(); }},
+		{Builtins::SUB(A, B), [=]{ return A.d() - B.d(); }},
+		{Builtins::DIV(A, B), [=]{ return B.d() == 0 ? 0 : divWorkaround(A.d(), B.d()); }},
+		{Builtins::SDIV(A, B), [=]{ return B.d() == 0 ? 0 : s2u(divWorkaround(u2s(A.d()), u2s(B.d()))); }},
+		{Builtins::MOD(A, B), [=]{ return B.d() == 0 ? 0 : modWorkaround(A.d(), B.d()); }},
+		{Builtins::SMOD(A, B), [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }},
+		{Builtins::EXP(A, B), [=]{ return Word(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << Pattern::WordSize)); }},
+		{Builtins::NOT(A), [=]{ return ~A.d(); }},
+		{Builtins::LT(A, B), [=]() -> Word { return A.d() < B.d() ? 1 : 0; }},
+		{Builtins::GT(A, B), [=]() -> Word { return A.d() > B.d() ? 1 : 0; }},
+		{Builtins::SLT(A, B), [=]() -> Word { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }},
+		{Builtins::SGT(A, B), [=]() -> Word { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }},
+		{Builtins::EQ(A, B), [=]() -> Word { return A.d() == B.d() ? 1 : 0; }},
+		{Builtins::ISZERO(A), [=]() -> Word { return A.d() == 0 ? 1 : 0; }},
+		{Builtins::AND(A, B), [=]{ return A.d() & B.d(); }},
+		{Builtins::OR(A, B), [=]{ return A.d() | B.d(); }},
+		{Builtins::XOR(A, B), [=]{ return A.d() ^ B.d(); }},
 		{Builtins::BYTE(A, B), [=]{
 			return
 				A.d() >= Pattern::WordSize / 8 ?
 				0 :
 				(B.d() >> unsigned(8 * (Pattern::WordSize / 8 - 1 - A.d()))) & 0xff;
-		}, false},
-		{Builtins::ADDMOD(A, B, C), [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) + bigint(B.d())) % C.d()); }, false},
-		{Builtins::MULMOD(A, B, C), [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) * bigint(B.d())) % C.d()); }, false},
+		}},
+		{Builtins::ADDMOD(A, B, C), [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) + bigint(B.d())) % C.d()); }},
+		{Builtins::MULMOD(A, B, C), [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) * bigint(B.d())) % C.d()); }},
 		{Builtins::SIGNEXTEND(A, B), [=]() -> Word {
 			if (A.d() >= Pattern::WordSize / 8 - 1)
 				return B.d();
 			unsigned testBit = unsigned(A.d()) * 8 + 7;
 			Word mask = (Word(1) << testBit) - 1;
 			return boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask;
-		}, false},
+		}},
 		{Builtins::SHL(A, B), [=]{
 			if (A.d() >= Pattern::WordSize)
 				return Word(0);
 			return shlWorkaround(B.d(), unsigned(A.d()));
-		}, false},
+		}},
 		{Builtins::SHR(A, B), [=]{
 			if (A.d() >= Pattern::WordSize)
 				return Word(0);
 			return B.d() >> unsigned(A.d());
-		}, false}
+		}}
 	};
 }
 
@@ -133,48 +133,48 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>> {
 		// invariants involving known constants
-		{Builtins::ADD(X, 0), [=]{ return X; }, false},
-		{Builtins::ADD(0, X), [=]{ return X; }, false},
-		{Builtins::SUB(X, 0), [=]{ return X; }, false},
-		{Builtins::SUB(~Word(0), X), [=]() -> Pattern { return Builtins::NOT(X); }, false},
-		{Builtins::MUL(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::MUL(0, X), [=]{ return Word(0); }, true},
-		{Builtins::MUL(X, 1), [=]{ return X; }, false},
-		{Builtins::MUL(1, X), [=]{ return X; }, false},
-		{Builtins::MUL(X, Word(-1)), [=]() -> Pattern { return Builtins::SUB(0, X); }, false},
-		{Builtins::MUL(Word(-1), X), [=]() -> Pattern { return Builtins::SUB(0, X); }, false},
-		{Builtins::DIV(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::DIV(0, X), [=]{ return Word(0); }, true},
-		{Builtins::DIV(X, 1), [=]{ return X; }, false},
-		{Builtins::SDIV(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::SDIV(0, X), [=]{ return Word(0); }, true},
-		{Builtins::SDIV(X, 1), [=]{ return X; }, false},
-		{Builtins::AND(X, ~Word(0)), [=]{ return X; }, false},
-		{Builtins::AND(~Word(0), X), [=]{ return X; }, false},
-		{Builtins::AND(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::AND(0, X), [=]{ return Word(0); }, true},
-		{Builtins::OR(X, 0), [=]{ return X; }, false},
-		{Builtins::OR(0, X), [=]{ return X; }, false},
-		{Builtins::OR(X, ~Word(0)), [=]{ return ~Word(0); }, true},
-		{Builtins::OR(~Word(0), X), [=]{ return ~Word(0); }, true},
-		{Builtins::XOR(X, 0), [=]{ return X; }, false},
-		{Builtins::XOR(0, X), [=]{ return X; }, false},
-		{Builtins::MOD(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::MOD(0, X), [=]{ return Word(0); }, true},
-		{Builtins::EQ(X, 0), [=]() -> Pattern { return Builtins::ISZERO(X); }, false },
-		{Builtins::EQ(0, X), [=]() -> Pattern { return Builtins::ISZERO(X); }, false },
-		{Builtins::SHL(0, X), [=]{ return X; }, false},
-		{Builtins::SHR(0, X), [=]{ return X; }, false},
-		{Builtins::SHL(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::SHR(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::GT(X, 0), [=]() -> Pattern { return Builtins::ISZERO(Builtins::ISZERO(X)); }, false},
-		{Builtins::LT(0, X), [=]() -> Pattern { return Builtins::ISZERO(Builtins::ISZERO(X)); }, false},
-		{Builtins::GT(X, ~Word(0)), [=]{ return Word(0); }, true},
-		{Builtins::LT(~Word(0), X), [=]{ return Word(0); }, true},
-		{Builtins::GT(0, X), [=]{ return Word(0); }, true},
-		{Builtins::LT(X, 0), [=]{ return Word(0); }, true},
-		{Builtins::AND(Builtins::BYTE(X, Y), Word(0xff)), [=]() -> Pattern { return Builtins::BYTE(X, Y); }, false},
-		{Builtins::BYTE(Word(Pattern::WordSize / 8 - 1), X), [=]() -> Pattern { return Builtins::AND(X, Word(0xff)); }, false}
+		{Builtins::ADD(X, 0), [=]{ return X; }},
+		{Builtins::ADD(0, X), [=]{ return X; }},
+		{Builtins::SUB(X, 0), [=]{ return X; }},
+		{Builtins::SUB(~Word(0), X), [=]() -> Pattern { return Builtins::NOT(X); }},
+		{Builtins::MUL(X, 0), [=]{ return Word(0); }},
+		{Builtins::MUL(0, X), [=]{ return Word(0); }},
+		{Builtins::MUL(X, 1), [=]{ return X; }},
+		{Builtins::MUL(1, X), [=]{ return X; }},
+		{Builtins::MUL(X, Word(-1)), [=]() -> Pattern { return Builtins::SUB(0, X); }},
+		{Builtins::MUL(Word(-1), X), [=]() -> Pattern { return Builtins::SUB(0, X); }},
+		{Builtins::DIV(X, 0), [=]{ return Word(0); }},
+		{Builtins::DIV(0, X), [=]{ return Word(0); }},
+		{Builtins::DIV(X, 1), [=]{ return X; }},
+		{Builtins::SDIV(X, 0), [=]{ return Word(0); }},
+		{Builtins::SDIV(0, X), [=]{ return Word(0); }},
+		{Builtins::SDIV(X, 1), [=]{ return X; }},
+		{Builtins::AND(X, ~Word(0)), [=]{ return X; }},
+		{Builtins::AND(~Word(0), X), [=]{ return X; }},
+		{Builtins::AND(X, 0), [=]{ return Word(0); }},
+		{Builtins::AND(0, X), [=]{ return Word(0); }},
+		{Builtins::OR(X, 0), [=]{ return X; }},
+		{Builtins::OR(0, X), [=]{ return X; }},
+		{Builtins::OR(X, ~Word(0)), [=]{ return ~Word(0); }},
+		{Builtins::OR(~Word(0), X), [=]{ return ~Word(0); }},
+		{Builtins::XOR(X, 0), [=]{ return X; }},
+		{Builtins::XOR(0, X), [=]{ return X; }},
+		{Builtins::MOD(X, 0), [=]{ return Word(0); }},
+		{Builtins::MOD(0, X), [=]{ return Word(0); }},
+		{Builtins::EQ(X, 0), [=]() -> Pattern { return Builtins::ISZERO(X); },},
+		{Builtins::EQ(0, X), [=]() -> Pattern { return Builtins::ISZERO(X); },},
+		{Builtins::SHL(0, X), [=]{ return X; }},
+		{Builtins::SHR(0, X), [=]{ return X; }},
+		{Builtins::SHL(X, 0), [=]{ return Word(0); }},
+		{Builtins::SHR(X, 0), [=]{ return Word(0); }},
+		{Builtins::GT(X, 0), [=]() -> Pattern { return Builtins::ISZERO(Builtins::ISZERO(X)); }},
+		{Builtins::LT(0, X), [=]() -> Pattern { return Builtins::ISZERO(Builtins::ISZERO(X)); }},
+		{Builtins::GT(X, ~Word(0)), [=]{ return Word(0); }},
+		{Builtins::LT(~Word(0), X), [=]{ return Word(0); }},
+		{Builtins::GT(0, X), [=]{ return Word(0); }},
+		{Builtins::LT(X, 0), [=]{ return Word(0); }},
+		{Builtins::AND(Builtins::BYTE(X, Y), Word(0xff)), [=]() -> Pattern { return Builtins::BYTE(X, Y); }},
+		{Builtins::BYTE(Word(Pattern::WordSize / 8 - 1), X), [=]() -> Pattern { return Builtins::AND(X, Word(0xff)); }},
 	};
 }
 
@@ -191,16 +191,16 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart3(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>> {
 		// operations involving an expression and itself
-		{Builtins::AND(X, X), [=]{ return X; }, true},
-		{Builtins::OR(X, X), [=]{ return X; }, true},
-		{Builtins::XOR(X, X), [=]{ return Word(0); }, true},
-		{Builtins::SUB(X, X), [=]{ return Word(0); }, true},
-		{Builtins::EQ(X, X), [=]{ return Word(1); }, true},
-		{Builtins::LT(X, X), [=]{ return Word(0); }, true},
-		{Builtins::SLT(X, X), [=]{ return Word(0); }, true},
-		{Builtins::GT(X, X), [=]{ return Word(0); }, true},
-		{Builtins::SGT(X, X), [=]{ return Word(0); }, true},
-		{Builtins::MOD(X, X), [=]{ return Word(0); }, true}
+		{Builtins::AND(X, X), [=]{ return X; }},
+		{Builtins::OR(X, X), [=]{ return X; }},
+		{Builtins::XOR(X, X), [=]{ return Word(0); }},
+		{Builtins::SUB(X, X), [=]{ return Word(0); }},
+		{Builtins::EQ(X, X), [=]{ return Word(1); }},
+		{Builtins::LT(X, X), [=]{ return Word(0); }},
+		{Builtins::SLT(X, X), [=]{ return Word(0); }},
+		{Builtins::GT(X, X), [=]{ return Word(0); }},
+		{Builtins::SGT(X, X), [=]{ return Word(0); }},
+		{Builtins::MOD(X, X), [=]{ return Word(0); }}
 	};
 }
 
@@ -217,23 +217,23 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>> {
 		// logical instruction combinations
-		{Builtins::NOT(Builtins::NOT(X)), [=]{ return X; }, false},
-		{Builtins::XOR(X, Builtins::XOR(X, Y)), [=]{ return Y; }, true},
-		{Builtins::XOR(X, Builtins::XOR(Y, X)), [=]{ return Y; }, true},
-		{Builtins::XOR(Builtins::XOR(X, Y), X), [=]{ return Y; }, true},
-		{Builtins::XOR(Builtins::XOR(Y, X), X), [=]{ return Y; }, true},
-		{Builtins::OR(X, Builtins::AND(X, Y)), [=]{ return X; }, true},
-		{Builtins::OR(X, Builtins::AND(Y, X)), [=]{ return X; }, true},
-		{Builtins::OR(Builtins::AND(X, Y), X), [=]{ return X; }, true},
-		{Builtins::OR(Builtins::AND(Y, X), X), [=]{ return X; }, true},
-		{Builtins::AND(X, Builtins::OR(X, Y)), [=]{ return X; }, true},
-		{Builtins::AND(X, Builtins::OR(Y, X)), [=]{ return X; }, true},
-		{Builtins::AND(Builtins::OR(X, Y), X), [=]{ return X; }, true},
-		{Builtins::AND(Builtins::OR(Y, X), X), [=]{ return X; }, true},
-		{Builtins::AND(X, Builtins::NOT(X)), [=]{ return Word(0); }, true},
-		{Builtins::AND(Builtins::NOT(X), X), [=]{ return Word(0); }, true},
-		{Builtins::OR(X, Builtins::NOT(X)), [=]{ return ~Word(0); }, true},
-		{Builtins::OR(Builtins::NOT(X), X), [=]{ return ~Word(0); }, true},
+		{Builtins::NOT(Builtins::NOT(X)), [=]{ return X; }},
+		{Builtins::XOR(X, Builtins::XOR(X, Y)), [=]{ return Y; }},
+		{Builtins::XOR(X, Builtins::XOR(Y, X)), [=]{ return Y; }},
+		{Builtins::XOR(Builtins::XOR(X, Y), X), [=]{ return Y; }},
+		{Builtins::XOR(Builtins::XOR(Y, X), X), [=]{ return Y; }},
+		{Builtins::OR(X, Builtins::AND(X, Y)), [=]{ return X; }},
+		{Builtins::OR(X, Builtins::AND(Y, X)), [=]{ return X; }},
+		{Builtins::OR(Builtins::AND(X, Y), X), [=]{ return X; }},
+		{Builtins::OR(Builtins::AND(Y, X), X), [=]{ return X; }},
+		{Builtins::AND(X, Builtins::OR(X, Y)), [=]{ return X; }},
+		{Builtins::AND(X, Builtins::OR(Y, X)), [=]{ return X; }},
+		{Builtins::AND(Builtins::OR(X, Y), X), [=]{ return X; }},
+		{Builtins::AND(Builtins::OR(Y, X), X), [=]{ return X; }},
+		{Builtins::AND(X, Builtins::NOT(X)), [=]{ return Word(0); }},
+		{Builtins::AND(Builtins::NOT(X), X), [=]{ return Word(0); }},
+		{Builtins::OR(X, Builtins::NOT(X)), [=]{ return ~Word(0); }},
+		{Builtins::OR(Builtins::NOT(X), X), [=]{ return ~Word(0); }},
 	};
 }
 
@@ -249,14 +249,14 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4_5(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>>{
 		// idempotent operations
-		{Builtins::AND(Builtins::AND(X, Y), Y), [=]{ return Builtins::AND(X, Y); }, true},
-		{Builtins::AND(Y, Builtins::AND(X, Y)), [=]{ return Builtins::AND(X, Y); }, true},
-		{Builtins::AND(Builtins::AND(Y, X), Y), [=]{ return Builtins::AND(Y, X); }, true},
-		{Builtins::AND(Y, Builtins::AND(Y, X)), [=]{ return Builtins::AND(Y, X); }, true},
-		{Builtins::OR(Builtins::OR(X, Y), Y), [=]{ return Builtins::OR(X, Y); }, true},
-		{Builtins::OR(Y, Builtins::OR(X, Y)), [=]{ return Builtins::OR(X, Y); }, true},
-		{Builtins::OR(Builtins::OR(Y, X), Y), [=]{ return Builtins::OR(Y, X); }, true},
-		{Builtins::OR(Y, Builtins::OR(Y, X)), [=]{ return Builtins::OR(Y, X); }, true},
+		{Builtins::AND(Builtins::AND(X, Y), Y), [=]{ return Builtins::AND(X, Y); }},
+		{Builtins::AND(Y, Builtins::AND(X, Y)), [=]{ return Builtins::AND(X, Y); }},
+		{Builtins::AND(Builtins::AND(Y, X), Y), [=]{ return Builtins::AND(Y, X); }},
+		{Builtins::AND(Y, Builtins::AND(Y, X)), [=]{ return Builtins::AND(Y, X); }},
+		{Builtins::OR(Builtins::OR(X, Y), Y), [=]{ return Builtins::OR(X, Y); }},
+		{Builtins::OR(Y, Builtins::OR(X, Y)), [=]{ return Builtins::OR(X, Y); }},
+		{Builtins::OR(Builtins::OR(Y, X), Y), [=]{ return Builtins::OR(Y, X); }},
+		{Builtins::OR(Y, Builtins::OR(Y, X)), [=]{ return Builtins::OR(Y, X); }},
 	};
 }
 
@@ -280,8 +280,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		Word value = Word(1) << i;
 		rules.push_back({
 			Builtins::MOD(X, value),
-			[=]() -> Pattern { return Builtins::AND(X, value - 1); },
-			false
+			[=]() -> Pattern { return Builtins::AND(X, value - 1); }
 		});
 	}
 
@@ -289,7 +288,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	rules.push_back({
 		Builtins::SHL(A, X),
 		[=]() -> Pattern { return Word(0); },
-		true,
 		[=]() { return A.d() >= Pattern::WordSize; }
 	});
 
@@ -297,7 +295,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	rules.push_back({
 		Builtins::SHR(A, X),
 		[=]() -> Pattern { return Word(0); },
-		true,
 		[=]() { return A.d() >= Pattern::WordSize; }
 	});
 
@@ -305,7 +302,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	rules.push_back({
 		Builtins::BYTE(A, X),
 		[=]() -> Pattern { return Word(0); },
-		true,
 		[=]() { return A.d() >= Pattern::WordSize / 8; }
 	});
 
@@ -320,13 +316,11 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 		Word const mask = (Word(1) << 160) - 1;
 		rules.push_back({
 			Builtins::AND(Pattern{instr}, mask),
-			[=]() -> Pattern { return {instr}; },
-			false
+			[=]() -> Pattern { return {instr}; }
 		});
 		rules.push_back({
 			Builtins::AND(mask, Pattern{instr}),
-			[=]() -> Pattern { return {instr}; },
-			false
+			[=]() -> Pattern { return {instr}; }
 		});
 	}
 
@@ -357,21 +351,18 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
 		typename Builtins::PatternGeneratorInstance op{instr};
 		rules.push_back({
 			Builtins::ISZERO(Builtins::ISZERO(op(X, Y))),
-			[=]() -> Pattern { return op(X, Y); },
-			false
+			[=]() -> Pattern { return op(X, Y); }
 		});
 	}
 
 	rules.push_back({
 		Builtins::ISZERO(Builtins::ISZERO(Builtins::ISZERO(X))),
-		[=]() -> Pattern { return Builtins::ISZERO(X); },
-		false
+		[=]() -> Pattern { return Builtins::ISZERO(X); }
 	});
 
 	rules.push_back({
 		Builtins::ISZERO(Builtins::XOR(X, Y)),
-		[=]() -> Pattern { return Builtins::EQ(X, Y); },
-		false
+		[=]() -> Pattern { return Builtins::EQ(X, Y); }
 	});
 
 	return rules;
@@ -409,23 +400,19 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			rules += std::vector<SimplificationRule<Pattern>>{{
 				// (X+A)+B -> X+(A+B)
 				op(opXA, B),
-				[=]() -> Pattern { return op(X, fun(A.d(), B.d())); },
-				false
+				[=]() -> Pattern { return op(X, fun(A.d(), B.d())); }
 			}, {
 				// (X+A)+Y -> (X+Y)+A
 				op(opXA, Y),
-				[=]() -> Pattern { return op(op(X, Y), A); },
-				false
+				[=]() -> Pattern { return op(op(X, Y), A); }
 			}, {
 				// B+(X+A) -> X+(A+B)
 				op(B, opXA),
-				[=]() -> Pattern { return op(X, fun(A.d(), B.d())); },
-				false
+				[=]() -> Pattern { return op(X, fun(A.d(), B.d())); }
 			}, {
 				// Y+(X+A) -> (Y+X)+A
 				op(Y, opXA),
-				[=]() -> Pattern { return op(op(Y, X), A); },
-				false
+				[=]() -> Pattern { return op(op(Y, X), A); }
 			}};
 		}
 	}
@@ -440,8 +427,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 				return Builtins::AND(X, Word(0));
 			else
 				return Builtins::SHL(Word(sum), X);
-		},
-		false
+		}
 	});
 
 	// Combine two SHR by constant
@@ -454,8 +440,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 				return Builtins::AND(X, Word(0));
 			else
 				return Builtins::SHR(Word(sum), X);
-		},
-		false
+		}
 	});
 
 	// Combine SHL-SHR by constant
@@ -472,7 +457,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			else
 				return Builtins::AND(X, mask);
 		},
-		false,
 		[=] { return A.d() < Pattern::WordSize && B.d() < Pattern::WordSize; }
 	});
 
@@ -490,7 +474,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			else
 				return Builtins::AND(X, mask);
 		},
-		false,
 		[=] { return A.d() < Pattern::WordSize && B.d() < Pattern::WordSize; }
 	});
 
@@ -509,14 +492,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 			// SH[L/R](B, AND(X, A)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
 			shiftOp(B, Builtins::AND(X, A)),
 			replacement,
-			false,
 			[=] { return B.d() < Pattern::WordSize; }
 		});
 		rules.push_back({
 			// SH[L/R](B, AND(A, X)) -> AND(SH[L/R](B, X), [ A << B / A >> B ])
 			shiftOp(B, Builtins::AND(A, X)),
 			replacement,
-			false,
 			[=] { return B.d() < Pattern::WordSize; }
 		});
 	}
@@ -526,17 +507,14 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		Builtins::MUL(X, Builtins::SHL(Y, Word(1))),
 		[=]() -> Pattern {
 			return Builtins::SHL(Y, X);
-		},
-		// Actually only changes the order, does not remove.
-		true
+		}
 	});
 	rules.push_back({
 		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
 		Builtins::MUL(Builtins::SHL(X, Word(1)), Y),
 		[=]() -> Pattern {
 			return Builtins::SHL(X, Y);
-		},
-		false
+		}
 	});
 
 	rules.push_back({
@@ -544,9 +522,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		Builtins::DIV(X, Builtins::SHL(Y, Word(1))),
 		[=]() -> Pattern {
 			return Builtins::SHR(Y, X);
-		},
-		// Actually only changes the order, does not remove.
-		true
+		}
 	});
 
 	std::function<bool()> feasibilityFunction = [=]() {
@@ -560,7 +536,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		// AND(A, SHR(B, X)) -> A & ((2^256-1) >> B) == ((2^256-1) >> B)
 		Builtins::AND(A, Builtins::SHR(B, X)),
 		[=]() -> Pattern { return Builtins::SHR(B, X); },
-		false,
 		feasibilityFunction
 	});
 
@@ -568,28 +543,24 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		// AND(SHR(B, X), A) -> ((2^256-1) >> B) & A == ((2^256-1) >> B)
 		Builtins::AND(Builtins::SHR(B, X), A),
 		[=]() -> Pattern { return Builtins::SHR(B, X); },
-		false,
 		feasibilityFunction
 	});
 
 	rules.push_back({
 		Builtins::BYTE(A, Builtins::SHL(B, X)),
 		[=]() -> Pattern { return Builtins::BYTE(A.d() + B.d() / 8, X); },
-		false,
 		[=] { return B.d() % 8 == 0 && A.d() <= 32 && B.d() <= 256; }
 	});
 
 	rules.push_back({
 		Builtins::BYTE(A, Builtins::SHR(B, X)),
 		[=]() -> Pattern { return Word(0); },
-		true,
 		[=] { return A.d() < B.d() / 8; }
 	});
 
 	rules.push_back({
 		Builtins::BYTE(A, Builtins::SHR(B, X)),
 		[=]() -> Pattern { return Builtins::BYTE(A.d() - B.d() / 8, X); },
-		false,
 		[=] {
 			return B.d() % 8 == 0 && A.d() < Pattern::WordSize / 8 && B.d() <= Pattern::WordSize && A.d() >= B.d() / 8;
 		}
@@ -615,28 +586,23 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 		{
 			// X - A -> X + (-A)
 			Builtins::SUB(X, A),
-			[=]() -> Pattern { return Builtins::ADD(X, 0 - A.d()); },
-			false
+			[=]() -> Pattern { return Builtins::ADD(X, 0 - A.d()); }
 		}, {
 			// (X + A) - Y -> (X - Y) + A
 			Builtins::SUB(Builtins::ADD(X, A), Y),
-			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A); },
-			false
+			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A); }
 		}, {
 			// (A + X) - Y -> (X - Y) + A
 			Builtins::SUB(Builtins::ADD(A, X), Y),
-			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A); },
-			false
+			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A); }
 		}, {
 			// X - (Y + A) -> (X - Y) + (-A)
 			Builtins::SUB(X, Builtins::ADD(Y, A)),
-			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); },
-			false
+			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); }
 		}, {
 			// X - (A + Y) -> (X - Y) + (-A)
 			Builtins::SUB(X, Builtins::ADD(A, Y)),
-			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); },
-			false
+			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); }
 		}
 	};
 	return rules;
@@ -662,24 +628,20 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart9(
 	// CREATE
 	rules.push_back({
 		Builtins::AND(Builtins::CREATE(W, X, Y), mask),
-		[=]() -> Pattern { return Builtins::CREATE(W, X, Y); },
-		false
+		[=]() -> Pattern { return Builtins::CREATE(W, X, Y); }
 	});
 	rules.push_back({
 		Builtins::AND(mask, Builtins::CREATE(W, X, Y)),
-		[=]() -> Pattern { return Builtins::CREATE(W, X, Y); },
-		false
+		[=]() -> Pattern { return Builtins::CREATE(W, X, Y); }
 	});
 	// CREATE2
 	rules.push_back({
 		Builtins::AND(Builtins::CREATE2(W, X, Y, Z), mask),
-		[=]() -> Pattern { return Builtins::CREATE2(W, X, Y, Z); },
-		false
+		[=]() -> Pattern { return Builtins::CREATE2(W, X, Y, Z); }
 	});
 	rules.push_back({
 		Builtins::AND(mask, Builtins::CREATE2(W, X, Y, Z)),
-		[=]() -> Pattern { return Builtins::CREATE2(W, X, Y, Z); },
-		false
+		[=]() -> Pattern { return Builtins::CREATE2(W, X, Y, Z); }
 	});
 
 	return rules;
@@ -703,7 +665,7 @@ std::vector<SimplificationRule<Pattern>> evmRuleList(
 	if (_evmVersion.hasSelfBalance())
 		rules.push_back({
 			Builtins::BALANCE(Instruction::ADDRESS),
-			[]() -> Pattern { return Instruction::SELFBALANCE; }, false
+			[]() -> Pattern { return Instruction::SELFBALANCE; }
 		});
 
 	return rules;

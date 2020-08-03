@@ -33,7 +33,8 @@ struct OptimiserStepContext;
 /**
  * Applies simplification rules to all expressions.
  * The component will work best if the code is in SSA form, but
- * this is not required for correctness.
+ * this is not required for correctness. Using CommonSubexpressionEliminator
+ * also helps this component track equivalent sub-expressions.
  *
  * It tracks the current values of variables using the DataFlowAnalyzer
  * and takes them into account for replacements.

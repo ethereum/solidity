@@ -2,11 +2,12 @@
 {
 	let c, d
 	let y := add(d, add(c, 7))
+	sstore(0, y)
 }
 // ----
 // step: expressionSimplifier
 //
 // {
 //     let c, d
-//     let y := 7
+//     sstore(d, 7)
 // }

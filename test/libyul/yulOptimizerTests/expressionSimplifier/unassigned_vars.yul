@@ -3,12 +3,9 @@
 	let c
 	let d
 	let y := add(d, add(c, 7))
+	sstore(8, y)
 }
 // ----
 // step: expressionSimplifier
 //
-// {
-//     let c
-//     let d
-//     let y := 7
-// }
+// { sstore(8, 7) }
