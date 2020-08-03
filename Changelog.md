@@ -8,6 +8,7 @@ Compiler Features:
 
 Bugfixes:
  * SMTChecker: Fix internal error on fixed bytes index access.
+ * References Resolver: Fix internal bug when using constructor for library.
 
 
 ### 0.7.0 (2020-07-28)
