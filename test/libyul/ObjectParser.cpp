@@ -258,6 +258,16 @@ BOOST_AUTO_TEST_CASE(arg_to_dataoffset_must_be_literal)
 	CHECK_ERROR(code, TypeError, "Function expects direct literals as arguments.");
 }
 
+BOOST_AUTO_TEST_CASE(arg_to_dataoffset_must_be_string_literal)
+{
+	string code = R"(
+		object "outer" {
+			code { let y := dataoffset(0) }
+		}
+	)";
+	CHECK_ERROR(code, TypeError, "Function expects string literal.");
+}
+
 BOOST_AUTO_TEST_CASE(arg_to_datasize_must_be_literal)
 {
 	string code = R"(
@@ -266,6 +276,16 @@ BOOST_AUTO_TEST_CASE(arg_to_datasize_must_be_literal)
 		}
 	)";
 	CHECK_ERROR(code, TypeError, "Function expects direct literals as arguments.");
+}
+
+BOOST_AUTO_TEST_CASE(arg_to_datasize_must_be_string_literal)
+{
+	string code = R"(
+		object "outer" {
+			code { let y := datasize(0) }
+		}
+	)";
+	CHECK_ERROR(code, TypeError, "Function expects string literal.");
 }
 
 BOOST_AUTO_TEST_CASE(args_to_datacopy_are_arbitrary)
