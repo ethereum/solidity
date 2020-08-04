@@ -10,4 +10,4 @@ contract C is B(C.y = 3) {
     uint immutable y;
 }
 // ----
-// TypeError 1581: (104-107): Immutable variables can only be initialized inline or assigned directly in the constructor.
+// TypeError 1581: (104-107): Cannot write to immutable here: Immutable variables can only be initialized inline or assigned directly in the constructor.

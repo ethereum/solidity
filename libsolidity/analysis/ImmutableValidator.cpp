@@ -163,41 +163,44 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 	if (!_variableReference.isStateVariable() || !_variableReference.immutable())
 		return;
 
-	if (_expression.annotation().willBeWrittenTo && _expression.annotation().lValueOfOrdinaryAssignment)
+	// If this is not an ordinary assignment, we write and read at the same time.
+	bool write = _expression.annotation().willBeWrittenTo;
+	bool read = !_expression.annotation().willBeWrittenTo || !_expression.annotation().lValueOfOrdinaryAssignment;
+	if (write)
 	{
 		if (!m_currentConstructor)
 			m_errorReporter.typeError(
 				1581_error,
 				_expression.location(),
-				"Immutable variables can only be initialized inline or assigned directly in the constructor."
+				"Cannot write to immutable here: Immutable variables can only be initialized inline or assigned directly in the constructor."
 			);
 		else if (m_currentConstructor->annotation().contract->id() != _variableReference.annotation().contract->id())
 			m_errorReporter.typeError(
 				7484_error,
 				_expression.location(),
-				"Immutable variables must be initialized in the constructor of the contract they are defined in."
+				"Cannot write to immutable here: Immutable variables must be initialized in the constructor of the contract they are defined in."
 			);
 		else if (m_inLoop)
 			m_errorReporter.typeError(
 				6672_error,
 				_expression.location(),
-				"Immutable variables can only be initialized once, not in a while statement."
+				"Cannot write to immutable here: Immutable variables cannot be initialized inside a loop."
 			);
 		else if (m_inBranch)
 			m_errorReporter.typeError(
 				4599_error,
 				_expression.location(),
-				"Immutable variables must be initialized unconditionally, not in an if statement."
+				"Cannot write to immutable here: Immutable variables cannot be initialized inside an if statement."
 			);
-
-		if (!m_initializedStateVariables.emplace(&_variableReference).second)
+		else if (m_initializedStateVariables.count(&_variableReference))
 			m_errorReporter.typeError(
 				1574_error,
 				_expression.location(),
 				"Immutable state variable already initialized."
 			);
+		m_initializedStateVariables.emplace(&_variableReference);
 	}
-	else if (m_inConstructionContext)
+	if (read && m_inConstructionContext)
 		m_errorReporter.typeError(
 			7733_error,
 			_expression.location(),

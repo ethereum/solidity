@@ -13,6 +13,7 @@ Compiler Features:
 
 Bugfixes:
  * AST: Remove ``null`` member values also when the compiler is used in standard-json-mode.
+ * Immutables: Properly treat complex assignment and increment/decrement as both reading and writing and thus disallow it everywhere for immutable variables.
  * Optimizer: Keep side-effects of ``x`` in ``byte(a, shr(b, x))`` even if the constants ``a`` and ``b`` would make the expression zero unconditionally. This optimizer rule is very hard if not impossible to trigger in a way that it can result in invalid code, though.
  * SMTChecker: Fix internal error in BMC function inlining.
  * SMTChecker: Fix internal error on array implicit conversion.
