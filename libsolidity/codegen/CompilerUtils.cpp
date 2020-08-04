@@ -955,7 +955,14 @@ void CompilerUtils::convertType(
 		case DataLocation::Memory:
 		{
 			// Copy the array to a free position in memory, unless it is already in memory.
-			if (typeOnStack.location() != DataLocation::Memory)
+			if (typeOnStack.location() == DataLocation::CallData)
+			{
+				m_context << Instruction::DUP1;
+				m_context << Instruction::CALLDATASIZE;
+				m_context << Instruction::SUB;
+				abiDecode({&targetType}, false);
+			}
+			else if (typeOnStack.location() == DataLocation::Storage)
 			{
 				// stack: <source ref> (variably sized)
 				unsigned stackSize = typeOnStack.sizeOnStack();
@@ -985,14 +992,6 @@ void CompilerUtils::convertType(
 				}
 				else
 				{
-					if (auto baseType = dynamic_cast<ArrayType const*>(typeOnStack.baseType()))
-						solUnimplementedAssert(
-							typeOnStack.location() != DataLocation::CallData ||
-							!typeOnStack.isDynamicallyEncoded() ||
-							!baseType->isDynamicallySized(),
-							"Copying nested dynamic calldata arrays to memory is not implemented in the old code generator."
-						);
-
 					m_context << u256(0) << Instruction::SWAP1;
 					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
 					auto repeat = m_context.newTag();
@@ -1003,8 +1002,7 @@ void CompilerUtils::convertType(
 					copyToStackTop(3 + stackSize, stackSize);
 					copyToStackTop(2 + stackSize, 1);
 					ArrayUtils(m_context).accessIndex(typeOnStack, false);
-					if (typeOnStack.location() == DataLocation::Storage)
-						StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
+					StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
 					convertType(*typeOnStack.baseType(), *targetType.baseType(), _cleanupNeeded);
 					storeInMemoryDynamic(*targetType.baseType(), true);
 					m_context << Instruction::SWAP1 << u256(1) << Instruction::ADD;
@@ -1105,7 +1103,6 @@ void CompilerUtils::convertType(
 			}
 			case DataLocation::CallData:
 			{
-				solUnimplementedAssert(!typeOnStack.isDynamicallyEncoded(), "");
 				m_context << Instruction::DUP1;
 				m_context << Instruction::CALLDATASIZE;
 				m_context << Instruction::SUB;
