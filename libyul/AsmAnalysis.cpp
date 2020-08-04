@@ -44,6 +44,20 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
+namespace
+{
+inline string to_string(LiteralKind _kind)
+{
+	switch (_kind)
+	{
+	case LiteralKind::Number: return "number";
+	case LiteralKind::Boolean: return "boolean";
+	case LiteralKind::String: return "string";
+	default: yulAssert(false, "");
+	}
+}
+}
+
 bool AsmAnalyzer::analyze(Block const& _block)
 {
 	auto watcher = m_errorReporter.errorWatcher();
@@ -318,15 +332,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
-		bool isLiteralArgument = literalArguments && (*literalArguments)[i - 1].has_value();
-		bool isStringLiteral = holds_alternative<Literal>(arg) && get<Literal>(arg).kind == LiteralKind::String;
-
-		if (isLiteralArgument && isStringLiteral)
-			argTypes.emplace_back(expectUnlimitedStringLiteral(get<Literal>(arg)));
-		else
-			argTypes.emplace_back(expectExpression(arg));
-
-		if (isLiteralArgument)
+		if (auto literalArgumentKind = literalArguments ? literalArguments->at(i - 1) : std::nullopt)
 		{
 			if (!holds_alternative<Literal>(arg))
 				m_errorReporter.typeError(
@@ -334,17 +340,29 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 					_funCall.functionName.location,
 					"Function expects direct literals as arguments."
 				);
-			else if (
-				_funCall.functionName.name.str() == "datasize" ||
-				_funCall.functionName.name.str() == "dataoffset"
-			)
-				if (!m_dataNames.count(std::get<Literal>(arg).value))
-					m_errorReporter.typeError(
-						3517_error,
-						_funCall.functionName.location,
-						"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
-					);
+			else if (*literalArgumentKind != get<Literal>(arg).kind)
+				m_errorReporter.typeError(
+					5859_error,
+					get<Literal>(arg).location,
+					"Function expects " + to_string(*literalArgumentKind) + " literal."
+				);
+			else if (*literalArgumentKind == LiteralKind::String)
+			{
+				if (
+					_funCall.functionName.name.str() == "datasize" ||
+					_funCall.functionName.name.str() == "dataoffset"
+				)
+					if (!m_dataNames.count(get<Literal>(arg).value))
+						m_errorReporter.typeError(
+							3517_error,
+							get<Literal>(arg).location,
+							"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
+						);
+				argTypes.emplace_back(expectUnlimitedStringLiteral(get<Literal>(arg)));
+				continue;
+			}
 		}
+		argTypes.emplace_back(expectExpression(arg));
 	}
 	std::reverse(argTypes.begin(), argTypes.end());
 
