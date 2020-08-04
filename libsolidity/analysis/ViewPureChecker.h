@@ -71,11 +71,13 @@ private:
 		std::optional<langutil::SourceLocation> const& _nestedLocation = {}
 	);
 
+	/// Determines the mutability of modifier if not already cached.
+	MutabilityAndLocation const& modifierMutability(ModifierDefinition const& _modifier);
+
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;
 	langutil::ErrorReporter& m_errorReporter;
 
 	bool m_errors = false;
-	bool m_checkModifiers = false;
 	MutabilityAndLocation m_bestMutabilityAndLocation = MutabilityAndLocation{StateMutability::Payable, langutil::SourceLocation()};
 	FunctionDefinition const* m_currentFunction = nullptr;
 	std::map<ModifierDefinition const*, MutabilityAndLocation> m_inferredMutability;

@@ -128,12 +128,6 @@ private:
 
 bool ViewPureChecker::check()
 {
-	// Process modifiers first to infer their state mutability.
-	m_checkModifiers = true;
-	for (auto const& source: m_ast)
-		source->accept(*this);
-
-	m_checkModifiers = false;
 	for (auto const& source: m_ast)
 		source->accept(*this);
 
@@ -142,9 +136,6 @@ bool ViewPureChecker::check()
 
 bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 {
-	if (m_checkModifiers)
-		return false;
-
 	solAssert(!m_currentFunction, "");
 	m_currentFunction = &_funDef;
 	m_bestMutabilityAndLocation = {StateMutability::Pure, _funDef.location()};
@@ -153,9 +144,6 @@ bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 
 void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 {
-	if (m_checkModifiers)
-		return;
-
 	solAssert(m_currentFunction == &_funDef, "");
 	if (
 		m_bestMutabilityAndLocation.mutability < _funDef.stateMutability() &&
@@ -177,9 +165,6 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 
 bool ViewPureChecker::visit(ModifierDefinition const& _modifier)
 {
-	if (!m_checkModifiers)
-		return false;
-
 	solAssert(m_currentFunction == nullptr, "");
 	m_bestMutabilityAndLocation = {StateMutability::Pure, _modifier.location()};
 	return true;
@@ -187,9 +172,6 @@ bool ViewPureChecker::visit(ModifierDefinition const& _modifier)
 
 void ViewPureChecker::endVisit(ModifierDefinition const& _modifierDef)
 {
-	if (!m_checkModifiers)
-		return;
-
 	solAssert(m_currentFunction == nullptr, "");
 	m_inferredMutability[&_modifierDef] = std::move(m_bestMutabilityAndLocation);
 }
@@ -306,7 +288,26 @@ void ViewPureChecker::reportMutability(
 		m_currentFunction->stateMutability() == StateMutability::Pure ||
 		m_currentFunction->stateMutability() == StateMutability::NonPayable,
 		""
-	);
+				);
+}
+
+ViewPureChecker::MutabilityAndLocation const& ViewPureChecker::modifierMutability(
+	ModifierDefinition const& _modifier
+)
+{
+	if (!m_inferredMutability.count(&_modifier))
+	{
+		MutabilityAndLocation bestMutabilityAndLocation{};
+		FunctionDefinition const* currentFunction = nullptr;
+		swap(bestMutabilityAndLocation, m_bestMutabilityAndLocation);
+		swap(currentFunction, m_currentFunction);
+
+		_modifier.accept(*this);
+
+		swap(bestMutabilityAndLocation, m_bestMutabilityAndLocation);
+		swap(currentFunction, m_currentFunction);
+	}
+	return m_inferredMutability.at(&_modifier);
 }
 
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
@@ -431,8 +432,7 @@ void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 	solAssert(_modifier.name(), "");
 	if (ModifierDefinition const* mod = dynamic_cast<decltype(mod)>(_modifier.name()->annotation().referencedDeclaration))
 	{
-		solAssert(m_inferredMutability.count(mod), "");
-		auto const& mutAndLocation = m_inferredMutability.at(mod);
+		MutabilityAndLocation const& mutAndLocation = modifierMutability(*mod);
 		reportMutability(mutAndLocation.mutability, _modifier.location(), mutAndLocation.location);
 	}
 	else
