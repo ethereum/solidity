@@ -70,7 +70,7 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.controlFlowSideEffects.terminates = evmasm::SemanticInformation::terminatesControlFlow(_instruction);
 	f.controlFlowSideEffects.reverts = evmasm::SemanticInformation::reverts(_instruction);
 	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
-	f.literalArguments.reset();
+	f.literalArguments.clear();
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
 		FunctionCall const& _call,
@@ -90,7 +90,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	size_t _params,
 	size_t _returns,
 	SideEffects _sideEffects,
-	vector<bool> _literalArguments,
+	vector<optional<LiteralKind>> _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)> _generateCode
 )
 {
@@ -102,10 +102,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
 	f.sideEffects = std::move(_sideEffects);
-	if (!_literalArguments.empty())
-		f.literalArguments = std::move(_literalArguments);
-	else
-		f.literalArguments.reset();
+	f.literalArguments = std::move(_literalArguments);
 	f.isMSize = false;
 	f.instruction = {};
 	f.generateCode = std::move(_generateCode);
@@ -135,7 +132,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 
 	if (_objectAccess)
 	{
-		builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {true}, [](
+		builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext&,
@@ -145,7 +142,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			Expression const& arg = _call.arguments.front();
 			_assembly.appendLinkerSymbol(std::get<Literal>(arg).value.str());
 		}));
-		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {true}, [](
+		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -167,7 +164,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendDataSize(subIdPath);
 			}
 		}));
-		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {true}, [](
+		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -210,7 +207,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			2,
 			0,
 			SideEffects{false, false, false, false, true},
-			{true, false},
+			{LiteralKind::String, std::nullopt},
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
@@ -230,7 +227,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			1,
 			1,
 			SideEffects{},
-			{true},
+			{LiteralKind::String},
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,

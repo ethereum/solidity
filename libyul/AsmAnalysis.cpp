@@ -272,14 +272,14 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	auto watcher = m_errorReporter.errorWatcher();
 	vector<YulString> const* parameterTypes = nullptr;
 	vector<YulString> const* returnTypes = nullptr;
-	vector<bool> const* needsLiteralArguments = nullptr;
+	vector<optional<LiteralKind>> const* literalArguments = nullptr;
 
 	if (BuiltinFunction const* f = m_dialect.builtin(_funCall.functionName.name))
 	{
 		parameterTypes = &f->parameters;
 		returnTypes = &f->returns;
-		if (f->literalArguments)
-			needsLiteralArguments = &f->literalArguments.value();
+		if (!f->literalArguments.empty())
+			literalArguments = &f->literalArguments;
 
 		validateInstructions(_funCall);
 	}
@@ -318,7 +318,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
 	{
 		Expression const& arg = _funCall.arguments[i - 1];
-		bool isLiteralArgument = needsLiteralArguments && (*needsLiteralArguments)[i - 1];
+		bool isLiteralArgument = literalArguments && (*literalArguments)[i - 1].has_value();
 		bool isStringLiteral = holds_alternative<Literal>(arg) && get<Literal>(arg).kind == LiteralKind::String;
 
 		if (isLiteralArgument && isStringLiteral)
