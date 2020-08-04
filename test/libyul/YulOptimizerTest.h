@@ -38,7 +38,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 namespace solidity::yul
 {
 struct AsmAnalysisInfo;
-struct Block;
+struct Object;
 struct Dialect;
 }
 
@@ -71,7 +71,7 @@ private:
 	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
-	std::shared_ptr<Block> m_ast;
+	std::shared_ptr<Object> m_object;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 };
 
