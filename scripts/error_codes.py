@@ -171,12 +171,13 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     test_sub_dirs = [
         path.join("test", "libsolidity", "errorRecoveryTests"),
         path.join("test", "libsolidity", "smtCheckerTests"),
-        path.join("test", "libsolidity", "syntaxTests")
+        path.join("test", "libsolidity", "syntaxTests"),
+        path.join("test", "libyul", "yulSyntaxTests")
     ]
     test_file_names = find_files(
         top_dir,
         test_sub_dirs,
-        [".sol"]
+        [".sol", ".yul"]
     )
     source_ids = source_id_to_file_names.keys()
     test_ids = find_ids_in_test_files(test_file_names)
