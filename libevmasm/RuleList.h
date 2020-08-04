@@ -583,9 +583,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		Builtins::BYTE(A, Builtins::SHR(B, X)),
 		[=]() -> Pattern { return Word(0); },
 		true,
-		[=] {
-			return B.d() % 8 == 0 && A.d() < Pattern::WordSize / 8 && B.d() <= Pattern::WordSize && A.d() < B.d() / 8;
-		}
+		[=] { return A.d() < B.d() / 8; }
 	});
 
 	rules.push_back({
