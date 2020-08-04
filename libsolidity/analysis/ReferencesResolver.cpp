@@ -313,6 +313,16 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 	case 1:
 	{
 		string const& name = _annotation.docTags.find("inheritdoc")->second.content;
+		if (name.empty())
+		{
+			m_errorReporter.docstringParsingError(
+				1933_error,
+				_documentation.location(),
+				"Expected contract name following documentation tag @inheritdoc."
+			);
+			return;
+		}
+
 		vector<string> path;
 		boost::split(path, name, boost::is_any_of("."));
 		Declaration const* result = m_resolver.pathFromCurrentScope(path);
