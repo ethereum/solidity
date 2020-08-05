@@ -9,6 +9,7 @@ Compiler Features:
 Bugfixes:
  * Optimizer: Keep side-effects of ``x`` in ``byte(a, shr(b, x))`` even if the constants ``a`` and ``b`` would make the expression zero unconditionally. This optimizer rule is very hard if not impossible to trigger in a way that it can result in invalid code, though.
  * SMTChecker: Fix internal error on fixed bytes index access.
+ * References Resolver: Fix internal bug when using constructor for library.
 
 
 ### 0.7.0 (2020-07-28)

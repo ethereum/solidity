@@ -451,7 +451,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 		);
 		for (FunctionDefinition const* function: library.definedFunctions())
 		{
-			if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
+			if (!function->isOrdinary() || !function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 				continue;
 			seenFunctions.insert(function);
 			if (function->parameters().empty())
@@ -3837,6 +3837,8 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 		for (auto const* declaration: contract.declarations())
 		{
 			if (dynamic_cast<ModifierDefinition const*>(declaration))
+				continue;
+			if (declaration->name().empty())
 				continue;
 
 			if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
