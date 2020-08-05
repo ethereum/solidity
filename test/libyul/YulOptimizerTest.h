@@ -58,7 +58,9 @@ public:
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 private:
-	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
+	std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> parse(
+		std::ostream& _stream, std::string const& _linePrefix, bool const _formatted, std::string const& _source
+	);
 	void disambiguate();
 	void updateContext();
 
