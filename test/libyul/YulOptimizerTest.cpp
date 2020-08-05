@@ -111,7 +111,8 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 
 TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	if (!parse(_stream, _linePrefix, _formatted))
+	std::tie(m_object, m_analysisInfo) = parse(_stream, _linePrefix, _formatted, m_source);
+	if (!m_object)
 		return TestResult::FatalError;
 
 	soltestAssert(m_dialect, "Dialect not set.");
@@ -141,7 +142,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "varDeclInitializer")
 		VarDeclInitializer::run(*m_context, *m_object->code);
 	else if (m_optimizerStep == "varNameCleaner")
+	{
+		disambiguate();
+		FunctionGrouper::run(*m_context, *m_object->code);
 		VarNameCleaner::run(*m_context, *m_object->code);
+	}
 	else if (m_optimizerStep == "forLoopConditionIntoBody")
 	{
 		disambiguate();
@@ -354,26 +359,42 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult =
-		"step: " + m_optimizerStep + "\n\n" +
-		(m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect)) +
-		"\n";
+	auto const printed = (m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect));
+
+	// Re-parse new code for compilability
+	// TODO: support for wordSizeTransform which needs different input and output dialects
+	if (m_optimizerStep != "wordSizeTransform" && !std::get<0>(parse(_stream, _linePrefix, _formatted, printed)))
+	{
+		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
+			<< _linePrefix << "Result after the optimiser:" << endl;
+		printIndented(_stream, printed, _linePrefix + "  ");
+		return TestResult::FatalError;
+	}
+
+	m_obtainedResult = "step: " + m_optimizerStep + "\n\n" + printed + "\n";
 
 	return checkResult(_stream, _linePrefix, _formatted);
 }
 
-bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
+std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimizerTest::parse(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool const _formatted,
+	string const& _source
+)
 {
 	ErrorList errors;
 	soltestAssert(m_dialect, "");
-	std::tie(m_object, m_analysisInfo) = yul::test::parse(m_source, *m_dialect, errors);
-	if (!m_object || !m_analysisInfo || !Error::containsOnlyWarnings(errors))
+	shared_ptr<Object> object;
+	shared_ptr<AsmAnalysisInfo> analysisInfo;
+	std::tie(object, analysisInfo) = yul::test::parse(_source, *m_dialect, errors);
+	if (!object || !analysisInfo || !Error::containsOnlyWarnings(errors))
 	{
 		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, errors);
-		return false;
+		return {};
 	}
-	return true;
+	return {std::move(object), std::move(analysisInfo)};
 }
 
 void YulOptimizerTest::disambiguate()
