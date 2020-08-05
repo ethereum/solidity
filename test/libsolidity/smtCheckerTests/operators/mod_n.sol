@@ -8,3 +8,5 @@ contract C
 		assert(z < y);
 	}
 }
+// ----
+// Warning 1218: (126-139): Error trying to invoke SMT solver.

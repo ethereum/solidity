@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author julius <djudju@protonmail.com>
  * @date 2019
@@ -26,6 +27,8 @@
 #include <liblangutil/SourceLocation.h>
 #include <libyul/AsmDataForward.h>
 
+#include <utility>
+
 namespace solidity::frontend
 {
 
@@ -35,7 +38,7 @@ namespace solidity::frontend
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::string _sourceName) : m_sourceName(_sourceName) {}
+	explicit AsmJsonImporter(std::string _sourceName) : m_sourceName(std::move(_sourceName)) {}
 	yul::Block createBlock(Json::Value const& _node);
 
 private:

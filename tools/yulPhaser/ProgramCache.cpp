@@ -14,8 +14,11 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/ProgramCache.h>
+
+#include <libyul/optimiser/Metrics.h>
 
 #include <libyul/optimiser/Suite.h>
 
@@ -133,7 +136,7 @@ size_t ProgramCache::calculateTotalCachedCodeSize() const
 {
 	size_t size = 0;
 	for (auto const& pair: m_entries)
-		size += pair.second.program.codeSize();
+		size += pair.second.program.codeSize(CacheStats::StorageWeights);
 
 	return size;
 }

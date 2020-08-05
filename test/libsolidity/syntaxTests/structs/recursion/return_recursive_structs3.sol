@@ -1,3 +1,5 @@
+pragma experimental ABIEncoderV2;
+
 contract C {
     struct S { uint a; S[][][] sub; }
     struct T { S s; }
@@ -5,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (119-129): Recursive type not allowed for public or external contract functions.
+// TypeError 4103: (154-164): Recursive type not allowed for public or external contract functions.

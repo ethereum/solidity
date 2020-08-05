@@ -170,7 +170,7 @@ case $(uname -s) in
 # Debian
 #------------------------------------------------------------------------------
 
-            Debian*)
+            Debian*|Raspbian)
                 #Debian
                 . /etc/os-release
                 install_z3=""

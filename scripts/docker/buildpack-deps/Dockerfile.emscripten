@@ -1,0 +1,67 @@
+# vim:syntax=dockerfile
+#------------------------------------------------------------------------------
+# Dockerfile for building and testing Solidity Compiler on CI
+# Target: Emscripten
+# URL: https://hub.docker.com/r/ethereum/solidity-buildpack-deps
+#
+# This file is part of solidity.
+#
+# solidity is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# solidity is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with solidity.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) 2016-2019 solidity contributors.
+#------------------------------------------------------------------------------
+#
+# The Emscripten SDK at https://github.com/emscripten-core/emsdk/
+# contains a Makefile in the docker/ subdirectory that can be used to create the
+# required base image using:
+#
+#   make version=1.39.15 build
+#
+FROM emscripten/emsdk:1.39.15 AS base
+LABEL version="1"
+
+ADD emscripten.jam /usr/src
+RUN set -ex; \
+	cd /usr/src; \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.8 --depth 1 ; \
+	cd z3; \
+	mkdir build; \
+	cd build; \
+	emcmake cmake \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/emsdk/emscripten/sdk/system/ \
+		-DZ3_BUILD_LIBZ3_SHARED=OFF \
+		-DZ3_ENABLE_EXAMPLE_TARGETS=OFF \
+		-DZ3_BUILD_TEST_EXECUTABLES=OFF \
+		-DZ3_BUILD_EXECUTABLE=OFF \
+		-DZ3_SINGLE_THREADED=ON \
+		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0" \
+		..; \
+	make; make install; \
+	rm -r /usr/src/z3; \
+	cd /usr/src; \
+	wget -q 'https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.bz2' -O boost.tar.bz2; \
+	test "$(sha256sum boost.tar.bz2)" = "4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402  boost.tar.bz2"; \
+	tar -xf boost.tar.bz2; \
+	rm boost.tar.bz2; \
+	cd boost_1_73_0; \
+	mv ../emscripten.jam .; \
+	./bootstrap.sh; \
+	echo "using emscripten : : em++ ;" >> project-config.jam ; \
+	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
+		--with-system --with-filesystem --with-test --with-program_options \
+		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
+	       --prefix=/emsdk/emscripten/sdk/system install; \
+	rm -r /usr/src/boost_1_73_0
+

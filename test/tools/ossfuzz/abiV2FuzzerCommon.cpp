@@ -9,13 +9,16 @@ SolidityCompilationFramework::SolidityCompilationFramework(langutil::EVMVersion 
 
 solidity::bytes SolidityCompilationFramework::compileContract(
 	std::string const& _sourceCode,
-	std::string const& _contractName
+	std::string const& _contractName,
+	std::map<std::string, solidity::util::h160> const& _libraryAddresses,
+	frontend::OptimiserSettings _optimization
 )
 {
 	std::string sourceCode = _sourceCode;
 	m_compiler.setSources({{"", sourceCode}});
+	m_compiler.setLibraries(_libraryAddresses);
 	m_compiler.setEVMVersion(m_evmVersion);
-	m_compiler.setOptimiserSettings(m_optimiserSettings);
+	m_compiler.setOptimiserSettings(_optimization);
 	if (!m_compiler.compile())
 	{
 		langutil::SourceReferenceFormatter formatter(std::cerr);

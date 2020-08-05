@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -22,9 +23,7 @@
 
 #include <libsolidity/analysis/ReferencesResolver.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
-#include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/TypeProvider.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -35,20 +34,22 @@
 #include <liblangutil/Exceptions.h>
 
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/CommonData.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 using namespace std;
+using namespace solidity;
 using namespace solidity::langutil;
+using namespace solidity::frontend;
 
-namespace solidity::frontend
-{
 
 bool ReferencesResolver::resolve(ASTNode const& _root)
 {
+	auto errorWatcher = m_errorReporter.errorWatcher();
 	_root.accept(*this);
-	return !m_errorOccurred;
+	return errorWatcher.ok();
 }
 
 bool ReferencesResolver::visit(Block const& _block)
@@ -107,6 +108,14 @@ void ReferencesResolver::endVisit(VariableDeclarationStatement const& _varDeclSt
 			m_resolver.activateVariable(var->name());
 }
 
+bool ReferencesResolver::visit(VariableDeclaration const& _varDecl)
+{
+	if (_varDecl.documentation())
+		resolveInheritDoc(*_varDecl.documentation(), _varDecl.annotation());
+
+	return true;
+}
+
 bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
@@ -121,48 +130,22 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 			else
 				errorMessage += " Did you mean " + std::move(suggestions) + "?";
 		}
-		declarationError(_identifier.location(), errorMessage);
+		m_errorReporter.declarationError(7576_error, _identifier.location(), errorMessage);
 	}
 	else if (declarations.size() == 1)
 		_identifier.annotation().referencedDeclaration = declarations.front();
 	else
-		_identifier.annotation().overloadedDeclarations =
-			m_resolver.cleanedDeclarations(_identifier, declarations);
+		_identifier.annotation().candidateDeclarations = declarations;
 	return false;
-}
-
-bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
-{
-	if (!_typeName.annotation().type)
-	{
-		_typeName.annotation().type = TypeProvider::fromElementaryTypeName(_typeName.typeName());
-		if (_typeName.stateMutability().has_value())
-		{
-			// for non-address types this was already caught by the parser
-			solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
-			switch (*_typeName.stateMutability())
-			{
-				case StateMutability::Payable:
-					_typeName.annotation().type = TypeProvider::payableAddress();
-					break;
-				case StateMutability::NonPayable:
-					_typeName.annotation().type = TypeProvider::address();
-					break;
-				default:
-					m_errorReporter.typeError(
-						_typeName.location(),
-						"Address types can only be payable or non-payable."
-					);
-					break;
-			}
-		}
-	}
-	return true;
 }
 
 bool ReferencesResolver::visit(FunctionDefinition const& _functionDefinition)
 {
 	m_returnParameters.push_back(_functionDefinition.returnParameterList().get());
+
+	if (_functionDefinition.documentation())
+		resolveInheritDoc(*_functionDefinition.documentation(), _functionDefinition.annotation());
+
 	return true;
 }
 
@@ -172,9 +155,13 @@ void ReferencesResolver::endVisit(FunctionDefinition const&)
 	m_returnParameters.pop_back();
 }
 
-bool ReferencesResolver::visit(ModifierDefinition const&)
+bool ReferencesResolver::visit(ModifierDefinition const& _modifierDefinition)
 {
 	m_returnParameters.push_back(nullptr);
+
+	if (_modifierDefinition.documentation())
+		resolveInheritDoc(*_modifierDefinition.documentation(), _modifierDefinition.annotation());
+
 	return true;
 }
 
@@ -189,118 +176,11 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 	{
-		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
+		m_errorReporter.fatalDeclarationError(7920_error, _typeName.location(), "Identifier not found or not unique.");
 		return;
 	}
 
 	_typeName.annotation().referencedDeclaration = declaration;
-
-	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
-		_typeName.annotation().type = TypeProvider::structType(*structDef, DataLocation::Storage);
-	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
-		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
-	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
-		_typeName.annotation().type = TypeProvider::contract(*contract);
-	else
-	{
-		_typeName.annotation().type = TypeProvider::emptyTuple();
-		fatalTypeError(_typeName.location(), "Name has to refer to a struct, enum or contract.");
-	}
-}
-
-void ReferencesResolver::endVisit(FunctionTypeName const& _typeName)
-{
-	switch (_typeName.visibility())
-	{
-	case Visibility::Internal:
-	case Visibility::External:
-		break;
-	default:
-		fatalTypeError(_typeName.location(), "Invalid visibility, can only be \"external\" or \"internal\".");
-		return;
-	}
-
-	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
-	{
-		fatalTypeError(_typeName.location(), "Only external function types can be payable.");
-		return;
-	}
-
-	if (_typeName.visibility() == Visibility::External)
-		for (auto const& t: _typeName.parameterTypes() + _typeName.returnParameterTypes())
-		{
-			solAssert(t->annotation().type, "Type not set for parameter.");
-			if (!t->annotation().type->interfaceType(false).get())
-			{
-				fatalTypeError(t->location(), "Internal type cannot be used for external function type.");
-				return;
-			}
-		}
-
-	_typeName.annotation().type = TypeProvider::function(_typeName);
-}
-
-void ReferencesResolver::endVisit(Mapping const& _mapping)
-{
-	if (auto const* typeName = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
-	{
-		if (auto const* contractType = dynamic_cast<ContractType const*>(typeName->annotation().type))
-		{
-			if (contractType->contractDefinition().isLibrary())
-				m_errorReporter.fatalTypeError(
-					typeName->location(),
-					"Library types cannot be used as mapping keys."
-				);
-		}
-		else if (typeName->annotation().type->category() != Type::Category::Enum)
-			m_errorReporter.fatalTypeError(
-				typeName->location(),
-				"Only elementary types, contract types or enums are allowed as mapping keys."
-			);
-	}
-	else
-		solAssert(dynamic_cast<ElementaryTypeName const*>(&_mapping.keyType()), "");
-
-	TypePointer keyType = _mapping.keyType().annotation().type;
-	TypePointer valueType = _mapping.valueType().annotation().type;
-
-	// Convert key type to memory.
-	keyType = TypeProvider::withLocationIfReference(DataLocation::Memory, keyType);
-
-	// Convert value type to storage reference.
-	valueType = TypeProvider::withLocationIfReference(DataLocation::Storage, valueType);
-	_mapping.annotation().type = TypeProvider::mapping(keyType, valueType);
-}
-
-void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
-{
-	TypePointer baseType = _typeName.baseType().annotation().type;
-	if (!baseType)
-	{
-		solAssert(!m_errorReporter.errors().empty(), "");
-		return;
-	}
-	if (baseType->storageBytes() == 0)
-		fatalTypeError(_typeName.baseType().location(), "Illegal base type of storage size zero for array.");
-	if (Expression const* length = _typeName.length())
-	{
-		TypePointer& lengthTypeGeneric = length->annotation().type;
-		if (!lengthTypeGeneric)
-			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
-		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
-		if (!lengthType || !lengthType->mobileType())
-			fatalTypeError(length->location(), "Invalid array length, expected integer literal or constant expression.");
-		else if (lengthType->isZero())
-			fatalTypeError(length->location(), "Array with zero length specified.");
-		else if (lengthType->isFractional())
-			fatalTypeError(length->location(), "Array with fractional length specified.");
-		else if (lengthType->isNegative())
-			fatalTypeError(length->location(), "Array with negative length specified.");
-		else
-			_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
-	}
-	else
-		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType);
 }
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
@@ -321,117 +201,12 @@ bool ReferencesResolver::visit(Return const& _return)
 	return true;
 }
 
-void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
-{
-	if (_variable.annotation().type)
-		return;
-
-	if (_variable.isConstant() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(_variable.location(), "The \"constant\" keyword can only be used for state variables.");
-	if (_variable.immutable() && !_variable.isStateVariable())
-		m_errorReporter.declarationError(_variable.location(), "The \"immutable\" keyword can only be used for state variables.");
-
-	if (!_variable.typeName())
-	{
-		// This can still happen in very unusual cases where a developer uses constructs, such as
-		// `var a;`, however, such code will have generated errors already.
-		// However, we cannot blindingly solAssert() for that here, as the TypeChecker (which is
-		// invoking ReferencesResolver) is generating it, so the error is most likely(!) generated
-		// after this step.
-		return;
-	}
-	using Location = VariableDeclaration::Location;
-	Location varLoc = _variable.referenceLocation();
-	DataLocation typeLoc = DataLocation::Memory;
-
-	set<Location> allowedDataLocations = _variable.allowedDataLocations();
-	if (!allowedDataLocations.count(varLoc))
-	{
-		auto locationToString = [](VariableDeclaration::Location _location) -> string
-		{
-			switch (_location)
-			{
-			case Location::Memory: return "\"memory\"";
-			case Location::Storage: return "\"storage\"";
-			case Location::CallData: return "\"calldata\"";
-			case Location::Unspecified: return "none";
-			}
-			return {};
-		};
-
-		string errorString;
-		if (!_variable.hasReferenceOrMappingType())
-			errorString = "Data location can only be specified for array, struct or mapping types";
-		else
-		{
-			errorString = "Data location must be " +
-			util::joinHumanReadable(
-				allowedDataLocations | boost::adaptors::transformed(locationToString),
-				", ",
-				" or "
-			);
-			if (_variable.isCallableOrCatchParameter())
-				errorString +=
-					" for " +
-					string(_variable.isReturnParameter() ? "return " : "") +
-					"parameter in" +
-					string(_variable.isExternalCallableParameter() ? " external" : "") +
-					" function";
-			else
-				errorString += " for variable";
-		}
-		errorString += ", but " + locationToString(varLoc) + " was given.";
-		typeError(_variable.location(), errorString);
-
-		solAssert(!allowedDataLocations.empty(), "");
-		varLoc = *allowedDataLocations.begin();
-	}
-
-	// Find correct data location.
-	if (_variable.isEventParameter())
-	{
-		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = DataLocation::Memory;
-	}
-	else if (_variable.isStateVariable())
-	{
-		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
-	}
-	else if (
-		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
-		dynamic_cast<EnumDefinition const*>(_variable.scope())
-	)
-		// The actual location will later be changed depending on how the type is used.
-		typeLoc = DataLocation::Storage;
-	else
-		switch (varLoc)
-		{
-		case Location::Memory:
-			typeLoc = DataLocation::Memory;
-			break;
-		case Location::Storage:
-			typeLoc = DataLocation::Storage;
-			break;
-		case Location::CallData:
-			typeLoc = DataLocation::CallData;
-			break;
-		case Location::Unspecified:
-			solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
-		}
-
-	TypePointer type = _variable.typeName()->annotation().type;
-	if (auto ref = dynamic_cast<ReferenceType const*>(type))
-	{
-		bool isPointer = !_variable.isStateVariable();
-		type = TypeProvider::withLocation(ref, typeLoc, isPointer);
-	}
-
-	_variable.annotation().type = type;
-}
-
 void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 {
+	validateYulIdentifierName(_function.name, _function.location);
+	for (yul::TypedName const& varName: _function.parameters + _function.returnVariables)
+		validateYulIdentifierName(varName.name, varName.location);
+
 	bool wasInsideFunction = m_yulInsideFunction;
 	m_yulInsideFunction = true;
 	this->operator()(_function.body);
@@ -440,9 +215,10 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
-	bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), "_slot");
-	bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), "_offset");
+	bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), ".slot");
+	bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), ".offset");
 
+	// Could also use `pathFromCurrentScope`, split by '.'
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
 	if (isSlot || isOffset)
 	{
@@ -452,27 +228,45 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			return;
 		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
 			isSlot ?
-			string("_slot").size() :
-			string("_offset").size()
+			string(".slot").size() :
+			string(".offset").size()
 		));
-		if (realName.empty())
-		{
-			declarationError(_identifier.location, "In variable names _slot and _offset can only be used as a suffix.");
-			return;
-		}
+		solAssert(!realName.empty(), "Empty name.");
 		declarations = m_resolver.nameFromCurrentScope(realName);
+		if (!declarations.empty())
+			// To support proper path resolution, we have to use pathFromCurrentScope.
+			solAssert(!util::contains(realName, '.'), "");
 	}
 	if (declarations.size() > 1)
 	{
-		declarationError(_identifier.location, "Multiple matching identifiers. Resolving overloaded identifiers is not supported.");
+		m_errorReporter.declarationError(
+			4718_error,
+			_identifier.location,
+			"Multiple matching identifiers. Resolving overloaded identifiers is not supported."
+		);
 		return;
 	}
 	else if (declarations.size() == 0)
+	{
+		if (
+			boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
+			boost::algorithm::ends_with(_identifier.name.str(), "_offset")
+		)
+			m_errorReporter.declarationError(
+				9467_error,
+				_identifier.location,
+				"Identifier not found. Use ``.slot`` and ``.offset`` to access storage variables."
+			);
 		return;
+	}
 	if (auto var = dynamic_cast<VariableDeclaration const*>(declarations.front()))
 		if (var->isLocalVariable() && m_yulInsideFunction)
 		{
-			declarationError(_identifier.location, "Cannot access local Solidity variables from inside an inline assembly function.");
+			m_errorReporter.declarationError(
+				6578_error,
+				_identifier.location,
+				"Cannot access local Solidity variables from inside an inline assembly function."
+			);
 			return;
 		}
 
@@ -485,14 +279,11 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 {
 	for (auto const& identifier: _varDecl.variables)
 	{
-		bool isSlot = boost::algorithm::ends_with(identifier.name.str(), "_slot");
-		bool isOffset = boost::algorithm::ends_with(identifier.name.str(), "_offset");
+		validateYulIdentifierName(identifier.name, identifier.location);
 
-		string namePrefix = identifier.name.str().substr(0, identifier.name.str().find('.'));
-		if (isSlot || isOffset)
-			declarationError(identifier.location, "In variable declarations _slot and _offset can not be used as a suffix.");
-		else if (
-			auto declarations = m_resolver.nameFromCurrentScope(namePrefix);
+
+		if (
+			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
 			!declarations.empty()
 		)
 		{
@@ -500,11 +291,10 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 			for (auto const* decl: declarations)
 				ssl.append("The shadowed declaration is here:", decl->location());
 			if (!ssl.infos.empty())
-				declarationError(
+				m_errorReporter.declarationError(
+					3859_error,
 					identifier.location,
 					ssl,
-					namePrefix.size() < identifier.name.str().size() ?
-					"The prefix of this declaration conflicts with a declaration outside the inline assembly block." :
 					"This declaration shadows a declaration outside the inline assembly block."
 				);
 		}
@@ -514,34 +304,71 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 		visit(*_varDecl.value);
 }
 
-void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)
+void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _documentation, StructurallyDocumentedAnnotation& _annotation)
 {
-	m_errorOccurred = true;
-	m_errorReporter.typeError(_location, _description);
+	switch (_annotation.docTags.count("inheritdoc"))
+	{
+	case 0:
+		break;
+	case 1:
+	{
+		string const& name = _annotation.docTags.find("inheritdoc")->second.content;
+		if (name.empty())
+		{
+			m_errorReporter.docstringParsingError(
+				1933_error,
+				_documentation.location(),
+				"Expected contract name following documentation tag @inheritdoc."
+			);
+			return;
+		}
+
+		vector<string> path;
+		boost::split(path, name, boost::is_any_of("."));
+		Declaration const* result = m_resolver.pathFromCurrentScope(path);
+
+		if (result == nullptr)
+		{
+			m_errorReporter.docstringParsingError(
+				9397_error,
+				_documentation.location(),
+				"Documentation tag @inheritdoc references inexistent contract \"" +
+				name +
+				"\"."
+			);
+			return;
+		}
+		else
+		{
+			_annotation.inheritdocReference = dynamic_cast<ContractDefinition const*>(result);
+
+			if (!_annotation.inheritdocReference)
+				m_errorReporter.docstringParsingError(
+					1430_error,
+					_documentation.location(),
+					"Documentation tag @inheritdoc reference \"" +
+					name +
+					"\" is not a contract."
+				);
+		}
+		break;
+	}
+	default:
+		m_errorReporter.docstringParsingError(
+			5142_error,
+			_documentation.location(),
+			"Documentation tag @inheritdoc can only be given once."
+		);
+		break;
+	}
 }
 
-void ReferencesResolver::fatalTypeError(SourceLocation const& _location, string const& _description)
+void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceLocation const& _location)
 {
-	m_errorOccurred = true;
-	m_errorReporter.fatalTypeError(_location, _description);
-}
-
-void ReferencesResolver::declarationError(SourceLocation const& _location, string const& _description)
-{
-	m_errorOccurred = true;
-	m_errorReporter.declarationError(_location, _description);
-}
-
-void ReferencesResolver::declarationError(SourceLocation const& _location, SecondarySourceLocation const& _ssl, string const& _description)
-{
-	m_errorOccurred = true;
-	m_errorReporter.declarationError(_location, _ssl, _description);
-}
-
-void ReferencesResolver::fatalDeclarationError(SourceLocation const& _location, string const& _description)
-{
-	m_errorOccurred = true;
-	m_errorReporter.fatalDeclarationError(_location, _description);
-}
-
+	if (util::contains(_name.str(), '.'))
+		m_errorReporter.declarationError(
+			3927_error,
+			_location,
+			"User-defined identifiers in inline assembly cannot contain '.'."
+		);
 }

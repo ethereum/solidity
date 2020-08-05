@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -25,6 +26,7 @@
 #include <liblangutil/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/ast/AST.h>
@@ -52,15 +54,15 @@ public:
 	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
 	Expression* expression() const { return m_expression; }
 private:
-	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Identifier& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Literal& _expression) override { return checkExpression(_expression); }
+	bool visit(Assignment& _expression) override { return checkExpression(_expression); }
+	bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
+	bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
+	bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
+	bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
+	bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
+	bool visit(Identifier& _expression) override { return checkExpression(_expression); }
+	bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
+	bool visit(Literal& _expression) override { return checkExpression(_expression); }
 	bool checkExpression(Expression& _expression)
 	{
 		if (m_expression == nullptr)
@@ -115,20 +117,14 @@ bytes compileFirstExpression(
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
 	GlobalContext globalContext;
-	map<ASTNode const*, shared_ptr<DeclarationContainer>> scopes;
-	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), scopes, errorReporter);
+	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	resolver.registerDeclarations(*sourceUnit);
-
+	BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*sourceUnit), "Resolving names failed");
+	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			BOOST_REQUIRE_MESSAGE(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
-	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
-			ErrorReporter errorReporter(errors);
-			TypeChecker typeChecker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
-			BOOST_REQUIRE(typeChecker.checkTypeRequirements(*contract));
-		}
+		BOOST_REQUIRE(declarationTypeChecker.check(*node));
+	TypeChecker typeChecker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
+	BOOST_REQUIRE(typeChecker.checkTypeRequirements(*sourceUnit));
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -141,8 +137,8 @@ bytes compileFirstExpression(
 			);
 			context.resetVisitedNodes(contract);
 			context.setMostDerivedContract(*contract);
-			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
-			context.adjustStackOffset(parametersSize);
+			size_t parametersSize = _localVariables.size(); // assume they are all one slot on the stack
+			context.adjustStackOffset(static_cast<int>(parametersSize));
 			for (vector<string> const& variable: _localVariables)
 				context.addVariable(
 					dynamic_cast<VariableDeclaration const&>(resolveDeclaration(*sourceUnit, variable, resolver)),
@@ -226,34 +222,18 @@ BOOST_AUTO_TEST_CASE(int_with_wei_ether_subdenomination)
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
-BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
+BOOST_AUTO_TEST_CASE(int_with_gwei_ether_subdenomination)
 {
 	char const* sourceCode = R"(
 		contract test {
 			function test () {
-				uint x = 1 szabo;
+				uint x = 1 gwei;
 			}
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({uint8_t(Instruction::PUSH5), 0xe8, 0xd4, 0xa5, 0x10, 0x00});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
-
-BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
-{
-	char const* sourceCode = R"(
-		contract test {
-			constructor()
-			{
-				 uint x = 1 finney;
-			}
-		}
-	)";
-	bytes code = compileFirstExpression(sourceCode);
-
-	bytes expectation({uint8_t(Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});
+	bytes expectation({uint8_t(Instruction::PUSH4), 0x3b, 0x9a, 0xca, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

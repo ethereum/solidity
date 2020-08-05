@@ -38,11 +38,12 @@ Details are given in the following example.
 
 ::
 
-    pragma solidity ^0.6.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
 
     contract Owned {
-        constructor() public { owner = msg.sender; }
+        constructor() { owner = msg.sender; }
         address payable owner;
     }
 
@@ -79,7 +80,7 @@ Details are given in the following example.
     // also a base class of `Destructible`, yet there is only a single
     // instance of `owned` (as for virtual inheritance in C++).
     contract Named is Owned, Destructible {
-        constructor(bytes32 name) public {
+        constructor(bytes32 name) {
             Config config = Config(0xD5f9D8D94886E70b06E474c3fB14Fd43E2f23970);
             NameReg(config.lookup(1)).register(name);
         }
@@ -105,8 +106,8 @@ Details are given in the following example.
 
 
     // If a constructor takes an argument, it needs to be
-    // provided in the header (or modifier-invocation-style at
-    // the constructor of the derived contract (see below)).
+    // provided in the header or modifier-invocation-style at
+    // the constructor of the derived contract (see below).
     contract PriceFeed is Owned, Destructible, Named("GoldFeed") {
         function updateInfo(uint newInfo) public {
             if (msg.sender == owner) info = newInfo;
@@ -125,10 +126,11 @@ Note that above, we call ``Destructible.destroy()`` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    pragma solidity ^0.6.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract owned {
-        constructor() public { owner = msg.sender; }
+        constructor() { owner = msg.sender; }
         address payable owner;
     }
 
@@ -154,10 +156,11 @@ A call to ``Final.destroy()`` will call ``Base2.destroy`` because we specify it
 explicitly in the final override, but this function will bypass
 ``Base1.destroy``. The way around this is to use ``super``::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract owned {
-        constructor() public { owner = msg.sender; }
+        constructor() { owner = msg.sender; }
         address payable owner;
     }
 
@@ -191,31 +194,38 @@ not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
 virtual method lookup.
 
-.. _function-overriding:
-
 .. index:: ! overriding;function
+
+.. _function-overriding:
 
 Function Overriding
 ===================
 
 Base functions can be overridden by inheriting contracts to change their
 behavior if they are marked as ``virtual``. The overriding function must then
-use the ``override`` keyword in the function header as shown in this example:
+use the ``override`` keyword in the function header.
+The overriding function may only change the visibility of the overridden function from ``external`` to ``public``.
+The mutability may be changed to a more strict one following the order:
+``nonpayable`` can be overridden by ``view`` and ``pure``. ``view`` can be overridden by ``pure``.
+``payable`` is an exception and cannot be changed to any other mutability.
+
+The following example demonstrates changing mutability and visibility:
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Base
     {
-        function foo() virtual public {}
+        function foo() virtual external view {}
     }
 
     contract Middle is Base {}
 
     contract Inherited is Middle
     {
-        function foo() public override {}
+        function foo() override public pure {}
     }
 
 For multiple inheritance, the most derived base contracts that define the same
@@ -227,7 +237,8 @@ bases, it has to explicitly override it:
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract Base1
     {
@@ -253,7 +264,8 @@ that already overrides all other functions.
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract A { function f() public pure{} }
     contract B is A {}
@@ -293,11 +305,12 @@ of the variable:
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract A
     {
-        function f() external pure virtual returns(uint) { return 5; }
+        function f() external view virtual returns(uint) { return 5; }
     }
 
     contract B is A
@@ -310,9 +323,9 @@ of the variable:
   While public state variables can override external functions, they themselves cannot
   be overridden.
 
-.. _modifier-overriding:
-
 .. index:: ! overriding;modifier
+
+.. _modifier-overriding:
 
 Modifier Overriding
 ===================
@@ -324,7 +337,8 @@ and the ``override`` keyword must be used in the overriding modifier:
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract Base
     {
@@ -342,7 +356,8 @@ explicitly:
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract Base1
     {
@@ -383,31 +398,38 @@ and all functions that are reachable from there through function calls.
 It does not include the constructor code or internal functions that are
 only called from the constructor.
 
-Constructor functions can be either ``public`` or ``internal``. If there is no
+If there is no
 constructor, the contract will assume the default constructor, which is
-equivalent to ``constructor() public {}``. For example:
+equivalent to ``constructor() {}``. For example:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
-    contract A {
+    abstract contract A {
         uint public a;
 
-        constructor(uint _a) internal {
+        constructor(uint _a) {
             a = _a;
         }
     }
 
     contract B is A(1) {
-        constructor() public {}
+        constructor() {}
     }
 
-A constructor set as ``internal`` causes the contract to be marked as :ref:`abstract <abstract-contract>`.
+You can use internal parameters in a constructor (for example storage pointers). In this case,
+the contract has to be marked :ref:`abstract <abstract-contract>`, because these parameters
+cannot be assigned valid values from outside but only through the constructors of derived contracts.
 
 .. warning ::
     Prior to version 0.4.22, constructors were defined as functions with the same name as the contract.
     This syntax was deprecated and is not allowed anymore in version 0.5.0.
+
+.. warning ::
+    Prior to version 0.7.0, you had to specify the visibility of constructors as either
+    ``internal`` or ``public``.
 
 
 .. index:: ! base;constructor
@@ -419,21 +441,22 @@ The constructors of all the base contracts will be called following the
 linearization rules explained below. If the base constructors have arguments,
 derived contracts need to specify all of them. This can be done in two ways::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Base {
         uint x;
-        constructor(uint _x) public { x = _x; }
+        constructor(uint _x) { x = _x; }
     }
 
     // Either directly specify in the inheritance list...
     contract Derived1 is Base(7) {
-        constructor() public {}
+        constructor() {}
     }
 
     // or through a "modifier" of the derived constructor.
     contract Derived2 is Base {
-        constructor(uint _y) Base(_y * _y) public {}
+        constructor(uint _y) Base(_y * _y) {}
     }
 
 One way is directly in the inheritance list (``is Base(7)``).  The other is in
@@ -478,7 +501,8 @@ error "Linearization of inheritance graph impossible".
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract X {}
     contract A is X {}
@@ -498,14 +522,15 @@ One area where inheritance linearization is especially important and perhaps not
 
 ::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Base1 {
-        constructor() public {}
+        constructor() {}
     }
 
     contract Base2 {
-        constructor() public {}
+        constructor() {}
     }
 
     // Constructors are executed in the following order:
@@ -513,7 +538,7 @@ One area where inheritance linearization is especially important and perhaps not
     //  2 - Base2
     //  3 - Derived1
     contract Derived1 is Base1, Base2 {
-        constructor() public Base1() Base2() {}
+        constructor() Base1() Base2() {}
     }
 
     // Constructors are executed in the following order:
@@ -521,7 +546,7 @@ One area where inheritance linearization is especially important and perhaps not
     //  2 - Base1
     //  3 - Derived2
     contract Derived2 is Base2, Base1 {
-        constructor() public Base2() Base1() {}
+        constructor() Base2() Base1() {}
     }
 
     // Constructors are still executed in the following order:
@@ -529,7 +554,7 @@ One area where inheritance linearization is especially important and perhaps not
     //  2 - Base1
     //  3 - Derived3
     contract Derived3 is Base2, Base1 {
-        constructor() public Base1() Base2() {}
+        constructor() Base1() Base2() {}
     }
 
 

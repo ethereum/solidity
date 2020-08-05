@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that uses the simplification rules to simplify expressions.
  */
@@ -46,7 +47,7 @@ public:
 	static void run(OptimiserStepContext&, Block& _ast);
 
 	using ASTModifier::operator();
-	virtual void visit(Expression& _expression);
+	void visit(Expression& _expression) override;
 
 private:
 	explicit ExpressionSimplifier(Dialect const& _dialect): DataFlowAnalyzer(_dialect) {}

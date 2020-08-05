@@ -5,4 +5,4 @@ contract C {
 	}
 }
 // ----
-// ParserError: (43-51): The state mutability modifier "constant" was removed in version 0.5.0. Use "view" or "pure" instead.
+// ParserError 2314: (43-51): Expected '{' but got 'constant'

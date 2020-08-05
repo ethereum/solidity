@@ -1,6 +1,6 @@
-contract C { constructor(uint) public {} }
+contract C { constructor(uint) {} }
 contract A is C(2) {}
 contract B is C(2) {}
 contract D is A, B {}
 // ----
-// DeclarationError: (87-108): Base constructor arguments given twice.
+// DeclarationError 3364: (80-101): Base constructor arguments given twice.

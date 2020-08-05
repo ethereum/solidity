@@ -6,7 +6,7 @@
     {
       "C":
       [
-        20
+        23
       ]
     }
   },
@@ -25,17 +25,55 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          20
+          23
         ],
         "name": "C",
-        "scope": 21
+        "scope": 24
       },
       "children":
       [
+        {
+          "attributes":
+          {
+            "constant": false,
+            "functionSelector": "c19d93fb",
+            "mutability": "mutable",
+            "name": "state",
+            "scope": 23,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "type": "uint256",
+            "visibility": "public"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "name": "uint",
+                "type": "uint256"
+              },
+              "id": 8,
+              "name": "ElementaryTypeName",
+              "src": "48:4:3"
+            },
+            {
+              "attributes":
+              {
+                "text": "Some comment on state var."
+              },
+              "id": 7,
+              "name": "StructuredDocumentation",
+              "src": "15:32:3"
+            }
+          ],
+          "id": 9,
+          "name": "VariableDeclaration",
+          "src": "48:17:3"
+        },
         {
           "attributes":
           {
@@ -49,46 +87,9 @@
               {
                 "text": "Some comment on Evt."
               },
-              "id": 7,
-              "name": "StructuredDocumentation",
-              "src": "15:26:3"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 8,
-              "name": "ParameterList",
-              "src": "51:2:3"
-            }
-          ],
-          "id": 9,
-          "name": "EventDefinition",
-          "src": "42:12:3"
-        },
-        {
-          "attributes":
-          {
-            "name": "mod",
-            "overrides": null,
-            "virtual": false,
-            "visibility": "internal"
-          },
-          "children":
-          [
-            {
-              "attributes":
-              {
-                "text": "Some comment on mod."
-              },
               "id": 10,
               "name": "StructuredDocumentation",
-              "src": "57:26:3"
+              "src": "69:26:3"
             },
             {
               "attributes":
@@ -101,25 +102,61 @@
               "children": [],
               "id": 11,
               "name": "ParameterList",
-              "src": "96:2:3"
+              "src": "105:2:3"
+            }
+          ],
+          "id": 12,
+          "name": "EventDefinition",
+          "src": "96:12:3"
+        },
+        {
+          "attributes":
+          {
+            "name": "mod",
+            "virtual": false,
+            "visibility": "internal"
+          },
+          "children":
+          [
+            {
+              "attributes":
+              {
+                "text": "Some comment on mod."
+              },
+              "id": 13,
+              "name": "StructuredDocumentation",
+              "src": "111:26:3"
+            },
+            {
+              "attributes":
+              {
+                "parameters":
+                [
+                  null
+                ]
+              },
+              "children": [],
+              "id": 14,
+              "name": "ParameterList",
+              "src": "150:2:3"
             },
             {
               "children":
               [
                 {
-                  "id": 12,
+                  "id": 15,
                   "name": "PlaceholderStatement",
-                  "src": "101:1:3"
+                  "src": "155:1:3"
                 }
               ],
-              "id": 13,
+              "id": 16,
               "name": "Block",
-              "src": "99:6:3"
+              "src": "153:6:3"
             }
           ],
-          "id": 14,
+          "id": 17,
           "name": "ModifierDefinition",
-          "src": "84:21:3"
+          "src": "138:21:3"
         },
         {
           "attributes":
@@ -133,8 +170,7 @@
               null
             ],
             "name": "fn",
-            "overrides": null,
-            "scope": 20,
+            "scope": 23,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
@@ -146,9 +182,9 @@
               {
                 "text": "Some comment on fn."
               },
-              "id": 15,
+              "id": 18,
               "name": "StructuredDocumentation",
-              "src": "108:25:3"
+              "src": "162:25:3"
             },
             {
               "attributes":
@@ -159,9 +195,9 @@
                 ]
               },
               "children": [],
-              "id": 16,
+              "id": 19,
               "name": "ParameterList",
-              "src": "145:2:3"
+              "src": "199:2:3"
             },
             {
               "attributes":
@@ -172,9 +208,9 @@
                 ]
               },
               "children": [],
-              "id": 17,
+              "id": 20,
               "name": "ParameterList",
-              "src": "155:0:3"
+              "src": "209:0:3"
             },
             {
               "attributes":
@@ -185,22 +221,22 @@
                 ]
               },
               "children": [],
-              "id": 18,
+              "id": 21,
               "name": "Block",
-              "src": "155:2:3"
+              "src": "209:2:3"
             }
           ],
-          "id": 19,
+          "id": 22,
           "name": "FunctionDefinition",
-          "src": "134:23:3"
+          "src": "188:23:3"
         }
       ],
-      "id": 20,
+      "id": 23,
       "name": "ContractDefinition",
-      "src": "0:159:3"
+      "src": "0:213:3"
     }
   ],
-  "id": 21,
+  "id": 24,
   "name": "SourceUnit",
-  "src": "0:160:3"
+  "src": "0:214:3"
 }

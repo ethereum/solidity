@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Adaptor between the abstract assembly and eth assembly.
  */
@@ -49,20 +50,26 @@ public:
 	size_t newLabelId() override;
 	size_t namedLabel(std::string const& _name) override;
 	void appendLinkerSymbol(std::string const& _linkerSymbol) override;
-	void appendJump(int _stackDiffAfter) override;
-	void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
-	void appendJumpToIf(LabelID _labelId) override;
+	void appendJump(int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
+	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
 	void appendBeginsub(LabelID, int) override;
 	void appendJumpsub(LabelID, int, int) override;
 	void appendReturnsub(int, int) override;
 	void appendAssemblySize() override;
 	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
-	void appendDataOffset(SubID _sub) override;
-	void appendDataSize(SubID _sub) override;
+	void appendDataOffset(std::vector<SubID> const& _subPath) override;
+	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
+
+	void appendImmutable(std::string const& _identifier) override;
+	void appendImmutableAssignment(std::string const& _identifier) override;
+
+	void markAsInvalid() override;
 
 private:
 	static LabelID assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag);
+	void appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType);
 
 	evmasm::Assembly& m_assembly;
 	std::map<SubID, u256> m_dataHashBySubId;

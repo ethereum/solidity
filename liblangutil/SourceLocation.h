@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Lefteris Karapetsas <lefteris@ethdev.com>
  * @date 2015
@@ -85,7 +86,7 @@ struct SourceLocation
 		assertThrow(0 <= start, SourceLocationError, "Invalid source location.");
 		assertThrow(start <= end, SourceLocationError, "Invalid source location.");
 		assertThrow(end <= int(source->source().length()), SourceLocationError, "Invalid source location.");
-		return source->source().substr(start, end - start);
+		return source->source().substr(size_t(start), size_t(end - start));
 	}
 
 	/// @returns the smallest SourceLocation that contains both @param _a and @param _b.
@@ -113,7 +114,11 @@ struct SourceLocation
 	std::shared_ptr<CharStream> source;
 };
 
-SourceLocation const parseSourceLocation(std::string const& _input, std::string const& _sourceName, size_t _maxIndex = -1);
+SourceLocation const parseSourceLocation(
+	std::string const& _input,
+	std::string const& _sourceName,
+	size_t _maxIndex = std::numeric_limits<size_t>::max()
+);
 
 /// Stream output for Location (used e.g. in boost exceptions).
 inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _location)

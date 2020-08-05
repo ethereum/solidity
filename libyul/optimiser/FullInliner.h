@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that performs function inlining for arbitrary functions.
  */
@@ -31,6 +32,7 @@
 
 #include <optional>
 #include <set>
+#include <utility>
 
 namespace solidity::yul
 {
@@ -147,10 +149,10 @@ class BodyCopier: public ASTCopier
 public:
 	BodyCopier(
 		NameDispenser& _nameDispenser,
-		std::map<YulString, YulString> const& _variableReplacements
+		std::map<YulString, YulString> _variableReplacements
 	):
 		m_nameDispenser(_nameDispenser),
-		m_variableReplacements(_variableReplacements)
+		m_variableReplacements(std::move(_variableReplacements))
 	{}
 
 	using ASTCopier::operator ();

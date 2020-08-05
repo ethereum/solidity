@@ -29,12 +29,11 @@
 set -e
 
 if test -z "$1"; then
-	BUILD_DIR="emscripten_build"
+    BUILD_DIR="emscripten_build"
 else
-	BUILD_DIR="$1"
+    BUILD_DIR="$1"
 fi
 
-docker run -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.39.3-64bit \
-    ./scripts/travis-emscripten/install_deps.sh
-docker run -v $(pwd):/root/project -w /root/project trzeci/emscripten:sdk-tag-1.39.3-64bit \
+docker run -v $(pwd):/root/project -w /root/project \
+    solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc \
     ./scripts/travis-emscripten/build_emscripten.sh $BUILD_DIR

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file KnownState.cpp
  * @author Christian <c@ethdev.com>
@@ -41,7 +42,7 @@ ostream& KnownState::stream(ostream& _out) const
 		if (!expr.item)
 			_out << " no item";
 		else if (expr.item->type() == UndefinedItem)
-			_out << " unknown " << int(expr.item->data());
+			_out << " unknown " << static_cast<int>(expr.item->data());
 		else
 			_out << *expr.item;
 		if (expr.sequenceNumber)
@@ -112,21 +113,21 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 			setStackElement(
 				m_stackHeight + 1,
 				stackElement(
-					m_stackHeight - int(instruction) + int(Instruction::DUP1),
+					m_stackHeight - static_cast<int>(instruction) + static_cast<int>(Instruction::DUP1),
 					_item.location()
 				)
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
 				m_stackHeight,
-				m_stackHeight - 1 - int(instruction) + int(Instruction::SWAP1),
+				m_stackHeight - 1 - static_cast<int>(instruction) + static_cast<int>(Instruction::SWAP1),
 				_item.location()
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<Id> arguments(info.args);
-			for (int i = 0; i < info.args; ++i)
-				arguments[i] = stackElement(m_stackHeight - i, _item.location());
+			vector<Id> arguments(static_cast<size_t>(info.args));
+			for (size_t i = 0; i < static_cast<size_t>(info.args); ++i)
+				arguments[i] = stackElement(m_stackHeight - static_cast<int>(i), _item.location());
 			switch (_item.instruction())
 			{
 			case Instruction::SSTORE:
@@ -134,7 +135,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				break;
 			case Instruction::SLOAD:
 				setStackElement(
-					m_stackHeight + _item.deposit(),
+					m_stackHeight + static_cast<int>(_item.deposit()),
 					loadFromStorage(arguments[0], _item.location())
 				);
 				break;
@@ -143,13 +144,13 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				break;
 			case Instruction::MLOAD:
 				setStackElement(
-					m_stackHeight + _item.deposit(),
+					m_stackHeight + static_cast<int>(_item.deposit()),
 					loadFromMemory(arguments[0], _item.location())
 				);
 				break;
 			case Instruction::KECCAK256:
 				setStackElement(
-					m_stackHeight + _item.deposit(),
+					m_stackHeight + static_cast<int>(_item.deposit()),
 					applyKeccak256(arguments.at(0), arguments.at(1), _item.location())
 				);
 				break;
@@ -167,16 +168,16 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				assertThrow(info.ret <= 1, InvalidDeposit, "");
 				if (info.ret == 1)
 					setStackElement(
-						m_stackHeight + _item.deposit(),
+						m_stackHeight + static_cast<int>(_item.deposit()),
 						m_expressionClasses->find(_item, arguments, _copyItem)
 					);
 			}
 		}
 		m_stackElements.erase(
-			m_stackElements.upper_bound(m_stackHeight + _item.deposit()),
+			m_stackElements.upper_bound(m_stackHeight + static_cast<int>(_item.deposit())),
 			m_stackElements.end()
 		);
-		m_stackHeight += _item.deposit();
+		m_stackHeight += static_cast<int>(_item.deposit());
 	}
 	return op;
 }
@@ -388,7 +389,7 @@ KnownState::Id KnownState::applyKeccak256(
 		bytes data;
 		for (Id a: arguments)
 			data += util::toBigEndian(*m_expressionClasses->knownConstant(a));
-		data.resize(size_t(*l));
+		data.resize(static_cast<size_t>(*l));
 		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _location));
 	}
 	else

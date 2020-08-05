@@ -133,10 +133,11 @@ public:
     /// The record of all SELFDESTRUCTs from the selfdestruct() method.
     std::vector<selfdestuct_record> recorded_selfdestructs;
 
-protected:
+private:
     /// The copy of call inputs for the recorded_calls record.
     std::vector<bytes> m_recorded_calls_inputs;
 
+public:
     /// Record an account access.
     /// @param addr  The address of the accessed account.
     void record_account_access(const address& addr) const

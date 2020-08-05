@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Specific AST walkers that collect facts about identifiers and definitions.
  */
@@ -61,8 +62,8 @@ public:
 	{}
 
 	using ASTWalker::operator ();
-	virtual void operator()(Identifier const& _identifier);
-	virtual void operator()(FunctionCall const& _funCall);
+	void operator()(Identifier const& _identifier) override;
+	void operator()(FunctionCall const& _funCall) override;
 
 	static std::map<YulString, size_t> countReferences(Block const& _block, CountWhat _countWhat = VariablesAndFunctions);
 	static std::map<YulString, size_t> countReferences(FunctionDefinition const& _function, CountWhat _countWhat = VariablesAndFunctions);

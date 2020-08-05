@@ -16,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 3,
       "linearizedBaseContracts":
@@ -29,7 +28,6 @@
       [
         {
           "anonymous": false,
-          "documentation": null,
           "id": 2,
           "name": "E",
           "nodeType": "EventDefinition",

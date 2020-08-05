@@ -5,5 +5,4 @@ library L {
 }
 
 // ----
-// TypeError: (66-81): Data location must be "memory" for parameter in function, but "calldata" was given.
-// TypeError: (159-173): Data location must be "memory" for parameter in function, but "storage" was given.
+// TypeError 6651: (159-173): Data location must be "memory" or "calldata" for parameter in function, but "storage" was given.

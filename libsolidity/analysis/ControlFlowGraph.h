@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -26,6 +27,7 @@
 #include <map>
 #include <memory>
 #include <stack>
+#include <utility>
 #include <vector>
 
 namespace solidity::frontend
@@ -48,8 +50,8 @@ public:
 		Assignment,
 		InlineAssembly
 	};
-	VariableOccurrence(VariableDeclaration const& _declaration, Kind _kind, std::optional<langutil::SourceLocation> const& _occurrence = {}):
-		m_declaration(_declaration), m_occurrenceKind(_kind), m_occurrence(_occurrence)
+	VariableOccurrence(VariableDeclaration const& _declaration, Kind _kind, std::optional<langutil::SourceLocation>  _occurrence = {}):
+		m_declaration(_declaration), m_occurrenceKind(_kind), m_occurrence(std::move(_occurrence))
 	{
 	}
 

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Dialects for Wasm.
  */
@@ -61,7 +62,7 @@ private:
 		std::vector<YulString> _params,
 		std::vector<YulString> _returns,
 		bool _movable = true,
-		bool _literalArguments = false
+		std::vector<std::optional<LiteralKind>> _literalArguments = std::vector<std::optional<LiteralKind>>{}
 	);
 
 	std::map<YulString, BuiltinFunction> m_functions;

@@ -14,12 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Selections.h>
 
 #include <tools/yulPhaser/SimulationRNG.h>
 
 #include <cmath>
+#include <numeric>
 
 using namespace std;
 using namespace solidity::phaser;
@@ -58,3 +60,12 @@ vector<size_t> RandomSelection::materialise(size_t _poolSize) const
 	return selection;
 }
 
+vector<size_t> RandomSubset::materialise(size_t _poolSize) const
+{
+	vector<size_t> selection;
+	for (size_t index = 0; index < _poolSize; ++index)
+		if (SimulationRNG::bernoulliTrial(m_selectionChance))
+			selection.push_back(index);
+
+	return selection;
+}

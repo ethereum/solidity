@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (53-84): Data location must be "memory" for return parameter in function, but "storage" was given.
+// TypeError 6651: (53-84): Data location must be "memory" or "calldata" for return parameter in function, but "storage" was given.

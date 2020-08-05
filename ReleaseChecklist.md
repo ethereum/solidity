@@ -6,9 +6,8 @@
  - [ ] Readthedocs account, access to the Solidity project
  - [ ] Write access to https://github.com/ethereum/homebrew-ethereum
 
-### Pre-release
- - [ ] Ensure that a Github project exists for the release.
- - [ ] Check that all issues and pull requests from the Github project to be released are merged to ``develop``.
+### Blog Post
+ - [ ] Create a post on https://github.com/ethereum/solidity-blog and explain some of the new features or concepts.
 
 ### Changelog
  - [ ] Sort the changelog entries alphabetically and correct any errors you notice.
@@ -27,14 +26,26 @@
  - [ ] Run ``scripts/create_source_tarball.sh`` while being on the tag to create the source tarball. Make sure to create ``prerelease.txt`` before: (``echo -n > prerelease.txt``). This will create the tarball in a directory called ``upload``.
  - [ ] Take the tarball from the upload directory (its name should be ``solidity_x.x.x.tar.gz``, otherwise ``prerelease.txt`` was missing in the step before) and upload the source tarball to the release page.
 
+### Homebrew and MacOS
+ - [ ] Update the version and the hash (``sha256sum solidity_x.x.x.tar.gz``) in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb
+ - [ ] Take the binary from the ``b_osx`` run of the released commit in circle-ci and add it to the release page as ``solc-macos``.
+
+### Update solc-bin
+ - [ ] Copy ``soljson.js`` from the release page to ``solc-bin/bin/soljson-v<version>+commit.<commit>.js``
+ - [ ] Copy ``solc-static-linux`` from the release page to ``solc-bin/linux-amd64/solc-linux-amd64-v<version>+commit.<commit>``
+ - [ ] Copy ``solc-macos`` from the release page to ``solc-bin/macos-amd64/solc-macos-amd64-v<version>+commit.<commit>``
+ - [ ] Copy ``solc-windows.zip`` from the release page to ``solc-bin/windows-amd64/solc-windows-amd64-v<version>+commit.<commit>.zip``
+ - [ ] Make the linux and the macos binaries executable.
+ - [ ] Run ``./update`` in ``solc-bin`` and verify that the script has updated ``list.js``, ``list.txt`` and ``list.json`` files correctly and that symlinks to the new release have been added in ``solc-bin/wasm/`` and ``solc-bin/emscripten-wasm32/``.
+ - [ ] Create a pull request and merge.
+
 ### PPA
  - [ ] Change ``scripts/release_ppa.sh`` to match your key's email and key id.
  - [ ] Run ``scripts/release_ppa.sh release`` to create the PPA release (you need the relevant openssl key).
  - [ ] Wait for the ``~ethereum/ubuntu/ethereum-static`` PPA build to be finished and published for *all platforms*. SERIOUSLY: DO NOT PROCEED EARLIER!!! *After* the static builds are *published*, copy the static package to the ``~ethereum/ubuntu/ethereum`` PPA for the destination series ``Trusty`` and ``Xenial`` while selecting ``Copy existing binaries``.
- - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh v0.x.x``).
 
-### Homebrew
- - [ ] Update the version and the hash (``sha256sum solidity_x.x.x.tar.gz``) in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb
+### Docker
+ - [ ] Check that the Docker release was pushed to Docker Hub (this still seems to have problems, run ``./scripts/docker_deploy_manual.sh v0.x.x``).
 
 ### Documentation
  - [ ] Build the new version on https://readthedocs.org/projects/solidity/ (select `latest` on the bottom of the page and click `BUILD`)
@@ -46,6 +57,7 @@
  - [ ] Make sure to push the tag ``npm publish`` created with ``git push --tags``.
 
 ### Post-release
+ - [ ] Publish the blog post.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
  - [ ] Merge ``release`` back into ``develop``.
  - [ ] Announce on Twitter and Reddit.

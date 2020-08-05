@@ -8,5 +8,5 @@ contract C {
   }
 }
 // ----
-// TypeError: (52-54): Initial value for constant variable has to be compile-time constant.
-// TypeError: (112-113): Only direct number constants and references to such constants are supported by inline assembly.
+// TypeError 8349: (52-54): Initial value for constant variable has to be compile-time constant.
+// TypeError 7615: (112-113): Only direct number constants and references to such constants are supported by inline assembly.

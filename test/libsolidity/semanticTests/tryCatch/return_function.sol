@@ -13,5 +13,7 @@ contract C {
     }
     function fun() public pure {}
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 0x1, 0xfdd67305928fcac8d213d1e47bfa6165cd0b87b946644cd0000000000000000, 9

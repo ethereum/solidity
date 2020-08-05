@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (208-218): Member "b1" is not available in struct Test.S1 memory outside of storage.
+// TypeError 4061: (161-172): Type struct Test.S2 is only valid in storage because it contains a (nested) mapping.

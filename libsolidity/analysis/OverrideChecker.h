@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Component that verifies override properties.
  */
@@ -32,6 +33,7 @@
 namespace solidity::langutil
 {
 class ErrorReporter;
+struct ErrorId;
 struct SourceLocation;
 }
 
@@ -84,6 +86,8 @@ public:
 
 	FunctionType const* functionType() const;
 	ModifierType const* modifierType() const;
+
+	Declaration const* declaration() const;
 
 	langutil::SourceLocation const& location() const;
 
@@ -158,18 +162,21 @@ private:
 	void overrideListError(
 		OverrideProxy const& _item,
 		std::set<ContractDefinition const*, CompareByID> _secondary,
+		langutil::ErrorId _error,
 		std::string const& _message1,
 		std::string const& _message2
 	);
 	void overrideError(
 		Declaration const& _overriding,
 		Declaration const& _super,
+		langutil::ErrorId _error,
 		std::string const& _message,
 		std::string const& _secondaryMsg = "Overridden function is here:"
 	);
 	void overrideError(
 		OverrideProxy const& _overriding,
 		OverrideProxy const& _super,
+		langutil::ErrorId _error,
 		std::string const& _message,
 		std::string const& _secondaryMsg = "Overridden function is here:"
 	);

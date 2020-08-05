@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Rhett <roadriverrail@gmail.com>
  * @date 2017
@@ -23,6 +24,7 @@
 #pragma once
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
@@ -50,64 +52,68 @@ public:
 		m_errorList += _errorList;
 	}
 
-	void warning(std::string const& _description);
+	void warning(ErrorId _error, std::string const& _description);
 
-	void warning(SourceLocation const& _location, std::string const& _description);
+	void warning(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	void warning(
+		ErrorId _error,
 		SourceLocation const& _location,
 		std::string const& _description,
 		SecondarySourceLocation const& _secondaryLocation
 	);
 
 	void error(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		std::string const& _description
 	);
 
 	void declarationError(
+		ErrorId _error,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description
 	);
 
-	void declarationError(SourceLocation const& _location, std::string const& _description);
+	void declarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void fatalDeclarationError(SourceLocation const& _location, std::string const& _description);
+	void fatalDeclarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void parserError(SourceLocation const& _location, std::string const& _description);
+	void parserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void fatalParserError(SourceLocation const& _location, std::string const& _description);
+	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
-	void syntaxError(SourceLocation const& _location, std::string const& _description);
+	void syntaxError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	void typeError(
+		ErrorId _error,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation = SecondarySourceLocation(),
 		std::string const& _description = std::string()
 	);
 
-	void typeError(SourceLocation const& _location, std::string const& _description);
+	void typeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	template <typename... Strings>
-	void typeErrorConcatenateDescriptions(SourceLocation const& _location, Strings const&... _descriptions)
+	void typeErrorConcatenateDescriptions(ErrorId _error, SourceLocation const& _location, Strings const&... _descriptions)
 	{
-		std::initializer_list<std::string> const descs = {_descriptions...};
+		std::initializer_list<std::string> const descs = { _descriptions... };
 		solAssert(descs.size() > 0, "Need error descriptions!");
 
 		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
 
 		std::string errorStr = util::joinHumanReadable(descs | filterEmpty, " ");
 
-		error(Error::Type::TypeError, _location, errorStr);
+		error(_error, Error::Type::TypeError, _location, errorStr);
 	}
 
-	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
-	void fatalTypeError(SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
+	void fatalTypeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void fatalTypeError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
 
-	void docstringParsingError(std::string const& _description);
-	void docstringParsingError(SourceLocation const& _location, std::string const& _description);
+	void docstringParsingError(ErrorId _error, std::string const& _description);
+	void docstringParsingError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	ErrorList const& errors() const;
 
@@ -119,23 +125,54 @@ public:
 		return m_errorCount > 0;
 	}
 
+	/// @returns the number of errors (ignores warnings).
+	unsigned errorCount() const
+	{
+		return m_errorCount;
+	}
+
 	// @returns true if the maximum error count has been reached.
 	bool hasExcessiveErrors() const;
 
+	class ErrorWatcher
+	{
+	public:
+		ErrorWatcher(ErrorReporter const& _errorReporter):
+			m_errorReporter(_errorReporter),
+			m_initialErrorCount(_errorReporter.errorCount())
+		{}
+		bool ok() const
+		{
+			solAssert(m_initialErrorCount <= m_errorReporter.errorCount(), "Unexpected error count.");
+			return m_initialErrorCount == m_errorReporter.errorCount();
+		}
+	private:
+		ErrorReporter const& m_errorReporter;
+		unsigned const m_initialErrorCount;
+	};
+
+	ErrorWatcher errorWatcher() const
+	{
+		return ErrorWatcher(*this);
+	}
+
 private:
 	void error(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
 
 	void fatalError(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
 		std::string const& _description = std::string());
 
 	void fatalError(
+		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location = SourceLocation(),
 		std::string const& _description = std::string());

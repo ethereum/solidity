@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Container of (unparsed) Yul functions identified by name which are meant to be generated
  * only once.
@@ -23,8 +24,6 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -34,6 +33,7 @@ string MultiUseYulFunctionCollector::requestedFunctions()
 {
 	string result;
 	for (auto const& f: m_requestedFunctions)
+		// std::map guarantees ascending order when iterating through its keys.
 		result += f.second;
 	m_requestedFunctions.clear();
 	return result;

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/BytesUtils.h>
 
@@ -22,6 +23,7 @@
 
 #include <liblangutil/Common.h>
 
+#include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
@@ -81,7 +83,7 @@ bytes BytesUtils::convertBoolean(string const& _literal)
 	else if (_literal == "false")
 		return bytes{false};
 	else
-		throw Error(Error::Type::ParserError, "Boolean literal invalid.");
+		throw TestParserError("Boolean literal invalid.");
 }
 
 bytes BytesUtils::convertNumber(string const& _literal)
@@ -92,7 +94,7 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Number encoding invalid.");
+		throw TestParserError("Number encoding invalid.");
 	}
 }
 
@@ -104,7 +106,7 @@ bytes BytesUtils::convertHexNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Hex number encoding invalid.");
+		throw TestParserError("Hex number encoding invalid.");
 	}
 }
 
@@ -116,7 +118,7 @@ bytes BytesUtils::convertString(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "String encoding invalid.");
+		throw TestParserError("String encoding invalid.");
 	}
 }
 
@@ -198,8 +200,7 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 				if (isprint(v))
 					os << v;
 				else
-					os << "\\x" << setw(2) << setfill('0') << hex << v;
-
+					os << "\\x" << toHex(v);
 		}
 	}
 	os << "\"";
@@ -252,7 +253,35 @@ string BytesUtils::formatBytes(
 		if (*_bytes.begin() & 0x80)
 			os << formatSigned(_bytes);
 		else
-			os << formatUnsigned(_bytes);
+		{
+			std::string decimal(formatUnsigned(_bytes));
+			std::string hexadecimal(formatHex(_bytes));
+			unsigned int value = u256(_bytes).convert_to<unsigned int>();
+			if (value < 0x10)
+				os << decimal;
+			else if (value >= 0x10 && value <= 0xff) {
+				os << hexadecimal;
+			}
+			else
+			{
+				auto entropy = [](std::string const& str) -> double {
+					double result = 0;
+					map<char, int> frequencies;
+					for (char c: str)
+						frequencies[c]++;
+					for (auto p: frequencies)
+					{
+						double freq = static_cast<double>(p.second) / str.length();
+						result -= freq * (log(freq) / log(2));
+					}
+					return result;
+				};
+				if (entropy(decimal) < entropy(hexadecimal.substr(2, hexadecimal.length())))
+					os << decimal;
+				else
+					os << hexadecimal;
+			}
+		}
 		break;
 	case ABIType::SignedDec:
 		os << formatSigned(_bytes);
@@ -320,10 +349,10 @@ string BytesUtils::formatBytesRange(
 
 size_t BytesUtils::countRightPaddedZeros(bytes const& _bytes)
 {
-	return find_if(
+	return static_cast<size_t>(find_if(
 		_bytes.rbegin(),
 		_bytes.rend(),
 		[](uint8_t b) { return b != '\0'; }
-	) - _bytes.rbegin();
+	) - _bytes.rbegin());
 }
 

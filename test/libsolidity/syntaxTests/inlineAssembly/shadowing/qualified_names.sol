@@ -10,5 +10,5 @@ contract C {
     }
 }
 // ----
-// DeclarationError: (115-118): The prefix of this declaration conflicts with a declaration outside the inline assembly block.
-// DeclarationError: (140-143): The prefix of this declaration conflicts with a declaration outside the inline assembly block.
+// DeclarationError 3927: (115-118): User-defined identifiers in inline assembly cannot contain '.'.
+// DeclarationError 3927: (140-143): User-defined identifiers in inline assembly cannot contain '.'.

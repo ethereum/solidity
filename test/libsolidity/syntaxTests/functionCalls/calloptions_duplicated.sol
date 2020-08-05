@@ -10,8 +10,8 @@ contract C {
 // ====
 // EVMVersion: >=constantinople
 // ----
-// TypeError: (78-101): Duplicate option "gas".
-// TypeError: (111-138): Duplicate option "value".
-// TypeError: (148-189): Duplicate option "gas".
-// TypeError: (148-189): Duplicate option "value".
-// TypeError: (199-228): Duplicate option "salt".
+// TypeError 9886: (78-101): Duplicate option "gas".
+// TypeError 9886: (111-138): Duplicate option "value".
+// TypeError 9886: (148-189): Duplicate option "gas".
+// TypeError 9886: (148-189): Duplicate option "value".
+// TypeError 9886: (199-228): Duplicate option "salt".

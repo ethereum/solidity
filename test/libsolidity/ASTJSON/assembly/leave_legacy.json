@@ -25,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -39,7 +38,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "ece866b9",
             "implemented": true,
             "isConstructor": false,
@@ -49,7 +47,6 @@
               null
             ],
             "name": "l",
-            "overrides": null,
             "scope": 6,
             "stateMutability": "nonpayable",
             "virtual": false,

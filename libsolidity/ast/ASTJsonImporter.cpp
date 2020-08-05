@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author julius <djudju@protonmail.com>
  * @date 2019
@@ -92,7 +93,7 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 {
 	astAssert(member(_node, "src").isString(), "'src' must be a string");
 
-	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_currentSourceName, int(m_sourceLocations.size()));
+	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_currentSourceName, m_sourceLocations.size());
 }
 
 template<class T>
@@ -218,10 +219,15 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 
 ASTPointer<SourceUnit> ASTJsonImporter::createSourceUnit(Json::Value const& _node, string const& _srcName)
 {
+	optional<string> license;
+	if (_node.isMember("license") && !_node["license"].isNull())
+		license = _node["license"].asString();
+
 	vector<ASTPointer<ASTNode>> nodes;
 	for (auto& child: member(_node, "nodes"))
 		nodes.emplace_back(convertJsonToASTNode(child));
-	ASTPointer<SourceUnit> tmp = createASTNode<SourceUnit>(_node, nodes);
+
+	ASTPointer<SourceUnit> tmp = createASTNode<SourceUnit>(_node, license, nodes);
 	tmp->annotation().path = _srcName;
 	return tmp;
 }
@@ -394,7 +400,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	return createASTNode<FunctionDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
-		visibility(_node),
+		kind == Token::Constructor ? Visibility::Default : visibility(_node),
 		stateMutability(_node),
 		kind,
 		memberAsBool(_node, "virtual"),
@@ -411,11 +417,24 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 {
 	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
 
-	VariableDeclaration::Constantness constantness{};
-	if (memberAsBool(_node, "constant"))
-		constantness = VariableDeclaration::Constantness::Constant;
+	VariableDeclaration::Mutability mutability{};
+	astAssert(member(_node, "mutability").isString(), "'mutability' expected to be string.");
+	string const mutabilityStr = member(_node, "mutability").asString();
+	if (mutabilityStr == "constant")
+	{
+		mutability = VariableDeclaration::Mutability::Constant;
+		astAssert(memberAsBool(_node, "constant"), "");
+	}
 	else
-		constantness = VariableDeclaration::Constantness::Mutable;
+	{
+		astAssert(!memberAsBool(_node, "constant"), "");
+		if (mutabilityStr == "mutable")
+			mutability = VariableDeclaration::Mutability::Mutable;
+		else if (mutabilityStr == "immutable")
+			mutability = VariableDeclaration::Mutability::Immutable;
+		else
+			astAssert(false, "");
+	}
 
 	return createASTNode<VariableDeclaration>(
 		_node,
@@ -423,9 +442,10 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		make_shared<ASTString>(member(_node, "name").asString()),
 		nullOrCast<Expression>(member(_node, "value")),
 		visibility(_node),
+		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
 		memberAsBool(_node, "stateVariable"),
 		_node.isMember("indexed") ? memberAsBool(_node, "indexed") : false,
-		constantness,
+		mutability,
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),
 		location(_node)
 	);
@@ -440,7 +460,7 @@ ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::V
 		createParameterList(member(_node, "parameters")),
 		memberAsBool(_node, "virtual"),
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),
-		createBlock(member(_node, "body"))
+		_node["body"].isNull() ? nullptr: createBlock(member(_node, "body"))
 	);
 }
 
@@ -495,7 +515,7 @@ ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json:
 	string nameString = member(_node, "name").asString();
 	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
 	for (string s: strs)
-		namePath.push_back(ASTString(s));
+		namePath.emplace_back(s);
 	return createASTNode<UserDefinedTypeName>(
 		_node,
 		namePath
@@ -866,7 +886,8 @@ ASTPointer<StructuredDocumentation> ASTJsonImporter::createDocumentation(Json::V
 
 Json::Value ASTJsonImporter::member(Json::Value const& _node, string const& _name)
 {
-	astAssert(_node.isMember(_name), "Node '" + _node["nodeType"].asString() + "' (id " + _node["id"].asString() + ") is missing field '" + _name + "'.");
+	if (!_node.isMember(_name))
+		return Json::nullValue;
 	return _node[_name];
 }
 
@@ -922,6 +943,10 @@ Token ASTJsonImporter::literalTokenKind(Json::Value const& _node)
 		tok = Token::Number;
 	else if (_node["kind"].asString() == "string")
 		tok = Token::StringLiteral;
+	else if (_node["kind"].asString() == "unicodeString")
+		tok = Token::UnicodeStringLiteral;
+	else if (_node["kind"].asString() == "hexString")
+		tok = Token::HexStringLiteral;
 	else if (_node["kind"].asString() == "bool")
 		tok = (member(_node, "value").asString() == "true") ? Token::TrueLiteral : Token::FalseLiteral;
 	else
@@ -982,10 +1007,8 @@ Literal::SubDenomination ASTJsonImporter::subdenomination(Json::Value const& _no
 
 	if (subDenStr == "wei")
 		return Literal::SubDenomination::Wei;
-	else if (subDenStr == "szabo")
-		return Literal::SubDenomination::Szabo;
-	else if (subDenStr == "finney")
-		return Literal::SubDenomination::Finney;
+	else if (subDenStr == "gwei")
+		return Literal::SubDenomination::Gwei;
 	else if (subDenStr == "ether")
 		return Literal::SubDenomination::Ether;
 	else if (subDenStr == "seconds")

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/fuzzer_common.h>
 
@@ -71,16 +72,16 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
-void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
+void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned _rand)
 {
 	frontend::CompilerStack compiler;
-	EVMVersion evmVersion = s_evmVersions[_input.size() % s_evmVersions.size()];
+	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
 	frontend::OptimiserSettings optimiserSettings;
 	if (_optimize)
 		optimiserSettings = frontend::OptimiserSettings::standard();
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
-	compiler.setSources({{"", _input}});
+	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
 	try
@@ -94,6 +95,9 @@ void FuzzerUtil::testCompiler(string const& _input, bool _optimize)
 	{
 	}
 	catch (UnimplementedFeatureError const&)
+	{
+	}
+	catch (StackTooDeepError const&)
 	{
 	}
 }
@@ -156,7 +160,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 		assembly.append(n);
 	}
 	for (bool isCreation: {false, true})
-		for (unsigned runs: {1, 2, 3, 20, 40, 100, 200, 400, 1000})
+		for (unsigned runs: {1u, 2u, 3u, 20u, 40u, 100u, 200u, 400u, 1000u})
 		{
 			// Make a copy here so that each time we start with the original state.
 			Assembly tmp = assembly;

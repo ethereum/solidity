@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Alex Beregszaszi
  * Removes unused JUMPDESTs.
@@ -30,7 +31,7 @@ using namespace solidity::evmasm;
 
 bool JumpdestRemover::optimise(set<size_t> const& _tagsReferencedFromOutside)
 {
-	set<size_t> references{referencedTags(m_items, -1)};
+	set<size_t> references{referencedTags(m_items, numeric_limits<size_t>::max())};
 	references.insert(_tagsReferencedFromOutside.begin(), _tagsReferencedFromOutside.end());
 
 	size_t initialSize = m_items.size();
@@ -43,7 +44,7 @@ bool JumpdestRemover::optimise(set<size_t> const& _tagsReferencedFromOutside)
 			if (_item.type() != Tag)
 				return false;
 			auto asmIdAndTag = _item.splitForeignPushTag();
-			assertThrow(asmIdAndTag.first == size_t(-1), OptimizerException, "Sub-assembly tag used as label.");
+			assertThrow(asmIdAndTag.first == numeric_limits<size_t>::max(), OptimizerException, "Sub-assembly tag used as label.");
 			size_t tag = asmIdAndTag.second;
 			return !references.count(tag);
 		}

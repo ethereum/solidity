@@ -1,5 +1,60 @@
 [
     {
+        "name": "UsingForCalldata",
+        "summary": "Function calls to internal library functions with calldata parameters called via ``using for`` can result in invalid data being read.",
+        "description": "Function calls to internal library functions using the ``using for`` mechanism copied all calldata parameters to memory first and passed them on like that, regardless of whether it was an internal or an external call. Due to that, the called function would receive a memory pointer that is interpreted as a calldata pointer. Since dynamically sized arrays are passed using two stack slots for calldata, but only one for memory, this can lead to stack corruption. An affected library call will consider the JUMPDEST to which it is supposed to return as part of its arguments and will instead jump out to whatever was on the stack before the call.",
+        "introduced": "0.6.9",
+        "fixed": "0.6.10",
+        "severity": "very low"
+    },
+    {
+        "name": "MissingEscapingInFormatting",
+        "summary": "String literals containing double backslash characters passed directly to external or encoding function calls can lead to a different string being used when ABIEncoderV2 is enabled.",
+        "description": "When ABIEncoderV2 is enabled, string literals passed directly to encoding functions or external function calls are stored as strings in the intemediate code. Characters outside the printable range are handled correctly, but backslashes are not escaped in this procedure. This leads to double backslashes being reduced to single backslashes and consequently re-interpreted as escapes potentially resulting in a different string being encoded.",
+        "introduced": "0.5.14",
+        "fixed": "0.6.8",
+        "severity": "very low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
+        "name": "ArraySliceDynamicallyEncodedBaseType",
+        "summary": "Accessing array slices of arrays with dynamically encoded base types (e.g. multi-dimensional arrays) can result in invalid data being read.",
+        "description": "For arrays with dynamically sized base types, index range accesses that use a start expression that is non-zero will result in invalid array slices. Any index access to such array slices will result in data being read from incorrect calldata offsets. Array slices are only supported for dynamic calldata types and all problematic type require ABIEncoderV2 to be enabled.",
+        "introduced": "0.6.0",
+        "fixed": "0.6.8",
+        "severity": "very low",
+        "conditions": {
+            "ABIEncoderV2": true
+        }
+    },
+    {
+        "name": "ImplicitConstructorCallvalueCheck",
+        "summary": "The creation code of a contract that does not define a constructor but has a base that does define a constructor did not revert for calls with non-zero value.",
+        "description": "Starting from Solidity 0.4.5 the creation code of contracts without explicit payable constructor is supposed to contain a callvalue check that results in contract creation reverting, if non-zero value is passed. However, this check was missing in case no explicit constructor was defined in a contract at all, but the contract has a base that does define a constructor. In these cases it is possible to send value in a contract creation transaction or using inline assembly without revert, even though the creation code is supposed to be non-payable.",
+        "introduced": "0.4.5",
+        "fixed": "0.6.8",
+        "severity": "very low"
+    },
+    {
+        "name": "TupleAssignmentMultiStackSlotComponents",
+        "summary": "Tuple assignments with components that occupy several stack slots, i.e. nested tuples, pointers to external functions or references to dynamically sized calldata arrays, can result in invalid values.",
+        "description": "Tuple assignments did not correctly account for tuple components that occupy multiple stack slots in case the number of stack slots differs between left-hand-side and right-hand-side. This can either happen in the presence of nested tuples or if the right-hand-side contains external function pointers or references to dynamic calldata arrays, while the left-hand-side contains an omission.",
+        "introduced": "0.1.6",
+        "fixed": "0.6.6",
+        "severity": "very low"
+    },
+    {
+        "name": "MemoryArrayCreationOverflow",
+        "summary": "The creation of very large memory arrays can result in overlapping memory regions and thus memory corruption.",
+        "description": "No runtime overflow checks were performed for the length of memory arrays during creation. In cases for which the memory size of an array in bytes, i.e. the array length times 32, is larger than 2^256-1, the memory allocation will overflow, potentially resulting in overlapping memory areas. The length of the array is still stored correctly, so copying or iterating over such an array will result in out-of-gas.",
+        "link": "https://solidity.ethereum.org/2020/04/06/memory-creation-overflow-bug/",
+        "introduced": "0.2.0",
+        "fixed": "0.6.5",
+        "severity": "low"
+    },
+    {
         "name": "YulOptimizerRedundantAssignmentBreakContinue",
         "summary": "The Yul optimizer can remove essential assignments to variables declared inside for loops when Yul's continue or break statement is used. You are unlikely to be affected if you do not use inline assembly with for loops and continue and break statements.",
         "description": "The Yul optimizer has a stage that removes assignments to variables that are overwritten again or are not used in all following control-flow branches. This logic incorrectly removes such assignments to variables declared inside a for loop if they can be removed in a control-flow branch that ends with ``break`` or ``continue`` even though they cannot be removed in other control-flow branches. Variables declared outside of the respective for loop are not affected.",
@@ -57,6 +112,7 @@
         "name": "SignedArrayStorageCopy",
         "summary": "Assigning an array of signed integers to a storage array of different type can lead to data corruption in that array.",
         "description": "In two's complement, negative integers have their higher order bits set. In order to fit into a shared storage slot, these have to be set to zero. When a conversion is done at the same time, the bits to set to zero were incorrectly determined from the source and not the target type. This means that such copy operations can lead to incorrect values being stored.",
+        "link": "https://blog.ethereum.org/2019/06/25/solidity-storage-array-bugs/",
         "introduced": "0.4.7",
         "fixed": "0.5.10",
         "severity": "low/medium"
@@ -65,6 +121,7 @@
         "name": "ABIEncoderV2StorageArrayWithMultiSlotElement",
         "summary": "Storage arrays containing structs or other statically-sized arrays are not read properly when directly encoded in external function calls or in abi.encode*.",
         "description": "When storage arrays whose elements occupy more than a single storage slot are directly encoded in external function calls or using abi.encode*, their elements are read in an overlapping manner, i.e. the element pointer is not properly advanced between reads. This is not a problem when the storage data is first copied to a memory variable or if the storage array only contains value types or dynamically-sized arrays.",
+        "link": "https://blog.ethereum.org/2019/06/25/solidity-storage-array-bugs/",
         "introduced": "0.4.16",
         "fixed": "0.5.10",
         "severity": "low",

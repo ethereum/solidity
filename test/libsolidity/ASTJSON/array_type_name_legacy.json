@@ -25,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -40,13 +39,12 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "i",
-            "overrides": null,
             "scope": 4,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "uint256[]",
-            "value": null,
             "visibility": "internal"
           },
           "children":
@@ -54,7 +52,6 @@
             {
               "attributes":
               {
-                "length": null,
                 "type": "uint256[]"
               },
               "children":

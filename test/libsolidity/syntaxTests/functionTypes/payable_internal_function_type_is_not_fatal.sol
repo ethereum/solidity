@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (17-66): Only external function types can be payable.
+// TypeError 7415: (17-66): Only external function types can be payable.

@@ -9,22 +9,15 @@
 object \"C_10\" {
     code {
         mstore(64, 128)
+        if callvalue() { revert(0, 0) }
 
-        // Begin state variable initialization for contract \"C\" (0 variables)
-        // End state variable initialization for contract \"C\".
-
+        constructor_C_10()
 
         codecopy(0, dataoffset(\"C_10_deployed\"), datasize(\"C_10_deployed\"))
+
         return(0, datasize(\"C_10_deployed\"))
 
-
-        function convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32() -> converted {
-            converted := 0x6162636162630000000000000000000000000000000000000000000000000000
-        }
-
-        function fun_f_9()  -> vloc__4 {
-            vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
-            leave
+        function constructor_C_10() {
 
         }
 
@@ -45,7 +38,7 @@ object \"C_10\" {
                     abi_decode_tuple_(4, calldatasize())
                     let ret_0 :=  fun_f_9()
                     let memPos := allocateMemory(0)
-                    let memEnd := abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack(memPos ,  ret_0)
+                    let memEnd := abi_encode_tuple_t_bytes32__to_t_bytes32__fromStack(memPos , ret_0)
                     return(memPos, sub(memEnd, memPos))
                 }
 
@@ -53,7 +46,6 @@ object \"C_10\" {
             }
             if iszero(calldatasize()) {  }
             revert(0, 0)
-
 
             function abi_decode_tuple_(headStart, dataEnd)   {
                 if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
@@ -87,7 +79,10 @@ object \"C_10\" {
                 converted := 0x6162636162630000000000000000000000000000000000000000000000000000
             }
 
-            function fun_f_9()  -> vloc__4 {
+            function fun_f_9() -> vloc__4 {
+                let zero_value_for_type_t_bytes32_1 := zero_value_for_split_t_bytes32()
+                vloc__4 := zero_value_for_type_t_bytes32_1
+
                 vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
                 leave
 
@@ -100,8 +95,14 @@ object \"C_10\" {
 
             }
 
+            function zero_value_for_split_t_bytes32() -> ret {
+                ret := 0
+            }
+
         }
+
     }
+
 }
 
 "}}},"sources":{"A":{"id":0}}}

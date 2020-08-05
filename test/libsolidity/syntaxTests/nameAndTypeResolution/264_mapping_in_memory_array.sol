@@ -4,4 +4,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (94-117): Type cannot live outside storage.
+// TypeError 1164: (94-117): Array containing a (nested) mapping cannot be constructed in memory.

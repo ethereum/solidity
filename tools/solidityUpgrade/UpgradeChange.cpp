@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/UpgradeChange.h>
 
 #include <liblangutil/SourceReferenceExtractor.h>
@@ -27,13 +28,16 @@ using namespace solidity::tools;
 
 void UpgradeChange::apply()
 {
-	m_source.replace(m_location.start, m_location.end - m_location.start, m_patch);
+	m_source.replace(
+		static_cast<size_t>(m_location.start),
+		static_cast<size_t>(m_location.end - m_location.start), m_patch
+	);
 }
 
 void UpgradeChange::log(bool const _shorten) const
 {
 	stringstream os;
-	SourceReferenceFormatterHuman formatter{os, true};
+	SourceReferenceFormatterHuman formatter{os, true, false};
 
 	string start = to_string(m_location.start);
 	string end = to_string(m_location.end);
@@ -56,7 +60,7 @@ void UpgradeChange::log(bool const _shorten) const
 	string line;
 	while (getline(output, line))
 	{
-		os << string(leftpad, ' ');
+		os << string(static_cast<size_t>(leftpad), ' ');
 		AnsiColorized(os, true, {formatting::BOLD, formatting::BLUE}) << "| ";
 		AnsiColorized(os, true, {}) << line << endl;
 	}

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AsmData.h>
@@ -22,7 +23,6 @@
 #include <libsolutil/Visitor.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
 using namespace solidity;

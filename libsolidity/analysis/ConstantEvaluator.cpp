@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -29,6 +30,7 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
+using namespace solidity::langutil;
 
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
@@ -46,6 +48,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 		TypePointer commonType = left->binaryOperatorResult(_operation.getOperator(), right);
 		if (!commonType)
 			m_errorReporter.fatalTypeError(
+				6020_error,
 				_operation.location(),
 				"Operator " +
 				string(TokenTraits::toString(_operation.getOperator())) +
@@ -82,7 +85,7 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	else if (!m_types->count(value.get()))
 	{
 		if (m_depth > 32)
-			m_errorReporter.fatalTypeError(_identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
+			m_errorReporter.fatalTypeError(5210_error, _identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
 		ConstantEvaluator(m_errorReporter, m_depth + 1, m_types).evaluate(*value);
 	}
 

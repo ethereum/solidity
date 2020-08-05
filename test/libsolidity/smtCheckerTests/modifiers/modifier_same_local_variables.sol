@@ -12,4 +12,4 @@ contract C
 	}
 }
 // ----
-// Warning: (121-135): Assertion violation happens here
+// Warning 6328: (121-135): Assertion violation happens here

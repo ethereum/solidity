@@ -26,5 +26,4 @@ contract C
 	}
 }
 // ----
-// Warning: (781-801): Assertion violation happens here
-// Warning: (781-801): Assertion violation happens here
+// Warning 6328: (781-801): Assertion violation happens here

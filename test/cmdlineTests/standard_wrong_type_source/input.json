@@ -6,7 +6,7 @@
 		"B": [1, 2, 3],
 		"C":
 		{
-			"content": "pragma solidity >=0.0; contract C { function f() public pure {} }"
+			"content": "//SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; contract C { function f() public pure {} }"
 		}
 	}
 }

@@ -14,14 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/Common.h>
 #include <test/TestCase.h>
 
+#include <libsolutil/AnsiColorized.h>
+
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 using namespace solidity;
@@ -37,6 +41,11 @@ void TestCase::printSettings(ostream& _stream, const string& _linePrefix, const 
 	_stream << _linePrefix << "// ====" << endl;
 	for (auto const& setting: settings)
 		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
+}
+
+void TestCase::printUpdatedSettings(std::ostream& _stream, std::string const& _linePrefix)
+{
+	printSettings(_stream, _linePrefix);
 }
 
 bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
@@ -58,6 +67,45 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	if (_it == _end || *_it != _c)
 		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
 	++_it;
+}
+
+void TestCase::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
+{
+	stringstream output(_output);
+	string line;
+	while (getline(output, line))
+		if (line.empty())
+			// Avoid trailing spaces.
+			_stream << boost::trim_right_copy(_linePrefix) << endl;
+		else
+			_stream << _linePrefix << line << endl;
+}
+
+void TestCase::printSource(ostream& _stream, string const& _linePrefix, bool const) const
+{
+	printIndented(_stream, m_source, _linePrefix);
+}
+
+void TestCase::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
+{
+	printIndented(_stream, m_obtainedResult, _linePrefix);
+}
+
+TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::string& _linePrefix, bool const _formatted)
+{
+	if (m_expectation != m_obtainedResult)
+	{
+		string nextIndentLevel = _linePrefix + "  ";
+		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
+			<< _linePrefix << "Expected result:" << endl;
+		// TODO could compute a simple diff with highlighted lines
+		printIndented(_stream, m_expectation, nextIndentLevel);
+		util::AnsiColorized(_stream, _formatted, {util::formatting::BOLD, util::formatting::CYAN})
+			<< _linePrefix << "Obtained result:" << endl;
+		printIndented(_stream, m_obtainedResult, nextIndentLevel);
+		return TestResult::Failure;
+	}
+	return TestResult::Success;
 }
 
 EVMVersionRestrictedTestCase::EVMVersionRestrictedTestCase(string const& _filename):

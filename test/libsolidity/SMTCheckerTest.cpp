@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/SMTCheckerTest.h>
 #include <test/Common.h>
@@ -26,17 +27,17 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-SMTCheckerTest::SMTCheckerTest(string const& _filename, langutil::EVMVersion _evmVersion): SyntaxTest(_filename, _evmVersion)
+SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, EVMVersion{})
 {
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
 	if (choice == "any")
-		m_enabledSolvers = smt::SMTSolverChoice::All();
+		m_enabledSolvers = smtutil::SMTSolverChoice::All();
 	else if (choice == "z3")
-		m_enabledSolvers = smt::SMTSolverChoice::Z3();
+		m_enabledSolvers = smtutil::SMTSolverChoice::Z3();
 	else if (choice == "cvc4")
-		m_enabledSolvers = smt::SMTSolverChoice::CVC4();
+		m_enabledSolvers = smtutil::SMTSolverChoice::CVC4();
 	else if (choice == "none")
-		m_enabledSolvers = smt::SMTSolverChoice::None();
+		m_enabledSolvers = smtutil::SMTSolverChoice::None();
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
 

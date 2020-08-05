@@ -5,4 +5,4 @@ contract A {
     }
 }
 // ----
-// DeclarationError: (34-96): Identifier already declared.
+// DeclarationError 2333: (34-96): Identifier already declared.

@@ -25,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -50,13 +49,12 @@
               "attributes":
               {
                 "constant": false,
+                "mutability": "mutable",
                 "name": "x",
-                "overrides": null,
                 "scope": 3,
                 "stateVariable": false,
                 "storageLocation": "default",
                 "type": "uint256",
-                "value": null,
                 "visibility": "internal"
               },
               "children":
@@ -85,13 +83,12 @@
           "attributes":
           {
             "constant": false,
+            "mutability": "mutable",
             "name": "s",
-            "overrides": null,
             "scope": 11,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "struct C.S",
-            "value": null,
             "visibility": "internal"
           },
           "children":
@@ -99,7 +96,6 @@
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "S",
                 "referencedDeclaration": 3,
                 "type": "struct C.S"
@@ -116,7 +112,6 @@
         {
           "attributes":
           {
-            "documentation": null,
             "functionSelector": "ffae15ba",
             "implemented": true,
             "isConstructor": false,
@@ -126,7 +121,6 @@
               null
             ],
             "name": "e",
-            "overrides": null,
             "scope": 11,
             "stateMutability": "pure",
             "virtual": false,
@@ -184,7 +178,7 @@
                         "valueSize": 1
                       }
                     ],
-                    "operations": "{\n    let x := s_offset\n    let y := mul(s_slot, 2)\n}"
+                    "operations": "{\n    let x := s.offset\n    let y := mul(s.slot, 2)\n}"
                   },
                   "children": [],
                   "id": 8,

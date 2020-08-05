@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Creates an independent copy of an AST, renaming identifiers to be unique.
  */
@@ -65,7 +66,7 @@ public:
 class ASTCopier: public ExpressionCopier, public StatementCopier
 {
 public:
-	virtual ~ASTCopier() = default;
+	~ASTCopier() override = default;
 	Expression operator()(Literal const& _literal) override;
 	Expression operator()(Identifier const& _identifier) override;
 	Expression operator()(FunctionCall const&) override;

@@ -142,14 +142,15 @@ The full contract
 
 ::
 
-    pragma solidity >=0.4.24 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract ReceiverPays {
         address owner = msg.sender;
 
         mapping(uint256 => bool) usedNonces;
 
-        constructor() public payable {}
+        constructor() payable {}
 
         function claimPayment(uint256 amount, uint256 nonce, bytes memory signature) public {
             require(!usedNonces[nonce]);
@@ -338,7 +339,8 @@ The full contract
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.
@@ -346,12 +348,11 @@ The full contract
         uint256 public expiration;  // Timeout in case the recipient never closes.
 
         constructor (address payable _recipient, uint256 duration)
-            public
             payable
         {
             sender = msg.sender;
             recipient = _recipient;
-            expiration = now + duration;
+            expiration = block.timestamp + duration;
         }
 
         /// the recipient can close the channel at any time by presenting a
@@ -376,7 +377,7 @@ The full contract
         /// if the timeout is reached without the recipient closing the channel,
         /// then the Ether is released back to the sender.
         function claimTimeout() public {
-            require(now >= expiration);
+            require(block.timestamp >= expiration);
             selfdestruct(sender);
         }
 
@@ -433,7 +434,7 @@ The full contract
 .. note::
   The function ``splitSignature`` does not use all security
   checks. A real implementation should use a more rigorously tested library,
-  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-solidity/blob/master/contracts/ECRecovery.sol>`_ of this code.
+  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol>`_ of this code.
 
 Verifying Payments
 ------------------
@@ -454,7 +455,7 @@ The recipient should verify each message using the following process:
 
 We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
 library to write this verification. The final step can be done a number of ways,
-and we use JavaScript. The following code borrows the `constructMessage` function from the signing **JavaScript code** above:
+and we use JavaScript. The following code borrows the ``constructMessage`` function from the signing **JavaScript code** above:
 
 ::
 

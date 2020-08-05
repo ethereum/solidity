@@ -4,4 +4,4 @@ contract C {
 
 }
 // ----
-// TypeError: (58-102): Function overload clash during conversion to external types for arguments.
+// TypeError 9914: (58-102): Function overload clash during conversion to external types for arguments.

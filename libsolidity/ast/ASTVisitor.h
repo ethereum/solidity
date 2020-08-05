@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -23,9 +24,11 @@
 #pragma once
 
 #include <libsolidity/ast/AST.h>
+
 #include <functional>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace solidity::frontend
 {
@@ -41,7 +44,16 @@ namespace solidity::frontend
 class ASTVisitor
 {
 public:
+	ASTVisitor() = default;
+
+	ASTVisitor(ASTVisitor const&) = delete;
+	ASTVisitor(ASTVisitor&&) = delete;
+
+	ASTVisitor& operator=(ASTVisitor const&) = delete;
+	ASTVisitor& operator=(ASTVisitor&&) = delete;
+
 	virtual ~ASTVisitor() = default;
+
 	virtual bool visit(SourceUnit& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
@@ -158,7 +170,16 @@ protected:
 class ASTConstVisitor
 {
 public:
+	ASTConstVisitor() = default;
+
+	ASTConstVisitor(ASTConstVisitor const&) = delete;
+	ASTConstVisitor(ASTConstVisitor&&) = delete;
+
+	ASTConstVisitor& operator=(ASTConstVisitor const&) = delete;
+	ASTConstVisitor& operator=(ASTConstVisitor&&) = delete;
+
 	virtual ~ASTConstVisitor() = default;
+
 	virtual bool visit(SourceUnit const& _node) { return visitNode(_node); }
 	virtual bool visit(PragmaDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(ImportDirective const& _node) { return visitNode(_node); }
@@ -281,7 +302,7 @@ public:
 	SimpleASTVisitor(
 		std::function<bool(ASTNode const&)> _onVisit,
 		std::function<void(ASTNode const&)> _onEndVisit
-	): m_onVisit(_onVisit), m_onEndVisit(_onEndVisit) {}
+	): m_onVisit(std::move(_onVisit)), m_onEndVisit(std::move(_onEndVisit)) {}
 
 protected:
 	bool visitNode(ASTNode const& _n) override { return m_onVisit ? m_onVisit(_n) : true; }
@@ -311,7 +332,7 @@ public:
 	ASTReduce(
 		std::function<bool(ASTNode const&)> _onNode,
 		std::function<void(ASTNode const&, ASTNode const&)> _onEdge
-	): m_onNode(_onNode), m_onEdge(_onEdge)
+	): m_onNode(std::move(_onNode)), m_onEdge(std::move(_onEdge))
 	{
 	}
 

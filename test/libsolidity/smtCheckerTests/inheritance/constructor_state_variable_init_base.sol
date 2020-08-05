@@ -5,10 +5,10 @@ contract C {
 }
 
 contract D is C {
-	constructor() public {
+	constructor() {
 		assert(x == 2);
 		assert(x == 3);
 	}
 }
 // ----
-// Warning: (124-138): Assertion violation happens here
+// Warning 6328: (117-131): Assertion violation happens here

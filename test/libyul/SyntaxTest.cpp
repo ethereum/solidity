@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -66,6 +67,7 @@ void SyntaxTest::parseAndAnalyze()
 
 		m_errorList.emplace_back(SyntaxTestError{
 			error->typeName(),
+			error->errorId(),
 			errorMessage(*error),
 			name,
 			locationStart,

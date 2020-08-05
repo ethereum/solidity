@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
@@ -25,7 +26,6 @@
 #include <libsolutil/Visitor.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
-#include <boost/algorithm/cxx11/any_of.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -60,8 +60,9 @@ void removeEmptyDefaultFromSwitch(Switch& _switchStmt)
 
 void removeEmptyCasesFromSwitch(Switch& _switchStmt)
 {
-	bool hasDefault = boost::algorithm::any_of(
-		_switchStmt.cases,
+	bool hasDefault = std::any_of(
+		_switchStmt.cases.begin(),
+		_switchStmt.cases.end(),
 		[](Case const& _case) { return !_case.value; }
 	);
 

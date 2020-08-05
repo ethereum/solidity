@@ -14,17 +14,16 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
+#include <liblangutil/Exceptions.h>
+
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
-
-namespace solidity::util
-{
-struct Exception;
-}
 
 namespace solidity::langutil
 {
@@ -58,8 +57,6 @@ struct SourceReference
 	}
 };
 
-struct SourceLocation;
-
 namespace SourceReferenceExtractor
 {
 	struct Message
@@ -67,9 +64,11 @@ namespace SourceReferenceExtractor
 		SourceReference primary;
 		std::string category; // "Error", "Warning", ...
 		std::vector<SourceReference> secondary;
+		std::optional<ErrorId> errorId;
 	};
 
 	Message extract(util::Exception const& _exception, std::string _category);
+	Message extract(Error const& _error);
 	SourceReference extract(SourceLocation const* _location, std::string message = "");
 }
 

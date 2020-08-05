@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning: (161-175): Assertion violation happens here
+// Warning 6328: (161-175): Assertion violation happens here

@@ -9,5 +9,7 @@ contract B is A {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f() -> 7

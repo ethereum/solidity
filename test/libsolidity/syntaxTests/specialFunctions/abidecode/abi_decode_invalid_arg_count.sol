@@ -6,7 +6,7 @@ contract C {
   }
 }
 // ----
-// TypeError: (46-58): This function takes two arguments, but 0 were provided.
-// TypeError: (64-84): This function takes two arguments, but 1 were provided.
-// TypeError: (90-122): This function takes two arguments, but 3 were provided.
-// TypeError: (111-115): The second argument to "abi.decode" has to be a tuple of types.
+// TypeError 5782: (46-58): This function takes two arguments, but 0 were provided.
+// TypeError 5782: (64-84): This function takes two arguments, but 1 were provided.
+// TypeError 5782: (90-122): This function takes two arguments, but 3 were provided.
+// TypeError 6444: (111-115): The second argument to "abi.decode" has to be a tuple of types.

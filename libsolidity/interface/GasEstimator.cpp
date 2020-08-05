@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -54,8 +55,8 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	{
 		solAssert(!!block.startState, "");
 		GasMeter meter(block.startState->copy(), m_evmVersion);
-		auto const end = _items.begin() + block.end;
-		for (auto iter = _items.begin() + block.begin; iter != end; ++iter)
+		auto const end = _items.begin() + static_cast<ptrdiff_t>(block.end);
+		for (auto iter = _items.begin() + static_cast<ptrdiff_t>(block.begin); iter != end; ++iter)
 			particularCosts[iter->location()] += meter.estimateMax(*iter);
 	}
 

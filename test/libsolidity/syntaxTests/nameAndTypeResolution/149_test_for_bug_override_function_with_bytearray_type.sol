@@ -5,4 +5,4 @@ contract Bike is Vehicle {
     function f(bytes calldata) override external returns (uint256 r) {r = 42;}
 }
 // ----
-// Warning: (23-95): Function state mutability can be restricted to pure
+// Warning 2018: (129-203): Function state mutability can be restricted to pure

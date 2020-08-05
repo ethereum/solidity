@@ -1,7 +1,7 @@
 contract C {
     uint256 public initial;
 
-    constructor() public {
+    constructor() {
         initial = double(2);
     }
 
@@ -13,7 +13,8 @@ contract C {
         return double(_arg);
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // runtime(uint256): 3 -> 6
 // initial() -> 4

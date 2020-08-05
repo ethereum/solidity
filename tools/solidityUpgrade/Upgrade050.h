@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <tools/solidityUpgrade/UpgradeChange.h>
@@ -37,7 +38,7 @@ public:
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
-	void endVisit(frontend::ContractDefinition const& _contract);
+	void endVisit(frontend::ContractDefinition const& _contract) override;
 };
 
 /**
@@ -52,7 +53,7 @@ public:
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
 private:
-	void endVisit(frontend::FunctionDefinition const& _function);
+	void endVisit(frontend::FunctionDefinition const& _function) override;
 };
 
 }

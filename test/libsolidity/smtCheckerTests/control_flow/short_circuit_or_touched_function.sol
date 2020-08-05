@@ -16,8 +16,8 @@ contract C
 	}
 }
 // ----
-// Warning: (156-179): Condition is always true.
-// Warning: (190-213): Condition is always true.
-// Warning: (224-243): Condition is always true.
-// Warning: (254-277): Condition is always true.
-// Warning: (288-301): Condition is always false.
+// Warning 6838: (156-179): Condition is always true.
+// Warning 6838: (190-213): Condition is always true.
+// Warning 6838: (224-243): Condition is always true.
+// Warning 6838: (254-277): Condition is always true.
+// Warning 6838: (288-301): Condition is always false.

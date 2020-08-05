@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file SHA3.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -69,25 +70,25 @@ static uint64_t const RC[24] = \
 #define REPEAT6(e) e e e e e e
 #define REPEAT24(e) REPEAT6(e e e e)
 #define REPEAT5(e) e e e e e
-#define FOR5(v, s, e) \
+#define FOR5(type, v, s, e) \
 	v = 0;            \
-	REPEAT5(e; v += s;)
+	REPEAT5(e; v = static_cast<type>(v + s);)
 
 /*** Keccak-f[1600] ***/
 static inline void keccakf(void* state) {
-	uint64_t* a = (uint64_t*)state;
+	auto* a = static_cast<uint64_t*>(state);
 	uint64_t b[5] = {0};
 
 	for (int i = 0; i < 24; i++)
 	{
 		uint8_t x, y;
 		// Theta
-		FOR5(x, 1,
+		FOR5(uint8_t, x, 1,
 			b[x] = 0;
-			FOR5(y, 5,
+			FOR5(uint8_t, y, 5,
 				b[x] ^= a[x + y]; ))
-		FOR5(x, 1,
-			FOR5(y, 5,
+		FOR5(uint8_t, x, 1,
+			FOR5(uint8_t, y, 5,
 				a[y + x] ^= b[(x + 4) % 5] ^ rol(b[(x + 1) % 5], 1); ))
 		// Rho and pi
 		uint64_t t = a[1];
@@ -97,11 +98,12 @@ static inline void keccakf(void* state) {
 				t = b[0];
 				x++; )
 		// Chi
-		FOR5(y,
+		FOR5(uint8_t,
+			y,
 			5,
-			FOR5(x, 1,
+			FOR5(uint8_t, x, 1,
 				b[x] = a[y + x];)
-			FOR5(x, 1,
+			FOR5(uint8_t, x, 1,
 				a[y + x] = b[x] ^ ((~b[(x + 1) % 5]) & b[(x + 2) % 5]); ))
 		// Iota
 		a[0] ^= RC[i];

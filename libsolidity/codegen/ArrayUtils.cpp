@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -56,7 +57,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	bool directCopy = sourceIsStorage && sourceBaseType->isValueType() && *sourceBaseType == *targetBaseType;
 	bool haveByteOffsetSource = !directCopy && sourceIsStorage && sourceBaseType->storageBytes() <= 16;
 	bool haveByteOffsetTarget = !directCopy && targetBaseType->storageBytes() <= 16;
-	unsigned byteOffsetSize = (haveByteOffsetSource ? 1 : 0) + (haveByteOffsetTarget ? 1 : 0);
+	unsigned byteOffsetSize = (haveByteOffsetSource ? 1u : 0u) + (haveByteOffsetTarget ? 1u : 0u);
 
 	// stack: source_ref [source_length] target_ref
 	// store target_ref
@@ -185,6 +186,13 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			{
 				solAssert(byteOffsetSize == 0, "Byte offset for array as base type.");
 				auto const& sourceBaseArrayType = dynamic_cast<ArrayType const&>(*sourceBaseType);
+
+				solUnimplementedAssert(
+					_sourceType.location() != DataLocation::CallData ||
+					!_sourceType.isDynamicallyEncoded() ||
+					!sourceBaseArrayType.isDynamicallySized(),
+					"Copying nested calldata dynamic arrays to storage is not implemented in the old code generator."
+				);
 				_context << Instruction::DUP3;
 				if (sourceBaseArrayType.location() == DataLocation::Memory)
 					_context << Instruction::MLOAD;
@@ -219,8 +227,9 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 				else
 					solUnimplemented("Copying of type " + _sourceType.toString(false) + " to storage not yet supported.");
 				// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset] <source_value>...
-				solAssert(
+				assertThrow(
 					2 + byteOffsetSize + sourceBaseType->sizeOnStack() <= 16,
+					StackTooDeepError,
 					"Stack too deep, try removing local variables."
 				);
 				// fetch target storage reference
@@ -927,11 +936,6 @@ void ArrayUtils::clearStorageLoop(TypePointer _type) const
 			}
 			// stack: end_pos pos
 
-			// jump to and return from the loop to allow for duplicate code removal
-			evmasm::AssemblyItem returnTag = _context.pushNewTag();
-			_context << Instruction::SWAP2 << Instruction::SWAP1;
-
-			// stack: <return tag> end_pos pos
 			evmasm::AssemblyItem loopStart = _context.appendJumpToNew();
 			_context << loopStart;
 			// check for loop condition
@@ -951,11 +955,8 @@ void ArrayUtils::clearStorageLoop(TypePointer _type) const
 			_context.appendJumpTo(loopStart);
 			// cleanup
 			_context << zeroLoopEnd;
-			_context << Instruction::POP << Instruction::SWAP1;
-			// "return"
-			_context << Instruction::JUMP;
+			_context << Instruction::POP;
 
-			_context << returnTag;
 			solAssert(_context.stackHeight() == stackHeightStart - 1, "");
 		}
 	);

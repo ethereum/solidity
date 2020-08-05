@@ -1,7 +1,7 @@
 pragma experimental SMTChecker;
 contract F {
 	uint a;
-	constructor() public {
+	constructor() {
 		uint f = 2;
 		a = f;
 	}
@@ -9,21 +9,21 @@ contract F {
 
 contract E is F {}
 contract D is E {
-	constructor() public {
+	constructor() {
 		uint d = 3;
 		a = d;
 	}
 }
 contract C is D {}
 contract B is C {
-	constructor() public {
+	constructor() {
 		uint b = 4;
 		a = b;
 	}
 }
 
 contract A is B {
-	constructor(uint x) public {
+	constructor(uint x) {
 		uint a1 = 4;
 		uint a2 = 5;
 		assert(a == a1);
@@ -31,5 +31,5 @@ contract A is B {
 	}
 }
 // ----
-// Warning: (317-323): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (385-400): Assertion violation happens here
+// Warning 5667: (296-302): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (357-372): Assertion violation happens here

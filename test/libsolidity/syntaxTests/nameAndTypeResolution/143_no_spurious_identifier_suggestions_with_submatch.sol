@@ -5,4 +5,4 @@ contract c {
      }
 }
 // ----
-// DeclarationError: (78-83): Undeclared identifier.
+// DeclarationError 7576: (78-83): Undeclared identifier.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file Assembly.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -29,6 +30,8 @@
 #include <libevmasm/ConstantOptimiser.h>
 #include <libevmasm/GasMeter.h>
 
+#include <liblangutil/Exceptions.h>
+
 #include <fstream>
 #include <json/json.h>
 
@@ -41,7 +44,7 @@ using namespace solidity::util;
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
 	assertThrow(m_deposit >= 0, AssemblyException, "Stack underflow.");
-	m_deposit += _i.deposit();
+	m_deposit += static_cast<int>(_i.deposit());
 	m_items.emplace_back(_i);
 	if (!m_items.back().location().isValid() && m_currentSourceLocation.isValid())
 		m_items.back().setLocation(m_currentSourceLocation);
@@ -77,10 +80,10 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 		return "";
 
 	string const& source = it->second;
-	if (size_t(_location.start) >= source.size())
+	if (static_cast<size_t>(_location.start) >= source.size())
 		return "";
 
-	string cut = source.substr(_location.start, _location.end - _location.start);
+	string cut = source.substr(static_cast<size_t>(_location.start), static_cast<size_t>(_location.end - _location.start));
 	auto newLinePos = cut.find_first_of("\n");
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
@@ -91,8 +94,8 @@ string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& 
 class Functionalizer
 {
 public:
-	Functionalizer (ostream& _out, string const& _prefix, StringMap const& _sourceCodes):
-		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes)
+	Functionalizer (ostream& _out, string const& _prefix, StringMap const& _sourceCodes, Assembly const& _assembly):
+		m_out(_out), m_prefix(_prefix), m_sourceCodes(_sourceCodes), m_assembly(_assembly)
 	{}
 
 	void feed(AssemblyItem const& _item)
@@ -103,21 +106,23 @@ public:
 			m_location = _item.location();
 			printLocation();
 		}
+
+		string expression = _item.toAssemblyText(m_assembly);
+
 		if (!(
 			_item.canBeFunctional() &&
 			_item.returnValues() <= 1 &&
-			_item.arguments() <= int(m_pending.size())
+			_item.arguments() <= m_pending.size()
 		))
 		{
 			flush();
-			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << _item.toAssemblyText() << endl;
+			m_out << m_prefix << (_item.type() == Tag ? "" : "  ") << expression << endl;
 			return;
 		}
-		string expression = _item.toAssemblyText();
 		if (_item.arguments() > 0)
 		{
 			expression += "(";
-			for (int i = 0; i < _item.arguments(); ++i)
+			for (size_t i = 0; i < _item.arguments(); ++i)
 			{
 				expression += m_pending.back();
 				m_pending.pop_back();
@@ -159,13 +164,14 @@ private:
 	ostream& m_out;
 	string const& m_prefix;
 	StringMap const& m_sourceCodes;
+	Assembly const& m_assembly;
 };
 
 }
 
 void Assembly::assemblyStream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
-	Functionalizer f(_out, _prefix, _sourceCodes);
+	Functionalizer f(_out, _prefix, _sourceCodes, *this);
 
 	for (auto const& i: m_items)
 		f.feed(i);
@@ -225,12 +231,12 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 	Json::Value& collection = root[".code"] = Json::arrayValue;
 	for (AssemblyItem const& i: m_items)
 	{
-		unsigned sourceIndex = unsigned(-1);
+		int sourceIndex = -1;
 		if (i.location().source)
 		{
 			auto iter = _sourceIndices.find(i.location().source->name());
 			if (iter != _sourceIndices.end())
-				sourceIndex = iter->second;
+				sourceIndex = static_cast<int>(iter->second);
 		}
 
 		switch (i.type())
@@ -340,7 +346,7 @@ AssemblyItem Assembly::namedTag(string const& _name)
 {
 	assertThrow(!_name.empty(), AssemblyException, "Empty named tag.");
 	if (!m_namedTags.count(_name))
-		m_namedTags[_name] = size_t(newTag().data());
+		m_namedTags[_name] = static_cast<size_t>(newTag().data());
 	return AssemblyItem{Tag, m_namedTags.at(_name)};
 }
 
@@ -435,13 +441,13 @@ map<u256, u256> Assembly::optimiseInternal(
 		// This only modifies PushTags, we have to run again to actually remove code.
 		if (_settings.runDeduplicate)
 		{
-			BlockDeduplicator dedup{m_items};
-			if (dedup.deduplicate())
+			BlockDeduplicator deduplicator{m_items};
+			if (deduplicator.deduplicate())
 			{
-				for (auto const& replacement: dedup.replacedTags())
+				for (auto const& replacement: deduplicator.replacedTags())
 				{
 					assertThrow(
-						replacement.first <= size_t(-1) && replacement.second <= size_t(-1),
+						replacement.first <= numeric_limits<size_t>::max() && replacement.second <= numeric_limits<size_t>::max(),
 						OptimizerException,
 						"Invalid tag replacement."
 					);
@@ -451,8 +457,8 @@ map<u256, u256> Assembly::optimiseInternal(
 						"Replacement already known."
 					);
 					tagReplacements[replacement.first] = replacement.second;
-					if (_tagsReferencedFromOutside.erase(size_t(replacement.first)))
-						_tagsReferencedFromOutside.insert(size_t(replacement.second));
+					if (_tagsReferencedFromOutside.erase(static_cast<size_t>(replacement.first)))
+						_tagsReferencedFromOutside.insert(static_cast<size_t>(replacement.second));
 				}
 				count++;
 			}
@@ -479,7 +485,7 @@ map<u256, u256> Assembly::optimiseInternal(
 				try
 				{
 					optimisedChunk = eliminator.getOptimizedItems();
-					shouldReplace = (optimisedChunk.size() < size_t(iter - orig));
+					shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
 				}
 				catch (StackTooDeepException const&)
 				{
@@ -521,6 +527,7 @@ map<u256, u256> Assembly::optimiseInternal(
 
 LinkerObject const& Assembly::assemble() const
 {
+	assertThrow(!m_invalid, AssemblyException, "Attempted to assemble invalid Assembly object.");
 	// Return the already assembled object, if present.
 	if (!m_assembledObject.bytecode.empty())
 		return m_assembledObject;
@@ -530,7 +537,7 @@ LinkerObject const& Assembly::assemble() const
 	LinkerObject& ret = m_assembledObject;
 
 	size_t subTagSize = 1;
-	map<u256, vector<size_t>> immutableReferencesBySub;
+	map<u256, pair<string, vector<size_t>>> immutableReferencesBySub;
 	for (auto const& sub: m_subs)
 	{
 		auto const& linkerObject = sub->assemble();
@@ -544,7 +551,7 @@ LinkerObject const& Assembly::assemble() const
 			immutableReferencesBySub = linkerObject.immutableReferences;
 		}
 		for (size_t tagPos: sub->m_tagPositionsInBytecode)
-			if (tagPos != size_t(-1) && tagPos > subTagSize)
+			if (tagPos != numeric_limits<size_t>::max() && tagPos > subTagSize)
 				subTagSize = tagPos;
 	}
 
@@ -554,7 +561,7 @@ LinkerObject const& Assembly::assemble() const
 	for (auto const& i: m_items)
 		if (i.type() == AssignImmutable)
 		{
-			i.setImmutableOccurrences(immutableReferencesBySub[i.data()].size());
+			i.setImmutableOccurrences(immutableReferencesBySub[i.data()].second.size());
 			setsImmutables = true;
 		}
 		else if (i.type() == PushImmutable)
@@ -567,7 +574,7 @@ LinkerObject const& Assembly::assemble() const
 		);
 
 	size_t bytesRequiredForCode = bytesRequired(subTagSize);
-	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, -1);
+	m_tagPositionsInBytecode = vector<size_t>(m_usedTags, numeric_limits<size_t>::max());
 	map<size_t, pair<size_t, size_t>> tagRef;
 	multimap<h256, unsigned> dataRef;
 	multimap<size_t, size_t> subRef;
@@ -586,7 +593,7 @@ LinkerObject const& Assembly::assemble() const
 	for (AssemblyItem const& i: m_items)
 	{
 		// store position of the invalid jump destination
-		if (i.type() != Tag && m_tagPositionsInBytecode[0] == size_t(-1))
+		if (i.type() != Tag && m_tagPositionsInBytecode[0] == numeric_limits<size_t>::max())
 			m_tagPositionsInBytecode[0] = ret.bytecode.size();
 
 		switch (i.type())
@@ -629,15 +636,15 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSub:
-			assertThrow(i.data() <= size_t(-1), AssemblyException, "");
+			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
 			ret.bytecode.push_back(dataRefPush);
-			subRef.insert(make_pair(size_t(i.data()), ret.bytecode.size()));
+			subRef.insert(make_pair(static_cast<size_t>(i.data()), ret.bytecode.size()));
 			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		case PushSubSize:
 		{
-			assertThrow(i.data() <= size_t(-1), AssemblyException, "");
-			auto s = m_subs.at(size_t(i.data()))->assemble().bytecode.size();
+			assertThrow(i.data() <= numeric_limits<size_t>::max(), AssemblyException, "");
+			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			uint8_t b = max<unsigned>(1, util::bytesRequired(s));
 			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
@@ -660,11 +667,12 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case PushImmutable:
 			ret.bytecode.push_back(uint8_t(Instruction::PUSH32));
-			ret.immutableReferences[i.data()].emplace_back(ret.bytecode.size());
+			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
+			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + 32);
 			break;
 		case AssignImmutable:
-			for (auto const& offset: immutableReferencesBySub[i.data()])
+			for (auto const& offset: immutableReferencesBySub[i.data()].second)
 			{
 				ret.bytecode.push_back(uint8_t(Instruction::DUP1));
 				// TODO: should we make use of the constant optimizer methods for pushing the offsets?
@@ -682,10 +690,10 @@ LinkerObject const& Assembly::assemble() const
 			break;
 		case Tag:
 			assertThrow(i.data() != 0, AssemblyException, "Invalid tag position.");
-			assertThrow(i.splitForeignPushTag().first == size_t(-1), AssemblyException, "Foreign tag.");
+			assertThrow(i.splitForeignPushTag().first == numeric_limits<size_t>::max(), AssemblyException, "Foreign tag.");
 			assertThrow(ret.bytecode.size() < 0xffffffffL, AssemblyException, "Tag too large.");
-			assertThrow(m_tagPositionsInBytecode[size_t(i.data())] == size_t(-1), AssemblyException, "Duplicate tag position.");
-			m_tagPositionsInBytecode[size_t(i.data())] = ret.bytecode.size();
+			assertThrow(m_tagPositionsInBytecode[static_cast<size_t>(i.data())] == numeric_limits<size_t>::max(), AssemblyException, "Duplicate tag position.");
+			m_tagPositionsInBytecode[static_cast<size_t>(i.data())] = ret.bytecode.size();
 			ret.bytecode.push_back((uint8_t)Instruction::JUMPDEST);
 			break;
 		default:
@@ -693,42 +701,35 @@ LinkerObject const& Assembly::assemble() const
 		}
 	}
 
-	assertThrow(
-		immutableReferencesBySub.empty(),
-		AssemblyException,
-		"Some immutables were read from but never assigned."
-	);
-
+	if (!immutableReferencesBySub.empty())
+		throw
+			langutil::Error(1284_error, langutil::Error::Type::CodeGenerationError) <<
+			util::errinfo_comment("Some immutables were read from but never assigned, possibly because of optimization.");
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(uint8_t(Instruction::INVALID));
 
-	for (size_t i = 0; i < m_subs.size(); ++i)
+	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
-		auto references = subRef.equal_range(i);
-		if (references.first == references.second)
-			continue;
-		for (auto ref = references.first; ref != references.second; ++ref)
-		{
-			bytesRef r(ret.bytecode.data() + ref->second, bytesPerDataRef);
-			toBigEndian(ret.bytecode.size(), r);
-		}
-		ret.append(m_subs[i]->assemble());
+		bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
+		toBigEndian(ret.bytecode.size(), r);
+		ret.append(subAssemblyById(subIdPath)->assemble());
 	}
+
 	for (auto const& i: tagRef)
 	{
 		size_t subId;
 		size_t tagId;
 		tie(subId, tagId) = i.second;
-		assertThrow(subId == size_t(-1) || subId < m_subs.size(), AssemblyException, "Invalid sub id");
-		std::vector<size_t> const& tagPositions =
-			subId == size_t(-1) ?
+		assertThrow(subId == numeric_limits<size_t>::max() || subId < m_subs.size(), AssemblyException, "Invalid sub id");
+		vector<size_t> const& tagPositions =
+			subId == numeric_limits<size_t>::max() ?
 			m_tagPositionsInBytecode :
 			m_subs[subId]->m_tagPositionsInBytecode;
 		assertThrow(tagId < tagPositions.size(), AssemblyException, "Reference to non-existing tag.");
 		size_t pos = tagPositions[tagId];
-		assertThrow(pos != size_t(-1), AssemblyException, "Reference to tag without position.");
+		assertThrow(pos != numeric_limits<size_t>::max(), AssemblyException, "Reference to tag without position.");
 		assertThrow(util::bytesRequired(pos) <= bytesPerTag, AssemblyException, "Tag too large for reserved space.");
 		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		toBigEndian(pos, r);
@@ -754,4 +755,52 @@ LinkerObject const& Assembly::assemble() const
 		toBigEndian(ret.bytecode.size(), r);
 	}
 	return ret;
+}
+
+vector<size_t> Assembly::decodeSubPath(size_t _subObjectId) const
+{
+	if (_subObjectId < m_subs.size())
+		return {_subObjectId};
+
+	auto subIdPathIt = find_if(
+		m_subPaths.begin(),
+		m_subPaths.end(),
+		[_subObjectId](auto const& subId) { return subId.second == _subObjectId; }
+	);
+
+	assertThrow(subIdPathIt != m_subPaths.end(), AssemblyException, "");
+	return subIdPathIt->first;
+}
+
+size_t Assembly::encodeSubPath(vector<size_t> const& _subPath)
+{
+	assertThrow(!_subPath.empty(), AssemblyException, "");
+	if (_subPath.size() == 1)
+	{
+		assertThrow(_subPath[0] < m_subs.size(), AssemblyException, "");
+		return _subPath[0];
+	}
+
+	if (m_subPaths.find(_subPath) == m_subPaths.end())
+	{
+		size_t objectId = numeric_limits<size_t>::max() - m_subPaths.size();
+		assertThrow(objectId >= m_subs.size(), AssemblyException, "");
+		m_subPaths[_subPath] = objectId;
+	}
+
+	return m_subPaths[_subPath];
+}
+
+Assembly const* Assembly::subAssemblyById(size_t _subId) const
+{
+	vector<size_t> subIds = decodeSubPath(_subId);
+	Assembly const* currentAssembly = this;
+	for (size_t currentSubId: subIds)
+	{
+		currentAssembly = currentAssembly->m_subs.at(currentSubId).get();
+		assertThrow(currentAssembly, AssemblyException, "");
+	}
+
+	assertThrow(currentAssembly != this, AssemblyException, "");
+	return currentAssembly;
 }

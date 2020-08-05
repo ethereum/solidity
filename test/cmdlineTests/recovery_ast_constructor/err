@@ -1,13 +1,13 @@
 Error: Expected primary expression.
- --> recovery_ast_constructor/input.sol:5:27:
+ --> recovery_ast_constructor/input.sol:6:27:
   |
-5 |     balances[tx.origin] = ; // missing RHS.
+6 |     balances[tx.origin] = ; // missing RHS.
   |                           ^
 
 Warning: Recovered in Statement at ';'.
- --> recovery_ast_constructor/input.sol:5:27:
+ --> recovery_ast_constructor/input.sol:6:27:
   |
-5 |     balances[tx.origin] = ; // missing RHS.
+6 |     balances[tx.origin] = ; // missing RHS.
   |                           ^
 
 

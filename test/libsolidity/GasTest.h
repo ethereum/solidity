@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -47,7 +48,6 @@ private:
 	bool m_optimise = false;
 	bool m_optimiseYul = false;
 	size_t m_optimiseRuns = 200;
-	std::string m_source;
 	std::map<std::string, std::map<std::string, std::string>> m_expectations;
 };
 

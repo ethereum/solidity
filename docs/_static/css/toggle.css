@@ -1,0 +1,77 @@
+input[type=checkbox] {
+    visibility: hidden;
+    height: 0;
+    width: 0;
+    margin: 0;
+}
+
+.rst-versions .rst-current-version {
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rst-versions .rst-current-version .fa-book,
+.rst-versions .rst-current-version .fa-v,
+.rst-versions .rst-current-version .fa-caret-down {
+    height: 24px;
+    line-height: 24px;
+    vertical-align: middle;
+}
+
+.rst-versions .rst-current-version .fa-element {
+    width: 80px;
+    text-align: center;
+}
+
+.rst-versions .rst-current-version .fa-book {
+    text-align: left;
+}
+
+.rst-versions .rst-current-version .fa-v {
+    color: #27AE60;
+    text-align: right;
+}
+
+label {
+    margin: 0 auto;
+    display: inline-block;
+    justify-content: center;
+    align-items: right;
+    border-radius: 100px;
+    position: relative;
+    cursor: pointer;
+    text-indent: -9999px;
+    width: 50px;
+    height: 21px;
+    background: #000;
+}
+
+label:after {
+    border-radius: 50%;
+    position: absolute;
+    content: '';
+    background: #fff;
+    width: 15px;
+    height: 15px;
+    top: 3px;
+    left: 3px;
+    transition: ease-in-out 200ms;
+}
+
+input:checked+label {
+    background: #3a7ca8;
+}
+
+input:checked+label:after {
+    left: calc(100% - 5px);
+    transform: translateX(-100%);
+}
+
+html.transition,
+html.transition *,
+html.transition *:before,
+html.transition *:after {
+    transition: ease-in-out 200ms !important;
+    transition-delay: 0 !important;
+}

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -30,8 +31,11 @@
 #include <liblangutil/SemVerHandler.h>
 #include <liblangutil/SourceLocation.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <cctype>
 #include <vector>
+#include <regex>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -79,6 +83,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		m_recursionDepth = 0;
 		m_scanner = _scanner;
 		ASTNodeFactory nodeFactory(*this);
+
 		vector<ASTPointer<ASTNode>> nodes;
 		while (m_scanner->currentToken() != Token::EOS)
 		{
@@ -103,11 +108,11 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseEnumDefinition());
 				break;
 			default:
-				fatalParserError(string("Expected pragma, import directive or contract/interface/library/struct/enum definition."));
+				fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum definition.");
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
-		return nodeFactory.createNode<SourceUnit>(nodes);
+		return nodeFactory.createNode<SourceUnit>(findLicenseString(nodes), nodes);
 	}
 	catch (FatalError const&)
 	{
@@ -128,9 +133,10 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 		// so we don't need to report anything here.
 		if (!m_parserErrorRecovery)
 			m_errorReporter.fatalParserError(
+				5333_error,
 				_location,
 				"Source file requires different compiler version (current compiler is " +
-				string(VersionString) + " - note that nightly builds are considered to be "
+				string(VersionString) + ") - note that nightly builds are considered to be "
 				"strictly less than the released version"
 			);
 }
@@ -162,7 +168,7 @@ ASTPointer<PragmaDirective> Parser::parsePragmaDirective()
 	{
 		Token token = m_scanner->currentToken();
 		if (token == Token::Illegal)
-			parserError("Token incompatible with Solidity parser as part of pragma directive.");
+			parserError(6281_error, "Token incompatible with Solidity parser as part of pragma directive.");
 		else
 		{
 			string literal = m_scanner->currentLiteral();
@@ -240,18 +246,18 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 			unitAlias = expectIdentifierToken();
 		}
 		else
-			fatalParserError("Expected string literal (path), \"*\" or alias list.");
+			fatalParserError(9478_error, "Expected string literal (path), \"*\" or alias list.");
 		// "from" is not a keyword but parsed as an identifier because of backwards
 		// compatibility and because it is a really common word.
 		if (m_scanner->currentToken() != Token::Identifier || m_scanner->currentLiteral() != "from")
-			fatalParserError("Expected \"from\".");
+			fatalParserError(8208_error, "Expected \"from\".");
 		m_scanner->next();
 		if (m_scanner->currentToken() != Token::StringLiteral)
-			fatalParserError("Expected import path.");
+			fatalParserError(6845_error, "Expected import path.");
 		path = getLiteralAndAdvance();
 	}
 	if (path->empty())
-		fatalParserError("Import path cannot be empty.");
+		fatalParserError(6326_error, "Import path cannot be empty.");
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
@@ -278,7 +284,7 @@ std::pair<ContractKind, bool> Parser::parseContractKind()
 		kind = ContractKind::Library;
 		break;
 	default:
-		parserError("Expected keyword \"contract\", \"interface\" or \"library\".");
+		parserError(3515_error, "Expected keyword \"contract\", \"interface\" or \"library\".");
 		return std::make_pair(ContractKind::Contract, abstract);
 	}
 	m_scanner->next();
@@ -343,7 +349,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			else if (currentTokenValue == Token::Using)
 				subNodes.push_back(parseUsingDirective());
 			else
-				fatalParserError(string("Function, variable, struct or modifier declaration expected."));
+				fatalParserError(9182_error, "Function, variable, struct or modifier declaration expected.");
 		}
 	}
 	catch (FatalError const&)
@@ -459,13 +465,6 @@ StateMutability Parser::parseStateMutability()
 		case Token::Pure:
 			stateMutability = StateMutability::Pure;
 			break;
-		case Token::Constant:
-			stateMutability = StateMutability::View;
-			parserError(
-				"The state mutability modifier \"constant\" was removed in version 0.5.0. "
-				"Use \"view\" or \"pure\" instead."
-			);
-			break;
 		default:
 			solAssert(false, "Invalid state mutability specifier.");
 	}
@@ -494,11 +493,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 				// Detect this and return early.
 				if (_isStateVariable && (result.visibility == Visibility::External || result.visibility == Visibility::Internal))
 					break;
-				parserError(string(
+				parserError(
+					9439_error,
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(result.visibility) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -508,11 +508,12 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		{
 			if (result.stateMutability != StateMutability::NonPayable)
 			{
-				parserError(string(
+				parserError(
+					9680_error,
 					"State mutability already specified as \"" +
 					stateMutabilityToString(result.stateMutability) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -521,14 +522,14 @@ Parser::FunctionHeaderParserResult Parser::parseFunctionHeader(bool _isStateVari
 		else if (!_isStateVariable && token == Token::Override)
 		{
 			if (result.overrides)
-				parserError("Override already specified.");
+				parserError(1827_error, "Override already specified.");
 
 			result.overrides = parseOverrideSpecifier();
 		}
 		else if (!_isStateVariable && token == Token::Virtual)
 		{
 			if (result.isVirtual)
-				parserError("Virtual already specified.");
+				parserError(6879_error, "Virtual already specified.");
 
 			result.isVirtual = true;
 			m_scanner->next();
@@ -576,9 +577,9 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 				"the \"function\" keyword to define it."
 			};
 			if (m_scanner->currentToken() == Token::Constructor)
-				parserError(message);
+				parserError(3323_error, message);
 			else
-				parserWarning(message);
+				parserWarning(3445_error, message);
 			m_scanner->next();
 		}
 		else
@@ -595,13 +596,13 @@ ASTPointer<ASTNode> Parser::parseFunctionDefinition()
 
 	ASTPointer<Block> block;
 	nodeFactory.markEndPosition();
-	if (m_scanner->currentToken() != Token::Semicolon)
+	if (m_scanner->currentToken() == Token::Semicolon)
+		m_scanner->next();
+	else
 	{
 		block = parseBlock();
 		nodeFactory.setEndPositionFromNode(block);
 	}
-	else
-		m_scanner->next(); // just consume the ';'
 	return nodeFactory.createNode<FunctionDefinition>(
 		name,
 		header.visibility,
@@ -659,10 +660,10 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			break;
 		expectToken(Token::Comma);
 		if (m_scanner->currentToken() != Token::Identifier)
-			fatalParserError(string("Expected identifier after ','"));
+			fatalParserError(1612_error, "Expected identifier after ','");
 	}
 	if (members.empty())
-		parserError({"enum with no members is not allowed."});
+		parserError(3147_error, "enum with no members is not allowed.");
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
@@ -677,25 +678,24 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
-	ASTPointer<TypeName> type;
-	if (_lookAheadArrayType)
-		type = _lookAheadArrayType;
-	else
-	{
-		type = parseTypeName(_options.allowVar);
-		if (type != nullptr)
-			nodeFactory.setEndPositionFromNode(type);
-	}
+
+	ASTPointer<StructuredDocumentation> const documentation = parseStructuredDocumentation();
+	ASTPointer<TypeName> type = _lookAheadArrayType ? _lookAheadArrayType : parseTypeName();
+	nodeFactory.setEndPositionFromNode(type);
+
+	if (!_options.isStateVariable && documentation != nullptr)
+		parserError(2837_error, "Only state variables can have a docstring.");
 
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
+			2915_error,
 			"Expected a state variable declaration. If you intended this as a fallback function "
 			"or a function to handle plain ether transactions, use the \"fallback\" keyword "
 			"or the \"receive\" keyword instead."
 		);
 
 	bool isIndexed = false;
-	VariableDeclaration::Constantness constantness = VariableDeclaration::Constantness::Mutable;
+	VariableDeclaration::Mutability mutability = VariableDeclaration::Mutability::Mutable;
 	ASTPointer<OverrideSpecifier> overrides = nullptr;
 	Visibility visibility(Visibility::Default);
 	VariableDeclaration::Location location = VariableDeclaration::Location::Unspecified;
@@ -709,11 +709,12 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			nodeFactory.markEndPosition();
 			if (visibility != Visibility::Default)
 			{
-				parserError(string(
+				parserError(
+					4110_error,
 					"Visibility already specified as \"" +
 					Declaration::visibilityToString(visibility) +
 					"\"."
-				));
+				);
 				m_scanner->next();
 			}
 			else
@@ -722,7 +723,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		else if (_options.isStateVariable && token == Token::Override)
 		{
 			if (overrides)
-				parserError("Override already specified.");
+				parserError(9125_error, "Override already specified.");
 
 			overrides = parseOverrideSpecifier();
 		}
@@ -732,22 +733,21 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 				isIndexed = true;
 			else if (token == Token::Constant || token == Token::Immutable)
 			{
-				if (constantness != VariableDeclaration::Constantness::Mutable)
+				if (mutability != VariableDeclaration::Mutability::Mutable)
 					parserError(
-						string("Constantness already set to ") +
-						(constantness == VariableDeclaration::Constantness::Constant ? "\"constant\"" : "\"immutable\"")
+						3109_error,
+						string("Mutability already set to ") +
+						(mutability == VariableDeclaration::Mutability::Constant ? "\"constant\"" : "\"immutable\"")
 					);
 				else if (token == Token::Constant)
-					constantness = VariableDeclaration::Constantness::Constant;
+					mutability = VariableDeclaration::Mutability::Constant;
 				else if (token == Token::Immutable)
-					constantness = VariableDeclaration::Constantness::Immutable;
+					mutability = VariableDeclaration::Mutability::Immutable;
 			}
 			else if (_options.allowLocationSpecifier && TokenTraits::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Unspecified)
-					parserError(string("Location already specified."));
-				else if (!type)
-					parserError(string("Location specifier needs explicit type name."));
+					parserError(3548_error, "Location already specified.");
 				else
 				{
 					switch (token)
@@ -774,10 +774,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 
 	if (_options.allowEmptyName && m_scanner->currentToken() != Token::Identifier)
-	{
 		identifier = make_shared<ASTString>("");
-		solAssert(!_options.allowVar, ""); // allowEmptyName && allowVar makes no sense
-	}
 	else
 	{
 		nodeFactory.markEndPosition();
@@ -798,9 +795,10 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		identifier,
 		value,
 		visibility,
+		documentation,
 		_options.isStateVariable,
 		isIndexed,
-		constantness,
+		mutability,
 		overrides,
 		location
 	);
@@ -836,13 +834,13 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 		if (m_scanner->currentToken() == Token::Override)
 		{
 			if (overrides)
-				parserError("Override already specified.");
+				parserError(9102_error, "Override already specified.");
 			overrides = parseOverrideSpecifier();
 		}
 		else if (m_scanner->currentToken() == Token::Virtual)
 		{
 			if (isVirtual)
-				parserError("Virtual already specified.");
+				parserError(2662_error, "Virtual already specified.");
 
 			isVirtual = true;
 			m_scanner->next();
@@ -851,9 +849,16 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 			break;
 	}
 
+	ASTPointer<Block> block;
+	nodeFactory.markEndPosition();
+	if (m_scanner->currentToken() != Token::Semicolon)
+	{
+		block = parseBlock();
+		nodeFactory.setEndPositionFromNode(block);
+	}
+	else
+		m_scanner->next(); // just consume the ';'
 
-	ASTPointer<Block> block = parseBlock();
-	nodeFactory.setEndPositionFromNode(block);
 	return nodeFactory.createNode<ModifierDefinition>(name, documentation, parameters, isVirtual, overrides, block);
 }
 
@@ -893,7 +898,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	if (m_scanner->currentToken() == Token::Mul)
 		m_scanner->next();
 	else
-		typeName = parseTypeName(false);
+		typeName = parseTypeName();
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<UsingForDirective>(library, typeName);
@@ -956,7 +961,7 @@ ASTPointer<TypeName> Parser::parseTypeNameSuffix(ASTPointer<TypeName> type, ASTN
 	return type;
 }
 
-ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
+ASTPointer<TypeName> Parser::parseTypeName()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
@@ -974,7 +979,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		auto stateMutability = elemTypeName.token() == Token::Address
 			? optional<StateMutability>{StateMutability::NonPayable}
 			: nullopt;
-		if (TokenTraits::isStateMutabilitySpecifier(m_scanner->currentToken(), false))
+		if (TokenTraits::isStateMutabilitySpecifier(m_scanner->currentToken()))
 		{
 			if (elemTypeName.token() == Token::Address)
 			{
@@ -983,17 +988,11 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 			}
 			else
 			{
-				parserError("State mutability can only be specified for address types.");
+				parserError(9106_error, "State mutability can only be specified for address types.");
 				m_scanner->next();
 			}
 		}
 		type = nodeFactory.createNode<ElementaryTypeName>(elemTypeName, stateMutability);
-	}
-	else if (token == Token::Var)
-	{
-		if (!_allowVar)
-			parserError(string("Expected explicit type name."));
-		m_scanner->next();
 	}
 	else if (token == Token::Function)
 		type = parseFunctionType();
@@ -1002,11 +1001,12 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Identifier)
 		type = parseUserDefinedTypeName();
 	else
-		fatalParserError(string("Expected type name"));
+		fatalParserError(3546_error, "Expected type name");
 
-	if (type)
-		// Parse "[...]" postfixes for arrays.
-		type = parseTypeNameSuffix(type, nodeFactory);
+	solAssert(type, "");
+	// Parse "[...]" postfixes for arrays.
+	type = parseTypeNameSuffix(type, nodeFactory);
+
 	return type;
 }
 
@@ -1045,10 +1045,9 @@ ASTPointer<Mapping> Parser::parseMapping()
 		m_scanner->next();
 	}
 	else
-		fatalParserError(string("Expected elementary type name or identifier for mapping key type"));
+		fatalParserError(1005_error, "Expected elementary type name or identifier for mapping key type");
 	expectToken(Token::Arrow);
-	bool const allowVar = false;
-	ASTPointer<TypeName> valueType = parseTypeName(allowVar);
+	ASTPointer<TypeName> valueType = parseTypeName();
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);
 	return nodeFactory.createNode<Mapping>(keyType, valueType);
@@ -1071,7 +1070,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 		while (m_scanner->currentToken() != Token::RParen)
 		{
 			if (m_scanner->currentToken() == Token::Comma && m_scanner->peekNextToken() == Token::RParen)
-				fatalParserError("Unexpected trailing comma in parameter list.");
+				fatalParserError(7591_error, "Unexpected trailing comma in parameter list.");
 			expectToken(Token::Comma);
 			parameters.push_back(parseVariableDeclaration(options));
 		}
@@ -1206,7 +1205,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	if (m_scanner->currentToken() == Token::StringLiteral)
 	{
 		if (m_scanner->currentLiteral() != "evmasm")
-			fatalParserError("Only \"evmasm\" supported.");
+			fatalParserError(4531_error, "Only \"evmasm\" supported.");
 		// This can be used in the future to set the dialect.
 		m_scanner->next();
 	}
@@ -1369,7 +1368,7 @@ ASTPointer<EmitStatement> Parser::parseEmitStatement(ASTPointer<ASTString> const
 	ASTNodeFactory eventCallNodeFactory(*this);
 
 	if (m_scanner->currentToken() != Token::Identifier)
-		fatalParserError("Expected event name or path.");
+		fatalParserError(5620_error, "Expected event name or path.");
 
 	IndexAccessedPath iap;
 	while (true)
@@ -1529,53 +1528,14 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 	ASTNodeFactory nodeFactory(*this);
 	if (_lookAheadArrayType)
 		nodeFactory.setLocation(_lookAheadArrayType->location());
+
+	VarDeclParserOptions options;
+	options.allowLocationSpecifier = true;
 	vector<ASTPointer<VariableDeclaration>> variables;
+	variables.emplace_back(parseVariableDeclaration(options, _lookAheadArrayType));
+	nodeFactory.setEndPositionFromNode(variables.back());
+
 	ASTPointer<Expression> value;
-	if (
-		!_lookAheadArrayType &&
-		m_scanner->currentToken() == Token::Var &&
-		m_scanner->peekNextToken() == Token::LParen
-	)
-	{
-		// Parse `var (a, b, ,, c) = ...` into a single VariableDeclarationStatement with multiple variables.
-		m_scanner->next();
-		m_scanner->next();
-		if (m_scanner->currentToken() != Token::RParen)
-			while (true)
-			{
-				ASTPointer<VariableDeclaration> var;
-				if (
-					m_scanner->currentToken() != Token::Comma &&
-					m_scanner->currentToken() != Token::RParen
-				)
-				{
-					ASTNodeFactory varDeclNodeFactory(*this);
-					varDeclNodeFactory.markEndPosition();
-					ASTPointer<ASTString> name = expectIdentifierToken();
-					var = varDeclNodeFactory.createNode<VariableDeclaration>(
-						ASTPointer<TypeName>(),
-						name,
-						ASTPointer<Expression>(),
-						Visibility::Default
-					);
-				}
-				variables.push_back(var);
-				if (m_scanner->currentToken() == Token::RParen)
-					break;
-				else
-					expectToken(Token::Comma);
-			}
-		nodeFactory.markEndPosition();
-		m_scanner->next();
-	}
-	else
-	{
-		VarDeclParserOptions options;
-		options.allowVar = true;
-		options.allowLocationSpecifier = true;
-		variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
-		nodeFactory.setEndPositionFromNode(variables.back());
-	}
 	if (m_scanner->currentToken() == Token::Assign)
 	{
 		m_scanner->next();
@@ -1689,11 +1649,8 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	else if (m_scanner->currentToken() == Token::New)
 	{
 		expectToken(Token::New);
-		ASTPointer<TypeName> typeName(parseTypeName(false));
-		if (typeName)
-			nodeFactory.setEndPositionFromNode(typeName);
-		else
-			nodeFactory.markEndPosition();
+		ASTPointer<TypeName> typeName(parseTypeName());
+		nodeFactory.setEndPositionFromNode(typeName);
 		expression = nodeFactory.createNode<NewExpression>(typeName);
 	}
 	else if (m_scanner->currentToken() == Token::Payable)
@@ -1825,6 +1782,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		}
 		break;
 	case Token::StringLiteral:
+	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
 	{
 		string literal = m_scanner->currentLiteral();
@@ -1837,7 +1795,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		nodeFactory.markEndPosition();
 		m_scanner->next();
 		if (m_scanner->currentToken() == Token::Illegal)
-			fatalParserError(to_string(m_scanner->currentError()));
+			fatalParserError(5428_error, to_string(m_scanner->currentError()));
 		expression = nodeFactory.createNode<Literal>(token, make_shared<ASTString>(literal));
 		break;
 	}
@@ -1868,7 +1826,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
 				else if (isArray)
-					parserError("Expected expression (inline array elements cannot be omitted).");
+					parserError(4799_error, "Expected expression (inline array elements cannot be omitted).");
 				else
 					components.push_back(ASTPointer<Expression>());
 
@@ -1883,7 +1841,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		break;
 	}
 	case Token::Illegal:
-		fatalParserError(to_string(m_scanner->currentError()));
+		fatalParserError(8936_error, to_string(m_scanner->currentError()));
 		break;
 	default:
 		if (TokenTraits::isElementaryTypeName(token))
@@ -1899,7 +1857,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			m_scanner->next();
 		}
 		else
-			fatalParserError(string("Expected primary expression."));
+			fatalParserError(6933_error, "Expected primary expression.");
 		break;
 	}
 	return expression;
@@ -1957,7 +1915,7 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 			m_scanner->peekNextToken() == Token::RBrace
 		)
 		{
-			parserError("Unexpected trailing comma.");
+			parserError(2074_error, "Unexpected trailing comma.");
 			m_scanner->next();
 		}
 
@@ -1965,6 +1923,60 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	}
 
 	return ret;
+}
+
+optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)
+{
+	// We circumvent the scanner here, because it skips non-docstring comments.
+	static regex const licenseRegex("SPDX-License-Identifier:\\s*([a-zA-Z0-9 ()+.-]+)");
+
+	// Search inside all parts of the source not covered by parsed nodes.
+	// This will leave e.g. "global comments".
+	string const& source = m_scanner->source();
+	using iter = decltype(source.begin());
+	vector<pair<iter, iter>> sequencesToSearch;
+	sequencesToSearch.emplace_back(source.begin(), source.end());
+	for (ASTPointer<ASTNode> const& node: _nodes)
+		if (node->location().hasText())
+		{
+			sequencesToSearch.back().second = source.begin() + node->location().start;
+			sequencesToSearch.emplace_back(source.begin() + node->location().end, source.end());
+		}
+
+	vector<string> matches;
+	for (auto const& [start, end]: sequencesToSearch)
+	{
+		smatch match;
+		if (regex_search(start, end, match, licenseRegex))
+		{
+			string license{boost::trim_copy(string(match[1]))};
+			if (!license.empty())
+				matches.emplace_back(std::move(license));
+		}
+	}
+
+	if (matches.size() == 1)
+		return matches.front();
+	else if (matches.empty())
+		parserWarning(
+			1878_error,
+			{-1, -1, m_scanner->charStream()},
+			"SPDX license identifier not provided in source file. "
+			"Before publishing, consider adding a comment containing "
+			"\"SPDX-License-Identifier: <SPDX-License>\" to each source file. "
+			"Use \"SPDX-License-Identifier: UNLICENSED\" for non-open-source code. "
+			"Please see https://spdx.org for more information."
+		);
+	else
+		parserError(
+			3716_error,
+			{-1, -1, m_scanner->charStream()},
+			"Multiple SPDX license identifiers found in source file. "
+			"Use \"AND\" or \"OR\" to combine multiple licenses. "
+			"Please see https://spdx.org for more information."
+		);
+
+	return {};
 }
 
 Parser::LookAheadInfo Parser::peekStatementType() const
@@ -1979,7 +1991,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	Token token(m_scanner->currentToken());
 	bool mightBeTypeName = (TokenTraits::isElementaryTypeName(token) || token == Token::Identifier);
 
-	if (token == Token::Mapping || token == Token::Function || token == Token::Var)
+	if (token == Token::Mapping || token == Token::Function)
 		return LookAheadInfo::VariableDeclaration;
 	if (mightBeTypeName)
 	{
@@ -1988,7 +2000,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 		// kind of statement. This means, for example, that we do not allow type expressions of the form
 		// ``address payable;``.
 		// If we want to change this in the future, we need to consider another scanner token here.
-		if (TokenTraits::isElementaryTypeName(token) && TokenTraits::isStateMutabilitySpecifier(next, false))
+		if (TokenTraits::isElementaryTypeName(token) && TokenTraits::isStateMutabilitySpecifier(next))
 			return LookAheadInfo::VariableDeclaration;
 		if (next == Token::Identifier || TokenTraits::isLocationSpecifier(next))
 			return LookAheadInfo::VariableDeclaration;
@@ -2076,7 +2088,7 @@ ASTPointer<TypeName> Parser::typeNameFromIndexAccessStructure(Parser::IndexAcces
 	for (auto const& lengthExpression: _iap.indices)
 	{
 		if (lengthExpression.end)
-			parserError(lengthExpression.location, "Expected array length expression.");
+			parserError(5464_error, lengthExpression.location, "Expected array length expression.");
 		nodeFactory.setLocation(lengthExpression.location);
 		type = nodeFactory.createNode<ArrayTypeName>(type, lengthExpression.start);
 	}

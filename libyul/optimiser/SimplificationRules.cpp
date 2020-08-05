@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Module for applying replacement rules against Expressions.
  */
@@ -36,7 +37,7 @@ using namespace solidity::evmasm;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 
-SimplificationRule<yul::Pattern> const* SimplificationRules::findFirstMatch(
+SimplificationRules::Rule const* SimplificationRules::findFirstMatch(
 	Expression const& _expr,
 	Dialect const& _dialect,
 	map<YulString, AssignedValue> const& _ssaValues
@@ -46,7 +47,16 @@ SimplificationRule<yul::Pattern> const* SimplificationRules::findFirstMatch(
 	if (!instruction)
 		return nullptr;
 
-	static SimplificationRules rules;
+	static std::map<std::optional<EVMVersion>, std::unique_ptr<SimplificationRules>> evmRules;
+
+	std::optional<EVMVersion> version;
+	if (yul::EVMDialect const* evmDialect = dynamic_cast<yul::EVMDialect const*>(&_dialect))
+		version = evmDialect->evmVersion();
+
+	if (!evmRules[version])
+		evmRules[version] = std::make_unique<SimplificationRules>(version);
+
+	SimplificationRules& rules = *evmRules[version];
 	assertThrow(rules.isInitialized(), OptimizerException, "Rule list not properly initialized.");
 
 	for (auto const& rule: rules.m_rules[uint8_t(instruction->first)])
@@ -76,18 +86,18 @@ std::optional<std::pair<evmasm::Instruction, vector<Expression> const*>>
 	return {};
 }
 
-void SimplificationRules::addRules(vector<SimplificationRule<Pattern>> const& _rules)
+void SimplificationRules::addRules(std::vector<Rule> const& _rules)
 {
 	for (auto const& r: _rules)
 		addRule(r);
 }
 
-void SimplificationRules::addRule(SimplificationRule<Pattern> const& _rule)
+void SimplificationRules::addRule(Rule const& _rule)
 {
 	m_rules[uint8_t(_rule.pattern.instruction())].push_back(_rule);
 }
 
-SimplificationRules::SimplificationRules()
+SimplificationRules::SimplificationRules(std::optional<langutil::EVMVersion> _evmVersion)
 {
 	// Multiple occurrences of one of these inside one rule must match the same equivalence class.
 	// Constants.
@@ -107,7 +117,7 @@ SimplificationRules::SimplificationRules()
 	Y.setMatchGroup(6, m_matchGroups);
 	Z.setMatchGroup(7, m_matchGroups);
 
-	addRules(simplificationRuleList(A, B, C, W, X, Y, Z));
+	addRules(simplificationRuleList(_evmVersion, A, B, C, W, X, Y, Z));
 	assertThrow(isInitialized(), OptimizerException, "Rule list not properly initialized.");
 }
 

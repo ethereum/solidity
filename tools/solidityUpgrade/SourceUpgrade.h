@@ -1,4 +1,4 @@
-﻿/*
+/*
 	This file is part of solidity.
 
 	solidity is free software: you can redistribute it and/or modify
@@ -14,11 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <tools/solidityUpgrade/UpgradeChange.h>
 #include <tools/solidityUpgrade/Upgrade050.h>
 #include <tools/solidityUpgrade/Upgrade060.h>
+#include <tools/solidityUpgrade/Upgrade070.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -56,7 +58,10 @@ private:
 		VisibilitySpecifier,
 		AbstractContract,
 		OverridingFunction,
-		VirtualFunction
+		VirtualFunction,
+		DotSyntax,
+		NowKeyword,
+		ConstrutorVisibility
 	};
 
 	/// Upgrade suite that hosts all available modules.
@@ -78,6 +83,14 @@ private:
 				OverridingFunction{m_changes}.analyze(_sourceUnit);
 			if (isActivated(Module::VirtualFunction))
 				VirtualFunction{m_changes}.analyze(_sourceUnit);
+
+			/// Solidity 0.7.0
+			if (isActivated(Module::DotSyntax))
+				DotSyntax{m_changes}.analyze(_sourceUnit);
+			if (isActivated(Module::NowKeyword))
+				NowKeyword{m_changes}.analyze(_sourceUnit);
+			if (isActivated(Module::ConstrutorVisibility))
+				ConstructorVisibility{m_changes}.analyze(_sourceUnit);
 		}
 
 		void activateModule(Module _module) { m_modules.insert(_module); }
@@ -96,7 +109,10 @@ private:
 			Module::VisibilitySpecifier,
 			Module::AbstractContract,
 			Module::OverridingFunction,
-			Module::VirtualFunction
+			Module::VirtualFunction,
+			Module::DotSyntax,
+			Module::NowKeyword,
+			Module::ConstrutorVisibility
 		};
 	};
 

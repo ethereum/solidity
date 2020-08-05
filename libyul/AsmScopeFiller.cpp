@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Module responsible for registering identifiers inside their scopes.
  */
@@ -28,8 +29,6 @@
 #include <liblangutil/ErrorReporter.h>
 
 #include <libsolutil/CommonData.h>
-
-#include <boost/range/adaptor/reversed.hpp>
 
 #include <memory>
 #include <functional>
@@ -141,6 +140,7 @@ bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const&
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
+			1395_error,
 			_location,
 			"Variable name " + _name.name.str() + " already taken in this scope."
 		);
@@ -161,6 +161,7 @@ bool ScopeFiller::registerFunction(FunctionDefinition const& _funDef)
 	{
 		//@TODO secondary location
 		m_errorReporter.declarationError(
+			6052_error,
 			_funDef.location,
 			"Function name " + _funDef.name.str() + " already taken in this scope."
 		);

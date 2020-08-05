@@ -13,7 +13,7 @@ contract C {
 
         bytes32 slot = keccak256(abi.encode(uint(1), uint(0)));
         assembly {
-            _data_slot := slot
+            _data.slot := slot
         }
     }
 

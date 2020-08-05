@@ -4,7 +4,7 @@
 	{
 		"":
 		{
-			"content": "pragma solidity >=0.0; import {A} from \".\";"
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; import {A} from \".\";"
 		}
 	}
 }

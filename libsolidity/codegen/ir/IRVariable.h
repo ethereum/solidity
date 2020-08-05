@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #pragma once
 
 #include <optional>
@@ -29,8 +30,7 @@ class Expression;
 
 /**
  * An IRVariable refers to a set of yul variables that correspond to the stack layout of a Solidity variable or expression
- * of a specific S
- * olidity type. If the Solidity type occupies a single stack slot, the IRVariable refers to a single yul variable.
+ * of a specific Solidity type. If the Solidity type occupies a single stack slot, the IRVariable refers to a single yul variable.
  * Otherwise the set of yul variables it refers to is (recursively) determined by  @see ``Type::stackItems()``.
  * For example, an IRVariable referring to a dynamically sized calldata array will consist of two parts named
  * ``offset`` and ``length``, whereas an IRVariable referring to a statically sized calldata type, a storage reference
@@ -70,10 +70,11 @@ public:
 	/// The returned IRVariable is itself typed with the type of the stack slot as defined
 	/// in ``m_type.stackItems()`` and may again occupy multiple stack slots.
 	IRVariable part(std::string const& _slot) const;
-private:
+
 	/// @returns a vector containing the names of the stack slots of the variable.
 	std::vector<std::string> stackSlots() const;
 
+private:
 	/// @returns a name consisting of the base name appended with an underscore and @æ _suffix,
 	/// unless @a _suffix is empty, in which case the base name itself is returned.
 	std::string suffixedName(std::string const& _suffix) const;

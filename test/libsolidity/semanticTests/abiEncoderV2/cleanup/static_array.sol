@@ -15,6 +15,7 @@ contract C {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >homestead
 // ----
 // f(uint256,uint256): 1, 1 -> 0x20, 0x44, hex"78b86ac6", 1, 1, hex"00000000000000000000000000000000000000000000000000000000"

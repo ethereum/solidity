@@ -345,8 +345,8 @@ struct evmc_result
     /**
      * The amount of gas left after the execution.
      *
-     *  If evmc_result::code is not ::EVMC_SUCCESS nor ::EVMC_REVERT
-     *  the value MUST be 0.
+     * If evmc_result::status_code is neither ::EVMC_SUCCESS nor ::EVMC_REVERT
+     * the value MUST be 0.
      */
     int64_t gas_left;
 

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -51,7 +52,7 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 		);
 		m_stream << "^";
 		if (_ref.endColumn > _ref.startColumn + 2)
-			m_stream << string(_ref.endColumn - _ref.startColumn - 2, '-');
+			m_stream << string(static_cast<size_t>(_ref.endColumn - _ref.startColumn - 2), '-');
 		if (_ref.endColumn > _ref.startColumn + 1)
 			m_stream << "^";
 		m_stream << endl;
@@ -60,7 +61,7 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 		m_stream <<
 			_ref.text <<
 			endl <<
-			string(_ref.startColumn, ' ') <<
+			string(static_cast<size_t>(_ref.startColumn), ' ') <<
 			"^ (Relevant source part starts here and spans across multiple lines)." <<
 			endl;
 }
@@ -80,10 +81,7 @@ void SourceReferenceFormatter::printExceptionInformation(util::Exception const& 
 
 void SourceReferenceFormatter::printErrorInformation(Error const& _error)
 {
-	printExceptionInformation(
-		_error,
-		(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
-	);
+	printExceptionInformation(SourceReferenceExtractor::extract(_error));
 }
 
 void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Component that can generate various useful Yul functions.
  */
@@ -22,6 +23,7 @@
 
 #include <liblangutil/EVMVersion.h>
 
+#include <libsolidity/ast/Types.h>
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 
 #include <libsolidity/interface/DebugSettings.h>
@@ -37,6 +39,7 @@ class Type;
 class ArrayType;
 class MappingType;
 class IntegerType;
+class StructType;
 
 /**
  * Component that can generate various useful Yul functions.
@@ -79,6 +82,14 @@ public:
 	std::string shiftLeftFunctionDynamic();
 	std::string shiftRightFunction(size_t _numBits);
 	std::string shiftRightFunctionDynamic();
+	std::string shiftRightSignedFunctionDynamic();
+
+	/// @returns the name of a function that performs a left shift and subsequent cleanup
+	/// and, if needed, prior cleanup.
+	/// If the amount to shift by is signed, a check for negativeness is performed.
+	/// signature: (value, amountToShift) -> result
+	std::string typedShiftLeftFunction(Type const& _type, Type const& _amountType);
+	std::string typedShiftRightFunction(Type const& _type, Type const& _amountType);
 
 	/// @returns the name of a function which replaces the
 	/// _numBytes bytes starting at byte position _shiftBytes (counted from the least significant
@@ -154,6 +165,7 @@ public:
 	/// to store an array in memory given its length (internally encoded, not ABI encoded).
 	/// The function reverts for too large lengths.
 	std::string arrayAllocationSizeFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that converts a storage slot number
 	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata pointer
 	/// for the data position of an array which is stored in that slot / memory area / calldata area.
@@ -201,7 +213,7 @@ public:
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
 	std::string readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes);
 
-	/// @returns a function that reads a value type from memory.
+	/// @returns a function that reads a value type from memory. Performs cleanup.
 	/// signature: (addr) -> value
 	std::string readFromMemory(Type const& _type);
 	/// @returns a function that reads a value type from calldata.
@@ -250,10 +262,45 @@ public:
 	/// Return value: pointer
 	std::string allocationFunction();
 
+	/// @returns the name of the function that allocates temporary memory with predefined size
+	/// Return value: pointer
+	std::string allocationTemporaryMemoryFunction();
+
+	/// @returns the name of the function that releases previously allocated temporary memory
+	std::string releaseTemporaryMemoryFunction();
+
+	/// @returns the name of a function that zeroes an array.
+	/// signature: (dataStart, dataSizeInBytes) ->
+	std::string zeroMemoryArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that zeroes a chunk of memory.
+	/// signature: (dataStart, dataSizeInBytes) ->
+	std::string zeroMemoryFunction(Type const& _type);
+
+	/// @returns the name of a function that zeroes an array
+	/// where the base does not have simple zero value in memory.
+	/// signature: (dataStart, dataSizeInBytes) ->
+	std::string zeroComplexMemoryArrayFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that allocates a memory array.
 	/// For dynamic arrays it adds space for length and stores it.
+	/// The contents of the data area are unspecified.
 	/// signature: (length) -> memPtr
 	std::string allocateMemoryArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that allocates and zeroes a memory array.
+	/// For dynamic arrays it adds space for length and stores it.
+	/// signature: (length) -> memPtr
+	std::string allocateAndInitializeMemoryArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that allocates a memory struct (no
+	/// initialization takes place).
+	/// signature: () -> memPtr
+	std::string allocateMemoryStructFunction(StructType const& _type);
+
+	/// @returns the name of a function that allocates and zeroes a memory struct.
+	/// signature: () -> memPtr
+	std::string allocateAndInitializeMemoryStructFunction(StructType const& _type);
 
 	/// @returns the name of the function that converts a value of type @a _from
 	/// to a value of type @a _to. The resulting vale is guaranteed to be in range
@@ -288,8 +335,9 @@ public:
 	std::string negateNumberCheckedFunction(Type const& _type);
 
 	/// @returns the name of a function that returns the zero value for the
-	/// provided type
-	std::string zeroValueFunction(Type const& _type);
+	/// provided type.
+	/// @param _splitFunctionTypes if false, returns two zeroes
+	std::string zeroValueFunction(Type const& _type, bool _splitFunctionTypes = true);
 
 	/// @returns the name of a function that will set the given storage item to
 	/// zero
@@ -302,10 +350,39 @@ public:
 	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	/// Returns the name of a function that decodes an error message.
+	/// signature: () -> arrayPtr
+	///
+	/// Returns a newly allocated `bytes memory` array containing the decoded error message
+	/// or 0 on failure.
+	std::string tryDecodeErrorMessageFunction();
+
+
+	/// Returns a function name that returns a newly allocated `bytes` array that contains the return data.
+	///
+	/// If returndatacopy() is not supported by the underlying target, a empty array will be returned instead.
+	std::string extractReturndataFunction();
+
+	/// @returns function name that returns constructor arguments copied to memory
+	/// signature: () -> arguments
+	std::string copyConstructorArgumentsToMemoryFunction(
+		ContractDefinition const& _contract,
+		std::string const& _creationObjectName
+	);
+
 private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
+
+	/// @returns function name that extracts and returns byte array length
+	/// signature: (data) -> length
+	std::string extractByteArrayLengthFunction();
+
+	/// @returns the name of a function that reduces the size of a storage byte array by one element
+	/// signature: (byteArray)
+	std::string storageByteArrayPopFunction(ArrayType const& _type);
 
 	std::string readFromMemoryOrCalldata(Type const& _type, bool _fromCalldata);
 

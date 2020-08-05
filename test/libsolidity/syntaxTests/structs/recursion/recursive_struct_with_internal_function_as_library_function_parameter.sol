@@ -8,4 +8,4 @@ library Test {
     function f(MyStructName storage s) public {}
 }
 // ----
-// TypeError: (142-164): Internal type is not allowed for public or external functions.
+// TypeError 4103: (142-164): Internal type is not allowed for public or external functions.

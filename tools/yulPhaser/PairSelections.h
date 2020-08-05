@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Contains an abstract base class representing a selection of pairs of elements from a collection
  * and its concrete implementations.
@@ -67,6 +68,28 @@ public:
 
 private:
 	double m_selectionSize;
+};
+
+
+/**
+ * A selection that goes over all elements in a container, for each one independently decides
+ * whether to select it or not and then randomly combines those elements into pairs. If the number
+ * of elements is odd, randomly decides whether to take one more or exclude one.
+ *
+ * Each element has the same chance of being selected and can be selected at most once.
+ * The number of selected elements is random and can be different with each call to
+ * @a materialise().
+ */
+class PairsFromRandomSubset: public PairSelection
+{
+public:
+	explicit PairsFromRandomSubset(double _selectionChance):
+		m_selectionChance(_selectionChance) {}
+
+	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
+
+private:
+	double m_selectionChance;
 };
 
 /**

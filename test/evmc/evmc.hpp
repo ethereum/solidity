@@ -25,6 +25,33 @@ struct address : evmc_address
     /// Initializes bytes to zeros if not other @p init value provided.
     constexpr address(evmc_address init = {}) noexcept : evmc_address{init} {}
 
+    /// Converting constructor from unsigned integer value.
+    ///
+    /// This constructor assigns the @p v value to the last 8 bytes [12:19]
+    /// in big-endian order.
+    constexpr explicit address(uint64_t v) noexcept
+      : evmc_address{{0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      static_cast<uint8_t>(v >> 56),
+                      static_cast<uint8_t>(v >> 48),
+                      static_cast<uint8_t>(v >> 40),
+                      static_cast<uint8_t>(v >> 32),
+                      static_cast<uint8_t>(v >> 24),
+                      static_cast<uint8_t>(v >> 16),
+                      static_cast<uint8_t>(v >> 8),
+                      static_cast<uint8_t>(v >> 0)}}
+    {}
+
     /// Explicit operator converting to bool.
     constexpr inline explicit operator bool() const noexcept;
 };
@@ -39,6 +66,45 @@ struct bytes32 : evmc_bytes32
     /// Initializes bytes to zeros if not other @p init value provided.
     constexpr bytes32(evmc_bytes32 init = {}) noexcept : evmc_bytes32{init} {}
 
+    /// Converting constructor from unsigned integer value.
+    ///
+    /// This constructor assigns the @p v value to the last 8 bytes [24:31]
+    /// in big-endian order.
+    constexpr explicit bytes32(uint64_t v) noexcept
+      : evmc_bytes32{{0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      0,
+                      static_cast<uint8_t>(v >> 56),
+                      static_cast<uint8_t>(v >> 48),
+                      static_cast<uint8_t>(v >> 40),
+                      static_cast<uint8_t>(v >> 32),
+                      static_cast<uint8_t>(v >> 24),
+                      static_cast<uint8_t>(v >> 16),
+                      static_cast<uint8_t>(v >> 8),
+                      static_cast<uint8_t>(v >> 0)}}
+    {}
+
     /// Explicit operator converting to bool.
     constexpr inline explicit operator bool() const noexcept;
 };
@@ -50,7 +116,6 @@ using uint256be = bytes32;
 /// Loads 64 bits / 8 bytes of data from the given @p bytes array in big-endian order.
 constexpr inline uint64_t load64be(const uint8_t* bytes) noexcept
 {
-    // TODO: Report bug in clang incorrectly optimizing this with AVX2 enabled.
     return (uint64_t{bytes[0]} << 56) | (uint64_t{bytes[1]} << 48) | (uint64_t{bytes[2]} << 40) |
            (uint64_t{bytes[3]} << 32) | (uint64_t{bytes[4]} << 24) | (uint64_t{bytes[5]} << 16) |
            (uint64_t{bytes[6]} << 8) | uint64_t{bytes[7]};
@@ -76,7 +141,7 @@ constexpr inline uint64_t fnv1a_by64(uint64_t h, uint64_t x) noexcept
 }  // namespace fnv
 
 
-/// The "equal" comparison operator for the evmc::address type.
+/// The "equal to" comparison operator for the evmc::address type.
 constexpr bool operator==(const address& a, const address& b) noexcept
 {
     // TODO: Report bug in clang keeping unnecessary bswap.
@@ -85,23 +150,41 @@ constexpr bool operator==(const address& a, const address& b) noexcept
            load32be(&a.bytes[16]) == load32be(&b.bytes[16]);
 }
 
-/// The "not equal" comparison operator for the evmc::address type.
+/// The "not equal to" comparison operator for the evmc::address type.
 constexpr bool operator!=(const address& a, const address& b) noexcept
 {
     return !(a == b);
 }
 
-/// The "less" comparison operator for the evmc::address type.
+/// The "less than" comparison operator for the evmc::address type.
 constexpr bool operator<(const address& a, const address& b) noexcept
 {
     return load64be(&a.bytes[0]) < load64be(&b.bytes[0]) ||
            (load64be(&a.bytes[0]) == load64be(&b.bytes[0]) &&
-            load64be(&a.bytes[8]) < load64be(&b.bytes[8])) ||
-           (load64be(&a.bytes[8]) == load64be(&b.bytes[8]) &&
-            load32be(&a.bytes[16]) < load32be(&b.bytes[16]));
+            (load64be(&a.bytes[8]) < load64be(&b.bytes[8]) ||
+             (load64be(&a.bytes[8]) == load64be(&b.bytes[8]) &&
+              load32be(&a.bytes[16]) < load32be(&b.bytes[16]))));
 }
 
-/// The "equal" comparison operator for the evmc::bytes32 type.
+/// The "greater than" comparison operator for the evmc::address type.
+constexpr bool operator>(const address& a, const address& b) noexcept
+{
+    return b < a;
+}
+
+/// The "less than or equal to" comparison operator for the evmc::address type.
+constexpr bool operator<=(const address& a, const address& b) noexcept
+{
+    return !(b < a);
+}
+
+/// The "greater than or equal to" comparison operator for the evmc::address type.
+constexpr bool operator>=(const address& a, const address& b) noexcept
+{
+    return !(a < b);
+}
+
+/// The "equal to" comparison operator for the evmc::bytes32 type.
 constexpr bool operator==(const bytes32& a, const bytes32& b) noexcept
 {
     return load64be(&a.bytes[0]) == load64be(&b.bytes[0]) &&
@@ -110,22 +193,40 @@ constexpr bool operator==(const bytes32& a, const bytes32& b) noexcept
            load64be(&a.bytes[24]) == load64be(&b.bytes[24]);
 }
 
-/// The "not equal" comparison operator for the evmc::bytes32 type.
+/// The "not equal to" comparison operator for the evmc::bytes32 type.
 constexpr bool operator!=(const bytes32& a, const bytes32& b) noexcept
 {
     return !(a == b);
 }
 
-/// The "less" comparison operator for the evmc::bytes32 type.
+/// The "less than" comparison operator for the evmc::bytes32 type.
 constexpr bool operator<(const bytes32& a, const bytes32& b) noexcept
 {
     return load64be(&a.bytes[0]) < load64be(&b.bytes[0]) ||
            (load64be(&a.bytes[0]) == load64be(&b.bytes[0]) &&
-            load64be(&a.bytes[8]) < load64be(&b.bytes[8])) ||
-           (load64be(&a.bytes[8]) == load64be(&b.bytes[8]) &&
-            load64be(&a.bytes[16]) < load64be(&b.bytes[16])) ||
-           (load64be(&a.bytes[16]) == load64be(&b.bytes[16]) &&
-            load64be(&a.bytes[24]) < load64be(&b.bytes[24]));
+            (load64be(&a.bytes[8]) < load64be(&b.bytes[8]) ||
+             (load64be(&a.bytes[8]) == load64be(&b.bytes[8]) &&
+              (load64be(&a.bytes[16]) < load64be(&b.bytes[16]) ||
+               (load64be(&a.bytes[16]) == load64be(&b.bytes[16]) &&
+                load64be(&a.bytes[24]) < load64be(&b.bytes[24]))))));
+}
+
+/// The "greater than" comparison operator for the evmc::bytes32 type.
+constexpr bool operator>(const bytes32& a, const bytes32& b) noexcept
+{
+    return b < a;
+}
+
+/// The "less than or equal to" comparison operator for the evmc::bytes32 type.
+constexpr bool operator<=(const bytes32& a, const bytes32& b) noexcept
+{
+    return !(b < a);
+}
+
+/// The "greater than or equal to" comparison operator for the evmc::bytes32 type.
+constexpr bool operator>=(const bytes32& a, const bytes32& b) noexcept
+{
+    return !(a < b);
 }
 
 /// Checks if the given address is the zero address.
@@ -154,107 +255,71 @@ namespace literals
 {
 namespace internal
 {
-template <typename T, T... Ints>
-struct integer_sequence
+constexpr size_t length(const char* s) noexcept
 {
-};
-
-template <uint8_t... Bytes>
-using byte_sequence = integer_sequence<uint8_t, Bytes...>;
-
-template <char... Chars>
-using char_sequence = integer_sequence<char, Chars...>;
-
-
-template <typename, typename>
-struct concatenate;
-
-template <uint8_t... Bytes1, uint8_t... Bytes2>
-struct concatenate<byte_sequence<Bytes1...>, byte_sequence<Bytes2...>>
-{
-    using type = byte_sequence<Bytes1..., Bytes2...>;
-};
-
-template <uint8_t D>
-constexpr uint8_t parse_hex_digit() noexcept
-{
-    static_assert((D >= '0' && D <= '9') || (D >= 'a' && D <= 'f') || (D >= 'A' && D <= 'F'),
-                  "literal must be hexadecimal integer");
-    return static_cast<uint8_t>(
-        (D >= '0' && D <= '9') ? D - '0' : (D >= 'a' && D <= 'f') ? D - 'a' + 10 : D - 'A' + 10);
+    return (*s != '\0') ? length(s + 1) + 1 : 0;
 }
 
-
-template <typename>
-struct parse_digits;
-
-template <uint8_t Digit1, uint8_t Digit2>
-struct parse_digits<byte_sequence<Digit1, Digit2>>
+constexpr int from_hex(char c) noexcept
 {
-    using type = byte_sequence<static_cast<uint8_t>(parse_hex_digit<Digit1>() << 4) |
-                               parse_hex_digit<Digit2>()>;
-};
+    return (c >= 'a' && c <= 'f') ? c - ('a' - 10) :
+                                    (c >= 'A' && c <= 'F') ? c - ('A' - 10) : c - '0';
+}
 
-template <uint8_t Digit1, uint8_t Digit2, uint8_t... Rest>
-struct parse_digits<byte_sequence<Digit1, Digit2, Rest...>>
+constexpr uint8_t byte(const char* s, size_t i) noexcept
 {
-    using type = typename concatenate<typename parse_digits<byte_sequence<Digit1, Digit2>>::type,
-                                      typename parse_digits<byte_sequence<Rest...>>::type>::type;
-};
+    return static_cast<uint8_t>((from_hex(s[2 * i]) << 4) | from_hex(s[2 * i + 1]));
+}
 
+template <typename T>
+T from_hex(const char*) noexcept;
 
-template <typename, typename>
-struct parse_literal;
-
-template <typename T, char Prefix1, char Prefix2, char... Literal>
-struct parse_literal<T, char_sequence<Prefix1, Prefix2, Literal...>>
+template <>
+constexpr bytes32 from_hex<bytes32>(const char* s) noexcept
 {
-    static_assert(Prefix1 == '0' && Prefix2 == 'x', "literal must be in hexadecimal notation");
-    static_assert(sizeof...(Literal) == sizeof(T) * 2, "literal must match the result type size");
+    return {
+        {{byte(s, 0),  byte(s, 1),  byte(s, 2),  byte(s, 3),  byte(s, 4),  byte(s, 5),  byte(s, 6),
+          byte(s, 7),  byte(s, 8),  byte(s, 9),  byte(s, 10), byte(s, 11), byte(s, 12), byte(s, 13),
+          byte(s, 14), byte(s, 15), byte(s, 16), byte(s, 17), byte(s, 18), byte(s, 19), byte(s, 20),
+          byte(s, 21), byte(s, 22), byte(s, 23), byte(s, 24), byte(s, 25), byte(s, 26), byte(s, 27),
+          byte(s, 28), byte(s, 29), byte(s, 30), byte(s, 31)}}};
+}
 
-    template <uint8_t... Bytes>
-    static constexpr T create_from(byte_sequence<Bytes...>) noexcept
-    {
-        return T{{{Bytes...}}};
-    }
-
-    static constexpr T get() noexcept
-    {
-        return create_from(typename parse_digits<byte_sequence<Literal...>>::type{});
-    }
-};
-
-template <typename T, char Digit>
-struct parse_literal<T, char_sequence<Digit>>
+template <>
+constexpr address from_hex<address>(const char* s) noexcept
 {
-    static_assert(Digit == '0', "only 0 is allowed as a single digit literal");
-    static constexpr T get() noexcept { return {}; }
-};
+    return {
+        {{byte(s, 0),  byte(s, 1),  byte(s, 2),  byte(s, 3),  byte(s, 4),  byte(s, 5),  byte(s, 6),
+          byte(s, 7),  byte(s, 8),  byte(s, 9),  byte(s, 10), byte(s, 11), byte(s, 12), byte(s, 13),
+          byte(s, 14), byte(s, 15), byte(s, 16), byte(s, 17), byte(s, 18), byte(s, 19)}}};
+}
 
-template <typename T, char... Literal>
-constexpr T parse() noexcept
+template <typename T>
+constexpr T from_literal(const char* s)
 {
-    return parse_literal<T, char_sequence<Literal...>>::get();
+    return (s[0] == '0' && s[1] == '\0') ?
+               T{} :
+               !(s[0] == '0' && s[1] == 'x') ?
+               throw "literal must be in hexadecimal notation" :
+               (length(s + 2) != sizeof(T) * 2) ? throw "literal must match the result type size" :
+                                                  from_hex<T>(s + 2);
 }
 }  // namespace internal
 
 /// Literal for evmc::address.
-template <char... Literal>
-constexpr address operator"" _address() noexcept
+constexpr address operator""_address(const char* s) noexcept
 {
-    return internal::parse<address, Literal...>();
+    return internal::from_literal<address>(s);
 }
 
 /// Literal for evmc::bytes32.
-template <char... Literal>
-constexpr bytes32 operator"" _bytes32() noexcept
+constexpr bytes32 operator""_bytes32(const char* s) noexcept
 {
-    return internal::parse<bytes32, Literal...>();
+    return internal::from_literal<bytes32>(s);
 }
 }  // namespace literals
 
 using namespace literals;
-
 
 /// Alias for evmc_make_result().
 constexpr auto make_result = evmc_make_result;
@@ -625,6 +690,13 @@ public:
         return result{
             m_instance->execute(m_instance, nullptr, nullptr, rev, &msg, code, code_size)};
     }
+
+    /// Returns the pointer to C EVMC struct representing the VM.
+    ///
+    /// Gives access to the C EVMC VM struct to allow advanced interaction with the VM not supported
+    /// by the C++ interface. Use as the last resort.
+    /// This object still owns the VM after returning the pointer. The returned pointer MAY be null.
+    evmc_vm* get_raw_pointer() const noexcept { return m_instance; }
 
 private:
     evmc_vm* m_instance = nullptr;

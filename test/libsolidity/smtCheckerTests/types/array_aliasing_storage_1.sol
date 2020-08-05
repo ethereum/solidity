@@ -44,13 +44,8 @@ contract C
 	}
 }
 // ----
-// Warning: (468-485): Assertion violation happens here
-// Warning: (532-554): Assertion violation happens here
-// Warning: (606-633): Assertion violation happens here
-// Warning: (774-796): Assertion violation happens here
-// Warning: (936-962): Assertion violation happens here
-// Warning: (468-485): Assertion violation happens here
-// Warning: (532-554): Assertion violation happens here
-// Warning: (606-633): Assertion violation happens here
-// Warning: (774-796): Assertion violation happens here
-// Warning: (936-962): Assertion violation happens here
+// Warning 6328: (468-485): Assertion violation happens here.
+// Warning 6328: (532-554): Assertion violation happens here.
+// Warning 6328: (606-633): Assertion violation happens here.
+// Warning 6328: (774-796): Assertion violation happens here.
+// Warning 6328: (936-962): Assertion violation happens here.

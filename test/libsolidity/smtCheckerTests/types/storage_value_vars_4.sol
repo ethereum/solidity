@@ -7,4 +7,4 @@ contract C
     uint c;
 }
 // ----
-// Warning: (84-97): Assertion violation happens here
+// Warning 6328: (84-97): Assertion violation happens here

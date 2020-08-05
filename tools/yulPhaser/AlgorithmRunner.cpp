@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
 
@@ -187,16 +188,16 @@ Population AlgorithmRunner::randomiseDuplicates(
 	if (_population.individuals().size() == 0)
 		return _population;
 
-	vector<Chromosome> chromosomes{_population.individuals()[0].chromosome};
+	vector<Individual> individuals{_population.individuals()[0]};
 	size_t duplicateCount = 0;
 	for (size_t i = 1; i < _population.individuals().size(); ++i)
 		if (_population.individuals()[i].chromosome == _population.individuals()[i - 1].chromosome)
 			++duplicateCount;
 		else
-			chromosomes.push_back(_population.individuals()[i].chromosome);
+			individuals.push_back(_population.individuals()[i]);
 
 	return (
-		Population(_population.fitnessMetric(), chromosomes) +
+		Population(_population.fitnessMetric(), individuals) +
 		Population::makeRandom(_population.fitnessMetric(), duplicateCount, _minChromosomeLength, _maxChromosomeLength)
 	);
 }

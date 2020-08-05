@@ -5,5 +5,8 @@ contract C {
         f = abi.decode(msg.data[4 + 32 : 4 + 32 + 32], (uint256));
     }
 }
+
+// ====
+// compileViaYul: also
 // ----
 // f(uint256,uint256): 42, 23 -> 42, 23, 42, 23

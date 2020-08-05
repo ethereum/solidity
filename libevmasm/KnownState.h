@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file KnownState.h
  * @author Christian <c@ethdev.com>
@@ -23,6 +24,7 @@
 
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <map>
 #include <set>
@@ -83,7 +85,7 @@ public:
 
 	explicit KnownState(
 		std::shared_ptr<ExpressionClasses> _expressionClasses = std::make_shared<ExpressionClasses>()
-	): m_expressionClasses(_expressionClasses)
+	): m_expressionClasses(std::move(_expressionClasses))
 	{
 	}
 

@@ -9,7 +9,7 @@ contract A {
 }
 
 contract C is A {
-	constructor() public {
+	constructor() {
 		assert(x == 1);
 		++x;
 		f();
@@ -17,10 +17,8 @@ contract C is A {
 	}
 }
 // ----
-// Warning: (82-96): Assertion violation happens here
-// Warning: (100-103): Underflow (resulting value less than 0) happens here
-// Warning: (82-96): Assertion violation happens here
-// Warning: (100-103): Underflow (resulting value less than 0) happens here
-// Warning: (155-169): Assertion violation happens here
-// Warning: (82-96): Assertion violation happens here
-// Warning: (187-201): Assertion violation happens here
+// Warning 6328: (82-96): Assertion violation happens here
+// Warning 6328: (148-162): Assertion violation happens here
+// Warning 6328: (180-194): Assertion violation happens here
+// Warning 4144: (100-103): Underflow (resulting value less than 0) happens here
+// Warning 4144: (100-103): Underflow (resulting value less than 0) happens here

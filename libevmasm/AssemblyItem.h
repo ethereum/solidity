@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file AssemblyItem.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -133,10 +134,10 @@ public:
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
-	unsigned bytesRequired(unsigned _addressLength) const;
-	int arguments() const;
-	int returnValues() const;
-	int deposit() const { return returnValues() - arguments(); }
+	size_t bytesRequired(size_t _addressLength) const;
+	size_t arguments() const;
+	size_t returnValues() const;
+	size_t deposit() const { return returnValues() - arguments(); }
 
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;
@@ -151,7 +152,7 @@ public:
 	void setPushedValue(u256 const& _value) const { m_pushedValue = std::make_shared<u256>(_value); }
 	u256 const* pushedValue() const { return m_pushedValue.get(); }
 
-	std::string toAssemblyText() const;
+	std::string toAssemblyText(Assembly const& _assembly) const;
 
 	size_t m_modifierDepth = 0;
 

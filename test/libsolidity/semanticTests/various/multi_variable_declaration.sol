@@ -42,6 +42,7 @@ contract C {
         return f1() && f2();
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // f() -> true

@@ -41,7 +41,6 @@
           null
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -67,7 +66,6 @@
           1
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -84,16 +82,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "A",
                 "referencedDeclaration": 1,
                 "type": "contract A"
@@ -122,7 +116,6 @@
           4
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -140,16 +133,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "B",
                 "referencedDeclaration": 4,
                 "type": "contract B"
@@ -179,7 +168,6 @@
           7
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -198,16 +186,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "C",
                 "referencedDeclaration": 7,
                 "type": "contract C"
@@ -238,7 +222,6 @@
           10
         ],
         "contractKind": "contract",
-        "documentation": null,
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
@@ -258,16 +241,12 @@
       "children":
       [
         {
-          "attributes":
-          {
-            "arguments": null
-          },
+          "attributes": {},
           "children":
           [
             {
               "attributes":
               {
-                "contractScope": null,
                 "name": "D",
                 "referencedDeclaration": 10,
                 "type": "contract D"

@@ -4,6 +4,7 @@ contract C
 {
 	uint[][] a;
 	function f(bool b) public {
+		a[1][1] = 512;
 		a[2][3] = 4;
 		if (b)
 			delete a;
@@ -16,4 +17,4 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (174-194): Assertion violation happens here
+// Warning 6328: (191-211): Assertion violation happens here

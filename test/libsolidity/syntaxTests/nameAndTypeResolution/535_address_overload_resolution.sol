@@ -17,4 +17,4 @@ contract D {
     }
 }
 // ----
-// Warning: (17-134): Function state mutability can be restricted to view
+// Warning 2018: (17-134): Function state mutability can be restricted to view

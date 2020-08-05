@@ -14,10 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libevmasm/AssemblyItem.h>
 
+#include <libevmasm/Assembly.h>
+
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 #include <libsolutil/FixedHash.h>
 #include <liblangutil/SourceLocation.h>
 
@@ -34,7 +38,7 @@ AssemblyItem AssemblyItem::toSubAssemblyTag(size_t _subId) const
 {
 	assertThrow(data() < (u256(1) << 64), util::Exception, "Tag already has subassembly set.");
 	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
-	size_t tag = size_t(u256(data()) & 0xffffffffffffffffULL);
+	auto tag = static_cast<size_t>(u256(data()) & 0xffffffffffffffffULL);
 	AssemblyItem r = *this;
 	r.m_type = PushTag;
 	r.setPushTagSubIdAndTag(_subId, tag);
@@ -45,8 +49,8 @@ pair<size_t, size_t> AssemblyItem::splitForeignPushTag() const
 {
 	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
 	u256 combined = u256(data());
-	size_t subId = size_t((combined >> 64) - 1);
-	size_t tag = size_t(combined & 0xffffffffffffffffULL);
+	size_t subId = static_cast<size_t>((combined >> 64) - 1);
+	size_t tag = static_cast<size_t>(combined & 0xffffffffffffffffULL);
 	return make_pair(subId, tag);
 }
 
@@ -54,12 +58,12 @@ void AssemblyItem::setPushTagSubIdAndTag(size_t _subId, size_t _tag)
 {
 	assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
 	u256 data = _tag;
-	if (_subId != size_t(-1))
+	if (_subId != numeric_limits<size_t>::max())
 		data |= (u256(_subId) + 1) << 64;
 	setData(data);
 }
 
-unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
+size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 {
 	switch (m_type)
 	{
@@ -69,7 +73,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushString:
 		return 1 + 32;
 	case Push:
-		return 1 + max<unsigned>(1, util::bytesRequired(data()));
+		return 1 + max<size_t>(1, util::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
 		return 1 + 4;		// worst case: a 16MB program
@@ -93,22 +97,22 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	assertThrow(false, InvalidOpcode, "");
 }
 
-int AssemblyItem::arguments() const
+size_t AssemblyItem::arguments() const
 {
 	if (type() == Operation)
-		return instructionInfo(instruction()).args;
+		return static_cast<size_t>(instructionInfo(instruction()).args);
 	else if (type() == AssignImmutable)
 		return 1;
 	else
 		return 0;
 }
 
-int AssemblyItem::returnValues() const
+size_t AssemblyItem::returnValues() const
 {
 	switch (m_type)
 	{
 	case Operation:
-		return instructionInfo(instruction()).ret;
+		return static_cast<size_t>(instructionInfo(instruction()).ret);
 	case Push:
 	case PushString:
 	case PushTag:
@@ -169,7 +173,7 @@ string AssemblyItem::getJumpTypeAsString() const
 	}
 }
 
-string AssemblyItem::toAssemblyText() const
+string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 {
 	string text;
 	switch (type())
@@ -193,7 +197,7 @@ string AssemblyItem::toAssemblyText() const
 		size_t sub{0};
 		size_t tag{0};
 		tie(sub, tag) = splitForeignPushTag();
-		if (sub == size_t(-1))
+		if (sub == numeric_limits<size_t>::max())
 			text = string("tag_") + to_string(tag);
 		else
 			text = string("tag_") + to_string(sub) + "_" + to_string(tag);
@@ -201,17 +205,24 @@ string AssemblyItem::toAssemblyText() const
 	}
 	case Tag:
 		assertThrow(data() < 0x10000, AssemblyException, "Declaration of sub-assembly tag.");
-		text = string("tag_") + to_string(size_t(data())) + ":";
+		text = string("tag_") + to_string(static_cast<size_t>(data())) + ":";
 		break;
 	case PushData:
 		text = string("data_") + util::toHex(data());
 		break;
 	case PushSub:
-		text = string("dataOffset(sub_") + to_string(size_t(data())) + ")";
-		break;
 	case PushSubSize:
-		text = string("dataSize(sub_") + to_string(size_t(data())) + ")";
+	{
+		vector<string> subPathComponents;
+		for (size_t subPathComponentId: _assembly.decodeSubPath(static_cast<size_t>(data())))
+			subPathComponents.emplace_back("sub_" + to_string(subPathComponentId));
+		text =
+			(type() == PushSub ? "dataOffset"s : "dataSize"s) +
+			"(" +
+			solidity::util::joinHumanReadable(subPathComponents, ".") +
+			")";
 		break;
+	}
 	case PushProgramSize:
 		text = string("bytecodeSize");
 		break;
@@ -262,7 +273,7 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	case PushTag:
 	{
 		size_t subId = _item.splitForeignPushTag().first;
-		if (subId == size_t(-1))
+		if (subId == numeric_limits<size_t>::max())
 			_out << " PushTag " << _item.splitForeignPushTag().second;
 		else
 			_out << " PushTag " << subId << ":" << _item.splitForeignPushTag().second;
@@ -272,13 +283,13 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " Tag " << _item.data();
 		break;
 	case PushData:
-		_out << " PushData " << hex << (unsigned)_item.data() << dec;
+		_out << " PushData " << hex << static_cast<unsigned>(_item.data()) << dec;
 		break;
 	case PushSub:
-		_out << " PushSub " << hex << size_t(_item.data()) << dec;
+		_out << " PushSub " << hex << static_cast<size_t>(_item.data()) << dec;
 		break;
 	case PushSubSize:
-		_out << " PushSubSize " << hex << size_t(_item.data()) << dec;
+		_out << " PushSubSize " << hex << static_cast<size_t>(_item.data()) << dec;
 		break;
 	case PushProgramSize:
 		_out << " PushProgramSize";
@@ -317,7 +328,7 @@ std::string AssemblyItem::computeSourceMapping(
 	int prevStart = -1;
 	int prevLength = -1;
 	int prevSourceIndex = -1;
-	size_t prevModifierDepth = -1;
+	int prevModifierDepth = -1;
 	char prevJump = 0;
 	for (auto const& item: _items)
 	{
@@ -328,14 +339,14 @@ std::string AssemblyItem::computeSourceMapping(
 		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
 		int sourceIndex =
 			location.source && _sourceIndicesMap.count(location.source->name()) ?
-			_sourceIndicesMap.at(location.source->name()) :
+			static_cast<int>(_sourceIndicesMap.at(location.source->name())) :
 			-1;
 		char jump = '-';
 		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)
 			jump = 'i';
 		else if (item.getJumpType() == evmasm::AssemblyItem::JumpType::OutOfFunction)
 			jump = 'o';
-		size_t modifierDepth = item.m_modifierDepth;
+		int modifierDepth = static_cast<int>(item.m_modifierDepth);
 
 		unsigned components = 5;
 		if (modifierDepth == prevModifierDepth)

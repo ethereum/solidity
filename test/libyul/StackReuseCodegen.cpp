@@ -43,7 +43,7 @@ string assemble(string const& _input)
 }
 }
 
-BOOST_AUTO_TEST_SUITE(StackReuseCodegen)
+BOOST_AUTO_TEST_SUITE(StackReuseCodegen, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
@@ -341,6 +341,69 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function_with_gaps)
 		"POP POP "
 		// stack: d c
 		"DUP2 DUP2 MSTORE "
+		"POP POP "
+	);
+}
+
+BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_to_last_used)
+{
+	string in = R"({
+		let x := 5
+		let y := x // y should reuse the stack slot of x
+		sstore(y, y)
+	})";
+	BOOST_CHECK_EQUAL(assemble(in),
+		"PUSH1 0x5 "
+		"DUP1 SWAP1 POP "
+		"DUP1 DUP2 SSTORE "
+		"POP "
+	);
+}
+
+BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_to_last_used_expr)
+{
+	string in = R"({
+		let x := 5
+		let y := add(x, 2) // y should reuse the stack slot of x
+		sstore(y, y)
+	})";
+	BOOST_CHECK_EQUAL(assemble(in),
+		"PUSH1 0x5 "
+		"PUSH1 0x2 DUP2 ADD "
+		"SWAP1 POP "
+		"DUP1 DUP2 SSTORE "
+		"POP "
+	);
+}
+
+BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_to_not_last_used)
+{
+	string in = R"({
+		let x := 5
+		let y := x // y should not reuse the stack slot of x, since x is still used below
+		sstore(y, x)
+	})";
+	BOOST_CHECK_EQUAL(assemble(in),
+		"PUSH1 0x5 "
+		"DUP1 "
+		"DUP2 DUP2 SSTORE "
+		"POP POP "
+	);
+}
+
+BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_not_same_scope)
+{
+	string in = R"({
+		let x := 5
+		{
+			let y := x // y should not reuse the stack slot of x, since x is not in the same scope
+			sstore(y, y)
+		}
+	})";
+	BOOST_CHECK_EQUAL(assemble(in),
+		"PUSH1 0x5 "
+		"DUP1 "
+		"DUP1 DUP2 SSTORE "
 		"POP POP "
 	);
 }

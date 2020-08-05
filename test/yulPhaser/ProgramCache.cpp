@@ -14,9 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/ProgramCache.h>
 #include <tools/yulPhaser/Chromosome.h>
+
+#include <libyul/optimiser/Metrics.h>
 
 #include <liblangutil/CharStream.h>
 
@@ -68,7 +71,7 @@ protected:
 	ProgramCache m_programCache{m_program};
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ProgramCacheTest)
 
 BOOST_AUTO_TEST_CASE(CacheStats_operator_plus_should_add_stats_together)
@@ -212,11 +215,11 @@ BOOST_FIXTURE_TEST_CASE(startRound_should_remove_entries_older_than_two_rounds, 
 
 BOOST_FIXTURE_TEST_CASE(gatherStats_should_return_cache_statistics, ProgramCacheFixture)
 {
-	size_t sizeI = optimisedProgram(m_program, "I").codeSize();
-	size_t sizeIu = optimisedProgram(m_program, "Iu").codeSize();
-	size_t sizeIuO = optimisedProgram(m_program, "IuO").codeSize();
-	size_t sizeL = optimisedProgram(m_program, "L").codeSize();
-	size_t sizeLT = optimisedProgram(m_program, "LT").codeSize();
+	size_t sizeI = optimisedProgram(m_program, "I").codeSize(CacheStats::StorageWeights);
+	size_t sizeIu = optimisedProgram(m_program, "Iu").codeSize(CacheStats::StorageWeights);
+	size_t sizeIuO = optimisedProgram(m_program, "IuO").codeSize(CacheStats::StorageWeights);
+	size_t sizeL = optimisedProgram(m_program, "L").codeSize(CacheStats::StorageWeights);
+	size_t sizeLT = optimisedProgram(m_program, "LT").codeSize(CacheStats::StorageWeights);
 
 	m_programCache.optimiseProgram("L");
 	m_programCache.optimiseProgram("Iu");

@@ -1,5 +1,5 @@
 contract C {
-    constructor() public payable { }
+    constructor() payable { }
 }
 
 contract D {

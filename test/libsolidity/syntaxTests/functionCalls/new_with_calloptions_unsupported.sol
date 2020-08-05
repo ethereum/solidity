@@ -1,4 +1,4 @@
-contract D { constructor() public payable {} }
+contract D { constructor() payable {} }
 contract C {
     function foo() pure internal {
 		new D{salt:"abc", value:3};
@@ -10,6 +10,6 @@ contract C {
 // ====
 // EVMVersion: <constantinople
 // ----
-// TypeError: (97-123): Unsupported call option "salt" (requires Constantinople-compatible VMs).
-// TypeError: (127-144): Unsupported call option "salt" (requires Constantinople-compatible VMs).
-// TypeError: (168-188): Unsupported call option "salt" (requires Constantinople-compatible VMs).
+// TypeError 5189: (90-116): Unsupported call option "salt" (requires Constantinople-compatible VMs).
+// TypeError 5189: (120-137): Unsupported call option "salt" (requires Constantinople-compatible VMs).
+// TypeError 5189: (161-181): Unsupported call option "salt" (requires Constantinople-compatible VMs).

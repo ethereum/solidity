@@ -68,10 +68,9 @@ contract FutarchyOracle is Oracle {
         uint24 fee,
         uint _deadline
     )
-        public
     {
         // Deadline is in the future
-        require(_deadline > now);
+        require(_deadline > block.timestamp);
         // Create decision event
         categoricalEvent = eventFactory.createCategoricalEvent(collateralToken, this, outcomeCount);
         // Create outcome events
@@ -131,7 +130,7 @@ contract FutarchyOracle is Oracle {
         public
     {
         // Outcome is not set yet and deadline has passed
-        require(!isSet && deadline <= now);
+        require(!isSet && deadline <= block.timestamp);
         // Find market with highest marginal price for long outcome tokens
         uint highestMarginalPrice = markets[0].marketMaker().calcMarginalPrice(markets[0], LONG);
         uint highestIndex = 0;

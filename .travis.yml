@@ -40,11 +40,14 @@ env:
         - ENCRYPTION_LABEL="6d4541b72666"
         - SOLC_BUILD_TYPE=RelWithDebInfo
         - SOLC_EMSCRIPTEN=Off
+        # FIXME: Pushing solcjson.js to solc-bin disabled until we fix the cause of #9261
+        - SOLC_PUBLISH_EMSCRIPTEN=Off
         - SOLC_INSTALL_DEPS_TRAVIS=On
         - SOLC_RELEASE=On
         - SOLC_TESTS=On
         - SOLC_STOREBYTECODE=Off
         - SOLC_DOCKER=Off
+        - MAKEFLAGS="-j 4"
 
 matrix:
     include:
@@ -104,13 +107,13 @@ matrix:
           sudo: required
           compiler: gcc
           node_js:
-            - "8"
+            - "10"
           services:
               - docker
           before_install:
-              - nvm install 8
-              - nvm use 8
-              - docker pull trzeci/emscripten:sdk-tag-1.39.3-64bit
+              - nvm install 10
+              - nvm use 10
+              - docker pull solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc
           env:
               - SOLC_EMSCRIPTEN=On
               - SOLC_INSTALL_DEPS_TRAVIS=Off
@@ -213,7 +216,7 @@ deploy:
     # scripts because TravisCI doesn't provide much in the way of conditional logic.
 
     - provider: script
-      script: test $SOLC_EMSCRIPTEN != On || (scripts/release_emscripten.sh)
+      script: test $SOLC_PUBLISH_EMSCRIPTEN != On || $SOLC_EMSCRIPTEN != On || (scripts/release_emscripten.sh)
       skip_cleanup: true
       on:
           branch:

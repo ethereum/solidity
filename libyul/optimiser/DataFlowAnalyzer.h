@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Base class to perform data flow analysis during AST walks.
  * Tracks assignments and is used as base class for both Rematerialiser and
@@ -142,9 +143,18 @@ protected:
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
+	/// Checks if the statement is sstore(a, b) / mstore(a, b)
+	/// where a and b are variables and returns these variables in that case.
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
 		evmasm::Instruction _store,
 		ExpressionStatement const& _statement
+	) const;
+
+	/// Checks if the expression is sload(a) / mload(a)
+	/// where a is a variable and returns the variable in that case.
+	std::optional<YulString> isSimpleLoad(
+		evmasm::Instruction _load,
+		Expression const& _expression
 	) const;
 
 	Dialect const& m_dialect;

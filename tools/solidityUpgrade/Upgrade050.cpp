@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/Upgrade050.h>
 #include <tools/solidityUpgrade/SourceTransform.h>
 
@@ -32,8 +33,7 @@ void ConstructorKeyword::endVisit(ContractDefinition const& _contract)
 {
 	for (auto const* function: _contract.definedFunctions())
 		if (function->name() == _contract.name())
-			m_changes.push_back(
-				UpgradeChange{
+			m_changes.emplace_back(
 					UpgradeChange::Level::Safe,
 					function->location(),
 					SourceTransform::replaceFunctionName(
@@ -41,18 +41,15 @@ void ConstructorKeyword::endVisit(ContractDefinition const& _contract)
 						function->name(),
 						"constructor"
 					)
-				}
 			);
 }
 
 void VisibilitySpecifier::endVisit(FunctionDefinition const& _function)
 {
 	if (_function.noVisibilitySpecified())
-		m_changes.push_back(
-			UpgradeChange{
+		m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_function.location(),
 				SourceTransform::insertAfterRightParenthesis(_function.location(), "public")
-			}
 		);
 }

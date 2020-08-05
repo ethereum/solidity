@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <fstream>
 #include <map>
@@ -23,6 +24,16 @@
 
 namespace solidity::frontend::test
 {
+
+/**
+ * A map for registering source names that also contains the main source name in a test case.
+ */
+struct SourceMap
+{
+	std::map<std::string, std::string> sources;
+	std::string mainSourceFile;
+};
+
 /**
  * A reader for test case data file, which parses source, settings and (optionally) simple expectations.
  */
@@ -31,11 +42,12 @@ class TestCaseReader
 public:
 	TestCaseReader() = default;
 	explicit TestCaseReader(std::string const& _filename);
+	explicit TestCaseReader(std::istringstream const& _testCode);
 
-	std::map<std::string, std::string> const& sources() { return m_sources; }
-	std::string const& source();
-	std::size_t lineNumber() { return m_lineNumber; }
-	std::map<std::string, std::string> const& settings() { return m_settings; }
+	SourceMap const& sources() const { return m_sources; }
+	std::string const& source() const;
+	std::size_t lineNumber() const { return m_lineNumber; }
+	std::map<std::string, std::string> const& settings() const { return m_settings; }
 	std::ifstream& stream() { return m_file; }
 
 	std::string simpleExpectations();
@@ -47,11 +59,11 @@ public:
 	void ensureAllSettingsRead() const;
 
 private:
-	std::pair<std::map<std::string, std::string>, std::size_t> parseSourcesAndSettingsWithLineNumber(std::istream& _file);
+	std::pair<SourceMap, std::size_t> parseSourcesAndSettingsWithLineNumber(std::istream& _file);
 	static std::string parseSimpleExpectations(std::istream& _file);
 
 	std::ifstream m_file;
-	std::map<std::string, std::string> m_sources;
+	SourceMap m_sources;
 	std::size_t m_lineNumber = 0;
 	std::map<std::string, std::string> m_settings;
 	std::map<std::string, std::string> m_unreadSettings; ///< tracks which settings are left unread

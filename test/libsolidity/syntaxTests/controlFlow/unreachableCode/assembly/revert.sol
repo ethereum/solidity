@@ -13,5 +13,5 @@ contract C {
     }
 }
 // ----
-// Warning: (129-135): Unreachable code.
-// Warning: (274-279): Unreachable code.
+// Warning 5740: (129-135): Unreachable code.
+// Warning 5740: (274-279): Unreachable code.

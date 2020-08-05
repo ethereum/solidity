@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @author Gav Wood <g@ethdev.com>
@@ -100,11 +101,13 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 		magicVarDecl("sha3", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
 		magicVarDecl("suicide", TypeProvider::function(strings{"address payable"}, strings{}, FunctionType::Kind::Selfdestruct)),
 		magicVarDecl("tx", TypeProvider::magic(MagicType::Kind::Transaction)),
+		// Accepts a MagicType that can be any contract type or an Integer type and returns a
+		// MagicType. The TypeChecker handles the correctness of the input and output types.
 		magicVarDecl("type", TypeProvider::function(
-			strings{"address"} /* accepts any contract type, handled by the type checker */,
-			strings{} /* returns a MagicType, handled by the type checker */,
+			strings{},
+			strings{},
 			FunctionType::Kind::MetaType,
-			false,
+			true,
 			StateMutability::Pure
 		)),
 	};
@@ -123,7 +126,7 @@ vector<Declaration const*> GlobalContext::declarations() const
 {
 	vector<Declaration const*> declarations;
 	declarations.reserve(m_magicVariables.size());
-	for (ASTPointer<Declaration const> const& variable: m_magicVariables)
+	for (ASTPointer<MagicVariableDeclaration const> const& variable: m_magicVariables)
 		declarations.push_back(variable.get());
 	return declarations;
 }

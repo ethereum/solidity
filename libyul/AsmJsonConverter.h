@@ -14,11 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @date 2019
  * @author julius <djudju@protonmail.com>
  * Converts inline assembly AST to JSON format
  */
+
+#pragma once
 
 #include <libyul/AsmDataForward.h>
 #include <liblangutil/SourceLocation.h>

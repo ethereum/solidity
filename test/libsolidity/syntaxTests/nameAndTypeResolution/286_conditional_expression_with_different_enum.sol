@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (139-151): True expression's type enum C.small doesn't match false expression's type enum C.big.
+// TypeError 1080: (139-151): True expression's type enum C.small does not match false expression's type enum C.big.

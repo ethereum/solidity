@@ -4,4 +4,4 @@ contract C {
   }
 }
 // ----
-// TypeError: (41-42): Indexed expression has to be a type, mapping or array (is function ())
+// TypeError 2614: (41-42): Indexed expression has to be a type, mapping or array (is function ())

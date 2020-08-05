@@ -24,7 +24,7 @@ Function Selector
 =================
 
 The first four bytes of the call data for a function call specifies the function to be called. It is the
-first (left, high-order in big-endian) four bytes of the Keccak-256 (SHA-3) hash of the signature of
+first (left, high-order in big-endian) four bytes of the Keccak-256 hash of the signature of
 the function. The signature is defined as the canonical expression of the basic prototype without data
 location specifier, i.e.
 the function name with the parenthesised list of parameter types. Parameter types are split by a single
@@ -202,7 +202,7 @@ on the type of ``X`` being
 - ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order
   (left) side with zero-bytes such that the length is 32 bytes.
 - ``address``: as in the ``uint160`` case
-- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` for negative ``X`` and with zero bytes for positive ``X`` such that the length is 32 bytes.
+- ``int<M>``: ``enc(X)`` is the big-endian two's complement encoding of ``X``, padded on the higher-order (left) side with ``0xff`` bytes for negative ``X`` and with zero-bytes for non-negative ``X`` such that the length is 32 bytes.
 - ``bool``: as in the ``uint8`` case, where ``1`` is used for ``true`` and ``0`` for ``false``
 - ``fixed<M>x<N>``: ``enc(X)`` is ``enc(X * 10**N)`` where ``X * 10**N`` is interpreted as a ``int256``.
 - ``fixed``: as in the ``fixed128x18`` case
@@ -232,7 +232,8 @@ Given the contract:
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract Foo {
         function bar(bytes3[2] memory) public pure {}
@@ -507,12 +508,16 @@ A function description is a JSON object with the fields:
 - ``outputs``: an array of objects similar to ``inputs``.
 - ``stateMutability``: a string with one of the following values: ``pure`` (:ref:`specified to not read
   blockchain state <pure-functions>`), ``view`` (:ref:`specified to not modify the blockchain
-  state <view-functions>`), ``nonpayable`` (function does not accept Ether) and ``payable`` (function accepts Ether).
+  state <view-functions>`), ``nonpayable`` (function does not accept Ether - the default) and ``payable`` (function accepts Ether).
 
 Constructor and fallback function never have ``name`` or ``outputs``. Fallback function doesn't have ``inputs`` either.
 
 .. note::
     Sending non-zero Ether to non-payable function will revert the transaction.
+
+.. note::
+    The state mutability ``nonpayable`` is reflected in Solidity by not specifying
+    a state mutability modifier at all.
 
 An event description is a JSON object with fairly similar fields:
 
@@ -531,11 +536,12 @@ For example,
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
 
     contract Test {
-        constructor() public { b = hex"12345678901234567890123456789012"; }
+        constructor() { b = hex"12345678901234567890123456789012"; }
         event Event(uint indexed a, bytes32 b);
         event Event2(uint indexed a, bytes32 b);
         function foo(uint a) public { emit Event(a, b); }
@@ -579,7 +585,8 @@ As an example, the code
 
 ::
 
-    pragma solidity >=0.4.19 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.19 <0.8.0;
     pragma experimental ABIEncoderV2;
 
     contract Test {

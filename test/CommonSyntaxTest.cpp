@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/CommonSyntaxTest.h>
 #include <test/Common.h>
@@ -58,10 +59,10 @@ int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 
 CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
 	EVMVersionRestrictedTestCase(_filename),
+	m_sources(m_reader.sources().sources),
+	m_expectations(parseExpectations(m_reader.stream())),
 	m_evmVersion(_evmVersion)
 {
-	m_sources = m_reader.sources();
-	m_expectations = parseExpectations(m_reader.stream());
 }
 
 TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -94,12 +95,10 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 	if (m_sources.empty())
 		return;
 
-	bool outputSourceNames = true;
-	if (m_sources.size() == 1 && m_sources.begin()->first.empty())
-		outputSourceNames = false;
+	bool outputSourceNames = (m_sources.size() != 1 || !m_sources.begin()->first.empty());
 
-	if (_formatted)
-		for (auto const& [name, source]: m_sources)
+	for (auto const& [name, source]: m_sources)
+		if (_formatted)
 		{
 			if (source.empty())
 				continue;
@@ -116,11 +115,11 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 					for (int i = error.locationStart; i < error.locationEnd; i++)
 						if (isWarning)
 						{
-							if (sourceFormatting[i] == formatting::RESET)
-								sourceFormatting[i] = formatting::ORANGE_BACKGROUND_256;
+							if (sourceFormatting[static_cast<size_t>(i)] == formatting::RESET)
+								sourceFormatting[static_cast<size_t>(i)] = formatting::ORANGE_BACKGROUND_256;
 						}
 						else
-							sourceFormatting[i] = formatting::RED_BACKGROUND;
+							sourceFormatting[static_cast<size_t>(i)] = formatting::RED_BACKGROUND;
 				}
 
 			_stream << _linePrefix << sourceFormatting.front() << source.front();
@@ -139,8 +138,7 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 			}
 			_stream << formatting::RESET;
 		}
-	else
-		for (auto const& [name, source]: m_sources)
+		else
 		{
 			if (outputSourceNames)
 				_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
@@ -165,8 +163,10 @@ void CommonSyntaxTest::printErrorList(
 		{
 			{
 				AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
-				_stream << _linePrefix;
-				_stream << error.type << ": ";
+				_stream << _linePrefix << error.type;
+				if (error.errorId.has_value())
+					_stream << ' ' << error.errorId->error;
+				_stream << ": ";
 			}
 			if (!error.sourceName.empty() || error.locationStart >= 0 || error.locationEnd >= 0)
 			{
@@ -206,13 +206,17 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		if (it == line.end()) continue;
 
 		auto typeBegin = it;
-		while (it != line.end() && *it != ':')
+		while (it != line.end() && isalpha(*it))
 			++it;
 		string errorType(typeBegin, it);
 
-		// skip colon
-		if (it != line.end()) it++;
+		skipWhitespace(it, line.end());
 
+		optional<ErrorId> errorId;
+		if (it != line.end() && isdigit(*it))
+			errorId = ErrorId{static_cast<unsigned long long>(parseUnsignedInteger(it, line.end()))};
+
+		expect(it, line.end(), ':');
 		skipWhitespace(it, line.end());
 
 		int locationStart = -1;
@@ -242,6 +246,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		string errorMessage(it, line.end());
 		expectations.emplace_back(SyntaxTestError{
 			move(errorType),
+			move(errorId),
 			move(errorMessage),
 			move(sourceName),
 			locationStart,

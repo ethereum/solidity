@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -348,6 +349,7 @@ TypePointer TypeProvider::forLiteral(Literal const& _literal)
 	case Token::Number:
 		return rationalNumber(_literal);
 	case Token::StringLiteral:
+	case Token::UnicodeStringLiteral:
 	case Token::HexStringLiteral:
 		return stringLiteral(_literal.value());
 	default:
@@ -556,7 +558,13 @@ MagicType const* TypeProvider::magic(MagicType::Kind _kind)
 
 MagicType const* TypeProvider::meta(Type const* _type)
 {
-	solAssert(_type && _type->category() == Type::Category::Contract, "Only contracts supported for now.");
+	solAssert(
+		_type && (
+			_type->category() == Type::Category::Contract ||
+			_type->category() == Type::Category::Integer
+		),
+		"Only contracts or integer types supported for now."
+	);
 	return createAndGet<MagicType>(_type);
 }
 

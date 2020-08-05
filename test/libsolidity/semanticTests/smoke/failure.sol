@@ -14,8 +14,9 @@ contract C {
     }
 }
 // ====
-// allowNonExistingFunctions: true
+// compileViaYul: also
 // EVMVersion: >homestead
+// allowNonExistingFunctions: true
 // ----
 // _() -> FAILURE
 // e() -> FAILURE, hex"08c379a0", 0x20, 19, "Transaction failed."

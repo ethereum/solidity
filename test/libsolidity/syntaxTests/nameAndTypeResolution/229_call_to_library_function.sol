@@ -8,4 +8,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (53-100): Library functions must be implemented if declared.
+// TypeError 9231: (53-100): Library functions must be implemented if declared.

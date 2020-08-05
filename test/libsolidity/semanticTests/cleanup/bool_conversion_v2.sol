@@ -11,6 +11,8 @@ contract C {
         _out = _in;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(bool): 0x0 -> 0x0
 // f(bool): 0x1 -> 0x1

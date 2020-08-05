@@ -25,6 +25,8 @@ contract C {
 		x = y;
 		if (y > 1) {
 			f();
+			// This now fails as a false positive because
+			// CHC does not propagate msg.sender throughout predicates.
 			assert(x == y + 1);
 		}
 		// Fails for {y = 0, x = 0}.
@@ -32,4 +34,5 @@ contract C {
 	}
 }
 // ----
-// Warning: (461-475): Assertion violation happens here
+// Warning 6328: (516-534): Assertion violation happens here
+// Warning 6328: (573-587): Assertion violation happens here

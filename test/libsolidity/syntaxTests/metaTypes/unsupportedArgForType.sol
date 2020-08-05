@@ -6,4 +6,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (154-155): Invalid type for argument in function call. Contract type required, but type(struct Test.S) provided.
+// TypeError 4259: (154-155): Invalid type for argument in the function call. A contract type or an integer type is required, but type(struct Test.S) provided.

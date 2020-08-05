@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -826,8 +827,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 		Instruction::JUMP,
 		AssemblyItem(Tag, 3)
 	};
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 
 	set<u256> pushTags;
 	for (AssemblyItem const& item: input)
@@ -857,8 +858,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_same)
 		AssemblyItem(PushTag, 1),
 		AssemblyItem(PushTag, 1),
 	} + blocks;
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
 }
 
@@ -876,8 +877,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_value)
 		AssemblyItem{AssignImmutable, 0x1234},
 		Instruction::JUMP
 	};
-	BlockDeduplicator dedup(input);
-	BOOST_CHECK(!dedup.deduplicate());
+	BlockDeduplicator deduplicator(input);
+	BOOST_CHECK(!deduplicator.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
@@ -894,8 +895,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
 		AssemblyItem{AssignImmutable, 0xABCD},
 		Instruction::JUMP
 	};
-	BlockDeduplicator dedup(input);
-	BOOST_CHECK(!dedup.deduplicate());
+	BlockDeduplicator deduplicator(input);
+	BOOST_CHECK(!deduplicator.deduplicate());
 }
 
 BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
@@ -920,8 +921,8 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 		AssemblyItem(PushTag, 2),
 		Instruction::JUMP,
 	};
-	BlockDeduplicator dedup(input);
-	dedup.deduplicate();
+	BlockDeduplicator deduplicator(input);
+	deduplicator.deduplicate();
 
 	set<u256> pushTags;
 	for (AssemblyItem const& item: input)
@@ -1227,7 +1228,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	sub->append(t4.pushTag());
 	sub->append(Instruction::JUMP);
 
-	size_t subId = size_t(main.appendSubroutine(sub).data());
+	size_t subId = static_cast<size_t>(main.appendSubroutine(sub).data());
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
@@ -1281,10 +1282,10 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
-	for (int i = 1; i < 256; i++)
+	for (size_t i = 1; i < 256; i++)
 	{
 		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i)-1),
+			u256(boost::multiprecision::pow(u256(2), i) - 1),
 			Instruction::CALLVALUE,
 			u256(256-i),
 			Instruction::SHR,
@@ -1309,10 +1310,10 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 	}
 
 	// Check that opt. does NOT trigger
-	for (int i = 1; i < 255; i++)
+	for (size_t i = 1; i < 255; i++)
 	{
 		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i)-1),
+			u256(boost::multiprecision::pow(u256(2), i) - 1),
 			Instruction::CALLVALUE,
 			u256(255-i),
 			Instruction::SHR,

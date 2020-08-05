@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file StringUtils.h
  * @author Balajiganapathi S <balajiganapathi.s@gmail.com>
  * @date 2017
@@ -156,14 +157,14 @@ inline std::string formatNumberReadable(
 	if (_useTruncation)
 	{
 		// return as interior-truncated hex.
-		int len = str.size();
+		size_t len = str.size();
 
 		if (len < 24)
 			return str;
 
-		int const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
-		int const finalChars = 4;
-		int numSkipped = len - initialChars - finalChars;
+		size_t const initialChars = (prefix == HexPrefix::Add) ? 6 : 4;
+		size_t const finalChars = 4;
+		size_t numSkipped = len - initialChars - finalChars;
 
 		return str.substr(0, initialChars) +
 			"...{+" +

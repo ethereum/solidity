@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Specific AST walker that generates the call graph.
  */
@@ -35,6 +36,10 @@ struct CallGraph
 {
 	std::map<YulString, std::set<YulString>> functionCalls;
 	std::set<YulString> functionsWithLoops;
+	/// @returns the set of functions contained in cycles in the call graph, i.e.
+	/// functions that are part of a (mutual) recursion.
+	/// Note that this does not include functions that merely call recursive functions.
+	std::set<YulString> recursiveFunctions() const;
 };
 
 /**

@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// DeclarationError: (55-56): Undeclared identifier. "x" is not (or not yet) visible at this point.
+// DeclarationError 7576: (55-56): Undeclared identifier. "x" is not (or not yet) visible at this point.

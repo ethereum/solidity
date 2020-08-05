@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
 #include <libyul/AsmData.h>
@@ -591,7 +592,7 @@ bool ControlFlowBuilder::visit(Identifier const& _identifier)
 	if (auto const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 		m_currentNode->variableOccurrences.emplace_back(
 			*variableDeclaration,
-			static_cast<Expression const&>(_identifier).annotation().lValueRequested ?
+			static_cast<Expression const&>(_identifier).annotation().willBeWrittenTo ?
 			VariableOccurrence::Kind::Assignment :
 			VariableOccurrence::Kind::Access,
 			_identifier.location()

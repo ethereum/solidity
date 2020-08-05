@@ -24,8 +24,11 @@ solidity code.  The goal of this guide is *consistency*.  A quote from python's
 `pep8 <https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds>`_
 captures this concept well.
 
+.. note::
+
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
-    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgement. Look at other examples and decide what looks best. And don't hesitate to ask!
+
+    But most importantly: **know when to be inconsistent** -- sometimes the style guide just doesn't apply. When in doubt, use your best judgement. Look at other examples and decide what looks best. And don't hesitate to ask!
 
 
 ***********
@@ -52,7 +55,8 @@ Surround top level declarations in solidity source with two blank lines.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
         // ...
@@ -70,7 +74,8 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
         // ...
@@ -89,7 +94,8 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 
 Yes::
 
-    pragma solidity ^0.6.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     abstract contract A {
         function spam() public virtual pure;
@@ -109,7 +115,8 @@ Yes::
 
 No::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     abstract contract A {
         function spam() virtual pure public;
@@ -243,7 +250,8 @@ Import statements should always be placed at the top of the file.
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     import "./Owned.sol";
 
@@ -257,7 +265,8 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract A {
         // ...
@@ -290,10 +299,11 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 
 Yes::
 
-    pragma solidity ^0.6.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract A {
-        constructor() public {
+        constructor() {
             // ...
         }
 
@@ -326,7 +336,8 @@ Yes::
 
 No::
 
-    pragma solidity ^0.6.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract A {
 
@@ -346,7 +357,7 @@ No::
         // Public functions
         // ...
 
-        constructor() public {
+        constructor() {
             // ...
         }
 
@@ -383,8 +394,7 @@ No::
 
     function spam(uint i , Coin coin) public ;
 
-More than one space around an assignment or other operator to align with
-  another:
+More than one space around an assignment or other operator to align with another:
 
 Yes::
 
@@ -434,7 +444,8 @@ should:
 
 Yes::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract Coin {
         struct Bank {
@@ -445,7 +456,8 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     contract Coin
     {
@@ -745,19 +757,20 @@ manner as modifiers if the function declaration is long or hard to read.
 
 Yes::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     // Base contracts just to make this compile
     contract B {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
     contract C {
-        constructor(uint, uint) public {
+        constructor(uint, uint) {
         }
     }
     contract D {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
 
@@ -768,7 +781,6 @@ Yes::
             B(param1)
             C(param2, param3)
             D(param4)
-            public
         {
             // do something with param5
             x = param5;
@@ -777,24 +789,25 @@ Yes::
 
 No::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
 
     // Base contracts just to make this compile
     contract B {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
 
 
     contract C {
-        constructor(uint, uint) public {
+        constructor(uint, uint) {
         }
     }
 
 
     contract D {
-        constructor(uint) public {
+        constructor(uint) {
         }
     }
 
@@ -805,8 +818,7 @@ No::
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
         B(param1)
         C(param2, param3)
-        D(param4)
-        public {
+        D(param4) {
             x = param5;
         }
     }
@@ -818,8 +830,7 @@ No::
         constructor(uint param1, uint param2, uint param3, uint param4, uint param5)
             B(param1)
             C(param2, param3)
-            D(param4)
-            public {
+            D(param4) {
                 x = param5;
             }
     }
@@ -996,18 +1007,19 @@ Contract and Library Names
 * Contract and library names should also match their filenames.
 * If a contract file includes multiple contracts and/or libraries, then the filename should match the *core contract*. This is not recommended however if it can be avoided.
 
-As shown in the example below, if the contract name is `Congress` and the library name is `Owned`, then their associated filenames should be `Congress.sol` and `Owned.sol`.
+As shown in the example below, if the contract name is ``Congress`` and the library name is ``Owned``, then their associated filenames should be ``Congress.sol`` and ``Owned.sol``.
 
 Yes::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
 
     // Owned.sol
     contract Owned {
         address public owner;
 
-        constructor() public {
+        constructor() {
             owner = msg.sender;
         }
 
@@ -1023,7 +1035,8 @@ Yes::
 
 and in ``Congress.sol``::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     import "./Owned.sol";
 
@@ -1034,14 +1047,15 @@ and in ``Congress.sol``::
 
 No::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
 
     // owned.sol
     contract owned {
         address public owner;
 
-        constructor() public {
+        constructor() {
             owner = msg.sender;
         }
 
@@ -1079,7 +1093,7 @@ Events should be named using the CapWords style. Examples: ``Deposit``, ``Transf
 Function Names
 ==============
 
-Functions other than constructors should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
+Functions should use mixedCase. Examples: ``getBalance``, ``transfer``, ``verifyOwner``, ``addMember``, ``changeOwner``.
 
 
 Function Argument Names
@@ -1132,13 +1146,14 @@ Solidity contracts can have a form of comments that are the basis of the
 Ethereum Natural Language Specification Format.
 
 Add comments above functions or contracts following `doxygen <http://www.doxygen.nl>`_ notation
-of one or multiple lines starting with `///` or a
-multiline comment starting with `/**` and ending with `*/`.
+of one or multiple lines starting with ``///`` or a
+multiline comment starting with ``/**`` and ending with ``*/``.
 
 For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
 added looks like the one below::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
 
     /// @author The Solidity Team

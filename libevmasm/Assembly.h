@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -52,6 +53,7 @@ public:
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
+	size_t numSubs() const { return m_subs.size(); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 	AssemblyItem newPushImmutable(std::string const& _identifier);
@@ -96,6 +98,7 @@ public:
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
+	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
 
 	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
 	LinkerObject const& assemble() const;
@@ -140,6 +143,12 @@ public:
 		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
 	) const;
 
+	/// Mark this assembly as invalid. Calling ``assemble`` on it will throw.
+	void markAsInvalid() { m_invalid = true; }
+
+	std::vector<size_t> decodeSubPath(size_t _subObjectId) const;
+	size_t encodeSubPath(std::vector<size_t> const& _subPath);
+
 protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
@@ -159,6 +168,10 @@ private:
 	);
 	static std::string toStringInHex(u256 _value);
 
+	bool m_invalid = false;
+
+	Assembly const* subAssemblyById(size_t _subId) const;
+
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
@@ -171,6 +184,10 @@ protected:
 	std::map<util::h256, std::string> m_strings;
 	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
 	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.
+
+	/// Map from a vector representing a path to a particular sub assembly to sub assembly id.
+	/// This map is used only for sub-assemblies which are not direct sub-assemblies (where path is having more than one value).
+	std::map<std::vector<size_t>, size_t> m_subPaths;
 
 	mutable LinkerObject m_assembledObject;
 	mutable std::vector<size_t> m_tagPositionsInBytecode;

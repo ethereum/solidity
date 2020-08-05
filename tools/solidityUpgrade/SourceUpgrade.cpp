@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/SourceUpgrade.h>
 
 #include <liblangutil/Exceptions.h>
@@ -194,6 +195,12 @@ Allowed options)",
 				m_suite.activateModule(Module::OverridingFunction);
 			else if (module == "virtual")
 				m_suite.activateModule(Module::VirtualFunction);
+			else if (module == "dotsyntax")
+				m_suite.activateModule(Module::DotSyntax);
+			else if (module == "now")
+				m_suite.activateModule(Module::NowKeyword);
+			else if (module == "constructor-visibility")
+				m_suite.activateModule(Module::ConstrutorVisibility);
 			else
 			{
 				error() << "Unknown upgrade module \"" + module + "\"" << endl;
@@ -390,7 +397,7 @@ void SourceUpgrade::applyChange(
 
 void SourceUpgrade::printErrors() const
 {
-	auto formatter = make_unique<langutil::SourceReferenceFormatterHuman>(cout, true);
+	auto formatter = make_unique<langutil::SourceReferenceFormatterHuman>(cout, true, false);
 
 	for (auto const& error: m_compiler->errors())
 		if (error->type() != langutil::Error::Type::Warning)

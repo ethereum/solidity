@@ -36,30 +36,71 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-size_t CodeSize::codeSize(Statement const& _statement)
+size_t CodeWeights::costOf(Statement const& _statement) const
 {
-	CodeSize cs;
+	if (holds_alternative<ExpressionStatement>(_statement))
+		return expressionStatementCost;
+	else if (holds_alternative<Assignment>(_statement))
+		return assignmentCost;
+	else if (holds_alternative<VariableDeclaration>(_statement))
+		return variableDeclarationCost;
+	else if (holds_alternative<FunctionDefinition>(_statement))
+		return functionDefinitionCost;
+	else if (holds_alternative<If>(_statement))
+		return ifCost;
+	else if (holds_alternative<Switch>(_statement))
+		return switchCost + caseCost * std::get<Switch>(_statement).cases.size();
+	else if (holds_alternative<ForLoop>(_statement))
+		return forLoopCost;
+	else if (holds_alternative<Break>(_statement))
+		return breakCost;
+	else if (holds_alternative<Continue>(_statement))
+		return continueCost;
+	else if (holds_alternative<Leave>(_statement))
+		return leaveCost;
+	else if (holds_alternative<Block>(_statement))
+		return blockCost;
+	else
+		yulAssert(false, "If you add a new statement type, you must update CodeWeights.");
+}
+
+size_t CodeWeights::costOf(Expression const& _expression) const
+{
+	if (holds_alternative<FunctionCall>(_expression))
+		return functionCallCost;
+	else if (holds_alternative<Identifier>(_expression))
+		return identifierCost;
+	else if (holds_alternative<Literal>(_expression))
+		return literalCost;
+	else
+		yulAssert(false, "If you add a new expression type, you must update CodeWeights.");
+}
+
+
+size_t CodeSize::codeSize(Statement const& _statement, CodeWeights const& _weights)
+{
+	CodeSize cs(true, _weights);
 	cs.visit(_statement);
 	return cs.m_size;
 }
 
-size_t CodeSize::codeSize(Expression const& _expression)
+size_t CodeSize::codeSize(Expression const& _expression, CodeWeights const& _weights)
 {
-	CodeSize cs;
+	CodeSize cs(true, _weights);
 	cs.visit(_expression);
 	return cs.m_size;
 }
 
-size_t CodeSize::codeSize(Block const& _block)
+size_t CodeSize::codeSize(Block const& _block, CodeWeights const& _weights)
 {
-	CodeSize cs;
+	CodeSize cs(true, _weights);
 	cs(_block);
 	return cs.m_size;
 }
 
-size_t CodeSize::codeSizeIncludingFunctions(Block const& _block)
+size_t CodeSize::codeSizeIncludingFunctions(Block const& _block, CodeWeights const& _weights)
 {
-	CodeSize cs(false);
+	CodeSize cs(false, _weights);
 	cs(_block);
 	return cs.m_size;
 }
@@ -68,32 +109,14 @@ void CodeSize::visit(Statement const& _statement)
 {
 	if (holds_alternative<FunctionDefinition>(_statement) && m_ignoreFunctions)
 		return;
-	else if (
-		holds_alternative<If>(_statement) ||
-		holds_alternative<Break>(_statement) ||
-		holds_alternative<Continue>(_statement) ||
-		holds_alternative<Leave>(_statement)
-	)
-		m_size += 2;
-	else if (holds_alternative<ForLoop>(_statement))
-		m_size += 3;
-	else if (holds_alternative<Switch>(_statement))
-		m_size += 1 + 2 * std::get<Switch>(_statement).cases.size();
-	else if (!(
-		holds_alternative<Block>(_statement) ||
-		holds_alternative<ExpressionStatement>(_statement) ||
-		holds_alternative<Assignment>(_statement) ||
-		holds_alternative<VariableDeclaration>(_statement)
-	))
-		++m_size;
 
+	m_size += m_weights.costOf(_statement);
 	ASTWalker::visit(_statement);
 }
 
 void CodeSize::visit(Expression const& _expression)
 {
-	if (!holds_alternative<Identifier>(_expression))
-		++m_size;
+	m_size += m_weights.costOf(_expression);
 	ASTWalker::visit(_expression);
 }
 

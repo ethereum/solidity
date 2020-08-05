@@ -14,12 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @author Christian <c@ethdev.com>
- * @date 2015
- * Parses and analyses the doc strings.
- * Stores the parsing results in the AST annotations and reports errors.
- */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -34,7 +29,7 @@ namespace solidity::frontend
 {
 
 /**
- * Parses and analyses the doc strings.
+ * Analyses and validates the doc strings.
  * Stores the parsing results in the AST annotations and reports errors.
  */
 class DocStringAnalyser: private ASTConstVisitor
@@ -44,19 +39,13 @@ public:
 	bool analyseDocStrings(SourceUnit const& _sourceUnit);
 
 private:
-	bool visit(ContractDefinition const& _contract) override;
 	bool visit(FunctionDefinition const& _function) override;
+	bool visit(VariableDeclaration const& _variable) override;
 	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(EventDefinition const& _event) override;
 
-	void checkParameters(
-		CallableDeclaration const& _callable,
-		StructurallyDocumented const& _node,
-		StructurallyDocumentedAnnotation& _annotation
-	);
-
-	void handleConstructor(
-		CallableDeclaration const& _callable,
+	CallableDeclaration const* resolveInheritDoc(
+		std::set<CallableDeclaration const*> const& _baseFunctions,
 		StructurallyDocumented const& _node,
 		StructurallyDocumentedAnnotation& _annotation
 	);
@@ -67,16 +56,6 @@ private:
 		StructurallyDocumentedAnnotation& _annotation
 	);
 
-	void parseDocStrings(
-		StructurallyDocumented const& _node,
-		StructurallyDocumentedAnnotation& _annotation,
-		std::set<std::string> const& _validTags,
-		std::string const& _nodeName
-	);
-
-	void appendError(langutil::SourceLocation const& _location, std::string const& _description);
-
-	bool m_errorOccured = false;
 	langutil::ErrorReporter& m_errorReporter;
 };
 

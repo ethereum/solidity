@@ -2,7 +2,7 @@
 	"language": "Solidity",
 	"sources": {
 		"fileA": {
-			"content": "contract A { }"
+			"content": "//SPDX-License-Identifier: GPL-3.0\ncontract A { }"
 		}
 	},
 	"settings": {

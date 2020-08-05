@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <boost/algorithm/string/replace.hpp>
 #include <test/libsolidity/ASTJSONTest.h>
@@ -134,11 +135,14 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		c.analyze();
 	else
 	{
-		SourceReferenceFormatterHuman formatter(_stream, _formatted);
+		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
 		for (auto const& error: c.errors())
 			formatter.printErrorInformation(*error);
 		return TestResult::FatalError;
 	}
+
+	if (m_sources.size() > 1)
+		m_result += "[\n";
 
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
@@ -149,6 +153,9 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 			m_result += ",";
 		m_result += "\n";
 	}
+
+	if (m_sources.size() > 1)
+		m_result += "]\n";
 
 	bool resultsMatch = true;
 

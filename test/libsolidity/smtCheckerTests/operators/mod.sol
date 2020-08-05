@@ -8,3 +8,5 @@ contract C {
 		assert(z1 == z2);
 	}
 }
+// ----
+// Warning 1218: (166-182): Error trying to invoke SMT solver.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -288,7 +289,8 @@ void ModifierDefinition::accept(ASTVisitor& _visitor)
 		m_parameters->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
-		m_body->accept(_visitor);
+		if (m_body)
+			m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -302,7 +304,8 @@ void ModifierDefinition::accept(ASTConstVisitor& _visitor) const
 		m_parameters->accept(_visitor);
 		if (m_overrides)
 			m_overrides->accept(_visitor);
-		m_body->accept(_visitor);
+		if (m_body)
+			m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }

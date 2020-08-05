@@ -13,8 +13,7 @@ arrays and mappings. If you use a reference type, you always have to explicitly
 provide the data area where the type is stored: ``memory`` (whose lifetime is limited
 to an external function call), ``storage`` (the location where the state variables
 are stored, where the lifetime is limited to the lifetime of a contract)
-or ``calldata`` (special data location that contains the function arguments,
-only available for external function call parameters).
+or ``calldata`` (special data location that contains the function arguments).
 
 An assignment or type conversion that changes the data location will always incur an automatic copy operation,
 while assignments inside the same data location only copy in some cases for storage types.
@@ -26,15 +25,21 @@ Data location
 
 Every reference type has an additional
 annotation, the "data location", about where it is stored. There are three data locations:
-``memory``, ``storage`` and ``calldata``. Calldata is only valid for parameters of external contract
-functions and is required for this type of parameter. Calldata is a non-modifiable,
+``memory``, ``storage`` and ``calldata``. Calldata is a non-modifiable,
 non-persistent area where function arguments are stored, and behaves mostly like memory.
+It is required for parameters of external functions but can also be used for other variables.
 
 
 .. note::
     Prior to version 0.5.0 the data location could be omitted, and would default to different locations
     depending on the kind of variable, function type, etc., but all complex types must now give an explicit
     data location.
+
+.. note::
+    If you can, try to use ``calldata`` as data location because it will avoid copies and
+    also makes sure that the data cannot be modified. Arrays and structs with ``calldata``
+    data location can also be returned from functions, but it is not possible to
+    allocate such types.
 
 .. _data-location-assignment:
 
@@ -57,7 +62,8 @@ Data locations are not only relevant for persistency of data, but also for the s
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
         // The data location of x is storage.
@@ -167,7 +173,8 @@ or create a new memory array and copy every element.
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
         function f(uint len) public pure {
@@ -198,7 +205,8 @@ the first element to ``uint``.
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract C {
         function f() public pure {
@@ -214,7 +222,8 @@ memory arrays, i.e. the following is not possible:
 
 ::
 
-    pragma solidity >=0.4.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
 
     // This will not compile.
     contract C {
@@ -227,6 +236,23 @@ memory arrays, i.e. the following is not possible:
 
 It is planned to remove this restriction in the future, but it creates some
 complications because of how arrays are passed in the ABI.
+
+If you want to initialize dynamically-sized arrays, you have to assign the
+individual elements:
+
+::
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.0 <0.8.0;
+
+    contract C {
+        function f() public pure {
+            uint[] memory x = new uint[](3);
+            x[0] = 1;
+            x[1] = 3;
+            x[2] = 4;
+        }
+    }
 
 .. index:: ! array;length, length, push, pop, !array;push, !array;pop
 
@@ -274,7 +300,8 @@ Array Members
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     contract ArrayContract {
         uint[2**20] m_aLotOfIntegers;
@@ -387,7 +414,7 @@ If ``start`` is greater than ``end`` or if ``end`` is greater
 than the length of the array, an exception is thrown.
 
 Both ``start`` and ``end`` are optional: ``start`` defaults
- to ``0`` and ``end`` defaults to the length of the array.
+to ``0`` and ``end`` defaults to the length of the array.
 
 Array slices do not have any members. They are implicitly
 convertible to arrays of their underlying type
@@ -406,20 +433,27 @@ Array slices are useful to ABI-decode secondary data passed in function paramete
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.6.99 <0.8.0;
 
     contract Proxy {
-        /// Address of the client contract managed by proxy i.e., this contract
+        /// @dev Address of the client contract managed by proxy i.e., this contract
         address client;
 
-        constructor(address _client) public {
+        constructor(address _client) {
             client = _client;
         }
 
         /// Forward call to "setOwner(address)" that is implemented by client
         /// after doing basic validation on the address argument.
         function forward(bytes calldata _payload) external {
-            bytes4 sig = abi.decode(_payload[:4], (bytes4));
+            // Since ABI decoding requires padded data, we cannot
+            // use abi.decode(_payload[:4], (bytes4)).
+            bytes4 sig =
+                _payload[0] |
+                (bytes4(_payload[1]) >> 8) |
+                (bytes4(_payload[2]) >> 16) |
+                (bytes4(_payload[3]) >> 24);
             if (sig == bytes4(keccak256("setOwner(address)"))) {
                 address owner = abi.decode(_payload[4:], (address));
                 require(owner != address(0), "Address of owner cannot be zero.");
@@ -443,7 +477,8 @@ shown in the following example:
 
 ::
 
-    pragma solidity >=0.6.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     // Defines a new type with two fields.
     // Declaring a struct outside of a contract allows
@@ -470,12 +505,11 @@ shown in the following example:
 
         function newCampaign(address payable beneficiary, uint goal) public returns (uint campaignID) {
             campaignID = numCampaigns++; // campaignID is return variable
-            // Creates new struct in memory and copies it to storage.
-            // We leave out the mapping type, because it is not valid in memory.
-            // If structs are copied (even from storage to storage),
-            // types that are not valid outside of storage (ex. mappings and array of mappings)
-            // are always omitted, because they cannot be enumerated.
-            campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0);
+            // We cannot use "campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0)"
+            // because the RHS creates a memory-struct "Campaign" that contains a mapping.
+            Campaign storage c = campaigns[campaignID];
+            c.beneficiary = beneficiary;
+            c.fundingGoal = goal;
         }
 
         function contribute(uint campaignID) public payable {
@@ -500,7 +534,7 @@ shown in the following example:
 
 The contract does not provide the full functionality of a crowdfunding
 contract, but it contains the basic concepts necessary to understand structs.
-Struct types can be used inside mappings and arrays and they can itself
+Struct types can be used inside mappings and arrays and they can themselves
 contain mappings and arrays.
 
 It is not possible for a struct to contain a member of its own type,

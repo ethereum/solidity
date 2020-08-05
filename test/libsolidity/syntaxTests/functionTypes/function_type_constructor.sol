@@ -1,7 +1,7 @@
 contract C {
     // Fool parser into parsing a constructor as a function type.
-    constructor() public x;
+    constructor() x;
 }
 // ----
-// SyntaxError: (83-106): Functions without implementation cannot have modifiers.
-// DeclarationError: (104-105): Undeclared identifier.
+// SyntaxError 2668: (83-99): Functions without implementation cannot have modifiers.
+// DeclarationError 7576: (97-98): Undeclared identifier.

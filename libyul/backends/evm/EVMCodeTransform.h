@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
  */
@@ -54,7 +55,7 @@ struct StackTooDeepError: virtual YulException
 struct CodeTransformContext
 {
 	std::map<Scope::Function const*, AbstractAssembly::LabelID> functionEntryIDs;
-	std::map<Scope::Variable const*, int> variableStackHeights;
+	std::map<Scope::Variable const*, size_t> variableStackHeights;
 	std::map<Scope::Variable const*, unsigned> variableReferences;
 
 	struct JumpInfo
@@ -92,10 +93,10 @@ public:
 	{}
 
 public:
-	void operator()(Identifier const& _identifier);
-	void operator()(FunctionDefinition const&);
-	void operator()(ForLoop const&);
-	void operator()(Block const& _block);
+	void operator()(Identifier const& _identifier) override;
+	void operator()(FunctionDefinition const&) override;
+	void operator()(ForLoop const&) override;
+	void operator()(Block const& _block) override;
 
 private:
 	void increaseRefIfFound(YulString _variableName);
@@ -152,7 +153,7 @@ protected:
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		bool _evm15,
-		ExternalIdentifierAccess const& _identifierAccess,
+		ExternalIdentifierAccess _identifierAccess,
 		bool _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context
 	);
@@ -161,8 +162,9 @@ protected:
 	bool unreferenced(Scope::Variable const& _var) const;
 	/// Marks slots of variables that are not used anymore
 	/// and were defined in the current scope for reuse.
-	/// Also POPs unused topmost stack slots.
-	void freeUnusedVariables();
+	/// Also POPs unused topmost stack slots,
+	/// unless @a _popUnusedSlotsAtStackTop is set to false.
+	void freeUnusedVariables(bool _popUnusedSlotsAtStackTop = true);
 	/// Marks the stack slot of @a _var to be reused.
 	void deleteVariable(Scope::Variable const& _var);
 
@@ -200,7 +202,9 @@ private:
 	/// Determines the stack height difference to the given variables. Throws
 	/// if it is not yet in scope or the height difference is too large. Returns
 	/// the (positive) stack height difference otherwise.
-	int variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
+	/// @param _forSwap if true, produces stack error if the difference is invalid for a swap
+	///                 opcode, otherwise checks for validity for a dup opcode.
+	size_t variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
 
 	void expectDeposit(int _deposit, int _oldHeight) const;
 

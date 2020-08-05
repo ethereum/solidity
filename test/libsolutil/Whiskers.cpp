@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for the mini moustache class.
  */
@@ -29,7 +30,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(WhiskersTest)
+BOOST_AUTO_TEST_SUITE(WhiskersTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(no_templates)
 {
@@ -112,6 +113,19 @@ BOOST_AUTO_TEST_CASE(conditional_plus_list)
 	list[1]["y"] = "b";
 	m("l", list);
 	BOOST_CHECK_EQUAL(m.render(), " - ab - ");
+}
+
+BOOST_AUTO_TEST_CASE(string_as_conditional)
+{
+	string templ = "<?+b>+<b><!+b>-</+b>";
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", "abc").render(), "+abc");
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", "").render(), "-");
+}
+
+BOOST_AUTO_TEST_CASE(string_as_conditional_wrong)
+{
+	string templ = "<?+b>+<b></b>";
+	BOOST_CHECK_EQUAL(Whiskers(templ)("b", "abc").render(), "<?+b>+abc</b>");
 }
 
 BOOST_AUTO_TEST_CASE(complicated_replacement)

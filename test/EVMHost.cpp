@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * EVM execution host, i.e. component that implements a simulated Ethereum blockchain
  * for testing purposes.
@@ -81,12 +82,14 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_BYZANTIUM;
 	else if (_evmVersion == langutil::EVMVersion::constantinople())
 		m_evmRevision = EVMC_CONSTANTINOPLE;
+	else if (_evmVersion == langutil::EVMVersion::petersburg())
+		m_evmRevision = EVMC_PETERSBURG;
 	else if (_evmVersion == langutil::EVMVersion::istanbul())
 		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
-		assertThrow(false, Exception, "Berlin is not supported yet.");
-	else //if (_evmVersion == langutil::EVMVersion::petersburg())
-		m_evmRevision = EVMC_PETERSBURG;
+		m_evmRevision = EVMC_BERLIN;
+	else
+		assertThrow(false, Exception, "Unsupported EVM version");
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -99,17 +102,16 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		evmc::address address{};
 		address.bytes[19] = precompiledAddress;
 		// 1wei
-		accounts[address].balance.bytes[31] = 1;
+		accounts[address].balance = evmc::uint256be{1};
 	}
 
-	// TODO: support short literals in EVMC and use them here
-	tx_context.block_difficulty = convertToEVMC(u256("200000000"));
+	tx_context.block_difficulty = evmc::uint256be{200000000};
 	tx_context.block_gas_limit = 20000000;
 	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
-	tx_context.tx_gas_price = convertToEVMC(u256("3000000000"));
+	tx_context.tx_gas_price = evmc::uint256be{3000000000};
 	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
 	// Mainnet according to EIP-155
-	tx_context.chain_id = convertToEVMC(u256(1));
+	tx_context.chain_id = evmc::uint256be{1};
 }
 
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
@@ -222,7 +224,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (message.kind == EVMC_CREATE || message.kind == EVMC_CREATE2)
 	{
-		result.gas_left -= evmasm::GasCosts::createDataGas * result.output_size;
+		result.gas_left -= static_cast<int64_t>(evmasm::GasCosts::createDataGas * result.output_size);
 		if (result.gas_left < 0)
 		{
 			result.gas_left = 0;

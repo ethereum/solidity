@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -90,13 +91,7 @@ size_t CompilerContext::immutableMemoryOffset(VariableDeclaration const& _variab
 
 vector<string> CompilerContext::immutableVariableSlotNames(VariableDeclaration const& _variable)
 {
-	string baseName =
-		_variable.annotation().contract->fullyQualifiedName() +
-		"." +
-		_variable.name() +
-		" (" +
-		to_string(_variable.id()) +
-		")";
+	string baseName = to_string(_variable.id());
 	solAssert(_variable.annotation().type->sizeOnStack() > 0, "");
 	if (_variable.annotation().type->sizeOnStack() == 1)
 		return {baseName};
@@ -139,7 +134,7 @@ void CompilerContext::callLowLevelFunction(
 	*this << lowLevelFunctionTag(_name, _inArgs, _outArgs, _generator);
 
 	appendJump(evmasm::AssemblyItem::JumpType::IntoFunction);
-	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }
 
@@ -152,8 +147,8 @@ void CompilerContext::callYulFunction(
 	m_externallyUsedYulFunctions.insert(_name);
 	auto const retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
-	appendJumpTo(namedTag(_name));
-	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
+	appendJumpTo(namedTag(_name), evmasm::AssemblyItem::JumpType::IntoFunction);
+	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }
 
@@ -187,7 +182,7 @@ void CompilerContext::appendMissingLowLevelFunctions()
 		tie(name, inArgs, outArgs, generator) = m_lowLevelFunctionGenerationQueue.front();
 		m_lowLevelFunctionGenerationQueue.pop();
 
-		setStackOffset(inArgs + 1);
+		setStackOffset(static_cast<int>(inArgs) + 1);
 		*this << m_lowLevelFunctions.at(name).tag();
 		generator(*this);
 		CompilerUtils(*this).moveToStackTop(outArgs);
@@ -198,6 +193,9 @@ void CompilerContext::appendMissingLowLevelFunctions()
 
 pair<string, set<string>> CompilerContext::requestedYulFunctions()
 {
+	solAssert(!m_requestedYulFunctionsRan, "requestedYulFunctions called more than once.");
+	m_requestedYulFunctionsRan = true;
+
 	set<string> empty;
 	swap(empty, m_externallyUsedYulFunctions);
 	return {m_yulFunctionCollector.requestedFunctions(), std::move(empty)};
@@ -275,27 +273,9 @@ evmasm::AssemblyItem CompilerContext::functionEntryLabelIfExists(Declaration con
 FunctionDefinition const& CompilerContext::superFunction(FunctionDefinition const& _function, ContractDefinition const& _base)
 {
 	solAssert(m_mostDerivedContract, "No most derived contract set.");
-	ContractDefinition const* super = superContract(_base);
+	ContractDefinition const* super = _base.superContract(mostDerivedContract());
 	solAssert(super, "Super contract not available.");
 	return _function.resolveVirtual(mostDerivedContract(), super);
-}
-
-FunctionDefinition const* CompilerContext::nextConstructor(ContractDefinition const& _contract) const
-{
-	ContractDefinition const* next = superContract(_contract);
-	if (next == nullptr)
-		return nullptr;
-	for (ContractDefinition const* c: m_mostDerivedContract->annotation().linearizedBaseContracts)
-		if (next != nullptr && next != c)
-			continue;
-		else
-		{
-			next = nullptr;
-			if (c->constructor())
-				return c->constructor();
-		}
-
-	return nullptr;
 }
 
 ContractDefinition const& CompilerContext::mostDerivedContract() const
@@ -319,12 +299,12 @@ unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declarat
 
 unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
 {
-	return m_asm->deposit() - _baseOffset - 1;
+	return static_cast<unsigned>(m_asm->deposit()) - _baseOffset - 1;
 }
 
 unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 {
-	return m_asm->deposit() - _offset - 1;
+	return static_cast<unsigned>(m_asm->deposit()) - _offset - 1;
 }
 
 pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration) const
@@ -392,7 +372,7 @@ void CompilerContext::appendInlineAssembly(
 	OptimiserSettings const& _optimiserSettings
 )
 {
-	int startStackHeight = stackHeight();
+	unsigned startStackHeight = stackHeight();
 
 	set<yul::YulString> externallyUsedIdentifiers;
 	for (auto const& fun: _externallyUsedFunctions)
@@ -405,12 +385,11 @@ void CompilerContext::appendInlineAssembly(
 		yul::Identifier const& _identifier,
 		yul::IdentifierContext,
 		bool _insideFunction
-	) -> size_t
+	) -> bool
 	{
 		if (_insideFunction)
-			return size_t(-1);
-		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
-		return it == _localVariables.end() ? size_t(-1) : 1;
+			return false;
+		return contains(_localVariables, _identifier.name.str());
 	};
 	identifierAccess.generateCode = [&](
 		yul::Identifier const& _identifier,
@@ -420,13 +399,13 @@ void CompilerContext::appendInlineAssembly(
 	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		solAssert(it != _localVariables.end(), "");
-		int stackDepth = _localVariables.end() - it;
-		int stackDiff = _assembly.stackHeight() - startStackHeight + stackDepth;
+		auto stackDepth = static_cast<size_t>(distance(it, _localVariables.end()));
+		size_t stackDiff = static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
 		if (_context == yul::IdentifierContext::LValue)
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
-				CompilerError() <<
+				StackTooDeepError() <<
 				errinfo_sourceLocation(_identifier.location) <<
 				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
@@ -443,7 +422,12 @@ void CompilerContext::appendInlineAssembly(
 	ErrorReporter errorReporter(errors);
 	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, "--CODEGEN--"));
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
-	shared_ptr<yul::Block> parserResult = yul::Parser(errorReporter, dialect).parse(scanner, false);
+	optional<langutil::SourceLocation> locationOverride;
+	if (!_system)
+		locationOverride = m_asm->currentSourceLocation();
+	shared_ptr<yul::Block> parserResult =
+		yul::Parser(errorReporter, dialect, std::move(locationOverride))
+		.parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
@@ -526,6 +510,7 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 		&meter,
 		_object,
 		_optimiserSettings.optimizeStackAllocation,
+		_optimiserSettings.yulOptimiserSteps,
 		_externalIdentifiers
 	);
 
@@ -540,21 +525,6 @@ LinkerObject const& CompilerContext::assembledObject() const
 	LinkerObject const& object = m_asm->assemble();
 	solAssert(object.immutableReferences.empty(), "Leftover immutables.");
 	return object;
-}
-
-ContractDefinition const* CompilerContext::superContract(ContractDefinition const& _contract) const
-{
-	auto const& hierarchy = mostDerivedContract().annotation().linearizedBaseContracts;
-	auto it = find(hierarchy.begin(), hierarchy.end(), &_contract);
-	solAssert(it != hierarchy.end(), "Base not found in inheritance hierarchy.");
-	++it;
-	if (it == hierarchy.end())
-		return nullptr;
-	else
-	{
-		solAssert(*it != &_contract, "");
-		return *it;
-	}
 }
 
 string CompilerContext::revertReasonIfDebug(string const& _message)

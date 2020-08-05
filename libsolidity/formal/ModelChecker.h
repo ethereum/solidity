@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Entry point to the model checking engines.
  * The goal of this class is to make different
@@ -25,9 +26,10 @@
 #include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/CHC.h>
 #include <libsolidity/formal/EncodingContext.h>
-#include <libsolidity/formal/SolverInterface.h>
 
 #include <libsolidity/interface/ReadFile.h>
+
+#include <libsmtutil/SolverInterface.h>
 #include <liblangutil/ErrorReporter.h>
 
 namespace solidity::langutil
@@ -48,7 +50,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
-		smt::SMTSolverChoice _enabledSolvers = smt::SMTSolverChoice::All()
+		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
 	);
 
 	void analyze(SourceUnit const& _sources);
@@ -59,7 +61,7 @@ public:
 	std::vector<std::string> unhandledQueries();
 
 	/// @returns SMT solvers that are available via the C++ API.
-	static smt::SMTSolverChoice availableSolvers();
+	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
 	/// Stores the context of the encoding.

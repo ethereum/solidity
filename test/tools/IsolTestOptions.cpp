@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file IsolTestOptions.cpp
 * @date 2019
 */
@@ -69,6 +70,7 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		std::cout << options << std::endl;
 		return false;
 	}
+	enforceViaYul = true;
 
 	return res;
 }

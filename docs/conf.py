@@ -17,7 +17,7 @@ import sys
 import os
 import re
 
-from pygments_lexer_solidity import SolidityLexer
+from pygments_lexer_solidity import SolidityLexer, YulLexer
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -27,6 +27,7 @@ def setup(sphinx):
     thisdir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, thisdir + '/utils')
     sphinx.add_lexer('Solidity', SolidityLexer())
+    sphinx.add_lexer('Yul', YulLexer())
 
     sphinx.add_stylesheet('css/custom.css')
 
@@ -146,10 +147,14 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_css_files = ["css/toggle.css"]
+
+html_js_files = ["js/toggle.js"]
+
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
 # directly to the root of the documentation.
-#html_extra_path = []
+html_extra_path = ["_static/css"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

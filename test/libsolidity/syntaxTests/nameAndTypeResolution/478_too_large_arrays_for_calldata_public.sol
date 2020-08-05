@@ -3,4 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (28-54): Array is too large to be encoded.
+// TypeError 1534: (28-54): Type too large for memory.

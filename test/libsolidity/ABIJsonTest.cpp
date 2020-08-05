@@ -26,8 +26,6 @@
 #include <libsolutil/JSON.h>
 #include <libsolutil/AnsiColorized.h>
 
-#include <boost/algorithm/string.hpp>
-
 #include <fstream>
 
 using namespace std;
@@ -47,7 +45,10 @@ TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefi
 {
 	CompilerStack compiler;
 
-	compiler.setSources({{"", "pragma solidity >=0.0;\n" + m_source}});
+	compiler.setSources({{
+		"",
+		"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + m_source
+	}});
 	compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	if (!compiler.parseAndAnalyze())
@@ -63,38 +64,6 @@ TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefi
 		m_obtainedResult += jsonPrettyPrint(compiler.contractABI(contractName)) + "\n";
 		first = false;
 	}
-	if (m_expectation != m_obtainedResult)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
-		printIndented(_stream, m_expectation, nextIndentLevel);
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return TestResult::Failure;
-	}
-	return TestResult::Success;
+
+	return checkResult(_stream, _linePrefix, _formatted);
 }
-
-
-void ABIJsonTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
-{
-	printIndented(_stream, m_source, _linePrefix);
-}
-
-void ABIJsonTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
-{
-	printIndented(_stream, m_obtainedResult, _linePrefix);
-}
-
-void ABIJsonTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		if (line.empty())
-			// Avoid trailing spaces.
-			_stream << boost::trim_right_copy(_linePrefix) << endl;
-		else
-			_stream << _linePrefix << line << endl;
-}
-

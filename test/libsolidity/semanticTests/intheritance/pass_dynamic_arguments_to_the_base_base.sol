@@ -1,5 +1,5 @@
 contract Base {
-    constructor(uint256 j) public {
+    constructor(uint256 j) {
         m_i = j;
     }
 
@@ -8,16 +8,18 @@ contract Base {
 
 
 contract Base1 is Base {
-    constructor(uint256 k) public Base(k) {}
+    constructor(uint256 k) Base(k) {}
 }
 
 
 contract Derived is Base, Base1 {
-    constructor(uint256 i) public Base1(i) {}
+    constructor(uint256 i) Base1(i) {}
 }
 
 
 contract Final is Derived(4) {}
 
+// ====
+// compileViaYul: also
 // ----
 // m_i() -> 4

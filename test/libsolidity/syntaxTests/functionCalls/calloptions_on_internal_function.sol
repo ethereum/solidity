@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (75-86): Function call options can only be set on external function calls or contract creations.
+// TypeError 2193: (75-86): Function call options can only be set on external function calls or contract creations.

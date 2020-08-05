@@ -292,6 +292,7 @@ Consider you have the following pre-0.5.0 contract already deployed:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.4.25;
     // This will report a warning until version 0.4.25 of the compiler
     // This will not compile after 0.5.0
@@ -309,7 +310,8 @@ This will no longer compile with Solidity v0.5.0. However, you can define a comp
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.5.0 <0.8.0;
     interface OldContract {
         function someOldFunction(uint8 a) external;
         function anotherOldFunction() external returns (bool);
@@ -326,7 +328,8 @@ Given the interface defined above, you can now easily use the already deployed p
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.5.0 <0.8.0;
 
     interface OldContract {
         function someOldFunction(uint8 a) external;
@@ -347,6 +350,7 @@ commandline compiler for linking):
 ::
 
     // This will not compile after 0.6.0
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.5.99;
 
     library OldLibrary {
@@ -370,6 +374,7 @@ Old version:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.4.25;
     // This will not compile after 0.5.0
 
@@ -432,6 +437,7 @@ New version:
 
 ::
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.5.99;
     // This will not compile after 0.6.0
 

@@ -10,4 +10,6 @@ contract C {
 	}
 }
 // ----
-// Warning: (194-213): Assertion violation happens here
+// Warning 1218: (171-190): Error trying to invoke SMT solver.
+// Warning 1218: (194-213): Error trying to invoke SMT solver.
+// Warning 4661: (194-213): Assertion violation happens here

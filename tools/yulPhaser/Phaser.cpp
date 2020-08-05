@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Phaser.h>
 
@@ -39,6 +40,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 using namespace solidity::phaser;
 
 namespace po = boost::program_options;
@@ -58,6 +60,7 @@ map<Algorithm, string> const AlgorithmToStringMap =
 {
 	{Algorithm::Random, "random"},
 	{Algorithm::GEWEP, "GEWEP"},
+	{Algorithm::Classic, "classic"},
 };
 map<string, Algorithm> const StringToAlgorithmMap = invertMap(AlgorithmToStringMap);
 
@@ -77,6 +80,14 @@ map<MetricAggregatorChoice, string> const MetricAggregatorChoiceToStringMap =
 };
 map<string, MetricAggregatorChoice> const StringToMetricAggregatorChoiceMap = invertMap(MetricAggregatorChoiceToStringMap);
 
+map<CrossoverChoice, string> const CrossoverChoiceToStringMap =
+{
+	{CrossoverChoice::SinglePoint, "single-point"},
+	{CrossoverChoice::TwoPoint, "two-point"},
+	{CrossoverChoice::Uniform, "uniform"},
+};
+map<string, CrossoverChoice> const StringToCrossoverChoiceMap = invertMap(CrossoverChoiceToStringMap);
+
 }
 
 istream& phaser::operator>>(istream& _inputStream, PhaserMode& _phaserMode) { return deserializeChoice(_inputStream, _phaserMode, StringToPhaserModeMap); }
@@ -87,6 +98,8 @@ istream& phaser::operator>>(istream& _inputStream, MetricChoice& _metric) { retu
 ostream& phaser::operator<<(ostream& _outputStream, MetricChoice _metric) { return serializeChoice(_outputStream, _metric, MetricChoiceToStringMap); }
 istream& phaser::operator>>(istream& _inputStream, MetricAggregatorChoice& _aggregator) { return deserializeChoice(_inputStream, _aggregator, StringToMetricAggregatorChoiceMap); }
 ostream& phaser::operator<<(ostream& _outputStream, MetricAggregatorChoice _aggregator) { return serializeChoice(_outputStream, _aggregator, MetricAggregatorChoiceToStringMap); }
+istream& phaser::operator>>(istream& _inputStream, CrossoverChoice& _crossover) { return deserializeChoice(_inputStream, _crossover, StringToCrossoverChoiceMap); }
+ostream& phaser::operator<<(ostream& _outputStream, CrossoverChoice _crossover) { return serializeChoice(_outputStream, _crossover, CrossoverChoiceToStringMap); }
 
 GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLine(po::variables_map const& _arguments)
 {
@@ -94,6 +107,8 @@ GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLi
 		_arguments["algorithm"].as<Algorithm>(),
 		_arguments["min-chromosome-length"].as<size_t>(),
 		_arguments["max-chromosome-length"].as<size_t>(),
+		_arguments["crossover"].as<CrossoverChoice>(),
+		_arguments["uniform-crossover-swap-chance"].as<double>(),
 		_arguments.count("random-elite-pool-size") > 0 ?
 			_arguments["random-elite-pool-size"].as<double>() :
 			optional<double>{},
@@ -107,6 +122,11 @@ GeneticAlgorithmFactory::Options GeneticAlgorithmFactory::Options::fromCommandLi
 		_arguments.count("gewep-genes-to-add-or-delete") > 0 ?
 			_arguments["gewep-genes-to-add-or-delete"].as<double>() :
 			optional<double>{},
+		_arguments["classic-elite-pool-size"].as<double>(),
+		_arguments["classic-crossover-chance"].as<double>(),
+		_arguments["classic-mutation-chance"].as<double>(),
+		_arguments["classic-deletion-chance"].as<double>(),
+		_arguments["classic-addition-chance"].as<double>(),
 	};
 }
 
@@ -149,11 +169,46 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 				/* deletionVsAdditionChance = */ _options.gewepDeletionVsAdditionChance,
 				/* percentGenesToRandomise = */ percentGenesToRandomise,
 				/* percentGenesToAddOrDelete = */ percentGenesToAddOrDelete,
+				/* crossover = */ _options.crossover,
+				/* uniformCrossoverSwapChance = */ _options.uniformCrossoverSwapChance,
+			});
+		}
+		case Algorithm::Classic:
+		{
+			return make_unique<ClassicGeneticAlgorithm>(ClassicGeneticAlgorithm::Options{
+				/* elitePoolSize = */ _options.classicElitePoolSize,
+				/* crossoverChance = */ _options.classicCrossoverChance,
+				/* mutationChance = */ _options.classicMutationChance,
+				/* deletionChance = */ _options.classicDeletionChance,
+				/* additionChance = */ _options.classicAdditionChance,
+				/* crossover = */ _options.crossover,
+				/* uniformCrossoverSwapChance = */ _options.uniformCrossoverSwapChance,
 			});
 		}
 		default:
 			assertThrow(false, solidity::util::Exception, "Invalid Algorithm value.");
 	}
+}
+
+CodeWeights CodeWeightFactory::buildFromCommandLine(po::variables_map const& _arguments)
+{
+	return {
+		_arguments["expression-statement-cost"].as<size_t>(),
+		_arguments["assignment-cost"].as<size_t>(),
+		_arguments["variable-declaration-cost"].as<size_t>(),
+		_arguments["function-definition-cost"].as<size_t>(),
+		_arguments["if-cost"].as<size_t>(),
+		_arguments["switch-cost"].as<size_t>(),
+		_arguments["case-cost"].as<size_t>(),
+		_arguments["for-loop-cost"].as<size_t>(),
+		_arguments["break-cost"].as<size_t>(),
+		_arguments["continue-cost"].as<size_t>(),
+		_arguments["leave-cost"].as<size_t>(),
+		_arguments["block-cost"].as<size_t>(),
+		_arguments["function-call-cost"].as<size_t>(),
+		_arguments["identifier-cost"].as<size_t>(),
+		_arguments["literal-cost"].as<size_t>(),
+	};
 }
 
 FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po::variables_map const& _arguments)
@@ -169,7 +224,8 @@ FitnessMetricFactory::Options FitnessMetricFactory::Options::fromCommandLine(po:
 unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 	Options const& _options,
 	vector<Program> _programs,
-	vector<shared_ptr<ProgramCache>> _programCaches
+	vector<shared_ptr<ProgramCache>> _programCaches,
+	CodeWeights const& _weights
 )
 {
 	assert(_programCaches.size() == _programs.size());
@@ -184,6 +240,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 				metrics.push_back(make_unique<ProgramSize>(
 					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
 					move(_programCaches[i]),
+					_weights,
 					_options.chromosomeRepetitions
 				));
 
@@ -196,6 +253,7 @@ unique_ptr<FitnessMetric> FitnessMetricFactory::build(
 					_programCaches[i] != nullptr ? optional<Program>{} : move(_programs[i]),
 					move(_programCaches[i]),
 					_options.relativeMetricScale,
+					_weights,
 					_options.chromosomeRepetitions
 				));
 			break;
@@ -405,8 +463,15 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		(
 			"mode",
 			po::value<PhaserMode>()->value_name("<NAME>")->default_value(PhaserMode::RunAlgorithm),
-			"Mode of operation. The default is to run the algorithm but you can also tell phaser "
-			"to do something else with its parameters, e.g. just print the optimised programs and exit."
+			(
+				"Mode of operation. The default is to run the algorithm but you can also tell phaser "
+				"to do something else with its parameters, e.g. just print the optimised programs and exit.\n"
+				"\n"
+				"AVAILABLE MODES:\n"
+				"* " + toString(PhaserMode::RunAlgorithm) + "\n" +
+				"* " + toString(PhaserMode::PrintOptimisedPrograms) + "\n" +
+				"* " + toString(PhaserMode::PrintOptimisedASTs)
+			).c_str()
 		)
 	;
 	keywordDescription.add(generalDescription);
@@ -416,7 +481,14 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		(
 			"algorithm",
 			po::value<Algorithm>()->value_name("<NAME>")->default_value(Algorithm::GEWEP),
-			"Algorithm"
+			(
+				"Algorithm\n"
+				"\n"
+				"AVAILABLE ALGORITHMS:\n"
+				"* " + toString(Algorithm::GEWEP) + "\n" +
+				"* " + toString(Algorithm::Classic) + "\n" +
+				"* " + toString(Algorithm::Random)
+			).c_str()
 		)
 		(
 			"no-randomise-duplicates",
@@ -427,13 +499,30 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		)
 		(
 			"min-chromosome-length",
-			po::value<size_t>()->value_name("<NUM>")->default_value(12),
+			po::value<size_t>()->value_name("<NUM>")->default_value(100),
 			"Minimum length of randomly generated chromosomes."
 		)
 		(
 			"max-chromosome-length",
-			po::value<size_t>()->value_name("<NUM>")->default_value(30),
+			po::value<size_t>()->value_name("<NUM>")->default_value(100),
 			"Maximum length of randomly generated chromosomes."
+		)
+		(
+			"crossover",
+			po::value<CrossoverChoice>()->value_name("<NAME>")->default_value(CrossoverChoice::Uniform),
+			(
+				"Type of the crossover operator to use.\n"
+				"\n"
+				"AVAILABLE CROSSOVER OPERATORS:\n"
+				"* " + toString(CrossoverChoice::SinglePoint) + "\n" +
+				"* " + toString(CrossoverChoice::TwoPoint) + "\n" +
+				"* " + toString(CrossoverChoice::Uniform)
+			).c_str()
+		)
+		(
+			"uniform-crossover-swap-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.5),
+			"Chance of two genes being swapped between chromosomes in uniform crossover."
 		)
 	;
 	keywordDescription.add(algorithmDescription);
@@ -474,6 +563,36 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		)
 	;
 	keywordDescription.add(gewepAlgorithmDescription);
+
+	po::options_description classicGeneticAlgorithmDescription("CLASSIC GENETIC ALGORITHM", lineLength, minDescriptionLength);
+	classicGeneticAlgorithmDescription.add_options()
+		(
+			"classic-elite-pool-size",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.25),
+			"Percentage of population to regenerate using mutations in each round."
+		)
+		(
+			"classic-crossover-chance",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.75),
+			"Chance of a chromosome being selected for crossover."
+		)
+		(
+			"classic-mutation-chance",
+			po::value<double>()->value_name("<FRACTION>")->default_value(0.01),
+			"Chance of a gene being mutated."
+		)
+		(
+			"classic-deletion-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.01),
+			"Chance of a gene being deleted."
+		)
+		(
+			"classic-addition-chance",
+			po::value<double>()->value_name("<PROBABILITY>")->default_value(0.01),
+			"Chance of a random gene being added."
+		)
+	;
+	keywordDescription.add(classicGeneticAlgorithmDescription);
 
 	po::options_description randomAlgorithmDescription("RANDOM ALGORITHM", lineLength, minDescriptionLength);
 	randomAlgorithmDescription.add_options()
@@ -518,13 +637,27 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		(
 			"metric",
 			po::value<MetricChoice>()->value_name("<NAME>")->default_value(MetricChoice::RelativeCodeSize),
-			"Metric used to evaluate the fitness of a chromosome."
+			(
+				"Metric used to evaluate the fitness of a chromosome.\n"
+				"\n"
+				"AVAILABLE METRICS:\n"
+				"* " + toString(MetricChoice::CodeSize) + "\n" +
+				"* " + toString(MetricChoice::RelativeCodeSize)
+			).c_str()
 		)
 		(
 			"metric-aggregator",
 			po::value<MetricAggregatorChoice>()->value_name("<NAME>")->default_value(MetricAggregatorChoice::Average),
-			"Operator used to combine multiple fitness metric obtained by evaluating a chromosome "
-			"separately for each input program."
+			(
+				"Operator used to combine multiple fitness metric values obtained by evaluating a "
+				"chromosome separately for each input program.\n"
+				"\n"
+				"AVAILABLE METRIC AGGREGATORS:\n"
+				"* " + toString(MetricAggregatorChoice::Average) + "\n" +
+				"* " + toString(MetricAggregatorChoice::Sum) + "\n" +
+				"* " + toString(MetricAggregatorChoice::Maximum) + "\n" +
+				"* " + toString(MetricAggregatorChoice::Minimum)
+			).c_str()
 		)
 		(
 			"relative-metric-scale",
@@ -545,6 +678,28 @@ Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 		)
 	;
 	keywordDescription.add(metricsDescription);
+
+	po::options_description metricWeightDescription("METRIC WEIGHTS", lineLength, minDescriptionLength);
+	metricWeightDescription.add_options()
+		// TODO: We need to figure out the best set of weights for the phaser.
+		// This one is just a stopgap to make sure no statement or expression has zero cost.
+		("expression-statement-cost", po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("assignment-cost",           po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("variable-declaration-cost", po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("function-definition-cost",  po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("if-cost",                   po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("switch-cost",               po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("case-cost",                 po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("for-loop-cost",             po::value<size_t>()->value_name("<COST>")->default_value(3))
+		("break-cost",                po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("continue-cost",             po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("leave-cost",                po::value<size_t>()->value_name("<COST>")->default_value(2))
+		("block-cost",                po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("function-call-cost",        po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("identifier-cost",           po::value<size_t>()->value_name("<COST>")->default_value(1))
+		("literal-cost",              po::value<size_t>()->value_name("<COST>")->default_value(1))
+	;
+	keywordDescription.add(metricWeightDescription);
 
 	po::options_description cacheDescription("CACHE", lineLength, minDescriptionLength);
 	cacheDescription.add_options()
@@ -655,8 +810,13 @@ void Phaser::runPhaser(po::variables_map const& _arguments)
 
 	vector<Program> programs = ProgramFactory::build(programOptions);
 	vector<shared_ptr<ProgramCache>> programCaches = ProgramCacheFactory::build(cacheOptions, programs);
-
-	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(metricOptions, programs, programCaches);
+	CodeWeights codeWeights = CodeWeightFactory::buildFromCommandLine(_arguments);
+	unique_ptr<FitnessMetric> fitnessMetric = FitnessMetricFactory::build(
+		metricOptions,
+		programs,
+		programCaches,
+		codeWeights
+	);
 	Population population = PopulationFactory::build(populationOptions, move(fitnessMetric));
 
 	if (_arguments["mode"].as<PhaserMode>() == PhaserMode::RunAlgorithm)

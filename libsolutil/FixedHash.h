@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file FixedHash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -64,10 +65,44 @@ public:
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytes const& _array, ConstructFromHashType _sizeMismatchBehavior = FailIfDifferent)
+	{
+		if (_array.size() == N)
+			memcpy(m_data.data(), _array.data(), _array.size());
+		else
+		{
+			m_data.fill(0);
+			if (_sizeMismatchBehavior != FailIfDifferent)
+			{
+				auto bytesToCopy = std::min<size_t>(_array.size(), N);
+				for (size_t i = 0; i < bytesToCopy; ++i)
+					if (_sizeMismatchBehavior == AlignRight)
+						m_data[N - 1 - i] = _array[_array.size() - 1 - i];
+					else
+						m_data[i] = _array[i];
+			}
+		}
+	}
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent)
+	{
+		if (_b.size() == N)
+			memcpy(m_data.data(), _b.data(), std::min<size_t>(_b.size(), N));
+		else
+		{
+			m_data.fill(0);
+			if (_t != FailIfDifferent)
+			{
+				auto c = std::min<size_t>(_b.size(), N);
+				for (size_t i = 0; i < c; ++i)
+					if (_t == AlignRight)
+						m_data[N - 1 - i] = _b[_b.size() - 1 - i];
+					else
+						m_data[i] = _b[i];
+			}
+		}
+	}
 
 	/// Explicitly construct, copying from a  string.
 	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht) {}

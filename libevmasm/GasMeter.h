@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file GasMeter.cpp
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -28,6 +29,7 @@
 
 #include <ostream>
 #include <tuple>
+#include <utility>
 
 namespace solidity::evmasm
 {
@@ -119,7 +121,7 @@ public:
 	struct GasConsumption
 	{
 		GasConsumption(unsigned _value = 0, bool _infinite = false): value(_value), isInfinite(_infinite) {}
-		GasConsumption(u256 _value, bool _infinite = false): value(_value), isInfinite(_infinite) {}
+		GasConsumption(u256 _value, bool _infinite = false): value(std::move(_value)), isInfinite(_infinite) {}
 		static GasConsumption infinite() { return GasConsumption(0, true); }
 
 		GasConsumption& operator+=(GasConsumption const& _other);
@@ -133,8 +135,8 @@ public:
 	};
 
 	/// Constructs a new gas meter given the current state.
-	GasMeter(std::shared_ptr<KnownState> const& _state, langutil::EVMVersion _evmVersion, u256 const& _largestMemoryAccess = 0):
-		m_state(_state), m_evmVersion(_evmVersion), m_largestMemoryAccess(_largestMemoryAccess) {}
+	GasMeter(std::shared_ptr<KnownState>  _state, langutil::EVMVersion _evmVersion, u256  _largestMemoryAccess = 0):
+		m_state(std::move(_state)), m_evmVersion(_evmVersion), m_largestMemoryAccess(std::move(_largestMemoryAccess)) {}
 
 	/// @returns an upper bound on the gas consumed by the given instruction and updates
 	/// the state.

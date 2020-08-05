@@ -6,5 +6,7 @@ contract C {
         return ecrecover(bytes32(uint(-1)), 1, bytes32(uint(2)), bytes32(uint(3)));
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 0

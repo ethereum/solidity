@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that turns complex expressions into multiple variable
  * declarations.
@@ -31,8 +32,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -47,13 +46,11 @@ void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
-		if (builtin->literalArguments)
-			// We cannot outline function arguments that have to be literals
-			return;
+	BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name);
 
-	for (auto& arg: _funCall.arguments | boost::adaptors::reversed)
-		outlineExpression(arg);
+	for (size_t i = _funCall.arguments.size(); i > 0; i--)
+		if (!builtin || !builtin->literalArgument(i - 1))
+			outlineExpression(_funCall.arguments[i - 1]);
 }
 
 void ExpressionSplitter::operator()(If& _if)

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -37,7 +38,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 namespace solidity::yul
 {
 struct AsmAnalysisInfo;
-struct Block;
+struct Object;
 struct Dialect;
 }
 
@@ -56,29 +57,22 @@ public:
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
-	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool const _formatted = false) const override;
-	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
-
 private:
-	void printIndented(std::ostream& _stream, std::string const& _output, std::string const& _linePrefix = "") const;
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	void disambiguate();
 	void updateContext();
 
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
-	std::string m_source;
 	std::string m_optimizerStep;
-	std::string m_expectation;
 
 	Dialect const* m_dialect = nullptr;
 	std::set<YulString> m_reservedIdentifiers;
 	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
-	std::shared_ptr<Block> m_ast;
+	std::shared_ptr<Object> m_object;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
-	std::string m_obtainedResult;
 };
 
 }

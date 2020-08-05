@@ -5,4 +5,4 @@ abstract contract C {
     function vote(uint id) public virtual returns (uint value);
 }
 // ----
-// DocstringParsingError: (26-121): Documentation tag "@return value2 Some value 2" exceeds the number of return parameters.
+// DocstringParsingError 2604: (26-121): Documentation tag "@return value2 Some value 2" exceeds the number of return parameters.

@@ -1,7 +1,7 @@
 pragma experimental SMTChecker;
 contract C {
 	uint a;
-	constructor() public {
+	constructor() {
 		a = 2;
 	}
 }
@@ -10,7 +10,7 @@ contract B is C {
 }
 
 contract B2 is C {
-	constructor() public {
+	constructor() {
 		assert(a == 2);
 	}
 }

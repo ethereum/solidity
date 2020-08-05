@@ -3,5 +3,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (57-84): Data location must be "memory" for return parameter in function, but "storage" was given.
-// TypeError: (57-84): Internal type cannot be used for external function type.
+// TypeError 6651: (57-84): Data location must be "memory" or "calldata" for return parameter in function, but "storage" was given.

@@ -13,4 +13,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (251-266): Assertion violation happens here
+// Warning 6328: (251-266): Assertion violation happens here

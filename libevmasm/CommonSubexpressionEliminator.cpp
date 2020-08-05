@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file CommonSubexpressionEliminator.cpp
  * @author Christian <c@ethdev.com>
@@ -386,7 +387,11 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 			"Opcodes with more than two arguments not implemented yet."
 		);
 	for (size_t i = 0; i < arguments.size(); ++i)
-		assertThrow(m_stack[m_stackHeight - i] == arguments[i], OptimizerException, "Expected arguments not present." );
+		assertThrow(
+			m_stack[m_stackHeight - static_cast<int>(i)] == arguments[i],
+			OptimizerException,
+			"Expected arguments not present."
+		);
 
 	while (SemanticInformation::isCommutativeOperation(*expr.item) &&
 			!m_generatedItems.empty() &&
@@ -395,8 +400,8 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
-		m_classPositions[m_stack[m_stackHeight - i]].erase(m_stackHeight - i);
-		m_stack.erase(m_stackHeight - i);
+		m_classPositions[m_stack[m_stackHeight - static_cast<int>(i)]].erase(m_stackHeight - static_cast<int>(i));
+		m_stack.erase(m_stackHeight - static_cast<int>(i));
 	}
 	appendItem(*expr.item);
 	if (expr.item->type() != Operation || instructionInfo(expr.item->instruction()).ret == 1)
@@ -467,7 +472,7 @@ void CSECodeGenerator::appendDup(int _fromPosition, SourceLocation const& _locat
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
 	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(dupInstruction(instructionNum), _location));
+	appendItem(AssemblyItem(dupInstruction(static_cast<unsigned>(instructionNum)), _location));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
 	m_classPositions[m_stack[m_stackHeight]].insert(m_stackHeight);
 }
@@ -480,7 +485,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 	int instructionNum = m_stackHeight - _fromPosition;
 	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(swapInstruction(instructionNum), _location));
+	appendItem(AssemblyItem(swapInstruction(static_cast<unsigned>(instructionNum)), _location));
 
 	if (m_stack[m_stackHeight] != m_stack[_fromPosition])
 	{
@@ -502,5 +507,5 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 void CSECodeGenerator::appendItem(AssemblyItem const& _item)
 {
 	m_generatedItems.push_back(_item);
-	m_stackHeight += _item.deposit();
+	m_stackHeight += static_cast<int>(_item.deposit());
 }

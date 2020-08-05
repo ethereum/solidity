@@ -8,3 +8,5 @@ contract C
 		assert((y % 2) == 0);
 	}
 }
+// ----
+// Warning 1218: (122-142): Error trying to invoke SMT solver.

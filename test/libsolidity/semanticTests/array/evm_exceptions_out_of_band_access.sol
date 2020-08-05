@@ -12,7 +12,8 @@ contract A {
         return true;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // test() -> false
 // testIt() -> FAILURE

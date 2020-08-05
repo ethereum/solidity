@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -180,7 +181,7 @@ void CompilerUtils::storeInMemory(unsigned _offset)
 		m_context << u256(_offset) << Instruction::MSTORE;
 }
 
-void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
+void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries, bool _cleanup)
 {
 	// process special types (Reference, StringLiteral, Function)
 	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
@@ -189,7 +190,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 			ref->location() == DataLocation::Memory,
 			"Only in-memory reference type can be stored."
 		);
-		storeInMemoryDynamic(*TypeProvider::uint256(), _padToWordBoundaries);
+		storeInMemoryDynamic(*TypeProvider::uint256(), _padToWordBoundaries, _cleanup);
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
 	{
@@ -212,7 +213,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	}
 	else if (_type.isValueType())
 	{
-		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
+		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries, _cleanup);
 		m_context << Instruction::DUP2 << Instruction::MSTORE;
 		m_context << u256(numBytes) << Instruction::ADD;
 	}
@@ -455,10 +456,15 @@ void CompilerUtils::encodeToMemory(
 			// leave end_of_mem as dyn head pointer
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			dynPointers++;
-			solAssert((argSize + dynPointers) < 16, "Stack too deep, try using fewer variables.");
+			assertThrow(
+				(argSize + dynPointers) < 16,
+				StackTooDeepError,
+				"Stack too deep, try using fewer variables."
+			);
 		}
 		else
 		{
+			bool needCleanup = true;
 			copyToStackTop(argSize - stackPos + dynPointers + 2, _givenTypes[i]->sizeOnStack());
 			solAssert(!!targetType, "Externalable type expected.");
 			TypePointer type = targetType;
@@ -477,11 +483,25 @@ void CompilerUtils::encodeToMemory(
 			)
 				type = _givenTypes[i]; // delay conversion
 			else
+			{
 				convertType(*_givenTypes[i], *targetType, true);
+				needCleanup = false;
+			}
+
 			if (auto arrayType = dynamic_cast<ArrayType const*>(type))
 				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
+			else if (auto arraySliceType = dynamic_cast<ArraySliceType const*>(type))
+			{
+				solAssert(
+					arraySliceType->dataStoredIn(DataLocation::CallData) &&
+					arraySliceType->isDynamicallySized() &&
+					!arraySliceType->arrayType().baseType()->isDynamicallyEncoded(),
+					""
+				);
+				ArrayUtils(m_context).copyArrayToMemory(arraySliceType->arrayType(), _padToWordBoundaries);
+			}
 			else
-				storeInMemoryDynamic(*type, _padToWordBoundaries);
+				storeInMemoryDynamic(*type, _padToWordBoundaries, needCleanup);
 		}
 		stackPos += _givenTypes[i]->sizeOnStack();
 	}
@@ -497,8 +517,9 @@ void CompilerUtils::encodeToMemory(
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// copy tail pointer (=mem_end - mem_start) to memory
-			solAssert(
+			assertThrow(
 				(2 + dynPointers) <= 16,
+				StackTooDeepError,
 				"Stack too deep(" + to_string(2 + dynPointers) + "), try using fewer variables."
 			);
 			m_context << dupInstruction(2 + dynPointers) << Instruction::DUP2;
@@ -516,22 +537,39 @@ void CompilerUtils::encodeToMemory(
 			}
 			else
 			{
-				solAssert(_givenTypes[i]->category() == Type::Category::Array, "Unknown dynamic type.");
-				auto const& arrayType = dynamic_cast<ArrayType const&>(*_givenTypes[i]);
+				ArrayType const* arrayType = nullptr;
+				switch (_givenTypes[i]->category())
+				{
+					case Type::Category::Array:
+						arrayType = dynamic_cast<ArrayType const*>(_givenTypes[i]);
+						break;
+					case Type::Category::ArraySlice:
+						arrayType = &dynamic_cast<ArraySliceType const*>(_givenTypes[i])->arrayType();
+						solAssert(
+							arrayType->isDynamicallySized() &&
+							arrayType->dataStoredIn(DataLocation::CallData) &&
+							!arrayType->baseType()->isDynamicallyEncoded(),
+							""
+						);
+						break;
+					default:
+						solAssert(false, "Unknown dynamic type.");
+						break;
+				}
 				// now copy the array
-				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType.sizeOnStack());
+				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType->sizeOnStack());
 				// stack: ... <end_of_mem> <value...>
 				// copy length to memory
-				m_context << dupInstruction(1 + arrayType.sizeOnStack());
-				ArrayUtils(m_context).retrieveLength(arrayType, 1);
+				m_context << dupInstruction(1 + arrayType->sizeOnStack());
+				ArrayUtils(m_context).retrieveLength(*arrayType, 1);
 				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
 				storeInMemoryDynamic(*TypeProvider::uint256(), true);
 				// stack: ... <end_of_mem> <value...> <end_of_mem''>
 				// copy the new memory pointer
-				m_context << swapInstruction(arrayType.sizeOnStack() + 1) << Instruction::POP;
+				m_context << swapInstruction(arrayType->sizeOnStack() + 1) << Instruction::POP;
 				// stack: ... <end_of_mem''> <value...>
 				// copy data part
-				ArrayUtils(m_context).copyArrayToMemory(arrayType, _padToWordBoundaries);
+				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
 				// stack: ... <end_of_mem'''>
 			}
 
@@ -559,8 +597,8 @@ void CompilerUtils::abiEncodeV2(
 
 	string encoderName =
 		_padToWordBoundaries ?
-		m_context.abiFunctions().tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
-		m_context.abiFunctions().tupleEncoderPacked(_givenTypes, _targetTypes);
+		m_context.abiFunctions().tupleEncoderReversed(_givenTypes, _targetTypes, _encodeAsLibraryTypes) :
+		m_context.abiFunctions().tupleEncoderPackedReversed(_givenTypes, _targetTypes);
 	m_context.callYulFunction(encoderName, sizeOnStack(_givenTypes) + 1, 1);
 }
 
@@ -947,6 +985,14 @@ void CompilerUtils::convertType(
 				}
 				else
 				{
+					if (auto baseType = dynamic_cast<ArrayType const*>(typeOnStack.baseType()))
+						solUnimplementedAssert(
+							typeOnStack.location() != DataLocation::CallData ||
+							!typeOnStack.isDynamicallyEncoded() ||
+							!baseType->isDynamicallySized(),
+							"Copying nested dynamic calldata arrays to memory is not implemented in the old code generator."
+						);
+
 					m_context << u256(0) << Instruction::SWAP1;
 					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
 					auto repeat = m_context.newTag();
@@ -987,10 +1033,15 @@ void CompilerUtils::convertType(
 	case Type::Category::ArraySlice:
 	{
 		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
+		solUnimplementedAssert(
+			_targetType.dataStoredIn(DataLocation::CallData),
+			"Conversion from calldata slices to memory not yet implemented."
+		);
 		solAssert(_targetType == typeOnStack.arrayType(), "");
 		solUnimplementedAssert(
 			typeOnStack.arrayType().location() == DataLocation::CallData &&
-			typeOnStack.arrayType().isDynamicallySized(),
+			typeOnStack.arrayType().isDynamicallySized() &&
+			!typeOnStack.arrayType().baseType()->isDynamicallyEncoded(),
 			""
 		);
 		break;
@@ -1029,8 +1080,7 @@ void CompilerUtils::convertType(
 					// stack: <memory ptr> <source ref> <memory ptr>
 					for (auto const& member: typeOnStack->members(nullptr))
 					{
-						if (!member.type->canLiveOutsideStorage())
-							continue;
+						solAssert(!member.type->containsNestedMapping(), "");
 						pair<u256, unsigned> const& offsets = typeOnStack->storageOffsetsOfMember(member.name);
 						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						_context << u256(offsets.second);
@@ -1108,12 +1158,12 @@ void CompilerUtils::convertType(
 					// Value shrank
 					for (unsigned j = targetSize; j < sourceSize; ++j)
 					{
-						moveToStackTop(depth - 1, 1);
+						moveToStackTop(depth + targetSize - sourceSize, 1);
 						m_context << Instruction::POP;
 					}
 					// Value grew
 					if (targetSize > sourceSize)
-						moveIntoStack(depth + targetSize - sourceSize - 1, targetSize - sourceSize);
+						moveIntoStack(depth - sourceSize, targetSize - sourceSize);
 				}
 			}
 			depth -= sourceSize;
@@ -1182,6 +1232,15 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			m_context << u256(0);
 		return;
 	}
+	if (referenceType->location() == DataLocation::CallData)
+	{
+		solAssert(referenceType->sizeOnStack() == 1 || referenceType->sizeOnStack() == 2, "");
+		m_context << Instruction::CALLDATASIZE;
+		if (referenceType->sizeOnStack() == 2)
+			m_context << 0;
+		return;
+	}
+
 	solAssert(referenceType->location() == DataLocation::Memory, "");
 	if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
 		if (arrayType->isDynamicallySized())
@@ -1241,7 +1300,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 	// move variable starting from its top end in the stack
 	if (stackPosition - size + 1 > 16)
 		BOOST_THROW_EXCEPTION(
-			CompilerError() <<
+			StackTooDeepError() <<
 			errinfo_sourceLocation(_variable.location()) <<
 			util::errinfo_comment("Stack too deep, try removing local variables.")
 		);
@@ -1251,7 +1310,11 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 
 void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
-	solAssert(_stackDepth <= 16, "Stack too deep, try removing local variables.");
+	assertThrow(
+		_stackDepth <= 16,
+		StackTooDeepError,
+		"Stack too deep, try removing local variables."
+	);
 	for (unsigned i = 0; i < _itemSize; ++i)
 		m_context << dupInstruction(_stackDepth);
 }
@@ -1273,14 +1336,22 @@ void CompilerUtils::moveIntoStack(unsigned _stackDepth, unsigned _itemSize)
 
 void CompilerUtils::rotateStackUp(unsigned _items)
 {
-	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
+	assertThrow(
+		_items - 1 <= 16,
+		StackTooDeepError,
+		"Stack too deep, try removing local variables."
+	);
 	for (unsigned i = 1; i < _items; ++i)
 		m_context << swapInstruction(_items - i);
 }
 
 void CompilerUtils::rotateStackDown(unsigned _items)
 {
-	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
+	assertThrow(
+		_items - 1 <= 16,
+		StackTooDeepError,
+		"Stack too deep, try removing local variables."
+	);
 	for (unsigned i = 1; i < _items; ++i)
 		m_context << swapInstruction(i);
 }
@@ -1302,7 +1373,7 @@ void CompilerUtils::popAndJump(unsigned _toHeight, evmasm::AssemblyItem const& _
 	unsigned amount = m_context.stackHeight() - _toHeight;
 	popStackSlots(amount);
 	m_context.appendJumpTo(_jumpTo);
-	m_context.adjustStackOffset(amount);
+	m_context.adjustStackOffset(static_cast<int>(amount));
 }
 
 unsigned CompilerUtils::sizeOnStack(vector<Type const*> const& _variableTypes)
@@ -1387,7 +1458,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	{
 		bool leftAligned = _type.category() == Type::Category::FixedBytes;
 		// add leading or trailing zeros by dividing/multiplying depending on alignment
-		int shiftFactor = (32 - numBytes) * 8;
+		unsigned shiftFactor = (32 - numBytes) * 8;
 		rightShiftNumberOnStack(shiftFactor);
 		if (leftAligned)
 		{
@@ -1433,7 +1504,7 @@ void CompilerUtils::rightShiftNumberOnStack(unsigned _bits)
 		m_context << (u256(1) << _bits) << Instruction::SWAP1 << Instruction::DIV;
 }
 
-unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
+unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords, bool _cleanup)
 {
 	solAssert(
 		_type.sizeOnStack() == 1,
@@ -1456,7 +1527,9 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWords)
 
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
 
-	convertType(_type, _type, true);
+	if (_cleanup)
+		convertType(_type, _type, true);
+
 	if (numBytes != 32 && !leftAligned && !_padToWords)
 		// shift the value accordingly before storing
 		leftShiftNumberOnStack((32 - numBytes) * 8);

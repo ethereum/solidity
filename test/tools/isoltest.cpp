@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/AnsiColorized.h>
@@ -21,20 +22,17 @@
 #include <memory>
 #include <test/Common.h>
 #include <test/tools/IsolTestOptions.h>
-#include <test/libsolidity/AnalysisFramework.h>
 #include <test/InteractiveTests.h>
 #include <test/EVMHost.h>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/program_options.hpp>
 
 #include <cstdlib>
 #include <iostream>
-#include <fstream>
 #include <queue>
 #include <regex>
+#include <utility>
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -71,7 +69,7 @@ struct TestStats
 class TestFilter
 {
 public:
-	explicit TestFilter(string const& _filter): m_filter(_filter)
+	explicit TestFilter(string _filter): m_filter(std::move(_filter))
 	{
 		string filter{m_filter};
 
@@ -97,14 +95,14 @@ public:
 	TestTool(
 		TestCreator _testCaseCreator,
 		TestOptions const& _options,
-		fs::path const& _path,
-		string const& _name
+		fs::path _path,
+		string _name
 	):
 		m_testCaseCreator(_testCaseCreator),
 		m_options(_options),
 		m_filter(TestFilter{_options.testFilter}),
-		m_path(_path),
-		m_name(_name)
+		m_path(std::move(_path)),
+		m_name(std::move(_name))
 	{}
 
 	enum class Result
@@ -160,7 +158,11 @@ TestTool::Result TestTool::process()
 		{
 			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
 
-			m_test = m_testCaseCreator(TestCase::Config{m_path.string(), m_options.evmVersion()});
+			m_test = m_testCaseCreator(TestCase::Config{
+				m_path.string(),
+				m_options.evmVersion(),
+				m_options.enforceViaYul
+			});
 			if (m_test->shouldRun())
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
@@ -231,7 +233,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 				cout << endl;
 				ofstream file(m_path.string(), ios::trunc);
 				m_test->printSource(file);
-				m_test->printSettings(file);
+				m_test->printUpdatedSettings(file);
 				file << "// ----" << endl;
 				m_test->printUpdatedExpectations(file, "// ");
 				return Request::Rerun;

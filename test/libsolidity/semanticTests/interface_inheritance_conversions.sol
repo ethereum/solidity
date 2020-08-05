@@ -33,6 +33,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // convertParent() -> 1
 // convertSubA() -> 1, 2

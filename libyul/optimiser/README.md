@@ -4,6 +4,7 @@ planned state of the optimiser.
 
 Table of Contents:
 
+- [Selecting optimisations](#selecting-optimisations)
 - [Preprocessing](#preprocessing)
 - [Pseudo-SSA Transformation](#pseudo-ssa-transformation)
 - [Tools](#tools)
@@ -32,6 +33,17 @@ the following transformation steps are the main components:
  - [Expression Simplifier](#expression-simplifier)
  - [Redundant Assign Eliminator](#redundant-assign-eliminator)
  - [Full Function Inliner](#full-function-inliner)
+
+## Selecting optimisations
+
+By default the optimiser applies its predefined sequence of optimisation steps to the generated assembly.
+You can override this sequence and supply your own using the `--yul-optimizations` option:
+
+``` bash
+solc --optimize --ir-optimized --yul-optimizations 'dhfoD[xarrscLMcCTU]uljmul'
+```
+
+There's a [table listing available abbreviations in the optimiser docs](/docs/yul.rst#optimization-step-sequence).
 
 ## Preprocessing
 

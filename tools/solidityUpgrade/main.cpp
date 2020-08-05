@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/SourceUpgrade.h>
 
 #include <libsolutil/CommonIO.h>
@@ -23,6 +24,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/exception/all.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -74,8 +76,16 @@ int main(int argc, char** argv)
 	if (!upgrade.parseArguments(argc, argv))
 		return 1;
 	upgrade.printPrologue();
-	if (!upgrade.processInput())
-		return 1;
+
+	try
+	{
+		if (!upgrade.processInput())
+			return 1;
+	}
+	catch (boost::exception const& _exception)
+	{
+		cerr << "Exception while processing input: " << boost::diagnostic_information(_exception) << endl;
+	}
 
 	return 0;
 }

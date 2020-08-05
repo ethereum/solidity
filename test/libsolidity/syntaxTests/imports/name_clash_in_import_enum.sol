@@ -4,4 +4,4 @@ enum E { A }
 import "a";
 enum E { A }
 // ----
-// DeclarationError: (b:12-24): Identifier already declared.
+// DeclarationError 2333: (b:12-24): Identifier already declared.

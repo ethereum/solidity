@@ -8,7 +8,7 @@
 
 	solidity is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
@@ -21,6 +21,7 @@
 #include <liblangutil/SourceLocation.h>
 
 #include <algorithm>
+#include <utility>
 
 namespace solidity::tools
 {
@@ -50,7 +51,7 @@ public:
 	:
 		m_location(_location),
 		m_source(_location.source->source()),
-		m_patch(_patch),
+		m_patch(std::move(_patch)),
 		m_level(_level) {}
 
 	~UpgradeChange() {}

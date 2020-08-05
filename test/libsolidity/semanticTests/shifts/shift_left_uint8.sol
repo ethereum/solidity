@@ -4,6 +4,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f(uint8,uint8): 0x66, 0x0 -> 0x66
 // f(uint8,uint8): 0x66, 0x8 -> 0

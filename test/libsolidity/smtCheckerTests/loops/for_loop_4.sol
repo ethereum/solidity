@@ -9,4 +9,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (136-150): Assertion violation happens here
+// Warning 6328: (136-150): Assertion violation happens here

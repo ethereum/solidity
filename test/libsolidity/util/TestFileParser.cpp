@@ -14,10 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/util/TestFileParser.h>
 
 #include <test/libsolidity/util/BytesUtils.h>
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/Common.h>
 
 #include <liblangutil/Common.h>
@@ -128,9 +130,9 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 
 					calls.emplace_back(std::move(call));
 				}
-				catch (Error const& _e)
+				catch (TestParserError const& _e)
 				{
-					throw Error{_e.type(), "Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what()};
+					throw TestParserError("Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what());
 				}
 			}
 		}
@@ -150,8 +152,7 @@ bool TestFileParser::accept(soltest::Token _token, bool const _expect)
 bool TestFileParser::expect(soltest::Token _token, bool const _advance)
 {
 	if (m_scanner.currentToken() != _token || m_scanner.currentToken() == Token::Invalid)
-		throw Error(
-			Error::Type::ParserError,
+		throw TestParserError(
 			"Unexpected " + formatToken(m_scanner.currentToken()) + ": \"" +
 			m_scanner.currentLiteral() + "\". " +
 			"Expected \"" + formatToken(_token) + "\"."
@@ -187,10 +188,10 @@ pair<string, bool> TestFileParser::parseFunctionSignature()
 		parameters += parseIdentifierOrTuple();
 	}
 	if (accept(Token::Arrow, true))
-		throw Error(Error::Type::ParserError, "Invalid signature detected: " + signature);
+		throw TestParserError("Invalid signature detected: " + signature);
 
 	if (!hasName && !parameters.empty())
-		throw Error(Error::Type::ParserError, "Signatures without a name cannot have parameters: " + signature);
+		throw TestParserError("Signatures without a name cannot have parameters: " + signature);
 	else
 		signature += parameters;
 
@@ -207,7 +208,7 @@ FunctionValue TestFileParser::parseFunctionCallValue()
 		u256 value{ parseDecimalNumber() };
 		Token token = m_scanner.currentToken();
 		if (token != Token::Ether && token != Token::Wei)
-			throw Error(Error::Type::ParserError, "Invalid value unit provided. Coins can be wei or ether.");
+			throw TestParserError("Invalid value unit provided. Coins can be wei or ether.");
 
 		m_scanner.scanNextToken();
 
@@ -216,7 +217,7 @@ FunctionValue TestFileParser::parseFunctionCallValue()
 	}
 	catch (std::exception const&)
 	{
-		throw Error(Error::Type::ParserError, "Ether value encoding invalid.");
+		throw TestParserError("Ether value encoding invalid.");
 	}
 }
 
@@ -226,7 +227,7 @@ FunctionCallArgs TestFileParser::parseFunctionCallArguments()
 
 	auto param = parseParameter();
 	if (param.abiType.type == ABIType::None)
-		throw Error(Error::Type::ParserError, "No argument provided.");
+		throw TestParserError("No argument provided.");
 	arguments.parameters.emplace_back(param);
 
 	while (accept(Token::Comma, true))
@@ -290,7 +291,7 @@ Parameter TestFileParser::parseParameter()
 	if (accept(Token::Boolean))
 	{
 		if (isSigned)
-			throw Error(Error::Type::ParserError, "Invalid boolean literal.");
+			throw TestParserError("Invalid boolean literal.");
 
 		parameter.abiType = ABIType{ABIType::Boolean, ABIType::AlignRight, 32};
 		string parsed = parseBoolean();
@@ -304,7 +305,7 @@ Parameter TestFileParser::parseParameter()
 	else if (accept(Token::HexNumber))
 	{
 		if (isSigned)
-			throw Error(Error::Type::ParserError, "Invalid hex number literal.");
+			throw TestParserError("Invalid hex number literal.");
 
 		parameter.abiType = ABIType{ABIType::Hex, ABIType::AlignRight, 32};
 		string parsed = parseHexNumber();
@@ -318,9 +319,9 @@ Parameter TestFileParser::parseParameter()
 	else if (accept(Token::Hex, true))
 	{
 		if (isSigned)
-			throw Error(Error::Type::ParserError, "Invalid hex string literal.");
+			throw TestParserError("Invalid hex string literal.");
 		if (parameter.alignment != Parameter::Alignment::None)
-			throw Error(Error::Type::ParserError, "Hex string literals cannot be aligned or padded.");
+			throw TestParserError("Hex string literals cannot be aligned or padded.");
 
 		string parsed = parseString();
 		parameter.rawString += "hex\"" + parsed + "\"";
@@ -332,9 +333,9 @@ Parameter TestFileParser::parseParameter()
 	else if (accept(Token::String))
 	{
 		if (isSigned)
-			throw Error(Error::Type::ParserError, "Invalid string literal.");
+			throw TestParserError("Invalid string literal.");
 		if (parameter.alignment != Parameter::Alignment::None)
-			throw Error(Error::Type::ParserError, "String literals cannot be aligned or padded.");
+			throw TestParserError("String literals cannot be aligned or padded.");
 
 		string parsed = parseString();
 		parameter.abiType = ABIType{ABIType::String, ABIType::AlignLeft, parsed.size()};
@@ -364,7 +365,7 @@ Parameter TestFileParser::parseParameter()
 	else if (accept(Token::Failure, true))
 	{
 		if (isSigned)
-			throw Error(Error::Type::ParserError, "Invalid failure literal.");
+			throw TestParserError("Invalid failure literal.");
 
 		parameter.abiType = ABIType{ABIType::Failure, ABIType::AlignRight, 0};
 		parameter.rawBytes = bytes{};
@@ -555,10 +556,7 @@ void TestFileParser::Scanner::scanNextToken()
 			else if (isEndOfLine())
 				token = make_pair(Token::EOS, "EOS");
 			else
-				throw Error(
-					Error::Type::ParserError,
-					"Unexpected character: '" + string{current()} + "'"
-				);
+				throw TestParserError("Unexpected character: '" + string{current()} + "'");
 			break;
 		}
 	}
@@ -651,7 +649,7 @@ string TestFileParser::Scanner::scanString()
 					str += scanHexPart();
 					break;
 				default:
-					throw Error(Error::Type::ParserError, "Invalid or escape sequence found in string literal.");
+					throw TestParserError("Invalid or escape sequence found in string literal.");
 			}
 		}
 		else
@@ -673,7 +671,7 @@ char TestFileParser::Scanner::scanHexPart()
 	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
 		value = tolower(current()) - 'a' + 10;
 	else
-		throw Error(Error::Type::ParserError, "\\x used with no following hex digits.");
+		throw TestParserError("\\x used with no following hex digits.");
 
 	advance();
 	if (current() == '"')

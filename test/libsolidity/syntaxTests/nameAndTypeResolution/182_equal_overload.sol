@@ -3,4 +3,4 @@ contract C {
     function test(uint a) external {}
 }
 // ----
-// DeclarationError: (17-66): Function with same name and arguments defined twice.
+// DeclarationError 1686: (17-66): Function with same name and parameter types defined twice.

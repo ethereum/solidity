@@ -1,3 +1,5 @@
+pragma experimental ABIEncoderV2;
+
 contract Test {
     struct MyStructName {
         address addr;
@@ -7,4 +9,4 @@ contract Test {
     function f(MyStructName memory s) public {}
 }
 // ----
-// TypeError: (112-133): Recursive type not allowed for public or external contract functions.
+// TypeError 4103: (147-168): Recursive type not allowed for public or external contract functions.

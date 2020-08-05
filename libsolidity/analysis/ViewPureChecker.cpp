@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/ast/ExperimentalFeatures.h>
@@ -23,6 +24,7 @@
 #include <libevmasm/SemanticInformation.h>
 
 #include <functional>
+#include <utility>
 #include <variant>
 
 using namespace std;
@@ -41,7 +43,7 @@ public:
 		std::function<void(StateMutability, SourceLocation const&)> _reportMutability
 	):
 		m_dialect(_dialect),
-		m_reportMutability(_reportMutability) {}
+		m_reportMutability(std::move(_reportMutability)) {}
 
 	void operator()(yul::Literal const&) {}
 	void operator()(yul::Identifier const&) {}
@@ -167,9 +169,10 @@ void ViewPureChecker::endVisit(FunctionDefinition const& _funDef)
 		!_funDef.isConstructor() &&
 		!_funDef.isFallback() &&
 		!_funDef.isReceive() &&
-		!_funDef.overrides()
+		!_funDef.virtualSemantics()
 	)
 		m_errorReporter.warning(
+			2018_error,
 			_funDef.location(),
 			"Function state mutability can be restricted to " + stateMutabilityToString(m_bestMutabilityAndLocation.mutability)
 		);
@@ -196,7 +199,7 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 
 	StateMutability mutability = StateMutability::Pure;
 
-	bool writes = _identifier.annotation().lValueRequested;
+	bool writes = _identifier.annotation().willBeWrittenTo;
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
 		if (varDecl->isStateVariable() && !varDecl->isConstant())
@@ -228,7 +231,7 @@ void ViewPureChecker::endVisit(InlineAssembly const& _inlineAssembly)
 {
 	AssemblyViewPureChecker{
 		_inlineAssembly.dialect(),
-		[=](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
+		[&](StateMutability _mutability, SourceLocation const& _location) { reportMutability(_mutability, _location); }
 	}(_inlineAssembly.operations());
 }
 
@@ -251,6 +254,7 @@ void ViewPureChecker::reportMutability(
 	))
 	{
 		m_errorReporter.typeError(
+			2527_error,
 			_location,
 			"Function declared as pure, but this expression (potentially) reads from the "
 			"environment or state and thus requires \"view\"."
@@ -260,6 +264,7 @@ void ViewPureChecker::reportMutability(
 	else if (_mutability == StateMutability::NonPayable)
 	{
 		m_errorReporter.typeError(
+			8961_error,
 			_location,
 			"Function declared as " +
 			stateMutabilityToString(m_currentFunction->stateMutability()) +
@@ -272,16 +277,18 @@ void ViewPureChecker::reportMutability(
 	{
 		// We do not warn for library functions because they cannot be payable anyway.
 		// Also internal functions should be allowed to use `msg.value`.
-		if (m_currentFunction->isPublic() && m_currentFunction->inContractKind() != ContractKind::Library)
+		if (m_currentFunction->isPublic() && !m_currentFunction->libraryFunction())
 		{
 			if (_nestedLocation)
 				m_errorReporter.typeError(
+					4006_error,
 					_location,
 					SecondarySourceLocation().append("\"msg.value\" or \"callvalue()\" appear here inside the modifier.", *_nestedLocation),
 					"This modifier uses \"msg.value\" or \"callvalue()\" and thus the function has to be payable or internal."
 				);
 			else
 				m_errorReporter.typeError(
+					5887_error,
 					_location,
 					"\"msg.value\" and \"callvalue()\" can only be used in payable public functions. Make the function "
 					"\"payable\" or use an internal function to avoid this error."
@@ -331,7 +338,7 @@ bool ViewPureChecker::visit(MemberAccess const& _memberAccess)
 void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 {
 	StateMutability mutability = StateMutability::Pure;
-	bool writes = _memberAccess.annotation().lValueRequested;
+	bool writes = _memberAccess.annotation().willBeWrittenTo;
 
 	ASTString const& member = _memberAccess.memberName();
 	switch (_memberAccess.expression().annotation().type->category())
@@ -355,6 +362,9 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 			{MagicType::Kind::MetaType, "creationCode"},
 			{MagicType::Kind::MetaType, "runtimeCode"},
 			{MagicType::Kind::MetaType, "name"},
+			{MagicType::Kind::MetaType, "interfaceId"},
+			{MagicType::Kind::MetaType, "min"},
+			{MagicType::Kind::MetaType, "max"},
 		};
 		set<MagicMember> static const payableMembers{
 			{MagicType::Kind::Message, "value"}
@@ -401,7 +411,7 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.annotation().type->category() == Type::Category::TypeType, "");
 	else
 	{
-		bool writes = _indexAccess.annotation().lValueRequested;
+		bool writes = _indexAccess.annotation().willBeWrittenTo;
 		if (_indexAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
 			reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexAccess.location());
 	}
@@ -409,7 +419,7 @@ void ViewPureChecker::endVisit(IndexAccess const& _indexAccess)
 
 void ViewPureChecker::endVisit(IndexRangeAccess const& _indexRangeAccess)
 {
-	bool writes = _indexRangeAccess.annotation().lValueRequested;
+	bool writes = _indexRangeAccess.annotation().willBeWrittenTo;
 	if (_indexRangeAccess.baseExpression().annotation().type->dataStoredIn(DataLocation::Storage))
 		reportMutability(writes ? StateMutability::NonPayable : StateMutability::View, _indexRangeAccess.location());
 }

@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (95-98): Expected '(' but got identifier
+// ParserError 2314: (95-98): Expected '(' but got identifier

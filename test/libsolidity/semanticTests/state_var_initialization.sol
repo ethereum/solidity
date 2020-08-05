@@ -2,7 +2,7 @@ contract C {
     uint public i = 1;
     uint public k = 2;
 
-    constructor() public {
+    constructor() {
         i = i + i;
         k = k - i;
     }

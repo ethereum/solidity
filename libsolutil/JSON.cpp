@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file JSON.cpp
  * @author Alexander Arlt <alexander.arlt@arlt-labs.com>
  * @date 2018
@@ -32,8 +33,8 @@
 using namespace std;
 
 static_assert(
-	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 2),
-	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.2."
+	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
+	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
 );
 
 namespace solidity::util
@@ -87,7 +88,30 @@ bool parse(Json::CharReaderBuilder& _builder, string const& _input, Json::Value&
 	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
 }
 
+/// Takes a JSON value (@ _json) and removes all its members with value 'null' recursively.
+void removeNullMembersHelper(Json::Value& _json)
+{
+	if (_json.type() == Json::ValueType::arrayValue)
+		for (auto& child: _json)
+			removeNullMembersHelper(child);
+	else if (_json.type() == Json::ValueType::objectValue)
+		for (auto const& key: _json.getMemberNames())
+		{
+			Json::Value& value = _json[key];
+			if (value.isNull())
+				_json.removeMember(key);
+			else
+				removeNullMembersHelper(value);
+		}
+}
+
 } // end anonymous namespace
+
+Json::Value removeNullMembers(Json::Value _json)
+{
+	removeNullMembersHelper(_json);
+	return _json;
+}
 
 string jsonPrettyPrint(Json::Value const& _input)
 {

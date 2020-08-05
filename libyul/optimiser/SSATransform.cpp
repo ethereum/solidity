@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that turns subsequent assignments to variable declarations
  * and assignments.
@@ -194,7 +195,7 @@ void IntroduceControlFlowSSA::operator()(FunctionDefinition& _function)
 
 void IntroduceControlFlowSSA::operator()(ForLoop& _for)
 {
-	(*this)(_for.pre);
+	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
 	Assignments assignments;
 	assignments(_for.body);
@@ -357,11 +358,7 @@ void PropagateValues::operator()(Assignment& _assignment)
 
 void PropagateValues::operator()(ForLoop& _for)
 {
-	// This will clear the current value in case of a reassignment inside the
-	// init part, although the new variable would still be in scope inside the whole loop.
-	// This small inefficiency is fine if we move the pre part of all for loops out
-	// of the for loop.
-	(*this)(_for.pre);
+	yulAssert(_for.pre.statements.empty(), "For loop init rewriter not run.");
 
 	Assignments assignments;
 	assignments(_for.body);

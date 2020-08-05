@@ -7,4 +7,4 @@ contract C
 	}
 }
 // ----
-// Warning: (76-91): Unused local variable.
+// Warning 2072: (76-91): Unused local variable.

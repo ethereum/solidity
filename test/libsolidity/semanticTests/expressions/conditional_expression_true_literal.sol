@@ -3,5 +3,7 @@ contract test {
         return true ? 5 : 10;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 5

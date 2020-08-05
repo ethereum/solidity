@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Specific AST walkers that collect semantical facts.
  */
@@ -104,7 +105,7 @@ public:
 	static bool containsMSize(Dialect const& _dialect, Block const& _ast);
 
 	using ASTWalker::operator();
-	void operator()(FunctionCall const& _funCall);
+	void operator()(FunctionCall const& _funCall) override;
 
 private:
 	MSizeFinder(Dialect const& _dialect): m_dialect(_dialect) {}
@@ -129,7 +130,7 @@ public:
 	}
 
 	using ASTWalker::operator();
-	void operator()(Leave const&) { m_leaveFound = true; }
+	void operator()(Leave const&) override { m_leaveFound = true; }
 
 private:
 	LeaveFinder() = default;

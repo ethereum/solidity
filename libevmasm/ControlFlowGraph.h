@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @file ControlFlowGraph.h
  * @author Christian <c@ethdev.com>
@@ -45,8 +46,8 @@ public:
 	BlockId() { *this = invalid(); }
 	explicit BlockId(unsigned _id): m_id(_id) {}
 	explicit BlockId(u256 const& _id);
-	static BlockId initial() { return BlockId(-2); }
-	static BlockId invalid() { return BlockId(-1); }
+	static BlockId initial() { return BlockId(std::numeric_limits<unsigned>::max() - 1); }
+	static BlockId invalid() { return BlockId(std::numeric_limits<unsigned>::max()); }
 
 	bool operator==(BlockId const& _other) const { return m_id == _other.m_id; }
 	bool operator!=(BlockId const& _other) const { return m_id != _other.m_id; }

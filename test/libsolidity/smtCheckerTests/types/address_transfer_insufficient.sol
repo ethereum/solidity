@@ -11,6 +11,6 @@ contract C
 	}
 }
 // ----
-// Warning: (134-149): Insufficient funds happens here
-// Warning: (153-169): Insufficient funds happens here
-// Warning: (213-237): Assertion violation happens here
+// Warning 6328: (213-237): Assertion violation happens here
+// Warning 1236: (134-149): Insufficient funds happens here
+// Warning 1236: (153-169): Insufficient funds happens here

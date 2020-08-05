@@ -25,6 +25,7 @@ contract C {
         if (a != 8 || b != 10) return 4;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // f() -> 0

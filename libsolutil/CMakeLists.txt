@@ -19,6 +19,7 @@ set(sources
 	JSON.h
 	Keccak256.cpp
 	Keccak256.h
+	LazyInit.h
 	picosha2.h
 	Result.h
 	StringUtils.cpp

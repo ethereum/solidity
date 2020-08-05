@@ -11,6 +11,12 @@ contract thirdPartyContractAbstract {
     function approvedCorionToken(address, uint256, bytes calldata) external returns (bool) {}
 }
 
+/**
+ *
+ * @title Corion Platform Token
+ * @author iFA @ Corion Platform
+ *
+ */
 contract token is safeMath, module, announcementTypes {
     /*
         module callbacks
@@ -26,12 +32,7 @@ contract token is safeMath, module, announcementTypes {
         require( _success && _active );
         _;
     }
-    /**
-    *
-    * @title Corion Platform Token
-    * @author iFA @ Corion Platform
-    *
-    */
+
     string public name = "Corion";
     string public symbol = "COR";
     uint8 public decimals = 6;
@@ -48,7 +49,7 @@ contract token is safeMath, module, announcementTypes {
 
     mapping(address => bool) public genesis;
 
-    constructor(bool forReplace, address payable moduleHandler, address dbAddr, address payable icoContractAddr, address payable exchangeContractAddress, address payable[] memory genesisAddr, uint256[] memory genesisValue) public payable {
+    constructor(bool forReplace, address payable moduleHandler, address dbAddr, address payable icoContractAddr, address payable exchangeContractAddress, address payable[] memory genesisAddr, uint256[] memory genesisValue) payable {
         /*
             Installation function
 

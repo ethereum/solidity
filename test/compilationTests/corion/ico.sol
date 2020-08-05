@@ -50,7 +50,7 @@ contract ico is safeMath {
     uint256 public totalMint;
     uint256 public totalPremiumMint;
 
-    constructor(address payable foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) public {
+    constructor(address payable foundation, address priceSet, uint256 exchangeRate, uint256 startBlockNum, address[] memory genesisAddr, uint256[] memory genesisValue) {
         /*
             Installation function.
 
@@ -193,7 +193,7 @@ contract ico is safeMath {
 
     function setICOEthPrice(uint256 value) external {
         /*
-            Setting of the ICO ETC USD rates which can only be calle by a pre-defined address.
+            Setting of the ICO ETC USD rates which can only be called by a pre-defined address.
             After this function is completed till the call of the next function (which is at least an exchangeRateDelay array) this rate counts.
             With this process avoiding the sudden rate changes.
 
@@ -221,8 +221,8 @@ contract ico is safeMath {
         /*
             Closing the ICO.
             It is only possible when the ICO period passed and only by the owner.
-            The 96% of the whole amount of the token is generated to the address of the fundation.
-            Ethers which are situated in this contract will be sent to the address of the fundation.
+            The 96% of the whole amount of the token is generated to the address of the foundation.
+            Ethers which are situated in this contract will be sent to the address of the foundation.
         */
         require( msg.sender == owner );
         require( block.number > icoDelay );

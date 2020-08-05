@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning: (155-175): Assertion violation happens here
+// Warning 6328: (155-175): Assertion violation happens here

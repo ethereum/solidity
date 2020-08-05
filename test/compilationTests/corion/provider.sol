@@ -118,7 +118,7 @@ contract provider is module, safeMath, announcementTypes {
 
     uint256 private currentSchellingRound = 1;
 
-    constructor(address payable _moduleHandler) public {
+    constructor(address payable _moduleHandler) {
         /*
             Install function.
 
@@ -256,7 +256,7 @@ contract provider is module, safeMath, announcementTypes {
         providers[msg.sender].data[currHeight].country         = country;
         providers[msg.sender].data[currHeight].info            = info;
         providers[msg.sender].data[currHeight].currentRate     = rate;
-        providers[msg.sender].data[currHeight].create          = now;
+        providers[msg.sender].data[currHeight].create          = block.timestamp;
         providers[msg.sender].data[currHeight].lastPaidRate    = rate;
         providers[msg.sender].data[currHeight].priv            = priv;
         providers[msg.sender].data[currHeight].lastSupplyID    = currentSchellingRound;
@@ -436,7 +436,7 @@ contract provider is module, safeMath, announcementTypes {
         clients[msg.sender].lastSupplyID = currentSchellingRound;
         clients[msg.sender].paidUpTo = currentSchellingRound;
         clients[msg.sender].lastRate = providers[provider].data[currHeight].currentRate;
-        clients[msg.sender].providerConnected = now;
+        clients[msg.sender].providerConnected = block.timestamp;
         emit ENewClient(msg.sender, provider, currHeight, bal);
     }
     function partProvider() isReady external {

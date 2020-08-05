@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -38,6 +39,7 @@ public:
 	{
 		std::string filename;
 		langutil::EVMVersion evmVersion;
+		bool enforceCompileViaYul;
 	};
 
 	enum class TestResult { Success, Failure, FatalError };
@@ -56,12 +58,14 @@ public:
 	/// Each line of output is prefixed with @arg _linePrefix.
 	/// If @arg _formatted is true, color-coding may be used to indicate
 	/// error locations in the contract, if applicable.
-	virtual void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const = 0;
+	virtual void printSource(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false) const;
 	/// Outputs settings.
 	virtual void printSettings(std::ostream &_stream, std::string const &_linePrefix = "", bool const _formatted = false);
+	/// Outputs updated settings
+	virtual void printUpdatedSettings(std::ostream& _stream, std::string const& _linePrefix = "");
 	/// Outputs test expectations to @arg _stream that match the actual results of the test.
 	/// Each line of output is prefixed with @arg _linePrefix.
-	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const = 0;
+	virtual void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const;
 
 	static bool isTestFilename(boost::filesystem::path const& _filename);
 
@@ -92,6 +96,13 @@ protected:
 		while (_it != _end && *_it == '/')
 			++_it;
 	}
+
+	void printIndented(std::ostream& _stream, std::string const& _output, std::string const& _linePrefix = "") const;
+	TestCase::TestResult checkResult(std::ostream& _stream, const std::string& _linePrefix, bool const _formatted);
+
+	std::string m_source;
+	std::string m_obtainedResult;
+	std::string m_expectation;
 
 	TestCaseReader m_reader;
 	bool m_shouldRun = true;

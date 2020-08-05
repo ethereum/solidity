@@ -8,6 +8,7 @@ contract c {
         x = 3;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // test() -> 3

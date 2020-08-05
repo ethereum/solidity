@@ -6,3 +6,5 @@ contract C {
 		assert(x / y == 3);
 	}
 }
+// ----
+// Warning 1218: (107-125): Error trying to invoke SMT solver.

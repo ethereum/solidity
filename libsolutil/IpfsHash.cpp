@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolutil/IpfsHash.h>
 
@@ -62,7 +63,7 @@ string base58Encode(bytes const& _data)
 	string output;
 	while (data)
 	{
-		output += alphabet[size_t(data % alphabet.size())];
+		output += alphabet[static_cast<size_t>(data % alphabet.size())];
 		data /= alphabet.size();
 	}
 	reverse(output.begin(), output.end());
@@ -160,7 +161,7 @@ bytes solidity::util::ipfsHash(string _data)
 
 	Chunks allChunks;
 
-	for (unsigned long chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
+	for (size_t chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
 	{
 		bytes chunkBytes = asBytes(
 			_data.substr(chunkIndex * maxChunkSize, min(maxChunkSize, _data.length() - chunkIndex * maxChunkSize))

@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (65-76): Wrong argument count for function call: 1 arguments given but expected 0.
+// TypeError 6160: (65-76): Wrong argument count for function call: 1 arguments given but expected 0.

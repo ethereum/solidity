@@ -17,4 +17,4 @@ contract C
 	}
 }
 // ----
-// Warning: (228-229): Assertion checker does not yet implement type type(library L)
+// Warning 8364: (228-229): Assertion checker does not yet implement type type(library L)

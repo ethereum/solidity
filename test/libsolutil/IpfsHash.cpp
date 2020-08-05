@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for the ipfs hash computation routine.
  */
@@ -29,17 +30,17 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(IpfsHash)
+BOOST_AUTO_TEST_SUITE(IpfsHash, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(test_small)
 {
 	BOOST_CHECK_EQUAL(ipfsHashBase58({}), "QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH");
 	BOOST_CHECK_EQUAL(ipfsHashBase58("x"), "QmULKig5Fxrs2sC4qt9nNduucXfb92AFYQ6Hi3YRqDmrYC");
 	BOOST_CHECK_EQUAL(ipfsHashBase58("Solidity\n"), "QmSsm9M7PQRBnyiz1smizk8hZw3URfk8fSeHzeTo3oZidS");
-	BOOST_CHECK_EQUAL(ipfsHashBase58(string(size_t(200), char(0))), "QmSXR1N23uWzsANi8wpxMPw5dmmhqBVUAb4hUrHVLpNaMr");
-	BOOST_CHECK_EQUAL(ipfsHashBase58(string(size_t(10250), char(0))), "QmVJJBB3gKKBWYC9QTywpH8ZL1bDeTDJ17B63Af5kino9i");
-	BOOST_CHECK_EQUAL(ipfsHashBase58(string(size_t(100000), char(0))), "QmYgKa25YqEGpQmmZtPPFMNK3kpqqneHk6nMSEUYryEX1C");
-	BOOST_CHECK_EQUAL(ipfsHashBase58(string(size_t(121071), char(0))), "QmdMdRshQmqvyc92N82r7AKYdUF5FRh4DJo6GtrmEk3wgj");
+	BOOST_CHECK_EQUAL(ipfsHashBase58(string(200ul, char(0))), "QmSXR1N23uWzsANi8wpxMPw5dmmhqBVUAb4hUrHVLpNaMr");
+	BOOST_CHECK_EQUAL(ipfsHashBase58(string(10250ul, char(0))), "QmVJJBB3gKKBWYC9QTywpH8ZL1bDeTDJ17B63Af5kino9i");
+	BOOST_CHECK_EQUAL(ipfsHashBase58(string(100000ul, char(0))), "QmYgKa25YqEGpQmmZtPPFMNK3kpqqneHk6nMSEUYryEX1C");
+	BOOST_CHECK_EQUAL(ipfsHashBase58(string(121071ul, char(0))), "QmdMdRshQmqvyc92N82r7AKYdUF5FRh4DJo6GtrmEk3wgj");
 }
 
 BOOST_AUTO_TEST_CASE(test_medium)

@@ -7,6 +7,4 @@ contract C
 	}
 }
 // ----
-// Warning: (117-133): Assertion checker does not yet support this expression.
-// Warning: (137-153): Assertion checker does not yet support this expression.
-// Warning: (110-154): Assertion violation happens here
+// Warning 6328: (110-154): Assertion violation happens here

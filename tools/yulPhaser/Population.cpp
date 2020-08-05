@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <tools/yulPhaser/Population.h>
 
@@ -117,6 +118,37 @@ Population Population::crossover(PairSelection const& _selection, function<Cross
 	return Population(m_fitnessMetric, crossedIndividuals);
 }
 
+tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
+	PairSelection const& _selection,
+	function<SymmetricCrossover> _symmetricCrossover
+) const
+{
+	vector<int> indexSelected(m_individuals.size(), false);
+
+	vector<Individual> crossedIndividuals;
+	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
+	{
+		auto children = _symmetricCrossover(
+			m_individuals[i].chromosome,
+			m_individuals[j].chromosome
+		);
+		crossedIndividuals.emplace_back(move(get<0>(children)), *m_fitnessMetric);
+		crossedIndividuals.emplace_back(move(get<1>(children)), *m_fitnessMetric);
+		indexSelected[i] = true;
+		indexSelected[j] = true;
+	}
+
+	vector<Individual> remainder;
+	for (size_t i = 0; i < indexSelected.size(); ++i)
+		if (!indexSelected[i])
+			remainder.emplace_back(m_individuals[i]);
+
+	return {
+		Population(m_fitnessMetric, crossedIndividuals),
+		Population(m_fitnessMetric, remainder),
+	};
+}
+
 namespace solidity::phaser
 {
 
@@ -130,6 +162,11 @@ Population operator+(Population _a, Population _b)
 	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
 }
 
+}
+
+Population Population::combine(std::tuple<Population, Population> _populationPair)
+{
+	return get<0>(_populationPair) + get<1>(_populationPair);
 }
 
 bool Population::operator==(Population const& _other) const

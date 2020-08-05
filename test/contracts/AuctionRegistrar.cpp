@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -24,9 +25,12 @@
 #include <test/contracts/ContractInterface.h>
 #include <test/EVMHost.h>
 
+#include <libsolutil/LazyInit.h>
+
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <optional>
 
 using namespace std;
 using namespace solidity;
@@ -38,9 +42,8 @@ namespace solidity::frontend::test
 
 namespace
 {
-
 static char const* registrarCode = R"DELIMITER(
-pragma solidity >=0.4.0 <0.7.0;
+pragma solidity >=0.4.0 <0.8.0;
 
 abstract contract NameRegister {
 	function addr(string memory _name) public virtual view returns (address o_owner);
@@ -68,7 +71,7 @@ abstract contract AuctionSystem {
 
 	function bid(string memory _name, address payable _bidder, uint _value) internal {
 		Auction storage auction = m_auctions[_name];
-		if (auction.endDate > 0 && now > auction.endDate)
+		if (auction.endDate > 0 && block.timestamp > auction.endDate)
 		{
 			emit AuctionEnded(_name, auction.highestBidder);
 			onAuctionEnd(_name);
@@ -82,7 +85,7 @@ abstract contract AuctionSystem {
 			auction.sumOfBids += _value;
 			auction.highestBid = _value;
 			auction.highestBidder = _bidder;
-			auction.endDate = now + c_biddingTime;
+			auction.endDate = block.timestamp + c_biddingTime;
 
 			emit NewBid(_name, _bidder, _value);
 		}
@@ -112,7 +115,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	uint constant c_renewalInterval = 365 days;
 	uint constant c_freeBytes = 12;
 
-	constructor() public {
+	constructor() {
 		// TODO: Populate with hall-of-fame.
 	}
 
@@ -120,7 +123,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		Auction storage auction = m_auctions[_name];
 		Record storage record = m_toRecord[_name];
 		address previousOwner = record.owner;
-		record.renewalDate = now + c_renewalInterval;
+		record.renewalDate = block.timestamp + c_renewalInterval;
 		record.owner = auction.highestBidder;
 		emit Changed(_name);
 		if (previousOwner != 0x0000000000000000000000000000000000000000) {
@@ -138,7 +141,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
-			if (now < m_toRecord[_name].renewalDate)
+			if (block.timestamp < m_toRecord[_name].renewalDate)
 				revert();
 			bid(_name, msg.sender, msg.value);
 		} else {
@@ -212,17 +215,18 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 }
 )DELIMITER";
 
-static unique_ptr<bytes> s_compiledRegistrar;
+static LazyInit<bytes> s_compiledRegistrar;
 
 class AuctionRegistrarTestFramework: public SolidityExecutionFramework
 {
 protected:
 	void deployRegistrar()
 	{
-		if (!s_compiledRegistrar)
-			s_compiledRegistrar = make_unique<bytes>(compileContract(registrarCode, "GlobalRegistrar"));
+		bytes const& compiled = s_compiledRegistrar.init([&]{
+			return compileContract(registrarCode, "GlobalRegistrar");
+		});
 
-		sendMessage(*s_compiledRegistrar, true);
+		sendMessage(compiled, true);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

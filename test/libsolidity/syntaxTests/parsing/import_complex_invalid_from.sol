@@ -1,3 +1,3 @@
 import {hello, world} from function;
 // ----
-// ParserError: (27-35): Expected import path.
+// ParserError 6845: (27-35): Expected import path.

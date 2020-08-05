@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file JSON.h
  * @date 2016
  *
@@ -27,6 +28,9 @@
 #include <string>
 
 namespace solidity::util {
+
+/// Removes members with null value recursively from (@a _json).
+Json::Value removeNullMembers(Json::Value _json);
 
 /// Serialise the JSON object (@a _input) with indentation
 std::string jsonPrettyPrint(Json::Value const& _input);

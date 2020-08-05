@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for the StringUtils routines.
  */
@@ -33,7 +34,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(StringUtils)
+BOOST_AUTO_TEST_SUITE(StringUtils, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(test_similarity)
 {
@@ -76,13 +77,13 @@ BOOST_AUTO_TEST_CASE(test_alternatives_list)
 {
 	vector<string> strings;
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "");
-	strings.push_back("a");
+	strings.emplace_back("a");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\"");
-	strings.push_back("b");
+	strings.emplace_back("b");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\" or \"b\"");
-	strings.push_back("c");
+	strings.emplace_back("c");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\" or \"c\"");
-	strings.push_back("d");
+	strings.emplace_back("d");
 	BOOST_CHECK_EQUAL(quotedAlternativesList(strings), "\"a\", \"b\", \"c\" or \"d\"");
 }
 

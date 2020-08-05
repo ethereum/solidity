@@ -15,18 +15,25 @@ then
 	exit 1
 fi
 
+function preparedGrep()
+{
+	git grep -nIE "$1" -- '*.h' '*.cpp' | grep -v "picosha2.h"
+	return $?
+}
+
+
 FORMATERROR=$(
 (
-	git grep -nIE "#include \"" -- '*.h' '*.cpp' | egrep -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
-	git grep -nIE "\<(if|for|while|switch)\(" -- '*.h' '*.cpp' # no space after "if", "for", "while" or "switch"
-	git grep -nIE "\<for\>\s*\([^=]*\>\s:\s.*\)" -- '*.h' '*.cpp' # no space before range based for-loop
-	git grep -nIE "\<if\>\s*\(.*\)\s*\{\s*$" -- '*.h' '*.cpp' # "{\n" on same line as "if" / "for"
-	git grep -nIE "[,\(<]\s*const " -- '*.h' '*.cpp' # const on left side of type
-	git grep -nIE "^\s*(static)?\s*const " -- '*.h' '*.cpp' # const on left side of type (beginning of line)
-	git grep -nIE "^ [^*]|[^*] 	|	 [^*]" -- '*.h' '*.cpp' # uses spaces for indentation or mixes spaces and tabs
-	git grep -nIE "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
+	preparedGrep "#include \"" | egrep -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
+	preparedGrep "\<(if|for|while|switch)\(" # no space after "if", "for", "while" or "switch"
+	preparedGrep "\<for\>\s*\([^=]*\>\s:\s.*\)" # no space before range based for-loop
+	preparedGrep "\<if\>\s*\(.*\)\s*\{\s*$" # "{\n" on same line as "if" / "for"
+	preparedGrep "[,\(<]\s*const " # const on left side of type
+	preparedGrep "^\s*(static)?\s*const " # const on left side of type (beginning of line)
+	preparedGrep "^ [^*]|[^*] 	|	 [^*]" # uses spaces for indentation or mixes spaces and tabs
+	preparedGrep "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" | egrep -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
 	# right-aligned reference pointer star (needs to exclude return and comments)
-	git grep -nIE "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" -- '*.h' '*.cpp' | egrep -v -e "return [*]" -e "^* [*]" -e "^*//.*"
+	preparedGrep "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" | egrep -v -e "return [*]" -e "^* [*]" -e "^*//.*"
 ) | egrep -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/"
 )
 

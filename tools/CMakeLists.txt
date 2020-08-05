@@ -5,6 +5,7 @@ add_executable(solidity-upgrade
     solidityUpgrade/UpgradeSuite.h
     solidityUpgrade/Upgrade050.cpp
     solidityUpgrade/Upgrade060.cpp
+    solidityUpgrade/Upgrade070.cpp
     solidityUpgrade/SourceTransform.h
     solidityUpgrade/SourceUpgrade.cpp
 )
@@ -42,6 +43,6 @@ add_executable(yul-phaser
 	yulPhaser/SimulationRNG.h
 	yulPhaser/SimulationRNG.cpp
 )
-target_link_libraries(yul-phaser PRIVATE solidity Boost::program_options)
+target_link_libraries(yul-phaser PRIVATE solidity Boost::filesystem Boost::program_options)
 
 install(TARGETS yul-phaser DESTINATION "${CMAKE_INSTALL_BINDIR}")

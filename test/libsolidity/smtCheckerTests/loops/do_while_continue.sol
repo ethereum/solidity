@@ -13,4 +13,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (107-112): Unreachable code.
+// Warning 5740: (107-112): Unreachable code.

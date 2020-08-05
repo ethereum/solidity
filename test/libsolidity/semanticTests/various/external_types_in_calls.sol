@@ -1,7 +1,7 @@
 contract C1 {
     C1 public bla;
 
-    constructor(C1 x) public {
+    constructor(C1 x) {
         bla = x;
     }
 }
@@ -23,6 +23,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // test() -> 9, 7
 // t2() -> 9

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -37,6 +38,7 @@ using namespace boost::unit_test::framework;
 using namespace boost::test_tools;
 using namespace solidity::langutil;
 using namespace solidity::util;
+using namespace solidity::yul;
 
 namespace fs = boost::filesystem;
 
@@ -120,7 +122,7 @@ protected:
 	RandomisingAlgorithm m_algorithm;
 };
 
-BOOST_AUTO_TEST_SUITE(Phaser)
+BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(AlgorithmRunnerTest)
 
 BOOST_FIXTURE_TEST_CASE(run_should_call_runNextRound_once_per_round, AlgorithmRunnerFixture)
@@ -299,8 +301,8 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_cache_stats_if_requested, AlgorithmRunn
 		make_shared<ProgramCache>(programs[1]),
 	};
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<FitnessMetricAverage>(vector<shared_ptr<FitnessMetric>>{
-		make_shared<ProgramSize>(nullopt, caches[0]),
-		make_shared<ProgramSize>(nullopt, caches[1]),
+		make_shared<ProgramSize>(nullopt, caches[0], CodeWeights{}),
+		make_shared<ProgramSize>(nullopt, caches[1], CodeWeights{}),
 	});
 	Population population = Population::makeRandom(fitnessMetric, 2, 0, 5);
 

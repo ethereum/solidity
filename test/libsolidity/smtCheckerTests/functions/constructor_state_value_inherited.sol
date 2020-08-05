@@ -5,7 +5,7 @@ contract B {
 }
 
 contract C is B {
-	constructor() public {
+	constructor() {
 		assert(x == 5);
 		x = 10;
 	}
@@ -15,4 +15,4 @@ contract C is B {
 	}
 }
 // ----
-// Warning: (172-186): Assertion violation happens here
+// Warning 6328: (165-179): Assertion violation happens here

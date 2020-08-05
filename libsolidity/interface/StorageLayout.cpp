@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/interface/StorageLayout.h>
 
@@ -50,7 +51,7 @@ Json::Value StorageLayout::generate(VariableDeclaration const& _var, u256 const&
 	TypePointer varType = _var.type();
 
 	varEntry["label"] = _var.name();
-	varEntry["astId"] = int(_var.id());
+	varEntry["astId"] = static_cast<int>(_var.id());
 	varEntry["contract"] = m_contract->fullyQualifiedName();
 	varEntry["slot"] = _slot.str();
 	varEntry["offset"] = _offset;

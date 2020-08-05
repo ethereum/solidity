@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file Common.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -47,6 +48,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <map>
+#include <utility>
 #include <vector>
 #include <functional>
 #include <string>
@@ -120,7 +122,7 @@ inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 class ScopeGuard
 {
 public:
-	explicit ScopeGuard(std::function<void(void)> _f): m_f(_f) {}
+	explicit ScopeGuard(std::function<void(void)> _f): m_f(std::move(_f)) {}
 	~ScopeGuard() { m_f(); }
 
 private:

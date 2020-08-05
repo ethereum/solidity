@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError: (105-141): Type function () external is not implicitly convertible to expected type function () view external.
+// TypeError 9574: (105-141): Type function () external is not implicitly convertible to expected type function () view external.

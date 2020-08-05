@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2016
@@ -41,8 +42,8 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 {
 	m_recursionDepth = 0;
 
-	_scanner->supportPeriodInIdentifier(true);
-	ScopeGuard resetScanner([&]{ _scanner->supportPeriodInIdentifier(false); });
+	_scanner->setScannerMode(ScannerKind::Yul);
+	ScopeGuard resetScanner([&]{ _scanner->setScannerMode(ScannerKind::Solidity); });
 
 	try
 	{
@@ -58,27 +59,6 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	}
 
 	return nullptr;
-}
-
-std::map<string, evmasm::Instruction> const& Parser::instructions()
-{
-	// Allowed instructions, lowercase names.
-	static map<string, evmasm::Instruction> s_instructions;
-	if (s_instructions.empty())
-	{
-		for (auto const& instruction: evmasm::c_instructions)
-		{
-			if (
-				instruction.second == evmasm::Instruction::JUMPDEST ||
-				evmasm::isPushInstruction(instruction.second)
-			)
-				continue;
-			string name = instruction.first;
-			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
-			s_instructions[name] = instruction.second;
-		}
-	}
-	return s_instructions;
 }
 
 Block Parser::parseBlock()
@@ -122,11 +102,11 @@ Statement Parser::parseStatement()
 		if (currentToken() == Token::Default)
 			_switch.cases.emplace_back(parseCase());
 		if (currentToken() == Token::Default)
-			fatalParserError("Only one default case allowed.");
+			fatalParserError(6931_error, "Only one default case allowed.");
 		else if (currentToken() == Token::Case)
-			fatalParserError("Case not allowed after default case.");
+			fatalParserError(4904_error, "Case not allowed after default case.");
 		if (_switch.cases.empty())
-			fatalParserError("Switch statement without any cases.");
+			fatalParserError(2418_error, "Switch statement without any cases.");
 		_switch.location.end = _switch.cases.back().body.location.end;
 		return Statement{move(_switch)};
 	}
@@ -151,7 +131,7 @@ Statement Parser::parseStatement()
 		{
 			Statement stmt{createWithLocation<Leave>()};
 			if (!m_insideFunction)
-				m_errorReporter.syntaxError(currentLocation(), "Keyword \"leave\" can only be used inside a function.");
+				m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
 			m_scanner->next();
 			return stmt;
 		}
@@ -175,7 +155,8 @@ Statement Parser::parseStatement()
 	case Token::Comma:
 	case Token::AssemblyAssign:
 	{
-		std::vector<Identifier> variableNames;
+		Assignment assignment;
+		assignment.location = locationOf(elementary);
 
 		while (true)
 		{
@@ -184,6 +165,7 @@ Statement Parser::parseStatement()
 				auto const token = currentToken() == Token::Comma ? "," : ":=";
 
 				fatalParserError(
+					2856_error,
 					std::string("Variable name must precede \"") +
 					token +
 					"\"" +
@@ -194,9 +176,9 @@ Statement Parser::parseStatement()
 			auto const& identifier = std::get<Identifier>(elementary);
 
 			if (m_dialect.builtin(identifier.name))
-				fatalParserError("Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
 
-			variableNames.emplace_back(identifier);
+			assignment.variableNames.emplace_back(identifier);
 
 			if (currentToken() != Token::Comma)
 				break;
@@ -206,10 +188,6 @@ Statement Parser::parseStatement()
 			elementary = parseElementaryOperation();
 		}
 
-		Assignment assignment;
-		assignment.location = std::get<Identifier>(elementary).location;
-		assignment.variableNames = std::move(variableNames);
-
 		expectToken(Token::AssemblyAssign);
 
 		assignment.value = make_unique<Expression>(parseExpression());
@@ -218,7 +196,7 @@ Statement Parser::parseStatement()
 		return Statement{std::move(assignment)};
 	}
 	default:
-		fatalParserError("Call or assignment expected.");
+		fatalParserError(6913_error, "Call or assignment expected.");
 		break;
 	}
 
@@ -250,7 +228,7 @@ Case Parser::parseCase()
 		advance();
 		ElementaryOperation literal = parseElementaryOperation();
 		if (!holds_alternative<Literal>(literal))
-			fatalParserError("Literal expected.");
+			fatalParserError(4805_error, "Literal expected.");
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
 	}
 	else
@@ -299,20 +277,6 @@ Expression Parser::parseExpression()
 	}
 }
 
-std::map<evmasm::Instruction, string> const& Parser::instructionNames()
-{
-	static map<evmasm::Instruction, string> s_instructionNames;
-	if (s_instructionNames.empty())
-	{
-		for (auto const& instr: instructions())
-			s_instructionNames[instr.second] = instr.first;
-		// set the ambiguous instructions to a clear default
-		s_instructionNames[evmasm::Instruction::SELFDESTRUCT] = "selfdestruct";
-		s_instructionNames[evmasm::Instruction::KECCAK256] = "keccak256";
-	}
-	return s_instructionNames;
-}
-
 Parser::ElementaryOperation Parser::parseElementaryOperation()
 {
 	RecursionGuard recursionGuard(*this);
@@ -325,6 +289,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	case Token::Bool:
 	case Token::Address:
 	case Token::Var:
+	case Token::In:
 	{
 		YulString literal{currentLiteral()};
 		if (m_dialect.builtin(literal))
@@ -352,7 +317,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			break;
 		case Token::Number:
 			if (!isValidNumberLiteral(currentLiteral()))
-				fatalParserError("Invalid number literal.");
+				fatalParserError(4828_error, "Invalid number literal.");
 			kind = LiteralKind::Number;
 			break;
 		case Token::TrueLiteral:
@@ -381,7 +346,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		break;
 	}
 	default:
-		fatalParserError("Literal or identifier expected.");
+		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
 	return ret;
 }
@@ -416,6 +381,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 
 	if (m_currentForLoopComponent == ForLoopComponent::ForLoopPre)
 		m_errorReporter.syntaxError(
+			3441_error,
 			currentLocation(),
 			"Functions cannot be defined inside a for-loop init block."
 		);
@@ -470,7 +436,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 	else if (holds_alternative<FunctionCall>(_initialOp))
 		ret = std::move(std::get<FunctionCall>(_initialOp));
 	else
-		fatalParserError("Function name expected.");
+		fatalParserError(9980_error, "Function name expected.");
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -515,6 +481,7 @@ YulString Parser::expectAsmIdentifier()
 	case Token::Bool:
 	case Token::Identifier:
 	case Token::Var:
+	case Token::In:
 		break;
 	default:
 		expectToken(Token::Identifier);
@@ -522,7 +489,7 @@ YulString Parser::expectAsmIdentifier()
 	}
 
 	if (m_dialect.builtin(name))
-		fatalParserError("Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
+		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
 	advance();
 	return name;
 }
@@ -532,13 +499,13 @@ void Parser::checkBreakContinuePosition(string const& _which)
 	switch (m_currentForLoopComponent)
 	{
 	case ForLoopComponent::None:
-		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
+		m_errorReporter.syntaxError(2592_error, currentLocation(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
 		break;
 	case ForLoopComponent::ForLoopPre:
-		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
+		m_errorReporter.syntaxError(9615_error, currentLocation(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
 		break;
 	case ForLoopComponent::ForLoopPost:
-		m_errorReporter.syntaxError(currentLocation(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
+		m_errorReporter.syntaxError(2461_error, currentLocation(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
 		break;
 	case ForLoopComponent::ForLoopBody:
 		break;

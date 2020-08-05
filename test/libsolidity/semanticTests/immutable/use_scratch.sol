@@ -2,7 +2,7 @@ contract C {
 	uint256 immutable x;
 	uint256 immutable y;
 	mapping(uint => uint) public m;
-	constructor(uint _a) public {
+	constructor(uint _a) {
 		x = 42;
 		y = 23;
 		m[_a] = 7;
@@ -13,6 +13,8 @@ contract C {
 		return (x+x,y);
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // constructor(): 3 ->
 // f() -> 84, 23

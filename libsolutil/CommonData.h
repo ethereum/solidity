@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file CommonData.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -34,14 +35,15 @@
 #include <set>
 #include <functional>
 #include <utility>
+#include <type_traits>
 
 /// Operators need to stay in the global namespace.
 
 /// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
 {
 	for (auto const& i: _b)
-		_a.push_back(i);
+		_a.push_back(T(i));
 	return _a;
 }
 /// Concatenate the contents of a container onto a vector, move variant.
@@ -51,7 +53,7 @@ template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _
 	return _a;
 }
 /// Concatenate the contents of a container onto a multiset
-template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U const& _b)
+template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
@@ -64,7 +66,7 @@ template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T..
 	return _a;
 }
 /// Concatenate the contents of a container onto a set
-template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U const& _b)
+template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
@@ -140,6 +142,36 @@ inline std::multiset<T...>& operator-=(std::multiset<T...>& _a, C const& _b)
 
 namespace solidity::util
 {
+
+/// Functional map.
+/// Returns a container _oc applying @param _op to each element in @param _c.
+/// By default _oc is a vector.
+/// If another return type is desired, an empty contained of that type
+/// is given as @param _oc.
+template<class Container, class Callable, class OutputContainer =
+	std::vector<std::invoke_result_t<
+		Callable,
+		decltype(*std::begin(std::declval<Container>()))
+>>>
+auto applyMap(Container const& _c, Callable&& _op, OutputContainer _oc = OutputContainer{})
+{
+	std::transform(std::begin(_c), std::end(_c), std::inserter(_oc, std::end(_oc)), _op);
+	return _oc;
+}
+
+/// Functional fold.
+/// Given a container @param _c, an initial value @param _acc,
+/// and a binary operator @param _binaryOp(T, U), accumulate
+/// the elements of _c over _acc.
+/// Note that <numeric> has a similar function `accumulate` which
+/// until C++20 does *not* std::move the partial accumulated.
+template<class C, class T, class Callable>
+auto fold(C const& _c, T _acc, Callable&& _binaryOp)
+{
+	for (auto const& e: _c)
+		_acc = _binaryOp(std::move(_acc), e);
+	return _acc;
+}
 
 template <class T, class U>
 T convertContainer(U const& _from)
@@ -268,7 +300,7 @@ template <class T>
 inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 {
 	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
-	int i = 0;
+	unsigned i = 0;
 	for (T v = _val; v; ++i, v >>= 8) {}
 	bytes ret(std::max<unsigned>(_min, i), 0);
 	toBigEndian(_val, ret);
@@ -348,7 +380,7 @@ void iterateReplacing(std::vector<T>& _vector, F const& _f)
 		{
 			if (!useModified)
 			{
-				std::move(_vector.begin(), _vector.begin() + i, back_inserter(modifiedVector));
+				std::move(_vector.begin(), _vector.begin() + ptrdiff_t(i), back_inserter(modifiedVector));
 				useModified = true;
 			}
 			modifiedVector += std::move(*r);
@@ -375,7 +407,7 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_seq
 		{
 			if (!useModified)
 			{
-				std::move(_vector.begin(), _vector.begin() + i, back_inserter(modifiedVector));
+				std::move(_vector.begin(), _vector.begin() + ptrdiff_t(i), back_inserter(modifiedVector));
 				useModified = true;
 			}
 			modifiedVector += std::move(*r);
@@ -428,6 +460,10 @@ bool isValidDecimal(std::string const& _string);
 /// or its hex representation otherwise.
 /// _value cannot be longer than 32 bytes.
 std::string formatAsStringOrNumber(std::string const& _value);
+
+/// @returns a string with the usual backslash-escapes for non-ASCII
+/// characters and surrounded by '"'-characters.
+std::string escapeAndQuoteString(std::string const& _input);
 
 template<typename Container, typename Compare>
 bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)

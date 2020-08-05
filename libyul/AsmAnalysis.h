@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Analysis part of inline assembly.
  */
@@ -34,6 +35,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <utility>
 
 namespace solidity::langutil
 {
@@ -58,14 +60,14 @@ public:
 		AsmAnalysisInfo& _analysisInfo,
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
-		ExternalIdentifierAccess::Resolver const& _resolver = ExternalIdentifierAccess::Resolver(),
-		std::set<YulString> const& _dataNames = {}
+		ExternalIdentifierAccess::Resolver _resolver = ExternalIdentifierAccess::Resolver(),
+		std::set<YulString> _dataNames = {}
 	):
-		m_resolver(_resolver),
+		m_resolver(std::move(_resolver)),
 		m_info(_analysisInfo),
 		m_errorReporter(_errorReporter),
 		m_dialect(_dialect),
-		m_dataNames(_dataNames)
+		m_dataNames(std::move(_dataNames))
 	{
 		if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			m_evmVersion = evmDialect->evmVersion();
@@ -96,26 +98,27 @@ private:
 	/// Visits the expression, expects that it evaluates to exactly one value and
 	/// returns the type. Reports errors on errors and returns the default type.
 	YulString expectExpression(Expression const& _expr);
+	YulString expectUnlimitedStringLiteral(Literal const& _literal);
 	/// Vists the expression and expects it to return a single boolean value.
 	/// Reports an error otherwise.
 	void expectBoolExpression(Expression const& _expr);
-	bool expectDeposit(int _deposit, int _oldHeight, langutil::SourceLocation const& _location);
 
 	/// Verifies that a variable to be assigned to exists, can be assigned to
 	/// and has the same type as the value.
 	void checkAssignment(Identifier const& _variable, YulString _valueType);
 
 	Scope& scope(Block const* _block);
+	void expectValidIdentifier(YulString _identifier, langutil::SourceLocation const& _location);
 	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
 	void expectType(YulString _expectedType, YulString _givenType, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
-	bool warnOnInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
 
-	void typeError(langutil::SourceLocation const& _location, std::string const& _description);
-	void declarationError(langutil::SourceLocation const& _location, std::string const& _description);
+	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
+	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
+	bool validateInstructions(FunctionCall const& _functionCall)
+	{
+		return validateInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
+	}
 
-	/// Success-flag, can be set to false at any time.
-	bool m_success = true;
 	yul::ExternalIdentifierAccess::Resolver m_resolver;
 	Scope* m_currentScope = nullptr;
 	/// Variables that are active at the current point in assembly (as opposed to

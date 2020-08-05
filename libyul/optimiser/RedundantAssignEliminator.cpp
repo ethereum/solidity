@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Optimiser component that removes assignments to variables that are not used
  * until they go out of scope or are re-assigned.
@@ -306,7 +307,7 @@ void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEli
 
 void AssignmentRemover::operator()(Block& _block)
 {
-	boost::range::remove_erase_if(_block.statements, [=](Statement const& _statement) -> bool {
+	boost::range::remove_erase_if(_block.statements, [&](Statement const& _statement) -> bool {
 		return holds_alternative<Assignment>(_statement) && m_toRemove.count(&std::get<Assignment>(_statement));
 	});
 

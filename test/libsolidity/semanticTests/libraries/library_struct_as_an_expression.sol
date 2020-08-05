@@ -13,5 +13,7 @@ contract Tsra {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f() -> 1

@@ -1,9 +1,9 @@
 contract test {
     enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-    constructor() public {
+    constructor() {
         a = ActionChoices.GoStraight;
     }
     uint256 a;
 }
 // ----
-// TypeError: (115-139): Type enum test.ActionChoices is not implicitly convertible to expected type uint256.
+// TypeError 7407: (108-132): Type enum test.ActionChoices is not implicitly convertible to expected type uint256.

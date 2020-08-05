@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// ParserError: (85-86): Expected '(' but got '}'
+// ParserError 2314: (85-86): Expected '(' but got '}'

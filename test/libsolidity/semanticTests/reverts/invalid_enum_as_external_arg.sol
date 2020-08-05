@@ -15,6 +15,7 @@ contract C {
         return this.tested(garbled);
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // test() -> FAILURE # should throw #

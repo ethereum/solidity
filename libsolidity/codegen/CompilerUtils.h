@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -107,10 +108,11 @@ public:
 	/// and also updates that. For reference types, only copies the data pointer. Fails for
 	/// non-memory-references.
 	/// @param _padToWords if true, adds zeros to pad to multiple of 32 bytes. Array elements
+	/// @param _cleanup if true, adds code to cleanup the value before storing it.
 	/// are always padded (except for byte arrays), regardless of this parameter.
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
-	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true);
+	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true, bool _cleanup = true);
 
 	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
 	/// From memory if @a _fromMemory is true, otherwise from call data.
@@ -286,7 +288,7 @@ public:
 	/// Appends code that computes the Keccak-256 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
 
-	/// Apppends code that copies the code of the given contract to memory.
+	/// Appends code that copies the code of the given contract to memory.
 	/// Stack pre: Memory position
 	/// Stack post: Updated memory position
 	/// @param creation if true, copies creation code, if false copies runtime code.
@@ -309,7 +311,8 @@ private:
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 
 	/// Prepares the given type for storing in memory by shifting it if necessary.
-	unsigned prepareMemoryStore(Type const& _type, bool _padToWords);
+	/// @param _cleanup if true, also cleanup the value when preparing to store it in memory
+	unsigned prepareMemoryStore(Type const& _type, bool _padToWords, bool _cleanup = true);
 	/// Loads type from memory assuming memory offset is on stack top.
 	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWords);
 

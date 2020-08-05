@@ -54,7 +54,6 @@ contract UltimateOracle is Oracle {
         uint _challengeAmount,
         uint _frontRunnerPeriod
     )
-        public
     {
         // Validate inputs
         require(   address(_forwardedOracle) != address(0)
@@ -80,7 +79,7 @@ contract UltimateOracle is Oracle {
                 && forwardedOutcomeSetTimestamp == 0
                 && forwardedOracle.isOutcomeSet());
         forwardedOutcome = forwardedOracle.getOutcome();
-        forwardedOutcomeSetTimestamp = now;
+        forwardedOutcomeSetTimestamp = block.timestamp;
         emit ForwardedOracleOutcomeAssignment(forwardedOutcome);
     }
 
@@ -97,7 +96,7 @@ contract UltimateOracle is Oracle {
         totalOutcomeAmounts[_outcome] = challengeAmount;
         totalAmount = challengeAmount;
         frontRunner = _outcome;
-        frontRunnerSetTimestamp = now;
+        frontRunnerSetTimestamp = block.timestamp;
         emit OutcomeChallenge(msg.sender, _outcome);
     }
 
@@ -120,7 +119,7 @@ contract UltimateOracle is Oracle {
         if (_outcome != frontRunner && totalOutcomeAmounts[_outcome] > totalOutcomeAmounts[frontRunner])
         {
             frontRunner = _outcome;
-            frontRunnerSetTimestamp = now;
+            frontRunnerSetTimestamp = block.timestamp;
         }
         emit OutcomeVote(msg.sender, _outcome, amount);
     }
@@ -147,7 +146,7 @@ contract UltimateOracle is Oracle {
         view
         returns (bool)
     {
-        return forwardedOutcomeSetTimestamp != 0 && now.sub(forwardedOutcomeSetTimestamp) > challengePeriod;
+        return forwardedOutcomeSetTimestamp != 0 && (block.timestamp).sub(forwardedOutcomeSetTimestamp) > challengePeriod;
     }
 
     /// @dev Checks if time to overbid the front runner is over
@@ -157,7 +156,7 @@ contract UltimateOracle is Oracle {
         view
         returns (bool)
     {
-        return frontRunnerSetTimestamp != 0 && now.sub(frontRunnerSetTimestamp) > frontRunnerPeriod;
+        return frontRunnerSetTimestamp != 0 && (block.timestamp).sub(frontRunnerSetTimestamp) > frontRunnerPeriod;
     }
 
     /// @dev Checks if outcome was challenged

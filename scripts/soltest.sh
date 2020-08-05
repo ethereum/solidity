@@ -6,10 +6,10 @@ USE_DEBUGGER=0
 DEBUGGER="gdb --args"
 BOOST_OPTIONS=
 SOLTEST_OPTIONS=
-SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-build}
+SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
 usage() {
-    echo 2>&1 "
+	echo 2>&1 "
 Usage: $0 [options] [soltest-options]
 Runs BOOST C++ unit test program, soltest.
 
@@ -23,7 +23,7 @@ Options:
 
 Important environment variables:
 
-SOLIDITY_BUILD_DIR: Sets directory under the repository root of where test/soltest should be found.
+SOLIDITY_BUILD_DIR: Sets directory where test/soltest should be found.
            The default is \"${SOLIDITY_BUILD_DIR}\".
 "
 }
@@ -64,4 +64,4 @@ if [ "$USE_DEBUGGER" -ne "0" ]; then
 	DEBUG_PREFIX=${DEBUGGER}
 fi
 
-exec ${DEBUG_PREFIX} ${REPO_ROOT}/${SOLIDITY_BUILD_DIR}/test/soltest ${BOOST_OPTIONS} -- --testpath ${REPO_ROOT}/test ${SOLTEST_OPTIONS}
+exec ${DEBUG_PREFIX} ${SOLIDITY_BUILD_DIR}/test/soltest ${BOOST_OPTIONS} -- --testpath ${REPO_ROOT}/test ${SOLTEST_OPTIONS}

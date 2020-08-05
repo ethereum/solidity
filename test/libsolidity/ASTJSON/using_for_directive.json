@@ -20,7 +20,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "library",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 1,
       "linearizedBaseContracts":
@@ -38,7 +37,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -53,7 +51,6 @@
           "id": 4,
           "libraryName":
           {
-            "contractScope": null,
             "id": 2,
             "name": "L",
             "nodeType": "UserDefinedTypeName",

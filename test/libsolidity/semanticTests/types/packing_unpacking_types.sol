@@ -5,6 +5,8 @@ contract test {
         y = y * 0x10000000000000000 | ~c;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // run(bool,uint32,uint64): true, 0x0f0f0f0f, 0xf0f0f0f0f0f0f0f0
 // -> 0x0000000000000000000000000000000000000001f0f0f0f00f0f0f0f0f0f0f0f

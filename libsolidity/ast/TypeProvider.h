@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -96,6 +97,7 @@ public:
 	static IntegerType const* uint(unsigned _bits) { return integer(_bits, IntegerType::Modifier::Unsigned); }
 
 	static IntegerType const* uint256() { return uint(256); }
+	static IntegerType const* int256() { return integer(256, IntegerType::Modifier::Signed); }
 
 	static FixedPointType const* fixedPoint(unsigned m, unsigned n, FixedPointType::Modifier _modifier);
 
@@ -112,12 +114,20 @@ public:
 	/// @returns a copy of @a _type having the same location as this (and is not a pointer type)
 	///          if _type is a reference type and an unmodified copy of _type otherwise.
 	///          This function is mostly useful to modify inner types appropriately.
-	static Type const* withLocationIfReference(DataLocation _location, Type const* _type)
+	static Type const* withLocationIfReference(DataLocation _location, Type const* _type, bool _isPointer = false)
 	{
 		if (auto refType = dynamic_cast<ReferenceType const*>(_type))
-			return withLocation(refType, _location, false);
+			return withLocation(refType, _location, _isPointer);
 
 		return _type;
+	}
+
+	static bool isReferenceWithLocation(Type const* _type, DataLocation _location)
+	{
+		if (auto const* refType = dynamic_cast<ReferenceType const*>(_type))
+			if (refType->location() == _location)
+				return true;
+		return false;
 	}
 
 	/// @returns the internally-facing or externally-facing type of a function or the type of a function declaration.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Formatting functions for errors referencing positions and locations in the source.
  */
@@ -21,14 +22,29 @@
 #include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
-#include <cmath>
+#include <libsolutil/UTF8.h>
 #include <iomanip>
+#include <string_view>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
+
+namespace
+{
+
+std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
+{
+	std::string output;
+	for (char const c: _utf8Input)
+		if ((c & 0xc0) != 0x80)
+			output.push_back(c == '\t' ? '\t' : _filler);
+	return output;
+}
+
+}
 
 AnsiColorized SourceReferenceFormatterHuman::normalColored() const
 {
@@ -70,58 +86,65 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	if (_ref.sourceName.empty())
 		return; // Nothing we can print here
 
-	int const leftpad = static_cast<int>(log10(max(_ref.position.line, 1))) + 1;
-
-	// line 0: source name
-	frameColored() << string(leftpad, ' ') << "--> ";
-
 	if (_ref.position.line < 0)
 	{
-		m_stream << _ref.sourceName << "\n";
+		frameColored() << "-->";
+		m_stream << ' ' << _ref.sourceName << '\n';
 		return; // No line available, nothing else to print
 	}
 
-	m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ":" << '\n';
+	string line = std::to_string(_ref.position.line + 1); // one-based line number as string
+	string leftpad = string(line.size(), ' ');
+
+	// line 0: source name
+	m_stream << leftpad;
+	frameColored() << "-->";
+	m_stream << ' ' << _ref.sourceName << ':' << line << ':' << (_ref.position.column + 1) << ":\n";
+
+	string_view text = _ref.text;
 
 	if (!_ref.multiline)
 	{
-		int const locationLength = _ref.endColumn - _ref.startColumn;
+		auto const locationLength = static_cast<size_t>(_ref.endColumn - _ref.startColumn);
 
 		// line 1:
-		m_stream << string(leftpad, ' ');
-		frameColored() << " |" << '\n';
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << '\n';
 
 		// line 2:
-		frameColored() << (_ref.position.line + 1) << " | ";
-		m_stream << _ref.text.substr(0, _ref.startColumn);
-		highlightColored() << _ref.text.substr(_ref.startColumn, locationLength);
-		m_stream << _ref.text.substr(_ref.endColumn) << '\n';
+		frameColored() << line << " |";
+
+		m_stream << ' ' << text.substr(0, static_cast<size_t>(_ref.startColumn));
+		highlightColored() << text.substr(static_cast<size_t>(_ref.startColumn), locationLength);
+		m_stream << text.substr(static_cast<size_t>(_ref.endColumn)) << '\n';
 
 		// line 3:
-		m_stream << string(leftpad, ' ');
-		frameColored() << " | ";
-		for_each(
-			_ref.text.cbegin(),
-			_ref.text.cbegin() + _ref.startColumn,
-			[this](char ch) { m_stream << (ch == '\t' ? '\t' : ' '); }
-		);
-		diagColored() << string(locationLength, '^') << '\n';
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+
+		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
+		diagColored() << replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^');
+		m_stream << '\n';
 	}
 	else
 	{
 		// line 1:
-		m_stream << string(leftpad, ' ');
-		frameColored() << " |" << '\n';
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << '\n';
 
 		// line 2:
-		frameColored() << (_ref.position.line + 1) << " | ";
-		m_stream << _ref.text.substr(0, _ref.startColumn);
-		highlightColored() << _ref.text.substr(_ref.startColumn) << '\n';
+		frameColored() << line << " |";
+		m_stream << ' ' << text.substr(0, static_cast<size_t>(_ref.startColumn));
+		highlightColored() << text.substr(static_cast<size_t>(_ref.startColumn)) << '\n';
 
 		// line 3:
-		frameColored() << string(leftpad, ' ') << " | ";
-		m_stream << string(_ref.startColumn, ' ');
-		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).\n";
+		m_stream << leftpad << ' ';
+		frameColored() << '|';
+		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
+		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).";
+		m_stream << '\n';
 	}
 }
 
@@ -129,6 +152,8 @@ void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExt
 {
 	// exception header line
 	errorColored() << _msg.category;
+	if (m_withErrorIds && _msg.errorId.has_value())
+		errorColored() << " (" << _msg.errorId.value().error << ")";
 	messageColored() << ": " << _msg.primary.message << '\n';
 
 	printSourceLocation(_msg.primary);

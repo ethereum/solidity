@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Class that contains contextual information during IR generation.
  */
@@ -21,15 +22,39 @@
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 
 #include <libsolidity/codegen/YulUtilFunctions.h>
+#include <libsolidity/codegen/ABIFunctions.h>
+#include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/TypeProvider.h>
 
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
+
+#include <boost/range/adaptor/map.hpp>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
+
+string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
+{
+	string name = IRNames::function(_function);
+
+	if (!m_functions.contains(name))
+		m_functionGenerationQueue.insert(&_function);
+
+	return name;
+}
+
+FunctionDefinition const* IRGenerationContext::dequeueFunctionForCodeGeneration()
+{
+	solAssert(!m_functionGenerationQueue.empty(), "");
+
+	FunctionDefinition const* result = *m_functionGenerationQueue.begin();
+	m_functionGenerationQueue.erase(m_functionGenerationQueue.begin());
+	return result;
+}
 
 ContractDefinition const& IRGenerationContext::mostDerivedContract() const
 {
@@ -55,6 +80,36 @@ IRVariable const& IRGenerationContext::localVariable(VariableDeclaration const& 
 	return m_localVariables.at(&_varDecl);
 }
 
+void IRGenerationContext::registerImmutableVariable(VariableDeclaration const& _variable)
+{
+	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");
+	solUnimplementedAssert(
+		_variable.annotation().type->isValueType(),
+		"Only immutable variables of value type are supported."
+	);
+	solAssert(m_reservedMemory.has_value(), "Reserved memory has already been reset.");
+	m_immutableVariables[&_variable] = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
+	solAssert(_variable.annotation().type->memoryHeadSize() == 32, "Memory writes might overlap.");
+	*m_reservedMemory += _variable.annotation().type->memoryHeadSize();
+}
+
+size_t IRGenerationContext::immutableMemoryOffset(VariableDeclaration const& _variable) const
+{
+	solAssert(
+		m_immutableVariables.count(&_variable),
+		"Unknown immutable variable: " + _variable.name()
+	);
+	return m_immutableVariables.at(&_variable);
+}
+
+size_t IRGenerationContext::reservedMemory()
+{
+	solAssert(m_reservedMemory.has_value(), "Reserved memory was used before.");
+	size_t reservedMemory = *m_reservedMemory;
+	m_reservedMemory = std::nullopt;
+	return reservedMemory;
+}
+
 void IRGenerationContext::addStateVariable(
 	VariableDeclaration const& _declaration,
 	u256 _storageOffset,
@@ -64,75 +119,70 @@ void IRGenerationContext::addStateVariable(
 	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
 }
 
-string IRGenerationContext::functionName(FunctionDefinition const& _function)
-{
-	// @TODO previously, we had to distinguish creation context and runtime context,
-	// but since we do not work with jump positions anymore, this should not be a problem, right?
-	return "fun_" + _function.name() + "_" + to_string(_function.id());
-}
-
-string IRGenerationContext::functionName(VariableDeclaration const& _varDecl)
-{
-	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
-}
-
-string IRGenerationContext::virtualFunctionName(FunctionDefinition const& _functionDeclaration)
-{
-	return functionName(_functionDeclaration.resolveVirtual(mostDerivedContract()));
-}
-
 string IRGenerationContext::newYulVariable()
 {
 	return "_" + to_string(++m_varCounter);
 }
 
-string IRGenerationContext::internalDispatch(size_t _in, size_t _out)
+void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _internalDispatch)
 {
-	string funName = "dispatch_internal_in_" + to_string(_in) + "_out_" + to_string(_out);
-	return m_functions.createFunction(funName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(fun <comma> <in>) <arrow> <out> {
-				switch fun
-				<#cases>
-				case <funID>
-				{
-					<out> := <name>(<in>)
-				}
-				</cases>
-				default { invalid() }
-			}
-		)");
-		templ("functionName", funName);
-		templ("comma", _in > 0 ? "," : "");
-		YulUtilFunctions utils(m_evmVersion, m_revertStrings, m_functions);
-		templ("in", suffixedVariableNameList("in_", 0, _in));
-		templ("arrow", _out > 0 ? "->" : "");
-		templ("out", suffixedVariableNameList("out_", 0, _out));
-		vector<map<string, string>> functions;
-		for (auto const& contract: mostDerivedContract().annotation().linearizedBaseContracts)
-			for (FunctionDefinition const* function: contract->definedFunctions())
-				if (
-					!function->isConstructor() &&
-					function->parameters().size() == _in &&
-					function->returnParameters().size() == _out
-				)
-				{
-					// 0 is reserved for uninitialized function pointers
-					solAssert(function->id() != 0, "Unexpected function ID: 0");
+	solAssert(internalDispatchClean(), "");
 
-					functions.emplace_back(map<string, string> {
-						{ "funID", to_string(function->id()) },
-						{ "name", functionName(*function)}
-					});
-				}
-		templ("cases", move(functions));
-		return templ.render();
-	});
+	for (set<FunctionDefinition const*> const& functions: _internalDispatch | boost::adaptors::map_values)
+		for (auto function: functions)
+			enqueueFunctionForCodeGeneration(*function);
+
+	m_internalDispatchMap = move(_internalDispatch);
+}
+
+InternalDispatchMap IRGenerationContext::consumeInternalDispatchMap()
+{
+	m_directInternalFunctionCalls.clear();
+
+	InternalDispatchMap internalDispatch = move(m_internalDispatchMap);
+	m_internalDispatchMap.clear();
+	return internalDispatch;
+}
+
+void IRGenerationContext::internalFunctionCalledDirectly(Expression const& _expression)
+{
+	solAssert(m_directInternalFunctionCalls.count(&_expression) == 0, "");
+
+	m_directInternalFunctionCalls.insert(&_expression);
+}
+
+void IRGenerationContext::internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function)
+{
+	solAssert(
+		IRHelpers::referencedFunctionDeclaration(_expression) &&
+		_function.resolveVirtual(mostDerivedContract()) ==
+		IRHelpers::referencedFunctionDeclaration(_expression)->resolveVirtual(mostDerivedContract()),
+		"Function definition does not match the expression"
+	);
+
+	if (m_directInternalFunctionCalls.count(&_expression) == 0)
+	{
+		FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
+		solAssert(functionType, "");
+
+		m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);
+		enqueueFunctionForCodeGeneration(_function);
+	}
+}
+
+void IRGenerationContext::internalFunctionCalledThroughDispatch(YulArity const& _arity)
+{
+	m_internalDispatchMap.try_emplace(_arity);
 }
 
 YulUtilFunctions IRGenerationContext::utils()
 {
 	return YulUtilFunctions(m_evmVersion, m_revertStrings, m_functions);
+}
+
+ABIFunctions IRGenerationContext::abiFunctions()
+{
+	return ABIFunctions(m_evmVersion, m_revertStrings, m_functions);
 }
 
 std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)

@@ -1,8 +1,8 @@
 contract Reverts {
-    constructor(uint) public { revert("test message."); }
+    constructor(uint) { revert("test message."); }
 }
 contract Succeeds {
-    constructor(uint) public { }
+    constructor(uint) { }
 }
 
 contract C {

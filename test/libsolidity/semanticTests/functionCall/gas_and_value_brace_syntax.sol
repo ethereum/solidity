@@ -15,7 +15,7 @@ contract helper {
 }
 contract test {
     helper h;
-    constructor() public payable {
+    constructor() payable {
         h = new helper();
     }
 
@@ -36,6 +36,8 @@ contract test {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
 // sendAmount(uint256): 5 -> 5

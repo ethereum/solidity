@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Adaptor between the abstract assembly and eth assembly.
  */
@@ -98,22 +99,22 @@ void EthAssemblyAdapter::appendLinkerSymbol(std::string const& _linkerSymbol)
 	m_assembly.appendLibraryAddress(_linkerSymbol);
 }
 
-void EthAssemblyAdapter::appendJump(int _stackDiffAfter)
+void EthAssemblyAdapter::appendJump(int _stackDiffAfter, JumpType _jumpType)
 {
-	appendInstruction(evmasm::Instruction::JUMP);
+	appendJumpInstruction(evmasm::Instruction::JUMP, _jumpType);
 	m_assembly.adjustDeposit(_stackDiffAfter);
 }
 
-void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
+void EthAssemblyAdapter::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
 	appendLabelReference(_labelId);
-	appendJump(_stackDiffAfter);
+	appendJump(_stackDiffAfter, _jumpType);
 }
 
-void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId)
+void EthAssemblyAdapter::appendJumpToIf(LabelID _labelId, JumpType _jumpType)
 {
 	appendLabelReference(_labelId);
-	appendInstruction(evmasm::Instruction::JUMPI);
+	appendJumpInstruction(evmasm::Instruction::JUMPI, _jumpType);
 }
 
 void EthAssemblyAdapter::appendBeginsub(LabelID, int)
@@ -143,25 +144,31 @@ pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::
 {
 	shared_ptr<evmasm::Assembly> assembly{make_shared<evmasm::Assembly>()};
 	auto sub = m_assembly.newSub(assembly);
-	return {make_shared<EthAssemblyAdapter>(*assembly), size_t(sub.data())};
+	return {make_shared<EthAssemblyAdapter>(*assembly), static_cast<size_t>(sub.data())};
 }
 
-void EthAssemblyAdapter::appendDataOffset(AbstractAssembly::SubID _sub)
+void EthAssemblyAdapter::appendDataOffset(vector<AbstractAssembly::SubID> const& _subPath)
 {
-	auto it = m_dataHashBySubId.find(_sub);
-	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineOffset(size_t(_sub));
-	else
+	if (auto it = m_dataHashBySubId.find(_subPath[0]); it != m_dataHashBySubId.end())
+	{
+		yulAssert(_subPath.size() == 1, "");
 		m_assembly << evmasm::AssemblyItem(evmasm::PushData, it->second);
+		return;
+	}
+
+	m_assembly.pushSubroutineOffset(m_assembly.encodeSubPath(_subPath));
 }
 
-void EthAssemblyAdapter::appendDataSize(AbstractAssembly::SubID _sub)
+void EthAssemblyAdapter::appendDataSize(vector<AbstractAssembly::SubID> const& _subPath)
 {
-	auto it = m_dataHashBySubId.find(_sub);
-	if (it == m_dataHashBySubId.end())
-		m_assembly.pushSubroutineSize(size_t(_sub));
-	else
+	if (auto it = m_dataHashBySubId.find(_subPath[0]); it != m_dataHashBySubId.end())
+	{
+		yulAssert(_subPath.size() == 1, "");
 		m_assembly << u256(m_assembly.data(h256(it->second)).size());
+		return;
+	}
+
+	m_assembly.pushSubroutineSize(m_assembly.encodeSubPath(_subPath));
 }
 
 AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)
@@ -172,11 +179,45 @@ AbstractAssembly::SubID EthAssemblyAdapter::appendData(bytes const& _data)
 	return subID;
 }
 
+void EthAssemblyAdapter::appendImmutable(std::string const& _identifier)
+{
+	m_assembly.appendImmutable(_identifier);
+}
+
+void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifier)
+{
+	m_assembly.appendImmutableAssignment(_identifier);
+}
+
+void EthAssemblyAdapter::markAsInvalid()
+{
+	m_assembly.markAsInvalid();
+}
+
 EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
 {
 	u256 id = _tag.data();
 	yulAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
 	return LabelID(id);
+}
+
+void EthAssemblyAdapter::appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType)
+{
+	yulAssert(_instruction == evmasm::Instruction::JUMP || _instruction == evmasm::Instruction::JUMPI, "");
+	evmasm::AssemblyItem jump(_instruction);
+	switch (_jumpType)
+	{
+	case JumpType::Ordinary:
+		yulAssert(jump.getJumpType() == evmasm::AssemblyItem::JumpType::Ordinary, "");
+		break;
+	case JumpType::IntoFunction:
+		jump.setJumpType(evmasm::AssemblyItem::JumpType::IntoFunction);
+		break;
+	case JumpType::OutOfFunction:
+		jump.setJumpType(evmasm::AssemblyItem::JumpType::OutOfFunction);
+		break;
+	}
+	m_assembly.append(std::move(jump));
 }
 
 void CodeGenerator::assemble(
@@ -202,17 +243,12 @@ void CodeGenerator::assemble(
 		_identifierAccess,
 		_useNamedLabelsForFunctions
 	);
-	try
-	{
-		transform(_parsedData);
-	}
-	catch (StackTooDeepError const& _e)
-	{
-		yulAssert(
+	transform(_parsedData);
+	if (!transform.stackErrors().empty())
+		assertThrow(
 			false,
+			langutil::StackTooDeepError,
 			"Stack too deep when compiling inline assembly" +
-			(_e.comment() ? ": " + *_e.comment() : ".")
+			(transform.stackErrors().front().comment() ? ": " + *transform.stackErrors().front().comment() : ".")
 		);
-	}
-	yulAssert(transform.stackErrors().empty(), "Stack errors present but not thrown.");
 }

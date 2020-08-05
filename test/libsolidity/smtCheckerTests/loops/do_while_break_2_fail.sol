@@ -17,6 +17,6 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (128-133): Unreachable code.
-// Warning: (147-151): Unreachable code.
-// Warning: (180-194): Assertion violation happens here
+// Warning 5740: (128-133): Unreachable code.
+// Warning 5740: (147-151): Unreachable code.
+// Warning 6328: (180-194): Assertion violation happens here

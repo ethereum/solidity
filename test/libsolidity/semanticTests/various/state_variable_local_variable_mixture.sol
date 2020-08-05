@@ -6,6 +6,7 @@ contract A {
         x = A.y;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // a() -> 2

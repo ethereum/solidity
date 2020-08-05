@@ -8,7 +8,7 @@ from os.path import join, isfile
 
 
 def extract_test_cases(path):
-    lines = open(path, 'rb').read().splitlines()
+    lines = open(path, encoding="utf8", errors='ignore', mode='rb').read().splitlines()
 
     inside = False
     delimiter = ''

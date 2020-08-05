@@ -7,10 +7,9 @@ contract C {
         return x(a);
     }
 
-    function g(uint256 x) public returns (uint256) {
+    function g(uint256 x) public pure returns (uint256) {
         return x + 1;
     }
 }
-
 // ----
 // f(uint256): 7 -> 8

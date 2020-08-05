@@ -5,7 +5,7 @@ contract test {
     struct st { uint a; uint[] finalArray; }
     mapping(uint256 => mapping(uint256 => st[5])) public multiple_map;
 
-    constructor() public {
+    constructor() {
         data[0] = 8;
 
         dynamicData.push();

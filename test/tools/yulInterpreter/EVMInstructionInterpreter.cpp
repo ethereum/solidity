@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Yul interpreter module that evaluates EVM instructions.
  */
@@ -48,10 +49,10 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 	if (_offset >= _data.size())
 		return 0;
 	else if (_offset + 32 <= _data.size())
-		return *reinterpret_cast<h256 const*>(_data.data() + size_t(_offset));
+		return *reinterpret_cast<h256 const*>(_data.data() + static_cast<size_t>(_offset));
 	else
 	{
-		size_t off = size_t(_offset);
+		size_t off = static_cast<size_t>(_offset);
 		u256 val;
 		for (size_t i = 0; i < 32; ++i)
 		{
@@ -88,7 +89,7 @@ u256 EVMInstructionInterpreter::eval(
 	using evmasm::Instruction;
 
 	auto info = instructionInfo(_instruction);
-	yulAssert(size_t(info.args) == _arguments.size(), "");
+	yulAssert(static_cast<size_t>(info.args) == _arguments.size(), "");
 
 	auto const& arg = _arguments;
 	switch (_instruction)
@@ -182,7 +183,10 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::ADDRESS:
 		return m_state.address;
 	case Instruction::BALANCE:
-		return m_state.balance;
+		if (arg[0] == m_state.address)
+			return m_state.selfbalance;
+		else
+			return m_state.balance;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:
@@ -300,11 +304,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CREATE:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
-		return 0xcccccc + arg[1];
+		return u160(0xcccccc + arg[1]);
 	case Instruction::CREATE2:
 		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
-		return 0xdddddd + arg[1];
+		return u160(0xdddddd + arg[1]);
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata
@@ -406,17 +410,17 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP14:
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
-	// --------------- EVM 2.0 ---------------
-	case Instruction::JUMPTO:
-	case Instruction::JUMPIF:
-	case Instruction::JUMPV:
-	case Instruction::JUMPSUB:
-	case Instruction::JUMPSUBV:
-	case Instruction::BEGINSUB:
-	case Instruction::BEGINDATA:
-	case Instruction::RETURNSUB:
-	case Instruction::PUTLOCAL:
-	case Instruction::GETLOCAL:
+	// --------------- EIP-615 ---------------
+	case Instruction::EIP615_JUMPTO:
+	case Instruction::EIP615_JUMPIF:
+	case Instruction::EIP615_JUMPV:
+	case Instruction::EIP615_JUMPSUB:
+	case Instruction::EIP615_JUMPSUBV:
+	case Instruction::EIP615_BEGINSUB:
+	case Instruction::EIP615_BEGINDATA:
+	case Instruction::EIP615_RETURNSUB:
+	case Instruction::EIP615_PUTLOCAL:
+	case Instruction::EIP615_GETLOCAL:
 	{
 		yulAssert(false, "");
 		return 0;
@@ -442,7 +446,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(BuiltinFunctionForEVM const& _fun, c
 				m_state.memory,
 				m_state.code,
 				size_t(_arguments.at(0)),
-				size_t(_arguments.at(1) & size_t(-1)),
+				size_t(_arguments.at(1) & numeric_limits<size_t>::max()),
 				size_t(_arguments.at(2))
 			);
 	}

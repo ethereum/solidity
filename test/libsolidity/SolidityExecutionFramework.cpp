@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2016
@@ -31,22 +32,18 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
 
-bytes SolidityExecutionFramework::compileContract(
-	string const& _sourceCode,
+bytes SolidityExecutionFramework::multiSourceCompileContract(
+	map<string, string> const& _sourceCode,
 	string const& _contractName,
 	map<string, Address> const& _libraryAddresses
 )
 {
-	// Silence compiler version warning
-	std::string sourceCode = "pragma solidity >=0.0;\n";
-	if (
-		solidity::test::CommonOptions::get().useABIEncoderV2 &&
-		_sourceCode.find("pragma experimental ABIEncoderV2;") == std::string::npos
-	)
-		sourceCode += "pragma experimental ABIEncoderV2;\n";
-	sourceCode += _sourceCode;
+	map<string, string> sourcesWithPreamble = _sourceCode;
+	for (auto& entry: sourcesWithPreamble)
+		entry.second = addPreamble(entry.second);
+
 	m_compiler.reset();
-	m_compiler.setSources({{"", sourceCode}});
+	m_compiler.setSources(sourcesWithPreamble);
 	m_compiler.setLibraries(_libraryAddresses);
 	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	m_compiler.setEVMVersion(m_evmVersion);
@@ -65,23 +62,40 @@ bytes SolidityExecutionFramework::compileContract(
 	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
-		yul::AssemblyStack asmStack(
-					m_evmVersion,
-					yul::AssemblyStack::Language::StrictAssembly,
-					// Ignore optimiser settings here because we need Yul optimisation to
-					// get code that does not exhaust the stack.
-					OptimiserSettings::full()
-					);
-		if (!asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName)))
+		// Try compiling twice: If the first run fails due to stack errors, forcefully enable
+		// the optimizer.
+		for (bool forceEnableOptimizer: {false, true})
 		{
-			langutil::SourceReferenceFormatter formatter(std::cerr);
+			OptimiserSettings optimiserSettings = m_optimiserSettings;
+			if (!forceEnableOptimizer && !optimiserSettings.runYulOptimiser)
+			{
+				// Enable some optimizations on the first run
+				optimiserSettings.runYulOptimiser = true;
+				optimiserSettings.yulOptimiserSteps = "uljmul jmul";
+			}
+			else if (forceEnableOptimizer)
+				optimiserSettings = OptimiserSettings::full();
 
-			for (auto const& error: m_compiler.errors())
-				formatter.printErrorInformation(*error);
-			BOOST_ERROR("Assembly contract failed. IR: " + m_compiler.yulIROptimized({}));
+			yul::AssemblyStack asmStack(
+				m_evmVersion,
+				yul::AssemblyStack::Language::StrictAssembly,
+				optimiserSettings
+			);
+			bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
+			solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
+
+			try
+			{
+				asmStack.optimize();
+				obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+				break;
+			}
+			catch (...)
+			{
+				if (forceEnableOptimizer || optimiserSettings == OptimiserSettings::full())
+					throw;
+			}
 		}
-		asmStack.optimize();
-		obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
 	}
 	else
 		obj = m_compiler.object(contractName);
@@ -89,4 +103,29 @@ bytes SolidityExecutionFramework::compileContract(
 	if (m_showMetadata)
 		cout << "metadata: " << m_compiler.metadata(contractName) << endl;
 	return obj.bytecode;
+}
+
+bytes SolidityExecutionFramework::compileContract(
+	string const& _sourceCode,
+	string const& _contractName,
+	map<string, Address> const& _libraryAddresses
+)
+{
+	return multiSourceCompileContract(
+		{{"", _sourceCode}},
+		_contractName,
+		_libraryAddresses
+	);
+}
+
+string SolidityExecutionFramework::addPreamble(string const& _sourceCode)
+{
+	// Silence compiler version warning
+	string preamble = "pragma solidity >=0.0;\n";
+	if (
+		solidity::test::CommonOptions::get().useABIEncoderV2 &&
+		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos
+	)
+		preamble += "pragma experimental ABIEncoderV2;\n";
+	return preamble + _sourceCode;
 }

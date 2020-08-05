@@ -14,14 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2015
  * Tests for a (comparatively) complex multisig wallet contract.
  */
 
+#include <libsolutil/LazyInit.h>
+
 #include <string>
 #include <tuple>
+#include <optional>
 
 #if defined(_MSC_VER)
 #pragma warning(push)
@@ -40,7 +44,6 @@ using namespace solidity::util;
 
 namespace solidity::frontend::test
 {
-
 static char const* walletCode = R"DELIMITER(
 //sol Wallet
 // Multi-sig, daily-limited account proxy/wallet.
@@ -53,7 +56,7 @@ static char const* walletCode = R"DELIMITER(
 // some number (specified in constructor) of the set of owners (specified in the constructor, modifiable) before the
 // interior is executed.
 
-pragma solidity >=0.4.0 <0.7.0;
+pragma solidity >=0.4.0 <0.8.0;
 
 contract multiowned {
 
@@ -98,7 +101,7 @@ contract multiowned {
 
 	// constructor is given number of sigs required to do protected "onlymanyowners" transactions
 	// as well as the selection of addresses capable of confirming them.
-	constructor(address[] memory _owners, uint _required) public {
+	constructor(address[] memory _owners, uint _required) {
 		m_numOwners = _owners.length + 1;
 		m_owners[1] = uint(msg.sender);
 		m_ownerIndex[uint(msg.sender)] = 1;
@@ -286,7 +289,7 @@ abstract contract daylimit is multiowned {
 	// METHODS
 
 	// constructor - stores initial daily limit and records the present day's index.
-	constructor(uint _limit) public {
+	constructor(uint _limit) {
 		m_dailyLimit = _limit;
 		m_lastDay = today();
 	}
@@ -317,7 +320,7 @@ abstract contract daylimit is multiowned {
 		return false;
 	}
 	// determines today's index.
-	function today() private view returns (uint) { return now / 1 days; }
+	function today() private view returns (uint) { return block.timestamp / 1 days; }
 
 	// FIELDS
 
@@ -367,7 +370,7 @@ contract Wallet is multisig, multiowned, daylimit {
 
 	// constructor - just pass on the owner array to the multiowned and
 	// the limit to daylimit
-	constructor(address[] memory _owners, uint _required, uint _daylimit) public payable
+	constructor(address[] memory _owners, uint _required, uint _daylimit) payable
 			multiowned(_owners, _required) daylimit(_daylimit) {
 	}
 
@@ -395,7 +398,7 @@ contract Wallet is multisig, multiowned, daylimit {
 		if (underLimit(_value)) {
 			emit SingleTransact(msg.sender, _value, _to, _data);
 			// yes - just execute the call.
-			_to.call.value(_value)(_data);
+			_to.call{value: _value}(_data);
 			return 0;
 		}
 		// determine our operation hash.
@@ -412,7 +415,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	// to determine the body of the transaction from the hash provided.
 	function confirm(bytes32 _h) onlymanyowners(_h) public override returns (bool) {
 		if (m_txs[_h].to != 0x0000000000000000000000000000000000000000) {
-			m_txs[_h].to.call.value(m_txs[_h].value)(m_txs[_h].data);
+			m_txs[_h].to.call{value: m_txs[_h].value}(m_txs[_h].data);
 			emit MultiTransact(msg.sender, _h, m_txs[_h].value, m_txs[_h].to, m_txs[_h].data);
 			delete m_txs[_h];
 			return true;
@@ -435,7 +438,7 @@ contract Wallet is multisig, multiowned, daylimit {
 }
 )DELIMITER";
 
-static unique_ptr<bytes> s_compiledWallet;
+static LazyInit<bytes> s_compiledWallet;
 
 class WalletTestFramework: public SolidityExecutionFramework
 {
@@ -447,11 +450,12 @@ protected:
 		u256 _dailyLimit = 0
 	)
 	{
-		if (!s_compiledWallet)
-			s_compiledWallet = make_unique<bytes>(compileContract(walletCode, "Wallet"));
+		bytes const& compiled = s_compiledWallet.init([&]{
+			return compileContract(walletCode, "Wallet");
+		});
 
 		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);
-		sendMessage(*s_compiledWallet + args, true, _value);
+		sendMessage(compiled + args, true, _value);
 		BOOST_REQUIRE(m_transactionSuccessful);
 		BOOST_REQUIRE(!m_output.empty());
 	}

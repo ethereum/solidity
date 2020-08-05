@@ -1,16 +1,16 @@
 pragma experimental SMTChecker;
 contract C {
 	uint a;
-	constructor(uint x) public {
+	constructor(uint x) {
 		a = x;
 	}
 }
 
 contract A is C {
-	constructor() C(2) public {
+	constructor() C(2) {
 		assert(a == 2);
 		assert(a == 3);
 	}
 }
 // ----
-// Warning: (166-180): Assertion violation happens here
+// Warning 6328: (152-166): Assertion violation happens here

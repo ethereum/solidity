@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Encodes Solidity into SMT expressions without creating
  * any verification targets.
@@ -53,6 +54,9 @@ public:
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
+	/// @returns the innermost element in a chain of 1-tuples.
+	static Expression const* innermostTuple(TupleExpression const& _tuple);
+
 	/// @returns the FunctionDefinition of a FunctionCall
 	/// if possible or nullptr.
 	static FunctionDefinition const* functionCallToDefinition(FunctionCall const& _funCall);
@@ -91,6 +95,7 @@ protected:
 	bool visit(InlineAssembly const& _node) override;
 	void endVisit(Break const&) override {}
 	void endVisit(Continue const&) override {}
+	bool visit(TryCatchClause const& _node) override;
 
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
@@ -99,15 +104,16 @@ protected:
 	/// @returns _op(_left, _right) with and without modular arithmetic.
 	/// Used by the function above, compound assignments and
 	/// unary increment/decrement.
-	virtual std::pair<smt::Expression, smt::Expression> arithmeticOperation(
+	virtual std::pair<smtutil::Expression, smtutil::Expression> arithmeticOperation(
 		Token _op,
-		smt::Expression const& _left,
-		smt::Expression const& _right,
+		smtutil::Expression const& _left,
+		smtutil::Expression const& _right,
 		TypePointer const& _commonType,
 		Expression const& _expression
 	);
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
+	void bitwiseOperation(BinaryOperation const& _op);
 
 	void initContract(ContractDefinition const& _contract);
 	void initFunction(FunctionDefinition const& _function);
@@ -135,25 +141,34 @@ protected:
 	/// while aliasing is not supported.
 	void arrayAssignment();
 	/// Handles assignment to SMT array index.
-	void arrayIndexAssignment(Expression const& _expr, smt::Expression const& _rightHandSide);
+	void arrayIndexAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide);
+
+	void arrayPush(FunctionCall const& _funCall);
+	void arrayPop(FunctionCall const& _funCall);
+	void arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array);
+	/// Allows BMC and CHC to create verification targets for popping
+	/// an empty array.
+	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
-	smt::Expression division(smt::Expression _left, smt::Expression _right, IntegerType const& _type);
+	smtutil::Expression division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.
-	void assignment(VariableDeclaration const& _variable, smt::Expression const& _value);
+	void assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value);
 	/// Handles assignments between generic expressions.
 	/// Will also be used for assignments of tuple components.
 	void assignment(
 		Expression const& _left,
-		std::vector<smt::Expression> const& _right,
+		smtutil::Expression const& _right,
 		TypePointer const& _type,
 		langutil::SourceLocation const& _location
 	);
+	/// Handle assignments between tuples.
+	void tupleAssignment(Expression const& _left, Expression const& _right);
 	/// Computes the right hand side of a compound assignment.
-	smt::Expression compoundAssignment(Assignment const& _assignment);
+	smtutil::Expression compoundAssignment(Assignment const& _assignment);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
@@ -161,8 +176,8 @@ protected:
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
 	/// @returns the variable indices after visiting the branch.
-	VariableIndices visitBranch(ASTNode const* _statement, smt::Expression const* _condition = nullptr);
-	VariableIndices visitBranch(ASTNode const* _statement, smt::Expression _condition);
+	VariableIndices visitBranch(ASTNode const* _statement, smtutil::Expression const* _condition = nullptr);
+	VariableIndices visitBranch(ASTNode const* _statement, smtutil::Expression _condition);
 
 	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
 
@@ -170,39 +185,42 @@ protected:
 	void initializeStateVariables(ContractDefinition const& _contract);
 	void createLocalVariables(FunctionDefinition const& _function);
 	void initializeLocalVariables(FunctionDefinition const& _function);
-	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smt::Expression> const& _callArgs);
+	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smtutil::Expression> const& _callArgs);
 	void resetStateVariables();
+	/// Resets all references/pointers that have the same type or have
+	/// a subexpression of the same type as _varDecl.
+	void resetReferences(VariableDeclaration const& _varDecl);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
 
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smt::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
+	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
-	smt::Expression currentValue(VariableDeclaration const& _decl);
+	smtutil::Expression currentValue(VariableDeclaration const& _decl);
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
-	smt::Expression valueAtIndex(VariableDeclaration const& _decl, int _index);
+	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, unsigned _index);
 	/// Returns the expression corresponding to the AST node.
 	/// If _targetType is not null apply conversion.
 	/// Throws if the expression does not exist.
-	smt::Expression expr(Expression const& _e, TypePointer _targetType = nullptr);
+	smtutil::Expression expr(Expression const& _e, TypePointer _targetType = nullptr);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
 	/// Creates the expression and sets its value.
-	void defineExpr(Expression const& _e, smt::Expression _value);
+	void defineExpr(Expression const& _e, smtutil::Expression _value);
 
 	/// Adds a new path condition
-	void pushPathCondition(smt::Expression const& _e);
+	void pushPathCondition(smtutil::Expression const& _e);
 	/// Remove the last path condition
 	void popPathCondition();
 	/// Returns the conjunction of all path conditions or True if empty
-	smt::Expression currentPathConditions();
+	smtutil::Expression currentPathConditions();
 	/// @returns a human-readable call stack. Used for models.
 	langutil::SecondarySourceLocation callStackMessage(std::vector<CallStackEntry> const& _callStack);
 	/// Copies and pops the last called node.
@@ -210,7 +228,7 @@ protected:
 	/// Adds (_definition, _node) to the callstack.
 	void pushCallStack(CallStackEntry _entry);
 	/// Add to the solver: the given expression implied by the current path conditions
-	void addPathImpliedExpression(smt::Expression const& _e);
+	void addPathImpliedExpression(smtutil::Expression const& _e);
 
 	/// Copy the SSA indices of m_variables.
 	VariableIndices copyVariableIndices();
@@ -233,16 +251,16 @@ protected:
 	/// @returns the symbolic arguments for a function call,
 	/// taking into account bound functions and
 	/// type conversion.
-	std::vector<smt::Expression> symbolicArguments(FunctionCall const& _funCall);
+	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall);
 
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 
 	struct VerificationTarget
 	{
-		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert } type;
-		smt::Expression value;
-		smt::Expression constraints;
+		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray } type;
+		smtutil::Expression value;
+		smtutil::Expression constraints;
 	};
 
 	smt::VariableUsage m_variableUsage;
@@ -254,7 +272,7 @@ protected:
 	/// These may be direct application of UFs or Array index access.
 	/// Used to retrieve models.
 	std::set<Expression const*> m_uninterpretedTerms;
-	std::vector<smt::Expression> m_pathConditions;
+	std::vector<smtutil::Expression> m_pathConditions;
 	/// Local SMTEncoder ErrorReporter.
 	/// This is necessary to show the "No SMT solver available"
 	/// warning before the others in case it's needed.

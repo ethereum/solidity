@@ -8,9 +8,11 @@
 object \"C_6\" {
     code {
         mstore(64, 128)
+        if callvalue() { revert(0, 0) }
+        constructor_C_6()
         codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
         return(0, datasize(\"C_6_deployed\"))
-        function fun_f_5()
+        function constructor_C_6()
         { }
     }
     object \"C_6_deployed\" {

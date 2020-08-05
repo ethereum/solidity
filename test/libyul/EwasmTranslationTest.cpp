@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/libyul/EwasmTranslationTest.h>
 
@@ -71,35 +72,7 @@ TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _
 
 	m_obtainedResult = interpret();
 
-	if (m_expectation != m_obtainedResult)
-	{
-		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Expected result:" << endl;
-		// TODO could compute a simple diff with highlighted lines
-		printIndented(_stream, m_expectation, nextIndentLevel);
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::CYAN}) << _linePrefix << "Obtained result:" << endl;
-		printIndented(_stream, m_obtainedResult, nextIndentLevel);
-		return TestResult::Failure;
-	}
-	return TestResult::Success;
-}
-
-void EwasmTranslationTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
-{
-	printIndented(_stream, m_source, _linePrefix);
-}
-
-void EwasmTranslationTest::printUpdatedExpectations(ostream& _stream, string const& _linePrefix) const
-{
-	printIndented(_stream, m_obtainedResult, _linePrefix);
-}
-
-void EwasmTranslationTest::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
-{
-	stringstream output(_output);
-	string line;
-	while (getline(output, line))
-		_stream << _linePrefix << line << endl;
+	return checkResult(_stream, _linePrefix, _formatted);
 }
 
 bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -126,12 +99,10 @@ string EwasmTranslationTest::interpret()
 {
 	InterpreterState state;
 	state.maxTraceSize = 10000;
-	state.maxSteps = 100000;
-	WasmDialect dialect;
-	Interpreter interpreter(state, dialect);
+	state.maxSteps = 1000000;
 	try
 	{
-		interpreter(*m_object->code);
+		Interpreter::run(state, WasmDialect{}, *m_object->code);
 	}
 	catch (InterpreterTerminatedGeneric const&)
 	{

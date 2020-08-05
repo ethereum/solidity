@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /** @file ConstantOptimiser.cpp
  * @author Christian <c@ethdev.com>
  * @date 2015
@@ -262,7 +263,7 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 		{
 		case Operation:
 		{
-			if (stack.size() < size_t(item.arguments()))
+			if (stack.size() < item.arguments())
 				return false;
 			u256* sp = &stack.back();
 			switch (item.instruction())
@@ -320,7 +321,7 @@ bool ComputeMethod::checkRepresentation(u256 const& _value, AssemblyItems const&
 
 bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
-	size_t numExps = count(_routine.begin(), _routine.end(), Instruction::EXP);
+	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), Instruction::EXP));
 	return combineGas(
 		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.

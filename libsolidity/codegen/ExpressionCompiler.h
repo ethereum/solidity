@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @author Gav Wood <g@ethdev.com>
@@ -100,6 +101,7 @@ private:
 	void appendArithmeticOperatorCode(Token _operator, Type const& _type);
 	void appendBitOperatorCode(Token _operator);
 	void appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType);
+	void appendExpOperatorCode(Type const& _valueType, Type const& _exponentType);
 	/// @}
 
 	/// Appends code to call a function of the given type with the given arguments.
@@ -148,7 +150,7 @@ void ExpressionCompiler::setLValue(Expression const& _expression, Arguments cons
 {
 	solAssert(!m_currentLValue, "Current LValue not reset before trying to set new one.");
 	std::unique_ptr<LValueType> lvalue = std::make_unique<LValueType>(m_context, _arguments...);
-	if (_expression.annotation().lValueRequested)
+	if (_expression.annotation().willBeWrittenTo)
 		m_currentLValue = move(lvalue);
 	else
 		lvalue->retrieveValue(_expression.location(), true);

@@ -14,11 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
-#include <libsolidity/formal/SolverInterface.h>
+#include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicVariables.h>
+
+#include <libsmtutil/SolverInterface.h>
 
 #include <unordered_map>
 #include <set>
@@ -38,13 +41,17 @@ public:
 	/// alive because of state variables and inlined function calls.
 	/// To be used in the beginning of a root function visit.
 	void reset();
+	/// Resets the fresh id for slack variables.
+	void resetUniqueId();
+	/// Returns the current fresh slack id and increments it.
+	unsigned newUniqueId();
 	/// Clears the entire context, erasing everything.
 	/// To be used before a model checking engine starts.
 	void clear();
 
 	/// Sets the current solver used by the current engine for
 	/// SMT variable declaration.
-	void setSolver(SolverInterface* _solver)
+	void setSolver(smtutil::SolverInterface* _solver)
 	{
 		solAssert(_solver, "");
 		m_solver = _solver;
@@ -54,7 +61,7 @@ public:
 	void setAssertionAccumulation(bool _acc) { m_accumulateAssertions = _acc; }
 
 	/// Forwards variable creation to the solver.
-	Expression newVariable(std::string _name, SortPointer _sort)
+	smtutil::Expression newVariable(std::string _name, smtutil::SortPointer _sort)
 	{
 		solAssert(m_solver, "");
 		return m_solver->newVariable(move(_name), move(_sort));
@@ -84,7 +91,7 @@ public:
 
 	/// Allocates a new index for the declaration, updates the current
 	/// index to this value and returns the expression.
-	Expression newValue(frontend::VariableDeclaration const& _decl);
+	smtutil::Expression newValue(frontend::VariableDeclaration const& _decl);
 	/// Sets the value of the declaration to zero.
 	void setZeroValue(frontend::VariableDeclaration const& _decl);
 	void setZeroValue(SymbolicVariable& _variable);
@@ -121,37 +128,24 @@ public:
 	bool knownGlobalSymbol(std::string const& _var) const;
 	//@}
 
-	/// Blockchain.
-	//@{
-	/// Value of `this` address.
-	Expression thisAddress();
-	/// @returns the symbolic balance of address `this`.
-	Expression balance();
-	/// @returns the symbolic balance of an address.
-	Expression balance(Expression _address);
-	/// Transfer _value from _from to _to.
-	void transfer(Expression _from, Expression _to, Expression _value);
-	//@}
-
 	/// Solver.
 	//@{
 	/// @returns conjunction of all added assertions.
-	Expression assertions();
+	smtutil::Expression assertions();
 	void pushSolver();
 	void popSolver();
-	void addAssertion(Expression const& _e);
+	void addAssertion(smtutil::Expression const& _e);
 	unsigned solverStackHeigh() { return m_assertions.size(); } const
-	SolverInterface* solver()
+	smtutil::SolverInterface* solver()
 	{
 		solAssert(m_solver, "");
 		return m_solver;
 	}
 	//@}
 
-private:
-	/// Adds _value to _account's balance.
-	void addBalance(Expression _account, Expression _value);
+	SymbolicState& state() { return m_state; }
 
+private:
 	/// Symbolic expressions.
 	//{@
 	/// Symbolic variables.
@@ -164,24 +158,24 @@ private:
 	/// variables and functions.
 	std::unordered_map<std::string, std::shared_ptr<smt::SymbolicVariable>> m_globalContext;
 
-	/// Symbolic `this` address.
-	std::unique_ptr<SymbolicAddressVariable> m_thisAddress;
-
-	/// Symbolic balances.
-	std::unique_ptr<SymbolicVariable> m_balances;
+	/// Symbolic representation of the blockchain state.
+	SymbolicState m_state;
 	//@}
 
 	/// Solver related.
 	//@{
 	/// Solver can be SMT solver or Horn solver in the future.
-	SolverInterface* m_solver = nullptr;
+	smtutil::SolverInterface* m_solver = nullptr;
 
 	/// Assertion stack.
-	std::vector<Expression> m_assertions;
+	std::vector<smtutil::Expression> m_assertions;
 
 	/// Whether to conjoin assertions in the assertion stack.
 	bool m_accumulateAssertions = true;
 	//@}
+
+	/// Central source of unique ids.
+	unsigned m_nextUniqueId = 0;
 };
 
 }

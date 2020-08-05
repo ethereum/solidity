@@ -6,4 +6,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (81-111): Data location must be "storage" for variable, but "memory" was given.
+// TypeError 4061: (81-111): Type mapping(uint256 => uint256) is only valid in storage because it contains a (nested) mapping.

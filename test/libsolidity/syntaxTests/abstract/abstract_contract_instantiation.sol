@@ -1,5 +1,5 @@
 abstract contract AbstractContract {
-    constructor() public { }
+    constructor() { }
     function utterance() public returns (bytes32) { return "miaow"; }
 }
 
@@ -9,4 +9,4 @@ contract Test {
     }
 }
 // ----
-// TypeError: (215-235): Cannot instantiate an abstract contract.
+// TypeError 4614: (208-228): Cannot instantiate an abstract contract.

@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Executable for use with AFL <http://lcamtuf.coredump.cx/afl>.
  */
@@ -104,7 +105,7 @@ Allowed options)",
 	else if (arguments.count("input-files"))
 		inputs = arguments["input-files"].as<vector<string>>();
 	else
-		inputs.push_back("");
+		inputs.emplace_back("");
 
 	bool optimize = !arguments.count("without-optimizer");
 	int retResult = 0;

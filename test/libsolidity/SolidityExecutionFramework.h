@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -46,15 +47,15 @@ public:
 		ExecutionFramework(_evmVersion), m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
 	{}
 
-	virtual bytes const& compileAndRunWithoutCheck(
-		std::string const& _sourceCode,
+	bytes const& compileAndRunWithoutCheck(
+		std::map<std::string, std::string> const& _sourceCode,
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
-		bytes const& _arguments = bytes(),
-		std::map<std::string, solidity::test::Address> const& _libraryAddresses = std::map<std::string, solidity::test::Address>()
+		bytes const& _arguments = {},
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
 	) override
 	{
-		bytes bytecode = compileContract(_sourceCode, _contractName, _libraryAddresses);
+		bytes bytecode = multiSourceCompileContract(_sourceCode, _contractName, _libraryAddresses);
 		sendMessage(bytecode + _arguments, true, _value);
 		return m_output;
 	}
@@ -62,16 +63,23 @@ public:
 	bytes compileContract(
 		std::string const& _sourceCode,
 		std::string const& _contractName = "",
-		std::map<std::string, solidity::test::Address> const& _libraryAddresses = std::map<std::string, solidity::test::Address>()
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
 	);
 
+	bytes multiSourceCompileContract(
+		std::map<std::string, std::string> const& _sources,
+		std::string const& _contractName = "",
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
+	);
+
+	/// Returns @param _sourceCode prefixed with the version pragma and the ABIEncoderV2 pragma,
+	/// the latter only if it is required.
+	static std::string addPreamble(std::string const& _sourceCode);
 protected:
 	solidity::frontend::CompilerStack m_compiler;
 	bool m_compileViaYul = false;
 	bool m_showMetadata = false;
 	RevertStrings m_revertStrings = RevertStrings::Default;
-
 };
 
 } // end namespaces
-

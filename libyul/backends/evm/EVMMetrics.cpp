@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
 * Module providing metrics for the EVM optimizer.
 */
@@ -91,7 +92,11 @@ void GasMeterVisitor::operator()(Literal const& _lit)
 	m_runGas += evmasm::GasMeter::runGas(evmasm::Instruction::PUSH1);
 	m_dataGas +=
 		singleByteDataGas() +
-		size_t(evmasm::GasMeter::dataGas(toCompactBigEndian(valueOfLiteral(_lit), 1), m_isCreation, m_dialect.evmVersion()));
+		static_cast<size_t>(evmasm::GasMeter::dataGas(
+			toCompactBigEndian(valueOfLiteral(_lit), 1),
+			m_isCreation,
+			m_dialect.evmVersion()
+		));
 }
 
 void GasMeterVisitor::operator()(Identifier const&)

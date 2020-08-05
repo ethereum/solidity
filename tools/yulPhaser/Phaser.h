@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Contains the main class that controls yul-phaser based on command-line parameters and
  * associated factories for building instances of phaser's components.
@@ -22,6 +23,7 @@
 #pragma once
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
+#include <tools/yulPhaser/GeneticAlgorithms.h>
 
 #include <boost/program_options.hpp>
 
@@ -35,6 +37,13 @@ namespace solidity::langutil
 {
 
 class CharStream;
+
+}
+
+namespace solidity::yul
+{
+
+struct CodeWeights;
 
 }
 
@@ -58,6 +67,7 @@ enum class Algorithm
 {
 	Random,
 	GEWEP,
+	Classic,
 };
 
 enum class MetricChoice
@@ -82,6 +92,8 @@ std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricCho
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricChoice _metric);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricAggregatorChoice& _aggregator);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricAggregatorChoice _aggregator);
+std::istream& operator>>(std::istream& _inputStream, solidity::phaser::CrossoverChoice& _crossover);
+std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::CrossoverChoice _crossover);
 
 /**
  * Builds and validates instances of @a GeneticAlgorithm and its derived classes.
@@ -94,7 +106,11 @@ public:
 		Algorithm algorithm;
 		size_t minChromosomeLength;
 		size_t maxChromosomeLength;
+		CrossoverChoice crossover;
+		double uniformCrossoverSwapChance;
+
 		std::optional<double> randomElitePoolSize;
+
 		double gewepMutationPoolSize;
 		double gewepCrossoverPoolSize;
 		double gewepRandomisationChance;
@@ -102,12 +118,29 @@ public:
 		std::optional<double> gewepGenesToRandomise;
 		std::optional<double> gewepGenesToAddOrDelete;
 
+		double classicElitePoolSize;
+		double classicCrossoverChance;
+		double classicMutationChance;
+		double classicDeletionChance;
+		double classicAdditionChance;
+
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
 	static std::unique_ptr<GeneticAlgorithm> build(
 		Options const& _options,
 		size_t _populationSize
+	);
+};
+
+/**
+ * Builds and validates instances of @a CodeWeights.
+ */
+class CodeWeightFactory
+{
+public:
+	static yul::CodeWeights buildFromCommandLine(
+		boost::program_options::variables_map const& _arguments
 	);
 };
 
@@ -130,7 +163,8 @@ public:
 	static std::unique_ptr<FitnessMetric> build(
 		Options const& _options,
 		std::vector<Program> _programs,
-		std::vector<std::shared_ptr<ProgramCache>> _programCaches
+		std::vector<std::shared_ptr<ProgramCache>> _programCaches,
+		yul::CodeWeights const& _weights
 	);
 };
 

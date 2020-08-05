@@ -12,4 +12,4 @@ contract c {
 	}
 }
 // ----
-// Warning: (289-306): Assertion violation happens here
+// Warning 6328: (289-306): Assertion violation happens here

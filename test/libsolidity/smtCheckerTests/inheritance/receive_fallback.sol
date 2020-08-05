@@ -21,8 +21,6 @@ contract B is A {
 	}
 }
 // ----
-// Warning: (120-134): Assertion violation happens here
-// Warning: (169-183): Assertion violation happens here
-// Warning: (288-302): Assertion violation happens here
-// Warning: (120-134): Assertion violation happens here
-// Warning: (169-183): Assertion violation happens here
+// Warning 6328: (120-134): Assertion violation happens here
+// Warning 6328: (169-183): Assertion violation happens here
+// Warning 6328: (288-302): Assertion violation happens here

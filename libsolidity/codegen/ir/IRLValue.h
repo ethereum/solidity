@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Classes that store locations of lvalues.
  */
@@ -34,6 +35,10 @@ struct IRLValue
 	struct Stack
 	{
 		IRVariable variable;
+	};
+	struct Immutable
+	{
+		VariableDeclaration const* variable = nullptr;
 	};
 	struct Storage
 	{
@@ -59,7 +64,7 @@ struct IRLValue
 	{
 		std::vector<std::optional<IRLValue>> components;
 	};
-	std::variant<Stack, Storage, Memory, Tuple> kind;
+	std::variant<Stack, Immutable, Storage, Memory, Tuple> kind;
 };
 
 }

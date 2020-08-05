@@ -13,6 +13,8 @@
 */
 
 #include <test/libsolidity/SemanticTest.h>
+#include <libsolutil/Whiskers.h>
+#include <libyul/Exceptions.h>
 #include <test/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -27,6 +29,7 @@
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::frontend::test;
@@ -36,14 +39,14 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion):
+SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, bool enforceViaYul):
 	SolidityExecutionFramework(_evmVersion),
-	EVMVersionRestrictedTestCase(_filename)
+	EVMVersionRestrictedTestCase(_filename),
+	m_sources(m_reader.sources()),
+	m_lineOffset(m_reader.lineNumber()),
+	m_enforceViaYul(enforceViaYul)
 {
-	m_source = m_reader.source();
-	m_lineOffset = m_reader.lineNumber();
-
-	string choice = m_reader.stringSetting("compileViaYul", "false");
+	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
 	{
 		m_runWithYul = true;
@@ -55,6 +58,13 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		m_runWithoutYul = false;
 	}
 	else if (choice == "false")
+	{
+		m_runWithYul = false;
+		m_runWithoutYul = true;
+		// Do not try to run via yul if explicitly denied.
+		m_enforceViaYul = false;
+	}
+	else if (choice == "default")
 	{
 		m_runWithYul = false;
 		m_runWithoutYul = true;
@@ -78,130 +88,223 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-	for(bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul})
+
+	for (bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul || m_enforceViaYul})
 	{
-		reset();
-		bool success = true;
-
-		m_compileViaYul = compileViaYul;
-		if (compileViaYul)
-			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
-
-		for (auto& test: m_tests)
-			test.reset();
-
-		map<string, solidity::test::Address> libraries;
-
-		bool constructed = false;
-
-		for (auto& test: m_tests)
+		try
 		{
-			if (constructed)
-			{
-				soltestAssert(!test.call().isLibrary, "Libraries have to be deployed before any other call.");
-				soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call expect for library deployments.");
-			}
-			else if (test.call().isLibrary)
-			{
-				soltestAssert(
-					deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
-					"Failed to deploy library " + test.call().signature
-				);
-				libraries[test.call().signature] = m_contractAddress;
-				continue;
-			}
-			else
-			{
-				if (test.call().isConstructor)
-					deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
-				else
-					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
-				constructed = true;
-			}
+			reset();
+			bool success = true;
 
-			if (test.call().isConstructor)
-			{
-				if (m_transactionSuccessful == test.call().expectations.failure)
-					success = false;
+			m_compileViaYul = compileViaYul;
+			m_compileViaYulCanBeSet = false;
 
-				test.setFailure(!m_transactionSuccessful);
-				test.setRawBytes(bytes());
-			}
-			else
+			if (compileViaYul)
+				AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
+
+			for (auto& test: m_tests)
+				test.reset();
+
+			map<string, solidity::test::Address> libraries;
+
+			bool constructed = false;
+
+			for (auto& test: m_tests)
 			{
-				bytes output;
-				if (test.call().useCallWithoutSignature)
-					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
-				else
+				if (constructed)
+				{
+					soltestAssert(!test.call().isLibrary, "Libraries have to be deployed before any other call.");
+					soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call expect for library deployments.");
+				}
+				else if (test.call().isLibrary)
 				{
 					soltestAssert(
-						m_allowNonExistingFunctions || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
-						"The function " + test.call().signature + " is not known to the compiler"
+							deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
+							"Failed to deploy library " + test.call().signature
 					);
-
-					output = callContractFunctionWithValueNoEncoding(
-						test.call().signature,
-						test.call().value.value,
-						test.call().arguments.rawBytes()
-					);
+					libraries[test.call().signature] = m_contractAddress;
+					continue;
+				}
+				else
+				{
+					if (test.call().isConstructor)
+						deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
+					else
+						soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
+					constructed = true;
 				}
 
-				if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
-					success = false;
+				if (test.call().isConstructor)
+				{
+					if (m_transactionSuccessful == test.call().expectations.failure)
+						success = false;
 
-				test.setFailure(!m_transactionSuccessful);
-				test.setRawBytes(std::move(output));
-				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+					test.setFailure(!m_transactionSuccessful);
+					test.setRawBytes(bytes());
+				}
+				else
+				{
+					bytes output;
+					if (test.call().useCallWithoutSignature)
+						output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
+					else
+					{
+						soltestAssert(
+								m_allowNonExistingFunctions || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+								"The function " + test.call().signature + " is not known to the compiler"
+						);
+
+						output = callContractFunctionWithValueNoEncoding(
+								test.call().signature,
+								test.call().value.value,
+								test.call().arguments.rawBytes()
+						);
+					}
+
+					if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
+						success = false;
+
+					test.setFailure(!m_transactionSuccessful);
+					test.setRawBytes(std::move(output));
+					test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+				}
+			}
+
+			if (success && !m_runWithYul && compileViaYul)
+			{
+				m_compileViaYulCanBeSet = true;
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl << _linePrefix
+					<< "Test can pass via Yul and marked with compileViaYul: false." << endl;
+				return TestResult::Failure;
+			}
+
+			if (!success && (m_runWithYul || !compileViaYul))
+			{
+				AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+				for (auto const& test: m_tests)
+				{
+					ErrorReporter errorReporter;
+					_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+					_stream << errorReporter.format(_linePrefix, _formatted);
+				}
+				_stream << endl;
+				AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+				for (auto const& test: m_tests)
+				{
+					ErrorReporter errorReporter;
+					_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+					_stream << errorReporter.format(_linePrefix, _formatted);
+				}
+				AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
+					<< "Attention: Updates on the test will apply the detected format displayed." << endl;
+				if (compileViaYul && m_runWithoutYul)
+				{
+					_stream << _linePrefix << endl << _linePrefix;
+					AnsiColorized(_stream, _formatted, {RED_BACKGROUND})
+						<< "Note that the test passed without Yul.";
+					_stream << endl;
+				}
+				else if (!compileViaYul && m_runWithYul)
+					AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl << _linePrefix
+						<< "Note that the test also has to pass via Yul." << endl;
+				return TestResult::Failure;
 			}
 		}
-
-		if (!success)
+		catch (WhiskersError const&)
 		{
-			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-			for (auto const& test: m_tests)
-			{
-				ErrorReporter errorReporter;
-				_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
-				_stream << errorReporter.format(_linePrefix, _formatted);
-			}
-			_stream << endl;
-			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-			for (auto const& test: m_tests)
-			{
-				ErrorReporter errorReporter;
-				_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
-				_stream << errorReporter.format(_linePrefix, _formatted);
-			}
-			AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
-				<< "Attention: Updates on the test will apply the detected format displayed." << endl;
-			if (compileViaYul && m_runWithoutYul)
-			{
-				_stream << _linePrefix << endl << _linePrefix;
-				AnsiColorized(_stream, _formatted, {RED_BACKGROUND}) << "Note that the test passed without Yul.";
-				_stream << endl;
-			}
-			else if (!compileViaYul && m_runWithYul)
-				AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl << _linePrefix
-					<< "Note that the test also has to pass via Yul." << endl;
-			return TestResult::Failure;
+			// this is an error in Whiskers template, so should be thrown anyway
+			throw;
+		}
+		catch (YulException const&)
+		{
+			// this should be an error in yul compilation or translation
+			throw;
+		}
+		catch (boost::exception const&)
+		{
+			if (compileViaYul && !m_runWithYul)
+				continue;
+			throw;
+		}
+		catch (std::exception const&)
+		{
+			if (compileViaYul && !m_runWithYul)
+				continue;
+			throw;
+		}
+		catch (...)
+		{
+			if (compileViaYul && !m_runWithYul)
+				continue;
+			throw;
 		}
 	}
 
 	return TestResult::Success;
 }
 
-void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool) const
+void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
 {
-	stringstream stream(m_source);
-	string line;
-	while (getline(stream, line))
-		_stream << _linePrefix << line << endl;
+	if (m_sources.sources.empty())
+		return;
+
+	bool outputNames = (m_sources.sources.size() != 1 || !m_sources.sources.begin()->first.empty());
+
+	for (auto const& [name, source]: m_sources.sources)
+		if (_formatted)
+		{
+			if (source.empty())
+				continue;
+
+			if (outputNames)
+				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name << " ====" << formatting::RESET << endl;
+			vector<char const*> sourceFormatting(source.length(), formatting::RESET);
+
+			_stream << _linePrefix << sourceFormatting.front() << source.front();
+			for (size_t i = 1; i < source.length(); i++)
+			{
+				if (sourceFormatting[i] != sourceFormatting[i - 1])
+					_stream << sourceFormatting[i];
+				if (source[i] != '\n')
+					_stream << source[i];
+				else
+				{
+					_stream << formatting::RESET << endl;
+					if (i + 1 < source.length())
+						_stream << _linePrefix << sourceFormatting[i];
+				}
+			}
+			_stream << formatting::RESET;
+		}
+		else
+		{
+			if (outputNames)
+				_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
+			stringstream stream(source);
+			string line;
+			while (getline(stream, line))
+				_stream << _linePrefix << line << endl;
+		}
 }
 
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
 	for (auto const& test: m_tests)
 		_stream << test.format("", true, false) << endl;
+}
+
+void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)
+{
+	auto& settings = m_reader.settings();
+	if (settings.empty() && !m_compileViaYulCanBeSet)
+		return;
+
+	_stream << _linePrefix << "// ====" << endl;
+	if (m_compileViaYulCanBeSet)
+		_stream << _linePrefix << "// compileViaYul: also\n";
+	for (auto const& setting: settings)
+		if (!m_compileViaYulCanBeSet || setting.first != "compileViaYul")
+		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
 void SemanticTest::parseExpectations(istream& _stream)
@@ -213,6 +316,6 @@ void SemanticTest::parseExpectations(istream& _stream)
 
 bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, solidity::test::Address> const& _libraries)
 {
-	auto output = compileAndRunWithoutCheck(m_source, _value, _contractName, _arguments, _libraries);
+	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;
 }

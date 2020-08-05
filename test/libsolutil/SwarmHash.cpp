@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for the swarm hash computation routine.
  */
@@ -31,7 +32,7 @@ using namespace std;
 namespace solidity::util::test
 {
 
-BOOST_AUTO_TEST_SUITE(SwarmHash)
+BOOST_AUTO_TEST_SUITE(SwarmHash, *boost::unit_test::label("nooptions"))
 
 string bzzr0HashHex(string const& _input)
 {

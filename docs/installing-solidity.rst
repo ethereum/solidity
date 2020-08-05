@@ -35,11 +35,11 @@ or if you require more compilation options.
 npm / Node.js
 =============
 
-Use `npm` for a convenient and portable way to install `solcjs`, a Solidity compiler. The
+Use ``npm`` for a convenient and portable way to install ``solcjs``, a Solidity compiler. The
 `solcjs` program has fewer features than the ways to access the compiler described
 further down this page. The
 :ref:`commandline-compiler` documentation assumes you are using
-the full-featured compiler, `solc`. The usage of `solcjs` is documented inside its own
+the full-featured compiler, ``solc``. The usage of ``solcjs`` is documented inside its own
 `repository <https://github.com/ethereum/solc-js>`_.
 
 Note: The solc-js project is derived from the C++
@@ -53,10 +53,10 @@ Please refer to the solc-js repository for instructions.
 
 .. note::
 
-    The commandline executable is named `solcjs`.
+    The commandline executable is named ``solcjs``.
 
-    The comandline options of `solcjs` are not compatible with `solc` and tools (such as `geth`)
-    expecting the behaviour of `solc` will not work with `solcjs`.
+    The comandline options of ``solcjs`` are not compatible with ``solc`` and tools (such as ``geth``)
+    expecting the behaviour of ``solc`` will not work with ``solcjs``.
 
 Docker
 ======
@@ -313,6 +313,16 @@ you should fork Solidity and add your personal fork as a second remote:
 .. code-block:: bash
 
     git remote add personal git@github.com:[username]/solidity.git
+
+.. note::
+    This method will result in a prerelease build leading to e.g. a flag
+    being set in each bytecode produced by such a compiler.
+    If you want to re-build a released Solidity compiler, then
+    please use the source tarball on the github release page:
+
+    https://github.com/ethereum/solidity/releases/download/v0.X.Y/solidity_0.X.Y.tar.gz
+
+    (not the "Source code" provided by github).
 
 Command-Line Build
 ------------------

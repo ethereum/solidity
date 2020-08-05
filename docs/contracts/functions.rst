@@ -23,7 +23,8 @@ unused parameters can be omitted.
 For example, if you want your contract to accept one kind of external call
 with two integers, you would use something like the following::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract Simple {
         uint sum;
@@ -55,7 +56,8 @@ Function return variables are declared with the same syntax after the
 For example, suppose you want to return two results: the sum and the product of
 two integers passed as function parameters, then you use something like::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -74,12 +76,13 @@ are initialized with their :ref:`default value <default-value>` and have that
 value until they are (re-)assigned.
 
 You can either explicitly assign to return variables and
-then leave the function using ``return;``,
+then leave the function as above,
 or you can provide return values
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
 statement::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -91,8 +94,8 @@ statement::
         }
     }
 
-This form is equivalent to first assigning values to the
-return variables and then using ``return;`` to leave the function.
+If you use an early ``return`` to leave a function that has return variables,
+you must provide return values together with the return statement.
 
 .. note::
     You cannot return some types from non-internal functions, notably
@@ -142,11 +145,12 @@ The following statements are considered modifying the state:
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
         function f(uint a, uint b) public view returns (uint) {
-            return a * (b + 42) + now;
+            return a * (b + 42) + block.timestamp;
         }
     }
 
@@ -187,7 +191,8 @@ In addition to the list of state modifying statements explained above, the follo
 
 ::
 
-    pragma solidity >=0.5.0 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.5.0 <0.8.0;
 
     contract C {
         function f(uint a, uint b) public pure returns (uint) {
@@ -195,7 +200,7 @@ In addition to the list of state modifying statements explained above, the follo
         }
     }
 
-Pure functions are able to use the `revert()` and `require()` functions to revert
+Pure functions are able to use the ``revert()`` and ``require()`` functions to revert
 potential state changes when an :ref:`error occurs <assert-and-require>`.
 
 Reverting a state change is not considered a "state modification", as only changes to the
@@ -235,9 +240,9 @@ A contract can have at most one ``receive`` function, declared using
 ``receive() external payable { ... }``
 (without the ``function`` keyword).
 This function cannot have arguments, cannot return anything and must have
-``external`` visibility and ``payable`` state mutability.  It is executed on a
+``external`` visibility and ``payable`` state mutability. It is executed on a
 call to the contract with empty calldata. This is the function that is executed
-on plain Ether transfers (e.g. via `.send()` or `.transfer()`).  If no such
+on plain Ether transfers (e.g. via ``.send()`` or ``.transfer()``). If no such
 function exists, but a payable :ref:`fallback function <fallback-function>`
 exists, the fallback function will be called on a plain Ether transfer. If
 neither a receive Ether nor a payable fallback function is present, the
@@ -245,7 +250,7 @@ contract cannot receive Ether through regular transactions and throws an
 exception.
 
 In the worst case, the fallback function can only rely on 2300 gas being
-available (for example when `send` or `transfer` is used), leaving little
+available (for example when ``send`` or ``transfer`` is used), leaving little
 room to perform other operations except basic logging. The following operations
 will consume more gas than the 2300 gas stipend:
 
@@ -265,7 +270,7 @@ will consume more gas than the 2300 gas stipend:
 
 .. warning::
     A contract without a receive Ether function can receive Ether as a
-    recipient of a `coinbase transaction` (aka `miner block reward`)
+    recipient of a *coinbase transaction* (aka *miner block reward*)
     or as a destination of a ``selfdestruct``.
 
     A contract cannot react to such Ether transfers and thus also
@@ -280,7 +285,8 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 
 ::
 
-    pragma solidity ^0.6.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.0 <0.8.0;
 
     // This contract keeps all Ether sent to it with no way
     // to get it back.
@@ -335,7 +341,8 @@ operations as long as there is enough gas passed on to it.
 
 ::
 
-    pragma solidity >=0.6.2 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.6.2 <0.8.0;
 
     contract Test {
         // This function is called for all messages sent to
@@ -407,7 +414,8 @@ The following example shows overloading of the function
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract A {
         function f(uint _in) public pure returns (uint out) {
@@ -425,7 +433,8 @@ externally visible functions differ by their Solidity types but not by their ext
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     // This will not compile
     contract A {
@@ -458,7 +467,8 @@ candidate, resolution fails.
 
 ::
 
-    pragma solidity >=0.4.16 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.8.0;
 
     contract A {
         function f(uint8 _in) public pure returns (uint8 out) {

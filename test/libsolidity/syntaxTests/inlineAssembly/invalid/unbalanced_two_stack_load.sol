@@ -5,4 +5,4 @@ contract c {
     }
 }
 // ----
-// TypeError: (75-76): Only local variables are supported. To access storage variables, use the _slot and _offset suffixes.
+// TypeError 1408: (75-76): Only local variables are supported. To access storage variables, use the .slot and .offset suffixes.

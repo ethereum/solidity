@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AsmData.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
@@ -41,15 +42,24 @@ void WordSizeTransform::operator()(FunctionDefinition& _fd)
 
 void WordSizeTransform::operator()(FunctionCall& _fc)
 {
+	vector<optional<LiteralKind>> const* literalArguments = nullptr;
+
 	if (BuiltinFunction const* fun = m_inputDialect.builtin(_fc.functionName.name))
-		if (fun->literalArguments)
+		if (!fun->literalArguments.empty())
+			literalArguments = &fun->literalArguments;
+
+	vector<Expression> newArgs;
+
+	for (size_t i = 0; i < _fc.arguments.size(); i++)
+		if (!literalArguments || !(*literalArguments)[i].has_value())
+			newArgs += expandValueToVector(_fc.arguments[i]);
+		else
 		{
-			for (Expression& arg: _fc.arguments)
-				get<Literal>(arg).type = m_targetDialect.defaultType;
-			return;
+			get<Literal>(_fc.arguments[i]).type = m_targetDialect.defaultType;
+			newArgs.emplace_back(std::move(_fc.arguments[i]));
 		}
 
-	rewriteFunctionCallArguments(_fc.arguments);
+	_fc.arguments = std::move(newArgs);
 }
 
 void WordSizeTransform::operator()(If& _if)
@@ -97,14 +107,15 @@ void WordSizeTransform::operator()(Block& _block)
 
 					// Special handling for datasize and dataoffset - they will only need one variable.
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*varDecl.value).functionName.name))
-						if (f->literalArguments)
+						if (f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring)
 						{
-							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
+							yulAssert(f->literalArguments.size() == 1, "");
+							yulAssert(f->literalArguments.at(0) == LiteralKind::String, "");
 							yulAssert(varDecl.variables.size() == 1, "");
 							auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
 							vector<Statement> ret;
-							for (int i = 0; i < 3; i++)
-								ret.push_back(VariableDeclaration{
+							for (size_t i = 0; i < 3; i++)
+								ret.emplace_back(VariableDeclaration{
 									varDecl.location,
 									{TypedName{varDecl.location, newLhs[i], m_targetDialect.defaultType}},
 									make_unique<Expression>(Literal{
@@ -114,7 +125,7 @@ void WordSizeTransform::operator()(Block& _block)
 										m_targetDialect.defaultType
 									})
 								});
-							ret.push_back(VariableDeclaration{
+							ret.emplace_back(VariableDeclaration{
 								varDecl.location,
 								{TypedName{varDecl.location, newLhs[3], m_targetDialect.defaultType}},
 								std::move(varDecl.value)
@@ -134,9 +145,8 @@ void WordSizeTransform::operator()(Block& _block)
 					auto newRhs = expandValue(*varDecl.value);
 					auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
 					vector<Statement> ret;
-					for (int i = 0; i < 4; i++)
-						ret.push_back(
-							VariableDeclaration{
+					for (size_t i = 0; i < 4; i++)
+						ret.emplace_back(VariableDeclaration{
 								varDecl.location,
 								{TypedName{varDecl.location, newLhs[i], m_targetDialect.defaultType}},
 								std::move(newRhs[i])
@@ -158,14 +168,15 @@ void WordSizeTransform::operator()(Block& _block)
 
 					// Special handling for datasize and dataoffset - they will only need one variable.
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*assignment.value).functionName.name))
-						if (f->literalArguments)
+						if (f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring)
 						{
-							yulAssert(f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring, "");
+							yulAssert(f->literalArguments.size() == 1, "");
+							yulAssert(f->literalArguments[0] == LiteralKind::String, "");
 							yulAssert(assignment.variableNames.size() == 1, "");
 							auto newLhs = generateU64IdentifierNames(assignment.variableNames[0].name);
 							vector<Statement> ret;
-							for (int i = 0; i < 3; i++)
-								ret.push_back(Assignment{
+							for (size_t i = 0; i < 3; i++)
+								ret.emplace_back(Assignment{
 									assignment.location,
 									{Identifier{assignment.location, newLhs[i]}},
 									make_unique<Expression>(Literal{
@@ -175,7 +186,7 @@ void WordSizeTransform::operator()(Block& _block)
 										m_targetDialect.defaultType
 									})
 								});
-							ret.push_back(Assignment{
+							ret.emplace_back(Assignment{
 								assignment.location,
 								{Identifier{assignment.location, newLhs[3]}},
 								std::move(assignment.value)
@@ -195,9 +206,8 @@ void WordSizeTransform::operator()(Block& _block)
 					auto newRhs = expandValue(*assignment.value);
 					YulString lhsName = assignment.variableNames[0].name;
 					vector<Statement> ret;
-					for (int i = 0; i < 4; i++)
-						ret.push_back(
-							Assignment{
+					for (size_t i = 0; i < 4; i++)
+						ret.emplace_back(Assignment{
 								assignment.location,
 								{Identifier{assignment.location, m_variableMapping.at(lhsName)[i]}},
 								std::move(newRhs[i])
@@ -264,17 +274,6 @@ void WordSizeTransform::rewriteIdentifierList(vector<Identifier>& _ids)
 			for (auto newId: m_variableMapping.at(_id.name))
 				ret.push_back(Identifier{_id.location, newId});
 			return ret;
-		}
-	);
-}
-
-void WordSizeTransform::rewriteFunctionCallArguments(vector<Expression>& _args)
-{
-	iterateReplacing(
-		_args,
-		[&](Expression& _e) -> std::optional<vector<Expression>>
-		{
-			return expandValueToVector(_e);
 		}
 	);
 }
@@ -386,7 +385,7 @@ std::vector<Statement> WordSizeTransform::handleSwitch(Switch& _switch)
 array<YulString, 4> WordSizeTransform::generateU64IdentifierNames(YulString const& _s)
 {
 	yulAssert(m_variableMapping.find(_s) == m_variableMapping.end(), "");
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < 4; i++)
 		m_variableMapping[_s][i] = m_nameDispenser.newName(YulString{_s.str() + "_" + to_string(i)});
 	return m_variableMapping[_s];
 }
@@ -396,19 +395,20 @@ array<unique_ptr<Expression>, 4> WordSizeTransform::expandValue(Expression const
 	array<unique_ptr<Expression>, 4> ret;
 	if (holds_alternative<Identifier>(_e))
 	{
-		Identifier const& id = std::get<Identifier>(_e);
-		for (int i = 0; i < 4; i++)
+		auto const& id = std::get<Identifier>(_e);
+		for (size_t i = 0; i < 4; i++)
 			ret[i] = make_unique<Expression>(Identifier{id.location, m_variableMapping.at(id.name)[i]});
 	}
 	else if (holds_alternative<Literal>(_e))
 	{
-		Literal const& lit = std::get<Literal>(_e);
+		auto const& lit = std::get<Literal>(_e);
 		u256 val = valueOfLiteral(lit);
-		for (int i = 3; i >= 0; i--)
+		for (size_t exprIndex = 0; exprIndex < 4; ++exprIndex)
 		{
+			size_t exprIndexReverse = 3 - exprIndex;
 			u256 currentVal = val & std::numeric_limits<uint64_t>::max();
 			val >>= 64;
-			ret[i] = make_unique<Expression>(
+			ret[exprIndexReverse] = make_unique<Expression>(
 				Literal{
 					lit.location,
 					LiteralKind::Number,
@@ -430,4 +430,3 @@ vector<Expression> WordSizeTransform::expandValueToVector(Expression const& _e)
 		ret.emplace_back(std::move(*val));
 	return ret;
 }
-

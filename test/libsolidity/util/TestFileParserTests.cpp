@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Unit tests for Solidity's test expectation parser.
  */
@@ -25,6 +26,7 @@
 #include <liblangutil/Exceptions.h>
 #include <test/ExecutionFramework.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libsolidity/util/TestFileParser.h>
 
 using namespace std;
@@ -65,7 +67,7 @@ void testFunctionCall(
 	ABI_CHECK(_call.expectations.rawBytes(), _expectations);
 	BOOST_REQUIRE_EQUAL(_call.displayMode, _mode);
 	BOOST_REQUIRE_EQUAL(_call.value.value, _value.value);
-	BOOST_REQUIRE_EQUAL(size_t(_call.value.unit), size_t(_value.unit));
+	BOOST_REQUIRE_EQUAL(static_cast<size_t>(_call.value.unit), static_cast<size_t>(_value.unit));
 	BOOST_REQUIRE_EQUAL(_call.arguments.comment, _argumentComment);
 	BOOST_REQUIRE_EQUAL(_call.expectations.comment, _expectationComment);
 
@@ -365,7 +367,7 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid1)
 	char const* source = R"(
 		// f(uint256): "\x" ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid2)
@@ -383,7 +385,7 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid3)
 	char const* source = R"(
 		// f(uint256): "\xZ" ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid4)
@@ -391,7 +393,7 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid4)
 	char const* source = R"(
 		// f(uint256): "\xZZ" ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_hex_string)
@@ -741,7 +743,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_hex_string_left_align)
 	char const* source = R"(
 		// f(bytes): left(hex"4200ef") ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_hex_string_right_align)
@@ -749,7 +751,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_hex_string_right_align)
 	char const* source = R"(
 		// f(bytes): right(hex"4200ef") ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_newline_invalid)
@@ -757,7 +759,7 @@ BOOST_AUTO_TEST_CASE(call_newline_invalid)
 	char const* source = R"(
 		/
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_invalid)
@@ -765,7 +767,7 @@ BOOST_AUTO_TEST_CASE(call_invalid)
 	char const* source = R"(
 		/ f() ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_signature_invalid)
@@ -773,7 +775,7 @@ BOOST_AUTO_TEST_CASE(call_signature_invalid)
 	char const* source = R"(
 		// f(uint8,) -> FAILURE
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid)
@@ -781,7 +783,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid)
 	char const* source = R"(
 		// f((uint8,) -> FAILURE
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid_empty)
@@ -789,7 +791,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid_empty)
 	char const* source = R"(
 		// f(uint8, ()) -> FAILURE
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid_parantheses)
@@ -797,14 +799,14 @@ BOOST_AUTO_TEST_CASE(call_arguments_tuple_invalid_parantheses)
 	char const* source = R"(
 		// f((uint8,() -> FAILURE
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_ether_value_expectations_missing)
 {
 	char const* source = R"(
 		// f(), 0)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_invalid)
@@ -812,7 +814,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_invalid)
 	char const* source = R"(
 		// f(uint256): abc -> 1
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_invalid_decimal)
@@ -820,7 +822,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_invalid_decimal)
 	char const* source = R"(
 		// sig(): 0.h3 ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_ether_value_invalid)
@@ -828,7 +830,7 @@ BOOST_AUTO_TEST_CASE(call_ether_value_invalid)
 	char const* source = R"(
 		// f(uint256), abc : 1 -> 1
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_ether_value_invalid_decimal)
@@ -836,7 +838,7 @@ BOOST_AUTO_TEST_CASE(call_ether_value_invalid_decimal)
 	char const* source = R"(
 		// sig(): 0.1hd ether ->
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
@@ -844,7 +846,7 @@ BOOST_AUTO_TEST_CASE(call_ether_type_invalid)
 	char const* source = R"(
 		// f(uint256), 2 btc : 1 -> 1
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_signed_bool_invalid)
@@ -852,7 +854,7 @@ BOOST_AUTO_TEST_CASE(call_signed_bool_invalid)
 	char const* source = R"(
 		// f() -> -true
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_signed_failure_invalid)
@@ -860,7 +862,7 @@ BOOST_AUTO_TEST_CASE(call_signed_failure_invalid)
 	char const* source = R"(
 		// f() -> -FAILURE
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_signed_hex_number_invalid)
@@ -868,7 +870,7 @@ BOOST_AUTO_TEST_CASE(call_signed_hex_number_invalid)
 	char const* source = R"(
 		// f() -> -0x42
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_colon)
@@ -877,7 +879,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_colon)
 		// h256():
 		// -> 1
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arguments_newline_colon)
@@ -887,7 +889,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_newline_colon)
 		// :
 		// -> 1
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_arrow_missing)
@@ -895,7 +897,7 @@ BOOST_AUTO_TEST_CASE(call_arrow_missing)
 	char const* source = R"(
 		// h256() FAILURE
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(call_unexpected_character)
@@ -903,7 +905,7 @@ BOOST_AUTO_TEST_CASE(call_unexpected_character)
 	char const* source = R"(
 		// f() -> ??
 	)";
-	BOOST_REQUIRE_THROW(parse(source), langutil::Error);
+	BOOST_REQUIRE_THROW(parse(source), TestParserError);
 }
 
 BOOST_AUTO_TEST_CASE(constructor)

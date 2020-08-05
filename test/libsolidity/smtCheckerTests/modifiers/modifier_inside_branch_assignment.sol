@@ -20,4 +20,4 @@ contract C {
 	}
 }
 // ----
-// Warning: (287-300): Assertion violation happens here
+// Warning 6328: (287-300): Assertion violation happens here

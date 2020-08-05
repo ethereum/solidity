@@ -36,7 +36,8 @@ Binary representation:
 Text representation:
     /* "yul_stack_opt/input.sol":495:500   */
   tag_1
-  jump(tag_2)
+  tag_2
+  jump	// in
 tag_1:
     /* "yul_stack_opt/input.sol":425:500   */
   pop
@@ -56,7 +57,8 @@ tag_1:
   pop
     /* "yul_stack_opt/input.sol":572:577   */
   tag_3
-  jump(tag_2)
+  tag_2
+  jump	// in
 tag_3:
     /* "yul_stack_opt/input.sol":502:577   */
   pop
@@ -198,5 +200,5 @@ tag_5:
   swap14
   swap15
   swap16
-  jump
+  jump	// out
 tag_4:

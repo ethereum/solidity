@@ -1,0 +1,18 @@
+{
+ "language": "Solidity",
+ "sources": {
+  "a.sol": {
+   "content": "// SPDX-License-Identifier: GPL-3.0\ncontract A { uint256 immutable x = 1; function f() public view returns (uint256) { return x; } }"
+  }
+ },
+ "settings": {
+  "evmVersion": "petersburg",
+  "outputSelection": {
+   "*": {
+    "A": [
+     "evm.deployedBytecode.immutableReferences"
+    ]
+   }
+  }
+ }
+}

@@ -3,4 +3,4 @@ contract test {
     event A(uint i);
 }
 // ----
-// DeclarationError: (20-36): Event with same name and arguments defined twice.
+// DeclarationError 5883: (20-36): Event with same name and parameter types defined twice.

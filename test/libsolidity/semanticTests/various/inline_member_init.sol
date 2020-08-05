@@ -1,5 +1,5 @@
 contract test {
-    constructor() public {
+    constructor() {
         m_b = 6;
         m_c = 8;
     }
@@ -14,6 +14,7 @@ contract test {
         c = m_c;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // get() -> 5, 6, 8

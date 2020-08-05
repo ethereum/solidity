@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -57,7 +58,6 @@ private:
 		// https://stackoverflow.com/questions/17430377
 		VarDeclParserOptions() {}
 
-		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
@@ -107,7 +107,7 @@ private:
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
 	ASTPointer<TypeName> parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory);
-	ASTPointer<TypeName> parseTypeName(bool _allowVar);
+	ASTPointer<TypeName> parseTypeName();
 	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(
@@ -174,6 +174,8 @@ private:
 		std::vector<Index> indices;
 		bool empty() const;
 	};
+
+	std::optional<std::string> findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes);
 
 	/// Returns the next AST node ID
 	int64_t nextID() { return ++m_currentNodeID; }

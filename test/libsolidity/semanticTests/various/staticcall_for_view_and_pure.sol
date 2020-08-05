@@ -32,6 +32,7 @@ contract D {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >=byzantium
 // ----
 // f() -> 0x1 # This should work, next should throw #

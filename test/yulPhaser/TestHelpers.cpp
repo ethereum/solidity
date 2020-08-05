@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <test/yulPhaser/TestHelpers.h>
 
@@ -72,9 +73,13 @@ size_t phaser::test::countDifferences(Chromosome const& _chromosome1, Chromosome
 {
 	size_t count = 0;
 	for (size_t i = 0; i < min(_chromosome1.length(), _chromosome2.length()); ++i)
-		count += static_cast<int>(_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i]);
+		if (_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i])
+			++count;
 
-	return count + abs(static_cast<int>(_chromosome1.length() - _chromosome2.length()));
+	return count + static_cast<size_t>(abs(
+		static_cast<long>(_chromosome1.length()) -
+		static_cast<long>(_chromosome2.length())
+	));
 }
 
 TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):

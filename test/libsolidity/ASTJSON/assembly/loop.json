@@ -16,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 6,
       "linearizedBaseContracts":
@@ -132,7 +131,6 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "e2179b8e",
           "id": 5,
           "implemented": true,
@@ -140,7 +138,6 @@
           "modifiers": [],
           "name": "g",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,

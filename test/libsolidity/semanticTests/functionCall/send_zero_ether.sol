@@ -6,7 +6,7 @@ contract Receiver {
 
 
 contract Main {
-    constructor() public payable {}
+    constructor() payable {}
 
     function s() public returns (bool) {
         Receiver r = new Receiver();
@@ -14,6 +14,8 @@ contract Main {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
 // s() -> true

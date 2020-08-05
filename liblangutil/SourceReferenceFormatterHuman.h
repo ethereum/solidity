@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Formatting functions for errors referencing positions and locations in the source.
  */
@@ -29,22 +30,14 @@
 #include <sstream>
 #include <functional>
 
-namespace solidity::util
-{
-struct Exception; // forward
-}
-
 namespace solidity::langutil
 {
-
-struct SourceLocation;
-struct SourceReference;
 
 class SourceReferenceFormatterHuman: public SourceReferenceFormatter
 {
 public:
-	SourceReferenceFormatterHuman(std::ostream& _stream, bool colored):
-		SourceReferenceFormatter{_stream}, m_colored{colored}
+	SourceReferenceFormatterHuman(std::ostream& _stream, bool _colored, bool _withErrorIds):
+		SourceReferenceFormatter{_stream}, m_colored{_colored}, m_withErrorIds(_withErrorIds)
 	{}
 
 	void printSourceLocation(SourceReference const& _ref) override;
@@ -54,12 +47,13 @@ public:
 	static std::string formatExceptionInformation(
 		util::Exception const& _exception,
 		std::string const& _name,
-		bool colored = false
+		bool _colored = false,
+		bool _withErrorIds = false
 	)
 	{
 		std::ostringstream errorOutput;
 
-		SourceReferenceFormatterHuman formatter(errorOutput, colored);
+		SourceReferenceFormatterHuman formatter(errorOutput, _colored, _withErrorIds);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
 	}
@@ -75,6 +69,7 @@ private:
 
 private:
 	bool m_colored;
+	bool m_withErrorIds;
 };
 
 }

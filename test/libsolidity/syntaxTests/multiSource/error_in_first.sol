@@ -7,4 +7,4 @@ contract B {
 	function f() public { }
 }
 // ----
-// DeclarationError: (A:36-37): Undeclared identifier.
+// DeclarationError 7576: (A:36-37): Undeclared identifier.

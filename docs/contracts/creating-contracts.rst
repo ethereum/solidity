@@ -34,7 +34,8 @@ This means that cyclic creation dependencies are impossible.
 
 ::
 
-    pragma solidity >=0.4.22 <0.7.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.22 <0.8.0;
 
 
     contract OwnedToken {
@@ -47,7 +48,7 @@ This means that cyclic creation dependencies are impossible.
 
         // This is the constructor which registers the
         // creator and the assigned name.
-        constructor(bytes32 _name) public {
+        constructor(bytes32 _name) {
             // State variables are accessed via their name
             // and not via e.g. `this.owner`. Functions can
             // be accessed directly or through `this.f`,

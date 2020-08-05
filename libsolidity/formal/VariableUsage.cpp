@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/VariableUsage.h>
 
@@ -33,22 +34,23 @@ set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _
 	m_touchedVariables.clear();
 	m_callStack.clear();
 	m_callStack += _outerCallstack;
-	m_lastCall = m_callStack.back();
+	if (!m_callStack.empty())
+		m_lastCall = m_callStack.back();
 	_node.accept(*this);
 	return m_touchedVariables;
 }
 
 void VariableUsage::endVisit(Identifier const& _identifier)
 {
-	if (_identifier.annotation().lValueRequested)
+	if (_identifier.annotation().willBeWrittenTo)
 		checkIdentifier(_identifier);
 }
 
 void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 {
-	if (_indexAccess.annotation().lValueRequested)
+	if (_indexAccess.annotation().willBeWrittenTo)
 	{
-		/// identifier.annotation().lValueRequested == false, that's why we
+		/// identifier.annotation().willBeWrittenTo == false, that's why we
 		/// need to check that before.
 		auto identifier = dynamic_cast<Identifier const*>(SMTEncoder::leftmostBase(_indexAccess));
 		if (identifier)
@@ -103,8 +105,7 @@ void VariableUsage::checkIdentifier(Identifier const& _identifier)
 	solAssert(declaration, "");
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		solAssert(m_lastCall, "");
-		if (!varDecl->isLocalVariable() || varDecl->functionOrModifierDefinition() == m_lastCall)
+		if (!varDecl->isLocalVariable() || (m_lastCall && varDecl->functionOrModifierDefinition() == m_lastCall))
 			m_touchedVariables.insert(varDecl);
 	}
 }

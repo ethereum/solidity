@@ -16,7 +16,6 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "documentation": null,
       "fullyImplemented": true,
       "id": 8,
       "linearizedBaseContracts":
@@ -96,7 +95,6 @@
               }
             ]
           },
-          "documentation": null,
           "functionSelector": "26121ff0",
           "id": 7,
           "implemented": true,
@@ -104,7 +102,6 @@
           "modifiers": [],
           "name": "f",
           "nodeType": "FunctionDefinition",
-          "overrides": null,
           "parameters":
           {
             "id": 1,
@@ -121,31 +118,22 @@
               {
                 "constant": false,
                 "id": 3,
+                "mutability": "mutable",
                 "name": "x",
                 "nodeType": "VariableDeclaration",
-                "overrides": null,
                 "scope": 7,
                 "src": "49:6:1",
                 "stateVariable": false,
                 "storageLocation": "default",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": "t_uint256",
-                  "typeString": "uint256"
-                },
+                "typeDescriptions": {},
                 "typeName":
                 {
                   "id": 2,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
                   "src": "49:4:1",
-                  "typeDescriptions":
-                  {
-                    "typeIdentifier": "t_uint256",
-                    "typeString": "uint256"
-                  }
+                  "typeDescriptions": {}
                 },
-                "value": null,
                 "visibility": "internal"
               }
             ],

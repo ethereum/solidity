@@ -1,4 +1,4 @@
-contract A { constructor() public { } }
-contract B is A { constructor() A public {  } }
+contract A { constructor() { } }
+contract B is A { constructor() A {  } }
 // ----
-// DeclarationError: (72-73): Modifier-style base constructor call without arguments.
+// DeclarationError 1563: (65-66): Modifier-style base constructor call without arguments.

@@ -5,7 +5,7 @@ contract C {
     }
     S public s;
 
-    constructor() public {
+    constructor() {
         s = S({a: 1, x: true});
     }
 }

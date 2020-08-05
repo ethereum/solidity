@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// ParserError: (80-81): Call or assignment expected.
+// ParserError 6913: (80-81): Call or assignment expected.

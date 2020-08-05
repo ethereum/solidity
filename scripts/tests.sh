@@ -29,7 +29,7 @@
 set -e
 
 REPO_ROOT="$(dirname "$0")/.."
-SOLIDITY_BUILD_DIR="${SOLIDITY_BUILD_DIR:-build}"
+SOLIDITY_BUILD_DIR="${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}"
 
 source "${REPO_ROOT}/scripts/common.sh"
 
@@ -88,43 +88,43 @@ fi
 # and homestead / byzantium VM
 for optimize in "" "--optimize"
 do
-  for vm in $EVM_VERSIONS
-  do
-    FORCE_ABIV2_RUNS="no"
-    if [[ "$vm" == "istanbul" ]]
-    then
-      FORCE_ABIV2_RUNS="no yes" # run both in istanbul
-    fi
-    for abiv2 in $FORCE_ABIV2_RUNS
+    for vm in $EVM_VERSIONS
     do
-        force_abiv2_flag=""
-        if [[ "$abiv2" == "yes" ]]
+        FORCE_ABIV2_RUNS="no"
+        if [[ "$vm" == "istanbul" ]]
         then
-            force_abiv2_flag="--abiencoderv2 --optimize-yul"
+            FORCE_ABIV2_RUNS="no yes" # run both in istanbul
         fi
-        printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv2_flag..."
+        for abiv2 in $FORCE_ABIV2_RUNS
+        do
+            force_abiv2_flag=""
+            if [[ "$abiv2" == "yes" ]]
+            then
+                force_abiv2_flag="--abiencoderv2"
+            fi
+            printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv2_flag..."
 
-        log=""
-        if [ -n "$log_directory" ]
-        then
-			if [ -n "$optimize" ]
-			then
-				log=--logger=JUNIT,error,$log_directory/opt_$vm.xml $testargs
-			else
-				log=--logger=JUNIT,error,$log_directory/noopt_$vm.xml $testargs_no_opt
-			fi
-        fi
+            log=""
+            if [ -n "$log_directory" ]
+            then
+                if [ -n "$optimize" ]
+                then
+                    log=--logger=JUNIT,error,$log_directory/opt_$vm.xml $testargs
+                else
+                    log=--logger=JUNIT,error,$log_directory/noopt_$vm.xml $testargs_no_opt
+                fi
+            fi
 
-        set +e
-        "$REPO_ROOT"/${SOLIDITY_BUILD_DIR}/test/soltest --show-progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv2_flag
+            set +e
+            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress $log -- --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv2_flag
 
-        if test "0" -ne "$?"; then
-            exit 1
-        fi
-        set -e
+            if test "0" -ne "$?"; then
+                exit 1
+            fi
+            set -e
 
+        done
     done
-  done
 done
 
 if [[ -n $CMDLINE_PID ]] && ! wait $CMDLINE_PID

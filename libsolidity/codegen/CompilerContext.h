@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -117,8 +118,6 @@ public:
 	/// @returns the function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
 	FunctionDefinition const& superFunction(FunctionDefinition const& _function, ContractDefinition const& _base);
-	/// @returns the next constructor in the inheritance hierarchy.
-	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
 	/// Sets the contract currently being compiled - the most derived one.
 	void setMostDerivedContract(ContractDefinition const& _contract) { m_mostDerivedContract = &_contract; }
 	ContractDefinition const& mostDerivedContract() const;
@@ -169,6 +168,7 @@ public:
 	/// Clears the internal list, i.e. calling it again will result in an
 	/// empty return value.
 	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
+	bool requestedYulFunctionsRan() const { return m_requestedYulFunctionsRan; }
 
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
@@ -313,8 +313,6 @@ public:
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
 private:
-	/// @returns a pointer to the contract directly above the given contract.
-	ContractDefinition const* superContract(ContractDefinition const& _contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
@@ -380,7 +378,7 @@ private:
 	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.
 	CompilerContext *m_runtimeContext;
 	/// The index of the runtime subroutine.
-	size_t m_runtimeSub = -1;
+	size_t m_runtimeSub = std::numeric_limits<size_t>::max();
 	/// An index of low-level function labels by name.
 	std::map<std::string, evmasm::AssemblyItem> m_lowLevelFunctions;
 	/// Collector for yul functions.
@@ -393,6 +391,8 @@ private:
 	YulUtilFunctions m_yulUtilFunctions;
 	/// The queue of low-level functions to generate.
 	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
+	/// Flag to check that requestedYulFunctions() was called exactly once
+	bool m_requestedYulFunctionsRan = false;
 };
 
 }

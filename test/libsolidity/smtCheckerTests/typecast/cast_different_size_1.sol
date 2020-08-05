@@ -18,9 +18,9 @@ contract C
 	}
 }
 // ----
-// Warning: (186-195): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (317-333): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (451-460): Type conversion is not yet fully supported and might yield false positives.
-// Warning: (280-303): Assertion violation happens here
-// Warning: (414-431): Assertion violation happens here
-// Warning: (542-559): Assertion violation happens here
+// Warning 6328: (280-303): Assertion violation happens here
+// Warning 6328: (414-431): Assertion violation happens here
+// Warning 6328: (542-559): Assertion violation happens here
+// Warning 5084: (186-195): Type conversion is not yet fully supported and might yield false positives.
+// Warning 5084: (317-333): Type conversion is not yet fully supported and might yield false positives.
+// Warning 5084: (451-460): Type conversion is not yet fully supported and might yield false positives.

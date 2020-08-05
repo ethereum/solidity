@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * @author Lefteris <lefteris@ethdev.com>
  * @date 2014
@@ -36,14 +37,22 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
+	Json::Value events(Json::objectValue);
+
+	doc["version"] = Json::Value(c_natspecVersion);
+	doc["kind"]    = Json::Value("user");
 
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
 	{
-		string value = extractDoc(constructorDefinition->annotation().docTags, "notice");
+		string const value = extractDoc(constructorDefinition->annotation().docTags, "notice");
 		if (!value.empty())
+		{
 			// add the constructor, only if we have any documentation to add
-			methods["constructor"] = Json::Value(value);
+			Json::Value user;
+			user["notice"] = Json::Value(value);
+			methods["constructor"] = user;
+		}
 	}
 
 	string notice = extractDoc(_contractDef.annotation().docTags, "notice");
@@ -52,18 +61,36 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 
 	for (auto const& it: _contractDef.interfaceFunctions())
 		if (it.second->hasDeclaration())
+		{
+			string value;
+
 			if (auto const* f = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
+				value = extractDoc(f->annotation().docTags, "notice");
+			else if (auto var = dynamic_cast<VariableDeclaration const*>(&it.second->declaration()))
 			{
-				string value = extractDoc(f->annotation().docTags, "notice");
-				if (!value.empty())
-				{
-					Json::Value user;
-					// since @notice is the only user tag if missing function should not appear
-					user["notice"] = Json::Value(value);
-					methods[it.second->externalSignature()] = user;
-				}
+				solAssert(var->isStateVariable() && var->isPublic(), "");
+				value = extractDoc(var->annotation().docTags, "notice");
 			}
+
+			if (!value.empty())
+			{
+				Json::Value user;
+				// since @notice is the only user tag if missing function should not appear
+				user["notice"] = Json::Value(value);
+				methods[it.second->externalSignature()] = user;
+			}
+		}
+
+	for (auto const& event: _contractDef.interfaceEvents())
+	{
+		string value = extractDoc(event->annotation().docTags, "notice");
+		if (!value.empty())
+			events[event->functionType(true)->externalSignature()]["notice"] = value;
+	}
+
 	doc["methods"] = methods;
+	if (!events.empty())
+		doc["events"] = events;
 
 	return doc;
 }
@@ -72,6 +99,9 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
+
+	doc["version"] = Json::Value(c_natspecVersion);
+	doc["kind"] = Json::Value("dev");
 
 	auto author = extractDoc(_contractDef.annotation().docTags, "author");
 	if (!author.empty())
@@ -99,20 +129,38 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
 		{
 			Json::Value method(devDocumentation(fun->annotation().docTags));
+			// add the function, only if we have any documentation to add
+			Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
+
+			if (!jsonReturn.empty())
+				method["returns"] = jsonReturn;
+
 			if (!method.empty())
-			{
-				// add the function, only if we have any documentation to add
-				Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
-
-				if (!jsonReturn.empty())
-					method["returns"] = jsonReturn;
-
 				methods[it.second->externalSignature()] = method;
-			}
 		}
 	}
 
+	Json::Value stateVariables(Json::objectValue);
+	for (VariableDeclaration const* varDecl: _contractDef.stateVariables())
+	{
+		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
+			stateVariables[varDecl->name()] = devDoc;
+
+		solAssert(varDecl->annotation().docTags.count("return") <= 1, "");
+		if (varDecl->annotation().docTags.count("return") == 1)
+			stateVariables[varDecl->name()]["return"] = extractDoc(varDecl->annotation().docTags, "return");
+	}
+
+	Json::Value events(Json::objectValue);
+	for (auto const& event: _contractDef.events())
+		if (auto devDoc = devDocumentation(event->annotation().docTags); !devDoc.empty())
+			events[event->functionType(true)->externalSignature()] = devDoc;
+
 	doc["methods"] = methods;
+	if (!stateVariables.empty())
+		doc["stateVariables"] = stateVariables;
+	if (!events.empty())
+		doc["events"] = events;
 
 	return doc;
 }

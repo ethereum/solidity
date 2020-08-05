@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 
 #pragma once
 
@@ -41,7 +42,6 @@ public:
 	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override;
 private:
 	std::vector<std::pair<std::string, std::string>> m_sources;
-	std::string m_expectation;
 	std::string m_expectationLegacy;
 	std::string m_astFilename;
 	std::string m_legacyAstFilename;

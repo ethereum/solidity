@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 /**
  * Common code generator for translating Yul / inline assembly to Wasm.
  */
@@ -24,6 +25,9 @@
 #include <libyul/AsmDataForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDispenser.h>
+#include <libyul/optimiser/TypeInfo.h>
+
+#include <libsolutil/Common.h>
 
 #include <stack>
 #include <map>
@@ -56,10 +60,12 @@ public:
 private:
 	WasmCodeTransform(
 		Dialect const& _dialect,
-		Block const& _ast
+		Block const& _ast,
+		TypeInfo& _typeInfo
 	):
 		m_dialect(_dialect),
-		m_nameDispenser(_dialect, _ast)
+		m_nameDispenser(_dialect, _ast),
+		m_typeInfo(_typeInfo)
 	{}
 
 	std::unique_ptr<wasm::Expression> visit(yul::Expression const& _expression);
@@ -79,15 +85,13 @@ private:
 
 	wasm::FunctionDefinition translateFunction(yul::FunctionDefinition const& _funDef);
 
-	wasm::Expression injectTypeConversionIfNeeded(wasm::FunctionCall _call) const;
-	std::vector<wasm::Expression> injectTypeConversionIfNeeded(
-		std::vector<wasm::Expression> _arguments,
-		std::vector<yul::Type> const& _parameterTypes
-	) const;
-
 	std::string newLabel();
-	/// Makes sure that there are at least @a _amount global variables.
-	void allocateGlobals(size_t _amount);
+	/// Selects a subset of global variables matching specified sequence of variable types.
+	/// Defines more global variables of a given type if there's not enough.
+	std::vector<size_t> allocateGlobals(std::vector<wasm::Type> const& _typesForGlobals);
+
+	static wasm::Type translatedType(yul::Type _yulType);
+	static wasm::Literal makeLiteral(wasm::Type _type, u256 _value);
 
 	Dialect const& m_dialect;
 	NameDispenser m_nameDispenser;
@@ -95,7 +99,9 @@ private:
 	std::vector<wasm::VariableDeclaration> m_localVariables;
 	std::vector<wasm::GlobalVariableDeclaration> m_globalVariables;
 	std::map<YulString, wasm::FunctionImport> m_functionsToImport;
+	std::string m_functionBodyLabel;
 	std::stack<std::pair<std::string, std::string>> m_breakContinueLabelNames;
+	TypeInfo& m_typeInfo;
 };
 
 }

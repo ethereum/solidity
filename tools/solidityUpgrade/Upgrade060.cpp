@@ -14,6 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
+// SPDX-License-Identifier: GPL-3.0
 #include <tools/solidityUpgrade/Upgrade060.h>
 #include <tools/solidityUpgrade/SourceTransform.h>
 
@@ -99,19 +100,17 @@ inline string appendVirtual(FunctionDefinition const& _function)
 
 void AbstractContract::endVisit(ContractDefinition const& _contract)
 {
-	bool isFullyImplemented = _contract.annotation().unimplementedFunctions.empty();
+	bool isFullyImplemented = _contract.annotation().unimplementedDeclarations.empty();
 
 	if (
 		!isFullyImplemented &&
 		!_contract.abstract() &&
 		!_contract.isInterface()
 	)
-		m_changes.push_back(
-			UpgradeChange{
+		m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_contract.location(),
 				SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
-			}
 		);
 }
 
@@ -132,31 +131,27 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 
 			/// Add override with contract list, if needed.
 			if (!function->overrides() && expectedContracts.size() > 1)
-				m_changes.push_back(
-					UpgradeChange{
+				m_changes.emplace_back(
 						UpgradeChange::Level::Safe,
 						function->location(),
 						appendOverride(*function, expectedContracts)
-					}
 				);
 
 			for (auto [begin, end] = inheritedFunctions.equal_range(proxy); begin != end; begin++)
 			{
 				auto& super = (*begin);
-				auto functionType = FunctionType(*function).asCallableFunction(false);
-				auto superType = super.functionType()->asCallableFunction(false);
+				auto functionType = FunctionType(*function).asExternallyCallableFunction(false);
+				auto superType = super.functionType()->asExternallyCallableFunction(false);
 
 				if (functionType && functionType->hasEqualParameterTypes(*superType))
 				{
 					/// If function does not specify override and no override with
 					/// contract list was added before.
 					if (!function->overrides() && expectedContracts.size() <= 1)
-						m_changes.push_back(
-							UpgradeChange{
+						m_changes.emplace_back(
 								UpgradeChange::Level::Safe,
 								function->location(),
 								appendOverride(*function, expectedContracts)
-							}
 						);
 				}
 			}
@@ -181,12 +176,10 @@ void VirtualFunction::endVisit(ContractDefinition const& _contract)
 				function->visibility() > Visibility::Private
 			)
 			{
-				m_changes.push_back(
-					UpgradeChange{
+				m_changes.emplace_back(
 						UpgradeChange::Level::Safe,
 						function->location(),
 						appendVirtual(*function)
-					}
 				);
 			}
 
@@ -198,12 +191,10 @@ void VirtualFunction::endVisit(ContractDefinition const& _contract)
 					!super.virtualSemantics()
 				)
 				{
-					m_changes.push_back(
-						UpgradeChange{
+					m_changes.emplace_back(
 							UpgradeChange::Level::Safe,
 							function->location(),
 							appendVirtual(*function)
-						}
 					);
 				}
 			}

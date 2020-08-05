@@ -13,5 +13,5 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
-// Warning: (66-72): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning: (142-156): Assertion violation happens here
+// Warning 5667: (66-72): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (142-156): Assertion violation happens here
