@@ -67,7 +67,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				// We should not modify function arguments that have to be literals
 				// Note that replacing the function call entirely is fine,
 				// if the function call is movable.
-				if (!builtin->literalArguments || !builtin->literalArguments.value()[i - 1])
+				if (!builtin->literalArgument(i - 1))
 					visit(funCall.arguments[i - 1]);
 
 			descend = false;

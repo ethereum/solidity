@@ -170,7 +170,7 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 			for (size_t j = 0; j < _call.arguments.size(); j++)
 			{
 				size_t const i = _call.arguments.size() - j - 1;
-				if (!(fun.second.literalArguments && (*fun.second.literalArguments)[i]))
+				if (!fun.second.literalArgument(i))
 				{
 					_visitExpression(_call.arguments[i]);
 					visited++;
