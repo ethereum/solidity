@@ -50,6 +50,7 @@ detect_stray_source_files("${libevmasm_sources}" "libevmasm/")
 
 set(liblangutil_sources
     liblangutil/CharStream.cpp
+    liblangutil/Scanner.cpp
     liblangutil/SourceLocation.cpp
 )
 detect_stray_source_files("${liblangutil_sources}" "liblangutil/")
@@ -92,7 +93,6 @@ set(libsolidity_sources
     libsolidity/SolidityNatspecJSON.cpp
     libsolidity/SolidityOptimizer.cpp
     libsolidity/SolidityParser.cpp
-    libsolidity/SolidityScanner.cpp
     libsolidity/SolidityTypes.cpp
     libsolidity/StandardCompiler.cpp
     libsolidity/SyntaxTest.cpp
