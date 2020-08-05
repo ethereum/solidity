@@ -61,7 +61,7 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 	m_context.setSolver(m_interface.get());
 	m_context.clear();
 	m_context.setAssertionAccumulation(true);
-	m_variableUsage.setFunctionInlining(true);
+	m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
 
 	_source.accept(*this);
 
