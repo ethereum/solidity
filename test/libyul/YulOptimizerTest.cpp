@@ -142,7 +142,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "varDeclInitializer")
 		VarDeclInitializer::run(*m_context, *m_object->code);
 	else if (m_optimizerStep == "varNameCleaner")
+	{
+		disambiguate();
+		FunctionGrouper::run(*m_context, *m_object->code);
 		VarNameCleaner::run(*m_context, *m_object->code);
+	}
 	else if (m_optimizerStep == "forLoopConditionIntoBody")
 	{
 		disambiguate();
