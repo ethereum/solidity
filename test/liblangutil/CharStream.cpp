@@ -31,7 +31,7 @@
 namespace solidity::langutil::test
 {
 
-BOOST_AUTO_TEST_SUITE(CharStreamtest)
+BOOST_AUTO_TEST_SUITE(CharStreamTest)
 
 BOOST_AUTO_TEST_CASE(test_fail)
 {

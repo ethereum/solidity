@@ -21,15 +21,16 @@
  */
 
 #include <liblangutil/Scanner.h>
+
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace solidity::langutil;
 
-namespace solidity::frontend::test
+namespace solidity::langutil::test
 {
 
-BOOST_AUTO_TEST_SUITE(SolidityScanner)
+BOOST_AUTO_TEST_SUITE(ScannerTest)
 
 BOOST_AUTO_TEST_CASE(test_empty)
 {
