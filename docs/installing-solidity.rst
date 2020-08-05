@@ -55,7 +55,7 @@ Please refer to the solc-js repository for instructions.
 
     The commandline executable is named ``solcjs``.
 
-    The comandline options of ``solcjs`` are not compatible with ``solc`` and tools (such as ``geth``)
+    The commandline options of ``solcjs`` are not compatible with ``solc`` and tools (such as ``geth``)
     expecting the behaviour of ``solc`` will not work with ``solcjs``.
 
 Docker
