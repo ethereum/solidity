@@ -1145,7 +1145,7 @@ NatSpec
 Solidity contracts can have a form of comments that are the basis of the
 Ethereum Natural Language Specification Format.
 
-Add comments above functions or contracts following `doxygen <http://www.doxygen.nl>`_ notation
+Add comments above functions or contracts following `doxygen <https://www.doxygen.nl>`_ notation
 of one or multiple lines starting with ``///`` or a
 multiline comment starting with ``/**`` and ending with ``*/``.
 

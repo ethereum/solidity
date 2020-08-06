@@ -205,7 +205,7 @@ The following are dependencies for all builds of Solidity:
 | `cvc4`_ (Optional)                | For use with SMT checker.                             |
 +-----------------------------------+-------------------------------------------------------+
 
-.. _cvc4: http://cvc4.cs.stanford.edu/web/
+.. _cvc4: https://cvc4.cs.stanford.edu/web/
 .. _Git: https://git-scm.com/download
 .. _Boost: https://www.boost.org
 .. _CMake: https://cmake.org/download/
@@ -243,7 +243,7 @@ command-line builds:
 
     sudo xcodebuild -license accept
 
-Our OS X build script uses `the Homebrew <http://brew.sh>`_
+Our OS X build script uses `the Homebrew <https://brew.sh>`_
 package manager for installing external dependencies.
 Here's how to `uninstall Homebrew
 <https://docs.brew.sh/FAQ#how-do-i-uninstall-homebrew>`_,

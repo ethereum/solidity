@@ -80,7 +80,7 @@ Solidity Integrations
 
 * Visual Studio Code:
 
-    * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
+    * `Visual Studio Code extension <https://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
         Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
 
 Discontinued:

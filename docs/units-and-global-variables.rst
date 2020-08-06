@@ -201,7 +201,7 @@ Mathematical and Cryptographic Functions
 
     If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without
     requiring knowledge of the corresponding private key. In the Homestead hard fork, this issue was fixed
-    for _transaction_ signatures (see `EIP-2 <http://eips.ethereum.org/EIPS/eip-2#specification>`_), but
+    for _transaction_ signatures (see `EIP-2 <https://eips.ethereum.org/EIPS/eip-2#specification>`_), but
     the ecrecover function remained unchanged.
 
     This is usually not a problem unless you require signatures to be unique or
