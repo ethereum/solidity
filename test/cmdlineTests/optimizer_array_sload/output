@@ -36,16 +36,16 @@ object "Arraysum_33" {
                             vloc_i := increment_t_uint256(vloc_i)
                         }
                         {
-                            let _3, _4 := storage_array_index_access_t_array$_t_uint256_$dyn_storage(_1, vloc_i)
+                            let _3, _4 := storage_array_index_access$_t_uint256_$dyn_storage(_1, vloc_i)
                             vloc_sum := checked_add_t_uint256(vloc_sum, extract_from_storage_value_dynamict_uint256(sload(_3), _4))
                         }
                         let memPos := allocateMemory(_1)
-                        return(memPos, sub(abi_encode_tuple_t_uint256__to_t_uint256__fromStack(memPos, _1), memPos))
+                        return(memPos, sub(abi_encode_uint(memPos, _1), memPos))
                     }
                 }
                 revert(0, 0)
             }
-            function abi_encode_tuple_t_uint256__to_t_uint256__fromStack(headStart, value0) -> tail
+            function abi_encode_uint(headStart, value0) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
@@ -71,7 +71,7 @@ object "Arraysum_33" {
                 if gt(value, not(1)) { revert(ret, ret) }
                 ret := add(value, 1)
             }
-            function storage_array_index_access_t_array$_t_uint256_$dyn_storage(array, index) -> slot, offset
+            function storage_array_index_access$_t_uint256_$dyn_storage(array, index) -> slot, offset
             {
                 if iszero(lt(index, sload(array))) { invalid() }
                 mstore(slot, array)

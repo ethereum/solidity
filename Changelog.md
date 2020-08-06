@@ -7,6 +7,8 @@ Compiler Features:
  * SMTChecker: Support shifts.
  * SMTChecker: Support structs.
  * Yul Optimizer: Prune unused parameters in functions.
+ * Yul Optimizer: Try to simplify function names.
+
 
 Bugfixes:
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.

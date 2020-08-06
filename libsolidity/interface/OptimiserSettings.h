@@ -32,7 +32,7 @@ namespace solidity::frontend
 struct OptimiserSettings
 {
 	static char constexpr DefaultYulOptimiserSteps[] =
-		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"NdhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
 		"["
 			"xarrscLM"                 // Turn into SSA and simplify
 			"cCTUtTOntnfDIul"          // Perform structural simplification
@@ -47,7 +47,7 @@ struct OptimiserSettings
 			"gvif"                     // Run full inliner
 			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
 		"]"
-		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+		"jmuljuljul VcTOcul jmulN";     // Make source short and pretty
 
 	/// No optimisations at all - not recommended.
 	static OptimiserSettings none()
