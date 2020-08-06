@@ -637,7 +637,7 @@ Example
 
 Assume that you have the following contract in ``Source.sol``:
 
-.. code-block:: solidity
+.. code-block:: Solidity
 
     pragma solidity >=0.6.0 <0.6.4;
     // This will not compile after 0.7.0
@@ -691,7 +691,7 @@ It is recommended to explicitly specify the upgrade modules by using ``--modules
 The command above applies all changes as shown below. Please review them carefully (the pragmas will
 have to be updated manually.)
 
-.. code-block:: solidity
+.. code-block:: Solidity
 
     pragma solidity >0.6.99 <0.8.0;
     // SPDX-License-Identifier: GPL-3.0
