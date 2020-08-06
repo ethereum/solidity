@@ -116,27 +116,40 @@ uint64_t popcnt(uint64_t _v)
 
 using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 
-u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _arguments)
+u256 EwasmBuiltinInterpreter::evalBuiltin(
+	YulString _functionName,
+	vector<Expression> const& _arguments,
+	vector<u256> const& _evaluatedArguments
+)
 {
 	vector<uint64_t> arg;
-	for (u256 const& a: _arguments)
+	for (u256 const& a: _evaluatedArguments)
 		arg.emplace_back(uint64_t(a & uint64_t(-1)));
 
-	string fun = _fun.str();
-	if (fun == "datasize")
-		return u256(keccak256(h256(_arguments.at(0)))) & 0xfff;
-	else if (fun == "dataoffset")
-		return u256(keccak256(h256(_arguments.at(0) + 2))) & 0xfff;
+	string const fun = _functionName.str();
+	if (fun == "datasize" || fun == "dataoffset")
+	{
+		string arg = std::get<Literal>(_arguments.at(0)).value.str();
+		if (arg.length() < 32)
+			arg.resize(32, 0);
+		if (fun == "datasize")
+			return u256(util::keccak256(arg)) & 0xfff;
+		else if (fun == "dataoffset")
+		{
+			arg[31] += 2;
+			return u256(util::keccak256(arg)) & 0xfff;
+		}
+	}
 	else if (fun == "datacopy")
 	{
 		// This is identical to codecopy.
-		if (accessMemory(_arguments.at(0), _arguments.at(2)))
+		if (accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2)))
 			copyZeroExtended(
 				m_state.memory,
 				m_state.code,
-				static_cast<size_t>(_arguments.at(0)),
-				static_cast<size_t>(_arguments.at(1) & numeric_limits<size_t>::max()),
-				static_cast<size_t>(_arguments.at(2))
+				static_cast<size_t>(_evaluatedArguments.at(0)),
+				static_cast<size_t>(_evaluatedArguments.at(1) & numeric_limits<size_t>::max()),
+				static_cast<size_t>(_evaluatedArguments.at(2))
 			);
 		return 0;
 	}
@@ -180,14 +193,14 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 		accessMemory(arg[0], 4);
 		return readMemoryHalfWord(arg[0]);
 	}
-	else if (_fun == "i32.clz"_yulstring)
+	else if (fun == "i32.clz")
 		// NOTE: the clz implementation assumes 64-bit inputs, hence the adjustment
 		return clz64(arg[0] & uint32_t(-1)) - 32;
-	else if (_fun == "i64.clz"_yulstring)
+	else if (fun == "i64.clz")
 		return clz64(arg[0]);
-	else if (_fun == "i32.ctz"_yulstring)
+	else if (fun == "i32.ctz")
 		return ctz32(uint32_t(arg[0] & uint32_t(-1)));
-	else if (_fun == "i64.ctz"_yulstring)
+	else if (fun == "i64.ctz")
 		return ctz64(arg[0]);
 
 	string prefix = fun;
@@ -211,7 +224,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _a
 	else if (prefix == "eth")
 		return evalEthBuiltin(suffix, arg);
 
-	yulAssert(false, "Unknown builtin: " + _fun.str() + " (or implementation did not return)");
+	yulAssert(false, "Unknown builtin: " + fun + " (or implementation did not return)");
 
 	return 0;
 }

@@ -69,7 +69,11 @@ public:
 		m_state(_state)
 	{}
 	/// Evaluate builtin function
-	u256 evalBuiltin(YulString _fun, std::vector<u256> const& _arguments);
+	u256 evalBuiltin(
+		YulString _functionName,
+		std::vector<Expression> const& _arguments,
+		std::vector<u256> const& _evaluatedArguments
+	);
 
 private:
 	template <typename Word>
