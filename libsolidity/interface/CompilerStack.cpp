@@ -85,9 +85,6 @@ static int g_compilerStackCounts = 0;
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
 	m_enabledSMTSolvers{smtutil::SMTSolverChoice::All()},
-	m_generateIR{false},
-	m_generateEwasm{false},
-	m_errorList{},
 	m_errorReporter{m_errorList}
 {
 	// Because TypeProvider is currently a singleton API, we must ensure that
@@ -518,7 +515,8 @@ bool CompilerStack::compile()
 				{
 					try
 					{
-						compileContract(*contract, otherCompilers);
+						if (m_generateEvmBytecode)
+							compileContract(*contract, otherCompilers);
 					}
 					catch (Error const& _error)
 					{
