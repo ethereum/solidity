@@ -46,7 +46,7 @@ The following example shows a contract and a function using all available tags.
   public. You are welcome to use similar comments for your internal and
   private functions, but those will not be parsed.
 
-.. code:: solidity
+.. code:: Solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.6.10 <0.8.0;
@@ -126,7 +126,7 @@ JSON output, for example the end-user client software, may present this to the e
 
 For example, some client software will render:
 
-.. code:: solidity
+.. code:: Solidity
 
    /// @notice This function will multiply `a` by 7
 
