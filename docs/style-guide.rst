@@ -1149,7 +1149,7 @@ Add comments above functions or contracts following `doxygen <http://www.doxygen
 of one or multiple lines starting with ``///`` or a
 multiline comment starting with ``/**`` and ending with ``*/``.
 
-For example, the contract from `a simple smart contract <simple-smart-contract>`_ with the comments
+For example, the contract from :ref:`a simple smart contract <simple-smart-contract>` with the comments
 added looks like the one below::
 
     // SPDX-License-Identifier: GPL-3.0
@@ -1176,6 +1176,6 @@ added looks like the one below::
         }
     }
 
-It is recommended that Solidity contracts are fully annotated using `NatSpec <natspec>`_ for all public interfaces (everything in the ABI).
+It is recommended that Solidity contracts are fully annotated using :ref:`NatSpec <natspec>` for all public interfaces (everything in the ABI).
 
-Please see the section about `NatSpec <natspec>`_ for a detailed explanation.
+Please see the section about :ref:`NatSpec <natspec>` for a detailed explanation.

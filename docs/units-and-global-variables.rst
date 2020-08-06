@@ -160,6 +160,8 @@ more details on error handling and when to use which function.
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 
+.. _mathematical-and-cryptographic-functions:
+
 Mathematical and Cryptographic Functions
 ----------------------------------------
 
