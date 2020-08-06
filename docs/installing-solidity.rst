@@ -246,7 +246,7 @@ command-line builds:
 Our OS X build script uses `the Homebrew <http://brew.sh>`_
 package manager for installing external dependencies.
 Here's how to `uninstall Homebrew
-<https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/FAQ.md#how-do-i-uninstall-homebrew>`_,
+<https://docs.brew.sh/FAQ#how-do-i-uninstall-homebrew>`_,
 if you ever want to start again from scratch.
 
 Prerequisites - Windows
