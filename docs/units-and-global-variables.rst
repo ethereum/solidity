@@ -195,7 +195,7 @@ Mathematical and Cryptographic Functions
     ``ecrecover`` returns an ``address``, and not an ``address payable``. See :ref:`address payable<address>` for
     conversion, in case you need to transfer funds to the recovered address.
 
-    For further details, read `example usage <https://ethereum.stackexchange.com/q/1777/222>`_.
+    For further details, read `example usage <https://ethereum.stackexchange.com/questions/1777/workflow-on-signing-a-string-with-private-key-followed-by-signature-verificatio>`_.
 
 .. warning::
 
