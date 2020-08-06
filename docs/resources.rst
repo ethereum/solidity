@@ -75,7 +75,7 @@ Solidity Integrations
     * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
         Plugin for the Vim editor providing syntax highlighting.
 
-    * `Vim Syntastic <https://github.com/scrooloose/syntastic>`_
+    * `Vim Syntastic <https://github.com/vim-syntastic/syntastic>`_
         Plugin for the Vim editor providing compile checking.
 
 * Visual Studio Code:
@@ -145,5 +145,5 @@ Third-Party Solidity Parsers and Grammars
 * `solidity-parser <https://github.com/ConsenSys/solidity-parser>`_
     Solidity parser for JavaScript
 
-* `Solidity Grammar for ANTLR 4 <https://github.com/federicobond/solidity-antlr4>`_
+* `Solidity Grammar for ANTLR 4 <https://github.com/solidityj/solidity-antlr4>`_
     Solidity grammar for the ANTLR 4 parser generator
