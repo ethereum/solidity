@@ -38,6 +38,7 @@ namespace solidity::frontend
 {
 
 class ASTNode;
+class ScopeOpener;
 class SourceUnit;
 class PragmaDirective;
 class ImportDirective;

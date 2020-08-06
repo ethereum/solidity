@@ -607,7 +607,7 @@ void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
 
 bool DeclarationRegistrationHelper::visit(TryCatchClause& _tryCatchClause)
 {
-	_tryCatchClause.annotation().scope = m_currentScope;
+	solAssert(_tryCatchClause.annotation().scope == m_currentScope, "");
 	enterNewSubScope(_tryCatchClause);
 	return true;
 }
@@ -643,7 +643,7 @@ void DeclarationRegistrationHelper::endVisit(FunctionTypeName&)
 
 bool DeclarationRegistrationHelper::visit(Block& _block)
 {
-	_block.annotation().scope = m_currentScope;
+	solAssert(_block.annotation().scope == m_currentScope, "");
 	enterNewSubScope(_block);
 	return true;
 }
@@ -655,7 +655,7 @@ void DeclarationRegistrationHelper::endVisit(Block&)
 
 bool DeclarationRegistrationHelper::visit(ForStatement& _for)
 {
-	_for.annotation().scope = m_currentScope;
+	solAssert(_for.annotation().scope == m_currentScope, "");
 	enterNewSubScope(_for);
 	return true;
 }
@@ -729,8 +729,8 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);
 
-	_declaration.annotation().scope = m_currentScope;
-	_declaration.annotation().contract = m_currentContract;
+	solAssert(_declaration.annotation().scope == m_currentScope, "");
+	solAssert(_declaration.annotation().contract == m_currentContract, "");
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }

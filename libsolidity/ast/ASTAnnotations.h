@@ -108,10 +108,10 @@ struct ScopableAnnotation
 	virtual ~ScopableAnnotation() = default;
 
 	/// The scope this declaration resides in. Can be nullptr if it is the global scope.
-	/// Available only after name and type resolution step.
+	/// Filled by the Scoper.
 	ASTNode const* scope = nullptr;
 	/// Pointer to the contract this declaration resides in. Can be nullptr if the current scope
-	/// is not part of a contract. Available only after name and type resolution step.
+	/// is not part of a contract. Filled by the Scoper.
 	ContractDefinition const* contract = nullptr;
 };
 

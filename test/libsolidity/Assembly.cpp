@@ -30,6 +30,7 @@
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/analysis/Scoper.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/analysis/TypeChecker.h>
@@ -59,6 +60,7 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(_sourceCode)));
 	BOOST_CHECK(!!sourceUnit);
 
+	Scoper::assignScopes(*sourceUnit);
 	GlobalContext globalContext;
 	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
