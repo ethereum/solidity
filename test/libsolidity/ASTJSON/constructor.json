@@ -34,7 +34,6 @@
             "src": "28:4:1",
             "statements": []
           },
-          "freeFunction": false,
           "id": 4,
           "implemented": true,
           "kind": "constructor",

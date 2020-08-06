@@ -46,7 +46,6 @@
         {
           "attributes":
           {
-            "freeFunction": false,
             "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
@@ -155,7 +154,6 @@
         {
           "attributes":
           {
-            "freeFunction": false,
             "functionSelector": "c2985578",
             "implemented": false,
             "isConstructor": false,
@@ -210,7 +208,6 @@
             [
               4
             ],
-            "freeFunction": false,
             "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,
@@ -337,7 +334,6 @@
             [
               10
             ],
-            "freeFunction": false,
             "functionSelector": "c2985578",
             "implemented": true,
             "isConstructor": false,
@@ -417,7 +413,6 @@
             [
               15
             ],
-            "freeFunction": false,
             "functionSelector": "a399b6a2",
             "implemented": true,
             "isConstructor": false,

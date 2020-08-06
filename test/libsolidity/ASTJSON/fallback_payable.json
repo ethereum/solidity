@@ -34,7 +34,6 @@
             "src": "34:2:1",
             "statements": []
           },
-          "freeFunction": false,
           "id": 4,
           "implemented": true,
           "kind": "fallback",

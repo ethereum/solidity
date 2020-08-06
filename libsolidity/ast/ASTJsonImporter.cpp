@@ -381,6 +381,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	astAssert(_node["kind"].isString(), "Expected 'kind' to be a string!");
 
 	Token kind;
+	bool freeFunction = false;
 	string kindStr = member(_node, "kind").asString();
 
 	if (kindStr == "constructor")
@@ -391,6 +392,11 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 		kind = Token::Fallback;
 	else if (kindStr == "receive")
 		kind = Token::Receive;
+	else if (kindStr == "freeFunction")
+	{
+		kind = Token::Function;
+		freeFunction = true;
+	}
 	else
 		astAssert(false, "Expected 'kind' to be one of [constructor, function, fallback, receive]");
 
@@ -399,16 +405,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 		modifiers.push_back(createModifierInvocation(mod));
 
 	Visibility vis = Visibility::Default;
-	bool const freeFunction = _node.isMember("freeFunction") ? _node["freeFunction"].asBool() : false;
-	if (kind == Token::Constructor)
-	{
-	}
-	else if (freeFunction)
-		astAssert(
-			vis == Visibility::Internal || vis == Visibility::Default,
-			"Expected internal or default visibility for free function."
-		);
-	else
+	if (!freeFunction)
 		vis = visibility(_node);
 	return createASTNode<FunctionDefinition>(
 		_node,
