@@ -1,7 +1,7 @@
 ### 0.7.1 (unreleased)
 
 Language Features:
-
+ * Super constructors can now be called using the member notation e.g.  ``M.C(123)``.
 
 Compiler Features:
  * Standard JSON Interface: Do not run EVM bytecode code generation, if only Yul IR or EWasm output is requested.

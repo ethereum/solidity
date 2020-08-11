@@ -146,7 +146,9 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::contract(*contract);
-	else
+	// Can't assign the type for modifiers at this stage as it needs info from
+	// the TypeChecker which is run later
+	else if (!dynamic_cast<ModifierDefinition const*>(declaration))
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
 		m_errorReporter.fatalTypeError(
@@ -276,6 +278,14 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	if (_variable.annotation().type)
 		return;
 
+	if (auto typeName = dynamic_cast<UserDefinedTypeName const*>(&_variable.typeName()))
+		if (dynamic_cast<ModifierDefinition const*>(typeName->annotation().referencedDeclaration))
+			m_errorReporter.fatalTypeError(
+				8872_error,
+				typeName->location(),
+				"Modifiers cannot be used as variable type."
+			);
+
 	if (_variable.isConstant() && !_variable.isStateVariable())
 		m_errorReporter.declarationError(
 			1788_error,
@@ -379,7 +389,6 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 
 	_variable.annotation().type = type;
-
 }
 
 void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)

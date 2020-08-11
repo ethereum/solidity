@@ -146,16 +146,12 @@
                 {
                   "attributes":
                   {
-                    "overloadedDeclarations":
-                    [
-                      null
-                    ],
+                    "name": "M",
                     "referencedDeclaration": 6,
-                    "type": "modifier (uint256)",
-                    "value": "M"
+                    "type": "modifier (uint256)"
                   },
                   "id": 8,
-                  "name": "Identifier",
+                  "name": "UserDefinedTypeName",
                   "src": "52:1:1"
                 },
                 {

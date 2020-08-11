@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError 5172: (77-80): Name has to refer to a struct, enum or contract.
+// TypeError 8872: (77-80): Modifiers cannot be used as variable type.

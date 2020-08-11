@@ -471,7 +471,7 @@ ASTPointer<ModifierInvocation> ASTJsonImporter::createModifierInvocation(Json::V
 		arguments.push_back(convertJsonToASTNode<Expression>(arg));
 	return createASTNode<ModifierInvocation>(
 		_node,
-		createIdentifier(member(_node, "modifierName")),
+		createUserDefinedTypeName(member(_node, "modifierName")),
 		member(_node, "arguments").isNull() ? nullptr : make_unique<std::vector<ASTPointer<Expression>>>(arguments)
 	);
 }

@@ -120,6 +120,12 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
+void ImmutableValidator::endVisit(UserDefinedTypeName const& _userDefinedTypeName)
+{
+	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_userDefinedTypeName.annotation().referencedDeclaration))
+		visitCallableIfNew(callableDef->resolveVirtual(m_currentContract));
+}
+
 void ImmutableValidator::endVisit(Identifier const& _identifier)
 {
 	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
