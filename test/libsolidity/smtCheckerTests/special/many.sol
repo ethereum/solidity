@@ -15,6 +15,7 @@ contract C
 	}
 }
 // ----
+// Warning 4984: (311-316): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning 6328: (79-115): Assertion violation happens here
 // Warning 6328: (119-161): Assertion violation happens here
 // Warning 6328: (165-204): Assertion violation happens here
@@ -23,4 +24,3 @@ contract C
 // Warning 6328: (304-332): Assertion violation happens here
 // Warning 6328: (336-364): Assertion violation happens here
 // Warning 6328: (368-391): Assertion violation happens here
-// Warning 2661: (311-316): Overflow (resulting value larger than 2**256 - 1) happens here

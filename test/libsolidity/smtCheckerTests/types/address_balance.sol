@@ -9,5 +9,5 @@ contract C
 }
 // ----
 // Warning 2072: (96-102): Unused local variable.
+// Warning 4984: (105-127): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning 6328: (131-160): Assertion violation happens here
-// Warning 2661: (105-127): Overflow (resulting value larger than 2**256 - 1) happens here

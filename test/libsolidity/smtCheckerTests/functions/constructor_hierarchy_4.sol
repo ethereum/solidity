@@ -18,6 +18,6 @@ contract A is B {
 	}
 }
 // ----
-// Warning 2661: (207-212): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning 2661: (198-203): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning 2661: (230-235): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4984: (198-203): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4984: (207-212): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4984: (230-235): Overflow (resulting value larger than 2**256 - 1) happens here

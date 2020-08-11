@@ -6,3 +6,5 @@ contract C {
 		return x / y;
 	}
 }
+// ----
+// Warning 1218: (147-152): Error trying to invoke SMT solver.
