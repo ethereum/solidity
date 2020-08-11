@@ -1911,8 +1911,23 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		}
 		case Type::Category::Struct:
-			solUnimplementedAssert(false, "Struct conversion not implemented.");
+		{
+			solAssert(toCategory == Type::Category::Struct, "");
+			auto const& fromStructType = dynamic_cast<StructType const &>(_from);
+			auto const& toStructType = dynamic_cast<StructType const &>(_to);
+			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
+
+			solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
+			solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
+			solUnimplementedAssert(fromStructType.location() == DataLocation::CallData, "");
+
+			body = Whiskers(R"(
+				converted := <abiDecode>(value, calldatasize())
+			)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
+				{&toStructType}
+			)).render();
 			break;
+		}
 		case Type::Category::FixedBytes:
 		{
 			FixedBytesType const& from = dynamic_cast<FixedBytesType const&>(_from);
