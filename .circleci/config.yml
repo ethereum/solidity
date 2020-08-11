@@ -927,6 +927,10 @@ workflows:
       - t_ems_compile_ext_gnosis: *workflow_emscripten
       - t_ems_compile_ext_zeppelin: *workflow_emscripten
 
+      # Code Coverage enabled build and tests
+      - b_ubu_codecov: *workflow_trigger_on_tags
+      - t_ubu_codecov: *workflow_ubuntu2004_codecov
+
   nightly:
 
     triggers:
