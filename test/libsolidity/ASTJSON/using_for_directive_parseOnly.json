@@ -31,9 +31,8 @@
           {
             "id": 2,
             "name": "L",
-            "nodeType": "UserDefinedTypeName",
-            "src": "32:1:1",
-            "typeDescriptions": {}
+            "nodeType": "IdentifierPath",
+            "src": "32:1:1"
           },
           "nodeType": "UsingForDirective",
           "src": "26:17:1",

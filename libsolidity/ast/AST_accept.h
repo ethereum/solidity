@@ -381,14 +381,14 @@ void ElementaryTypeName::accept(ASTConstVisitor& _visitor) const
 void UserDefinedTypeName::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-		this->pathNode()->accept(_visitor);
+		this->pathNode().accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
 void UserDefinedTypeName::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
-		this->pathNode()->accept(_visitor);
+		this->pathNode().accept(_visitor);
 	_visitor.endVisit(*this);
 }
 

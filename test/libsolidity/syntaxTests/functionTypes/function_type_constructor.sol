@@ -4,4 +4,4 @@ contract C {
 }
 // ----
 // SyntaxError 2668: (83-99): Functions without implementation cannot have modifiers.
-// DeclarationError 7576: (97-98): Undeclared identifier.
+// DeclarationError 7920: (97-98): Identifier not found or not unique.

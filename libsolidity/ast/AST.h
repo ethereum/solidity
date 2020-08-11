@@ -558,7 +558,7 @@ private:
 };
 
 /**
- * A sequence of identifiers separated by dots
+ * A sequence of identifiers separated by dots used outside the expression context. Inside the expression context, this is a sequence of Identifier and MemberAccess.
  */
 class IdentifierPath: public ASTNode
 {
@@ -584,7 +584,7 @@ public:
 	InheritanceSpecifier(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<UserDefinedTypeName> _baseName,
+		ASTPointer<IdentifierPath> _baseName,
 		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
 		ASTNode(_id, _location), m_baseName(std::move(_baseName)), m_arguments(std::move(_arguments))
@@ -595,14 +595,14 @@ public:
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	UserDefinedTypeName const& name() const { return *m_baseName; }
+	IdentifierPath const& name() const { return *m_baseName; }
 	// Returns nullptr if no argument list was given (``C``).
 	// If an argument list is given (``C(...)``), the arguments are returned
 	// as a vector of expressions. Note that this vector can be empty (``C()``).
 	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
-	ASTPointer<UserDefinedTypeName> m_baseName;
+	ASTPointer<IdentifierPath> m_baseName;
 	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
@@ -617,7 +617,7 @@ public:
 	UsingForDirective(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<UserDefinedTypeName> _libraryName,
+		ASTPointer<IdentifierPath> _libraryName,
 		ASTPointer<TypeName> _typeName
 	):
 		ASTNode(_id, _location), m_libraryName(std::move(_libraryName)), m_typeName(std::move(_typeName))
@@ -628,12 +628,12 @@ public:
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	UserDefinedTypeName const& libraryName() const { return *m_libraryName; }
+	IdentifierPath const& libraryName() const { return *m_libraryName; }
 	/// @returns the type name the library is attached to, null for `*`.
 	TypeName const* typeName() const { return m_typeName.get(); }
 
 private:
-	ASTPointer<UserDefinedTypeName> m_libraryName;
+	ASTPointer<IdentifierPath> m_libraryName;
 	ASTPointer<TypeName> m_typeName;
 };
 
@@ -792,7 +792,7 @@ public:
 	OverrideSpecifier(
 		int64_t _id,
 		SourceLocation const& _location,
-		std::vector<ASTPointer<UserDefinedTypeName>> _overrides
+		std::vector<ASTPointer<IdentifierPath>> _overrides
 	):
 		ASTNode(_id, _location),
 		m_overrides(std::move(_overrides))
@@ -803,10 +803,10 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	/// @returns the list of specific overrides, if any
-	std::vector<ASTPointer<UserDefinedTypeName>> const& overrides() const { return m_overrides; }
+	std::vector<ASTPointer<IdentifierPath>> const& overrides() const { return m_overrides; }
 
 protected:
-	std::vector<ASTPointer<UserDefinedTypeName>> m_overrides;
+	std::vector<ASTPointer<IdentifierPath>> m_overrides;
 };
 
 class FunctionDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional, public ScopeOpener
@@ -1077,7 +1077,7 @@ public:
 	ModifierInvocation(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<Identifier> _name,
+		ASTPointer<IdentifierPath> _name,
 		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
 		ASTNode(_id, _location), m_modifierName(std::move(_name)), m_arguments(std::move(_arguments))
@@ -1088,14 +1088,14 @@ public:
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	ASTPointer<Identifier> const& name() const { return m_modifierName; }
+	IdentifierPath& name() const { return *m_modifierName; }
 	// Returns nullptr if no argument list was given (``mod``).
 	// If an argument list is given (``mod(...)``), the arguments are returned
 	// as a vector of expressions. Note that this vector can be empty (``mod()``).
 	std::vector<ASTPointer<Expression>> const* arguments() const { return m_arguments.get(); }
 
 private:
-	ASTPointer<Identifier> m_modifierName;
+	ASTPointer<IdentifierPath> m_modifierName;
 	std::unique_ptr<std::vector<ASTPointer<Expression>>> m_arguments;
 };
 
@@ -1225,15 +1225,15 @@ class UserDefinedTypeName: public TypeName
 {
 public:
 	UserDefinedTypeName(int64_t _id, SourceLocation const& _location, ASTPointer<IdentifierPath> _namePath):
-		TypeName(_id, _location), m_namePath(std::move(_namePath)) {}
-
+		TypeName(_id, _location), m_namePath(std::move(_namePath))
+	{
+		solAssert(m_namePath != nullptr, "Name cannot be null.");
+	}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTString> const& namePath() const { return m_namePath->path(); }
-	ASTPointer<IdentifierPath> const& pathNode() const { return m_namePath; }
-
-	UserDefinedTypeNameAnnotation& annotation() const override;
+	IdentifierPath& pathNode() const { return *m_namePath; }
 
 private:
 	ASTPointer<IdentifierPath> m_namePath;

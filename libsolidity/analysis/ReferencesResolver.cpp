@@ -183,11 +183,6 @@ void ReferencesResolver::endVisit(IdentifierPath const& _path)
 	_path.annotation().referencedDeclaration = declaration;
 }
 
-void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
-{
-	_typeName.annotation().referencedDeclaration = _typeName.pathNode()->annotation().referencedDeclaration;
-}
-
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
 	m_resolver.warnVariablesNamedLikeInstructions();

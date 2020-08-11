@@ -6,7 +6,7 @@
     {
       "C":
       [
-        6
+        5
       ],
       "L":
       [
@@ -39,7 +39,7 @@
         [
           null
         ],
-        "scope": 7
+        "scope": 6
       },
       "id": 1,
       "name": "ContractDefinition",
@@ -61,10 +61,10 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          6
+          5
         ],
         "name": "C",
-        "scope": 7
+        "scope": 6
       },
       "children":
       [
@@ -74,24 +74,11 @@
             {
               "attributes":
               {
-                "referencedDeclaration": 1,
-                "type": "library L"
+                "name": "L",
+                "referencedDeclaration": 1
               },
-              "children":
-              [
-                {
-                  "attributes":
-                  {
-                    "name": "L",
-                    "referencedDeclaration": 1
-                  },
-                  "id": 2,
-                  "name": "IdentifierPath",
-                  "src": "32:1:1"
-                }
-              ],
-              "id": 3,
-              "name": "UserDefinedTypeName",
+              "id": 2,
+              "name": "IdentifierPath",
               "src": "32:1:1"
             },
             {
@@ -100,22 +87,22 @@
                 "name": "uint",
                 "type": "uint256"
               },
-              "id": 4,
+              "id": 3,
               "name": "ElementaryTypeName",
               "src": "38:4:1"
             }
           ],
-          "id": 5,
+          "id": 4,
           "name": "UsingForDirective",
           "src": "26:17:1"
         }
       ],
-      "id": 6,
+      "id": 5,
       "name": "ContractDefinition",
       "src": "13:32:1"
     }
   ],
-  "id": 7,
+  "id": 6,
   "name": "SourceUnit",
   "src": "0:46:1"
 }

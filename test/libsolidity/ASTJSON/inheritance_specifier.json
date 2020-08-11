@@ -8,10 +8,10 @@
     ],
     "C2":
     [
-      5
+      4
     ]
   },
-  "id": 6,
+  "id": 5,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -29,7 +29,7 @@
       "name": "C1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 6,
+      "scope": 5,
       "src": "0:14:1"
     },
     {
@@ -39,25 +39,13 @@
         {
           "baseName":
           {
-            "id": 3,
-            "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
-              "id": 2,
-              "name": "C1",
-              "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1,
-              "src": "30:2:1"
-            },
+            "id": 2,
+            "name": "C1",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 1,
-            "src": "30:2:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_C1_$1",
-              "typeString": "contract C1"
-            }
+            "src": "30:2:1"
           },
-          "id": 4,
+          "id": 3,
           "nodeType": "InheritanceSpecifier",
           "src": "30:2:1"
         }
@@ -68,16 +56,16 @@
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 5,
+      "id": 4,
       "linearizedBaseContracts":
       [
-        5,
+        4,
         1
       ],
       "name": "C2",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 6,
+      "scope": 5,
       "src": "15:20:1"
     }
   ],

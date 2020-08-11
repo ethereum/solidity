@@ -389,7 +389,7 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<UserDefinedTypeName> name(parseUserDefinedTypeName());
+	ASTPointer<IdentifierPath> name(parseIdentifierPath());
 	unique_ptr<vector<ASTPointer<Expression>>> arguments;
 	if (m_scanner->currentToken() == Token::LParen)
 	{
@@ -433,7 +433,7 @@ ASTPointer<OverrideSpecifier> Parser::parseOverrideSpecifier()
 	solAssert(m_scanner->currentToken() == Token::Override, "");
 
 	ASTNodeFactory nodeFactory(*this);
-	std::vector<ASTPointer<UserDefinedTypeName>> overrides;
+	std::vector<ASTPointer<IdentifierPath>> overrides;
 
 	nodeFactory.markEndPosition();
 	m_scanner->next();
@@ -443,7 +443,7 @@ ASTPointer<OverrideSpecifier> Parser::parseOverrideSpecifier()
 		m_scanner->next();
 		while (true)
 		{
-			overrides.push_back(parseUserDefinedTypeName());
+			overrides.push_back(parseIdentifierPath());
 
 			if (m_scanner->currentToken() == Token::RParen)
 				break;
@@ -900,7 +900,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::Using);
-	ASTPointer<UserDefinedTypeName> library(parseUserDefinedTypeName());
+	ASTPointer<IdentifierPath> library(parseIdentifierPath());
 	ASTPointer<TypeName> typeName;
 	expectToken(Token::For);
 	if (m_scanner->currentToken() == Token::Mul)
@@ -916,7 +916,7 @@ ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
 {
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<Identifier> name(parseIdentifier());
+	ASTPointer<IdentifierPath> name(parseIdentifierPath());
 	unique_ptr<vector<ASTPointer<Expression>>> arguments;
 	if (m_scanner->currentToken() == Token::LParen)
 	{

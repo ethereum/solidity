@@ -82,8 +82,7 @@ private:
 	void endVisit(FunctionDefinition const& _functionDefinition) override;
 	bool visit(ModifierDefinition const& _modifierDefinition) override;
 	void endVisit(ModifierDefinition const& _modifierDefinition) override;
-	void endVisit(IdentifierPath const& _typeName) override;
-	void endVisit(UserDefinedTypeName const& _typeName) override;
+	void endVisit(IdentifierPath const& _path) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(Return const& _return) override;
 

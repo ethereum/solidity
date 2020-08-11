@@ -154,12 +154,12 @@ vector<ContractDefinition const*> resolveDirectBaseContracts(ContractDefinition 
 	return resolvedContracts;
 }
 
-vector<ASTPointer<UserDefinedTypeName>> sortByContract(vector<ASTPointer<UserDefinedTypeName>> const& _list)
+vector<ASTPointer<IdentifierPath>> sortByContract(vector<ASTPointer<IdentifierPath>> const& _list)
 {
 	auto sorted = _list;
 
 	stable_sort(sorted.begin(), sorted.end(),
-		[] (ASTPointer<UserDefinedTypeName> _a, ASTPointer<UserDefinedTypeName> _b) {
+		[] (ASTPointer<IdentifierPath> _a, ASTPointer<IdentifierPath> _b) {
 			if (!_a || !_b)
 				return _a < _b;
 
@@ -773,7 +773,7 @@ set<ContractDefinition const*, OverrideChecker::CompareByID> OverrideChecker::re
 {
 	set<ContractDefinition const*, CompareByID> resolved;
 
-	for (ASTPointer<UserDefinedTypeName> const& override: _overrides.overrides())
+	for (ASTPointer<IdentifierPath> const& override: _overrides.overrides())
 	{
 		Declaration const* decl  = override->annotation().referencedDeclaration;
 		solAssert(decl, "Expected declaration to be resolved.");
@@ -798,7 +798,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 	if (_item.overrides() && specifiedContracts.size() != _item.overrides()->overrides().size())
 	{
 		// Sort by contract id to find duplicate for error reporting
-		vector<ASTPointer<UserDefinedTypeName>> list =
+		vector<ASTPointer<IdentifierPath>> list =
 			sortByContract(_item.overrides()->overrides());
 
 		// Find duplicates and output error
@@ -818,7 +818,7 @@ void OverrideChecker::checkOverrideList(OverrideProxy _item, OverrideProxyBySign
 					list[i]->location(),
 					ssl,
 					"Duplicate contract \"" +
-					joinHumanReadable(list[i]->namePath(), ".") +
+					joinHumanReadable(list[i]->path(), ".") +
 					"\" found in override list of \"" +
 					_item.name() +
 					"\"."

@@ -217,7 +217,7 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 
 	void endVisit(OverrideSpecifier const& _overrideSpecifier) override
 	{
-		for (ASTPointer<UserDefinedTypeName> const& override: _overrideSpecifier.overrides())
+		for (ASTPointer<IdentifierPath> const& override: _overrideSpecifier.overrides())
 		{
 			Declaration const* decl = override->annotation().referencedDeclaration;
 			solAssert(decl, "Expected declaration to be resolved.");

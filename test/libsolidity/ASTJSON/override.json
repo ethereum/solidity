@@ -8,14 +8,14 @@
     ],
     "B":
     [
-      17
+      16
     ],
     "C":
     [
-      35
+      31
     ]
   },
-  "id": 36,
+  "id": 32,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -70,7 +70,7 @@
           "visibility": "public"
         }
       ],
-      "scope": 36,
+      "scope": 32,
       "src": "0:40:1"
     },
     {
@@ -80,25 +80,13 @@
         {
           "baseName":
           {
-            "id": 7,
-            "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
-              "id": 6,
-              "name": "A",
-              "nodeType": "IdentifierPath",
-              "referencedDeclaration": 5,
-              "src": "55:1:1"
-            },
+            "id": 6,
+            "name": "A",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 5,
-            "src": "55:1:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_A_$5",
-              "typeString": "contract A"
-            }
+            "src": "55:1:1"
           },
-          "id": 8,
+          "id": 7,
           "nodeType": "InheritanceSpecifier",
           "src": "55:1:1"
         }
@@ -109,10 +97,10 @@
       ],
       "contractKind": "contract",
       "fullyImplemented": false,
-      "id": 17,
+      "id": 16,
       "linearizedBaseContracts":
       [
-        17,
+        16,
         5
       ],
       "name": "B",
@@ -121,7 +109,7 @@
       [
         {
           "functionSelector": "c2985578",
-          "id": 11,
+          "id": 10,
           "implemented": false,
           "kind": "function",
           "modifiers": [],
@@ -129,19 +117,19 @@
           "nodeType": "FunctionDefinition",
           "parameters":
           {
-            "id": 9,
+            "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "72:2:1"
           },
           "returnParameters":
           {
-            "id": 10,
+            "id": 9,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "81:0:1"
           },
-          "scope": 17,
+          "scope": 16,
           "src": "60:22:1",
           "stateMutability": "nonpayable",
           "virtual": false,
@@ -154,13 +142,13 @@
           ],
           "body":
           {
-            "id": 15,
+            "id": 14,
             "nodeType": "Block",
             "src": "115:2:1",
             "statements": []
           },
           "functionSelector": "a399b6a2",
-          "id": 16,
+          "id": 15,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -168,33 +156,33 @@
           "nodeType": "FunctionDefinition",
           "overrides":
           {
-            "id": 13,
+            "id": 12,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
             "src": "106:8:1"
           },
           "parameters":
           {
-            "id": 12,
+            "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "96:2:1"
           },
           "returnParameters":
           {
-            "id": 14,
+            "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "115:0:1"
           },
-          "scope": 17,
+          "scope": 16,
           "src": "84:33:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 36,
+      "scope": 32,
       "src": "41:78:1"
     },
     {
@@ -204,25 +192,13 @@
         {
           "baseName":
           {
-            "id": 19,
-            "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
-              "id": 18,
-              "name": "B",
-              "nodeType": "IdentifierPath",
-              "referencedDeclaration": 17,
-              "src": "134:1:1"
-            },
-            "referencedDeclaration": 17,
-            "src": "134:1:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_B_$17",
-              "typeString": "contract B"
-            }
+            "id": 17,
+            "name": "B",
+            "nodeType": "IdentifierPath",
+            "referencedDeclaration": 16,
+            "src": "134:1:1"
           },
-          "id": 20,
+          "id": 18,
           "nodeType": "InheritanceSpecifier",
           "src": "134:1:1"
         }
@@ -230,15 +206,15 @@
       "contractDependencies":
       [
         5,
-        17
+        16
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 35,
+      "id": 31,
       "linearizedBaseContracts":
       [
-        35,
-        17,
+        31,
+        16,
         5
       ],
       "name": "C",
@@ -248,17 +224,17 @@
         {
           "baseFunctions":
           [
-            11
+            10
           ],
           "body":
           {
-            "id": 24,
+            "id": 22,
             "nodeType": "Block",
             "src": "170:3:1",
             "statements": []
           },
           "functionSelector": "c2985578",
-          "id": 25,
+          "id": 23,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -266,26 +242,26 @@
           "nodeType": "FunctionDefinition",
           "overrides":
           {
-            "id": 22,
+            "id": 20,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
             "src": "161:8:1"
           },
           "parameters":
           {
-            "id": 21,
+            "id": 19,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "151:2:1"
           },
           "returnParameters":
           {
-            "id": 23,
+            "id": 21,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "170:0:1"
           },
-          "scope": 35,
+          "scope": 31,
           "src": "139:34:1",
           "stateMutability": "nonpayable",
           "virtual": false,
@@ -294,17 +270,17 @@
         {
           "baseFunctions":
           [
-            16
+            15
           ],
           "body":
           {
-            "id": 33,
+            "id": 29,
             "nodeType": "Block",
             "src": "212:2:1",
             "statements": []
           },
           "functionSelector": "a399b6a2",
-          "id": 34,
+          "id": 30,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -312,73 +288,49 @@
           "nodeType": "FunctionDefinition",
           "overrides":
           {
-            "id": 31,
+            "id": 27,
             "nodeType": "OverrideSpecifier",
             "overrides":
             [
               {
-                "id": 28,
-                "nodeType": "UserDefinedTypeName",
-                "pathNode":
-                {
-                  "id": 27,
-                  "name": "A",
-                  "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 5,
-                  "src": "206:1:1"
-                },
+                "id": 25,
+                "name": "A",
+                "nodeType": "IdentifierPath",
                 "referencedDeclaration": 5,
-                "src": "206:1:1",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": "t_contract$_A_$5",
-                  "typeString": "contract A"
-                }
+                "src": "206:1:1"
               },
               {
-                "id": 30,
-                "nodeType": "UserDefinedTypeName",
-                "pathNode":
-                {
-                  "id": 29,
-                  "name": "B",
-                  "nodeType": "IdentifierPath",
-                  "referencedDeclaration": 17,
-                  "src": "209:1:1"
-                },
-                "referencedDeclaration": 17,
-                "src": "209:1:1",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": "t_contract$_B_$17",
-                  "typeString": "contract B"
-                }
+                "id": 26,
+                "name": "B",
+                "nodeType": "IdentifierPath",
+                "referencedDeclaration": 16,
+                "src": "209:1:1"
               }
             ],
             "src": "197:14:1"
           },
           "parameters":
           {
-            "id": 26,
+            "id": 24,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "187:2:1"
           },
           "returnParameters":
           {
-            "id": 32,
+            "id": 28,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "212:0:1"
           },
-          "scope": 35,
+          "scope": 31,
           "src": "175:39:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 36,
+      "scope": 32,
       "src": "120:96:1"
     }
   ],

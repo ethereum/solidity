@@ -4,14 +4,14 @@
   {
     "C":
     [
-      6
+      5
     ],
     "L":
     [
       1
     ]
   },
-  "id": 7,
+  "id": 6,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -29,7 +29,7 @@
       "name": "L",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 7,
+      "scope": 6,
       "src": "0:12:1"
     },
     {
@@ -38,42 +38,30 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 6,
+      "id": 5,
       "linearizedBaseContracts":
       [
-        6
+        5
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
       [
         {
-          "id": 5,
+          "id": 4,
           "libraryName":
           {
-            "id": 3,
-            "nodeType": "UserDefinedTypeName",
-            "pathNode":
-            {
-              "id": 2,
-              "name": "L",
-              "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1,
-              "src": "32:1:1"
-            },
+            "id": 2,
+            "name": "L",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 1,
-            "src": "32:1:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_L_$1",
-              "typeString": "library L"
-            }
+            "src": "32:1:1"
           },
           "nodeType": "UsingForDirective",
           "src": "26:17:1",
           "typeName":
           {
-            "id": 4,
+            "id": 3,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
             "src": "38:4:1",
@@ -85,7 +73,7 @@
           }
         }
       ],
-      "scope": 7,
+      "scope": 6,
       "src": "13:32:1"
     }
   ],

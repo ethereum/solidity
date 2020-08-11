@@ -10,7 +10,7 @@
       ],
       "C2":
       [
-        5
+        4
       ]
     }
   },
@@ -39,7 +39,7 @@
         [
           null
         ],
-        "scope": 6
+        "scope": 5
       },
       "id": 1,
       "name": "ContractDefinition",
@@ -57,7 +57,7 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          5,
+          4,
           1
         ],
         "name": "C2",
@@ -65,7 +65,7 @@
         [
           null
         ],
-        "scope": 6
+        "scope": 5
       },
       "children":
       [
@@ -76,38 +76,25 @@
             {
               "attributes":
               {
-                "referencedDeclaration": 1,
-                "type": "contract C1"
+                "name": "C1",
+                "referencedDeclaration": 1
               },
-              "children":
-              [
-                {
-                  "attributes":
-                  {
-                    "name": "C1",
-                    "referencedDeclaration": 1
-                  },
-                  "id": 2,
-                  "name": "IdentifierPath",
-                  "src": "30:2:1"
-                }
-              ],
-              "id": 3,
-              "name": "UserDefinedTypeName",
+              "id": 2,
+              "name": "IdentifierPath",
               "src": "30:2:1"
             }
           ],
-          "id": 4,
+          "id": 3,
           "name": "InheritanceSpecifier",
           "src": "30:2:1"
         }
       ],
-      "id": 5,
+      "id": 4,
       "name": "ContractDefinition",
       "src": "15:20:1"
     }
   ],
-  "id": 6,
+  "id": 5,
   "name": "SourceUnit",
   "src": "0:36:1"
 }

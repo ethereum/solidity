@@ -133,7 +133,7 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	if (_typeName.annotation().type)
 		return;
 
-	Declaration const* declaration = _typeName.annotation().referencedDeclaration;
+	Declaration const* declaration = _typeName.pathNode().annotation().referencedDeclaration;
 	solAssert(declaration, "");
 
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
@@ -390,7 +390,6 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 
 	_variable.annotation().type = type;
-
 }
 
 void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)

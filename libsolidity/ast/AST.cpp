@@ -460,11 +460,6 @@ EventDefinitionAnnotation& EventDefinition::annotation() const
 	return initAnnotation<EventDefinitionAnnotation>();
 }
 
-UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
-{
-	return initAnnotation<UserDefinedTypeNameAnnotation>();
-}
-
 SourceUnit const& Scopable::sourceUnit() const
 {
 	ASTNode const* s = scope();

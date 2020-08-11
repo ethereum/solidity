@@ -493,7 +493,7 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 {
 	setJsonNode(_node, "ModifierInvocation", {
-		make_pair("modifierName", toJson(*_node.name())),
+		make_pair("modifierName", toJson(_node.name())),
 		make_pair("arguments", _node.arguments() ? toJson(*_node.arguments()) : Json::nullValue)
 	});
 	return false;
@@ -528,8 +528,8 @@ bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 {
 	setJsonNode(_node, "UserDefinedTypeName", {
-		make_pair("pathNode", toJson(*_node.pathNode())),
-		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration)),
+		make_pair("pathNode", toJson(_node.pathNode())),
+		make_pair("referencedDeclaration", idOrNull(_node.pathNode().annotation().referencedDeclaration)),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	});
 	return false;
