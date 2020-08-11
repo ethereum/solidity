@@ -84,6 +84,14 @@ private:
 	void externalFunctionCall(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
+	/// Creates underflow/overflow verification targets.
+	std::pair<smtutil::Expression, smtutil::Expression> arithmeticOperation(
+		Token _op,
+		smtutil::Expression const& _left,
+		smtutil::Expression const& _right,
+		TypePointer const& _commonType,
+		Expression const& _expression
+	) override;
 	//@}
 
 	struct IdCompare
@@ -197,8 +205,8 @@ private:
 	std::pair<smtutil::CheckResult, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
 	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
+	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId);
 	void addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
-	void addArrayPopVerificationTarget(ASTNode const* _scope, smtutil::Expression _errorId);
 
 	void checkVerificationTargets();
 	// Forward declaration. Definition is below.

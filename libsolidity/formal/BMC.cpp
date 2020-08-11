@@ -498,8 +498,37 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
 
+	auto const* intType = dynamic_cast<IntegerType const*>(_commonType);
+	if (!intType)
+		intType = TypeProvider::uint256();
+
+	// Mod does not need underflow/overflow checks.
+	if (_op == Token::Mod)
+		return values;
+
+	VerificationTarget::Type type;
+	// The order matters here:
+	// If _op is Div and intType is signed, we only care about overflow.
+	if (_op == Token::Div)
+	{
+		if (intType->isSigned())
+			// Signed division can only overflow.
+			type = VerificationTarget::Type::Overflow;
+		else
+			// Unsigned division cannot underflow/overflow.
+			return values;
+	}
+	else if (intType->isSigned())
+		type = VerificationTarget::Type::UnderOverflow;
+	else if (_op == Token::Sub)
+		type = VerificationTarget::Type::Underflow;
+	else if (_op == Token::Add || _op == Token::Mul)
+		type = VerificationTarget::Type::Overflow;
+	else
+		solAssert(false, "");
+
 	addVerificationTarget(
-		VerificationTarget::Type::UnderOverflow,
+		type,
 		values.second,
 		&_expression
 	);
@@ -605,12 +634,19 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression con
 			_target.type == VerificationTarget::Type::UnderOverflow,
 		""
 	);
-	IntegerType const* intType = nullptr;
-	if (auto const* type = dynamic_cast<IntegerType const*>(_target.expression->annotation().type))
-		intType = type;
-	else
+
+	if (
+		m_solvedTargets.count(_target.expression) && (
+			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::Underflow) ||
+			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::UnderOverflow)
+		)
+	)
+		return;
+
+	auto const* intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
+	if (!intType)
 		intType = TypeProvider::uint256();
-	solAssert(intType, "");
+
 	checkCondition(
 		_target.constraints && _constraints && _target.value < smt::minValue(*intType),
 		_target.callStack,
@@ -631,13 +667,19 @@ void BMC::checkOverflow(BMCVerificationTarget& _target, smtutil::Expression cons
 			_target.type == VerificationTarget::Type::UnderOverflow,
 		""
 	);
-	IntegerType const* intType = nullptr;
-	if (auto const* type = dynamic_cast<IntegerType const*>(_target.expression->annotation().type))
-		intType = type;
-	else
+
+	if (
+		m_solvedTargets.count(_target.expression) && (
+			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::Overflow) ||
+			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::UnderOverflow)
+		)
+	)
+		return;
+
+	auto const* intType = dynamic_cast<IntegerType const*>(_target.expression->annotation().type);
+	if (!intType)
 		intType = TypeProvider::uint256();
 
-	solAssert(intType, "");
 	checkCondition(
 		_target.constraints && _constraints && _target.value > smt::maxValue(*intType),
 		_target.callStack,

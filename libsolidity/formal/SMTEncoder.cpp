@@ -1083,7 +1083,6 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 
 	auto oldElements = symbArray->elements();
 	auto oldLength = symbArray->length();
-	m_context.addAssertion(oldLength > 0);
 
 	symbArray->increaseIndex();
 	m_context.addAssertion(symbArray->elements() == oldElements);

@@ -147,7 +147,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	else
 		inlineConstructorHierarchy(_contract);
 
-	connectBlocks(m_currentBlock, summary(_contract), m_error.currentValue() == 0);
+	connectBlocks(m_currentBlock, summary(_contract));
 
 	clearIndices(m_currentContract, nullptr);
 	vector<smtutil::Expression> symbArgs = currentFunctionVariables(*m_currentContract);
@@ -452,6 +452,9 @@ void CHC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BareCallCode:
 	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::Creation:
+		SMTEncoder::endVisit(_funCall);
+		unknownFunctionCall(_funCall);
+		break;
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
 	case FunctionType::Kind::SHA256:
@@ -459,9 +462,7 @@ void CHC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::BlockHash:
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
-		SMTEncoder::endVisit(_funCall);
-		unknownFunctionCall(_funCall);
-		break;
+		[[fallthrough]];
 	default:
 		SMTEncoder::endVisit(_funCall);
 		break;
@@ -601,14 +602,74 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	auto previousError = m_error.currentValue();
 	m_error.increaseIndex();
 
-	addArrayPopVerificationTarget(&_arrayPop, m_error.currentValue());
-	connectBlocks(
-		m_currentBlock,
-		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
-		currentPathConditions() && symbArray->length() <= 0 && m_error.currentValue() == newErrorId(_arrayPop)
+	addVerificationTarget(&_arrayPop, VerificationTarget::Type::PopEmptyArray, m_error.currentValue());
+
+	smtutil::Expression target = (symbArray->length() <= 0) && (m_error.currentValue() == newErrorId(_arrayPop));
+	m_context.addAssertion((m_error.currentValue() == previousError) || target);
+}
+
+pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
+	Token _op,
+	smtutil::Expression const& _left,
+	smtutil::Expression const& _right,
+	TypePointer const& _commonType,
+	frontend::Expression const& _expression
+)
+{
+	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
+
+	IntegerType const* intType = nullptr;
+	if (auto const* type = dynamic_cast<IntegerType const*>(_commonType))
+		intType = type;
+	else
+		intType = TypeProvider::uint256();
+
+	// Mod does not need underflow/overflow checks.
+	// Div only needs overflow check for signed types.
+	if (_op == Token::Mod || (_op == Token::Div && !intType->isSigned()))
+		return values;
+
+	auto previousError = m_error.currentValue();
+	m_error.increaseIndex();
+
+	VerificationTarget::Type targetType;
+	unsigned errorId = newErrorId(_expression);
+
+	optional<smtutil::Expression> target;
+	if (_op == Token::Div)
+	{
+		targetType = VerificationTarget::Type::Overflow;
+		target = values.second > intType->maxValue() && m_error.currentValue() == errorId;
+	}
+	else if (intType->isSigned())
+	{
+		unsigned secondErrorId = newErrorId(_expression);
+		targetType = VerificationTarget::Type::UnderOverflow;
+		target = (values.second < intType->minValue() && m_error.currentValue() == errorId) ||
+			(values.second > intType->maxValue() && m_error.currentValue() == secondErrorId);
+	}
+	else if (_op == Token::Sub)
+	{
+		targetType = VerificationTarget::Type::Underflow;
+		target = values.second < intType->minValue() && m_error.currentValue() == errorId;
+	}
+	else if (_op == Token::Add || _op == Token::Mul)
+	{
+		targetType = VerificationTarget::Type::Overflow;
+		target = values.second > intType->maxValue() && m_error.currentValue() == errorId;
+	}
+	else
+		solAssert(false, "");
+
+	addVerificationTarget(
+		&_expression,
+		targetType,
+		m_error.currentValue()
 	);
 
-	m_context.addAssertion(m_error.currentValue() == previousError);
+	m_context.addAssertion((m_error.currentValue() == previousError) || *target);
+
+	return values;
 }
 
 void CHC::resetSourceAnalysis()
@@ -1174,24 +1235,23 @@ void CHC::addVerificationTarget(
 	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
 }
 
-void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId)
-{
-	addVerificationTarget(_scope, VerificationTarget::Type::Assert, _from, _constraints, _errorId);
-}
-
-void CHC::addArrayPopVerificationTarget(ASTNode const* _scope, smtutil::Expression _errorId)
+void CHC::addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId)
 {
 	solAssert(m_currentContract, "");
-	solAssert(m_currentFunction, "");
 
-	if (m_currentFunction->isConstructor())
-		addVerificationTarget(_scope, VerificationTarget::Type::PopEmptyArray, summary(*m_currentContract), smtutil::Expression(true), _errorId);
+	if (!m_currentFunction || m_currentFunction->isConstructor())
+		addVerificationTarget(_scope, _type, summary(*m_currentContract), smtutil::Expression(true), _errorId);
 	else
 	{
 		auto iface = (*m_interfaces.at(m_currentContract))(initialStateVariables());
 		auto sum = summary(*m_currentFunction);
-		addVerificationTarget(_scope, VerificationTarget::Type::PopEmptyArray, iface, sum, _errorId);
+		addVerificationTarget(_scope, _type, iface, sum, _errorId);
 	}
+}
+
+void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId)
+{
+	addVerificationTarget(_scope, VerificationTarget::Type::Assert, _from, _constraints, _errorId);
 }
 
 void CHC::checkVerificationTargets()
@@ -1203,8 +1263,12 @@ void CHC::checkVerificationTargets()
 		else
 		{
 			string satMsg;
+			string satMsgUnderflow;
+			string satMsgOverflow;
 			string unknownMsg;
 			ErrorId errorReporterId;
+			ErrorId underflowErrorId = 3944_error;
+			ErrorId overflowErrorId = 4984_error;
 
 			if (target.type == VerificationTarget::Type::PopEmptyArray)
 			{
@@ -1213,12 +1277,51 @@ void CHC::checkVerificationTargets()
 				unknownMsg = "Empty array \"pop\" might happen here.";
 				errorReporterId = 2529_error;
 			}
+			else if (
+				target.type == VerificationTarget::Type::Underflow ||
+				target.type == VerificationTarget::Type::Overflow ||
+				target.type == VerificationTarget::Type::UnderOverflow
+			)
+			{
+				auto const* expr = dynamic_cast<Expression const*>(scope);
+				solAssert(expr, "");
+				auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
+				if (!intType)
+					intType = TypeProvider::uint256();
+
+				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here";
+				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here";
+				if (target.type == VerificationTarget::Type::Underflow)
+				{
+					satMsg = satMsgUnderflow;
+					errorReporterId = underflowErrorId;
+				}
+				else if (target.type == VerificationTarget::Type::Overflow)
+				{
+					satMsg = satMsgOverflow;
+					errorReporterId = overflowErrorId;
+				}
+			}
 			else
 				solAssert(false, "");
 
 			auto it = m_errorIds.find(scope->id());
 			solAssert(it != m_errorIds.end(), "");
-			checkAndReportTarget(scope, target, it->second, errorReporterId, satMsg, unknownMsg);
+			unsigned errorId = it->second;
+
+			if (target.type != VerificationTarget::Type::UnderOverflow)
+				checkAndReportTarget(scope, target, errorId, errorReporterId, satMsg, unknownMsg);
+			else
+			{
+				auto specificTarget = target;
+				specificTarget.type = VerificationTarget::Type::Underflow;
+				checkAndReportTarget(scope, specificTarget, errorId, underflowErrorId, satMsgUnderflow, unknownMsg);
+
+				++it;
+				solAssert(it != m_errorIds.end(), "");
+				specificTarget.type = VerificationTarget::Type::Overflow;
+				checkAndReportTarget(scope, specificTarget, it->second, overflowErrorId, satMsgOverflow, unknownMsg);
+			}
 		}
 	}
 }
