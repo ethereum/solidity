@@ -112,6 +112,7 @@ Semicolon: ';';
 Period: '.';
 Conditional: '?';
 Arrow: '=>';
+RightArrow: '->';
 
 Assign: '=';
 AssignBitOr: '|=';
@@ -283,9 +284,7 @@ YulRParen: ')';
 YulAssign: ':=';
 YulPeriod: '.';
 YulComma: ',';
-// TODO: remove whitespace workaround once the parser disallows it.
-//@doc:name ->
-YulArrow: '->' | '-' YulWS+ '>';
+YulArrow: '->';
 
 /**
  * Yul identifiers consist of letters, dollar signs, underscores and numbers, but may not start with a number.

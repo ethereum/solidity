@@ -782,8 +782,7 @@ BOOST_AUTO_TEST_CASE(yul_function)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Comma);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::RParen);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Sub);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::GreaterThan);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::RightArrow);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Comma);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
@@ -797,8 +796,7 @@ BOOST_AUTO_TEST_CASE(yul_function)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Comma);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::RParen);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Sub);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::GreaterThan);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::RightArrow);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Comma);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
