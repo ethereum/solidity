@@ -85,11 +85,7 @@ void CHC::analyze(SourceUnit const& _source)
 
 	resetSourceAnalysis();
 
-	auto genesisSort = make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>(),
-		smtutil::SortProvider::boolSort
-	);
-	m_genesisPredicate = createSymbolicBlock(genesisSort, "genesis");
+	m_genesisPredicate = createSymbolicBlock(arity0FunctionSort(), "genesis");
 	addRule(genesis(), "genesis");
 
 	set<SourceUnit const*, IdCompare> sources;
@@ -124,10 +120,8 @@ bool CHC::visit(ContractDefinition const& _contract)
 	clearIndices(&_contract);
 
 	string suffix = _contract.name() + "_" + to_string(_contract.id());
-	m_errorPredicate = createSymbolicBlock(arity0FunctionSort(), "error_" + suffix);
-	m_constructorSummaryPredicate = createSymbolicBlock(constructorSort(), "summary_constructor_" + suffix);
-	m_symbolFunction[m_constructorSummaryPredicate->currentFunctionValue().name] = &_contract;
-	m_implicitConstructorPredicate = createSymbolicBlock(arity0FunctionSort(), "implicit_constructor_" + suffix);
+	m_constructorSummaryPredicate = createSymbolicBlock(constructorSort(), "summary_constructor_" + suffix, &_contract);
+	m_implicitConstructorPredicate = createSymbolicBlock(arity0FunctionSort(), "implicit_constructor_" + suffix, &_contract);
 	auto stateExprs = currentStateVariables();
 	setCurrentBlock(*m_interfaces.at(m_currentContract), &stateExprs);
 
@@ -233,7 +227,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 		{
 			string suffix = m_currentContract->name() + "_" + to_string(m_currentContract->id());
-			auto constructorExit = createSymbolicBlock(constructorSort(), "constructor_exit_" + suffix);
+			auto constructorExit = createSymbolicBlock(constructorSort(), "constructor_exit_" + suffix, m_currentContract);
 			connectBlocks(m_currentBlock, predicate(*constructorExit, currentFunctionVariables(*m_currentContract)));
 
 			clearIndices(m_currentContract, m_currentFunction);
@@ -326,8 +320,8 @@ bool CHC::visit(WhileStatement const& _while)
 
 	auto outerBreakDest = m_breakDest;
 	auto outerContinueDest = m_continueDest;
-	m_breakDest = afterLoopBlock.get();
-	m_continueDest = loopHeaderBlock.get();
+	m_breakDest = afterLoopBlock;
+	m_continueDest = loopHeaderBlock;
 
 	if (_while.isDoWhile())
 		_while.body().accept(*this);
@@ -377,8 +371,8 @@ bool CHC::visit(ForStatement const& _for)
 
 	auto outerBreakDest = m_breakDest;
 	auto outerContinueDest = m_continueDest;
-	m_breakDest = afterLoopBlock.get();
-	m_continueDest = postLoop ? postLoopBlock.get() : loopHeaderBlock.get();
+	m_breakDest = afterLoopBlock;
+	m_continueDest = postLoop ? postLoopBlock : loopHeaderBlock;
 
 	if (auto init = _for.initializationExpression())
 		init->accept(*this);
@@ -571,7 +565,6 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 			m_context.variable(*var)->increaseIndex();
 
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + currentStateVariables());
-	m_symbolFunction[nondet.name] = &_funCall;
 	m_context.addAssertion(nondet);
 
 	m_context.addAssertion(m_error.currentValue() == 0);
@@ -681,7 +674,9 @@ void CHC::resetSourceAnalysis()
 	m_errorIds.clear();
 	m_callGraph.clear();
 	m_summaries.clear();
-	m_symbolFunction.clear();
+	m_interfaces.clear();
+	m_nondetInterfaces.clear();
+	Predicate::reset();
 }
 
 void CHC::resetContractAnalysis()
@@ -717,7 +712,7 @@ void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition c
 }
 
 void CHC::setCurrentBlock(
-	smt::SymbolicFunctionVariable const& _block,
+	Predicate const& _block,
 	vector<smtutil::Expression> const* _arguments
 )
 {
@@ -806,7 +801,7 @@ smtutil::SortPointer CHC::nondetInterfaceSort(ContractDefinition const& _contrac
 	);
 }
 
-smtutil::SortPointer CHC::arity0FunctionSort()
+smtutil::SortPointer CHC::arity0FunctionSort() const
 {
 	return make_shared<smtutil::FunctionSort>(
 		vector<smtutil::SortPointer>(),
@@ -870,14 +865,10 @@ smtutil::SortPointer CHC::summarySort(FunctionDefinition const& _function, Contr
 	);
 }
 
-unique_ptr<smt::SymbolicFunctionVariable> CHC::createSymbolicBlock(smtutil::SortPointer _sort, string const& _name)
+Predicate const* CHC::createSymbolicBlock(SortPointer _sort, string const& _name, ASTNode const* _node)
 {
-	auto block = make_unique<smt::SymbolicFunctionVariable>(
-		_sort,
-		_name,
-		m_context
-	);
-	m_interface->registerRelation(block->currentFunctionValue());
+	auto const* block = Predicate::create(_sort, _name, m_context, _node);
+	m_interface->registerRelation(block->functor());
 	return block;
 }
 
@@ -887,20 +878,24 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
 			for (auto const* base: contract->annotation().linearizedBaseContracts)
 			{
-				string suffix = base->name() + "_" + to_string(base->id());
-				m_interfaces[base] = createSymbolicBlock(interfaceSort(*base), "interface_" + suffix);
-				m_nondetInterfaces[base] = createSymbolicBlock(nondetInterfaceSort(*base), "nondet_interface_" + suffix);
-
 				for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*base))
 					if (!m_context.knownVariable(*var))
 						createVariable(*var);
 
-				/// Base nondeterministic interface that allows
-				/// 0 steps to be taken, used as base for the inductive
-				/// rule for each function.
-				auto const& iface = *m_nondetInterfaces.at(base);
-				auto state0 = stateVariablesAtIndex(0, *base);
-				addRule(iface(state0 + state0), "base_nondet");
+				if (!m_interfaces.count(base))
+				{
+					solAssert(!m_nondetInterfaces.count(base), "");
+					string suffix = base->name() + "_" + to_string(base->id());
+					m_interfaces.emplace(base, createSymbolicBlock(interfaceSort(*base), "interface_" + suffix, base));
+					m_nondetInterfaces.emplace(base, createSymbolicBlock(nondetInterfaceSort(*base), "nondet_interface_" + suffix, base));
+
+					/// Base nondeterministic interface that allows
+					/// 0 steps to be taken, used as base for the inductive
+					/// rule for each function.
+					auto const* iface = m_nondetInterfaces.at(base);
+					auto state0 = stateVariablesAtIndex(0, *base);
+					addRule((*iface)(state0 + state0), "base_nondet");
+				}
 
 				for (auto const* function: base->definedFunctions())
 				{
@@ -923,8 +918,10 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						auto state1 = stateVariablesAtIndex(1, *base);
 						auto state2 = stateVariablesAtIndex(2, *base);
 
-						auto nondetPre = iface(state0 + state1);
-						auto nondetPost = iface(state0 + state2);
+						auto const* iface = m_nondetInterfaces.at(base);
+						auto state0 = stateVariablesAtIndex(0, *base);
+						auto nondetPre = (*iface)(state0 + state1);
+						auto nondetPost = (*iface)(state0 + state2);
 
 						vector<smtutil::Expression> args{m_error.currentValue()};
 						args += state1 +
@@ -960,7 +957,7 @@ smtutil::Expression CHC::error()
 
 smtutil::Expression CHC::error(unsigned _idx)
 {
-	return m_errorPredicate->functionValueAtIndex(_idx)({});
+	return m_errorPredicate->functor(_idx)({});
 }
 
 smtutil::Expression CHC::summary(ContractDefinition const& _contract)
@@ -994,37 +991,33 @@ smtutil::Expression CHC::summary(FunctionDefinition const& _function)
 	return summary(_function, *m_currentContract);
 }
 
-unique_ptr<smt::SymbolicFunctionVariable> CHC::createBlock(ASTNode const* _node, string const& _prefix)
+Predicate const* CHC::createBlock(ASTNode const* _node, string const& _prefix)
 {
-	auto block = createSymbolicBlock(sort(_node),
-		"block_" +
-		uniquePrefix() +
-		"_" +
-		_prefix +
-		predicateName(_node));
+	auto block = createSymbolicBlock(
+		sort(_node),
+		"block_" + uniquePrefix() + "_" + _prefix + predicateName(_node),
+		_node
+	);
 
 	solAssert(m_currentFunction, "");
-	m_symbolFunction[block->currentFunctionValue().name] = m_currentFunction;
 	return block;
 }
 
-unique_ptr<smt::SymbolicFunctionVariable> CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract)
+Predicate const* CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
-	auto block = createSymbolicBlock(summarySort(_function, _contract),
-		"summary_" +
-		uniquePrefix() +
-		"_" +
-		predicateName(&_function, &_contract));
+	auto block = createSymbolicBlock(
+		summarySort(_function, _contract),
+		"summary_" + uniquePrefix() + "_" + predicateName(&_function, &_contract),
+		&_function
+	);
 
-	m_symbolFunction[block->currentFunctionValue().name] = &_function;
 	return block;
 }
 
 void CHC::createErrorBlock()
 {
-	solAssert(m_errorPredicate, "");
-	m_errorPredicate->increaseIndex();
-	m_interface->registerRelation(m_errorPredicate->currentFunctionValue());
+	m_errorPredicate = createSymbolicBlock(arity0FunctionSort(), "error_target_" + to_string(m_context.newUniqueId()));
+	m_interface->registerRelation(m_errorPredicate->functor());
 }
 
 void CHC::connectBlocks(smtutil::Expression const& _from, smtutil::Expression const& _to, smtutil::Expression const& _constraints)
@@ -1128,13 +1121,13 @@ string CHC::predicateName(ASTNode const* _node, ContractDefinition const* _contr
 	return prefix + "_" + to_string(_node->id()) + "_" + to_string(contract->id());
 }
 
-smtutil::Expression CHC::predicate(smt::SymbolicFunctionVariable const& _block)
+smtutil::Expression CHC::predicate(Predicate const& _block)
 {
 	return _block(currentBlockVariables());
 }
 
 smtutil::Expression CHC::predicate(
-	smt::SymbolicFunctionVariable const& _block,
+	Predicate const& _block,
 	vector<smtutil::Expression> const& _arguments
 )
 {
@@ -1441,18 +1434,19 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		/// At this point property 2 from the function description is verified for this node.
 
 		auto const& summaryNode = _graph.nodes.at(summaryId);
-		solAssert(m_symbolFunction.count(summaryNode.first), "");
+		Predicate const* summaryPredicate = Predicate::predicate(summaryNode.first);
+		solAssert(summaryPredicate, "");
 
 		FunctionDefinition const* calledFun = nullptr;
 		ContractDefinition const* calledContract = nullptr;
-		if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_symbolFunction.at(summaryNode.first)))
+		if (auto const* contract = dynamic_cast<ContractDefinition const*>(summaryPredicate->programNode()))
 		{
 			if (auto const* constructor = contract->constructor())
 				calledFun = constructor;
 			else
 				calledContract = contract;
 		}
-		else if (auto const* fun = dynamic_cast<FunctionDefinition const*>(m_symbolFunction.at(summaryNode.first)))
+		else if (auto const* fun = dynamic_cast<FunctionDefinition const*>(summaryPredicate->programNode()))
 			calledFun = fun;
 		else
 			solAssert(false, "");

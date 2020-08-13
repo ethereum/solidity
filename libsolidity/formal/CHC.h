@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include <libsolidity/formal/Predicate.h>
 #include <libsolidity/formal/SMTEncoder.h>
 
 #include <libsolidity/interface/ReadFile.h>
@@ -108,7 +109,7 @@ private:
 	void resetContractAnalysis();
 	void eraseKnowledge();
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
-	void setCurrentBlock(smt::SymbolicFunctionVariable const& _block, std::vector<smtutil::Expression> const* _arguments = nullptr);
+	void setCurrentBlock(Predicate const& _block, std::vector<smtutil::Expression> const* _arguments = nullptr);
 	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
@@ -122,7 +123,7 @@ private:
 	smtutil::SortPointer nondetInterfaceSort();
 	static smtutil::SortPointer interfaceSort(ContractDefinition const& _const);
 	static smtutil::SortPointer nondetInterfaceSort(ContractDefinition const& _const);
-	smtutil::SortPointer arity0FunctionSort();
+	smtutil::SortPointer arity0FunctionSort() const;
 	smtutil::SortPointer sort(FunctionDefinition const& _function);
 	smtutil::SortPointer sort(ASTNode const* _block);
 	/// @returns the sort of a predicate that represents the summary of _function in the scope of _contract.
@@ -134,7 +135,7 @@ private:
 	/// Predicate helpers.
 	//@{
 	/// @returns a new block of given _sort and _name.
-	std::unique_ptr<smt::SymbolicFunctionVariable> createSymbolicBlock(smtutil::SortPointer _sort, std::string const& _name);
+	Predicate const* createSymbolicBlock(smtutil::SortPointer _sort, std::string const& _name, ASTNode const* _node = nullptr);
 
 	/// Creates summary predicates for all functions of all contracts
 	/// in a given _source.
@@ -150,10 +151,10 @@ private:
 	smtutil::Expression error(unsigned _idx);
 
 	/// Creates a block for the given _node.
-	std::unique_ptr<smt::SymbolicFunctionVariable> createBlock(ASTNode const* _node, std::string const& _prefix = "");
+	Predicate const* createBlock(ASTNode const* _node, std::string const& _prefix = "");
 	/// Creates a call block for the given function _function from contract _contract.
 	/// The contract is needed here because of inheritance.
-	std::unique_ptr<smt::SymbolicFunctionVariable> createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract);
+	Predicate const* createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract);
 
 	/// Creates a new error block to be used by an assertion.
 	/// Also registers the predicate.
@@ -184,9 +185,9 @@ private:
 	/// @returns the predicate name for a given node.
 	std::string predicateName(ASTNode const* _node, ContractDefinition const* _contract = nullptr);
 	/// @returns a predicate application over the current scoped variables.
-	smtutil::Expression predicate(smt::SymbolicFunctionVariable const& _block);
+	smtutil::Expression predicate(Predicate const& _block);
 	/// @returns a predicate application over @param _arguments.
-	smtutil::Expression predicate(smt::SymbolicFunctionVariable const& _block, std::vector<smtutil::Expression> const& _arguments);
+	smtutil::Expression predicate(Predicate const& _block, std::vector<smtutil::Expression> const& _arguments);
 	/// @returns the summary predicate for the called function.
 	smtutil::Expression predicate(FunctionCall const& _funCall);
 	/// @returns a predicate that defines a constructor summary.
@@ -251,32 +252,32 @@ private:
 	/// Predicates.
 	//@{
 	/// Genesis predicate.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_genesisPredicate;
+	Predicate const* m_genesisPredicate = nullptr;
 
 	/// Implicit constructor predicate.
 	/// Explicit constructors are handled as functions.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_implicitConstructorPredicate;
+	Predicate const* m_implicitConstructorPredicate = nullptr;
 
 	/// Constructor summary predicate, exists after the constructor
 	/// (implicit or explicit) and before the interface.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_constructorSummaryPredicate;
+	Predicate const* m_constructorSummaryPredicate = nullptr;
 
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
-	std::map<ContractDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>> m_interfaces;
+	std::map<ContractDefinition const*, Predicate const*> m_interfaces;
 
 	/// Nondeterministic interfaces.
 	/// These are used when the analyzed contract makes external calls to unknown code,
 	/// which means that the analyzed contract can potentially be called
 	/// nondeterministically.
-	std::map<ContractDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>> m_nondetInterfaces;
+	std::map<ContractDefinition const*, Predicate const*> m_nondetInterfaces;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
-	std::unique_ptr<smt::SymbolicFunctionVariable> m_errorPredicate;
+	Predicate const* m_errorPredicate = nullptr;
 
 	/// Function predicates.
-	std::map<ContractDefinition const*, std::map<FunctionDefinition const*, std::unique_ptr<smt::SymbolicFunctionVariable>>> m_summaries;
+	std::map<ContractDefinition const*, std::map<FunctionDefinition const*, Predicate const*>> m_summaries;
 
 	smt::SymbolicIntVariable m_error{
 		TypeProvider::uint256(),
@@ -337,9 +338,9 @@ private:
 	bool m_unknownFunctionCallSeen = false;
 
 	/// Block where a loop break should go to.
-	smt::SymbolicFunctionVariable const* m_breakDest = nullptr;
+	Predicate const* m_breakDest;
 	/// Block where a loop continue should go to.
-	smt::SymbolicFunctionVariable const* m_continueDest = nullptr;
+	Predicate const* m_continueDest;
 	//@}
 
 	/// CHC solver.
