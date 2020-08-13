@@ -18,6 +18,7 @@
 
 #include <libsolutil/Common.h>
 
+#include <liblangutil/EVMVersion.h>
 #include <map>
 #include <string>
 
@@ -46,4 +47,5 @@ struct FuzzerUtil
 	/// Adds the experimental SMTChecker pragma to each source file in the
 	/// source map.
 	static void forceSMT(solidity::StringMap& _input);
+	static void yulIRDiff(solidity::langutil::EVMVersion _version, std::string const& _ir, std::string const& _irOpt);
 };

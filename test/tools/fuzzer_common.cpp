@@ -29,6 +29,11 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <libyul/AssemblyStack.h>
+
+#include <test/tools/ossfuzz/yulFuzzerCommon.h>
+
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <sstream>
 
 using namespace std;
@@ -36,6 +41,22 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::evmasm;
 using namespace solidity::langutil;
+using namespace solidity::yul;
+using namespace solidity::yul::test::yul_fuzzer;
+
+namespace
+{
+void printErrors(ostream& _stream, ErrorList const& _errors)
+{
+	SourceReferenceFormatter formatter(_stream);
+
+	for (auto const& error: _errors)
+		formatter.printExceptionInformation(
+			*error,
+			(error->type() == Error::Type::Warning) ? "Warning" : "Error"
+		);
+}
+}
 
 static vector<EVMVersion> s_evmVersions = {
 	EVMVersion::homestead(),
@@ -81,6 +102,73 @@ void FuzzerUtil::forceSMT(StringMap& _input)
 			sourceUnit.second += smtPragma;
 }
 
+void FuzzerUtil::yulIRDiff(EVMVersion _version, string const& _ir, string const& _irOpt)
+{
+	YulStringRepository::reset();
+
+	if (_ir.empty() && _irOpt.empty())
+		return;
+
+	// AssemblyStack entry point
+	AssemblyStack stackIr(
+		_version,
+		AssemblyStack::Language::StrictAssembly,
+		solidity::frontend::OptimiserSettings::full()
+	);
+
+	// Parse protobuf mutated YUL code
+	if (
+		!stackIr.parseAndAnalyze("source", _ir) ||
+		!stackIr.parserResult()->code ||
+		!stackIr.parserResult()->analysisInfo ||
+		!Error::containsOnlyWarnings(stackIr.errors())
+	)
+	{
+		std::cout << _ir << std::endl;
+		printErrors(std::cout, stackIr.errors());
+		yulAssert(false, "Compiler generated malformed IR");
+	}
+
+	AssemblyStack stackIrOpt(
+		_version,
+		AssemblyStack::Language::StrictAssembly,
+		solidity::frontend::OptimiserSettings::full()
+	);
+
+	// Parse protobuf mutated YUL code
+	if (
+		!stackIrOpt.parseAndAnalyze("source", _irOpt) ||
+		!stackIrOpt.parserResult()->code ||
+		!stackIrOpt.parserResult()->analysisInfo ||
+		!Error::containsOnlyWarnings(stackIrOpt.errors())
+		)
+	{
+		std::cout << _irOpt << std::endl;
+		printErrors(std::cout, stackIrOpt.errors());
+		yulAssert(false, "Compiler generated malformed optimized IR");
+	}
+
+	ostringstream os1;
+	ostringstream os2;
+	yulFuzzerUtil::interpret(
+		os1,
+		stackIr.parserResult()->code,
+		EVMDialect::strictAssemblyForEVMObjects(_version)
+	);
+
+	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
+		os2,
+		stackIrOpt.parserResult()->code,
+		EVMDialect::strictAssemblyForEVMObjects(_version)
+	);
+
+	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
+		return;
+
+	bool isTraceEq = (os1.str() == os2.str());
+	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");
+}
+
 void FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand, bool _forceSMT)
 {
 	frontend::CompilerStack compiler;
@@ -96,11 +184,23 @@ void FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand,
 		compiler.setModelCheckerSettings({frontend::ModelCheckerEngine::All(), frontend::ModelCheckerTargets::All(), /*timeout=*/1});
 	}
 	compiler.setSources(_input);
+	compiler.enableIRGeneration();
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
 	try
 	{
-		compiler.compile();
+		if (compiler.compile() && !compiler.contractNames().empty())
+		{
+			string lastContractName = compiler.lastContractName();
+			yulIRDiff(
+				evmVersion,
+				compiler.yulIR(lastContractName),
+				compiler.yulIROptimized(lastContractName)
+			);
+		}
+	}
+	catch (InternalCompilerError const&)
+	{
 	}
 	catch (Error const&)
 	{
