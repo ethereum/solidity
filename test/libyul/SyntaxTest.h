@@ -23,7 +23,6 @@
 
 namespace solidity::yul::test
 {
-
 using solidity::test::SyntaxTestError;
 
 class SyntaxTest: public solidity::test::CommonSyntaxTest
@@ -39,6 +38,7 @@ public:
 	}
 	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 	~SyntaxTest() override {}
+
 protected:
 	void parseAndAnalyze() override;
 

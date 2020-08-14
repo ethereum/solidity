@@ -44,19 +44,19 @@ bool DeclarationTypeChecker::visit(ElementaryTypeName const& _typeName)
 		solAssert(_typeName.annotation().type->category() == Type::Category::Address, "");
 		switch (*_typeName.stateMutability())
 		{
-			case StateMutability::Payable:
-				_typeName.annotation().type = TypeProvider::payableAddress();
-				break;
-			case StateMutability::NonPayable:
-				_typeName.annotation().type = TypeProvider::address();
-				break;
-			default:
-				m_errorReporter.typeError(
-					2311_error,
-					_typeName.location(),
-					"Address types can only be payable or non-payable."
-				);
-				break;
+		case StateMutability::Payable:
+			_typeName.annotation().type = TypeProvider::payableAddress();
+			break;
+		case StateMutability::NonPayable:
+			_typeName.annotation().type = TypeProvider::address();
+			break;
+		default:
+			m_errorReporter.typeError(
+				2311_error,
+				_typeName.location(),
+				"Address types can only be payable or non-payable."
+			);
+			break;
 		}
 	}
 	return true;
@@ -123,7 +123,8 @@ bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 		}
 	};
 	if (util::CycleDetector<StructDefinition>(visitor).run(_struct))
-		m_errorReporter.fatalTypeError(2046_error, _struct.location(), "Recursive struct definition.");
+		m_errorReporter
+			.fatalTypeError(2046_error, _struct.location(), "Recursive struct definition.");
 
 	return false;
 }
@@ -144,7 +145,9 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	}
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
-	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
+	else if (
+		ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration)
+	)
 		_typeName.annotation().type = TypeProvider::contract(*contract);
 	else
 	{
@@ -170,16 +173,16 @@ bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
 
 	switch (_typeName.visibility())
 	{
-		case Visibility::Internal:
-		case Visibility::External:
-			break;
-		default:
-			m_errorReporter.fatalTypeError(
-				6012_error,
-				_typeName.location(),
-				"Invalid visibility, can only be \"external\" or \"internal\"."
-			);
-			return false;
+	case Visibility::Internal:
+	case Visibility::External:
+		break;
+	default:
+		m_errorReporter.fatalTypeError(
+			6012_error,
+			_typeName.location(),
+			"Invalid visibility, can only be \"external\" or \"internal\"."
+		);
+		return false;
 	}
 
 	if (_typeName.isPayable() && _typeName.visibility() != Visibility::External)
@@ -202,7 +205,8 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 
 	if (auto const* typeName = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
 	{
-		if (auto const* contractType = dynamic_cast<ContractType const*>(typeName->annotation().type))
+		if (auto const* contractType =
+				dynamic_cast<ContractType const*>(typeName->annotation().type))
 		{
 			if (contractType->contractDefinition().isLibrary())
 				m_errorReporter.fatalTypeError(
@@ -249,7 +253,8 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		TypePointer& lengthTypeGeneric = length->annotation().type;
 		if (!lengthTypeGeneric)
 			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
-		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
+		RationalNumberType const* lengthType =
+			dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
 		u256 lengthValue = 0;
 		if (!lengthType || !lengthType->mobileType())
 			m_errorReporter.typeError(
@@ -258,14 +263,21 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 				"Invalid array length, expected integer literal or constant expression."
 			);
 		else if (lengthType->isZero())
-			m_errorReporter.typeError(1406_error, length->location(), "Array with zero length specified.");
+			m_errorReporter
+				.typeError(1406_error, length->location(), "Array with zero length specified.");
 		else if (lengthType->isFractional())
-			m_errorReporter.typeError(3208_error, length->location(), "Array with fractional length specified.");
+			m_errorReporter.typeError(
+				3208_error,
+				length->location(),
+				"Array with fractional length specified."
+			);
 		else if (lengthType->isNegative())
-			m_errorReporter.typeError(3658_error, length->location(), "Array with negative length specified.");
+			m_errorReporter
+				.typeError(3658_error, length->location(), "Array with negative length specified.");
 		else
 			lengthValue = lengthType->literalValue(nullptr);
-		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthValue);
+		_typeName.annotation().type =
+			TypeProvider::array(DataLocation::Storage, baseType, lengthValue);
 	}
 	else
 		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType);
@@ -300,10 +312,14 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		{
 			switch (_location)
 			{
-				case Location::Memory: return "\"memory\"";
-				case Location::Storage: return "\"storage\"";
-				case Location::CallData: return "\"calldata\"";
-				case Location::Unspecified: return "none";
+			case Location::Memory:
+				return "\"memory\"";
+			case Location::Storage:
+				return "\"storage\"";
+			case Location::CallData:
+				return "\"calldata\"";
+			case Location::Unspecified:
+				return "none";
 			}
 			return {};
 		};
@@ -315,16 +331,14 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		{
 			errorString = "Data location must be " +
 				util::joinHumanReadable(
-					allowedDataLocations | boost::adaptors::transformed(locationToString),
-					", ",
-					" or "
+							  allowedDataLocations | boost::adaptors::transformed(locationToString),
+							  ", ",
+							  " or "
 				);
 			if (_variable.isConstructorParameter())
 				errorString += " for constructor parameter";
 			else if (_variable.isCallableOrCatchParameter())
-				errorString +=
-					" for " +
-					string(_variable.isReturnParameter() ? "return " : "") +
+				errorString += " for " + string(_variable.isReturnParameter() ? "return " : "") +
 					"parameter in" +
 					string(_variable.isExternalCallableParameter() ? " external" : "") +
 					" function";
@@ -347,7 +361,8 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	else if (_variable.isStateVariable())
 	{
 		solAssert(varLoc == Location::Unspecified, "");
-		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory : DataLocation::Storage;
+		typeLoc = (_variable.isConstant() || _variable.immutable()) ? DataLocation::Memory :
+																		DataLocation::Storage;
 	}
 	else if (
 		dynamic_cast<StructDefinition const*>(_variable.scope()) ||
@@ -358,17 +373,17 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	else
 		switch (varLoc)
 		{
-			case Location::Memory:
-				typeLoc = DataLocation::Memory;
-				break;
-			case Location::Storage:
-				typeLoc = DataLocation::Storage;
-				break;
-			case Location::CallData:
-				typeLoc = DataLocation::CallData;
-				break;
-			case Location::Unspecified:
-				solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
+		case Location::Memory:
+			typeLoc = DataLocation::Memory;
+			break;
+		case Location::Storage:
+			typeLoc = DataLocation::Storage;
+			break;
+		case Location::CallData:
+			typeLoc = DataLocation::CallData;
+			break;
+		case Location::Unspecified:
+			solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
 		}
 
 	TypePointer type = _variable.typeName().annotation().type;
@@ -379,7 +394,6 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 
 	_variable.annotation().type = type;
-
 }
 
 void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)
@@ -388,7 +402,11 @@ void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)
 		_usingFor.libraryName().annotation().referencedDeclaration
 	);
 	if (!library || !library->isLibrary())
-		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
+		m_errorReporter.fatalTypeError(
+			4357_error,
+			_usingFor.libraryName().location(),
+			"Library name expected."
+		);
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)

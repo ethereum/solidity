@@ -44,35 +44,23 @@ using namespace solidity::yul;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-EthAssemblyAdapter::EthAssemblyAdapter(evmasm::Assembly& _assembly):
-	m_assembly(_assembly)
-{
-}
+EthAssemblyAdapter::EthAssemblyAdapter(evmasm::Assembly& _assembly): m_assembly(_assembly) {}
 
 void EthAssemblyAdapter::setSourceLocation(SourceLocation const& _location)
 {
 	m_assembly.setSourceLocation(_location);
 }
 
-int EthAssemblyAdapter::stackHeight() const
-{
-	return m_assembly.deposit();
-}
+int EthAssemblyAdapter::stackHeight() const { return m_assembly.deposit(); }
 
-void EthAssemblyAdapter::setStackHeight(int height)
-{
-	m_assembly.setDeposit(height);
-}
+void EthAssemblyAdapter::setStackHeight(int height) { m_assembly.setDeposit(height); }
 
 void EthAssemblyAdapter::appendInstruction(evmasm::Instruction _instruction)
 {
 	m_assembly.append(_instruction);
 }
 
-void EthAssemblyAdapter::appendConstant(u256 const& _constant)
-{
-	m_assembly.append(_constant);
-}
+void EthAssemblyAdapter::appendConstant(u256 const& _constant) { m_assembly.append(_constant); }
 
 void EthAssemblyAdapter::appendLabel(LabelID _labelId)
 {
@@ -84,10 +72,7 @@ void EthAssemblyAdapter::appendLabelReference(LabelID _labelId)
 	m_assembly.append(evmasm::AssemblyItem(evmasm::PushTag, _labelId));
 }
 
-size_t EthAssemblyAdapter::newLabelId()
-{
-	return assemblyTagToIdentifier(m_assembly.newTag());
-}
+size_t EthAssemblyAdapter::newLabelId() { return assemblyTagToIdentifier(m_assembly.newTag()); }
 
 size_t EthAssemblyAdapter::namedLabel(std::string const& _name)
 {
@@ -135,10 +120,7 @@ void EthAssemblyAdapter::appendReturnsub(int, int)
 	yulAssert(false, "RETURNSUB not implemented for EVM 1.0");
 }
 
-void EthAssemblyAdapter::appendAssemblySize()
-{
-	m_assembly.appendProgramSize();
-}
+void EthAssemblyAdapter::appendAssemblySize() { m_assembly.appendProgramSize(); }
 
 pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EthAssemblyAdapter::createSubAssembly()
 {
@@ -189,12 +171,11 @@ void EthAssemblyAdapter::appendImmutableAssignment(std::string const& _identifie
 	m_assembly.appendImmutableAssignment(_identifier);
 }
 
-void EthAssemblyAdapter::markAsInvalid()
-{
-	m_assembly.markAsInvalid();
-}
+void EthAssemblyAdapter::markAsInvalid() { m_assembly.markAsInvalid(); }
 
-EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::AssemblyItem const& _tag)
+EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(
+	evmasm::AssemblyItem const& _tag
+)
 {
 	u256 id = _tag.data();
 	yulAssert(id <= std::numeric_limits<LabelID>::max(), "Tag id too large.");
@@ -203,7 +184,10 @@ EthAssemblyAdapter::LabelID EthAssemblyAdapter::assemblyTagToIdentifier(evmasm::
 
 void EthAssemblyAdapter::appendJumpInstruction(evmasm::Instruction _instruction, JumpType _jumpType)
 {
-	yulAssert(_instruction == evmasm::Instruction::JUMP || _instruction == evmasm::Instruction::JUMPI, "");
+	yulAssert(
+		_instruction == evmasm::Instruction::JUMP || _instruction == evmasm::Instruction::JUMPI,
+		""
+	);
 	evmasm::AssemblyItem jump(_instruction);
 	switch (_jumpType)
 	{
@@ -249,6 +233,8 @@ void CodeGenerator::assemble(
 			false,
 			langutil::StackTooDeepError,
 			"Stack too deep when compiling inline assembly" +
-			(transform.stackErrors().front().comment() ? ": " + *transform.stackErrors().front().comment() : ".")
+				(transform.stackErrors().front().comment() ?
+					   ": " + *transform.stackErrors().front().comment() :
+					   ".")
 		);
 }

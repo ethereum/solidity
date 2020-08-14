@@ -34,7 +34,6 @@
 
 namespace solidity::evmasm
 {
-
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 class Assembly;
@@ -56,18 +55,20 @@ public:
 	);
 
 protected:
-	/// This is the public API for the optimiser methods, but it doesn't need to be exposed to the caller.
+	/// This is the public API for the optimiser methods, but it doesn't need to be exposed to the
+	/// caller.
 
 	struct Params
 	{
-		bool isCreation; ///< Whether this is called during contract creation or runtime.
-		size_t runs; ///< Estimated number of calls per opcode oven the lifetime of the contract.
-		size_t multiplicity; ///< Number of times the constant appears in the code.
-		langutil::EVMVersion evmVersion; ///< Version of the EVM
+		bool isCreation;  ///< Whether this is called during contract creation or runtime.
+		size_t runs;  ///< Estimated number of calls per opcode oven the lifetime of the contract.
+		size_t multiplicity;  ///< Number of times the constant appears in the code.
+		langutil::EVMVersion evmVersion;  ///< Version of the EVM
 	};
 
 	explicit ConstantOptimisationMethod(Params const& _params, u256 const& _value):
-		m_params(_params), m_value(_value) {}
+		m_params(_params), m_value(_value)
+	{}
 	virtual ~ConstantOptimisationMethod() = default;
 	virtual bigint gasNeeded() const = 0;
 	/// Executes the method, potentially appending to the assembly and returns a vector of
@@ -93,7 +94,10 @@ protected:
 	}
 
 	/// Replaces all constants i by the code given in @a _replacement[i].
-	static void replaceConstants(AssemblyItems& _items, std::map<u256, AssemblyItems> const& _replacements);
+	static void replaceConstants(
+		AssemblyItems& _items,
+		std::map<u256, AssemblyItems> const& _replacements
+	);
 
 	Params m_params;
 	u256 const& m_value;
@@ -107,7 +111,8 @@ class LiteralMethod: public ConstantOptimisationMethod
 {
 public:
 	explicit LiteralMethod(Params const& _params, u256 const& _value):
-		ConstantOptimisationMethod(_params, _value) {}
+		ConstantOptimisationMethod(_params, _value)
+	{}
 	bigint gasNeeded() const override;
 	AssemblyItems execute(Assembly&) const override { return AssemblyItems{}; }
 };
@@ -119,7 +124,8 @@ class CodeCopyMethod: public ConstantOptimisationMethod
 {
 public:
 	explicit CodeCopyMethod(Params const& _params, u256 const& _value):
-		ConstantOptimisationMethod(_params, _value) {}
+		ConstantOptimisationMethod(_params, _value)
+	{}
 	bigint gasNeeded() const override;
 	AssemblyItems execute(Assembly& _assembly) const override;
 
@@ -145,10 +151,7 @@ public:
 	}
 
 	bigint gasNeeded() const override { return gasNeeded(m_routine); }
-	AssemblyItems execute(Assembly&) const override
-	{
-		return m_routine;
-	}
+	AssemblyItems execute(Assembly&) const override { return m_routine; }
 
 protected:
 	/// Tries to recursively find a way to compute @a _value.

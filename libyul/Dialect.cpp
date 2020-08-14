@@ -63,8 +63,7 @@ Dialect const& Dialect::yulDeprecated()
 			"u128"_yulstring,
 			"s128"_yulstring,
 			"u256"_yulstring,
-			"s256"_yulstring
-		};
+			"s256"_yulstring};
 	};
 
 	return *dialect;

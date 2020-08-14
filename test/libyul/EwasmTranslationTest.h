@@ -30,7 +30,6 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
 namespace solidity::yul::test
 {
-
 class EwasmTranslationTest: public solidity::frontend::test::EVMVersionRestrictedTestCase
 {
 public:
@@ -41,7 +40,11 @@ public:
 
 	explicit EwasmTranslationTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool const _formatted = false
+	) override;
 
 private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);

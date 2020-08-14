@@ -28,7 +28,6 @@
 
 namespace solidity::phaser
 {
-
 /**
  * Abstract base class for selections of pairs elements from a collection.
  *
@@ -61,8 +60,7 @@ public:
 class RandomPairSelection: public PairSelection
 {
 public:
-	explicit RandomPairSelection(double _selectionSize):
-		m_selectionSize(_selectionSize) {}
+	explicit RandomPairSelection(double _selectionSize): m_selectionSize(_selectionSize) {}
 
 	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
 
@@ -83,8 +81,7 @@ private:
 class PairsFromRandomSubset: public PairSelection
 {
 public:
-	explicit PairsFromRandomSubset(double _selectionChance):
-		m_selectionChance(_selectionChance) {}
+	explicit PairsFromRandomSubset(double _selectionChance): m_selectionChance(_selectionChance) {}
 
 	std::vector<std::tuple<size_t, size_t>> materialise(size_t _poolSize) const override;
 
@@ -105,9 +102,11 @@ private:
 class PairMosaicSelection: public PairSelection
 {
 public:
-	explicit PairMosaicSelection(std::vector<std::tuple<size_t, size_t>> _pattern, double _selectionSize = 1.0):
-		m_pattern(move(_pattern)),
-		m_selectionSize(_selectionSize)
+	explicit PairMosaicSelection(
+		std::vector<std::tuple<size_t, size_t>> _pattern,
+		double _selectionSize = 1.0
+	):
+		m_pattern(move(_pattern)), m_selectionSize(_selectionSize)
 	{
 		assert(m_pattern.size() > 0 || _selectionSize == 0.0);
 	}

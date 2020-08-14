@@ -29,7 +29,6 @@ using namespace solidity::smtutil;
 
 namespace solidity::frontend::smt
 {
-
 SortPointer smtSort(frontend::Type const& _type)
 {
 	switch (smtKind(_type.category()))
@@ -67,7 +66,10 @@ SortPointer smtSort(frontend::Type const& _type)
 		{
 			auto mapType = dynamic_cast<frontend::MappingType const*>(&_type);
 			solAssert(mapType, "");
-			array = make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
+			array = make_shared<ArraySort>(
+				smtSortAbstractFunction(*mapType->keyType()),
+				smtSortAbstractFunction(*mapType->valueType())
+			);
 		}
 		else if (isStringLiteral(_type.category()))
 		{
@@ -86,16 +88,17 @@ SortPointer smtSort(frontend::Type const& _type)
 				solAssert(false, "");
 
 			solAssert(arrayType, "");
-			array = make_shared<ArraySort>(SortProvider::uintSort, smtSortAbstractFunction(*arrayType->baseType()));
+			array = make_shared<ArraySort>(
+				SortProvider::uintSort,
+				smtSortAbstractFunction(*arrayType->baseType())
+			);
 		}
 
 		string tupleName;
-		if (
-			auto arrayType = dynamic_cast<ArrayType const*>(&_type);
+		if (auto arrayType = dynamic_cast<ArrayType const*>(&_type);
 			(arrayType && arrayType->isString()) ||
 			_type.category() == frontend::Type::Category::ArraySlice ||
-			_type.category() == frontend::Type::Category::StringLiteral
-		)
+			_type.category() == frontend::Type::Category::StringLiteral)
 			tupleName = "bytes_tuple";
 		else
 			tupleName = _type.toString(true) + "_tuple";
@@ -171,17 +174,13 @@ Kind smtKind(frontend::Type::Category _category)
 
 bool isSupportedType(frontend::Type::Category _category)
 {
-	return isNumber(_category) ||
-		isBool(_category) ||
-		isMapping(_category) ||
-		isArray(_category) ||
+	return isNumber(_category) || isBool(_category) || isMapping(_category) || isArray(_category) ||
 		isTuple(_category);
 }
 
 bool isSupportedTypeDeclaration(frontend::Type::Category _category)
 {
-	return isSupportedType(_category) ||
-		isFunction(_category);
+	return isSupportedType(_category) || isFunction(_category);
 }
 
 pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
@@ -196,7 +195,12 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
-		var = make_shared<SymbolicIntVariable>(frontend::TypeProvider::uint256(), type, _uniqueName, _context);
+		var = make_shared<SymbolicIntVariable>(
+			frontend::TypeProvider::uint256(),
+			type,
+			_uniqueName,
+			_context
+		);
 	}
 	else if (isBool(_type.category()))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _context);
@@ -205,20 +209,25 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		auto const& fType = dynamic_cast<FunctionType const*>(type);
 		auto const& paramsIn = fType->parameterTypes();
 		auto const& paramsOut = fType->returnParameterTypes();
-		auto findFunctionParam = [&](auto&& params) {
+		auto findFunctionParam = [&](auto&& params)
+		{
 			return find_if(
 				begin(params),
 				end(params),
-				[&](TypePointer _paramType) { return _paramType->category() == frontend::Type::Category::Function; }
+				[&](TypePointer _paramType)
+				{ return _paramType->category() == frontend::Type::Category::Function; }
 			);
 		};
-		if (
-			findFunctionParam(paramsIn) != end(paramsIn) ||
-			findFunctionParam(paramsOut) != end(paramsOut)
-		)
+		if (findFunctionParam(paramsIn) != end(paramsIn) ||
+			findFunctionParam(paramsOut) != end(paramsOut))
 		{
 			abstract = true;
-			var = make_shared<SymbolicIntVariable>(TypeProvider::uint256(), type, _uniqueName, _context);
+			var = make_shared<SymbolicIntVariable>(
+				TypeProvider::uint256(),
+				type,
+				_uniqueName,
+				_context
+			);
 		}
 		else
 			var = make_shared<SymbolicFunctionVariable>(type, _uniqueName, _context);
@@ -231,7 +240,12 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	{
 		auto fixedBytesType = dynamic_cast<frontend::FixedBytesType const*>(type);
 		solAssert(fixedBytesType, "");
-		var = make_shared<SymbolicFixedBytesVariable>(type, fixedBytesType->numBytes(), _uniqueName, _context);
+		var = make_shared<SymbolicFixedBytesVariable>(
+			type,
+			fixedBytesType->numBytes(),
+			_uniqueName,
+			_context
+		);
 	}
 	else if (isAddress(_type.category()) || isContract(_type.category()))
 		var = make_shared<SymbolicAddressVariable>(_uniqueName, _context);
@@ -242,7 +256,12 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		auto rational = dynamic_cast<frontend::RationalNumberType const*>(&_type);
 		solAssert(rational, "");
 		if (rational->isFractional())
-			var = make_shared<SymbolicIntVariable>(frontend::TypeProvider::uint256(), type, _uniqueName, _context);
+			var = make_shared<SymbolicIntVariable>(
+				frontend::TypeProvider::uint256(),
+				type,
+				_uniqueName,
+				_context
+			);
 		else
 			var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	}
@@ -260,10 +279,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 	return make_pair(abstract, var);
 }
 
-bool isSupportedType(frontend::Type const& _type)
-{
-	return isSupportedType(_type.category());
-}
+bool isSupportedType(frontend::Type const& _type) { return isSupportedType(_type.category()); }
 
 bool isSupportedTypeDeclaration(frontend::Type const& _type)
 {
@@ -307,12 +323,8 @@ bool isEnum(frontend::Type::Category _category)
 
 bool isNumber(frontend::Type::Category _category)
 {
-	return isInteger(_category) ||
-		isFixedPoint(_category) ||
-		isRational(_category) ||
-		isFixedBytes(_category) ||
-		isAddress(_category) ||
-		isContract(_category) ||
+	return isInteger(_category) || isFixedPoint(_category) || isRational(_category) ||
+		isFixedBytes(_category) || isAddress(_category) || isContract(_category) ||
 		isEnum(_category);
 }
 
@@ -363,7 +375,11 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 	setSymbolicZeroValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicZeroValue(
+	smtutil::Expression _expr,
+	frontend::TypePointer const& _type,
+	EncodingContext& _context
+)
 {
 	solAssert(_type, "");
 	_context.addAssertion(_expr == zeroValue(_type));
@@ -388,21 +404,29 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 			auto length = bigint(0);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(_type))
 			{
-				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(arrayType->baseType()));
+				zeroArray = smtutil::Expression::const_array(
+					smtutil::Expression(sortSort),
+					zeroValue(arrayType->baseType())
+				);
 				if (!arrayType->isDynamicallySized())
 					length = bigint(arrayType->length());
 			}
 			else if (auto mappingType = dynamic_cast<MappingType const*>(_type))
-				zeroArray = smtutil::Expression::const_array(smtutil::Expression(sortSort), zeroValue(mappingType->valueType()));
+				zeroArray = smtutil::Expression::const_array(
+					smtutil::Expression(sortSort),
+					zeroValue(mappingType->valueType())
+				);
 			else
 				solAssert(false, "");
 
 			solAssert(zeroArray, "");
 			return smtutil::Expression::tuple_constructor(
-				smtutil::Expression(std::make_shared<SortSort>(smtSort(*_type)), _type->toString(true)),
+				smtutil::Expression(
+					std::make_shared<SortSort>(smtSort(*_type)),
+					_type->toString(true)
+				),
 				vector<smtutil::Expression>{*zeroArray, length}
 			);
-
 		}
 		solAssert(false, "");
 	}
@@ -415,7 +439,11 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicUnknownValue(
+	smtutil::Expression _expr,
+	frontend::TypePointer const& _type,
+	EncodingContext& _context
+)
 {
 	solAssert(_type, "");
 	if (isEnum(_type->category()))
@@ -445,7 +473,9 @@ optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePoin
 			{
 				if (strType->value().empty())
 					return smtutil::Expression(size_t(0));
-				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+				return smtutil::Expression(
+					u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add))
+				);
 			}
 
 	return std::nullopt;

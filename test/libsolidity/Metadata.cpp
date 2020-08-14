@@ -33,7 +33,6 @@ using namespace std;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
 map<string, string> requireParsedCBORMetadata(bytes const& _bytecode)
@@ -60,10 +59,9 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 	)";
 	for (auto release: std::set<bool>{true, VersionIsRelease})
 		for (auto metadataHash: set<CompilerStack::MetadataHash>{
-			CompilerStack::MetadataHash::IPFS,
-			CompilerStack::MetadataHash::Bzzr1,
-			CompilerStack::MetadataHash::None
-		})
+				 CompilerStack::MetadataHash::IPFS,
+				 CompilerStack::MetadataHash::Bzzr1,
+				 CompilerStack::MetadataHash::None})
 		{
 			CompilerStack compilerStack;
 			compilerStack.overwriteReleaseFlag(release);
@@ -121,10 +119,9 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 	)";
 	for (auto release: set<bool>{true, VersionIsRelease})
 		for (auto metadataHash: set<CompilerStack::MetadataHash>{
-			CompilerStack::MetadataHash::IPFS,
-			CompilerStack::MetadataHash::Bzzr1,
-			CompilerStack::MetadataHash::None
-		})
+				 CompilerStack::MetadataHash::IPFS,
+				 CompilerStack::MetadataHash::Bzzr1,
+				 CompilerStack::MetadataHash::None})
 		{
 			CompilerStack compilerStack;
 			compilerStack.overwriteReleaseFlag(release);
@@ -227,11 +224,11 @@ BOOST_AUTO_TEST_CASE(metadata_relevant_sources_imports)
 			function g(function(uint) external returns (uint) x) public override {}
 		}
 	)";
-	compilerStack.setSources({
-		{"A", std::string(sourceCodeA)},
-		{"B", std::string(sourceCodeB)},
-		{"C", std::string(sourceCodeC)}
-	});
+	compilerStack.setSources(
+		{{"A", std::string(sourceCodeA)},
+		 {"B", std::string(sourceCodeB)},
+		 {"C", std::string(sourceCodeC)}}
+	);
 	compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");

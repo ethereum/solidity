@@ -40,7 +40,6 @@ using solidity::util::keccak256;
 
 namespace
 {
-
 /// Reads 32 bytes from @a _data at position @a _offset bytes while
 /// interpreting @a _data to be padded with an infinite number of zero
 /// bytes beyond its end.
@@ -68,17 +67,26 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
 /// continue with an infinite sequence of zero bytes beyond its end.
 void copyZeroExtended(
-	map<u256, uint8_t>& _target, bytes const& _source,
-	size_t _targetOffset, size_t _sourceOffset, size_t _size
+	map<u256, uint8_t>& _target,
+	bytes const& _source,
+	size_t _targetOffset,
+	size_t _sourceOffset,
+	size_t _size
 )
 {
 	for (size_t i = 0; i < _size; ++i)
-		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
+		_target[_targetOffset + i] =
+			_sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
 }
 
 }
 
-using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
+using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<
+	512,
+	256,
+	boost::multiprecision::unsigned_magnitude,
+	boost::multiprecision::unchecked,
+	void>>;
 
 u256 EVMInstructionInterpreter::eval(
 	evmasm::Instruction _instruction,
@@ -202,8 +210,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLDATACOPY:
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
-				m_state.memory, m_state.calldata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+				m_state.memory,
+				m_state.calldata,
+				size_t(arg[0]),
+				size_t(arg[1]),
+				size_t(arg[2])
 			);
 		return 0;
 	case Instruction::CODESIZE:
@@ -211,8 +222,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CODECOPY:
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+				m_state.memory,
+				m_state.code,
+				size_t(arg[0]),
+				size_t(arg[1]),
+				size_t(arg[2])
 			);
 		return 0;
 	case Instruction::GASPRICE:
@@ -228,8 +242,11 @@ u256 EVMInstructionInterpreter::eval(
 		if (accessMemory(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the same thing.
 			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
+				m_state.memory,
+				m_state.code,
+				size_t(arg[1]),
+				size_t(arg[2]),
+				size_t(arg[3])
 			);
 		return 0;
 	case Instruction::RETURNDATASIZE:
@@ -238,8 +255,11 @@ u256 EVMInstructionInterpreter::eval(
 		logTrace(_instruction, arg);
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
-				m_state.memory, m_state.returndata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+				m_state.memory,
+				m_state.returndata,
+				size_t(arg[0]),
+				size_t(arg[1]),
+				size_t(arg[2])
 			);
 		return 0;
 	case Instruction::BLOCKHASH:
@@ -430,7 +450,10 @@ u256 EVMInstructionInterpreter::eval(
 	return 0;
 }
 
-u256 EVMInstructionInterpreter::evalBuiltin(BuiltinFunctionForEVM const& _fun, const std::vector<u256>& _arguments)
+u256 EVMInstructionInterpreter::evalBuiltin(
+	BuiltinFunctionForEVM const& _fun,
+	const std::vector<u256>& _arguments
+)
 {
 	if (_fun.instruction)
 		return eval(*_fun.instruction, _arguments);
@@ -491,12 +514,20 @@ void EVMInstructionInterpreter::writeMemoryWord(u256 const& _offset, u256 const&
 }
 
 
-void EVMInstructionInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(
+	evmasm::Instruction _instruction,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
 	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
 }
 
-void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EVMInstructionInterpreter::logTrace(
+	std::string const& _pseudoInstruction,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)

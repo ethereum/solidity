@@ -52,7 +52,6 @@ static const u256 ether = u256(1) << 18;
 
 class ExecutionFramework
 {
-
 public:
 	ExecutionFramework();
 	explicit ExecutionFramework(langutil::EVMVersion _evmVersion);
@@ -92,10 +91,7 @@ public:
 		return m_output;
 	}
 
-	bytes const & callFallback()
-	{
-		return callFallbackWithValue(0);
-	}
+	bytes const& callFallback() { return callFallbackWithValue(0); }
 
 	bytes const& callLowLevel(bytes const& _data, u256 const& _value)
 	{
@@ -103,7 +99,11 @@ public:
 		return m_output;
 	}
 
-	bytes const& callContractFunctionWithValueNoEncoding(std::string _sig, u256 const& _value, bytes const& _arguments)
+	bytes const& callContractFunctionWithValueNoEncoding(
+		std::string _sig,
+		u256 const& _value,
+		bytes const& _arguments
+	)
 	{
 		util::FixedHash<4> hash(util::keccak256(_sig));
 		sendMessage(hash.asBytes() + _arguments, false, _value);
@@ -116,7 +116,11 @@ public:
 	}
 
 	template <class... Args>
-	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
+	bytes const& callContractFunctionWithValue(
+		std::string _sig,
+		u256 const& _value,
+		Args const&... _arguments
+	)
 	{
 		return callContractFunctionWithValueNoEncoding(_sig, _value, encodeArgs(_arguments...));
 	}
@@ -128,21 +132,28 @@ public:
 	}
 
 	template <class CppFunction, class... Args>
-	void testContractAgainstCpp(std::string _sig, CppFunction const& _cppFunction, Args const&... _arguments)
+	void testContractAgainstCpp(
+		std::string _sig,
+		CppFunction const& _cppFunction,
+		Args const&... _arguments
+	)
 	{
 		bytes contractResult = callContractFunction(_sig, _arguments...);
 		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
 		BOOST_CHECK_MESSAGE(
 			contractResult == cppResult,
-			"Computed values do not match.\nContract: " +
-				util::toHex(contractResult) +
-				"\nC++:      " +
-				util::toHex(cppResult)
+			"Computed values do not match.\nContract: " + util::toHex(contractResult) +
+				"\nC++:      " + util::toHex(cppResult)
 		);
 	}
 
 	template <class CppFunction, class... Args>
-	void testContractAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction, u256 const& _rangeStart, u256 const& _rangeEnd)
+	void testContractAgainstCppOnRange(
+		std::string _sig,
+		CppFunction const& _cppFunction,
+		u256 const& _rangeStart,
+		u256 const& _rangeEnd
+	)
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
@@ -150,17 +161,17 @@ public:
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
 			BOOST_CHECK_MESSAGE(
 				contractResult == cppResult,
-				"Computed values do not match.\nContract: " +
-					util::toHex(contractResult) +
-					"\nC++:      " +
-					util::toHex(cppResult) +
-					"\nArgument: " +
-					util::toHex(encode(argument))
+				"Computed values do not match.\nContract: " + util::toHex(contractResult) +
+					"\nC++:      " + util::toHex(cppResult) +
+					"\nArgument: " + util::toHex(encode(argument))
 			);
 		}
 	}
 
-	static std::pair<bool, std::string> compareAndCreateMessage(bytes const& _result, bytes const& _expectation);
+	static std::pair<bool, std::string> compareAndCreateMessage(
+		bytes const& _result,
+		bytes const& _expectation
+	);
 
 	static bytes encode(bool _value) { return encode(uint8_t(_value)); }
 	static bytes encode(int _value) { return encode(u256(_value)); }
@@ -197,10 +208,7 @@ public:
 	{
 		return encode(_firstArg) + encodeArgs(_followingArgs...);
 	}
-	static bytes encodeArgs()
-	{
-		return bytes();
-	}
+	static bytes encodeArgs() { return bytes(); }
 
 	//@todo might be extended in the future
 	template <class Arg>
@@ -214,8 +222,12 @@ public:
 	u256 blockHash(u256 const& _blockNumber) const;
 	u256 blockNumber() const;
 
-	template<typename Range>
-	static bytes encodeArray(bool _dynamicallySized, bool _dynamicallyEncoded, Range const& _elements)
+	template <typename Range>
+	static bytes encodeArray(
+		bool _dynamicallySized,
+		bool _dynamicallyEncoded,
+		Range const& _elements
+	)
 	{
 		bytes result;
 		if (_dynamicallySized)
@@ -241,15 +253,17 @@ public:
 
 private:
 	template <class CppFunction, class... Args>
-	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
-	-> typename std::enable_if<std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
+	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments) ->
+		typename std::enable_if<std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::
+			type
 	{
 		_cppFunction(_arguments...);
 		return bytes();
 	}
 	template <class CppFunction, class... Args>
-	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
-	-> typename std::enable_if<!std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
+	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments) ->
+		typename std::
+			enable_if<!std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
 	{
 		return encode(_cppFunction(_arguments...));
 	}
@@ -277,7 +291,8 @@ protected:
 
 	langutil::EVMVersion m_evmVersion;
 	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;
-	solidity::frontend::OptimiserSettings m_optimiserSettings = solidity::frontend::OptimiserSettings::minimal();
+	solidity::frontend::OptimiserSettings m_optimiserSettings =
+		solidity::frontend::OptimiserSettings::minimal();
 	bool m_showMessages = false;
 	std::shared_ptr<EVMHost> m_evmHost;
 
@@ -290,10 +305,13 @@ protected:
 	u256 m_gasUsed;
 };
 
-#define ABI_CHECK(result, expectation) do { \
-	auto abiCheckResult = ExecutionFramework::compareAndCreateMessage((result), (expectation)); \
-	BOOST_CHECK_MESSAGE(abiCheckResult.first, abiCheckResult.second); \
-} while (0)
+#define ABI_CHECK(result, expectation)                                            \
+	do                                                                            \
+	{                                                                             \
+		auto abiCheckResult =                                                     \
+			ExecutionFramework::compareAndCreateMessage((result), (expectation)); \
+		BOOST_CHECK_MESSAGE(abiCheckResult.first, abiCheckResult.second);         \
+	} while (0)
 
 
-} // end namespaces
+}  // end namespaces

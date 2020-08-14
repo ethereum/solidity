@@ -138,22 +138,16 @@ string ProtoConverter::visit(TestContract const& _testContract)
 	return c.render();
 }
 
-bool ProtoConverter::libraryTest() const
-{
-	return m_libraryTest;
-}
+bool ProtoConverter::libraryTest() const { return m_libraryTest; }
 
-string ProtoConverter::libraryName() const
-{
-	return m_libraryName;
-}
+string ProtoConverter::libraryName() const { return m_libraryName; }
 
 string ProtoConverter::visit(Program const& _p)
 {
 	ostringstream program;
 	ostringstream contracts;
 
-	for (auto &contract: _p.contracts())
+	for (auto& contract: _p.contracts())
 		contracts << visit(contract);
 
 	Whiskers p(R"(<endl>pragma solidity >=0.0;<endl><contracts><endl><test>)");

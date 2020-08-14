@@ -50,18 +50,13 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 			m_errorReporter.fatalTypeError(
 				6020_error,
 				_operation.location(),
-				"Operator " +
-				string(TokenTraits::toString(_operation.getOperator())) +
-				" not compatible with types " +
-				left->toString() +
-				" and " +
-				right->toString()
+				"Operator " + string(TokenTraits::toString(_operation.getOperator())) +
+					" not compatible with types " + left->toString() + " and " + right->toString()
 			);
 		setType(
 			_operation,
-			TokenTraits::isCompareOp(_operation.getOperator()) ?
-			TypeProvider::boolean() :
-			commonType
+			TokenTraits::isCompareOp(_operation.getOperator()) ? TypeProvider::boolean() :
+																   commonType
 		);
 	}
 }
@@ -73,7 +68,8 @@ void ConstantEvaluator::endVisit(Literal const& _literal)
 
 void ConstantEvaluator::endVisit(Identifier const& _identifier)
 {
-	VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration);
+	VariableDeclaration const* variableDeclaration =
+		dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration);
 	if (!variableDeclaration)
 		return;
 	if (!variableDeclaration->isConstant())
@@ -85,7 +81,11 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	else if (!m_types->count(value.get()))
 	{
 		if (m_depth > 32)
-			m_errorReporter.fatalTypeError(5210_error, _identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
+			m_errorReporter.fatalTypeError(
+				5210_error,
+				_identifier.location(),
+				"Cyclic constant definition (or maximum recursion depth exhausted)."
+			);
 		ConstantEvaluator(m_errorReporter, m_depth + 1, m_types).evaluate(*value);
 	}
 
@@ -104,10 +104,7 @@ void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
 		(*m_types)[&_node] = _type;
 }
 
-TypePointer ConstantEvaluator::type(ASTNode const& _node)
-{
-	return (*m_types)[&_node];
-}
+TypePointer ConstantEvaluator::type(ASTNode const& _node) { return (*m_types)[&_node]; }
 
 TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
 {

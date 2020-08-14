@@ -39,7 +39,6 @@ class Scanner;
 
 namespace solidity::yul
 {
-
 /**
  * Yul object parser. Invokes the inline assembly parser.
  */
@@ -47,13 +46,17 @@ class ObjectParser: public langutil::ParserBase
 {
 public:
 	explicit ObjectParser(langutil::ErrorReporter& _errorReporter, Dialect const& _dialect):
-		ParserBase(_errorReporter), m_dialect(_dialect) {}
+		ParserBase(_errorReporter), m_dialect(_dialect)
+	{}
 
 	/// Parses a Yul object.
 	/// Falls back to code-only parsing if the source starts with `{`.
 	/// @param _reuseScanner if true, do check for end of input after the last `}`.
 	/// @returns an empty shared pointer on error.
-	std::shared_ptr<Object> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
+	std::shared_ptr<Object> parse(
+		std::shared_ptr<langutil::Scanner> const& _scanner,
+		bool _reuseScanner
+	);
 
 private:
 	std::shared_ptr<Object> parseObject(Object* _containingObject = nullptr);
@@ -63,7 +66,11 @@ private:
 
 	/// Tries to parse a name that is non-empty and unique inside the containing object.
 	YulString parseUniqueName(Object const* _containingObject);
-	void addNamedSubObject(Object& _container, YulString _name, std::shared_ptr<ObjectNode> _subObject);
+	void addNamedSubObject(
+		Object& _container,
+		YulString _name,
+		std::shared_ptr<ObjectNode> _subObject
+	);
 
 	Dialect const& m_dialect;
 };

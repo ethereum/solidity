@@ -32,7 +32,6 @@
 
 namespace solidity::evmasm
 {
-
 class KnownState;
 
 struct GasPath
@@ -54,7 +53,10 @@ class PathGasMeter
 public:
 	explicit PathGasMeter(AssemblyItems const& _items, langutil::EVMVersion _evmVersion);
 
-	GasMeter::GasConsumption estimateMax(size_t _startIndex, std::shared_ptr<KnownState> const& _state);
+	GasMeter::GasConsumption estimateMax(
+		size_t _startIndex,
+		std::shared_ptr<KnownState> const& _state
+	);
 
 	static GasMeter::GasConsumption estimateMax(
 		AssemblyItems const& _items,

@@ -23,7 +23,6 @@
 
 namespace solidity::util
 {
-
 /**
  * Detector for cycles in directed graphs. It returns the first
  * vertex on the path towards a cycle or a nullptr if there is
@@ -39,9 +38,7 @@ public:
 	/// @param _visit function that is given the current vertex
 	///               and is supposed to call @a run on all
 	///               adjacent vertices.
-	explicit CycleDetector(Visitor _visit):
-		m_visit(std::move(_visit))
-	{  }
+	explicit CycleDetector(Visitor _visit): m_visit(std::move(_visit)) {}
 
 	/// Recursively perform cycle detection starting
 	/// (or continuing) with @param _vertex
@@ -85,21 +82,23 @@ private:
  * Example: Gather all (recursive) children in a graph starting at (and including) ``root``:
  *
  * Node const* root = ...;
- * std::set<Node const*> allNodes = BreadthFirstSearch<Node const*>{{root}}.run([](Node const* _node, auto&& _addChild) {
+ * std::set<Node const*> allNodes = BreadthFirstSearch<Node const*>{{root}}.run([](Node const*
+ * _node, auto&& _addChild) {
  *   // Potentially process ``_node``.
  *   for (Node const& _child: _node->children())
  *     // Potentially filter the children to be visited.
  *     _addChild(&_child);
  * }).visited;
  */
-template<typename V>
+template <typename V>
 struct BreadthFirstSearch
 {
-	/// Runs the breadth first search. The verticesToTraverse member of the struct needs to be initialized.
-	/// @param _forEachChild is a callable of the form [...](V const& _node, auto&& _addChild) { ... }
-	/// that is called for each visited node and is supposed to call _addChild(childNode) for every child
-	/// node of _node.
-	template<typename ForEachChild>
+	/// Runs the breadth first search. The verticesToTraverse member of the struct needs to be
+	/// initialized.
+	/// @param _forEachChild is a callable of the form [...](V const& _node, auto&& _addChild) { ...
+	/// } that is called for each visited node and is supposed to call _addChild(childNode) for
+	/// every child node of _node.
+	template <typename ForEachChild>
 	BreadthFirstSearch& run(ForEachChild&& _forEachChild)
 	{
 		while (!verticesToTraverse.empty())
@@ -108,17 +107,18 @@ struct BreadthFirstSearch
 			verticesToTraverse.erase(verticesToTraverse.begin());
 			visited.insert(v);
 
-			_forEachChild(v, [this](V _vertex) {
-				if (!visited.count(_vertex))
-					verticesToTraverse.emplace(std::move(_vertex));
-			});
+			_forEachChild(
+				v,
+				[this](V _vertex)
+				{
+					if (!visited.count(_vertex))
+						verticesToTraverse.emplace(std::move(_vertex));
+				}
+			);
 		}
 		return *this;
 	}
-	void abort()
-	{
-		verticesToTraverse.clear();
-	}
+	void abort() { verticesToTraverse.clear(); }
 
 	std::set<V> verticesToTraverse;
 	std::set<V> visited{};

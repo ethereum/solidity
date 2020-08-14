@@ -27,7 +27,6 @@
 
 namespace solidity::phaser
 {
-
 /**
  * Structure used by @a ProgramCache to store intermediate programs and metadata associated
  * with them.
@@ -38,8 +37,8 @@ struct CacheEntry
 	size_t roundNumber;
 
 	CacheEntry(Program _program, size_t _roundNumber):
-		program(std::move(_program)),
-		roundNumber(_roundNumber) {}
+		program(std::move(_program)), roundNumber(_roundNumber)
+	{}
 };
 
 /**
@@ -105,8 +104,7 @@ struct CacheStats
 class ProgramCache
 {
 public:
-	explicit ProgramCache(Program _program):
-		m_program(std::move(_program)) {}
+	explicit ProgramCache(Program _program): m_program(std::move(_program)) {}
 
 	Program optimiseProgram(
 		std::string const& _abbreviatedOptimisationSteps,
@@ -117,7 +115,10 @@ public:
 
 	size_t size() const { return m_entries.size(); }
 	Program const* find(std::string const& _abbreviatedOptimisationSteps) const;
-	bool contains(std::string const& _abbreviatedOptimisationSteps) const { return find(_abbreviatedOptimisationSteps) != nullptr; }
+	bool contains(std::string const& _abbreviatedOptimisationSteps) const
+	{
+		return find(_abbreviatedOptimisationSteps) != nullptr;
+	}
 
 	CacheStats gatherStats() const;
 

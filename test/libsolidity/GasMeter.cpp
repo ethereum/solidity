@@ -37,15 +37,18 @@ using namespace solidity::frontend::test;
 
 namespace solidity::frontend::test
 {
-
 class GasMeterTestFramework: public SolidityExecutionFramework
 {
 public:
 	void compile(string const& _sourceCode)
 	{
 		m_compiler.reset();
-		m_compiler.setSources({{"", "pragma solidity >=0.0;\n"
-				"// SPDX-License-Identifier: GPL-3.0\n" + _sourceCode}});
+		m_compiler.setSources(
+			{{"",
+			  "pragma solidity >=0.0;\n"
+			  "// SPDX-License-Identifier: GPL-3.0\n" +
+				  _sourceCode}}
+		);
 		m_compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		m_compiler.setEVMVersion(m_evmVersion);
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
@@ -54,7 +57,8 @@ public:
 		ASTNode const& sourceUnit = m_compiler.ast("");
 		BOOST_REQUIRE(items != nullptr);
 		m_gasCosts = GasEstimator::breakToStatementLevel(
-			GasEstimator(solidity::test::CommonOptions::get().evmVersion()).structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
+			GasEstimator(solidity::test::CommonOptions::get().evmVersion())
+				.structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
 			{&sourceUnit}
 		);
 	}
@@ -63,7 +67,10 @@ public:
 	{
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
-		PathGasMeter meter(*m_compiler.assemblyItems(m_compiler.lastContractName()), solidity::test::CommonOptions::get().evmVersion());
+		PathGasMeter meter(
+			*m_compiler.assemblyItems(m_compiler.lastContractName()),
+			solidity::test::CommonOptions::get().evmVersion()
+		);
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject(m_compiler.lastContractName()).bytecode.size());
 		// costs for deployment
@@ -83,7 +90,11 @@ public:
 
 	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
 	/// against the actual gas usage computed by the VM on the given set of argument variants.
-	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants, u256 const& _tolerance = u256(0))
+	void testRunTimeGas(
+		string const& _sig,
+		vector<bytes> _argumentVariants,
+		u256 const& _tolerance = u256(0)
+	)
 	{
 		u256 gasUsed = 0;
 		GasMeter::GasConsumption gas;
@@ -96,10 +107,11 @@ public:
 			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));
 		}
 
-		gas += GasEstimator(solidity::test::CommonOptions::get().evmVersion()).functionalEstimation(
-			*m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
-			_sig
-		);
+		gas += GasEstimator(solidity::test::CommonOptions::get().evmVersion())
+				   .functionalEstimation(
+					   *m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
+					   _sig
+				   );
 		// Skip the tests when we force ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
 		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
@@ -157,7 +169,8 @@ BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
 
 BOOST_AUTO_TEST_CASE(simple_contract)
 {
-	// Tests a simple "deploy contract" code without constructor. The actual contract is not relevant.
+	// Tests a simple "deploy contract" code without constructor. The actual contract is not
+	// relevant.
 	char const* sourceCode = R"(
 		contract test {
 			bytes32 public shaValue;
@@ -195,7 +208,10 @@ BOOST_AUTO_TEST_CASE(updating_store)
 			}
 		}
 	)";
-	testCreationTimeGas(sourceCode, m_evmVersion < langutil::EVMVersion::constantinople() ? u256(0) : u256(9600));
+	testCreationTimeGas(
+		sourceCode,
+		m_evmVersion < langutil::EVMVersion::constantinople() ? u256(0) : u256(9600)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(branches)
@@ -358,7 +374,10 @@ BOOST_AUTO_TEST_CASE(complex_control_flow)
 	)";
 	testCreationTimeGas(sourceCode);
 	// max gas is used for small x
-	testRunTimeGas("ln(int128)", vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)});
+	testRunTimeGas(
+		"ln(int128)",
+		vector<bytes>{encodeArgs(0), encodeArgs(10), encodeArgs(105), encodeArgs(30000)}
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

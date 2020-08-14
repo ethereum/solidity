@@ -39,7 +39,10 @@ GasMeter::GasConsumption& GasMeter::GasConsumption::operator+=(GasConsumption co
 	return *this;
 }
 
-GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _includeExternalCosts)
+GasMeter::GasConsumption GasMeter::estimateMax(
+	AssemblyItem const& _item,
+	bool _includeExternalCosts
+)
 {
 	GasConsumption gas;
 	switch (_item.type())
@@ -67,11 +70,10 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		{
 			ExpressionClasses::Id slot = m_state->relativeStackElement(0);
 			ExpressionClasses::Id value = m_state->relativeStackElement(-1);
-			if (classes.knownZero(value) || (
-				m_state->storageContent().count(slot) &&
-				classes.knownNonZero(m_state->storageContent().at(slot))
-			))
-				gas = GasCosts::sstoreResetGas; //@todo take refunds into account
+			if (classes.knownZero(value) ||
+				(m_state->storageContent().count(slot) &&
+				 classes.knownNonZero(m_state->storageContent().at(slot))))
+				gas = GasCosts::sstoreResetGas;	 //@todo take refunds into account
 			else
 				gas = GasCosts::sstoreSetGas;
 			break;
@@ -87,17 +89,17 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::MLOAD:
 		case Instruction::MSTORE:
 			gas = runGas(_item.instruction());
-			gas += memoryGas(classes.find(Instruction::ADD, {
-				m_state->relativeStackElement(0),
-				classes.find(AssemblyItem(32))
-			}));
+			gas += memoryGas(classes.find(
+				Instruction::ADD,
+				{m_state->relativeStackElement(0), classes.find(AssemblyItem(32))}
+			));
 			break;
 		case Instruction::MSTORE8:
 			gas = runGas(_item.instruction());
-			gas += memoryGas(classes.find(Instruction::ADD, {
-				m_state->relativeStackElement(0),
-				classes.find(AssemblyItem(1))
-			}));
+			gas += memoryGas(classes.find(
+				Instruction::ADD,
+				{m_state->relativeStackElement(0), classes.find(AssemblyItem(1))}
+			));
 			break;
 		case Instruction::KECCAK256:
 			gas = GasCosts::keccak256Gas;
@@ -142,7 +144,8 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		case Instruction::STATICCALL:
 		{
 			if (_includeExternalCosts)
-				// We assume that we do not know the target contract and thus, the consumption is infinite.
+				// We assume that we do not know the target contract and thus, the
+				// consumption is infinite.
 				gas = GasConsumption::infinite();
 			else
 			{
@@ -152,9 +155,11 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				else
 					gas = GasConsumption::infinite();
 				if (_item.instruction() == Instruction::CALL)
-					gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
+					gas += GasCosts::callNewAccountGas;	 // We very rarely know whether the
+														 // address exists.
 				int valueSize = 1;
-				if (_item.instruction() == Instruction::DELEGATECALL || _item.instruction() == Instruction::STATICCALL)
+				if (_item.instruction() == Instruction::DELEGATECALL ||
+					_item.instruction() == Instruction::STATICCALL)
 					valueSize = 0;
 				else if (!classes.knownZero(m_state->relativeStackElement(-1 - valueSize)))
 					gas += GasCosts::callValueTransferGas;
@@ -165,12 +170,14 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 		}
 		case Instruction::SELFDESTRUCT:
 			gas = GasCosts::selfdestructGas(m_evmVersion);
-			gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
+			gas += GasCosts::callNewAccountGas;	 // We very rarely know whether the address
+												 // exists.
 			break;
 		case Instruction::CREATE:
 		case Instruction::CREATE2:
 			if (_includeExternalCosts)
-				// We assume that we do not know the target contract and thus, the consumption is infinite.
+				// We assume that we do not know the target contract and thus, the
+				// consumption is infinite.
 				gas = GasConsumption::infinite();
 			else
 			{
@@ -185,7 +192,8 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item, bool _
 				if (*value)
 				{
 					// Note: msb() counts from 0 and throws on 0 as input.
-					unsigned const significantByteCount  = (boost::multiprecision::msb(*value) + 1 + 7) / 8;
+					unsigned const significantByteCount =
+						(boost::multiprecision::msb(*value) + 1 + 7) / 8;
 					gas += GasCosts::expByteGas(m_evmVersion) * significantByteCount;
 				}
 			}
@@ -247,10 +255,11 @@ GasMeter::GasConsumption GasMeter::memoryGas(int _stackPosOffset, int _stackPosS
 	if (classes.knownZero(m_state->relativeStackElement(_stackPosSize)))
 		return GasConsumption(0);
 	else
-		return memoryGas(classes.find(Instruction::ADD, {
-			m_state->relativeStackElement(_stackPosOffset),
-			m_state->relativeStackElement(_stackPosSize)
-		}));
+		return memoryGas(classes.find(
+			Instruction::ADD,
+			{m_state->relativeStackElement(_stackPosOffset),
+			 m_state->relativeStackElement(_stackPosSize)}
+		));
 }
 
 unsigned GasMeter::runGas(Instruction _instruction)
@@ -260,16 +269,28 @@ unsigned GasMeter::runGas(Instruction _instruction)
 
 	switch (instructionInfo(_instruction).gasPriceTier)
 	{
-	case Tier::Zero:    return GasCosts::tier0Gas;
-	case Tier::Base:    return GasCosts::tier1Gas;
-	case Tier::VeryLow: return GasCosts::tier2Gas;
-	case Tier::Low:     return GasCosts::tier3Gas;
-	case Tier::Mid:     return GasCosts::tier4Gas;
-	case Tier::High:    return GasCosts::tier5Gas;
-	case Tier::Ext:     return GasCosts::tier6Gas;
-	default: break;
+	case Tier::Zero:
+		return GasCosts::tier0Gas;
+	case Tier::Base:
+		return GasCosts::tier1Gas;
+	case Tier::VeryLow:
+		return GasCosts::tier2Gas;
+	case Tier::Low:
+		return GasCosts::tier3Gas;
+	case Tier::Mid:
+		return GasCosts::tier4Gas;
+	case Tier::High:
+		return GasCosts::tier5Gas;
+	case Tier::Ext:
+		return GasCosts::tier6Gas;
+	default:
+		break;
 	}
-	assertThrow(false, OptimizerException, "Invalid gas tier for instruction " + instructionInfo(_instruction).name);
+	assertThrow(
+		false,
+		OptimizerException,
+		"Invalid gas tier for instruction " + instructionInfo(_instruction).name
+	);
 	return 0;
 }
 

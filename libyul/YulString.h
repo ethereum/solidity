@@ -31,7 +31,6 @@
 
 namespace solidity::yul
 {
-
 /// Repository for YulStrings.
 /// Owns the string data for all YulStrings, which can be referenced by a Handle.
 /// A Handle consists of an ID (that depends on the insertion order of YulStrings and is potentially
@@ -54,7 +53,7 @@ public:
 	Handle stringToHandle(std::string const& _string)
 	{
 		if (_string.empty())
-			return { 0, emptyHash() };
+			return {0, emptyHash()};
 		std::uint64_t h = hash(_string);
 		auto range = m_hashToID.equal_range(h);
 		for (auto it = range.first; it != range.second; ++it)
@@ -66,7 +65,7 @@ public:
 
 		return Handle{id, h};
 	}
-	std::string const& idToString(size_t _id) const	{ return *m_strings.at(_id); }
+	std::string const& idToString(size_t _id) const { return *m_strings.at(_id); }
 
 	static std::uint64_t hash(std::string const& v)
 	{
@@ -126,7 +125,9 @@ class YulString
 {
 public:
 	YulString() = default;
-	explicit YulString(std::string const& _s): m_handle(YulStringRepository::instance().stringToHandle(_s)) {}
+	explicit YulString(std::string const& _s):
+		m_handle(YulStringRepository::instance().stringToHandle(_s))
+	{}
 	YulString(YulString const&) = default;
 	YulString(YulString&&) = default;
 	YulString& operator=(YulString const&) = default;
@@ -140,9 +141,12 @@ public:
 	/// falls back to string comparison.
 	bool operator<(YulString const& _other) const
 	{
-		if (m_handle.hash < _other.m_handle.hash) return true;
-		if (_other.m_handle.hash < m_handle.hash) return false;
-		if (m_handle.id == _other.m_handle.id) return false;
+		if (m_handle.hash < _other.m_handle.hash)
+			return true;
+		if (_other.m_handle.hash < m_handle.hash)
+			return false;
+		if (m_handle.id == _other.m_handle.id)
+			return false;
 		return str() < _other.str();
 	}
 	/// Equality is determined based on the string ID.
@@ -159,10 +163,10 @@ public:
 
 private:
 	/// Handle of the string. Assumes that the empty string has ID zero.
-	YulStringRepository::Handle m_handle{ 0, YulStringRepository::emptyHash() };
+	YulStringRepository::Handle m_handle{0, YulStringRepository::emptyHash()};
 };
 
-inline YulString operator "" _yulstring(char const* _string, std::size_t _size)
+inline YulString operator"" _yulstring(char const* _string, std::size_t _size)
 {
 	return YulString(std::string(_string, _size));
 }

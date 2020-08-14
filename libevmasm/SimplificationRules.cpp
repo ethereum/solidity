@@ -57,10 +57,7 @@ SimplificationRule<Pattern> const* Rules::findFirstMatch(
 	return nullptr;
 }
 
-bool Rules::isInitialized() const
-{
-	return !m_rules[uint8_t(Instruction::ADD)].empty();
-}
+bool Rules::isInitialized() const { return !m_rules[uint8_t(Instruction::ADD)].empty(); }
 
 void Rules::addRules(std::vector<SimplificationRule<Pattern>> const& _rules)
 {
@@ -98,11 +95,8 @@ Rules::Rules()
 }
 
 Pattern::Pattern(Instruction _instruction, std::initializer_list<Pattern> _arguments):
-	m_type(Operation),
-	m_instruction(_instruction),
-	m_arguments(_arguments)
-{
-}
+	m_type(Operation), m_instruction(_instruction), m_arguments(_arguments)
+{}
 
 void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _matchGroups)
 {
@@ -121,7 +115,11 @@ bool Pattern::matches(Expression const& _expr, ExpressionClasses const& _classes
 		else if ((*m_matchGroups)[m_matchGroup]->id != _expr.id)
 			return false;
 	}
-	assertThrow(m_arguments.size() == 0 || _expr.arguments.size() == m_arguments.size(), OptimizerException, "");
+	assertThrow(
+		m_arguments.size() == 0 || _expr.arguments.size() == m_arguments.size(),
+		OptimizerException,
+		""
+	);
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i].matches(_classes.representative(_expr.arguments[i]), _classes))
 			return false;

@@ -40,7 +40,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 	Json::Value events(Json::objectValue);
 
 	doc["version"] = Json::Value(c_natspecVersion);
-	doc["kind"]    = Json::Value("user");
+	doc["kind"] = Json::Value("user");
 
 	auto constructorDefinition(_contractDef.constructor());
 	if (constructorDefinition)
@@ -148,7 +148,8 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 
 		solAssert(varDecl->annotation().docTags.count("return") <= 1, "");
 		if (varDecl->annotation().docTags.count("return") == 1)
-			stateVariables[varDecl->name()]["return"] = extractDoc(varDecl->annotation().docTags, "return");
+			stateVariables[varDecl->name()]["return"] =
+				extractDoc(varDecl->annotation().docTags, "return");
 	}
 
 	Json::Value events(Json::objectValue);
@@ -165,7 +166,10 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	return doc;
 }
 
-Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef)
+Json::Value Natspec::extractReturnParameterDocs(
+	std::multimap<std::string, DocTag> const& _tags,
+	FunctionDefinition const& _functionDef
+)
 {
 	Json::Value jsonReturn{Json::objectValue};
 	auto returnDocs = _tags.equal_range("return");
@@ -182,10 +186,13 @@ Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTa
 				paramName = "_" + std::to_string(n);
 			else
 			{
-				//check to make sure the first word of the doc str is the same as the return name
+				// check to make sure the first word of the doc str is the same as the return name
 				auto nameEndPos = content.find_first_of(" \t");
-				solAssert(content.substr(0, nameEndPos) == paramName, "No return param name given: " + paramName);
-				content = content.substr(nameEndPos+1);
+				solAssert(
+					content.substr(0, nameEndPos) == paramName,
+					"No return param name given: " + paramName
+				);
+				content = content.substr(nameEndPos + 1);
 			}
 
 			jsonReturn[paramName] = Json::Value(content);

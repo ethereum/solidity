@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * Unit tests for stack-reusing code generator.
@@ -29,7 +29,6 @@ using namespace std;
 
 namespace solidity::yul::test
 {
-
 namespace
 {
 string assemble(string const& _input)
@@ -37,7 +36,11 @@ string assemble(string const& _input)
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = true;
-	AssemblyStack asmStack(langutil::EVMVersion{}, AssemblyStack::Language::StrictAssembly, settings);
+	AssemblyStack asmStack(
+		langutil::EVMVersion{},
+		AssemblyStack::Language::StrictAssembly,
+		settings
+	);
 	BOOST_REQUIRE_MESSAGE(asmStack.parseAndAnalyze("", _input), "Source did not parse: " + _input);
 	return evmasm::disassemble(asmStack.assemble(AssemblyStack::Machine::EVM).bytecode->bytecode);
 }
@@ -89,8 +92,10 @@ BOOST_AUTO_TEST_CASE(multi_reuse_single_slot_nested)
 
 BOOST_AUTO_TEST_CASE(multi_reuse_same_variable_name)
 {
-	string out = assemble("{ let z := mload(0) { let x := 1 x := 6 z := x } { let x := 2 z := x x := 4 } }");
-	BOOST_CHECK_EQUAL(out,
+	string out =
+		assemble("{ let z := mload(0) { let x := 1 x := 6 z := x } { let x := 2 z := x x := 4 } }");
+	BOOST_CHECK_EQUAL(
+		out,
 		"PUSH1 0x0 MLOAD "
 		"PUSH1 0x1 PUSH1 0x6 SWAP1 POP DUP1 SWAP2 POP POP "
 		"PUSH1 0x2 DUP1 SWAP2 POP PUSH1 0x4 SWAP1 POP POP "
@@ -108,18 +113,24 @@ BOOST_AUTO_TEST_CASE(if_)
 {
 	// z is only removed after the if (after the jumpdest)
 	string out = assemble("{ let z := mload(0) if z { let x := z } let t := 3 }");
-	BOOST_CHECK_EQUAL(out, "PUSH1 0x0 MLOAD DUP1 ISZERO PUSH1 0xA JUMPI DUP1 POP JUMPDEST POP PUSH1 0x3 POP ");
+	BOOST_CHECK_EQUAL(
+		out,
+		"PUSH1 0x0 MLOAD DUP1 ISZERO PUSH1 0xA JUMPI DUP1 POP JUMPDEST POP PUSH1 0x3 POP "
+	);
 }
 
 BOOST_AUTO_TEST_CASE(switch_)
 {
-	string out = assemble("{ let z := 0 switch z case 0 { let x := 2 let y := 3 } default { z := 3 } let t := 9 }");
-	BOOST_CHECK_EQUAL(out,
+	string out = assemble(
+		"{ let z := 0 switch z case 0 { let x := 2 let y := 3 } default { z := 3 } let t := 9 }"
+	);
+	BOOST_CHECK_EQUAL(
+		out,
 		"PUSH1 0x0 DUP1 "
 		"PUSH1 0x0 DUP2 EQ PUSH1 0x11 JUMPI "
 		"PUSH1 0x3 SWAP2 POP PUSH1 0x18 JUMP "
 		"JUMPDEST PUSH1 0x2 POP PUSH1 0x3 POP "
-		"JUMPDEST POP POP " // This is where z and its copy (switch condition) can be removed.
+		"JUMPDEST POP POP "	 // This is where z and its copy (switch condition) can be removed.
 		"PUSH1 0x9 POP "
 	);
 }
@@ -128,10 +139,11 @@ BOOST_AUTO_TEST_CASE(reuse_slots)
 {
 	// x and y should reuse the slots of b and d
 	string out = assemble("{ let a, b, c, d let x := 2 let y := 3 mstore(x, a) mstore(y, c) }");
-	BOOST_CHECK_EQUAL(out,
+	BOOST_CHECK_EQUAL(
+		out,
 		"PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 "
-		"POP " // d is removed right away
-		"PUSH1 0x2 SWAP2 POP " // x is stored at b's slot
+		"POP "	// d is removed right away
+		"PUSH1 0x2 SWAP2 POP "	// x is stored at b's slot
 		"PUSH1 0x3 DUP4 DUP4 MSTORE "
 		"DUP2 DUP2 MSTORE "
 		"POP POP POP POP "
@@ -142,7 +154,8 @@ BOOST_AUTO_TEST_CASE(for_1)
 {
 	// Special scoping rules, but can remove z early
 	string out = assemble("{ for { let z := 0 } 1 { } { let x := 3 } let t := 2 }");
-	BOOST_CHECK_EQUAL(out,
+	BOOST_CHECK_EQUAL(
+		out,
 		"PUSH1 0x0 POP "
 		"JUMPDEST PUSH1 0x1 ISZERO PUSH1 0x11 JUMPI "
 		"PUSH1 0x3 POP JUMPDEST PUSH1 0x3 JUMP "
@@ -154,13 +167,14 @@ BOOST_AUTO_TEST_CASE(for_2)
 {
 	// Special scoping rules, cannot remove z until after the loop!
 	string out = assemble("{ for { let z := 0 } 1 { } { z := 8 let x := 3 } let t := 2 }");
-	BOOST_CHECK_EQUAL(out,
+	BOOST_CHECK_EQUAL(
+		out,
 		"PUSH1 0x0 "
 		"JUMPDEST PUSH1 0x1 ISZERO PUSH1 0x14 JUMPI "
 		"PUSH1 0x8 SWAP1 POP "
 		"PUSH1 0x3 POP "
 		"JUMPDEST PUSH1 0x2 JUMP "
-		"JUMPDEST POP " // z is removed
+		"JUMPDEST POP "	 // z is removed
 		"PUSH1 0x2 POP "
 	);
 }
@@ -170,9 +184,7 @@ BOOST_AUTO_TEST_CASE(function_trivial)
 	string in = R"({
 		function f() { }
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x6 JUMP JUMPDEST JUMPDEST JUMP JUMPDEST "
-	);
+	BOOST_CHECK_EQUAL(assemble(in), "PUSH1 0x6 JUMP JUMPDEST JUMPDEST JUMP JUMPDEST ");
 }
 
 BOOST_AUTO_TEST_CASE(function_retparam)
@@ -180,7 +192,8 @@ BOOST_AUTO_TEST_CASE(function_retparam)
 	string in = R"({
 		function f() -> x, y { }
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0xC JUMP "
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 JUMP "
 		"JUMPDEST "
@@ -204,8 +217,10 @@ BOOST_AUTO_TEST_CASE(function_params_and_retparams)
 	// We do not expect parameters to be fully unused, so the stack
 	// layout for a function is still fixed, even though parameters
 	// can be re-used.
-	BOOST_CHECK_EQUAL(assemble(in),
-		"PUSH1 0x11 JUMP JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP5 POP SWAP5 SWAP3 POP POP POP JUMP JUMPDEST "
+	BOOST_CHECK_EQUAL(
+		assemble(in),
+		"PUSH1 0x11 JUMP JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP5 POP SWAP5 SWAP3 POP POP POP "
+		"JUMP JUMPDEST "
 	);
 }
 
@@ -214,7 +229,8 @@ BOOST_AUTO_TEST_CASE(function_params_and_retparams_partly_unused)
 	string in = R"({
 		function f(a, b, c, d) -> x, y { b := 3 let s := 9 y := 2 mstore(s, y) }
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x1F JUMP "
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 "
 		"PUSH1 0x3 SWAP4 POP "
@@ -235,11 +251,12 @@ BOOST_AUTO_TEST_CASE(function_with_body_embedded)
 		}
 		b := 7
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x3 PUSH1 "
 		"0x17 JUMP "
-		"JUMPDEST PUSH1 0x0 " // start of f, initialize t
-		"DUP2 POP " // let x := a
+		"JUMPDEST PUSH1 0x0 "  // start of f, initialize t
+		"DUP2 POP "	 // let x := a
 		"PUSH1 0x3 SWAP2 POP "
 		"DUP2 SWAP1 POP "
 		"JUMPDEST SWAP3 SWAP2 POP POP JUMP "
@@ -255,10 +272,11 @@ BOOST_AUTO_TEST_CASE(function_call)
 		function f(a, r) -> t { }
 		b := f(3, 4)
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x9 PUSH1 0x2 PUSH1 0x1 PUSH1 0xD JUMP "
-		"JUMPDEST PUSH1 0x16 JUMP " // jump over f
-		"JUMPDEST PUSH1 0x0 JUMPDEST SWAP3 SWAP2 POP POP JUMP " // f
+		"JUMPDEST PUSH1 0x16 JUMP "	 // jump over f
+		"JUMPDEST PUSH1 0x0 JUMPDEST SWAP3 SWAP2 POP POP JUMP "	 // f
 		"JUMPDEST PUSH1 0x20 PUSH1 0x4 PUSH1 0x3 PUSH1 0xD JUMP "
 		"JUMPDEST SWAP1 POP POP "
 	);
@@ -276,18 +294,19 @@ BOOST_AUTO_TEST_CASE(functions_multi_return)
 		y, z := g()
 		let unused := 7
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x15 JUMP "
-		"JUMPDEST PUSH1 0x0 JUMPDEST SWAP3 SWAP2 POP POP JUMP " // f
-		"JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 JUMP " // g
-		"JUMPDEST PUSH1 0x1F PUSH1 0x2 PUSH1 0x1 PUSH1 0x3 JUMP " // f(1, 2)
-		"JUMPDEST PUSH1 0x29 PUSH1 0x4 PUSH1 0x3 PUSH1 0x3 JUMP " // f(3, 4)
-		"JUMPDEST SWAP1 POP " // assignment to x
-		"POP " // remove x
-		"PUSH1 0x32 PUSH1 0xC JUMP " // g()
-		"JUMPDEST PUSH1 0x38 PUSH1 0xC JUMP " // g()
-		"JUMPDEST SWAP2 POP SWAP2 POP " // assignments
-		"POP POP " // removal of y and z
+		"JUMPDEST PUSH1 0x0 JUMPDEST SWAP3 SWAP2 POP POP JUMP "	 // f
+		"JUMPDEST PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 JUMP "  // g
+		"JUMPDEST PUSH1 0x1F PUSH1 0x2 PUSH1 0x1 PUSH1 0x3 JUMP "  // f(1, 2)
+		"JUMPDEST PUSH1 0x29 PUSH1 0x4 PUSH1 0x3 PUSH1 0x3 JUMP "  // f(3, 4)
+		"JUMPDEST SWAP1 POP "  // assignment to x
+		"POP "	// remove x
+		"PUSH1 0x32 PUSH1 0xC JUMP "  // g()
+		"JUMPDEST PUSH1 0x38 PUSH1 0xC JUMP "  // g()
+		"JUMPDEST SWAP2 POP SWAP2 POP "	 // assignments
+		"POP POP "	// removal of y and z
 		"PUSH1 0x7 POP "
 	);
 }
@@ -298,14 +317,15 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function)
 		function f() -> x, y, z, t {}
 		let a, b, c, d := f() let x1 := 2 let y1 := 3 mstore(x1, a) mstore(y1, c)
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x12 JUMP "
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
 		"JUMPDEST PUSH1 0x18 PUSH1 0x3 JUMP "
 		// Stack: a b c d
-		"JUMPDEST POP " // d is unused
+		"JUMPDEST POP "	 // d is unused
 		// Stack: a b c
-		"PUSH1 0x2 SWAP2 POP " // x1 reuses b's slot
+		"PUSH1 0x2 SWAP2 POP "	// x1 reuses b's slot
 		"PUSH1 0x3 "
 		// Stack: a x1 c y1
 		"DUP4 DUP4 MSTORE "
@@ -324,14 +344,15 @@ BOOST_AUTO_TEST_CASE(reuse_slots_function_with_gaps)
 		function f() -> x, y, z, t {}
 		let a, b, c, d := f() mstore(x3, a) mstore(c, d)
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x5 PUSH1 0x6 PUSH1 0x7 "
 		"DUP2 DUP4 MSTORE "
-		"PUSH1 0x1B JUMP " // jump across function
+		"PUSH1 0x1B JUMP "	// jump across function
 		"JUMPDEST PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 PUSH1 0x0 JUMPDEST SWAP1 SWAP2 SWAP3 SWAP4 JUMP "
 		"JUMPDEST PUSH1 0x21 PUSH1 0xC JUMP "
 		// stack: x1 x2 x3 a b c d
-		"JUMPDEST SWAP6 POP " // move d into x1
+		"JUMPDEST SWAP6 POP "  // move d into x1
 		// stack: d x2 x3 a b c
 		"SWAP4 POP "
 		// stack: d c x3 a b
@@ -352,7 +373,8 @@ BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_to_last_used)
 		let y := x // y should reuse the stack slot of x
 		sstore(y, y)
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x5 "
 		"DUP1 SWAP1 POP "
 		"DUP1 DUP2 SSTORE "
@@ -367,7 +389,8 @@ BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_to_last_used_expr)
 		let y := add(x, 2) // y should reuse the stack slot of x
 		sstore(y, y)
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x5 "
 		"PUSH1 0x2 DUP2 ADD "
 		"SWAP1 POP "
@@ -383,7 +406,8 @@ BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_to_not_last_used)
 		let y := x // y should not reuse the stack slot of x, since x is still used below
 		sstore(y, x)
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x5 "
 		"DUP1 "
 		"DUP2 DUP2 SSTORE "
@@ -400,7 +424,8 @@ BOOST_AUTO_TEST_CASE(reuse_on_decl_assign_not_same_scope)
 			sstore(y, y)
 		}
 	})";
-	BOOST_CHECK_EQUAL(assemble(in),
+	BOOST_CHECK_EQUAL(
+		assemble(in),
 		"PUSH1 0x5 "
 		"DUP1 "
 		"DUP1 DUP2 SSTORE "

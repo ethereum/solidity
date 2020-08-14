@@ -186,11 +186,8 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr)
 	static Rules rules;
 	assertThrow(rules.isInitialized(), OptimizerException, "Rule list not properly initialized.");
 
-	if (
-		!_expr.item ||
-		_expr.item->type() != Operation ||
-		!SemanticInformation::isDeterministic(*_expr.item)
-	)
+	if (!_expr.item || _expr.item->type() != Operation ||
+		!SemanticInformation::isDeterministic(*_expr.item))
 		return numeric_limits<unsigned>::max();
 
 	if (auto match = rules.findFirstMatch(_expr, *this))

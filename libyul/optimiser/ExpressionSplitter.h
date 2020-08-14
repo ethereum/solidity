@@ -30,7 +30,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 struct OptimiserStepContext;
 class TypeInfo;
@@ -74,10 +73,8 @@ private:
 		NameDispenser& _nameDispenser,
 		TypeInfo& _typeInfo
 	):
-		m_dialect(_dialect),
-		m_nameDispenser(_nameDispenser),
-		m_typeInfo(_typeInfo)
-	{ }
+		m_dialect(_dialect), m_nameDispenser(_nameDispenser), m_typeInfo(_typeInfo)
+	{}
 
 	/// Replaces the expression by a variable if it is a function call or functional
 	/// instruction. The declaration of the variable is appended to m_statementsToPrefix.

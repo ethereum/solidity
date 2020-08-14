@@ -32,7 +32,6 @@ using namespace solidity::phaser;
 
 namespace solidity::phaser
 {
-
 ostream& operator<<(ostream& _stream, Chromosome const& _chromosome);
 
 }

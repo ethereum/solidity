@@ -40,7 +40,6 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 class NameAndTypeResolver;
 
 /**
@@ -90,7 +89,10 @@ private:
 	void operator()(yul::Identifier const& _identifier) override;
 	void operator()(yul::VariableDeclaration const& _varDecl) override;
 
-	void resolveInheritDoc(StructuredDocumentation const& _documentation, StructurallyDocumentedAnnotation& _annotation);
+	void resolveInheritDoc(
+		StructuredDocumentation const& _documentation,
+		StructurallyDocumentedAnnotation& _annotation
+	);
 
 	/// Checks if the name contains a '.'.
 	void validateYulIdentifierName(yul::YulString _name, langutil::SourceLocation const& _location);

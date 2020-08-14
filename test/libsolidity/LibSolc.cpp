@@ -31,10 +31,8 @@ using namespace std;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
-
 /// TODO: share this between StandardCompiler.cpp
 /// Helper to match a specific error type and message
 bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
@@ -73,7 +71,7 @@ char* stringToSolidity(string const& _input)
 	return ptr;
 }
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(LibSolc)
 
@@ -126,7 +124,11 @@ BOOST_AUTO_TEST_CASE(missing_callback)
 	Json::Value result = compile(input);
 	BOOST_REQUIRE(result.isObject());
 
-	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: File not supplied initially."));
+	BOOST_CHECK(containsError(
+		result,
+		"ParserError",
+		"Source \"missing.sol\" not found: File not supplied initially."
+	));
 }
 
 BOOST_AUTO_TEST_CASE(with_callback)
@@ -166,19 +168,25 @@ BOOST_AUTO_TEST_CASE(with_callback)
 				*o_error = nullptr;
 				*o_contents = nullptr;
 			}
-		}
-	};
+		}};
 
 	Json::Value result = compile(input, callback);
 	BOOST_REQUIRE(result.isObject());
 
-	// This ensures that "found.sol" was properly loaded which triggered the second import statement.
-	BOOST_CHECK(containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file."));
+	// This ensures that "found.sol" was properly loaded which triggered the second import
+	// statement.
+	BOOST_CHECK(
+		containsError(result, "ParserError", "Source \"missing.sol\" not found: Missing file.")
+	);
 
 	// This should be placed due to the missing "notfound.sol" which sets both pointers to null.
-	BOOST_CHECK(containsError(result, "ParserError", "Source \"notfound.sol\" not found: Callback not supported."));
+	BOOST_CHECK(containsError(
+		result,
+		"ParserError",
+		"Source \"notfound.sol\" not found: Callback not supported."
+	));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

@@ -32,8 +32,7 @@
 
 namespace solidity::frontend
 {
-
-class Type; // forward
+class Type;	 // forward
 
 /**
  * Container for all global objects which look like AST nodes, but are not part of the AST
@@ -55,8 +54,12 @@ public:
 private:
 	std::vector<std::shared_ptr<MagicVariableDeclaration const>> m_magicVariables;
 	ContractDefinition const* m_currentContract = nullptr;
-	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_thisPointer;
-	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_superPointer;
+	std::map<
+		ContractDefinition const*,
+		std::shared_ptr<MagicVariableDeclaration const>> mutable m_thisPointer;
+	std::map<
+		ContractDefinition const*,
+		std::shared_ptr<MagicVariableDeclaration const>> mutable m_superPointer;
 };
 
 }

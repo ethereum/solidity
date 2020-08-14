@@ -81,8 +81,12 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 				yul::AssemblyStack::Language::StrictAssembly,
 				optimiserSettings
 			);
-			bool analysisSuccessful = asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
-			solAssert(analysisSuccessful, "Code that passed analysis in CompilerStack can't have errors");
+			bool analysisSuccessful =
+				asmStack.parseAndAnalyze("", m_compiler.yulIROptimized(contractName));
+			solAssert(
+				analysisSuccessful,
+				"Code that passed analysis in CompilerStack can't have errors"
+			);
 
 			try
 			{
@@ -111,21 +115,15 @@ bytes SolidityExecutionFramework::compileContract(
 	map<string, Address> const& _libraryAddresses
 )
 {
-	return multiSourceCompileContract(
-		{{"", _sourceCode}},
-		_contractName,
-		_libraryAddresses
-	);
+	return multiSourceCompileContract({{"", _sourceCode}}, _contractName, _libraryAddresses);
 }
 
 string SolidityExecutionFramework::addPreamble(string const& _sourceCode)
 {
 	// Silence compiler version warning
 	string preamble = "pragma solidity >=0.0;\n";
-	if (
-		solidity::test::CommonOptions::get().useABIEncoderV2 &&
-		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos
-	)
+	if (solidity::test::CommonOptions::get().useABIEncoderV2 &&
+		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos)
 		preamble += "pragma experimental ABIEncoderV2;\n";
 	return preamble + _sourceCode;
 }

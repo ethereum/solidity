@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -28,7 +28,6 @@ using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
-
 BOOST_AUTO_TEST_SUITE(SolidityScanner)
 
 BOOST_AUTO_TEST_CASE(test_empty)
@@ -83,7 +82,8 @@ BOOST_AUTO_TEST_CASE(assembly_multiple_assign)
 
 BOOST_AUTO_TEST_CASE(string_printable)
 {
-	for (unsigned v = 0x20; v < 0x7e; v++) {
+	for (unsigned v = 0x20; v < 0x7e; v++)
+	{
 		string lit{static_cast<char>(v)};
 		// Escape \ and " (since we are quoting with ")
 		if (v == '\\' || v == '"')
@@ -104,7 +104,8 @@ BOOST_AUTO_TEST_CASE(string_printable)
 
 BOOST_AUTO_TEST_CASE(string_nonprintable)
 {
-	for (unsigned v = 0; v < 0xff; v++) {
+	for (unsigned v = 0; v < 0xff; v++)
+	{
 		// Skip the valid ones
 		if (v >= 0x20 && v <= 0x7e)
 			continue;
@@ -375,7 +376,9 @@ BOOST_AUTO_TEST_CASE(negative_numbers)
 
 BOOST_AUTO_TEST_CASE(locations)
 {
-	Scanner scanner(CharStream("function_identifier has ; -0x743/*comment*/\n ident //comment", ""));
+	Scanner scanner(
+		CharStream("function_identifier has ; -0x743/*comment*/\n ident //comment", "")
+	);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.currentLocation().start, 0);
 	BOOST_CHECK_EQUAL(scanner.currentLocation().end, 19);
@@ -398,7 +401,18 @@ BOOST_AUTO_TEST_CASE(locations)
 BOOST_AUTO_TEST_CASE(ambiguities)
 {
 	// test scanning of some operators which need look-ahead
-	Scanner scanner(CharStream("<=" "<" "+ +=a++ =>" "<<" ">>" " >>=" ">>>" ">>>=" " >>>>>=><<=", ""));
+	Scanner scanner(CharStream(
+		"<="
+		"<"
+		"+ +=a++ =>"
+		"<<"
+		">>"
+		" >>="
+		">>>"
+		">>>="
+		" >>>>>=><<=",
+		""
+	));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LessThanOrEqual);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LessThan);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Add);
@@ -422,60 +436,89 @@ BOOST_AUTO_TEST_CASE(documentation_comments_parsed_begin)
 {
 	Scanner scanner(CharStream("/// Send $(value / 1000) chocolates to the user", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(
+		scanner.currentCommentLiteral(),
+		"Send $(value / 1000) chocolates to the user"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiline_documentation_comments_parsed_begin)
 {
 	Scanner scanner(CharStream("/** Send $(value / 1000) chocolates to the user*/", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(
+		scanner.currentCommentLiteral(),
+		"Send $(value / 1000) chocolates to the user"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(documentation_comments_parsed)
 {
-	Scanner scanner(CharStream("some other tokens /// Send $(value / 1000) chocolates to the user", ""));
+	Scanner scanner(
+		CharStream("some other tokens /// Send $(value / 1000) chocolates to the user", "")
+	);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(
+		scanner.currentCommentLiteral(),
+		"Send $(value / 1000) chocolates to the user"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiline_documentation_comments_parsed)
 {
-	Scanner scanner(CharStream("some other tokens /**\n"
-							   "* Send $(value / 1000) chocolates to the user\n"
-							   "*/", ""));
+	Scanner scanner(CharStream(
+		"some other tokens /**\n"
+		"* Send $(value / 1000) chocolates to the user\n"
+		"*/",
+		""
+	));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(
+		scanner.currentCommentLiteral(),
+		" Send $(value / 1000) chocolates to the user"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiline_documentation_no_stars)
 {
-	Scanner scanner(CharStream("some other tokens /**\n"
-							   " Send $(value / 1000) chocolates to the user\n"
-							   "*/", ""));
+	Scanner scanner(CharStream(
+		"some other tokens /**\n"
+		" Send $(value / 1000) chocolates to the user\n"
+		"*/",
+		""
+	));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(
+		scanner.currentCommentLiteral(),
+		"Send $(value / 1000) chocolates to the user"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiline_documentation_whitespace_hell)
 {
-	Scanner scanner(CharStream("some other tokens /** \t \r \n"
-							   "\t \r  * Send $(value / 1000) chocolates to the user\n"
-							   "*/", ""));
+	Scanner scanner(CharStream(
+		"some other tokens /** \t \r \n"
+		"\t \r  * Send $(value / 1000) chocolates to the user\n"
+		"*/",
+		""
+	));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
-	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
+	BOOST_CHECK_EQUAL(
+		scanner.currentCommentLiteral(),
+		" Send $(value / 1000) chocolates to the user"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(comment_before_eos)
@@ -508,9 +551,12 @@ BOOST_AUTO_TEST_CASE(empty_multiline_documentation_comment_before_eos)
 
 BOOST_AUTO_TEST_CASE(comments_mixed_in_sequence)
 {
-	Scanner scanner(CharStream("hello_world ///documentation comment \n"
-							   "//simple comment \n"
-							   "<<", ""));
+	Scanner scanner(CharStream(
+		"hello_world ///documentation comment \n"
+		"//simple comment \n"
+		"<<",
+		""
+	));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SHL);
 	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "documentation comment ");
@@ -542,7 +588,6 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Contract);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::RBrace);
-
 }
 
 // Unicode string escapes
@@ -715,7 +760,7 @@ BOOST_AUTO_TEST_CASE(regular_line_breaks_in_multiline_doc_comment)
 {
 	// Test CR, LF, CRLF as line valid terminators for code comments.
 	// Any accepted non-LF is being canonicalized to LF.
-	for (auto const& nl : {"\r"s, "\n"s, "\r\n"s})
+	for (auto const& nl: {"\r"s, "\n"s, "\r\n"s})
 	{
 		Scanner scanner{CharStream{"/// Hello" + nl + "/// World" + nl + "ident", ""}};
 		auto const& lit = scanner.currentCommentLiteral();
@@ -772,4 +817,4 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

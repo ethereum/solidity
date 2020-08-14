@@ -36,7 +36,6 @@ enum class Token : unsigned int;
 
 namespace solidity::frontend
 {
-
 class ASTNode;
 class SourceUnit;
 class PragmaDirective;

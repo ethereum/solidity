@@ -33,7 +33,6 @@
 
 namespace solidity::yul
 {
-
 struct AsmAnalysisInfo;
 struct Dialect;
 class GasMeter;
@@ -48,8 +47,9 @@ class OptimiserSuite
 public:
 	static constexpr size_t MaxRounds = 12;
 
-	/// Special characters that do not represent optimiser steps but are allowed in abbreviation sequences.
-	/// Some of them (like whitespace) are ignored, others (like brackets) are a part of the syntax.
+	/// Special characters that do not represent optimiser steps but are allowed in abbreviation
+	/// sequences. Some of them (like whitespace) are ignored, others (like brackets) are a part of
+	/// the syntax.
 	static constexpr char NonStepAbbreviations[] = " \n[]";
 
 	enum class Debug

@@ -28,7 +28,6 @@
 
 namespace solidity::test
 {
-
 /// Returns only the CBOR metadata.
 bytes onlyMetadata(bytes const& _bytecode);
 
@@ -52,4 +51,4 @@ std::optional<std::map<std::string, std::string>> parseCBORMetadata(bytes const&
 /// content is valid metadata.
 bool isValidMetadata(std::string const& _metadata);
 
-} // end namespaces
+}  // end namespaces

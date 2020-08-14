@@ -25,7 +25,6 @@
 
 namespace solidity::frontend::smt
 {
-
 class EncodingContext;
 
 /**
@@ -57,17 +56,16 @@ private:
 	EncodingContext& m_context;
 
 	/// Symbolic `this` address.
-	SymbolicAddressVariable m_thisAddress{
-		"this",
-		m_context
-	};
+	SymbolicAddressVariable m_thisAddress{"this", m_context};
 
 	/// Symbolic balances.
 	SymbolicArrayVariable m_balances{
-		std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort),
+		std::make_shared<smtutil::ArraySort>(
+			smtutil::SortProvider::uintSort,
+			smtutil::SortProvider::uintSort
+		),
 		"balances",
-		m_context
-	};
+		m_context};
 };
 
 }

@@ -29,7 +29,7 @@
 
 namespace solidity::evmasm
 {
-enum class Instruction: uint8_t;
+enum class Instruction : uint8_t;
 }
 
 namespace solidity::yul
@@ -40,7 +40,6 @@ struct BuiltinFunctionForEVM;
 
 namespace solidity::yul::test
 {
-
 struct InterpreterState;
 
 /**
@@ -65,22 +64,14 @@ struct InterpreterState;
 class EwasmBuiltinInterpreter
 {
 public:
-	explicit EwasmBuiltinInterpreter(InterpreterState& _state):
-		m_state(_state)
-	{}
+	explicit EwasmBuiltinInterpreter(InterpreterState& _state): m_state(_state) {}
 	/// Evaluate builtin function
 	u256 evalBuiltin(YulString _fun, std::vector<u256> const& _arguments);
 
 private:
 	template <typename Word>
-	u256 evalWasmBuiltin(
-		std::string const& _fun,
-		std::vector<Word> const& _arguments
-	);
-	u256 evalEthBuiltin(
-		std::string const& _fun,
-		std::vector<uint64_t> const& _arguments
-	);
+	u256 evalWasmBuiltin(std::string const& _fun, std::vector<Word> const& _arguments);
+	u256 evalEthBuiltin(std::string const& _fun, std::vector<uint64_t> const& _arguments);
 
 	/// Checks if the memory access is not too large for the interpreter and adjusts
 	/// msize accordingly.
@@ -114,10 +105,18 @@ private:
 	u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }
 	u256 readAddress(uint64_t _offset) { return readU256(_offset, 20); }
 
-	void logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
+	void logTrace(
+		evmasm::Instruction _instruction,
+		std::vector<u256> const& _arguments = {},
+		bytes const& _data = {}
+	);
 	/// Appends a log to the trace representing an instruction or similar operation by string,
 	/// with arguments and auxiliary data (if nonempty).
-	void logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
+	void logTrace(
+		std::string const& _pseudoInstruction,
+		std::vector<u256> const& _arguments = {},
+		bytes const& _data = {}
+	);
 
 	InterpreterState& m_state;
 };

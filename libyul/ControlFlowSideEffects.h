@@ -22,7 +22,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Side effects of code related to control flow.
  */

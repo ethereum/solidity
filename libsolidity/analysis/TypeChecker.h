@@ -37,7 +37,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * The module that performs type analysis on the AST, checks the applicability of operations on
  * those types and stores errors for invalid operations.
@@ -48,12 +47,12 @@ class TypeChecker: private ASTConstVisitor
 public:
 	/// @param _errorReporter provides the error logging functionality.
 	TypeChecker(langutil::EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
-		m_evmVersion(_evmVersion),
-		m_errorReporter(_errorReporter)
+		m_evmVersion(_evmVersion), m_errorReporter(_errorReporter)
 	{}
 
 	/// Performs type checking on the given source and all of its sub-nodes.
-	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
+	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still
+	/// contain warnings
 	bool checkTypeRequirements(SourceUnit const& _source);
 
 	/// @returns the type of an expression and asserts that it is present.
@@ -65,7 +64,6 @@ public:
 	static bool typeSupportedByOldABIEncoder(Type const& _type, bool _isLibraryCall);
 
 private:
-
 	bool visit(ContractDefinition const& _contract) override;
 	/// Checks (and warns) if a tuple assignment might cause unexpected overwrites in storage.
 	/// Should only be called if the left hand side is tuple-typed.
@@ -85,11 +83,10 @@ private:
 	TypePointers typeCheckMetaTypeFunctionAndRetrieveReturnType(FunctionCall const& _functionCall);
 
 	/// Performs type checks and determines result types for type conversion FunctionCall nodes.
-	TypePointer typeCheckTypeConversionAndRetrieveReturnType(
-		FunctionCall const& _functionCall
-	);
+	TypePointer typeCheckTypeConversionAndRetrieveReturnType(FunctionCall const& _functionCall);
 
-	/// Performs type checks on function call and struct ctor FunctionCall nodes (except for kind ABIDecode).
+	/// Performs type checks on function call and struct ctor FunctionCall nodes (except for kind
+	/// ABIDecode).
 	void typeCheckFunctionCall(
 		FunctionCall const& _functionCall,
 		FunctionTypePointer _functionType
@@ -99,7 +96,8 @@ private:
 	void typeCheckReceiveFunction(FunctionDefinition const& _function);
 	void typeCheckConstructor(FunctionDefinition const& _function);
 
-	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.
+	/// Performs general number and type checks of arguments against function call and struct ctor
+	/// FunctionCall node parameters.
 	void typeCheckFunctionGeneralChecks(
 		FunctionCall const& _functionCall,
 		FunctionTypePointer _functionType
@@ -117,7 +115,10 @@ private:
 	bool visit(VariableDeclaration const& _variable) override;
 	/// We need to do this manually because we want to pass the bases of the current contract in
 	/// case this is a base constructor call.
-	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
+	void visitManually(
+		ModifierInvocation const& _modifier,
+		std::vector<ContractDefinition const*> const& _bases
+	);
 	bool visit(EventDefinition const& _eventDef) override;
 	void endVisit(FunctionTypeName const& _funType) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
@@ -146,7 +147,8 @@ private:
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
-		std::set<ContractDefinition const*> const& _seenContracts = std::set<ContractDefinition const*>()
+		std::set<ContractDefinition const*> const& _seenContracts =
+			std::set<ContractDefinition const*>()
 	) const;
 
 	/// @returns the referenced declaration and throws on error.

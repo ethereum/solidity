@@ -34,12 +34,15 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 class ViewPureChecker: private ASTConstVisitor
 {
 public:
-	ViewPureChecker(std::vector<std::shared_ptr<ASTNode>> const& _ast, langutil::ErrorReporter& _errorReporter):
-		m_ast(_ast), m_errorReporter(_errorReporter) {}
+	ViewPureChecker(
+		std::vector<std::shared_ptr<ASTNode>> const& _ast,
+		langutil::ErrorReporter& _errorReporter
+	):
+		m_ast(_ast), m_errorReporter(_errorReporter)
+	{}
 
 	bool check();
 
@@ -75,7 +78,8 @@ private:
 	langutil::ErrorReporter& m_errorReporter;
 
 	bool m_errors = false;
-	MutabilityAndLocation m_bestMutabilityAndLocation = MutabilityAndLocation{StateMutability::Payable, langutil::SourceLocation()};
+	MutabilityAndLocation m_bestMutabilityAndLocation =
+		MutabilityAndLocation{StateMutability::Payable, langutil::SourceLocation()};
 	FunctionDefinition const* m_currentFunction = nullptr;
 	std::map<ModifierDefinition const*, MutabilityAndLocation> m_inferredMutability;
 };

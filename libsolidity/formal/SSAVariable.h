@@ -22,7 +22,6 @@
 
 namespace solidity::frontend::smt
 {
-
 /**
  * This class represents the SSA representation of a program variable.
  */
@@ -39,10 +38,7 @@ public:
 	unsigned index() const { return m_currentIndex; }
 	unsigned& index() { return m_currentIndex; }
 
-	unsigned operator++()
-	{
-		return m_currentIndex = m_nextFreeIndex++;
-	}
+	unsigned operator++() { return m_currentIndex = m_nextFreeIndex++; }
 
 private:
 	unsigned m_currentIndex;

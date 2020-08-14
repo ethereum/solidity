@@ -33,8 +33,7 @@ ModelChecker::ModelChecker(
 	m_context(),
 	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
 	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers)
-{
-}
+{}
 
 void ModelChecker::analyze(SourceUnit const& _source)
 {

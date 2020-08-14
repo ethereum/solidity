@@ -26,7 +26,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Computes and holds information relevant during decoding an external function
  * call's return values.
@@ -35,7 +34,8 @@ struct ReturnInfo
 {
 	ReturnInfo(langutil::EVMVersion const& _evmVersion, FunctionType const& _functionType);
 
-	/// Vector of TypePointer, for each return variable. Dynamic types are already replaced if required.
+	/// Vector of TypePointer, for each return variable. Dynamic types are already replaced if
+	/// required.
 	TypePointers returnTypes = {};
 
 	/// Boolean, indicating whether or not return size is only known at runtime.

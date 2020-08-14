@@ -43,11 +43,8 @@ CacheStats& CacheStats::operator+=(CacheStats const& _other)
 
 bool CacheStats::operator==(CacheStats const& _other) const
 {
-	return
-		hits == _other.hits &&
-		misses == _other.misses &&
-		totalCodeSize == _other.totalCodeSize &&
-		roundEntryCounts == _other.roundEntryCounts;
+	return hits == _other.hits && misses == _other.misses &&
+		totalCodeSize == _other.totalCodeSize && roundEntryCounts == _other.roundEntryCounts;
 }
 
 Program ProgramCache::optimiseProgram(
@@ -73,15 +70,14 @@ Program ProgramCache::optimiseProgram(
 			break;
 	}
 
-	Program intermediateProgram = (
-		prefixSize == 0 ?
-		m_program :
-		m_entries.at(targetOptimisations.substr(0, prefixSize)).program
-	);
+	Program intermediateProgram =
+		(prefixSize == 0 ? m_program :
+							 m_entries.at(targetOptimisations.substr(0, prefixSize)).program);
 
 	for (size_t i = prefixSize + 1; i <= targetOptimisations.size(); ++i)
 	{
-		string stepName = OptimiserSuite::stepAbbreviationToNameMap().at(targetOptimisations[i - 1]);
+		string stepName =
+			OptimiserSuite::stepAbbreviationToNameMap().at(targetOptimisations[i - 1]);
 		intermediateProgram.optimise({stepName});
 
 		m_entries.insert({targetOptimisations.substr(0, i), {intermediateProgram, m_currentRound}});

@@ -55,11 +55,7 @@ bytes BytesUtils::alignRight(bytes _bytes)
 	return bytes(32 - _bytes.size(), 0) + std::move(_bytes);
 }
 
-bytes BytesUtils::applyAlign(
-	Parameter::Alignment _alignment,
-	ABIType& _abiType,
-	bytes _bytes
-)
+bytes BytesUtils::applyAlign(Parameter::Alignment _alignment, ABIType& _abiType, bytes _bytes)
 {
 	if (_alignment != Parameter::Alignment::None)
 		_abiType.alignDeclared = true;
@@ -190,17 +186,17 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 		auto const v = _bytes[i];
 		switch (v)
 		{
-			case '\0':
-				os << "\\0";
-				break;
-			case '\n':
-				os << "\\n";
-				break;
-			default:
-				if (isprint(v))
-					os << v;
-				else
-					os << "\\x" << toHex(v);
+		case '\0':
+			os << "\\0";
+			break;
+		case '\n':
+			os << "\\n";
+			break;
+		default:
+			if (isprint(v))
+				os << v;
+			else
+				os << "\\x" << toHex(v);
 		}
 	}
 	os << "\"";
@@ -211,7 +207,8 @@ string BytesUtils::formatString(bytes const& _bytes, size_t _cutOff)
 string BytesUtils::formatRawBytes(
 	bytes const& _bytes,
 	solidity::frontend::test::ParameterList const& _parameters,
-	string _linePrefix)
+	string _linePrefix
+)
 {
 	stringstream os;
 	ParameterList parameters;
@@ -236,10 +233,7 @@ string BytesUtils::formatRawBytes(
 	return os.str();
 }
 
-string BytesUtils::formatBytes(
-	bytes const& _bytes,
-	ABIType const& _abiType
-)
+string BytesUtils::formatBytes(bytes const& _bytes, ABIType const& _abiType)
 {
 	stringstream os;
 
@@ -259,12 +253,14 @@ string BytesUtils::formatBytes(
 			unsigned int value = u256(_bytes).convert_to<unsigned int>();
 			if (value < 0x10)
 				os << decimal;
-			else if (value >= 0x10 && value <= 0xff) {
+			else if (value >= 0x10 && value <= 0xff)
+			{
 				os << hexadecimal;
 			}
 			else
 			{
-				auto entropy = [](std::string const& str) -> double {
+				auto entropy = [](std::string const& str) -> double
+				{
 					double result = 0;
 					map<char, int> frequencies;
 					for (char c: str)
@@ -330,11 +326,8 @@ string BytesUtils::formatBytesRange(
 		bytes byteRange{it, it + static_cast<long>(parameter.abiType.size)};
 
 		if (!parameter.matchesBytes(byteRange))
-			AnsiColorized(
-				os,
-				_highlight,
-				{util::formatting::RED_BACKGROUND}
-			) << formatBytes(byteRange, parameter.abiType);
+			AnsiColorized(os, _highlight, {util::formatting::RED_BACKGROUND})
+				<< formatBytes(byteRange, parameter.abiType);
 		else
 			os << parameter.rawString;
 
@@ -349,10 +342,8 @@ string BytesUtils::formatBytesRange(
 
 size_t BytesUtils::countRightPaddedZeros(bytes const& _bytes)
 {
-	return static_cast<size_t>(find_if(
-		_bytes.rbegin(),
-		_bytes.rend(),
-		[](uint8_t b) { return b != '\0'; }
-	) - _bytes.rbegin());
+	return static_cast<size_t>(
+		find_if(_bytes.rbegin(), _bytes.rend(), [](uint8_t b) { return b != '\0'; }) -
+		_bytes.rbegin()
+	);
 }
-

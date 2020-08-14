@@ -22,7 +22,6 @@
 
 namespace solidity::yul
 {
-
 class AssignmentCounter;
 
 /**
@@ -78,7 +77,9 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	explicit SSAReverser(AssignmentCounter const& _assignmentCounter): m_assignmentCounter(_assignmentCounter) {}
+	explicit SSAReverser(AssignmentCounter const& _assignmentCounter):
+		m_assignmentCounter(_assignmentCounter)
+	{}
 
 	AssignmentCounter const& m_assignmentCounter;
 };

@@ -28,8 +28,7 @@ ReturnInfo::ReturnInfo(EVMVersion const& _evmVersion, FunctionType const& _funct
 {
 	FunctionType::Kind const funKind = _functionType.kind();
 	bool const haveReturndatacopy = _evmVersion.supportsReturndata();
-	bool const returnSuccessConditionAndReturndata =
-		funKind == FunctionType::Kind::BareCall ||
+	bool const returnSuccessConditionAndReturndata = funKind == FunctionType::Kind::BareCall ||
 		funKind == FunctionType::Kind::BareDelegateCall ||
 		funKind == FunctionType::Kind::BareStaticCall;
 

@@ -31,7 +31,6 @@
 
 namespace solidity::yul
 {
-
 class NameDispenser;
 
 /**

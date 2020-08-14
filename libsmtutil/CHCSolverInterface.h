@@ -29,7 +29,6 @@
 
 namespace solidity::smtutil
 {
-
 class CHCSolverInterface
 {
 public:
@@ -55,9 +54,7 @@ public:
 
 	/// Takes a function application _expr and checks for reachability.
 	/// @returns solving result and a counterexample graph, if possible.
-	virtual std::pair<CheckResult, CexGraph> query(
-		Expression const& _expr
-	) = 0;
+	virtual std::pair<CheckResult, CexGraph> query(Expression const& _expr) = 0;
 };
 
 }

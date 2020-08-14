@@ -30,7 +30,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 
 /**

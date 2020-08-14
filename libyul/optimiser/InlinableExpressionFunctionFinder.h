@@ -28,7 +28,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Optimiser component that finds functions that can be
  * inlined inside functional expressions, i.e. functions that
@@ -41,7 +40,6 @@ namespace solidity::yul
 class InlinableExpressionFunctionFinder: public ASTWalker
 {
 public:
-
 	std::map<YulString, FunctionDefinition const*> const& inlinableFunctions() const
 	{
 		return m_inlinableFunctions;

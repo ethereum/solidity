@@ -62,20 +62,14 @@ smtutil::Expression SymbolicVariable::currentValue(frontend::TypePointer const&)
 	return valueAtIndex(m_ssa->index());
 }
 
-string SymbolicVariable::currentName() const
-{
-	return uniqueSymbol(m_ssa->index());
-}
+string SymbolicVariable::currentName() const { return uniqueSymbol(m_ssa->index()); }
 
 smtutil::Expression SymbolicVariable::valueAtIndex(unsigned _index) const
 {
 	return m_context.newVariable(uniqueSymbol(_index), m_sort);
 }
 
-string SymbolicVariable::nameAtIndex(unsigned _index) const
-{
-	return uniqueSymbol(_index);
-}
+string SymbolicVariable::nameAtIndex(unsigned _index) const { return uniqueSymbol(_index); }
 
 string SymbolicVariable::uniqueSymbol(unsigned _index) const
 {
@@ -121,13 +115,14 @@ SymbolicIntVariable::SymbolicIntVariable(
 	solAssert(isNumber(m_type->category()), "");
 }
 
-SymbolicAddressVariable::SymbolicAddressVariable(
-	string _uniqueName,
-	EncodingContext& _context
-):
-	SymbolicIntVariable(TypeProvider::uint(160), TypeProvider::uint(160), move(_uniqueName), _context)
-{
-}
+SymbolicAddressVariable::SymbolicAddressVariable(string _uniqueName, EncodingContext& _context):
+	SymbolicIntVariable(
+		TypeProvider::uint(160),
+		TypeProvider::uint(160),
+		move(_uniqueName),
+		_context
+	)
+{}
 
 SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 	frontend::TypePointer _originalType,
@@ -135,9 +130,13 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 	string _uniqueName,
 	EncodingContext& _context
 ):
-	SymbolicIntVariable(TypeProvider::uint(_numBytes * 8), _originalType, move(_uniqueName), _context)
-{
-}
+	SymbolicIntVariable(
+		TypeProvider::uint(_numBytes * 8),
+		_originalType,
+		move(_uniqueName),
+		_context
+	)
+{}
 
 SymbolicFunctionVariable::SymbolicFunctionVariable(
 	frontend::TypePointer _type,
@@ -161,15 +160,13 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	solAssert(m_sort->kind == Kind::Function, "");
 }
 
-smtutil::Expression SymbolicFunctionVariable::currentValue(frontend::TypePointer const& _targetType) const
+smtutil::Expression SymbolicFunctionVariable::currentValue(frontend::TypePointer const& _targetType)
+	const
 {
 	return m_abstract.currentValue(_targetType);
 }
 
-smtutil::Expression SymbolicFunctionVariable::currentFunctionValue() const
-{
-	return m_declaration;
-}
+smtutil::Expression SymbolicFunctionVariable::currentFunctionValue() const { return m_declaration; }
 
 smtutil::Expression SymbolicFunctionVariable::valueAtIndex(unsigned _index) const
 {
@@ -201,7 +198,8 @@ smtutil::Expression SymbolicFunctionVariable::increaseIndex()
 	return m_abstract.currentValue();
 }
 
-smtutil::Expression SymbolicFunctionVariable::operator()(vector<smtutil::Expression> _arguments) const
+smtutil::Expression SymbolicFunctionVariable::operator()(vector<smtutil::Expression> _arguments)
+	const
 {
 	return m_declaration(_arguments);
 }
@@ -268,11 +266,7 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	EncodingContext& _context
 ):
 	SymbolicVariable(_type, _originalType, move(_uniqueName), _context),
-	m_pair(
-		smtSort(*_type),
-		m_uniqueName + "_length_pair",
-		m_context
-	)
+	m_pair(smtSort(*_type), m_uniqueName + "_length_pair", m_context)
 {
 	solAssert(isArray(m_type->category()) || isMapping(m_type->category()), "");
 }
@@ -296,7 +290,8 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	solAssert(m_sort->kind == Kind::Array, "");
 }
 
-smtutil::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer const& _targetType) const
+smtutil::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer const& _targetType)
+	const
 {
 	optional<smtutil::Expression> conversion = symbolicTypeConversion(m_originalType, _targetType);
 	if (conversion)
@@ -310,12 +305,6 @@ smtutil::Expression SymbolicArrayVariable::valueAtIndex(unsigned _index) const
 	return m_pair.valueAtIndex(_index);
 }
 
-smtutil::Expression SymbolicArrayVariable::elements()
-{
-	return m_pair.component(0);
-}
+smtutil::Expression SymbolicArrayVariable::elements() { return m_pair.component(0); }
 
-smtutil::Expression SymbolicArrayVariable::length()
-{
-	return m_pair.component(1);
-}
+smtutil::Expression SymbolicArrayVariable::length() { return m_pair.component(1); }

@@ -27,7 +27,6 @@
 
 namespace solidity::evmasm
 {
-
 /**
  * Rule that contains a pattern, an action that can be applied
  * after the pattern has matched and a bool that indicates
@@ -60,10 +59,11 @@ struct EVMBuiltins
 {
 	using InstrType = Instruction;
 
-	template<Instruction inst>
+	template <Instruction inst>
 	struct PatternGenerator
 	{
-		template<typename... Args> constexpr Pattern operator()(Args&&... _args) const
+		template <typename... Args>
+		constexpr Pattern operator()(Args&&... _args) const
 		{
 			return {inst, {std::forward<Args>(_args)...}};
 		}
@@ -72,7 +72,8 @@ struct EVMBuiltins
 	struct PatternGeneratorInstance
 	{
 		Instruction instruction;
-		template<typename... Args> constexpr Pattern operator()(Args&&... _args) const
+		template <typename... Args>
+		constexpr Pattern operator()(Args&&... _args) const
 		{
 			return {instruction, {std::forward<Args>(_args)...}};
 		}

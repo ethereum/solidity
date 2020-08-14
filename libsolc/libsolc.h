@@ -41,7 +41,8 @@ extern "C" {
 /// @param _context The readContext passed to solidity_compile. Can be NULL.
 /// @param _kind The kind of callback (a string).
 /// @param _data The data for the callback (a string).
-/// @param o_contents A pointer to the contents of the file, if found. Allocated via solidity_alloc().
+/// @param o_contents A pointer to the contents of the file, if found. Allocated via
+/// solidity_alloc().
 /// @param o_error A pointer to an error message, if there is one.
 ///
 /// The file (as well as error) contents that is to be allocated by the callback
@@ -50,7 +51,9 @@ extern "C" {
 /// of the deallocation.
 ///
 /// If the callback is not supported, *o_contents and *o_error must be set to NULL.
-typedef void (*CStyleReadFileCallback)(void* _context, char const* _kind, char const* _data, char** o_contents, char** o_error);
+typedef void (
+	*CStyleReadFileCallback
+)(void* _context, char const* _kind, char const* _data, char** o_contents, char** o_error);
 
 /// Returns the complete license document.
 ///
@@ -87,13 +90,15 @@ void solidity_free(char* _data) SOLC_NOEXCEPT;
 ///                      Please see the documentation of the type for details.
 /// @param _readContext An optional context pointer passed to _readCallback. Can be NULL.
 ///
-/// @returns A pointer to the result. The pointer returned must be freed by the caller using solidity_free() or solidity_reset().
-char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) SOLC_NOEXCEPT;
+/// @returns A pointer to the result. The pointer returned must be freed by the caller using
+/// solidity_free() or solidity_reset().
+char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext)
+	SOLC_NOEXCEPT;
 
 /// Frees up any allocated memory.
 ///
-/// NOTE: the pointer returned by solidity_compile as well as any other pointer retrieved via solidity_alloc()
-/// is invalid after calling this!
+/// NOTE: the pointer returned by solidity_compile as well as any other pointer retrieved via
+/// solidity_alloc() is invalid after calling this!
 void solidity_reset() SOLC_NOEXCEPT;
 
 #ifdef __cplusplus

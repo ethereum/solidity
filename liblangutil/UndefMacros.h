@@ -38,9 +38,11 @@
 #undef interface
 #endif
 
-#elif defined(DELETE) || defined(IN) || defined(VOID) || defined(THIS) || defined(CONST) || defined(interface)
+#elif defined(DELETE) || defined(IN) || defined(VOID) || defined(THIS) || defined(CONST) || \
+	defined(interface)
 
-#error "The preceding macros in this header file are reserved for V8's "\
+#error \
+	"The preceding macros in this header file are reserved for V8's "\
 "TOKEN_LIST. Please add a platform specific define above to undefine "\
 "overlapping macros."
 

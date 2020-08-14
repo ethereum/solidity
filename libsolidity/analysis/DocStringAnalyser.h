@@ -27,7 +27,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * Analyses and validates the doc strings.
  * Stores the parsing results in the AST annotations and reports errors.

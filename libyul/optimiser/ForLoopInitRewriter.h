@@ -22,7 +22,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Rewrites ForLoop by moving the pre statement block in front of the ForLoop.
  * Requirements:
@@ -32,10 +31,7 @@ class ForLoopInitRewriter: public ASTModifier
 {
 public:
 	static constexpr char const* name{"ForLoopInitRewriter"};
-	static void run(OptimiserStepContext&, Block& _ast)
-	{
-		ForLoopInitRewriter{}(_ast);
-	}
+	static void run(OptimiserStepContext&, Block& _ast) { ForLoopInitRewriter{}(_ast); }
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;

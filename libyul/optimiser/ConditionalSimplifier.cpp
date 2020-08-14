@@ -42,12 +42,12 @@ void ConditionalSimplifier::operator()(Switch& _switch)
 		if (_case.value)
 		{
 			(*this)(*_case.value);
-			_case.body.statements.insert(_case.body.statements.begin(),
+			_case.body.statements.insert(
+				_case.body.statements.begin(),
 				Assignment{
 					_case.body.location,
 					{Identifier{_case.body.location, expr}},
-					make_unique<Expression>(*_case.value)
-				}
+					make_unique<Expression>(*_case.value)}
 			);
 		}
 		(*this)(_case.body);
@@ -64,12 +64,9 @@ void ConditionalSimplifier::operator()(Block& _block)
 			if (holds_alternative<If>(_s))
 			{
 				If& _if = std::get<If>(_s);
-				if (
-					holds_alternative<Identifier>(*_if.condition) &&
-					!_if.body.statements.empty() &&
+				if (holds_alternative<Identifier>(*_if.condition) && !_if.body.statements.empty() &&
 					TerminationFinder(m_dialect).controlFlowKind(_if.body.statements.back()) !=
-						TerminationFinder::ControlFlow::FlowOut
-				)
+						TerminationFinder::ControlFlow::FlowOut)
 				{
 					YulString condition = std::get<Identifier>(*_if.condition).name;
 					langutil::SourceLocation location = _if.location;
@@ -78,8 +75,9 @@ void ConditionalSimplifier::operator()(Block& _block)
 						Assignment{
 							location,
 							{Identifier{location, condition}},
-							make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
-						}
+							make_unique<Expression>(
+								m_dialect.zeroLiteralForType(m_dialect.boolType)
+							)}
 					);
 				}
 			}

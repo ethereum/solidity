@@ -34,7 +34,6 @@ using namespace solidity::util;
 
 namespace
 {
-
 static char const* upperHexChars = "0123456789ABCDEF";
 static char const* lowerHexChars = "0123456789abcdef";
 
@@ -42,14 +41,15 @@ static char const* lowerHexChars = "0123456789abcdef";
 
 string solidity::util::toHex(uint8_t _data, HexCase _case)
 {
-	assertThrow(_case != HexCase::Mixed, BadHexCase, "Mixed case can only be used for byte arrays.");
+	assertThrow(
+		_case != HexCase::Mixed,
+		BadHexCase,
+		"Mixed case can only be used for byte arrays."
+	);
 
 	char const* chars = _case == HexCase::Upper ? upperHexChars : lowerHexChars;
 
-	return std::string{
-		chars[(unsigned(_data) / 16) & 0xf],
-		chars[unsigned(_data) & 0xf]
-	};
+	return std::string{chars[(unsigned(_data) / 16) & 0xf], chars[unsigned(_data) & 0xf]};
 }
 
 string solidity::util::toHex(bytes const& _data, HexPrefix _prefix, HexCase _case)
@@ -131,10 +131,8 @@ bool solidity::util::passesAddressChecksum(string const& _str, bool _strict)
 	if (s.length() != 42)
 		return false;
 
-	if (!_strict && (
-		s.find_first_of("abcdef") == string::npos ||
-		s.find_first_of("ABCDEF") == string::npos
-	))
+	if (!_strict &&
+		(s.find_first_of("abcdef") == string::npos || s.find_first_of("ABCDEF") == string::npos))
 		return true;
 
 	return s == solidity::util::getChecksummedAddress(s);
@@ -186,7 +184,11 @@ bool solidity::util::isValidDecimal(string const& _string)
 
 string solidity::util::formatAsStringOrNumber(string const& _value)
 {
-	assertThrow(_value.length() <= 32, StringTooLong, "String to be formatted longer than 32 bytes.");
+	assertThrow(
+		_value.length() <= 32,
+		StringTooLong,
+		"String to be formatted longer than 32 bytes."
+	);
 
 	for (auto const& c: _value)
 		if (c <= 0x1f || c >= 0x7f || c == '"')
@@ -220,7 +222,7 @@ string solidity::util::escapeAndQuoteString(string const& _input)
 		else if (!isprint(c, locale::classic()))
 		{
 			ostringstream o;
-			o << "\\x" << std::hex << setfill('0') << setw(2) << (unsigned)(unsigned char)(c);
+			o << "\\x" << std::hex << setfill('0') << setw(2) << (unsigned) (unsigned char) (c);
 			out += o.str();
 		}
 		else

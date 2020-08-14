@@ -37,7 +37,6 @@ using namespace solidity::yul;
 
 namespace solidity::phaser::test
 {
-
 class ProgramCacheFixture
 {
 protected:
@@ -59,8 +58,9 @@ protected:
 
 	static set<string> cachedKeys(ProgramCache const& _programCache)
 	{
-		 set<string> keys;
-		for (auto pair = _programCache.entries().begin(); pair != _programCache.entries().end(); ++pair)
+		set<string> keys;
+		for (auto pair = _programCache.entries().begin(); pair != _programCache.entries().end();
+			 ++pair)
 			keys.insert(pair->first);
 
 		return keys;
@@ -83,7 +83,10 @@ BOOST_AUTO_TEST_CASE(CacheStats_operator_plus_should_add_stats_together)
 	BOOST_CHECK(statsA + statsB == statsC);
 }
 
-BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_apply_optimisation_steps_to_program, ProgramCacheFixture)
+BOOST_FIXTURE_TEST_CASE(
+	optimiseProgram_should_apply_optimisation_steps_to_program,
+	ProgramCacheFixture
+)
 {
 	Program expectedProgram = optimisedProgram(m_program, "IuO");
 	assert(toString(expectedProgram) != toString(m_program));
@@ -117,7 +120,10 @@ BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_store_programs_for_all_prefixes, 
 	BOOST_TEST(toString(*m_programCache.find("IuO")) == toString(programIuO));
 }
 
-BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_repeat_the_chromosome_requested_number_of_times, ProgramCacheFixture)
+BOOST_FIXTURE_TEST_CASE(
+	optimiseProgram_should_repeat_the_chromosome_requested_number_of_times,
+	ProgramCacheFixture
+)
 {
 	string steps = "IuOIuO";
 
@@ -139,7 +145,10 @@ BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_repeat_the_chromosome_requested_n
 	}
 }
 
-BOOST_FIXTURE_TEST_CASE(optimiseProgram_should_reuse_the_longest_prefix_and_move_it_to_the_next_round, ProgramCacheFixture)
+BOOST_FIXTURE_TEST_CASE(
+	optimiseProgram_should_reuse_the_longest_prefix_and_move_it_to_the_next_round,
+	ProgramCacheFixture
+)
 {
 	BOOST_TEST(m_programCache.currentRound() == 0);
 

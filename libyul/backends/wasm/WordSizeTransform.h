@@ -31,7 +31,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * A stage that replace every u256 variable with four u64 variables.
  * This transformation stage is required because values in EVM are 256 bits,
@@ -48,7 +47,8 @@ namespace solidity::yul
  * mul(a1, a2, a3, a4, b1, b2, b3, b4) -> c1, c2, c3, c4
  *
  * the value of c4 should be
- *	((a1*(2^192) + a2*(2^128) + a3(2^64) + a4) * (b1*(2^192) + b2*(2^128) + b3(2^64) + b4)) & ((1<<64)-1)
+ *	((a1*(2^192) + a2*(2^128) + a3(2^64) + a4) * (b1*(2^192) + b2*(2^128) + b3(2^64) + b4)) &
+ *((1<<64)-1)
  *
  * The resulting code still uses the EVM builtin functions but assumes that they
  * take four times the parameters and each of type u64.

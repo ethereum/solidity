@@ -32,7 +32,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Occurrence of a variable in a block of control flow.
  * Stores the declaration of the referenced variable, the
@@ -50,18 +49,23 @@ public:
 		Assignment,
 		InlineAssembly
 	};
-	VariableOccurrence(VariableDeclaration const& _declaration, Kind _kind, std::optional<langutil::SourceLocation>  _occurrence = {}):
+	VariableOccurrence(
+		VariableDeclaration const& _declaration,
+		Kind _kind,
+		std::optional<langutil::SourceLocation> _occurrence = {}
+	):
 		m_declaration(_declaration), m_occurrenceKind(_kind), m_occurrence(std::move(_occurrence))
-	{
-	}
+	{}
 
 	/// Defines a deterministic order on variable occurrences.
 	bool operator<(VariableOccurrence const& _rhs) const
 	{
 		if (m_occurrence && _rhs.m_occurrence)
 		{
-			if (*m_occurrence < *_rhs.m_occurrence) return true;
-			if (*_rhs.m_occurrence < *m_occurrence) return false;
+			if (*m_occurrence < *_rhs.m_occurrence)
+				return true;
+			if (*_rhs.m_occurrence < *m_occurrence)
+				return false;
 		}
 		else if (_rhs.m_occurrence)
 			return true;
@@ -69,15 +73,17 @@ public:
 			return false;
 
 		using KindCompareType = std::underlying_type<VariableOccurrence::Kind>::type;
-		return
-			std::make_pair(m_declaration.id(), static_cast<KindCompareType>(m_occurrenceKind)) <
-			std::make_pair(_rhs.m_declaration.id(), static_cast<KindCompareType>(_rhs.m_occurrenceKind))
-		;
+		return std::make_pair(m_declaration.id(), static_cast<KindCompareType>(m_occurrenceKind)) <
+			std::make_pair(
+				   _rhs.m_declaration.id(),
+				   static_cast<KindCompareType>(_rhs.m_occurrenceKind)
+			);
 	}
 
 	VariableDeclaration const& declaration() const { return m_declaration; }
 	Kind kind() const { return m_occurrenceKind; };
 	std::optional<langutil::SourceLocation> const& occurrence() const { return m_occurrence; }
+
 private:
 	/// Declaration of the occurring variable.
 	VariableDeclaration const& m_declaration;
@@ -143,9 +149,11 @@ public:
 	{
 	public:
 		CFGNode* newNode();
+
 	private:
 		std::vector<std::unique_ptr<CFGNode>> m_nodes;
 	};
+
 private:
 	langutil::ErrorReporter& m_errorReporter;
 

@@ -24,7 +24,6 @@
 
 namespace solidity::frontend::test
 {
-
 using ABITypes = std::vector<ABIType>;
 
 /**

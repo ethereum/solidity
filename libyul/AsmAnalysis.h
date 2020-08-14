@@ -45,7 +45,6 @@ struct SourceLocation;
 
 namespace solidity::yul
 {
-
 struct AsmAnalysisInfo;
 
 /**
@@ -77,7 +76,10 @@ public:
 
 	/// Performs analysis on the outermost code of the given object and returns the analysis info.
 	/// Asserts on failure.
-	static AsmAnalysisInfo analyzeStrictAssertCorrect(Dialect const& _dialect, Object const& _object);
+	static AsmAnalysisInfo analyzeStrictAssertCorrect(
+		Dialect const& _dialect,
+		Object const& _object
+	);
 
 	std::vector<YulString> operator()(Literal const& _literal);
 	std::vector<YulString> operator()(Identifier const&);
@@ -89,9 +91,9 @@ public:
 	void operator()(If const& _if);
 	void operator()(Switch const& _switch);
 	void operator()(ForLoop const& _forLoop);
-	void operator()(Break const&) { }
-	void operator()(Continue const&) { }
-	void operator()(Leave const&) { }
+	void operator()(Break const&) {}
+	void operator()(Continue const&) {}
+	void operator()(Leave const&) {}
 	void operator()(Block const& _block);
 
 private:
@@ -110,13 +112,26 @@ private:
 	Scope& scope(Block const* _block);
 	void expectValidIdentifier(YulString _identifier, langutil::SourceLocation const& _location);
 	void expectValidType(YulString _type, langutil::SourceLocation const& _location);
-	void expectType(YulString _expectedType, YulString _givenType, langutil::SourceLocation const& _location);
+	void expectType(
+		YulString _expectedType,
+		YulString _givenType,
+		langutil::SourceLocation const& _location
+	);
 
-	bool validateInstructions(evmasm::Instruction _instr, langutil::SourceLocation const& _location);
-	bool validateInstructions(std::string const& _instrIdentifier, langutil::SourceLocation const& _location);
+	bool validateInstructions(
+		evmasm::Instruction _instr,
+		langutil::SourceLocation const& _location
+	);
+	bool validateInstructions(
+		std::string const& _instrIdentifier,
+		langutil::SourceLocation const& _location
+	);
 	bool validateInstructions(FunctionCall const& _functionCall)
 	{
-		return validateInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
+		return validateInstructions(
+			_functionCall.functionName.name.str(),
+			_functionCall.functionName.location
+		);
 	}
 
 	yul::ExternalIdentifierAccess::Resolver m_resolver;

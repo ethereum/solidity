@@ -41,17 +41,17 @@ bool anyDataStoredInStorage(TypePointers const& _pointers)
 
 Json::Value ABI::generate(ContractDefinition const& _contractDef)
 {
-	auto compare = [](Json::Value const& _a, Json::Value const& _b) -> bool {
-		return make_tuple(_a["type"], _a["name"]) < make_tuple(_b["type"], _b["name"]);
-	};
+	auto compare = [](Json::Value const& _a, Json::Value const& _b) -> bool
+	{ return make_tuple(_a["type"], _a["name"]) < make_tuple(_b["type"], _b["name"]); };
 	multiset<Json::Value, decltype(compare)> abi(compare);
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
-		if (_contractDef.isLibrary() && (
-			it.second->stateMutability() > StateMutability::View ||
-			anyDataStoredInStorage(it.second->parameterTypes() + it.second->returnParameterTypes())
-		))
+		if (_contractDef.isLibrary() &&
+			(it.second->stateMutability() > StateMutability::View ||
+			 anyDataStoredInStorage(
+				 it.second->parameterTypes() + it.second->returnParameterTypes()
+			 )))
 			continue;
 
 		FunctionType const* externalFunctionType = it.second->interfaceFunctionType();
@@ -59,7 +59,8 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		Json::Value method;
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
-		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
+		method["stateMutability"] =
+			stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
 			externalFunctionType->parameterTypes(),
@@ -82,7 +83,8 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		solAssert(!!externalFunctionType, "");
 		Json::Value method;
 		method["type"] = "constructor";
-		method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
+		method["stateMutability"] =
+			stateMutabilityToString(externalFunctionType->stateMutability());
 		method["inputs"] = formatTypeList(
 			externalFunctionType->parameterNames(),
 			externalFunctionType->parameterTypes(),
@@ -91,14 +93,17 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		);
 		abi.emplace(std::move(method));
 	}
-	for (auto const* fallbackOrReceive: {_contractDef.fallbackFunction(), _contractDef.receiveFunction()})
+	for (auto const* fallbackOrReceive:
+		 {_contractDef.fallbackFunction(), _contractDef.receiveFunction()})
 		if (fallbackOrReceive)
 		{
-			auto const* externalFunctionType = FunctionType(*fallbackOrReceive).interfaceFunctionType();
+			auto const* externalFunctionType =
+				FunctionType(*fallbackOrReceive).interfaceFunctionType();
 			solAssert(!!externalFunctionType, "");
 			Json::Value method;
 			method["type"] = TokenTraits::toString(fallbackOrReceive->kind());
-			method["stateMutability"] = stateMutabilityToString(externalFunctionType->stateMutability());
+			method["stateMutability"] =
+				stateMutabilityToString(externalFunctionType->stateMutability());
 			abi.emplace(std::move(method));
 		}
 	for (auto const& it: _contractDef.interfaceEvents())
@@ -155,8 +160,10 @@ Json::Value ABI::formatType(
 	Json::Value ret;
 	ret["name"] = _name;
 	ret["internalType"] = _solidityType.toString(true);
-	string suffix = (_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)) ? " storage" : "";
-	if (_encodingType.isValueType() || (_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)))
+	string suffix =
+		(_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)) ? " storage" : "";
+	if (_encodingType.isValueType() ||
+		(_forLibrary && _encodingType.dataStoredIn(DataLocation::Storage)))
 		ret["type"] = _encodingType.canonicalName() + suffix;
 	else if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(&_encodingType))
 	{

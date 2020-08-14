@@ -24,29 +24,29 @@ typedef struct evmc_vm* (*evmc_create_fn)(void);
 /** Error codes for the EVMC loader. */
 enum evmc_loader_error_code
 {
-    /** The loader succeeded. */
-    EVMC_LOADER_SUCCESS = 0,
+	/** The loader succeeded. */
+	EVMC_LOADER_SUCCESS = 0,
 
-    /** The loader cannot open the given file name. */
-    EVMC_LOADER_CANNOT_OPEN = 1,
+	/** The loader cannot open the given file name. */
+	EVMC_LOADER_CANNOT_OPEN = 1,
 
-    /** The VM create function not found. */
-    EVMC_LOADER_SYMBOL_NOT_FOUND = 2,
+	/** The VM create function not found. */
+	EVMC_LOADER_SYMBOL_NOT_FOUND = 2,
 
-    /** The invalid argument value provided. */
-    EVMC_LOADER_INVALID_ARGUMENT = 3,
+	/** The invalid argument value provided. */
+	EVMC_LOADER_INVALID_ARGUMENT = 3,
 
-    /** The creation of a VM instance has failed. */
-    EVMC_LOADER_VM_CREATION_FAILURE = 4,
+	/** The creation of a VM instance has failed. */
+	EVMC_LOADER_VM_CREATION_FAILURE = 4,
 
-    /** The ABI version of the VM instance has mismatched. */
-    EVMC_LOADER_ABI_VERSION_MISMATCH = 5,
+	/** The ABI version of the VM instance has mismatched. */
+	EVMC_LOADER_ABI_VERSION_MISMATCH = 5,
 
-    /** The VM option is invalid. */
-    EVMC_LOADER_INVALID_OPTION_NAME = 6,
+	/** The VM option is invalid. */
+	EVMC_LOADER_INVALID_OPTION_NAME = 6,
 
-    /** The VM option value is invalid. */
-    EVMC_LOADER_INVALID_OPTION_VALUE = 7
+	/** The VM option value is invalid. */
+	EVMC_LOADER_INVALID_OPTION_VALUE = 7
 };
 
 /**
@@ -145,8 +145,10 @@ struct evmc_vm* evmc_load_and_create(const char* filename, enum evmc_loader_erro
  *                    ::EVMC_LOADER_SUCCESS on success or any other error code as described above.
  * @return            The pointer to the created VM or NULL in case of error.
  */
-struct evmc_vm* evmc_load_and_configure(const char* config,
-                                        enum evmc_loader_error_code* error_code);
+struct evmc_vm* evmc_load_and_configure(
+	const char* config,
+	enum evmc_loader_error_code* error_code
+);
 
 /**
  * Returns the human-readable message describing the most recent error

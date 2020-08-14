@@ -35,13 +35,17 @@ using namespace solidity::frontend;
 
 namespace
 {
-
-void copyMissingTags(StructurallyDocumentedAnnotation& _target, set<CallableDeclaration const*> const& _baseFunctions)
+void copyMissingTags(
+	StructurallyDocumentedAnnotation& _target,
+	set<CallableDeclaration const*> const& _baseFunctions
+)
 {
 	if (_baseFunctions.size() != 1)
 		return;
 
-	auto& sourceDoc = dynamic_cast<StructurallyDocumentedAnnotation const&>((*_baseFunctions.begin())->annotation());
+	auto& sourceDoc = dynamic_cast<StructurallyDocumentedAnnotation const&>(
+		(*_baseFunctions.begin())->annotation()
+	);
 
 	set<string> existingTags;
 
@@ -53,12 +57,18 @@ void copyMissingTags(StructurallyDocumentedAnnotation& _target, set<CallableDecl
 			_target.docTags.emplace(tag, content);
 }
 
-CallableDeclaration const* findBaseCallable(set<CallableDeclaration const*> const& _baseFunctions, int64_t _contractId)
+CallableDeclaration const* findBaseCallable(
+	set<CallableDeclaration const*> const& _baseFunctions,
+	int64_t _contractId
+)
 {
 	for (CallableDeclaration const* baseFuncCandidate: _baseFunctions)
 		if (baseFuncCandidate->annotation().contract->id() == _contractId)
 			return baseFuncCandidate;
-		else if (auto callable = findBaseCallable(baseFuncCandidate->annotation().baseFunctions, _contractId))
+		else if (
+			auto callable =
+				findBaseCallable(baseFuncCandidate->annotation().baseFunctions, _contractId)
+		)
 			return callable;
 
 	return nullptr;
@@ -66,7 +76,11 @@ CallableDeclaration const* findBaseCallable(set<CallableDeclaration const*> cons
 
 bool parameterNamesEqual(CallableDeclaration const& _a, CallableDeclaration const& _b)
 {
-	return boost::range::equal(_a.parameters(), _b.parameters(), [](auto const& pa, auto const& pb) { return pa->name() == pb->name(); });
+	return boost::range::equal(
+		_a.parameters(),
+		_b.parameters(),
+		[](auto const& pa, auto const& pb) { return pa->name() == pb->name(); }
+	);
 }
 
 }
@@ -90,7 +104,11 @@ bool DocStringAnalyser::visit(VariableDeclaration const& _variable)
 	if (!_variable.isStateVariable())
 		return false;
 
-	if (CallableDeclaration const* baseFunction = resolveInheritDoc(_variable.annotation().baseFunctions, _variable, _variable.annotation()))
+	if (CallableDeclaration const* baseFunction = resolveInheritDoc(
+			_variable.annotation().baseFunctions,
+			_variable,
+			_variable.annotation()
+		))
 		copyMissingTags(_variable.annotation(), {baseFunction});
 	else if (_variable.annotation().docTags.empty())
 		copyMissingTags(_variable.annotation(), _variable.annotation().baseFunctions);
@@ -118,11 +136,11 @@ void DocStringAnalyser::handleCallable(
 	StructurallyDocumentedAnnotation& _annotation
 )
 {
-	if (CallableDeclaration const* baseFunction = resolveInheritDoc(_callable.annotation().baseFunctions, _node, _annotation))
+	if (CallableDeclaration const* baseFunction =
+			resolveInheritDoc(_callable.annotation().baseFunctions, _node, _annotation))
 		copyMissingTags(_annotation, {baseFunction});
 	else if (
-		_annotation.docTags.empty() &&
-		_callable.annotation().baseFunctions.size() == 1 &&
+		_annotation.docTags.empty() && _callable.annotation().baseFunctions.size() == 1 &&
 		parameterNamesEqual(_callable, **_callable.annotation().baseFunctions.begin())
 	)
 		copyMissingTags(_annotation, _callable.annotation().baseFunctions);
@@ -144,8 +162,8 @@ CallableDeclaration const* DocStringAnalyser::resolveInheritDoc(
 		4682_error,
 		_node.documentation()->location(),
 		"Documentation tag @inheritdoc references contract \"" +
-		_annotation.inheritdocReference->name() +
-		"\", but the contract does not contain a function that is overridden by this function."
+			_annotation.inheritdocReference->name() +
+			"\", but the contract does not contain a function that is overridden by this function."
 	);
 
 	return nullptr;

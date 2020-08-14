@@ -35,7 +35,6 @@
 
 namespace solidity::util
 {
-
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
 /// Transparently converts to/from the corresponding arithmetic type; this will
 /// assume the data contained in the hash is big-endian.
@@ -44,28 +43,55 @@ class FixedHash
 {
 public:
 	/// The corresponding arithmetic type.
-	using Arith = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<N * 8, N * 8, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
+	using Arith = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<
+		N * 8,
+		N * 8,
+		boost::multiprecision::unsigned_magnitude,
+		boost::multiprecision::unchecked,
+		void>>;
 
 	/// The size of the container.
-	enum { size = N };
+	enum
+	{
+		size = N
+	};
 
 	/// Method to convert from a string.
-	enum ConstructFromStringType { FromHex, FromBinary };
+	enum ConstructFromStringType
+	{
+		FromHex,
+		FromBinary
+	};
 
 	/// Method to convert from a string.
-	enum ConstructFromHashType { AlignLeft, AlignRight, FailIfDifferent };
+	enum ConstructFromHashType
+	{
+		AlignLeft,
+		AlignRight,
+		FailIfDifferent
+	};
 
 	/// Construct an empty hash.
 	explicit FixedHash() { m_data.fill(0); }
 
 	/// Construct from another hash, filling with zeroes or cropping as necessary.
-	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill(0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
+	template <unsigned M>
+	explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft)
+	{
+		m_data.fill(0);
+		unsigned c = std::min(M, N);
+		for (unsigned i = 0; i < c; ++i)
+			m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i];
+	}
 
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytes const& _array, ConstructFromHashType _sizeMismatchBehavior = FailIfDifferent)
+	explicit FixedHash(
+		bytes const& _array,
+		ConstructFromHashType _sizeMismatchBehavior = FailIfDifferent
+	)
 	{
 		if (_array.size() == N)
 			memcpy(m_data.data(), _array.data(), _array.size());
@@ -105,7 +131,13 @@ public:
 	}
 
 	/// Explicitly construct, copying from a  string.
-	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht) {}
+	explicit FixedHash(
+		std::string const& _s,
+		ConstructFromStringType _t = FromHex,
+		ConstructFromHashType _ht = FailIfDifferent
+	):
+		FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht)
+	{}
 
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
@@ -114,7 +146,15 @@ public:
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
 	/// Required to sort objects of this type or use them as map keys.
-	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
+	bool operator<(FixedHash const& _c) const
+	{
+		for (unsigned i = 0; i < N; ++i)
+			if (m_data[i] < _c.m_data[i])
+				return true;
+			else if (m_data[i] > _c.m_data[i])
+				return false;
+		return false;
+	}
 
 	/// @returns a particular byte from the hash.
 	uint8_t& operator[](unsigned _i) { return m_data[_i]; }
@@ -140,7 +180,7 @@ public:
 	bytes asBytes() const { return bytes(data(), data() + N); }
 
 private:
-	std::array<uint8_t, N> m_data;		///< The binary data.
+	std::array<uint8_t, N> m_data;	///< The binary data.
 };
 
 /// Stream I/O for the FixedHash class.
@@ -150,7 +190,7 @@ inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 	boost::io::ios_all_saver guard(_out);
 	_out << std::noshowbase << std::hex << std::setfill('0');
 	for (unsigned i = 0; i < N; ++i)
-		_out << std::setw(2) << (int)_h[i];
+		_out << std::setw(2) << (int) _h[i];
 	_out << std::dec;
 	return _out;
 }

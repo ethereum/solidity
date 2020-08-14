@@ -58,11 +58,16 @@ string solidity::yul::reindent(string const& _code)
 		boost::trim(line);
 
 	// Reduce multiple consecutive empty lines.
-	lines = fold(lines, vector<string>{}, [](auto&& _lines, auto&& _line) {
-		if (!(_line.empty() && !_lines.empty() && _lines.back().empty()))
-			_lines.emplace_back(std::move(_line));
-		return std::move(_lines);
-	});
+	lines = fold(
+		lines,
+		vector<string>{},
+		[](auto&& _lines, auto&& _line)
+		{
+			if (!(_line.empty() && !_lines.empty() && _lines.back().empty()))
+				_lines.emplace_back(std::move(_line));
+			return std::move(_lines);
+		}
+	);
 
 	stringstream out;
 	int depth = 0;
@@ -93,7 +98,10 @@ u256 solidity::yul::valueOfNumberLiteral(Literal const& _literal)
 	yulAssert(_literal.kind == LiteralKind::Number, "Expected number literal!");
 
 	std::string const& literalString = _literal.value.str();
-	yulAssert(isValidDecimal(literalString) || isValidHex(literalString), "Invalid number literal!");
+	yulAssert(
+		isValidDecimal(literalString) || isValidHex(literalString),
+		"Invalid number literal!"
+	);
 	return u256(literalString);
 }
 
@@ -121,18 +129,18 @@ u256 solidity::yul::valueOfLiteral(Literal const& _literal)
 {
 	switch (_literal.kind)
 	{
-		case LiteralKind::Number:
-			return valueOfNumberLiteral(_literal);
-		case LiteralKind::Boolean:
-			return valueOfBoolLiteral(_literal);
-		case LiteralKind::String:
-			return valueOfStringLiteral(_literal);
-		default:
-			yulAssert(false, "Unexpected literal kind!");
+	case LiteralKind::Number:
+		return valueOfNumberLiteral(_literal);
+	case LiteralKind::Boolean:
+		return valueOfBoolLiteral(_literal);
+	case LiteralKind::String:
+		return valueOfStringLiteral(_literal);
+	default:
+		yulAssert(false, "Unexpected literal kind!");
 	}
 }
 
-template<>
+template <>
 bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const
 {
 	if (std::make_tuple(_lhs.kind, _lhs.type) != std::make_tuple(_rhs.kind, _rhs.type))

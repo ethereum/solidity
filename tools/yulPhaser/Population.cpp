@@ -36,7 +36,6 @@ using namespace solidity::phaser;
 
 namespace solidity::phaser
 {
-
 ostream& operator<<(ostream& _stream, Individual const& _individual);
 ostream& operator<<(ostream& _stream, Population const& _population);
 
@@ -54,7 +53,8 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 	return (
 		(a.fitness < b.fitness) ||
 		(a.fitness == b.fitness && a.chromosome.length() < b.chromosome.length()) ||
-		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() &&
+		 toString(a.chromosome) < toString(b.chromosome))
 	);
 }
 
@@ -103,15 +103,13 @@ Population Population::mutate(Selection const& _selection, function<Mutation> _m
 	return Population(m_fitnessMetric, mutatedIndividuals);
 }
 
-Population Population::crossover(PairSelection const& _selection, function<Crossover> _crossover) const
+Population Population::crossover(PairSelection const& _selection, function<Crossover> _crossover)
+	const
 {
 	vector<Individual> crossedIndividuals;
 	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
 	{
-		auto childChromosome = _crossover(
-			m_individuals[i].chromosome,
-			m_individuals[j].chromosome
-		);
+		auto childChromosome = _crossover(m_individuals[i].chromosome, m_individuals[j].chromosome);
 		crossedIndividuals.emplace_back(move(childChromosome), *m_fitnessMetric);
 	}
 
@@ -128,10 +126,8 @@ tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
 	vector<Individual> crossedIndividuals;
 	for (auto const& [i, j]: _selection.materialise(m_individuals.size()))
 	{
-		auto children = _symmetricCrossover(
-			m_individuals[i].chromosome,
-			m_individuals[j].chromosome
-		);
+		auto children =
+			_symmetricCrossover(m_individuals[i].chromosome, m_individuals[j].chromosome);
 		crossedIndividuals.emplace_back(move(get<0>(children)), *m_fitnessMetric);
 		crossedIndividuals.emplace_back(move(get<1>(children)), *m_fitnessMetric);
 		indexSelected[i] = true;
@@ -151,14 +147,13 @@ tuple<Population, Population> Population::symmetricCrossoverWithRemainder(
 
 namespace solidity::phaser
 {
-
 Population operator+(Population _a, Population _b)
 {
 	// This operator is meant to be used only with populations sharing the same metric (and, to make
 	// things simple, "the same" here means the same exact object in memory).
 	assert(_a.m_fitnessMetric == _b.m_fitnessMetric);
 
-	using ::operator+; // Import the std::vector concat operator from CommonData.h
+	using ::operator+;	// Import the std::vector concat operator from CommonData.h
 	return Population(_a.m_fitnessMetric, move(_a.m_individuals) + move(_b.m_individuals));
 }
 

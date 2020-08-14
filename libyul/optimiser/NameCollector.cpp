@@ -34,14 +34,14 @@ void NameCollector::operator()(VariableDeclaration const& _varDecl)
 		m_names.emplace(var.name);
 }
 
-void NameCollector::operator ()(FunctionDefinition const& _funDef)
+void NameCollector::operator()(FunctionDefinition const& _funDef)
 {
 	m_names.emplace(_funDef.name);
 	for (auto const& arg: _funDef.parameters)
 		m_names.emplace(arg.name);
 	for (auto const& ret: _funDef.returnVariables)
 		m_names.emplace(ret.name);
-	ASTWalker::operator ()(_funDef);
+	ASTWalker::operator()(_funDef);
 }
 
 void ReferencesCounter::operator()(Identifier const& _identifier)
@@ -63,14 +63,20 @@ map<YulString, size_t> ReferencesCounter::countReferences(Block const& _block, C
 	return counter.references();
 }
 
-map<YulString, size_t> ReferencesCounter::countReferences(FunctionDefinition const& _function, CountWhat _countWhat)
+map<YulString, size_t> ReferencesCounter::countReferences(
+	FunctionDefinition const& _function,
+	CountWhat _countWhat
+)
 {
 	ReferencesCounter counter(_countWhat);
 	counter(_function);
 	return counter.references();
 }
 
-map<YulString, size_t> ReferencesCounter::countReferences(Expression const& _expression, CountWhat _countWhat)
+map<YulString, size_t> ReferencesCounter::countReferences(
+	Expression const& _expression,
+	CountWhat _countWhat
+)
 {
 	ReferencesCounter counter(_countWhat);
 	counter.visit(_expression);
@@ -104,7 +110,4 @@ void AssignmentsSinceContinue::operator()(Assignment const& _assignment)
 			m_names.emplace(var.name);
 }
 
-void AssignmentsSinceContinue::operator()(FunctionDefinition const&)
-{
-	yulAssert(false, "");
-}
+void AssignmentsSinceContinue::operator()(FunctionDefinition const&) { yulAssert(false, ""); }

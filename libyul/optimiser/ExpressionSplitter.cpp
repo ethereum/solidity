@@ -81,7 +81,8 @@ void ExpressionSplitter::operator()(Block& _block)
 	swap(saved, m_statementsToPrefix);
 
 	function<std::optional<vector<Statement>>(Statement&)> f =
-			[&](Statement& _statement) -> std::optional<vector<Statement>> {
+		[&](Statement& _statement) -> std::optional<vector<Statement>>
+	{
 		m_statementsToPrefix.clear();
 		visit(_statement);
 		if (m_statementsToPrefix.empty())
@@ -107,9 +108,7 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
 		location,
 		{{TypedName{location, var, type}}},
-		make_unique<Expression>(std::move(_expr))
-	});
+		make_unique<Expression>(std::move(_expr))});
 	_expr = Identifier{location, var};
 	m_typeInfo.setVariableType(var, type);
 }
-

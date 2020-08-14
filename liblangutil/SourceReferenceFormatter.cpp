@@ -38,7 +38,7 @@ void SourceReferenceFormatter::printSourceLocation(SourceLocation const* _locati
 void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 {
 	if (_ref.position.line < 0)
-		return; // Nothing we can print here
+		return;	 // Nothing we can print here
 
 	if (!_ref.multiline)
 	{
@@ -58,23 +58,24 @@ void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 		m_stream << endl;
 	}
 	else
-		m_stream <<
-			_ref.text <<
-			endl <<
-			string(static_cast<size_t>(_ref.startColumn), ' ') <<
-			"^ (Relevant source part starts here and spans across multiple lines)." <<
-			endl;
+		m_stream << _ref.text << endl
+				 << string(static_cast<size_t>(_ref.startColumn), ' ')
+				 << "^ (Relevant source part starts here and spans across multiple lines)." << endl;
 }
 
 void SourceReferenceFormatter::printSourceName(SourceReference const& _ref)
 {
 	if (_ref.position.line != -1)
-		m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":" << (_ref.position.column + 1) << ": ";
+		m_stream << _ref.sourceName << ":" << (_ref.position.line + 1) << ":"
+				 << (_ref.position.column + 1) << ": ";
 	else if (!_ref.sourceName.empty())
 		m_stream << _ref.sourceName << ": ";
 }
 
-void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
+void SourceReferenceFormatter::printExceptionInformation(
+	util::Exception const& _exception,
+	std::string const& _category
+)
 {
 	printExceptionInformation(SourceReferenceExtractor::extract(_exception, _category));
 }
@@ -84,7 +85,9 @@ void SourceReferenceFormatter::printErrorInformation(Error const& _error)
 	printExceptionInformation(SourceReferenceExtractor::extract(_error));
 }
 
-void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
+void SourceReferenceFormatter::printExceptionInformation(
+	SourceReferenceExtractor::Message const& _msg
+)
 {
 	printSourceName(_msg.primary);
 

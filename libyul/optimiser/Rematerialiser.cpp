@@ -30,7 +30,11 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void Rematerialiser::run(Dialect const& _dialect, Block& _ast, set<YulString> _varsToAlwaysRematerialize)
+void Rematerialiser::run(
+	Dialect const& _dialect,
+	Block& _ast,
+	set<YulString> _varsToAlwaysRematerialize
+)
 {
 	Rematerialiser{_dialect, _ast, std::move(_varsToAlwaysRematerialize)}(_ast);
 }
@@ -52,8 +56,7 @@ Rematerialiser::Rematerialiser(
 	DataFlowAnalyzer(_dialect),
 	m_referenceCounts(ReferencesCounter::countReferences(_ast)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize))
-{
-}
+{}
 
 Rematerialiser::Rematerialiser(
 	Dialect const& _dialect,
@@ -63,8 +66,7 @@ Rematerialiser::Rematerialiser(
 	DataFlowAnalyzer(_dialect),
 	m_referenceCounts(ReferencesCounter::countReferences(_function)),
 	m_varsToAlwaysRematerialize(std::move(_varsToAlwaysRematerialize))
-{
-}
+{}
 
 void Rematerialiser::visit(Expression& _e)
 {
@@ -78,12 +80,9 @@ void Rematerialiser::visit(Expression& _e)
 			AssignedValue const& value = m_value.at(name);
 			size_t refs = m_referenceCounts[name];
 			size_t cost = CodeCost::codeCost(m_dialect, *value.value);
-			if (
-				(refs <= 1 && value.loopDepth == m_loopDepth) ||
-				cost == 0 ||
+			if ((refs <= 1 && value.loopDepth == m_loopDepth) || cost == 0 ||
 				(refs <= 5 && cost <= 1 && m_loopDepth == 0) ||
-				m_varsToAlwaysRematerialize.count(name)
-			)
+				m_varsToAlwaysRematerialize.count(name))
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
 				for (auto const& ref: m_references.forward[name])

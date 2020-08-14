@@ -30,7 +30,6 @@
 
 namespace solidity::test
 {
-
 struct SyntaxTestError
 {
 	std::string type;
@@ -41,11 +40,8 @@ struct SyntaxTestError
 	int locationEnd = -1;
 	bool operator==(SyntaxTestError const& _rhs) const
 	{
-		return type == _rhs.type &&
-			errorId == _rhs.errorId &&
-			message == _rhs.message &&
-			sourceName == _rhs.sourceName &&
-			locationStart == _rhs.locationStart &&
+		return type == _rhs.type && errorId == _rhs.errorId && message == _rhs.message &&
+			sourceName == _rhs.sourceName && locationStart == _rhs.locationStart &&
 			locationEnd == _rhs.locationEnd;
 	}
 };
@@ -56,16 +52,26 @@ class CommonSyntaxTest: public frontend::test::EVMVersionRestrictedTestCase
 public:
 	CommonSyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	) override;
 
-	void printSource(std::ostream& _stream, std::string const &_linePrefix = "", bool _formatted = false) const override;
-	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix) const override
+	void printSource(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	) const override;
+	void printUpdatedExpectations(std::ostream& _stream, std::string const& _linePrefix)
+		const override
 	{
 		if (!m_errorList.empty())
 			printErrorList(_stream, m_errorList, _linePrefix, false);
 	}
 
 	static std::string errorMessage(util::Exception const& _e);
+
 protected:
 	virtual void parseAndAnalyze() = 0;
 
@@ -76,8 +82,16 @@ protected:
 		bool _formatted = false
 	);
 
-	TestResult conclude(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
-	void printExpectationAndError(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false);
+	TestResult conclude(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	);
+	void printExpectationAndError(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	);
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 

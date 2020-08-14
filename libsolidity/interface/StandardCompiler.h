@@ -31,7 +31,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Standard JSON compiler interface, which expects a JSON input and returns a JSON output.
  * See docs/using-the-compiler#compiler-input-and-output-json-description.
@@ -44,8 +43,7 @@ public:
 	/// and must not emit exceptions.
 	explicit StandardCompiler(ReadCallback::Callback _readFile = ReadCallback::Callback()):
 		m_readFile(std::move(_readFile))
-	{
-	}
+	{}
 
 	/// Sets all input parameters according to @a _input which conforms to the standardized input
 	/// format, performs compilation and returns a standardized output.

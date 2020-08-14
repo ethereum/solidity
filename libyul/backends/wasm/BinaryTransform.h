@@ -30,7 +30,6 @@
 
 namespace solidity::yul::wasm
 {
-
 /**
  * Web assembly to binary transform.
  */
@@ -119,4 +118,3 @@ private:
 };
 
 }
-

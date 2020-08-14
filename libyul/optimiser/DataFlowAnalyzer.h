@@ -63,9 +63,9 @@ struct AssignedValue
  *
  * For elementary statements, we check if it is an SSTORE(x, y) / MSTORE(x, y)
  * If yes, visit the statement. Then record that fact and clear all storage slots t
- *   where we cannot prove x != t or y == m_storage[t] using the current values of the variables x and t.
- * Otherwise, determine if the statement invalidates storage/memory. If yes, clear all knowledge
- * about storage/memory before visiting the statement. Then visit the statement.
+ *   where we cannot prove x != t or y == m_storage[t] using the current values of the variables x
+ * and t. Otherwise, determine if the statement invalidates storage/memory. If yes, clear all
+ * knowledge about storage/memory before visiting the statement. Then visit the statement.
  *
  * For forward-joining control flow, storage/memory information from the branches is combined.
  * If the keys or values are different or non-existent in one branch, the key is deleted.
@@ -152,10 +152,8 @@ protected:
 
 	/// Checks if the expression is sload(a) / mload(a)
 	/// where a is a variable and returns the variable in that case.
-	std::optional<YulString> isSimpleLoad(
-		evmasm::Instruction _load,
-		Expression const& _expression
-	) const;
+	std::optional<YulString> isSimpleLoad(evmasm::Instruction _load, Expression const& _expression)
+		const;
 
 	Dialect const& m_dialect;
 	/// Side-effects of user-defined functions. Worst-case side-effects are assumed

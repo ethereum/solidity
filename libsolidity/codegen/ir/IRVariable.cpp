@@ -28,8 +28,7 @@ using namespace solidity::util;
 
 IRVariable::IRVariable(std::string _baseName, Type const& _type):
 	m_baseName(std::move(_baseName)), m_type(_type)
-{
-}
+{}
 
 IRVariable::IRVariable(VariableDeclaration const& _declaration):
 	IRVariable(IRNames::localVariable(_declaration), *_declaration.annotation().type)
@@ -39,8 +38,7 @@ IRVariable::IRVariable(VariableDeclaration const& _declaration):
 
 IRVariable::IRVariable(Expression const& _expression):
 	IRVariable(IRNames::localVariable(_expression), *_expression.annotation().type)
-{
-}
+{}
 
 IRVariable IRVariable::part(string const& _name) const
 {
@@ -71,10 +69,7 @@ vector<string> IRVariable::stackSlots() const
 	return result;
 }
 
-string IRVariable::commaSeparatedList() const
-{
-	return joinHumanReadable(stackSlots());
-}
+string IRVariable::commaSeparatedList() const { return joinHumanReadable(stackSlots()); }
 
 string IRVariable::commaSeparatedListPrefixed() const
 {

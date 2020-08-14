@@ -41,8 +41,7 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-pair<SourceUnit const*, ErrorList>
-AnalysisFramework::parseAnalyseAndReturnError(
+pair<SourceUnit const*, ErrorList> AnalysisFramework::parseAnalyseAndReturnError(
 	string const& _source,
 	bool _reportWarnings,
 	bool _insertLicenseAndVersionPragma,
@@ -51,11 +50,12 @@ AnalysisFramework::parseAnalyseAndReturnError(
 )
 {
 	compiler().reset();
-	compiler().setSources({{"",
-		_insertLicenseAndVersionPragma ?
-		"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + _source :
-		_source
-	}});
+	compiler().setSources(
+		{{"",
+		  _insertLicenseAndVersionPragma ?
+				"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + _source :
+				_source}}
+	);
 	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler().setParserErrorRecovery(_allowRecoveryErrors);
 	_allowMultipleErrors = _allowMultipleErrors || _allowRecoveryErrors;
@@ -116,7 +116,11 @@ bool AnalysisFramework::success(string const& _source)
 	return parseAnalyseAndReturnError(_source).second.empty();
 }
 
-ErrorList AnalysisFramework::expectError(std::string const& _source, bool _warning, bool _allowMultiple)
+ErrorList AnalysisFramework::expectError(
+	std::string const& _source,
+	bool _warning,
+	bool _allowMultiple
+)
 {
 	auto sourceAndErrors = parseAnalyseAndReturnError(_source, _warning, true, _allowMultiple);
 	BOOST_REQUIRE(!sourceAndErrors.second.empty());
@@ -137,7 +141,10 @@ string AnalysisFramework::formatError(Error const& _error) const
 	return SourceReferenceFormatter::formatErrorInformation(_error);
 }
 
-ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)
+ContractDefinition const* AnalysisFramework::retrieveContractByName(
+	SourceUnit const& _source,
+	string const& _name
+)
 {
 	ContractDefinition* contract = nullptr;
 

@@ -24,9 +24,9 @@
 
 namespace solidity::phaser
 {
-
 /**
- * A class that provides functions for generating random numbers good enough for simulation purposes.
+ * A class that provides functions for generating random numbers good enough for simulation
+ * purposes.
  *
  * The functions share a common instance of the generator which can be reset with a known seed
  * to deterministically generate a given sequence of numbers. Initially the generator is seeded with

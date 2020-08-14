@@ -25,10 +25,7 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend::smt;
 
-EncodingContext::EncodingContext():
-	m_state(*this)
-{
-}
+EncodingContext::EncodingContext(): m_state(*this) {}
 
 void EncodingContext::reset()
 {
@@ -40,15 +37,9 @@ void EncodingContext::reset()
 	m_assertions.clear();
 }
 
-void EncodingContext::resetUniqueId()
-{
-	m_nextUniqueId = 0;
-}
+void EncodingContext::resetUniqueId() { m_nextUniqueId = 0; }
 
-unsigned EncodingContext::newUniqueId()
-{
-	return m_nextUniqueId++;
-}
+unsigned EncodingContext::newUniqueId() { return m_nextUniqueId++; }
 
 void EncodingContext::clear()
 {
@@ -58,7 +49,9 @@ void EncodingContext::clear()
 
 /// Variables.
 
-shared_ptr<SymbolicVariable> EncodingContext::variable(frontend::VariableDeclaration const& _varDecl)
+shared_ptr<SymbolicVariable> EncodingContext::variable(
+	frontend::VariableDeclaration const& _varDecl
+)
 {
 	solAssert(knownVariable(_varDecl), "");
 	return m_variables[&_varDecl];
@@ -68,7 +61,8 @@ bool EncodingContext::createVariable(frontend::VariableDeclaration const& _varDe
 {
 	solAssert(!knownVariable(_varDecl), "");
 	auto const& type = _varDecl.type();
-	auto result = newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *this);
+	auto result =
+		newSymbolicVariable(*type, _varDecl.name() + "_" + to_string(_varDecl.id()), *this);
 	m_variables.emplace(&_varDecl, result.second);
 	return result.first;
 }
@@ -90,13 +84,19 @@ void EncodingContext::resetVariables(set<frontend::VariableDeclaration const*> c
 		resetVariable(*decl);
 }
 
-void EncodingContext::resetVariables(function<bool(frontend::VariableDeclaration const&)> const& _filter)
+void EncodingContext::resetVariables(
+	function<bool(frontend::VariableDeclaration const&)> const& _filter
+)
 {
-	for_each(begin(m_variables), end(m_variables), [&](auto _variable)
-	{
-		if (_filter(*_variable.first))
-			this->resetVariable(*_variable.first);
-	});
+	for_each(
+		begin(m_variables),
+		end(m_variables),
+		[&](auto _variable)
+		{
+			if (_filter(*_variable.first))
+				this->resetVariable(*_variable.first);
+		}
+	);
 }
 
 void EncodingContext::resetAllVariables()
@@ -141,7 +141,10 @@ shared_ptr<SymbolicVariable> EncodingContext::expression(frontend::Expression co
 	return m_expressions.at(&_e);
 }
 
-bool EncodingContext::createExpression(frontend::Expression const& _e, shared_ptr<SymbolicVariable> _symbVar)
+bool EncodingContext::createExpression(
+	frontend::Expression const& _e,
+	shared_ptr<SymbolicVariable> _symbVar
+)
 {
 	solAssert(_e.annotation().type, "");
 	if (knownExpression(_e))
@@ -156,7 +159,8 @@ bool EncodingContext::createExpression(frontend::Expression const& _e, shared_pt
 	}
 	else
 	{
-		auto result = newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *this);
+		auto result =
+			newSymbolicVariable(*_e.annotation().type, "expr_" + to_string(_e.id()), *this);
 		m_expressions.emplace(&_e, result.second);
 		return result.first;
 	}

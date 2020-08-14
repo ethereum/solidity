@@ -135,15 +135,21 @@ private:
 	class State
 	{
 	public:
-		enum Value { Unused, Undecided, Used };
+		enum Value
+		{
+			Unused,
+			Undecided,
+			Used
+		};
 		State(Value _value = Undecided): m_value(_value) {}
 		inline bool operator==(State _other) const { return m_value == _other.m_value; }
 		inline bool operator!=(State _other) const { return !operator==(_other); }
 		static inline void join(State& _a, State const& _b)
 		{
 			// Using "max" works here because of the order of the values in the enum.
-			_a.m_value =  Value(std::max(int(_a.m_value), int(_b.m_value)));
+			_a.m_value = Value(std::max(int(_a.m_value), int(_b.m_value)));
 		}
+
 	private:
 		Value m_value = Undecided;
 	};
@@ -184,8 +190,7 @@ private:
 class AssignmentRemover: public ASTModifier
 {
 public:
-	explicit AssignmentRemover(std::set<Assignment const*> const& _toRemove):
-		m_toRemove(_toRemove)
+	explicit AssignmentRemover(std::set<Assignment const*> const& _toRemove): m_toRemove(_toRemove)
 	{}
 	void operator()(Block& _block) override;
 

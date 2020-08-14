@@ -28,7 +28,6 @@
 
 namespace solidity::smtutil
 {
-
 class CHCSmtLib2Interface: public CHCSolverInterface
 {
 public:

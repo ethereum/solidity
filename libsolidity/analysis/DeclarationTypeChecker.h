@@ -33,7 +33,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * Assigns types to declarations.
  */
@@ -44,14 +43,12 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		langutil::EVMVersion _evmVersion
 	):
-		m_errorReporter(_errorReporter),
-		m_evmVersion(_evmVersion)
+		m_errorReporter(_errorReporter), m_evmVersion(_evmVersion)
 	{}
 
 	bool check(ASTNode const& _contract);
 
 private:
-
 	bool visit(ElementaryTypeName const& _typeName) override;
 	void endVisit(UserDefinedTypeName const& _typeName) override;
 	bool visit(FunctionTypeName const& _typeName) override;

@@ -56,14 +56,19 @@ EwasmTranslationTest::EwasmTranslationTest(string const& _filename):
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult EwasmTranslationTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult EwasmTranslationTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool const _formatted
+)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
 		return TestResult::FatalError;
 
-	*m_object = EVMToEwasmTranslator(
-		EVMDialect::strictAssemblyForEVMObjects(solidity::test::CommonOptions::get().evmVersion())
-	).run(*m_object);
+	*m_object = EVMToEwasmTranslator(EVMDialect::strictAssemblyForEVMObjects(
+										 solidity::test::CommonOptions::get().evmVersion()
+									 ))
+					.run(*m_object);
 
 	// Add call to "main()".
 	m_object->code->statements.emplace_back(
@@ -89,7 +94,8 @@ bool EwasmTranslationTest::parse(ostream& _stream, string const& _linePrefix, bo
 	}
 	else
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED})
+			<< _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
 		return false;
 	}
@@ -105,8 +111,7 @@ string EwasmTranslationTest::interpret()
 		Interpreter::run(state, WasmDialect{}, *m_object->code);
 	}
 	catch (InterpreterTerminatedGeneric const&)
-	{
-	}
+	{}
 
 	stringstream result;
 	state.dumpTraceAndState(result);

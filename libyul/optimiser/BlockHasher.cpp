@@ -33,10 +33,12 @@ namespace
 {
 static constexpr uint64_t compileTimeLiteralHash(char const* _literal, size_t _n)
 {
-	return (_n == 0) ? BlockHasher::fnvEmptyHash : (static_cast<uint64_t>(_literal[0]) * BlockHasher::fnvPrime) ^ compileTimeLiteralHash(_literal + 1, _n - 1);
+	return (_n == 0) ? BlockHasher::fnvEmptyHash :
+						 (static_cast<uint64_t>(_literal[0]) * BlockHasher::fnvPrime) ^
+			compileTimeLiteralHash(_literal + 1, _n - 1);
 }
 
-template<size_t N>
+template <size_t N>
 static constexpr uint64_t compileTimeLiteralHash(char const (&_literal)[N])
 {
 	return compileTimeLiteralHash(_literal, N);
@@ -65,10 +67,9 @@ void BlockHasher::operator()(Identifier const& _identifier)
 	auto it = m_variableReferences.find(_identifier.name);
 	if (it == m_variableReferences.end())
 	{
-		it = m_variableReferences.emplace(_identifier.name, VariableReference {
-			m_externalIdentifierCount++,
-			true
-		}).first;
+		it = m_variableReferences
+				 .emplace(_identifier.name, VariableReference{m_externalIdentifierCount++, true})
+				 .first;
 		m_externalReferences.emplace_back(_identifier.name);
 	}
 	if (it->second.isExternal)
@@ -108,10 +109,7 @@ void BlockHasher::operator()(VariableDeclaration const& _varDecl)
 	for (auto const& var: _varDecl.variables)
 	{
 		yulAssert(!m_variableReferences.count(var.name), "");
-		m_variableReferences[var.name] = VariableReference{
-			m_internalIdentifierCount++,
-			false
-		};
+		m_variableReferences[var.name] = VariableReference{m_internalIdentifierCount++, false};
 	}
 	ASTWalker::operator()(_varDecl);
 }

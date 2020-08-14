@@ -55,7 +55,11 @@ private:
 	{
 	public:
 		Checker(FunctionDefinition const& _f) { _f.accept(*this); }
-		bool visit(InlineAssembly const&) override { assemblySeen = true; return false; }
+		bool visit(InlineAssembly const&) override
+		{
+			assemblySeen = true;
+			return false;
+		}
 		bool assemblySeen = false;
 	};
 
@@ -74,14 +78,9 @@ private:
 	map<ContractDefinition const*, bool> m_usesAssembly;
 };
 
-StaticAnalyzer::StaticAnalyzer(ErrorReporter& _errorReporter):
-	m_errorReporter(_errorReporter)
-{
-}
+StaticAnalyzer::StaticAnalyzer(ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
-StaticAnalyzer::~StaticAnalyzer()
-{
-}
+StaticAnalyzer::~StaticAnalyzer() {}
 
 bool StaticAnalyzer::analyze(SourceUnit const& _sourceUnit)
 {
@@ -124,11 +123,18 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 						5667_error,
 						var.first.second->location(),
 						"Unused " +
-						string(var.first.second->isTryCatchParameter() ? "try/catch" : "function") +
-						" parameter. Remove or comment out the variable name to silence this warning."
+							string(
+								var.first.second->isTryCatchParameter() ? "try/catch" : "function"
+							) +
+							" parameter. Remove or comment out the variable name to silence this "
+							"warning."
 					);
 				else
-					m_errorReporter.warning(2072_error, var.first.second->location(), "Unused local variable.");
+					m_errorReporter.warning(
+						2072_error,
+						var.first.second->location(),
+						"Unused local variable."
+					);
 			}
 	m_localVarUseCount.clear();
 	m_constructor = false;
@@ -138,7 +144,9 @@ void StaticAnalyzer::endVisit(FunctionDefinition const&)
 bool StaticAnalyzer::visit(Identifier const& _identifier)
 {
 	if (m_currentFunction)
-		if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+		if (auto var = dynamic_cast<VariableDeclaration const*>(
+				_identifier.annotation().referencedDeclaration
+			))
 		{
 			solAssert(!var->name().empty(), "");
 			if (var->isLocalVariable())
@@ -173,18 +181,15 @@ bool StaticAnalyzer::visit(Return const& _return)
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 {
 	if (_statement.expression().annotation().isPure)
-		m_errorReporter.warning(
-			6133_error,
-			_statement.location(),
-			"Statement has no effect."
-		);
+		m_errorReporter.warning(6133_error, _statement.location(), "Statement has no effect.");
 
 	return true;
 }
 
 bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 {
-	if (MagicType const* type = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type))
+	if (MagicType const* type =
+			dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type))
 	{
 		if (type->kind() == MagicType::Kind::Message && _memberAccess.memberName() == "gas")
 			m_errorReporter.typeError(
@@ -192,13 +197,17 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 				_memberAccess.location(),
 				"\"msg.gas\" has been deprecated in favor of \"gasleft()\""
 			);
-		else if (type->kind() == MagicType::Kind::Block && _memberAccess.memberName() == "blockhash")
+		else if (
+			type->kind() == MagicType::Kind::Block && _memberAccess.memberName() == "blockhash"
+		)
 			m_errorReporter.typeError(
 				8113_error,
 				_memberAccess.location(),
 				"\"block.blockhash()\" has been deprecated in favor of \"blockhash()\""
 			);
-		else if (type->kind() == MagicType::Kind::MetaType && _memberAccess.memberName() == "runtimeCode")
+		else if (
+			type->kind() == MagicType::Kind::MetaType && _memberAccess.memberName() == "runtimeCode"
+		)
 		{
 			if (!m_constructorUsesAssembly)
 				m_constructorUsesAssembly = make_unique<ConstructorUsesAssembly>();
@@ -208,7 +217,8 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					6417_error,
 					_memberAccess.location(),
 					"The constructor of the contract (or its base) uses inline assembly. "
-					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
+					"Because of that, it might be that the deployed bytecode is different from "
+					"type(...).runtimeCode."
 				);
 		}
 	}
@@ -235,7 +245,8 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 						id->location(),
 						"\"this\" used in constructor. "
 						"Note that external functions of a contract "
-						"cannot be called while it is being constructed.");
+						"cannot be called while it is being constructed."
+					);
 				break;
 			}
 			else if (auto tuple = dynamic_cast<TupleExpression const*>(expr))
@@ -273,13 +284,11 @@ bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
 
 bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 {
-	if (
-		_operation.rightExpression().annotation().isPure &&
-		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
-	)
+	if (_operation.rightExpression().annotation().isPure &&
+		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod))
 		if (auto rhs = dynamic_cast<RationalNumberType const*>(
-			ConstantEvaluator(m_errorReporter).evaluate(_operation.rightExpression())
-		))
+				ConstantEvaluator(m_errorReporter).evaluate(_operation.rightExpression())
+			))
 			if (rhs->isZero())
 				m_errorReporter.typeError(
 					1211_error,
@@ -294,15 +303,17 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 {
 	if (_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
 	{
-		auto functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
+		auto functionType =
+			dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 		solAssert(functionType, "");
-		if (functionType->kind() == FunctionType::Kind::AddMod || functionType->kind() == FunctionType::Kind::MulMod)
+		if (functionType->kind() == FunctionType::Kind::AddMod ||
+			functionType->kind() == FunctionType::Kind::MulMod)
 		{
 			solAssert(_functionCall.arguments().size() == 3, "");
 			if (_functionCall.arguments()[2]->annotation().isPure)
 				if (auto lastArg = dynamic_cast<RationalNumberType const*>(
-					ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
-				))
+						ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
+					))
 					if (lastArg->isZero())
 						m_errorReporter.typeError(
 							4195_error,
@@ -310,11 +321,9 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 							"Arithmetic modulo zero."
 						);
 		}
-		if (
-			m_currentContract->isLibrary() &&
+		if (m_currentContract->isLibrary() &&
 			functionType->kind() == FunctionType::Kind::DelegateCall &&
-			functionType->declaration().scope() == m_currentContract
-		)
+			functionType->declaration().scope() == m_currentContract)
 			m_errorReporter.typeError(
 				6700_error,
 				_functionCall.location(),

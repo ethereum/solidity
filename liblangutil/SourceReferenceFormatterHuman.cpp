@@ -34,7 +34,6 @@ using namespace solidity::util::formatting;
 
 namespace
 {
-
 std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 {
 	std::string output;
@@ -84,16 +83,16 @@ AnsiColorized SourceReferenceFormatterHuman::diagColored() const
 void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _ref)
 {
 	if (_ref.sourceName.empty())
-		return; // Nothing we can print here
+		return;	 // Nothing we can print here
 
 	if (_ref.position.line < 0)
 	{
 		frameColored() << "-->";
 		m_stream << ' ' << _ref.sourceName << '\n';
-		return; // No line available, nothing else to print
+		return;	 // No line available, nothing else to print
 	}
 
-	string line = std::to_string(_ref.position.line + 1); // one-based line number as string
+	string line = std::to_string(_ref.position.line + 1);  // one-based line number as string
 	string leftpad = string(line.size(), ' ');
 
 	// line 0: source name
@@ -123,8 +122,12 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
 
-		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
-		diagColored() << replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^');
+		m_stream << ' '
+				 << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
+		diagColored() << replaceNonTabs(
+			text.substr(static_cast<size_t>(_ref.startColumn), locationLength),
+			'^'
+		);
 		m_stream << '\n';
 	}
 	else
@@ -142,13 +145,16 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 		// line 3:
 		m_stream << leftpad << ' ';
 		frameColored() << '|';
-		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
+		m_stream << ' '
+				 << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
 		diagColored() << "^ (Relevant source part starts here and spans across multiple lines).";
 		m_stream << '\n';
 	}
 }
 
-void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
+void SourceReferenceFormatterHuman::printExceptionInformation(
+	SourceReferenceExtractor::Message const& _msg
+)
 {
 	// exception header line
 	errorColored() << _msg.category;

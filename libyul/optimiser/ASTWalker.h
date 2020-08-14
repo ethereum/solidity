@@ -33,7 +33,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Generic AST walker.
  */

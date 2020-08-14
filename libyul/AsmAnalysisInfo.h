@@ -29,7 +29,6 @@
 
 namespace solidity::yul
 {
-
 struct Scope;
 
 struct AsmAnalysisInfo

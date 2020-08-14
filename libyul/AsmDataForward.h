@@ -27,7 +27,6 @@
 
 namespace solidity::yul
 {
-
 struct Literal;
 struct Label;
 struct Identifier;
@@ -48,6 +47,17 @@ struct Block;
 struct TypedName;
 
 using Expression = std::variant<FunctionCall, Identifier, Literal>;
-using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
+using Statement = std::variant<
+	ExpressionStatement,
+	Assignment,
+	VariableDeclaration,
+	FunctionDefinition,
+	If,
+	Switch,
+	ForLoop,
+	Break,
+	Continue,
+	Leave,
+	Block>;
 
 }

@@ -93,8 +93,8 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 		// can be ignored
 	}
 	else if (_item.type() == AssignImmutable)
-		// Since AssignImmutable breaks blocks, it should be fine to only consider its changes to the stack, which
-		// is the same as POP.
+		// Since AssignImmutable breaks blocks, it should be fine to only consider its changes to
+		// the stack, which is the same as POP.
 		return feedItem(AssemblyItem(Instruction::POP), _copyItem);
 	else if (_item.type() != Operation)
 	{
@@ -113,14 +113,16 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 			setStackElement(
 				m_stackHeight + 1,
 				stackElement(
-					m_stackHeight - static_cast<int>(instruction) + static_cast<int>(Instruction::DUP1),
+					m_stackHeight - static_cast<int>(instruction) +
+						static_cast<int>(Instruction::DUP1),
 					_item.location()
 				)
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
 				m_stackHeight,
-				m_stackHeight - 1 - static_cast<int>(instruction) + static_cast<int>(Instruction::SWAP1),
+				m_stackHeight - 1 - static_cast<int>(instruction) +
+					static_cast<int>(Instruction::SWAP1),
 				_item.location()
 			);
 		else if (instruction != Instruction::POP)
@@ -164,7 +166,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				if (invStor)
 					resetStorage();
 				if (invMem || invStor)
-					m_sequenceNumber += 2; // Increment by two because it can read and write
+					m_sequenceNumber += 2;	// Increment by two because it can read and write
 				assertThrow(info.ret <= 1, InvalidDeposit, "");
 				if (info.ret == 1)
 					setStackElement(
@@ -184,7 +186,8 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 
 /// Helper function for KnownState::reduceToCommonKnowledge, removes everything from
 /// _this which is not in or not equal to the value in _other.
-template <class Mapping> void intersect(Mapping& _this, Mapping const& _other)
+template <class Mapping>
+void intersect(Mapping& _this, Mapping const& _other)
 {
 	for (auto it = _this.begin(); it != _this.end();)
 		if (_other.count(it->first) && _other.at(it->first) == it->second)
@@ -242,7 +245,8 @@ bool KnownState::operator==(KnownState const& _other) const
 	int stackDiff = m_stackHeight - _other.m_stackHeight;
 	auto thisIt = m_stackElements.cbegin();
 	auto otherIt = _other.m_stackElements.cbegin();
-	for (; thisIt != m_stackElements.cend() && otherIt != _other.m_stackElements.cend(); ++thisIt, ++otherIt)
+	for (; thisIt != m_stackElements.cend() && otherIt != _other.m_stackElements.cend();
+		 ++thisIt, ++otherIt)
 		if (thisIt->first - stackDiff != otherIt->first || thisIt->second != otherIt->second)
 			return false;
 	return (thisIt == m_stackElements.cend() && otherIt == _other.m_stackElements.cend());
@@ -254,7 +258,7 @@ ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation 
 		return m_stackElements.at(_stackHeight);
 	// Stack element not found (not assigned yet), create new unknown equivalence class.
 	return m_stackElements[_stackHeight] =
-			m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
+			   m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
 }
 
 KnownState::Id KnownState::relativeStackElement(int _stackOffset, SourceLocation const& _location)
@@ -293,7 +297,8 @@ void KnownState::swapStackElements(
 KnownState::StoreOperation KnownState::storeInStorage(
 	Id _slot,
 	Id _value,
-	SourceLocation const& _location)
+	SourceLocation const& _location
+)
 {
 	if (m_storageContent.count(_slot) && m_storageContent[_slot] == _value)
 		// do not execute the storage if we know that the value is already there
@@ -304,7 +309,8 @@ KnownState::StoreOperation KnownState::storeInStorage(
 	// operation will not destroy the knowledge. Specifically, we copy storage locations we know
 	// are different from _slot or locations where we know that the stored value is equal to _value.
 	for (auto const& storageItem: m_storageContent)
-		if (m_expressionClasses->knownToBeDifferent(storageItem.first, _slot) || storageItem.second == _value)
+		if (m_expressionClasses->knownToBeDifferent(storageItem.first, _slot) ||
+			storageItem.second == _value)
 			storageContents.insert(storageItem);
 	m_storageContent = move(storageContents);
 
@@ -324,10 +330,15 @@ ExpressionClasses::Id KnownState::loadFromStorage(Id _slot, SourceLocation const
 		return m_storageContent.at(_slot);
 
 	AssemblyItem item(Instruction::SLOAD, _location);
-	return m_storageContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
+	return m_storageContent[_slot] =
+			   m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
-KnownState::StoreOperation KnownState::storeInMemory(Id _slot, Id _value, SourceLocation const& _location)
+KnownState::StoreOperation KnownState::storeInMemory(
+	Id _slot,
+	Id _value,
+	SourceLocation const& _location
+)
 {
 	if (m_memoryContent.count(_slot) && m_memoryContent[_slot] == _value)
 		// do not execute the store if we know that the value is already there
@@ -355,14 +366,11 @@ ExpressionClasses::Id KnownState::loadFromMemory(Id _slot, SourceLocation const&
 		return m_memoryContent.at(_slot);
 
 	AssemblyItem item(Instruction::MLOAD, _location);
-	return m_memoryContent[_slot] = m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
+	return m_memoryContent[_slot] =
+			   m_expressionClasses->find(item, {_slot}, true, m_sequenceNumber);
 }
 
-KnownState::Id KnownState::applyKeccak256(
-	Id _start,
-	Id _length,
-	SourceLocation const& _location
-)
+KnownState::Id KnownState::applyKeccak256(Id _start, Id _length, SourceLocation const& _location)
 {
 	AssemblyItem keccak256Item(Instruction::KECCAK256, _location);
 	// Special logic if length is a short constant, otherwise we cannot tell.
@@ -384,7 +392,11 @@ KnownState::Id KnownState::applyKeccak256(
 		return m_knownKeccak256Hashes.at(arguments);
 	Id v;
 	// If all arguments are known constants, compute the Keccak-256 here
-	if (all_of(arguments.begin(), arguments.end(), [this](Id _a) { return !!m_expressionClasses->knownConstant(_a); }))
+	if (all_of(
+			arguments.begin(),
+			arguments.end(),
+			[this](Id _a) { return !!m_expressionClasses->knownConstant(_a); }
+		))
 	{
 		bytes data;
 		for (Id a: arguments)
@@ -420,4 +432,3 @@ KnownState::Id KnownState::tagUnion(set<u256> _tags)
 		return id;
 	}
 }
-

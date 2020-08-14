@@ -36,7 +36,12 @@ using namespace solidity::frontend::test;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
-SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery): CommonSyntaxTest(_filename, _evmVersion)
+SyntaxTest::SyntaxTest(
+	string const& _filename,
+	langutil::EVMVersion _evmVersion,
+	bool _parserErrorRecovery
+):
+	CommonSyntaxTest(_filename, _evmVersion)
 {
 	m_optimiseYul = m_reader.boolSetting("optimize-yul", true);
 	m_parserErrorRecovery = _parserErrorRecovery;
@@ -62,9 +67,7 @@ void SyntaxTest::setupCompiler()
 	compiler().setEVMVersion(m_evmVersion);
 	compiler().setParserErrorRecovery(m_parserErrorRecovery);
 	compiler().setOptimiserSettings(
-		m_optimiseYul ?
-		OptimiserSettings::full() :
-		OptimiserSettings::minimal()
+		m_optimiseYul ? OptimiserSettings::full() : OptimiserSettings::minimal()
 	);
 }
 
@@ -76,28 +79,31 @@ void SyntaxTest::parseAndAnalyze()
 			if (!compiler().compile())
 			{
 				ErrorList const& errors = compiler().errors();
-				auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return error->type() == Error::Type::CodeGenerationError;
-				});
-				auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return error->type() != Error::Type::Warning;
-				});
+				auto codeGeneretionErrorCount = count_if(
+					errors.cbegin(),
+					errors.cend(),
+					[](auto const& error)
+					{ return error->type() == Error::Type::CodeGenerationError; }
+				);
+				auto errorCount = count_if(
+					errors.cbegin(),
+					errors.cend(),
+					[](auto const& error) { return error->type() != Error::Type::Warning; }
+				);
 				// failing compilation after successful analysis is a rare case,
-				// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError
+				// it assumes that errors contain exactly one error, and the error is of type
+				// Error::Type::CodeGenerationError
 				if (codeGeneretionErrorCount != 1 || errorCount != 1)
-					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+					BOOST_THROW_EXCEPTION(
+						runtime_error("Compilation failed even though analysis was successful.")
+					);
 			}
 		}
 		catch (UnimplementedFeatureError const& _e)
 		{
-			m_errorList.emplace_back(SyntaxTestError{
-				"UnimplementedFeatureError",
-				nullopt,
-				errorMessage(_e),
-				"",
-				-1,
-				-1
-			});
+			m_errorList.emplace_back(
+				SyntaxTestError{"UnimplementedFeatureError", nullopt, errorMessage(_e), "", -1, -1}
+			);
 		}
 }
 
@@ -110,7 +116,8 @@ void SyntaxTest::filterObtainedErrors()
 		string sourceName;
 		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
 		{
-			// ignore the version & license pragma inserted by the testing tool when calculating locations.
+			// ignore the version & license pragma inserted by the testing tool when calculating
+			// locations.
 			if (location->start >= static_cast<int>(preamble.size()))
 				locationStart = location->start - static_cast<int>(preamble.size());
 			if (location->end >= static_cast<int>(preamble.size()))
@@ -124,8 +131,6 @@ void SyntaxTest::filterObtainedErrors()
 			errorMessage(*currentError),
 			sourceName,
 			locationStart,
-			locationEnd
-		});
+			locationEnd});
 	}
 }
-

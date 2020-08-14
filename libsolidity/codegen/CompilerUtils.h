@@ -29,15 +29,14 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
 
-namespace solidity::frontend {
-
-class Type; // forward
+namespace solidity::frontend
+{
+class Type;	 // forward
 
 class CompilerUtils
 {
 public:
-	explicit CompilerUtils(CompilerContext& _context): m_context(_context)
-	{}
+	explicit CompilerUtils(CompilerContext& _context): m_context(_context) {}
 
 	/// Stores the initial value of the free-memory-pointer at its position;
 	void initialiseFreeMemoryPointer();
@@ -74,10 +73,9 @@ public:
 	void returnDataToArray();
 
 	/// Computes the absolute calldata offset of a tail given a base reference and the (absolute)
-	/// offset of the tail pointer. Performs bounds checks. If @a _type is a dynamically sized array it also
-	/// returns the array length on the stack.
-	/// Stack pre: base_ref tail_ptr
-	/// Stack post: tail_ref [length]
+	/// offset of the tail pointer. Performs bounds checks. If @a _type is a dynamically sized array
+	/// it also returns the array length on the stack. Stack pre: base_ref tail_ptr Stack post:
+	/// tail_ref [length]
 	void accessCalldataTail(Type const& _type);
 
 	/// Loads data from memory to the stack.
@@ -104,8 +102,8 @@ public:
 	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
 	void storeInMemory(unsigned _offset);
-	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
-	/// and also updates that. For reference types, only copies the data pointer. Fails for
+	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the
+	/// stack and also updates that. For reference types, only copies the data pointer. Fails for
 	/// non-memory-references.
 	/// @param _padToWords if true, adds zeros to pad to multiple of 32 bytes. Array elements
 	/// @param _cleanup if true, adds code to cleanup the value before storing it.
@@ -114,13 +112,12 @@ public:
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true, bool _cleanup = true);
 
-	/// Creates code that unpacks the arguments according to their types specified by a vector of TypePointers.
-	/// From memory if @a _fromMemory is true, otherwise from call data.
-	/// Calls revert if the supplied size is shorter than the static data requirements
-	/// or if dynamic data pointers reach outside of the area.
-	/// Also has a hard cap of 0x100000000 for any given length/offset field.
-	/// Stack pre: <source_offset> <length>
-	/// Stack post: <value0> <value1> ... <valuen>
+	/// Creates code that unpacks the arguments according to their types specified by a vector of
+	/// TypePointers. From memory if @a _fromMemory is true, otherwise from call data. Calls revert
+	/// if the supplied size is shorter than the static data requirements or if dynamic data
+	/// pointers reach outside of the area. Also has a hard cap of 0x100000000 for any given
+	/// length/offset field. Stack pre: <source_offset> <length> Stack post: <value0> <value1> ...
+	/// <valuen>
 	void abiDecode(TypePointers const& _typeParameters, bool _fromMemory = false);
 
 	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
@@ -195,10 +192,9 @@ public:
 	/// Stack post: <updated_memptr>
 	void zeroInitialiseMemoryArray(ArrayType const& _type);
 
-	/// Copies full 32 byte words in memory (regions cannot overlap), i.e. may copy more than length.
-	/// Length can be zero, in this case, it copies nothing.
-	/// Stack pre: <size> <target> <source>
-	/// Stack post:
+	/// Copies full 32 byte words in memory (regions cannot overlap), i.e. may copy more than
+	/// length. Length can be zero, in this case, it copies nothing. Stack pre: <size> <target>
+	/// <source> Stack post:
 	void memoryCopy32();
 	/// Copies data in memory (regions cannot overlap).
 	/// Length can be zero, in this case, it copies nothing.
@@ -228,8 +224,8 @@ public:
 	/// if a reference type is converted from calldata or storage to memory.
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
-	/// If @a _chopSignBits, the function resets the signed bits out of the width of the signed integer.
-	/// If @a _asPartOfArgumentDecoding is true, failed conversions are flagged via REVERT,
+	/// If @a _chopSignBits, the function resets the signed bits out of the width of the signed
+	/// integer. If @a _asPartOfArgumentDecoding is true, failed conversions are flagged via REVERT,
 	/// otherwise they are flagged with INVALID.
 	void convertType(
 		Type const& _typeOnStack,
@@ -259,8 +255,8 @@ public:
 	/// Rotates the topmost @a _items items on the stack, such that the previously topmost element
 	/// is bottom-most.
 	void rotateStackUp(unsigned _items);
-	/// Rotates the topmost @a _items items on the stack, such that the previously bottom-most element
-	/// is now topmost.
+	/// Rotates the topmost @a _items items on the stack, such that the previously bottom-most
+	/// element is now topmost.
 	void rotateStackDown(unsigned _items);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);

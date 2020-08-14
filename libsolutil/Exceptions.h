@@ -28,7 +28,6 @@
 
 namespace solidity::util
 {
-
 /// Base class for all exceptions.
 struct Exception: virtual std::exception, virtual boost::exception
 {
@@ -43,7 +42,11 @@ struct Exception: virtual std::exception, virtual boost::exception
 private:
 };
 
-#define DEV_SIMPLE_EXCEPTION(X) struct X: virtual ::solidity::util::Exception { const char* what() const noexcept override { return #X; } }
+#define DEV_SIMPLE_EXCEPTION(X)                                   \
+	struct X: virtual ::solidity::util::Exception                 \
+	{                                                             \
+		const char* what() const noexcept override { return #X; } \
+	}
 
 DEV_SIMPLE_EXCEPTION(InvalidAddress);
 DEV_SIMPLE_EXCEPTION(BadHexCharacter);

@@ -16,8 +16,8 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
-* Common code generator for translating Yul / inline assembly to Wasm.
-*/
+ * Common code generator for translating Yul / inline assembly to Wasm.
+ */
 
 #include <libyul/backends/wasm/WasmCodeTransform.h>
 
@@ -53,7 +53,9 @@ wasm::Module WasmCodeTransform::run(Dialect const& _dialect, yul::Block const& _
 			"Expected only function definitions at the highest level."
 		);
 		if (holds_alternative<yul::FunctionDefinition>(statement))
-			module.functions.emplace_back(transform.translateFunction(std::get<yul::FunctionDefinition>(statement)));
+			module.functions.emplace_back(
+				transform.translateFunction(std::get<yul::FunctionDefinition>(statement))
+			);
 	}
 
 	for (auto& imp: transform.m_functionsToImport)
@@ -72,11 +74,13 @@ wasm::Expression WasmCodeTransform::generateMultiAssignment(
 	wasm::LocalAssignment assignment{move(_variableNames.front()), std::move(_firstValue)};
 
 	if (_variableNames.size() == 1)
-		return { std::move(assignment) };
+		return {std::move(assignment)};
 
 	vector<wasm::Type> typesForGlobals;
 	for (size_t i = 1; i < _variableNames.size(); ++i)
-		typesForGlobals.push_back(translatedType(m_typeInfo.typeOfVariable(YulString(_variableNames[i]))));
+		typesForGlobals.push_back(
+			translatedType(m_typeInfo.typeOfVariable(YulString(_variableNames[i])))
+		);
 	vector<size_t> allocatedIndices = allocateGlobals(typesForGlobals);
 	yulAssert(allocatedIndices.size() == _variableNames.size() - 1, "");
 
@@ -85,9 +89,9 @@ wasm::Expression WasmCodeTransform::generateMultiAssignment(
 	for (size_t i = 1; i < _variableNames.size(); ++i)
 		block.statements.emplace_back(wasm::LocalAssignment{
 			move(_variableNames.at(i)),
-			make_unique<wasm::Expression>(wasm::GlobalVariable{m_globalVariables.at(allocatedIndices[i - 1]).variableName})
-		});
-	return { std::move(block) };
+			make_unique<wasm::Expression>(wasm::GlobalVariable{
+				m_globalVariables.at(allocatedIndices[i - 1]).variableName})});
+	return {std::move(block)};
 }
 
 wasm::Expression WasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
@@ -96,7 +100,9 @@ wasm::Expression WasmCodeTransform::operator()(VariableDeclaration const& _varDe
 	for (auto const& var: _varDecl.variables)
 	{
 		variableNames.emplace_back(var.name.str());
-		m_localVariables.emplace_back(wasm::VariableDeclaration{variableNames.back(), translatedType(var.type)});
+		m_localVariables.emplace_back(
+			wasm::VariableDeclaration{variableNames.back(), translatedType(var.type)}
+		);
 	}
 
 	if (_varDecl.value)
@@ -133,8 +139,9 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 					builtin->name.str().substr(4),
 					builtin->name.str(),
 					{},
-					builtin->returns.empty() ? nullopt : make_optional<wasm::Type>(translatedType(builtin->returns.front()))
-				};
+					builtin->returns.empty() ?
+						  nullopt :
+						  make_optional<wasm::Type>(translatedType(builtin->returns.front()))};
 				for (auto const& param: builtin->parameters)
 					imp.paramTypes.emplace_back(translatedType(param));
 				m_functionsToImport[builtin->name] = std::move(imp);
@@ -147,7 +154,8 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 				if (builtin->literalArgument(i))
 				{
 					yulAssert(builtin->literalArgument(i) == LiteralKind::String, "");
-					arguments.emplace_back(wasm::StringLiteral{std::get<Literal>(_call.arguments[i]).value.str()});
+					arguments.emplace_back(wasm::StringLiteral{
+						std::get<Literal>(_call.arguments[i]).value.str()});
 				}
 				else
 					arguments.emplace_back(visitReturnByValue(_call.arguments[i]));
@@ -204,7 +212,9 @@ wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
 
 	wasm::Block block;
 	string condition = m_nameDispenser.newName("condition"_yulstring).str();
-	m_localVariables.emplace_back(wasm::VariableDeclaration{condition, translatedType(expressionType)});
+	m_localVariables.emplace_back(
+		wasm::VariableDeclaration{condition, translatedType(expressionType)}
+	);
 	block.statements.emplace_back(wasm::LocalAssignment{condition, visit(*_switch.expression)});
 
 	vector<wasm::Expression>* currentBlock = &block.statements;
@@ -213,15 +223,16 @@ wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
 		Case const& c = _switch.cases.at(i);
 		if (c.value)
 		{
-			wasm::BuiltinCall comparison{eq_instruction.str(), make_vector<wasm::Expression>(
-				wasm::LocalVariable{condition},
-				visitReturnByValue(*c.value)
-			)};
+			wasm::BuiltinCall comparison{
+				eq_instruction.str(),
+				make_vector<wasm::Expression>(
+					wasm::LocalVariable{condition},
+					visitReturnByValue(*c.value)
+				)};
 			wasm::If ifStmnt{
 				make_unique<wasm::Expression>(move(comparison)),
 				visit(c.body.statements),
-				{}
-			};
+				{}};
 			vector<wasm::Expression>* nextBlock = nullptr;
 			if (i != _switch.cases.size() - 1)
 			{
@@ -237,7 +248,7 @@ wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
 			*currentBlock += visit(c.body.statements);
 		}
 	}
-	return { std::move(block) };
+	return {std::move(block)};
 }
 
 wasm::Expression WasmCodeTransform::operator()(FunctionDefinition const&)
@@ -260,11 +271,11 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 
 	wasm::Loop loop;
 	loop.labelName = newLabel();
-	loop.statements.emplace_back(wasm::BranchIf{wasm::Label{breakLabel}, make_unique<wasm::Expression>(
-		wasm::BuiltinCall{eqz_instruction.str(), make_vector<wasm::Expression>(
-			visitReturnByValue(*_for.condition)
-		)}
-	)});
+	loop.statements.emplace_back(wasm::BranchIf{
+		wasm::Label{breakLabel},
+		make_unique<wasm::Expression>(wasm::BuiltinCall{
+			eqz_instruction.str(),
+			make_vector<wasm::Expression>(visitReturnByValue(*_for.condition))})});
 	loop.statements.emplace_back(wasm::Block{continueLabel, visit(_for.body.statements)});
 	loop.statements += visit(_for.post.statements);
 	loop.statements.emplace_back(wasm::Branch{wasm::Label{loop.labelName}});
@@ -332,17 +343,18 @@ wasm::FunctionDefinition WasmCodeTransform::translateFunction(yul::FunctionDefin
 	for (auto const& param: _fun.parameters)
 		fun.parameters.push_back({param.name.str(), translatedType(param.type)});
 	for (auto const& retParam: _fun.returnVariables)
-		fun.locals.emplace_back(wasm::VariableDeclaration{retParam.name.str(), translatedType(retParam.type)});
+		fun.locals.emplace_back(
+			wasm::VariableDeclaration{retParam.name.str(), translatedType(retParam.type)}
+		);
 	if (!_fun.returnVariables.empty())
 		fun.returnType = translatedType(_fun.returnVariables[0].type);
 
 	yulAssert(m_localVariables.empty(), "");
 	yulAssert(m_functionBodyLabel.empty(), "");
 	m_functionBodyLabel = newLabel();
-	fun.body.emplace_back(wasm::Expression(wasm::Block{
-		m_functionBodyLabel,
-		visit(_fun.body.statements)
-	}));
+	fun.body.emplace_back(
+		wasm::Expression(wasm::Block{m_functionBodyLabel, visit(_fun.body.statements)})
+	);
 	fun.locals += m_localVariables;
 
 	m_localVariables.clear();
@@ -361,17 +373,14 @@ wasm::FunctionDefinition WasmCodeTransform::translateFunction(yul::FunctionDefin
 		for (size_t i = 1; i < _fun.returnVariables.size(); ++i)
 			fun.body.emplace_back(wasm::GlobalAssignment{
 				m_globalVariables.at(allocatedIndices[i - 1]).variableName,
-				make_unique<wasm::Expression>(wasm::LocalVariable{_fun.returnVariables.at(i).name.str()})
-			});
+				make_unique<wasm::Expression>(wasm::LocalVariable{
+					_fun.returnVariables.at(i).name.str()})});
 		fun.body.emplace_back(wasm::LocalVariable{_fun.returnVariables.front().name.str()});
 	}
 	return fun;
 }
 
-string WasmCodeTransform::newLabel()
-{
-	return m_nameDispenser.newName("label_"_yulstring).str();
-}
+string WasmCodeTransform::newLabel() { return m_nameDispenser.newName("label_"_yulstring).str(); }
 
 vector<size_t> WasmCodeTransform::allocateGlobals(vector<wasm::Type> const& _typesForGlobals)
 {
@@ -404,12 +413,19 @@ vector<size_t> WasmCodeTransform::allocateGlobals(vector<wasm::Type> const& _typ
 		allocatedIndices.push_back(nextGlobal[type]++);
 	}
 
-	yulAssert(all_of(
-		allocatedIndices.begin(),
-		allocatedIndices.end(),
-		[this](size_t index){ return index < m_globalVariables.size(); }
-	), "");
-	yulAssert(allocatedIndices.size() == set<size_t>(allocatedIndices.begin(), allocatedIndices.end()).size(), "Indices not unique");
+	yulAssert(
+		all_of(
+			allocatedIndices.begin(),
+			allocatedIndices.end(),
+			[this](size_t index) { return index < m_globalVariables.size(); }
+		),
+		""
+	);
+	yulAssert(
+		allocatedIndices.size() ==
+			set<size_t>(allocatedIndices.begin(), allocatedIndices.end()).size(),
+		"Indices not unique"
+	);
 	yulAssert(allocatedIndices.size() == _typesForGlobals.size(), "");
 	return allocatedIndices;
 }

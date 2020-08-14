@@ -30,7 +30,12 @@
 using namespace std;
 using namespace solidity::util;
 
-bool solidity::util::stringWithinDistance(string const& _str1, string const& _str2, size_t _maxDistance, size_t _lenThreshold)
+bool solidity::util::stringWithinDistance(
+	string const& _str1,
+	string const& _str2,
+	size_t _maxDistance,
+	size_t _lenThreshold
+)
 {
 	if (_str1 == _str2)
 		return true;
@@ -42,8 +47,8 @@ bool solidity::util::stringWithinDistance(string const& _str1, string const& _st
 
 	size_t distance = stringDistance(_str1, _str2);
 
-	// if distance is not greater than _maxDistance, and distance is strictly less than length of both names, they can be considered similar
-	// this is to avoid irrelevant suggestions
+	// if distance is not greater than _maxDistance, and distance is strictly less than length of
+	// both names, they can be considered similar this is to avoid irrelevant suggestions
 	return distance <= _maxDistance && distance < n1 && distance < n2;
 }
 
@@ -55,13 +60,14 @@ size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
 	// This is a two-dimensional array of size 3 x (n2 + 1).
 	vector<size_t> dp(3 * (n2 + 1));
 
-	// In this dp formulation of Damerau–Levenshtein distance we are assuming that the strings are 1-based to make base case storage easier.
-	// So index accesser to _name1 and _name2 have to be adjusted accordingly
+	// In this dp formulation of Damerau–Levenshtein distance we are assuming that the strings are
+	// 1-based to make base case storage easier. So index accesser to _name1 and _name2 have to be
+	// adjusted accordingly
 	for (size_t i1 = 0; i1 <= n1; ++i1)
 		for (size_t i2 = 0; i2 <= n2; ++i2)
 		{
 			size_t x = 0;
-			if (min(i1, i2) == 0) // base case
+			if (min(i1, i2) == 0)  // base case
 				x = max(i1, i2);
 			else
 			{
@@ -70,7 +76,7 @@ size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
 				size_t upleft = dp[((i1 - 1) % 3) + (i2 - 1) * 3];
 				// deletion and insertion
 				x = min(left + 1, up + 1);
-				if (_str1[i1-1] == _str2[i2-1])
+				if (_str1[i1 - 1] == _str2[i2 - 1])
 					// same chars, can skip
 					x = min(x, upleft);
 				else
@@ -78,7 +84,8 @@ size_t solidity::util::stringDistance(string const& _str1, string const& _str2)
 					x = min(x, upleft + 1);
 
 				// transposing
-				if (i1 > 1 && i2 > 1 && _str1[i1 - 1] == _str2[i2 - 2] && _str1[i1 - 2] == _str2[i2 - 1])
+				if (i1 > 1 && i2 > 1 && _str1[i1 - 1] == _str2[i2 - 2] &&
+					_str1[i1 - 2] == _str2[i2 - 1])
 					x = min(x, dp[((i1 - 2) % 3) + (i2 - 2) * 3] + 1);
 			}
 			dp[(i1 % 3) + i2 * 3] = x;
@@ -97,7 +104,11 @@ string solidity::util::quotedAlternativesList(vector<string> const& suggestions)
 	return joinHumanReadable(quotedSuggestions, ", ", " or ");
 }
 
-string solidity::util::suffixedVariableNameList(string const& _baseName, size_t _startSuffix, size_t _endSuffix)
+string solidity::util::suffixedVariableNameList(
+	string const& _baseName,
+	size_t _startSuffix,
+	size_t _endSuffix
+)
 {
 	string result;
 	if (_startSuffix < _endSuffix)

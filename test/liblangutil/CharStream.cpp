@@ -30,7 +30,6 @@
 
 namespace solidity::langutil::test
 {
-
 BOOST_AUTO_TEST_SUITE(CharStreamtest)
 
 BOOST_AUTO_TEST_CASE(test_fail)
@@ -42,12 +41,9 @@ BOOST_AUTO_TEST_CASE(test_fail)
 	BOOST_CHECK('o' == source->advanceAndGet());
 	BOOST_CHECK('n' == source->rollback(1));
 	BOOST_CHECK('w' == source->setPosition(2));
-	BOOST_REQUIRE_THROW(
-		source->setPosition(200),
-		::solidity::langutil::InternalCompilerError
-	);
+	BOOST_REQUIRE_THROW(source->setPosition(200), ::solidity::langutil::InternalCompilerError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

@@ -36,7 +36,6 @@
 
 namespace solidity::frontend
 {
-
 class Type;
 class ArrayType;
 class StructType;
@@ -89,7 +88,8 @@ public:
 		TypePointers const& _givenTypes,
 		TypePointers const& _targetTypes,
 		bool _encodeAsLibraryTypes = false
-	) {
+	)
+	{
 		return tupleEncoder(_givenTypes, _targetTypes, _encodeAsLibraryTypes, true);
 	}
 
@@ -111,7 +111,10 @@ public:
 	);
 
 	/// Specialization of tupleEncoderPacked to _reversed = true
-	std::string tupleEncoderPackedReversed(TypePointers const& _givenTypes, TypePointers const& _targetTypes)
+	std::string tupleEncoderPackedReversed(
+		TypePointers const& _givenTypes,
+		TypePointers const& _targetTypes
+	)
 	{
 		return tupleEncoderPacked(_givenTypes, _targetTypes, true);
 	}
@@ -219,11 +222,7 @@ private:
 	/// part) can happen inside this function.
 	/// @param _fromMemory if decoding from memory instead of from calldata
 	/// @param _forUseOnStack if the decoded value is stored on stack or in memory.
-	std::string abiDecodingFunction(
-		Type const& _type,
-		bool _fromMemory,
-		bool _forUseOnStack
-	);
+	std::string abiDecodingFunction(Type const& _type, bool _fromMemory, bool _forUseOnStack);
 
 	/// Part of @a abiDecodingFunction for value types.
 	std::string abiDecodingFunctionValueType(Type const& _type, bool _fromMemory);
@@ -238,7 +237,11 @@ private:
 	/// Part of @a abiDecodingFunction for struct types.
 	std::string abiDecodingFunctionStruct(StructType const& _type, bool _fromMemory);
 	/// Part of @a abiDecodingFunction for array types.
-	std::string abiDecodingFunctionFunctionType(FunctionType const& _type, bool _fromMemory, bool _forUseOnStack);
+	std::string abiDecodingFunctionFunctionType(
+		FunctionType const& _type,
+		bool _fromMemory,
+		bool _forUseOnStack
+	);
 
 	/// @returns the name of a function that retrieves an element from calldata.
 	std::string calldataAccessFunction(Type const& _type);
@@ -248,20 +251,26 @@ private:
 	/// It returns the new encoding position.
 	/// If the array is not dynamically sized (or in-place encoding was requested),
 	/// does nothing and just returns the position again.
-	std::string arrayStoreLengthForEncodingFunction(ArrayType const& _type, EncodingOptions const& _options);
+	std::string arrayStoreLengthForEncodingFunction(
+		ArrayType const& _type,
+		EncodingOptions const& _options
+	);
 
 	/// Helper function that uses @a _creator to create a function and add it to
 	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
 	/// cases.
-	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
+	std::string createFunction(
+		std::string const& _name,
+		std::function<std::string()> const& _creator
+	);
 
 	/// @returns the size of the static part of the encoding of the given types.
 	static size_t headSize(TypePointers const& _targetTypes);
 
 	/// @returns the number of variables needed to store a type.
 	/// This is one for almost all types. The exception being dynamically sized calldata arrays or
-	/// external function types (if we are encoding from stack, i.e. _options.encodeFunctionFromStack
-	/// is true), for which it is two.
+	/// external function types (if we are encoding from stack, i.e.
+	/// _options.encodeFunctionFromStack is true), for which it is two.
 	static size_t numVariablesForType(Type const& _type, EncodingOptions const& _options);
 
 	/// @returns code that stores @param _message for revert reason

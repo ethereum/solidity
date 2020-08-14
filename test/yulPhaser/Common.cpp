@@ -35,7 +35,6 @@ using namespace solidity::util;
 
 namespace solidity::phaser::test
 {
-
 class ReadLinesFromFileFixture
 {
 protected:
@@ -44,7 +43,6 @@ protected:
 
 namespace
 {
-
 enum class TestEnum
 {
 	A,
@@ -55,8 +53,7 @@ enum class TestEnum
 	GH,
 };
 
-map<TestEnum, string> const TestEnumToStringMap =
-{
+map<TestEnum, string> const TestEnumToStringMap = {
 	{TestEnum::A, "a"},
 	{TestEnum::B, "b"},
 	{TestEnum::AB, "a b"},
@@ -70,11 +67,20 @@ map<string, TestEnum> const StringToTestEnumMap = invertMap(TestEnumToStringMap)
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(CommonTest)
 
-BOOST_FIXTURE_TEST_CASE(readLinesFromFile_should_return_all_lines_from_a_text_file_as_strings_without_newlines, ReadLinesFromFileFixture)
+BOOST_FIXTURE_TEST_CASE(
+	readLinesFromFile_should_return_all_lines_from_a_text_file_as_strings_without_newlines,
+	ReadLinesFromFileFixture
+)
 {
 	{
 		ofstream tmpFile(m_tempDir.memberPath("test-file.txt"));
-		tmpFile << endl << "Line 1" << endl << endl << endl << "Line 2" << endl << "#" << endl << endl;
+		tmpFile << endl
+				<< "Line 1" << endl
+				<< endl
+				<< endl
+				<< "Line 2" << endl
+				<< "#" << endl
+				<< endl;
 	}
 
 	vector<string> lines = readLinesFromFile(m_tempDir.memberPath("test-file.txt"));
@@ -102,7 +108,9 @@ BOOST_AUTO_TEST_CASE(deserializeChoice_should_convert_string_to_enum)
 	BOOST_TEST(!cdStream.fail());
 }
 
-BOOST_AUTO_TEST_CASE(deserializeChoice_should_set_failbit_if_there_is_no_enum_corresponding_to_string)
+BOOST_AUTO_TEST_CASE(
+	deserializeChoice_should_set_failbit_if_there_is_no_enum_corresponding_to_string
+)
 {
 	istringstream xyzStream("xyz");
 	TestEnum xyzResult;

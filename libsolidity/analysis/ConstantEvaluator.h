@@ -34,7 +34,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 class TypeChecker;
 
 /**
@@ -46,13 +45,11 @@ public:
 	ConstantEvaluator(
 		langutil::ErrorReporter& _errorReporter,
 		size_t _newDepth = 0,
-		std::shared_ptr<std::map<ASTNode const*, TypePointer>> _types = std::make_shared<std::map<ASTNode const*, TypePointer>>()
+		std::shared_ptr<std::map<ASTNode const*, TypePointer>> _types =
+			std::make_shared<std::map<ASTNode const*, TypePointer>>()
 	):
-		m_errorReporter(_errorReporter),
-		m_depth(_newDepth),
-		m_types(std::move(_types))
-	{
-	}
+		m_errorReporter(_errorReporter), m_depth(_newDepth), m_types(std::move(_types))
+	{}
 
 	TypePointer evaluate(Expression const& _expr);
 

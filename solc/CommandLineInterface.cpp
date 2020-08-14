@@ -63,12 +63,12 @@
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/algorithm/string.hpp>
 
-#ifdef _WIN32 // windows
-	#include <io.h>
-	#define isatty _isatty
-	#define fileno _fileno
-#else // unix
-	#include <unistd.h>
+#ifdef _WIN32  // windows
+#include <io.h>
+#define isatty _isatty
+#define fileno _fileno
+#else  // unix
+#include <unistd.h>
 #endif
 
 #include <string>
@@ -76,7 +76,7 @@
 #include <fstream>
 
 #if !defined(STDERR_FILENO)
-	#define STDERR_FILENO 2
+#define STDERR_FILENO 2
 #endif
 
 using namespace std;
@@ -88,7 +88,6 @@ namespace po = boost::program_options;
 
 namespace solidity::frontend
 {
-
 bool g_hasOutput = false;
 
 std::ostream& sout()
@@ -159,13 +158,11 @@ static string const g_strRevertStrings = "revert-strings";
 static string const g_strStorageLayout = "storage-layout";
 
 /// Possible arguments to for --revert-strings
-static set<string> const g_revertStringsArgs
-{
+static set<string> const g_revertStringsArgs{
 	revertStringsToString(RevertStrings::Default),
 	revertStringsToString(RevertStrings::Strip),
 	revertStringsToString(RevertStrings::Debug),
-	revertStringsToString(RevertStrings::VerboseDebug)
-};
+	revertStringsToString(RevertStrings::VerboseDebug)};
 
 static string const g_strSignatureHashes = "hashes";
 static string const g_strSources = "sources";
@@ -230,8 +227,7 @@ static string const g_argErrorIds = g_strErrorIds;
 static string const g_argOldReporter = g_strOldReporter;
 
 /// Possible arguments to for --combined-json
-static set<string> const g_combinedJsonArgs
-{
+static set<string> const g_combinedJsonArgs{
 	g_strAbi,
 	g_strAsm,
 	g_strAst,
@@ -246,40 +242,21 @@ static set<string> const g_combinedJsonArgs
 	g_strSignatureHashes,
 	g_strSrcMap,
 	g_strSrcMapRuntime,
-	g_strStorageLayout
-};
+	g_strStorageLayout};
 
 /// Possible arguments to for --machine
-static set<string> const g_machineArgs
-{
-	g_strEVM,
-	g_strEVM15,
-	g_strEwasm
-};
+static set<string> const g_machineArgs{g_strEVM, g_strEVM15, g_strEwasm};
 
 /// Possible arguments to for --yul-dialect
-static set<string> const g_yulDialectArgs
-{
-	g_strEVM,
-	g_strEwasm
-};
+static set<string> const g_yulDialectArgs{g_strEVM, g_strEwasm};
 
 /// Possible arguments to for --metadata-hash
-static set<string> const g_metadataHashArgs
-{
-	g_strIPFS,
-	g_strSwarm,
-	g_strNone
-};
+static set<string> const g_metadataHashArgs{g_strIPFS, g_strSwarm, g_strNone};
 
 static void version()
 {
-	sout() <<
-		"solc, the solidity compiler commandline interface" <<
-		endl <<
-		"Version: " <<
-		solidity::frontend::VersionString <<
-		endl;
+	sout() << "solc, the solidity compiler commandline interface" << endl
+		   << "Version: " << solidity::frontend::VersionString << endl;
 	exit(0);
 }
 
@@ -297,20 +274,19 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		return true;
 	if (_args.count(g_argOutputDir))
 		return false;
-	for (string const& arg: {
-		g_argAbi,
-		g_argAsm,
-		g_argAsmJson,
-		g_argAstJson,
-		g_argBinary,
-		g_argBinaryRuntime,
-		g_argMetadata,
-		g_argNatspecUser,
-		g_argNatspecDev,
-		g_argOpcodes,
-		g_argSignatureHashes,
-		g_argStorageLayout
-	})
+	for (string const& arg:
+		 {g_argAbi,
+		  g_argAsm,
+		  g_argAsmJson,
+		  g_argAstJson,
+		  g_argBinary,
+		  g_argBinaryRuntime,
+		  g_argMetadata,
+		  g_argNatspecUser,
+		  g_argNatspecDev,
+		  g_argOpcodes,
+		  g_argSignatureHashes,
+		  g_argStorageLayout})
 		if (_args.count(arg))
 			return true;
 	return false;
@@ -321,7 +297,10 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinary))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin", objectWithLinkRefsHex(m_compiler->object(_contract)));
+			createFile(
+				m_compiler->filesystemFriendlyName(_contract) + ".bin",
+				objectWithLinkRefsHex(m_compiler->object(_contract))
+			);
 		else
 		{
 			sout() << "Binary:" << endl;
@@ -331,7 +310,10 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryRuntime))
 	{
 		if (m_args.count(g_argOutputDir))
-			createFile(m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime", objectWithLinkRefsHex(m_compiler->runtimeObject(_contract)));
+			createFile(
+				m_compiler->filesystemFriendlyName(_contract) + ".bin-runtime",
+				objectWithLinkRefsHex(m_compiler->runtimeObject(_contract))
+			);
 		else
 		{
 			sout() << "Binary of the runtime part:" << endl;
@@ -343,7 +325,10 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count(g_argOutputDir))
-		createFile(m_compiler->filesystemFriendlyName(_contract) + ".opcode", evmasm::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contract) + ".opcode",
+			evmasm::disassemble(m_compiler->object(_contract).bytecode)
+		);
 	else
 	{
 		sout() << "Opcodes:" << endl;
@@ -358,7 +343,10 @@ void CommandLineInterface::handleIR(string const& _contractName)
 		return;
 
 	if (m_args.count(g_argOutputDir))
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".yul", m_compiler->yulIR(_contractName));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + ".yul",
+			m_compiler->yulIR(_contractName)
+		);
 	else
 	{
 		sout() << "IR:" << endl;
@@ -372,7 +360,10 @@ void CommandLineInterface::handleIROptimized(string const& _contractName)
 		return;
 
 	if (m_args.count(g_argOutputDir))
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul", m_compiler->yulIROptimized(_contractName));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + "_opt.yul",
+			m_compiler->yulIROptimized(_contractName)
+		);
 	else
 	{
 		sout() << "Optimized IR:" << endl;
@@ -387,7 +378,10 @@ void CommandLineInterface::handleEwasm(string const& _contractName)
 
 	if (m_args.count(g_argOutputDir))
 	{
-		createFile(m_compiler->filesystemFriendlyName(_contractName) + ".wast", m_compiler->ewasm(_contractName));
+		createFile(
+			m_compiler->filesystemFriendlyName(_contractName) + ".wast",
+			m_compiler->ewasm(_contractName)
+		);
 		createFile(
 			m_compiler->filesystemFriendlyName(_contractName) + ".wasm",
 			asString(m_compiler->ewasmObject(_contractName).bytecode)
@@ -482,13 +476,9 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 
 	if (m_args.count(argName))
 	{
-		std::string output = jsonPrettyPrint(
-			removeNullMembers(
-				_natspecDev ?
-				m_compiler->natspecDev(_contract) :
-				m_compiler->natspecUser(_contract)
-			)
-		);
+		std::string output = jsonPrettyPrint(removeNullMembers(
+			_natspecDev ? m_compiler->natspecDev(_contract) : m_compiler->natspecUser(_contract)
+		));
 
 		if (m_args.count(g_argOutputDir))
 			createFile(m_compiler->filesystemFriendlyName(_contract) + suffix, output);
@@ -497,7 +487,6 @@ void CommandLineInterface::handleNatspec(bool _natspecDev, string const& _contra
 			sout() << title << endl;
 			sout() << output << endl;
 		}
-
 	}
 }
 
@@ -602,7 +591,9 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		m_sourceCodes[g_stdinFileName] = readStandardInput();
 	if (m_sourceCodes.size() == 0)
 	{
-		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		serr() << "No input files given. If you wish to use the standard input please specify "
+				  "\"-\" explicitly."
+			   << endl;
 		return false;
 	}
 
@@ -624,16 +615,22 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	}
 
 	vector<string> libraries;
-	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);
+	boost::split(
+		libraries,
+		data,
+		boost::is_space() || boost::is_any_of(","),
+		boost::token_compress_on
+	);
 	for (string const& lib: libraries)
 		if (!lib.empty())
 		{
-			//search for last colon in string as our binaries output placeholders in the form of file:Name
-			//so we need to search for the second `:` in the string
+			// search for last colon in string as our binaries output placeholders in the form of
+			// file:Name so we need to search for the second `:` in the string
 			auto colon = lib.rfind(':');
 			if (colon == string::npos)
 			{
-				serr() << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
+				serr() << "Colon separator missing in library address specifier \"" << lib << "\""
+					   << endl;
 				return false;
 			}
 			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(colon));
@@ -650,12 +647,14 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			}
 			else if (addrString.length() != 40)
 			{
-				serr() << "Invalid length for address for library \"" << libName << "\": " << addrString.length() << " instead of 40 characters." << endl;
+				serr() << "Invalid length for address for library \"" << libName
+					   << "\": " << addrString.length() << " instead of 40 characters." << endl;
 				return false;
 			}
 			if (!passesAddressChecksum(addrString, false))
 			{
-				serr() << "Invalid checksum on address for library \"" << libName << "\": " << addrString << endl;
+				serr() << "Invalid checksum on address for library \"" << libName
+					   << "\": " << addrString << endl;
 				serr() << "The correct checksum is " << getChecksummedAddress(addrString) << endl;
 				return false;
 			}
@@ -663,7 +662,8 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 			h160 address(binAddr, h160::AlignRight);
 			if (binAddr.size() > 20 || address == h160())
 			{
-				serr() << "Invalid address for library \"" << libName << "\": " << addrString << endl;
+				serr() << "Invalid address for library \"" << libName << "\": " << addrString
+					   << endl;
 				return false;
 			}
 			m_libraries[libName] = address;
@@ -681,14 +681,20 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 	{
 		Json::Value ast;
 		astAssert(jsonParseStrict(srcPair.second, ast), "Input file could not be parsed to JSON");
-		astAssert(ast.isMember("sources"), "Invalid Format for import-JSON: Must have 'sources'-object");
+		astAssert(
+			ast.isMember("sources"),
+			"Invalid Format for import-JSON: Must have 'sources'-object"
+		);
 
 		for (auto& src: ast["sources"].getMemberNames())
 		{
 			std::string astKey = ast["sources"][src].isMember("ast") ? "ast" : "AST";
 
 			astAssert(ast["sources"][src].isMember(astKey), "astkey is not member");
-			astAssert(ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",  "Top-level node should be a 'SourceUnit'");
+			astAssert(
+				ast["sources"][src][astKey]["nodeType"].asString() == "SourceUnit",
+				"Top-level node should be a 'SourceUnit'"
+			);
 			astAssert(sourceJsons.count(src) == 0, "All sources must have unique names");
 			sourceJsons.emplace(src, move(ast["sources"][src][astKey]));
 			tmpSources[src] = util::jsonCompactPrint(ast);
@@ -710,14 +716,17 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	string pathName = (p / _fileName).string();
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
-		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --" << g_strOverwrite << " to force)." << endl;
+		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --"
+			   << g_strOverwrite << " to force)." << endl;
 		m_error = true;
 		return;
 	}
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
+		BOOST_THROW_EXCEPTION(
+			FileError() << errinfo_comment("Could not write to file: " + pathName)
+		);
 }
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
@@ -730,10 +739,12 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 	g_hasOutput = false;
 
 	// Declare the supported options.
-	po::options_description desc((R"(solc, the Solidity commandline compiler.
+	po::options_description desc(
+		(R"(solc, the Solidity commandline compiler.
 
 This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
-are welcome to redistribute it under certain conditions. See 'solc --)" + g_strLicense + R"('
+are welcome to redistribute it under certain conditions. See 'solc --)" +
+		 g_strLicense + R"('
 for details.
 
 Usage: solc [options] [input_file...]
@@ -743,232 +754,186 @@ at standard output or in files in the output directory, if specified.
 Imports are automatically read from the filesystem, but it is also possible to
 remap paths using the context:prefix=path syntax.
 Example:
-solc --)" + g_argBinary + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
+solc --)" +
+		 g_argBinary + R"( -o /tmp/solcoutput dapp-bin=/usr/local/lib/dapp-bin contract.sol
 
-General Information)").c_str(),
+General Information)")
+			.c_str(),
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23
 	);
-	desc.add_options()
-		(g_argHelp.c_str(), "Show help message and exit.")
-		(g_argVersion.c_str(), "Show version and exit.")
-		(g_strLicense.c_str(), "Show licensing information and exit.")
-	;
+	desc.add_options()(g_argHelp.c_str(), "Show help message and exit.")(
+		g_argVersion.c_str(),
+		"Show version and exit."
+	)(g_strLicense.c_str(), "Show licensing information and exit.");
 
 	po::options_description inputOptions("Input Options");
-	inputOptions.add_options()
-		(
-			g_argBasePath.c_str(),
-			po::value<string>()->value_name("path"),
-			"Use the given path as the root of the source tree instead of the root of the filesystem."
-		)
-		(
-			g_argAllowPaths.c_str(),
-			po::value<string>()->value_name("path(s)"),
-			"Allow a given path for imports. A list of paths can be supplied by separating them with a comma."
-		)
-		(
-			g_argIgnoreMissingFiles.c_str(),
-			"Ignore missing files."
-		)
-		(
-			g_argErrorRecovery.c_str(),
-			"Enables additional parser error recovery."
-		)
-	;
+	inputOptions.add_options()(
+		g_argBasePath.c_str(),
+		po::value<string>()->value_name("path"),
+		"Use the given path as the root of the source tree instead of the root of the filesystem."
+	)(g_argAllowPaths.c_str(),
+	  po::value<string>()->value_name("path(s)"),
+	  "Allow a given path for imports. A list of paths can be supplied by separating them with a "
+	  "comma.")(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.")(
+		g_argErrorRecovery.c_str(),
+		"Enables additional parser error recovery."
+	);
 	desc.add(inputOptions);
 
 	po::options_description outputOptions("Output Options");
-	outputOptions.add_options()
-		(
-			(g_argOutputDir + ",o").c_str(),
-			po::value<string>()->value_name("path"),
-			"If given, creates one file per component and contract/file at the specified directory."
-		)
-		(
-			g_strOverwrite.c_str(),
-			"Overwrite existing files (used together with -o)."
-		)
-		(
-			g_strEVMVersion.c_str(),
-			po::value<string>()->value_name("version"),
-			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
-			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
-		)
-		(
-			g_strRevertStrings.c_str(),
-			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
-			"Strip revert (and require) reason strings or add additional debugging information."
-		)
-	;
+	outputOptions.add_options()(
+		(g_argOutputDir + ",o").c_str(),
+		po::value<string>()->value_name("path"),
+		"If given, creates one file per component and contract/file at the specified directory."
+	)(g_strOverwrite.c_str(), "Overwrite existing files (used together with -o).")(
+		g_strEVMVersion.c_str(),
+		po::value<string>()->value_name("version"),
+		"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
+		"byzantium, constantinople, petersburg, istanbul (default) or berlin."
+	)(g_strRevertStrings.c_str(),
+	  po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
+	  "Strip revert (and require) reason strings or add additional debugging information.");
 	desc.add(outputOptions);
 
 	po::options_description alternativeInputModes("Alternative Input Modes");
-	alternativeInputModes.add_options()
-		(
-			g_argStandardJSON.c_str(),
-			"Switch to Standard JSON input / output mode, ignoring all options. "
-			"It reads from standard input, if no input file was given, otherwise it reads from the provided input file. The result will be written to standard output."
-		)
-		(
-			g_argLink.c_str(),
-			("Switch to linker mode, ignoring all options apart from --" + g_argLibraries + " "
-			"and modify binaries in place.").c_str()
-		)
-		(
-			g_argAssemble.c_str(),
-			("Switch to assembly mode, ignoring all options except "
-			"--" + g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is assembly.").c_str()
-		)
-		(
-			g_argYul.c_str(),
-			("Switch to Yul mode, ignoring all options except "
-			"--" + g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is Yul.").c_str()
-		)
-		(
-			g_argStrictAssembly.c_str(),
-			("Switch to strict assembly mode, ignoring all options except "
-			"--" + g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" + g_strYulOptimizations + " "
-			"and assumes input is strict assembly.").c_str()
-		)
-		(
-			g_argImportAst.c_str(),
-			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
-			"Supported Inputs is the output of the --" + g_argStandardJSON + " or the one produced by "
-			"--" + g_argCombinedJson + " " + g_strAst + "," + g_strCompactJSON).c_str()
-		)
-	;
+	alternativeInputModes.add_options()(
+		g_argStandardJSON.c_str(),
+		"Switch to Standard JSON input / output mode, ignoring all options. "
+		"It reads from standard input, if no input file was given, otherwise it reads from the "
+		"provided input file. The result will be written to standard output."
+	)(g_argLink.c_str(),
+	  ("Switch to linker mode, ignoring all options apart from --" + g_argLibraries +
+	   " "
+	   "and modify binaries in place.")
+		  .c_str())(
+		g_argAssemble.c_str(),
+		("Switch to assembly mode, ignoring all options except "
+		 "--" +
+		 g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" +
+		 g_strYulOptimizations +
+		 " "
+		 "and assumes input is assembly.")
+			.c_str()
+	)(g_argYul.c_str(),
+	  ("Switch to Yul mode, ignoring all options except "
+	   "--" +
+	   g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" +
+	   g_strYulOptimizations +
+	   " "
+	   "and assumes input is Yul.")
+		  .c_str())(
+		g_argStrictAssembly.c_str(),
+		("Switch to strict assembly mode, ignoring all options except "
+		 "--" +
+		 g_argMachine + ", --" + g_strYulDialect + ", --" + g_argOptimize + " and --" +
+		 g_strYulOptimizations +
+		 " "
+		 "and assumes input is strict assembly.")
+			.c_str()
+	)(g_argImportAst.c_str(),
+	  ("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
+	   "Supported Inputs is the output of the --" +
+	   g_argStandardJSON +
+	   " or the one produced by "
+	   "--" +
+	   g_argCombinedJson + " " + g_strAst + "," + g_strCompactJSON)
+		  .c_str());
 	desc.add(alternativeInputModes);
 
 	po::options_description assemblyModeOptions("Assembly Mode Options");
-	assemblyModeOptions.add_options()
-		(
-			g_argMachine.c_str(),
-			po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
-			"Target machine in assembly or Yul mode."
-		)
-		(
-			g_strYulDialect.c_str(),
-			po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
-			"Input dialect to use in assembly or yul mode."
-		)
-	;
+	assemblyModeOptions.add_options()(
+		g_argMachine.c_str(),
+		po::value<string>()->value_name(boost::join(g_machineArgs, ",")),
+		"Target machine in assembly or Yul mode."
+	)(g_strYulDialect.c_str(),
+	  po::value<string>()->value_name(boost::join(g_yulDialectArgs, ",")),
+	  "Input dialect to use in assembly or yul mode.");
 	desc.add(assemblyModeOptions);
 
 	po::options_description linkerModeOptions("Linker Mode Options");
-	linkerModeOptions.add_options()
-		(
-			g_argLibraries.c_str(),
-			po::value<vector<string>>()->value_name("libs"),
-			"Direct string or file containing library addresses. Syntax: "
-			"<libraryName>:<address> [, or whitespace] ...\n"
-			"Address is interpreted as a hex string optionally prefixed by 0x."
-		)
-	;
+	linkerModeOptions.add_options()(
+		g_argLibraries.c_str(),
+		po::value<vector<string>>()->value_name("libs"),
+		"Direct string or file containing library addresses. Syntax: "
+		"<libraryName>:<address> [, or whitespace] ...\n"
+		"Address is interpreted as a hex string optionally prefixed by 0x."
+	);
 	desc.add(linkerModeOptions);
 
 	po::options_description outputFormatting("Output Formatting");
-	outputFormatting.add_options()
-		(
-			g_argPrettyJson.c_str(),
-			"Output JSON in pretty format. Currently it only works with the combined JSON output."
-		)
-		(
-			g_argColor.c_str(),
-			"Force colored output."
-		)
-		(
-			g_argNoColor.c_str(),
-			"Explicitly disable colored output, disabling terminal auto-detection."
-		)
-		(
-			g_argErrorIds.c_str(),
-			"Output error codes."
-		)
-		(
-			g_argOldReporter.c_str(),
-			"Enables old diagnostics reporter (legacy option, will be removed)."
-		)
-	;
+	outputFormatting.add_options()(
+		g_argPrettyJson.c_str(),
+		"Output JSON in pretty format. Currently it only works with the combined JSON output."
+	)(g_argColor.c_str(), "Force colored output.")(
+		g_argNoColor.c_str(),
+		"Explicitly disable colored output, disabling terminal auto-detection."
+	)(g_argErrorIds.c_str(), "Output error codes.")(
+		g_argOldReporter.c_str(),
+		"Enables old diagnostics reporter (legacy option, will be removed)."
+	);
 	desc.add(outputFormatting);
 
 	po::options_description outputComponents("Output Components");
-	outputComponents.add_options()
-		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
-		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
-		(g_argAsm.c_str(), "EVM assembly of the contracts.")
-		(g_argAsmJson.c_str(), "EVM assembly of the contracts in JSON format.")
-		(g_argOpcodes.c_str(), "Opcodes of the contracts.")
-		(g_argBinary.c_str(), "Binary of the contracts in hex.")
-		(g_argBinaryRuntime.c_str(), "Binary of the runtime part of the contracts in hex.")
-		(g_argAbi.c_str(), "ABI specification of the contracts.")
-		(g_argIR.c_str(), "Intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(g_argIROptimized.c_str(), "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")
-		(g_argEwasm.c_str(), "Ewasm text representation of all contracts (EXPERIMENTAL).")
-		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
-		(g_argNatspecUser.c_str(), "Natspec user documentation of all contracts.")
-		(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")
-		(g_argMetadata.c_str(), "Combined Metadata JSON whose Swarm hash is stored on-chain.")
-		(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.")
-	;
+	outputComponents.add_options()(g_argAstJson.c_str(), "AST of all source files in JSON format.")(
+		g_argAstCompactJson.c_str(),
+		"AST of all source files in a compact JSON format."
+	)(g_argAsm.c_str(), "EVM assembly of the contracts.")(
+		g_argAsmJson.c_str(),
+		"EVM assembly of the contracts in JSON format."
+	)(g_argOpcodes.c_str(),
+	  "Opcodes of the contracts.")(g_argBinary.c_str(), "Binary of the contracts in hex.")(
+		g_argBinaryRuntime.c_str(),
+		"Binary of the runtime part of the contracts in hex."
+	)(g_argAbi.c_str(), "ABI specification of the contracts.")(
+		g_argIR.c_str(),
+		"Intermediate Representation (IR) of all contracts (EXPERIMENTAL)."
+	)(g_argIROptimized.c_str(),
+	  "Optimized intermediate Representation (IR) of all contracts (EXPERIMENTAL).")(
+		g_argEwasm.c_str(),
+		"Ewasm text representation of all contracts (EXPERIMENTAL)."
+	)(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")(
+		g_argNatspecUser.c_str(),
+		"Natspec user documentation of all contracts."
+	)(g_argNatspecDev.c_str(), "Natspec developer documentation of all contracts.")(
+		g_argMetadata.c_str(),
+		"Combined Metadata JSON whose Swarm hash is stored on-chain."
+	)(g_argStorageLayout.c_str(), "Slots, offsets and types of the contract's state variables.");
 	desc.add(outputComponents);
 
 	po::options_description extraOutput("Extra Output");
-	extraOutput.add_options()
-		(
-			g_argGas.c_str(),
-			"Print an estimate of the maximal gas usage for each function."
-		)
-		(
-			g_argCombinedJson.c_str(),
-			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
-			"Output a single json document containing the specified information."
-		)
-	;
+	extraOutput.add_options()(
+		g_argGas.c_str(),
+		"Print an estimate of the maximal gas usage for each function."
+	)(g_argCombinedJson.c_str(),
+	  po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
+	  "Output a single json document containing the specified information.");
 	desc.add(extraOutput);
 
 	po::options_description metadataOptions("Metadata Options");
-	metadataOptions.add_options()
-		(
-			g_argMetadataHash.c_str(),
-			po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
-			"Choose hash method for the bytecode metadata or disable it."
-		)
-		(
-			g_argMetadataLiteral.c_str(),
-			"Store referenced sources as literal data in the metadata output."
-		)
-	;
+	metadataOptions.add_options()(
+		g_argMetadataHash.c_str(),
+		po::value<string>()->value_name(boost::join(g_metadataHashArgs, ",")),
+		"Choose hash method for the bytecode metadata or disable it."
+	)(g_argMetadataLiteral.c_str(),
+	  "Store referenced sources as literal data in the metadata output.");
 	desc.add(metadataOptions);
 
 	po::options_description optimizerOptions("Optimizer Options");
-	optimizerOptions.add_options()
-		(
-			g_argOptimize.c_str(),
-			"Enable bytecode optimizer."
-		)
-		(
-			g_argOptimizeRuns.c_str(),
-			po::value<unsigned>()->value_name("n")->default_value(200),
-			"Set for how many contract runs to optimize. "
-			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
-		)
-		(
-			g_strOptimizeYul.c_str(),
-			("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.").c_str()
-		)
-		(
-			g_strNoOptimizeYul.c_str(),
-			"Disable Yul optimizer in Solidity."
-		)
-		(
-			g_strYulOptimizations.c_str(),
-			po::value<string>()->value_name("steps"),
-			"Forces yul optimizer to use the specified sequence of optimization steps instead of the built-in one."
-		)
-	;
+	optimizerOptions.add_options()(g_argOptimize.c_str(), "Enable bytecode optimizer.")(
+		g_argOptimizeRuns.c_str(),
+		po::value<unsigned>()->value_name("n")->default_value(200),
+		"Set for how many contract runs to optimize. "
+		"Lower values will optimize more for initial deployment cost, higher values will optimize "
+		"more for high-frequency usage."
+	)(g_strOptimizeYul.c_str(),
+	  ("Legacy option, ignored. Use the general --" + g_argOptimize + " to enable Yul optimizer.")
+		  .c_str())(g_strNoOptimizeYul.c_str(), "Disable Yul optimizer in Solidity.")(
+		g_strYulOptimizations.c_str(),
+		po::value<string>()->value_name("steps"),
+		"Forces yul optimizer to use the specified sequence of optimization steps instead of the "
+		"built-in one."
+	);
 	desc.add(optimizerOptions);
 
 	po::options_description allOptions = desc;
@@ -982,7 +947,9 @@ General Information)").c_str(),
 	try
 	{
 		po::command_line_parser cmdLineParser(_argc, _argv);
-		cmdLineParser.style(po::command_line_style::default_style & (~po::command_line_style::allow_guessing));
+		cmdLineParser.style(
+			po::command_line_style::default_style & (~po::command_line_style::allow_guessing)
+		);
 		cmdLineParser.options(allOptions).positional(filesPositions);
 		po::store(cmdLineParser.run(), m_args);
 	}
@@ -994,11 +961,13 @@ General Information)").c_str(),
 
 	if (m_args.count(g_argColor) && m_args.count(g_argNoColor))
 	{
-		serr() << "Option " << g_argColor << " and " << g_argNoColor << " are mutualy exclusive." << endl;
+		serr() << "Option " << g_argColor << " and " << g_argNoColor << " are mutualy exclusive."
+			   << endl;
 		return false;
 	}
 
-	m_coloredOutput = !m_args.count(g_argNoColor) && (isatty(STDERR_FILENO) || m_args.count(g_argColor));
+	m_coloredOutput =
+		!m_args.count(g_argNoColor) && (isatty(STDERR_FILENO) || m_args.count(g_argColor));
 
 	m_withErrorIds = m_args.count(g_argErrorIds);
 
@@ -1026,12 +995,14 @@ General Information)").c_str(),
 		std::optional<RevertStrings> revertStrings = revertStringsFromString(revertStringsString);
 		if (!revertStrings)
 		{
-			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString << endl;
+			serr() << "Invalid option for --" << g_strRevertStrings << ": " << revertStringsString
+				   << endl;
 			return false;
 		}
 		if (*revertStrings == RevertStrings::VerboseDebug)
 		{
-			serr() << "Only \"default\", \"strip\" and \"debug\" are implemented for --" << g_strRevertStrings << " for now." << endl;
+			serr() << "Only \"default\", \"strip\" and \"debug\" are implemented for --"
+				   << g_strRevertStrings << " for now." << endl;
 			return false;
 		}
 		m_revertStrings = *revertStrings;
@@ -1040,7 +1011,8 @@ General Information)").c_str(),
 	if (m_args.count(g_argCombinedJson))
 	{
 		vector<string> requests;
-		for (string const& item: boost::split(requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(",")))
+		for (string const& item:
+			 boost::split(requests, m_args[g_argCombinedJson].as<string>(), boost::is_any_of(",")))
 			if (!g_combinedJsonArgs.count(item))
 			{
 				serr() << "Invalid option to --" << g_argCombinedJson << ": " << item << endl;
@@ -1059,10 +1031,10 @@ bool CommandLineInterface::processInput()
 		try
 		{
 			if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
-				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-					"ReadFile callback used as callback kind " +
-					_kind
-				));
+				BOOST_THROW_EXCEPTION(
+					InternalCompilerError()
+					<< errinfo_comment("ReadFile callback used as callback kind " + _kind)
+				);
 			string validPath = _path;
 			if (validPath.find("file://") == 0)
 				validPath.erase(0, 7);
@@ -1073,10 +1045,9 @@ bool CommandLineInterface::processInput()
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
 				// If dir is a prefix of boostPath, we are fine.
-				if (
-					std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-					std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
-				)
+				if (std::distance(allowedDir.begin(), allowedDir.end()) <=
+						std::distance(canonicalPath.begin(), canonicalPath.end()) &&
+					std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin()))
 				{
 					isAllowed = true;
 					break;
@@ -1097,7 +1068,9 @@ bool CommandLineInterface::processInput()
 		}
 		catch (Exception const& _exception)
 		{
-			return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
+			return ReadCallback::Result{
+				false,
+				"Exception in read callback: " + boost::diagnostic_information(_exception)};
 		}
 		catch (...)
 		{
@@ -1121,7 +1094,8 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_argAllowPaths))
 	{
 		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
+		for (string const& path:
+			 boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
 		{
 			auto filesystem_path = boost::filesystem::path(path);
 			// If the given path had a trailing slash, the Boost filesystem
@@ -1144,7 +1118,8 @@ bool CommandLineInterface::processInput()
 	};
 	if (countEnabledOptions(exclusiveModes) > 1)
 	{
-		serr() << "The following options are mutually exclusive: " << joinOptionNames(exclusiveModes) << ". ";
+		serr() << "The following options are mutually exclusive: "
+			   << joinOptionNames(exclusiveModes) << ". ";
 		serr() << "Select at most one." << endl;
 		return false;
 	}
@@ -1159,7 +1134,8 @@ bool CommandLineInterface::processInput()
 			jsonFile = inputFiles[0];
 		else if (inputFiles.size() > 1)
 		{
-			serr() << "If --" << g_argStandardJSON << " is used, only zero or one input files are supported." << endl;
+			serr() << "If --" << g_argStandardJSON
+				   << " is used, only zero or one input files are supported." << endl;
 			return false;
 		}
 		string input;
@@ -1183,10 +1159,12 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_strEVMVersion))
 	{
 		string versionOptionStr = m_args[g_strEVMVersion].as<string>();
-		std::optional<langutil::EVMVersion> versionOption = langutil::EVMVersion::fromString(versionOptionStr);
+		std::optional<langutil::EVMVersion> versionOption =
+			langutil::EVMVersion::fromString(versionOptionStr);
 		if (!versionOption)
 		{
-			serr() << "Invalid option for --" << g_strEVMVersion << ": " << versionOptionStr << endl;
+			serr() << "Invalid option for --" << g_strEVMVersion << ": " << versionOptionStr
+				   << endl;
 			return false;
 		}
 		m_evmVersion = *versionOption;
@@ -1204,13 +1182,16 @@ bool CommandLineInterface::processInput()
 		};
 		if (countEnabledOptions(nonAssemblyModeOptions) >= 1)
 		{
-			auto optionEnabled = [&](string const& name){ return m_args.count(name) > 0; };
-			auto enabledOptions = boost::copy_range<vector<string>>(nonAssemblyModeOptions | boost::adaptors::filtered(optionEnabled));
+			auto optionEnabled = [&](string const& name) { return m_args.count(name) > 0; };
+			auto enabledOptions = boost::copy_range<vector<string>>(
+				nonAssemblyModeOptions | boost::adaptors::filtered(optionEnabled)
+			);
 
 			serr() << "The following options are invalid in assembly mode: ";
 			serr() << joinOptionNames(enabledOptions) << ".";
 			if (m_args.count(g_strOptimizeYul) || m_args.count(g_strNoOptimizeYul))
-				serr() << " Optimization is disabled by default and can be enabled with --" << g_argOptimize << "." << endl;
+				serr() << " Optimization is disabled by default and can be enabled with --"
+					   << g_argOptimize << "." << endl;
 			serr() << endl;
 			return false;
 		}
@@ -1219,7 +1200,9 @@ bool CommandLineInterface::processInput()
 		m_onlyAssemble = true;
 		using Input = yul::AssemblyStack::Language;
 		using Machine = yul::AssemblyStack::Machine;
-		Input inputLanguage = m_args.count(g_argYul) ? Input::Yul : (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
+		Input inputLanguage = m_args.count(g_argYul) ?
+			  Input::Yul :
+			  (m_args.count(g_argStrictAssembly) ? Input::StrictAssembly : Input::Assembly);
 		Machine targetMachine = Machine::EVM;
 		bool optimize = m_args.count(g_argOptimize);
 
@@ -1228,7 +1211,8 @@ bool CommandLineInterface::processInput()
 		{
 			if (!optimize)
 			{
-				serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
+				serr() << "--" << g_strYulOptimizations
+					   << " is invalid if Yul optimizer is disabled" << endl;
 				return false;
 			}
 
@@ -1238,7 +1222,8 @@ bool CommandLineInterface::processInput()
 			}
 			catch (yul::OptimizerException const& _exception)
 			{
-				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
+				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": "
+					   << _exception.what() << endl;
 				return false;
 			}
 
@@ -1285,22 +1270,19 @@ bool CommandLineInterface::processInput()
 		}
 		if (optimize && (inputLanguage != Input::StrictAssembly && inputLanguage != Input::Ewasm))
 		{
-			serr() <<
-				"Optimizer can only be used for strict assembly. Use --" <<
-				g_strStrictAssembly <<
-				"." <<
-				endl;
+			serr() << "Optimizer can only be used for strict assembly. Use --"
+				   << g_strStrictAssembly << "." << endl;
 			return false;
 		}
-		if (targetMachine == Machine::Ewasm && inputLanguage != Input::StrictAssembly && inputLanguage != Input::Ewasm)
+		if (targetMachine == Machine::Ewasm && inputLanguage != Input::StrictAssembly &&
+			inputLanguage != Input::Ewasm)
 		{
-			serr() << "The selected input language is not directly supported when targeting the Ewasm machine ";
+			serr() << "The selected input language is not directly supported when targeting the "
+					  "Ewasm machine ";
 			serr() << "and automatic translation is not available." << endl;
 			return false;
 		}
-		serr() <<
-			"Warning: Yul is still experimental. Please use the output with care." <<
-			endl;
+		serr() << "Warning: Yul is still experimental. Please use the output with care." << endl;
 
 		return assemble(inputLanguage, targetMachine, optimize, yulOptimiserSteps);
 	}
@@ -1340,7 +1322,11 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_argOldReporter))
 		formatter = make_unique<SourceReferenceFormatter>(serr(false));
 	else
-		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
+		formatter = make_unique<SourceReferenceFormatterHuman>(
+			serr(false),
+			m_coloredOutput,
+			m_withErrorIds
+		);
 
 	try
 	{
@@ -1360,7 +1346,8 @@ bool CommandLineInterface::processInput()
 		m_compiler->enableIRGeneration(m_args.count(g_argIR) || m_args.count(g_argIROptimized));
 		m_compiler->enableEwasmGeneration(m_args.count(g_argEwasm));
 
-		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() : OptimiserSettings::minimal();
+		OptimiserSettings settings = m_args.count(g_argOptimize) ? OptimiserSettings::standard() :
+																	 OptimiserSettings::minimal();
 		settings.expectedExecutionsPerDeployment = m_args[g_argOptimizeRuns].as<unsigned>();
 		if (m_args.count(g_strNoOptimizeYul))
 			settings.runYulOptimiser = false;
@@ -1368,7 +1355,8 @@ bool CommandLineInterface::processInput()
 		{
 			if (!settings.runYulOptimiser)
 			{
-				serr() << "--" << g_strYulOptimizations << " is invalid if Yul optimizer is disabled" << endl;
+				serr() << "--" << g_strYulOptimizations
+					   << " is invalid if Yul optimizer is disabled" << endl;
 				return false;
 			}
 
@@ -1378,7 +1366,8 @@ bool CommandLineInterface::processInput()
 			}
 			catch (yul::OptimizerException const& _exception)
 			{
-				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": " << _exception.what() << endl;
+				serr() << "Invalid optimizer step sequence in --" << g_strYulOptimizations << ": "
+					   << _exception.what() << endl;
 				return false;
 			}
 
@@ -1437,32 +1426,26 @@ bool CommandLineInterface::processInput()
 	}
 	catch (InternalCompilerError const& _exception)
 	{
-		serr() <<
-			"Internal compiler error during compilation:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
+		serr() << "Internal compiler error during compilation:" << endl
+			   << boost::diagnostic_information(_exception);
 		return false;
 	}
 	catch (UnimplementedFeatureError const& _exception)
 	{
-		serr() <<
-			"Unimplemented feature:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
+		serr() << "Unimplemented feature:" << endl << boost::diagnostic_information(_exception);
 		return false;
 	}
 	catch (smtutil::SMTLogicError const& _exception)
 	{
-		serr() <<
-			"SMT logic error during analysis:" <<
-			endl <<
-			boost::diagnostic_information(_exception);
+		serr() << "SMT logic error during analysis:" << endl
+			   << boost::diagnostic_information(_exception);
 		return false;
 	}
 	catch (Error const& _error)
 	{
 		if (_error.type() == Error::Type::DocstringParsingError)
-			serr() << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
+			serr() << "Documentation parsing error: "
+				   << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
 		{
 			g_hasOutput = true;
@@ -1473,14 +1456,14 @@ bool CommandLineInterface::processInput()
 	}
 	catch (Exception const& _exception)
 	{
-		serr() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
+		serr() << "Exception during compilation: " << boost::diagnostic_information(_exception)
+			   << endl;
 		return false;
 	}
 	catch (std::exception const& _e)
 	{
-		serr() << "Unknown exception during compilation" << (
-			_e.what() ? ": " + string(_e.what()) : "."
-		) << endl;
+		serr() << "Unknown exception during compilation"
+			   << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
 		return false;
 	}
 	catch (...)
@@ -1518,11 +1501,13 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strBinaryRuntime) && m_compiler->compilationSuccessful())
 			contractData[g_strBinaryRuntime] = m_compiler->runtimeObject(contractName).toHex();
 		if (requests.count(g_strOpcodes) && m_compiler->compilationSuccessful())
-			contractData[g_strOpcodes] = evmasm::disassemble(m_compiler->object(contractName).bytecode);
+			contractData[g_strOpcodes] =
+				evmasm::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (requests.count(g_strStorageLayout) && m_compiler->compilationSuccessful())
-			contractData[g_strStorageLayout] = jsonCompactPrint(m_compiler->storageLayout(contractName));
+			contractData[g_strStorageLayout] =
+				jsonCompactPrint(m_compiler->storageLayout(contractName));
 		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
@@ -1538,10 +1523,12 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strNatspecDev))
 			contractData[g_strNatspecDev] = jsonCompactPrint(m_compiler->natspecDev(contractName));
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = jsonCompactPrint(m_compiler->natspecUser(contractName));
+			contractData[g_strNatspecUser] =
+				jsonCompactPrint(m_compiler->natspecUser(contractName));
 	}
 
-	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
+	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) ||
+		requests.count(g_strSrcMapRuntime);
 	if (needsSourceList)
 	{
 		// Indices into this array are used to abbreviate source names in source locations.
@@ -1559,12 +1546,14 @@ void CommandLineInterface::handleCombinedJSON()
 		{
 			ASTJsonConverter converter(legacyFormat, m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
-			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
+			output[g_strSources][sourceCode.first]["AST"] =
+				converter.toJson(m_compiler->ast(sourceCode.first));
 		}
 	}
 
-	string json = m_args.count(g_argPrettyJson) ? jsonPrettyPrint(removeNullMembers(std::move(output))) :
-		jsonCompactPrint(removeNullMembers(std::move(output)));
+	string json = m_args.count(g_argPrettyJson) ?
+		  jsonPrettyPrint(removeNullMembers(std::move(output))) :
+		  jsonCompactPrint(removeNullMembers(std::move(output)));
 
 	if (m_args.count(g_argOutputDir))
 		createJson("combined", json);
@@ -1609,7 +1598,8 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			{
 				stringstream data;
 				string postfix = "";
-				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices())
+					.print(data, m_compiler->ast(sourceCode.first));
 				postfix += "_json";
 				boost::filesystem::path path(sourceCode.first);
 				createFile(path.filename().string() + postfix + ".ast", data.str());
@@ -1621,7 +1611,8 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			for (auto const& sourceCode: m_sourceCodes)
 			{
 				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
+				ASTJsonConverter(legacyFormat, m_compiler->sourceIndices())
+					.print(sout(), m_compiler->ast(sourceCode.first));
 			}
 		}
 	}
@@ -1643,7 +1634,7 @@ bool CommandLineInterface::link()
 {
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
-	int const placeholderSize = 40; // 20 bytes or 40 hex characters
+	int const placeholderSize = 40;	 // 20 bytes or 40 hex characters
 	for (auto const& library: m_libraries)
 	{
 		string const& name = library.first;
@@ -1652,7 +1643,8 @@ bool CommandLineInterface::link()
 		// be just the cropped or '_'-padded library name, but this changed to
 		// the cropped hex representation of the hash of the library name.
 		// We support both ways of linking here.
-		librariesReplacements["__" + evmasm::LinkerObject::libraryPlaceholder(name) + "__"] = library.second;
+		librariesReplacements["__" + evmasm::LinkerObject::libraryPlaceholder(name) + "__"] =
+			library.second;
 
 		string replacement = "__";
 		for (size_t i = 0; i < placeholderSize - 4; ++i)
@@ -1665,11 +1657,14 @@ bool CommandLineInterface::link()
 		auto end = src.second.end();
 		for (auto it = src.second.begin(); it != end;)
 		{
-			while (it != end && *it != '_') ++it;
-			if (it == end) break;
+			while (it != end && *it != '_')
+				++it;
+			if (it == end)
+				break;
 			if (end - it < placeholderSize)
 			{
-				serr() << "Error in binary object file " << src.first << " at position " << (end - src.second.begin()) << endl;
+				serr() << "Error in binary object file " << src.first << " at position "
+					   << (end - src.second.begin()) << endl;
 				return false;
 			}
 
@@ -1680,7 +1675,8 @@ bool CommandLineInterface::link()
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
-				serr() << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
+				serr() << "Reference \"" << name << "\" in file \"" << src.first
+					   << "\" still unresolved." << endl;
 			it += placeholderSize;
 		}
 		// Remove hints for resolved libraries.
@@ -1740,11 +1736,13 @@ bool CommandLineInterface::assemble(
 	map<string, yul::AssemblyStack> assemblyStacks;
 	for (auto const& src: m_sourceCodes)
 	{
-		OptimiserSettings settings = _optimize ? OptimiserSettings::full() : OptimiserSettings::minimal();
+		OptimiserSettings settings =
+			_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal();
 		if (_yulOptimiserSteps.has_value())
 			settings.yulOptimiserSteps = _yulOptimiserSteps.value();
 
-		auto& stack = assemblyStacks[src.first] = yul::AssemblyStack(m_evmVersion, _language, settings);
+		auto& stack = assemblyStacks[src.first] =
+			yul::AssemblyStack(m_evmVersion, _language, settings);
 		try
 		{
 			if (!stack.parseAndAnalyze(src.first, src.second))
@@ -1754,15 +1752,14 @@ bool CommandLineInterface::assemble(
 		}
 		catch (Exception const& _exception)
 		{
-			serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
+			serr() << "Exception in assembler: " << boost::diagnostic_information(_exception)
+				   << endl;
 			return false;
 		}
 		catch (std::exception const& _e)
 		{
-			serr() <<
-				"Unknown exception during compilation" <<
-				(_e.what() ? ": " + string(_e.what()) : ".") <<
-				endl;
+			serr() << "Unknown exception during compilation"
+				   << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
 			return false;
 		}
 		catch (...)
@@ -1779,7 +1776,11 @@ bool CommandLineInterface::assemble(
 		if (m_args.count(g_argOldReporter))
 			formatter = make_unique<SourceReferenceFormatter>(serr(false));
 		else
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
+			formatter = make_unique<SourceReferenceFormatterHuman>(
+				serr(false),
+				m_coloredOutput,
+				m_withErrorIds
+			);
 
 		for (auto const& error: stack.errors())
 		{
@@ -1795,10 +1796,9 @@ bool CommandLineInterface::assemble(
 
 	for (auto const& src: m_sourceCodes)
 	{
-		string machine =
-			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
-			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
-			"Ewasm";
+		string machine = _targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
+			_targetMachine == yul::AssemblyStack::Machine::EVM15			? "EVM 1.5" :
+																				"Ewasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
 		yul::AssemblyStack& stack = assemblyStacks[src.first];
@@ -1806,7 +1806,8 @@ bool CommandLineInterface::assemble(
 		sout() << endl << "Pretty printed source:" << endl;
 		sout() << stack.print() << endl;
 
-		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
+		if (_language != yul::AssemblyStack::Language::Ewasm &&
+			_targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
 			stack.translate(yul::AssemblyStack::Language::Ewasm);
 			stack.optimize();
@@ -1823,14 +1824,14 @@ bool CommandLineInterface::assemble(
 		}
 		catch (Exception const& _exception)
 		{
-			serr() << "Exception while assembling: " << boost::diagnostic_information(_exception) << endl;
+			serr() << "Exception while assembling: " << boost::diagnostic_information(_exception)
+				   << endl;
 			return false;
 		}
 		catch (std::exception const& _e)
 		{
-			serr() << "Unknown exception during compilation" << (
-				_e.what() ? ": " + string(_e.what()) : "."
-			) << endl;
+			serr() << "Unknown exception during compilation"
+				   << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
 			return false;
 		}
 		catch (...)
@@ -1886,7 +1887,11 @@ void CommandLineInterface::outputCompilationResults()
 
 			if (m_args.count(g_argOutputDir))
 			{
-				createFile(m_compiler->filesystemFriendlyName(contract) + (m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"), ret);
+				createFile(
+					m_compiler->filesystemFriendlyName(contract) +
+						(m_args.count(g_argAsmJson) ? "_evm.json" : ".evm"),
+					ret
+				);
 			}
 			else
 			{
@@ -1907,12 +1912,13 @@ void CommandLineInterface::outputCompilationResults()
 		handleStorageLayout(contract);
 		handleNatspec(true, contract);
 		handleNatspec(false, contract);
-	} // end of contracts iteration
+	}  // end of contracts iteration
 
 	if (!g_hasOutput)
 	{
 		if (m_args.count(g_argOutputDir))
-			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_args.at(g_argOutputDir).as<string>() << "." << endl;
+			sout() << "Compiler run successful. Artifact(s) can be found in directory "
+				   << m_args.at(g_argOutputDir).as<string>() << "." << endl;
 		else
 			serr() << "Compiler run successful, no output requested." << endl;
 	}
@@ -1930,7 +1936,8 @@ size_t CommandLineInterface::countEnabledOptions(vector<string> const& _optionNa
 string CommandLineInterface::joinOptionNames(vector<string> const& _optionNames, string _separator)
 {
 	return boost::algorithm::join(
-		_optionNames | boost::adaptors::transformed([](string const& _option){ return "--" + _option; }),
+		_optionNames |
+			boost::adaptors::transformed([](string const& _option) { return "--" + _option; }),
 		_separator
 	);
 }

@@ -32,15 +32,15 @@ function<Crossover> phaser::buildCrossoverOperator(
 {
 	switch (_choice)
 	{
-		case CrossoverChoice::SinglePoint:
-			return randomPointCrossover();
-		case CrossoverChoice::TwoPoint:
-			return randomTwoPointCrossover();
-		case CrossoverChoice::Uniform:
-			assert(_uniformCrossoverSwapChance.has_value());
-			return uniformCrossover(_uniformCrossoverSwapChance.value());
-		default:
-			assertThrow(false, solidity::util::Exception, "Invalid CrossoverChoice value.");
+	case CrossoverChoice::SinglePoint:
+		return randomPointCrossover();
+	case CrossoverChoice::TwoPoint:
+		return randomTwoPointCrossover();
+	case CrossoverChoice::Uniform:
+		assert(_uniformCrossoverSwapChance.has_value());
+		return uniformCrossover(_uniformCrossoverSwapChance.value());
+	default:
+		assertThrow(false, solidity::util::Exception, "Invalid CrossoverChoice value.");
 	};
 }
 
@@ -51,15 +51,15 @@ function<SymmetricCrossover> phaser::buildSymmetricCrossoverOperator(
 {
 	switch (_choice)
 	{
-		case CrossoverChoice::SinglePoint:
-			return symmetricRandomPointCrossover();
-		case CrossoverChoice::TwoPoint:
-			return symmetricRandomTwoPointCrossover();
-		case CrossoverChoice::Uniform:
-			assert(_uniformCrossoverSwapChance.has_value());
-			return symmetricUniformCrossover(_uniformCrossoverSwapChance.value());
-		default:
-			assertThrow(false, solidity::util::Exception, "Invalid CrossoverChoice value.");
+	case CrossoverChoice::SinglePoint:
+		return symmetricRandomPointCrossover();
+	case CrossoverChoice::TwoPoint:
+		return symmetricRandomTwoPointCrossover();
+	case CrossoverChoice::Uniform:
+		assert(_uniformCrossoverSwapChance.has_value());
+		return symmetricUniformCrossover(_uniformCrossoverSwapChance.value());
+	default:
+		assertThrow(false, solidity::util::Exception, "Invalid CrossoverChoice value.");
 	};
 }
 
@@ -68,15 +68,15 @@ Population RandomAlgorithm::runNextRound(Population _population)
 	RangeSelection elite(0.0, m_options.elitePoolSize);
 
 	Population elitePopulation = _population.select(elite);
-	size_t replacementCount = _population.individuals().size() - elitePopulation.individuals().size();
+	size_t replacementCount =
+		_population.individuals().size() - elitePopulation.individuals().size();
 
-	return
-		move(elitePopulation) +
+	return move(elitePopulation) +
 		Population::makeRandom(
-			_population.fitnessMetric(),
-			replacementCount,
-			m_options.minChromosomeLength,
-			m_options.maxChromosomeLength
+			   _population.fitnessMetric(),
+			   replacementCount,
+			   m_options.minChromosomeLength,
+			   m_options.maxChromosomeLength
 		);
 }
 
@@ -97,13 +97,10 @@ Population GenerationalElitistWithExclusivePools::runNextRound(Population _popul
 			geneAddition(m_options.percentGenesToAddOrDelete)
 		)
 	);
-	std::function<Crossover> crossoverOperator = buildCrossoverOperator(
-		m_options.crossover,
-		m_options.uniformCrossoverSwapChance
-	);
+	std::function<Crossover> crossoverOperator =
+		buildCrossoverOperator(m_options.crossover, m_options.uniformCrossoverSwapChance);
 
-	return
-		_population.select(elitePool) +
+	return _population.select(elitePool) +
 		_population.select(elitePool).mutate(mutationPoolFromElite, mutationOperator) +
 		_population.select(elitePool).crossover(crossoverPoolFromElite, crossoverOperator);
 }
@@ -115,17 +112,14 @@ Population ClassicGeneticAlgorithm::runNextRound(Population _population)
 
 	Population selectedPopulation = select(_population, rest.individuals().size());
 
-	std::function<SymmetricCrossover> crossoverOperator = buildSymmetricCrossoverOperator(
-		m_options.crossover,
-		m_options.uniformCrossoverSwapChance
-	);
+	std::function<SymmetricCrossover> crossoverOperator =
+		buildSymmetricCrossoverOperator(m_options.crossover, m_options.uniformCrossoverSwapChance);
 
-	Population crossedPopulation = Population::combine(
-		selectedPopulation.symmetricCrossoverWithRemainder(
+	Population crossedPopulation =
+		Population::combine(selectedPopulation.symmetricCrossoverWithRemainder(
 			PairsFromRandomSubset(m_options.crossoverChance),
 			crossoverOperator
-		)
-	);
+		));
 
 	std::function<Mutation> mutationOperator = mutationSequence({
 		geneRandomisation(m_options.mutationChance),

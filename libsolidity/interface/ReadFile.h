@@ -26,7 +26,6 @@
 
 namespace solidity::frontend
 {
-
 class ReadCallback: boost::noncopyable
 {
 public:

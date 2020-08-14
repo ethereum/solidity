@@ -45,7 +45,11 @@ Json::Value StorageLayout::generate(ContractDefinition const& _contractDef)
 	return layout;
 }
 
-Json::Value StorageLayout::generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset)
+Json::Value StorageLayout::generate(
+	VariableDeclaration const& _var,
+	u256 const& _slot,
+	unsigned _offset
+)
 {
 	Json::Value varEntry;
 	TypePointer varType = _var.type();

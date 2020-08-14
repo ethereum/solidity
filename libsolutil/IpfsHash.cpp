@@ -46,10 +46,7 @@ bytes encodeByteArray(bytes const& _data)
 	return bytes{0x0a} + varintEncoding(_data.size()) + _data;
 }
 
-bytes encodeHash(bytes const& _data)
-{
-	return bytes{0x12, 0x20} + picosha2::hash256(_data);
-}
+bytes encodeHash(bytes const& _data) { return bytes{0x12, 0x20} + picosha2::hash256(_data); }
 
 bytes encodeLinkData(bytes const& _data)
 {
@@ -74,9 +71,7 @@ struct Chunk
 {
 	Chunk() = default;
 	Chunk(bytes _hash, size_t _size, size_t _blockSize):
-		hash(std::move(_hash)),
-		size(_size),
-		blockSize(_blockSize)
+		hash(std::move(_hash)), size(_size), blockSize(_blockSize)
 	{}
 
 	bytes hash = {};
@@ -97,17 +92,15 @@ Chunk combineLinks(Chunks& _links)
 		chunk.blockSize += link.blockSize;
 
 		data += encodeLinkData(
-			bytes {0x0a} +
-			varintEncoding(link.hash.size()) +
-			std::move(link.hash) +
-			bytes{0x12, 0x00, 0x18} +
-			varintEncoding(link.blockSize)
+			bytes{0x0a} + varintEncoding(link.hash.size()) + std::move(link.hash) +
+			bytes{0x12, 0x00, 0x18} + varintEncoding(link.blockSize)
 		);
 
 		lengths += bytes{0x20} + varintEncoding(link.size);
 	}
 
-	bytes blockData = data + encodeByteArray(bytes{0x08, 0x02, 0x18} + varintEncoding(chunk.size) + lengths);
+	bytes blockData =
+		data + encodeByteArray(bytes{0x08, 0x02, 0x18} + varintEncoding(chunk.size) + lengths);
 
 	chunk.blockSize += blockData.size();
 	chunk.hash = encodeHash(blockData);
@@ -140,7 +133,8 @@ Chunks buildNextLevel(Chunks& _currentLevel)
 /// Builds a tree starting from the bottom level where nodes are data nodes.
 /// Data nodes should be calculated and passed as the only level in chunk levels
 /// Each next level is calculated as following:
-///   - Pick up to maxChildNum (174) nodes until a whole level is added, group them and pass to the node in the next level
+///   - Pick up to maxChildNum (174) nodes until a whole level is added, group them and pass to the
+///   node in the next level
 ///   - Do this until the current level has only one node, return the hash in that node
 bytes groupChunksBottomUp(Chunks _currentLevel)
 {
@@ -163,9 +157,10 @@ bytes solidity::util::ipfsHash(string _data)
 
 	for (size_t chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
 	{
-		bytes chunkBytes = asBytes(
-			_data.substr(chunkIndex * maxChunkSize, min(maxChunkSize, _data.length() - chunkIndex * maxChunkSize))
-		);
+		bytes chunkBytes = asBytes(_data.substr(
+			chunkIndex * maxChunkSize,
+			min(maxChunkSize, _data.length() - chunkIndex * maxChunkSize)
+		));
 
 		bytes lengthAsVarint = varintEncoding(chunkBytes.size());
 
@@ -187,11 +182,7 @@ bytes solidity::util::ipfsHash(string _data)
 		bytes blockData = encodeByteArray(protobufEncodedData);
 
 		// Multihash: sha2-256, 256 bits
-		allChunks.emplace_back(
-			encodeHash(blockData),
-			chunkBytes.size(),
-			blockData.size()
-		);
+		allChunks.emplace_back(encodeHash(blockData), chunkBytes.size(), blockData.size());
 	}
 
 	return groupChunksBottomUp(std::move(allChunks));

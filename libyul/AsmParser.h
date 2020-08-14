@@ -36,13 +36,15 @@
 
 namespace solidity::yul
 {
-
 class Parser: public langutil::ParserBase
 {
 public:
 	enum class ForLoopComponent
 	{
-		None, ForLoopPre, ForLoopPost, ForLoopBody
+		None,
+		ForLoopPre,
+		ForLoopPost,
+		ForLoopBody
 	};
 
 	explicit Parser(
@@ -58,7 +60,10 @@ public:
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
-	std::unique_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
+	std::unique_ptr<Block> parse(
+		std::shared_ptr<langutil::Scanner> const& _scanner,
+		bool _reuseScanner
+	);
 
 protected:
 	using ElementaryOperation = std::variant<Literal, Identifier, FunctionCall>;
@@ -69,7 +74,8 @@ protected:
 	}
 
 	/// Creates an inline assembly node with the current source location.
-	template <class T> T createWithLocation() const
+	template <class T>
+	T createWithLocation() const
 	{
 		T r;
 		r.location = currentLocation();

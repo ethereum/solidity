@@ -35,10 +35,7 @@ struct SolRandomNumGenerator
 	explicit SolRandomNumGenerator(unsigned _seed): m_random(RandomEngine(_seed)) {}
 
 	/// @returns a pseudo random unsigned integer
-	unsigned operator()()
-	{
-		return m_random();
-	}
+	unsigned operator()() { return m_random(); }
 
 	RandomEngine m_random;
 };
@@ -124,6 +121,7 @@ public:
 	bool libraryTest() const;
 	/// @returns name of the library under test
 	std::string libraryName() const;
+
 private:
 	/// Variant type that points to one of contract, interface, library protobuf messages
 	using CIL = std::variant<Contract const*, Interface const*, Library const*>;
@@ -149,22 +147,13 @@ private:
 	unsigned randomNumber();
 	/// @returns true if fuzzer supplied Library protobuf message
 	/// contains zero functions, false otherwise.
-	static bool emptyLibrary(Library const& _library)
-	{
-		return _library.funcdef_size() == 0;
-	}
+	static bool emptyLibrary(Library const& _library) { return _library.funcdef_size() == 0; }
 	/// @returns true if there are no valid library test cases, false
 	/// otherwise.
-	bool emptyLibraryTests()
-	{
-		return m_libraryTests.empty();
-	}
+	bool emptyLibraryTests() { return m_libraryTests.empty(); }
 	/// @returns true if there are no valid contract test cases, false
 	/// otherwise.
-	bool emptyContractTests()
-	{
-		return m_contractTests.empty();
-	}
+	bool emptyContractTests() { return m_contractTests.empty(); }
 	/// Numeric suffix that is part of program names e.g., "0" in "C0"
 	unsigned m_programNumericSuffix = 0;
 	/// Flag that states whether library call is tested (true) or not (false).

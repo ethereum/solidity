@@ -25,7 +25,6 @@
 
 namespace solidity::frontend::smt
 {
-
 /**
  * This class computes information about which variables are modified in a certain subtree.
  */
@@ -33,7 +32,10 @@ class VariableUsage: private ASTConstVisitor
 {
 public:
 	/// @param _outerCallstack the current callstack in the callers context.
-	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack);
+	std::set<VariableDeclaration const*> touchedVariables(
+		ASTNode const& _node,
+		std::vector<CallableDeclaration const*> const& _outerCallstack
+	);
 
 	/// Sets whether to inline function calls.
 	void setFunctionInlining(bool _inlineFunction) { m_inlineFunctionCalls = _inlineFunction; }

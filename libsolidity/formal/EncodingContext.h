@@ -28,7 +28,6 @@
 
 namespace solidity::frontend::smt
 {
-
 /**
  * Stores the context of the SMT encoding.
  */
@@ -72,7 +71,13 @@ public:
 	/// @returns the symbolic representation of a program variable.
 	std::shared_ptr<SymbolicVariable> variable(frontend::VariableDeclaration const& _varDecl);
 	/// @returns all symbolic variables.
-	std::unordered_map<frontend::VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> const& variables() const { return m_variables; }
+	std::unordered_map<
+		frontend::VariableDeclaration const*,
+		std::shared_ptr<SymbolicVariable>> const&
+	variables() const
+	{
+		return m_variables;
+	}
 
 	/// Creates a symbolic variable and
 	/// @returns true if a variable's type is not supported and is therefore abstract.
@@ -86,7 +91,7 @@ public:
 	void resetVariables(std::set<frontend::VariableDeclaration const*> const& _variables);
 	/// Resets variables according to a predicate.
 	void resetVariables(std::function<bool(frontend::VariableDeclaration const&)> const& _filter);
-	///Resets all variables.
+	/// Resets all variables.
 	void resetAllVariables();
 
 	/// Allocates a new index for the declaration, updates the current
@@ -105,11 +110,18 @@ public:
 	/// @returns the symbolic representation of an AST node expression.
 	std::shared_ptr<SymbolicVariable> expression(frontend::Expression const& _e);
 	/// @returns all symbolic expressions.
-	std::unordered_map<frontend::Expression const*, std::shared_ptr<SymbolicVariable>> const& expressions() const { return m_expressions; }
+	std::unordered_map<frontend::Expression const*, std::shared_ptr<SymbolicVariable>> const&
+	expressions() const
+	{
+		return m_expressions;
+	}
 
 	/// Creates the expression (value can be arbitrary).
 	/// @returns true if type is not supported.
-	bool createExpression(frontend::Expression const& _e, std::shared_ptr<SymbolicVariable> _symbExpr = nullptr);
+	bool createExpression(
+		frontend::Expression const& _e,
+		std::shared_ptr<SymbolicVariable> _symbExpr = nullptr
+	);
 	/// Checks if expression was created.
 	bool knownExpression(frontend::Expression const& _e) const;
 	//@}
@@ -119,7 +131,10 @@ public:
 	/// Global variables and functions.
 	std::shared_ptr<SymbolicVariable> globalSymbol(std::string const& _name);
 	/// @returns all symbolic globals.
-	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> const& globalSymbols() const { return m_globalContext; }
+	std::unordered_map<std::string, std::shared_ptr<SymbolicVariable>> const& globalSymbols() const
+	{
+		return m_globalContext;
+	}
 
 	/// Defines a new global variable or function
 	/// and @returns true if type was abstracted.
@@ -135,8 +150,8 @@ public:
 	void pushSolver();
 	void popSolver();
 	void addAssertion(smtutil::Expression const& _e);
-	unsigned solverStackHeigh() { return m_assertions.size(); } const
-	smtutil::SolverInterface* solver()
+	unsigned solverStackHeigh() { return m_assertions.size(); }
+	const smtutil::SolverInterface* solver()
 	{
 		solAssert(m_solver, "");
 		return m_solver;
@@ -149,10 +164,12 @@ private:
 	/// Symbolic expressions.
 	//{@
 	/// Symbolic variables.
-	std::unordered_map<frontend::VariableDeclaration const*, std::shared_ptr<SymbolicVariable>> m_variables;
+	std::unordered_map<frontend::VariableDeclaration const*, std::shared_ptr<SymbolicVariable>>
+		m_variables;
 
 	/// Symbolic expressions.
-	std::unordered_map<frontend::Expression const*, std::shared_ptr<SymbolicVariable>> m_expressions;
+	std::unordered_map<frontend::Expression const*, std::shared_ptr<SymbolicVariable>>
+		m_expressions;
 
 	/// Symbolic representation of global symbols including
 	/// variables and functions.

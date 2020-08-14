@@ -43,7 +43,6 @@ using namespace boost::unit_test;
 
 namespace
 {
-
 void replaceVersionWithTag(string& _input)
 {
 	boost::algorithm::replace_all(
@@ -68,7 +67,9 @@ void replaceTagWithVersion(string& _input)
 ASTJSONTest::ASTJSONTest(string const& _filename)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
+		BOOST_THROW_EXCEPTION(
+			runtime_error("Invalid test contract file name: \"" + _filename + "\".")
+		);
 
 	m_astFilename = _filename.substr(0, _filename.size() - 4) + ".json";
 	m_legacyAstFilename = _filename.substr(0, _filename.size() - 4) + "_legacy.json";
@@ -118,7 +119,11 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	}
 }
 
-TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult ASTJSONTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool const _formatted
+)
 {
 	CompilerStack c;
 
@@ -164,7 +169,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 	if (m_expectation != m_result)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+			<< _linePrefix << "Expected result:" << endl;
 		{
 			istringstream stream(m_expectation);
 			string line;
@@ -172,7 +178,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 				_stream << nextIndentLevel << line << endl;
 		}
 		_stream << endl;
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+			<< _linePrefix << "Obtained result:" << endl;
 		{
 			istringstream stream(m_result);
 			string line;
@@ -198,7 +205,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 	if (m_expectationLegacy != m_resultLegacy)
 	{
 		string nextIndentLevel = _linePrefix + "  ";
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result (legacy):" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+			<< _linePrefix << "Expected result (legacy):" << endl;
 		{
 			istringstream stream(m_expectationLegacy);
 			string line;
@@ -206,7 +214,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 				_stream << nextIndentLevel << line << endl;
 		}
 		_stream << endl;
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result (legacy):" << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+			<< _linePrefix << "Obtained result (legacy):" << endl;
 		{
 			istringstream stream(m_resultLegacy);
 			string line;
@@ -237,7 +246,10 @@ void ASTJSONTest::printSource(ostream& _stream, string const& _linePrefix, bool 
 void ASTJSONTest::printUpdatedExpectations(std::ostream&, std::string const&) const
 {
 	ofstream file(m_astFilename.c_str());
-	if (!file) BOOST_THROW_EXCEPTION(runtime_error("Cannot write AST expectation to \"" + m_astFilename + "\"."));
+	if (!file)
+		BOOST_THROW_EXCEPTION(
+			runtime_error("Cannot write AST expectation to \"" + m_astFilename + "\".")
+		);
 	file.exceptions(ios::badbit);
 
 	string replacedResult = m_result;
@@ -248,7 +260,10 @@ void ASTJSONTest::printUpdatedExpectations(std::ostream&, std::string const&) co
 	file.close();
 
 	file.open(m_legacyAstFilename.c_str());
-	if (!file) BOOST_THROW_EXCEPTION(runtime_error("Cannot write legacy AST expectation to \"" + m_legacyAstFilename + "\"."));
+	if (!file)
+		BOOST_THROW_EXCEPTION(
+			runtime_error("Cannot write legacy AST expectation to \"" + m_legacyAstFilename + "\".")
+		);
 
 	string replacedResultLegacy = m_resultLegacy;
 	replaceVersionWithTag(replacedResultLegacy);

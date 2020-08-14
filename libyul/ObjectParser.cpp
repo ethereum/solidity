@@ -57,7 +57,7 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 	catch (FatalError const&)
 	{
 		if (m_errorReporter.errors().empty())
-			throw; // Something is weird here, rather throw again.
+			throw;	// Something is weird here, rather throw again.
 	}
 	return nullptr;
 }
@@ -136,14 +136,24 @@ YulString ObjectParser::parseUniqueName(Object const* _containingObject)
 	if (name.empty())
 		parserError(3287_error, "Object name cannot be empty.");
 	else if (_containingObject && _containingObject->name == name)
-		parserError(8311_error, "Object name cannot be the same as the name of the containing object.");
+		parserError(
+			8311_error,
+			"Object name cannot be the same as the name of the containing object."
+		);
 	else if (_containingObject && _containingObject->subIndexByName.count(name))
-		parserError(8794_error, "Object name \"" + name.str() + "\" already exists inside the containing object.");
+		parserError(
+			8794_error,
+			"Object name \"" + name.str() + "\" already exists inside the containing object."
+		);
 	advance();
 	return name;
 }
 
-void ObjectParser::addNamedSubObject(Object& _container, YulString _name, shared_ptr<ObjectNode> _subObject)
+void ObjectParser::addNamedSubObject(
+	Object& _container,
+	YulString _name,
+	shared_ptr<ObjectNode> _subObject
+)
 {
 	_container.subIndexByName[_name] = _container.subObjects.size();
 	_container.subObjects.emplace_back(std::move(_subObject));

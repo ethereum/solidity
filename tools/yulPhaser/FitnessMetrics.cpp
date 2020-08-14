@@ -40,10 +40,7 @@ Program ProgramBasedMetric::optimisedProgram(Chromosome const& _chromosome)
 	if (m_programCache == nullptr)
 		return optimisedProgramNoCache(_chromosome);
 
-	return m_programCache->optimiseProgram(
-		toString(_chromosome),
-		m_repetitionCount
-	);
+	return m_programCache->optimiseProgram(toString(_chromosome), m_repetitionCount);
 }
 
 Program ProgramBasedMetric::optimisedProgramNoCache(Chromosome const& _chromosome) const
@@ -70,9 +67,9 @@ size_t RelativeProgramSize::evaluate(Chromosome const& _chromosome)
 
 	size_t optimisedSize = optimisedProgram(_chromosome).codeSize(codeWeights());
 
-	return static_cast<size_t>(round(
-		static_cast<double>(optimisedSize) / unoptimisedSize * scalingFactor
-	));
+	return static_cast<size_t>(
+		round(static_cast<double>(optimisedSize) / unoptimisedSize * scalingFactor)
+	);
 }
 
 size_t FitnessMetricAverage::evaluate(Chromosome const& _chromosome)

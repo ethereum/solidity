@@ -37,7 +37,6 @@ using namespace solidity::langutil;
 
 namespace
 {
-
 /**
  * First step of SSA transform: Introduces new SSA variables for each assignment or
  * declaration of a variable to be replaced.
@@ -53,7 +52,7 @@ public:
 		m_nameDispenser(_nameDispenser),
 		m_variablesToReplace(_variablesToReplace),
 		m_typeInfo(_typeInfo)
-	{ }
+	{}
 
 	void operator()(Block& _block) override;
 
@@ -97,11 +96,11 @@ void IntroduceSSA::operator()(Block& _block)
 					statements.emplace_back(VariableDeclaration{
 						loc,
 						{TypedName{loc, oldName, var.type}},
-						make_unique<Expression>(Identifier{loc, newName})
-					});
+						make_unique<Expression>(Identifier{loc, newName})});
 				}
-				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
-				return { std::move(statements) };
+				std::get<VariableDeclaration>(statements.front()).variables =
+					std::move(newVariables);
+				return {std::move(statements)};
 			}
 			else if (holds_alternative<Assignment>(_s))
 			{
@@ -120,19 +119,17 @@ void IntroduceSSA::operator()(Block& _block)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{
-						loc,
-						newName,
-						m_typeInfo.typeOfVariable(oldName)
-					});
+					newVariables.emplace_back(
+						TypedName{loc, newName, m_typeInfo.typeOfVariable(oldName)}
+					);
 					statements.emplace_back(Assignment{
 						loc,
 						{Identifier{loc, oldName}},
-						make_unique<Expression>(Identifier{loc, newName})
-					});
+						make_unique<Expression>(Identifier{loc, newName})});
 				}
-				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
-				return { std::move(statements) };
+				std::get<VariableDeclaration>(statements.front()).variables =
+					std::move(newVariables);
+				return {std::move(statements)};
 			}
 			else
 				visit(_s);
@@ -156,7 +153,7 @@ public:
 		m_nameDispenser(_nameDispenser),
 		m_variablesToReplace(_variablesToReplace),
 		m_typeInfo(_typeInfo)
-	{ }
+	{}
 
 	void operator()(FunctionDefinition& _function) override;
 	void operator()(ForLoop& _forLoop) override;
@@ -240,8 +237,7 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 				toPrepend.emplace_back(VariableDeclaration{
 					locationOf(_s),
 					{TypedName{locationOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
-					make_unique<Expression>(Identifier{locationOf(_s), toReassign})
-				});
+					make_unique<Expression>(Identifier{locationOf(_s), toReassign})});
 				assignedVariables.insert(toReassign);
 			}
 			m_variablesToReassign.clear();
@@ -289,7 +285,7 @@ class PropagateValues: public ASTModifier
 public:
 	explicit PropagateValues(set<YulString> const& _variablesToReplace):
 		m_variablesToReplace(_variablesToReplace)
-	{ }
+	{}
 
 	void operator()(Identifier& _identifier) override;
 	void operator()(VariableDeclaration& _varDecl) override;
@@ -396,5 +392,3 @@ void SSATransform::run(OptimiserStepContext& _context, Block& _ast)
 	IntroduceControlFlowSSA{_context.dispenser, assignments.names(), typeInfo}(_ast);
 	PropagateValues{assignments.names()}(_ast);
 }
-
-

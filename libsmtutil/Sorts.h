@@ -27,7 +27,6 @@
 
 namespace solidity::smtutil
 {
-
 enum class Kind
 {
 	Int,
@@ -41,8 +40,7 @@ enum class Kind
 
 struct Sort
 {
-	Sort(Kind _kind):
-		kind(_kind) {}
+	Sort(Kind _kind): kind(_kind) {}
 	virtual ~Sort() = default;
 	virtual bool operator==(Sort const& _other) const { return kind == _other.kind; }
 
@@ -52,10 +50,7 @@ using SortPointer = std::shared_ptr<Sort>;
 
 struct IntSort: public Sort
 {
-	IntSort(bool _signed):
-		Sort(Kind::Int),
-		isSigned(_signed)
-	{}
+	IntSort(bool _signed): Sort(Kind::Int), isSigned(_signed) {}
 
 	bool operator==(IntSort const& _other) const
 	{
@@ -67,10 +62,7 @@ struct IntSort: public Sort
 
 struct BitVectorSort: public Sort
 {
-	BitVectorSort(unsigned _size):
-		Sort(Kind::BitVector),
-		size(_size)
-	{}
+	BitVectorSort(unsigned _size): Sort(Kind::BitVector), size(_size) {}
 
 	bool operator==(BitVectorSort const& _other) const
 	{
@@ -83,7 +75,8 @@ struct BitVectorSort: public Sort
 struct FunctionSort: public Sort
 {
 	FunctionSort(std::vector<SortPointer> _domain, SortPointer _codomain):
-		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain)) {}
+		Sort(Kind::Function), domain(std::move(_domain)), codomain(std::move(_codomain))
+	{}
 	bool operator==(Sort const& _other) const override
 	{
 		if (!Sort::operator==(_other))
@@ -93,11 +86,11 @@ struct FunctionSort: public Sort
 		if (domain.size() != _otherFunction->domain.size())
 			return false;
 		if (!std::equal(
-			domain.begin(),
-			domain.end(),
-			_otherFunction->domain.begin(),
-			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
-		))
+				domain.begin(),
+				domain.end(),
+				_otherFunction->domain.begin(),
+				[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
+			))
 			return false;
 		smtAssert(codomain, "");
 		smtAssert(_otherFunction->codomain, "");
@@ -113,7 +106,8 @@ struct ArraySort: public Sort
 	/// _domain is the sort of the indices
 	/// _range is the sort of the values
 	ArraySort(SortPointer _domain, SortPointer _range):
-		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range)) {}
+		Sort(Kind::Array), domain(std::move(_domain)), range(std::move(_range))
+	{}
 	bool operator==(Sort const& _other) const override
 	{
 		if (!Sort::operator==(_other))
@@ -174,11 +168,11 @@ struct TupleSort: public Sort
 		if (components.size() != _otherTuple->components.size())
 			return false;
 		if (!std::equal(
-			components.begin(),
-			components.end(),
-			_otherTuple->components.begin(),
-			[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
-		))
+				components.begin(),
+				components.end(),
+				_otherTuple->components.begin(),
+				[&](SortPointer _a, SortPointer _b) { return *_a == *_b; }
+			))
 			return false;
 		return true;
 	}

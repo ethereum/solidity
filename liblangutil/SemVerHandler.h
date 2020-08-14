@@ -31,10 +31,8 @@
 
 namespace solidity::langutil
 {
-
 class SemVerError: util::Exception
-{
-};
+{};
 
 #undef major
 #undef minor
@@ -83,7 +81,7 @@ struct SemVerMatchExpression
 class SemVerMatchExpressionParser
 {
 public:
-	SemVerMatchExpressionParser(std::vector<Token>  _tokens, std::vector<std::string>  _literals):
+	SemVerMatchExpressionParser(std::vector<Token> _tokens, std::vector<std::string> _literals):
 		m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
 	{}
 	SemVerMatchExpression parse();

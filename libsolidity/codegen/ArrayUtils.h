@@ -27,7 +27,6 @@
 
 namespace solidity::frontend
 {
-
 class CompilerContext;
 class Type;
 class ArrayType;
@@ -72,10 +71,9 @@ public:
 	/// Stack pre: reference (excludes byte offset)
 	/// Stack post: new_length
 	void incrementDynamicArraySize(ArrayType const& _type) const;
-	/// Decrements the size of a dynamic array by one if length is nonzero. Causes an invalid instruction otherwise.
-	/// Clears the removed data element. In case of a byte array, this might move the data.
-	/// Stack pre: reference
-	/// Stack post:
+	/// Decrements the size of a dynamic array by one if length is nonzero. Causes an invalid
+	/// instruction otherwise. Clears the removed data element. In case of a byte array, this might
+	/// move the data. Stack pre: reference Stack post:
 	void popStorageArrayElement(ArrayType const& _type) const;
 	/// Appends a loop that clears a sequence of storage slots of the given type (excluding end).
 	/// Stack pre: end_ref start_ref
@@ -93,16 +91,23 @@ public:
 	/// Stack post: reference length
 	void retrieveLength(ArrayType const& _arrayType, unsigned _stackDepth = 0) const;
 	/// Stores the length of an array of type @a _arrayType in storage. The length itself is stored
-	/// on the stack at position @a _stackDepthLength and the storage reference at @a _stackDepthRef.
-	/// If @a _arrayType is a byte array, takes tight coding into account.
-	void storeLength(ArrayType const& _arrayType, unsigned _stackDepthLength = 0, unsigned _stackDepthRef = 1) const;
-	/// Checks whether the index is out of range and returns the absolute offset of the element reference[index]
-	/// (i.e. reference + index * size_of_base_type).
-	/// If @a _keepReference is true, the base reference to the beginning of the array is kept on the stack.
-	/// Stack pre: reference [length] index
-	/// Stack post (storage): [reference] storage_slot byte_offset
-	/// Stack post: [reference] memory/calldata_offset
-	void accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck = true, bool _keepReference = false) const;
+	/// on the stack at position @a _stackDepthLength and the storage reference at @a
+	/// _stackDepthRef. If @a _arrayType is a byte array, takes tight coding into account.
+	void storeLength(
+		ArrayType const& _arrayType,
+		unsigned _stackDepthLength = 0,
+		unsigned _stackDepthRef = 1
+	) const;
+	/// Checks whether the index is out of range and returns the absolute offset of the element
+	/// reference[index] (i.e. reference + index * size_of_base_type). If @a _keepReference is true,
+	/// the base reference to the beginning of the array is kept on the stack. Stack pre: reference
+	/// [length] index Stack post (storage): [reference] storage_slot byte_offset Stack post:
+	/// [reference] memory/calldata_offset
+	void accessIndex(
+		ArrayType const& _arrayType,
+		bool _doBoundsCheck = true,
+		bool _keepReference = false
+	) const;
 	/// Access calldata array's element and put it on stack.
 	/// Stack pre: reference [length] index
 	/// Stack post: value
@@ -113,7 +118,11 @@ private:
 	/// the storage offset if adding this number again would increase the counter over 32.
 	/// @param byteOffsetPosition the stack offset of the storage byte offset
 	/// @param storageOffsetPosition the stack offset of the storage slot offset
-	void incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const;
+	void incrementByteOffset(
+		unsigned _byteSize,
+		unsigned _byteOffsetPosition,
+		unsigned _storageOffsetPosition
+	) const;
 
 	CompilerContext& m_context;
 };

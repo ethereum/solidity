@@ -26,12 +26,12 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 
-#ifdef _WIN32 // windows
-	#include <io.h>
-	#define isatty _isatty
-	#define fileno _fileno
-#else // unix
-	#include <unistd.h>
+#ifdef _WIN32  // windows
+#include <io.h>
+#define isatty _isatty
+#define fileno _fileno
+#else  // unix
+#include <unistd.h>
 #endif
 
 
@@ -58,31 +58,15 @@ static string const g_argAllowPaths = "allow-paths";
 
 namespace
 {
+ostream& out() { return cout; }
 
-ostream& out()
-{
-	return cout;
-}
+AnsiColorized log() { return AnsiColorized(cout, true, {}); }
 
-AnsiColorized log()
-{
-	return AnsiColorized(cout, true, {});
-}
+AnsiColorized success() { return AnsiColorized(cout, true, {formatting::CYAN}); }
 
-AnsiColorized success()
-{
-	return AnsiColorized(cout, true, {formatting::CYAN});
-}
+AnsiColorized warning() { return AnsiColorized(cout, true, {formatting::YELLOW}); }
 
-AnsiColorized warning()
-{
-	return AnsiColorized(cout, true, {formatting::YELLOW});
-}
-
-AnsiColorized error()
-{
-	return AnsiColorized(cout, true, {formatting::MAGENTA});
-}
+AnsiColorized error() { return AnsiColorized(cout, true, {formatting::MAGENTA}); }
 
 void logVersion()
 {
@@ -100,7 +84,8 @@ void logProgress()
 
 bool SourceUpgrade::parseArguments(int _argc, char** _argv)
 {
-	po::options_description desc(R"(solidity-upgrade, the Solidity upgrade assistant.
+	po::options_description desc(
+		R"(solidity-upgrade, the Solidity upgrade assistant.
 
 The solidity-upgrade tool can help upgrade smart contracts to breaking language features.
 
@@ -117,25 +102,21 @@ Allowed options)",
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23
 	);
-	desc.add_options()
-		(g_argHelp.c_str(), "Show help message and exit.")
-		(g_argVersion.c_str(), "Show version and exit.")
-		(
-			g_argAllowPaths.c_str(),
-			po::value<string>()->value_name("path(s)"),
-			"Allow a given path for imports. A list of paths can be supplied by separating them "
-			"with a comma."
-		)
-		(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.")
-		(
-			g_argModules.c_str(),
-			po::value<string>()->value_name("module(s)"),
-			"Only activate a specific upgrade module. A list of "
-			"modules can be supplied by separating them with a comma."
-		)
-		(g_argDryRun.c_str(), "Apply changes in-memory only and don't write to input file.")
-		(g_argVerbose.c_str(), "Print logs, errors and changes. Shortens output of upgrade patches.")
-		(g_argUnsafe.c_str(), "Accept *unsafe* changes.");
+	desc.add_options()(g_argHelp.c_str(), "Show help message and exit.")(
+		g_argVersion.c_str(),
+		"Show version and exit."
+	)(g_argAllowPaths.c_str(),
+	  po::value<string>()->value_name("path(s)"),
+	  "Allow a given path for imports. A list of paths can be supplied by separating them "
+	  "with a comma.")(g_argIgnoreMissingFiles.c_str(), "Ignore missing files.")(
+		g_argModules.c_str(),
+		po::value<string>()->value_name("module(s)"),
+		"Only activate a specific upgrade module. A list of "
+		"modules can be supplied by separating them with a comma."
+	)(g_argDryRun.c_str(), "Apply changes in-memory only and don't write to input file.")(
+		g_argVerbose.c_str(),
+		"Print logs, errors and changes. Shortens output of upgrade patches."
+	)(g_argUnsafe.c_str(), "Accept *unsafe* changes.");
 
 
 	po::options_description allOptions = desc;
@@ -176,9 +157,8 @@ Allowed options)",
 	if (m_args.count(g_argModules))
 	{
 		vector<string> moduleArgs;
-		auto modules = boost::split(
-			moduleArgs, m_args[g_argModules].as<string>(), boost::is_any_of(",")
-		);
+		auto modules =
+			boost::split(moduleArgs, m_args[g_argModules].as<string>(), boost::is_any_of(","));
 
 		/// All modules are activated by default. Clear them before activating single ones.
 		m_suite.deactivateModules();
@@ -213,9 +193,8 @@ Allowed options)",
 	if (m_args.count(g_argAllowPaths))
 	{
 		vector<string> paths;
-		auto allowedPaths = boost::split(
-			paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")
-		);
+		auto allowedPaths =
+			boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(","));
 		for (string const& path: allowedPaths)
 		{
 			auto filesystem_path = boost::filesystem::path(path);
@@ -238,16 +217,11 @@ void SourceUpgrade::printPrologue()
 	out() << endl;
 	out() << endl;
 
-	log() <<
-		"solidity-upgrade does not support all breaking changes for each version." <<
-		endl <<
-		"Please run `solidity-upgrade --help` and get a list of implemented upgrades." <<
-		endl <<
-		endl;
+	log() << "solidity-upgrade does not support all breaking changes for each version." << endl
+		  << "Please run `solidity-upgrade --help` and get a list of implemented upgrades." << endl
+		  << endl;
 
-	log() <<
-		"Running analysis (and upgrade) on given source files." <<
-		endl;
+	log() << "Running analysis (and upgrade) on given source files." << endl;
 }
 
 bool SourceUpgrade::processInput()
@@ -280,31 +254,26 @@ void SourceUpgrade::tryCompile() const
 		{
 			if (m_compiler->analyze())
 				m_compiler->compile();
-			else
-				if (verbose)
-				{
-					error() <<
-						"Compilation errors that solidity-upgrade may resolve occurred." <<
-						endl <<
-						endl;
-
-					printErrors();
-				}
-		}
-		else
-			if (verbose)
+			else if (verbose)
 			{
-				error() <<
-					"Compilation errors that solidity-upgrade cannot resolve occurred." <<
-					endl <<
-					endl;
+				error() << "Compilation errors that solidity-upgrade may resolve occurred." << endl
+						<< endl;
 
 				printErrors();
 			}
+		}
+		else if (verbose)
+		{
+			error() << "Compilation errors that solidity-upgrade cannot resolve occurred." << endl
+					<< endl;
+
+			printErrors();
+		}
 	}
 	catch (Exception const& _exception)
 	{
-		error() << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
+		error() << "Exception during compilation: " << boost::diagnostic_information(_exception)
+				<< endl;
 	}
 	catch (std::exception const& _e)
 	{
@@ -374,10 +343,7 @@ bool SourceUpgrade::analyzeAndUpgrade(pair<string, string> const& _sourceCode)
 	return false;
 }
 
-void SourceUpgrade::applyChange(
-	pair<string, string> const& _sourceCode,
-	UpgradeChange& _change
-)
+void SourceUpgrade::applyChange(pair<string, string> const& _sourceCode, UpgradeChange& _change)
 {
 	bool dryRun = m_args.count(g_argDryRun);
 	bool verbose = m_args.count(g_argVerbose);
@@ -455,7 +421,9 @@ bool SourceUpgrade::readInputFiles()
 
 	if (m_sourceCodes.size() == 0)
 	{
-		warning() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		warning() << "No input files given. If you wish to use the standard input please specify "
+					 "\"-\" explicitly."
+				  << endl;
 		return false;
 	}
 
@@ -491,10 +459,9 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 			for (auto const& allowedDir: m_allowedDirectories)
 			{
 				// If dir is a prefix of boostPath, we are fine.
-				if (
-					std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-					std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
-				)
+				if (std::distance(allowedDir.begin(), allowedDir.end()) <=
+						std::distance(canonicalPath.begin(), canonicalPath.end()) &&
+					std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin()))
 				{
 					isAllowed = true;
 					break;
@@ -515,7 +482,9 @@ ReadCallback::Callback SourceUpgrade::fileReader()
 		}
 		catch (Exception const& _exception)
 		{
-			return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
+			return ReadCallback::Result{
+				false,
+				"Exception in read callback: " + boost::diagnostic_information(_exception)};
 		}
 		catch (...)
 		{

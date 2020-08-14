@@ -39,9 +39,7 @@ function<Mutation> phaser::geneRandomisation(double _chance)
 		vector<string> optimisationSteps;
 		for (auto const& step: _chromosome.optimisationSteps())
 			optimisationSteps.push_back(
-				SimulationRNG::bernoulliTrial(_chance) ?
-				Chromosome::randomOptimisationStep() :
-				step
+				SimulationRNG::bernoulliTrial(_chance) ? Chromosome::randomOptimisationStep() : step
 			);
 
 		return Chromosome(move(optimisationSteps));
@@ -110,7 +108,6 @@ function<Mutation> phaser::mutationSequence(vector<function<Mutation>> _mutation
 
 namespace
 {
-
 ChromosomePair fixedPointSwap(
 	Chromosome const& _chromosome1,
 	Chromosome const& _chromosome2,
@@ -184,7 +181,6 @@ function<Crossover> phaser::fixedPointCrossover(double _crossoverPoint)
 
 namespace
 {
-
 ChromosomePair fixedTwoPointSwap(
 	Chromosome const& _chromosome1,
 	Chromosome const& _chromosome2,
@@ -255,8 +251,11 @@ function<SymmetricCrossover> phaser::symmetricRandomTwoPointCrossover()
 
 namespace
 {
-
-ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2, double _swapChance)
+ChromosomePair uniformSwap(
+	Chromosome const& _chromosome1,
+	Chromosome const& _chromosome2,
+	double _swapChance
+)
 {
 	vector<string> steps1;
 	vector<string> steps2;
@@ -304,15 +303,11 @@ ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _ch
 function<Crossover> phaser::uniformCrossover(double _swapChance)
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
-	{
-		return get<0>(uniformSwap(_chromosome1, _chromosome2, _swapChance));
-	};
+	{ return get<0>(uniformSwap(_chromosome1, _chromosome2, _swapChance)); };
 }
 
 function<SymmetricCrossover> phaser::symmetricUniformCrossover(double _swapChance)
 {
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
-	{
-		return uniformSwap(_chromosome1, _chromosome2, _swapChance);
-	};
+	{ return uniformSwap(_chromosome1, _chromosome2, _swapChance); };
 }

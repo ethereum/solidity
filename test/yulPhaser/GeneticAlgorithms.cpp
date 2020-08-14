@@ -36,7 +36,6 @@ using namespace solidity::util;
 
 namespace solidity::phaser::test
 {
-
 class GeneticAlgorithmFixture
 {
 protected:
@@ -61,9 +60,13 @@ BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(GeneticAlgorithmsTest)
 BOOST_AUTO_TEST_SUITE(RandomAlgorithmTest)
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_randomise_rest_of_population, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_preserve_elite_and_randomise_rest_of_population,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 4, 5, 5);
 	assert((chromosomeLengths(population) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
 	RandomAlgorithm algorithm({0.5, 1, 1});
 
@@ -71,9 +74,13 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_randomise_rest_of
 	BOOST_TEST((chromosomeLengths(newPopulation) == vector<size_t>{1, 1, 1, 1, 3, 3, 3, 3}));
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individuals, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_not_replace_elite_with_worse_individuals,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 4, 5, 5);
 	assert((chromosomeLengths(population) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
 	RandomAlgorithm algorithm({0.5, 7, 7});
 
@@ -81,9 +88,13 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individ
 	BOOST_TEST((chromosomeLengths(newPopulation) == vector<size_t>{3, 3, 3, 3, 7, 7, 7, 7}));
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_replace_all_chromosomes_if_zero_size_elite, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_replace_all_chromosomes_if_zero_size_elite,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 4, 5, 5);
 	assert((chromosomeLengths(population) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
 	RandomAlgorithm algorithm({0.0, 1, 1});
 
@@ -91,9 +102,13 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_replace_all_chromosomes_if_zero_size
 	BOOST_TEST((chromosomeLengths(newPopulation) == vector<size_t>{1, 1, 1, 1, 1, 1, 1, 1}));
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_any_chromosomes_if_whole_population_is_the_elite, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_not_replace_any_chromosomes_if_whole_population_is_the_elite,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 4, 5, 5);
 	assert((chromosomeLengths(population) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5}));
 	RandomAlgorithm algorithm({1.0, 1, 1});
 
@@ -104,9 +119,13 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_any_chromosomes_if_whole
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(GenerationalElitistWithExclusivePoolsTest)
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_regenerate_rest_of_population, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_preserve_elite_and_regenerate_rest_of_population,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 6, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 6, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 4, 5, 5);
 	assert((chromosomeLengths(population) == vector<size_t>{3, 3, 3, 3, 3, 3, 5, 5, 5, 5}));
 
 	GenerationalElitistWithExclusivePools::Options options = {
@@ -126,9 +145,13 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite_and_regenerate_rest_o
 	BOOST_TEST((chromosomeLengths(newPopulation) == vector<size_t>{0, 0, 3, 3, 3, 3, 3, 3, 3, 3}));
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individuals, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_not_replace_elite_with_worse_individuals,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 6, 3, 3) + Population::makeRandom(m_fitnessMetric, 4, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 6, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 4, 5, 5);
 	assert(chromosomeLengths(population) == (vector<size_t>{3, 3, 3, 3, 3, 3, 5, 5, 5, 5}));
 
 	GenerationalElitistWithExclusivePools::Options options = {
@@ -148,7 +171,10 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_not_replace_elite_with_worse_individ
 	BOOST_TEST((chromosomeLengths(newPopulation) == vector<size_t>{3, 3, 3, 3, 3, 3, 3, 3, 7, 7}));
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossover_pool_by_mutating_the_elite, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_generate_individuals_in_the_crossover_pool_by_mutating_the_elite,
+	GeneticAlgorithmFixture
+)
 {
 	auto population = Population::makeRandom(m_fitnessMetric, 20, 5, 5);
 
@@ -167,18 +193,20 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossove
 	SimulationRNG::reset(1);
 	Population newPopulation = algorithm.runNextRound(population);
 
-	BOOST_TEST((
-		chromosomeLengths(newPopulation) ==
-		vector<size_t>{0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 11, 11, 11}
-	));
+	BOOST_TEST(
+		(chromosomeLengths(newPopulation) ==
+		 vector<size_t>{0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 11, 11, 11})
+	);
 }
 
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossover_pool_by_crossing_over_the_elite, GeneticAlgorithmFixture)
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_generate_individuals_in_the_crossover_pool_by_crossing_over_the_elite,
+	GeneticAlgorithmFixture
+)
 {
-	auto population = (
-		Population(m_fitnessMetric, {Chromosome("aa"), Chromosome("ff")}) +
-		Population::makeRandom(m_fitnessMetric, 8, 6, 6)
-	);
+	auto population =
+		(Population(m_fitnessMetric, {Chromosome("aa"), Chromosome("ff")}) +
+		 Population::makeRandom(m_fitnessMetric, 8, 6, 6));
 	assert((chromosomeLengths(population) == vector<size_t>{2, 2, 6, 6, 6, 6, 6, 6, 6, 6}));
 
 	GenerationalElitistWithExclusivePools::Options options = {
@@ -199,29 +227,36 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_generate_individuals_in_the_crossove
 	vector<Individual> const& newIndividuals = newPopulation.individuals();
 	BOOST_TEST((chromosomeLengths(newPopulation) == vector<size_t>{2, 2, 2, 2, 2, 2, 2, 2, 2, 2}));
 	for (auto& individual: newIndividuals)
-		BOOST_TEST((
-			individual.chromosome == Chromosome("aa") ||
-			individual.chromosome == Chromosome("af") ||
-			individual.chromosome == Chromosome("fa") ||
-			individual.chromosome == Chromosome("ff")
-		));
-	BOOST_TEST(any_of(newIndividuals.begin() + 2, newIndividuals.end(), [](auto& individual){
-		return individual.chromosome != Chromosome("aa") && individual.chromosome != Chromosome("ff");
-	}));
+		BOOST_TEST(
+			(individual.chromosome == Chromosome("aa") ||
+			 individual.chromosome == Chromosome("af") ||
+			 individual.chromosome == Chromosome("fa") || individual.chromosome == Chromosome("ff"))
+		);
+	BOOST_TEST(any_of(
+		newIndividuals.begin() + 2,
+		newIndividuals.end(),
+		[](auto& individual) {
+			return individual.chromosome != Chromosome("aa") &&
+				individual.chromosome != Chromosome("ff");
+		}
+	));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ClassicGeneticAlgorithmTest)
 
 // FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_proportional_to_fitness, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_select_individuals_with_probability_proportional_to_fitness,
+	ClassicGeneticAlgorithmFixture,
+	*boost::unit_test::disabled()
+)
 {
 	constexpr double relativeTolerance = 0.1;
 	constexpr size_t populationSize = 1000;
 	assert(populationSize % 4 == 0 && "Choose a number divisible by 4 for this test");
 
-	auto population =
-		Population::makeRandom(m_fitnessMetric, populationSize / 4, 0, 0) +
+	auto population = Population::makeRandom(m_fitnessMetric, populationSize / 4, 0, 0) +
 		Population::makeRandom(m_fitnessMetric, populationSize / 4, 1, 1) +
 		Population::makeRandom(m_fitnessMetric, populationSize / 4, 2, 2) +
 		Population::makeRandom(m_fitnessMetric, populationSize / 4, 3, 3);
@@ -232,18 +267,14 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_
 		{2, 2.0 / (4 + 3 + 2 + 1)},
 		{3, 1.0 / (4 + 3 + 2 + 1)},
 	};
-	double const expectedValue = (
-		0.0 * expectedProbabilities[0] +
-		1.0 * expectedProbabilities[1] +
-		2.0 * expectedProbabilities[2] +
-		3.0 * expectedProbabilities[3]
-	);
-	double const variance = (
-		(0.0 - expectedValue) * (0.0 - expectedValue) * expectedProbabilities[0] +
-		(1.0 - expectedValue) * (1.0 - expectedValue) * expectedProbabilities[1] +
-		(2.0 - expectedValue) * (2.0 - expectedValue) * expectedProbabilities[2] +
-		(3.0 - expectedValue) * (3.0 - expectedValue) * expectedProbabilities[3]
-	);
+	double const expectedValue =
+		(0.0 * expectedProbabilities[0] + 1.0 * expectedProbabilities[1] +
+		 2.0 * expectedProbabilities[2] + 3.0 * expectedProbabilities[3]);
+	double const variance =
+		((0.0 - expectedValue) * (0.0 - expectedValue) * expectedProbabilities[0] +
+		 (1.0 - expectedValue) * (1.0 - expectedValue) * expectedProbabilities[1] +
+		 (2.0 - expectedValue) * (2.0 - expectedValue) * expectedProbabilities[2] +
+		 (3.0 - expectedValue) * (3.0 - expectedValue) * expectedProbabilities[3]);
 
 	ClassicGeneticAlgorithm algorithm(m_options);
 	Population newPopulation = algorithm.runNextRound(population);
@@ -252,11 +283,17 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_individuals_with_probability_
 
 	vector<size_t> newFitness = chromosomeLengths(newPopulation);
 	BOOST_TEST(abs(mean(newFitness) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(newFitness, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(newFitness, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 // FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_only_individuals_existing_in_the_original_population, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_select_only_individuals_existing_in_the_original_population,
+	ClassicGeneticAlgorithmFixture,
+	*boost::unit_test::disabled()
+)
 {
 	constexpr size_t populationSize = 1000;
 	auto population = Population::makeRandom(m_fitnessMetric, populationSize, 1, 10);
@@ -274,11 +311,20 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_select_only_individuals_existing_in_
 
 BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_crossover, ClassicGeneticAlgorithmFixture)
 {
-	auto population = Population(m_fitnessMetric, {
-		Chromosome("aa"), Chromosome("aa"), Chromosome("aa"),
-		Chromosome("ff"), Chromosome("ff"), Chromosome("ff"),
-		Chromosome("gg"), Chromosome("gg"), Chromosome("gg"),
-	});
+	auto population = Population(
+		m_fitnessMetric,
+		{
+			Chromosome("aa"),
+			Chromosome("aa"),
+			Chromosome("aa"),
+			Chromosome("ff"),
+			Chromosome("ff"),
+			Chromosome("ff"),
+			Chromosome("gg"),
+			Chromosome("gg"),
+			Chromosome("gg"),
+		}
+	);
 
 	set<string> originalSteps{"aa", "ff", "gg"};
 	set<string> crossedSteps{"af", "fa", "fg", "gf", "ga", "ag"};
@@ -301,7 +347,11 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_crossover, ClassicGeneticAlgorith
 }
 
 // FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_mutation, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_do_mutation,
+	ClassicGeneticAlgorithmFixture,
+	*boost::unit_test::disabled()
+)
 {
 	m_options.mutationChance = 0.6;
 	ClassicGeneticAlgorithm algorithm(m_options);
@@ -327,11 +377,18 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_mutation, ClassicGeneticAlgorithm
 	}
 
 	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) <
+		variance * relativeTolerance
+	);
 }
 
 // FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_deletion, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_do_deletion,
+	ClassicGeneticAlgorithmFixture,
+	*boost::unit_test::disabled()
+)
 {
 	m_options.deletionChance = 0.6;
 	ClassicGeneticAlgorithm algorithm(m_options);
@@ -357,11 +414,18 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_deletion, ClassicGeneticAlgorithm
 	}
 
 	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) <
+		variance * relativeTolerance
+	);
 }
 
 // FIXME: This test runs *very* slowly (tens of seconds). Investigate, fix and re-enable.
-BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_addition, ClassicGeneticAlgorithmFixture, *boost::unit_test::disabled())
+BOOST_FIXTURE_TEST_CASE(
+	runNextRound_should_do_addition,
+	ClassicGeneticAlgorithmFixture,
+	*boost::unit_test::disabled()
+)
 {
 	m_options.additionChance = 0.6;
 	ClassicGeneticAlgorithm algorithm(m_options);
@@ -384,18 +448,24 @@ BOOST_FIXTURE_TEST_CASE(runNextRound_should_do_addition, ClassicGeneticAlgorithm
 		string steps = toString(individual.chromosome);
 		for (size_t i = 0; i < chromosome.length() + 1; ++i)
 		{
-			BOOST_REQUIRE(chromosome.length() <= steps.size() && steps.size() <= 2 * chromosome.length() + 1);
+			BOOST_REQUIRE(
+				chromosome.length() <= steps.size() && steps.size() <= 2 * chromosome.length() + 1
+			);
 			bernoulliTrials.push_back(static_cast<size_t>(i < steps.size() - chromosome.length()));
 		}
 	}
 
 	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) <
+		variance * relativeTolerance
+	);
 }
 
 BOOST_FIXTURE_TEST_CASE(runNextRound_should_preserve_elite, ClassicGeneticAlgorithmFixture)
 {
-	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) + Population::makeRandom(m_fitnessMetric, 6, 5, 5);
+	auto population = Population::makeRandom(m_fitnessMetric, 4, 3, 3) +
+		Population::makeRandom(m_fitnessMetric, 6, 5, 5);
 	assert((chromosomeLengths(population) == vector<size_t>{3, 3, 3, 3, 5, 5, 5, 5, 5, 5}));
 
 	m_options.elitePoolSize = 0.5;

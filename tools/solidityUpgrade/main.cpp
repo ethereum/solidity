@@ -45,7 +45,6 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-
 void setupTerminal()
 {
 #if defined(_WIN32) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -84,7 +83,8 @@ int main(int argc, char** argv)
 	}
 	catch (boost::exception const& _exception)
 	{
-		cerr << "Exception while processing input: " << boost::diagnostic_information(_exception) << endl;
+		cerr << "Exception while processing input: " << boost::diagnostic_information(_exception)
+			 << endl;
 	}
 
 	return 0;

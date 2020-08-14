@@ -26,7 +26,10 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
-SourceReferenceExtractor::Message SourceReferenceExtractor::extract(util::Exception const& _exception, string _category)
+SourceReferenceExtractor::Message SourceReferenceExtractor::extract(
+	util::Exception const& _exception,
+	string _category
+)
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 
@@ -50,12 +53,15 @@ SourceReferenceExtractor::Message SourceReferenceExtractor::extract(Error const&
 	return message;
 }
 
-SourceReference SourceReferenceExtractor::extract(SourceLocation const* _location, std::string message)
+SourceReference SourceReferenceExtractor::extract(
+	SourceLocation const* _location,
+	std::string message
+)
 {
-	if (!_location || !_location->source.get()) // Nothing we can extract here
+	if (!_location || !_location->source.get())	 // Nothing we can extract here
 		return SourceReference::MessageOnly(std::move(message));
 
-	if (!_location->hasText()) // No source text, so we can only extract the source name
+	if (!_location->hasText())	// No source text, so we can only extract the source name
 		return SourceReference::MessageOnly(std::move(message), _location->source->name());
 
 	shared_ptr<CharStream> const& source = _location->source;
@@ -68,14 +74,13 @@ SourceReference SourceReferenceExtractor::extract(SourceLocation const* _locatio
 	string line = source->lineAtPosition(_location->start);
 
 	int locationLength =
-		isMultiline ?
-			int(line.length()) - start.column :
-			end.column - start.column;
+		isMultiline ? int(line.length()) - start.column : end.column - start.column;
 
 	if (locationLength > 150)
 	{
 		auto const lhs = static_cast<size_t>(start.column) + 35;
-		string::size_type const rhs = (isMultiline ? line.length() : static_cast<size_t>(end.column)) - 35;
+		string::size_type const rhs =
+			(isMultiline ? line.length() : static_cast<size_t>(end.column)) - 35;
 		line = line.substr(0, lhs) + " ... " + line.substr(rhs);
 		end.column = start.column + 75;
 		locationLength = 75;
@@ -86,9 +91,8 @@ SourceReference SourceReferenceExtractor::extract(SourceLocation const* _locatio
 		int const len = static_cast<int>(line.length());
 		line = line.substr(
 			static_cast<size_t>(max(0, start.column - 35)),
-			static_cast<size_t>(min(start.column, 35)) + static_cast<size_t>(
-				min(locationLength + 35,len - start.column)
-			)
+			static_cast<size_t>(min(start.column, 35)) +
+				static_cast<size_t>(min(locationLength + 35, len - start.column))
 		);
 		if (start.column + locationLength + 35 < len)
 			line += " ...";

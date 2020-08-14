@@ -34,7 +34,6 @@ class Scanner;
 
 namespace solidity::frontend
 {
-
 class Parser: public langutil::ParserBase
 {
 public:
@@ -43,8 +42,7 @@ public:
 		langutil::EVMVersion _evmVersion,
 		bool _errorRecovery = false
 	):
-		ParserBase(_errorReporter, _errorRecovery),
-		m_evmVersion(_evmVersion)
+		ParserBase(_errorReporter, _errorRecovery), m_evmVersion(_evmVersion)
 	{}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
@@ -79,7 +77,11 @@ private:
 
 	///@{
 	///@name Parsing functions for the AST nodes
-	void parsePragmaVersion(langutil::SourceLocation const& _location, std::vector<Token> const& _tokens, std::vector<std::string> const& _literals);
+	void parsePragmaVersion(
+		langutil::SourceLocation const& _location,
+		std::vector<Token> const& _tokens,
+		std::vector<std::string> const& _literals
+	);
 	ASTPointer<StructuredDocumentation> parseStructuredDocumentation();
 	ASTPointer<PragmaDirective> parsePragmaDirective();
 	ASTPointer<ImportDirective> parseImportDirective();
@@ -106,7 +108,10 @@ private:
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
-	ASTPointer<TypeName> parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory);
+	ASTPointer<TypeName> parseTypeNameSuffix(
+		ASTPointer<TypeName> type,
+		ASTNodeFactory& nodeFactory
+	);
 	ASTPointer<TypeName> parseTypeName();
 	ASTPointer<FunctionTypeName> parseFunctionType();
 	ASTPointer<Mapping> parseMapping();
@@ -137,7 +142,8 @@ private:
 	ASTPointer<Expression> parseExpression(
 		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
-	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4,
+	ASTPointer<Expression> parseBinaryExpression(
+		int _minPrecedence = 4,
 		ASTPointer<Expression> const& _partiallyParsedExpression = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseUnaryExpression(
@@ -148,8 +154,10 @@ private:
 	);
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
-	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
-	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseNamedArguments();
+	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>>
+	parseFunctionCallArguments();
+	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>>
+	parseNamedArguments();
 	///@}
 
 	///@{
@@ -158,7 +166,9 @@ private:
 	/// Used as return value of @see peekStatementType.
 	enum class LookAheadInfo
 	{
-		IndexAccessStructure, VariableDeclaration, Expression
+		IndexAccessStructure,
+		VariableDeclaration,
+		Expression
 	};
 	/// Structure that represents a.b.c[x][y][z]. Can be converted either to an expression
 	/// or to a type name. For this to be valid, path cannot be empty, but indices can be empty.
@@ -181,9 +191,9 @@ private:
 	int64_t nextID() { return ++m_currentNodeID; }
 
 	std::pair<LookAheadInfo, IndexAccessedPath> tryParseIndexAccessedPath();
-	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
-	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
-	/// decide with constant look-ahead.
+	/// Performs limited look-ahead to distinguish between variable declaration and expression
+	/// statement. For source code of the form "a[][8]" ("IndexAccessStructure"), this is not
+	/// possible to decide with constant look-ahead.
 	LookAheadInfo peekStatementType() const;
 	/// @returns an IndexAccessedPath as a prestage to parsing a variable declaration (type name)
 	/// or an expression;
@@ -193,7 +203,9 @@ private:
 	ASTPointer<TypeName> typeNameFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
 	/// @returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]",
 	/// or an empty pointer if an empty @a _pathAndIncides has been supplied.
-	ASTPointer<Expression> expressionFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
+	ASTPointer<Expression> expressionFromIndexAccessStructure(
+		IndexAccessedPath const& _pathAndIndices
+	);
 
 	ASTPointer<ASTString> expectIdentifierToken();
 	ASTPointer<ASTString> getLiteralAndAdvance();

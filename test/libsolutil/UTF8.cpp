@@ -30,11 +30,10 @@ using namespace std;
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(UTF8, *boost::unit_test::label("nooptions"))
 
-namespace {
-
+namespace
+{
 bool isValidUTF8(string const& _value)
 {
 	size_t pos;
@@ -76,20 +75,20 @@ BOOST_AUTO_TEST_CASE(valid)
 BOOST_AUTO_TEST_CASE(invalid)
 {
 	// anything between 0x80 and 0xc0 is disallowed
-	BOOST_CHECK(isInvalidUTF8("80", 0)); // invalid per table 3.6
-	BOOST_CHECK(isInvalidUTF8("a0", 0)); // invalid per table 3.6
-	BOOST_CHECK(isInvalidUTF8("c0", 0)); // invalid per table 3.7
-	BOOST_CHECK(isInvalidUTF8("c1", 0)); // invalid per table 3.7
-	BOOST_CHECK(isInvalidUTF8("c2", 0)); // too short (position is reported as the first byte)
-	BOOST_CHECK(isInvalidUTF8("e08081", 2)); // e0 must be followed by >= a0
-	BOOST_CHECK(isInvalidUTF8("e180", 0)); // too short
-	BOOST_CHECK(isInvalidUTF8("ec80", 0)); // too short
-	BOOST_CHECK(isInvalidUTF8("f08f8001", 2)); // f0 must be followed by >= 90
-	BOOST_CHECK(isInvalidUTF8("f18080", 0)); // too short
-	BOOST_CHECK(isInvalidUTF8("f4908081", 2)); // f4 must be followed by < 90
+	BOOST_CHECK(isInvalidUTF8("80", 0));  // invalid per table 3.6
+	BOOST_CHECK(isInvalidUTF8("a0", 0));  // invalid per table 3.6
+	BOOST_CHECK(isInvalidUTF8("c0", 0));  // invalid per table 3.7
+	BOOST_CHECK(isInvalidUTF8("c1", 0));  // invalid per table 3.7
+	BOOST_CHECK(isInvalidUTF8("c2", 0));  // too short (position is reported as the first byte)
+	BOOST_CHECK(isInvalidUTF8("e08081", 2));  // e0 must be followed by >= a0
+	BOOST_CHECK(isInvalidUTF8("e180", 0));	// too short
+	BOOST_CHECK(isInvalidUTF8("ec80", 0));	// too short
+	BOOST_CHECK(isInvalidUTF8("f08f8001", 2));	// f0 must be followed by >= 90
+	BOOST_CHECK(isInvalidUTF8("f18080", 0));  // too short
+	BOOST_CHECK(isInvalidUTF8("f4908081", 2));	// f4 must be followed by < 90
 	// anything above 0xf7 is disallowed
-	BOOST_CHECK(isInvalidUTF8("f8", 0)); // invalid per table 3.7
-	BOOST_CHECK(isInvalidUTF8("f9", 0)); // invalid per table 3.7
+	BOOST_CHECK(isInvalidUTF8("f8", 0));  // invalid per table 3.7
+	BOOST_CHECK(isInvalidUTF8("f9", 0));  // invalid per table 3.7
 }
 
 BOOST_AUTO_TEST_CASE(corpus)

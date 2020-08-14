@@ -41,11 +41,17 @@ bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 	// current values to turn `sub(_a, _b)` into a nonzero constant.
 	// If that fails, try `eq(_a, _b)`.
 
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	Expression expr1 = simplify(FunctionCall{
+		{},
+		{{}, "sub"_yulstring},
+		util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
 	if (holds_alternative<Literal>(expr1))
 		return valueOfLiteral(std::get<Literal>(expr1)) != 0;
 
-	Expression expr2 = simplify(FunctionCall{{}, {{}, "eq"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	Expression expr2 = simplify(FunctionCall{
+		{},
+		{{}, "eq"_yulstring},
+		util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
 	if (holds_alternative<Literal>(expr2))
 		return valueOfLiteral(std::get<Literal>(expr2)) == 0;
 
@@ -57,7 +63,10 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 	// Try to use the simplification rules together with the
 	// current values to turn `sub(_a, _b)` into a constant whose absolute value is at least 32.
 
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	Expression expr1 = simplify(FunctionCall{
+		{},
+		{{}, "sub"_yulstring},
+		util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
 	if (holds_alternative<Literal>(expr1))
 	{
 		u256 val = valueOfLiteral(std::get<Literal>(expr1));
@@ -70,7 +79,11 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 Expression KnowledgeBase::simplify(Expression _expression)
 {
 	bool startedRecursion = (m_recursionCounter == 0);
-	ScopeGuard{[&] { if (startedRecursion) m_recursionCounter = 0; }};
+	ScopeGuard{[&]
+			   {
+				   if (startedRecursion)
+					   m_recursionCounter = 0;
+			   }};
 
 	if (startedRecursion)
 		m_recursionCounter = 100;

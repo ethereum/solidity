@@ -35,10 +35,7 @@ using namespace solidity::util;
 class TypeInfo::TypeCollector: public ASTWalker
 {
 public:
-	explicit TypeCollector(Block const& _block)
-	{
-		(*this)(_block);
-	}
+	explicit TypeCollector(Block const& _block) { (*this)(_block); }
 
 	using ASTWalker::operator();
 	void operator()(VariableDeclaration const& _varDecl) override
@@ -68,8 +65,7 @@ public:
 };
 
 
-TypeInfo::TypeInfo(Dialect const& _dialect, Block const& _ast):
-	m_dialect(_dialect)
+TypeInfo::TypeInfo(Dialect const& _dialect, Block const& _ast): m_dialect(_dialect)
 {
 	TypeCollector types(_ast);
 	m_functionTypes = std::move(types.functionTypes);
@@ -78,27 +74,26 @@ TypeInfo::TypeInfo(Dialect const& _dialect, Block const& _ast):
 
 YulString TypeInfo::typeOf(Expression const& _expression) const
 {
-	return std::visit(GenericVisitor{
-		[&](FunctionCall const& _funCall) {
-			YulString name = _funCall.functionName.name;
-			vector<YulString> const* retTypes = nullptr;
-			if (BuiltinFunction const* fun = m_dialect.builtin(name))
-				retTypes = &fun->returns;
-			else
-				retTypes = &m_functionTypes.at(name).returns;
-			yulAssert(retTypes && retTypes->size() == 1, "Call to typeOf for non-single-value expression.");
-			return retTypes->front();
-		},
-		[&](Identifier const& _identifier) {
-			return m_variableTypes.at(_identifier.name);
-		},
-		[&](Literal const& _literal) {
-			return _literal.type;
-		}
-	}, _expression);
+	return std::visit(
+		GenericVisitor{
+			[&](FunctionCall const& _funCall)
+			{
+				YulString name = _funCall.functionName.name;
+				vector<YulString> const* retTypes = nullptr;
+				if (BuiltinFunction const* fun = m_dialect.builtin(name))
+					retTypes = &fun->returns;
+				else
+					retTypes = &m_functionTypes.at(name).returns;
+				yulAssert(
+					retTypes && retTypes->size() == 1,
+					"Call to typeOf for non-single-value expression."
+				);
+				return retTypes->front();
+			},
+			[&](Identifier const& _identifier) { return m_variableTypes.at(_identifier.name); },
+			[&](Literal const& _literal) { return _literal.type; }},
+		_expression
+	);
 }
 
-YulString TypeInfo::typeOfVariable(YulString _name) const
-{
-	return m_variableTypes.at(_name);
-}
+YulString TypeInfo::typeOfVariable(YulString _name) const { return m_variableTypes.at(_name); }

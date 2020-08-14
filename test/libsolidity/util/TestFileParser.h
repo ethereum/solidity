@@ -29,7 +29,6 @@
 
 namespace solidity::frontend::test
 {
-
 /**
  * Class that is able to parse an additional and well-formed comment section in a Solidity
  * source file used by the file-based unit test environment. For now, it parses function

@@ -38,19 +38,35 @@
 
 namespace solidity::evmasm
 {
-
 using AssemblyPointer = std::shared_ptr<Assembly>;
 
 class Assembly
 {
 public:
-	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
-	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
+	AssemblyItem newTag()
+	{
+		assertThrow(m_usedTags < 0xffffffff, AssemblyException, "");
+		return AssemblyItem(Tag, m_usedTags++);
+	}
+	AssemblyItem newPushTag()
+	{
+		assertThrow(m_usedTags < 0xffffffff, AssemblyException, "");
+		return AssemblyItem(PushTag, m_usedTags++);
+	}
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
 	AssemblyItem namedTag(std::string const& _name);
-	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	AssemblyItem newData(bytes const& _data)
+	{
+		util::h256 h(util::keccak256(util::asString(_data)));
+		m_data[h] = _data;
+		return AssemblyItem(PushData, h);
+	}
 	bytes const& data(util::h256 const& _i) const { return m_data.at(_i); }
-	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
+	AssemblyItem newSub(AssemblyPointer const& _sub)
+	{
+		m_subs.push_back(_sub);
+		return AssemblyItem(PushSub, m_subs.size() - 1);
+	}
 	Assembly const& sub(size_t _sub) const { return *m_subs.at(_sub); }
 	Assembly& sub(size_t _sub) { return *m_subs.at(_sub); }
 	size_t numSubs() const { return m_subs.size(); }
@@ -62,23 +78,59 @@ public:
 	AssemblyItem const& append(AssemblyItem const& _i);
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 
-	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
+	template <class T>
+	Assembly& operator<<(T const& _d)
+	{
+		append(_d);
+		return *this;
+	}
 
 	/// Pushes the final size of the current assembly itself. Use this when the code is modified
 	/// after compilation and CODESIZE is not an option.
 	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
-	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
+	void appendLibraryAddress(std::string const& _identifier)
+	{
+		append(newPushLibraryAddress(_identifier));
+	}
 	void appendImmutable(std::string const& _identifier) { append(newPushImmutable(_identifier)); }
-	void appendImmutableAssignment(std::string const& _identifier) { append(newImmutableAssignment(_identifier)); }
+	void appendImmutableAssignment(std::string const& _identifier)
+	{
+		append(newImmutableAssignment(_identifier));
+	}
 
-	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
-	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
-	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
-	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMPI); return ret; }
+	AssemblyItem appendJump()
+	{
+		auto ret = append(newPushTag());
+		append(Instruction::JUMP);
+		return ret;
+	}
+	AssemblyItem appendJumpI()
+	{
+		auto ret = append(newPushTag());
+		append(Instruction::JUMPI);
+		return ret;
+	}
+	AssemblyItem appendJump(AssemblyItem const& _tag)
+	{
+		auto ret = append(_tag.pushTag());
+		append(Instruction::JUMP);
+		return ret;
+	}
+	AssemblyItem appendJumpI(AssemblyItem const& _tag)
+	{
+		auto ret = append(_tag.pushTag());
+		append(Instruction::JUMPI);
+		return ret;
+	}
 
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	AssemblyItem appendSubroutine(AssemblyPointer const& _assembly) { auto sub = newSub(_assembly); append(newPushSubSize(size_t(sub.data()))); return sub; }
+	AssemblyItem appendSubroutine(AssemblyPointer const& _assembly)
+	{
+		auto sub = newSub(_assembly);
+		append(newPushSubSize(size_t(sub.data())));
+		return sub;
+	}
 	void pushSubroutineSize(size_t _subRoutine) { append(newPushSubSize(_subRoutine)); }
 	/// Pushes the offset of the subroutine.
 	void pushSubroutineOffset(size_t _subRoutine) { append(AssemblyItem(PushSub, _subRoutine)); }
@@ -93,14 +145,29 @@ public:
 	AssemblyItems& items() { return m_items; }
 
 	int deposit() const { return m_deposit; }
-	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
-	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
+	void adjustDeposit(int _adjustment)
+	{
+		m_deposit += _adjustment;
+		assertThrow(m_deposit >= 0, InvalidDeposit, "");
+	}
+	void setDeposit(int _deposit)
+	{
+		m_deposit = _deposit;
+		assertThrow(m_deposit >= 0, InvalidDeposit, "");
+	}
 
 	/// Changes the source location used for each appended item.
-	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
-	langutil::SourceLocation const& currentSourceLocation() const { return m_currentSourceLocation; }
+	void setSourceLocation(langutil::SourceLocation const& _location)
+	{
+		m_currentSourceLocation = _location;
+	}
+	langutil::SourceLocation const& currentSourceLocation() const
+	{
+		return m_currentSourceLocation;
+	}
 
-	/// Assembles the assembly into bytecode. The assembly should not be modified after this call, since the assembled version is cached.
+	/// Assembles the assembly into bytecode. The assembly should not be modified after this call,
+	/// since the assembled version is cached.
 	LinkerObject const& assemble() const;
 
 	struct OptimiserSettings
@@ -113,7 +180,8 @@ public:
 		bool runConstantOptimiser = false;
 		langutil::EVMVersion evmVersion;
 		/// This specifies an estimate on how often each opcode in this assembly will be executed,
-		/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
+		/// i.e. use a small value to optimise for size and a large value to optimise for runtime
+		/// gas usage.
 		size_t expectedExecutionsPerDeployment = 200;
 	};
 
@@ -126,12 +194,15 @@ public:
 	/// @a _runs specifes an estimate on how often each opcode in this assembly will be executed,
 	/// i.e. use a small value to optimise for size and a large value to optimise for runtime.
 	/// If @a _enable is not set, will perform some simple peephole optimizations.
-	Assembly& optimise(bool _enable, langutil::EVMVersion _evmVersion, bool _isCreation, size_t _runs);
+	Assembly& optimise(
+		bool _enable,
+		langutil::EVMVersion _evmVersion,
+		bool _isCreation,
+		size_t _runs
+	);
 
 	/// Create a text representation of the assembly.
-	std::string assemblyString(
-		StringMap const& _sourceCodes = StringMap()
-	) const;
+	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const;
 	void assemblyStream(
 		std::ostream& _out,
 		std::string const& _prefix = "",
@@ -153,7 +224,10 @@ protected:
 	/// Does the same operations as @a optimise, but should only be applied to a sub and
 	/// returns the replaced tags. Also takes an argument containing the tags of this assembly
 	/// that are referenced in a super-assembly.
-	std::map<u256, u256> optimiseInternal(OptimiserSettings const& _settings, std::set<size_t> _tagsReferencedFromOutside);
+	std::map<u256, u256> optimiseInternal(
+		OptimiserSettings const& _settings,
+		std::set<size_t> _tagsReferencedFromOutside
+	);
 
 	unsigned bytesRequired(unsigned subTagSize) const;
 
@@ -182,11 +256,12 @@ protected:
 	bytes m_auxiliaryData;
 	std::vector<std::shared_ptr<Assembly>> m_subs;
 	std::map<util::h256, std::string> m_strings;
-	std::map<util::h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
-	std::map<util::h256, std::string> m_immutables; ///< Identifiers of immutables.
+	std::map<util::h256, std::string> m_libraries;	///< Identifiers of libraries to be linked.
+	std::map<util::h256, std::string> m_immutables;	 ///< Identifiers of immutables.
 
 	/// Map from a vector representing a path to a particular sub assembly to sub assembly id.
-	/// This map is used only for sub-assemblies which are not direct sub-assemblies (where path is having more than one value).
+	/// This map is used only for sub-assemblies which are not direct sub-assemblies (where path is
+	/// having more than one value).
 	std::map<std::vector<size_t>, size_t> m_subPaths;
 
 	mutable LinkerObject m_assembledObject;
@@ -195,6 +270,7 @@ protected:
 	int m_deposit = 0;
 
 	langutil::SourceLocation m_currentSourceLocation;
+
 public:
 	size_t m_currentModifierDepth = 0;
 };

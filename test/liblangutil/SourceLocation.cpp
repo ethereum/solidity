@@ -29,7 +29,6 @@
 
 namespace solidity::langutil::test
 {
-
 BOOST_AUTO_TEST_SUITE(SourceLocationTest)
 
 BOOST_AUTO_TEST_CASE(test_fail)
@@ -48,4 +47,4 @@ BOOST_AUTO_TEST_CASE(test_fail)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

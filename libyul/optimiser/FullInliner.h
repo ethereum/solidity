@@ -36,7 +36,6 @@
 
 namespace solidity::yul
 {
-
 class NameCollector;
 
 
@@ -120,12 +119,17 @@ private:
 class InlineModifier: public ASTModifier
 {
 public:
-	InlineModifier(FullInliner& _driver, NameDispenser& _nameDispenser, YulString _functionName, Dialect const& _dialect):
+	InlineModifier(
+		FullInliner& _driver,
+		NameDispenser& _nameDispenser,
+		YulString _functionName,
+		Dialect const& _dialect
+	):
 		m_currentFunction(std::move(_functionName)),
 		m_driver(_driver),
 		m_nameDispenser(_nameDispenser),
 		m_dialect(_dialect)
-	{ }
+	{}
 
 	void operator()(Block& _block) override;
 
@@ -147,15 +151,11 @@ private:
 class BodyCopier: public ASTCopier
 {
 public:
-	BodyCopier(
-		NameDispenser& _nameDispenser,
-		std::map<YulString, YulString> _variableReplacements
-	):
-		m_nameDispenser(_nameDispenser),
-		m_variableReplacements(std::move(_variableReplacements))
+	BodyCopier(NameDispenser& _nameDispenser, std::map<YulString, YulString> _variableReplacements):
+		m_nameDispenser(_nameDispenser), m_variableReplacements(std::move(_variableReplacements))
 	{}
 
-	using ASTCopier::operator ();
+	using ASTCopier::operator();
 
 	Statement operator()(VariableDeclaration const& _varDecl) override;
 	Statement operator()(FunctionDefinition const& _funDef) override;

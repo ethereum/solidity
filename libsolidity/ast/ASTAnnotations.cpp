@@ -26,4 +26,3 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
-

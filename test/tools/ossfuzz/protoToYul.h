@@ -60,10 +60,7 @@ public:
 	std::string programToString(Program const& _input);
 
 	/// Returns evm version
-	solidity::langutil::EVMVersion version()
-	{
-		return m_evmVersion;
-	}
+	solidity::langutil::EVMVersion version() { return m_evmVersion; }
 
 private:
 	void visit(BinaryOp const&);
@@ -127,10 +124,7 @@ private:
 	std::string createHex(std::string const& _hexBytes);
 
 	/// Returns a new variable name.
-	std::string newVarName()
-	{
-		return "x_" + std::to_string(counter());
-	}
+	std::string newVarName() { return "x_" + std::to_string(counter()); }
 
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
@@ -292,10 +286,7 @@ private:
 	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
 
 	/// Returns a monotonically increasing counter that starts from zero.
-	unsigned counter()
-	{
-		return m_counter++;
-	}
+	unsigned counter() { return m_counter++; }
 
 	/// Generate function name of the form "foo_<typeSuffix>_<counter>".
 	/// @param _type Type classified according to the number of
@@ -316,18 +307,15 @@ private:
 	/// enclosed within double quotes.
 	std::string newObjectId(bool _decorate = true)
 	{
-		return util::Whiskers(R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)")
-			("decorate", _decorate)
-			("id", std::to_string(m_objectId++))
+		return util::Whiskers(
+				   R"(<?decorate>"</decorate>object<id><?decorate>"</decorate>)"
+		)("decorate", _decorate)("id", std::to_string(m_objectId++))
 			.render();
 	}
 
 	/// Returns the object counter value corresponding to the object
 	/// being visited.
-	unsigned currentObjectId()
-	{
-		return m_objectId - 1;
-	}
+	unsigned currentObjectId() { return m_objectId - 1; }
 
 	std::ostringstream m_output;
 	/// Variables in all function definitions
@@ -354,7 +342,8 @@ private:
 	std::map<std::string, std::pair<unsigned, unsigned>> m_functionSigMap;
 	/// Map of object name to list of sub-object namespace(s) in scope
 	std::map<std::string, std::vector<std::string>> m_objectScope;
-	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
+	// mod input/output parameters impose an upper bound on the number of input/output parameters a
+	// function may have.
 	static unsigned constexpr s_modInputParams = 5;
 	static unsigned constexpr s_modOutputParams = 5;
 	/// Hard-coded identifier for a Yul object's data block

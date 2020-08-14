@@ -25,7 +25,6 @@
 
 namespace solidity::tools
 {
-
 /**
  * Models a single source code change, based on the initial source location
  * and a patch, which needs to be applied.
@@ -43,16 +42,12 @@ public:
 		Unsafe
 	};
 
-	UpgradeChange(
-		Level _level,
-		langutil::SourceLocation _location,
-		std::string _patch
-	)
-	:
+	UpgradeChange(Level _level, langutil::SourceLocation _location, std::string _patch):
 		m_location(_location),
 		m_source(_location.source->source()),
 		m_patch(std::move(_patch)),
-		m_level(_level) {}
+		m_level(_level)
+	{}
 
 	~UpgradeChange() {}
 
@@ -70,6 +65,7 @@ public:
 	/// can contain a lot of code lines, it can be shortened, which is signaled
 	/// by setting the flag.
 	void log(bool const _shorten = true) const;
+
 private:
 	langutil::SourceLocation m_location;
 	std::string m_source;

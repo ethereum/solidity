@@ -36,7 +36,6 @@ using namespace solidity::yul;
 
 namespace solidity::phaser::test
 {
-
 class DummyProgramBasedMetric: public ProgramBasedMetric
 {
 public:
@@ -100,9 +99,14 @@ BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(FitnessMetricsTest)
 BOOST_AUTO_TEST_SUITE(ProgramBasedMetricTest)
 
-BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_return_optimised_program_even_if_cache_not_available, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	optimisedProgram_should_return_optimised_program_even_if_cache_not_available,
+	ProgramBasedMetricFixture
+)
 {
-	string code = toString(DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgram(m_chromosome));
+	string code = toString(
+		DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgram(m_chromosome)
+	);
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
@@ -110,24 +114,35 @@ BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_return_optimised_program_even_if
 
 BOOST_FIXTURE_TEST_CASE(optimisedProgram_should_use_cache_if_available, ProgramBasedMetricFixture)
 {
-	string code = toString(DummyProgramBasedMetric(nullopt, m_programCache, m_weights).optimisedProgram(m_chromosome));
+	string code = toString(
+		DummyProgramBasedMetric(nullopt, m_programCache, m_weights).optimisedProgram(m_chromosome)
+	);
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
 	BOOST_TEST(m_programCache->size() == m_chromosome.length());
 }
 
-BOOST_FIXTURE_TEST_CASE(optimisedProgramNoCache_should_return_optimised_program_even_if_cache_not_available, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	optimisedProgramNoCache_should_return_optimised_program_even_if_cache_not_available,
+	ProgramBasedMetricFixture
+)
 {
-	string code = toString(DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgramNoCache(m_chromosome));
+	string code = toString(
+		DummyProgramBasedMetric(m_program, nullptr, m_weights).optimisedProgramNoCache(m_chromosome)
+	);
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
 }
 
-BOOST_FIXTURE_TEST_CASE(optimisedProgramNoCache_should_not_use_cache_even_if_available, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	optimisedProgramNoCache_should_not_use_cache_even_if_available,
+	ProgramBasedMetricFixture
+)
 {
-	string code = toString(DummyProgramBasedMetric(nullopt, m_programCache, m_weights).optimisedProgramNoCache(m_chromosome));
+	string code = toString(DummyProgramBasedMetric(nullopt, m_programCache, m_weights)
+							   .optimisedProgramNoCache(m_chromosome));
 
 	BOOST_TEST(code != toString(m_program));
 	BOOST_TEST(code == toString(m_optimisedProgram));
@@ -137,7 +152,10 @@ BOOST_FIXTURE_TEST_CASE(optimisedProgramNoCache_should_not_use_cache_even_if_ava
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ProgramSizeTest)
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_compute_size_of_the_optimised_program,
+	ProgramBasedMetricFixture
+)
 {
 	size_t fitness = ProgramSize(m_program, nullptr, m_weights).evaluate(m_chromosome);
 
@@ -145,7 +163,10 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_size_of_the_optimised_program, P
 	BOOST_TEST(fitness == m_optimisedProgram.codeSize(m_weights));
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_be_able_to_use_program_cache_if_available, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_be_able_to_use_program_cache_if_available,
+	ProgramBasedMetricFixture
+)
 {
 	size_t fitness = ProgramSize(nullopt, m_programCache, m_weights).evaluate(m_chromosome);
 
@@ -154,7 +175,10 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_be_able_to_use_program_cache_if_availabl
 	BOOST_TEST(m_programCache->size() == m_chromosome.length());
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number_of_times, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_repeat_the_optimisation_specified_number_of_times,
+	ProgramBasedMetricFixture
+)
 {
 	Program const& programOptimisedOnce = m_optimisedProgram;
 	Program programOptimisedTwice = optimisedProgram(programOptimisedOnce);
@@ -167,7 +191,10 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number
 	BOOST_TEST(fitness == programOptimisedTwice.codeSize(m_weights));
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_not_optimise_if_number_of_repetitions_is_zero, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_not_optimise_if_number_of_repetitions_is_zero,
+	ProgramBasedMetricFixture
+)
 {
 	ProgramSize metric(m_program, nullptr, m_weights, 0);
 	size_t fitness = metric.evaluate(m_chromosome);
@@ -179,7 +206,10 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_not_optimise_if_number_of_repetitions_is
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(RelativeProgramSizeTest)
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_the_size_ratio_between_optimised_program_and_original_program, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_compute_the_size_ratio_between_optimised_program_and_original_program,
+	ProgramBasedMetricFixture
+)
 {
 	BOOST_TEST(
 		RelativeProgramSize(m_program, nullptr, 3, m_weights).evaluate(m_chromosome) ==
@@ -187,7 +217,10 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_compute_the_size_ratio_between_optimised
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_be_able_to_use_program_cache_if_available, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_be_able_to_use_program_cache_if_available,
+	ProgramBasedMetricFixture
+)
 {
 	BOOST_TEST(
 		RelativeProgramSize(nullopt, m_programCache, 3, m_weights).evaluate(m_chromosome) ==
@@ -196,7 +229,10 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_be_able_to_use_program_cache_if_availabl
 	BOOST_TEST(m_programCache->size() == m_chromosome.length());
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number_of_times, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_repeat_the_optimisation_specified_number_of_times,
+	ProgramBasedMetricFixture
+)
 {
 	Program const& programOptimisedOnce = m_optimisedProgram;
 	Program programOptimisedTwice = optimisedProgram(programOptimisedOnce);
@@ -205,18 +241,30 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_repeat_the_optimisation_specified_number
 	size_t fitness = metric.evaluate(m_chromosome);
 
 	BOOST_TEST(fitness != 1000);
-	BOOST_TEST(fitness != RelativeProgramSize(programOptimisedTwice, nullptr, 3, m_weights, 1).evaluate(m_chromosome));
-	BOOST_TEST(fitness == round(1000.0 * programOptimisedTwice.codeSize(m_weights) / m_program.codeSize(m_weights)));
+	BOOST_TEST(
+		fitness !=
+		RelativeProgramSize(programOptimisedTwice, nullptr, 3, m_weights, 1).evaluate(m_chromosome)
+	);
+	BOOST_TEST(
+		fitness ==
+		round(1000.0 * programOptimisedTwice.codeSize(m_weights) / m_program.codeSize(m_weights))
+	);
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_number_of_repetitions_is_zero, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_return_one_if_number_of_repetitions_is_zero,
+	ProgramBasedMetricFixture
+)
 {
 	RelativeProgramSize metric(m_program, nullptr, 3, m_weights, 0);
 
 	BOOST_TEST(metric.evaluate(m_chromosome) == 1000);
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_the_original_program_size_is_zero, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_return_one_if_the_original_program_size_is_zero,
+	ProgramBasedMetricFixture
+)
 {
 	CharStream sourceStream = CharStream("{}", "");
 	Program program = get<Program>(Program::load(sourceStream));
@@ -228,20 +276,42 @@ BOOST_FIXTURE_TEST_CASE(evaluate_should_return_one_if_the_original_program_size_
 	BOOST_TEST(metric.evaluate(Chromosome("afcxjLTLTDoO")) == 1000);
 }
 
-BOOST_FIXTURE_TEST_CASE(evaluate_should_multiply_the_result_by_scaling_factor, ProgramBasedMetricFixture)
+BOOST_FIXTURE_TEST_CASE(
+	evaluate_should_multiply_the_result_by_scaling_factor,
+	ProgramBasedMetricFixture
+)
 {
-	double sizeRatio = static_cast<double>(m_optimisedProgram.codeSize(m_weights)) / m_program.codeSize(m_weights);
-	BOOST_TEST(RelativeProgramSize(m_program, nullptr, 0, m_weights).evaluate(m_chromosome) == round(1.0 * sizeRatio));
-	BOOST_TEST(RelativeProgramSize(m_program, nullptr, 1, m_weights).evaluate(m_chromosome) == round(10.0 * sizeRatio));
-	BOOST_TEST(RelativeProgramSize(m_program, nullptr, 2, m_weights).evaluate(m_chromosome) == round(100.0 * sizeRatio));
-	BOOST_TEST(RelativeProgramSize(m_program, nullptr, 3, m_weights).evaluate(m_chromosome) == round(1000.0 * sizeRatio));
-	BOOST_TEST(RelativeProgramSize(m_program, nullptr, 4, m_weights).evaluate(m_chromosome) == round(10000.0 * sizeRatio));
+	double sizeRatio =
+		static_cast<double>(m_optimisedProgram.codeSize(m_weights)) / m_program.codeSize(m_weights);
+	BOOST_TEST(
+		RelativeProgramSize(m_program, nullptr, 0, m_weights).evaluate(m_chromosome) ==
+		round(1.0 * sizeRatio)
+	);
+	BOOST_TEST(
+		RelativeProgramSize(m_program, nullptr, 1, m_weights).evaluate(m_chromosome) ==
+		round(10.0 * sizeRatio)
+	);
+	BOOST_TEST(
+		RelativeProgramSize(m_program, nullptr, 2, m_weights).evaluate(m_chromosome) ==
+		round(100.0 * sizeRatio)
+	);
+	BOOST_TEST(
+		RelativeProgramSize(m_program, nullptr, 3, m_weights).evaluate(m_chromosome) ==
+		round(1000.0 * sizeRatio)
+	);
+	BOOST_TEST(
+		RelativeProgramSize(m_program, nullptr, 4, m_weights).evaluate(m_chromosome) ==
+		round(10000.0 * sizeRatio)
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(FitnessMetricCombinationTest)
 
-BOOST_FIXTURE_TEST_CASE(FitnessMetricAverage_evaluate_should_compute_average_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	FitnessMetricAverage_evaluate_should_compute_average_of_values_returned_by_metrics_passed_to_it,
+	FitnessMetricCombinationFixture
+)
 {
 	FitnessMetricAverage metric(m_simpleMetrics);
 
@@ -250,7 +320,10 @@ BOOST_FIXTURE_TEST_CASE(FitnessMetricAverage_evaluate_should_compute_average_of_
 	BOOST_TEST(metric.metrics() == m_simpleMetrics);
 }
 
-BOOST_FIXTURE_TEST_CASE(FitnessMetricSum_evaluate_should_compute_sum_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	FitnessMetricSum_evaluate_should_compute_sum_of_values_returned_by_metrics_passed_to_it,
+	FitnessMetricCombinationFixture
+)
 {
 	FitnessMetricSum metric(m_simpleMetrics);
 
@@ -259,7 +332,10 @@ BOOST_FIXTURE_TEST_CASE(FitnessMetricSum_evaluate_should_compute_sum_of_values_r
 	BOOST_TEST(metric.metrics() == m_simpleMetrics);
 }
 
-BOOST_FIXTURE_TEST_CASE(FitnessMetricMaximum_evaluate_should_compute_maximum_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	FitnessMetricMaximum_evaluate_should_compute_maximum_of_values_returned_by_metrics_passed_to_it,
+	FitnessMetricCombinationFixture
+)
 {
 	FitnessMetricMaximum metric(m_simpleMetrics);
 
@@ -268,7 +344,10 @@ BOOST_FIXTURE_TEST_CASE(FitnessMetricMaximum_evaluate_should_compute_maximum_of_
 	BOOST_TEST(metric.metrics() == m_simpleMetrics);
 }
 
-BOOST_FIXTURE_TEST_CASE(FitnessMetricMinimum_evaluate_should_compute_minimum_of_values_returned_by_metrics_passed_to_it, FitnessMetricCombinationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	FitnessMetricMinimum_evaluate_should_compute_minimum_of_values_returned_by_metrics_passed_to_it,
+	FitnessMetricCombinationFixture
+)
 {
 	FitnessMetricMinimum metric(m_simpleMetrics);
 

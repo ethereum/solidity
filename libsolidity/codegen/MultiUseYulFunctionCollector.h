@@ -28,7 +28,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Container of (unparsed) Yul functions identified by name which are meant to be generated
  * only once.
@@ -39,7 +38,10 @@ public:
 	/// Helper function that uses @a _creator to create a function and add it to
 	/// @a m_requestedFunctions if it has not been created yet and returns @a _name in both
 	/// cases.
-	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
+	std::string createFunction(
+		std::string const& _name,
+		std::function<std::string()> const& _creator
+	);
 
 	/// @returns concatenation of all generated functions.
 	/// Guarantees that the order of functions in the generated code is deterministic and

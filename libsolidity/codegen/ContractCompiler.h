@@ -33,7 +33,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Code generator at the contract level. Can be used to generate code for exactly one contract
  * either either in "runtime mode" or "creation mode".
@@ -49,8 +48,7 @@ public:
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_runtimeCompiler(_runtimeCompiler),
 		m_context(_context)
-	{
-	}
+	{}
 
 	void compileContract(
 		ContractDefinition const& _contract,
@@ -70,8 +68,8 @@ private:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers
 	);
-	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
-	/// with a new and initialized context. Adds the constructor code.
+	/// Adds the code that is run at creation time. Should be run after exchanging the run-time
+	/// context with a new and initialized context. Adds the constructor code.
 	/// @returns the identifier of the runtime sub assembly
 	size_t packIntoContractCreator(ContractDefinition const& _contract);
 	/// Appends code that deploys the given contract as a library.
@@ -131,7 +129,10 @@ private:
 	void appendModifierOrFunctionCode();
 
 	void appendStackVariableInitialisation(VariableDeclaration const& _variable);
-	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
+	void compileExpression(
+		Expression const& _expression,
+		TypePointer const& _targetType = TypePointer()
+	);
 
 	/// Frees the variables of a certain scope (to be used when leaving).
 	void popScopedVariables(ASTNode const* _node);
@@ -143,12 +144,14 @@ private:
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
-	/// Tag to jump to for a "break" statement and the stack height after freeing the local loop variables.
+	/// Tag to jump to for a "break" statement and the stack height after freeing the local loop
+	/// variables.
 	std::vector<std::pair<evmasm::AssemblyItem, unsigned>> m_breakTags;
-	/// Tag to jump to for a "continue" statement and the stack height after freeing the local loop variables.
+	/// Tag to jump to for a "continue" statement and the stack height after freeing the local loop
+	/// variables.
 	std::vector<std::pair<evmasm::AssemblyItem, unsigned>> m_continueTags;
-	/// Tag to jump to for a "return" statement and the stack height after freeing the local function or modifier variables.
-	/// Needs to be stacked because of modifiers.
+	/// Tag to jump to for a "return" statement and the stack height after freeing the local
+	/// function or modifier variables. Needs to be stacked because of modifiers.
 	std::vector<std::pair<evmasm::AssemblyItem, unsigned>> m_returnTags;
 	unsigned m_modifierDepth = 0;
 	FunctionDefinition const* m_currentFunction = nullptr;

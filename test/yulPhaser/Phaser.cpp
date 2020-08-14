@@ -39,7 +39,6 @@ namespace fs = boost::filesystem;
 
 namespace solidity::phaser::test
 {
-
 class GeneticAlgorithmFactoryFixture
 {
 protected:
@@ -108,7 +107,10 @@ BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(PhaserTest)
 BOOST_AUTO_TEST_SUITE(GeneticAlgorithmFactoryTest)
 
-BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_options_to_it, GeneticAlgorithmFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_select_the_right_algorithm_and_pass_the_options_to_it,
+	GeneticAlgorithmFactoryFixture
+)
 {
 	m_options.algorithm = Algorithm::Random;
 	unique_ptr<GeneticAlgorithm> algorithm1 = GeneticAlgorithmFactory::build(m_options, 100);
@@ -128,13 +130,24 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 	BOOST_REQUIRE(gewepAlgorithm != nullptr);
 	BOOST_TEST(gewepAlgorithm->options().crossover == m_options.crossover);
 	BOOST_TEST(gewepAlgorithm->options().uniformCrossoverSwapChance.has_value());
-	BOOST_TEST(gewepAlgorithm->options().uniformCrossoverSwapChance.value() == m_options.uniformCrossoverSwapChance);
+	BOOST_TEST(
+		gewepAlgorithm->options().uniformCrossoverSwapChance.value() ==
+		m_options.uniformCrossoverSwapChance
+	);
 	BOOST_TEST(gewepAlgorithm->options().mutationPoolSize == m_options.gewepMutationPoolSize);
 	BOOST_TEST(gewepAlgorithm->options().crossoverPoolSize == m_options.gewepCrossoverPoolSize);
 	BOOST_TEST(gewepAlgorithm->options().randomisationChance == m_options.gewepRandomisationChance);
-	BOOST_TEST(gewepAlgorithm->options().deletionVsAdditionChance == m_options.gewepDeletionVsAdditionChance);
-	BOOST_TEST(gewepAlgorithm->options().percentGenesToRandomise == m_options.gewepGenesToRandomise.value());
-	BOOST_TEST(gewepAlgorithm->options().percentGenesToAddOrDelete == m_options.gewepGenesToAddOrDelete.value());
+	BOOST_TEST(
+		gewepAlgorithm->options().deletionVsAdditionChance ==
+		m_options.gewepDeletionVsAdditionChance
+	);
+	BOOST_TEST(
+		gewepAlgorithm->options().percentGenesToRandomise == m_options.gewepGenesToRandomise.value()
+	);
+	BOOST_TEST(
+		gewepAlgorithm->options().percentGenesToAddOrDelete ==
+		m_options.gewepGenesToAddOrDelete.value()
+	);
 
 	m_options.algorithm = Algorithm::Classic;
 	unique_ptr<GeneticAlgorithm> algorithm3 = GeneticAlgorithmFactory::build(m_options, 100);
@@ -143,7 +156,10 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 	auto classicAlgorithm = dynamic_cast<ClassicGeneticAlgorithm*>(algorithm3.get());
 	BOOST_REQUIRE(classicAlgorithm != nullptr);
 	BOOST_TEST(classicAlgorithm->options().uniformCrossoverSwapChance.has_value());
-	BOOST_TEST(classicAlgorithm->options().uniformCrossoverSwapChance.value() == m_options.uniformCrossoverSwapChance);
+	BOOST_TEST(
+		classicAlgorithm->options().uniformCrossoverSwapChance.value() ==
+		m_options.uniformCrossoverSwapChance
+	);
 	BOOST_TEST(classicAlgorithm->options().elitePoolSize == m_options.classicElitePoolSize);
 	BOOST_TEST(classicAlgorithm->options().crossoverChance == m_options.classicCrossoverChance);
 	BOOST_TEST(classicAlgorithm->options().mutationChance == m_options.classicMutationChance);
@@ -151,7 +167,10 @@ BOOST_FIXTURE_TEST_CASE(build_should_select_the_right_algorithm_and_pass_the_opt
 	BOOST_TEST(classicAlgorithm->options().additionChance == m_options.classicAdditionChance);
 }
 
-BOOST_FIXTURE_TEST_CASE(build_should_set_random_algorithm_elite_pool_size_based_on_population_size_if_not_specified, GeneticAlgorithmFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_set_random_algorithm_elite_pool_size_based_on_population_size_if_not_specified,
+	GeneticAlgorithmFactoryFixture
+)
 {
 	m_options.algorithm = Algorithm::Random;
 	m_options.randomElitePoolSize = nullopt;
@@ -163,7 +182,10 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_random_algorithm_elite_pool_size_based_
 	BOOST_TEST(randomAlgorithm->options().elitePoolSize == 1.0 / 100.0);
 }
 
-BOOST_FIXTURE_TEST_CASE(build_should_set_gewep_mutation_percentages_based_on_maximum_chromosome_length_if_not_specified, GeneticAlgorithmFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_set_gewep_mutation_percentages_based_on_maximum_chromosome_length_if_not_specified,
+	GeneticAlgorithmFactoryFixture
+)
 {
 	m_options.algorithm = Algorithm::GEWEP;
 	m_options.gewepGenesToRandomise = nullopt;
@@ -186,7 +208,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMet
 {
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Sum;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
+	unique_ptr<FitnessMetric> metric =
+		FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto sumMetric = dynamic_cast<FitnessMetricSum*>(metric.get());
@@ -194,17 +217,22 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_metric_of_the_right_type, FitnessMet
 	BOOST_REQUIRE(sumMetric->metrics().size() == 1);
 	BOOST_REQUIRE(sumMetric->metrics()[0] != nullptr);
 
-	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(sumMetric->metrics()[0].get());
+	auto relativeProgramSizeMetric =
+		dynamic_cast<RelativeProgramSize*>(sumMetric->metrics()[0].get());
 	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
 	BOOST_TEST(toString(relativeProgramSizeMetric->program()) == toString(m_programs[0]));
 }
 
-BOOST_FIXTURE_TEST_CASE(build_should_respect_chromosome_repetitions_option, FitnessMetricFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_respect_chromosome_repetitions_option,
+	FitnessMetricFactoryFixture
+)
 {
 	m_options.metric = MetricChoice::CodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.chromosomeRepetitions = 5;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
+	unique_ptr<FitnessMetric> metric =
+		FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
@@ -222,7 +250,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 	m_options.metric = MetricChoice::RelativeCodeSize;
 	m_options.metricAggregator = MetricAggregatorChoice::Average;
 	m_options.relativeMetricScale = 10;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
+	unique_ptr<FitnessMetric> metric =
+		FitnessMetricFactory::build(m_options, {m_programs[0]}, {nullptr}, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto averageMetric = dynamic_cast<FitnessMetricAverage*>(metric.get());
@@ -230,12 +259,16 @@ BOOST_FIXTURE_TEST_CASE(build_should_set_relative_metric_scale, FitnessMetricFac
 	BOOST_REQUIRE(averageMetric->metrics().size() == 1);
 	BOOST_REQUIRE(averageMetric->metrics()[0] != nullptr);
 
-	auto relativeProgramSizeMetric = dynamic_cast<RelativeProgramSize*>(averageMetric->metrics()[0].get());
+	auto relativeProgramSizeMetric =
+		dynamic_cast<RelativeProgramSize*>(averageMetric->metrics()[0].get());
 	BOOST_REQUIRE(relativeProgramSizeMetric != nullptr);
 	BOOST_TEST(relativeProgramSizeMetric->fixedPointPrecision() == m_options.relativeMetricScale);
 }
 
-BOOST_FIXTURE_TEST_CASE(build_should_create_metric_for_each_input_program, FitnessMetricFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_create_metric_for_each_input_program,
+	FitnessMetricFactoryFixture
+)
 {
 	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(
 		m_options,
@@ -260,7 +293,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_pass_program_caches_to_metrics, FitnessMetr
 	};
 
 	m_options.metric = MetricChoice::RelativeCodeSize;
-	unique_ptr<FitnessMetric> metric = FitnessMetricFactory::build(m_options, m_programs, caches, m_weights);
+	unique_ptr<FitnessMetric> metric =
+		FitnessMetricFactory::build(m_options, m_programs, caches, m_weights);
 	BOOST_REQUIRE(metric != nullptr);
 
 	auto combinedMetric = dynamic_cast<FitnessMetricCombination*>(metric.get());
@@ -269,7 +303,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_pass_program_caches_to_metrics, FitnessMetr
 
 	for (size_t i = 0; i < caches.size(); ++i)
 	{
-		auto programBasedMetric = dynamic_cast<ProgramBasedMetric*>(combinedMetric->metrics()[i].get());
+		auto programBasedMetric =
+			dynamic_cast<ProgramBasedMetric*>(combinedMetric->metrics()[i].get());
 		BOOST_REQUIRE(programBasedMetric != nullptr);
 		BOOST_TEST(programBasedMetric->programCache() == caches[i].get());
 	}
@@ -278,7 +313,10 @@ BOOST_FIXTURE_TEST_CASE(build_should_pass_program_caches_to_metrics, FitnessMetr
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(PopulationFactoryTest)
 
-BOOST_FIXTURE_TEST_CASE(build_should_create_an_empty_population_if_no_specific_options_given, PoulationFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_create_an_empty_population_if_no_specific_options_given,
+	PoulationFactoryFixture
+)
 {
 	m_options.population = {};
 	m_options.randomPopulation = {};
@@ -310,7 +348,8 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_random_population_option, Poulation
 	BOOST_TEST(all_of(
 		population.individuals().begin(),
 		population.individuals().end(),
-		[](auto const& individual){ return 5 <= individual.chromosome.length() && individual.chromosome.length() <= 10; }
+		[](auto const& individual)
+		{ return 5 <= individual.chromosome.length() && individual.chromosome.length() <= 10; }
 	));
 }
 
@@ -335,19 +374,25 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_population_from_file_option, Poulat
 
 	BOOST_TEST(
 		PopulationFactory::build(m_options, m_fitnessMetric) ==
-		Population(m_fitnessMetric, {
-			Chromosome("a"),
-			Chromosome("fff"),
-			Chromosome(""),
-			Chromosome("jxccLTa"),
-			Chromosome(""),
-			Chromosome("c"),
-			Chromosome("T"),
-		})
+		Population(
+			m_fitnessMetric,
+			{
+				Chromosome("a"),
+				Chromosome("fff"),
+				Chromosome(""),
+				Chromosome("jxccLTa"),
+				Chromosome(""),
+				Chromosome("c"),
+				Chromosome("T"),
+			}
+		)
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(build_should_throw_FileOpenError_if_population_file_does_not_exist, PoulationFactoryFixture)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_throw_FileOpenError_if_population_file_does_not_exist,
+	PoulationFactoryFixture
+)
 {
 	m_options.populationFromFile = {"a-file-that-does-not-exist.abcdefgh"};
 	assert(!fs::exists(m_options.populationFromFile[0]));
@@ -374,7 +419,11 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 	auto begin = population.individuals().begin();
 	auto end = population.individuals().end();
 	BOOST_TEST(population.individuals().size() == 6);
-	BOOST_TEST(all_of(begin, end, [](auto const& individual){ return individual.chromosome.length() == 3; }));
+	BOOST_TEST(all_of(
+		begin,
+		end,
+		[](auto const& individual) { return individual.chromosome.length() == 3; }
+	));
 	BOOST_TEST(count(begin, end, Individual(Chromosome("axc"), *m_fitnessMetric)) >= 2);
 	BOOST_TEST(count(begin, end, Individual(Chromosome("fcL"), *m_fitnessMetric)) >= 2);
 }
@@ -383,11 +432,16 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(ProgramCacheFactoryTest)
 
-BOOST_FIXTURE_TEST_CASE(build_should_create_cache_for_each_input_program_if_cache_enabled, FixtureWithPrograms)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_create_cache_for_each_input_program_if_cache_enabled,
+	FixtureWithPrograms
+)
 {
 	ProgramCacheFactory::Options options{/* programCacheEnabled = */ true};
 	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
-	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
+	assert(
+		m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful"
+	);
 
 	BOOST_TEST(caches.size() == m_programs.size());
 	for (size_t i = 0; i < m_programs.size(); ++i)
@@ -397,11 +451,16 @@ BOOST_FIXTURE_TEST_CASE(build_should_create_cache_for_each_input_program_if_cach
 	}
 }
 
-BOOST_FIXTURE_TEST_CASE(build_should_return_nullptr_for_each_input_program_if_cache_disabled, FixtureWithPrograms)
+BOOST_FIXTURE_TEST_CASE(
+	build_should_return_nullptr_for_each_input_program_if_cache_disabled,
+	FixtureWithPrograms
+)
 {
 	ProgramCacheFactory::Options options{/* programCacheEnabled = */ false};
 	vector<shared_ptr<ProgramCache>> caches = ProgramCacheFactory::build(options, m_programs);
-	assert(m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful");
+	assert(
+		m_programs.size() >= 2 && "There must be at least 2 programs for this test to be meaningful"
+	);
 
 	BOOST_TEST(caches.size() == m_programs.size());
 	for (size_t i = 0; i < m_programs.size(); ++i)

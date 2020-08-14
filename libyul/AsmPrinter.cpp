@@ -47,11 +47,18 @@ string AsmPrinter::operator()(Literal const& _literal) const
 	switch (_literal.kind)
 	{
 	case LiteralKind::Number:
-		yulAssert(isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()), "Invalid number literal");
+		yulAssert(
+			isValidDecimal(_literal.value.str()) || isValidHex(_literal.value.str()),
+			"Invalid number literal"
+		);
 		return _literal.value.str() + appendTypeName(_literal.type);
 	case LiteralKind::Boolean:
-		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "Invalid bool literal.");
-		return ((_literal.value == "true"_yulstring) ? "true" : "false") + appendTypeName(_literal.type, true);
+		yulAssert(
+			_literal.value == "true"_yulstring || _literal.value == "false"_yulstring,
+			"Invalid bool literal."
+		);
+		return ((_literal.value == "true"_yulstring) ? "true" : "false") +
+			appendTypeName(_literal.type, true);
 	case LiteralKind::String:
 		break;
 	}
@@ -83,9 +90,9 @@ string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration) c
 {
 	string out = "let ";
 	out += boost::algorithm::join(
-		_variableDeclaration.variables | boost::adaptors::transformed(
-			[this](TypedName argument) { return formatTypedName(argument); }
-		),
+		_variableDeclaration.variables |
+			boost::adaptors::transformed([this](TypedName argument)
+										 { return formatTypedName(argument); }),
 		", "
 	);
 	if (_variableDeclaration.value)
@@ -101,9 +108,9 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition) con
 	yulAssert(!_functionDefinition.name.empty(), "Invalid function name.");
 	string out = "function " + _functionDefinition.name.str() + "(";
 	out += boost::algorithm::join(
-		_functionDefinition.parameters | boost::adaptors::transformed(
-			[this](TypedName argument) { return formatTypedName(argument); }
-		),
+		_functionDefinition.parameters |
+			boost::adaptors::transformed([this](TypedName argument)
+										 { return formatTypedName(argument); }),
 		", "
 	);
 	out += ")";
@@ -111,9 +118,9 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition) con
 	{
 		out += " -> ";
 		out += boost::algorithm::join(
-			_functionDefinition.returnVariables | boost::adaptors::transformed(
-				[this](TypedName argument) { return formatTypedName(argument); }
-			),
+			_functionDefinition.returnVariables |
+				boost::adaptors::transformed([this](TypedName argument)
+											 { return formatTypedName(argument); }),
 			", "
 		);
 	}
@@ -123,11 +130,13 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition) con
 
 string AsmPrinter::operator()(FunctionCall const& _functionCall) const
 {
-	return
-		(*this)(_functionCall.functionName) + "(" +
+	return (*this)(_functionCall.functionName) + "(" +
 		boost::algorithm::join(
-			_functionCall.arguments | boost::adaptors::transformed([&](auto&& _node) { return std::visit(*this, _node); }),
-			", " ) +
+			   _functionCall.arguments |
+				   boost::adaptors::transformed([&](auto&& _node)
+												{ return std::visit(*this, _node); }),
+			   ", "
+		) +
 		")";
 }
 
@@ -163,38 +172,26 @@ string AsmPrinter::operator()(ForLoop const& _forLoop) const
 	string condition = std::visit(*this, *_forLoop.condition);
 	string post = (*this)(_forLoop.post);
 	char delim = '\n';
-	if (
-		pre.size() + condition.size() + post.size() < 60 &&
-		pre.find('\n') == string::npos &&
-		post.find('\n') == string::npos
-	)
+	if (pre.size() + condition.size() + post.size() < 60 && pre.find('\n') == string::npos &&
+		post.find('\n') == string::npos)
 		delim = ' ';
-	return
-		("for " + move(pre) + delim + move(condition) + delim + move(post) + "\n") +
+	return ("for " + move(pre) + delim + move(condition) + delim + move(post) + "\n") +
 		(*this)(_forLoop.body);
 }
 
-string AsmPrinter::operator()(Break const&) const
-{
-	return "break";
-}
+string AsmPrinter::operator()(Break const&) const { return "break"; }
 
-string AsmPrinter::operator()(Continue const&) const
-{
-	return "continue";
-}
+string AsmPrinter::operator()(Continue const&) const { return "continue"; }
 
-string AsmPrinter::operator()(Leave const&) const
-{
-	return "leave";
-}
+string AsmPrinter::operator()(Leave const&) const { return "leave"; }
 
 string AsmPrinter::operator()(Block const& _block) const
 {
 	if (_block.statements.empty())
 		return "{ }";
 	string body = boost::algorithm::join(
-		_block.statements | boost::adaptors::transformed([&](auto&& _node) { return std::visit(*this, _node); }),
+		_block.statements |
+			boost::adaptors::transformed([&](auto&& _node) { return std::visit(*this, _node); }),
 		"\n"
 	);
 	if (body.size() < 30 && body.find('\n') == string::npos)

@@ -66,7 +66,6 @@ using AssemblyItems = std::vector<AssemblyItem>;
 
 namespace solidity::frontend
 {
-
 // forward declarations
 class ASTNode;
 class ContractDefinition;
@@ -87,7 +86,8 @@ class DeclarationContainer;
 class CompilerStack: boost::noncopyable
 {
 public:
-	enum State {
+	enum State
+	{
 		Empty,
 		SourcesSet,
 		ParsingPerformed,
@@ -95,7 +95,8 @@ public:
 		CompilationSuccessful
 	};
 
-	enum class MetadataHash {
+	enum class MetadataHash
+	{
 		IPFS,
 		Bzzr1,
 		None
@@ -171,7 +172,10 @@ public:
 	/// If empty, no filtering is performed and every contract
 	/// found in the supplied sources is compiled.
 	/// Names are cleared iff @a _contractNames is missing.
-	void setRequestedContractNames(std::map<std::string, std::set<std::string>> const& _contractNames = std::map<std::string, std::set<std::string>>{})
+	void setRequestedContractNames(
+		std::map<std::string, std::set<std::string>> const& _contractNames =
+			std::map<std::string, std::set<std::string>>{}
+	)
 	{
 		m_requestedContractNames = _contractNames;
 	}
@@ -202,8 +206,8 @@ public:
 	/// @returns false on error.
 	bool parse();
 
-	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as parse().
-	/// Will throw errors if the import fails
+	/// Imports given SourceUnits so they can be analyzed. Leads to the same internal state as
+	/// parse(). Will throw errors if the import fails
 	void importASTs(std::map<std::string, Json::Value> const& _sources);
 
 	/// Performs the analysis steps (imports, scopesetting, syntaxCheck, referenceResolving,
@@ -235,11 +239,16 @@ public:
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
-	std::tuple<int, int, int, int> positionFromSourceLocation(langutil::SourceLocation const& _sourceLocation) const;
+	std::tuple<int, int, int, int> positionFromSourceLocation(
+		langutil::SourceLocation const& _sourceLocation
+	) const;
 
 	/// @returns a list of unhandled queries to the SMT solver (has to be supplied in a second run
 	/// by calling @a addSMTLib2Response).
-	std::vector<std::string> const& unhandledSMTLib2Queries() const { return m_unhandledSMTLib2Queries; }
+	std::vector<std::string> const& unhandledSMTLib2Queries() const
+	{
+		return m_unhandledSMTLib2Queries;
+	}
 
 	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
@@ -247,7 +256,8 @@ public:
 	/// @returns the name of the last contract.
 	std::string const lastContractName() const;
 
-	/// @returns either the contract's name or a mixture of its name and source file, sanitized for filesystem use
+	/// @returns either the contract's name or a mixture of its name and source file, sanitized for
+	/// filesystem use
 	std::string const filesystemFriendlyName(std::string const& _contractName) const;
 
 	/// @returns the IR representation of a contract.
@@ -285,7 +295,10 @@ public:
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	std::string assemblyString(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
+	std::string assemblyString(
+		std::string const& _contractName,
+		StringMap _sourceCodes = StringMap()
+	) const;
 
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
@@ -317,11 +330,13 @@ public:
 	/// @returns the cbor-encoded metadata.
 	bytes cborMetadata(std::string const& _contractName) const;
 
-	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
+	/// @returns a JSON representing the estimated gas usage for contract creation, internal and
+	/// external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
 	/// Overwrites the release/prerelease flag. Should only be used for testing.
 	void overwriteReleaseFlag(bool release) { m_release = release; }
+
 private:
 	/// The state per source unit. Filled gradually during parsing.
 	struct Source
@@ -342,13 +357,14 @@ private:
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
-		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
-		evmasm::LinkerObject runtimeObject; ///< Runtime object.
-		std::string yulIR; ///< Experimental Yul IR code.
-		std::string yulIROptimized; ///< Optimized experimental Yul IR code.
-		std::string ewasm; ///< Experimental Ewasm text representation
-		evmasm::LinkerObject ewasmObject; ///< Experimental Ewasm code
-		util::LazyInit<std::string const> metadata; ///< The metadata json that will be hashed into the chain.
+		evmasm::LinkerObject object;  ///< Deployment object (includes the runtime sub-object).
+		evmasm::LinkerObject runtimeObject;	 ///< Runtime object.
+		std::string yulIR;	///< Experimental Yul IR code.
+		std::string yulIROptimized;	 ///< Optimized experimental Yul IR code.
+		std::string ewasm;	///< Experimental Ewasm text representation
+		evmasm::LinkerObject ewasmObject;  ///< Experimental Ewasm code
+		util::LazyInit<std::string const>
+			metadata;  ///< The metadata json that will be hashed into the chain.
 		util::LazyInit<Json::Value const> abi;
 		util::LazyInit<Json::Value const> storageLayout;
 		util::LazyInit<Json::Value const> userDocumentation;
@@ -408,31 +424,34 @@ private:
 	bytes createCBORMetadata(Contract const& _contract) const;
 
 	/// @returns the contract ABI as a JSON object.
-	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	/// This will generate the JSON object and store it in the Contract object if it is not present
+	/// yet.
 	Json::Value const& contractABI(Contract const&) const;
 
 	/// @returns the storage layout of the contract as a JSON object.
-	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	/// This will generate the JSON object and store it in the Contract object if it is not present
+	/// yet.
 	Json::Value const& storageLayout(Contract const&) const;
 
 	/// @returns the Natspec User documentation as a JSON object.
-	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	/// This will generate the JSON object and store it in the Contract object if it is not present
+	/// yet.
 	Json::Value const& natspecUser(Contract const&) const;
 
 	/// @returns the Natspec Developer documentation as a JSON object.
-	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
+	/// This will generate the JSON object and store it in the Contract object if it is not present
+	/// yet.
 	Json::Value const& natspecDev(Contract const&) const;
 
 	/// @returns the Contract Metadata
-	/// This will generate the metadata and store it in the Contract object if it is not present yet.
+	/// This will generate the metadata and store it in the Contract object if it is not present
+	/// yet.
 	std::string const& metadata(Contract const&) const;
 
 	/// @returns the offset of the entry point of the given function into the list of assembly items
 	/// or zero if it is not found or does not exist.
-	size_t functionEntryPoint(
-		std::string const& _contractName,
-		FunctionDefinition const& _function
-	) const;
+	size_t functionEntryPoint(std::string const& _contractName, FunctionDefinition const& _function)
+		const;
 
 	ReadCallback::Callback m_readFile;
 	OptimiserSettings m_optimiserSettings;

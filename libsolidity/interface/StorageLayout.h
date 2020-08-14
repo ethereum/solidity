@@ -28,7 +28,6 @@
 
 namespace solidity::frontend
 {
-
 class StorageLayout
 {
 public:

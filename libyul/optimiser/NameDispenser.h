@@ -40,7 +40,11 @@ class NameDispenser
 {
 public:
 	/// Initialize the name dispenser with all the names used in the given AST.
-	explicit NameDispenser(Dialect const& _dialect, Block const& _ast, std::set<YulString> _reservedNames = {});
+	explicit NameDispenser(
+		Dialect const& _dialect,
+		Block const& _ast,
+		std::set<YulString> _reservedNames = {}
+	);
 	/// Initialize the name dispenser with the given used names.
 	explicit NameDispenser(Dialect const& _dialect, std::set<YulString> _usedNames);
 

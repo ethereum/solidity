@@ -33,24 +33,22 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Component that imports an AST from json format to the internal format
  */
 class ASTJsonImporter
 {
 public:
-	ASTJsonImporter(langutil::EVMVersion _evmVersion)
-		:m_evmVersion(_evmVersion)
-	{}
+	ASTJsonImporter(langutil::EVMVersion _evmVersion): m_evmVersion(_evmVersion) {}
 
 	/// Converts the AST from JSON-format to ASTPointer
 	/// @a _sourceList used to provide source names for the ASTs
 	/// @returns map of sourcenames to their respective ASTs
-	std::map<std::string, ASTPointer<SourceUnit>> jsonToSourceUnit(std::map<std::string, Json::Value> const& _sourceList);
+	std::map<std::string, ASTPointer<SourceUnit>> jsonToSourceUnit(
+		std::map<std::string, Json::Value> const& _sourceList
+	);
 
 private:
-
 	// =========== general creation functions ==============
 
 	/// Sets the source location and nodeID
@@ -64,7 +62,7 @@ private:
 	ASTPointer<ASTNode> convertJsonToASTNode(Json::Value const& _ast);
 	/// @returns a pointer to the more specific subclass of ASTNode
 	/// as indicated by the nodeType field of the json
-	template<class T>
+	template <class T>
 	ASTPointer<T> convertJsonToASTNode(Json::Value const& _node);
 
 
@@ -104,7 +102,9 @@ private:
 	ASTPointer<Return> createReturn(Json::Value const& _node);
 	ASTPointer<Throw> createThrow(Json::Value const& _node);
 	ASTPointer<EmitStatement> createEmitStatement(Json::Value const& _node);
-	ASTPointer<VariableDeclarationStatement> createVariableDeclarationStatement(Json::Value const& _node);
+	ASTPointer<VariableDeclarationStatement> createVariableDeclarationStatement(
+		Json::Value const& _node
+	);
 	ASTPointer<ExpressionStatement> createExpressionStatement(Json::Value const& _node);
 	ASTPointer<Conditional> createConditional(Json::Value const& _node);
 	ASTPointer<Assignment> createAssignment(Json::Value const& _node);
@@ -118,7 +118,9 @@ private:
 	ASTPointer<IndexAccess> createIndexAccess(Json::Value const& _node);
 	ASTPointer<IndexRangeAccess> createIndexRangeAccess(Json::Value const& _node);
 	ASTPointer<Identifier> createIdentifier(Json::Value const& _node);
-	ASTPointer<ElementaryTypeNameExpression> createElementaryTypeNameExpression(Json::Value const& _node);
+	ASTPointer<ElementaryTypeNameExpression> createElementaryTypeNameExpression(
+		Json::Value const& _node
+	);
 	ASTPointer<ASTNode> createLiteral(Json::Value const& _node);
 	ASTPointer<StructuredDocumentation> createDocumentation(Json::Value const& _node);
 	///@}
@@ -128,7 +130,7 @@ private:
 	Json::Value member(Json::Value const& _node, std::string const& _name);
 	/// @returns the appropriate TokenObject used in parsed Strings (pragma directive or operator)
 	Token scanSingleToken(Json::Value const& _node);
-	template<class T>
+	template <class T>
 	///@returns nullptr or an ASTPointer cast to a specific Class
 	ASTPointer<T> nullOrCast(Json::Value const& _json);
 	/// @returns nullptr or ASTString, given an JSON string or an empty field

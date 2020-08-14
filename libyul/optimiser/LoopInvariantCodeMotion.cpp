@@ -70,7 +70,8 @@ bool LoopInvariantCodeMotion::canBePromoted(
 			return false;
 	if (_varDecl.value)
 	{
-		for (auto const& ref: ReferencesCounter::countReferences(*_varDecl.value, ReferencesCounter::OnlyVariables))
+		for (auto const& ref:
+			 ReferencesCounter::countReferences(*_varDecl.value, ReferencesCounter::OnlyVariables))
 			if (_varsDefinedInCurrentScope.count(ref.first) || !m_ssaVariables.count(ref.first))
 				return false;
 		if (!SideEffectsCollector{m_dialect, *_varDecl.value, &m_functionSideEffects}.movable())
@@ -96,7 +97,8 @@ optional<vector<Statement>> LoopInvariantCodeMotion::rewriteLoop(ForLoop& _for)
 					if (canBePromoted(varDecl, varsDefinedInScope))
 					{
 						replacement.emplace_back(std::move(_s));
-						// Do not add the variables declared here to varsDefinedInScope because we are moving them.
+						// Do not add the variables declared here to varsDefinedInScope because we
+						// are moving them.
 						return vector<Statement>{};
 					}
 					for (auto const& var: varDecl.variables)
@@ -111,6 +113,6 @@ optional<vector<Statement>> LoopInvariantCodeMotion::rewriteLoop(ForLoop& _for)
 	else
 	{
 		replacement.emplace_back(std::move(_for));
-		return { std::move(replacement) };
+		return {std::move(replacement)};
 	}
 }

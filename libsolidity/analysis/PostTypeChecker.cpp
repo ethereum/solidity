@@ -53,45 +53,21 @@ void PostTypeChecker::endVisit(OverrideSpecifier const& _overrideSpecifier)
 	callEndVisit(_overrideSpecifier);
 }
 
-bool PostTypeChecker::visit(VariableDeclaration const& _variable)
-{
-	return callVisit(_variable);
-}
+bool PostTypeChecker::visit(VariableDeclaration const& _variable) { return callVisit(_variable); }
 
-void PostTypeChecker::endVisit(VariableDeclaration const& _variable)
-{
-	callEndVisit(_variable);
-}
+void PostTypeChecker::endVisit(VariableDeclaration const& _variable) { callEndVisit(_variable); }
 
-bool PostTypeChecker::visit(EmitStatement const& _emit)
-{
-	return callVisit(_emit);
-}
+bool PostTypeChecker::visit(EmitStatement const& _emit) { return callVisit(_emit); }
 
-void PostTypeChecker::endVisit(EmitStatement const& _emit)
-{
-	callEndVisit(_emit);
-}
+void PostTypeChecker::endVisit(EmitStatement const& _emit) { callEndVisit(_emit); }
 
-bool PostTypeChecker::visit(FunctionCall const& _functionCall)
-{
-	return callVisit(_functionCall);
-}
+bool PostTypeChecker::visit(FunctionCall const& _functionCall) { return callVisit(_functionCall); }
 
-bool PostTypeChecker::visit(Identifier const& _identifier)
-{
-	return callVisit(_identifier);
-}
+bool PostTypeChecker::visit(Identifier const& _identifier) { return callVisit(_identifier); }
 
-bool PostTypeChecker::visit(StructDefinition const& _struct)
-{
-	return callVisit(_struct);
-}
+bool PostTypeChecker::visit(StructDefinition const& _struct) { return callVisit(_struct); }
 
-void PostTypeChecker::endVisit(StructDefinition const& _struct)
-{
-	callEndVisit(_struct);
-}
+void PostTypeChecker::endVisit(StructDefinition const& _struct) { callEndVisit(_struct); }
 
 bool PostTypeChecker::visit(ModifierInvocation const& _modifierInvocation)
 {
@@ -107,8 +83,7 @@ namespace
 {
 struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 {
-	ConstStateVarCircularReferenceChecker(ErrorReporter& _errorReporter):
-		Checker(_errorReporter) {}
+	ConstStateVarCircularReferenceChecker(ErrorReporter& _errorReporter): Checker(_errorReporter) {}
 
 	bool visit(ContractDefinition const&) override
 	{
@@ -126,7 +101,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 					6161_error,
 					declaration->location(),
 					"The value of the constant " + declaration->name() +
-					" has a cyclic dependency via " + identifier->name() + "."
+						" has a cyclic dependency via " + identifier->name() + "."
 				);
 
 		m_constVariables.clear();
@@ -156,7 +131,9 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 	bool visit(Identifier const& _identifier) override
 	{
 		if (m_currentConstVariable)
-			if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+			if (auto var = dynamic_cast<VariableDeclaration const*>(
+					_identifier.annotation().referencedDeclaration
+				))
 				if (var->isConstant())
 					m_constVariableDependencies[m_currentConstVariable].insert(var);
 		return true;
@@ -164,10 +141,16 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 
 	VariableDeclaration const* findCycle(VariableDeclaration const& _startingFrom)
 	{
-		auto visitor = [&](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
+		auto visitor = [&](VariableDeclaration const& _variable,
+						   util::CycleDetector<VariableDeclaration>& _cycleDetector,
+						   size_t _depth)
 		{
 			if (_depth >= 256)
-				m_errorReporter.fatalDeclarationError(7380_error, _variable.location(), "Variable definition exhausting cyclic dependency validator.");
+				m_errorReporter.fatalDeclarationError(
+					7380_error,
+					_variable.location(),
+					"Variable definition exhausting cyclic dependency validator."
+				);
 
 			// Iterating through the dependencies needs to be deterministic and thus cannot
 			// depend on the memory layout.
@@ -176,10 +159,12 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 				m_constVariableDependencies[&_variable].begin(),
 				m_constVariableDependencies[&_variable].end()
 			);
-			sort(dependencies.begin(), dependencies.end(), [](VariableDeclaration const* _a, VariableDeclaration const* _b) -> bool
-			{
-				return _a->id() < _b->id();
-			});
+			sort(
+				dependencies.begin(),
+				dependencies.end(),
+				[](VariableDeclaration const* _a, VariableDeclaration const* _b) -> bool
+				{ return _a->id() < _b->id(); }
+			);
 			for (auto v: dependencies)
 				if (_cycleDetector.run(*v))
 					return;
@@ -189,20 +174,20 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 
 private:
 	VariableDeclaration const* m_currentConstVariable = nullptr;
-	std::map<VariableDeclaration const*, std::set<VariableDeclaration const*>> m_constVariableDependencies;
-	std::vector<VariableDeclaration const*> m_constVariables; ///< Required for determinism.
+	std::map<VariableDeclaration const*, std::set<VariableDeclaration const*>>
+		m_constVariableDependencies;
+	std::vector<VariableDeclaration const*> m_constVariables;  ///< Required for determinism.
 };
 
 struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 {
-	OverrideSpecifierChecker(ErrorReporter& _errorReporter):
-		Checker(_errorReporter) {}
+	OverrideSpecifierChecker(ErrorReporter& _errorReporter): Checker(_errorReporter) {}
 
 	void endVisit(OverrideSpecifier const& _overrideSpecifier) override
 	{
 		for (ASTPointer<UserDefinedTypeName> const& override: _overrideSpecifier.overrides())
 		{
-			Declaration const* decl  = override->annotation().referencedDeclaration;
+			Declaration const* decl = override->annotation().referencedDeclaration;
 			solAssert(decl, "Expected declaration to be resolved.");
 
 			if (dynamic_cast<ContractDefinition const*>(decl))
@@ -213,9 +198,7 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 			m_errorReporter.typeError(
 				9301_error,
 				override->location(),
-				"Expected contract but got " +
-				actualTypeType->actualType()->toString(true) +
-				"."
+				"Expected contract but got " + actualTypeType->actualType()->toString(true) + "."
 			);
 		}
 	}
@@ -223,8 +206,7 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 
 struct ModifierContextChecker: public PostTypeChecker::Checker
 {
-	ModifierContextChecker(ErrorReporter& _errorReporter):
-		Checker(_errorReporter) {}
+	ModifierContextChecker(ErrorReporter& _errorReporter): Checker(_errorReporter) {}
 
 	bool visit(ModifierInvocation const&) override
 	{
@@ -233,10 +215,7 @@ struct ModifierContextChecker: public PostTypeChecker::Checker
 		return true;
 	}
 
-	void endVisit(ModifierInvocation const&) override
-	{
-		m_insideModifierInvocation = false;
-	}
+	void endVisit(ModifierInvocation const&) override { m_insideModifierInvocation = false; }
 
 	bool visit(Identifier const& _identifier) override
 	{
@@ -254,6 +233,7 @@ struct ModifierContextChecker: public PostTypeChecker::Checker
 
 		return false;
 	}
+
 private:
 	/// Flag indicating whether we are currently inside the invocation of a modifier
 	bool m_insideModifierInvocation = false;
@@ -261,8 +241,7 @@ private:
 
 struct EventOutsideEmitChecker: public PostTypeChecker::Checker
 {
-	EventOutsideEmitChecker(ErrorReporter& _errorReporter):
-		Checker(_errorReporter) {}
+	EventOutsideEmitChecker(ErrorReporter& _errorReporter): Checker(_errorReporter) {}
 
 	bool visit(EmitStatement const&) override
 	{
@@ -270,17 +249,16 @@ struct EventOutsideEmitChecker: public PostTypeChecker::Checker
 		return true;
 	}
 
-	void endVisit(EmitStatement const&) override
-	{
-		m_insideEmitStatement = true;
-	}
+	void endVisit(EmitStatement const&) override { m_insideEmitStatement = true; }
 
 	bool visit(FunctionCall const& _functionCall) override
 	{
 		if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 			return true;
 
-		if (FunctionTypePointer const functionType = dynamic_cast<FunctionTypePointer const>(_functionCall.expression().annotation().type))
+		if (FunctionTypePointer const functionType = dynamic_cast<FunctionTypePointer const>(
+				_functionCall.expression().annotation().type
+			))
 			// Check for event outside of emit statement
 			if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
 				m_errorReporter.typeError(
@@ -299,21 +277,20 @@ private:
 
 struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
 {
-	NoVariablesInInterfaceChecker(ErrorReporter& _errorReporter):
-		Checker(_errorReporter)
-	{}
+	NoVariablesInInterfaceChecker(ErrorReporter& _errorReporter): Checker(_errorReporter) {}
 
 	bool visit(VariableDeclaration const& _variable) override
 	{
 		// Forbid any variable declarations inside interfaces unless they are part of
 		// * a function's input/output parameters,
 		// * or inside of a struct definition.
-		if (
-			m_scope && m_scope->isInterface()
-			&& !_variable.isCallableOrCatchParameter()
-			&& !m_insideStruct
-		)
-			m_errorReporter.typeError(8274_error, _variable.location(), "Variables cannot be declared in interfaces.");
+		if (m_scope && m_scope->isInterface() && !_variable.isCallableOrCatchParameter() &&
+			!m_insideStruct)
+			m_errorReporter.typeError(
+				8274_error,
+				_variable.location(),
+				"Variables cannot be declared in interfaces."
+			);
 
 		return true;
 	}
@@ -324,10 +301,7 @@ struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
 		return true;
 	}
 
-	void endVisit(ContractDefinition const&) override
-	{
-		m_scope = nullptr;
-	}
+	void endVisit(ContractDefinition const&) override { m_scope = nullptr; }
 
 	bool visit(StructDefinition const&) override
 	{
@@ -341,6 +315,7 @@ struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
 		m_insideStruct--;
 		solAssert(m_insideStruct >= 0, "");
 	}
+
 private:
 	ContractDefinition const* m_scope = nullptr;
 	/// Flag indicating whether we are currently inside a StructDefinition.
@@ -348,7 +323,8 @@ private:
 };
 }
 
-PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
+PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter):
+	m_errorReporter(_errorReporter)
 {
 	m_checkers.push_back(make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));

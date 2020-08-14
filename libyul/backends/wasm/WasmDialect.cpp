@@ -37,37 +37,36 @@ WasmDialect::WasmDialect()
 
 	for (auto t: types)
 		for (auto const& name: {
-			"add",
-			"sub",
-			"mul",
-			// TODO: div_s
-			"div_u",
-			// TODO: rem_s
-			"rem_u",
-			"and",
-			"or",
-			"xor",
-			"shl",
-			// TODO: shr_s
-			"shr_u",
-			// TODO: rotl
-			// TODO: rotr
-		})
+				 "add",
+				 "sub",
+				 "mul",
+				 // TODO: div_s
+				 "div_u",
+				 // TODO: rem_s
+				 "rem_u",
+				 "and",
+				 "or",
+				 "xor",
+				 "shl",
+				 // TODO: shr_s
+				 "shr_u",
+				 // TODO: rotl
+				 // TODO: rotr
+			 })
 			addFunction(t.str() + "." + name, {t, t}, {t});
 
 	for (auto t: types)
-		for (auto const& name: {
-			"eq",
-			"ne",
-			// TODO: lt_s
-			"lt_u",
-			// TODO: gt_s
-			"gt_u",
-			// TODO: le_s
-			"le_u",
-			// TODO: ge_s
-			"ge_u"
-		})
+		for (auto const& name:
+			 {"eq",
+			  "ne",
+			  // TODO: lt_s
+			  "lt_u",
+			  // TODO: gt_s
+			  "gt_u",
+			  // TODO: le_s
+			  "le_u",
+			  // TODO: ge_s
+			  "ge_u"})
 			addFunction(t.str() + "." + name, {t, t}, {i32});
 
 	addFunction("i32.eqz", {i32}, {i32});
@@ -75,10 +74,10 @@ WasmDialect::WasmDialect()
 
 	for (auto t: types)
 		for (auto const& name: {
-			"clz",
-			"ctz",
-			"popcnt",
-		})
+				 "clz",
+				 "ctz",
+				 "popcnt",
+			 })
 			addFunction(t.str() + "." + name, {t}, {t});
 
 	addFunction("i32.wrap_i64", {i64}, {i32});
@@ -166,7 +165,7 @@ void WasmDialect::addEthereumExternals()
 	// to the YulStringRepository reset.
 	static string const i64{"i64"};
 	static string const i32{"i32"};
-	static string const i32ptr{"i32"}; // Uses "i32" on purpose.
+	static string const i32ptr{"i32"};	// Uses "i32" on purpose.
 	struct External
 	{
 		string name;
@@ -206,8 +205,7 @@ void WasmDialect::addEthereumExternals()
 		{"getReturnDataSize", {}, {i32}},
 		{"returnDataCopy", {i32ptr, i32, i32}, {}},
 		{"selfDestruct", {i32ptr}, {}, ControlFlowSideEffects{true, false}},
-		{"getBlockTimestamp", {}, {i64}}
-	};
+		{"getBlockTimestamp", {}, {i64}}};
 	for (External const& ext: externals)
 	{
 		YulString name{"eth." + ext.name};

@@ -34,7 +34,6 @@
 
 namespace solidity::tools
 {
-
 /**
  * The Solidity source upgrade tool. It supplies a command line interface
  * and connects this to a compiler stack that the upgrade logic is facilitated
@@ -112,8 +111,7 @@ private:
 			Module::VirtualFunction,
 			Module::DotSyntax,
 			Module::NowKeyword,
-			Module::ConstrutorVisibility
-		};
+			Module::ConstrutorVisibility};
 	};
 
 	/// Parses the current sources and runs analyses as well as compilation on
@@ -127,9 +125,7 @@ private:
 	/// Runs upgrade analysis on source and applies upgrades changes to it.
 	/// Returns `true` if there're still changes that can be applied,
 	/// `false` otherwise.
-	bool analyzeAndUpgrade(
-		std::pair<std::string, std::string> const& _sourceCode
-	);
+	bool analyzeAndUpgrade(std::pair<std::string, std::string> const& _sourceCode);
 
 	/// Applies the change given to its source code. If no `--dry-run` was
 	/// passed via the commandline, the upgraded source code is written back

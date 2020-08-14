@@ -256,30 +256,39 @@ void joinMap(std::map<K, V>& _a, std::map<K, V>&& _b, F _conflictSolver)
 
 void RedundantAssignEliminator::merge(TrackedAssignments& _target, TrackedAssignments&& _other)
 {
-	joinMap(_target, move(_other), [](
-		map<Assignment const*, State>& _assignmentHere,
-		map<Assignment const*, State>&& _assignmentThere
-	)
-	{
-		return joinMap(_assignmentHere, move(_assignmentThere), State::join);
-	});
+	joinMap(
+		_target,
+		move(_other),
+		[](map<Assignment const*, State>& _assignmentHere,
+		   map<Assignment const*, State>&& _assignmentThere)
+		{ return joinMap(_assignmentHere, move(_assignmentThere), State::join); }
+	);
 }
 
-void RedundantAssignEliminator::merge(TrackedAssignments& _target, vector<TrackedAssignments>&& _source)
+void RedundantAssignEliminator::merge(
+	TrackedAssignments& _target,
+	vector<TrackedAssignments>&& _source
+)
 {
 	for (TrackedAssignments& ts: _source)
 		merge(_target, move(ts));
 	_source.clear();
 }
 
-void RedundantAssignEliminator::changeUndecidedTo(YulString _variable, RedundantAssignEliminator::State _newState)
+void RedundantAssignEliminator::changeUndecidedTo(
+	YulString _variable,
+	RedundantAssignEliminator::State _newState
+)
 {
 	for (auto& assignment: m_assignments[_variable])
 		if (assignment.second == State::Undecided)
 			assignment.second = _newState;
 }
 
-void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEliminator::State _finalState)
+void RedundantAssignEliminator::finalize(
+	YulString _variable,
+	RedundantAssignEliminator::State _finalState
+)
 {
 	std::map<Assignment const*, State> assignments;
 	joinMap(assignments, std::move(m_assignments[_variable]), State::join);
@@ -300,16 +309,22 @@ void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEli
 	{
 		State const state = assignment.second == State::Undecided ? _finalState : assignment.second;
 
-		if (state == State::Unused && SideEffectsCollector{*m_dialect, *assignment.first->value}.movable())
+		if (state == State::Unused &&
+			SideEffectsCollector{*m_dialect, *assignment.first->value}.movable())
 			m_pendingRemovals.insert(assignment.first);
 	}
 }
 
 void AssignmentRemover::operator()(Block& _block)
 {
-	boost::range::remove_erase_if(_block.statements, [&](Statement const& _statement) -> bool {
-		return holds_alternative<Assignment>(_statement) && m_toRemove.count(&std::get<Assignment>(_statement));
-	});
+	boost::range::remove_erase_if(
+		_block.statements,
+		[&](Statement const& _statement) -> bool
+		{
+			return holds_alternative<Assignment>(_statement) &&
+				m_toRemove.count(&std::get<Assignment>(_statement));
+		}
+	);
 
 	ASTModifier::operator()(_block);
 }

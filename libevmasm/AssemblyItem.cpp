@@ -68,7 +68,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 	switch (m_type)
 	{
 	case Operation:
-	case Tag: // 1 byte for the JUMPDEST
+	case Tag:  // 1 byte for the JUMPDEST
 		return 1;
 	case PushString:
 		return 1 + 32;
@@ -76,7 +76,7 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 		return 1 + max<size_t>(1, util::bytesRequired(data()));
 	case PushSubSize:
 	case PushProgramSize:
-		return 1 + 4;		// worst case: a 16MB program
+		return 1 + 4;  // worst case: a 16MB program
 	case PushTag:
 	case PushData:
 	case PushSub:
@@ -90,7 +90,8 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 		if (m_immutableOccurrences)
 			return 1 + (3 + 32) * *m_immutableOccurrences;
 		else
-			return 1 + (3 + 32) * 1024; // 1024 occurrences are beyond the maximum code size anyways.
+			return 1 +
+				(3 + 32) * 1024;  // 1024 occurrences are beyond the maximum code size anyways.
 	default:
 		break;
 	}
@@ -182,7 +183,12 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	{
 		assertThrow(isValidInstruction(instruction()), AssemblyException, "Invalid instruction.");
 		string name = instructionInfo(instruction()).name;
-		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+		transform(
+			name.begin(),
+			name.end(),
+			name.begin(),
+			[](unsigned char _c) { return tolower(_c); }
+		);
 		text = name;
 		break;
 	}
@@ -216,11 +222,8 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		vector<string> subPathComponents;
 		for (size_t subPathComponentId: _assembly.decodeSubPath(static_cast<size_t>(data())))
 			subPathComponents.emplace_back("sub_" + to_string(subPathComponentId));
-		text =
-			(type() == PushSub ? "dataOffset"s : "dataSize"s) +
-			"(" +
-			solidity::util::joinHumanReadable(subPathComponents, ".") +
-			")";
+		text = (type() == PushSub ? "dataOffset"s : "dataSize"s) + "(" +
+			solidity::util::joinHumanReadable(subPathComponents, ".") + ")";
 		break;
 	}
 	case PushProgramSize:
@@ -233,10 +236,12 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 		text = string("deployTimeAddress()");
 		break;
 	case PushImmutable:
-		text = string("immutable(\"") + toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
+		text = string("immutable(\"") +
+			toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
 		break;
 	case AssignImmutable:
-		text = string("assignImmutable(\"") + toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
+		text = string("assignImmutable(\"") +
+			toHex(util::toCompactBigEndian(data(), 1), util::HexPrefix::Add) + "\")";
 		break;
 	case UndefinedItem:
 		assertThrow(false, AssemblyException, "Invalid assembly item.");
@@ -268,7 +273,7 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " PUSH " << hex << _item.data() << dec;
 		break;
 	case PushString:
-		_out << " PushString"  << hex << (unsigned)_item.data() << dec;
+		_out << " PushString" << hex << (unsigned) _item.data() << dec;
 		break;
 	case PushTag:
 	{
@@ -297,7 +302,8 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 	case PushLibraryAddress:
 	{
 		string hash(util::h256((_item.data())).hex());
-		_out << " PushLibraryAddress " << hash.substr(0, 8) + "..." + hash.substr(hash.length() - 8);
+		_out << " PushLibraryAddress "
+			 << hash.substr(0, 8) + "..." + hash.substr(hash.length() - 8);
 		break;
 	}
 	case PushDeployTimeAddress:
@@ -336,11 +342,11 @@ std::string AssemblyItem::computeSourceMapping(
 			ret += ";";
 
 		SourceLocation const& location = item.location();
-		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
-		int sourceIndex =
-			location.source && _sourceIndicesMap.count(location.source->name()) ?
-			static_cast<int>(_sourceIndicesMap.at(location.source->name())) :
-			-1;
+		int length =
+			location.start != -1 && location.end != -1 ? location.end - location.start : -1;
+		int sourceIndex = location.source && _sourceIndicesMap.count(location.source->name()) ?
+			  static_cast<int>(_sourceIndicesMap.at(location.source->name())) :
+			  -1;
 		char jump = '-';
 		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)
 			jump = 'i';

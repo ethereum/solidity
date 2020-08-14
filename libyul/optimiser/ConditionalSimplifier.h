@@ -24,7 +24,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Conditional simplifier.
  *
@@ -63,9 +62,7 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	explicit ConditionalSimplifier(Dialect const& _dialect):
-		m_dialect(_dialect)
-	{}
+	explicit ConditionalSimplifier(Dialect const& _dialect): m_dialect(_dialect) {}
 	Dialect const& m_dialect;
 };
 

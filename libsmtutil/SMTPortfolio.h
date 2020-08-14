@@ -29,7 +29,6 @@
 
 namespace solidity::smtutil
 {
-
 /**
  * The SMTPortfolio wraps all available solvers within a single interface,
  * propagating the functionalities to all solvers.
@@ -54,10 +53,13 @@ public:
 
 	void addAssertion(Expression const& _expr) override;
 
-	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	std::pair<CheckResult, std::vector<std::string>> check(
+		std::vector<Expression> const& _expressionsToEvaluate
+	) override;
 
 	std::vector<std::string> unhandledQueries() override;
 	unsigned solvers() override { return m_solvers.size(); }
+
 private:
 	static bool solverAnswered(CheckResult result);
 

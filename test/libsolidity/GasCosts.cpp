@@ -35,50 +35,43 @@ using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
+#define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt, _evmVersion)                                    \
+	do                                                                                       \
+	{                                                                                        \
+		u256 metaCost = GasMeter::dataGas(                                                   \
+			m_compiler.cborMetadata(m_compiler.lastContractName()),                          \
+			true,                                                                            \
+			_evmVersion                                                                      \
+		);                                                                                   \
+		u256 gasOpt{_gasOpt};                                                                \
+		u256 gasNoOpt{_gasNoOpt};                                                            \
+		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt;  \
+		BOOST_CHECK_MESSAGE(                                                                 \
+			m_gasUsed >= metaCost,                                                           \
+			"Gas used: " + m_gasUsed.str() +                                                 \
+				" is less than the data cost for the cbor metadata: " + u256(metaCost).str() \
+		);                                                                                   \
+		u256 gasUsed = m_gasUsed - metaCost;                                                 \
+		BOOST_CHECK_MESSAGE(                                                                 \
+			gas == gasUsed,                                                                  \
+			"Gas used: " + gasUsed.str() + " - expected: " + gas.str()                       \
+		);                                                                                   \
+	} while (0)
 
-#define CHECK_DEPLOY_GAS(_gasNoOpt, _gasOpt, _evmVersion) \
-	do \
-	{ \
-		u256 metaCost = GasMeter::dataGas(m_compiler.cborMetadata(m_compiler.lastContractName()), true, _evmVersion); \
-		u256 gasOpt{_gasOpt}; \
-		u256 gasNoOpt{_gasNoOpt}; \
+#define CHECK_GAS(_gasNoOpt, _gasOpt, _tolerance)                                           \
+	do                                                                                      \
+	{                                                                                       \
+		u256 gasOpt{_gasOpt};                                                               \
+		u256 gasNoOpt{_gasNoOpt};                                                           \
+		u256 tolerance{_tolerance};                                                         \
 		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
-		BOOST_CHECK_MESSAGE( \
-			m_gasUsed >= metaCost, \
-			"Gas used: " + \
-			m_gasUsed.str() + \
-			" is less than the data cost for the cbor metadata: " + \
-			u256(metaCost).str() \
-		); \
-		u256 gasUsed = m_gasUsed - metaCost; \
-		BOOST_CHECK_MESSAGE( \
-			gas == gasUsed, \
-			"Gas used: " + \
-			gasUsed.str() + \
-			" - expected: " + \
-			gas.str() \
-		); \
-	} while(0)
-
-#define CHECK_GAS(_gasNoOpt, _gasOpt, _tolerance) \
-	do \
-	{ \
-		u256 gasOpt{_gasOpt}; \
-		u256 gasNoOpt{_gasNoOpt}; \
-		u256 tolerance{_tolerance}; \
-		u256 gas = m_optimiserSettings == OptimiserSettings::minimal() ? gasNoOpt : gasOpt; \
-		u256 diff = gas < m_gasUsed ? m_gasUsed - gas : gas - m_gasUsed; \
-		BOOST_CHECK_MESSAGE( \
-			diff <= tolerance, \
-			"Gas used: " + \
-			m_gasUsed.str() + \
-			" - expected: " + \
-			gas.str() + \
-			" (tolerance: " + \
-			tolerance.str() + \
-			")" \
-		); \
-	} while(0)
+		u256 diff = gas < m_gasUsed ? m_gasUsed - gas : gas - m_gasUsed;                    \
+		BOOST_CHECK_MESSAGE(                                                                \
+			diff <= tolerance,                                                              \
+			"Gas used: " + m_gasUsed.str() + " - expected: " + gas.str() +                  \
+				" (tolerance: " + tolerance.str() + ")"                                     \
+		);                                                                                  \
+	} while (0)
 
 BOOST_FIXTURE_TEST_SUITE(GasCostTests, SolidityExecutionFramework)
 

@@ -36,7 +36,7 @@ struct SourceLocation;
 
 namespace solidity::evmasm
 {
-enum class Instruction: uint8_t;
+enum class Instruction : uint8_t;
 }
 
 namespace solidity::yul
@@ -51,7 +51,12 @@ class AbstractAssembly
 public:
 	using LabelID = size_t;
 	using SubID = size_t;
-	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
+	enum class JumpType
+	{
+		Ordinary,
+		IntoFunction,
+		OutOfFunction
+	};
 
 	virtual ~AbstractAssembly() = default;
 
@@ -84,7 +89,11 @@ public:
 
 	/// Append a jump-to-immediate operation.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0, JumpType _jumpType = JumpType::Ordinary) = 0;
+	virtual void appendJumpTo(
+		LabelID _labelId,
+		int _stackDiffAfter = 0,
+		JumpType _jumpType = JumpType::Ordinary
+	) = 0;
 	/// Append a jump-to-if-immediate operation.
 	virtual void appendJumpToIf(LabelID _labelId, JumpType _jumpType = JumpType::Ordinary) = 0;
 	/// Start a subroutine identified by @a _labelId that takes @a _arguments
@@ -117,20 +126,28 @@ public:
 	virtual void markAsInvalid() = 0;
 };
 
-enum class IdentifierContext { LValue, RValue, VariableDeclaration };
+enum class IdentifierContext
+{
+	LValue,
+	RValue,
+	VariableDeclaration
+};
 
 /// Object that is used to resolve references and generate code for access to identifiers external
 /// to inline assembly (not used in standalone assembly mode).
 struct ExternalIdentifierAccess
 {
-	using Resolver = std::function<bool(Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
+	using Resolver = std::function<
+		bool(Identifier const&, IdentifierContext, bool /*_crossesFunctionBoundary*/)>;
 	/// Resolve an external reference given by the identifier in the given context.
 	/// @returns the size of the value (number of stack slots) or size_t(-1) if not found.
 	Resolver resolve;
-	using CodeGenerator = std::function<void(Identifier const&, IdentifierContext, yul::AbstractAssembly&)>;
-	/// Generate code for retrieving the value (rvalue context) or storing the value (lvalue context)
-	/// of an identifier. The code should be appended to the assembly. In rvalue context, the value is supposed
-	/// to be put onto the stack, in lvalue context, the value is assumed to be at the top of the stack.
+	using CodeGenerator =
+		std::function<void(Identifier const&, IdentifierContext, yul::AbstractAssembly&)>;
+	/// Generate code for retrieving the value (rvalue context) or storing the value (lvalue
+	/// context) of an identifier. The code should be appended to the assembly. In rvalue context,
+	/// the value is supposed to be put onto the stack, in lvalue context, the value is assumed to
+	/// be at the top of the stack.
 	CodeGenerator generateCode;
 };
 

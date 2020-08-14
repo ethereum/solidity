@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * Unit tests for the compilability checker.
@@ -31,7 +31,6 @@ using namespace std;
 
 namespace solidity::yul::test
 {
-
 namespace
 {
 string check(string const& _input)
@@ -39,7 +38,11 @@ string check(string const& _input)
 	Object obj;
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(_input, false);
 	BOOST_REQUIRE(obj.code);
-	map<YulString, int> functions = CompilabilityChecker::run(EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()), obj, true);
+	map<YulString, int> functions = CompilabilityChecker::run(
+		EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion()),
+		obj,
+		true
+	);
 	string out;
 	for (auto const& function: functions)
 		out += function.first.str() + ": " + to_string(function.second) + " ";

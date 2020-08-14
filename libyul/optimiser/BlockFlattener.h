@@ -22,7 +22,6 @@
 
 namespace solidity::yul
 {
-
 class BlockFlattener: public ASTModifier
 {
 public:

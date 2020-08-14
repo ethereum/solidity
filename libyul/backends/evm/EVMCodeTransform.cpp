@@ -85,13 +85,12 @@ void VariableReferenceCounter::operator()(Block const& _block)
 
 void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
 {
-	m_scope->lookup(_variableName, GenericVisitor{
-		[&](Scope::Variable const& _var)
-		{
-			++m_context.variableReferences[&_var];
-		},
-		[](Scope::Function const&) { }
-	});
+	m_scope->lookup(
+		_variableName,
+		GenericVisitor{
+			[&](Scope::Variable const& _var) { ++m_context.variableReferences[&_var]; },
+			[](Scope::Function const&) {}}
+	);
 }
 
 CodeTransform::CodeTransform(
@@ -262,13 +261,18 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	yulAssert(m_scope, "");
 
 	if (BuiltinFunctionForEVM const* builtin = m_dialect.builtin(_call.functionName.name))
-		builtin->generateCode(_call, m_assembly, m_builtinContext, [&](Expression const& _expression) {
-			visitExpression(_expression);
-		});
+		builtin->generateCode(
+			_call,
+			m_assembly,
+			m_builtinContext,
+			[&](Expression const& _expression) { visitExpression(_expression); }
+		);
 	else
 	{
 		m_assembly.setSourceLocation(_call.location);
-		EVMAssembly::LabelID returnLabel(numeric_limits<EVMAssembly::LabelID>::max()); // only used for evm 1.0
+		EVMAssembly::LabelID returnLabel(
+			numeric_limits<EVMAssembly::LabelID>::max()
+		);	// only used for evm 1.0
 		if (!m_evm15)
 		{
 			returnLabel = m_assembly.newLabelId();
@@ -276,10 +280,15 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		}
 
 		Scope::Function* function = nullptr;
-		yulAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
-			[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
-			[&](Scope::Function& _function) { function = &_function; }
-		}), "Function name not found.");
+		yulAssert(
+			m_scope->lookup(
+				_call.functionName.name,
+				GenericVisitor{
+					[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
+					[&](Scope::Function& _function) { function = &_function; }}
+			),
+			"Function name not found."
+		);
 		yulAssert(function, "");
 		yulAssert(function->arguments.size() == _call.arguments.size(), "");
 		for (auto const& arg: _call.arguments | boost::adaptors::reversed)
@@ -308,23 +317,23 @@ void CodeTransform::operator()(Identifier const& _identifier)
 	m_assembly.setSourceLocation(_identifier.location);
 	// First search internals, then externals.
 	yulAssert(m_scope, "");
-	if (m_scope->lookup(_identifier.name, GenericVisitor{
-		[&](Scope::Variable& _var)
-		{
-			// TODO: opportunity for optimization: Do not DUP if this is the last reference
-			// to the top most element of the stack
-			if (size_t heightDiff = variableHeightDiff(_var, _identifier.name, false))
-				m_assembly.appendInstruction(evmasm::dupInstruction(heightDiff));
-			else
-				// Store something to balance the stack
-				m_assembly.appendConstant(u256(0));
-			decreaseReference(_identifier.name, _var);
-		},
-		[](Scope::Function&)
-		{
-			yulAssert(false, "Function not removed during desugaring.");
-		}
-	}))
+	if (m_scope->lookup(
+			_identifier.name,
+			GenericVisitor{
+				[&](Scope::Variable& _var)
+				{
+					// TODO: opportunity for optimization: Do not DUP if this is the last reference
+					// to the top most element of the stack
+					if (size_t heightDiff = variableHeightDiff(_var, _identifier.name, false))
+						m_assembly.appendInstruction(evmasm::dupInstruction(heightDiff));
+					else
+						// Store something to balance the stack
+						m_assembly.appendConstant(u256(0));
+					decreaseReference(_identifier.name, _var);
+				},
+				[](Scope::Function&)
+				{ yulAssert(false, "Function not removed during desugaring."); }}
+		))
 	{
 		return;
 	}
@@ -420,7 +429,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	int const stackHeightBefore = m_assembly.stackHeight();
 
 	if (m_evm15)
-		m_assembly.appendBeginsub(functionEntryID(_function.name, function), static_cast<int>(_function.parameters.size()));
+		m_assembly.appendBeginsub(
+			functionEntryID(_function.name, function),
+			static_cast<int>(_function.parameters.size())
+		);
 	else
 		m_assembly.appendLabel(functionEntryID(_function.name, function));
 
@@ -475,27 +487,35 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		// modified parallel to the actual stack.
 		vector<int> stackLayout;
 		if (!m_evm15)
-			stackLayout.push_back(static_cast<int>(_function.returnVariables.size())); // Move return label to the top
-		stackLayout += vector<int>(_function.parameters.size(), -1); // discard all arguments
+			stackLayout.push_back(
+				static_cast<int>(_function.returnVariables.size())
+			);	// Move return label to the top
+		stackLayout += vector<int>(_function.parameters.size(), -1);  // discard all arguments
 
 		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
-			stackLayout.push_back(static_cast<int>(i)); // Move return values down, but keep order.
+			stackLayout.push_back(static_cast<int>(i));	 // Move return values down, but keep order.
 
 		if (stackLayout.size() > 17)
 		{
-			StackTooDeepError error(_function.name, YulString{}, static_cast<int>(stackLayout.size()) - 17);
+			StackTooDeepError error(
+				_function.name,
+				YulString{},
+				static_cast<int>(stackLayout.size()) - 17
+			);
 			error << errinfo_comment(
-				"The function " +
-				_function.name.str() +
-				" has " +
+				"The function " + _function.name.str() + " has " +
 				to_string(stackLayout.size() - 17) +
 				" parameters or return variables too many to fit the stack size."
 			);
-			stackError(std::move(error), m_assembly.stackHeight() - static_cast<int>(_function.parameters.size()));
+			stackError(
+				std::move(error),
+				m_assembly.stackHeight() - static_cast<int>(_function.parameters.size())
+			);
 		}
 		else
 		{
-			while (!stackLayout.empty() && stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
+			while (!stackLayout.empty() &&
+				   stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
 				if (stackLayout.back() < 0)
 				{
 					m_assembly.appendInstruction(evmasm::Instruction::POP);
@@ -503,7 +523,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 				}
 				else
 				{
-					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u));
+					m_assembly.appendInstruction(evmasm::swapInstruction(
+						static_cast<unsigned>(stackLayout.size()) -
+						static_cast<unsigned>(stackLayout.back()) - 1u
+					));
 					swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
 				}
 			for (size_t i = 0; i < stackLayout.size(); ++i)
@@ -511,7 +534,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		}
 	}
 	if (m_evm15)
-		m_assembly.appendReturnsub(static_cast<int>(_function.returnVariables.size()), stackHeightBefore);
+		m_assembly.appendReturnsub(
+			static_cast<int>(_function.returnVariables.size()),
+			stackHeightBefore
+		);
 	else
 		m_assembly.appendJump(
 			stackHeightBefore - static_cast<int>(_function.returnVariables.size()),
@@ -542,7 +568,9 @@ void CodeTransform::operator()(ForLoop const& _forLoop)
 	m_assembly.appendJumpToIf(loopEnd);
 
 	int const stackHeightBody = m_assembly.stackHeight();
-	m_context->forLoopStack.emplace(Context::ForLoopLabels{ {postPart, stackHeightBody}, {loopEnd, stackHeightBody} });
+	m_context->forLoopStack.emplace(
+		Context::ForLoopLabels{{postPart, stackHeightBody}, {loopEnd, stackHeightBody}}
+	);
 	(*this)(_forLoop.body);
 
 	m_assembly.setSourceLocation(_forLoop.location);
@@ -569,7 +597,10 @@ int CodeTransform::appendPopUntil(int _targetDepth)
 
 void CodeTransform::operator()(Break const& _break)
 {
-	yulAssert(!m_context->forLoopStack.empty(), "Invalid break-statement. Requires surrounding for-loop in code generation.");
+	yulAssert(
+		!m_context->forLoopStack.empty(),
+		"Invalid break-statement. Requires surrounding for-loop in code generation."
+	);
 	m_assembly.setSourceLocation(_break.location);
 
 	Context::JumpInfo const& jump = m_context->forLoopStack.top().done;
@@ -578,7 +609,10 @@ void CodeTransform::operator()(Break const& _break)
 
 void CodeTransform::operator()(Continue const& _continue)
 {
-	yulAssert(!m_context->forLoopStack.empty(), "Invalid continue-statement. Requires surrounding for-loop in code generation.");
+	yulAssert(
+		!m_context->forLoopStack.empty(),
+		"Invalid continue-statement. Requires surrounding for-loop in code generation."
+	);
 	m_assembly.setSourceLocation(_continue.location);
 
 	Context::JumpInfo const& jump = m_context->forLoopStack.top().post;
@@ -587,7 +621,10 @@ void CodeTransform::operator()(Continue const& _continue)
 
 void CodeTransform::operator()(Leave const& _leaveStatement)
 {
-	yulAssert(!m_context->functionExitPoints.empty(), "Invalid leave-statement. Requires surrounding function in code generation.");
+	yulAssert(
+		!m_context->functionExitPoints.empty(),
+		"Invalid leave-statement. Requires surrounding function in code generation."
+	);
 	m_assembly.setSourceLocation(_leaveStatement.location);
 
 	Context::JumpInfo const& jump = m_context->functionExitPoints.top();
@@ -606,14 +643,16 @@ void CodeTransform::operator()(Block const& _block)
 	m_scope = originalScope;
 }
 
-AbstractAssembly::LabelID CodeTransform::functionEntryID(YulString _name, Scope::Function const& _function)
+AbstractAssembly::LabelID CodeTransform::functionEntryID(
+	YulString _name,
+	Scope::Function const& _function
+)
 {
 	if (!m_context->functionEntryIDs.count(&_function))
 	{
-		AbstractAssembly::LabelID id =
-			m_useNamedLabelsForFunctions ?
-			m_assembly.namedLabel(_name.str()) :
-			m_assembly.newLabelId();
+		AbstractAssembly::LabelID id = m_useNamedLabelsForFunctions ?
+			  m_assembly.namedLabel(_name.str()) :
+			  m_assembly.newLabelId();
 		m_context->functionEntryIDs[&_function] = id;
 	}
 	return m_context->functionEntryIDs[&_function];
@@ -708,20 +747,22 @@ void CodeTransform::generateAssignment(Identifier const& _variableName)
 	}
 }
 
-size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString _varName, bool _forSwap)
+size_t CodeTransform::variableHeightDiff(
+	Scope::Variable const& _var,
+	YulString _varName,
+	bool _forSwap
+)
 {
 	yulAssert(m_context->variableStackHeights.count(&_var), "");
-	size_t heightDiff = static_cast<size_t>(m_assembly.stackHeight()) - m_context->variableStackHeights[&_var];
+	size_t heightDiff =
+		static_cast<size_t>(m_assembly.stackHeight()) - m_context->variableStackHeights[&_var];
 	yulAssert(heightDiff > (_forSwap ? 1 : 0), "Negative stack difference for variable.");
 	size_t limit = _forSwap ? 17 : 16;
 	if (heightDiff > limit)
 	{
 		m_stackErrors.emplace_back(_varName, heightDiff - limit);
 		m_stackErrors.back() << errinfo_comment(
-			"Variable " +
-			_varName.str() +
-			" is " +
-			to_string(heightDiff - limit) +
+			"Variable " + _varName.str() + " is " + to_string(heightDiff - limit) +
 			" slot(s) too deep inside the stack."
 		);
 		m_assembly.markAsInvalid();

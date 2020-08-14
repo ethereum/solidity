@@ -37,7 +37,6 @@
 
 namespace solidity::frontend::test
 {
-
 /** Container for all information regarding a testsuite */
 struct Testsuite
 {
@@ -53,21 +52,57 @@ struct Testsuite
 
 /// Array of testsuits that can be run interactively as well as automatically
 Testsuite const g_interactiveTestsuites[] = {
-/*
-	Title                   Path           Subpath                SMT   NeedsVM Creator function */
-	{"Ewasm Translation",   "libyul",      "ewasmTranslationTests",false,false, &yul::test::EwasmTranslationTest::create},
-	{"Yul Optimizer",       "libyul",      "yulOptimizerTests",   false, false, &yul::test::YulOptimizerTest::create},
-	{"Yul Interpreter",     "libyul",      "yulInterpreterTests", false, false, &yul::test::YulInterpreterTest::create},
-	{"Yul Object Compiler", "libyul",      "objectCompiler",      false, false, &yul::test::ObjectCompilerTest::create},
-	{"Function Side Effects","libyul",     "functionSideEffects", false, false, &yul::test::FunctionSideEffects::create},
-	{"Yul Syntax",          "libyul",      "yulSyntaxTests",      false, false, &yul::test::SyntaxTest::create},
-	{"Syntax",              "libsolidity", "syntaxTests",         false, false, &SyntaxTest::create},
-	{"Error Recovery",      "libsolidity", "errorRecoveryTests",  false, false, &SyntaxTest::createErrorRecovery},
-	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
-	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
-	{"JSON ABI",            "libsolidity", "ABIJson",             false, false, &ABIJsonTest::create},
-	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create, {"nooptions"}},
-	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
-};
+	/*
+		Title                   Path           Subpath                SMT   NeedsVM Creator function
+	 */
+	{"Ewasm Translation",
+	 "libyul",
+	 "ewasmTranslationTests",
+	 false,
+	 false,
+	 &yul::test::EwasmTranslationTest::create},
+	{"Yul Optimizer",
+	 "libyul",
+	 "yulOptimizerTests",
+	 false,
+	 false,
+	 &yul::test::YulOptimizerTest::create},
+	{"Yul Interpreter",
+	 "libyul",
+	 "yulInterpreterTests",
+	 false,
+	 false,
+	 &yul::test::YulInterpreterTest::create},
+	{"Yul Object Compiler",
+	 "libyul",
+	 "objectCompiler",
+	 false,
+	 false,
+	 &yul::test::ObjectCompilerTest::create},
+	{"Function Side Effects",
+	 "libyul",
+	 "functionSideEffects",
+	 false,
+	 false,
+	 &yul::test::FunctionSideEffects::create},
+	{"Yul Syntax", "libyul", "yulSyntaxTests", false, false, &yul::test::SyntaxTest::create},
+	{"Syntax", "libsolidity", "syntaxTests", false, false, &SyntaxTest::create},
+	{"Error Recovery",
+	 "libsolidity",
+	 "errorRecoveryTests",
+	 false,
+	 false,
+	 &SyntaxTest::createErrorRecovery},
+	{"Semantic", "libsolidity", "semanticTests", false, true, &SemanticTest::create},
+	{"JSON AST", "libsolidity", "ASTJSON", false, false, &ASTJSONTest::create},
+	{"JSON ABI", "libsolidity", "ABIJson", false, false, &ABIJsonTest::create},
+	{"SMT Checker",
+	 "libsolidity",
+	 "smtCheckerTests",
+	 true,
+	 false,
+	 &SMTCheckerTest::create,
+	 {"nooptions"}},
+	{"Gas Estimates", "libsolidity", "gasTests", false, false, &GasTest::create}};
 
 }

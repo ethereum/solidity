@@ -31,7 +31,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * The module that performs syntax analysis on the AST:
  *  - whether continue/break is in a for/while loop.
@@ -45,14 +44,12 @@ class SyntaxChecker: private ASTConstVisitor
 public:
 	/// @param _errorReporter provides the error logging functionality.
 	SyntaxChecker(langutil::ErrorReporter& _errorReporter, bool _useYulOptimizer):
-		m_errorReporter(_errorReporter),
-		m_useYulOptimizer(_useYulOptimizer)
+		m_errorReporter(_errorReporter), m_useYulOptimizer(_useYulOptimizer)
 	{}
 
 	bool checkSyntax(ASTNode const& _astRoot);
 
 private:
-
 	bool visit(SourceUnit const& _sourceUnit) override;
 	void endVisit(SourceUnit const& _sourceUnit) override;
 	bool visit(PragmaDirective const& _pragma) override;

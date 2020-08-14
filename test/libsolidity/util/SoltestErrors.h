@@ -20,14 +20,12 @@
 
 namespace solidity::frontend::test
 {
-
-#define soltestAssert(CONDITION, DESCRIPTION) \
-	do \
-	{ \
-		if (!(CONDITION)) \
+#define soltestAssert(CONDITION, DESCRIPTION)                  \
+	do                                                         \
+	{                                                          \
+		if (!(CONDITION))                                      \
 			BOOST_THROW_EXCEPTION(runtime_error(DESCRIPTION)); \
-	} \
-	while (false)
+	} while (false)
 
 
 class TestParserError: virtual public util::Exception
@@ -53,8 +51,7 @@ struct FormatError
 	};
 
 	explicit FormatError(Type _type, std::string _message):
-		type(_type),
-		message(std::move(_message))
+		type(_type), message(std::move(_message))
 	{}
 
 	Type type;
@@ -106,18 +103,12 @@ public:
 
 				break;
 			case FormatError::Warning:
-				util::AnsiColorized(
-					os,
-					_formatted,
-					{util::formatting::YELLOW}
-				) << _linePrefix << "Warning: " << error.message << std::endl;
+				util::AnsiColorized(os, _formatted, {util::formatting::YELLOW})
+					<< _linePrefix << "Warning: " << error.message << std::endl;
 				break;
 			case FormatError::Error:
-				util::AnsiColorized(
-					os,
-					_formatted,
-					{util::formatting::RED}
-				) << _linePrefix << "Error: " << error.message << std::endl;
+				util::AnsiColorized(os, _formatted, {util::formatting::RED})
+					<< _linePrefix << "Error: " << error.message << std::endl;
 				break;
 			}
 		}

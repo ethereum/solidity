@@ -33,7 +33,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 class DocStringParser
 {
 public:

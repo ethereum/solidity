@@ -32,8 +32,8 @@
 
 namespace solidity::evmasm
 {
-
-enum AssemblyItemType {
+enum AssemblyItemType
+{
 	UndefinedItem,
 	Operation,
 	Push,
@@ -44,10 +44,13 @@ enum AssemblyItemType {
 	PushProgramSize,
 	Tag,
 	PushData,
-	PushLibraryAddress, ///< Push a currently unknown address of another (library) contract.
-	PushDeployTimeAddress, ///< Push an address to be filled at deploy time. Should not be touched by the optimizer.
-	PushImmutable, ///< Push the currently unknown value of an immutable variable. The actual value will be filled in by the constructor.
-	AssignImmutable ///< Assigns the current value on the stack to an immutable variable. Only valid during creation code.
+	PushLibraryAddress,	 ///< Push a currently unknown address of another (library) contract.
+	PushDeployTimeAddress,	///< Push an address to be filled at deploy time. Should not be touched
+							///< by the optimizer.
+	PushImmutable,	///< Push the currently unknown value of an immutable variable. The actual value
+					///< will be filled in by the constructor.
+	AssignImmutable	 ///< Assigns the current value on the stack to an immutable variable. Only
+					 ///< valid during creation code.
 };
 
 class Assembly;
@@ -57,18 +60,25 @@ using AssemblyItems = std::vector<AssemblyItem>;
 class AssemblyItem
 {
 public:
-	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
+	enum class JumpType
+	{
+		Ordinary,
+		IntoFunction,
+		OutOfFunction
+	};
 
 	AssemblyItem(u256 _push, langutil::SourceLocation _location = langutil::SourceLocation()):
-		AssemblyItem(Push, std::move(_push), std::move(_location)) { }
-	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
-		m_type(Operation),
-		m_instruction(_i),
-		m_location(std::move(_location))
+		AssemblyItem(Push, std::move(_push), std::move(_location))
 	{}
-	AssemblyItem(AssemblyItemType _type, u256 _data = 0, langutil::SourceLocation _location = langutil::SourceLocation()):
-		m_type(_type),
-		m_location(std::move(_location))
+	AssemblyItem(Instruction _i, langutil::SourceLocation _location = langutil::SourceLocation()):
+		m_type(Operation), m_instruction(_i), m_location(std::move(_location))
+	{}
+	AssemblyItem(
+		AssemblyItemType _type,
+		u256 _data = 0,
+		langutil::SourceLocation _location = langutil::SourceLocation()
+	):
+		m_type(_type), m_location(std::move(_location))
 	{
 		if (m_type == Operation)
 			m_instruction = Instruction(uint8_t(_data));
@@ -80,9 +90,18 @@ public:
 	AssemblyItem& operator=(AssemblyItem const&) = default;
 	AssemblyItem& operator=(AssemblyItem&&) = default;
 
-	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(Tag, data()); }
-	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, util::Exception, ""); return AssemblyItem(PushTag, data()); }
-	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across assemblies.
+	AssemblyItem tag() const
+	{
+		assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+		return AssemblyItem(Tag, data());
+	}
+	AssemblyItem pushTag() const
+	{
+		assertThrow(m_type == PushTag || m_type == Tag, util::Exception, "");
+		return AssemblyItem(PushTag, data());
+	}
+	/// Converts the tag to a subassembly tag. This has to be called in order to move a tag across
+	/// assemblies.
 	/// @param _subId the identifier of the subassembly the tag is taken from.
 	AssemblyItem toSubAssemblyTag(size_t _subId) const;
 	/// @returns splits the data of the push tag into sub assembly id and actual tag id.
@@ -92,11 +111,23 @@ public:
 	void setPushTagSubIdAndTag(size_t _subId, size_t _tag);
 
 	AssemblyItemType type() const { return m_type; }
-	u256 const& data() const { assertThrow(m_type != Operation, util::Exception, ""); return *m_data; }
-	void setData(u256 const& _data) { assertThrow(m_type != Operation, util::Exception, ""); m_data = std::make_shared<u256>(_data); }
+	u256 const& data() const
+	{
+		assertThrow(m_type != Operation, util::Exception, "");
+		return *m_data;
+	}
+	void setData(u256 const& _data)
+	{
+		assertThrow(m_type != Operation, util::Exception, "");
+		m_data = std::make_shared<u256>(_data);
+	}
 
 	/// @returns the instruction of this item (only valid if type() == Operation)
-	Instruction instruction() const { assertThrow(m_type == Operation, util::Exception, ""); return m_instruction; }
+	Instruction instruction() const
+	{
+		assertThrow(m_type == Operation, util::Exception, "");
+		return m_instruction;
+	}
 
 	/// @returns true if the type and data of the items are equal.
 	bool operator==(AssemblyItem const& _other) const
@@ -149,19 +180,25 @@ public:
 	JumpType getJumpType() const { return m_jumpType; }
 	std::string getJumpTypeAsString() const;
 
-	void setPushedValue(u256 const& _value) const { m_pushedValue = std::make_shared<u256>(_value); }
+	void setPushedValue(u256 const& _value) const
+	{
+		m_pushedValue = std::make_shared<u256>(_value);
+	}
 	u256 const* pushedValue() const { return m_pushedValue.get(); }
 
 	std::string toAssemblyText(Assembly const& _assembly) const;
 
 	size_t m_modifierDepth = 0;
 
-	void setImmutableOccurrences(size_t _n) const { m_immutableOccurrences = std::make_shared<size_t>(_n); }
+	void setImmutableOccurrences(size_t _n) const
+	{
+		m_immutableOccurrences = std::make_shared<size_t>(_n);
+	}
 
 private:
 	AssemblyItemType m_type;
-	Instruction m_instruction; ///< Only valid if m_type == Operation
-	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
+	Instruction m_instruction;	///< Only valid if m_type == Operation
+	std::shared_ptr<u256> m_data;  ///< Only valid if m_type != Operation
 	langutil::SourceLocation m_location;
 	JumpType m_jumpType = JumpType::Ordinary;
 	/// Pushed value for operations with data to be determined during assembly stage,

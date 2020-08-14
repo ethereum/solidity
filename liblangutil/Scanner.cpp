@@ -43,7 +43,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -61,42 +61,51 @@
 
 using namespace std;
 
-namespace solidity::langutil {
-
+namespace solidity::langutil
+{
 string to_string(ScannerError _errorCode)
 {
 	switch (_errorCode)
 	{
-		case ScannerError::NoError: return "No error.";
-		case ScannerError::IllegalToken: return "Invalid token.";
-		case ScannerError::IllegalHexString: return "Expected even number of hex-nibbles.";
-		case ScannerError::IllegalHexDigit: return "Hexadecimal digit missing or invalid.";
-		case ScannerError::IllegalCommentTerminator: return "Expected multi-line comment-terminator.";
-		case ScannerError::IllegalEscapeSequence: return "Invalid escape sequence.";
-		case ScannerError::IllegalCharacterInString: return "Invalid character in string.";
-		case ScannerError::IllegalStringEndQuote: return "Expected string end-quote.";
-		case ScannerError::IllegalNumberSeparator: return "Invalid use of number separator '_'.";
-		case ScannerError::IllegalExponent: return "Invalid exponent.";
-		case ScannerError::IllegalNumberEnd: return "Identifier-start is not allowed at end of a number.";
-		case ScannerError::OctalNotAllowed: return "Octal numbers not allowed.";
-		default:
-			solAssert(false, "Unhandled case in to_string(ScannerError)");
-			return "";
+	case ScannerError::NoError:
+		return "No error.";
+	case ScannerError::IllegalToken:
+		return "Invalid token.";
+	case ScannerError::IllegalHexString:
+		return "Expected even number of hex-nibbles.";
+	case ScannerError::IllegalHexDigit:
+		return "Hexadecimal digit missing or invalid.";
+	case ScannerError::IllegalCommentTerminator:
+		return "Expected multi-line comment-terminator.";
+	case ScannerError::IllegalEscapeSequence:
+		return "Invalid escape sequence.";
+	case ScannerError::IllegalCharacterInString:
+		return "Invalid character in string.";
+	case ScannerError::IllegalStringEndQuote:
+		return "Expected string end-quote.";
+	case ScannerError::IllegalNumberSeparator:
+		return "Invalid use of number separator '_'.";
+	case ScannerError::IllegalExponent:
+		return "Invalid exponent.";
+	case ScannerError::IllegalNumberEnd:
+		return "Identifier-start is not allowed at end of a number.";
+	case ScannerError::OctalNotAllowed:
+		return "Octal numbers not allowed.";
+	default:
+		solAssert(false, "Unhandled case in to_string(ScannerError)");
+		return "";
 	}
 }
 
 
-ostream& operator<<(ostream& os, ScannerError _errorCode)
-{
-	return os << to_string(_errorCode);
-}
+ostream& operator<<(ostream& os, ScannerError _errorCode) { return os << to_string(_errorCode); }
 
 /// Scoped helper for literal recording. Automatically drops the literal
 /// if aborting the scanning before it's complete.
 enum LiteralType
 {
 	LITERAL_TYPE_STRING,
-	LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
+	LITERAL_TYPE_NUMBER,  // not really different from string type in behaviour
 	LITERAL_TYPE_COMMENT
 };
 
@@ -104,9 +113,7 @@ class LiteralScope
 {
 public:
 	explicit LiteralScope(Scanner* _self, enum LiteralType _type):
-		m_type(_type),
-		m_scanner(_self),
-		m_complete(false)
+		m_type(_type), m_scanner(_self), m_complete(false)
 	{
 		if (_type == LITERAL_TYPE_COMMENT)
 			m_scanner->m_skippedComments[Scanner::NextNext].literal.clear();
@@ -276,15 +283,13 @@ Token Scanner::skipSingleLineComment()
 	// Line terminator is not part of the comment. If it is a
 	// non-ascii line terminator, it will result in a parser error.
 	while (!isUnicodeLinebreak())
-		if (!advance()) break;
+		if (!advance())
+			break;
 
 	return Token::Whitespace;
 }
 
-bool Scanner::atEndOfLine() const
-{
-	return m_char == '\n' || m_char == '\r';
-}
+bool Scanner::atEndOfLine() const { return m_char == '\n' || m_char == '\r'; }
 
 bool Scanner::tryScanEndOfLine()
 {
@@ -321,20 +326,18 @@ size_t Scanner::scanSingleLineDocComment()
 			if (!skipWhitespaceExceptUnicodeLinebreak())
 				endPosition = m_source->position();
 
-			if (!m_source->isPastEndOfInput(3) &&
-				m_source->get(0) == '/' &&
-				m_source->get(1) == '/' &&
-				m_source->get(2) == '/')
+			if (!m_source->isPastEndOfInput(3) && m_source->get(0) == '/' &&
+				m_source->get(1) == '/' && m_source->get(2) == '/')
 			{
 				if (!m_source->isPastEndOfInput(4) && m_source->get(3) == '/')
-					break; // "////" is not a documentation comment
+					break;	// "////" is not a documentation comment
 				m_char = m_source->advanceAndGet(3);
 				if (atEndOfLine())
 					continue;
 				addCommentLiteralChar('\n');
 			}
 			else
-				break; // next line is not a documentation comment, we are done
+				break;	// next line is not a documentation comment, we are done
 		}
 		else if (isUnicodeLinebreak())
 			// Any line terminator that is not '\n' is considered to end the
@@ -378,25 +381,30 @@ Token Scanner::scanMultiLineDocComment()
 
 	while (!isSourcePastEndOfInput())
 	{
-		//handle newlines in multline comments
+		// handle newlines in multline comments
 		if (atEndOfLine())
 		{
 			skipWhitespace();
-			if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '*')
-			{ // it is unknown if this leads to the end of the comment
+			if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' &&
+				m_source->get(1) == '*')
+			{  // it is unknown if this leads to the end of the comment
 				addCommentLiteralChar('*');
 				advance();
 			}
-			else if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) != '/')
-			{ // skip first '*' in subsequent lines
+			else if (
+				!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) != '/'
+			)
+			{  // skip first '*' in subsequent lines
 				m_char = m_source->advanceAndGet(1);
-				if (atEndOfLine()) // ignores empty lines
+				if (atEndOfLine())	// ignores empty lines
 					continue;
 				if (charsAdded)
-					addCommentLiteralChar('\n'); // corresponds to the end of previous line
+					addCommentLiteralChar('\n');  // corresponds to the end of previous line
 			}
-			else if (!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '/')
-			{ // if after newline the comment ends, don't insert the newline
+			else if (
+				!m_source->isPastEndOfInput(1) && m_source->get(0) == '*' && m_source->get(1) == '/'
+			)
+			{  // if after newline the comment ends, don't insert the newline
 				m_char = m_source->advanceAndGet(2);
 				endFound = true;
 				break;
@@ -432,7 +440,7 @@ Token Scanner::scanSlash()
 			return Token::Whitespace;
 		else if (m_char == '/')
 		{
-			advance(); //consume the last '/' at ///
+			advance();	// consume the last '/' at ///
 
 			// "////"
 			if (m_char == '/')
@@ -454,12 +462,12 @@ Token Scanner::scanSlash()
 			return setError(ScannerError::IllegalCommentTerminator);
 		else if (m_char == '*')
 		{
-			advance(); //consume the last '*' at /**
+			advance();	// consume the last '*' at /**
 
 			// "/**/"
 			if (m_char == '/')
 			{
-				advance(); //skip the closing slash
+				advance();	// skip the closing slash
 				return Token::Whitespace;
 			}
 			// "/***"
@@ -473,7 +481,7 @@ Token Scanner::scanSlash()
 			m_skippedComments[NextNext].location.end = static_cast<int>(sourcePos());
 			m_skippedComments[NextNext].token = comment;
 			if (comment == Token::Illegal)
-				return Token::Illegal; // error already set
+				return Token::Illegal;	// error already set
 			else
 				return Token::Whitespace;
 		}
@@ -703,8 +711,7 @@ void Scanner::scanToken()
 		}
 		// Continue scanning for tokens as long as we're just skipping
 		// whitespace.
-	}
-	while (token == Token::Whitespace);
+	} while (token == Token::Whitespace);
 	m_tokens[NextNext].location.end = static_cast<int>(sourcePos());
 	m_tokens[NextNext].location.source = m_source;
 	m_tokens[NextNext].token = token;
@@ -722,7 +729,7 @@ bool Scanner::scanEscape()
 
 	switch (c)
 	{
-	case '\'':  // fall through
+	case '\'':	// fall through
 	case '"':  // fall through
 	case '\\':
 		break;
@@ -769,12 +776,13 @@ bool Scanner::isUnicodeLinebreak()
 	if (0x0a <= m_char && m_char <= 0x0d)
 		// line feed, vertical tab, form feed, carriage return
 		return true;
-	if (!m_source->isPastEndOfInput(1) && uint8_t(m_source->get(0)) == 0xc2 && uint8_t(m_source->get(1)) == 0x85)
+	if (!m_source->isPastEndOfInput(1) && uint8_t(m_source->get(0)) == 0xc2 &&
+		uint8_t(m_source->get(1)) == 0x85)
 		// NEL - U+0085, C2 85 in utf8
 		return true;
-	if (!m_source->isPastEndOfInput(2) && uint8_t(m_source->get(0)) == 0xe2 && uint8_t(m_source->get(1)) == 0x80 && (
-		uint8_t(m_source->get(2)) == 0xa8 || uint8_t(m_source->get(2)) == 0xa9
-	))
+	if (!m_source->isPastEndOfInput(2) && uint8_t(m_source->get(0)) == 0xe2 &&
+		uint8_t(m_source->get(1)) == 0x80 &&
+		(uint8_t(m_source->get(2)) == 0xa8 || uint8_t(m_source->get(2)) == 0xa9))
 		// LS - U+2028, E2 80 A8  in utf8
 		// PS - U+2029, E2 80 A9  in utf8
 		return true;
@@ -784,7 +792,7 @@ bool Scanner::isUnicodeLinebreak()
 Token Scanner::scanString(bool const _isUnicode)
 {
 	char const quote = m_char;
-	advance();  // consume quote
+	advance();	// consume quote
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	while (m_char != quote && !isSourcePastEndOfInput() && !isUnicodeLinebreak())
 	{
@@ -803,7 +811,8 @@ Token Scanner::scanString(bool const _isUnicode)
 			//
 			// We are using a manual range and not isprint() to avoid
 			// any potential complications with locale.
-			if (!_isUnicode && (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f))
+			if (!_isUnicode &&
+				(static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f))
 				return setError(ScannerError::IllegalCharacterInString);
 			addLiteralChar(c);
 		}
@@ -811,14 +820,14 @@ Token Scanner::scanString(bool const _isUnicode)
 	if (m_char != quote)
 		return setError(ScannerError::IllegalStringEndQuote);
 	literal.complete();
-	advance();  // consume quote
+	advance();	// consume quote
 	return _isUnicode ? Token::UnicodeStringLiteral : Token::StringLiteral;
 }
 
 Token Scanner::scanHexString()
 {
 	char const quote = m_char;
-	advance();  // consume quote
+	advance();	// consume quote
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	bool allowUnderscore = false;
 	while (m_char != quote && !isSourcePastEndOfInput())
@@ -845,7 +854,7 @@ Token Scanner::scanHexString()
 		return setError(ScannerError::IllegalStringEndQuote);
 
 	literal.complete();
-	advance();  // consume quote
+	advance();	// consume quote
 	return Token::HexStringLiteral;
 }
 
@@ -866,7 +875,12 @@ void Scanner::scanDecimalDigits()
 
 Token Scanner::scanNumber(char _charSeen)
 {
-	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
+	enum
+	{
+		DECIMAL,
+		HEX,
+		BINARY
+	} kind = DECIMAL;
 	LiteralScope literal(this, LITERAL_TYPE_NUMBER);
 	if (_charSeen == '.')
 	{
@@ -890,9 +904,12 @@ Token Scanner::scanNumber(char _charSeen)
 				kind = HEX;
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
-					return setError(ScannerError::IllegalHexDigit); // we must have at least one hex digit after 'x'
+					return setError(
+						ScannerError::IllegalHexDigit
+					);	// we must have at least one hex digit after 'x'
 
-				while (isHexDigit(m_char) || m_char == '_') // We keep the underscores for later validation
+				while (isHexDigit(m_char) ||
+					   m_char == '_')  // We keep the underscores for later validation
 					addLiteralCharAndAdvance();
 			}
 			else if (isDecimalDigit(m_char))
@@ -907,10 +924,10 @@ Token Scanner::scanNumber(char _charSeen)
 			{
 				if (!m_source->isPastEndOfInput(1) && m_source->get(1) == '_')
 				{
-					// Assume the input may be a floating point number with leading '_' in fraction part.
-					// Recover by consuming it all but returning `Illegal` right away.
-					addLiteralCharAndAdvance(); // '.'
-					addLiteralCharAndAdvance(); // '_'
+					// Assume the input may be a floating point number with leading '_' in fraction
+					// part. Recover by consuming it all but returning `Illegal` right away.
+					addLiteralCharAndAdvance();	 // '.'
+					addLiteralCharAndAdvance();	 // '_'
 					scanDecimalDigits();
 				}
 				if (m_source->isPastEndOfInput() || !isDecimalDigit(m_source->get(1)))
@@ -934,17 +951,17 @@ Token Scanner::scanNumber(char _charSeen)
 		{
 			// Recover from wrongly placed underscore as delimiter in literal with scientific
 			// notation by consuming until the end.
-			addLiteralCharAndAdvance(); // 'e'
-			addLiteralCharAndAdvance(); // '_'
+			addLiteralCharAndAdvance();	 // 'e'
+			addLiteralCharAndAdvance();	 // '_'
 			scanDecimalDigits();
 			literal.complete();
 			return Token::Number;
 		}
 		// scan exponent
-		addLiteralCharAndAdvance(); // 'e' | 'E'
+		addLiteralCharAndAdvance();	 // 'e' | 'E'
 		if (m_char == '+' || m_char == '-')
 			addLiteralCharAndAdvance();
-		if (!isDecimalDigit(m_char)) // we must have at least one decimal digit after 'e'/'E'
+		if (!isDecimalDigit(m_char))  // we must have at least one decimal digit after 'e'/'E'
 			return setError(ScannerError::IllegalExponent);
 		scanDecimalDigits();
 	}
@@ -970,4 +987,4 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	return TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
 }
 
-} // namespace solidity::langutil
+}  // namespace solidity::langutil

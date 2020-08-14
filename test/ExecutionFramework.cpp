@@ -41,8 +41,7 @@ using namespace solidity::test;
 
 ExecutionFramework::ExecutionFramework():
 	ExecutionFramework(solidity::test::CommonOptions::get().evmVersion())
-{
-}
+{}
 
 ExecutionFramework::ExecutionFramework(langutil::EVMVersion _evmVersion):
 	m_evmVersion(_evmVersion),
@@ -72,28 +71,21 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 	if (_result == _expectation)
 		return std::make_pair(true, std::string{});
 	std::string message =
-			"Invalid encoded data\n"
-			"   Result                                                           Expectation\n";
+		"Invalid encoded data\n"
+		"   Result                                                           Expectation\n";
 	auto resultHex = boost::replace_all_copy(toHex(_result), "0", ".");
 	auto expectedHex = boost::replace_all_copy(toHex(_expectation), "0", ".");
 	for (size_t i = 0; i < std::max(resultHex.size(), expectedHex.size()); i += 0x40)
 	{
 		std::string result{i >= resultHex.size() ? string{} : resultHex.substr(i, 0x40)};
 		std::string expected{i > expectedHex.size() ? string{} : expectedHex.substr(i, 0x40)};
-		message +=
-			(result == expected ? "   " : " X ") +
-			result +
-			std::string(0x41 - result.size(), ' ') +
-			expected +
-			"\n";
+		message += (result == expected ? "   " : " X ") + result +
+			std::string(0x41 - result.size(), ' ') + expected + "\n";
 	}
 	return make_pair(false, message);
 }
 
-u256 ExecutionFramework::gasLimit() const
-{
-	return {m_evmHost->tx_context.block_gas_limit};
-}
+u256 ExecutionFramework::gasLimit() const { return {m_evmHost->tx_context.block_gas_limit}; }
 
 u256 ExecutionFramework::gasPrice() const
 {
@@ -107,10 +99,7 @@ u256 ExecutionFramework::blockHash(u256 const& _number) const
 	)};
 }
 
-u256 ExecutionFramework::blockNumber() const
-{
-	return m_evmHost->tx_context.block_number;
-}
+u256 ExecutionFramework::blockNumber() const { return m_evmHost->tx_context.block_number; }
 
 void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
 {
@@ -196,7 +185,10 @@ size_t ExecutionFramework::blockTimestamp(u256 _block)
 
 Address ExecutionFramework::account(size_t _idx)
 {
-	return Address(h256(u256{"0x1212121212121212121212121212120000000012"} + _idx * 0x1000), Address::AlignRight);
+	return Address(
+		h256(u256{"0x1212121212121212121212121212120000000012"} + _idx * 0x1000),
+		Address::AlignRight
+	);
 }
 
 bool ExecutionFramework::addressHasCode(Address const& _addr)
@@ -204,10 +196,7 @@ bool ExecutionFramework::addressHasCode(Address const& _addr)
 	return m_evmHost->get_code_size(EVMHost::convertToEVMC(_addr)) != 0;
 }
 
-size_t ExecutionFramework::numLogs() const
-{
-	return m_evmHost->recorded_logs.size();
-}
+size_t ExecutionFramework::numLogs() const { return m_evmHost->recorded_logs.size(); }
 
 size_t ExecutionFramework::numLogTopics(size_t _logIdx) const
 {

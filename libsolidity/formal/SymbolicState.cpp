@@ -24,10 +24,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::frontend::smt;
 
-SymbolicState::SymbolicState(EncodingContext& _context):
-	m_context(_context)
-{
-}
+SymbolicState::SymbolicState(EncodingContext& _context): m_context(_context) {}
 
 void SymbolicState::reset()
 {
@@ -37,22 +34,20 @@ void SymbolicState::reset()
 
 // Blockchain
 
-smtutil::Expression SymbolicState::thisAddress()
-{
-	return m_thisAddress.currentValue();
-}
+smtutil::Expression SymbolicState::thisAddress() { return m_thisAddress.currentValue(); }
 
-smtutil::Expression SymbolicState::balance()
-{
-	return balance(m_thisAddress.currentValue());
-}
+smtutil::Expression SymbolicState::balance() { return balance(m_thisAddress.currentValue()); }
 
 smtutil::Expression SymbolicState::balance(smtutil::Expression _address)
 {
 	return smtutil::Expression::select(m_balances.elements(), move(_address));
 }
 
-void SymbolicState::transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value)
+void SymbolicState::transfer(
+	smtutil::Expression _from,
+	smtutil::Expression _to,
+	smtutil::Expression _value
+)
 {
 	unsigned indexBefore = m_balances.index();
 	addBalance(_from, 0 - _value);
@@ -83,4 +78,3 @@ void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression
 	m_context.addAssertion(m_balances.elements() == newBalances);
 	m_context.addAssertion(m_balances.length() == oldLength);
 }
-

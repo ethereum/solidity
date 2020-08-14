@@ -92,13 +92,15 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
 
-YulOptimizerTest::YulOptimizerTest(string const& _filename):
-	EVMVersionRestrictedTestCase(_filename)
+YulOptimizerTest::YulOptimizerTest(string const& _filename): EVMVersionRestrictedTestCase(_filename)
 {
 	boost::filesystem::path path(_filename);
 
-	if (path.empty() || std::next(path.begin()) == path.end() || std::next(std::next(path.begin())) == path.end())
-		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
+	if (path.empty() || std::next(path.begin()) == path.end() ||
+		std::next(std::next(path.begin())) == path.end())
+		BOOST_THROW_EXCEPTION(
+			runtime_error("Filename path has to contain a directory: \"" + _filename + "\".")
+		);
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
 
 	m_source = m_reader.source();
@@ -109,7 +111,11 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulOptimizerTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool const _formatted
+)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
 		return TestResult::FatalError;
@@ -125,8 +131,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		disambiguate();
 		NameDisplacer{
 			*m_nameDispenser,
-			{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
-		}(*m_object->code);
+			{"illegal1"_yulstring,
+			 "illegal2"_yulstring,
+			 "illegal3"_yulstring,
+			 "illegal4"_yulstring,
+			 "illegal5"_yulstring}}(*m_object->code);
 	}
 	else if (m_optimizerStep == "blockFlattener")
 	{
@@ -346,17 +355,24 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		yul::Object obj;
 		obj.code = m_object->code;
 		obj.analysisInfo = m_analysisInfo;
-		OptimiserSuite::run(*m_dialect, &meter, obj, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
+		OptimiserSuite::run(
+			*m_dialect,
+			&meter,
+			obj,
+			true,
+			solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps
+		);
 	}
 	else
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED})
+			<< _linePrefix << "Invalid optimizer step: " << m_optimizerStep << endl;
 		return TestResult::FatalError;
 	}
 
-	m_obtainedResult =
-		"step: " + m_optimizerStep + "\n\n" +
-		(m_object->subObjects.empty() ? AsmPrinter{ *m_dialect }(*m_object->code) : m_object->toString(m_dialect)) +
+	m_obtainedResult = "step: " + m_optimizerStep + "\n\n" +
+		(m_object->subObjects.empty() ? AsmPrinter{*m_dialect}(*m_object->code) :
+										  m_object->toString(m_dialect)) +
 		"\n";
 
 	return checkResult(_stream, _linePrefix, _formatted);
@@ -369,7 +385,8 @@ bool YulOptimizerTest::parse(ostream& _stream, string const& _linePrefix, bool c
 	std::tie(m_object, m_analysisInfo) = yul::test::parse(m_source, *m_dialect, errors);
 	if (!m_object || !m_analysisInfo || !Error::containsOnlyWarnings(errors))
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED})
+			<< _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, errors);
 		return false;
 	}
@@ -385,12 +402,11 @@ void YulOptimizerTest::disambiguate()
 
 void YulOptimizerTest::updateContext()
 {
-	m_nameDispenser = make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
-	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{
-		*m_dialect,
-		*m_nameDispenser,
-		m_reservedIdentifiers
-	});
+	m_nameDispenser =
+		make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
+	m_context = make_unique<OptimiserStepContext>(
+		OptimiserStepContext{*m_dialect, *m_nameDispenser, m_reservedIdentifiers}
+	);
 }
 
 void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)

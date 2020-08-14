@@ -35,7 +35,6 @@ struct Block;
 
 namespace solidity::yul::test
 {
-
 class ObjectCompilerTest: public solidity::frontend::test::TestCase
 {
 public:
@@ -46,7 +45,11 @@ public:
 
 	explicit ObjectCompilerTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool const _formatted = false
+	) override;
 
 private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);

@@ -60,7 +60,8 @@ vector<tuple<size_t, size_t>> PairsFromRandomSubset::materialise(size_t _poolSiz
 			do
 			{
 				size_t extraIndex = SimulationRNG::uniformInt(0, selectedIndices.size() - 1);
-				if (find(selectedIndices.begin(), selectedIndices.end(), extraIndex) == selectedIndices.end())
+				if (find(selectedIndices.begin(), selectedIndices.end(), extraIndex) ==
+					selectedIndices.end())
 					selectedIndices.push_back(extraIndex);
 			} while (selectedIndices.size() % 2 != 0);
 		}

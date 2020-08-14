@@ -36,7 +36,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * Component that verifies overloads, abstract contracts, function clashes and others
  * checks at contract or function level.
@@ -44,15 +43,14 @@ namespace solidity::frontend
 class ContractLevelChecker
 {
 public:
-
 	/// @param _errorReporter provides the error logging functionality.
 	explicit ContractLevelChecker(langutil::ErrorReporter& _errorReporter):
-		m_overrideChecker{_errorReporter},
-		m_errorReporter(_errorReporter)
+		m_overrideChecker{_errorReporter}, m_errorReporter(_errorReporter)
 	{}
 
 	/// Performs checks on the given contract.
-	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
+	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still
+	/// contain warnings
 	bool check(ContractDefinition const& _contract);
 
 private:

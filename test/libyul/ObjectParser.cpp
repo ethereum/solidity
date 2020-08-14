@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @date 2018
@@ -40,10 +40,8 @@ using namespace solidity::langutil;
 
 namespace solidity::yul::test
 {
-
 namespace
 {
-
 std::pair<bool, ErrorList> parse(string const& _source)
 {
 	try
@@ -95,7 +93,6 @@ bool successParse(std::string const& _source, bool _allowWarnings = true)
 
 Error expectError(std::string const& _source, bool _allowWarnings = false)
 {
-
 	auto error = parseAndReturnFirstError(_source, _allowWarnings);
 	BOOST_REQUIRE(error);
 	return *error;
@@ -103,20 +100,17 @@ Error expectError(std::string const& _source, bool _allowWarnings = false)
 
 }
 
-#define CHECK_ERROR(text, typ, substring) \
-do \
-{ \
-	Error err = expectError((text), false); \
-	BOOST_CHECK(err.type() == (Error::Type::typ)); \
-	BOOST_CHECK(::solidity::frontend::test::searchErrorMessage(err, (substring))); \
-} while(0)
+#define CHECK_ERROR(text, typ, substring)                                              \
+	do                                                                                 \
+	{                                                                                  \
+		Error err = expectError((text), false);                                        \
+		BOOST_CHECK(err.type() == (Error::Type::typ));                                 \
+		BOOST_CHECK(::solidity::frontend::test::searchErrorMessage(err, (substring))); \
+	} while (0)
 
 BOOST_AUTO_TEST_SUITE(YulObjectParser)
 
-BOOST_AUTO_TEST_CASE(empty_code)
-{
-	BOOST_CHECK(successParse("{ }"));
-}
+BOOST_AUTO_TEST_CASE(empty_code) { BOOST_CHECK(successParse("{ }")); }
 
 BOOST_AUTO_TEST_CASE(object_with_empty_code)
 {
@@ -151,12 +145,18 @@ BOOST_AUTO_TEST_CASE(object_with_code)
 
 BOOST_AUTO_TEST_CASE(object_with_code_and_data)
 {
-	BOOST_CHECK(successParse("object \"a\" { code { let x := mload(0) sstore(0, x) } data \"b\" hex\"01010202\" }"));
+	BOOST_CHECK(successParse(
+		"object \"a\" { code { let x := mload(0) sstore(0, x) } data \"b\" hex\"01010202\" }"
+	));
 }
 
 BOOST_AUTO_TEST_CASE(object_with_non_code_at_start)
 {
-	CHECK_ERROR("object \"a\" { data \"d\" hex\"0102\" code {  } }", ParserError, "Expected keyword \"code\"");
+	CHECK_ERROR(
+		"object \"a\" { data \"d\" hex\"0102\" code {  } }",
+		ParserError,
+		"Expected keyword \"code\""
+	);
 }
 
 BOOST_AUTO_TEST_CASE(nested_object)
@@ -189,7 +189,11 @@ BOOST_AUTO_TEST_CASE(reuse_object_name)
 			data "outer" "stringdata"
 		}
 	)";
-	CHECK_ERROR(code, ParserError, "Object name cannot be the same as the name of the containing object");
+	CHECK_ERROR(
+		code,
+		ParserError,
+		"Object name cannot be the same as the name of the containing object"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(reuse_object_in_subobject)
@@ -200,7 +204,11 @@ BOOST_AUTO_TEST_CASE(reuse_object_in_subobject)
 			object "outer" { code {} }
 		}
 	)";
-	CHECK_ERROR(code, ParserError, "Object name cannot be the same as the name of the containing object");
+	CHECK_ERROR(
+		code,
+		ParserError,
+		"Object name cannot be the same as the name of the containing object"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(reuse_object_of_sibling)
@@ -301,9 +309,7 @@ BOOST_AUTO_TEST_CASE(args_to_datacopy_are_arbitrary)
 
 BOOST_AUTO_TEST_CASE(non_existing_objects)
 {
-	BOOST_CHECK(successParse(
-		"object \"main\" { code { pop(datasize(\"main\")) } }"
-	));
+	BOOST_CHECK(successParse("object \"main\" { code { pop(datasize(\"main\")) } }"));
 	CHECK_ERROR(
 		"object \"main\" { code { pop(datasize(\"abc\")) } }",
 		TypeError,

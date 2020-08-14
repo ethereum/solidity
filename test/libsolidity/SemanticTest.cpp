@@ -39,7 +39,11 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, bool enforceViaYul):
+SemanticTest::SemanticTest(
+	string const& _filename,
+	langutil::EVMVersion _evmVersion,
+	bool enforceViaYul
+):
 	SolidityExecutionFramework(_evmVersion),
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
@@ -76,7 +80,8 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
 		m_shouldRun = false;
 
-	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
+	auto revertStrings =
+		revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
 	soltestAssert(revertStrings, "Invalid revertStrings setting.");
 	m_revertStrings = revertStrings.value();
 
@@ -88,7 +93,6 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
-
 	for (bool compileViaYul: set<bool>{!m_runWithoutYul, m_runWithYul || m_enforceViaYul})
 	{
 		try
@@ -100,7 +104,8 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			m_compileViaYulCanBeSet = false;
 
 			if (compileViaYul)
-				AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
+				AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+					<< _linePrefix << "Running via Yul:" << endl;
 
 			for (auto& test: m_tests)
 				test.reset();
@@ -113,14 +118,21 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			{
 				if (constructed)
 				{
-					soltestAssert(!test.call().isLibrary, "Libraries have to be deployed before any other call.");
-					soltestAssert(!test.call().isConstructor, "Constructor has to be the first function call expect for library deployments.");
+					soltestAssert(
+						!test.call().isLibrary,
+						"Libraries have to be deployed before any other call."
+					);
+					soltestAssert(
+						!test.call().isConstructor,
+						"Constructor has to be the first function call expect for library "
+						"deployments."
+					);
 				}
 				else if (test.call().isLibrary)
 				{
 					soltestAssert(
-							deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
-							"Failed to deploy library " + test.call().signature
+						deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
+						"Failed to deploy library " + test.call().signature
 					);
 					libraries[test.call().signature] = m_contractAddress;
 					continue;
@@ -128,9 +140,17 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 				else
 				{
 					if (test.call().isConstructor)
-						deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
+						deploy(
+							"",
+							test.call().value.value,
+							test.call().arguments.rawBytes(),
+							libraries
+						);
 					else
-						soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
+						soltestAssert(
+							deploy("", 0, bytes(), libraries),
+							"Failed to deploy contract."
+						);
 					constructed = true;
 				}
 
@@ -146,22 +166,27 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 				{
 					bytes output;
 					if (test.call().useCallWithoutSignature)
-						output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
+						output =
+							callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 					else
 					{
 						soltestAssert(
-								m_allowNonExistingFunctions || m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
-								"The function " + test.call().signature + " is not known to the compiler"
+							m_allowNonExistingFunctions ||
+								m_compiler.methodIdentifiers(m_compiler.lastContractName())
+									.isMember(test.call().signature),
+							"The function " + test.call().signature +
+								" is not known to the compiler"
 						);
 
 						output = callContractFunctionWithValueNoEncoding(
-								test.call().signature,
-								test.call().value.value,
-								test.call().arguments.rawBytes()
+							test.call().signature,
+							test.call().value.value,
+							test.call().arguments.rawBytes()
 						);
 					}
 
-					if ((m_transactionSuccessful == test.call().expectations.failure) || (output != test.call().expectations.rawBytes()))
+					if ((m_transactionSuccessful == test.call().expectations.failure) ||
+						(output != test.call().expectations.rawBytes()))
 						success = false;
 
 					test.setFailure(!m_transactionSuccessful);
@@ -173,14 +198,17 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 			if (success && !m_runWithYul && compileViaYul)
 			{
 				m_compileViaYulCanBeSet = true;
-				AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl << _linePrefix
-					<< "Test can pass via Yul and marked with compileViaYul: false." << endl;
+				AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+					<< _linePrefix << endl
+					<< _linePrefix << "Test can pass via Yul and marked with compileViaYul: false."
+					<< endl;
 				return TestResult::Failure;
 			}
 
 			if (!success && (m_runWithYul || !compileViaYul))
 			{
-				AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+				AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+					<< _linePrefix << "Expected result:" << endl;
 				for (auto const& test: m_tests)
 				{
 					ErrorReporter errorReporter;
@@ -188,15 +216,19 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 					_stream << errorReporter.format(_linePrefix, _formatted);
 				}
 				_stream << endl;
-				AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+				AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+					<< _linePrefix << "Obtained result:" << endl;
 				for (auto const& test: m_tests)
 				{
 					ErrorReporter errorReporter;
 					_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
 					_stream << errorReporter.format(_linePrefix, _formatted);
 				}
-				AnsiColorized(_stream, _formatted, {BOLD, RED}) << _linePrefix << endl << _linePrefix
-					<< "Attention: Updates on the test will apply the detected format displayed." << endl;
+				AnsiColorized(_stream, _formatted, {BOLD, RED})
+					<< _linePrefix << endl
+					<< _linePrefix
+					<< "Attention: Updates on the test will apply the detected format displayed."
+					<< endl;
 				if (compileViaYul && m_runWithoutYul)
 				{
 					_stream << _linePrefix << endl << _linePrefix;
@@ -205,8 +237,9 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 					_stream << endl;
 				}
 				else if (!compileViaYul && m_runWithYul)
-					AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) << _linePrefix << endl << _linePrefix
-						<< "Note that the test also has to pass via Yul." << endl;
+					AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+						<< _linePrefix << endl
+						<< _linePrefix << "Note that the test also has to pass via Yul." << endl;
 				return TestResult::Failure;
 			}
 		}
@@ -257,7 +290,8 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 				continue;
 
 			if (outputNames)
-				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name << " ====" << formatting::RESET << endl;
+				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name
+						<< " ====" << formatting::RESET << endl;
 			vector<char const*> sourceFormatting(source.length(), formatting::RESET);
 
 			_stream << _linePrefix << sourceFormatting.front() << source.front();
@@ -304,7 +338,7 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 		_stream << _linePrefix << "// compileViaYul: also\n";
 	for (auto const& setting: settings)
 		if (!m_compileViaYulCanBeSet || setting.first != "compileViaYul")
-		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
+			_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
 void SemanticTest::parseExpectations(istream& _stream)
@@ -314,8 +348,14 @@ void SemanticTest::parseExpectations(istream& _stream)
 	std::move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
 }
 
-bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, solidity::test::Address> const& _libraries)
+bool SemanticTest::deploy(
+	string const& _contractName,
+	u256 const& _value,
+	bytes const& _arguments,
+	map<string, solidity::test::Address> const& _libraries
+)
 {
-	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
+	auto output =
+		compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;
 }

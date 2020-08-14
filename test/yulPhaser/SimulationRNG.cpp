@@ -28,7 +28,6 @@ using namespace std;
 
 namespace solidity::phaser::test
 {
-
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(RandomTest)
 
@@ -48,7 +47,9 @@ BOOST_AUTO_TEST_CASE(bernoulliTrial_should_produce_samples_with_right_expected_v
 		samples.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_CASE(bernoulliTrial_can_be_reset)
@@ -59,21 +60,29 @@ BOOST_AUTO_TEST_CASE(bernoulliTrial_can_be_reset)
 	SimulationRNG::reset(1);
 	vector<uint32_t> samples1;
 	for (uint32_t i = 0; i < numSamples; ++i)
-		samples1.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+		samples1.push_back(
+			static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability))
+		);
 
 	vector<uint32_t> samples2;
 	for (uint32_t i = 0; i < numSamples; ++i)
-		samples2.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+		samples2.push_back(
+			static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability))
+		);
 
 	SimulationRNG::reset(1);
 	vector<uint32_t> samples3;
 	for (uint32_t i = 0; i < numSamples; ++i)
-		samples3.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+		samples3.push_back(
+			static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability))
+		);
 
 	SimulationRNG::reset(2);
 	vector<uint32_t> samples4;
 	for (uint32_t i = 0; i < numSamples; ++i)
-		samples4.push_back(static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability)));
+		samples4.push_back(
+			static_cast<uint32_t>(SimulationRNG::bernoulliTrial(successProbability))
+		);
 
 	BOOST_TEST(samples1 != samples2);
 	BOOST_TEST(samples1 == samples3);
@@ -100,7 +109,9 @@ BOOST_AUTO_TEST_CASE(uniformInt_returns_different_values_when_called_multiple_ti
 		samples.push_back(SimulationRNG::uniformInt(minValue, maxValue));
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_CASE(uniformInt_can_be_reset)
@@ -153,7 +164,9 @@ BOOST_AUTO_TEST_CASE(binomialInt_should_produce_samples_with_right_expected_valu
 		samples.push_back(SimulationRNG::binomialInt(numTrials, successProbability));
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_CASE(binomialInt_can_be_reset)

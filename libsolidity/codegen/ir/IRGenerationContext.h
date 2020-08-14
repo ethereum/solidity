@@ -40,7 +40,6 @@
 
 namespace solidity::frontend
 {
-
 class YulUtilFunctions;
 class ABIFunctions;
 
@@ -82,7 +81,10 @@ public:
 
 
 	IRVariable const& addLocalVariable(VariableDeclaration const& _varDecl);
-	bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
+	bool isLocalVariable(VariableDeclaration const& _varDecl) const
+	{
+		return m_localVariables.count(&_varDecl);
+	}
 	IRVariable const& localVariable(VariableDeclaration const& _varDecl);
 
 	/// Registers an immutable variable of the contract.
@@ -96,8 +98,15 @@ public:
 	/// to after the area used for immutables.
 	size_t reservedMemory();
 
-	void addStateVariable(VariableDeclaration const& _varDecl, u256 _storageOffset, unsigned _byteOffset);
-	bool isStateVariable(VariableDeclaration const& _varDecl) const { return m_stateVariables.count(&_varDecl); }
+	void addStateVariable(
+		VariableDeclaration const& _varDecl,
+		u256 _storageOffset,
+		unsigned _byteOffset
+	);
+	bool isStateVariable(VariableDeclaration const& _varDecl) const
+	{
+		return m_stateVariables.count(&_varDecl);
+	}
 	std::pair<u256, unsigned> storageLocationOfVariable(VariableDeclaration const& _varDecl) const
 	{
 		return m_stateVariables.at(&_varDecl);
@@ -107,7 +116,10 @@ public:
 
 	void initializeInternalDispatch(InternalDispatchMap _internalDispatchMap);
 	InternalDispatchMap consumeInternalDispatchMap();
-	bool internalDispatchClean() const { return m_internalDispatchMap.empty() && m_directInternalFunctionCalls.empty(); }
+	bool internalDispatchClean() const
+	{
+		return m_internalDispatchMap.empty() && m_directInternalFunctionCalls.empty();
+	}
 
 	/// Notifies the context that a function call that needs to go through internal dispatch was
 	/// encountered while visiting the AST. This ensures that the corresponding dispatch function
@@ -124,7 +136,10 @@ public:
 	/// visiting the AST. If the name has not been reported as a direct call using
 	/// @a internalFunctionCalledDirectly(), it's assumed to represent function variable access
 	/// and the function gets added to internal dispatch.
-	void internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function);
+	void internalFunctionAccessed(
+		Expression const& _expression,
+		FunctionDefinition const& _function
+	);
 
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();
@@ -139,7 +154,10 @@ public:
 
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
-	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
+	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated()
+	{
+		return m_subObjects;
+	}
 
 private:
 	langutil::EVMVersion m_evmVersion;
@@ -169,8 +187,8 @@ private:
 
 	/// Collection of functions that need to be callable via internal dispatch.
 	/// Note that having a key with an empty set of functions is a valid situation. It means that
-	/// the code contains a call via a pointer even though a specific function is never assigned to it.
-	/// It will fail at runtime but the code must still compile.
+	/// the code contains a call via a pointer even though a specific function is never assigned to
+	/// it. It will fail at runtime but the code must still compile.
 	InternalDispatchMap m_internalDispatchMap;
 	std::set<Expression const*> m_directInternalFunctionCalls;
 

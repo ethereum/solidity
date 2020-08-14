@@ -29,7 +29,6 @@ using namespace std;
 
 namespace solidity::yul
 {
-
 Json::Value AsmJsonConverter::operator()(Block const& _node) const
 {
 	Json::Value ret = createAstNode(_node.location, "YulBlock");
@@ -180,7 +179,10 @@ Json::Value AsmJsonConverter::operator()(Leave const& _node) const
 	return createAstNode(_node.location, "YulLeave");
 }
 
-Json::Value AsmJsonConverter::createAstNode(langutil::SourceLocation const& _location, string _nodeType) const
+Json::Value AsmJsonConverter::createAstNode(
+	langutil::SourceLocation const& _location,
+	string _nodeType
+) const
 {
 	Json::Value ret{Json::objectValue};
 	ret["nodeType"] = std::move(_nodeType);

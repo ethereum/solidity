@@ -28,7 +28,6 @@ namespace solidity::util
 {
 namespace
 {
-
 /// Validate byte sequence against Unicode chapter 3 Table 3-7.
 bool isWellFormed(unsigned char byte1, unsigned char byte2)
 {
@@ -136,7 +135,11 @@ bool validateUTF8(unsigned char const* _input, size_t _length, size_t& _invalidP
 
 bool validateUTF8(std::string const& _input, size_t& _invalidPosition)
 {
-	return validateUTF8(reinterpret_cast<unsigned char const*>(_input.c_str()), _input.length(), _invalidPosition);
+	return validateUTF8(
+		reinterpret_cast<unsigned char const*>(_input.c_str()),
+		_input.length(),
+		_invalidPosition
+	);
 }
 
 }

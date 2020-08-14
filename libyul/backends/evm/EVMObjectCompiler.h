@@ -30,7 +30,14 @@ struct EVMDialect;
 class EVMObjectCompiler
 {
 public:
-	static void compile(Object& _object, AbstractAssembly& _assembly, EVMDialect const& _dialect, bool _evm15, bool _optimize);
+	static void compile(
+		Object& _object,
+		AbstractAssembly& _assembly,
+		EVMDialect const& _dialect,
+		bool _evm15,
+		bool _optimize
+	);
+
 private:
 	EVMObjectCompiler(AbstractAssembly& _assembly, EVMDialect const& _dialect, bool _evm15):
 		m_assembly(_assembly), m_dialect(_dialect), m_evm15(_evm15)

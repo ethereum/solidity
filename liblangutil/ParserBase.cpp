@@ -29,30 +29,15 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
 
-SourceLocation ParserBase::currentLocation() const
-{
-	return m_scanner->currentLocation();
-}
+SourceLocation ParserBase::currentLocation() const { return m_scanner->currentLocation(); }
 
-Token ParserBase::currentToken() const
-{
-	return m_scanner->currentToken();
-}
+Token ParserBase::currentToken() const { return m_scanner->currentToken(); }
 
-Token ParserBase::peekNextToken() const
-{
-	return m_scanner->peekNextToken();
-}
+Token ParserBase::peekNextToken() const { return m_scanner->peekNextToken(); }
 
-string ParserBase::currentLiteral() const
-{
-	return m_scanner->currentLiteral();
-}
+string ParserBase::currentLiteral() const { return m_scanner->currentLiteral(); }
 
-Token ParserBase::advance()
-{
-	return m_scanner->next();
-}
+Token ParserBase::advance() { return m_scanner->next(); }
 
 string ParserBase::tokenName(Token _token)
 {
@@ -62,7 +47,7 @@ string ParserBase::tokenName(Token _token)
 		return "end of source";
 	else if (TokenTraits::isReservedKeyword(_token))
 		return "reserved keyword '" + TokenTraits::friendlyName(_token) + "'";
-	else if (TokenTraits::isElementaryTypeName(_token)) //for the sake of accuracy in reporting
+	else if (TokenTraits::isElementaryTypeName(_token))	 // for the sake of accuracy in reporting
 	{
 		ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 		return "'" + elemTypeName.toString() + "'";
@@ -80,7 +65,10 @@ void ParserBase::expectToken(Token _value, bool _advance)
 		if (m_parserErrorRecovery)
 			parserError(6635_error, "Expected " + expectedToken + " but got " + tokenName(tok));
 		else
-			fatalParserError(2314_error, "Expected " + expectedToken + " but got " + tokenName(tok));
+			fatalParserError(
+				2314_error,
+				"Expected " + expectedToken + " but got " + tokenName(tok)
+			);
 		// Do not advance so that recovery can sync or make use of the current token.
 		// This is especially useful if the expected token
 		// is the only one that is missing and is at the end of a construct.
@@ -92,7 +80,11 @@ void ParserBase::expectToken(Token _value, bool _advance)
 		m_scanner->next();
 }
 
-void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentNodeName, bool _advance)
+void ParserBase::expectTokenOrConsumeUntil(
+	Token _value,
+	string const& _currentNodeName,
+	bool _advance
+)
 {
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
@@ -103,10 +95,12 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 			m_scanner->next();
 
 		string const expectedToken = ParserBase::tokenName(_value);
-		string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " +  ParserBase::tokenName(tok) +  " instead.";
+		string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " +
+			ParserBase::tokenName(tok) + " instead.";
 		if (m_scanner->currentToken() == Token::EOS)
 		{
-			// rollback to where the token started, and raise exception to be caught at a higher level.
+			// rollback to where the token started, and raise exception to be caught at a higher
+			// level.
 			m_scanner->setPosition(static_cast<size_t>(startPosition));
 			m_inParserRecovery = true;
 			fatalParserError(1957_error, errorLoc, msg);
@@ -114,7 +108,10 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 		else
 		{
 			if (m_inParserRecovery)
-				parserWarning(3796_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
+				parserWarning(
+					3796_error,
+					"Recovered in " + _currentNodeName + " at " + expectedToken + "."
+				);
 			else
 				parserError(1054_error, errorLoc, msg + "Recovered at next " + expectedToken);
 			m_inParserRecovery = false;
@@ -123,7 +120,10 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 	else if (m_inParserRecovery)
 	{
 		string expectedToken = ParserBase::tokenName(_value);
-		parserWarning(3347_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
+		parserWarning(
+			3347_error,
+			"Recovered in " + _currentNodeName + " at " + expectedToken + "."
+		);
 		m_inParserRecovery = false;
 	}
 
@@ -149,12 +149,20 @@ void ParserBase::parserWarning(ErrorId _error, string const& _description)
 	m_errorReporter.warning(_error, currentLocation(), _description);
 }
 
-void ParserBase::parserWarning(ErrorId _error, SourceLocation const& _location, string const& _description)
+void ParserBase::parserWarning(
+	ErrorId _error,
+	SourceLocation const& _location,
+	string const& _description
+)
 {
 	m_errorReporter.warning(_error, _location, _description);
 }
 
-void ParserBase::parserError(ErrorId _error, SourceLocation const& _location, string const& _description)
+void ParserBase::parserError(
+	ErrorId _error,
+	SourceLocation const& _location,
+	string const& _description
+)
 {
 	m_errorReporter.parserError(_error, _location, _description);
 }
@@ -169,7 +177,11 @@ void ParserBase::fatalParserError(ErrorId _error, string const& _description)
 	fatalParserError(_error, currentLocation(), _description);
 }
 
-void ParserBase::fatalParserError(ErrorId _error, SourceLocation const& _location, string const& _description)
+void ParserBase::fatalParserError(
+	ErrorId _error,
+	SourceLocation const& _location,
+	string const& _description
+)
 {
 	m_errorReporter.fatalParserError(_error, _location, _description);
 }

@@ -36,10 +36,8 @@ using namespace solidity::evmasm;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
-
 /// Helper to match a specific error type and message
 bool containsError(Json::Value const& _compilerResult, string const& _type, string const& _message)
 {
@@ -74,13 +72,15 @@ bool containsAtMostWarnings(Json::Value const& _compilerResult)
 	return true;
 }
 
-Json::Value getContractResult(Json::Value const& _compilerResult, string const& _file, string const& _name)
+Json::Value getContractResult(
+	Json::Value const& _compilerResult,
+	string const& _file,
+	string const& _name
+)
 {
-	if (
-		!_compilerResult["contracts"].isObject() ||
+	if (!_compilerResult["contracts"].isObject() ||
 		!_compilerResult["contracts"][_file].isObject() ||
-		!_compilerResult["contracts"][_file][_name].isObject()
-	)
+		!_compilerResult["contracts"][_file][_name].isObject())
 		return Json::Value();
 	return _compilerResult["contracts"][_file][_name];
 }
@@ -94,7 +94,7 @@ Json::Value compile(string _input)
 	return ret;
 }
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(StandardCompiler)
 
@@ -111,14 +111,36 @@ BOOST_AUTO_TEST_CASE(assume_object_input)
 
 	/// Use the string interface of StandardCompiler to trigger these
 	result = compile("");
-	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n* Line 1, Column 1\n  A valid JSON document must be either an array or an object value.\n"));
+	BOOST_CHECK(containsError(
+		result,
+		"JSONError",
+		"* Line 1, Column 1\n  Syntax error: value, object or array expected.\n* Line 1, Column "
+		"1\n  A valid JSON document must be either an array or an object value.\n"
+	));
 	result = compile("invalid");
-	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n* Line 1, Column 2\n  Extra non-whitespace after JSON value.\n"));
+	BOOST_CHECK(containsError(
+		result,
+		"JSONError",
+		"* Line 1, Column 1\n  Syntax error: value, object or array expected.\n* Line 1, Column "
+		"2\n  Extra non-whitespace after JSON value.\n"
+	));
 	result = compile("\"invalid\"");
-	BOOST_CHECK(containsError(result, "JSONError", "* Line 1, Column 1\n  A valid JSON document must be either an array or an object value.\n"));
-	BOOST_CHECK(!containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
+	BOOST_CHECK(containsError(
+		result,
+		"JSONError",
+		"* Line 1, Column 1\n  A valid JSON document must be either an array or an object value.\n"
+	));
+	BOOST_CHECK(!containsError(
+		result,
+		"JSONError",
+		"* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"
+	));
 	result = compile("{}");
-	BOOST_CHECK(!containsError(result, "JSONError", "* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"));
+	BOOST_CHECK(!containsError(
+		result,
+		"JSONError",
+		"* Line 1, Column 1\n  Syntax error: value, object or array expected.\n"
+	));
 	BOOST_CHECK(!containsAtMostWarnings(result));
 }
 
@@ -131,7 +153,11 @@ BOOST_AUTO_TEST_CASE(invalid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
+	BOOST_CHECK(containsError(
+		result,
+		"JSONError",
+		"Only \"Solidity\" or \"Yul\" is supported as a language."
+	));
 }
 
 BOOST_AUTO_TEST_CASE(valid_language)
@@ -142,7 +168,11 @@ BOOST_AUTO_TEST_CASE(valid_language)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(!containsError(result, "JSONError", "Only \"Solidity\" or \"Yul\" is supported as a language."));
+	BOOST_CHECK(!containsError(
+		result,
+		"JSONError",
+		"Only \"Solidity\" or \"Yul\" is supported as a language."
+	));
 }
 
 BOOST_AUTO_TEST_CASE(no_sources)
@@ -207,7 +237,11 @@ BOOST_AUTO_TEST_CASE(unexpected_trailing_test)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "* Line 10, Column 2\n  Extra non-whitespace after JSON value.\n"));
+	BOOST_CHECK(containsError(
+		result,
+		"JSONError",
+		"* Line 10, Column 2\n  Extra non-whitespace after JSON value.\n"
+	));
 }
 
 BOOST_AUTO_TEST_CASE(smoke_test)
@@ -243,7 +277,9 @@ BOOST_AUTO_TEST_CASE(error_recovery_field)
 	)";
 
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "\"settings.parserErrorRecovery\" must be a Boolean."));
+	BOOST_CHECK(
+		containsError(result, "JSONError", "\"settings.parserErrorRecovery\" must be a Boolean.")
+	);
 
 	input = R"(
 	{
@@ -303,7 +339,9 @@ BOOST_AUTO_TEST_CASE(optimizer_runs_not_a_number)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+	BOOST_CHECK(
+		containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number.")
+	);
 }
 
 BOOST_AUTO_TEST_CASE(optimizer_runs_not_an_unsigned_number)
@@ -325,7 +363,9 @@ BOOST_AUTO_TEST_CASE(optimizer_runs_not_an_unsigned_number)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number."));
+	BOOST_CHECK(
+		containsError(result, "JSONError", "The \"runs\" setting must be an unsigned number.")
+	);
 }
 
 BOOST_AUTO_TEST_CASE(basic_compilation)
@@ -355,9 +395,15 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["abi"].isArray());
 	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["abi"]), "[]");
 	BOOST_CHECK(contract["devdoc"].isObject());
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["devdoc"]), R"({"kind":"dev","methods":{},"version":1})");
+	BOOST_CHECK_EQUAL(
+		util::jsonCompactPrint(contract["devdoc"]),
+		R"({"kind":"dev","methods":{},"version":1})"
+	);
 	BOOST_CHECK(contract["userdoc"].isObject());
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["userdoc"]), R"({"kind":"user","methods":{},"version":1})");
+	BOOST_CHECK_EQUAL(
+		util::jsonCompactPrint(contract["userdoc"]),
+		R"({"kind":"user","methods":{},"version":1})"
+	);
 	BOOST_CHECK(contract["evm"].isObject());
 	/// @TODO check evm.methodIdentifiers, legacyAssembly, bytecode, deployedBytecode
 	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
@@ -365,22 +411,26 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK_EQUAL(
 		solidity::test::bytecodeSansMetadata(contract["evm"]["bytecode"]["object"].asString()),
 		string("6080604052348015600f57600080fd5b5060") +
-		(VersionIsRelease ? "3f" : util::toHex(bytes{uint8_t(61 + VersionStringStrict.size())})) +
-		"80601d6000396000f3fe6080604052600080fdfe"
+			(VersionIsRelease ? "3f" :
+								  util::toHex(bytes{uint8_t(61 + VersionStringStrict.size())})) +
+			"80601d6000396000f3fe6080604052600080fdfe"
 	);
 	BOOST_CHECK(contract["evm"]["assembly"].isString());
-	BOOST_CHECK(contract["evm"]["assembly"].asString().find(
-		"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x80)\n  "
-		"callvalue\n  dup1\n  "
-		"iszero\n  tag_1\n  jumpi\n  "
-		"0x00\n  "
-		"dup1\n  revert\n"
-		"tag_1:\n  pop\n  dataSize(sub_0)\n  dup1\n  "
-		"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n        "
-		"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      "
-		"0x00\n      "
-		"dup1\n      revert\n\n    auxdata: 0xa26469706673582212"
-	) == 0);
+	BOOST_CHECK(
+		contract["evm"]["assembly"].asString().find(
+			"    /* \"fileA\":0:14  contract A { } */\n  mstore(0x40, 0x80)\n  "
+			"callvalue\n  dup1\n  "
+			"iszero\n  tag_1\n  jumpi\n  "
+			"0x00\n  "
+			"dup1\n  revert\n"
+			"tag_1:\n  pop\n  dataSize(sub_0)\n  dup1\n  "
+			"dataOffset(sub_0)\n  0x00\n  codecopy\n  0x00\n  return\nstop\n\nsub_0: assembly {\n  "
+			"      "
+			"/* \"fileA\":0:14  contract A { } */\n      mstore(0x40, 0x80)\n      "
+			"0x00\n      "
+			"dup1\n      revert\n\n    auxdata: 0xa26469706673582212"
+		) == 0
+	);
 	BOOST_CHECK(contract["evm"]["gasEstimates"].isObject());
 	BOOST_CHECK_EQUAL(contract["evm"]["gasEstimates"].size(), 1);
 	BOOST_CHECK(contract["evm"]["gasEstimates"]["creation"].isObject());
@@ -390,11 +440,12 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(contract["evm"]["gasEstimates"]["creation"]["totalCost"].isString());
 	BOOST_CHECK_EQUAL(
 		u256(contract["evm"]["gasEstimates"]["creation"]["codeDepositCost"].asString()) +
-		u256(contract["evm"]["gasEstimates"]["creation"]["executionCost"].asString()),
+			u256(contract["evm"]["gasEstimates"]["creation"]["executionCost"].asString()),
 		u256(contract["evm"]["gasEstimates"]["creation"]["totalCost"].asString())
 	);
-	// Lets take the top level `.code` section (the "deployer code"), that should expose most of the features of
-	// the assembly JSON. What we want to check here is Operation, Push, PushTag, PushSub, PushSubSize and Tag.
+	// Lets take the top level `.code` section (the "deployer code"), that should expose most of the
+	// features of the assembly JSON. What we want to check here is Operation, Push, PushTag,
+	// PushSub, PushSubSize and Tag.
 	BOOST_CHECK(contract["evm"]["legacyAssembly"].isObject());
 	BOOST_CHECK(contract["evm"]["legacyAssembly"][".code"].isArray());
 	BOOST_CHECK_EQUAL(
@@ -413,9 +464,13 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 		"{\"begin\":0,\"end\":14,\"name\":\"tag\",\"source\":0,\"value\":\"1\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"JUMPDEST\",\"source\":0},"
 		"{\"begin\":0,\"end\":14,\"name\":\"POP\",\"source\":0},"
-		"{\"begin\":0,\"end\":14,\"name\":\"PUSH #[$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH "
+		"#[$]\",\"source\":0,\"value\":"
+		"\"0000000000000000000000000000000000000000000000000000000000000000\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"DUP1\",\"source\":0},"
-		"{\"begin\":0,\"end\":14,\"name\":\"PUSH [$]\",\"source\":0,\"value\":\"0000000000000000000000000000000000000000000000000000000000000000\"},"
+		"{\"begin\":0,\"end\":14,\"name\":\"PUSH "
+		"[$]\",\"source\":0,\"value\":"
+		"\"0000000000000000000000000000000000000000000000000000000000000000\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"source\":0,\"value\":\"0\"},"
 		"{\"begin\":0,\"end\":14,\"name\":\"CODECOPY\",\"source\":0},"
 		"{\"begin\":0,\"end\":14,\"name\":\"PUSH\",\"source\":0,\"value\":\"0\"},"
@@ -428,10 +483,14 @@ BOOST_AUTO_TEST_CASE(basic_compilation)
 	BOOST_CHECK(result["sources"]["fileA"]["legacyAST"].isObject());
 	BOOST_CHECK_EQUAL(
 		util::jsonCompactPrint(result["sources"]["fileA"]["legacyAST"]),
-		"{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]},\"license\":null},\"children\":"
-		"[{\"attributes\":{\"abstract\":false,\"baseContracts\":[null],\"contractDependencies\":[null],\"contractKind\":\"contract\","
-		"\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],\"name\":\"A\",\"nodes\":[null],\"scope\":2},"
-		"\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"id\":2,\"name\":\"SourceUnit\",\"src\":\"0:14:0\"}"
+		"{\"attributes\":{\"absolutePath\":\"fileA\",\"exportedSymbols\":{\"A\":[1]},\"license\":"
+		"null},\"children\":"
+		"[{\"attributes\":{\"abstract\":false,\"baseContracts\":[null],\"contractDependencies\":["
+		"null],\"contractKind\":\"contract\","
+		"\"documentation\":null,\"fullyImplemented\":true,\"linearizedBaseContracts\":[1],\"name\":"
+		"\"A\",\"nodes\":[null],\"scope\":2},"
+		"\"id\":1,\"name\":\"ContractDefinition\",\"src\":\"0:14:0\"}],\"id\":2,\"name\":"
+		"\"SourceUnit\",\"src\":\"0:14:0\"}"
 	);
 }
 
@@ -467,9 +526,12 @@ BOOST_AUTO_TEST_CASE(compilation_error)
 		{
 			BOOST_CHECK_EQUAL(
 				util::jsonCompactPrint(error),
-				"{\"component\":\"general\",\"errorCode\":\"2314\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier but got '}'\\n"
-				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier but got '}'\","
-				"\"severity\":\"error\",\"sourceLocation\":{\"end\":23,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
+				"{\"component\":\"general\",\"errorCode\":\"2314\",\"formattedMessage\":\"fileA:1:"
+				"23: ParserError: Expected identifier but got '}'\\n"
+				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected "
+				"identifier but got '}'\","
+				"\"severity\":\"error\",\"sourceLocation\":{\"end\":23,\"file\":\"fileA\","
+				"\"start\":22},\"type\":\"ParserError\"}"
 			);
 		}
 	}
@@ -617,7 +679,11 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract)
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["abi"].isArray());
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["abi"]), "[{\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
+	BOOST_CHECK_EQUAL(
+		util::jsonCompactPrint(contract["abi"]),
+		"[{\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":"
+		"\"function\"}]"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
@@ -649,7 +715,11 @@ BOOST_AUTO_TEST_CASE(output_selection_dependent_contract_with_import)
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["abi"].isArray());
-	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["abi"]), "[{\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]");
+	BOOST_CHECK_EQUAL(
+		util::jsonCompactPrint(contract["abi"]),
+		"[{\"inputs\":[],\"name\":\"f\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":"
+		"\"function\"}]"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(filename_with_colon)
@@ -675,7 +745,8 @@ BOOST_AUTO_TEST_CASE(filename_with_colon)
 	)";
 	Json::Value result = compile(input);
 	BOOST_CHECK(containsAtMostWarnings(result));
-	Json::Value contract = getContractResult(result, "http://github.com/ethereum/solidity/std/StandardToken.sol", "A");
+	Json::Value contract =
+		getContractResult(result, "http://github.com/ethereum/solidity/std/StandardToken.sol", "A");
 	BOOST_CHECK(contract.isObject());
 	BOOST_CHECK(contract["abi"].isArray());
 	BOOST_CHECK_EQUAL(util::jsonCompactPrint(contract["abi"]), "[]");
@@ -713,7 +784,9 @@ BOOST_AUTO_TEST_CASE(library_filename_with_colon)
 	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"].isObject());
 	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"].isObject());
 	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"].isArray());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"][0].isObject());
+	BOOST_CHECK(
+		contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"][0].isObject()
+	);
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_top_level)
@@ -776,7 +849,11 @@ BOOST_AUTO_TEST_CASE(libraries_invalid_hex)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsError(result, "JSONError", "Invalid library address (\"0x4200000000000000000000000000000000000xx1\") supplied."));
+	BOOST_CHECK(containsError(
+		result,
+		"JSONError",
+		"Invalid library address (\"0x4200000000000000000000000000000000000xx1\") supplied."
+	));
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_length)
@@ -879,7 +956,8 @@ BOOST_AUTO_TEST_CASE(evm_version)
 				"language": "Solidity",
 				"sources": { "fileA": { "content": "contract A { }" } },
 				"settings": {
-					)" + _version + R"(
+					)" +
+			_version + R"(
 					"outputSelection": {
 						"fileA": {
 							"A": [ "metadata" ]
@@ -891,22 +969,54 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	};
 	Json::Value result;
 	result = compile(inputForVersion("\"evmVersion\": \"homestead\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"homestead\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"homestead\""
+		) != string::npos
+	);
 	result = compile(inputForVersion("\"evmVersion\": \"tangerineWhistle\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"tangerineWhistle\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"tangerineWhistle\""
+		) != string::npos
+	);
 	result = compile(inputForVersion("\"evmVersion\": \"spuriousDragon\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"spuriousDragon\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"spuriousDragon\""
+		) != string::npos
+	);
 	result = compile(inputForVersion("\"evmVersion\": \"byzantium\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"byzantium\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"byzantium\""
+		) != string::npos
+	);
 	result = compile(inputForVersion("\"evmVersion\": \"constantinople\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"constantinople\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"constantinople\""
+		) != string::npos
+	);
 	result = compile(inputForVersion("\"evmVersion\": \"petersburg\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"petersburg\""
+		) != string::npos
+	);
 	result = compile(inputForVersion("\"evmVersion\": \"istanbul\","));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"istanbul\""
+		) != string::npos
+	);
 	// test default
 	result = compile(inputForVersion(""));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
+	BOOST_CHECK(
+		result["contracts"]["fileA"]["A"]["metadata"].asString().find(
+			"\"evmVersion\":\"istanbul\""
+		) != string::npos
+	);
 	// test invalid
 	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
@@ -1068,7 +1178,10 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 		(set<string>{"stackAllocation", "optimizerSteps"})
 	);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["stackAllocation"].asBool() == true);
-	BOOST_CHECK(optimizer["details"]["yulDetails"]["optimizerSteps"].asString() == OptimiserSettings::DefaultYulOptimiserSteps);
+	BOOST_CHECK(
+		optimizer["details"]["yulDetails"]["optimizerSteps"].asString() ==
+		OptimiserSettings::DefaultYulOptimiserSteps
+	);
 	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 8);
 	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
 }
@@ -1242,7 +1355,11 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	BOOST_REQUIRE(result["errors"].isArray());
 	BOOST_CHECK(result["errors"][0]["severity"] == "error");
 	BOOST_REQUIRE(result["errors"][0]["message"].isString());
-	BOOST_CHECK(result["errors"][0]["message"].asString().find("Stack too deep when compiling inline assembly") != std::string::npos);
+	BOOST_CHECK(
+		result["errors"][0]["message"].asString().find(
+			"Stack too deep when compiling inline assembly"
+		) != std::string::npos
+	);
 	BOOST_CHECK(result["errors"][0]["type"] == "CompilerError");
 }
 
@@ -1284,7 +1401,6 @@ BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard)
 	BOOST_REQUIRE(result["sources"].isObject());
 	BOOST_REQUIRE(result["sources"].size() == 1);
 	BOOST_REQUIRE(result["sources"]["A"].isObject());
-
 }
 
 BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard_colon_source)
@@ -1414,4 +1530,4 @@ BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard_multiple_sources)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

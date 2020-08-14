@@ -28,7 +28,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Specific AST copier that replaces certain identifiers with expressions.
  */

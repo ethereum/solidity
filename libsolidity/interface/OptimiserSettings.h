@@ -28,32 +28,28 @@
 
 namespace solidity::frontend
 {
-
 struct OptimiserSettings
 {
 	static char constexpr DefaultYulOptimiserSteps[] =
-		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"dhfoDgvulfnTUtnIf"	 // None of these can make stack problems worse
 		"["
-			"xarrscLM"                 // Turn into SSA and simplify
-			"cCTUtTOntnfDIul"          // Perform structural simplification
-			"Lcul"                     // Simplify again
-			"Vcul jj"                  // Reverse SSA
+		"xarrscLM"	// Turn into SSA and simplify
+		"cCTUtTOntnfDIul"  // Perform structural simplification
+		"Lcul"	// Simplify again
+		"Vcul jj"  // Reverse SSA
 
-			// should have good "compilability" property here.
+		// should have good "compilability" property here.
 
-			"eul"                      // Run functional expression inliner
-			"xarulrul"                 // Prune a bit more in SSA
-			"xarrcL"                   // Turn into SSA again and simplify
-			"gvif"                     // Run full inliner
-			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+		"eul"  // Run functional expression inliner
+		"xarulrul"	// Prune a bit more in SSA
+		"xarrcL"  // Turn into SSA again and simplify
+		"gvif"	// Run full inliner
+		"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
 		"]"
-		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+		"jmuljuljul VcTOcul jmul";	// Make source short and pretty
 
 	/// No optimisations at all - not recommended.
-	static OptimiserSettings none()
-	{
-		return {};
-	}
+	static OptimiserSettings none() { return {}; }
 	/// Minimal optimisations: Peephole and jumpdest remover
 	static OptimiserSettings minimal()
 	{
@@ -78,19 +74,13 @@ struct OptimiserSettings
 		return s;
 	}
 	/// Full optimisations. Currently an alias for standard optimisations.
-	static OptimiserSettings full()
-	{
-		return standard();
-	}
+	static OptimiserSettings full() { return standard(); }
 
 	bool operator==(OptimiserSettings const& _other) const
 	{
-		return
-			runOrderLiterals == _other.runOrderLiterals &&
-			runJumpdestRemover == _other.runJumpdestRemover &&
-			runPeephole == _other.runPeephole &&
-			runDeduplicate == _other.runDeduplicate &&
-			runCSE == _other.runCSE &&
+		return runOrderLiterals == _other.runOrderLiterals &&
+			runJumpdestRemover == _other.runJumpdestRemover && runPeephole == _other.runPeephole &&
+			runDeduplicate == _other.runDeduplicate && runCSE == _other.runCSE &&
 			runConstantOptimiser == _other.runConstantOptimiser &&
 			optimizeStackAllocation == _other.optimizeStackAllocation &&
 			runYulOptimiser == _other.runYulOptimiser &&
@@ -112,7 +102,8 @@ struct OptimiserSettings
 	/// Constant optimizer, which tries to find better representations that satisfy the given
 	/// size/cost-trade-off.
 	bool runConstantOptimiser = false;
-	/// Perform more efficient stack allocation for variables during code generation from Yul to bytecode.
+	/// Perform more efficient stack allocation for variables during code generation from Yul to
+	/// bytecode.
 	bool optimizeStackAllocation = false;
 	/// Yul optimiser with default settings. Will only run on certain parts of the code for now.
 	bool runYulOptimiser = false;
@@ -122,7 +113,8 @@ struct OptimiserSettings
 	/// no optimisations.
 	std::string yulOptimiserSteps = DefaultYulOptimiserSteps;
 	/// This specifies an estimate on how often each opcode in this assembly will be executed,
-	/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
+	/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas
+	/// usage.
 	size_t expectedExecutionsPerDeployment = 200;
 };
 

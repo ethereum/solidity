@@ -26,7 +26,7 @@
 
 // way too many unsigned to size_t warnings in 32 bit build
 #ifdef _M_IX86
-#pragma warning(disable:4244)
+#pragma warning(disable : 4244)
 #endif
 
 #if _MSC_VER && _MSC_VER < 1900
@@ -35,7 +35,7 @@
 #endif
 
 #ifdef __INTEL_COMPILER
-#pragma warning(disable:3682) //call through incomplete class
+#pragma warning(disable : 3682)	 // call through incomplete class
 #endif
 
 #include <libsolutil/vector_ref.h>
@@ -55,7 +55,6 @@
 
 namespace solidity
 {
-
 // Binary data types.
 using bytes = std::vector<uint8_t>;
 using bytesRef = util::vector_ref<uint8_t>;
@@ -63,9 +62,24 @@ using bytesConstRef = util::vector_ref<uint8_t const>;
 
 // Numeric types.
 using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
-using u256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-using s256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
-using u160 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
+using u256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<
+	256,
+	256,
+	boost::multiprecision::unsigned_magnitude,
+	boost::multiprecision::unchecked,
+	void>>;
+using s256 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<
+	256,
+	256,
+	boost::multiprecision::signed_magnitude,
+	boost::multiprecision::unchecked,
+	void>>;
+using u160 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<
+	160,
+	160,
+	boost::multiprecision::unsigned_magnitude,
+	boost::multiprecision::unchecked,
+	void>>;
 
 // Map types.
 using StringMap = std::map<std::string, std::string>;

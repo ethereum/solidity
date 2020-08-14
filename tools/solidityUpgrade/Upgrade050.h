@@ -24,7 +24,6 @@
 
 namespace solidity::tools
 {
-
 /**
  * Module that performs analysis on the AST. It visits all contract
  * definitions and its defined functions and reports a source upgrade,
@@ -37,6 +36,7 @@ public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::ContractDefinition const& _contract) override;
 };
@@ -52,6 +52,7 @@ public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::FunctionDefinition const& _function) override;
 };

@@ -26,7 +26,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 struct EVMDialect;
 
@@ -47,7 +46,7 @@ struct EVMDialect;
  * per jump/branch. This means if, break and continue statements have a cost of 2,
  * switch statements have a cost of 1 plus the number of cases times two,
  * and for loops cost 3.
-*/
+ */
 struct CodeWeights
 {
 	// Statements
@@ -90,8 +89,8 @@ public:
 
 private:
 	CodeSize(bool _ignoreFunctions = true, CodeWeights const& _weights = {}):
-		m_ignoreFunctions(_ignoreFunctions),
-		m_weights(_weights) {}
+		m_ignoreFunctions(_ignoreFunctions), m_weights(_weights)
+	{}
 
 	void visit(Statement const& _statement) override;
 	void visit(Expression const& _expression) override;
@@ -138,6 +137,7 @@ public:
 	using ASTWalker::operator();
 	void operator()(Assignment const& _assignment) override;
 	std::size_t assignmentCount(YulString _name) const;
+
 private:
 	std::map<YulString, size_t> m_assignmentCounters;
 };

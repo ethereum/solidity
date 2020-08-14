@@ -43,10 +43,7 @@ struct MiniEVMInterpreter
 {
 	explicit MiniEVMInterpreter(EVMDialect const& _dialect): m_dialect(_dialect) {}
 
-	u256 eval(Expression const& _expr)
-	{
-		return std::visit(*this, _expr);
-	}
+	u256 eval(Expression const& _expr) { return std::visit(*this, _expr); }
 
 	u256 eval(evmasm::Instruction _instr, vector<Expression> const& _arguments)
 	{
@@ -80,10 +77,7 @@ struct MiniEVMInterpreter
 		yulAssert(fun->instruction, "Expected EVM instruction.");
 		return eval(*fun->instruction, _funCall.arguments);
 	}
-	u256 operator()(Literal const& _literal)
-	{
-		return valueOfLiteral(_literal);
-	}
+	u256 operator()(Literal const& _literal) { return valueOfLiteral(_literal); }
 	u256 operator()(Identifier const&) { yulAssert(false, ""); }
 
 	EVMDialect const& m_dialect;
@@ -98,11 +92,9 @@ void ConstantOptimiser::visit(Expression& _e)
 		if (literal.kind != LiteralKind::Number)
 			return;
 
-		if (
-			Expression const* repr =
+		if (Expression const* repr =
 				RepresentationFinder(m_dialect, m_meter, locationOf(_e), m_cache)
-				.tryFindRepresentation(valueOfLiteral(literal))
-		)
+					.tryFindRepresentation(valueOfLiteral(literal)))
 			_e = ASTCopier{}.translate(*repr);
 	}
 	else
@@ -144,7 +136,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 		bigint lowerPart = _value & (powerOfTwo - 1);
 		if ((powerOfTwo - lowerPart) < lowerPart)
 		{
-			lowerPart = lowerPart - powerOfTwo; // make it negative
+			lowerPart = lowerPart - powerOfTwo;	 // make it negative
 			upperPart++;
 		}
 		if (upperPart == 0)
@@ -165,22 +157,29 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 			continue;
 
 		if (lowerPart > 0)
-			newRoutine = represent("add"_yulstring, newRoutine, findRepresentation(u256(abs(lowerPart))));
+			newRoutine =
+				represent("add"_yulstring, newRoutine, findRepresentation(u256(abs(lowerPart))));
 		else if (lowerPart < 0)
-			newRoutine = represent("sub"_yulstring, newRoutine, findRepresentation(u256(abs(lowerPart))));
+			newRoutine =
+				represent("sub"_yulstring, newRoutine, findRepresentation(u256(abs(lowerPart))));
 
 		if (m_maxSteps > 0)
 			m_maxSteps--;
 		routine = min(move(routine), move(newRoutine));
 	}
-	yulAssert(MiniEVMInterpreter{m_dialect}.eval(*routine.expression) == _value, "Invalid expression generated.");
+	yulAssert(
+		MiniEVMInterpreter{m_dialect}.eval(*routine.expression) == _value,
+		"Invalid expression generated."
+	);
 	return m_cache[_value] = move(routine);
 }
 
 Representation RepresentationFinder::represent(u256 const& _value) const
 {
 	Representation repr;
-	repr.expression = make_unique<Expression>(Literal{m_location, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
+	repr.expression = make_unique<Expression>(
+		Literal{m_location, LiteralKind::Number, YulString{formatNumber(_value)}, {}}
+	);
 	repr.cost = m_meter.costs(*repr.expression);
 	return repr;
 }
@@ -194,9 +193,9 @@ Representation RepresentationFinder::represent(
 	repr.expression = make_unique<Expression>(FunctionCall{
 		m_location,
 		Identifier{m_location, _instruction},
-		{ASTCopier{}.translate(*_argument.expression)}
-	});
-	repr.cost = _argument.cost + m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction);
+		{ASTCopier{}.translate(*_argument.expression)}});
+	repr.cost =
+		_argument.cost + m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction);
 	return repr;
 }
 
@@ -210,9 +209,9 @@ Representation RepresentationFinder::represent(
 	repr.expression = make_unique<Expression>(FunctionCall{
 		m_location,
 		Identifier{m_location, _instruction},
-		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}
-	});
-	repr.cost = m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction) + _arg1.cost + _arg2.cost;
+		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}});
+	repr.cost = m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction) +
+		_arg1.cost + _arg2.cost;
 	return repr;
 }
 

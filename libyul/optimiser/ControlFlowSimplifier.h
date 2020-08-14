@@ -64,8 +64,7 @@ public:
 
 private:
 	ControlFlowSimplifier(Dialect const& _dialect, TypeInfo const& _typeInfo):
-		m_dialect(_dialect),
-		m_typeInfo(_typeInfo)
+		m_dialect(_dialect), m_typeInfo(_typeInfo)
 	{}
 
 	void simplify(std::vector<Statement>& _statements);

@@ -46,10 +46,8 @@ using namespace solidity::evmasm;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
-
 evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 {
 	ErrorList errors;
@@ -60,8 +58,15 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	BOOST_CHECK(!!sourceUnit);
 
 	GlobalContext globalContext;
-	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
-	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
+	NameAndTypeResolver resolver(
+		globalContext,
+		solidity::test::CommonOptions::get().evmVersion(),
+		errorReporter
+	);
+	DeclarationTypeChecker declarationTypeChecker(
+		errorReporter,
+		solidity::test::CommonOptions::get().evmVersion()
+	);
 	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
 	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*sourceUnit));
@@ -83,9 +88,14 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 			Compiler compiler(
 				solidity::test::CommonOptions::get().evmVersion(),
 				RevertStrings::Default,
-				solidity::test::CommonOptions::get().optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal()
+				solidity::test::CommonOptions::get().optimize ? OptimiserSettings::standard() :
+																  OptimiserSettings::minimal()
 			);
-			compiler.compileContract(*contract, map<ContractDefinition const*, shared_ptr<Compiler const>>{}, bytes());
+			compiler.compileContract(
+				*contract,
+				map<ContractDefinition const*, shared_ptr<Compiler const>>{},
+				bytes()
+			);
 
 			return compiler.runtimeAssemblyItems();
 		}
@@ -97,16 +107,9 @@ void printAssemblyLocations(AssemblyItems const& _items)
 {
 	auto printRepeated = [](SourceLocation const& _loc, size_t _repetitions)
 	{
-		cout <<
-			"\t\tvector<SourceLocation>(" <<
-			_repetitions <<
-			", SourceLocation{" <<
-			_loc.start <<
-			", " <<
-			_loc.end <<
-			", make_shared<string>(\"" <<
-			_loc.source->name() <<
-			"\")}) +" << endl;
+		cout << "\t\tvector<SourceLocation>(" << _repetitions << ", SourceLocation{" << _loc.start
+			 << ", " << _loc.end << ", make_shared<string>(\"" << _loc.source->name() << "\")}) +"
+			 << endl;
 	};
 
 	vector<SourceLocation> locations;
@@ -139,7 +142,10 @@ void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> 
 		if (_items[i].location().start != _locations[i].start ||
 			_items[i].location().end != _locations[i].end)
 		{
-			BOOST_CHECK_MESSAGE(false, "Location mismatch for item " + to_string(i) + ". Found the following locations:");
+			BOOST_CHECK_MESSAGE(
+				false,
+				"Location mismatch for item " + to_string(i) + ". Found the following locations:"
+			);
 			printAssemblyLocations(_items);
 			return;
 		}
@@ -147,19 +153,22 @@ void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> 
 }
 
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 BOOST_AUTO_TEST_SUITE(Assembly)
 
 BOOST_AUTO_TEST_CASE(location_test)
 {
-	auto sourceCode = make_shared<CharStream>(R"(
+	auto sourceCode = make_shared<CharStream>(
+		R"(
 	contract test {
 		function f() public returns (uint256 a) {
 			return 16;
 		}
 	}
-	)", "");
+	)",
+		""
+	);
 	AssemblyItems items = compileContract(sourceCode);
 	bool hasShifts = solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting();
 
@@ -167,14 +176,12 @@ BOOST_AUTO_TEST_CASE(location_test)
 
 	vector<SourceLocation> locations;
 	if (solidity::test::CommonOptions::get().optimize)
-		locations =
-			vector<SourceLocation>(31, SourceLocation{2, 82, sourceCode}) +
+		locations = vector<SourceLocation>(31, SourceLocation{2, 82, sourceCode}) +
 			vector<SourceLocation>(21, SourceLocation{20, 79, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{72, 74, sourceCode}) +
 			vector<SourceLocation>(2, SourceLocation{20, 79, sourceCode});
 	else
-		locations =
-			vector<SourceLocation>(hasShifts ? 31 : 32, SourceLocation{2, 82, sourceCode}) +
+		locations = vector<SourceLocation>(hasShifts ? 31 : 32, SourceLocation{2, 82, sourceCode}) +
 			vector<SourceLocation>(24, SourceLocation{20, 79, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{49, 58, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{72, 74, sourceCode}) +
@@ -186,7 +193,8 @@ BOOST_AUTO_TEST_CASE(location_test)
 
 BOOST_AUTO_TEST_CASE(jump_type)
 {
-	auto sourceCode = make_shared<CharStream>(R"(
+	auto sourceCode = make_shared<CharStream>(
+		R"(
 	contract C {
 		function f(uint a) public pure returns (uint t) {
 			assembly {
@@ -195,7 +203,9 @@ BOOST_AUTO_TEST_CASE(jump_type)
 			}
 		}
 	}
-	)", "");
+	)",
+		""
+	);
 	AssemblyItems items = compileContract(sourceCode);
 
 	string jumpTypes;
@@ -209,4 +219,4 @@ BOOST_AUTO_TEST_CASE(jump_type)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

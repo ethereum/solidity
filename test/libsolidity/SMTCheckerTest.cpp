@@ -51,7 +51,11 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 		m_shouldRun = false;
 }
 
-TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SMTCheckerTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted
+)
 {
 	setupCompiler();
 	compiler().setSMTSolverChoice(m_enabledSolvers);

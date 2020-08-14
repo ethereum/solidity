@@ -53,7 +53,11 @@ YulInterpreterTest::YulInterpreterTest(string const& _filename):
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult YulInterpreterTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
+TestCase::TestResult YulInterpreterTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool const _formatted
+)
 {
 	if (!parse(_stream, _linePrefix, _formatted))
 		return TestResult::FatalError;
@@ -78,7 +82,8 @@ bool YulInterpreterTest::parse(ostream& _stream, string const& _linePrefix, bool
 	}
 	else
 	{
-		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED}) << _linePrefix << "Error parsing source." << endl;
+		AnsiColorized(_stream, _formatted, {formatting::BOLD, formatting::RED})
+			<< _linePrefix << "Error parsing source." << endl;
 		printErrors(_stream, stack.errors());
 		return false;
 	}
@@ -91,11 +96,14 @@ string YulInterpreterTest::interpret()
 	state.maxSteps = 10000;
 	try
 	{
-		Interpreter::run(state, EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}), *m_ast);
+		Interpreter::run(
+			state,
+			EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion{}),
+			*m_ast
+		);
 	}
 	catch (InterpreterTerminatedGeneric const&)
-	{
-	}
+	{}
 
 	stringstream result;
 	state.dumpTraceAndState(result);

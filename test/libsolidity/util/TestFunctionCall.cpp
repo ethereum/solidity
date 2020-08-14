@@ -80,7 +80,6 @@ string TestFunctionCall::format(
 			if (!m_call.arguments.parameters.at(0).format.newline)
 				stream << ws;
 			stream << output;
-
 		}
 
 		/// Formats comments on the function parameters and the arrow taking
@@ -103,8 +102,8 @@ string TestFunctionCall::format(
 			stream << endl << _linePrefix << newline << ws;
 			if (!m_call.arguments.comment.empty())
 			{
-				 stream << comment << m_call.arguments.comment << comment;
-				 stream << endl << _linePrefix << newline << ws;
+				stream << comment << m_call.arguments.comment << comment;
+				stream << endl << _linePrefix << newline << ws;
 			}
 			stream << arrow;
 		}
@@ -115,29 +114,31 @@ string TestFunctionCall::format(
 		{
 			bool const isFailure = m_call.expectations.failure;
 			result = isFailure ?
-				formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
-				formatRawParameters(m_call.expectations.result);
+				  formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
+				  formatRawParameters(m_call.expectations.result);
 			if (!result.empty())
-				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
+				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND})
+					<< ws << result;
 		}
 		else
 		{
 			if (m_calledNonExistingFunction)
-				_errorReporter.warning("The function \"" + m_call.signature + "\" is not known to the compiler.");
+				_errorReporter.warning(
+					"The function \"" + m_call.signature + "\" is not known to the compiler."
+				);
 
 			bytes output = m_rawBytes;
 			bool const isFailure = m_failure;
 			result = isFailure ?
-				formatFailure(_errorReporter, m_call, output, _renderResult, highlight) :
-				matchesExpectation() ?
-					formatRawParameters(m_call.expectations.result) :
-					formatBytesParameters(
-						_errorReporter,
-						output,
-						m_call.signature,
-						m_call.expectations.result,
-						highlight
-					);
+				  formatFailure(_errorReporter, m_call, output, _renderResult, highlight) :
+				matchesExpectation() ? formatRawParameters(m_call.expectations.result) :
+										 formatBytesParameters(
+										   _errorReporter,
+										   output,
+										   m_call.signature,
+										   m_call.expectations.result,
+										   highlight
+									   );
 
 			if (!matchesExpectation())
 			{
@@ -156,25 +157,23 @@ string TestFunctionCall::format(
 					);
 
 				string bytesOutput = abiParams ?
-					BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
-					BytesUtils::formatRawBytes(
+					  BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
+					  BytesUtils::formatRawBytes(
 						output,
 						ContractABIUtils::defaultParameters(ceil(output.size() / 32)),
 						_linePrefix
 					);
 
 				_errorReporter.warning(
-					"The call to \"" + m_call.signature + "\" returned \n" +
-					bytesOutput
+					"The call to \"" + m_call.signature + "\" returned \n" + bytesOutput
 				);
 			}
 
 			if (isFailure)
-				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
-			else
-				if (!result.empty())
-					stream << ws << result;
-
+				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND})
+					<< ws << result;
+			else if (!result.empty())
+				stream << ws << result;
 		}
 
 		/// Format comments on expectations taking the display-mode into account.
@@ -225,11 +224,8 @@ string TestFunctionCall::formatBytesParameters(
 	}
 	else
 	{
-		std::optional<ParameterList> abiParams = ContractABIUtils::parametersFromJsonOutputs(
-			_errorReporter,
-			m_contractABI,
-			_signature
-		);
+		std::optional<ParameterList> abiParams =
+			ContractABIUtils::parametersFromJsonOutputs(_errorReporter, m_contractABI, _signature);
 
 		if (abiParams)
 		{
@@ -242,13 +238,18 @@ string TestFunctionCall::formatBytesParameters(
 
 			if (preferredParams)
 			{
-				ContractABIUtils::overwriteParameters(_errorReporter, preferredParams.value(), abiParams.value());
+				ContractABIUtils::overwriteParameters(
+					_errorReporter,
+					preferredParams.value(),
+					abiParams.value()
+				);
 				os << BytesUtils::formatBytesRange(_bytes, preferredParams.value(), _highlight);
 			}
 		}
 		else
 		{
-			ParameterList defaultParameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+			ParameterList defaultParameters =
+				ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
 
 			ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
 			os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);

@@ -38,22 +38,28 @@ namespace solidity::langutil
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
-struct CompilerError: virtual util::Exception {};
-struct StackTooDeepError: virtual CompilerError {};
-struct InternalCompilerError: virtual util::Exception {};
-struct FatalError: virtual util::Exception {};
-struct UnimplementedFeatureError: virtual util::Exception {};
-struct InvalidAstError: virtual util::Exception {};
+struct CompilerError: virtual util::Exception
+{};
+struct StackTooDeepError: virtual CompilerError
+{};
+struct InternalCompilerError: virtual util::Exception
+{};
+struct FatalError: virtual util::Exception
+{};
+struct UnimplementedFeatureError: virtual util::Exception
+{};
+struct InvalidAstError: virtual util::Exception
+{};
 
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
+/// Assertion that throws an InternalCompilerError containing the given description if it is not
+/// met.
 #define solAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::solidity::langutil::InternalCompilerError, DESCRIPTION)
 
 #define solUnimplementedAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::solidity::langutil::UnimplementedFeatureError, DESCRIPTION)
 
-#define solUnimplemented(DESCRIPTION) \
-	solUnimplementedAssert(false, DESCRIPTION)
+#define solUnimplemented(DESCRIPTION) solUnimplementedAssert(false, DESCRIPTION)
 
 #define astAssert(CONDITION, DESCRIPTION) \
 	assertThrow(CONDITION, ::solidity::langutil::InvalidAstError, DESCRIPTION)
@@ -62,16 +68,16 @@ struct InvalidAstError: virtual util::Exception {};
  * Unique identifiers are used to tag and track individual error cases.
  * They are passed as the first parameter of error reporting functions.
  * Suffix _error helps to find them in the sources.
- * The struct ErrorId prevents incidental calls like typeError(3141) instead of typeError(3141_error).
- * To create a new ID, one can add 0000_error and then run "python ./scripts/error_codes.py --fix"
- * from the root of the repo.
+ * The struct ErrorId prevents incidental calls like typeError(3141) instead of
+ * typeError(3141_error). To create a new ID, one can add 0000_error and then run "python
+ * ./scripts/error_codes.py --fix" from the root of the repo.
  */
 struct ErrorId
 {
 	unsigned long long error = 0;
 	bool operator==(ErrorId const& _rhs) const { return error == _rhs.error; }
 };
-constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{ _error }; }
+constexpr ErrorId operator"" _error(unsigned long long _error) { return ErrorId{_error}; }
 
 class Error: virtual public util::Exception
 {
@@ -94,7 +100,12 @@ public:
 		std::string const& _description = std::string()
 	);
 
-	Error(ErrorId _errorId, Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation());
+	Error(
+		ErrorId _errorId,
+		Type _type,
+		std::string const& _description,
+		SourceLocation const& _location = SourceLocation()
+	);
 
 	ErrorId errorId() const { return m_errorId; }
 	Type type() const { return m_type; }
@@ -119,6 +130,7 @@ public:
 		}
 		return true;
 	}
+
 private:
 	ErrorId m_errorId;
 	Type m_type;
@@ -130,7 +142,10 @@ using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 class SecondarySourceLocation
 {
 public:
-	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
+	SecondarySourceLocation& append(
+		std::string const& _errMsg,
+		SourceLocation const& _sourceLocation
+	)
 	{
 		infos.emplace_back(_errMsg, _sourceLocation);
 		return *this;
@@ -149,7 +164,8 @@ public:
 		if (occurrences > 32)
 		{
 			infos.resize(32);
-			_message += " Truncated from " + std::to_string(occurrences) + " to the first 32 occurrences.";
+			_message +=
+				" Truncated from " + std::to_string(occurrences) + " to the first 32 occurrences.";
 		}
 	}
 
@@ -157,7 +173,8 @@ public:
 };
 
 using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
-using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
+using errinfo_secondarySourceLocation =
+	boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
 
 
 }

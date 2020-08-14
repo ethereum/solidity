@@ -43,34 +43,23 @@ Reads a single source from stdin, compiles it and signals a failure for internal
 
 Allowed options)",
 		po::options_description::m_default_line_length,
-		po::options_description::m_default_line_length - 23);
-	options.add_options()
-		("help", "Show this help screen.")
-		("quiet", "Only output errors.")
-		(
-			"standard-json",
-			"Test via the standard-json interface, i.e. "
-			"input is expected to be JSON-encoded instead of "
-			"plain source file."
-		)
-		(
-			"const-opt",
-			"Run the constant optimizer instead of compiling. "
-			"Expects a binary string of up to 32 bytes on stdin."
-		)
-		(
-			"input-file",
-			po::value<string>(),
-			"input file"
-		)(
-			"input-files",
-			po::value<std::vector<string>>()->multitoken(),
-			"input files"
-		)
-		(
-			"without-optimizer",
-			"Run without optimizations. Cannot be used together with standard-json."
-		);
+		po::options_description::m_default_line_length - 23
+	);
+	options.add_options()("help", "Show this help screen.")("quiet", "Only output errors.")(
+		"standard-json",
+		"Test via the standard-json interface, i.e. "
+		"input is expected to be JSON-encoded instead of "
+		"plain source file."
+	)("const-opt",
+	  "Run the constant optimizer instead of compiling. "
+	  "Expects a binary string of up to 32 bytes on stdin.")(
+		"input-file",
+		po::value<string>(),
+		"input file"
+	)("input-files", po::value<std::vector<string>>()->multitoken(), "input files")(
+		"without-optimizer",
+		"Run without optimizations. Cannot be used together with standard-json."
+	);
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description filesPositions;
@@ -134,10 +123,8 @@ Allowed options)",
 			if (inputFile.size() == 0)
 				throw;
 
-			cerr << "Fuzzer "
-				<< (optimize ? "" : "(without optimizer) ")
-				<< "failed on "
-				<< inputFile;
+			cerr << "Fuzzer " << (optimize ? "" : "(without optimizer) ") << "failed on "
+				 << inputFile;
 		}
 	}
 

@@ -34,7 +34,7 @@ using namespace solidity::util;
 
 Statement ASTCopier::operator()(ExpressionStatement const& _statement)
 {
-	return ExpressionStatement{ _statement.location, translate(_statement.expression) };
+	return ExpressionStatement{_statement.location, translate(_statement.expression)};
 }
 
 Statement ASTCopier::operator()(VariableDeclaration const& _varDecl)
@@ -42,8 +42,7 @@ Statement ASTCopier::operator()(VariableDeclaration const& _varDecl)
 	return VariableDeclaration{
 		_varDecl.location,
 		translateVector(_varDecl.variables),
-		translate(_varDecl.value)
-	};
+		translate(_varDecl.value)};
 }
 
 Statement ASTCopier::operator()(Assignment const& _assignment)
@@ -51,8 +50,7 @@ Statement ASTCopier::operator()(Assignment const& _assignment)
 	return Assignment{
 		_assignment.location,
 		translateVector(_assignment.variableNames),
-		translate(_assignment.value)
-	};
+		translate(_assignment.value)};
 }
 
 Expression ASTCopier::operator()(FunctionCall const& _call)
@@ -60,19 +58,12 @@ Expression ASTCopier::operator()(FunctionCall const& _call)
 	return FunctionCall{
 		_call.location,
 		translate(_call.functionName),
-		translateVector(_call.arguments)
-	};
+		translateVector(_call.arguments)};
 }
 
-Expression ASTCopier::operator()(Identifier const& _identifier)
-{
-	return translate(_identifier);
-}
+Expression ASTCopier::operator()(Identifier const& _identifier) { return translate(_identifier); }
 
-Expression ASTCopier::operator()(Literal const& _literal)
-{
-	return translate(_literal);
-}
+Expression ASTCopier::operator()(Literal const& _literal) { return translate(_literal); }
 
 Statement ASTCopier::operator()(If const& _if)
 {
@@ -96,8 +87,7 @@ Statement ASTCopier::operator()(FunctionDefinition const& _function)
 		translatedName,
 		translateVector(_function.parameters),
 		translateVector(_function.returnVariables),
-		translate(_function.body)
-	};
+		translate(_function.body)};
 }
 
 Statement ASTCopier::operator()(ForLoop const& _forLoop)
@@ -110,28 +100,15 @@ Statement ASTCopier::operator()(ForLoop const& _forLoop)
 		translate(_forLoop.pre),
 		translate(_forLoop.condition),
 		translate(_forLoop.post),
-		translate(_forLoop.body)
-	};
+		translate(_forLoop.body)};
 }
-Statement ASTCopier::operator()(Break const& _break)
-{
-	return Break{ _break };
-}
+Statement ASTCopier::operator()(Break const& _break) { return Break{_break}; }
 
-Statement ASTCopier::operator()(Continue const& _continue)
-{
-	return Continue{ _continue };
-}
+Statement ASTCopier::operator()(Continue const& _continue) { return Continue{_continue}; }
 
-Statement ASTCopier::operator()(Leave const& _leaveStatement)
-{
-	return Leave{_leaveStatement};
-}
+Statement ASTCopier::operator()(Leave const& _leaveStatement) { return Leave{_leaveStatement}; }
 
-Statement ASTCopier::operator ()(Block const& _block)
-{
-	return translate(_block);
-}
+Statement ASTCopier::operator()(Block const& _block) { return translate(_block); }
 
 Expression ASTCopier::translate(Expression const& _expression)
 {
@@ -161,13 +138,9 @@ Identifier ASTCopier::translate(Identifier const& _identifier)
 	return Identifier{_identifier.location, translateIdentifier(_identifier.name)};
 }
 
-Literal ASTCopier::translate(Literal const& _literal)
-{
-	return _literal;
-}
+Literal ASTCopier::translate(Literal const& _literal) { return _literal; }
 
 TypedName ASTCopier::translate(TypedName const& _typedName)
 {
 	return TypedName{_typedName.location, translateIdentifier(_typedName.name), _typedName.type};
 }
-

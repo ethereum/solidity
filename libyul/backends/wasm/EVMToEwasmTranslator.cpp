@@ -49,7 +49,8 @@ using namespace solidity::langutil;
 
 namespace
 {
-static string const polyfill{R"(
+static string const polyfill{
+	R"(
 {
 function or_bool(a, b, c, d) -> r:i32 {
 	r := i32.eqz(i64.eqz(i64.or(i64.or(a, b), i64.or(c, d))))
@@ -595,9 +596,9 @@ function lt_512x512_64(x1, x2, x3, x4, x5, x6, x7, x8, y1, y2, y3, y4, y5, y6, y
 	default { z := 1:i32 }
 }/*
 )"
-// Split long string to make it compilable on msvc
-// https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?view=vs-2019
-R"(
+	// Split long string to make it compilable on msvc
+	// https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?view=vs-2019
+	R"(
 */
 function lt_256x256_64(x1, x2, x3, x4, y1, y2, y3, y4) -> z:i32 {
 	switch cmp(x1, y1)
@@ -1244,11 +1245,19 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	AsmAnalyzer analyzer(*ret.analysisInfo, errorReporter, WasmDialect::instance(), {}, _object.qualifiedDataNames());
+	AsmAnalyzer analyzer(
+		*ret.analysisInfo,
+		errorReporter,
+		WasmDialect::instance(),
+		{},
+		_object.qualifiedDataNames()
+	);
 	if (!analyzer.analyze(*ret.code))
 	{
 		string message = "Invalid code generated after EVM to wasm translation.\n";
-		message += "Note that the source locations in the errors below will reference the original, not the translated code.\n";
+		message +=
+			"Note that the source locations in the errors below will reference the original, not "
+			"the translated code.\n";
 		message += "Translated code:\n";
 		message += "----------------------------------\n";
 		message += ret.toString(&WasmDialect::instance());

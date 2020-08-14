@@ -34,7 +34,6 @@ namespace fs = boost::filesystem;
 
 namespace solidity::phaser::test
 {
-
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(TestHelpersTest)
 
@@ -66,7 +65,10 @@ BOOST_AUTO_TEST_CASE(chromosomeLengths_should_return_lengths_of_all_chromosomes_
 {
 	shared_ptr<FitnessMetric> fitnessMetric = make_shared<ChromosomeLengthMetric>();
 
-	Population population1(fitnessMetric, {Chromosome(), Chromosome("a"), Chromosome("aa"), Chromosome("aaa")});
+	Population population1(
+		fitnessMetric,
+		{Chromosome(), Chromosome("a"), Chromosome("aa"), Chromosome("aaa")}
+	);
 	BOOST_TEST((chromosomeLengths(population1) == vector<size_t>{0, 1, 2, 3}));
 
 	Population population2(fitnessMetric);
@@ -80,7 +82,9 @@ BOOST_AUTO_TEST_CASE(countDifferences_should_return_zero_for_identical_chromosom
 	BOOST_TEST(countDifferences(Chromosome("afxT"), Chromosome("afxT")) == 0);
 }
 
-BOOST_AUTO_TEST_CASE(countDifferences_should_count_mismatched_positions_in_chromosomes_of_the_same_length)
+BOOST_AUTO_TEST_CASE(
+	countDifferences_should_count_mismatched_positions_in_chromosomes_of_the_same_length
+)
 {
 	BOOST_TEST(countDifferences(Chromosome("a"), Chromosome("f")) == 1);
 	BOOST_TEST(countDifferences(Chromosome("aa"), Chromosome("ac")) == 1);
@@ -101,7 +105,9 @@ BOOST_AUTO_TEST_CASE(countDifferences_should_count_missing_characters_as_differe
 	BOOST_TEST(countDifferences(Chromosome("aa"), Chromosome("cccc")) == 4);
 }
 
-BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_available_optimisation_steps)
+BOOST_AUTO_TEST_CASE(
+	enumerateOptimisationSteps_should_assing_indices_to_all_available_optimisation_steps
+)
 {
 	map<string, char> stepsAndAbbreviations = OptimiserSuite::stepNameToAbbreviationMap();
 	map<string, size_t> stepsAndIndices = enumerateOptmisationSteps();
@@ -152,7 +158,9 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_
 	BOOST_TEST(!fs::exists(dirPath / "test-file.txt"));
 }
 
-BOOST_AUTO_TEST_CASE(TemporaryDirectory_memberPath_should_construct_paths_relative_to_the_temporary_directory)
+BOOST_AUTO_TEST_CASE(
+	TemporaryDirectory_memberPath_should_construct_paths_relative_to_the_temporary_directory
+)
 {
 	TemporaryDirectory tempDir("temporary-directory-test-");
 
@@ -165,7 +173,9 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_memberPath_should_construct_paths_relati
 		ofstream file;
 		file.open(tempDir.memberPath("file.txt"), ios::out);
 	}
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("file.txt"), tempDir.path() / fs::path("file.txt")));
+	BOOST_TEST(
+		fs::equivalent(tempDir.memberPath("file.txt"), tempDir.path() / fs::path("file.txt"))
+	);
 
 	{
 		fs::create_directories(tempDir.memberPath("a/b/"));
@@ -173,7 +183,10 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_memberPath_should_construct_paths_relati
 		ofstream file;
 		file.open(tempDir.memberPath("a/b/file.txt"), ios::out);
 	}
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("a/b/file.txt"), tempDir.path() / fs::path("a") / fs::path("b") / fs::path("file.txt")));
+	BOOST_TEST(fs::equivalent(
+		tempDir.memberPath("a/b/file.txt"),
+		tempDir.path() / fs::path("a") / fs::path("b") / fs::path("file.txt")
+	));
 }
 
 BOOST_AUTO_TEST_CASE(stripWhitespace_should_remove_all_whitespace_characters_from_a_string)
@@ -190,7 +203,9 @@ BOOST_AUTO_TEST_CASE(stripWhitespace_should_remove_all_whitespace_characters_fro
 	BOOST_TEST(stripWhitespace("   a   b \n\n  c \n\t\v") == "abc");
 }
 
-BOOST_AUTO_TEST_CASE(countSubstringOccurrences_should_count_non_overlapping_substring_occurrences_in_a_string)
+BOOST_AUTO_TEST_CASE(
+	countSubstringOccurrences_should_count_non_overlapping_substring_occurrences_in_a_string
+)
 {
 	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "a") == 6);
 	BOOST_TEST(countSubstringOccurrences("aaabcdcbaaa", "aa") == 2);
@@ -220,7 +235,9 @@ BOOST_AUTO_TEST_CASE(mean_should_calculate_statistical_mean)
 	BOOST_TEST(mean<double>({1.3, 1.1, 0.0, 1.5, 1.1, 2.0, 1.5, 1.5}) == 1.25);
 }
 
-BOOST_AUTO_TEST_CASE(meanSquaredError_should_calculate_average_squared_difference_between_samples_and_expected_value)
+BOOST_AUTO_TEST_CASE(
+	meanSquaredError_should_calculate_average_squared_difference_between_samples_and_expected_value
+)
 {
 	BOOST_TEST(meanSquaredError<int>({0}, 0.0) == 0.0);
 	BOOST_TEST(meanSquaredError<int>({0}, 1.0) == 1.0);
@@ -231,7 +248,10 @@ BOOST_AUTO_TEST_CASE(meanSquaredError_should_calculate_average_squared_differenc
 	BOOST_TEST(meanSquaredError<int>({0, 1, 2, 3}, 2.0) == 1.5);
 	BOOST_TEST(meanSquaredError<int>({-4, -3, -2, -1, 0, 1, 2, 3}, -4.0) == 17.5);
 
-	BOOST_TEST(meanSquaredError<double>({1.3, 1.1, 0.0, 1.5, 1.1, 2.0, 1.5, 1.5}, 1.0) == 0.3575, tolerance(0.0001));
+	BOOST_TEST(
+		meanSquaredError<double>({1.3, 1.1, 0.0, 1.5, 1.1, 2.0, 1.5, 1.5}, 1.0) == 0.3575,
+		tolerance(0.0001)
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

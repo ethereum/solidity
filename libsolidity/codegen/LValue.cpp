@@ -36,21 +36,22 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 
 
-StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
+StackVariable::StackVariable(
+	CompilerContext& _compilerContext,
+	VariableDeclaration const& _declaration
+):
 	LValue(_compilerContext, _declaration.annotation().type),
 	m_baseStackOffset(m_context.baseStackOffsetOfVariable(_declaration)),
 	m_size(m_dataType->sizeOnStack())
-{
-}
+{}
 
 void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 {
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
-	if (stackPos + 1 > 16) //@todo correct this by fetching earlier or moving to memory
+	if (stackPos + 1 > 16)	//@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(
-			StackTooDeepError() <<
-			errinfo_sourceLocation(_location) <<
-			errinfo_comment("Stack too deep, try removing local variables.")
+			StackTooDeepError() << errinfo_sourceLocation(_location)
+								<< errinfo_comment("Stack too deep, try removing local variables.")
 		);
 	solAssert(stackPos + 1 >= m_size, "Size and stack pos mismatch.");
 	for (unsigned i = 0; i < m_size; ++i)
@@ -62,9 +63,8 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
 	if (stackDiff > 16)
 		BOOST_THROW_EXCEPTION(
-			StackTooDeepError() <<
-			errinfo_sourceLocation(_location) <<
-			errinfo_comment("Stack too deep, try removing local variables.")
+			StackTooDeepError() << errinfo_sourceLocation(_location)
+								<< errinfo_comment("Stack too deep, try removing local variables.")
 		);
 	else if (stackDiff > 0)
 		for (unsigned i = 0; i < m_size; ++i)
@@ -80,10 +80,8 @@ void StackVariable::setToZero(SourceLocation const& _location, bool) const
 }
 
 MemoryItem::MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded):
-	LValue(_compilerContext, &_type),
-	m_padded(_padded)
-{
-}
+	LValue(_compilerContext, &_type), m_padded(_padded)
+{}
 
 void MemoryItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
@@ -125,7 +123,10 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 	}
 	else
 	{
-		solUnimplementedAssert(_sourceType == *m_dataType, "Conversion not implemented for assignment to memory.");
+		solUnimplementedAssert(
+			_sourceType == *m_dataType,
+			"Conversion not implemented for assignment to memory."
+		);
 
 		solAssert(m_dataType->sizeOnStack() == 1, "");
 		if (!_move)
@@ -146,7 +147,10 @@ void MemoryItem::setToZero(SourceLocation const&, bool _removeReference) const
 }
 
 
-ImmutableItem::ImmutableItem(CompilerContext& _compilerContext, VariableDeclaration const& _variable):
+ImmutableItem::ImmutableItem(
+	CompilerContext& _compilerContext,
+	VariableDeclaration const& _variable
+):
 	LValue(_compilerContext, _variable.annotation().type), m_variable(_variable)
 {
 	solAssert(_variable.immutable(), "");
@@ -181,7 +185,10 @@ void ImmutableItem::setToZero(SourceLocation const&, bool) const
 	solAssert(false, "Attempted to set immutable variable to zero.");
 }
 
-StorageItem::StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
+StorageItem::StorageItem(
+	CompilerContext& _compilerContext,
+	VariableDeclaration const& _declaration
+):
 	StorageItem(_compilerContext, *_declaration.annotation().type)
 {
 	solAssert(!_declaration.immutable(), "");
@@ -207,7 +214,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 	{
 		solAssert(m_dataType->sizeOnStack() == 1, "Invalid storage ref size.");
 		if (_remove)
-			m_context << Instruction::POP; // remove byte offset
+			m_context << Instruction::POP;	// remove byte offset
 		else
 			m_context << Instruction::DUP2;
 		return;
@@ -219,9 +226,8 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 	else
 	{
 		bool cleaned = false;
-		m_context
-			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
-			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
+		m_context << Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1 << u256(0x100)
+				  << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
 		if (m_dataType->category() == Type::Category::FixedPoint)
 			// implementation should be very similar to the integer case.
 			solUnimplemented("Not yet implemented - FixedPointType.");
@@ -260,7 +266,8 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 	}
 }
 
-void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
+void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move)
+	const
 {
 	CompilerUtils utils(m_context);
 	solAssert(m_dataType, "");
@@ -293,28 +300,34 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			m_context << Instruction::DUP2 << Instruction::SLOAD;
 			// stack: value storege_ref multiplier old_full_value
 			// clear bytes in old value
-			m_context
-				<< Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
-				<< Instruction::MUL;
+			m_context << Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
+					  << Instruction::MUL;
 			m_context << Instruction::NOT << Instruction::AND << Instruction::SWAP1;
 			// stack: value storage_ref cleared_value multiplier
 			utils.copyToStackTop(3 + m_dataType->sizeOnStack(), m_dataType->sizeOnStack());
 			// stack: value storage_ref cleared_value multiplier value
 			if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
 			{
-				solAssert(_sourceType == *m_dataType, "function item stored but target is not equal to source");
+				solAssert(
+					_sourceType == *m_dataType,
+					"function item stored but target is not equal to source"
+				);
 				if (fun->kind() == FunctionType::Kind::External)
 					// Combine the two-item function type into a single stack slot.
 					utils.combineExternalFunctionType(false);
 				else
-					m_context <<
-						((u256(1) << (8 * m_dataType->storageBytes())) - 1) <<
-						Instruction::AND;
+					m_context << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
+							  << Instruction::AND;
 			}
 			else if (m_dataType->category() == Type::Category::FixedBytes)
 			{
-				solAssert(_sourceType.category() == Type::Category::FixedBytes, "source not fixed bytes");
-				CompilerUtils(m_context).rightShiftNumberOnStack(256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes());
+				solAssert(
+					_sourceType.category() == Type::Category::FixedBytes,
+					"source not fixed bytes"
+				);
+				CompilerUtils(m_context).rightShiftNumberOnStack(
+					256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()
+				);
 			}
 			else
 			{
@@ -322,7 +335,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				// remove the higher order bits
 				utils.convertType(_sourceType, *m_dataType, true, true);
 			}
-			m_context  << Instruction::MUL << Instruction::OR;
+			m_context << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 			if (_move)
@@ -337,7 +350,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		);
 		if (m_dataType->category() == Type::Category::Array)
 		{
-			m_context << Instruction::POP; // remove byte offset
+			m_context << Instruction::POP;	// remove byte offset
 			ArrayUtils(m_context).copyArrayToStorage(
 				dynamic_cast<ArrayType const&>(*m_dataType),
 				dynamic_cast<ArrayType const&>(_sourceType)
@@ -357,7 +370,10 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				"Struct assignment with conversion."
 			);
 			solAssert(!structType.containsNestedMapping(), "");
-			solAssert(sourceType.location() != DataLocation::CallData, "Structs in calldata not supported.");
+			solAssert(
+				sourceType.location() != DataLocation::CallData,
+				"Structs in calldata not supported."
+			);
 			for (auto const& member: structType.members(nullptr))
 			{
 				// assign each member that can live outside of storage
@@ -367,7 +383,8 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				if (sourceType.location() == DataLocation::Storage)
 				{
 					// stack layout: source_ref target_ref
-					pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+					pair<u256, unsigned> const& offsets =
+						sourceType.storageOffsetsOfMember(member.name);
 					m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 					m_context << u256(offsets.second);
 					// stack: source_ref target_ref source_member_ref source_member_off
@@ -384,10 +401,12 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					// stack layout: source_ref target_ref source_value...
 				}
 				unsigned stackSize = sourceMemberType->sizeOnStack();
-				pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+				pair<u256, unsigned> const& offsets =
+					structType.storageOffsetsOfMember(member.name);
 				m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
 				m_context << u256(offsets.second);
-				// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
+				// stack: source_ref target_ref target_off source_value... target_member_ref
+				// target_member_byte_off
 				StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
 			}
 			// stack layout: source_ref target_ref
@@ -399,9 +418,9 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		}
 		else
 			BOOST_THROW_EXCEPTION(
-				InternalCompilerError()
-					<< errinfo_sourceLocation(_location)
-					<< errinfo_comment("Invalid non-value type for assignment."));
+				InternalCompilerError() << errinfo_sourceLocation(_location)
+										<< errinfo_comment("Invalid non-value type for assignment.")
+			);
 	}
 }
 
@@ -426,9 +445,8 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 			if (memberType->category() == Type::Category::Mapping)
 				continue;
 			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
-			m_context
-				<< offsets.first << Instruction::DUP3 << Instruction::ADD
-				<< u256(offsets.second);
+			m_context << offsets.first << Instruction::DUP3 << Instruction::ADD
+					  << u256(offsets.second);
 			StorageItem(m_context, *memberType).setToZero();
 		}
 		if (_removeReference)
@@ -436,15 +454,16 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	}
 	else
 	{
-		solAssert(m_dataType->isValueType(), "Clearing of unsupported type requested: " + m_dataType->toString());
+		solAssert(
+			m_dataType->isValueType(),
+			"Clearing of unsupported type requested: " + m_dataType->toString()
+		);
 		if (!_removeReference)
 			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 		if (m_dataType->storageBytes() == 32)
 		{
 			// offset should be zero
-			m_context
-				<< Instruction::POP << u256(0)
-				<< Instruction::SWAP1 << Instruction::SSTORE;
+			m_context << Instruction::POP << u256(0) << Instruction::SWAP1 << Instruction::SSTORE;
 		}
 		else
 		{
@@ -454,9 +473,8 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 			m_context << Instruction::DUP2 << Instruction::SLOAD;
 			// stack: storege_ref multiplier old_full_value
 			// clear bytes in old value
-			m_context
-				<< Instruction::SWAP1 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
-				<< Instruction::MUL;
+			m_context << Instruction::SWAP1 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
+					  << Instruction::MUL;
 			m_context << Instruction::NOT << Instruction::AND;
 			// stack: storage_ref cleared_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
@@ -466,18 +484,17 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 
 StorageByteArrayElement::StorageByteArrayElement(CompilerContext& _compilerContext):
 	LValue(_compilerContext, TypeProvider::byte())
-{
-}
+{}
 
 void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove) const
 {
 	// stack: ref byte_number
 	if (_remove)
-		m_context << Instruction::SWAP1 << Instruction::SLOAD
-			<< Instruction::SWAP1 << Instruction::BYTE;
+		m_context << Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
+				  << Instruction::BYTE;
 	else
-		m_context << Instruction::DUP2 << Instruction::SLOAD
-			<< Instruction::DUP2 << Instruction::BYTE;
+		m_context << Instruction::DUP2 << Instruction::SLOAD << Instruction::DUP2
+				  << Instruction::BYTE;
 	m_context << (u256(1) << (256 - 8)) << Instruction::MUL;
 }
 
@@ -489,12 +506,12 @@ void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, boo
 	m_context << Instruction::DUP2 << Instruction::SLOAD;
 	// stack: value ref (1<<(8*(31-byte_number))) old_full_value
 	// clear byte in old value
-	m_context << Instruction::DUP2 << u256(0xff) << Instruction::MUL
-		<< Instruction::NOT << Instruction::AND;
+	m_context << Instruction::DUP2 << u256(0xff) << Instruction::MUL << Instruction::NOT
+			  << Instruction::AND;
 	// stack: value ref (1<<(32-byte_number)) old_full_value_with_cleared_byte
 	m_context << Instruction::SWAP1;
-	m_context << (u256(1) << (256 - 8)) << Instruction::DUP5 << Instruction::DIV
-		<< Instruction::MUL << Instruction::OR;
+	m_context << (u256(1) << (256 - 8)) << Instruction::DUP5 << Instruction::DIV << Instruction::MUL
+			  << Instruction::OR;
 	// stack: value ref new_full_value
 	m_context << Instruction::SWAP1 << Instruction::SSTORE;
 	if (_move)
@@ -521,8 +538,7 @@ TupleObject::TupleObject(
 	std::vector<std::unique_ptr<LValue>>&& _lvalues
 ):
 	LValue(_compilerContext), m_lvalues(move(_lvalues))
-{
-}
+{}
 
 unsigned TupleObject::sizeOnStack() const
 {

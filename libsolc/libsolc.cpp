@@ -43,9 +43,9 @@ using solidity::frontend::StandardCompiler;
 
 namespace
 {
-
-// The strings in this list must not be resized after they have been added here (via solidity_alloc()), because
-// this may potentially change the pointer that was passed to the caller from solidity_alloc().
+// The strings in this list must not be resized after they have been added here (via
+// solidity_alloc()), because this may potentially change the pointer that was passed to the caller
+// from solidity_alloc().
 static list<string> solidityAllocations;
 
 /// Find the equivalent to @p _data in the list of allocations of solidity_alloc(),
@@ -116,20 +116,20 @@ string compile(string _input, CStyleReadFileCallback _readCallback, void* _readC
 
 }
 
-extern "C"
-{
+extern "C" {
 extern char const* solidity_license() noexcept
 {
 	static string fullLicenseText = otherLicenses + licenseText;
 	return fullLicenseText.c_str();
 }
 
-extern char const* solidity_version() noexcept
-{
-	return frontend::VersionString.c_str();
-}
+extern char const* solidity_version() noexcept { return frontend::VersionString.c_str(); }
 
-extern char* solidity_compile(char const* _input, CStyleReadFileCallback _readCallback, void* _readContext) noexcept
+extern char* solidity_compile(
+	char const* _input,
+	CStyleReadFileCallback _readCallback,
+	void* _readContext
+) noexcept
 {
 	return solidityAllocations.emplace_back(compile(_input, _readCallback, _readContext)).data();
 }
@@ -147,10 +147,7 @@ extern char* solidity_alloc(size_t _size) noexcept
 	}
 }
 
-extern void solidity_free(char* _data) noexcept
-{
-	takeOverAllocation(_data);
-}
+extern void solidity_free(char* _data) noexcept { takeOverAllocation(_data); }
 
 extern void solidity_reset() noexcept
 {

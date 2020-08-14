@@ -37,9 +37,9 @@ using namespace solidity::yul;
 
 
 SideEffectsCollector::SideEffectsCollector(
-		Dialect const& _dialect,
-		Expression const& _expression,
-		map<YulString, SideEffects> const* _functionSideEffects
+	Dialect const& _dialect,
+	Expression const& _expression,
+	map<YulString, SideEffects> const* _functionSideEffects
 ):
 	SideEffectsCollector(_dialect, _functionSideEffects)
 {
@@ -103,7 +103,8 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	// is actually a bit different from "not movable".
 
 	map<YulString, SideEffects> ret;
-	for (auto const& function: _directCallGraph.functionsWithLoops + _directCallGraph.recursiveFunctions())
+	for (auto const& function:
+		 _directCallGraph.functionsWithLoops + _directCallGraph.recursiveFunctions())
 	{
 		ret[function].movable = false;
 		ret[function].sideEffectFree = false;
@@ -115,7 +116,8 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 		YulString funName = call.first;
 		SideEffects sideEffects;
 		util::BreadthFirstSearch<YulString>{call.second, {funName}}.run(
-			[&](YulString _function, auto&& _addChild) {
+			[&](YulString _function, auto&& _addChild)
+			{
 				if (sideEffects == SideEffects::worst())
 					return;
 				if (BuiltinFunction const* f = _dialect.builtin(_function))
@@ -166,10 +168,8 @@ pair<TerminationFinder::ControlFlow, size_t> TerminationFinder::firstUncondition
 
 TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement const& _statement)
 {
-	if (
-		holds_alternative<ExpressionStatement>(_statement) &&
-		isTerminatingBuiltin(std::get<ExpressionStatement>(_statement))
-	)
+	if (holds_alternative<ExpressionStatement>(_statement) &&
+		isTerminatingBuiltin(std::get<ExpressionStatement>(_statement)))
 		return ControlFlow::Terminate;
 	else if (holds_alternative<Break>(_statement))
 		return ControlFlow::Break;
@@ -185,8 +185,12 @@ bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStm
 {
 	if (holds_alternative<FunctionCall>(_exprStmnt.expression))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
+			if (auto const* builtin = dialect->builtin(
+					std::get<FunctionCall>(_exprStmnt.expression).functionName.name
+				))
 				if (builtin->instruction)
-					return evmasm::SemanticInformation::terminatesControlFlow(*builtin->instruction);
+					return evmasm::SemanticInformation::terminatesControlFlow(
+						*builtin->instruction
+					);
 	return false;
 }

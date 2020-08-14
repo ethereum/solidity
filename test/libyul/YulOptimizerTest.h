@@ -44,7 +44,6 @@ struct Dialect;
 
 namespace solidity::yul::test
 {
-
 class YulOptimizerTest: public solidity::frontend::test::EVMVersionRestrictedTestCase
 {
 public:
@@ -55,7 +54,11 @@ public:
 
 	explicit YulOptimizerTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool const _formatted = false
+	) override;
 
 private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);

@@ -64,10 +64,7 @@ void Disambiguator::leaveFunction(FunctionDefinition const& _function)
 	leaveScopeInternal(*m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()));
 }
 
-void Disambiguator::enterScopeInternal(Scope& _scope)
-{
-	m_scopes.push_back(&_scope);
-}
+void Disambiguator::enterScopeInternal(Scope& _scope) { m_scopes.push_back(&_scope); }
 
 void Disambiguator::leaveScopeInternal(Scope& _scope)
 {

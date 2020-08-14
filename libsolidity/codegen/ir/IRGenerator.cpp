@@ -55,7 +55,11 @@ pair<string, string> IRGenerator::run(
 {
 	string const ir = yul::reindent(generate(_contract, _otherYulSources));
 
-	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	yul::AssemblyStack asmStack(
+		m_evmVersion,
+		yul::AssemblyStack::Language::StrictAssembly,
+		m_optimiserSettings
+	);
 	if (!asmStack.parseAndAnalyze("", ir))
 	{
 		string errorMessage;
@@ -81,7 +85,10 @@ string IRGenerator::generate(
 	map<ContractDefinition const*, string const> const& _otherYulSources
 )
 {
-	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> string
+	auto subObjectSources =
+		[&_otherYulSources](
+			std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects
+		) -> string
 	{
 		std::string subObjectsSources;
 		for (ContractDefinition const* subObject: subObjects)
@@ -128,10 +135,11 @@ string IRGenerator::generate(
 	{
 		for (size_t i = 0; i < constructor->parameters().size(); ++i)
 			constructorParams.emplace_back(m_context.newYulVariable());
-		t(
-			"copyConstructorArguments",
-			m_utils.copyConstructorArgumentsToMemoryFunction(_contract, IRNames::creationObject(_contract))
-		);
+		t("copyConstructorArguments",
+		  m_utils.copyConstructorArgumentsToMemoryFunction(
+			  _contract,
+			  IRNames::creationObject(_contract)
+		  ));
 	}
 	t("constructorParams", joinHumanReadable(constructorParams));
 	t("constructorHasParams", !constructorParams.empty());
@@ -187,8 +195,11 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 	for (YulArity const& arity: internalDispatchMap | boost::adaptors::map_keys)
 	{
 		string funName = IRNames::internalDispatch(arity);
-		m_context.functionCollector().createFunction(funName, [&]() {
-			Whiskers templ(R"(
+		m_context.functionCollector().createFunction(
+			funName,
+			[&]()
+			{
+				Whiskers templ(R"(
 				function <functionName>(fun<?+in>, <in></+in>) <?+out>-> <out></+out> {
 					switch fun
 					<#cases>
@@ -200,38 +211,44 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 					default { invalid() }
 				}
 			)");
-			templ("functionName", funName);
-			templ("in", suffixedVariableNameList("in_", 0, arity.in));
-			templ("out", suffixedVariableNameList("out_", 0, arity.out));
+				templ("functionName", funName);
+				templ("in", suffixedVariableNameList("in_", 0, arity.in));
+				templ("out", suffixedVariableNameList("out_", 0, arity.out));
 
-			vector<map<string, string>> cases;
-			for (FunctionDefinition const* function: internalDispatchMap.at(arity))
-			{
-				solAssert(function, "");
-				solAssert(
-					YulArity::fromType(*TypeProvider::function(*function, FunctionType::Kind::Internal)) == arity,
-					"A single dispatch function can only handle functions of one arity"
-				);
-				solAssert(!function->isConstructor(), "");
-				// 0 is reserved for uninitialized function pointers
-				solAssert(function->id() != 0, "Unexpected function ID: 0");
-				solAssert(m_context.functionCollector().contains(IRNames::function(*function)), "");
+				vector<map<string, string>> cases;
+				for (FunctionDefinition const* function: internalDispatchMap.at(arity))
+				{
+					solAssert(function, "");
+					solAssert(
+						YulArity::fromType(
+							*TypeProvider::function(*function, FunctionType::Kind::Internal)
+						) == arity,
+						"A single dispatch function can only handle functions of one arity"
+					);
+					solAssert(!function->isConstructor(), "");
+					// 0 is reserved for uninitialized function pointers
+					solAssert(function->id() != 0, "Unexpected function ID: 0");
+					solAssert(
+						m_context.functionCollector().contains(IRNames::function(*function)),
+						""
+					);
 
-				cases.emplace_back(map<string, string>{
-					{"funID", to_string(function->id())},
-					{"name", IRNames::function(*function)}
-				});
+					cases.emplace_back(map<string, string>{
+						{"funID", to_string(function->id())},
+						{"name", IRNames::function(*function)}});
+				}
+
+				templ("cases", move(cases));
+				return templ.render();
 			}
-
-			templ("cases", move(cases));
-			return templ.render();
-		});
+		);
 	}
 
 	solAssert(m_context.internalDispatchClean(), "");
 	solAssert(
 		m_context.functionGenerationQueueEmpty(),
-		"Internal dispatch generation must not add new functions to generation queue because they won't be proeessed."
+		"Internal dispatch generation must not add new functions to generation queue because they "
+		"won't be proeessed."
 	);
 
 	return internalDispatchMap;
@@ -240,174 +257,185 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
 	string functionName = IRNames::function(_function);
-	return m_context.functionCollector().createFunction(functionName, [&]() {
-		Whiskers t(R"(
+	return m_context.functionCollector().createFunction(
+		functionName,
+		[&]()
+		{
+			Whiskers t(R"(
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
 				<initReturnVariables>
 				<body>
 			}
 		)");
-		t("functionName", functionName);
-		vector<string> params;
-		for (auto const& varDecl: _function.parameters())
-			params += m_context.addLocalVariable(*varDecl).stackSlots();
-		t("params", joinHumanReadable(params));
-		vector<string> retParams;
-		string retInit;
-		for (auto const& varDecl: _function.returnParameters())
-		{
-			retParams += m_context.addLocalVariable(*varDecl).stackSlots();
-			retInit += generateInitialAssignment(*varDecl);
+			t("functionName", functionName);
+			vector<string> params;
+			for (auto const& varDecl: _function.parameters())
+				params += m_context.addLocalVariable(*varDecl).stackSlots();
+			t("params", joinHumanReadable(params));
+			vector<string> retParams;
+			string retInit;
+			for (auto const& varDecl: _function.returnParameters())
+			{
+				retParams += m_context.addLocalVariable(*varDecl).stackSlots();
+				retInit += generateInitialAssignment(*varDecl);
+			}
+			t("retParams", joinHumanReadable(retParams));
+			t("initReturnVariables", retInit);
+			t("body", generate(_function.body()));
+			return t.render();
 		}
-		t("retParams", joinHumanReadable(retParams));
-		t("initReturnVariables", retInit);
-		t("body", generate(_function.body()));
-		return t.render();
-	});
+	);
 }
 
 string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 {
 	string functionName = IRNames::function(_varDecl);
-	return m_context.functionCollector().createFunction(functionName, [&]() {
-		Type const* type = _varDecl.annotation().type;
-
-		solAssert(_varDecl.isStateVariable(), "");
-
-		FunctionType accessorType(_varDecl);
-		TypePointers paramTypes = accessorType.parameterTypes();
-		if (_varDecl.immutable())
+	return m_context.functionCollector().createFunction(
+		functionName,
+		[&]()
 		{
-			solAssert(paramTypes.empty(), "");
-			solUnimplementedAssert(type->sizeOnStack() == 1, "");
-			return Whiskers(R"(
+			Type const* type = _varDecl.annotation().type;
+
+			solAssert(_varDecl.isStateVariable(), "");
+
+			FunctionType accessorType(_varDecl);
+			TypePointers paramTypes = accessorType.parameterTypes();
+			if (_varDecl.immutable())
+			{
+				solAssert(paramTypes.empty(), "");
+				solUnimplementedAssert(type->sizeOnStack() == 1, "");
+				return Whiskers(R"(
 				function <functionName>() -> rval {
 					rval := loadimmutable("<id>")
 				}
-			)")
-			("functionName", functionName)
-			("id", to_string(_varDecl.id()))
-			.render();
-		}
-		else if (_varDecl.isConstant())
-		{
-			solAssert(paramTypes.empty(), "");
-			return Whiskers(R"(
+			)")("functionName", functionName)("id", to_string(_varDecl.id()))
+					.render();
+			}
+			else if (_varDecl.isConstant())
+			{
+				solAssert(paramTypes.empty(), "");
+				return Whiskers(R"(
 				function <functionName>() -> <ret> {
 					<ret> := <constantValueFunction>()
 				}
-			)")
-			("functionName", functionName)
-			("constantValueFunction", IRGeneratorForStatements(m_context, m_utils).constantValueFunction(_varDecl))
-			("ret", suffixedVariableNameList("ret_", 0, _varDecl.type()->sizeOnStack()))
-			.render();
-		}
+			)")("functionName", functionName)(
+						   "constantValueFunction",
+						   IRGeneratorForStatements(m_context, m_utils)
+							   .constantValueFunction(_varDecl)
+				)("ret", suffixedVariableNameList("ret_", 0, _varDecl.type()->sizeOnStack()))
+					.render();
+			}
 
-		string code;
+			string code;
 
-		auto const& location = m_context.storageLocationOfVariable(_varDecl);
-		code += Whiskers(R"(
+			auto const& location = m_context.storageLocationOfVariable(_varDecl);
+			code += Whiskers(R"(
 			let slot := <slot>
 			let offset := <offset>
-		)")
-		("slot", location.first.str())
-		("offset", to_string(location.second))
-		.render();
+		)")("slot", location.first.str())("offset", to_string(location.second))
+						.render();
 
-		if (!paramTypes.empty())
-			solAssert(
-				location.second == 0,
-				"If there are parameters, we are dealing with structs or mappings and thus should have offset zero."
-			);
+			if (!paramTypes.empty())
+				solAssert(
+					location.second == 0,
+					"If there are parameters, we are dealing with structs or mappings and thus "
+					"should have offset zero."
+				);
 
-		// The code of an accessor is of the form `x[a][b][c]` (it is slightly more complicated
-		// if the final type is a struct).
-		// In each iteration of the loop below, we consume one parameter, perform an
-		// index access, reassign the yul variable `slot` and move @a currentType further "down".
-		// The initial value of @a currentType is only used if we skip the loop completely.
-		TypePointer currentType = _varDecl.annotation().type;
+			// The code of an accessor is of the form `x[a][b][c]` (it is slightly more complicated
+			// if the final type is a struct).
+			// In each iteration of the loop below, we consume one parameter, perform an
+			// index access, reassign the yul variable `slot` and move @a currentType further
+			// "down". The initial value of @a currentType is only used if we skip the loop
+			// completely.
+			TypePointer currentType = _varDecl.annotation().type;
 
-		vector<string> parameters;
-		vector<string> returnVariables;
+			vector<string> parameters;
+			vector<string> returnVariables;
 
-		for (size_t i = 0; i < paramTypes.size(); ++i)
-		{
-			MappingType const* mappingType = dynamic_cast<MappingType const*>(currentType);
-			ArrayType const* arrayType = dynamic_cast<ArrayType const*>(currentType);
-			solAssert(mappingType || arrayType, "");
-
-			vector<string> keys = IRVariable("key_" + to_string(i),
-				mappingType ? *mappingType->keyType() : *TypeProvider::uint256()
-			).stackSlots();
-			parameters += keys;
-			code += Whiskers(R"(
-				slot<?array>, offset</array> := <indexAccess>(slot<?+keys>, <keys></+keys>)
-			)")
-			(
-				"indexAccess",
-				mappingType ?
-				m_utils.mappingIndexAccessFunction(*mappingType, *mappingType->keyType()) :
-				m_utils.storageArrayIndexAccessFunction(*arrayType)
-			)
-			("array", arrayType != nullptr)
-			("keys", joinHumanReadable(keys))
-			.render();
-
-			currentType = mappingType ? mappingType->valueType() : arrayType->baseType();
-		}
-
-		auto returnTypes = accessorType.returnParameterTypes();
-		solAssert(returnTypes.size() >= 1, "");
-		if (StructType const* structType = dynamic_cast<StructType const*>(currentType))
-		{
-			solAssert(location.second == 0, "");
-			auto const& names = accessorType.returnParameterNames();
-			for (size_t i = 0; i < names.size(); ++i)
+			for (size_t i = 0; i < paramTypes.size(); ++i)
 			{
-				if (returnTypes[i]->category() == Type::Category::Mapping)
-					continue;
-				if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]))
-					if (!arrayType->isByteArray())
-						continue;
+				MappingType const* mappingType = dynamic_cast<MappingType const*>(currentType);
+				ArrayType const* arrayType = dynamic_cast<ArrayType const*>(currentType);
+				solAssert(mappingType || arrayType, "");
 
-				// TODO conversion from storage byte arrays is not yet implemented.
-				pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
-				vector<string> retVars = IRVariable("ret_" + to_string(returnVariables.size()), *returnTypes[i]).stackSlots();
-				returnVariables += retVars;
+				vector<string> keys =
+					IRVariable(
+						"key_" + to_string(i),
+						mappingType ? *mappingType->keyType() : *TypeProvider::uint256()
+					)
+						.stackSlots();
+				parameters += keys;
 				code += Whiskers(R"(
-					<ret> := <readStorage>(add(slot, <slotOffset>))
-				)")
-				("ret", joinHumanReadable(retVars))
-				("readStorage", m_utils.readFromStorage(*returnTypes[i], offsets.second, true))
-				("slotOffset", offsets.first.str())
-				.render();
-			}
-		}
-		else
-		{
-			solAssert(returnTypes.size() == 1, "");
-			vector<string> retVars = IRVariable("ret", *returnTypes.front()).stackSlots();
-			returnVariables += retVars;
-			// TODO conversion from storage byte arrays is not yet implemented.
-			code += Whiskers(R"(
-				<ret> := <readStorage>(slot, offset)
-			)")
-			("ret", joinHumanReadable(retVars))
-			("readStorage", m_utils.readFromStorageDynamic(*returnTypes.front(), true))
-			.render();
-		}
+				slot<?array>, offset</array> := <indexAccess>(slot<?+keys>, <keys></+keys>)
+			)")("indexAccess",
+					mappingType ?
+					  m_utils.mappingIndexAccessFunction(*mappingType, *mappingType->keyType()) :
+					  m_utils.storageArrayIndexAccessFunction(*arrayType))(
+							"array",
+							arrayType != nullptr
+				)("keys", joinHumanReadable(keys))
+							.render();
 
-		return Whiskers(R"(
+				currentType = mappingType ? mappingType->valueType() : arrayType->baseType();
+			}
+
+			auto returnTypes = accessorType.returnParameterTypes();
+			solAssert(returnTypes.size() >= 1, "");
+			if (StructType const* structType = dynamic_cast<StructType const*>(currentType))
+			{
+				solAssert(location.second == 0, "");
+				auto const& names = accessorType.returnParameterNames();
+				for (size_t i = 0; i < names.size(); ++i)
+				{
+					if (returnTypes[i]->category() == Type::Category::Mapping)
+						continue;
+					if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]))
+						if (!arrayType->isByteArray())
+							continue;
+
+					// TODO conversion from storage byte arrays is not yet implemented.
+					pair<u256, unsigned> const& offsets =
+						structType->storageOffsetsOfMember(names[i]);
+					vector<string> retVars =
+						IRVariable("ret_" + to_string(returnVariables.size()), *returnTypes[i])
+							.stackSlots();
+					returnVariables += retVars;
+					code += Whiskers(R"(
+					<ret> := <readStorage>(add(slot, <slotOffset>))
+				)")("ret", joinHumanReadable(retVars))(
+								"readStorage",
+								m_utils.readFromStorage(*returnTypes[i], offsets.second, true)
+					)("slotOffset", offsets.first.str())
+								.render();
+				}
+			}
+			else
+			{
+				solAssert(returnTypes.size() == 1, "");
+				vector<string> retVars = IRVariable("ret", *returnTypes.front()).stackSlots();
+				returnVariables += retVars;
+				// TODO conversion from storage byte arrays is not yet implemented.
+				code += Whiskers(R"(
+				<ret> := <readStorage>(slot, offset)
+			)")("ret", joinHumanReadable(retVars))(
+							"readStorage",
+							m_utils.readFromStorageDynamic(*returnTypes.front(), true)
+				)
+							.render();
+			}
+
+			return Whiskers(R"(
 			function <functionName>(<params>) -> <retVariables> {
 				<code>
 			}
-		)")
-		("functionName", functionName)
-		("params", joinHumanReadable(parameters))
-		("retVariables", joinHumanReadable(returnVariables))
-		("code", std::move(code))
-		.render();
-	});
+		)")("functionName", functionName)("params", joinHumanReadable(parameters))(
+					   "retVariables",
+					   joinHumanReadable(returnVariables)
+			)("code", std::move(code))
+				.render();
+		}
+	);
 }
 
 string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDecl)
@@ -417,17 +445,20 @@ string IRGenerator::generateInitialAssignment(VariableDeclaration const& _varDec
 	return generator.code();
 }
 
-pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evaluateConstructorArguments(
-	ContractDefinition const& _contract
-)
+pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::
+	evaluateConstructorArguments(ContractDefinition const& _contract)
 {
 	map<ContractDefinition const*, vector<string>> constructorParams;
-	vector<pair<ContractDefinition const*, std::vector<ASTPointer<Expression>>const *>> baseConstructorArguments;
+	vector<pair<ContractDefinition const*, std::vector<ASTPointer<Expression>> const*>>
+		baseConstructorArguments;
 
 	for (ASTPointer<InheritanceSpecifier> const& base: _contract.baseContracts())
-		if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
-				base->name().annotation().referencedDeclaration
-		)->constructor(); baseConstructor && base->arguments())
+		if (FunctionDefinition const* baseConstructor =
+				dynamic_cast<ContractDefinition const*>(
+					base->name().annotation().referencedDeclaration
+				)
+					->constructor();
+			baseConstructor && base->arguments())
 			baseConstructorArguments.emplace_back(
 				dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
 				base->arguments()
@@ -436,12 +467,10 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		for (ASTPointer<ModifierInvocation> const& modifier: constructor->modifiers())
 			if (auto const* baseContract = dynamic_cast<ContractDefinition const*>(
-				modifier->name()->annotation().referencedDeclaration
-			))
-				if (
-					FunctionDefinition const* baseConstructor = baseContract->constructor();
-					baseConstructor && modifier->arguments()
-				)
+					modifier->name()->annotation().referencedDeclaration
+				))
+				if (FunctionDefinition const* baseConstructor = baseContract->constructor();
+					baseConstructor && modifier->arguments())
 					baseConstructorArguments.emplace_back(
 						dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
 						modifier->arguments()
@@ -455,10 +484,12 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 		{
 			vector<string> params;
 			for (size_t i = 0; i < arguments->size(); ++i)
-				params += generator.evaluateExpression(
-					*(arguments->at(i)),
-					*(baseContract->constructor()->parameters()[i]->type())
-				).stackSlots();
+				params += generator
+							  .evaluateExpression(
+								  *(arguments->at(i)),
+								  *(baseContract->constructor()->parameters()[i]->type())
+							  )
+							  .stackSlots();
 			constructorParams[baseContract] = std::move(params);
 		}
 	}
@@ -479,8 +510,8 @@ string IRGenerator::initStateVariables(ContractDefinition const& _contract)
 
 void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contract)
 {
-	auto listAllParams = [&](
-		map<ContractDefinition const*, vector<string>> const& baseParams) -> vector<string>
+	auto listAllParams =
+		[&](map<ContractDefinition const*, vector<string>> const& baseParams) -> vector<string>
 	{
 		vector<string> params;
 		for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
@@ -495,8 +526,11 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 		ContractDefinition const* contract = _contract.annotation().linearizedBaseContracts[i];
 		baseConstructorParams.erase(contract);
 
-		m_context.functionCollector().createFunction(IRNames::implicitConstructor(*contract), [&]() {
-			Whiskers t(R"(
+		m_context.functionCollector().createFunction(
+			IRNames::implicitConstructor(*contract),
+			[&]()
+			{
+				Whiskers t(R"(
 				function <functionName>(<params><comma><baseParams>) {
 					<evalBaseArguments>
 					<?hasNextConstructor> <nextConstructor>(<nextParams>) </hasNextConstructor>
@@ -504,32 +538,40 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 					<userDefinedConstructorBody>
 				}
 			)");
-			vector<string> params;
-			if (contract->constructor())
-				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
-					params += m_context.addLocalVariable(*varDecl).stackSlots();
-			t("params", joinHumanReadable(params));
-			vector<string> baseParams = listAllParams(baseConstructorParams);
-			t("baseParams", joinHumanReadable(baseParams));
-			t("comma", !params.empty() && !baseParams.empty() ? ", " : "");
-			t("functionName", IRNames::implicitConstructor(*contract));
-			pair<string, map<ContractDefinition const*, vector<string>>> evaluatedArgs = evaluateConstructorArguments(*contract);
-			baseConstructorParams.insert(evaluatedArgs.second.begin(), evaluatedArgs.second.end());
-			t("evalBaseArguments", evaluatedArgs.first);
-			if (i < _contract.annotation().linearizedBaseContracts.size() - 1)
-			{
-				t("hasNextConstructor", true);
-				ContractDefinition const* nextContract = _contract.annotation().linearizedBaseContracts[i + 1];
-				t("nextConstructor", IRNames::implicitConstructor(*nextContract));
-				t("nextParams", joinHumanReadable(listAllParams(baseConstructorParams)));
-			}
-			else
-				t("hasNextConstructor", false);
-			t("initStateVariables", initStateVariables(*contract));
-			t("userDefinedConstructorBody", contract->constructor() ? generate(contract->constructor()->body()) : "");
+				vector<string> params;
+				if (contract->constructor())
+					for (ASTPointer<VariableDeclaration> const& varDecl:
+						 contract->constructor()->parameters())
+						params += m_context.addLocalVariable(*varDecl).stackSlots();
+				t("params", joinHumanReadable(params));
+				vector<string> baseParams = listAllParams(baseConstructorParams);
+				t("baseParams", joinHumanReadable(baseParams));
+				t("comma", !params.empty() && !baseParams.empty() ? ", " : "");
+				t("functionName", IRNames::implicitConstructor(*contract));
+				pair<string, map<ContractDefinition const*, vector<string>>> evaluatedArgs =
+					evaluateConstructorArguments(*contract);
+				baseConstructorParams.insert(
+					evaluatedArgs.second.begin(),
+					evaluatedArgs.second.end()
+				);
+				t("evalBaseArguments", evaluatedArgs.first);
+				if (i < _contract.annotation().linearizedBaseContracts.size() - 1)
+				{
+					t("hasNextConstructor", true);
+					ContractDefinition const* nextContract =
+						_contract.annotation().linearizedBaseContracts[i + 1];
+					t("nextConstructor", IRNames::implicitConstructor(*nextContract));
+					t("nextParams", joinHumanReadable(listAllParams(baseConstructorParams)));
+				}
+				else
+					t("hasNextConstructor", false);
+				t("initStateVariables", initStateVariables(*contract));
+				t("userDefinedConstructorBody",
+				  contract->constructor() ? generate(contract->constructor()->body()) : "");
 
-			return t.render();
-		});
+				return t.render();
+			}
+		);
 	}
 }
 
@@ -560,12 +602,10 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 		string yulVar = m_context.newYulVariable();
 		loadImmutables.emplace_back(map<string, string>{
 			{"var"s, yulVar},
-			{"memoryOffset"s, to_string(m_context.immutableMemoryOffset(*immutable))}
-		});
-		storeImmutables.emplace_back(map<string, string>{
-			{"var"s, yulVar},
-			{"immutableName"s, to_string(immutable->id())}
-		});
+			{"memoryOffset"s, to_string(m_context.immutableMemoryOffset(*immutable))}});
+		storeImmutables.emplace_back(
+			map<string, string>{{"var"s, yulVar}, {"immutableName"s, to_string(immutable->id())}}
+		);
 	}
 	t("loadImmutables", std::move(loadImmutables));
 	// reverse order to ease stack strain
@@ -574,10 +614,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 	return t.render();
 }
 
-string IRGenerator::callValueCheck()
-{
-	return "if callvalue() { revert(0, 0) }";
-}
+string IRGenerator::callValueCheck() { return "if callvalue() { revert(0, 0) }"; }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 {
@@ -617,20 +654,32 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		unsigned paramVars = make_shared<TupleType>(type->parameterTypes())->sizeOnStack();
 		unsigned retVars = make_shared<TupleType>(type->returnParameterTypes())->sizeOnStack();
 
-		ABIFunctions abiFunctions(m_evmVersion, m_context.revertStrings(), m_context.functionCollector());
+		ABIFunctions abiFunctions(
+			m_evmVersion,
+			m_context.revertStrings(),
+			m_context.functionCollector()
+		);
 		templ["abiDecode"] = abiFunctions.tupleDecoder(type->parameterTypes());
 		templ["params"] = suffixedVariableNameList("param_", 0, paramVars);
 		templ["retParams"] = suffixedVariableNameList("ret_", 0, retVars);
 
-		if (FunctionDefinition const* funDef = dynamic_cast<FunctionDefinition const*>(&type->declaration()))
+		if (FunctionDefinition const* funDef =
+				dynamic_cast<FunctionDefinition const*>(&type->declaration()))
 			templ["function"] = m_context.enqueueFunctionForCodeGeneration(*funDef);
-		else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(&type->declaration()))
+		else if (
+			VariableDeclaration const* varDecl =
+				dynamic_cast<VariableDeclaration const*>(&type->declaration())
+		)
 			templ["function"] = generateGetter(*varDecl);
 		else
 			solAssert(false, "Unexpected declaration for function!");
 
 		templ["allocate"] = m_utils.allocationFunction();
-		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), false);
+		templ["abiEncode"] = abiFunctions.tupleEncoder(
+			type->returnParameterTypes(),
+			type->returnParameterTypes(),
+			false
+		);
 	}
 	t("cases", functions);
 	if (FunctionDefinition const* fallback = _contract.fallbackFunction())
@@ -656,10 +705,11 @@ string IRGenerator::memoryInit()
 	// This function should be called at the beginning of the EVM call frame
 	// and thus can assume all memory to be zero, including the contents of
 	// the "zero memory area" (the position CompilerUtils::zeroPointer points to).
-	return
-		Whiskers{"mstore(<memPtr>, <freeMemoryStart>)"}
-		("memPtr", to_string(CompilerUtils::freeMemoryPointer))
-		("freeMemoryStart", to_string(CompilerUtils::generalPurposeMemoryStart + m_context.reservedMemory()))
+	return Whiskers{"mstore(<memPtr>, <freeMemoryStart>)"}(
+			   "memPtr",
+			   to_string(CompilerUtils::freeMemoryPointer)
+	)("freeMemoryStart",
+	  to_string(CompilerUtils::generalPurposeMemoryStart + m_context.reservedMemory()))
 		.render();
 }
 

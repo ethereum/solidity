@@ -30,7 +30,6 @@
 
 namespace solidity::langutil
 {
-
 class ErrorReporter;
 class Scanner;
 struct ErrorId;
@@ -42,7 +41,8 @@ public:
 	/// recovery.  This is experimental and intended for use
 	/// by front-end tools that need partial AST information even
 	/// when errors occur.
-	explicit ParserBase(ErrorReporter& errorReporter, bool _parserErrorRecovery = false): m_errorReporter(errorReporter)
+	explicit ParserBase(ErrorReporter& errorReporter, bool _parserErrorRecovery = false):
+		m_errorReporter(errorReporter)
 	{
 		m_parserErrorRecovery = _parserErrorRecovery;
 	}
@@ -60,6 +60,7 @@ protected:
 			m_parser.increaseRecursionDepth();
 		}
 		~RecursionGuard() { m_parser.decreaseRecursionDepth(); }
+
 	private:
 		ParserBase& m_parser;
 	};
@@ -76,7 +77,11 @@ protected:
 	/// Like expectToken but if there is an error ignores tokens until
 	/// the expected token or EOS is seen. If EOS is encountered, back up to the error point,
 	/// and throw an exception so that a higher grammar rule has an opportunity to recover.
-	void expectTokenOrConsumeUntil(Token _value, std::string const& _currentNodeName, bool _advance = true);
+	void expectTokenOrConsumeUntil(
+		Token _value,
+		std::string const& _currentNodeName,
+		bool _advance = true
+	);
 	Token currentToken() const;
 	Token peekNextToken() const;
 	std::string tokenName(Token _token);
@@ -91,17 +96,29 @@ protected:
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description.
 	void parserError(ErrorId _error, std::string const& _description);
-	void parserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void parserError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
 	/// Creates a @ref ParserWarning and annotates it with the current position and the
 	/// given @a _description.
 	void parserWarning(ErrorId _error, std::string const& _description);
-	void parserWarning(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void parserWarning(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
 	/// Creates a @ref ParserError and annotates it with the current position and the
 	/// given @a _description. Throws the FatalError.
 	void fatalParserError(ErrorId _error, std::string const& _description);
-	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void fatalParserError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
 	std::shared_ptr<Scanner> m_scanner;
 	/// The reference to the list of errors and warning to add errors/warnings during parsing

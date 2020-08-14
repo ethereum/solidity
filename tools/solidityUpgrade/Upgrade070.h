@@ -22,12 +22,12 @@
 
 namespace solidity::tools
 {
-
 class DotSyntax: public AnalysisUpgrade
 {
 public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::FunctionCall const& _expression) override;
 };
@@ -37,6 +37,7 @@ class NowKeyword: public AnalysisUpgrade
 public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::Identifier const& _expression) override;
 };
@@ -46,6 +47,7 @@ class ConstructorVisibility: public AnalysisUpgrade
 public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::ContractDefinition const& _contract) override;
 };

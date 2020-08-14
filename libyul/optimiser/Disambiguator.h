@@ -48,8 +48,7 @@ public:
 		m_dialect(_dialect),
 		m_externallyUsedIdentifiers(_externallyUsedIdentifiers),
 		m_nameDispenser(_dialect, m_externallyUsedIdentifiers)
-	{
-	}
+	{}
 
 protected:
 	void enterScope(Block const& _block) override;

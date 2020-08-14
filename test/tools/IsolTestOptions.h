@@ -26,7 +26,6 @@
 
 namespace solidity::test
 {
-
 struct IsolTestOptions: CommonOptions
 {
 	bool showHelp = false;

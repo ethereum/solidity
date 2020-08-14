@@ -40,7 +40,8 @@ struct OptimiserStepContext;
  *
  * Furthermore, for all parameters, all of the following need to be true
  *  - the argument is movable
- *  - the parameter is either referenced less than twice in the function body, or the argument is rather cheap
+ *  - the parameter is either referenced less than twice in the function body, or the argument is
+ * rather cheap
  *    ("cost" of at most 1 like a constant up to 0xff)
  *
  * This component can only be used on sources with unique names.
@@ -60,7 +61,8 @@ private:
 	ExpressionInliner(
 		Dialect const& _dialect,
 		std::map<YulString, FunctionDefinition const*> const& _inlinableFunctions
-	): m_dialect(_dialect), m_inlinableFunctions(_inlinableFunctions)
+	):
+		m_dialect(_dialect), m_inlinableFunctions(_inlinableFunctions)
 	{}
 
 	Dialect const& m_dialect;

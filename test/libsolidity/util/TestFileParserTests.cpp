@@ -35,7 +35,6 @@ using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
-
 using fmt = ExecutionFramework;
 using Mode = FunctionCall::DisplayMode;
 
@@ -47,18 +46,18 @@ vector<FunctionCall> parse(string const& _source)
 }
 
 void testFunctionCall(
-		FunctionCall const& _call,
-		FunctionCall::DisplayMode _mode,
-		string _signature = "",
-		bool _failure = true,
-		bytes _arguments = bytes{},
-		bytes _expectations = bytes{},
-		FunctionValue _value = { 0 },
-		string _argumentComment = "",
-		string _expectationComment = "",
-		vector<string> _rawArguments = vector<string>{},
-		bool _isConstructor = false,
-		bool _isLibrary = false
+	FunctionCall const& _call,
+	FunctionCall::DisplayMode _mode,
+	string _signature = "",
+	bool _failure = true,
+	bytes _arguments = bytes{},
+	bytes _expectations = bytes{},
+	FunctionValue _value = {0},
+	string _argumentComment = "",
+	string _expectationComment = "",
+	vector<string> _rawArguments = vector<string>{},
+	bool _isConstructor = false,
+	bool _isLibrary = false
 )
 {
 	BOOST_REQUIRE_EQUAL(_call.expectations.failure, _failure);
@@ -183,7 +182,14 @@ BOOST_AUTO_TEST_CASE(simple_single_line_call_comment_success)
 		"",
 		" f(uint256) does not return a value. "
 	);
-	testFunctionCall(calls.at(1), Mode::SingleLine, "f(uint256)", false, fmt::encode(1), fmt::encode(1));
+	testFunctionCall(
+		calls.at(1),
+		Mode::SingleLine,
+		"f(uint256)",
+		false,
+		fmt::encode(1),
+		fmt::encode(1)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_single_line)
@@ -195,7 +201,14 @@ BOOST_AUTO_TEST_CASE(multiple_single_line)
 	auto const calls = parse(source);
 	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 
-	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(1), fmt::encodeArgs(1));
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(uint256)",
+		false,
+		fmt::encodeArgs(1),
+		fmt::encodeArgs(1)
+	);
 	testFunctionCall(calls.at(1), Mode::SingleLine, "g(uint256)", false, fmt::encodeArgs(1));
 }
 
@@ -209,8 +222,14 @@ BOOST_AUTO_TEST_CASE(multiple_single_line_swapped)
 	BOOST_REQUIRE_EQUAL(calls.size(), 2);
 
 	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(1));
-	testFunctionCall(calls.at(1), Mode::SingleLine, "g(uint256)", false, fmt::encodeArgs(1), fmt::encodeArgs(1));
-
+	testFunctionCall(
+		calls.at(1),
+		Mode::SingleLine,
+		"g(uint256)",
+		false,
+		fmt::encodeArgs(1),
+		fmt::encodeArgs(1)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(non_existent_call_revert)
@@ -330,7 +349,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_ether)
 		false,
 		fmt::encodeArgs(5),
 		fmt::encodeArgs(4),
-		{exp256(u256(10), u256(18)) , FunctionValueUnit::Ether},
+		{exp256(u256(10), u256(18)), FunctionValueUnit::Ether},
 		" optional ether value "
 	);
 }
@@ -359,7 +378,13 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values)
 	)";
 	auto const calls = parse(source);
 	BOOST_REQUIRE_EQUAL(calls.size(), 1);
-	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x20\x00\xff", 3)));
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(uint256)",
+		false,
+		fmt::encodeArgs(string("\x20\x00\xff", 3))
+	);
 }
 
 BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid1)
@@ -377,7 +402,13 @@ BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid2)
 	)";
 	auto const calls = parse(source);
 	BOOST_REQUIRE_EQUAL(calls.size(), 1);
-	testFunctionCall(calls.at(0), Mode::SingleLine, "f(uint256)", false, fmt::encodeArgs(string("\x1", 1)));
+	testFunctionCall(
+		calls.at(0),
+		Mode::SingleLine,
+		"f(uint256)",
+		false,
+		fmt::encodeArgs(string("\x1", 1))
+	);
 }
 
 BOOST_AUTO_TEST_CASE(scanner_hex_values_invalid3)
@@ -459,10 +490,7 @@ BOOST_AUTO_TEST_CASE(call_hex_number)
 		Mode::SingleLine,
 		"f(bytes32,bytes32)",
 		false,
-		fmt::encodeArgs(
-			fromHex("0x616"),
-			fromHex("0x1042")
-		),
+		fmt::encodeArgs(fromHex("0x616"), fromHex("0x1042")),
 		fmt::encodeArgs(1)
 	);
 }
@@ -509,10 +537,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_left_aligned)
 		Mode::SingleLine,
 		"f(bytes32,bytes32)",
 		false,
-		fmt::encodeArgs(
-			fromHex("0x6161"),
-			fromHex("0x420000EF")
-		),
+		fmt::encodeArgs(fromHex("0x6161"), fromHex("0x420000EF")),
 		fmt::encodeArgs(1)
 	);
 	testFunctionCall(
@@ -520,10 +545,7 @@ BOOST_AUTO_TEST_CASE(call_arguments_left_aligned)
 		Mode::SingleLine,
 		"g(bytes32,bytes32)",
 		false,
-		fmt::encodeArgs(
-			fromHex("0x0616"),
-			fromHex("0x0042EF00")
-		),
+		fmt::encodeArgs(fromHex("0x0616"), fromHex("0x0042EF00")),
 		fmt::encodeArgs(1)
 	);
 }
@@ -662,7 +684,6 @@ BOOST_AUTO_TEST_CASE(call_signature_struct_array)
 	testFunctionCall(calls.at(1), Mode::SingleLine, "f((uint256)[3])", false);
 	testFunctionCall(calls.at(2), Mode::SingleLine, "f((uint256,uint8)[3])", false);
 	testFunctionCall(calls.at(3), Mode::SingleLine, "f((uint256)[3][][],(uint8,bool)[9])", false);
-
 }
 
 BOOST_AUTO_TEST_CASE(call_signature_valid)

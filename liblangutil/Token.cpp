@@ -48,10 +48,16 @@ using namespace std;
 
 namespace solidity::langutil
 {
-
-void ElementaryTypeNameToken::assertDetails(Token _baseType, unsigned const& _first, unsigned const& _second)
+void ElementaryTypeNameToken::assertDetails(
+	Token _baseType,
+	unsigned const& _first,
+	unsigned const& _second
+)
 {
-	solAssert(TokenTraits::isElementaryTypeName(_baseType), "Expected elementary type name: " + string(TokenTraits::toString(_baseType)));
+	solAssert(
+		TokenTraits::isElementaryTypeName(_baseType),
+		"Expected elementary type name: " + string(TokenTraits::toString(_baseType))
+	);
 	if (_baseType == Token::BytesM)
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");
@@ -59,17 +65,23 @@ void ElementaryTypeNameToken::assertDetails(Token _baseType, unsigned const& _fi
 	}
 	else if (_baseType == Token::UIntM || _baseType == Token::IntM)
 	{
-		solAssert(_second == 0, "There should not be a second size argument to type " + string(TokenTraits::toString(_baseType)) + ".");
+		solAssert(
+			_second == 0,
+			"There should not be a second size argument to type " +
+				string(TokenTraits::toString(_baseType)) + "."
+		);
 		solAssert(
 			_first <= 256 && _first % 8 == 0,
-			"No elementary type " + string(TokenTraits::toString(_baseType)) + to_string(_first) + "."
+			"No elementary type " + string(TokenTraits::toString(_baseType)) + to_string(_first) +
+				"."
 		);
 	}
 	else if (_baseType == Token::UFixedMxN || _baseType == Token::FixedMxN)
 	{
 		solAssert(
 			_first >= 8 && _first <= 256 && _first % 8 == 0 && _second <= 80,
-			"No elementary type " + string(TokenTraits::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
+			"No elementary type " + string(TokenTraits::toString(_baseType)) + to_string(_first) +
+				"x" + to_string(_second) + "."
 		);
 	}
 	else
@@ -86,18 +98,20 @@ char const* toString(Token tok)
 {
 	switch (tok)
 	{
-#define T(name, string, precedence) case Token::name: return string;
+#define T(name, string, precedence) \
+	case Token::name:               \
+		return string;
 		TOKEN_LIST(T, T)
 #undef T
-		default: // Token::NUM_TOKENS:
-			return "";
+	default:  // Token::NUM_TOKENS:
+		return "";
 	}
 }
 
 char const* name(Token tok)
 {
 #define T(name, string, precedence) #name,
-	static char const* const names[TokenTraits::count()] = { TOKEN_LIST(T, T) };
+	static char const* const names[TokenTraits::count()] = {TOKEN_LIST(T, T)};
 #undef T
 
 	solAssert(static_cast<size_t>(tok) < TokenTraits::count(), "");
@@ -118,10 +132,7 @@ std::string friendlyName(Token tok)
 #define T(name, string, precedence) precedence,
 int precedence(Token tok)
 {
-	int8_t const static precs[TokenTraits::count()] =
-	{
-		TOKEN_LIST(T, T)
-	};
+	int8_t const static precs[TokenTraits::count()] = {TOKEN_LIST(T, T)};
 	return precs[static_cast<size_t>(tok)];
 }
 #undef T
@@ -133,7 +144,7 @@ int parseSize(string::const_iterator _begin, string::const_iterator _end)
 		int m = boost::lexical_cast<int>(boost::make_iterator_range(_begin, _end));
 		return m;
 	}
-	catch(boost::bad_lexical_cast const&)
+	catch (boost::bad_lexical_cast const&)
 	{
 		return -1;
 	}
@@ -178,17 +189,12 @@ tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _
 		}
 		else if (keyword == Token::UFixed || keyword == Token::Fixed)
 		{
-			if (
-				positionM < positionX &&
-				positionX < _literal.end() &&
-				*positionX == 'x' &&
-				all_of(positionX + 1, _literal.end(), ::isdigit)
-			) {
+			if (positionM < positionX && positionX < _literal.end() && *positionX == 'x' &&
+				all_of(positionX + 1, _literal.end(), ::isdigit))
+			{
 				int n = parseSize(positionX + 1, _literal.end());
-				if (
-					8 <= m && m <= 256 && m % 8 == 0 &&
-					0 <= n && n <= 80
-				) {
+				if (8 <= m && m <= 256 && m % 8 == 0 && 0 <= n && n <= 80)
+				{
 					if (keyword == Token::UFixed)
 						return make_tuple(Token::UFixedMxN, m, n);
 					else

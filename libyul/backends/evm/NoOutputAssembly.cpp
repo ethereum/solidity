@@ -45,10 +45,7 @@ void NoOutputAssembly::appendConstant(u256 const&)
 	appendInstruction(evmasm::pushInstruction(1));
 }
 
-void NoOutputAssembly::appendLabel(LabelID)
-{
-	appendInstruction(evmasm::Instruction::JUMPDEST);
-}
+void NoOutputAssembly::appendLabel(LabelID) { appendInstruction(evmasm::Instruction::JUMPDEST); }
 
 void NoOutputAssembly::appendLabelReference(LabelID)
 {
@@ -56,15 +53,9 @@ void NoOutputAssembly::appendLabelReference(LabelID)
 	appendInstruction(evmasm::pushInstruction(1));
 }
 
-NoOutputAssembly::LabelID NoOutputAssembly::newLabelId()
-{
-	return 1;
-}
+NoOutputAssembly::LabelID NoOutputAssembly::newLabelId() { return 1; }
 
-AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&)
-{
-	return 1;
-}
+AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&) { return 1; }
 
 void NoOutputAssembly::appendLinkerSymbol(string const&)
 {
@@ -121,10 +112,7 @@ void NoOutputAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
 	m_stackHeight += _stackDiffAfter - _returns;
 }
 
-void NoOutputAssembly::appendAssemblySize()
-{
-	appendInstruction(evmasm::Instruction::PUSH1);
-}
+void NoOutputAssembly::appendAssemblySize() { appendInstruction(evmasm::Instruction::PUSH1); }
 
 pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> NoOutputAssembly::createSubAssembly()
 {
@@ -142,10 +130,7 @@ void NoOutputAssembly::appendDataSize(std::vector<AbstractAssembly::SubID> const
 	appendInstruction(evmasm::Instruction::PUSH1);
 }
 
-AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&)
-{
-	return 1;
-}
+AbstractAssembly::SubID NoOutputAssembly::appendData(bytes const&) { return 1; }
 
 
 void NoOutputAssembly::appendImmutable(std::string const&)
@@ -164,7 +149,10 @@ NoOutputEVMDialect::NoOutputEVMDialect(EVMDialect const& _copyFrom):
 	for (auto& fun: m_functions)
 	{
 		size_t returns = fun.second.returns.size();
-		fun.second.generateCode = [=](FunctionCall const& _call, AbstractAssembly& _assembly, BuiltinContext&, std::function<void(Expression const&)> _visitExpression)
+		fun.second.generateCode = [=](FunctionCall const& _call,
+									  AbstractAssembly& _assembly,
+									  BuiltinContext&,
+									  std::function<void(Expression const&)> _visitExpression)
 		{
 			size_t visited = 0;
 			for (size_t j = 0; j < _call.arguments.size(); j++)

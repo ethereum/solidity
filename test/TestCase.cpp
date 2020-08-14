@@ -52,8 +52,8 @@ bool TestCase::isTestFilename(boost::filesystem::path const& _filename)
 {
 	string extension = _filename.extension().string();
 	return (extension == ".sol" || extension == ".yul") &&
-		   !boost::starts_with(_filename.string(), "~") &&
-			!boost::starts_with(_filename.string(), ".");
+		!boost::starts_with(_filename.string(), "~") &&
+		!boost::starts_with(_filename.string(), ".");
 }
 
 bool TestCase::shouldRun()
@@ -69,7 +69,8 @@ void TestCase::expect(string::iterator& _it, string::iterator _end, string::valu
 	++_it;
 }
 
-void TestCase::printIndented(ostream& _stream, string const& _output, string const& _linePrefix) const
+void TestCase::printIndented(ostream& _stream, string const& _output, string const& _linePrefix)
+	const
 {
 	stringstream output(_output);
 	string line;
@@ -91,7 +92,11 @@ void TestCase::printUpdatedExpectations(ostream& _stream, string const& _linePre
 	printIndented(_stream, m_obtainedResult, _linePrefix);
 }
 
-TestCase::TestResult TestCase::checkResult(std::ostream& _stream, const std::string& _linePrefix, bool const _formatted)
+TestCase::TestResult TestCase::checkResult(
+	std::ostream& _stream,
+	const std::string& _linePrefix,
+	bool const _formatted
+)
 {
 	if (m_expectation != m_obtainedResult)
 	{

@@ -28,7 +28,6 @@
 
 namespace solidity::phaser
 {
-
 /// Loads the whole file into memory, splits the content into lines, strips newlines and
 /// returns the result as a list of strings.
 ///

@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @date 2017
@@ -49,7 +49,9 @@ namespace
 {
 Dialect const& defaultDialect(bool _yul)
 {
-	return _yul ? yul::Dialect::yulDeprecated() : yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
+	return _yul ?
+		  yul::Dialect::yulDeprecated() :
+		  yul::EVMDialect::strictAssemblyForEVM(solidity::test::CommonOptions::get().evmVersion());
 }
 }
 
@@ -62,14 +64,17 @@ void yul::test::printErrors(ErrorList const& _errors)
 }
 
 
-pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
+pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
+	string const& _source,
+	bool _yul
+)
 {
 	AssemblyStack stack(
 		solidity::test::CommonOptions::get().evmVersion(),
 		_yul ? AssemblyStack::Language::Yul : AssemblyStack::Language::StrictAssembly,
 		solidity::test::CommonOptions::get().optimize ?
-			solidity::frontend::OptimiserSettings::standard() :
-			solidity::frontend::OptimiserSettings::minimal()
+			  solidity::frontend::OptimiserSettings::standard() :
+			  solidity::frontend::OptimiserSettings::minimal()
 	);
 	if (!stack.parseAndAnalyze("", _source) || !stack.errors().empty())
 		BOOST_FAIL("Invalid source.");
@@ -84,13 +89,15 @@ pair<shared_ptr<Object>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 {
 	ErrorReporter errorReporter(_errors);
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_source, ""));
-	shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
+	shared_ptr<Object> parserResult =
+		yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
 	if (!parserResult)
 		return {};
 	if (!parserResult->code || errorReporter.hasErrors())
 		return {};
 	shared_ptr<AsmAnalysisInfo> analysisInfo = make_shared<AsmAnalysisInfo>();
-	AsmAnalyzer analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
+	AsmAnalyzer
+		analyzer(*analysisInfo, errorReporter, _dialect, {}, parserResult->qualifiedDataNames());
 	// TODO this should be done recursively.
 	if (!analyzer.analyze(*parserResult->code) || errorReporter.hasErrors())
 		return {};
@@ -110,33 +117,29 @@ string yul::test::format(string const& _source, bool _yul)
 
 namespace
 {
-std::map<string const, yul::Dialect const& (*)(langutil::EVMVersion)> const validDialects = {
-	{
-		"evm",
-		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialect::strictAssemblyForEVMObjects(_evmVersion); }
-	},
-	{
-		"evmTyped",
-		[](langutil::EVMVersion _evmVersion) -> yul::Dialect const&
-		{ return yul::EVMDialectTyped::instance(_evmVersion); }
-	},
-	{
-		"yul",
-		[](langutil::EVMVersion) -> yul::Dialect const&
-		{ return yul::Dialect::yulDeprecated(); }
-	},
-	{
-		"ewasm",
-		[](langutil::EVMVersion) -> yul::Dialect const&
-		{ return yul::WasmDialect::instance(); }
-	}
-};
+std::map<string const, yul::Dialect const& (*) (langutil::EVMVersion)> const validDialects = {
+	{"evm",
+	 [](langutil::EVMVersion _evmVersion) -> yul::Dialect const& {
+		 return yul::EVMDialect::strictAssemblyForEVMObjects(_evmVersion);
+	 }},
+	{"evmTyped",
+	 [](langutil::EVMVersion _evmVersion) -> yul::Dialect const& {
+		 return yul::EVMDialectTyped::instance(_evmVersion);
+	 }},
+	{"yul",
+	 [](langutil::EVMVersion) -> yul::Dialect const& { return yul::Dialect::yulDeprecated(); }},
+	{"ewasm",
+	 [](langutil::EVMVersion) -> yul::Dialect const& { return yul::WasmDialect::instance(); }}};
 
 vector<string> validDialectNames()
 {
 	vector<string> names{size(validDialects), ""};
-	transform(begin(validDialects), end(validDialects), names.begin(), [](auto const& dialect) { return dialect.first; });
+	transform(
+		begin(validDialects),
+		end(validDialects),
+		names.begin(),
+		[](auto const& dialect) { return dialect.first; }
+	);
 
 	return names;
 }
@@ -146,12 +149,8 @@ yul::Dialect const& yul::test::dialect(std::string const& _name, langutil::EVMVe
 {
 	if (!validDialects.count(_name))
 		BOOST_THROW_EXCEPTION(runtime_error{
-			"Invalid Dialect \"" +
-			_name +
-			"\". Valid dialects are " +
-			util::joinHumanReadable(validDialectNames(), ", ", " and ") +
-			"."
-		});
+			"Invalid Dialect \"" + _name + "\". Valid dialects are " +
+			util::joinHumanReadable(validDialectNames(), ", ", " and ") + "."});
 
 	return validDialects.at(_name)(_evmVersion);
 }

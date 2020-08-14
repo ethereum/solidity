@@ -34,7 +34,6 @@ struct SourceLocation;
 
 namespace solidity::yul
 {
-
 struct TypedName;
 struct Scope;
 struct AsmAnalysisInfo;

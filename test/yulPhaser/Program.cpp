@@ -43,21 +43,20 @@ using namespace boost::unit_test::framework;
 
 namespace
 {
-	/// If the specified block is redundant (i.e. the only thing it contains is another block)
-	/// the function recurses into it and returns the first non-redundant one it finds.
-	/// If the block isn't redundant it just returns it immediately.
-	Block const& skipRedundantBlocks(Block const& _block)
-	{
-		if (_block.statements.size() == 1 && holds_alternative<Block>(_block.statements[0]))
-			return skipRedundantBlocks(get<Block>(_block.statements[0]));
-		else
-			return _block;
-	}
+/// If the specified block is redundant (i.e. the only thing it contains is another block)
+/// the function recurses into it and returns the first non-redundant one it finds.
+/// If the block isn't redundant it just returns it immediately.
+Block const& skipRedundantBlocks(Block const& _block)
+{
+	if (_block.statements.size() == 1 && holds_alternative<Block>(_block.statements[0]))
+		return skipRedundantBlocks(get<Block>(_block.statements[0]));
+	else
+		return _block;
+}
 }
 
 namespace solidity::phaser::test
 {
-
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ProgramTest)
 
@@ -112,7 +111,8 @@ BOOST_AUTO_TEST_CASE(load_should_disambiguate)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	Program program = get<Program>(Program::load(sourceStream));
 
-	// skipRedundantBlocks() makes the test independent of whether load() includes function grouping or not.
+	// skipRedundantBlocks() makes the test independent of whether load() includes function grouping
+	// or not.
 	Block const& parentBlock = skipRedundantBlocks(program.ast());
 	BOOST_TEST(parentBlock.statements.size() == 2);
 
@@ -162,7 +162,8 @@ BOOST_AUTO_TEST_CASE(load_should_do_loop_init_rewriting)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	Program program = get<Program>(Program::load(sourceStream));
 
-	// skipRedundantBlocks() makes the test independent of whether load() includes function grouping or not.
+	// skipRedundantBlocks() makes the test independent of whether load() includes function grouping
+	// or not.
 	Block const& parentBlock = skipRedundantBlocks(program.ast());
 	BOOST_TEST(holds_alternative<VariableDeclaration>(parentBlock.statements[0]));
 	BOOST_TEST(holds_alternative<ForLoop>(parentBlock.statements[1]));
@@ -269,7 +270,9 @@ BOOST_AUTO_TEST_CASE(load_should_extract_nested_object_with_deployed_suffix_if_p
 	BOOST_TEST(holds_alternative<Program>(programOrErrors));
 }
 
-BOOST_AUTO_TEST_CASE(load_should_fall_back_to_parsing_the_whole_object_if_there_is_no_subobject_with_the_right_name)
+BOOST_AUTO_TEST_CASE(
+	load_should_fall_back_to_parsing_the_whole_object_if_there_is_no_subobject_with_the_right_name
+)
 {
 	string sourceCode(
 		"object \"C_178\" {\n"
@@ -360,8 +363,9 @@ BOOST_AUTO_TEST_CASE(output_operator)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	Program program = get<Program>(Program::load(sourceStream));
 
-	// NOTE: The snippet above was chosen so that the few optimisations applied automatically by load()
-	// as of now do not change the code significantly. If that changes, you may have to update it.
+	// NOTE: The snippet above was chosen so that the few optimisations applied automatically by
+	// load() as of now do not change the code significantly. If that changes, you may have to
+	// update it.
 	BOOST_TEST(stripWhitespace(toString(program)) == stripWhitespace("{" + sourceCode + "}"));
 }
 
@@ -399,7 +403,9 @@ BOOST_AUTO_TEST_CASE(codeSize)
 	CharStream sourceStream(sourceCode, current_test_case().p_name);
 	Program program = get<Program>(Program::load(sourceStream));
 
-	BOOST_TEST(program.codeSize(CodeWeights{}) == CodeSize::codeSizeIncludingFunctions(program.ast()));
+	BOOST_TEST(
+		program.codeSize(CodeWeights{}) == CodeSize::codeSizeIncludingFunctions(program.ast())
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

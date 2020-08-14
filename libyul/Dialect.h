@@ -33,7 +33,6 @@
 
 namespace solidity::yul
 {
-
 class YulString;
 using Type = YulString;
 enum class LiteralKind;
@@ -49,7 +48,8 @@ struct BuiltinFunction
 	/// If true, this is the msize instruction.
 	bool isMSize = false;
 	/// Must be empty or the same length as the arguments.
-	/// If set at index i, the i'th argument has to be a literal which means it can't be moved to variables.
+	/// If set at index i, the i'th argument has to be a literal which means it can't be moved to
+	/// variables.
 	std::vector<std::optional<LiteralKind>> literalArguments{};
 	std::optional<LiteralKind> literalArgument(size_t i) const
 	{
@@ -65,7 +65,8 @@ struct Dialect: boost::noncopyable
 	YulString boolType;
 	std::set<YulString> types = {{}};
 
-	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
+	/// @returns the builtin function of the given name or a nullptr if it is not a builtin
+	/// function.
 	virtual BuiltinFunction const* builtin(YulString /*_name*/) const { return nullptr; }
 
 	virtual BuiltinFunction const* discardFunction(YulString /* _type */) const { return nullptr; }

@@ -82,7 +82,8 @@ bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string 
 	m_errors.clear();
 	m_analysisSuccessful = false;
 	m_scanner = make_shared<Scanner>(CharStream(_source, _sourceName));
-	m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(m_scanner, false);
+	m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion))
+						 .parse(m_scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	yulAssert(m_parserResult, "");
@@ -114,9 +115,8 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 		"Invalid language combination"
 	);
 
-	*m_parserResult = EVMToEwasmTranslator(
-		languageToDialect(m_language, m_evmVersion)
-	).run(*parserResult());
+	*m_parserResult =
+		EVMToEwasmTranslator(languageToDialect(m_language, m_evmVersion)).run(*parserResult());
 
 	m_language = _targetLanguage;
 }
@@ -153,16 +153,16 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 	EVMDialect const* dialect = nullptr;
 	switch (m_language)
 	{
-		case Language::Assembly:
-		case Language::StrictAssembly:
-			dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
-			break;
-		case Language::Yul:
-			dialect = &EVMDialectTyped::instance(m_evmVersion);
-			break;
-		default:
-			yulAssert(false, "Invalid language.");
-			break;
+	case Language::Assembly:
+	case Language::StrictAssembly:
+		dialect = &EVMDialect::strictAssemblyForEVMObjects(m_evmVersion);
+		break;
+	case Language::Yul:
+		dialect = &EVMDialectTyped::instance(m_evmVersion);
+		break;
+	default:
+		yulAssert(false, "Invalid language.");
+		break;
 	}
 
 	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
@@ -179,7 +179,11 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 	Dialect const& dialect = languageToDialect(m_language, m_evmVersion);
 	unique_ptr<GasMeter> meter;
 	if (EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&dialect))
-		meter = make_unique<GasMeter>(*evmDialect, _isCreation, m_optimiserSettings.expectedExecutionsPerDeployment);
+		meter = make_unique<GasMeter>(
+			*evmDialect,
+			_isCreation,
+			m_optimiserSettings.expectedExecutionsPerDeployment
+		);
 	OptimiserSuite::run(
 		dialect,
 		meter.get(),
@@ -241,12 +245,10 @@ pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleAndGue
 	creationObject.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
 	yulAssert(creationObject.bytecode->immutableReferences.empty(), "Leftover immutables.");
 	creationObject.assembly = assembly.assemblyString();
-	creationObject.sourceMappings = make_unique<string>(
-		evmasm::AssemblyItem::computeSourceMapping(
-			assembly.items(),
-			{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
-		)
-	);
+	creationObject.sourceMappings = make_unique<string>(evmasm::AssemblyItem::computeSourceMapping(
+		assembly.items(),
+		{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+	));
 
 	MachineAssemblyObject runtimeObject;
 	// Heuristic: If there is a single sub-assembly, this is likely the runtime object.
@@ -255,15 +257,13 @@ pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleAndGue
 		evmasm::Assembly& runtimeAssembly = assembly.sub(0);
 		runtimeObject.bytecode = make_shared<evmasm::LinkerObject>(runtimeAssembly.assemble());
 		runtimeObject.assembly = runtimeAssembly.assemblyString();
-		runtimeObject.sourceMappings = make_unique<string>(
-			evmasm::AssemblyItem::computeSourceMapping(
+		runtimeObject.sourceMappings =
+			make_unique<string>(evmasm::AssemblyItem::computeSourceMapping(
 				runtimeAssembly.items(),
 				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
-			)
-		);
+			));
 	}
 	return {std::move(creationObject), std::move(runtimeObject)};
-
 }
 
 string AssemblyStack::print() const

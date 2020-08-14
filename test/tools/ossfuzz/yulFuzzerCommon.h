@@ -20,7 +20,6 @@
 
 namespace solidity::yul::test::yul_fuzzer
 {
-
 struct yulFuzzerUtil
 {
 	enum class TerminationReason

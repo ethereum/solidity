@@ -31,29 +31,40 @@
 
 namespace solidity::util
 {
-
-// Calculates the Damerau–Levenshtein distance between _str1 and _str2 and returns true if that distance is not greater than _maxDistance
-// if _lenThreshold > 0 and the product of the strings length is greater than _lenThreshold, the function will return false
-bool stringWithinDistance(std::string const& _str1, std::string const& _str2, size_t _maxDistance, size_t _lenThreshold = 0);
+// Calculates the Damerau–Levenshtein distance between _str1 and _str2 and returns true if that
+// distance is not greater than _maxDistance if _lenThreshold > 0 and the product of the strings
+// length is greater than _lenThreshold, the function will return false
+bool stringWithinDistance(
+	std::string const& _str1,
+	std::string const& _str2,
+	size_t _maxDistance,
+	size_t _lenThreshold = 0
+);
 // Calculates the Damerau–Levenshtein distance between _str1 and _str2
 size_t stringDistance(std::string const& _str1, std::string const& _str2);
-// Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b" or "c"
+// Return a string having elements of suggestions as quoted, alternative suggestions. e.g. "a", "b"
+// or "c"
 std::string quotedAlternativesList(std::vector<std::string> const& suggestions);
 
-/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName suffixed
-/// with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a _startSuffix < @a _endSuffix,
-/// and with decreasing integers in the range [@a _endSuffix, @a _startSuffix), if @a _endSuffix < @a _startSuffix.
-/// If @a _startSuffix == @a _endSuffix, the empty string is returned.
-std::string suffixedVariableNameList(std::string const& _baseName, size_t _startSuffix, size_t _endSuffix);
+/// @returns a string containing a comma-separated list of variable names consisting of @a _baseName
+/// suffixed with increasing integers in the range [@a _startSuffix, @a _endSuffix), if @a
+/// _startSuffix < @a _endSuffix, and with decreasing integers in the range [@a _endSuffix, @a
+/// _startSuffix), if @a _endSuffix < @a _startSuffix. If @a _startSuffix == @a _endSuffix, the
+/// empty string is returned.
+std::string suffixedVariableNameList(
+	std::string const& _baseName,
+	size_t _startSuffix,
+	size_t _endSuffix
+);
 
-/// Joins collection of strings into one string with separators between, last separator can be different.
+/// Joins collection of strings into one string with separators between, last separator can be
+/// different.
 /// @param _list collection of strings to join
 /// @param _separator defaults to ", "
 /// @param _lastSeparator (optional) will be used to separate last two strings instead of _separator
 /// @example join(vector<string>{"a", "b", "c"}, "; ", " or ") == "a; b or c"
-template<class T>
-std::string joinHumanReadable
-(
+template <class T>
+std::string joinHumanReadable(
 	T const& _list,
 	std::string const& _separator = ", ",
 	std::string const& _lastSeparator = ""
@@ -63,7 +74,7 @@ std::string joinHumanReadable
 
 	std::string result;
 
-	for (auto it = begin(_list); it != itEnd; )
+	for (auto it = begin(_list); it != itEnd;)
 	{
 		std::string element = *it;
 		bool first = (it == begin(_list));
@@ -71,7 +82,7 @@ std::string joinHumanReadable
 		if (!first)
 		{
 			if (it == itEnd && !_lastSeparator.empty())
-				result += _lastSeparator; // last iteration
+				result += _lastSeparator;  // last iteration
 			else
 				result += _separator;
 		}
@@ -83,9 +94,8 @@ std::string joinHumanReadable
 
 /// Joins collection of strings just like joinHumanReadable, but prepends the separator
 /// unless the collection is empty.
-template<class T>
-std::string joinHumanReadablePrefixed
-(
+template <class T>
+std::string joinHumanReadablePrefixed(
 	T const& _list,
 	std::string const& _separator = ", ",
 	std::string const& _lastSeparator = ""
@@ -107,15 +117,12 @@ std::string joinHumanReadablePrefixed
 /// like  0x5555...{+56 more}...5555
 /// @example formatNumber((u256)0x7ffffff)
 template <class T>
-inline std::string formatNumberReadable(
-	T const& _value,
-	bool _useTruncation = false
-)
+inline std::string formatNumberReadable(T const& _value, bool _useTruncation = false)
 {
 	static_assert(
 		std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed,
 		"only unsigned types or bigint supported"
-	); //bigint does not carry sign bit on shift
+	);	// bigint does not carry sign bit on shift
 
 	// smaller numbers return as decimal
 	if (_value <= 0x1000000)
@@ -134,9 +141,7 @@ inline std::string formatNumberReadable(
 		// 0x100 yields 2**8 (N is 1 and redundant)
 		if (v == 1)
 			return "2**" + std::to_string(i * 8);
-		return toHex(toCompactBigEndian(v), prefix, hexcase) +
-			" * 2**" +
-			std::to_string(i * 8);
+		return toHex(toCompactBigEndian(v), prefix, hexcase) + " * 2**" + std::to_string(i * 8);
 	}
 
 	// when multiple trailing FF bytes, format as N * 2**x - 1
@@ -148,9 +153,8 @@ inline std::string formatNumberReadable(
 		// 0xFF yields 2**8 - 1 (v is 0 in that case)
 		if (v == 0)
 			return "2**" + std::to_string(i * 8) + " - 1";
-		return toHex(toCompactBigEndian(T(v + 1)), prefix, hexcase) +
-			" * 2**" + std::to_string(i * 8) +
-			" - 1";
+		return toHex(toCompactBigEndian(T(v + 1)), prefix, hexcase) + " * 2**" +
+			std::to_string(i * 8) + " - 1";
 	}
 
 	std::string str = toHex(toCompactBigEndian(_value), prefix, hexcase);
@@ -166,11 +170,8 @@ inline std::string formatNumberReadable(
 		size_t const finalChars = 4;
 		size_t numSkipped = len - initialChars - finalChars;
 
-		return str.substr(0, initialChars) +
-			"...{+" +
-			std::to_string(numSkipped) +
-			" more}..." +
-			str.substr(len-finalChars, len);
+		return str.substr(0, initialChars) + "...{+" + std::to_string(numSkipped) + " more}..." +
+			str.substr(len - finalChars, len);
 	}
 
 	// otherwise, show whole value.

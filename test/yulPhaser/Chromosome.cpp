@@ -46,7 +46,6 @@ using namespace solidity::util;
 
 namespace solidity::phaser::test
 {
-
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ChromosomeTest)
 
@@ -62,8 +61,7 @@ BOOST_AUTO_TEST_CASE(constructor_should_convert_from_string_to_optimisation_step
 		ExpressionSimplifier::name,
 		ForLoopInitRewriter::name,
 		LoopInvariantCodeMotion::name,
-		ExpressionInliner::name
-	};
+		ExpressionInliner::name};
 
 	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == expectedSteps);
 }
@@ -92,7 +90,9 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_pro
 	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_CASE(constructor_should_store_optimisation_steps)
@@ -148,7 +148,9 @@ BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_pr
 	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -42,7 +42,6 @@ struct Dialect;
 
 namespace solidity::frontend
 {
-
 class Type;
 using TypePointer = Type const*;
 
@@ -61,7 +60,7 @@ struct ASTAnnotation
 
 struct DocTag
 {
-	std::string content;	///< The text content of the tag.
+	std::string content;  ///< The text content of the tag.
 	std::string paramName;	///< Only used for @param, stores the parameter name.
 };
 
@@ -114,8 +113,7 @@ struct ScopableAnnotation
 };
 
 struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
-{
-};
+{};
 
 struct ImportAnnotation: DeclarationAnnotation
 {
@@ -133,11 +131,11 @@ struct TypeDeclarationAnnotation: DeclarationAnnotation
 
 struct StructDeclarationAnnotation: TypeDeclarationAnnotation
 {
-	/// Whether the struct is recursive, i.e. if the struct (recursively) contains a member that involves a struct of the same
-	/// type, either in a dynamic array, as member of another struct or inside a mapping.
-	/// Only cases in which the recursive occurrence is within a dynamic array or a mapping are valid, while direct
-	/// recursion immediately raises an error.
-	/// Will be filled in by the DeclarationTypeChecker.
+	/// Whether the struct is recursive, i.e. if the struct (recursively) contains a member that
+	/// involves a struct of the same type, either in a dynamic array, as member of another struct
+	/// or inside a mapping. Only cases in which the recursive occurrence is within a dynamic array
+	/// or a mapping are valid, while direct recursion immediately raises an error. Will be filled
+	/// in by the DeclarationTypeChecker.
 	std::optional<bool> recursive;
 	/// Whether the struct contains a mapping type, either directly or, indirectly inside another
 	/// struct or an array.
@@ -146,7 +144,8 @@ struct StructDeclarationAnnotation: TypeDeclarationAnnotation
 
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
-	/// List of functions and modifiers without a body. Can also contain functions from base classes.
+	/// List of functions and modifiers without a body. Can also contain functions from base
+	/// classes.
 	std::vector<Declaration const*> unimplementedDeclarations;
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
@@ -166,16 +165,13 @@ struct CallableDeclarationAnnotation: DeclarationAnnotation
 };
 
 struct FunctionDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
-{
-};
+{};
 
 struct EventDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
-{
-};
+{};
 
 struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
-{
-};
+{};
 
 struct VariableDeclarationAnnotation: DeclarationAnnotation, StructurallyDocumentedAnnotation
 {
@@ -186,16 +182,15 @@ struct VariableDeclarationAnnotation: DeclarationAnnotation, StructurallyDocumen
 };
 
 struct StatementAnnotation: ASTAnnotation
-{
-};
+{};
 
 struct InlineAssemblyAnnotation: StatementAnnotation
 {
 	struct ExternalIdentifierInfo
 	{
 		Declaration const* declaration = nullptr;
-		bool isSlot = false; ///< Whether the storage slot of a variable is queried.
-		bool isOffset = false; ///< Whether the intra-slot offset of a storage variable is queried.
+		bool isSlot = false;  ///< Whether the storage slot of a variable is queried.
+		bool isOffset = false;	///< Whether the intra-slot offset of a storage variable is queried.
 		size_t valueSize = size_t(-1);
 	};
 
@@ -206,16 +201,13 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 };
 
 struct BlockAnnotation: StatementAnnotation, ScopableAnnotation
-{
-};
+{};
 
 struct TryCatchClauseAnnotation: ASTAnnotation, ScopableAnnotation
-{
-};
+{};
 
 struct ForStatementAnnotation: StatementAnnotation, ScopableAnnotation
-{
-};
+{};
 
 struct ReturnAnnotation: StatementAnnotation
 {

@@ -70,9 +70,7 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 		return true;
 	};
 	auto onEdge = [&](ASTNode const& _parent, ASTNode const& _child)
-	{
-		gasCosts[&_parent][1] += gasCosts[&_child][1];
-	};
+	{ gasCosts[&_parent][1] += gasCosts[&_child][1]; };
 	ASTReduce folder(onNode, onEdge);
 	for (ASTNode const* ast: _ast)
 		ast->accept(folder);
@@ -108,10 +106,7 @@ map<ASTNode const*, GasMeter::GasConsumption> GasEstimator::breakToStatementLeve
 	//  - its statement depth is 0 or
 	//  - its statement depth is undefined but the parent's statement depth is at least 1
 	map<ASTNode const*, GasConsumption> gasCosts;
-	auto onNodeSecondPass = [&](ASTNode const& _node)
-	{
-		return statementDepth.count(&_node);
-	};
+	auto onNodeSecondPass = [&](ASTNode const& _node) { return statementDepth.count(&_node); };
 	auto onEdgeSecondPass = [&](ASTNode const& _parent, ASTNode const& _child)
 	{
 		bool useNode = false;
@@ -141,7 +136,9 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		ExpressionClasses& classes = state->expressionClasses();
 		using Id = ExpressionClasses::Id;
 		using Ids = vector<Id>;
-		Id hashValue = classes.find(u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(_signature)))));
+		Id hashValue = classes.find(
+			u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(_signature))))
+		);
 		Id calldata = classes.find(Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
 		if (!m_evmVersion.hasBitwiseShifting())
 			// div(calldataload(0), 1 << 224) equals to hashValue
@@ -152,11 +149,8 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 			);
 		else
 			// shr(0xe0, calldataload(0)) equals to hashValue
-			classes.forceEqual(
-				hashValue,
-				Instruction::SHR,
-				Ids{classes.find(u256(0xe0)), calldata}
-			);
+			classes
+				.forceEqual(hashValue, Instruction::SHR, Ids{classes.find(u256(0xe0)), calldata});
 		// lt(calldatasize(), 4) equals to 0 (ignore the shortcut for fallback functions)
 		classes.forceEqual(
 			classes.find(u256(0)),
@@ -190,20 +184,21 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	return PathGasMeter::estimateMax(_items, m_evmVersion, _offset, state);
 }
 
-set<ASTNode const*> GasEstimator::finestNodesAtLocation(
-	vector<ASTNode const*> const& _roots
-)
+set<ASTNode const*> GasEstimator::finestNodesAtLocation(vector<ASTNode const*> const& _roots)
 {
 	map<SourceLocation, ASTNode const*> locations;
 	set<ASTNode const*> nodes;
-	SimpleASTVisitor visitor(function<bool(ASTNode const&)>(), [&](ASTNode const& _n)
-	{
-		if (!locations.count(_n.location()))
+	SimpleASTVisitor visitor(
+		function<bool(ASTNode const&)>(),
+		[&](ASTNode const& _n)
 		{
-			locations[_n.location()] = &_n;
-			nodes.insert(&_n);
+			if (!locations.count(_n.location()))
+			{
+				locations[_n.location()] = &_n;
+				nodes.insert(&_n);
+			}
 		}
-	});
+	);
 
 	for (ASTNode const* root: _roots)
 		root->accept(visitor);

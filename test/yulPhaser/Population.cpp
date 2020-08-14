@@ -45,15 +45,21 @@ using namespace boost::unit_test::framework;
 
 namespace solidity::phaser::test
 {
-
 class PopulationFixture
 {
 protected:
-	static ChromosomePair twoStepSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+	static ChromosomePair twoStepSwap(
+		Chromosome const& _chromosome1,
+		Chromosome const& _chromosome2
+	)
 	{
 		return ChromosomePair{
-			Chromosome(vector<string>{_chromosome1.optimisationSteps()[0], _chromosome2.optimisationSteps()[1]}),
-			Chromosome(vector<string>{_chromosome2.optimisationSteps()[0], _chromosome1.optimisationSteps()[1]}),
+			Chromosome(vector<string>{
+				_chromosome1.optimisationSteps()[0],
+				_chromosome2.optimisationSteps()[1]}),
+			Chromosome(vector<string>{
+				_chromosome2.optimisationSteps()[0],
+				_chromosome1.optimisationSteps()[1]}),
 		};
 	}
 
@@ -93,7 +99,10 @@ BOOST_AUTO_TEST_CASE(isFitter_should_return_false_for_identical_individuals)
 	BOOST_TEST(!isFitter(Individual(Chromosome("acT"), 0), Individual(Chromosome("acT"), 0)));
 }
 
-BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_sort_chromosomes, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	constructor_should_copy_chromosomes_compute_fitness_and_sort_chromosomes,
+	PopulationFixture
+)
 {
 	vector<Chromosome> chromosomes = {
 		Chromosome::makeRandom(5),
@@ -113,24 +122,39 @@ BOOST_FIXTURE_TEST_CASE(constructor_should_copy_chromosomes_compute_fitness_and_
 	BOOST_TEST(individuals[2].chromosome == chromosomes[1]);
 }
 
-BOOST_FIXTURE_TEST_CASE(constructor_should_accept_individuals_without_recalculating_fitness, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	constructor_should_accept_individuals_without_recalculating_fitness,
+	PopulationFixture
+)
 {
 	vector<Individual> customIndividuals = {
 		Individual(Chromosome("aaaccc"), 20),
 		Individual(Chromosome("aaa"), 10),
 		Individual(Chromosome("aaaf"), 30),
 	};
-	assert(customIndividuals[0].fitness != m_fitnessMetric->evaluate(customIndividuals[0].chromosome));
-	assert(customIndividuals[1].fitness != m_fitnessMetric->evaluate(customIndividuals[1].chromosome));
-	assert(customIndividuals[2].fitness != m_fitnessMetric->evaluate(customIndividuals[2].chromosome));
+	assert(
+		customIndividuals[0].fitness != m_fitnessMetric->evaluate(customIndividuals[0].chromosome)
+	);
+	assert(
+		customIndividuals[1].fitness != m_fitnessMetric->evaluate(customIndividuals[1].chromosome)
+	);
+	assert(
+		customIndividuals[2].fitness != m_fitnessMetric->evaluate(customIndividuals[2].chromosome)
+	);
 
 	Population population(m_fitnessMetric, customIndividuals);
 
-	vector<Individual> expectedIndividuals{customIndividuals[1], customIndividuals[0], customIndividuals[2]};
+	vector<Individual> expectedIndividuals{
+		customIndividuals[1],
+		customIndividuals[0],
+		customIndividuals[2]};
 	BOOST_TEST(population.individuals() == expectedIndividuals);
 }
 
-BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_generator, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	makeRandom_should_get_chromosome_lengths_from_specified_generator,
+	PopulationFixture
+)
 {
 	size_t chromosomeCount = 30;
 	size_t maxLength = 5;
@@ -146,18 +170,23 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_
 			count_if(
 				population.individuals().begin(),
 				population.individuals().end(),
-				[&length](auto const& individual) { return individual.chromosome.length() == length; }
+				[&length](auto const& individual)
+				{ return individual.chromosome.length() == length; }
 			) == chromosomeCount / maxLength
 		);
 }
 
-BOOST_FIXTURE_TEST_CASE(makeRandom_should_get_chromosome_lengths_from_specified_range, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	makeRandom_should_get_chromosome_lengths_from_specified_range,
+	PopulationFixture
+)
 {
 	auto population = Population::makeRandom(m_fitnessMetric, 100, 5, 10);
 	BOOST_TEST(all_of(
 		population.individuals().begin(),
 		population.individuals().end(),
-		[](auto const& individual){ return 5 <= individual.chromosome.length() && individual.chromosome.length() <= 10; }
+		[](auto const& individual)
+		{ return 5 <= individual.chromosome.length() && individual.chromosome.length() <= 10; }
 	));
 }
 
@@ -176,10 +205,15 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_use_random_chromosome_length, Populati
 	const double variance = ((maxLength - minLength + 1) * (maxLength - minLength + 1) - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
-BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromosomes, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	makeRandom_should_return_population_with_random_chromosomes,
+	PopulationFixture
+)
 {
 	SimulationRNG::reset(1);
 	constexpr int populationSize = 100;
@@ -187,7 +221,8 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 	constexpr double relativeTolerance = 0.01;
 
 	map<string, size_t> stepIndices = enumerateOptmisationSteps();
-	auto population = Population::makeRandom(m_fitnessMetric, populationSize, chromosomeLength, chromosomeLength);
+	auto population =
+		Population::makeRandom(m_fitnessMetric, populationSize, chromosomeLength, chromosomeLength);
 
 	vector<size_t> samples;
 	for (auto& individual: population.individuals())
@@ -198,54 +233,89 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_FIXTURE_TEST_CASE(makeRandom_should_compute_fitness, PopulationFixture)
 {
 	auto population = Population::makeRandom(m_fitnessMetric, 3, 5, 10);
 
-	BOOST_TEST(population.individuals()[0].fitness == m_fitnessMetric->evaluate(population.individuals()[0].chromosome));
-	BOOST_TEST(population.individuals()[1].fitness == m_fitnessMetric->evaluate(population.individuals()[1].chromosome));
-	BOOST_TEST(population.individuals()[2].fitness == m_fitnessMetric->evaluate(population.individuals()[2].chromosome));
+	BOOST_TEST(
+		population.individuals()[0].fitness ==
+		m_fitnessMetric->evaluate(population.individuals()[0].chromosome)
+	);
+	BOOST_TEST(
+		population.individuals()[1].fitness ==
+		m_fitnessMetric->evaluate(population.individuals()[1].chromosome)
+	);
+	BOOST_TEST(
+		population.individuals()[2].fitness ==
+		m_fitnessMetric->evaluate(population.individuals()[2].chromosome)
+	);
 }
 
 BOOST_FIXTURE_TEST_CASE(plus_operator_should_add_two_populations, PopulationFixture)
 {
 	BOOST_CHECK_EQUAL(
 		Population(m_fitnessMetric, {Chromosome("ac"), Chromosome("cx")}) +
-		Population(m_fitnessMetric, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
-		Population(m_fitnessMetric, {Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")})
+			Population(m_fitnessMetric, {Chromosome("g"), Chromosome("h"), Chromosome("iI")}),
+		Population(
+			m_fitnessMetric,
+			{Chromosome("ac"), Chromosome("cx"), Chromosome("g"), Chromosome("h"), Chromosome("iI")}
+		)
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(select_should_return_population_containing_individuals_indicated_by_selection, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	select_should_return_population_containing_individuals_indicated_by_selection,
+	PopulationFixture
+)
 {
-	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c"), Chromosome("g"), Chromosome("h")});
+	Population population(
+		m_fitnessMetric,
+		{Chromosome("a"), Chromosome("c"), Chromosome("g"), Chromosome("h")}
+	);
 	RangeSelection selection(0.25, 0.75);
 	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
 
 	BOOST_TEST(
 		population.select(selection) ==
-		Population(m_fitnessMetric, {population.individuals()[1].chromosome, population.individuals()[2].chromosome})
+		Population(
+			m_fitnessMetric,
+			{population.individuals()[1].chromosome, population.individuals()[2].chromosome}
+		)
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(select_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	select_should_include_duplicates_if_selection_contains_duplicates,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
 	MosaicSelection selection({0, 1}, 2.0);
 	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{0, 1, 0, 1}));
 
-	BOOST_TEST(population.select(selection) == Population(m_fitnessMetric, {
-		population.individuals()[0].chromosome,
-		population.individuals()[1].chromosome,
-		population.individuals()[0].chromosome,
-		population.individuals()[1].chromosome,
-	}));
+	BOOST_TEST(
+		population.select(selection) ==
+		Population(
+			m_fitnessMetric,
+			{
+				population.individuals()[0].chromosome,
+				population.individuals()[1].chromosome,
+				population.individuals()[0].chromosome,
+				population.individuals()[1].chromosome,
+			}
+		)
+	);
 }
 
-BOOST_FIXTURE_TEST_CASE(select_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	select_should_return_empty_population_if_selection_is_empty,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("a"), Chromosome("c")});
 	RangeSelection selection(0.0, 0.0);
@@ -254,18 +324,30 @@ BOOST_FIXTURE_TEST_CASE(select_should_return_empty_population_if_selection_is_em
 	BOOST_TEST(population.select(selection).individuals().empty());
 }
 
-BOOST_FIXTURE_TEST_CASE(mutate_should_return_population_containing_individuals_indicated_by_selection_with_mutation_applied, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	mutate_should_return_population_containing_individuals_indicated_by_selection_with_mutation_applied,
+	PopulationFixture
+)
 {
-	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	Population population(
+		m_fitnessMetric,
+		{Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")}
+	);
 	RangeSelection selection(0.25, 0.75);
 	assert(selection.materialise(population.individuals().size()) == (vector<size_t>{1, 2}));
 
 	Population expectedPopulation(m_fitnessMetric, {Chromosome("fc"), Chromosome("fg")});
 
-	BOOST_TEST(population.mutate(selection, geneSubstitution(0, BlockFlattener::name)) == expectedPopulation);
+	BOOST_TEST(
+		population.mutate(selection, geneSubstitution(0, BlockFlattener::name)) ==
+		expectedPopulation
+	);
 }
 
-BOOST_FIXTURE_TEST_CASE(mutate_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	mutate_should_include_duplicates_if_selection_contains_duplicates,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
 	RangeSelection selection(0.0, 1.0);
@@ -277,39 +359,68 @@ BOOST_FIXTURE_TEST_CASE(mutate_should_include_duplicates_if_selection_contains_d
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(mutate_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	mutate_should_return_empty_population_if_selection_is_empty,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc")});
 	RangeSelection selection(0.0, 0.0);
 	assert(selection.materialise(population.individuals().size()).empty());
 
-	BOOST_TEST(population.mutate(selection, geneSubstitution(0, BlockFlattener::name)).individuals().empty());
+	BOOST_TEST(population.mutate(selection, geneSubstitution(0, BlockFlattener::name))
+				   .individuals()
+				   .empty());
 }
 
-BOOST_FIXTURE_TEST_CASE(crossover_should_return_population_containing_individuals_indicated_by_selection_with_crossover_applied, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	crossover_should_return_population_containing_individuals_indicated_by_selection_with_crossover_applied,
+	PopulationFixture
+)
 {
-	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	Population population(
+		m_fitnessMetric,
+		{Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")}
+	);
 	PairMosaicSelection selection({{0, 1}, {2, 1}}, 1.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 1}, {2, 1}, {0, 1}, {2, 1}}));
+	assert(
+		selection.materialise(population.individuals().size()) ==
+		(vector<tuple<size_t, size_t>>{{0, 1}, {2, 1}, {0, 1}, {2, 1}})
+	);
 
-	Population expectedPopulation(m_fitnessMetric, {Chromosome("ac"), Chromosome("ac"), Chromosome("gc"), Chromosome("gc")});
+	Population expectedPopulation(
+		m_fitnessMetric,
+		{Chromosome("ac"), Chromosome("ac"), Chromosome("gc"), Chromosome("gc")}
+	);
 
 	BOOST_TEST(population.crossover(selection, fixedPointCrossover(0.5)) == expectedPopulation);
 }
 
-BOOST_FIXTURE_TEST_CASE(crossover_should_include_duplicates_if_selection_contains_duplicates, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	crossover_should_include_duplicates_if_selection_contains_duplicates,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa")});
 	PairMosaicSelection selection({{0, 0}, {1, 1}}, 2.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {1, 1}, {0, 0}, {1, 1}}));
+	assert(
+		selection.materialise(population.individuals().size()) ==
+		(vector<tuple<size_t, size_t>>{{0, 0}, {1, 1}, {0, 0}, {1, 1}})
+	);
 
 	BOOST_TEST(
 		population.crossover(selection, fixedPointCrossover(0.5)) ==
-		Population(m_fitnessMetric, {Chromosome("aa"), Chromosome("aa"), Chromosome("aa"), Chromosome("aa")})
+		Population(
+			m_fitnessMetric,
+			{Chromosome("aa"), Chromosome("aa"), Chromosome("aa"), Chromosome("aa")}
+		)
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(crossover_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	crossover_should_return_empty_population_if_selection_is_empty,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc")});
 	PairMosaicSelection selection({}, 0.0);
@@ -318,11 +429,20 @@ BOOST_FIXTURE_TEST_CASE(crossover_should_return_empty_population_if_selection_is
 	BOOST_TEST(population.crossover(selection, fixedPointCrossover(0.5)).individuals().empty());
 }
 
-BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_crossed_population_and_remainder, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	symmetricCrossoverWithRemainder_should_return_crossed_population_and_remainder,
+	PopulationFixture
+)
 {
-	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	Population population(
+		m_fitnessMetric,
+		{Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")}
+	);
 	PairMosaicSelection selection({{2, 1}}, 0.25);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{2, 1}}));
+	assert(
+		selection.materialise(population.individuals().size()) ==
+		(vector<tuple<size_t, size_t>>{{2, 1}})
+	);
 
 	Population expectedCrossedPopulation(m_fitnessMetric, {Chromosome("gc"), Chromosome("cg")});
 	Population expectedRemainder(m_fitnessMetric, {Chromosome("aa"), Chromosome("hh")});
@@ -333,18 +453,34 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_crossed_po
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_allow_crossing_the_same_individual_multiple_times, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	symmetricCrossoverWithRemainder_should_allow_crossing_the_same_individual_multiple_times,
+	PopulationFixture
+)
 {
-	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")});
+	Population population(
+		m_fitnessMetric,
+		{Chromosome("aa"), Chromosome("cc"), Chromosome("gg"), Chromosome("hh")}
+	);
 	PairMosaicSelection selection({{0, 0}, {2, 1}}, 1.0);
-	assert(selection.materialise(population.individuals().size()) == (vector<tuple<size_t, size_t>>{{0, 0}, {2, 1}, {0, 0}, {2, 1}}));
+	assert(
+		selection.materialise(population.individuals().size()) ==
+		(vector<tuple<size_t, size_t>>{{0, 0}, {2, 1}, {0, 0}, {2, 1}})
+	);
 
-	Population expectedCrossedPopulation(m_fitnessMetric, {
-		Chromosome("aa"), Chromosome("aa"),
-		Chromosome("aa"), Chromosome("aa"),
-		Chromosome("gc"), Chromosome("cg"),
-		Chromosome("gc"), Chromosome("cg"),
-	});
+	Population expectedCrossedPopulation(
+		m_fitnessMetric,
+		{
+			Chromosome("aa"),
+			Chromosome("aa"),
+			Chromosome("aa"),
+			Chromosome("aa"),
+			Chromosome("gc"),
+			Chromosome("cg"),
+			Chromosome("gc"),
+			Chromosome("cg"),
+		}
+	);
 	Population expectedRemainder(m_fitnessMetric, {Chromosome("hh")});
 
 	BOOST_TEST(
@@ -353,7 +489,10 @@ BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_allow_crossing_th
 	);
 }
 
-BOOST_FIXTURE_TEST_CASE(symmetricCrossoverWithRemainder_should_return_empty_population_if_selection_is_empty, PopulationFixture)
+BOOST_FIXTURE_TEST_CASE(
+	symmetricCrossoverWithRemainder_should_return_empty_population_if_selection_is_empty,
+	PopulationFixture
+)
 {
 	Population population(m_fitnessMetric, {Chromosome("aa"), Chromosome("cc")});
 	PairMosaicSelection selection({}, 0.0);

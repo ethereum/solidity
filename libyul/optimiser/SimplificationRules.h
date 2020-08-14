@@ -104,7 +104,9 @@ public:
 	Pattern(int _value): Pattern(u256(_value)) {}
 	Pattern(long unsigned _value): Pattern(u256(_value)) {}
 	// Matches a specific constant value.
-	Pattern(u256 const& _value): m_kind(PatternKind::Constant), m_data(std::make_shared<u256>(_value)) {}
+	Pattern(u256 const& _value):
+		m_kind(PatternKind::Constant), m_data(std::make_shared<u256>(_value))
+	{}
 	// Matches a given instruction with given arguments
 	Pattern(evmasm::Instruction _instruction, std::initializer_list<Pattern> _arguments = {});
 	/// Sets this pattern to be part of the match group with the identifier @a _group.
@@ -133,8 +135,8 @@ private:
 	Expression const& matchGroupValue() const;
 
 	PatternKind m_kind = PatternKind::Any;
-	evmasm::Instruction m_instruction; ///< Only valid if m_kind is Operation
-	std::shared_ptr<u256> m_data; ///< Only valid if m_kind is Constant
+	evmasm::Instruction m_instruction;	///< Only valid if m_kind is Operation
+	std::shared_ptr<u256> m_data;  ///< Only valid if m_kind is Constant
 	std::vector<Pattern> m_arguments;
 	unsigned m_matchGroup = 0;
 	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;

@@ -33,8 +33,7 @@ using namespace solidity::util;
 
 void yul::removeEmptyBlocks(Block& _block)
 {
-	auto isEmptyBlock = [](Statement const& _st) -> bool {
-		return holds_alternative<Block>(_st) && std::get<Block>(_st).statements.empty();
-	};
+	auto isEmptyBlock = [](Statement const& _st) -> bool
+	{ return holds_alternative<Block>(_st) && std::get<Block>(_st).statements.empty(); };
 	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
 }

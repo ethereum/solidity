@@ -24,7 +24,6 @@
 
 namespace solidity::tools
 {
-
 /**
  * Module that performs analysis on the AST. Finds abstract contracts that are
  * not marked as such and adds the `abstract` keyword.
@@ -35,6 +34,7 @@ public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::ContractDefinition const& _contract) override;
 };
@@ -49,6 +49,7 @@ public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::ContractDefinition const& _contract) override;
 };
@@ -63,6 +64,7 @@ public:
 	using AnalysisUpgrade::AnalysisUpgrade;
 
 	void analyze(frontend::SourceUnit const& _sourceUnit) { _sourceUnit.accept(*this); }
+
 private:
 	void endVisit(frontend::ContractDefinition const& _function) override;
 };

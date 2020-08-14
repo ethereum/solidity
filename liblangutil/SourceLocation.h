@@ -33,7 +33,8 @@
 
 namespace solidity::langutil
 {
-struct SourceLocationError: virtual util::Exception {};
+struct SourceLocationError: virtual util::Exception
+{};
 
 /**
  * Representation of an interval of source positions.
@@ -49,10 +50,12 @@ struct SourceLocation
 
 	inline bool operator<(SourceLocation const& _other) const
 	{
-		if (!source|| !_other.source)
-			return std::make_tuple(int(!!source), start, end) < std::make_tuple(int(!!_other.source), _other.start, _other.end);
+		if (!source || !_other.source)
+			return std::make_tuple(int(!!source), start, end) <
+				std::make_tuple(int(!!_other.source), _other.start, _other.end);
 		else
-			return std::make_tuple(source->name(), start, end) < std::make_tuple(_other.source->name(), _other.start, _other.end);
+			return std::make_tuple(source->name(), start, end) <
+				std::make_tuple(_other.source->name(), _other.start, _other.end);
 	}
 
 	inline bool contains(SourceLocation const& _other) const
@@ -73,11 +76,7 @@ struct SourceLocation
 
 	bool hasText() const
 	{
-		return
-			source &&
-			0 <= start &&
-			start <= end &&
-			end <= int(source->source().length());
+		return source && 0 <= start && start <= end && end <= int(source->source().length());
 	}
 
 	std::string text() const
@@ -85,14 +84,19 @@ struct SourceLocation
 		assertThrow(source, SourceLocationError, "Requested text from null source.");
 		assertThrow(0 <= start, SourceLocationError, "Invalid source location.");
 		assertThrow(start <= end, SourceLocationError, "Invalid source location.");
-		assertThrow(end <= int(source->source().length()), SourceLocationError, "Invalid source location.");
+		assertThrow(
+			end <= int(source->source().length()),
+			SourceLocationError,
+			"Invalid source location."
+		);
 		return source->source().substr(size_t(start), size_t(end - start));
 	}
 
 	/// @returns the smallest SourceLocation that contains both @param _a and @param _b.
-	/// Assumes that @param _a and @param _b refer to the same source (exception: if the source of either one
-	/// is unset, the source of the other will be used for the result, even if that is unset as well).
-	/// Invalid start and end positions (with value of -1) are ignored (if start or end are -1 for both @param _a and
+	/// Assumes that @param _a and @param _b refer to the same source (exception: if the source of
+	/// either one is unset, the source of the other will be used for the result, even if that is
+	/// unset as well). Invalid start and end positions (with value of -1) are ignored (if start or
+	/// end are -1 for both @param _a and
 	/// @param _b, then start resp. end of the result will be -1 as well).
 	static SourceLocation smallestCovering(SourceLocation _a, SourceLocation const& _b)
 	{

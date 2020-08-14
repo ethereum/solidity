@@ -53,10 +53,7 @@ void IndentedWriter::unindent()
 	m_lines.back().indentation--;
 }
 
-void IndentedWriter::add(string const& _str)
-{
-	m_lines.back().contents += _str;
-}
+void IndentedWriter::add(string const& _str) { m_lines.back().contents += _str; }
 
 void IndentedWriter::addLine(string const& _line)
 {

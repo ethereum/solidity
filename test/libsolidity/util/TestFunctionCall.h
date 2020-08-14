@@ -32,7 +32,6 @@
 
 namespace solidity::frontend::test
 {
-
 /**
  * Represents a function call and the result it returned. It stores the call
  * representation itself, the actual byte result (if any) and a string representation
@@ -48,11 +47,10 @@ public:
 	/// Formats this function call test and applies the format that was detected during parsing.
 	/// If _renderResult is false, the expected result of the call will be used, if it's true
 	/// the actual result is used.
-	/// If _highlight is false, it's formatted without colorized highlighting. If it's true, AnsiColorized is
-	/// used to apply a colorized highlighting.
-	/// If test expectations do not match, the contract ABI is consulted in order to get the
-	/// right encoding for returned bytes, based on the parsed return types.
-	/// Reports warnings and errors to the error reporter.
+	/// If _highlight is false, it's formatted without colorized highlighting. If it's true,
+	/// AnsiColorized is used to apply a colorized highlighting. If test expectations do not match,
+	/// the contract ABI is consulted in order to get the right encoding for returned bytes, based
+	/// on the parsed return types. Reports warnings and errors to the error reporter.
 	std::string format(
 		ErrorReporter& _errorReporter,
 		std::string const& _linePrefix = "",
@@ -83,10 +81,9 @@ public:
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 
 private:
-	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each parameter.
-	/// Throws if there's a mismatch in the size of `bytes` and the desired formats that are specified
-	/// in the ABI type.
-	/// Reports warnings and errors to the error reporter.
+	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each
+	/// parameter. Throws if there's a mismatch in the size of `bytes` and the desired formats that
+	/// are specified in the ABI type. Reports warnings and errors to the error reporter.
 	std::string formatBytesParameters(
 		ErrorReporter& _errorReporter,
 		bytes const& _bytes,
@@ -97,10 +94,7 @@ private:
 	) const;
 
 	/// Formats a given _bytes applying the _abiType.
-	std::string formatBytesRange(
-		bytes const& _bytes,
-		ABIType const& _abiType
-	) const;
+	std::string formatBytesRange(bytes const& _bytes, ABIType const& _abiType) const;
 
 	/// Formats a FAILURE plus additional parameters, if e.g. a revert message was returned.
 	std::string formatFailure(
@@ -130,7 +124,8 @@ private:
 	/// JSON object which holds the contract ABI and that is used to set the output formatting
 	/// in the interactive update routine.
 	Json::Value m_contractABI;
-	/// Flags that the test failed because the called function is not known to exist on the contract.
+	/// Flags that the test failed because the called function is not known to exist on the
+	/// contract.
 	bool m_calledNonExistingFunction = false;
 };
 

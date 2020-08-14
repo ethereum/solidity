@@ -74,9 +74,18 @@ void CompilerContext::addStateVariable(
 
 void CompilerContext::addImmutable(VariableDeclaration const& _variable)
 {
-	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");
-	solUnimplementedAssert(_variable.annotation().type->isValueType(), "Only immutable variables of value type are supported.");
-	solAssert(m_runtimeContext, "Attempted to register an immutable variable for runtime code generation.");
+	solAssert(
+		_variable.immutable(),
+		"Attempted to register a non-immutable variable as immutable."
+	);
+	solUnimplementedAssert(
+		_variable.annotation().type->isValueType(),
+		"Only immutable variables of value type are supported."
+	);
+	solAssert(
+		m_runtimeContext,
+		"Attempted to register an immutable variable for runtime code generation."
+	);
 	m_immutableVariables[&_variable] = CompilerUtils::generalPurposeMemoryStart + *m_reservedMemory;
 	solAssert(_variable.annotation().type->memoryHeadSize() == 32, "Memory writes might overlap.");
 	*m_reservedMemory += _variable.annotation().type->memoryHeadSize();
@@ -84,8 +93,15 @@ void CompilerContext::addImmutable(VariableDeclaration const& _variable)
 
 size_t CompilerContext::immutableMemoryOffset(VariableDeclaration const& _variable) const
 {
-	solAssert(m_immutableVariables.count(&_variable), "Memory offset of unknown immutable queried.");
-	solAssert(m_runtimeContext, "Attempted to fetch the memory offset of an immutable variable during runtime code generation.");
+	solAssert(
+		m_immutableVariables.count(&_variable),
+		"Memory offset of unknown immutable queried."
+	);
+	solAssert(
+		m_runtimeContext,
+		"Attempted to fetch the memory offset of an immutable variable during runtime code "
+		"generation."
+	);
 	return m_immutableVariables.at(&_variable);
 }
 
@@ -96,7 +112,9 @@ vector<string> CompilerContext::immutableVariableSlotNames(VariableDeclaration c
 	if (_variable.annotation().type->sizeOnStack() == 1)
 		return {baseName};
 	vector<string> names;
-	auto collectSlotNames = [&](string const& _baseName, TypePointer type, auto const& _recurse) -> void {
+	auto collectSlotNames =
+		[&](string const& _baseName, TypePointer type, auto const& _recurse) -> void
+	{
 		for (auto const& [slot, type]: type->stackItems())
 			if (type)
 				_recurse(_baseName + " " + slot, type, _recurse);
@@ -138,11 +156,7 @@ void CompilerContext::callLowLevelFunction(
 	*this << retTag.tag();
 }
 
-void CompilerContext::callYulFunction(
-	string const& _name,
-	unsigned _inArgs,
-	unsigned _outArgs
-)
+void CompilerContext::callYulFunction(string const& _name, unsigned _inArgs, unsigned _outArgs)
 {
 	m_externallyUsedYulFunctions.insert(_name);
 	auto const retTag = pushNewTag();
@@ -187,7 +201,10 @@ void CompilerContext::appendMissingLowLevelFunctions()
 		generator(*this);
 		CompilerUtils(*this).moveToStackTop(outArgs);
 		appendJump(evmasm::AssemblyItem::JumpType::OutOfFunction);
-		solAssert(stackHeight() == outArgs, "Invalid stack height in low-level function " + name + ".");
+		solAssert(
+			stackHeight() == outArgs,
+			"Invalid stack height in low-level function " + name + "."
+		);
 	}
 }
 
@@ -216,7 +233,10 @@ void CompilerContext::addVariable(
 
 void CompilerContext::removeVariable(Declaration const& _declaration)
 {
-	solAssert(m_localVariables.count(&_declaration) && !m_localVariables[&_declaration].empty(), "");
+	solAssert(
+		m_localVariables.count(&_declaration) && !m_localVariables[&_declaration].empty(),
+		""
+	);
 	m_localVariables[&_declaration].pop_back();
 	if (m_localVariables[&_declaration].empty())
 		m_localVariables.erase(&_declaration);
@@ -236,19 +256,19 @@ void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
 		removeVariable(*_var);
 }
 
-unsigned CompilerContext::numberOfLocalVariables() const
-{
-	return m_localVariables.size();
-}
+unsigned CompilerContext::numberOfLocalVariables() const { return m_localVariables.size(); }
 
-shared_ptr<evmasm::Assembly> CompilerContext::compiledContract(ContractDefinition const& _contract) const
+shared_ptr<evmasm::Assembly> CompilerContext::compiledContract(ContractDefinition const& _contract)
+	const
 {
 	auto ret = m_otherCompilers.find(&_contract);
 	solAssert(ret != m_otherCompilers.end(), "Compiled contract not found.");
 	return ret->second->assemblyPtr();
 }
 
-shared_ptr<evmasm::Assembly> CompilerContext::compiledContractRuntime(ContractDefinition const& _contract) const
+shared_ptr<evmasm::Assembly> CompilerContext::compiledContractRuntime(
+	ContractDefinition const& _contract
+) const
 {
 	auto ret = m_otherCompilers.find(&_contract);
 	solAssert(ret != m_otherCompilers.end(), "Compiled contract not found.");
@@ -265,12 +285,16 @@ evmasm::AssemblyItem CompilerContext::functionEntryLabel(Declaration const& _dec
 	return m_functionCompilationQueue.entryLabel(_declaration, *this);
 }
 
-evmasm::AssemblyItem CompilerContext::functionEntryLabelIfExists(Declaration const& _declaration) const
+evmasm::AssemblyItem CompilerContext::functionEntryLabelIfExists(Declaration const& _declaration)
+	const
 {
 	return m_functionCompilationQueue.entryLabelIfExists(_declaration);
 }
 
-FunctionDefinition const& CompilerContext::superFunction(FunctionDefinition const& _function, ContractDefinition const& _base)
+FunctionDefinition const& CompilerContext::superFunction(
+	FunctionDefinition const& _function,
+	ContractDefinition const& _base
+)
 {
 	solAssert(m_mostDerivedContract, "No most derived contract set.");
 	ContractDefinition const* super = _base.superContract(mostDerivedContract());
@@ -307,7 +331,8 @@ unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 	return static_cast<unsigned>(m_asm->deposit()) - _offset - 1;
 }
 
-pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration) const
+pair<u256, unsigned> CompilerContext::storageLocationOfVariable(Declaration const& _declaration)
+	const
 {
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");
@@ -321,10 +346,7 @@ CompilerContext& CompilerContext::appendJump(evmasm::AssemblyItem::JumpType _jum
 	return *this << item;
 }
 
-CompilerContext& CompilerContext::appendInvalid()
-{
-	return *this << Instruction::INVALID;
-}
+CompilerContext& CompilerContext::appendInvalid() { return *this << Instruction::INVALID; }
 
 CompilerContext& CompilerContext::appendConditionalInvalid()
 {
@@ -341,17 +363,26 @@ CompilerContext& CompilerContext::appendRevert(string const& _message)
 	return *this;
 }
 
-CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData, string const& _message)
+CompilerContext& CompilerContext::appendConditionalRevert(
+	bool _forwardReturnData,
+	string const& _message
+)
 {
 	if (_forwardReturnData && m_evmVersion.supportsReturndata())
-		appendInlineAssembly(R"({
+		appendInlineAssembly(
+			R"({
 			if condition {
 				returndatacopy(0, 0, returndatasize())
 				revert(0, returndatasize())
 			}
-		})", {"condition"});
+		})",
+			{"condition"}
+		);
 	else
-		appendInlineAssembly("{ if condition { " + revertReasonIfDebug(_message) + " } }", {"condition"});
+		appendInlineAssembly(
+			"{ if condition { " + revertReasonIfDebug(_message) + " } }",
+			{"condition"}
+		);
 	*this << Instruction::POP;
 	return *this;
 }
@@ -381,33 +412,32 @@ void CompilerContext::appendInlineAssembly(
 		externallyUsedIdentifiers.insert(yul::YulString(var));
 
 	yul::ExternalIdentifierAccess identifierAccess;
-	identifierAccess.resolve = [&](
-		yul::Identifier const& _identifier,
-		yul::IdentifierContext,
-		bool _insideFunction
-	) -> bool
+	identifierAccess.resolve = [&](yul::Identifier const& _identifier,
+								   yul::IdentifierContext,
+								   bool _insideFunction) -> bool
 	{
 		if (_insideFunction)
 			return false;
 		return contains(_localVariables, _identifier.name.str());
 	};
-	identifierAccess.generateCode = [&](
-		yul::Identifier const& _identifier,
-		yul::IdentifierContext _context,
-		yul::AbstractAssembly& _assembly
-	)
+	identifierAccess.generateCode = [&](yul::Identifier const& _identifier,
+										yul::IdentifierContext _context,
+										yul::AbstractAssembly& _assembly)
 	{
 		auto it = std::find(_localVariables.begin(), _localVariables.end(), _identifier.name.str());
 		solAssert(it != _localVariables.end(), "");
 		auto stackDepth = static_cast<size_t>(distance(it, _localVariables.end()));
-		size_t stackDiff = static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
+		size_t stackDiff =
+			static_cast<size_t>(_assembly.stackHeight()) - startStackHeight + stackDepth;
 		if (_context == yul::IdentifierContext::LValue)
 			stackDiff -= 1;
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
-				StackTooDeepError() <<
-				errinfo_sourceLocation(_identifier.location) <<
-				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
+				StackTooDeepError() << errinfo_sourceLocation(_identifier.location)
+									<< util::errinfo_comment(
+										   "Stack too deep (" + to_string(stackDiff) +
+										   "), try removing local variables."
+									   )
 			);
 		if (_context == yul::IdentifierContext::RValue)
 			_assembly.appendInstruction(dupInstruction(stackDiff));
@@ -426,19 +456,18 @@ void CompilerContext::appendInlineAssembly(
 	if (!_system)
 		locationOverride = m_asm->currentSourceLocation();
 	shared_ptr<yul::Block> parserResult =
-		yul::Parser(errorReporter, dialect, std::move(locationOverride))
-		.parse(scanner, false);
+		yul::Parser(errorReporter, dialect, std::move(locationOverride)).parse(scanner, false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
 
 	auto reportError = [&](string const& _context)
 	{
-		string message =
-			"Error parsing/analyzing inline assembly block:\n" +
-			_context + "\n"
+		string message = "Error parsing/analyzing inline assembly block:\n" + _context +
+			"\n"
 			"------------------ Input: -----------------\n" +
-			_assembly + "\n"
+			_assembly +
+			"\n"
 			"------------------ Errors: ----------------\n";
 		for (auto const& error: errorReporter.errors())
 			message += SourceReferenceFormatter::formatErrorInformation(*error);
@@ -450,12 +479,9 @@ void CompilerContext::appendInlineAssembly(
 	yul::AsmAnalysisInfo analysisInfo;
 	bool analyzerResult = false;
 	if (parserResult)
-		analyzerResult = yul::AsmAnalyzer(
-			analysisInfo,
-			errorReporter,
-			dialect,
-			identifierAccess.resolve
-		).analyze(*parserResult);
+		analyzerResult =
+			yul::AsmAnalyzer(analysisInfo, errorReporter, dialect, identifierAccess.resolve)
+				.analyze(*parserResult);
 	if (!parserResult || !errorReporter.errors().empty() || !analyzerResult)
 		reportError("Invalid assembly generated by code generator.");
 
@@ -497,7 +523,12 @@ void CompilerContext::appendInlineAssembly(
 }
 
 
-void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSettings, std::set<yul::YulString> const& _externalIdentifiers)
+void CompilerContext::optimizeYul(
+	yul::Object& _object,
+	yul::EVMDialect const& _dialect,
+	OptimiserSettings const& _optimiserSettings,
+	std::set<yul::YulString> const& _externalIdentifiers
+)
 {
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(*dialect)(*_object.code) << endl;
@@ -534,13 +565,18 @@ string CompilerContext::revertReasonIfDebug(string const& _message)
 
 void CompilerContext::updateSourceLocation()
 {
-	m_asm->setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->location());
+	m_asm->setSourceLocation(
+		m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->location()
+	);
 }
 
-evmasm::Assembly::OptimiserSettings CompilerContext::translateOptimiserSettings(OptimiserSettings const& _settings)
+evmasm::Assembly::OptimiserSettings CompilerContext::translateOptimiserSettings(
+	OptimiserSettings const& _settings
+)
 {
 	// Constructing it this way so that we notice changes in the fields.
-	evmasm::Assembly::OptimiserSettings asmSettings{false, false, false, false, false, false, m_evmVersion, 0};
+	evmasm::Assembly::OptimiserSettings
+		asmSettings{false, false, false, false, false, false, m_evmVersion, 0};
 	asmSettings.isCreation = true;
 	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
 	asmSettings.runPeephole = _settings.runPeephole;
@@ -567,13 +603,15 @@ evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
 	}
 	else
 		return res->second.tag();
-
 }
 
-evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabelIfExists(Declaration const& _declaration) const
+evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabelIfExists(
+	Declaration const& _declaration
+) const
 {
 	auto res = m_entryLabels.find(&_declaration);
-	return res == m_entryLabels.end() ? evmasm::AssemblyItem(evmasm::UndefinedItem) : res->second.tag();
+	return res == m_entryLabels.end() ? evmasm::AssemblyItem(evmasm::UndefinedItem) :
+										  res->second.tag();
 }
 
 Declaration const* CompilerContext::FunctionCompilationQueue::nextFunctionToCompile() const

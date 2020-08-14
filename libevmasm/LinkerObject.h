@@ -27,7 +27,6 @@
 
 namespace solidity::evmasm
 {
-
 /**
  * Binary object that potentially still needs to be linked (i.e. addresses of other contracts
  * need to be filled in).
@@ -41,14 +40,15 @@ struct LinkerObject
 	/// need to be replaced by the actual addresses by the linker.
 	std::map<size_t, std::string> linkReferences;
 
-	/// Map from hashes of the identifiers of immutable variables to the full identifier of the immutable and
-	/// to a list of offsets into the bytecode that refer to their values.
+	/// Map from hashes of the identifiers of immutable variables to the full identifier of the
+	/// immutable and to a list of offsets into the bytecode that refer to their values.
 	std::map<u256, std::pair<std::string, std::vector<size_t>>> immutableReferences;
 
 	/// Appends the bytecode of @a _other and incorporates its link references.
 	void append(LinkerObject const& _other);
 
-	/// Links the given libraries by replacing their uses in the code and removes them from the references.
+	/// Links the given libraries by replacing their uses in the code and removes them from the
+	/// references.
 	void link(std::map<std::string, util::h160> const& _libraryAddresses);
 
 	/// @returns a hex representation of the bytecode of the given object, replacing unlinked

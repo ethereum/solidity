@@ -23,20 +23,20 @@
 
 namespace solidity::frontend
 {
-
 class VariableDeclaration;
 class Type;
 class Expression;
 
 /**
- * An IRVariable refers to a set of yul variables that correspond to the stack layout of a Solidity variable or expression
- * of a specific Solidity type. If the Solidity type occupies a single stack slot, the IRVariable refers to a single yul variable.
- * Otherwise the set of yul variables it refers to is (recursively) determined by  @see ``Type::stackItems()``.
- * For example, an IRVariable referring to a dynamically sized calldata array will consist of two parts named
- * ``offset`` and ``length``, whereas an IRVariable referring to a statically sized calldata type, a storage reference
- * type or a memory reference type will contain a single unnamed part containing an offset. An IRVariable referring to
- * a value type will contain a single unnamed part containing the value, an IRVariable referring to a tuple will
- * have the typed tuple components as parts.
+ * An IRVariable refers to a set of yul variables that correspond to the stack layout of a Solidity
+ * variable or expression of a specific Solidity type. If the Solidity type occupies a single stack
+ * slot, the IRVariable refers to a single yul variable. Otherwise the set of yul variables it
+ * refers to is (recursively) determined by  @see ``Type::stackItems()``. For example, an IRVariable
+ * referring to a dynamically sized calldata array will consist of two parts named
+ * ``offset`` and ``length``, whereas an IRVariable referring to a statically sized calldata type, a
+ * storage reference type or a memory reference type will contain a single unnamed part containing
+ * an offset. An IRVariable referring to a value type will contain a single unnamed part containing
+ * the value, an IRVariable referring to a tuple will have the typed tuple components as parts.
  */
 class IRVariable
 {
@@ -46,7 +46,8 @@ public:
 	/// IR variable referring to the declaration @a _decl.
 	explicit IRVariable(VariableDeclaration const& _decl);
 	/// IR variable referring to the expression @a _expr.
-	/// Intentionally not defined as explicit to allow defining IRVariables for expressions directly via implicit conversions.
+	/// Intentionally not defined as explicit to allow defining IRVariables for expressions directly
+	/// via implicit conversions.
 	IRVariable(Expression const& _expression);
 
 	/// @returns the name of the variable, if it occupies a single stack slot (otherwise throws).

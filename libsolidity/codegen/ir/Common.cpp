@@ -29,8 +29,7 @@ YulArity YulArity::fromType(FunctionType const& _functionType)
 {
 	return YulArity{
 		TupleType(_functionType.parameterTypes()).sizeOnStack(),
-		TupleType(_functionType.returnParameterTypes()).sizeOnStack()
-	};
+		TupleType(_functionType.returnParameterTypes()).sizeOnStack()};
 }
 string IRNames::function(FunctionDefinition const& _function)
 {
@@ -57,8 +56,8 @@ string IRNames::runtimeObject(ContractDefinition const& _contract)
 string IRNames::internalDispatch(YulArity const& _arity)
 {
 	return "dispatch_internal"
-		"_in_" + to_string(_arity.in) +
-		"_out_" + to_string(_arity.out);
+		   "_in_" +
+		to_string(_arity.in) + "_out_" + to_string(_arity.out);
 }
 
 string IRNames::implicitConstructor(ContractDefinition const& _contract)
@@ -91,10 +90,7 @@ string IRNames::trySuccessConditionVariable(Expression const& _expression)
 	return "trySuccessCondition_" + to_string(_expression.id());
 }
 
-string IRNames::tupleComponent(size_t _i)
-{
-	return "component_" + to_string(_i + 1);
-}
+string IRNames::tupleComponent(size_t _i) { return "component_" + to_string(_i + 1); }
 
 string IRNames::zeroValue(Type const& _type, string const& _variableName)
 {
@@ -104,9 +100,13 @@ string IRNames::zeroValue(Type const& _type, string const& _variableName)
 FunctionDefinition const* IRHelpers::referencedFunctionDeclaration(Expression const& _expression)
 {
 	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
-		return dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
+		return dynamic_cast<FunctionDefinition const*>(
+			memberAccess->annotation().referencedDeclaration
+		);
 	else if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
-		return dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration);
+		return dynamic_cast<FunctionDefinition const*>(
+			identifier->annotation().referencedDeclaration
+		);
 	else
 		return nullptr;
 }

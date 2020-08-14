@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * Unit tests for the SMT checker.
@@ -30,12 +30,10 @@ using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
-
 class SMTCheckerFramework: public AnalysisFramework
 {
 protected:
-	std::pair<SourceUnit const*, ErrorList>
-	parseAnalyseAndReturnError(
+	std::pair<SourceUnit const*, ErrorList> parseAnalyseAndReturnError(
 		std::string const& _source,
 		bool _reportWarnings = false,
 		bool _insertLicenseAndVersionPragma = true,
@@ -58,8 +56,8 @@ BOOST_FIXTURE_TEST_SUITE(SMTChecker, SMTCheckerFramework)
 BOOST_AUTO_TEST_CASE(import_base, *boost::unit_test::label("no_options"))
 {
 	CompilerStack c;
-	c.setSources({
-	{"base", R"(
+	c.setSources(
+		{{"base", R"(
 		pragma solidity >=0.0;
 		contract Base {
 			uint x;
@@ -71,7 +69,7 @@ BOOST_AUTO_TEST_CASE(import_base, *boost::unit_test::label("no_options"))
 			}
 		}
 	)"},
-	{"der", R"(
+		 {"der", R"(
 		pragma solidity >=0.0;
 		pragma experimental SMTChecker;
 		import "base";
@@ -81,8 +79,8 @@ BOOST_AUTO_TEST_CASE(import_base, *boost::unit_test::label("no_options"))
 				assert(y > x);
 			}
 		}
-	)"}
-	});
+	)"}}
+	);
 	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	BOOST_CHECK(c.compile());
 
@@ -100,8 +98,8 @@ BOOST_AUTO_TEST_CASE(import_base, *boost::unit_test::label("no_options"))
 BOOST_AUTO_TEST_CASE(import_library, *boost::unit_test::label("no_options"))
 {
 	CompilerStack c;
-	c.setSources({
-	{"lib", R"(
+	c.setSources(
+		{{"lib", R"(
 		pragma solidity >=0.0;
 		library L {
 			uint constant one = 1;
@@ -110,7 +108,7 @@ BOOST_AUTO_TEST_CASE(import_library, *boost::unit_test::label("no_options"))
 			}
 		}
 	)"},
-	{"c", R"(
+		 {"c", R"(
 		pragma solidity >=0.0;
 		pragma experimental SMTChecker;
 		import "lib";
@@ -120,8 +118,8 @@ BOOST_AUTO_TEST_CASE(import_library, *boost::unit_test::label("no_options"))
 				assert(x > y);
 			}
 		}
-	)"}
-	});
+	)"}}
+	);
 	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	BOOST_CHECK(c.compile());
 
@@ -134,7 +132,6 @@ BOOST_AUTO_TEST_CASE(import_library, *boost::unit_test::label("no_options"))
 			++asserts;
 	}
 	BOOST_CHECK_EQUAL(asserts, 1);
-
 }
 
 

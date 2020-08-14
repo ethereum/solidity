@@ -32,16 +32,17 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
 
-NameDispenser::NameDispenser(Dialect const& _dialect, Block const& _ast, set<YulString> _reservedNames):
+NameDispenser::NameDispenser(
+	Dialect const& _dialect,
+	Block const& _ast,
+	set<YulString> _reservedNames
+):
 	NameDispenser(_dialect, NameCollector(_ast).names() + std::move(_reservedNames))
-{
-}
+{}
 
 NameDispenser::NameDispenser(Dialect const& _dialect, set<YulString> _usedNames):
-	m_dialect(_dialect),
-	m_usedNames(std::move(_usedNames))
-{
-}
+	m_dialect(_dialect), m_usedNames(std::move(_usedNames))
+{}
 
 YulString NameDispenser::newName(YulString _nameHint)
 {

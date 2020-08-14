@@ -23,7 +23,6 @@
 
 namespace solidity::util
 {
-
 /**
  * Generic visitor used as follows:
  * std::visit(GenericVisitor{
@@ -48,14 +47,32 @@ namespace solidity::util
  * }, variant);
  */
 
-template <typename...> struct VisitorFallback;
+template <typename...>
+struct VisitorFallback;
 
 template <typename R>
-struct VisitorFallback<R> { template<typename T> R operator()(T&&) const { return {}; } };
+struct VisitorFallback<R>
+{
+	template <typename T>
+	R operator()(T&&) const
+	{
+		return {};
+	}
+};
 
-template<>
-struct VisitorFallback<> { template<typename T> void operator()(T&&) const {} };
+template <>
+struct VisitorFallback<>
+{
+	template <typename T>
+	void operator()(T&&) const
+	{}
+};
 
-template <typename... Visitors> struct GenericVisitor: Visitors... { using Visitors::operator()...; };
-template <typename... Visitors> GenericVisitor(Visitors...) -> GenericVisitor<Visitors...>;
+template <typename... Visitors>
+struct GenericVisitor: Visitors...
+{
+	using Visitors::operator()...;
+};
+template <typename... Visitors>
+GenericVisitor(Visitors...) -> GenericVisitor<Visitors...>;
 }

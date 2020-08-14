@@ -26,7 +26,6 @@
 
 namespace solidity::yul
 {
-
 struct OptimiserStepContext;
 
 /**

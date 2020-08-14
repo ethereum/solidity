@@ -24,7 +24,6 @@
 
 namespace solidity::frontend::test
 {
-
 /**
  * A map for registering source names that also contains the main source name in a test case.
  */
@@ -35,7 +34,8 @@ struct SourceMap
 };
 
 /**
- * A reader for test case data file, which parses source, settings and (optionally) simple expectations.
+ * A reader for test case data file, which parses source, settings and (optionally) simple
+ * expectations.
  */
 class TestCaseReader
 {
@@ -66,6 +66,6 @@ private:
 	SourceMap m_sources;
 	std::size_t m_lineNumber = 0;
 	std::map<std::string, std::string> m_settings;
-	std::map<std::string, std::string> m_unreadSettings; ///< tracks which settings are left unread
+	std::map<std::string, std::string> m_unreadSettings;  ///< tracks which settings are left unread
 };
 }

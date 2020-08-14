@@ -24,16 +24,10 @@ solidity::bytes SolidityCompilationFramework::compileContract(
 		langutil::SourceReferenceFormatter formatter(std::cerr);
 
 		for (auto const& error: m_compiler.errors())
-			formatter.printExceptionInformation(
-					*error,
-					formatter.formatErrorInformation(*error)
-			);
+			formatter.printExceptionInformation(*error, formatter.formatErrorInformation(*error));
 		std::cerr << "Compiling contract failed" << std::endl;
 	}
-	evmasm::LinkerObject obj = m_compiler.object(
-		_contractName.empty() ?
-		m_compiler.lastContractName() :
-		_contractName
-	);
+	evmasm::LinkerObject obj =
+		m_compiler.object(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
 	return obj.bytecode;
 }

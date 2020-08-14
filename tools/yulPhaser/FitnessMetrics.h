@@ -32,7 +32,6 @@
 
 namespace solidity::phaser
 {
-
 /**
  * Abstract base class for fitness metrics.
  *
@@ -121,8 +120,14 @@ public:
 		yul::CodeWeights const& _weights,
 		size_t _repetitionCount = 1
 	):
-		ProgramBasedMetric(std::move(_program), std::move(_programCache), _weights, _repetitionCount),
-		m_fixedPointPrecision(_fixedPointPrecision) {}
+		ProgramBasedMetric(
+			std::move(_program),
+			std::move(_programCache),
+			_weights,
+			_repetitionCount
+		),
+		m_fixedPointPrecision(_fixedPointPrecision)
+	{}
 
 	size_t fixedPointPrecision() const { return m_fixedPointPrecision; }
 
@@ -140,7 +145,8 @@ class FitnessMetricCombination: public FitnessMetric
 {
 public:
 	explicit FitnessMetricCombination(std::vector<std::shared_ptr<FitnessMetric>> _metrics):
-		m_metrics(std::move(_metrics)) {}
+		m_metrics(std::move(_metrics))
+	{}
 
 	std::vector<std::shared_ptr<FitnessMetric>> const& metrics() const { return m_metrics; }
 

@@ -35,16 +35,10 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast)
-{
-	ExpressionJoiner{_ast}(_ast);
-}
+void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast) { ExpressionJoiner{_ast}(_ast); }
 
 
-void ExpressionJoiner::operator()(FunctionCall& _funCall)
-{
-	handleArguments(_funCall.arguments);
-}
+void ExpressionJoiner::operator()(FunctionCall& _funCall) { handleArguments(_funCall.arguments); }
 
 void ExpressionJoiner::operator()(Block& _block)
 {
@@ -70,7 +64,8 @@ void ExpressionJoiner::visit(Expression& _e)
 			VariableDeclaration& varDecl = std::get<VariableDeclaration>(*latestStatement());
 			_e = std::move(*varDecl.value);
 
-			// Delete the variable declaration (also get the moved-from structure back into a sane state)
+			// Delete the variable declaration (also get the moved-from structure back into a sane
+			// state)
 			*latestStatement() = Block();
 
 			decrementLatestStatementPointer();

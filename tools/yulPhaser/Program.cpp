@@ -52,7 +52,6 @@ using namespace solidity::phaser;
 
 namespace solidity::phaser
 {
-
 ostream& operator<<(ostream& _stream, Program const& _program);
 
 }
@@ -71,8 +70,7 @@ Program::Program(Program const& program):
 	m_ast(make_unique<Block>(get<Block>(ASTCopier{}(*program.m_ast)))),
 	m_dialect{program.m_dialect},
 	m_nameDispenser(program.m_nameDispenser)
-{
-}
+{}
 
 variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 {
@@ -83,10 +81,8 @@ variant<Program, ErrorList> Program::load(CharStream& _sourceCode)
 	if (holds_alternative<ErrorList>(astOrErrors))
 		return get<ErrorList>(astOrErrors);
 
-	variant<unique_ptr<AsmAnalysisInfo>, ErrorList> analysisInfoOrErrors = analyzeAST(
-		dialect,
-		*get<unique_ptr<Block>>(astOrErrors)
-	);
+	variant<unique_ptr<AsmAnalysisInfo>, ErrorList> analysisInfoOrErrors =
+		analyzeAST(dialect, *get<unique_ptr<Block>>(astOrErrors));
 	if (holds_alternative<ErrorList>(analysisInfoOrErrors))
 		return get<ErrorList>(analysisInfoOrErrors);
 
@@ -123,7 +119,10 @@ string Program::toJson() const
 	return jsonPrettyPrint(removeNullMembers(std::move(serializedAst)));
 }
 
-variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _dialect, CharStream _source)
+variant<unique_ptr<Block>, ErrorList> Program::parseObject(
+	Dialect const& _dialect,
+	CharStream _source
+)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
@@ -163,7 +162,10 @@ variant<unique_ptr<Block>, ErrorList> Program::parseObject(Dialect const& _diale
 	return variant<unique_ptr<Block>, ErrorList>(move(astCopy));
 }
 
-variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(Dialect const& _dialect, Block const& _ast)
+variant<unique_ptr<AsmAnalysisInfo>, ErrorList> Program::analyzeAST(
+	Dialect const& _dialect,
+	Block const& _ast
+)
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);

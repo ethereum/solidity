@@ -30,8 +30,8 @@ using namespace solidity::yul;
 
 using OptionalStatements = std::optional<vector<Statement>>;
 
-namespace {
-
+namespace
+{
 OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _constExprVal)
 {
 	Block* matchingCaseBlock = nullptr;
@@ -59,38 +59,34 @@ OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _const
 
 }
 
-void StructuralSimplifier::run(OptimiserStepContext&, Block& _ast)
-{
-	StructuralSimplifier{}(_ast);
-}
+void StructuralSimplifier::run(OptimiserStepContext&, Block& _ast) { StructuralSimplifier{}(_ast); }
 
-void StructuralSimplifier::operator()(Block& _block)
-{
-	simplify(_block.statements);
-}
+void StructuralSimplifier::operator()(Block& _block) { simplify(_block.statements); }
 
 void StructuralSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
 	util::GenericVisitor visitor{
 		util::VisitorFallback<OptionalStatements>{},
-		[&](If& _ifStmt) -> OptionalStatements {
+		[&](If& _ifStmt) -> OptionalStatements
+		{
 			if (expressionAlwaysTrue(*_ifStmt.condition))
 				return {std::move(_ifStmt.body.statements)};
 			else if (expressionAlwaysFalse(*_ifStmt.condition))
 				return {vector<Statement>{}};
 			return {};
 		},
-		[&](Switch& _switchStmt) -> OptionalStatements {
+		[&](Switch& _switchStmt) -> OptionalStatements
+		{
 			if (std::optional<u256> const constExprVal = hasLiteralValue(*_switchStmt.expression))
 				return replaceConstArgSwitch(_switchStmt, constExprVal.value());
 			return {};
 		},
-		[&](ForLoop& _forLoop) -> OptionalStatements {
+		[&](ForLoop& _forLoop) -> OptionalStatements
+		{
 			if (expressionAlwaysFalse(*_forLoop.condition))
 				return {std::move(_forLoop.pre.statements)};
 			return {};
-		}
-	};
+		}};
 
 	util::iterateReplacing(
 		_statements,

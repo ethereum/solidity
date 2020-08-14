@@ -25,7 +25,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 struct Block;
 class YulString;

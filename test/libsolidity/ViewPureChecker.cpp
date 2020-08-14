@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * Unit tests for the view and pure checker.
@@ -32,7 +32,6 @@ using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
-
 BOOST_FIXTURE_TEST_SUITE(ViewPureChecker, AnalysisFramework)
 
 BOOST_AUTO_TEST_CASE(environment_access)
@@ -57,20 +56,14 @@ BOOST_AUTO_TEST_CASE(environment_access)
 
 	// ``block.blockhash`` and ``blockhash`` are tested separately below because their usage will
 	// produce warnings that can't be handled in a generic way.
-	vector<string> pure{
-		"msg.data",
-		"msg.data[0]",
-		"msg.sig",
-		"msg",
-		"block",
-		"tx"
-	};
+	vector<string> pure{"msg.data", "msg.data[0]", "msg.sig", "msg", "block", "tx"};
 	for (string const& x: view)
 	{
 		CHECK_ERROR(
 			"contract C { function f() pure public { " + x + "; } }",
 			TypeError,
-			"Function declared as pure, but this expression (potentially) reads from the environment or state and thus requires \"view\""
+			"Function declared as pure, but this expression (potentially) reads from the "
+			"environment or state and thus requires \"view\""
 		);
 	}
 	for (string const& x: pure)
@@ -85,8 +78,8 @@ BOOST_AUTO_TEST_CASE(environment_access)
 		"contract C { function f() view public { blockhash; } }",
 		(std::vector<std::string>{
 			"Function state mutability can be restricted to pure",
-			"Statement has no effect."
-	}));
+			"Statement has no effect."})
+	);
 
 	CHECK_ERROR(
 		"contract C { function f() view public { block.blockhash; } }",

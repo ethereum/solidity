@@ -39,7 +39,10 @@ string MultiUseYulFunctionCollector::requestedFunctions()
 	return result;
 }
 
-string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)
+string MultiUseYulFunctionCollector::createFunction(
+	string const& _name,
+	function<string()> const& _creator
+)
 {
 	if (!m_requestedFunctions.count(_name))
 	{

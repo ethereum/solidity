@@ -27,11 +27,7 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::smtutil;
 
-CVC4Interface::CVC4Interface():
-	m_solver(&m_context)
-{
-	reset();
-}
+CVC4Interface::CVC4Interface(): m_solver(&m_context) { reset(); }
 
 void CVC4Interface::reset()
 {
@@ -41,15 +37,9 @@ void CVC4Interface::reset()
 	m_solver.setResourceLimit(resourceLimit);
 }
 
-void CVC4Interface::push()
-{
-	m_solver.push();
-}
+void CVC4Interface::push() { m_solver.push(); }
 
-void CVC4Interface::pop()
-{
-	m_solver.pop();
-}
+void CVC4Interface::pop() { m_solver.pop(); }
 
 void CVC4Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
@@ -81,7 +71,9 @@ void CVC4Interface::addAssertion(Expression const& _expr)
 	}
 }
 
-pair<CheckResult, vector<string>> CVC4Interface::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> CVC4Interface::check(
+	vector<Expression> const& _expressionsToEvaluate
+)
 {
 	CheckResult result;
 	vector<string> values;
@@ -194,14 +186,20 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);
 			auto i2bvOp = m_context.mkConst(CVC4::IntToBitVector(size));
-			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
+			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if
+			// needed.
 			return m_context.mkExpr(
 				CVC4::kind::ITE,
-				m_context.mkExpr(CVC4::kind::GEQ, arguments[0], m_context.mkConst(CVC4::Rational(0))),
+				m_context
+					.mkExpr(CVC4::kind::GEQ, arguments[0], m_context.mkConst(CVC4::Rational(0))),
 				m_context.mkExpr(CVC4::kind::INT_TO_BITVECTOR, i2bvOp, arguments[0]),
 				m_context.mkExpr(
 					CVC4::kind::BITVECTOR_NEG,
-					m_context.mkExpr(CVC4::kind::INT_TO_BITVECTOR, i2bvOp, m_context.mkExpr(CVC4::kind::UMINUS, arguments[0]))
+					m_context.mkExpr(
+						CVC4::kind::INT_TO_BITVECTOR,
+						i2bvOp,
+						m_context.mkExpr(CVC4::kind::UMINUS, arguments[0])
+					)
 				)
 			);
 		}
@@ -216,9 +214,11 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			auto type = arguments[0].getType();
 			smtAssert(type.isBitVector(), "");
 			auto size = CVC4::BitVectorType(type).getSize();
-			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if needed.
+			// CVC4 treats all BVs as unsigned, so we need to manually apply 2's complement if
+			// needed.
 			auto extractOp = m_context.mkConst(CVC4::BitVectorExtract(size - 1, size - 1));
-			return m_context.mkExpr(CVC4::kind::ITE,
+			return m_context.mkExpr(
+				CVC4::kind::ITE,
 				m_context.mkExpr(
 					CVC4::kind::EQUAL,
 					m_context.mkExpr(CVC4::kind::BITVECTOR_EXTRACT, extractOp, arguments[0]),
@@ -227,7 +227,10 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 				nat,
 				m_context.mkExpr(
 					CVC4::kind::UMINUS,
-					m_context.mkExpr(CVC4::kind::BITVECTOR_TO_NAT, m_context.mkExpr(CVC4::kind::BITVECTOR_NEG, arguments[0]))
+					m_context.mkExpr(
+						CVC4::kind::BITVECTOR_TO_NAT,
+						m_context.mkExpr(CVC4::kind::BITVECTOR_NEG, arguments[0])
+					)
 				)
 			);
 		}
@@ -237,13 +240,15 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::STORE, arguments[0], arguments[1], arguments[2]);
 		else if (n == "const_array")
 		{
-			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
+			shared_ptr<SortSort> sortSort =
+				std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
 			smtAssert(sortSort, "");
 			return m_context.mkConst(CVC4::ArrayStoreAll(cvc4Sort(*sortSort->inner), arguments[1]));
 		}
 		else if (n == "tuple_get")
 		{
-			shared_ptr<TupleSort> tupleSort = std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
+			shared_ptr<TupleSort> tupleSort =
+				std::dynamic_pointer_cast<TupleSort>(_expr.arguments[0].sort);
 			smtAssert(tupleSort, "");
 			CVC4::DatatypeType tt = m_context.mkTupleType(cvc4Sort(tupleSort->components));
 			CVC4::Datatype const& dt = tt.getDatatype();

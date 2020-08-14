@@ -61,12 +61,23 @@ bool DocStringTagParser::visit(VariableDeclaration const& _variable)
 {
 	if (_variable.isStateVariable())
 	{
-		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "inheritdoc"};
+		static set<string> const validPublicTags =
+			set<string>{"dev", "notice", "return", "inheritdoc"};
 		static set<string> const validNonPublicTags = set<string>{"dev", "inheritdoc"};
 		if (_variable.isPublic())
-			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
+			parseDocStrings(
+				_variable,
+				_variable.annotation(),
+				validPublicTags,
+				"public state variables"
+			);
 		else
-			parseDocStrings(_variable, _variable.annotation(), validNonPublicTags, "non-public state variables");
+			parseDocStrings(
+				_variable,
+				_variable.annotation(),
+				validNonPublicTags,
+				"non-public state variables"
+			);
 	}
 	return false;
 }
@@ -103,9 +114,8 @@ void DocStringTagParser::checkParameters(
 			m_errorReporter.docstringParsingError(
 				3881_error,
 				_node.documentation()->location(),
-				"Documented parameter \"" +
-				i->second.paramName +
-				"\" not found in the parameter list of the function."
+				"Documented parameter \"" + i->second.paramName +
+					"\" not found in the parameter list of the function."
 			);
 }
 
@@ -127,7 +137,8 @@ void DocStringTagParser::handleCallable(
 )
 {
 	static set<string> const validEventTags = set<string>{"dev", "notice", "return", "param"};
-	static set<string> const validTags = set<string>{"dev", "notice", "return", "param", "inheritdoc"};
+	static set<string> const validTags =
+		set<string>{"dev", "notice", "return", "param", "inheritdoc"};
 
 	if (dynamic_cast<EventDefinition const*>(&_callable))
 		parseDocStrings(_node, _annotation, validEventTags, "events");
@@ -165,12 +176,16 @@ void DocStringTagParser::parseDocStrings(
 			returnTagsVisited++;
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
 			{
-				solAssert(varDecl->isPublic(), "@return is only allowed on public state-variables.");
+				solAssert(
+					varDecl->isPublic(),
+					"@return is only allowed on public state-variables."
+				);
 				if (returnTagsVisited > 1)
 					m_errorReporter.docstringParsingError(
 						5256_error,
 						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + "\" is only allowed once on state-variables."
+						"Documentation tag \"@" + docTag.first +
+							"\" is only allowed once on state-variables."
 					);
 			}
 			else if (auto const* function = dynamic_cast<FunctionDefinition const*>(&_node))
@@ -182,8 +197,8 @@ void DocStringTagParser::parseDocStrings(
 					m_errorReporter.docstringParsingError(
 						2604_error,
 						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
-						" exceeds the number of return parameters."
+						"Documentation tag \"@" + docTag.first + " " + docTag.second.content +
+							"\"" + " exceeds the number of return parameters."
 					);
 				else
 				{
@@ -192,8 +207,8 @@ void DocStringTagParser::parseDocStrings(
 						m_errorReporter.docstringParsingError(
 							5856_error,
 							_node.documentation()->location(),
-							"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
-							" does not contain the name of its return parameter."
+							"Documentation tag \"@" + docTag.first + " " + docTag.second.content +
+								"\"" + " does not contain the name of its return parameter."
 						);
 				}
 			}

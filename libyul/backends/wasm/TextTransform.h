@@ -32,7 +32,6 @@ struct AsmAnalysisInfo;
 
 namespace solidity::yul::wasm
 {
-
 class TextTransform
 {
 public:

@@ -44,7 +44,6 @@ namespace fs = boost::filesystem;
 
 namespace solidity::phaser::test
 {
-
 class CountingAlgorithm: public GeneticAlgorithm
 {
 public:
@@ -64,7 +63,12 @@ public:
 	using GeneticAlgorithm::GeneticAlgorithm;
 	Population runNextRound(Population _population) override
 	{
-		return Population::makeRandom(_population.fitnessMetric(), _population.individuals().size(), 10, 20);
+		return Population::makeRandom(
+			_population.fitnessMetric(),
+			_population.individuals().size(),
+			10,
+			20
+		);
 	}
 };
 
@@ -200,11 +204,17 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_only_top_chromosome_if_requested, Algor
 	RandomisingAlgorithm algorithm;
 
 	runner.run(algorithm);
-	BOOST_TEST(nextLineMatches(m_output, regex(topChromosomePattern(1, runner.population().individuals()[0]))));
+	BOOST_TEST(nextLineMatches(
+		m_output,
+		regex(topChromosomePattern(1, runner.population().individuals()[0]))
+	));
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_print_round_number_for_top_chromosome_if_round_info_not_requested, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_not_print_round_number_for_top_chromosome_if_round_info_not_requested,
+	AlgorithmRunnerFixture
+)
 {
 	m_options.maxRounds = 1;
 	m_options.showInitialPopulation = false;
@@ -214,11 +224,16 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_print_round_number_for_top_chromosome_if_
 	RandomisingAlgorithm algorithm;
 
 	runner.run(algorithm);
-	BOOST_TEST(nextLineMatches(m_output, regex(individualPattern(runner.population().individuals()[0]))));
+	BOOST_TEST(
+		nextLineMatches(m_output, regex(individualPattern(runner.population().individuals()[0])))
+	);
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_print_population_if_its_empty_and_only_top_chromosome_requested, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_not_print_population_if_its_empty_and_only_top_chromosome_requested,
+	AlgorithmRunnerFixture
+)
 {
 	m_options.maxRounds = 3;
 	m_options.showRoundInfo = true;
@@ -248,7 +263,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_initial_population_if_requested, Algori
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_print_initial_population_if_not_requested, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_not_print_initial_population_if_not_requested,
+	AlgorithmRunnerFixture
+)
 {
 	m_options.maxRounds = 0;
 	m_options.showInitialPopulation = false;
@@ -262,7 +280,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_print_initial_population_if_not_requested
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_print_whole_initial_population_even_if_only_top_chromosome_requested, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_print_whole_initial_population_even_if_only_top_chromosome_requested,
+	AlgorithmRunnerFixture
+)
 {
 	m_options.maxRounds = 0;
 	m_options.showInitialPopulation = true;
@@ -300,10 +321,11 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_cache_stats_if_requested, AlgorithmRunn
 		make_shared<ProgramCache>(programs[0]),
 		make_shared<ProgramCache>(programs[1]),
 	};
-	shared_ptr<FitnessMetric> fitnessMetric = make_shared<FitnessMetricAverage>(vector<shared_ptr<FitnessMetric>>{
-		make_shared<ProgramSize>(nullopt, caches[0], CodeWeights{}),
-		make_shared<ProgramSize>(nullopt, caches[1], CodeWeights{}),
-	});
+	shared_ptr<FitnessMetric> fitnessMetric =
+		make_shared<FitnessMetricAverage>(vector<shared_ptr<FitnessMetric>>{
+			make_shared<ProgramSize>(nullopt, caches[0], CodeWeights{}),
+			make_shared<ProgramSize>(nullopt, caches[1], CodeWeights{}),
+		});
 	Population population = Population::makeRandom(fitnessMetric, 2, 0, 5);
 
 	AlgorithmRunner runner(population, caches, m_options, m_output);
@@ -333,15 +355,29 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_cache_stats_if_requested, AlgorithmRunn
 	size_t round = m_options.maxRounds.value();
 	BOOST_TEST(nextLineMatches(m_output, regex(".*")));
 	BOOST_TEST(nextLineMatches(m_output, regex("-+CACHESTATS-+")));
-	BOOST_TEST(nextLineMatches(m_output, regex("Round" + toString(round - 1) + ":" + toString(stats.roundEntryCounts[round - 1]) + "entries")));
-	BOOST_TEST(nextLineMatches(m_output, regex("Round" + toString(round) + ":" + toString(stats.roundEntryCounts[round]) + "entries")));
+	BOOST_TEST(nextLineMatches(
+		m_output,
+		regex(
+			"Round" + toString(round - 1) + ":" + toString(stats.roundEntryCounts[round - 1]) +
+			"entries"
+		)
+	));
+	BOOST_TEST(nextLineMatches(
+		m_output,
+		regex("Round" + toString(round) + ":" + toString(stats.roundEntryCounts[round]) + "entries")
+	));
 	BOOST_TEST(nextLineMatches(m_output, regex("Totalhits:" + toString(stats.hits))));
 	BOOST_TEST(nextLineMatches(m_output, regex("Totalmisses:" + toString(stats.misses))));
-	BOOST_TEST(nextLineMatches(m_output, regex("Sizeofcachedcode:" + toString(stats.totalCodeSize))));
+	BOOST_TEST(
+		nextLineMatches(m_output, regex("Sizeofcachedcode:" + toString(stats.totalCodeSize)))
+	);
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_print_message_if_cache_stats_requested_but_cache_disabled, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_print_message_if_cache_stats_requested_but_cache_disabled,
+	AlgorithmRunnerFixture
+)
 {
 	m_options.maxRounds = 1;
 	m_options.showInitialPopulation = false;
@@ -359,7 +395,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_message_if_cache_stats_requested_but_ca
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_print_partial_stats_and_message_if_some_caches_disabled, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_print_partial_stats_and_message_if_some_caches_disabled,
+	AlgorithmRunnerFixture
+)
 {
 	m_options.maxRounds = 1;
 	m_options.showInitialPopulation = false;
@@ -369,7 +408,8 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_partial_stats_and_message_if_some_cache
 	RandomisingAlgorithm algorithm;
 
 	CharStream sourceStream = CharStream("{}", "");
-	shared_ptr<ProgramCache> cache = make_shared<ProgramCache>(get<Program>(Program::load(sourceStream)));
+	shared_ptr<ProgramCache> cache =
+		make_shared<ProgramCache>(get<Program>(Program::load(sourceStream)));
 
 	AlgorithmRunner runner(m_population, {cache, nullptr}, m_options, m_output);
 	BOOST_REQUIRE(cache->gatherStats().roundEntryCounts.size() == 0);
@@ -380,11 +420,17 @@ BOOST_FIXTURE_TEST_CASE(run_should_print_partial_stats_and_message_if_some_cache
 	BOOST_TEST(nextLineMatches(m_output, regex(R"(Totalhits:\d+)")));
 	BOOST_TEST(nextLineMatches(m_output, regex(R"(Totalmisses:\d+)")));
 	BOOST_TEST(nextLineMatches(m_output, regex(R"(Sizeofcachedcode:\d+)")));
-	BOOST_TEST(nextLineMatches(m_output, regex(stripWhitespace("Program cache disabled for 1 out of 2 programs"))));
+	BOOST_TEST(nextLineMatches(
+		m_output,
+		regex(stripWhitespace("Program cache disabled for 1 out of 2 programs"))
+	));
 	BOOST_TEST(m_output.peek() == EOF);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_save_initial_population_to_file_if_autosave_file_specified, AlgorithmRunnerAutosaveFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_save_initial_population_to_file_if_autosave_file_specified,
+	AlgorithmRunnerAutosaveFixture
+)
 {
 	m_options.maxRounds = 0;
 	m_options.populationAutosaveFile = m_autosavePath;
@@ -398,7 +444,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_save_initial_population_to_file_if_autosave_f
 	BOOST_TEST(readLinesFromFile(m_autosavePath) == chromosomeStrings(runner.population()));
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_save_population_to_file_if_autosave_file_specified, AlgorithmRunnerAutosaveFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_save_population_to_file_if_autosave_file_specified,
+	AlgorithmRunnerAutosaveFixture
+)
 {
 	m_options.maxRounds = 1;
 	m_options.populationAutosaveFile = m_autosavePath;
@@ -412,7 +461,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_save_population_to_file_if_autosave_file_spec
 	BOOST_TEST(readLinesFromFile(m_autosavePath) == chromosomeStrings(runner.population()));
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_overwrite_existing_file_if_autosave_file_specified, AlgorithmRunnerAutosaveFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_overwrite_existing_file_if_autosave_file_specified,
+	AlgorithmRunnerAutosaveFixture
+)
 {
 	m_options.maxRounds = 5;
 	m_options.populationAutosaveFile = m_autosavePath;
@@ -433,7 +485,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_overwrite_existing_file_if_autosave_file_spec
 	BOOST_TEST(readLinesFromFile(m_autosavePath) != originalContent);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_save_population_to_file_if_autosave_file_not_specified, AlgorithmRunnerAutosaveFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_not_save_population_to_file_if_autosave_file_not_specified,
+	AlgorithmRunnerAutosaveFixture
+)
 {
 	m_options.maxRounds = 5;
 	m_options.populationAutosaveFile = nullopt;
@@ -445,7 +500,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_save_population_to_file_if_autosave_file_
 	BOOST_TEST(!fs::exists(m_autosavePath));
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_randomise_duplicate_chromosomes_if_requested, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_randomise_duplicate_chromosomes_if_requested,
+	AlgorithmRunnerFixture
+)
 {
 	Chromosome duplicate("afc");
 	Population population(m_fitnessMetric, {duplicate, duplicate, duplicate});
@@ -462,21 +520,29 @@ BOOST_FIXTURE_TEST_CASE(run_should_randomise_duplicate_chromosomes_if_requested,
 	auto const& newIndividuals = runner.population().individuals();
 
 	BOOST_TEST(newIndividuals.size() == 3);
-	BOOST_TEST((
-		newIndividuals[0].chromosome == duplicate ||
-		newIndividuals[1].chromosome == duplicate ||
-		newIndividuals[2].chromosome == duplicate
-	));
+	BOOST_TEST(
+		(newIndividuals[0].chromosome == duplicate || newIndividuals[1].chromosome == duplicate ||
+		 newIndividuals[2].chromosome == duplicate)
+	);
 	BOOST_TEST(newIndividuals[0] != newIndividuals[1]);
 	BOOST_TEST(newIndividuals[0] != newIndividuals[2]);
 	BOOST_TEST(newIndividuals[1] != newIndividuals[2]);
 
-	BOOST_TEST((newIndividuals[0].chromosome.length() == 50 || newIndividuals[0].chromosome == duplicate));
-	BOOST_TEST((newIndividuals[1].chromosome.length() == 50 || newIndividuals[1].chromosome == duplicate));
-	BOOST_TEST((newIndividuals[2].chromosome.length() == 50 || newIndividuals[2].chromosome == duplicate));
+	BOOST_TEST(
+		(newIndividuals[0].chromosome.length() == 50 || newIndividuals[0].chromosome == duplicate)
+	);
+	BOOST_TEST(
+		(newIndividuals[1].chromosome.length() == 50 || newIndividuals[1].chromosome == duplicate)
+	);
+	BOOST_TEST(
+		(newIndividuals[2].chromosome.length() == 50 || newIndividuals[2].chromosome == duplicate)
+	);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_not_randomise_duplicate_chromosomes_if_not_requested, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_not_randomise_duplicate_chromosomes_if_not_requested,
+	AlgorithmRunnerFixture
+)
 {
 	Chromosome duplicate("afc");
 	Population population(m_fitnessMetric, {duplicate, duplicate, duplicate});
@@ -494,7 +560,10 @@ BOOST_FIXTURE_TEST_CASE(run_should_not_randomise_duplicate_chromosomes_if_not_re
 	BOOST_TEST(runner.population().individuals()[2].chromosome == duplicate);
 }
 
-BOOST_FIXTURE_TEST_CASE(run_should_clear_cache_at_the_beginning_and_update_it_before_each_round, AlgorithmRunnerFixture)
+BOOST_FIXTURE_TEST_CASE(
+	run_should_clear_cache_at_the_beginning_and_update_it_before_each_round,
+	AlgorithmRunnerFixture
+)
 {
 	CharStream sourceStream = CharStream("{}", current_test_case().p_name);
 	vector<shared_ptr<ProgramCache>> caches = {

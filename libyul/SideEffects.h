@@ -22,7 +22,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Side effects of code.
  *
@@ -51,10 +50,7 @@ struct SideEffects
 	bool invalidatesMemory = false;
 
 	/// @returns the worst-case side effects.
-	static SideEffects worst()
-	{
-		return SideEffects{false, false, false, true, true};
-	}
+	static SideEffects worst() { return SideEffects{false, false, false, true, true}; }
 
 	/// @returns the combined side effects of two pieces of code.
 	SideEffects operator+(SideEffects const& _other)
@@ -64,8 +60,7 @@ struct SideEffects
 			sideEffectFree && _other.sideEffectFree,
 			sideEffectFreeIfNoMSize && _other.sideEffectFreeIfNoMSize,
 			invalidatesStorage || _other.invalidatesStorage,
-			invalidatesMemory || _other.invalidatesMemory
-		};
+			invalidatesMemory || _other.invalidatesMemory};
 	}
 
 	/// Adds the side effects of another piece of code to this side effect.
@@ -77,9 +72,7 @@ struct SideEffects
 
 	bool operator==(SideEffects const& _other) const
 	{
-		return
-			movable == _other.movable &&
-			sideEffectFree == _other.sideEffectFree &&
+		return movable == _other.movable && sideEffectFree == _other.sideEffectFree &&
 			sideEffectFreeIfNoMSize == _other.sideEffectFreeIfNoMSize &&
 			invalidatesStorage == _other.invalidatesStorage &&
 			invalidatesMemory == _other.invalidatesMemory;

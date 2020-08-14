@@ -126,7 +126,8 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 		if (!suggestions.empty())
 		{
 			if ("\"" + _identifier.name() + "\"" == suggestions)
-				errorMessage += " " + std::move(suggestions) + " is not (or not yet) visible at this point.";
+				errorMessage +=
+					" " + std::move(suggestions) + " is not (or not yet) visible at this point.";
 			else
 				errorMessage += " Did you mean " + std::move(suggestions) + "?";
 		}
@@ -176,7 +177,11 @@ void ReferencesResolver::endVisit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 	{
-		m_errorReporter.fatalDeclarationError(7920_error, _typeName.location(), "Identifier not found or not unique.");
+		m_errorReporter.fatalDeclarationError(
+			7920_error,
+			_typeName.location(),
+			"Identifier not found or not unique."
+		);
 		return;
 	}
 
@@ -226,11 +231,11 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 		if (!declarations.empty())
 			// the special identifier exists itself, we should not allow that.
 			return;
-		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
-			isSlot ?
-			string(".slot").size() :
-			string(".offset").size()
-		));
+		string realName = _identifier.name.str().substr(
+			0,
+			_identifier.name.str().size() -
+				(isSlot ? string(".slot").size() : string(".offset").size())
+		);
 		solAssert(!realName.empty(), "Empty name.");
 		declarations = m_resolver.nameFromCurrentScope(realName);
 		if (!declarations.empty())
@@ -248,10 +253,8 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 	}
 	else if (declarations.size() == 0)
 	{
-		if (
-			boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
-			boost::algorithm::ends_with(_identifier.name.str(), "_offset")
-		)
+		if (boost::algorithm::ends_with(_identifier.name.str(), "_slot") ||
+			boost::algorithm::ends_with(_identifier.name.str(), "_offset"))
 			m_errorReporter.declarationError(
 				9467_error,
 				_identifier.location,
@@ -282,10 +285,8 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 		validateYulIdentifierName(identifier.name, identifier.location);
 
 
-		if (
-			auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
-			!declarations.empty()
-		)
+		if (auto declarations = m_resolver.nameFromCurrentScope(identifier.name.str());
+			!declarations.empty())
 		{
 			SecondarySourceLocation ssl;
 			for (auto const* decl: declarations)
@@ -304,7 +305,10 @@ void ReferencesResolver::operator()(yul::VariableDeclaration const& _varDecl)
 		visit(*_varDecl.value);
 }
 
-void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _documentation, StructurallyDocumentedAnnotation& _annotation)
+void ReferencesResolver::resolveInheritDoc(
+	StructuredDocumentation const& _documentation,
+	StructurallyDocumentedAnnotation& _annotation
+)
 {
 	switch (_annotation.docTags.count("inheritdoc"))
 	{
@@ -332,9 +336,7 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 			m_errorReporter.docstringParsingError(
 				9397_error,
 				_documentation.location(),
-				"Documentation tag @inheritdoc references inexistent contract \"" +
-				name +
-				"\"."
+				"Documentation tag @inheritdoc references inexistent contract \"" + name + "\"."
 			);
 			return;
 		}
@@ -346,9 +348,7 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 				m_errorReporter.docstringParsingError(
 					1430_error,
 					_documentation.location(),
-					"Documentation tag @inheritdoc reference \"" +
-					name +
-					"\" is not a contract."
+					"Documentation tag @inheritdoc reference \"" + name + "\" is not a contract."
 				);
 		}
 		break;
@@ -363,7 +363,10 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 	}
 }
 
-void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceLocation const& _location)
+void ReferencesResolver::validateYulIdentifierName(
+	yul::YulString _name,
+	SourceLocation const& _location
+)
 {
 	if (util::contains(_name.str(), '.'))
 		m_errorReporter.declarationError(

@@ -29,7 +29,10 @@ using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
 
-set<VariableDeclaration const*> VariableUsage::touchedVariables(ASTNode const& _node, vector<CallableDeclaration const*> const& _outerCallstack)
+set<VariableDeclaration const*> VariableUsage::touchedVariables(
+	ASTNode const& _node,
+	vector<CallableDeclaration const*> const& _outerCallstack
+)
 {
 	m_touchedVariables.clear();
 	m_callStack.clear();
@@ -83,7 +86,9 @@ void VariableUsage::endVisit(FunctionDefinition const&)
 
 void VariableUsage::endVisit(ModifierInvocation const& _modifierInv)
 {
-	auto const& modifierDef = dynamic_cast<ModifierDefinition const*>(_modifierInv.name()->annotation().referencedDeclaration);
+	auto const& modifierDef = dynamic_cast<ModifierDefinition const*>(
+		_modifierInv.name()->annotation().referencedDeclaration
+	);
 	if (modifierDef)
 		modifierDef->accept(*this);
 }
@@ -105,7 +110,8 @@ void VariableUsage::checkIdentifier(Identifier const& _identifier)
 	solAssert(declaration, "");
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		if (!varDecl->isLocalVariable() || (m_lastCall && varDecl->functionOrModifierDefinition() == m_lastCall))
+		if (!varDecl->isLocalVariable() ||
+			(m_lastCall && varDecl->functionOrModifierDefinition() == m_lastCall))
 			m_touchedVariables.insert(varDecl);
 	}
 }

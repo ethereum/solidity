@@ -41,8 +41,7 @@ SMTLib2Interface::SMTLib2Interface(
 	map<h256, string> const& _queryResponses,
 	ReadCallback::Callback _smtCallback
 ):
-	m_queryResponses(_queryResponses),
-	m_smtCallback(std::move(_smtCallback))
+	m_queryResponses(_queryResponses), m_smtCallback(std::move(_smtCallback))
 {
 	reset();
 }
@@ -57,10 +56,7 @@ void SMTLib2Interface::reset()
 	write("(set-logic ALL)");
 }
 
-void SMTLib2Interface::push()
-{
-	m_accumulatedOutput.emplace_back();
-}
+void SMTLib2Interface::push() { m_accumulatedOutput.emplace_back(); }
 
 void SMTLib2Interface::pop()
 {
@@ -91,15 +87,7 @@ void SMTLib2Interface::declareFunction(string const& _name, SortPointer const& _
 		string domain = toSmtLibSort(fSort->domain);
 		string codomain = toSmtLibSort(*fSort->codomain);
 		m_variables.emplace(_name, _sort);
-		write(
-			"(declare-fun |" +
-			_name +
-			"| " +
-			domain +
-			" " +
-			codomain +
-			")"
-		);
+		write("(declare-fun |" + _name + "| " + domain + " " + codomain + ")");
 	}
 }
 
@@ -108,7 +96,9 @@ void SMTLib2Interface::addAssertion(Expression const& _expr)
 	write("(assert " + toSExpr(_expr) + ")");
 }
 
-pair<CheckResult, vector<string>> SMTLib2Interface::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> SMTLib2Interface::check(
+	vector<Expression> const& _expressionsToEvaluate
+)
 {
 	string response = querySolver(
 		boost::algorithm::join(m_accumulatedOutput, "\n") +
@@ -143,10 +133,9 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		size_t size = std::stoul(_expr.arguments[1].name);
 		auto arg = toSExpr(_expr.arguments.front());
 		auto int2bv = "(_ int2bv " + to_string(size) + ")";
-		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.
-		sexpr += string("ite ") +
-			"(>= " + arg + " 0) " +
-			"(" + int2bv + " " + arg + ") " +
+		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if
+		// needed.
+		sexpr += string("ite ") + "(>= " + arg + " 0) " + "(" + int2bv + " " + arg + ") " +
 			"(bvneg (" + int2bv + " (- " + arg + ")))";
 	}
 	else if (_expr.name == "bv2int")
@@ -165,11 +154,10 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		auto size = to_string(bvSort->size);
 		auto pos = to_string(bvSort->size - 1);
 
-		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if needed.
-		sexpr += string("ite ") +
-			"(= ((_ extract " + pos + " " + pos + ")" + arg + ") #b0) " +
-			nat + " " +
-			"(- (bvneg " + arg + "))";
+		// Some solvers treat all BVs as unsigned, so we need to manually apply 2's complement if
+		// needed.
+		sexpr += string("ite ") + "(= ((_ extract " + pos + " " + pos + ")" + arg + ") #b0) " +
+			nat + " " + "(- (bvneg " + arg + "))";
 	}
 	else if (_expr.name == "const_array")
 	{
@@ -219,7 +207,8 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);
 		smtAssert(arraySort.domain && arraySort.range, "");
-		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) + ')';
+		return "(Array " + toSmtLibSort(*arraySort.domain) + ' ' + toSmtLibSort(*arraySort.range) +
+			')';
 	}
 	case Kind::Tuple:
 	{
@@ -231,7 +220,8 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 			string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
 			smtAssert(tupleSort.members.size() == tupleSort.components.size(), "");
 			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
-				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
+				decl += " (|" + tupleSort.members.at(i) + "| " +
+					toSmtLibSort(*tupleSort.components.at(i)) + ")";
 			decl += "))))";
 			write(decl);
 		}
@@ -258,7 +248,9 @@ void SMTLib2Interface::write(string _data)
 	m_accumulatedOutput.back() += move(_data) + "\n";
 }
 
-string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _expressionsToEvaluate)
+string SMTLib2Interface::checkSatAndGetValuesCommand(
+	vector<Expression> const& _expressionsToEvaluate
+)
 {
 	string command;
 	if (_expressionsToEvaluate.empty())
@@ -269,8 +261,12 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 		for (size_t i = 0; i < _expressionsToEvaluate.size(); i++)
 		{
 			auto const& e = _expressionsToEvaluate.at(i);
-			smtAssert(e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool, "Invalid sort for expression to evaluate.");
-			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " + (e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
+			smtAssert(
+				e.sort->kind == Kind::Int || e.sort->kind == Kind::Bool,
+				"Invalid sort for expression to evaluate."
+			);
+			command += "(declare-const |EVALEXPR_" + to_string(i) + "| " +
+				(e.sort->kind == Kind::Int ? "Int" : "Bool") + ")\n";
 			command += "(assert (= |EVALEXPR_" + to_string(i) + "| " + toSExpr(e) + "))\n";
 		}
 		command += "(check-sat)\n";
@@ -283,7 +279,10 @@ string SMTLib2Interface::checkSatAndGetValuesCommand(vector<Expression> const& _
 	return command;
 }
 
-vector<string> SMTLib2Interface::parseValues(string::const_iterator _start, string::const_iterator _end)
+vector<string> SMTLib2Interface::parseValues(
+	string::const_iterator _start,
+	string::const_iterator _end
+)
 {
 	vector<string> values;
 	while (_start < _end)

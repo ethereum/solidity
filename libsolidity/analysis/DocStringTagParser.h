@@ -27,7 +27,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * Parses the doc tags and does basic validity checks.
  * Stores the parsing results in the AST annotations and reports errors.
@@ -35,7 +34,9 @@ namespace solidity::frontend
 class DocStringTagParser: private ASTConstVisitor
 {
 public:
-	explicit DocStringTagParser(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+	explicit DocStringTagParser(langutil::ErrorReporter& _errorReporter):
+		m_errorReporter(_errorReporter)
+	{}
 	bool parseDocStrings(SourceUnit const& _sourceUnit);
 
 private:

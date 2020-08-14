@@ -50,4 +50,3 @@ bool EVMVersion::hasOpcode(Instruction _opcode) const
 		return true;
 	}
 }
-

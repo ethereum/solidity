@@ -38,22 +38,17 @@ struct Dialect;
 
 namespace solidity::yul::test
 {
-
 class InterpreterTerminatedGeneric: public util::Exception
-{
-};
+{};
 
 class ExplicitlyTerminated: public InterpreterTerminatedGeneric
-{
-};
+{};
 
 class StepLimitReached: public InterpreterTerminatedGeneric
-{
-};
+{};
 
 class TraceLimitReached: public InterpreterTerminatedGeneric
-{
-};
+{};
 
 enum class ControlFlowState
 {
@@ -122,12 +117,8 @@ public:
 		Scope& _scope,
 		std::map<YulString, u256> _variables = {}
 	):
-		m_dialect(_dialect),
-		m_state(_state),
-		m_variables(std::move(_variables)),
-		m_scope(&_scope)
-	{
-	}
+		m_dialect(_dialect), m_state(_state), m_variables(std::move(_variables)), m_scope(&_scope)
+	{}
 
 	void operator()(ExpressionStatement const& _statement) override;
 	void operator()(Assignment const& _assignment) override;
@@ -177,10 +168,7 @@ public:
 		Scope& _scope,
 		std::map<YulString, u256> const& _variables
 	):
-		m_state(_state),
-		m_dialect(_dialect),
-		m_variables(_variables),
-		m_scope(_scope)
+		m_state(_state), m_dialect(_dialect), m_variables(_variables), m_scope(_scope)
 	{}
 
 	void operator()(Literal const&) override;
@@ -209,4 +197,3 @@ private:
 };
 
 }
-

@@ -23,7 +23,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Loop-invariant code motion.
  *
@@ -54,10 +53,13 @@ private:
 		m_dialect(_dialect),
 		m_ssaVariables(_ssaVariables),
 		m_functionSideEffects(_functionSideEffects)
-	{ }
+	{}
 
 	/// @returns true if the given variable declaration can be moved to in front of the loop.
-	bool canBePromoted(VariableDeclaration const& _varDecl, std::set<YulString> const& _varsDefinedInCurrentScope) const;
+	bool canBePromoted(
+		VariableDeclaration const& _varDecl,
+		std::set<YulString> const& _varsDefinedInCurrentScope
+	) const;
 	std::optional<std::vector<Statement>> rewriteLoop(ForLoop& _for);
 
 	Dialect const& m_dialect;

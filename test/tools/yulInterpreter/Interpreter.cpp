@@ -55,10 +55,12 @@ void InterpreterState::dumpTraceAndState(ostream& _out) const
 	_out << "Memory dump:\n";
 	map<u256, u256> words;
 	for (auto const& [offset, value]: memory)
-		words[(offset / 0x20) * 0x20] |= u256(uint32_t(value)) << (256 - 8 - 8 * static_cast<size_t>(offset % 0x20));
+		words[(offset / 0x20) * 0x20] |= u256(uint32_t(value))
+			<< (256 - 8 - 8 * static_cast<size_t>(offset % 0x20));
 	for (auto const& [offset, value]: words)
 		if (value != 0)
-			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
+			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": "
+				 << h256(value).hex() << endl;
 	_out << "Storage dump:" << endl;
 	for (auto const& slot: storage)
 		if (slot.second != h256{})
@@ -126,16 +128,14 @@ void Interpreter::operator()(Switch const& _switch)
 		}
 }
 
-void Interpreter::operator()(FunctionDefinition const&)
-{
-}
+void Interpreter::operator()(FunctionDefinition const&) {}
 
 void Interpreter::operator()(ForLoop const& _forLoop)
 {
 	solAssert(_forLoop.condition, "");
 
 	enterScope(_forLoop.pre);
-	ScopeGuard g([this]{ leaveScope(); });
+	ScopeGuard g([this] { leaveScope(); });
 
 	for (auto const& statement: _forLoop.pre.statements)
 	{
@@ -152,7 +152,8 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 
 		m_state.controlFlowState = ControlFlowState::Default;
 		(*this)(_forLoop.body);
-		if (m_state.controlFlowState == ControlFlowState::Break || m_state.controlFlowState == ControlFlowState::Leave)
+		if (m_state.controlFlowState == ControlFlowState::Break ||
+			m_state.controlFlowState == ControlFlowState::Leave)
 			break;
 
 		m_state.controlFlowState = ControlFlowState::Default;
@@ -164,20 +165,14 @@ void Interpreter::operator()(ForLoop const& _forLoop)
 		m_state.controlFlowState = ControlFlowState::Default;
 }
 
-void Interpreter::operator()(Break const&)
-{
-	m_state.controlFlowState = ControlFlowState::Break;
-}
+void Interpreter::operator()(Break const&) { m_state.controlFlowState = ControlFlowState::Break; }
 
 void Interpreter::operator()(Continue const&)
 {
 	m_state.controlFlowState = ControlFlowState::Continue;
 }
 
-void Interpreter::operator()(Leave const&)
-{
-	m_state.controlFlowState = ControlFlowState::Leave;
-}
+void Interpreter::operator()(Leave const&) { m_state.controlFlowState = ControlFlowState::Leave; }
 
 void Interpreter::operator()(Block const& _block)
 {
@@ -218,11 +213,7 @@ vector<u256> Interpreter::evaluateMulti(Expression const& _expression)
 void Interpreter::enterScope(Block const& _block)
 {
 	if (!m_scope->subScopes.count(&_block))
-		m_scope->subScopes[&_block] = make_unique<Scope>(Scope{
-			{},
-			{},
-			m_scope
-		});
+		m_scope->subScopes[&_block] = make_unique<Scope>(Scope{{}, {}, m_scope});
 	m_scope = m_scope->subScopes[&_block].get();
 }
 

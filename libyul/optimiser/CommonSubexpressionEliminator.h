@@ -27,7 +27,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 struct SideEffects;
 

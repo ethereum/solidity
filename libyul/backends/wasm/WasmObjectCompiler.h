@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <libsolutil/Common.h>     // solidity::bytes
+#include <libsolutil/Common.h>	// solidity::bytes
 
 namespace solidity::yul
 {
@@ -40,10 +40,9 @@ class WasmObjectCompiler
 public:
 	/// Compiles the given object and returns the Wasm text and binary representation.
 	static std::pair<std::string, bytes> compile(Object& _object, Dialect const& _dialect);
+
 private:
-	WasmObjectCompiler(Dialect const& _dialect):
-		m_dialect(_dialect)
-	{}
+	WasmObjectCompiler(Dialect const& _dialect): m_dialect(_dialect) {}
 
 	wasm::Module run(Object& _object);
 

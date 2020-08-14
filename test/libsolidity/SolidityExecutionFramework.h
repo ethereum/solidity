@@ -37,14 +37,14 @@
 
 namespace solidity::frontend::test
 {
-
 class SolidityExecutionFramework: public solidity::test::ExecutionFramework
 {
-
 public:
-	SolidityExecutionFramework(): m_showMetadata(solidity::test::CommonOptions::get().showMetadata) {}
+	SolidityExecutionFramework(): m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
+	{}
 	explicit SolidityExecutionFramework(langutil::EVMVersion _evmVersion):
-		ExecutionFramework(_evmVersion), m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
+		ExecutionFramework(_evmVersion),
+		m_showMetadata(solidity::test::CommonOptions::get().showMetadata)
 	{}
 
 	bytes const& compileAndRunWithoutCheck(
@@ -75,6 +75,7 @@ public:
 	/// Returns @param _sourceCode prefixed with the version pragma and the ABIEncoderV2 pragma,
 	/// the latter only if it is required.
 	static std::string addPreamble(std::string const& _sourceCode);
+
 protected:
 	solidity::frontend::CompilerStack m_compiler;
 	bool m_compileViaYul = false;
@@ -82,4 +83,4 @@ protected:
 	RevertStrings m_revertStrings = RevertStrings::Default;
 };
 
-} // end namespaces
+}  // end namespaces

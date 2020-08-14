@@ -23,7 +23,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Reverses the transformation of ForLoopConditionIntoBody.
  *
@@ -65,9 +64,7 @@ public:
 	void operator()(ForLoop& _forLoop) override;
 
 private:
-	ForLoopConditionOutOfBody(Dialect const& _dialect):
-		m_dialect(_dialect)
-	{}
+	ForLoopConditionOutOfBody(Dialect const& _dialect): m_dialect(_dialect) {}
 
 	Dialect const& m_dialect;
 };

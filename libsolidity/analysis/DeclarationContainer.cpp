@@ -45,30 +45,22 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 	if (m_invisibleDeclarations.count(*_name))
 		declarations += m_invisibleDeclarations.at(*_name);
 
-	if (
-		dynamic_cast<FunctionDefinition const*>(&_declaration) ||
+	if (dynamic_cast<FunctionDefinition const*>(&_declaration) ||
 		dynamic_cast<EventDefinition const*>(&_declaration) ||
-		dynamic_cast<MagicVariableDeclaration const*>(&_declaration)
-	)
+		dynamic_cast<MagicVariableDeclaration const*>(&_declaration))
 	{
 		// check that all other declarations are of the same kind (in which
 		// case the type checker will ensure that the signatures are different)
 		for (Declaration const* declaration: declarations)
 		{
-			if (
-				dynamic_cast<FunctionDefinition const*>(&_declaration) &&
-				!dynamic_cast<FunctionDefinition const*>(declaration)
-			)
+			if (dynamic_cast<FunctionDefinition const*>(&_declaration) &&
+				!dynamic_cast<FunctionDefinition const*>(declaration))
 				return declaration;
-			if (
-				dynamic_cast<EventDefinition const*>(&_declaration) &&
-				!dynamic_cast<EventDefinition const*>(declaration)
-			)
+			if (dynamic_cast<EventDefinition const*>(&_declaration) &&
+				!dynamic_cast<EventDefinition const*>(declaration))
 				return declaration;
-			if (
-				dynamic_cast<MagicVariableDeclaration const*>(&_declaration) &&
-				!dynamic_cast<MagicVariableDeclaration const*>(declaration)
-			)
+			if (dynamic_cast<MagicVariableDeclaration const*>(&_declaration) &&
+				!dynamic_cast<MagicVariableDeclaration const*>(declaration))
 				return declaration;
 			// Or, continue.
 		}
@@ -85,7 +77,8 @@ void DeclarationContainer::activateVariable(ASTString const& _name)
 {
 	solAssert(
 		m_invisibleDeclarations.count(_name) && m_invisibleDeclarations.at(_name).size() == 1,
-		"Tried to activate a non-inactive variable or multiple inactive variables with the same name."
+		"Tried to activate a non-inactive variable or multiple inactive variables with the same "
+		"name."
 	);
 	solAssert(m_declarations.count(_name) == 0 || m_declarations.at(_name).empty(), "");
 	m_declarations[_name].emplace_back(m_invisibleDeclarations.at(_name).front());
@@ -111,20 +104,28 @@ bool DeclarationContainer::registerDeclaration(
 
 	if (_update)
 	{
-		solAssert(!dynamic_cast<FunctionDefinition const*>(&_declaration), "Attempt to update function definition.");
+		solAssert(
+			!dynamic_cast<FunctionDefinition const*>(&_declaration),
+			"Attempt to update function definition."
+		);
 		m_declarations.erase(*_name);
 		m_invisibleDeclarations.erase(*_name);
 	}
 	else if (conflictingDeclaration(_declaration, _name))
 		return false;
 
-	vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
+	vector<Declaration const*>& decls =
+		_invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
 	if (!util::contains(decls, &_declaration))
 		decls.push_back(&_declaration);
 	return true;
 }
 
-vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive, bool _alsoInvisible) const
+vector<Declaration const*> DeclarationContainer::resolveName(
+	ASTString const& _name,
+	bool _recursive,
+	bool _alsoInvisible
+) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	vector<Declaration const*> result;
@@ -139,9 +140,9 @@ vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _n
 
 vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) const
 {
-
-	// because the function below has quadratic runtime - it will not magically improve once a better algorithm is discovered ;)
-	// since 80 is the suggested line length limit, we use 80^2 as length threshold
+	// because the function below has quadratic runtime - it will not magically improve once a
+	// better algorithm is discovered ;) since 80 is the suggested line length limit, we use 80^2 as
+	// length threshold
 	static size_t const MAXIMUM_LENGTH_THRESHOLD = 80 * 80;
 
 	vector<ASTString> similar;
@@ -149,13 +150,23 @@ vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) con
 	for (auto const& declaration: m_declarations)
 	{
 		string const& declarationName = declaration.first;
-		if (util::stringWithinDistance(_name, declarationName, maximumEditDistance, MAXIMUM_LENGTH_THRESHOLD))
+		if (util::stringWithinDistance(
+				_name,
+				declarationName,
+				maximumEditDistance,
+				MAXIMUM_LENGTH_THRESHOLD
+			))
 			similar.push_back(declarationName);
 	}
 	for (auto const& declaration: m_invisibleDeclarations)
 	{
 		string const& declarationName = declaration.first;
-		if (util::stringWithinDistance(_name, declarationName, maximumEditDistance, MAXIMUM_LENGTH_THRESHOLD))
+		if (util::stringWithinDistance(
+				_name,
+				declarationName,
+				maximumEditDistance,
+				MAXIMUM_LENGTH_THRESHOLD
+			))
 			similar.push_back(declarationName);
 	}
 

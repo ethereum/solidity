@@ -14,14 +14,12 @@ string ProtoConverter::getVarDecl(
 	// One level of indentation for state variable declarations
 	// Two levels of indentation for local variable declarations
 	return Whiskers(R"(
-	<?isLocalVar>	</isLocalVar><type><?qual> <qualifier></qual> <varName>;)"
-		)
-		("isLocalVar", !m_isStateVar)
-		("type", _type)
-		("qual", !_qualifier.empty())
-		("qualifier", _qualifier)
-		("varName", _varName)
-		.render() +
+	<?isLocalVar>	</isLocalVar><type><?qual> <qualifier></qual> <varName>;)")(
+			   "isLocalVar",
+			   !m_isStateVar
+		   )("type",
+			 _type)("qual", !_qualifier.empty())("qualifier", _qualifier)("varName", _varName)
+			   .render() +
 		"\n";
 }
 
@@ -127,13 +125,7 @@ pair<string, string> ProtoConverter::processType(T const& _type, bool _isValueTy
 	if (!m_isStateVar && !_isValueType)
 		location = "memory";
 
-	auto varDeclBuffers = varDecl(
-		varName,
-		paramName,
-		_type,
-		_isValueType,
-		location
-	);
+	auto varDeclBuffers = varDecl(varName, paramName, _type, _isValueType, location);
 	global << varDeclBuffers.first;
 	local << varDeclBuffers.second;
 	auto assignCheckBuffers = assignChecker(varName, paramName, _type);
@@ -185,11 +177,7 @@ pair<string, string> ProtoConverter::varDecl(
 		_paramName,
 		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
 	);
-	appendTypes(
-		_isValueType,
-		typeStr,
-		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
-	);
+	appendTypes(_isValueType, typeStr, ((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD));
 	appendTypedReturn(
 		_isValueType,
 		typeStr,
@@ -211,14 +199,8 @@ pair<string, string> ProtoConverter::assignChecker(
 )
 {
 	ostringstream local;
-	AssignCheckVisitor acVisitor(
-		_varName,
-		_paramName,
-		m_returnValue,
-		m_isStateVar,
-		m_counter,
-		m_structCounter
-	);
+	AssignCheckVisitor
+		acVisitor(_varName, _paramName, m_returnValue, m_isStateVar, m_counter, m_structCounter);
 	pair<string, string> assignCheckStrPair = acVisitor.visit(_type);
 	m_returnValue += acVisitor.errorStmts();
 	m_counter += acVisitor.counted();
@@ -232,15 +214,9 @@ pair<string, string> ProtoConverter::assignChecker(
 	return make_pair("", local.str());
 }
 
-pair<string, string> ProtoConverter::visit(VarDecl const& _x)
-{
-	return visit(_x.type());
-}
+pair<string, string> ProtoConverter::visit(VarDecl const& _x) { return visit(_x.type()); }
 
-std::string ProtoConverter::equalityChecksAsString()
-{
-	return m_checks.str();
-}
+std::string ProtoConverter::equalityChecksAsString() { return m_checks.str(); }
 
 std::string ProtoConverter::delimiterToString(Delimiter _delimiter)
 {
@@ -277,21 +253,13 @@ void ProtoConverter::appendTypedParams(
 	}
 }
 
-void ProtoConverter::appendTypes(
-	bool _isValueType,
-	string const& _typeString,
-	Delimiter _delimiter
-)
+void ProtoConverter::appendTypes(bool _isValueType, string const& _typeString, Delimiter _delimiter)
 {
-	string qualifiedTypeString = (
-		_isValueType ?
-		_typeString :
-		_typeString + " memory"
-	);
-	m_types << Whiskers(R"(<delimiter><type>)")
-		("delimiter", delimiterToString(_delimiter))
-		("type", qualifiedTypeString)
-		.render();
+	string qualifiedTypeString = (_isValueType ? _typeString : _typeString + " memory");
+	m_types << Whiskers(
+				   R"(<delimiter><type>)"
+	)("delimiter", delimiterToString(_delimiter))("type", qualifiedTypeString)
+				   .render();
 }
 
 void ProtoConverter::appendTypedReturn(
@@ -300,36 +268,27 @@ void ProtoConverter::appendTypedReturn(
 	Delimiter _delimiter
 )
 {
-	string qualifiedTypeString = (
-		_isValueType ?
-		_typeString :
-		_typeString + " memory"
-	);
-	m_typedReturn << Whiskers(R"(<delimiter><type> <varName>)")
-		("delimiter", delimiterToString(_delimiter))
-		("type", qualifiedTypeString)
-		("varName", "lv_" + to_string(m_varCounter - 1))
-		.render();
+	string qualifiedTypeString = (_isValueType ? _typeString : _typeString + " memory");
+	m_typedReturn << Whiskers(R"(<delimiter><type> <varName>)")(
+						 "delimiter",
+						 delimiterToString(_delimiter)
+	)("type", qualifiedTypeString)("varName", "lv_" + to_string(m_varCounter - 1))
+						 .render();
 }
 
 // Adds the qualifier "calldata" to non-value parameter of an external function.
 void ProtoConverter::appendTypedParamsExternal(
 	bool _isValueType,
-    std::string const& _typeString,
-    std::string const& _varName,
-    Delimiter _delimiter
+	std::string const& _typeString,
+	std::string const& _varName,
+	Delimiter _delimiter
 )
 {
-	std::string qualifiedTypeString = (
-		_isValueType ?
-		_typeString :
-		_typeString + " calldata"
-	);
-	m_typedParamsExternal << Whiskers(R"(<delimiter><type> <varName>)")
-		("delimiter", delimiterToString(_delimiter))
-		("type", qualifiedTypeString)
-		("varName", _varName)
-		.render();
+	std::string qualifiedTypeString = (_isValueType ? _typeString : _typeString + " calldata");
+	m_typedParamsExternal << Whiskers(
+								 R"(<delimiter><type> <varName>)"
+	)("delimiter", delimiterToString(_delimiter))("type", qualifiedTypeString)("varName", _varName)
+								 .render();
 }
 
 // Adds the qualifier "memory" to non-value parameter of an external function.
@@ -340,16 +299,11 @@ void ProtoConverter::appendTypedParamsPublic(
 	Delimiter _delimiter
 )
 {
-	std::string qualifiedTypeString = (
-		_isValueType ?
-		_typeString :
-		_typeString + " memory"
-		);
-	m_typedParamsPublic << Whiskers(R"(<delimiter><type> <varName>)")
-		("delimiter", delimiterToString(_delimiter))
-		("type", qualifiedTypeString)
-		("varName", _varName)
-		.render();
+	std::string qualifiedTypeString = (_isValueType ? _typeString : _typeString + " memory");
+	m_typedParamsPublic << Whiskers(
+							   R"(<delimiter><type> <varName>)"
+	)("delimiter", delimiterToString(_delimiter))("type", qualifiedTypeString)("varName", _varName)
+							   .render();
 }
 
 std::string ProtoConverter::typedParametersAsString(CalleeType _calleeType)
@@ -377,10 +331,11 @@ string ProtoConverter::visit(TestFunction const& _x, string const& _storageVarDe
 	function test() public returns (uint) {
 		<?calldata>return test_calldata_coding();</calldata>
 		<?returndata>return test_returndata_coding();</returndata>
-	})")
-	("calldata", m_test == Contract_Test::Contract_Test_CALLDATA_CODER)
-	("returndata", m_test == Contract_Test::Contract_Test_RETURNDATA_CODER)
-	.render();
+	})")("calldata", m_test == Contract_Test::Contract_Test_CALLDATA_CODER)(
+							  "returndata",
+							  m_test == Contract_Test::Contract_Test_RETURNDATA_CODER
+	)
+							  .render();
 
 	string functionDeclCalldata = "function test_calldata_coding() internal returns (uint)";
 	string functionDeclReturndata = "function test_returndata_coding() internal returns (uint)";
@@ -407,22 +362,22 @@ string ProtoConverter::visit(TestFunction const& _x, string const& _storageVarDe
 		return (<return_values>);
 	}
 </varsPresent>
-</returndata>)")
-		("testFunction", testFunction)
-		("calldata", m_test == Contract_Test::Contract_Test_CALLDATA_CODER)
-		("returndata", m_test == Contract_Test::Contract_Test_RETURNDATA_CODER)
-		("calldataHelperFuncs", calldataHelperFunctions())
-		("varsPresent", !m_types.str().empty())
-		("structTypeDecl", structTypeDecl)
-		("functionDeclCalldata", functionDeclCalldata)
-		("functionDeclReturndata", functionDeclReturndata)
-		("storageVarDefs", _storageVarDefs)
-		("localVarDefs", localVarDefs)
-		("calldataTestCode", testCallDataFunction(_x.invalid_encoding_length()))
-		("returndataTestCode", testReturnDataFunction())
-		("return_types", m_types.str())
-		("return_values", m_argsCoder.str())
-		.render();
+</returndata>)")("testFunction",
+				 testFunction)("calldata", m_test == Contract_Test::Contract_Test_CALLDATA_CODER)(
+					  "returndata",
+					  m_test == Contract_Test::Contract_Test_RETURNDATA_CODER
+	)("calldataHelperFuncs", calldataHelperFunctions())("varsPresent", !m_types.str().empty())(
+					  "structTypeDecl",
+					  structTypeDecl
+	)("functionDeclCalldata", functionDeclCalldata)(
+					  "functionDeclReturndata",
+					  functionDeclReturndata
+	)("storageVarDefs", _storageVarDefs)("localVarDefs", localVarDefs)(
+					  "calldataTestCode",
+					  testCallDataFunction(_x.invalid_encoding_length())
+	)("returndataTestCode",
+	  testReturnDataFunction())("return_types", m_types.str())("return_values", m_argsCoder.str())
+					  .render();
 	return testBuffer.str();
 }
 
@@ -459,11 +414,11 @@ string ProtoConverter::testCallDataFunction(unsigned _invalidLength)
 			return uint(200000) + returnVal;
 		</atLeastOneVar>
 		return 0;
-		)")
-		("argumentNames", m_argsCoder.str())
-		("invalidLengthFuzz", std::to_string(_invalidLength))
-		("isRightPadded", isLastDynParamRightPadded() ? "true" : "false")
-		("atLeastOneVar", m_varCounter > 0)
+		)")("argumentNames",
+			m_argsCoder.str())("invalidLengthFuzz", std::to_string(_invalidLength))(
+			   "isRightPadded",
+			   isLastDynParamRightPadded() ? "true" : "false"
+	)("atLeastOneVar", m_varCounter > 0)
 		.render();
 }
 
@@ -475,10 +430,10 @@ string ProtoConverter::testReturnDataFunction()
 <equality_checks>
 </varsPresent>
 		return 0;
-		)")
-		("varsPresent", !m_typedReturn.str().empty())
-		("varDecl", m_typedReturn.str())
-		("equality_checks", m_checks.str())
+		)")("varsPresent", !m_typedReturn.str().empty())("varDecl", m_typedReturn.str())(
+			   "equality_checks",
+			   m_checks.str()
+	)
 		.render();
 }
 
@@ -563,11 +518,11 @@ string ProtoConverter::calldataHelperFunctions()
 <equality_checks>
 		return 0;
 	}
-	)")
-	("parameters_memory", typedParametersAsString(CalleeType::PUBLIC))
-	("equality_checks", equalityChecksAsString())
-	("parameters_calldata", typedParametersAsString(CalleeType::EXTERNAL))
-	.render();
+	)")("parameters_memory", typedParametersAsString(CalleeType::PUBLIC))(
+							   "equality_checks",
+							   equalityChecksAsString()
+	)("parameters_calldata", typedParametersAsString(CalleeType::EXTERNAL))
+							   .render();
 
 	return calldataHelperFuncs.str();
 }
@@ -614,18 +569,15 @@ pragma experimental ABIEncoderV2;)";
 	 * - Helper functions
 	 */
 	ostringstream contractBody;
-	contractBody << storageVarDecls
-	             << testFunction
-	             << commonHelperFunctions();
+	contractBody << storageVarDecls << testFunction << commonHelperFunctions();
 	m_output << Whiskers(R"(<pragmas>
 <contractStart>
 <contractBody>
-<contractEnd>)")
-		("pragmas", pragmas)
-		("contractStart", "contract C {")
-		("contractBody", contractBody.str())
-		("contractEnd", "}")
-		.render();
+<contractEnd>)")("pragmas", pragmas)("contractStart", "contract C {")(
+					"contractBody",
+					contractBody.str()
+	)("contractEnd", "}")
+					.render();
 }
 
 string ProtoConverter::contractToString(Contract const& _input)
@@ -667,10 +619,8 @@ string TypeVisitor::visit(ArrayType const& _type)
 	string baseType = visit(_type.t());
 	solAssert(!baseType.empty(), "");
 	string arrayBraces = _type.is_static() ?
-	                     string("[") +
-	                     to_string(getStaticArrayLengthFromFuzz(_type.length())) +
-	                     string("]") :
-	                     string("[]");
+		  string("[") + to_string(getStaticArrayLengthFromFuzz(_type.length())) + string("]") :
+		  string("[]");
 	m_baseType += arrayBraces;
 
 	// If we don't know yet if the array will be dynamically encoded,
@@ -702,12 +652,8 @@ void TypeVisitor::structDefinition(StructType const& _type)
 	m_structFieldCounter = 0;
 
 	// Commence struct declaration
-	string structDef = lineString(
-		"struct " +
-		string(s_structNamePrefix) +
-		to_string(m_structCounter) +
-		" {"
-	);
+	string structDef =
+		lineString("struct " + string(s_structNamePrefix) + to_string(m_structCounter) + " {");
 
 	// Increase indentation for struct fields
 	m_indentation++;
@@ -725,12 +671,10 @@ void TypeVisitor::structDefinition(StructType const& _type)
 
 		solAssert(!type.empty(), "");
 
-		structDef += lineString(
-			Whiskers(R"(<type> <member>;)")
-				("type", type)
-				("member", "m" + to_string(m_structFieldCounter++))
-				.render()
-		);
+		structDef += lineString(Whiskers(
+									R"(<type> <member>;)"
+		)("type", type)("member", "m" + to_string(m_structFieldCounter++))
+									.render());
 	}
 	m_indentation--;
 	structDef += lineString("}");
@@ -785,7 +729,8 @@ pair<string, string> AssignCheckVisitor::visit(AddressType const& _type)
 pair<string, string> AssignCheckVisitor::visit(DynamicByteArrayType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	DataType dataType = _type.type() == DynamicByteArrayType::BYTES ? DataType::BYTES :	DataType::STRING;
+	DataType dataType =
+		_type.type() == DynamicByteArrayType::BYTES ? DataType::BYTES : DataType::STRING;
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, dataType);
 }
 
@@ -813,28 +758,29 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 		if (m_stateVar)
 		{
 			// Dynamic storage arrays are resized via the empty push() operation
-			resizeBuffer.first = Whiskers(R"(<indentation>for (uint i = 0; i < <length>; i++) <arrayRef>.push();)")
-				("indentation", indentation())
-				("length", lengthStr)
-				("arrayRef", m_varName)
-				.render() + "\n";
+			resizeBuffer.first =
+				Whiskers(
+					R"(<indentation>for (uint i = 0; i < <length>; i++) <arrayRef>.push();)"
+				)("indentation", indentation())("length", lengthStr)("arrayRef", m_varName)
+					.render() +
+				"\n";
 			// Add a dynamic check on the resized length
 			resizeBuffer.second = checkString(m_paramName + ".length", lengthStr, DataType::VALUE);
 		}
 		else
 		{
 			// Resizing memory arrays via the new operator
-			string resizeOp = Whiskers(R"(new <fullTypeStr>(<length>))")
-				("fullTypeStr", typeStr)
-				("length", lengthStr)
-				.render();
+			string resizeOp = Whiskers(
+								  R"(new <fullTypeStr>(<length>))"
+			)("fullTypeStr", typeStr)("length", lengthStr)
+								  .render();
 			resizeBuffer = assignAndCheckStringPair(
 				m_varName,
 				m_paramName + ".length",
 				resizeOp,
 				lengthStr,
 				DataType::VALUE
-				);
+			);
 		}
 	}
 	else
@@ -916,15 +862,15 @@ pair<string, string> AssignCheckVisitor::assignAndCheckStringPair(
 	DataType _type
 )
 {
-	return make_pair(assignString(_varRef, _assignValue), checkString(_checkRef, _checkValue, _type));
+	return make_pair(
+		assignString(_varRef, _assignValue),
+		checkString(_checkRef, _checkValue, _type)
+	);
 }
 
 string AssignCheckVisitor::assignString(string const& _ref, string const& _value)
 {
-	string assignStmt = Whiskers(R"(<ref> = <value>;)")
-		("ref", _ref)
-		("value", _value)
-		.render();
+	string assignStmt = Whiskers(R"(<ref> = <value>;)")("ref", _ref)("value", _value).render();
 	return indentation() + assignStmt + "\n";
 }
 
@@ -934,67 +880,47 @@ string AssignCheckVisitor::checkString(string const& _ref, string const& _value,
 	switch (_type)
 	{
 	case DataType::STRING:
-		checkPred = Whiskers(R"(!bytesCompare(bytes(<varName>), <value>))")
-			("varName", _ref)
-			("value", _value)
-			.render();
+		checkPred = Whiskers(
+						R"(!bytesCompare(bytes(<varName>), <value>))"
+		)("varName", _ref)("value", _value)
+						.render();
 		break;
 	case DataType::BYTES:
-		checkPred = Whiskers(R"(!bytesCompare(<varName>, <value>))")
-			("varName", _ref)
-			("value", _value)
-			.render();
+		checkPred =
+			Whiskers(R"(!bytesCompare(<varName>, <value>))")("varName", _ref)("value", _value)
+				.render();
 		break;
 	case DataType::VALUE:
-		checkPred = Whiskers(R"(<varName> != <value>)")
-			("varName", _ref)
-			("value", _value)
-			.render();
+		checkPred = Whiskers(R"(<varName> != <value>)")("varName", _ref)("value", _value).render();
 		break;
 	case DataType::ARRAY:
 		solUnimplemented("Proto ABIv2 fuzzer: Invalid data type.");
 	}
-	string checkStmt = Whiskers(R"(if (<checkPred>) return <errCode>;)")
-		("checkPred", checkPred)
-		("errCode", to_string(m_errorCode++))
-		.render();
+	string checkStmt = Whiskers(
+						   R"(if (<checkPred>) return <errCode>;)"
+	)("checkPred", checkPred)("errCode", to_string(m_errorCode++))
+						   .render();
 	return indentation() + checkStmt + "\n";
 }
 
 /// ValueGetterVisitor
-string ValueGetterVisitor::visit(BoolType const&)
-{
-	return counter() % 2 ? "true" : "false";
-}
+string ValueGetterVisitor::visit(BoolType const&) { return counter() % 2 ? "true" : "false"; }
 
 string ValueGetterVisitor::visit(IntegerType const& _type)
 {
-	return integerValueAsString(
-		_type.is_signed(),
-		getIntWidth(_type),
-		counter()
-	);
+	return integerValueAsString(_type.is_signed(), getIntWidth(_type), counter());
 }
 
 string ValueGetterVisitor::visit(FixedByteType const& _type)
 {
-	return fixedByteValueAsString(
-		getFixedByteWidth(_type),
-		counter()
-	);
+	return fixedByteValueAsString(getFixedByteWidth(_type), counter());
 }
 
-string ValueGetterVisitor::visit(AddressType const&)
-{
-	return addressValueAsString(counter());
-}
+string ValueGetterVisitor::visit(AddressType const&) { return addressValueAsString(counter()); }
 
 string ValueGetterVisitor::visit(DynamicByteArrayType const& _type)
 {
-	return bytesArrayValueAsString(
-		counter(),
-		getDataTypeOfDynBytesType(_type) == DataType::BYTES
-	);
+	return bytesArrayValueAsString(counter(), getDataTypeOfDynBytesType(_type) == DataType::BYTES);
 }
 
 std::string ValueGetterVisitor::integerValueAsString(bool _sign, unsigned _width, unsigned _counter)
@@ -1019,7 +945,7 @@ std::string ValueGetterVisitor::uintValueAsString(unsigned _width, unsigned _cou
 		(_width % 8 == 0),
 		"Proto ABIv2 Fuzzer: Unsigned integer width is not a multiple of 8"
 	);
-	return maskUnsignedIntToHex(_counter, _width/4);
+	return maskUnsignedIntToHex(_counter, _width / 4);
 }
 
 /* Input(s)
@@ -1032,11 +958,8 @@ std::string ValueGetterVisitor::uintValueAsString(unsigned _width, unsigned _cou
  */
 std::string ValueGetterVisitor::intValueAsString(unsigned _width, unsigned _counter)
 {
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Signed integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, ((_width/4) - 1));
+	solAssert((_width % 8 == 0), "Proto ABIv2 Fuzzer: Signed integer width is not a multiple of 8");
+	return maskUnsignedIntToHex(_counter, ((_width / 4) - 1));
 }
 
 std::string ValueGetterVisitor::croppedString(
@@ -1065,10 +988,7 @@ std::string ValueGetterVisitor::croppedString(
 	unsigned startPos = 66 - numMaskNibbles;
 	// Extracts the least significant numMaskNibbles from the result
 	// of maskUnsignedIntToHex().
-	return maskUnsignedIntToHex(
-		_counter,
-		numMaskNibbles
-	).substr(startPos, numMaskNibbles);
+	return maskUnsignedIntToHex(_counter, numMaskNibbles).substr(startPos, numMaskNibbles);
 }
 
 std::string ValueGetterVisitor::hexValueAsString(
@@ -1078,23 +998,21 @@ std::string ValueGetterVisitor::hexValueAsString(
 	bool _decorate
 )
 {
-	solAssert(_numBytes > 0 && _numBytes <= 32,
-	          "Proto ABIv2 fuzzer: Invalid hex length"
-	);
+	solAssert(_numBytes > 0 && _numBytes <= 32, "Proto ABIv2 fuzzer: Invalid hex length");
 
 	// If _decorate is set, then we return a hex"" or a "" string.
 	if (_numBytes == 0)
-		return Whiskers(R"(<?decorate><?isHex>hex</isHex>""</decorate>)")
-			("decorate", _decorate)
-			("isHex", _isHexLiteral)
+		return Whiskers(
+				   R"(<?decorate><?isHex>hex</isHex>""</decorate>)"
+		)("decorate", _decorate)("isHex", _isHexLiteral)
 			.render();
 
 	// This is needed because solidity interprets a 20-byte 0x prefixed hex literal as an address
 	// payable type.
-	return Whiskers(R"(<?decorate><?isHex>hex</isHex>"</decorate><value><?decorate>"</decorate>)")
-		("decorate", _decorate)
-		("isHex", _isHexLiteral)
-		("value", croppedString(_numBytes, _counter, _isHexLiteral))
+	return Whiskers(R"(<?decorate><?isHex>hex</isHex>"</decorate><value><?decorate>"</decorate>)")(
+			   "decorate",
+			   _decorate
+	)("isHex", _isHexLiteral)("value", croppedString(_numBytes, _counter, _isHexLiteral))
 		.render();
 }
 
@@ -1109,9 +1027,7 @@ std::string ValueGetterVisitor::fixedByteValueAsString(unsigned _width, unsigned
 
 std::string ValueGetterVisitor::addressValueAsString(unsigned _counter)
 {
-	return Whiskers(R"(address(<value>))")
-		("value", uintValueAsString(160, _counter))
-		.render();
+	return Whiskers(R"(address(<value>))")("value", uintValueAsString(160, _counter)).render();
 }
 
 std::string ValueGetterVisitor::variableLengthValueAsString(
@@ -1121,13 +1037,11 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 )
 {
 	// TODO: Move this to caller
-//	solAssert(_numBytes >= 0 && _numBytes <= s_maxDynArrayLength,
-//	          "Proto ABIv2 fuzzer: Invalid hex length"
-//	);
+	//	solAssert(_numBytes >= 0 && _numBytes <= s_maxDynArrayLength,
+	//	          "Proto ABIv2 fuzzer: Invalid hex length"
+	//	);
 	if (_numBytes == 0)
-		return Whiskers(R"(<?isHex>hex</isHex>"")")
-			("isHex", _isHexLiteral)
-			.render();
+		return Whiskers(R"(<?isHex>hex</isHex>"")")("isHex", _isHexLiteral).render();
 
 	unsigned numBytesRemaining = _numBytes;
 	// Stores the literal
@@ -1141,9 +1055,9 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 			_isHexLiteral,
 			/*decorate=*/false
 		);
-		// If requested value is longer than 32 bytes, the literal
-		// is obtained by duplicating the return value of hexValueAsString
-		// until we reach a value of the requested size.
+	// If requested value is longer than 32 bytes, the literal
+	// is obtained by duplicating the return value of hexValueAsString
+	// until we reach a value of the requested size.
 	else
 	{
 		// Create a 32-byte value to be duplicated and
@@ -1152,8 +1066,8 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 		// (expensive) calls to keccak256.
 		string cachedString = hexValueAsString(
 			/*numBytes=*/32,
-			             _counter,
-			             _isHexLiteral,
+			_counter,
+			_isHexLiteral,
 			/*decorate=*/false
 		);
 		output = cachedString;
@@ -1192,17 +1106,13 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 		);
 
 	// Decorate output
-	return Whiskers(R"(<?isHexLiteral>hex</isHexLiteral>"<value>")")
-		("isHexLiteral", _isHexLiteral)
-		("value", output)
+	return Whiskers(
+			   R"(<?isHexLiteral>hex</isHexLiteral>"<value>")"
+	)("isHexLiteral", _isHexLiteral)("value", output)
 		.render();
 }
 
 string ValueGetterVisitor::bytesArrayValueAsString(unsigned _counter, bool _isHexLiteral)
 {
-	return variableLengthValueAsString(
-		getVarLength(_counter),
-		_counter,
-		_isHexLiteral
-	);
+	return variableLengthValueAsString(getVarLength(_counter), _counter, _isHexLiteral);
 }

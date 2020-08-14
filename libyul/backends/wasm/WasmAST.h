@@ -30,14 +30,17 @@
 
 namespace solidity::yul::wasm
 {
-
 enum class Type
 {
 	i32,
 	i64,
 };
 
-struct TypedName { std::string name; Type type; };
+struct TypedName
+{
+	std::string name;
+	Type type;
+};
 using TypedNameList = std::vector<TypedName>;
 
 struct Literal;
@@ -55,34 +58,101 @@ struct Branch;
 struct BranchIf;
 struct Return;
 using Expression = std::variant<
-	Literal, StringLiteral, LocalVariable, GlobalVariable,
-	FunctionCall, BuiltinCall, LocalAssignment, GlobalAssignment,
-	Block, If, Loop, Branch, BranchIf, Return
->;
+	Literal,
+	StringLiteral,
+	LocalVariable,
+	GlobalVariable,
+	FunctionCall,
+	BuiltinCall,
+	LocalAssignment,
+	GlobalAssignment,
+	Block,
+	If,
+	Loop,
+	Branch,
+	BranchIf,
+	Return>;
 
-struct Literal { std::variant<uint32_t, uint64_t> value; };
-struct StringLiteral { std::string value; };
-struct LocalVariable { std::string name; };
-struct GlobalVariable { std::string name; };
-struct Label { std::string name; };
-struct FunctionCall { std::string functionName; std::vector<Expression> arguments; };
-struct BuiltinCall { std::string functionName; std::vector<Expression> arguments; };
-struct LocalAssignment { std::string variableName; std::unique_ptr<Expression> value; };
-struct GlobalAssignment { std::string variableName; std::unique_ptr<Expression> value; };
-struct Block { std::string labelName; std::vector<Expression> statements; };
-struct If {
+struct Literal
+{
+	std::variant<uint32_t, uint64_t> value;
+};
+struct StringLiteral
+{
+	std::string value;
+};
+struct LocalVariable
+{
+	std::string name;
+};
+struct GlobalVariable
+{
+	std::string name;
+};
+struct Label
+{
+	std::string name;
+};
+struct FunctionCall
+{
+	std::string functionName;
+	std::vector<Expression> arguments;
+};
+struct BuiltinCall
+{
+	std::string functionName;
+	std::vector<Expression> arguments;
+};
+struct LocalAssignment
+{
+	std::string variableName;
+	std::unique_ptr<Expression> value;
+};
+struct GlobalAssignment
+{
+	std::string variableName;
+	std::unique_ptr<Expression> value;
+};
+struct Block
+{
+	std::string labelName;
+	std::vector<Expression> statements;
+};
+struct If
+{
 	std::unique_ptr<Expression> condition;
 	std::vector<Expression> statements;
 	std::unique_ptr<std::vector<Expression>> elseStatements;
 };
-struct Loop { std::string labelName; std::vector<Expression> statements; };
-struct Branch { Label label; };
-struct Return {};
-struct BranchIf { Label label; std::unique_ptr<Expression> condition; };
+struct Loop
+{
+	std::string labelName;
+	std::vector<Expression> statements;
+};
+struct Branch
+{
+	Label label;
+};
+struct Return
+{};
+struct BranchIf
+{
+	Label label;
+	std::unique_ptr<Expression> condition;
+};
 
-struct VariableDeclaration { std::string variableName; Type type; };
-struct GlobalVariableDeclaration { std::string variableName; Type type; };
-struct FunctionImport {
+struct VariableDeclaration
+{
+	std::string variableName;
+	Type type;
+};
+struct GlobalVariableDeclaration
+{
+	std::string variableName;
+	Type type;
+};
+struct FunctionImport
+{
 	std::string module;
 	std::string externalName;
 	std::string internalName;

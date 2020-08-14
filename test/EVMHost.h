@@ -37,8 +37,8 @@ using Address = util::h160;
 class EVMHost: public evmc::MockedHost
 {
 public:
-	using MockedHost::get_code_size;
 	using MockedHost::get_balance;
+	using MockedHost::get_code_size;
 
 	/// Tries to dynamically load libevmone. @returns nullptr on failure.
 	/// The path has to be provided for the first successful run and will be ignored
@@ -47,7 +47,11 @@ public:
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm = getVM());
 
-	void reset() { accounts.clear(); m_currentAddress = {}; }
+	void reset()
+	{
+		accounts.clear();
+		m_currentAddress = {};
+	}
 	void newBlock()
 	{
 		tx_context.block_number++;
@@ -82,7 +86,10 @@ private:
 	static evmc::result precompileALTBN128G1Add(evmc_message const& _message) noexcept;
 	static evmc::result precompileALTBN128G1Mul(evmc_message const& _message) noexcept;
 	static evmc::result precompileALTBN128PairingProduct(evmc_message const& _message) noexcept;
-	static evmc::result precompileGeneric(evmc_message const& _message, std::map<bytes, bytes> const& _inOut) noexcept;
+	static evmc::result precompileGeneric(
+		evmc_message const& _message,
+		std::map<bytes, bytes> const& _inOut
+	) noexcept;
 	/// @returns a result object with no gas usage and result data taken from @a _data.
 	/// @note The return value is only valid as long as @a _data is alive!
 	static evmc::result resultWithGas(evmc_message const& _message, bytes const& _data) noexcept;

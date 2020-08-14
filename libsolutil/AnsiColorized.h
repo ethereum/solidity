@@ -23,10 +23,8 @@
 
 namespace solidity::util
 {
-
 namespace formatting
 {
-
 // control codes
 static constexpr char const* RESET = "\033[0m";
 static constexpr char const* INVERSE = "\033[7m";

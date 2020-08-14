@@ -47,9 +47,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		solAssert(obj.bytecode, "");
 	}
 	catch (StackTooDeepError const&)
-	{
-
-	}
+	{}
 
 	return 0;
 }

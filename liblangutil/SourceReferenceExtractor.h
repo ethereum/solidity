@@ -27,7 +27,6 @@
 
 namespace solidity::langutil
 {
-
 struct LineColumn
 {
 	int line = {-1};
@@ -39,13 +38,16 @@ struct LineColumn
 
 struct SourceReference
 {
-	std::string message;      ///< A message that relates to this source reference (such as a warning or an error message).
-	std::string sourceName;   ///< Underlying source name (for example the filename).
-	LineColumn position;      ///< Actual (error) position this source reference is surrounding.
-	bool multiline = {false}; ///< Indicates whether the actual SourceReference is truncated to one line.
-	std::string text;         ///< Extracted source code text (potentially truncated if multiline or too long).
-	int startColumn = {-1};   ///< Highlighting range-start of text field.
-	int endColumn = {-1};     ///< Highlighting range-end of text field.
+	std::string message;  ///< A message that relates to this source reference (such as a warning or
+						  ///< an error message).
+	std::string sourceName;	 ///< Underlying source name (for example the filename).
+	LineColumn position;  ///< Actual (error) position this source reference is surrounding.
+	bool multiline = {
+		false};	 ///< Indicates whether the actual SourceReference is truncated to one line.
+	std::string
+		text;  ///< Extracted source code text (potentially truncated if multiline or too long).
+	int startColumn = {-1};	 ///< Highlighting range-start of text field.
+	int endColumn = {-1};  ///< Highlighting range-end of text field.
 
 	/// Constructs a SourceReference containing a message only.
 	static SourceReference MessageOnly(std::string _msg, std::string _sourceName = {})
@@ -59,17 +61,17 @@ struct SourceReference
 
 namespace SourceReferenceExtractor
 {
-	struct Message
-	{
-		SourceReference primary;
-		std::string category; // "Error", "Warning", ...
-		std::vector<SourceReference> secondary;
-		std::optional<ErrorId> errorId;
-	};
+struct Message
+{
+	SourceReference primary;
+	std::string category;  // "Error", "Warning", ...
+	std::vector<SourceReference> secondary;
+	std::optional<ErrorId> errorId;
+};
 
-	Message extract(util::Exception const& _exception, std::string _category);
-	Message extract(Error const& _error);
-	SourceReference extract(SourceLocation const* _location, std::string message = "");
+Message extract(util::Exception const& _exception, std::string _category);
+Message extract(Error const& _error);
+SourceReference extract(SourceLocation const* _location, std::string message = "");
 }
 
 }

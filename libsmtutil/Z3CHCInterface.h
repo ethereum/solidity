@@ -29,7 +29,6 @@
 
 namespace solidity::smtutil
 {
-
 class Z3CHCInterface: public CHCSolverInterface
 {
 public:

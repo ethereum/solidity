@@ -27,7 +27,6 @@
 
 namespace solidity::tools
 {
-
 /**
  * Helper for displaying location during asserts
  */
@@ -36,7 +35,6 @@ class LocationHelper
 	std::stringstream m_stream;
 
 public:
-
 	template <typename T>
 	LocationHelper& operator<<(T const& data)
 	{
@@ -61,18 +59,12 @@ public:
 		std::string const& _keyword
 	)
 	{
-		return regex_search(
-			_location.text(),
-			std::regex{"(\\b" + _keyword + "\\b\\n|\\r|\\r\\n)"}
-		);
+		return regex_search(_location.text(), std::regex{"(\\b" + _keyword + "\\b\\n|\\r|\\r\\n)"});
 	}
 
 	static bool hasMutabilityKeyword(langutil::SourceLocation const& _location)
 	{
-		return regex_search(
-			_location.text(),
-			std::regex{"(\\b(pure|view|nonpayable|payable)\\b)"}
-		);
+		return regex_search(_location.text(), std::regex{"(\\b(pure|view|nonpayable|payable)\\b)"});
 	}
 
 	static bool hasVirtualKeyword(langutil::SourceLocation const& _location)
@@ -139,8 +131,8 @@ public:
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
-				"\nNeeds to be fixed manually."
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location
+								 << "\nNeeds to be fixed manually."
 			);
 
 		return "";
@@ -163,12 +155,11 @@ public:
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
-				"\nNeeds to be fixed manually."
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location
+								 << "\nNeeds to be fixed manually."
 			);
 
 		return "";
-
 	}
 
 	/// Searches for the first right parenthesis and appends the expression
@@ -181,16 +172,12 @@ public:
 	{
 		auto _regex = std::regex{"(\\))"};
 		if (regex_search(_location.text(), _regex))
-			return regex_replace(
-				_location.text(),
-				std::regex{"(\\))"},
-				") " + _expression
-			);
+			return regex_replace(_location.text(), std::regex{"(\\))"}, ") " + _expression);
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
-				"\nNeeds to be fixed manually."
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location
+								 << "\nNeeds to be fixed manually."
 			);
 
 		return "";
@@ -205,18 +192,14 @@ public:
 		std::string const& _expression
 	)
 	{
-		auto _regex = std::regex{ "(\\bfunction\\s*" + _name + "\\b)"};
+		auto _regex = std::regex{"(\\bfunction\\s*" + _name + "\\b)"};
 		if (regex_search(_location.text(), _regex))
-			return regex_replace(
-				_location.text(),
-				_regex,
-				_expression
-			);
+			return regex_replace(_location.text(), _regex, _expression);
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
-				"\nNeeds to be fixed manually."
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location
+								 << "\nNeeds to be fixed manually."
 			);
 
 		return "";
@@ -240,8 +223,8 @@ public:
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
-				"\nNeeds to be fixed manually."
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location
+								 << "\nNeeds to be fixed manually."
 			);
 
 		return "";
@@ -255,18 +238,18 @@ public:
 		if (regex_search(_location.text(), valueReg))
 		{
 			std::string out = regex_replace(
-					_location.text(),
-					valueReg,
-					"{value: ",
-					std::regex_constants::format_first_only
+				_location.text(),
+				valueReg,
+				"{value: ",
+				std::regex_constants::format_first_only
 			);
 			return regex_replace(out, std::regex{"\\)$"}, "}");
 		}
 		else
 			solAssert(
 				false,
-				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location <<
-				"\nNeeds to be fixed manually."
+				LocationHelper() << "Could not fix: " << _location.text() << " at " << _location
+								 << "\nNeeds to be fixed manually."
 			);
 
 		return "";
@@ -280,7 +263,8 @@ public:
 	static std::string removeVisibility(langutil::SourceLocation const& _location)
 	{
 		std::string replacement = _location.text();
-		for (auto const& replace: {"public ", "public", "internal ", "internal", "external ", "external"})
+		for (auto const& replace:
+			 {"public ", "public", "internal ", "internal", "external ", "external"})
 			replacement = regex_replace(replacement, std::regex{replace}, "");
 		return replacement;
 	}

@@ -43,7 +43,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -63,7 +63,6 @@
 
 namespace solidity::langutil
 {
-
 class AstRawString;
 class AstValueFactory;
 class ParserRecorder;
@@ -98,6 +97,7 @@ std::ostream& operator<<(std::ostream& os, ScannerError _errorCode);
 class Scanner
 {
 	friend class LiteralScope;
+
 public:
 	explicit Scanner(std::shared_ptr<CharStream> _source) { reset(std::move(_source)); }
 	explicit Scanner(CharStream _source = CharStream()) { reset(std::move(_source)); }
@@ -132,10 +132,7 @@ public:
 	///@name Information about the current token
 
 	/// @returns the current token
-	Token currentToken() const
-	{
-		return m_tokens[Current].token;
-	}
+	Token currentToken() const { return m_tokens[Current].token; }
 	ElementaryTypeNameToken currentElementaryTypeNameToken() const
 	{
 		unsigned firstSize;
@@ -146,7 +143,10 @@ public:
 
 	SourceLocation currentLocation() const { return m_tokens[Current].location; }
 	std::string const& currentLiteral() const { return m_tokens[Current].literal; }
-	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_tokens[Current].extendedTokenInfo; }
+	std::tuple<unsigned, unsigned> const& currentTokenInfo() const
+	{
+		return m_tokens[Current].extendedTokenInfo;
+	}
 
 	/// Retrieves the last error that occurred during lexical analysis.
 	/// @note If no error occurred, the value is undefined.
@@ -179,7 +179,10 @@ public:
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
 	std::string lineAtPosition(int _position) const { return m_source->lineAtPosition(_position); }
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source->translatePositionToLineColumn(_position); }
+	std::tuple<int, int> translatePositionToLineColumn(int _position) const
+	{
+		return m_source->translatePositionToLineColumn(_position);
+	}
 	///@}
 
 private:
@@ -203,17 +206,33 @@ private:
 	///@name Literal buffer support
 	inline void addLiteralChar(char c) { m_tokens[NextNext].literal.push_back(c); }
 	inline void addCommentLiteralChar(char c) { m_skippedComments[NextNext].literal.push_back(c); }
-	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
+	inline void addLiteralCharAndAdvance()
+	{
+		addLiteralChar(m_char);
+		advance();
+	}
 	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
 
-	bool advance() { m_char = m_source->advanceAndGet(); return !m_source->isPastEndOfInput(); }
+	bool advance()
+	{
+		m_char = m_source->advanceAndGet();
+		return !m_source->isPastEndOfInput();
+	}
 	void rollback(size_t _amount) { m_char = m_source->rollback(_amount); }
 	/// Rolls back to the start of the current token and re-runs the scanner.
 	void rescan();
 
-	inline Token selectErrorToken(ScannerError _err) { advance(); return setError(_err); }
-	inline Token selectToken(Token _tok) { advance(); return _tok; }
+	inline Token selectErrorToken(ScannerError _err)
+	{
+		advance();
+		return setError(_err);
+	}
+	inline Token selectToken(Token _tok)
+	{
+		advance();
+		return _tok;
+	}
 	/// If the next character is _next, advance and return _then, otherwise return _else.
 	inline Token selectToken(char _next, Token _then, Token _else);
 
@@ -260,10 +279,15 @@ private:
 	size_t sourcePos() const { return m_source->position(); }
 	bool isSourcePastEndOfInput() const { return m_source->isPastEndOfInput(); }
 
-	enum TokenIndex { Current, Next, NextNext };
+	enum TokenIndex
+	{
+		Current,
+		Next,
+		NextNext
+	};
 
-	TokenDesc m_skippedComments[3] = {}; // desc for the current, next and nextnext skipped comment
-	TokenDesc m_tokens[3] = {}; // desc for the current, next and nextnext token
+	TokenDesc m_skippedComments[3] = {};  // desc for the current, next and nextnext skipped comment
+	TokenDesc m_tokens[3] = {};	 // desc for the current, next and nextnext token
 
 	std::shared_ptr<CharStream> m_source;
 

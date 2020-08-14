@@ -28,7 +28,6 @@
 
 namespace solidity::phaser
 {
-
 using ChromosomePair = std::tuple<Chromosome, Chromosome>;
 
 using Mutation = Chromosome(Chromosome const&);

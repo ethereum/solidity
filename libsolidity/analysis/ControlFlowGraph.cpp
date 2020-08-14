@@ -35,7 +35,8 @@ bool CFG::constructFlow(ASTNode const& _astRoot)
 bool CFG::visit(FunctionDefinition const& _function)
 {
 	if (_function.isImplemented())
-		m_functionControlFlow[&_function] = ControlFlowBuilder::createFunctionFlow(m_nodeContainer, _function);
+		m_functionControlFlow[&_function] =
+			ControlFlowBuilder::createFunctionFlow(m_nodeContainer, _function);
 	return false;
 }
 

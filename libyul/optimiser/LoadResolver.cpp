@@ -38,8 +38,7 @@ void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 	LoadResolver{
 		_context.dialect,
 		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
-		!containsMSize
-	}(_ast);
+		!containsMSize}(_ast);
 }
 
 void LoadResolver::visit(Expression& _e)
@@ -52,7 +51,8 @@ void LoadResolver::visit(Expression& _e)
 	if (holds_alternative<FunctionCall>(_e))
 	{
 		FunctionCall const& funCall = std::get<FunctionCall>(_e);
-		if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
+		if (auto const* builtin =
+				dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
 			if (builtin->instruction)
 				tryResolve(_e, *builtin->instruction, funCall.arguments);
 	}
@@ -68,15 +68,10 @@ void LoadResolver::tryResolve(
 		return;
 
 	YulString key = std::get<Identifier>(_arguments.at(0)).name;
-	if (
-		_instruction == evmasm::Instruction::SLOAD &&
-		m_storage.values.count(key)
-	)
+	if (_instruction == evmasm::Instruction::SLOAD && m_storage.values.count(key))
 		_e = Identifier{locationOf(_e), m_storage.values[key]};
 	else if (
-		m_optimizeMLoad &&
-		_instruction == evmasm::Instruction::MLOAD &&
-		m_memory.values.count(key)
+		m_optimizeMLoad && _instruction == evmasm::Instruction::MLOAD && m_memory.values.count(key)
 	)
 		_e = Identifier{locationOf(_e), m_memory.values[key]};
 }

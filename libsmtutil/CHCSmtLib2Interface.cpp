@@ -62,25 +62,13 @@ void CHCSmtLib2Interface::registerRelation(Expression const& _expr)
 		string domain = m_smtlib2->toSmtLibSort(fSort->domain);
 		// Relations are predicates which have implicit codomain Bool.
 		m_variables.insert(_expr.name);
-		write(
-			"(declare-rel |" +
-			_expr.name +
-			"| " +
-			domain +
-			")"
-		);
+		write("(declare-rel |" + _expr.name + "| " + domain + ")");
 	}
 }
 
 void CHCSmtLib2Interface::addRule(Expression const& _expr, std::string const& _name)
 {
-	write(
-		"(rule (! " +
-		m_smtlib2->toSExpr(_expr) +
-		" :named " +
-		_name +
-		"))"
-	);
+	write("(rule (! " + m_smtlib2->toSExpr(_expr) + " :named " + _name + "))");
 }
 
 pair<CheckResult, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expression const& _block)
@@ -91,10 +79,8 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expre
 		declareVariable(var.first, var.second);
 	m_accumulatedOutput += accumulated;
 
-	string response = querySolver(
-		m_accumulatedOutput +
-		"\n(query " + _block.name + " :print-certificate true)"
-	);
+	string response =
+		querySolver(m_accumulatedOutput + "\n(query " + _block.name + " :print-certificate true)");
 
 	CheckResult result;
 	// TODO proper parsing
@@ -135,22 +121,11 @@ void CHCSmtLib2Interface::declareFunction(string const& _name, SortPointer const
 		string domain = m_smtlib2->toSmtLibSort(fSort->domain);
 		string codomain = m_smtlib2->toSmtLibSort(*fSort->codomain);
 		m_variables.insert(_name);
-		write(
-			"(declare-fun |" +
-			_name +
-			"| " +
-			domain +
-			" " +
-			codomain +
-			")"
-		);
+		write("(declare-fun |" + _name + "| " + domain + " " + codomain + ")");
 	}
 }
 
-void CHCSmtLib2Interface::write(string _data)
-{
-	m_accumulatedOutput += move(_data) + "\n";
-}
+void CHCSmtLib2Interface::write(string _data) { m_accumulatedOutput += move(_data) + "\n"; }
 
 string CHCSmtLib2Interface::querySolver(string const& _input)
 {

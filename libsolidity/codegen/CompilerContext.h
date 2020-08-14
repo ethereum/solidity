@@ -46,8 +46,8 @@
 #include <queue>
 #include <utility>
 
-namespace solidity::frontend {
-
+namespace solidity::frontend
+{
 class Compiler;
 
 /**
@@ -77,17 +77,30 @@ public:
 	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
 
 	/// Update currently enabled set of experimental features.
-	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
+	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features)
+	{
+		m_experimentalFeatures = _features;
+	}
 	/// @returns true if the given feature is enabled.
-	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
+	bool experimentalFeatureActive(ExperimentalFeature _feature) const
+	{
+		return m_experimentalFeatures.count(_feature);
+	}
 
-	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
+	void addStateVariable(
+		VariableDeclaration const& _declaration,
+		u256 const& _storageOffset,
+		unsigned _byteOffset
+	);
 	void addImmutable(VariableDeclaration const& _declaration);
 
-	/// @returns the reserved memory for storing the value of the immutable @a _variable during contract creation.
+	/// @returns the reserved memory for storing the value of the immutable @a _variable during
+	/// contract creation.
 	size_t immutableMemoryOffset(VariableDeclaration const& _variable) const;
 	/// @returns a list of slot names referring to the stack slots of an immutable variable.
-	static std::vector<std::string> immutableVariableSlotNames(VariableDeclaration const& _variable);
+	static std::vector<std::string> immutableVariableSlotNames(
+		VariableDeclaration const& _variable
+	);
 
 	/// @returns the reserved memory and resets it to mark it as used.
 	size_t reservedMemory();
@@ -99,16 +112,29 @@ public:
 	/// Returns the number of currently allocated local variables.
 	unsigned numberOfLocalVariables() const;
 
-	void setOtherCompilers(std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers) { m_otherCompilers = _otherCompilers; }
+	void setOtherCompilers(
+		std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> const& _otherCompilers
+	)
+	{
+		m_otherCompilers = _otherCompilers;
+	}
 	std::shared_ptr<evmasm::Assembly> compiledContract(ContractDefinition const& _contract) const;
-	std::shared_ptr<evmasm::Assembly> compiledContractRuntime(ContractDefinition const& _contract) const;
+	std::shared_ptr<evmasm::Assembly> compiledContractRuntime(ContractDefinition const& _contract)
+		const;
 
 	void setStackOffset(int _offset) { m_asm->setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm->adjustDeposit(_adjustment); }
-	unsigned stackHeight() const { solAssert(m_asm->deposit() >= 0, ""); return unsigned(m_asm->deposit()); }
+	unsigned stackHeight() const
+	{
+		solAssert(m_asm->deposit() >= 0, "");
+		return unsigned(m_asm->deposit());
+	}
 
 	bool isLocalVariable(Declaration const* _declaration) const;
-	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
+	bool isStateVariable(Declaration const* _declaration) const
+	{
+		return m_stateVariables.count(_declaration) != 0;
+	}
 
 	/// @returns the entry label of the given function and creates it if it does not exist yet.
 	evmasm::AssemblyItem functionEntryLabel(Declaration const& _declaration);
@@ -117,9 +143,15 @@ public:
 	evmasm::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
 	/// @returns the function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
-	FunctionDefinition const& superFunction(FunctionDefinition const& _function, ContractDefinition const& _base);
+	FunctionDefinition const& superFunction(
+		FunctionDefinition const& _function,
+		ContractDefinition const& _base
+	);
 	/// Sets the contract currently being compiled - the most derived one.
-	void setMostDerivedContract(ContractDefinition const& _contract) { m_mostDerivedContract = &_contract; }
+	void setMostDerivedContract(ContractDefinition const& _contract)
+	{
+		m_mostDerivedContract = &_contract;
+	}
 	ContractDefinition const& mostDerivedContract() const;
 
 	/// @returns the next function in the queue of functions that are still to be compiled
@@ -134,7 +166,8 @@ public:
 	/// Appends a call to the named low-level function and inserts the generator into the
 	/// list of low-level-functions to be generated, unless it already exists.
 	/// Note that the generator should not assume that objects are still alive when it is called,
-	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for example).
+	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for
+	/// example).
 	void callLowLevelFunction(
 		std::string const& _name,
 		unsigned _inArgs,
@@ -143,16 +176,13 @@ public:
 	);
 
 	/// Appends a call to a yul function and registers the function as externally used.
-	void callYulFunction(
-		std::string const& _name,
-		unsigned _inArgs,
-		unsigned _outArgs
-	);
+	void callYulFunction(std::string const& _name, unsigned _inArgs, unsigned _outArgs);
 
 	/// Returns the tag of the named low-level function and inserts the generator into the
 	/// list of low-level-functions to be generated, unless it already exists.
 	/// Note that the generator should not assume that objects are still alive when it is called,
-	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for example).
+	/// unless they are guaranteed to be alive for the whole run of the compiler (AST nodes, for
+	/// example).
 	evmasm::AssemblyItem lowLevelFunctionTag(
 		std::string const& _name,
 		unsigned _inArgs,
@@ -170,7 +200,8 @@ public:
 	std::pair<std::string, std::set<std::string>> requestedYulFunctions();
 	bool requestedYulFunctionsRan() const { return m_requestedYulFunctionsRan; }
 
-	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
+	/// Returns the distance of the given local variable from the bottom of the stack (of the
+	/// current function).
 	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref baseStackOffsetOfVariable(variable), returns
 	/// the distance of that variable from the current top of the stack.
@@ -184,11 +215,17 @@ public:
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	evmasm::AssemblyItem appendConditionalJump() { return m_asm->appendJumpI().tag(); }
 	/// Appends a JUMPI instruction to @a _tag
-	CompilerContext& appendConditionalJumpTo(evmasm::AssemblyItem const& _tag) { m_asm->appendJumpI(_tag); return *this; }
+	CompilerContext& appendConditionalJumpTo(evmasm::AssemblyItem const& _tag)
+	{
+		m_asm->appendJumpI(_tag);
+		return *this;
+	}
 	/// Appends a JUMP to a new tag and @returns the tag
 	evmasm::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext& appendJump(evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary);
+	CompilerContext& appendJump(
+		evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary
+	);
 	/// Appends an INVALID instruction
 	CompilerContext& appendInvalid();
 	/// Appends a conditional INVALID instruction
@@ -201,12 +238,19 @@ public:
 	/// If the current EVM version does not support RETURNDATA, uses REVERT but does not forward
 	/// the data.
 	/// @param _message is an optional revert message used in debug mode
-	CompilerContext& appendConditionalRevert(bool _forwardReturnData = false, std::string const& _message = "");
+	CompilerContext& appendConditionalRevert(
+		bool _forwardReturnData = false,
+		std::string const& _message = ""
+	);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(
 		evmasm::AssemblyItem const& _tag,
 		evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary
-	) { *m_asm << _tag.pushTag(); return appendJump(_jumpType); }
+	)
+	{
+		*m_asm << _tag.pushTag();
+		return appendJump(_jumpType);
+	}
 	/// Appends pushing of a new tag and @returns the new tag.
 	evmasm::AssemblyItem pushNewTag() { return m_asm->append(m_asm->newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data
@@ -215,7 +259,10 @@ public:
 	evmasm::AssemblyItem namedTag(std::string const& _name) { return m_asm->namedTag(_name); }
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
-	evmasm::AssemblyItem addSubroutine(evmasm::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
+	evmasm::AssemblyItem addSubroutine(evmasm::AssemblyPointer const& _assembly)
+	{
+		return m_asm->appendSubroutine(_assembly);
+	}
 	/// Pushes the size of the subroutine.
 	void pushSubroutineSize(size_t _subRoutine) { m_asm->pushSubroutineSize(_subRoutine); }
 	/// Pushes the offset of the subroutine.
@@ -225,32 +272,66 @@ public:
 	/// Adds data to the data section, pushes a reference to the stack
 	evmasm::AssemblyItem appendData(bytes const& _data) { return m_asm->append(_data); }
 	/// Appends the address (virtual, will be filled in by linker) of a library.
-	void appendLibraryAddress(std::string const& _identifier) { m_asm->appendLibraryAddress(_identifier); }
+	void appendLibraryAddress(std::string const& _identifier)
+	{
+		m_asm->appendLibraryAddress(_identifier);
+	}
 	/// Appends an immutable variable. The value will be filled in by the constructor.
 	void appendImmutable(std::string const& _identifier) { m_asm->appendImmutable(_identifier); }
 	/// Appends an assignment to an immutable variable. Only valid in creation code.
-	void appendImmutableAssignment(std::string const& _identifier) { m_asm->appendImmutableAssignment(_identifier); }
+	void appendImmutableAssignment(std::string const& _identifier)
+	{
+		m_asm->appendImmutableAssignment(_identifier);
+	}
 	/// Appends a zero-address that can be replaced by something else at deploy time (if the
 	/// position in bytecode is known).
 	void appendDeployTimeAddress() { m_asm->append(evmasm::PushDeployTimeAddress); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
-	void popVisitedNodes() { m_visitedNodes.pop(); updateSourceLocation(); }
+	void popVisitedNodes()
+	{
+		m_visitedNodes.pop();
+		updateSourceLocation();
+	}
 	/// Pushes an ASTNode to the stack of visited nodes
-	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
+	void pushVisitedNodes(ASTNode const* _node)
+	{
+		m_visitedNodes.push(_node);
+		updateSourceLocation();
+	}
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
-	CompilerContext& operator<<(evmasm::AssemblyItem const& _item) { m_asm->append(_item); return *this; }
-	CompilerContext& operator<<(evmasm::Instruction _instruction) { m_asm->append(_instruction); return *this; }
-	CompilerContext& operator<<(u256 const& _value) { m_asm->append(_value); return *this; }
-	CompilerContext& operator<<(bytes const& _data) { m_asm->append(_data); return *this; }
+	CompilerContext& operator<<(evmasm::AssemblyItem const& _item)
+	{
+		m_asm->append(_item);
+		return *this;
+	}
+	CompilerContext& operator<<(evmasm::Instruction _instruction)
+	{
+		m_asm->append(_instruction);
+		return *this;
+	}
+	CompilerContext& operator<<(u256 const& _value)
+	{
+		m_asm->append(_value);
+		return *this;
+	}
+	CompilerContext& operator<<(bytes const& _data)
+	{
+		m_asm->append(_data);
+		return *this;
+	}
 
 	/// Appends inline assembly (strict mode).
-	/// @a _replacements are string-matching replacements that are performed prior to parsing the inline assembly.
-	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
-	/// @param _externallyUsedFunctions a set of function names that are not to be renamed or removed.
-	/// @param _system if true, this is a "system-level" assembly where all functions use named labels.
+	/// @a _replacements are string-matching replacements that are performed prior to parsing the
+	/// inline assembly.
+	/// @param _localVariables assigns stack positions to variables with the last one being the
+	/// stack top
+	/// @param _externallyUsedFunctions a set of function names that are not to be renamed or
+	/// removed.
+	/// @param _system if true, this is a "system-level" assembly where all functions use named
+	/// labels.
 	void appendInlineAssembly(
 		std::string const& _assembly,
 		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
@@ -264,15 +345,24 @@ public:
 	/// Otherwise returns "revert(0, 0)".
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
-	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulString> const& _externalIdentifiers = {});
+	void optimizeYul(
+		yul::Object& _object,
+		yul::EVMDialect const& _dialect,
+		OptimiserSettings const& _optimiserSetting,
+		std::set<yul::YulString> const& _externalIdentifiers = {}
+	);
 
 	/// Appends arbitrary data to the end of the bytecode.
 	void appendAuxiliaryData(bytes const& _data) { m_asm->appendAuxiliaryDataToEnd(_data); }
 
 	/// Run optimisation step.
-	void optimise(OptimiserSettings const& _settings) { m_asm->optimise(translateOptimiserSettings(_settings)); }
+	void optimise(OptimiserSettings const& _settings)
+	{
+		m_asm->optimise(translateOptimiserSettings(_settings));
+	}
 
-	/// @returns the runtime context if in creation mode and runtime context is set, nullptr otherwise.
+	/// @returns the runtime context if in creation mode and runtime context is set, nullptr
+	/// otherwise.
 	CompilerContext* runtimeContext() const { return m_runtimeContext; }
 	/// @returns the identifier of the runtime subroutine.
 	size_t runtimeSub() const { return m_runtimeSub; }
@@ -290,13 +380,18 @@ public:
 	}
 
 	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indicies = std::map<std::string, unsigned>()) const
+	Json::Value assemblyJSON(
+		std::map<std::string, unsigned> const& _indicies = std::map<std::string, unsigned>()
+	) const
 	{
 		return m_asm->assemblyJSON(_indicies);
 	}
 
 	evmasm::LinkerObject const& assembledObject() const;
-	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
+	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const
+	{
+		return m_asm->sub(_subIndex).assemble();
+	}
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -305,7 +400,10 @@ public:
 	{
 	public:
 		LocationSetter(CompilerContext& _compilerContext, ASTNode const& _node):
-			ScopeGuard([&]{ _compilerContext.popVisitedNodes(); }) { _compilerContext.pushVisitedNodes(&_node); }
+			ScopeGuard([&] { _compilerContext.popVisitedNodes(); })
+		{
+			_compilerContext.pushVisitedNodes(&_node);
+		}
 	};
 
 	void setModifierDepth(size_t _modifierDepth) { m_asm->m_currentModifierDepth = _modifierDepth; }
@@ -316,7 +414,9 @@ private:
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
-	evmasm::Assembly::OptimiserSettings translateOptimiserSettings(OptimiserSettings const& _settings);
+	evmasm::Assembly::OptimiserSettings translateOptimiserSettings(
+		OptimiserSettings const& _settings
+	);
 
 	/**
 	 * Helper class that manages function labels and ensures that referenced functions are
@@ -332,9 +432,9 @@ private:
 		evmasm::AssemblyItem entryLabelIfExists(Declaration const& _declaration) const;
 
 		/// @returns the next function in the queue of functions that are still to be compiled
-		/// (i.e. that were referenced during compilation but where we did not yet generate code for).
-		/// Returns nullptr if the queue is empty. Does not remove the function from the queue,
-		/// that will only be done by startFunction below.
+		/// (i.e. that were referenced during compilation but where we did not yet generate code
+		/// for). Returns nullptr if the queue is empty. Does not remove the function from the
+		/// queue, that will only be done by startFunction below.
 		Declaration const* nextFunctionToCompile() const;
 		/// Informs the queue that we are about to compile the given function, i.e. removes
 		/// the function from the queue of functions to compile.
@@ -362,9 +462,9 @@ private:
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Memory offsets reserved for the values of immutable variables during contract creation.
 	std::map<VariableDeclaration const*, size_t> m_immutableVariables;
-	/// Total amount of reserved memory. Reserved memory is used to store immutable variables during contract creation.
-	/// This has to be finalized before initialiseFreeMemoryPointer() is called. That function
-	/// will reset the optional to verify that.
+	/// Total amount of reserved memory. Reserved memory is used to store immutable variables during
+	/// contract creation. This has to be finalized before initialiseFreeMemoryPointer() is called.
+	/// That function will reset the optional to verify that.
 	std::optional<size_t> m_reservedMemory = {0};
 	/// Offsets of local variables on the stack (relative to stack base).
 	/// This needs to be a stack because if a modifier contains a local variable and this
@@ -375,8 +475,9 @@ private:
 	ContractDefinition const* m_mostDerivedContract = nullptr;
 	/// Stack of current visited AST nodes, used for location attachment
 	std::stack<ASTNode const*> m_visitedNodes;
-	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.
-	CompilerContext *m_runtimeContext;
+	/// The runtime context if in Creation mode, this is used for generating tags that would be
+	/// stored into the storage and then used at runtime.
+	CompilerContext* m_runtimeContext;
 	/// The index of the runtime subroutine.
 	size_t m_runtimeSub = std::numeric_limits<size_t>::max();
 	/// An index of low-level function labels by name.
@@ -390,7 +491,8 @@ private:
 	/// Container for Yul Util functions to be generated.
 	YulUtilFunctions m_yulUtilFunctions;
 	/// The queue of low-level functions to generate.
-	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>> m_lowLevelFunctionGenerationQueue;
+	std::queue<std::tuple<std::string, unsigned, unsigned, std::function<void(CompilerContext&)>>>
+		m_lowLevelFunctionGenerationQueue;
 	/// Flag to check that requestedYulFunctions() was called exactly once
 	bool m_requestedYulFunctionsRan = false;
 };

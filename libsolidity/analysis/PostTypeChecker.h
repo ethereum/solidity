@@ -32,9 +32,9 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 /**
- * This module performs analyses on the AST that are done after type checking and assignments of types:
+ * This module performs analyses on the AST that are done after type checking and assignments of
+ * types:
  *  - whether there are circular references in constant state variables
  *  - whether override specifiers are actually contracts
  *  - whether a modifier is in a function header
@@ -52,8 +52,8 @@ class PostTypeChecker: private ASTConstVisitor
 public:
 	struct Checker: public ASTConstVisitor
 	{
-		Checker(langutil::ErrorReporter& _errorReporter):
-			m_errorReporter(_errorReporter) {}
+		Checker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
+
 	protected:
 		langutil::ErrorReporter& m_errorReporter;
 	};

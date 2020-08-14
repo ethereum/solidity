@@ -27,8 +27,7 @@
 using namespace std;
 using namespace solidity::frontend::test;
 
-TestCaseReader::TestCaseReader(string const& _filename):
-	m_file(_filename)
+TestCaseReader::TestCaseReader(string const& _filename): m_file(_filename)
 {
 	if (!m_file)
 		BOOST_THROW_EXCEPTION(runtime_error("Cannot open file: \"" + _filename + "\"."));
@@ -48,14 +47,13 @@ TestCaseReader::TestCaseReader(istringstream const& _str)
 string const& TestCaseReader::source() const
 {
 	if (m_sources.sources.size() != 1)
-		BOOST_THROW_EXCEPTION(runtime_error("Expected single source definition, but got multiple sources."));
+		BOOST_THROW_EXCEPTION(
+			runtime_error("Expected single source definition, but got multiple sources.")
+		);
 	return m_sources.sources.at(m_sources.mainSourceFile);
 }
 
-string TestCaseReader::simpleExpectations()
-{
-	return parseSimpleExpectations(m_file);
-}
+string TestCaseReader::simpleExpectations() { return parseSimpleExpectations(m_file); }
 
 bool TestCaseReader::boolSetting(std::string const& _name, bool _defaultValue)
 {
@@ -124,7 +122,8 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 			sourcePart = false;
 		else if (sourcePart)
 		{
-			if (boost::algorithm::starts_with(line, sourceDelimiterStart) && boost::algorithm::ends_with(line, sourceDelimiterEnd))
+			if (boost::algorithm::starts_with(line, sourceDelimiterStart) &&
+				boost::algorithm::ends_with(line, sourceDelimiterEnd))
 			{
 				if (!(currentSourceName.empty() && currentSource.empty()))
 					sources[currentSourceName] = std::move(currentSource);
@@ -134,7 +133,9 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 					line.size() - sourceDelimiterEnd.size() - sourceDelimiterStart.size()
 				));
 				if (sources.count(currentSourceName))
-					throw runtime_error("Multiple definitions of test source \"" + currentSourceName + "\".");
+					throw runtime_error(
+						"Multiple definitions of test source \"" + currentSourceName + "\"."
+					);
 			}
 			else
 				currentSource += line + "\n";
@@ -151,7 +152,9 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 			m_settings[key] = value;
 		}
 		else
-			throw runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source."));
+			throw runtime_error(
+				string("Expected \"//\" or \"// ---\" to terminate settings and source.")
+			);
 	}
 	// Register the last source as the main one
 	sources[currentSourceName] = currentSource;

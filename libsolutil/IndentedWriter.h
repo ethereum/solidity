@@ -29,7 +29,6 @@
 
 namespace solidity::util
 {
-
 DEV_SIMPLE_EXCEPTION(IndentedWriterError);
 
 class IndentedWriter

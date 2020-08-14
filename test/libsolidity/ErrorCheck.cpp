@@ -33,10 +33,7 @@ using namespace solidity::frontend;
 
 namespace
 {
-std::string errorMessage(Error const& _e)
-{
-	return _e.comment() ? *_e.comment() : "NONE";
-}
+std::string errorMessage(Error const& _e) { return _e.comment() ? *_e.comment() : "NONE"; }
 }
 
 bool solidity::frontend::test::searchErrorMessage(Error const& _err, std::string const& _substr)
@@ -45,7 +42,8 @@ bool solidity::frontend::test::searchErrorMessage(Error const& _err, std::string
 	{
 		if (errorMessage->find(_substr) == std::string::npos)
 		{
-			cout << "Expected message \"" << _substr << "\" but found \"" << *errorMessage << "\".\n";
+			cout << "Expected message \"" << _substr << "\" but found \"" << *errorMessage
+				 << "\".\n";
 			return false;
 		}
 		return true;
@@ -55,7 +53,10 @@ bool solidity::frontend::test::searchErrorMessage(Error const& _err, std::string
 	return _substr.empty();
 }
 
-string solidity::frontend::test::searchErrors(ErrorList const& _errors, vector<pair<Error::Type, string>> const& _expectations)
+string solidity::frontend::test::searchErrors(
+	ErrorList const& _errors,
+	vector<pair<Error::Type, string>> const& _expectations
+)
 {
 	auto expectations = _expectations;
 	for (auto const& error: _errors)

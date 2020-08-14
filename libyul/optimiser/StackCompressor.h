@@ -26,7 +26,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 struct Object;
 struct FunctionDefinition;

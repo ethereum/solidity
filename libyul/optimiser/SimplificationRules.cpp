@@ -74,14 +74,18 @@ bool SimplificationRules::isInitialized() const
 	return !m_rules[uint8_t(evmasm::Instruction::ADD)].empty();
 }
 
-std::optional<std::pair<evmasm::Instruction, vector<Expression> const*>>
-	SimplificationRules::instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
+std::optional<std::pair<evmasm::Instruction, vector<Expression> const*>> SimplificationRules::
+	instructionAndArguments(Dialect const& _dialect, Expression const& _expr)
 {
 	if (holds_alternative<FunctionCall>(_expr))
 		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
+			if (auto const* builtin =
+					dialect->builtin(std::get<FunctionCall>(_expr).functionName.name))
 				if (builtin->instruction)
-					return make_pair(*builtin->instruction, &std::get<FunctionCall>(_expr).arguments);
+					return make_pair(
+						*builtin->instruction,
+						&std::get<FunctionCall>(_expr).arguments
+					);
 
 	return {};
 }
@@ -122,11 +126,8 @@ SimplificationRules::SimplificationRules(std::optional<langutil::EVMVersion> _ev
 }
 
 yul::Pattern::Pattern(evmasm::Instruction _instruction, initializer_list<Pattern> _arguments):
-	m_kind(PatternKind::Operation),
-	m_instruction(_instruction),
-	m_arguments(_arguments)
-{
-}
+	m_kind(PatternKind::Operation), m_instruction(_instruction), m_arguments(_arguments)
+{}
 
 void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _matchGroups)
 {
@@ -194,18 +195,25 @@ bool Pattern::matches(
 
 		if (m_matchGroups->count(m_matchGroup))
 		{
-			assertThrow(m_kind == PatternKind::Any, OptimizerException, "Match group repetition for non-any.");
+			assertThrow(
+				m_kind == PatternKind::Any,
+				OptimizerException,
+				"Match group repetition for non-any."
+			);
 			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
-			return
-				SyntacticallyEqual{}(*firstMatch, _expr) &&
+			return SyntacticallyEqual{}(*firstMatch, _expr) &&
 				SideEffectsCollector(_dialect, _expr).movable();
 		}
 		else if (m_kind == PatternKind::Any)
 			(*m_matchGroups)[m_matchGroup] = &_expr;
 		else
 		{
-			assertThrow(m_kind == PatternKind::Constant, OptimizerException, "Match group set for operation.");
+			assertThrow(
+				m_kind == PatternKind::Constant,
+				OptimizerException,
+				"Match group set for operation."
+			);
 			// We do not use _expr here, because we want the actual number.
 			(*m_matchGroups)[m_matchGroup] = expr;
 		}
@@ -240,16 +248,12 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 		return FunctionCall{
 			_location,
 			Identifier{_location, YulString{name}},
-			std::move(arguments)
-		};
+			std::move(arguments)};
 	}
 	assertThrow(false, OptimizerException, "Pattern of kind 'any', but no match group.");
 }
 
-u256 Pattern::d() const
-{
-	return valueOfNumberLiteral(std::get<Literal>(matchGroupValue()));
-}
+u256 Pattern::d() const { return valueOfNumberLiteral(std::get<Literal>(matchGroupValue())); }
 
 Expression const& Pattern::matchGroupValue() const
 {

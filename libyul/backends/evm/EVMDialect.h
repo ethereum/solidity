@@ -31,7 +31,6 @@
 
 namespace solidity::yul
 {
-
 class YulString;
 using Type = YulString;
 struct FunctionCall;
@@ -53,7 +52,9 @@ struct BuiltinFunctionForEVM: public BuiltinFunction
 	/// Function to generate code for the given function call and append it to the abstract
 	/// assembly. The fourth parameter is called to visit (and generate code for) the given
 	/// argument.
-	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)> generateCode;
+	std::function<
+		void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)>
+		generateCode;
 };
 
 
@@ -67,12 +68,22 @@ struct EVMDialect: public Dialect
 	/// Constructor, should only be used internally. Use the factory functions below.
 	EVMDialect(langutil::EVMVersion _evmVersion, bool _objectAccess);
 
-	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
+	/// @returns the builtin function of the given name or a nullptr if it is not a builtin
+	/// function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
-	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
-	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
+	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override
+	{
+		return builtin("pop"_yulstring);
+	}
+	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override
+	{
+		return builtin("eq"_yulstring);
+	}
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override
+	{
+		return builtin("iszero"_yulstring);
+	}
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
@@ -106,7 +117,10 @@ struct EVMDialectTyped: public EVMDialect
 
 	BuiltinFunctionForEVM const* discardFunction(YulString _type) const override;
 	BuiltinFunctionForEVM const* equalityFunction(YulString _type) const override;
-	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("not"_yulstring); }
+	BuiltinFunctionForEVM const* booleanNegationFunction() const override
+	{
+		return builtin("not"_yulstring);
+	}
 
 	static EVMDialectTyped const& instance(langutil::EVMVersion _version);
 };

@@ -51,13 +51,15 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 	if (i != end && *i == '-')
 	{
 		auto prereleaseStart = ++i;
-		while (i != end && *i != '+') ++i;
+		while (i != end && *i != '+')
+			++i;
 		prerelease = string(prereleaseStart, i);
 	}
 	if (i != end && *i == '+')
 	{
 		auto buildStart = ++i;
-		while (i != end) ++i;
+		while (i != end)
+			++i;
 		build = string(buildStart, i);
 	}
 	if (i != end)

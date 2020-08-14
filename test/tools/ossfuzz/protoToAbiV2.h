@@ -59,7 +59,7 @@
  *			return (sv_0, lv_0);
  *		}
  *
-  *		// The following function is generated if the protobuf field
+ *		// The following function is generated if the protobuf field
  *		// "Contract.test" is equal to "CALLDATA_CODER".
  *		function test_calldata_coding() internal returns (uint) {
  *			// Local variable
@@ -75,32 +75,36 @@
  *				return 200000 + returnVal;
  *			// Encode parameters
  *			bytes memory argumentEncoding = abi.encode(<parameter_names>);
- *			returnVal = checkEncodedCall(this.coder_public.selector, argumentEncoding, <invalidLengthFuzz>);
- *			// Check if calls to coder_public meet expectations for correctly/incorrectly encoded data.
- *			if (returnVal != 0)
- *				return returnVal;
+ *			returnVal = checkEncodedCall(this.coder_public.selector, argumentEncoding,
+ *<invalidLengthFuzz>);
+ *			// Check if calls to coder_public meet expectations for correctly/incorrectly encoded
+ *data. if (returnVal != 0) return returnVal;
  *
- *			returnVal = checkEncodedCall(this.coder_external.selector, argumentEncoding, <invalidLengthFuzz>);
- *			// Check if calls to coder_external meet expectations for correctly/incorrectly encoded data.
- *			// Offset return value to distinguish between failures originating from coder_public and coder_external.
- *			if (returnVal != 0)
- *				return uint(200000) + returnVal;
+ *			returnVal = checkEncodedCall(this.coder_external.selector, argumentEncoding,
+ *<invalidLengthFuzz>);
+ *			// Check if calls to coder_external meet expectations for correctly/incorrectly encoded
+ *data.
+ *			// Offset return value to distinguish between failures originating from coder_public and
+ *coder_external. if (returnVal != 0) return uint(200000) + returnVal;
  *			// Return zero if all checks pass.
  *			return 0;
  *		}
  *
- *		/// Accepts function selector, correct argument encoding, and an invalid encoding length as input.
- *		/// Returns a non-zero value if either call with correct encoding fails or call with incorrect encoding
+ *		/// Accepts function selector, correct argument encoding, and an invalid encoding length as
+ *input.
+ *		/// Returns a non-zero value if either call with correct encoding fails or call with
+ *incorrect encoding
  *		/// succeeds. Returns zero if both calls meet expectation.
- *		function checkEncodedCall(bytes4 funcSelector, bytes memory argumentEncoding, uint invalidLengthFuzz)
- *			public returns (uint) {
+ *		function checkEncodedCall(bytes4 funcSelector, bytes memory argumentEncoding, uint
+ *invalidLengthFuzz) public returns (uint) {
  *			...
  *		}
  *
- *		/// Accepts function selector, correct argument encoding, and length of invalid encoding and returns
- *		/// the correct and incorrect abi encoding for calling the function specified by the function selector.
- *		function createEncoding(bytes4 funcSelector, bytes memory argumentEncoding, uint invalidLengthFuzz)
- *			internal pure returns (bytes memory, bytes memory) {
+ *		/// Accepts function selector, correct argument encoding, and length of invalid encoding and
+ *returns
+ *		/// the correct and incorrect abi encoding for calling the function specified by the
+ *function selector. function createEncoding(bytes4 funcSelector, bytes memory argumentEncoding,
+ *uint invalidLengthFuzz) internal pure returns (bytes memory, bytes memory) {
  *			...
  *		}
  *
@@ -109,31 +113,28 @@
  *			...
  *		}
  *
- *		// Public function that is called by test() function. Accepts one or more arguments and returns
+ *		// Public function that is called by test() function. Accepts one or more arguments and
+ *returns
  *		// a uint value (zero if abi en/decoding was successful, non-zero otherwise)
  *		function coder_public(string memory c_0, bytes memory c_1) public pure returns (uint) {
- *			if (!bytesCompare(bytes(c_0), "044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d"))
- *				return 1;
- *			if (!bytesCompare(c_1, "1"))
- *				return 2;
- *			return 0;
+ *			if (!bytesCompare(bytes(c_0),
+ *"044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d")) return 1; if
+ *(!bytesCompare(c_1, "1")) return 2; return 0;
  *		}
  *
- *		// External function that is called by test() function. Accepts one or more arguments and returns
+ *		// External function that is called by test() function. Accepts one or more arguments and
+ *returns
  *		// a uint value (zero if abi en/decoding was successful, non-zero otherwise)
- *		function coder_external(string calldata c_0, bytes calldata c_1) external pure returns (uint) {
- *			if (!bytesCompare(bytes(c_0), "044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d"))
- *				return 1;
- *			if (!bytesCompare(c_1, "1"))
- *				return 2;
- *			return 0;
+ *		function coder_external(string calldata c_0, bytes calldata c_1) external pure returns
+ *(uint) { if (!bytesCompare(bytes(c_0),
+ *"044852b2a670ade5407e78fb2863c51de9fcb96542a07186fe3aeda6bb8a116d")) return 1; if
+ *(!bytesCompare(c_1, "1")) return 2; return 0;
  *		}
  *	}
  */
 
 namespace solidity::test::abiv2fuzzer
 {
-
 /// Converts a protobuf input into a Solidity program that tests
 /// abi coding.
 class ProtoConverter
@@ -152,6 +153,7 @@ public:
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string contractToString(Contract const& _input);
+
 private:
 	enum class Delimiter
 	{
@@ -274,18 +276,10 @@ private:
 	);
 
 	/// Append types to typed stream used by returndata coders.
-	void appendTypes(
-		bool _isValueType,
-		std::string const& _typeString,
-		Delimiter _delimiter
-	);
+	void appendTypes(bool _isValueType, std::string const& _typeString, Delimiter _delimiter);
 
 	/// Append typed return value.
-	void appendTypedReturn(
-		bool _isValueType,
-		std::string const& _typeString,
-		Delimiter _delimiter
-	);
+	void appendTypedReturn(bool _isValueType, std::string const& _typeString, Delimiter _delimiter);
 
 	/// Returns a Solidity variable declaration statement
 	/// @param _type: string containing Solidity type of the
@@ -321,10 +315,7 @@ private:
 
 	/// Return the next variable count that is used for
 	/// variable naming.
-	unsigned getNextVarCounter()
-	{
-		return m_varCounter++;
-	}
+	unsigned getNextVarCounter() { return m_varCounter++; }
 
 	/// Return a pair of names for Solidity variable and the same variable when
 	/// passed either as a function parameter or used to store the tuple
@@ -353,10 +344,7 @@ private:
 
 	/// Checks if the last dynamically encoded Solidity type is right
 	/// padded, returning true if it is and false otherwise.
-	bool isLastDynParamRightPadded()
-	{
-		return m_isLastDynParamRightPadded;
-	}
+	bool isLastDynParamRightPadded() { return m_isLastDynParamRightPadded; }
 
 	/// Convert delimter to a comma or null string.
 	static std::string delimiterToString(Delimiter _delimiter);
@@ -411,18 +399,9 @@ public:
 	virtual T visit(DynamicByteArrayType const& _node) = 0;
 	virtual T visit(ArrayType const& _node) = 0;
 	virtual T visit(StructType const& _node) = 0;
-	virtual T visit(ValueType const& _node)
-	{
-		return visitValueType(_node);
-	}
-	virtual T visit(NonValueType const& _node)
-	{
-		return visitNonValueType(_node);
-	}
-	virtual T visit(Type const& _node)
-	{
-		return visitType(_node);
-	}
+	virtual T visit(ValueType const& _node) { return visitValueType(_node); }
+	virtual T visit(NonValueType const& _node) { return visitNonValueType(_node); }
+	virtual T visit(Type const& _node) { return visitType(_node); }
 
 	enum class DataType
 	{
@@ -436,30 +415,18 @@ public:
 	static auto constexpr s_structNamePrefix = "S";
 
 	// Static function definitions
-	static bool isValueType(DataType _dataType)
-	{
-		return _dataType == DataType::VALUE;
-	}
+	static bool isValueType(DataType _dataType) { return _dataType == DataType::VALUE; }
 
-	static unsigned getIntWidth(IntegerType const& _x)
-	{
-		return 8 * ((_x.width() % 32) + 1);
-	}
+	static unsigned getIntWidth(IntegerType const& _x) { return 8 * ((_x.width() % 32) + 1); }
 
-	static bool isIntSigned(IntegerType const& _x)
-	{
-		return _x.is_signed();
-	}
+	static bool isIntSigned(IntegerType const& _x) { return _x.is_signed(); }
 
 	static std::string getIntTypeAsString(IntegerType const& _x)
 	{
 		return ((isIntSigned(_x) ? "int" : "uint") + std::to_string(getIntWidth(_x)));
 	}
 
-	static unsigned getFixedByteWidth(FixedByteType const& _x)
-	{
-		return (_x.width() % 32) + 1;
-	}
+	static unsigned getFixedByteWidth(FixedByteType const& _x) { return (_x.width() % 32) + 1; }
 
 	static std::string getFixedByteTypeAsString(FixedByteType const& _x)
 	{
@@ -480,10 +447,7 @@ public:
 	}
 
 	// Convert _counter to string and return its keccak256 hash
-	static u256 hashUnsignedInt(unsigned _counter)
-	{
-		return util::keccak256(util::h256(_counter));
-	}
+	static u256 hashUnsignedInt(unsigned _counter) { return util::keccak256(util::h256(_counter)); }
 
 	static u256 maskUnsignedInt(unsigned _counter, unsigned _numMaskNibbles)
 	{
@@ -534,51 +498,53 @@ public:
 			return "string";
 		}
 	}
+
 protected:
-T visitValueType(ValueType const& _type)
-{
-	switch (_type.value_type_oneof_case())
+	T visitValueType(ValueType const& _type)
 	{
-	case ValueType::kInty:
-		return visit(_type.inty());
-	case ValueType::kByty:
-		return visit(_type.byty());
-	case ValueType::kAdty:
-		return visit(_type.adty());
-	case ValueType::kBoolty:
-		return visit(_type.boolty());
-	case ValueType::VALUE_TYPE_ONEOF_NOT_SET:
-		return T();
+		switch (_type.value_type_oneof_case())
+		{
+		case ValueType::kInty:
+			return visit(_type.inty());
+		case ValueType::kByty:
+			return visit(_type.byty());
+		case ValueType::kAdty:
+			return visit(_type.adty());
+		case ValueType::kBoolty:
+			return visit(_type.boolty());
+		case ValueType::VALUE_TYPE_ONEOF_NOT_SET:
+			return T();
+		}
 	}
-}
 
-T visitNonValueType(NonValueType const& _type)
-{
-	switch (_type.nonvalue_type_oneof_case())
+	T visitNonValueType(NonValueType const& _type)
 	{
-	case NonValueType::kDynbytearray:
-		return visit(_type.dynbytearray());
-	case NonValueType::kArrtype:
-		return visit(_type.arrtype());
-	case NonValueType::kStype:
-		return visit(_type.stype());
-	case NonValueType::NONVALUE_TYPE_ONEOF_NOT_SET:
-		return T();
+		switch (_type.nonvalue_type_oneof_case())
+		{
+		case NonValueType::kDynbytearray:
+			return visit(_type.dynbytearray());
+		case NonValueType::kArrtype:
+			return visit(_type.arrtype());
+		case NonValueType::kStype:
+			return visit(_type.stype());
+		case NonValueType::NONVALUE_TYPE_ONEOF_NOT_SET:
+			return T();
+		}
 	}
-}
 
-T visitType(Type const& _type)
-{
-	switch (_type.type_oneof_case())
+	T visitType(Type const& _type)
 	{
-	case Type::kVtype:
-		return visit(_type.vtype());
-	case Type::kNvtype:
-		return visit(_type.nvtype());
-	case Type::TYPE_ONEOF_NOT_SET:
-		return T();
+		switch (_type.type_oneof_case())
+		{
+		case Type::kVtype:
+			return visit(_type.vtype());
+		case Type::kNvtype:
+			return visit(_type.nvtype());
+		case Type::TYPE_ONEOF_NOT_SET:
+			return T();
+		}
 	}
-}
+
 private:
 	static unsigned constexpr s_maxArrayLength = 4;
 	static unsigned constexpr s_maxDynArrayLength = 256;
@@ -604,22 +570,10 @@ public:
 	std::string visit(DynamicByteArrayType const&) override;
 	std::string visit(StructType const&) override;
 	using AbiV2ProtoVisitor<std::string>::visit;
-	std::string baseType()
-	{
-		return m_baseType;
-	}
-	bool isLastDynParamRightPadded()
-	{
-		return m_isLastDynParamRightPadded;
-	}
-	std::string structDef()
-	{
-		return m_structDef.str();
-	}
-	unsigned numStructs()
-	{
-		return m_structCounter - m_structStartCounter;
-	}
+	std::string baseType() { return m_baseType; }
+	bool isLastDynParamRightPadded() { return m_isLastDynParamRightPadded; }
+	std::string structDef() { return m_structDef.str(); }
+	unsigned numStructs() { return m_structCounter - m_structStartCounter; }
 	static bool arrayOfStruct(ArrayType const& _type)
 	{
 		Type const& baseType = _type.t();
@@ -630,17 +584,12 @@ public:
 		else
 			return false;
 	}
+
 private:
 	void structDefinition(StructType const&);
 
-	std::string indentation()
-	{
-		return std::string(m_indentation * 1, '\t');
-	}
-	std::string lineString(std::string const& _line)
-	{
-		return indentation() + _line + "\n";
-	}
+	std::string indentation() { return std::string(m_indentation * 1, '\t'); }
+	std::string lineString(std::string const& _line) { return indentation() + _line + "\n"; }
 
 	std::string m_baseType;
 	std::ostringstream m_structDef;
@@ -685,29 +634,15 @@ public:
 	std::pair<std::string, std::string> visit(StructType const&) override;
 	using AbiV2ProtoVisitor<std::pair<std::string, std::string>>::visit;
 
-	unsigned errorStmts()
-	{
-		return m_errorCode - m_errorStart;
-	}
+	unsigned errorStmts() { return m_errorCode - m_errorStart; }
 
-	unsigned counted()
-	{
-		return m_counter - m_counterStart;
-	}
+	unsigned counted() { return m_counter - m_counterStart; }
 
-	unsigned structs()
-	{
-		return m_structCounter - m_structStart;
-	}
+	unsigned structs() { return m_structCounter - m_structStart; }
+
 private:
-	std::string indentation()
-	{
-		return std::string(m_indentation * 1, '\t');
-	}
-	unsigned counter()
-	{
-		return m_counter++;
-	}
+	std::string indentation() { return std::string(m_indentation * 1, '\t'); }
+	unsigned counter() { return m_counter++; }
 
 	std::pair<std::string, std::string> assignAndCheckStringPair(
 		std::string const& _varRef,
@@ -750,11 +685,9 @@ public:
 		solAssert(false, "ABIv2 proto fuzzer: Cannot call valuegettervisitor on complex type");
 	}
 	using AbiV2ProtoVisitor<std::string>::visit;
+
 private:
-	unsigned counter()
-	{
-		return m_counter++;
-	}
+	unsigned counter() { return m_counter++; }
 
 	static std::string intValueAsString(unsigned _width, unsigned _counter);
 	static std::string uintValueAsString(unsigned _width, unsigned _counter);
@@ -813,30 +746,15 @@ class ValidityVisitor: AbiV2ProtoVisitor<bool>
 public:
 	ValidityVisitor(): m_arrayDimensions(0) {}
 
-	bool visit(BoolType const&) override
-	{
-		return true;
-	}
+	bool visit(BoolType const&) override { return true; }
 
-	bool visit(IntegerType const&) override
-	{
-		return true;
-	}
+	bool visit(IntegerType const&) override { return true; }
 
-	bool visit(FixedByteType const&) override
-	{
-		return true;
-	}
+	bool visit(FixedByteType const&) override { return true; }
 
-	bool visit(AddressType const&) override
-	{
-		return true;
-	}
+	bool visit(AddressType const&) override { return true; }
 
-	bool visit(DynamicByteArrayType const&) override
-	{
-		return true;
-	}
+	bool visit(DynamicByteArrayType const&) override { return true; }
 
 	bool visit(ArrayType const& _type) override
 	{
@@ -874,30 +792,15 @@ class DynParamVisitor: AbiV2ProtoVisitor<bool>
 public:
 	DynParamVisitor() = default;
 
-	bool visit(BoolType const&) override
-	{
-		return false;
-	}
+	bool visit(BoolType const&) override { return false; }
 
-	bool visit(IntegerType const&) override
-	{
-		return false;
-	}
+	bool visit(IntegerType const&) override { return false; }
 
-	bool visit(FixedByteType const&) override
-	{
-		return false;
-	}
+	bool visit(FixedByteType const&) override { return false; }
 
-	bool visit(AddressType const&) override
-	{
-		return false;
-	}
+	bool visit(AddressType const&) override { return false; }
 
-	bool visit(DynamicByteArrayType const&) override
-	{
-		return true;
-	}
+	bool visit(DynamicByteArrayType const&) override { return true; }
 
 	bool visit(ArrayType const& _type) override
 	{

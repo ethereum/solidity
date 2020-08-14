@@ -39,13 +39,12 @@ struct SourceLocation;
 
 namespace solidity::evmasm
 {
-
 class Pattern;
 struct ExpressionTemplate;
 
 /**
- * Collection of classes of equivalent expressions that can also determine the class of an expression.
- * Identifiers are contiguously assigned to new classes starting from zero.
+ * Collection of classes of equivalent expressions that can also determine the class of an
+ * expression. Identifiers are contiguously assigned to new classes starting from zero.
  */
 class ExpressionClasses
 {
@@ -60,12 +59,13 @@ public:
 		Ids arguments;
 		/// Storage modification sequence, only used for storage and memory operations.
 		unsigned sequenceNumber = 0;
-		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
+		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments,
+		/// sequenceNumber).
 		bool operator<(Expression const& _other) const;
 	};
 
-	/// Retrieves the id of the expression equivalence class resulting from the given item applied to the
-	/// given classes, might also create a new one.
+	/// Retrieves the id of the expression equivalence class resulting from the given item applied
+	/// to the given classes, might also create a new one.
 	/// @param _copyItem if true, copies the assembly item to an internal storage instead of just
 	/// keeping a pointer.
 	/// The @a _sequenceNumber indicates the current storage or memory access sequence.
@@ -83,7 +83,12 @@ public:
 	/// Forces the given @a _item with @a _arguments to the class @a _id. This can be used to
 	/// add prior knowledge e.g. about CALLDATA, but has to be used with caution. Will not work as
 	/// expected if @a _item applied to @a _arguments already exists.
-	void forceEqual(Id _id, AssemblyItem const& _item, Ids const& _arguments, bool _copyItem = true);
+	void forceEqual(
+		Id _id,
+		AssemblyItem const& _item,
+		Ids const& _arguments,
+		bool _copyItem = true
+	);
 
 	/// @returns the id of a new class which is different to all other classes.
 	Id newClass(langutil::SourceLocation const& _location);

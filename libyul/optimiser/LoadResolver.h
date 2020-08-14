@@ -28,7 +28,6 @@
 
 namespace solidity::yul
 {
-
 struct EVMDialect;
 struct BuiltinFunctionForEVM;
 
@@ -53,8 +52,7 @@ private:
 		std::map<YulString, SideEffects> _functionSideEffects,
 		bool _optimizeMLoad
 	):
-		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
-		m_optimizeMLoad(_optimizeMLoad)
+		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)), m_optimizeMLoad(_optimizeMLoad)
 	{}
 
 protected:

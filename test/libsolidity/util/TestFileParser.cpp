@@ -50,7 +50,9 @@ char TestFileParser::Scanner::peek() const noexcept
 	return *next;
 }
 
-vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
+vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCalls(
+	size_t _lineOffset
+)
 {
 	vector<FunctionCall> calls;
 	if (!accept(Token::EOS))
@@ -71,9 +73,8 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 				/// if the next token is an identifier.
 				if (calls.empty())
 					expect(Token::Newline);
-				else
-					if (accept(Token::Newline, true))
-						m_lineNumber++;
+				else if (accept(Token::Newline, true))
+					m_lineNumber++;
 
 				try
 				{
@@ -87,7 +88,8 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 					}
 					else
 					{
-						tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
+						tie(call.signature, call.useCallWithoutSignature) =
+							parseFunctionSignature();
 						if (accept(Token::Comma, true))
 							call.value = parseFunctionCallValue();
 
@@ -125,14 +127,15 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 
 						if (call.signature == "constructor()")
 							call.isConstructor = true;
-
 					}
 
 					calls.emplace_back(std::move(call));
 				}
 				catch (TestParserError const& _e)
 				{
-					throw TestParserError("Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what());
+					throw TestParserError(
+						"Line " + to_string(_lineOffset + m_lineNumber) + ": " + _e.what()
+					);
 				}
 			}
 		}
@@ -154,9 +157,8 @@ bool TestFileParser::expect(soltest::Token _token, bool const _advance)
 	if (m_scanner.currentToken() != _token || m_scanner.currentToken() == Token::Invalid)
 		throw TestParserError(
 			"Unexpected " + formatToken(m_scanner.currentToken()) + ": \"" +
-			m_scanner.currentLiteral() + "\". " +
-			"Expected \"" + formatToken(_token) + "\"."
-			);
+			m_scanner.currentLiteral() + "\". " + "Expected \"" + formatToken(_token) + "\"."
+		);
 	if (_advance)
 		m_scanner.scanNextToken();
 	return true;
@@ -205,15 +207,18 @@ FunctionValue TestFileParser::parseFunctionCallValue()
 {
 	try
 	{
-		u256 value{ parseDecimalNumber() };
+		u256 value{parseDecimalNumber()};
 		Token token = m_scanner.currentToken();
 		if (token != Token::Ether && token != Token::Wei)
 			throw TestParserError("Invalid value unit provided. Coins can be wei or ether.");
 
 		m_scanner.scanNextToken();
 
-		FunctionValueUnit unit = token == Token::Wei ? FunctionValueUnit::Wei : FunctionValueUnit::Ether;
-		return { (unit == FunctionValueUnit::Wei ? u256(1) : exp256(u256(10), u256(18))) * value, unit };
+		FunctionValueUnit unit =
+			token == Token::Wei ? FunctionValueUnit::Wei : FunctionValueUnit::Ether;
+		return {
+			(unit == FunctionValueUnit::Wei ? u256(1) : exp256(u256(10), u256(18))) * value,
+			unit};
 	}
 	catch (std::exception const&)
 	{
@@ -326,9 +331,8 @@ Parameter TestFileParser::parseParameter()
 		string parsed = parseString();
 		parameter.rawString += "hex\"" + parsed + "\"";
 		parameter.rawBytes = BytesUtils::convertHexNumber(parsed);
-		parameter.abiType = ABIType{
-			ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()
-		};
+		parameter.abiType =
+			ABIType{ABIType::HexString, ABIType::AlignNone, parameter.rawBytes.size()};
 	}
 	else if (accept(Token::String))
 	{
@@ -471,20 +475,31 @@ void TestFileParser::Scanner::scanNextToken()
 	// Make code coverage happy.
 	assert(formatToken(Token::NUM_TOKENS) == "");
 
-	auto detectKeyword = [](std::string const& _literal = "") -> TokenDesc {
-		if (_literal == "true") return TokenDesc{Token::Boolean, _literal};
-		if (_literal == "false") return TokenDesc{Token::Boolean, _literal};
-		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
-		if (_literal == "wei") return TokenDesc{Token::Wei, _literal};
-		if (_literal == "left") return TokenDesc{Token::Left, _literal};
-		if (_literal == "library") return TokenDesc{Token::Library, _literal};
-		if (_literal == "right") return TokenDesc{Token::Right, _literal};
-		if (_literal == "hex") return TokenDesc{Token::Hex, _literal};
-		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
+	auto detectKeyword = [](std::string const& _literal = "") -> TokenDesc
+	{
+		if (_literal == "true")
+			return TokenDesc{Token::Boolean, _literal};
+		if (_literal == "false")
+			return TokenDesc{Token::Boolean, _literal};
+		if (_literal == "ether")
+			return TokenDesc{Token::Ether, _literal};
+		if (_literal == "wei")
+			return TokenDesc{Token::Wei, _literal};
+		if (_literal == "left")
+			return TokenDesc{Token::Left, _literal};
+		if (_literal == "library")
+			return TokenDesc{Token::Library, _literal};
+		if (_literal == "right")
+			return TokenDesc{Token::Right, _literal};
+		if (_literal == "hex")
+			return TokenDesc{Token::Hex, _literal};
+		if (_literal == "FAILURE")
+			return TokenDesc{Token::Failure, _literal};
 		return TokenDesc{Token::Identifier, _literal};
 	};
 
-	auto selectToken = [this](Token _token, std::string const& _literal = "") -> TokenDesc {
+	auto selectToken = [this](Token _token, std::string const& _literal = "") -> TokenDesc
+	{
 		advance();
 		return make_pair(_token, !_literal.empty() ? _literal : formatToken(_token));
 	};
@@ -492,7 +507,7 @@ void TestFileParser::Scanner::scanNextToken()
 	TokenDesc token = make_pair(Token::Unknown, "");
 	do
 	{
-		switch(current())
+		switch (current())
 		{
 		case '/':
 			advance();
@@ -559,8 +574,7 @@ void TestFileParser::Scanner::scanNextToken()
 				throw TestParserError("Unexpected character: '" + string{current()} + "'");
 			break;
 		}
-	}
-	while (token.first == Token::Whitespace);
+	} while (token.first == Token::Whitespace);
 	m_currentToken = token;
 }
 
@@ -625,31 +639,31 @@ string TestFileParser::Scanner::scanString()
 			advance();
 			switch (current())
 			{
-				case '\\':
-					str += current();
-					advance();
-					break;
-				case 'n':
-					str += '\n';
-					advance();
-					break;
-				case 'r':
-					str += '\r';
-					advance();
-					break;
-				case 't':
-					str += '\t';
-					advance();
-					break;
-				case '0':
-					str += '\0';
-					advance();
-					break;
-				case 'x':
-					str += scanHexPart();
-					break;
-				default:
-					throw TestParserError("Invalid or escape sequence found in string literal.");
+			case '\\':
+				str += current();
+				advance();
+				break;
+			case 'n':
+				str += '\n';
+				advance();
+				break;
+			case 'r':
+				str += '\r';
+				advance();
+				break;
+			case 't':
+				str += '\t';
+				advance();
+				break;
+			case '0':
+				str += '\0';
+				advance();
+				break;
+			case 'x':
+				str += scanHexPart();
+				break;
+			default:
+				throw TestParserError("Invalid or escape sequence found in string literal.");
 			}
 		}
 		else
@@ -663,7 +677,7 @@ string TestFileParser::Scanner::scanString()
 
 char TestFileParser::Scanner::scanHexPart()
 {
-	advance(); // skip 'x'
+	advance();	// skip 'x'
 
 	char value{};
 	if (isdigit(current()))

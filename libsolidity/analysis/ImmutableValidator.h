@@ -25,7 +25,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Validates access and initialization of immutable variables:
  * must be directly initialized in their respective c'tor
@@ -34,16 +33,18 @@ namespace solidity::frontend
  * must be initialized outside ifs (must be initialized unconditionally)
  * must be initialized exactly once (no multiple statements)
  * must be initialized exactly once (no early return to skip initialization)
-*/
+ */
 class ImmutableValidator: private ASTConstVisitor
 {
 	using CallableDeclarationSet = std::set<CallableDeclaration const*, ASTNode::CompareByID>;
 
 public:
-	ImmutableValidator(langutil::ErrorReporter& _errorReporter, ContractDefinition const& _contractDefinition):
-		m_currentContract(_contractDefinition),
-		m_errorReporter(_errorReporter)
-	{ }
+	ImmutableValidator(
+		langutil::ErrorReporter& _errorReporter,
+		ContractDefinition const& _contractDefinition
+	):
+		m_currentContract(_contractDefinition), m_errorReporter(_errorReporter)
+	{}
 
 	void analyze();
 
@@ -57,7 +58,10 @@ private:
 	void endVisit(Return const& _return);
 
 	bool analyseCallable(CallableDeclaration const& _callableDeclaration);
-	void analyseVariableReference(VariableDeclaration const& _variableReference, Expression const& _expression);
+	void analyseVariableReference(
+		VariableDeclaration const& _variableReference,
+		Expression const& _expression
+	);
 
 	void checkAllVariablesInitialized(langutil::SourceLocation const& _location);
 

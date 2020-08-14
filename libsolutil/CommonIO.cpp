@@ -40,7 +40,6 @@ using namespace solidity::util;
 
 namespace
 {
-
 template <typename T>
 inline T readFile(std::string const& _file)
 {
@@ -54,7 +53,7 @@ inline T readFile(std::string const& _file)
 	is.seekg(0, is.end);
 	streamoff length = is.tellg();
 	if (length == 0)
-		return ret; // do not read empty file (MSVC does not like it)
+		return ret;	 // do not read empty file (MSVC does not like it)
 	is.seekg(0, is.beg);
 
 	ret.resize((static_cast<size_t>(length) + c_elementSize - 1) / c_elementSize);
@@ -64,10 +63,7 @@ inline T readFile(std::string const& _file)
 
 }
 
-string solidity::util::readFileAsString(string const& _file)
-{
-	return readFile<string>(_file);
-}
+string solidity::util::readFileAsString(string const& _file) { return readFile<string>(_file); }
 
 string solidity::util::readStandardInput()
 {
@@ -93,10 +89,8 @@ public:
 		GetConsoleMode(m_stdin, &m_oldMode);
 		SetConsoleMode(m_stdin, m_oldMode & (~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT)));
 	}
-	~DisableConsoleBuffering()
-	{
-		SetConsoleMode(m_stdin, m_oldMode);
-	}
+	~DisableConsoleBuffering() { SetConsoleMode(m_stdin, m_oldMode); }
+
 private:
 	HANDLE m_stdin;
 	DWORD m_oldMode;
@@ -120,6 +114,7 @@ public:
 		m_termios.c_lflag |= ECHO;
 		tcsetattr(0, TCSADRAIN, &m_termios);
 	}
+
 private:
 	struct termios m_termios;
 };
@@ -147,6 +142,7 @@ string solidity::util::absolutePath(string const& _path, string const& _referenc
 	return result.generic_string();
 }
 
-string solidity::util::sanitizePath(string const& _path) {
+string solidity::util::sanitizePath(string const& _path)
+{
 	return boost::filesystem::path(_path).generic_string();
 }

@@ -23,7 +23,7 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/StringUtils.h>
 
-#include <libsolidity/ast/Types.h>  // for IntegerType
+#include <libsolidity/ast/Types.h>	// for IntegerType
 
 #include <test/Common.h>
 
@@ -33,7 +33,6 @@ using namespace std;
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(StringUtils, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(test_similarity)
@@ -53,7 +52,17 @@ BOOST_AUTO_TEST_CASE(test_similarity)
 	BOOST_CHECK_EQUAL(stringWithinDistance("abc", "abcdef", 2), false);
 	BOOST_CHECK_EQUAL(stringWithinDistance("abcd", "wxyz", 2), false);
 	BOOST_CHECK_EQUAL(stringWithinDistance("", "", 2), true);
-	BOOST_CHECK_EQUAL(stringWithinDistance("YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY", "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYZ", 2, 6400), false);
+	BOOST_CHECK_EQUAL(
+		stringWithinDistance(
+			"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+			"YYY",
+			"YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+			"YYZ",
+			2,
+			6400
+		),
+		false
+	);
 }
 
 BOOST_AUTO_TEST_CASE(test_dldistance)
@@ -69,8 +78,10 @@ BOOST_AUTO_TEST_CASE(test_dldistance)
 	BOOST_CHECK_EQUAL(stringDistance("abc", "abcdef"), 3);
 	BOOST_CHECK_EQUAL(stringDistance("abcd", "wxyz"), 4);
 	BOOST_CHECK_EQUAL(stringDistance("", ""), 0);
-	BOOST_CHECK_EQUAL(stringDistance("abcdefghijklmnopqrstuvwxyz", "abcabcabcabcabcabcabcabca"), 23);
-
+	BOOST_CHECK_EQUAL(
+		stringDistance("abcdefghijklmnopqrstuvwxyz", "abcabcabcabcabcabcabcabca"),
+		23
+	);
 }
 
 BOOST_AUTO_TEST_CASE(test_alternatives_list)
@@ -102,7 +113,10 @@ BOOST_AUTO_TEST_CASE(test_human_readable_join)
 	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({}), "; ", " or "), "");
 	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a"}), "; ", " or "), "a");
 	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b"}), "; ", " or "), "a or b");
-	BOOST_CHECK_EQUAL(joinHumanReadable(vector<string>({"a", "b", "c"}), "; ", " or "), "a; b or c");
+	BOOST_CHECK_EQUAL(
+		joinHumanReadable(vector<string>({"a", "b", "c"}), "; ", " or "),
+		"a; b or c"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(test_format_number_readable)
@@ -137,26 +151,22 @@ BOOST_AUTO_TEST_CASE(test_format_number_readable)
 		b <<= 8;
 		b |= 0x55;
 	}
-	u256 c = (u256)FixedHash<32>(
+	u256 c = (u256) FixedHash<32>(
 		fromHex("0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
 	);
-	u256 d = u256(0xAAAAaaaaAAAAaaaa) << 192 |
-		u256(0xFFFFffffFFFFffff) << 128 |
-		u256(0xFFFFffffFFFFffff) << 64 |
-		u256(0xFFFFffffFFFFffff);
+	u256 d = u256(0xAAAAaaaaAAAAaaaa) << 192 | u256(0xFFFFffffFFFFffff) << 128 |
+		u256(0xFFFFffffFFFFffff) << 64 | u256(0xFFFFffffFFFFffff);
 	BOOST_CHECK_EQUAL(formatNumberReadable(a, true), "0x5555...{+32 more}...5555");
 	BOOST_CHECK_EQUAL(formatNumberReadable(b, true), "0x5555...{+56 more}...5555");
 	BOOST_CHECK_EQUAL(formatNumberReadable(c, true), "0xABCD...{+56 more}...6789");
 	BOOST_CHECK_EQUAL(formatNumberReadable(d, true), "0xAAAAaaaaAAAAaaab * 2**192 - 1");
 
-	//for codegen/ExpressionCompiler
+	// for codegen/ExpressionCompiler
 	BOOST_CHECK_EQUAL(formatNumberReadable(u256(-1)), "2**256 - 1");
 
 	// for formal/SMTChecker
-	BOOST_CHECK_EQUAL(
-			formatNumberReadable(frontend::IntegerType(256).minValue()), "0");
-	BOOST_CHECK_EQUAL(
-			formatNumberReadable(frontend::IntegerType(256).maxValue()), "2**256 - 1");
+	BOOST_CHECK_EQUAL(formatNumberReadable(frontend::IntegerType(256).minValue()), "0");
+	BOOST_CHECK_EQUAL(formatNumberReadable(frontend::IntegerType(256).maxValue()), "2**256 - 1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

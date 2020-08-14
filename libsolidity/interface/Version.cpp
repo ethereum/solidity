@@ -33,20 +33,17 @@ using namespace std;
 
 char const* solidity::frontend::VersionNumber = ETH_PROJECT_VERSION;
 
-string const solidity::frontend::VersionString =
-	string(solidity::frontend::VersionNumber) +
+string const solidity::frontend::VersionString = string(solidity::frontend::VersionNumber) +
 	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
 	(string(SOL_VERSION_BUILDINFO).empty() ? "" : "+" + string(SOL_VERSION_BUILDINFO));
 
-string const solidity::frontend::VersionStringStrict =
-	string(solidity::frontend::VersionNumber) +
+string const solidity::frontend::VersionStringStrict = string(solidity::frontend::VersionNumber) +
 	(string(SOL_VERSION_PRERELEASE).empty() ? "" : "-" + string(SOL_VERSION_PRERELEASE)) +
 	(string(SOL_VERSION_COMMIT).empty() ? "" : "+" + string(SOL_VERSION_COMMIT));
 
 solidity::bytes const solidity::frontend::VersionCompactBytes = {
 	ETH_PROJECT_VERSION_MAJOR,
 	ETH_PROJECT_VERSION_MINOR,
-	ETH_PROJECT_VERSION_PATCH
-};
+	ETH_PROJECT_VERSION_PATCH};
 
 bool const solidity::frontend::VersionIsRelease = string(SOL_VERSION_PRERELEASE).empty();

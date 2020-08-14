@@ -80,11 +80,7 @@ public:
 			return false;
 		}
 		m_analysisInfo = make_shared<yul::AsmAnalysisInfo>();
-		AsmAnalyzer analyzer(
-			*m_analysisInfo,
-			errorReporter,
-			m_dialect
-		);
+		AsmAnalyzer analyzer(*m_analysisInfo, errorReporter, m_dialect);
 		if (!analyzer.analyze(*m_ast) || !errorReporter.errors().empty())
 		{
 			cerr << "Error analyzing source." << endl;
@@ -100,9 +96,11 @@ public:
 		size_t _columns
 	)
 	{
-		auto hasShorterString = [](auto const& a, auto const& b){ return a.second.size() < b.second.size(); };
+		auto hasShorterString = [](auto const& a, auto const& b)
+		{ return a.second.size() < b.second.size(); };
 		size_t longestDescriptionLength = max(
-			max_element(_optimizationSteps.begin(), _optimizationSteps.end(), hasShorterString)->second.size(),
+			max_element(_optimizationSteps.begin(), _optimizationSteps.end(), hasShorterString)
+				->second.size(),
 			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
 		);
 
@@ -123,11 +121,15 @@ public:
 			yulAssert(
 				_optimizationSteps.count(optionAndDescription.first) == 0,
 				"ERROR: Conflict between yulopti controls and Yul optimizer step abbreviations.\n"
-				"Character '" + string(1, optionAndDescription.first) + "' is assigned to both " +
-				optionAndDescription.second + " and " + _optimizationSteps.at(optionAndDescription.first) + " step.\n"
-				"This is most likely caused by someone adding a new step abbreviation to "
-				"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
-				"Please update the code to use a different character and recompile yulopti."
+				"Character '" +
+					string(1, optionAndDescription.first) + "' is assigned to both " +
+					optionAndDescription.second + " and " +
+					_optimizationSteps.at(optionAndDescription.first) +
+					" step.\n"
+					"This is most likely caused by someone adding a new step abbreviation to "
+					"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used "
+					"by yulopti.\n"
+					"Please update the code to use a different character and recompile yulopti."
 			);
 			printPair(optionAndDescription);
 		}
@@ -150,7 +152,8 @@ public:
 			{
 				*m_ast = std::get<yul::Block>(Disambiguator(m_dialect, *m_analysisInfo)(*m_ast));
 				m_analysisInfo.reset();
-				m_nameDispenser = make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
+				m_nameDispenser =
+					make_shared<NameDispenser>(m_dialect, *m_ast, reservedIdentifiers);
 				disambiguated = true;
 			}
 			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
@@ -171,28 +174,30 @@ public:
 			auto abbreviationAndName = abbreviationMap.find(option);
 			if (abbreviationAndName != abbreviationMap.end())
 			{
-				OptimiserStep const& step = *OptimiserSuite::allSteps().at(abbreviationAndName->second);
+				OptimiserStep const& step =
+					*OptimiserSuite::allSteps().at(abbreviationAndName->second);
 				step.run(context, *m_ast);
 			}
-			else switch (option)
-			{
-			case '#':
-				return;
-			case ',':
-				VarNameCleaner::run(context, *m_ast);
-				// VarNameCleaner destroys the unique names guarantee of the disambiguator.
-				disambiguated = false;
-				break;
-			case ';':
-			{
-				Object obj;
-				obj.code = m_ast;
-				StackCompressor::run(m_dialect, obj, true, 16);
-				break;
-			}
-			default:
-				cerr << "Unknown option." << endl;
-			}
+			else
+				switch (option)
+				{
+				case '#':
+					return;
+				case ',':
+					VarNameCleaner::run(context, *m_ast);
+					// VarNameCleaner destroys the unique names guarantee of the disambiguator.
+					disambiguated = false;
+					break;
+				case ';':
+				{
+					Object obj;
+					obj.code = m_ast;
+					StackCompressor::run(m_dialect, obj, true, 16);
+					break;
+				}
+				default:
+					cerr << "Unknown option." << endl;
+				}
 			source = AsmPrinter{m_dialect}(*m_ast);
 		}
 	}
@@ -215,14 +220,12 @@ interactively read from stdin.
 
 Allowed options)",
 		po::options_description::m_default_line_length,
-		po::options_description::m_default_line_length - 23);
-	options.add_options()
-		(
-			"input-file",
-			po::value<string>(),
-			"input file"
-		)
-		("help", "Show this help screen.");
+		po::options_description::m_default_line_length - 23
+	);
+	options.add_options()("input-file", po::value<string>(), "input file")(
+		"help",
+		"Show this help screen."
+	);
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description filesPositions;

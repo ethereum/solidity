@@ -45,7 +45,6 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 class SMTEncoder: public ASTConstVisitor
 {
 public:
@@ -128,13 +127,20 @@ protected:
 	void visitFunctionOrModifier();
 
 	/// Inlines a modifier or base constructor call.
-	void inlineModifierInvocation(ModifierInvocation const* _invocation, CallableDeclaration const* _definition);
+	void inlineModifierInvocation(
+		ModifierInvocation const* _invocation,
+		CallableDeclaration const* _definition
+	);
 
 	/// Inlines the constructor hierarchy into a single constructor.
 	void inlineConstructorHierarchy(ContractDefinition const& _contract);
 
 	/// Defines a new global variable or function.
-	void defineGlobalVariable(std::string const& _name, Expression const& _expr, bool _increaseIndex = false);
+	void defineGlobalVariable(
+		std::string const& _name,
+		Expression const& _expr,
+		bool _increaseIndex = false
+	);
 
 	/// Handles the side effects of assignment
 	/// to variable of some SMT array type
@@ -152,7 +158,11 @@ protected:
 
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
-	smtutil::Expression division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type);
+	smtutil::Expression division(
+		smtutil::Expression _left,
+		smtutil::Expression _right,
+		IntegerType const& _type
+	);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.
@@ -176,7 +186,10 @@ protected:
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
 	/// @returns the variable indices after visiting the branch.
-	VariableIndices visitBranch(ASTNode const* _statement, smtutil::Expression const* _condition = nullptr);
+	VariableIndices visitBranch(
+		ASTNode const* _statement,
+		smtutil::Expression const* _condition = nullptr
+	);
 	VariableIndices visitBranch(ASTNode const* _statement, smtutil::Expression _condition);
 
 	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
@@ -185,7 +198,10 @@ protected:
 	void initializeStateVariables(ContractDefinition const& _contract);
 	void createLocalVariables(FunctionDefinition const& _function);
 	void initializeLocalVariables(FunctionDefinition const& _function);
-	void initializeFunctionCallParameters(CallableDeclaration const& _function, std::vector<smtutil::Expression> const& _callArgs);
+	void initializeFunctionCallParameters(
+		CallableDeclaration const& _function,
+		std::vector<smtutil::Expression> const& _callArgs
+	);
 	void resetStateVariables();
 	/// Resets all references/pointers that have the same type or have
 	/// a subexpression of the same type as _varDecl.
@@ -196,7 +212,12 @@ protected:
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
 	/// using the branch condition as guard.
-	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
+	void mergeVariables(
+		std::set<VariableDeclaration const*> const& _variables,
+		smtutil::Expression const& _condition,
+		VariableIndices const& _indicesEndTrue,
+		VariableIndices const& _indicesEndFalse
+	);
 	/// Tries to create an uninitialized variable and returns true on success.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
@@ -222,7 +243,9 @@ protected:
 	/// Returns the conjunction of all path conditions or True if empty
 	smtutil::Expression currentPathConditions();
 	/// @returns a human-readable call stack. Used for models.
-	langutil::SecondarySourceLocation callStackMessage(std::vector<CallStackEntry> const& _callStack);
+	langutil::SecondarySourceLocation callStackMessage(
+		std::vector<CallStackEntry> const& _callStack
+	);
 	/// Copies and pops the last called node.
 	CallStackEntry popCallStack();
 	/// Adds (_definition, _node) to the callstack.
@@ -235,7 +258,10 @@ protected:
 	/// Resets the variable indices.
 	void resetVariableIndices(VariableIndices const& _indices);
 	/// Used when starting a new block.
-	virtual void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr);
+	virtual void clearIndices(
+		ContractDefinition const* _contract,
+		FunctionDefinition const* _function = nullptr
+	);
 
 
 	/// @returns variables that are touched in _node's subtree.
@@ -258,7 +284,17 @@ protected:
 
 	struct VerificationTarget
 	{
-		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray } type;
+		enum class Type
+		{
+			ConstantCondition,
+			Underflow,
+			Overflow,
+			UnderOverflow,
+			DivByZero,
+			Balance,
+			Assert,
+			PopEmptyArray
+		} type;
 		smtutil::Expression value;
 		smtutil::Expression constraints;
 	};

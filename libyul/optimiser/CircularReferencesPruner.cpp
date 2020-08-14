@@ -47,16 +47,23 @@ void CircularReferencesPruner::operator()(Block& _block)
 	removeEmptyBlocks(_block);
 }
 
-set<YulString> CircularReferencesPruner::functionsCalledFromOutermostContext(CallGraph const& _callGraph)
+set<YulString> CircularReferencesPruner::functionsCalledFromOutermostContext(
+	CallGraph const& _callGraph
+)
 {
 	set<YulString> verticesToTraverse = m_reservedIdentifiers;
 	verticesToTraverse.insert(YulString(""));
 
-	return util::BreadthFirstSearch<YulString>{{verticesToTraverse.begin(), verticesToTraverse.end()}}.run(
-		[&_callGraph](YulString _function, auto&& _addChild) {
-			if (_callGraph.functionCalls.count(_function))
-				for (auto const& callee: _callGraph.functionCalls.at(_function))
-					if (_callGraph.functionCalls.count(callee))
-						_addChild(callee);
-		}).visited;
+	return util::BreadthFirstSearch<YulString>{
+		{verticesToTraverse.begin(), verticesToTraverse.end()}}
+		.run(
+			[&_callGraph](YulString _function, auto&& _addChild)
+			{
+				if (_callGraph.functionCalls.count(_function))
+					for (auto const& callee: _callGraph.functionCalls.at(_function))
+						if (_callGraph.functionCalls.count(callee))
+							_addChild(callee);
+			}
+		)
+		.visited;
 }

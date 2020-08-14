@@ -31,7 +31,6 @@
 
 namespace solidity::yul
 {
-
 struct CallGraph
 {
 	std::map<YulString, std::set<YulString>> functionCalls;

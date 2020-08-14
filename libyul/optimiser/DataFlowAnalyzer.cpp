@@ -47,10 +47,8 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
 		for (auto const& item: m_storage.values)
-			if (!(
-				m_knowledgeBase.knownToBeDifferent(vars->first, item.first) ||
-				m_knowledgeBase.knownToBeEqual(vars->second, item.second)
-			))
+			if (!(m_knowledgeBase.knownToBeDifferent(vars->first, item.first) ||
+				  m_knowledgeBase.knownToBeEqual(vars->second, item.second)))
 				keysToErase.insert(item.first);
 		for (YulString const& key: keysToErase)
 			m_storage.eraseKey(key);
@@ -392,21 +390,15 @@ std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 	ExpressionStatement const& _statement
 ) const
 {
-	yulAssert(
-		_store == evmasm::Instruction::MSTORE ||
-		_store == evmasm::Instruction::SSTORE,
-		""
-	);
+	yulAssert(_store == evmasm::Instruction::MSTORE || _store == evmasm::Instruction::SSTORE, "");
 	if (holds_alternative<FunctionCall>(_statement.expression))
 	{
 		FunctionCall const& funCall = std::get<FunctionCall>(_statement.expression);
 		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
 				if (builtin->instruction == _store)
-					if (
-						holds_alternative<Identifier>(funCall.arguments.at(0)) &&
-						holds_alternative<Identifier>(funCall.arguments.at(1))
-					)
+					if (holds_alternative<Identifier>(funCall.arguments.at(0)) &&
+						holds_alternative<Identifier>(funCall.arguments.at(1)))
 					{
 						YulString key = std::get<Identifier>(funCall.arguments.at(0)).name;
 						YulString value = std::get<Identifier>(funCall.arguments.at(1)).name;
@@ -421,11 +413,7 @@ std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
 	Expression const& _expression
 ) const
 {
-	yulAssert(
-		_load == evmasm::Instruction::MLOAD ||
-		_load == evmasm::Instruction::SLOAD,
-		""
-	);
+	yulAssert(_load == evmasm::Instruction::MLOAD || _load == evmasm::Instruction::SLOAD, "");
 	if (holds_alternative<FunctionCall>(_expression))
 	{
 		FunctionCall const& funCall = std::get<FunctionCall>(_expression);
@@ -437,4 +425,3 @@ std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
 	}
 	return {};
 }
-

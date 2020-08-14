@@ -22,10 +22,7 @@ using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
 
-SSAVariable::SSAVariable()
-{
-	resetIndex();
-}
+SSAVariable::SSAVariable() { resetIndex(); }
 
 void SSAVariable::resetIndex()
 {

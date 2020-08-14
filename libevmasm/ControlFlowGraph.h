@@ -32,7 +32,6 @@
 
 namespace solidity::evmasm
 {
-
 class KnownState;
 using KnownStatePointer = std::shared_ptr<KnownState>;
 
@@ -76,7 +75,13 @@ struct BasicBlock
 	/// ID of the block that has to precede this one (because control flows into it).
 	BlockId prev = BlockId::invalid();
 
-	enum class EndType { JUMP, JUMPI, STOP, HANDOVER };
+	enum class EndType
+	{
+		JUMP,
+		JUMPI,
+		STOP,
+		HANDOVER
+	};
 	EndType endType = EndType::HANDOVER;
 
 	/// Knowledge about the state when this block is entered. Intersection of all possible ways
@@ -100,8 +105,7 @@ public:
 	/// @a _items has to persist across the usage of this class.
 	/// @a _joinKnowledge if true, reduces state knowledge to common base at the join of two paths
 	explicit ControlFlowGraph(AssemblyItems const& _items, bool _joinKnowledge = true):
-		m_items(_items),
-		m_joinKnowledge(_joinKnowledge)
+		m_items(_items), m_joinKnowledge(_joinKnowledge)
 	{}
 	/// @returns vector of basic blocks in the order they should be used in the final code.
 	/// Should be called only once.

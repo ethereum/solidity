@@ -26,7 +26,6 @@
 
 namespace solidity::yul
 {
-
 std::string reindent(std::string const& _code);
 
 u256 valueOfNumberLiteral(Literal const& _literal);
@@ -41,13 +40,13 @@ u256 valueOfLiteral(Literal const& _literal);
  * Note: the order is total and deterministic, but independent of the semantics, e.g.
  * it is not guaranteed that the false Literal is "less" than the true Literal.
  */
-template<typename T>
+template <typename T>
 struct Less
 {
 	bool operator()(T const& _lhs, T const& _rhs) const;
 };
 
-template<typename T>
+template <typename T>
 struct Less<T*>
 {
 	bool operator()(T const* _lhs, T const* _rhs) const
@@ -59,7 +58,8 @@ struct Less<T*>
 	}
 };
 
-template<> bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const;
+template <>
+bool Less<Literal>::operator()(Literal const& _lhs, Literal const& _rhs) const;
 extern template struct Less<Literal>;
 
 // This can only be used for cases within one switch statement and

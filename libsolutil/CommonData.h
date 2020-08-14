@@ -40,39 +40,45 @@
 /// Operators need to stay in the global namespace.
 
 /// Concatenate the contents of a container onto a vector
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
+template <class T, class U>
+std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
 {
 	for (auto const& i: _b)
 		_a.push_back(T(i));
 	return _a;
 }
 /// Concatenate the contents of a container onto a vector, move variant.
-template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U&& _b)
+template <class T, class U>
+std::vector<T>& operator+=(std::vector<T>& _a, U&& _b)
 {
 	std::move(_b.begin(), _b.end(), std::back_inserter(_a));
 	return _a;
 }
 /// Concatenate the contents of a container onto a multiset
-template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
+template <class U, class... T>
+std::multiset<T...>& operator+=(std::multiset<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
 }
 /// Concatenate the contents of a container onto a multiset, move variant.
-template <class U, class... T> std::multiset<T...>& operator+=(std::multiset<T...>& _a, U&& _b)
+template <class U, class... T>
+std::multiset<T...>& operator+=(std::multiset<T...>& _a, U&& _b)
 {
 	for (auto&& x: _b)
 		_a.insert(std::move(x));
 	return _a;
 }
 /// Concatenate the contents of a container onto a set
-template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U& _b)
+template <class U, class... T>
+std::set<T...>& operator+=(std::set<T...>& _a, U& _b)
 {
 	_a.insert(_b.begin(), _b.end());
 	return _a;
 }
 /// Concatenate the contents of a container onto a set, move variant.
-template <class U, class... T> std::set<T...>& operator+=(std::set<T...>& _a, U&& _b)
+template <class U, class... T>
+std::set<T...>& operator+=(std::set<T...>& _a, U&& _b)
 {
 	for (auto&& x: _b)
 		_a.insert(std::move(x));
@@ -142,17 +148,16 @@ inline std::multiset<T...>& operator-=(std::multiset<T...>& _a, C const& _b)
 
 namespace solidity::util
 {
-
 /// Functional map.
 /// Returns a container _oc applying @param _op to each element in @param _c.
 /// By default _oc is a vector.
 /// If another return type is desired, an empty contained of that type
 /// is given as @param _oc.
-template<class Container, class Callable, class OutputContainer =
-	std::vector<std::invoke_result_t<
-		Callable,
-		decltype(*std::begin(std::declval<Container>()))
->>>
+template <
+	class Container,
+	class Callable,
+	class OutputContainer = std::vector<
+		std::invoke_result_t<Callable, decltype(*std::begin(std::declval<Container>()))>>>
 auto applyMap(Container const& _c, Callable&& _op, OutputContainer _oc = OutputContainer{})
 {
 	std::transform(std::begin(_c), std::end(_c), std::inserter(_oc, std::end(_oc)), _op);
@@ -165,7 +170,7 @@ auto applyMap(Container const& _c, Callable&& _op, OutputContainer _oc = OutputC
 /// the elements of _c over _acc.
 /// Note that <numeric> has a similar function `accumulate` which
 /// until C++20 does *not* std::move the partial accumulated.
-template<class C, class T, class Callable>
+template <class C, class T, class Callable>
 auto fold(C const& _c, T _acc, Callable&& _binaryOp)
 {
 	for (auto const& e: _c)
@@ -182,10 +187,7 @@ T convertContainer(U const& _from)
 template <class T, class U>
 T convertContainer(U&& _from)
 {
-	return T{
-		std::make_move_iterator(_from.begin()),
-		std::make_move_iterator(_from.end())
-	};
+	return T{std::make_move_iterator(_from.begin()), std::make_move_iterator(_from.end())};
 }
 
 /// Gets a @a K -> @a V map and returns a map where values from the original map are keys and keys
@@ -232,7 +234,11 @@ std::string toHex(uint8_t _data, HexCase _case = HexCase::Lower);
 
 /// Convert a series of bytes to the corresponding string of hex duplets,
 /// optionally with "0x" prefix and with uppercase hex letters.
-std::string toHex(bytes const& _data, HexPrefix _prefix = HexPrefix::DontAdd, HexCase _case = HexCase::Lower);
+std::string toHex(
+	bytes const& _data,
+	HexPrefix _prefix = HexPrefix::DontAdd,
+	HexCase _case = HexCase::Lower
+);
 
 /// Converts a (printable) ASCII hex character into the corresponding integer value.
 /// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
@@ -240,66 +246,86 @@ int fromHex(char _i, WhenError _throw);
 
 /// Converts a (printable) ASCII hex string into the corresponding byte stream.
 /// @example fromHex("41626261") == asBytes("Abba")
-/// If _throw = ThrowType::DontThrow, it replaces bad hex characters with 0's, otherwise it will throw an exception.
+/// If _throw = ThrowType::DontThrow, it replaces bad hex characters with 0's, otherwise it will
+/// throw an exception.
 bytes fromHex(std::string const& _s, WhenError _throw = WhenError::DontThrow);
 /// Converts byte array to a string containing the same (binary) data. Unless
 /// the byte array happens to contain ASCII data, this won't be printable.
 inline std::string asString(bytes const& _b)
 {
-	return std::string((char const*)_b.data(), (char const*)(_b.data() + _b.size()));
+	return std::string((char const*) _b.data(), (char const*) (_b.data() + _b.size()));
 }
 
 /// Converts byte array ref to a string containing the same (binary) data. Unless
 /// the byte array happens to contain ASCII data, this won't be printable.
 inline std::string asString(bytesConstRef _b)
 {
-	return std::string((char const*)_b.data(), (char const*)(_b.data() + _b.size()));
+	return std::string((char const*) _b.data(), (char const*) (_b.data() + _b.size()));
 }
 
 /// Converts a string to a byte array containing the string's (byte) data.
 inline bytes asBytes(std::string const& _b)
 {
-	return bytes((uint8_t const*)_b.data(), (uint8_t const*)(_b.data() + _b.size()));
+	return bytes((uint8_t const*) _b.data(), (uint8_t const*) (_b.data() + _b.size()));
 }
 
 // Big-endian to/from host endian conversion functions.
 
-/// Converts a templated integer value to the big-endian byte-stream represented on a templated collection.
-/// The size of the collection object will be unchanged. If it is too small, it will not represent the
-/// value properly, if too big then the additional elements will be zeroed out.
+/// Converts a templated integer value to the big-endian byte-stream represented on a templated
+/// collection. The size of the collection object will be unchanged. If it is too small, it will not
+/// represent the value properly, if too big then the additional elements will be zeroed out.
 /// @a Out will typically be either std::string or bytes.
 /// @a T will typically by unsigned, u160, u256 or bigint.
 template <class T, class Out>
 inline void toBigEndian(T _val, Out& o_out)
 {
-	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
+	static_assert(
+		std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed,
+		"only unsigned types or bigint supported"
+	);	// bigint does not carry sign bit on shift
 	for (auto i = o_out.size(); i != 0; _val >>= 8, i--)
 	{
-		T v = _val & (T)0xff;
-		o_out[i - 1] = (typename Out::value_type)(uint8_t)v;
+		T v = _val & (T) 0xff;
+		o_out[i - 1] = (typename Out::value_type)(uint8_t) v;
 	}
 }
 
-/// Converts a big-endian byte-stream represented on a templated collection to a templated integer value.
+/// Converts a big-endian byte-stream represented on a templated collection to a templated integer
+/// value.
 /// @a In will typically be either std::string or bytes.
 /// @a T will typically by unsigned, u160, u256 or bigint.
 template <class T, class In>
 inline T fromBigEndian(In const& _bytes)
 {
-	T ret = (T)0;
+	T ret = (T) 0;
 	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (uint8_t)(typename std::make_unsigned<typename In::value_type>::type)i);
+		ret =
+			(T)((ret << 8) |
+				(uint8_t)(typename std::make_unsigned<typename In::value_type>::type) i);
 	return ret;
 }
-inline bytes toBigEndian(u256 _val) { bytes ret(32); toBigEndian(_val, ret); return ret; }
-inline bytes toBigEndian(u160 _val) { bytes ret(20); toBigEndian(_val, ret); return ret; }
+inline bytes toBigEndian(u256 _val)
+{
+	bytes ret(32);
+	toBigEndian(_val, ret);
+	return ret;
+}
+inline bytes toBigEndian(u160 _val)
+{
+	bytes ret(20);
+	toBigEndian(_val, ret);
+	return ret;
+}
 
 /// Convenience function for toBigEndian.
 /// @returns a byte array just big enough to represent @a _val.
 template <class T>
 inline bytes toCompactBigEndian(T _val, unsigned _min = 0)
 {
-	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
+	static_assert(
+		std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed,
+		"only unsigned types or bigint supported"
+	);	// bigint does not carry sign bit on shift
 	unsigned i = 0;
 	for (T v = _val; v; ++i, v >>= 8) {}
 	bytes ret(std::max<unsigned>(_min, i), 0);
@@ -345,7 +371,10 @@ inline std::string formatNumber(u256 const& _value)
 template <class T>
 inline unsigned bytesRequired(T _i)
 {
-	static_assert(std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed, "only unsigned types or bigint supported"); //bigint does not carry sign bit on shift
+	static_assert(
+		std::is_same<bigint, T>::value || !std::numeric_limits<T>::is_signed,
+		"only unsigned types or bigint supported"
+	);	// bigint does not carry sign bit on shift
 	unsigned i = 0;
 	for (; _i != 0; ++i, _i >>= 8) {}
 	return i;
@@ -380,7 +409,11 @@ void iterateReplacing(std::vector<T>& _vector, F const& _f)
 		{
 			if (!useModified)
 			{
-				std::move(_vector.begin(), _vector.begin() + ptrdiff_t(i), back_inserter(modifiedVector));
+				std::move(
+					_vector.begin(),
+					_vector.begin() + ptrdiff_t(i),
+					back_inserter(modifiedVector)
+				);
 				useModified = true;
 			}
 			modifiedVector += std::move(*r);
@@ -397,7 +430,8 @@ namespace detail
 template <typename T, typename F, std::size_t... I>
 void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_sequence<I...>)
 {
-	// Concept: _f must be Callable, must accept sizeof...(I) parameters of type T&, must return optional<vector<T>>
+	// Concept: _f must be Callable, must accept sizeof...(I) parameters of type T&, must return
+	// optional<vector<T>>
 	bool useModified = false;
 	std::vector<T> modifiedVector;
 	size_t i = 0;
@@ -407,7 +441,11 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_seq
 		{
 			if (!useModified)
 			{
-				std::move(_vector.begin(), _vector.begin() + ptrdiff_t(i), back_inserter(modifiedVector));
+				std::move(
+					_vector.begin(),
+					_vector.begin() + ptrdiff_t(i),
+					back_inserter(modifiedVector)
+				);
 				useModified = true;
 			}
 			modifiedVector += std::move(*r);
@@ -440,7 +478,8 @@ void iterateReplacingWindow(std::vector<T>& _vector, F const& _f, std::index_seq
 template <std::size_t N, typename T, typename F>
 void iterateReplacingWindow(std::vector<T>& _vector, F const& _f)
 {
-	// Concept: _f must be Callable, must accept N parameters of type T&, must return optional<vector<T>>
+	// Concept: _f must be Callable, must accept N parameters of type T&, must return
+	// optional<vector<T>>
 	detail::iterateReplacingWindow(_vector, _f, std::make_index_sequence<N>{});
 }
 
@@ -465,10 +504,16 @@ std::string formatAsStringOrNumber(std::string const& _value);
 /// characters and surrounded by '"'-characters.
 std::string escapeAndQuoteString(std::string const& _input);
 
-template<typename Container, typename Compare>
+template <typename Container, typename Compare>
 bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)
 {
-	return std::equal(std::begin(_lhs), std::end(_lhs), std::begin(_rhs), std::end(_rhs), std::forward<Compare>(_compare));
+	return std::equal(
+		std::begin(_lhs),
+		std::end(_lhs),
+		std::begin(_rhs),
+		std::end(_rhs),
+		std::forward<Compare>(_compare)
+	);
 }
 
 inline std::string findAnyOf(std::string const& _haystack, std::vector<std::string> const& _needles)
@@ -482,9 +527,10 @@ inline std::string findAnyOf(std::string const& _haystack, std::vector<std::stri
 
 namespace detail
 {
-template<typename T>
-void variadicEmplaceBack(std::vector<T>&) {}
-template<typename T, typename A, typename... Args>
+template <typename T>
+void variadicEmplaceBack(std::vector<T>&)
+{}
+template <typename T, typename A, typename... Args>
 void variadicEmplaceBack(std::vector<T>& _vector, A&& _a, Args&&... _args)
 {
 	_vector.emplace_back(std::forward<A>(_a));
@@ -492,7 +538,7 @@ void variadicEmplaceBack(std::vector<T>& _vector, A&& _a, Args&&... _args)
 }
 }
 
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 std::vector<T> make_vector(Args&&... _args)
 {
 	std::vector<T> result;

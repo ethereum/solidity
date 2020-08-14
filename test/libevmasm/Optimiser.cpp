@@ -42,73 +42,85 @@ using namespace solidity::evmasm;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
-	AssemblyItems addDummyLocations(AssemblyItems const& _input)
+AssemblyItems addDummyLocations(AssemblyItems const& _input)
+{
+	// add dummy locations to each item so that we can check that they are not deleted
+	AssemblyItems input = _input;
+	for (AssemblyItem& item: input)
+		item.setLocation({1, 3, nullptr});
+	return input;
+}
+
+evmasm::KnownState createInitialState(AssemblyItems const& _input)
+{
+	evmasm::KnownState state;
+	for (auto const& item: addDummyLocations(_input))
+		state.feedItem(item, true);
+	return state;
+}
+
+AssemblyItems CSE(
+	AssemblyItems const& _input,
+	evmasm::KnownState const& _state = evmasm::KnownState()
+)
+{
+	AssemblyItems input = addDummyLocations(_input);
+
+	bool usesMsize =
+		(find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
+	evmasm::CommonSubexpressionEliminator cse(_state);
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+
+	for (AssemblyItem const& item: output)
 	{
-		// add dummy locations to each item so that we can check that they are not deleted
-		AssemblyItems input = _input;
-		for (AssemblyItem& item: input)
-			item.setLocation({1, 3, nullptr});
-		return input;
+		BOOST_CHECK(item == Instruction::POP || item.location().isValid());
 	}
+	return output;
+}
 
-	evmasm::KnownState createInitialState(AssemblyItems const& _input)
+void checkCSE(
+	AssemblyItems const& _input,
+	AssemblyItems const& _expectation,
+	KnownState const& _state = evmasm::KnownState()
+)
+{
+	AssemblyItems output = CSE(_input, _state);
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		_expectation.begin(),
+		_expectation.end(),
+		output.begin(),
+		output.end()
+	);
+}
+
+AssemblyItems CFG(AssemblyItems const& _input)
+{
+	AssemblyItems output = _input;
+	// Running it four times should be enough for these tests.
+	for (unsigned i = 0; i < 4; ++i)
 	{
-		evmasm::KnownState state;
-		for (auto const& item: addDummyLocations(_input))
-			state.feedItem(item, true);
-		return state;
+		ControlFlowGraph cfg(output);
+		AssemblyItems optItems;
+		for (BasicBlock const& block: cfg.optimisedBlocks())
+			copy(output.begin() + block.begin, output.begin() + block.end, back_inserter(optItems));
+		output = move(optItems);
 	}
+	return output;
+}
 
-	AssemblyItems CSE(AssemblyItems const& _input, evmasm::KnownState const& _state = evmasm::KnownState())
-	{
-		AssemblyItems input = addDummyLocations(_input);
-
-		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
-		evmasm::CommonSubexpressionEliminator cse(_state);
-		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
-		AssemblyItems output = cse.getOptimizedItems();
-
-		for (AssemblyItem const& item: output)
-		{
-			BOOST_CHECK(item == Instruction::POP || item.location().isValid());
-		}
-		return output;
-	}
-
-	void checkCSE(
-		AssemblyItems const& _input,
-		AssemblyItems const& _expectation,
-		KnownState const& _state = evmasm::KnownState()
-	)
-	{
-		AssemblyItems output = CSE(_input, _state);
-		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
-	}
-
-	AssemblyItems CFG(AssemblyItems const& _input)
-	{
-		AssemblyItems output = _input;
-		// Running it four times should be enough for these tests.
-		for (unsigned i = 0; i < 4; ++i)
-		{
-			ControlFlowGraph cfg(output);
-			AssemblyItems optItems;
-			for (BasicBlock const& block: cfg.optimisedBlocks())
-				copy(output.begin() + block.begin, output.begin() + block.end,
-					 back_inserter(optItems));
-			output = move(optItems);
-		}
-		return output;
-	}
-
-	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
-	{
-		AssemblyItems output = CFG(_input);
-		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
-	}
+void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
+{
+	AssemblyItems output = CFG(_input);
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		_expectation.begin(),
+		_expectation.end(),
+		output.begin(),
+		output.end()
+	);
+}
 }
 
 BOOST_AUTO_TEST_SUITE(Optimiser)
@@ -121,7 +133,7 @@ BOOST_AUTO_TEST_CASE(cse_push_immutable_same)
 
 BOOST_AUTO_TEST_CASE(cse_push_immutable_different)
 {
-	AssemblyItems input{{PushImmutable, 0x1234},{PushImmutable, 0xABCD}};
+	AssemblyItems input{{PushImmutable, 0x1234}, {PushImmutable, 0xABCD}};
 	checkCSE(input, input);
 }
 
@@ -140,11 +152,9 @@ BOOST_AUTO_TEST_CASE(cse_assign_immutable)
 
 BOOST_AUTO_TEST_CASE(cse_assign_immutable_breaks)
 {
-	AssemblyItems input = addDummyLocations(AssemblyItems{
-		u256(0x42),
-		{AssignImmutable, 0x1234},
-		Instruction::ORIGIN
-	});
+	AssemblyItems input = addDummyLocations(
+		AssemblyItems{u256(0x42), {AssignImmutable, 0x1234}, Instruction::ORIGIN}
+	);
 
 	evmasm::CommonSubexpressionEliminator cse{evmasm::KnownState()};
 	// Make sure CSE breaks after AssignImmutable.
@@ -156,10 +166,19 @@ BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 	evmasm::KnownState state;
 	evmasm::CommonSubexpressionEliminator cse(state);
 	AssemblyItems input{
-		Instruction::SWAP1, Instruction::POP, Instruction::ADD, u256(0), Instruction::SWAP1,
-		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
-		Instruction::DIV, u256(0xff), Instruction::AND
-	};
+		Instruction::SWAP1,
+		Instruction::POP,
+		Instruction::ADD,
+		u256(0),
+		Instruction::SWAP1,
+		Instruction::SLOAD,
+		Instruction::SWAP1,
+		u256(100),
+		Instruction::EXP,
+		Instruction::SWAP1,
+		Instruction::DIV,
+		u256(0xff),
+		Instruction::AND};
 	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), false) == input.end());
 	AssemblyItems output = cse.getOptimizedItems();
 	BOOST_CHECK(!output.empty());
@@ -183,10 +202,7 @@ BOOST_AUTO_TEST_CASE(cse_intermediate_negative_stack)
 	checkCSE(input, input);
 }
 
-BOOST_AUTO_TEST_CASE(cse_pop)
-{
-	checkCSE({Instruction::POP}, {Instruction::POP});
-}
+BOOST_AUTO_TEST_CASE(cse_pop) { checkCSE({Instruction::POP}, {Instruction::POP}); }
 
 BOOST_AUTO_TEST_CASE(cse_unneeded_items)
 {
@@ -213,8 +229,7 @@ BOOST_AUTO_TEST_CASE(cse_invariants)
 		Instruction::DUP1,
 		u256(0),
 		Instruction::OR,
-		Instruction::OR
-	};
+		Instruction::OR};
 	checkCSE(input, {Instruction::DUP1});
 }
 
@@ -223,10 +238,7 @@ BOOST_AUTO_TEST_CASE(cse_subself)
 	checkCSE({Instruction::DUP1, Instruction::SUB}, {Instruction::POP, u256(0)});
 }
 
-BOOST_AUTO_TEST_CASE(cse_subother)
-{
-	checkCSE({Instruction::SUB}, {Instruction::SUB});
-}
+BOOST_AUTO_TEST_CASE(cse_subother) { checkCSE({Instruction::SUB}, {Instruction::SUB}); }
 
 BOOST_AUTO_TEST_CASE(cse_double_negation)
 {
@@ -250,8 +262,7 @@ BOOST_AUTO_TEST_CASE(cse_associativity)
 		Instruction::DUP1,
 		u256(0),
 		Instruction::OR,
-		Instruction::OR
-	};
+		Instruction::OR};
 	checkCSE(input, {Instruction::DUP1});
 }
 
@@ -268,9 +279,11 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 		Instruction::ADD,
 		Instruction::ADD,
 		Instruction::ADD,
-		Instruction::ADD
-	};
-	checkCSE(input, {Instruction::DUP2, Instruction::DUP2, Instruction::ADD, u256(5), Instruction::ADD});
+		Instruction::ADD};
+	checkCSE(
+		input,
+		{Instruction::DUP2, Instruction::DUP2, Instruction::ADD, u256(5), Instruction::ADD}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
@@ -282,8 +295,7 @@ BOOST_AUTO_TEST_CASE(cse_double_shift_right_overflow)
 			u256(2),
 			Instruction::SHR,
 			u256(-1),
-			Instruction::SHR
-		};
+			Instruction::SHR};
 		checkCSE(input, {u256(0)});
 	}
 }
@@ -297,29 +309,20 @@ BOOST_AUTO_TEST_CASE(cse_double_shift_left_overflow)
 			u256(2),
 			Instruction::SHL,
 			u256(-1),
-			Instruction::SHL
-		};
+			Instruction::SHL};
 		checkCSE(input, {u256(0)});
 	}
 }
 
 BOOST_AUTO_TEST_CASE(cse_byte_ordering_bug)
 {
-	AssemblyItems input{
-		u256(31),
-		Instruction::CALLVALUE,
-		Instruction::BYTE
-	};
+	AssemblyItems input{u256(31), Instruction::CALLVALUE, Instruction::BYTE};
 	checkCSE(input, {u256(31), Instruction::CALLVALUE, Instruction::BYTE});
 }
 
 BOOST_AUTO_TEST_CASE(cse_byte_ordering_fix)
 {
-	AssemblyItems input{
-		Instruction::CALLVALUE,
-		u256(31),
-		Instruction::BYTE
-	};
+	AssemblyItems input{Instruction::CALLVALUE, u256(31), Instruction::BYTE};
 	checkCSE(input, {u256(0xff), Instruction::CALLVALUE, Instruction::AND});
 }
 
@@ -332,17 +335,17 @@ BOOST_AUTO_TEST_CASE(cse_storage)
 		Instruction::SLOAD,
 		Instruction::ADD,
 		u256(0),
-		Instruction::SSTORE
-	};
-	checkCSE(input, {
-		u256(0),
-		Instruction::DUP1,
-		Instruction::SLOAD,
-		Instruction::DUP1,
-		Instruction::ADD,
-		Instruction::SWAP1,
-		Instruction::SSTORE
-	});
+		Instruction::SSTORE};
+	checkCSE(
+		input,
+		{u256(0),
+		 Instruction::DUP1,
+		 Instruction::SLOAD,
+		 Instruction::DUP1,
+		 Instruction::ADD,
+		 Instruction::SWAP1,
+		 Instruction::SSTORE}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_noninterleaved_storage)
@@ -357,14 +360,8 @@ BOOST_AUTO_TEST_CASE(cse_noninterleaved_storage)
 		Instruction::SLOAD,
 		u256(8),
 		Instruction::DUP3,
-		Instruction::SSTORE
-	};
-	checkCSE(input, {
-		u256(8),
-		Instruction::DUP2,
-		Instruction::SSTORE,
-		u256(7)
-	});
+		Instruction::SSTORE};
+	checkCSE(input, {u256(8), Instruction::DUP2, Instruction::SSTORE, u256(7)});
 }
 
 BOOST_AUTO_TEST_CASE(cse_interleaved_storage)
@@ -373,12 +370,12 @@ BOOST_AUTO_TEST_CASE(cse_interleaved_storage)
 	AssemblyItems input{
 		u256(7),
 		Instruction::DUP2,
-		Instruction::SSTORE, // store to "DUP1"
+		Instruction::SSTORE,  // store to "DUP1"
 		Instruction::DUP2,
-		Instruction::SLOAD, // read from "DUP2", might be equal to "DUP1"
+		Instruction::SLOAD,	 // read from "DUP2", might be equal to "DUP1"
 		u256(0),
 		Instruction::DUP3,
-		Instruction::SSTORE // store different value to "DUP1"
+		Instruction::SSTORE	 // store different value to "DUP1"
 	};
 	checkCSE(input, input);
 }
@@ -390,22 +387,19 @@ BOOST_AUTO_TEST_CASE(cse_interleaved_storage_same_value)
 	AssemblyItems input{
 		u256(7),
 		Instruction::DUP2,
-		Instruction::SSTORE, // store to "DUP1"
+		Instruction::SSTORE,  // store to "DUP1"
 		Instruction::DUP2,
-		Instruction::SLOAD, // read from "DUP2", might be equal to "DUP1"
+		Instruction::SLOAD,	 // read from "DUP2", might be equal to "DUP1"
 		u256(6),
 		u256(1),
 		Instruction::ADD,
 		Instruction::DUP3,
-		Instruction::SSTORE // store same value to "DUP1"
+		Instruction::SSTORE	 // store same value to "DUP1"
 	};
-	checkCSE(input, {
-		u256(7),
-		Instruction::DUP2,
-		Instruction::SSTORE,
-		Instruction::DUP2,
-		Instruction::SLOAD
-	});
+	checkCSE(
+		input,
+		{u256(7), Instruction::DUP2, Instruction::SSTORE, Instruction::DUP2, Instruction::SLOAD}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location)
@@ -415,20 +409,14 @@ BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location)
 	AssemblyItems input{
 		u256(0x70),
 		u256(1),
-		Instruction::SSTORE, // store to 1
+		Instruction::SSTORE,  // store to 1
 		u256(2),
-		Instruction::SLOAD, // read from 2, is different from 1
+		Instruction::SLOAD,	 // read from 2, is different from 1
 		u256(0x90),
 		u256(1),
-		Instruction::SSTORE // store different value at 1
+		Instruction::SSTORE	 // store different value at 1
 	};
-	checkCSE(input, {
-		u256(2),
-		Instruction::SLOAD,
-		u256(0x90),
-		u256(1),
-		Instruction::SSTORE
-	});
+	checkCSE(input, {u256(2), Instruction::SLOAD, u256(0x90), u256(1), Instruction::SSTORE});
 }
 
 BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location_offset)
@@ -440,28 +428,29 @@ BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location_offset)
 		Instruction::DUP2,
 		u256(1),
 		Instruction::ADD,
-		Instruction::SSTORE, // store to "DUP1"+1
+		Instruction::SSTORE,  // store to "DUP1"+1
 		Instruction::DUP1,
 		u256(2),
 		Instruction::ADD,
-		Instruction::SLOAD, // read from "DUP1"+2, is different from "DUP1"+1
+		Instruction::SLOAD,	 // read from "DUP1"+2, is different from "DUP1"+1
 		u256(0x90),
 		Instruction::DUP3,
 		u256(1),
 		Instruction::ADD,
-		Instruction::SSTORE // store different value at "DUP1"+1
+		Instruction::SSTORE	 // store different value at "DUP1"+1
 	};
-	checkCSE(input, {
-		u256(2),
-		Instruction::DUP2,
-		Instruction::ADD,
-		Instruction::SLOAD,
-		u256(0x90),
-		u256(1),
-		Instruction::DUP4,
-		Instruction::ADD,
-		Instruction::SSTORE
-	});
+	checkCSE(
+		input,
+		{u256(2),
+		 Instruction::DUP2,
+		 Instruction::ADD,
+		 Instruction::SLOAD,
+		 u256(0x90),
+		 u256(1),
+		 Instruction::DUP4,
+		 Instruction::ADD,
+		 Instruction::SSTORE}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_deep_stack)
@@ -482,25 +471,28 @@ BOOST_AUTO_TEST_CASE(cse_deep_stack)
 		Instruction::POP,
 		Instruction::POP,
 	};
-	checkCSE(input, {
-		Instruction::SWAP4,
-		Instruction::SWAP12,
-		Instruction::SWAP3,
-		Instruction::SWAP11,
-		Instruction::POP,
-		Instruction::SWAP1,
-		Instruction::SWAP3,
-		Instruction::ADD,
-		Instruction::SWAP8,
-		Instruction::POP,
-		Instruction::SWAP6,
-		Instruction::POP,
-		Instruction::POP,
-		Instruction::POP,
-		Instruction::POP,
-		Instruction::POP,
-		Instruction::POP,
-	});
+	checkCSE(
+		input,
+		{
+			Instruction::SWAP4,
+			Instruction::SWAP12,
+			Instruction::SWAP3,
+			Instruction::SWAP11,
+			Instruction::POP,
+			Instruction::SWAP1,
+			Instruction::SWAP3,
+			Instruction::ADD,
+			Instruction::SWAP8,
+			Instruction::POP,
+			Instruction::SWAP6,
+			Instruction::POP,
+			Instruction::POP,
+			Instruction::POP,
+			Instruction::POP,
+			Instruction::POP,
+			Instruction::POP,
+		}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_jumpi_no_jump)
@@ -510,12 +502,8 @@ BOOST_AUTO_TEST_CASE(cse_jumpi_no_jump)
 		u256(1),
 		Instruction::DUP2,
 		AssemblyItem(PushTag, 1),
-		Instruction::JUMPI
-	};
-	checkCSE(input, {
-		u256(0),
-		u256(1)
-	});
+		Instruction::JUMPI};
+	checkCSE(input, {u256(0), u256(1)});
 }
 
 BOOST_AUTO_TEST_CASE(cse_jumpi_jump)
@@ -525,26 +513,14 @@ BOOST_AUTO_TEST_CASE(cse_jumpi_jump)
 		u256(1),
 		Instruction::DUP2,
 		AssemblyItem(PushTag, 1),
-		Instruction::JUMPI
-	};
-	checkCSE(input, {
-		u256(1),
-		Instruction::DUP1,
-		AssemblyItem(PushTag, 1),
-		Instruction::JUMP
-	});
+		Instruction::JUMPI};
+	checkCSE(input, {u256(1), Instruction::DUP1, AssemblyItem(PushTag, 1), Instruction::JUMP});
 }
 
 BOOST_AUTO_TEST_CASE(cse_empty_keccak256)
 {
-	AssemblyItems input{
-		u256(0),
-		Instruction::DUP2,
-		Instruction::KECCAK256
-	};
-	checkCSE(input, {
-		u256(util::keccak256(bytesConstRef()))
-	});
+	AssemblyItems input{u256(0), Instruction::DUP2, Instruction::KECCAK256};
+	checkCSE(input, {u256(util::keccak256(bytesConstRef()))});
 }
 
 BOOST_AUTO_TEST_CASE(cse_partial_keccak256)
@@ -555,14 +531,14 @@ BOOST_AUTO_TEST_CASE(cse_partial_keccak256)
 		Instruction::MSTORE,
 		u256(2),
 		u256(0),
-		Instruction::KECCAK256
-	};
-	checkCSE(input, {
-		u256(0xabcd) << (256 - 16),
-		u256(0),
-		Instruction::MSTORE,
-		u256(util::keccak256(bytes{0xab, 0xcd}))
-	});
+		Instruction::KECCAK256};
+	checkCSE(
+		input,
+		{u256(0xabcd) << (256 - 16),
+		 u256(0),
+		 Instruction::MSTORE,
+		 u256(util::keccak256(bytes{0xab, 0xcd}))}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_location)
@@ -577,17 +553,17 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_location)
 		Instruction::KECCAK256,
 		u256(64),
 		Instruction::DUP3,
-		Instruction::KECCAK256
-	};
-	checkCSE(input, {
-		Instruction::DUP2,
-		Instruction::DUP1,
-		Instruction::MSTORE,
-		u256(64),
-		Instruction::DUP2,
-		Instruction::KECCAK256,
-		Instruction::DUP1
-	});
+		Instruction::KECCAK256};
+	checkCSE(
+		input,
+		{Instruction::DUP2,
+		 Instruction::DUP1,
+		 Instruction::MSTORE,
+		 u256(64),
+		 Instruction::DUP2,
+		 Instruction::KECCAK256,
+		 Instruction::DUP1}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content)
@@ -596,31 +572,32 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content)
 	AssemblyItems input{
 		Instruction::DUP1,
 		u256(0x80),
-		Instruction::MSTORE, // m[128] = DUP1
+		Instruction::MSTORE,  // m[128] = DUP1
 		u256(0x20),
 		u256(0x80),
-		Instruction::KECCAK256, // keccak256(m[128..(128+32)])
+		Instruction::KECCAK256,	 // keccak256(m[128..(128+32)])
 		Instruction::DUP2,
 		u256(12),
-		Instruction::MSTORE, // m[12] = DUP1
+		Instruction::MSTORE,  // m[12] = DUP1
 		u256(0x20),
 		u256(12),
-		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
+		Instruction::KECCAK256	// keccak256(m[12..(12+32)])
 	};
-	checkCSE(input, {
-		u256(0x80),
-		Instruction::DUP2,
-		Instruction::DUP2,
-		Instruction::MSTORE,
-		u256(0x20),
-		Instruction::SWAP1,
-		Instruction::KECCAK256,
-		u256(12),
-		Instruction::DUP3,
-		Instruction::SWAP1,
-		Instruction::MSTORE,
-		Instruction::DUP1
-	});
+	checkCSE(
+		input,
+		{u256(0x80),
+		 Instruction::DUP2,
+		 Instruction::DUP2,
+		 Instruction::MSTORE,
+		 u256(0x20),
+		 Instruction::SWAP1,
+		 Instruction::KECCAK256,
+		 u256(12),
+		 Instruction::DUP3,
+		 Instruction::SWAP1,
+		 Instruction::MSTORE,
+		 Instruction::DUP1}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_dynamic_store_in_between)
@@ -631,22 +608,22 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_dynamic_store_in_between)
 		u256(0x80),
 		Instruction::DUP2,
 		Instruction::DUP2,
-		Instruction::MSTORE, // m[128] = DUP1
+		Instruction::MSTORE,  // m[128] = DUP1
 		u256(0x20),
 		Instruction::DUP1,
 		Instruction::DUP3,
-		Instruction::KECCAK256, // keccak256(m[128..(128+32)])
+		Instruction::KECCAK256,	 // keccak256(m[128..(128+32)])
 		u256(12),
 		Instruction::DUP5,
 		Instruction::DUP2,
-		Instruction::MSTORE, // m[12] = DUP1
+		Instruction::MSTORE,  // m[12] = DUP1
 		Instruction::DUP12,
 		Instruction::DUP14,
-		Instruction::MSTORE, // destroys memory knowledge
+		Instruction::MSTORE,  // destroys memory knowledge
 		Instruction::SWAP2,
 		Instruction::SWAP1,
 		Instruction::SWAP2,
-		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
+		Instruction::KECCAK256	// keccak256(m[12..(12+32)])
 	};
 	checkCSE(input, input);
 }
@@ -659,24 +636,24 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_noninterfering_store_in_be
 		u256(0x80),
 		Instruction::DUP2,
 		Instruction::DUP2,
-		Instruction::MSTORE, // m[128] = DUP1
+		Instruction::MSTORE,  // m[128] = DUP1
 		u256(0x20),
 		Instruction::DUP1,
 		Instruction::DUP3,
-		Instruction::KECCAK256, // keccak256(m[128..(128+32)])
+		Instruction::KECCAK256,	 // keccak256(m[128..(128+32)])
 		u256(12),
 		Instruction::DUP5,
 		Instruction::DUP2,
-		Instruction::MSTORE, // m[12] = DUP1
+		Instruction::MSTORE,  // m[12] = DUP1
 		Instruction::DUP12,
 		u256(12 + 32),
-		Instruction::MSTORE, // does not destoy memory knowledge
+		Instruction::MSTORE,  // does not destoy memory knowledge
 		Instruction::DUP13,
 		u256(128 - 32),
-		Instruction::MSTORE, // does not destoy memory knowledge
+		Instruction::MSTORE,  // does not destoy memory knowledge
 		u256(0x20),
 		u256(12),
-		Instruction::KECCAK256 // keccak256(m[12..(12+32)])
+		Instruction::KECCAK256	// keccak256(m[12..(12+32)])
 	};
 	// if this changes too often, only count the number of SHA3 and MSTORE instructions
 	AssemblyItems output = CSE(input);
@@ -686,23 +663,16 @@ BOOST_AUTO_TEST_CASE(cse_keccak256_twice_same_content_noninterfering_store_in_be
 
 BOOST_AUTO_TEST_CASE(cse_with_initially_known_stack)
 {
-	evmasm::KnownState state = createInitialState(AssemblyItems{
-		u256(0x12),
-		u256(0x20),
-		Instruction::ADD
-	});
-	AssemblyItems input{
-		u256(0x12 + 0x20)
-	};
+	evmasm::KnownState state =
+		createInitialState(AssemblyItems{u256(0x12), u256(0x20), Instruction::ADD});
+	AssemblyItems input{u256(0x12 + 0x20)};
 	checkCSE(input, AssemblyItems{Instruction::DUP1}, state);
 }
 
 BOOST_AUTO_TEST_CASE(cse_equality_on_initially_known_stack)
 {
 	evmasm::KnownState state = createInitialState(AssemblyItems{Instruction::DUP1});
-	AssemblyItems input{
-		Instruction::EQ
-	};
+	AssemblyItems input{Instruction::EQ};
 	AssemblyItems output = CSE(input, state);
 	// check that it directly pushes 1 (true)
 	BOOST_CHECK(find(output.begin(), output.end(), AssemblyItem(u256(1))) != output.end());
@@ -718,8 +688,7 @@ BOOST_AUTO_TEST_CASE(cse_access_previous_sequence)
 		u256(1),
 		Instruction::ADD,
 		u256(0),
-		Instruction::SSTORE
-	});
+		Instruction::SSTORE});
 	// now stored: val_1 + 1 (value at sequence 1)
 	// if in the following instructions, the SLOAD cresolves to "val_1 + 1",
 	// this cannot be generated because we cannot load from sequence 1 anymore.
@@ -767,8 +736,7 @@ BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused_loop)
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMP,
 		AssemblyItem(Tag, 3),
-		u256(11)
-	};
+		u256(11)};
 	checkCFG(input, {u256(11)});
 }
 
@@ -803,8 +771,7 @@ BOOST_AUTO_TEST_CASE(control_flow_graph_do_not_remove_returned_to)
 		AssemblyItem(Tag, 2),
 		Instruction::JUMP,
 		AssemblyItem(Tag, 1),
-		u256(2)
-	};
+		u256(2)};
 	checkCFG(input, {u256(2)});
 }
 
@@ -825,8 +792,7 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 		u256(6),
 		Instruction::SWAP3,
 		Instruction::JUMP,
-		AssemblyItem(Tag, 3)
-	};
+		AssemblyItem(Tag, 3)};
 	BlockDeduplicator deduplicator(input);
 	deduplicator.deduplicate();
 
@@ -847,17 +813,20 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_same)
 		AssemblyItem(Tag, 2),
 		u256(42),
 		AssemblyItem{AssignImmutable, 0x1234},
-		Instruction::JUMP
-	};
+		Instruction::JUMP};
 
-	AssemblyItems input = AssemblyItems{
-		AssemblyItem(PushTag, 2),
-		AssemblyItem(PushTag, 1),
-	} + blocks;
-	AssemblyItems output = AssemblyItems{
-		AssemblyItem(PushTag, 1),
-		AssemblyItem(PushTag, 1),
-	} + blocks;
+	AssemblyItems input =
+		AssemblyItems{
+			AssemblyItem(PushTag, 2),
+			AssemblyItem(PushTag, 1),
+		} +
+		blocks;
+	AssemblyItems output =
+		AssemblyItems{
+			AssemblyItem(PushTag, 1),
+			AssemblyItem(PushTag, 1),
+		} +
+		blocks;
 	BlockDeduplicator deduplicator(input);
 	deduplicator.deduplicate();
 	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
@@ -875,8 +844,7 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_value)
 		AssemblyItem(Tag, 2),
 		u256(23),
 		AssemblyItem{AssignImmutable, 0x1234},
-		Instruction::JUMP
-	};
+		Instruction::JUMP};
 	BlockDeduplicator deduplicator(input);
 	BOOST_CHECK(!deduplicator.deduplicate());
 }
@@ -893,8 +861,7 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_assign_immutable_different_hash)
 		AssemblyItem(Tag, 2),
 		u256(42),
 		AssemblyItem{AssignImmutable, 0xABCD},
-		Instruction::JUMP
-	};
+		Instruction::JUMP};
 	BlockDeduplicator deduplicator(input);
 	BOOST_CHECK(!deduplicator.deduplicate());
 }
@@ -945,8 +912,7 @@ BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMP,
 		u256(5),
-		u256(6)
-	};
+		u256(6)};
 	AssemblyItems expectation{
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMP,
@@ -955,50 +921,35 @@ BOOST_AUTO_TEST_CASE(clear_unreachable_code)
 		u256(6),
 		Instruction::SSTORE,
 		AssemblyItem(PushTag, 1),
-		Instruction::JUMP
-	};
+		Instruction::JUMP};
 	PeepholeOptimiser peepOpt(items);
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		items.begin(), items.end(),
-		expectation.begin(), expectation.end()
+		items.begin(),
+		items.end(),
+		expectation.begin(),
+		expectation.end()
 	);
 }
 
 BOOST_AUTO_TEST_CASE(peephole_double_push)
 {
-	AssemblyItems items{
-		u256(0),
-		u256(0),
-		u256(5),
-		u256(5),
-		u256(4),
-		u256(5)
-	};
-	AssemblyItems expectation{
-		u256(0),
-		Instruction::DUP1,
-		u256(5),
-		Instruction::DUP1,
-		u256(4),
-		u256(5)
-	};
+	AssemblyItems items{u256(0), u256(0), u256(5), u256(5), u256(4), u256(5)};
+	AssemblyItems
+		expectation{u256(0), Instruction::DUP1, u256(5), Instruction::DUP1, u256(4), u256(5)};
 	PeepholeOptimiser peepOpt(items);
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		items.begin(), items.end(),
-		expectation.begin(), expectation.end()
+		items.begin(),
+		items.end(),
+		expectation.begin(),
+		expectation.end()
 	);
 }
 
 BOOST_AUTO_TEST_CASE(peephole_pop_calldatasize)
 {
-	AssemblyItems items{
-		u256(4),
-		Instruction::CALLDATASIZE,
-		Instruction::LT,
-		Instruction::POP
-	};
+	AssemblyItems items{u256(4), Instruction::CALLDATASIZE, Instruction::LT, Instruction::POP};
 	PeepholeOptimiser peepOpt(items);
 	for (size_t i = 0; i < 3; i++)
 		BOOST_CHECK(peepOpt.optimise());
@@ -1013,30 +964,18 @@ BOOST_AUTO_TEST_CASE(peephole_commutative_swap1)
 		Instruction::EQ,
 		Instruction::AND,
 		Instruction::OR,
-		Instruction::XOR
-	};
+		Instruction::XOR};
 	for (Instruction const op: ops)
 	{
-		AssemblyItems items{
-			u256(1),
-			u256(2),
-			Instruction::SWAP1,
-			op,
-			u256(4),
-			u256(5)
-		};
-		AssemblyItems expectation{
-			u256(1),
-			u256(2),
-			op,
-			u256(4),
-			u256(5)
-		};
+		AssemblyItems items{u256(1), u256(2), Instruction::SWAP1, op, u256(4), u256(5)};
+		AssemblyItems expectation{u256(1), u256(2), op, u256(4), u256(5)};
 		PeepholeOptimiser peepOpt(items);
 		BOOST_REQUIRE(peepOpt.optimise());
 		BOOST_CHECK_EQUAL_COLLECTIONS(
-			items.begin(), items.end(),
-			expectation.begin(), expectation.end()
+			items.begin(),
+			items.end(),
+			expectation.begin(),
+			expectation.end()
 		);
 	}
 }
@@ -1050,31 +989,18 @@ BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
 		Instruction::SDIV,
 		Instruction::MOD,
 		Instruction::SMOD,
-		Instruction::EXP
-	};
+		Instruction::EXP};
 	for (Instruction const op: ops)
 	{
-		AssemblyItems items{
-			u256(1),
-			u256(2),
-			Instruction::SWAP1,
-			op,
-			u256(4),
-			u256(5)
-		};
-		AssemblyItems expectation{
-			u256(1),
-			u256(2),
-			Instruction::SWAP1,
-			op,
-			u256(4),
-			u256(5)
-		};
+		AssemblyItems items{u256(1), u256(2), Instruction::SWAP1, op, u256(4), u256(5)};
+		AssemblyItems expectation{u256(1), u256(2), Instruction::SWAP1, op, u256(4), u256(5)};
 		PeepholeOptimiser peepOpt(items);
 		BOOST_REQUIRE(!peepOpt.optimise());
 		BOOST_CHECK_EQUAL_COLLECTIONS(
-			items.begin(), items.end(),
-			expectation.begin(), expectation.end()
+			items.begin(),
+			items.end(),
+			expectation.begin(),
+			expectation.end()
 		);
 	}
 }
@@ -1082,34 +1008,22 @@ BOOST_AUTO_TEST_CASE(peephole_noncommutative_swap1)
 BOOST_AUTO_TEST_CASE(peephole_swap_comparison)
 {
 	map<Instruction, Instruction> swappableOps{
-		{ Instruction::LT, Instruction::GT },
-		{ Instruction::GT, Instruction::LT },
-		{ Instruction::SLT, Instruction::SGT },
-		{ Instruction::SGT, Instruction::SLT }
-	};
+		{Instruction::LT, Instruction::GT},
+		{Instruction::GT, Instruction::LT},
+		{Instruction::SLT, Instruction::SGT},
+		{Instruction::SGT, Instruction::SLT}};
 
 	for (auto const& op: swappableOps)
 	{
-		AssemblyItems items{
-			u256(1),
-			u256(2),
-			Instruction::SWAP1,
-			op.first,
-			u256(4),
-			u256(5)
-		};
-		AssemblyItems expectation{
-			u256(1),
-			u256(2),
-			op.second,
-			u256(4),
-			u256(5)
-		};
+		AssemblyItems items{u256(1), u256(2), Instruction::SWAP1, op.first, u256(4), u256(5)};
+		AssemblyItems expectation{u256(1), u256(2), op.second, u256(4), u256(5)};
 		PeepholeOptimiser peepOpt(items);
 		BOOST_REQUIRE(peepOpt.optimise());
 		BOOST_CHECK_EQUAL_COLLECTIONS(
-			items.begin(), items.end(),
-			expectation.begin(), expectation.end()
+			items.begin(),
+			items.end(),
+			expectation.begin(),
+			expectation.end()
 		);
 	}
 }
@@ -1123,19 +1037,19 @@ BOOST_AUTO_TEST_CASE(peephole_truthy_and)
 		Instruction::NOT,
 		Instruction::AND,
 		AssemblyItem(PushTag, 1),
-		Instruction::JUMPI
-	};
+		Instruction::JUMPI};
 	AssemblyItems expectation{
 		AssemblyItem(Tag, 1),
 		Instruction::BALANCE,
 		AssemblyItem(PushTag, 1),
-		Instruction::JUMPI
-	};
+		Instruction::JUMPI};
 	PeepholeOptimiser peepOpt(items);
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		items.begin(), items.end(),
-		expectation.begin(), expectation.end()
+		items.begin(),
+		items.end(),
+		expectation.begin(),
+		expectation.end()
 	);
 }
 
@@ -1152,8 +1066,7 @@ BOOST_AUTO_TEST_CASE(peephole_iszero_iszero_jumpi)
 		Instruction::JUMPI,
 		u256(0),
 		u256(0x20),
-		Instruction::RETURN
-	};
+		Instruction::RETURN};
 	AssemblyItems expectation{
 		AssemblyItem(Tag, 1),
 		u256(0),
@@ -1162,13 +1075,14 @@ BOOST_AUTO_TEST_CASE(peephole_iszero_iszero_jumpi)
 		Instruction::JUMPI,
 		u256(0),
 		u256(0x20),
-		Instruction::RETURN
-	};
+		Instruction::RETURN};
 	PeepholeOptimiser peepOpt(items);
 	BOOST_REQUIRE(peepOpt.optimise());
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-	  items.begin(), items.end(),
-	  expectation.begin(), expectation.end()
+		items.begin(),
+		items.end(),
+		expectation.begin(),
+		expectation.end()
 	);
 }
 
@@ -1189,13 +1103,14 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal)
 		u256(5),
 		u256(6),
 		AssemblyItem(Tag, 1),
-		Instruction::JUMP
-	};
+		Instruction::JUMP};
 	JumpdestRemover jdr(items);
 	BOOST_REQUIRE(jdr.optimise({}));
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		items.begin(), items.end(),
-		expectation.begin(), expectation.end()
+		items.begin(),
+		items.end(),
+		expectation.begin(),
+		expectation.end()
 	);
 }
 
@@ -1215,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	sub->append(u256(2));
 	sub->append(Instruction::JUMP);
 	auto t2 = sub->newTag();
-	sub->append(t2); // Identical to T1, will be unified
+	sub->append(t2);  // Identical to T1, will be unified
 	sub->append(u256(2));
 	sub->append(Instruction::JUMP);
 	auto t3 = sub->newTag();
@@ -1223,7 +1138,7 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	auto t4 = sub->newTag();
 	sub->append(t4);
 	auto t5 = sub->newTag();
-	sub->append(t5); // This will be removed
+	sub->append(t5);  // This will be removed
 	sub->append(u256(7));
 	sub->append(t4.pushTag());
 	sub->append(Instruction::JUMP);
@@ -1239,42 +1154,39 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 		AssemblyItem(PushSubSize, 0),
 		t1.toSubAssemblyTag(subId).pushTag(),
 		t1.toSubAssemblyTag(subId).pushTag(),
-		u256(8)
-	};
+		u256(8)};
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		main.items().begin(), main.items().end(),
-		expectationMain.begin(), expectationMain.end()
+		main.items().begin(),
+		main.items().end(),
+		expectationMain.begin(),
+		expectationMain.end()
 	);
 
 	AssemblyItems expectationSub{
-		u256(1), t1.tag(), u256(2), Instruction::JUMP, t4.tag(), u256(7), t4.pushTag(), Instruction::JUMP
-	};
+		u256(1),
+		t1.tag(),
+		u256(2),
+		Instruction::JUMP,
+		t4.tag(),
+		u256(7),
+		t4.pushTag(),
+		Instruction::JUMP};
 	BOOST_CHECK_EQUAL_COLLECTIONS(
-		sub->items().begin(), sub->items().end(),
-		expectationSub.begin(), expectationSub.end()
+		sub->items().begin(),
+		sub->items().end(),
+		expectationSub.begin(),
+		expectationSub.end()
 	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_sub_zero)
 {
-	checkCSE({
-		u256(0),
-		Instruction::DUP2,
-		Instruction::SUB
-	}, {
-		Instruction::DUP1
-	});
+	checkCSE({u256(0), Instruction::DUP2, Instruction::SUB}, {Instruction::DUP1});
 
-	checkCSE({
-		Instruction::DUP1,
-		u256(0),
-		Instruction::SUB
-	}, {
-		u256(0),
-		Instruction::DUP2,
-		Instruction::SWAP1,
-		Instruction::SUB
-	});
+	checkCSE(
+		{Instruction::DUP1, u256(0), Instruction::SUB},
+		{u256(0), Instruction::DUP2, Instruction::SWAP1, Instruction::SUB}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
@@ -1284,75 +1196,74 @@ BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
 
 	for (size_t i = 1; i < 256; i++)
 	{
-		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i) - 1),
-			Instruction::CALLVALUE,
-			u256(256-i),
-			Instruction::SHR,
-			Instruction::AND
-		}, {
-			Instruction::CALLVALUE,
-			u256(256-i),
-			Instruction::SHR,
-		});
+		checkCSE(
+			{u256(boost::multiprecision::pow(u256(2), i) - 1),
+			 Instruction::CALLVALUE,
+			 u256(256 - i),
+			 Instruction::SHR,
+			 Instruction::AND},
+			{
+				Instruction::CALLVALUE,
+				u256(256 - i),
+				Instruction::SHR,
+			}
+		);
 
-		checkCSE({
-			Instruction::CALLVALUE,
-			u256(256-i),
-			Instruction::SHR,
-			u256(boost::multiprecision::pow(u256(2), i)-1),
-			Instruction::AND
-		}, {
-			Instruction::CALLVALUE,
-			u256(256-i),
-			Instruction::SHR,
-		});
+		checkCSE(
+			{Instruction::CALLVALUE,
+			 u256(256 - i),
+			 Instruction::SHR,
+			 u256(boost::multiprecision::pow(u256(2), i) - 1),
+			 Instruction::AND},
+			{
+				Instruction::CALLVALUE,
+				u256(256 - i),
+				Instruction::SHR,
+			}
+		);
 	}
 
 	// Check that opt. does NOT trigger
 	for (size_t i = 1; i < 255; i++)
 	{
-		checkCSE({
-			u256(boost::multiprecision::pow(u256(2), i) - 1),
-			Instruction::CALLVALUE,
-			u256(255-i),
-			Instruction::SHR,
-			Instruction::AND
-		}, { // Opt. did some reordering
-			Instruction::CALLVALUE,
-			u256(255-i),
-			Instruction::SHR,
-			u256(boost::multiprecision::pow(u256(2), i)-1),
-			Instruction::AND
-		});
+		checkCSE(
+			{u256(boost::multiprecision::pow(u256(2), i) - 1),
+			 Instruction::CALLVALUE,
+			 u256(255 - i),
+			 Instruction::SHR,
+			 Instruction::AND},
+			{// Opt. did some reordering
+			 Instruction::CALLVALUE,
+			 u256(255 - i),
+			 Instruction::SHR,
+			 u256(boost::multiprecision::pow(u256(2), i) - 1),
+			 Instruction::AND}
+		);
 
-		checkCSE({
-			Instruction::CALLVALUE,
-			u256(255-i),
-			Instruction::SHR,
-			u256(boost::multiprecision::pow(u256(2), i)-1),
-			Instruction::AND
-		}, { // Opt. did some reordering
-			u256(boost::multiprecision::pow(u256(2), i)-1),
-			Instruction::CALLVALUE,
-			u256(255-i),
-			Instruction::SHR,
-			Instruction::AND
-		});
+		checkCSE(
+			{Instruction::CALLVALUE,
+			 u256(255 - i),
+			 Instruction::SHR,
+			 u256(boost::multiprecision::pow(u256(2), i) - 1),
+			 Instruction::AND},
+			{// Opt. did some reordering
+			 u256(boost::multiprecision::pow(u256(2), i) - 1),
+			 Instruction::CALLVALUE,
+			 u256(255 - i),
+			 Instruction::SHR,
+			 Instruction::AND}
+		);
 	}
 
 	//(x >> (31*8)) & 0xffffffff
-	checkCSE({
-		Instruction::CALLVALUE,
-		u256(31*8),
-		Instruction::SHR,
-		u256(0xffffffff),
-		Instruction::AND
-	}, {
-		Instruction::CALLVALUE,
-		u256(31*8),
-		Instruction::SHR
-	});
+	checkCSE(
+		{Instruction::CALLVALUE,
+		 u256(31 * 8),
+		 Instruction::SHR,
+		 u256(0xffffffff),
+		 Instruction::AND},
+		{Instruction::CALLVALUE, u256(31 * 8), Instruction::SHR}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
@@ -1361,68 +1272,37 @@ BOOST_AUTO_TEST_CASE(cse_remove_unwanted_masking_of_address)
 		Instruction::ADDRESS,
 		Instruction::CALLER,
 		Instruction::ORIGIN,
-		Instruction::COINBASE
-	};
+		Instruction::COINBASE};
 	for (auto const& op: ops)
 	{
-		checkCSE({
-			u256("0xffffffffffffffffffffffffffffffffffffffff"),
-			op,
-			Instruction::AND
-		}, {
-			op
-		});
+		checkCSE({u256("0xffffffffffffffffffffffffffffffffffffffff"), op, Instruction::AND}, {op});
 
-		checkCSE({
-			op,
-			u256("0xffffffffffffffffffffffffffffffffffffffff"),
-			Instruction::AND
-		}, {
-			op
-		});
+		checkCSE({op, u256("0xffffffffffffffffffffffffffffffffffffffff"), Instruction::AND}, {op});
 
 		// do not remove mask for other masking
-		checkCSE({
-			u256(1234),
-			op,
-			Instruction::AND
-		}, {
-			op,
-			u256(1234),
-			Instruction::AND
-		});
+		checkCSE({u256(1234), op, Instruction::AND}, {op, u256(1234), Instruction::AND});
 
-		checkCSE({
-			op,
-			u256(1234),
-			Instruction::AND
-		}, {
-			u256(1234),
-			op,
-			Instruction::AND
-		});
+		checkCSE({op, u256(1234), Instruction::AND}, {u256(1234), op, Instruction::AND});
 	}
 
 	// leave other opcodes untouched
-	checkCSE({
-		u256("0xffffffffffffffffffffffffffffffffffffffff"),
-		Instruction::CALLVALUE,
-		Instruction::AND
-	}, {
-		Instruction::CALLVALUE,
-		u256("0xffffffffffffffffffffffffffffffffffffffff"),
-		Instruction::AND
-	});
+	checkCSE(
+		{u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		 Instruction::CALLVALUE,
+		 Instruction::AND},
+		{Instruction::CALLVALUE,
+		 u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		 Instruction::AND}
+	);
 
-	checkCSE({
-		Instruction::CALLVALUE,
-		u256("0xffffffffffffffffffffffffffffffffffffffff"),
-		Instruction::AND
-	}, {
-		u256("0xffffffffffffffffffffffffffffffffffffffff"),
-		Instruction::CALLVALUE,
-		Instruction::AND
-	});
+	checkCSE(
+		{Instruction::CALLVALUE,
+		 u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		 Instruction::AND},
+		{u256("0xffffffffffffffffffffffffffffffffffffffff"),
+		 Instruction::CALLVALUE,
+		 Instruction::AND}
+	);
 }
 
 BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
@@ -1430,43 +1310,21 @@ BOOST_AUTO_TEST_CASE(cse_replace_too_large_shift)
 	if (!solidity::test::CommonOptions::get().evmVersion().hasBitwiseShifting())
 		return;
 
-	checkCSE({
-		Instruction::CALLVALUE,
-		u256(299),
-		Instruction::SHL
-	}, {
-		u256(0)
-	});
+	checkCSE({Instruction::CALLVALUE, u256(299), Instruction::SHL}, {u256(0)});
 
-	checkCSE({
-		Instruction::CALLVALUE,
-		u256(299),
-		Instruction::SHR
-	}, {
-		u256(0)
-	});
+	checkCSE({Instruction::CALLVALUE, u256(299), Instruction::SHR}, {u256(0)});
 
-	checkCSE({
-		Instruction::CALLVALUE,
-		u256(255),
-		Instruction::SHL
-	}, {
-		Instruction::CALLVALUE,
-		u256(255),
-		Instruction::SHL
-	});
+	checkCSE(
+		{Instruction::CALLVALUE, u256(255), Instruction::SHL},
+		{Instruction::CALLVALUE, u256(255), Instruction::SHL}
+	);
 
-	checkCSE({
-		Instruction::CALLVALUE,
-		u256(255),
-		Instruction::SHR
-	}, {
-		Instruction::CALLVALUE,
-		u256(255),
-		Instruction::SHR
-	});
+	checkCSE(
+		{Instruction::CALLVALUE, u256(255), Instruction::SHR},
+		{Instruction::CALLVALUE, u256(255), Instruction::SHR}
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

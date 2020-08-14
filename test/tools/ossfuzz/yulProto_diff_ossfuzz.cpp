@@ -78,12 +78,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	);
 
 	// Parse protobuf mutated YUL code
-	if (
-		!stack.parseAndAnalyze("source", yul_source) ||
-		!stack.parserResult()->code ||
-		!stack.parserResult()->analysisInfo ||
-		!Error::containsOnlyWarnings(stack.errors())
-	)
+	if (!stack.parseAndAnalyze("source", yul_source) || !stack.parserResult()->code ||
+		!stack.parserResult()->analysisInfo || !Error::containsOnlyWarnings(stack.errors()))
 	{
 		printErrors(std::cout, stack.errors());
 		yulAssert(false, "Proto fuzzer generated malformed program");
@@ -97,10 +93,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
-	if (
-		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached
-	)
+	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached)
 		return;
 
 	stack.optimize();

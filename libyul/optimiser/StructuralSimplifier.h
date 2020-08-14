@@ -24,7 +24,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Structural simplifier. Performs the following simplification steps:
  * - replace if with true condition with its body
@@ -46,6 +45,7 @@ public:
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
+
 private:
 	StructuralSimplifier() = default;
 

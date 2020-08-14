@@ -18,9 +18,10 @@
 
 #include <tools/yulPhaser/SimulationRNG.h>
 
-// NOTE: The code would work with std::random but the results for a given seed would not be reproducible
-// across different STL implementations. Boost does not guarantee this either but at least it has only one
-// implementation. Reproducibility is not a hard requirement for yul-phaser but it's nice to have.
+// NOTE: The code would work with std::random but the results for a given seed would not be
+// reproducible across different STL implementations. Boost does not guarantee this either but at
+// least it has only one implementation. Reproducibility is not a hard requirement for yul-phaser
+// but it's nice to have.
 #include <boost/random/bernoulli_distribution.hpp>
 #include <boost/random/binomial_distribution.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -53,7 +54,10 @@ size_t SimulationRNG::binomialInt(size_t _numTrials, double _successProbability)
 	// and fails to compile due to ambiguous conversion.
 	assert(_numTrials <= static_cast<size_t>(numeric_limits<long>::max()));
 
-	boost::random::binomial_distribution<long> distribution(static_cast<long>(_numTrials), _successProbability);
+	boost::random::binomial_distribution<long> distribution(
+		static_cast<long>(_numTrials),
+		_successProbability
+	);
 	return static_cast<size_t>(distribution(s_generator));
 }
 

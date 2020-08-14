@@ -28,7 +28,6 @@
 
 namespace solidity::util
 {
-
 /// Validate an input for UTF8 encoding
 /// @returns false if it is invalid and the first invalid position in invalidPosition
 bool validateUTF8(std::string const& _input, size_t& _invalidPosition);

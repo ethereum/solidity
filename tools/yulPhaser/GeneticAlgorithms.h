@@ -16,7 +16,8 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Contains an abstract base class representing a genetic algorithm and its concrete implementations.
+ * Contains an abstract base class representing a genetic algorithm and its concrete
+ * implementations.
  */
 
 #pragma once
@@ -28,7 +29,6 @@
 
 namespace solidity::phaser
 {
-
 enum class CrossoverChoice
 {
 	SinglePoint,
@@ -83,9 +83,9 @@ class RandomAlgorithm: public GeneticAlgorithm
 public:
 	struct Options
 	{
-		double elitePoolSize;        ///< Percentage of the population treated as the elite
-		size_t minChromosomeLength;  ///< Minimum length of newly generated chromosomes
-		size_t maxChromosomeLength;  ///< Maximum length of newly generated chromosomes
+		double elitePoolSize;  ///< Percentage of the population treated as the elite
+		size_t minChromosomeLength;	 ///< Minimum length of newly generated chromosomes
+		size_t maxChromosomeLength;	 ///< Maximum length of newly generated chromosomes
 
 		bool isValid() const
 		{
@@ -96,8 +96,7 @@ public:
 		}
 	};
 
-	explicit RandomAlgorithm(Options const& _options):
-		m_options(_options)
+	explicit RandomAlgorithm(Options const& _options): m_options(_options)
 	{
 		assert(_options.isValid());
 	}
@@ -125,32 +124,37 @@ class GenerationalElitistWithExclusivePools: public GeneticAlgorithm
 public:
 	struct Options
 	{
-		double mutationPoolSize;          ///< Percentage of population to regenerate using mutations in each round.
-		double crossoverPoolSize;         ///< Percentage of population to regenerate using crossover in each round.
-		double randomisationChance;       ///< The chance of choosing @a geneRandomisation as the mutation to perform
-		double deletionVsAdditionChance;  ///< The chance of choosing @a geneDeletion as the mutation if randomisation was not chosen.
-		double percentGenesToRandomise;   ///< The chance of any given gene being mutated in gene randomisation.
-		double percentGenesToAddOrDelete; ///< The chance of a gene being added (or deleted) in gene addition (or deletion).
-		CrossoverChoice crossover;        ///< The crossover operator to use.
-		std::optional<double> uniformCrossoverSwapChance; ///< Chance of a pair of genes being swapped in uniform crossover.
+		double mutationPoolSize;  ///< Percentage of population to regenerate using mutations in
+								  ///< each round.
+		double crossoverPoolSize;  ///< Percentage of population to regenerate using crossover in
+								   ///< each round.
+		double randomisationChance;	 ///< The chance of choosing @a geneRandomisation as the
+									 ///< mutation to perform
+		double deletionVsAdditionChance;  ///< The chance of choosing @a geneDeletion as the
+										  ///< mutation if randomisation was not chosen.
+		double percentGenesToRandomise;	 ///< The chance of any given gene being mutated in gene
+										 ///< randomisation.
+		double percentGenesToAddOrDelete;  ///< The chance of a gene being added (or deleted) in
+										   ///< gene addition (or deletion).
+		CrossoverChoice crossover;	///< The crossover operator to use.
+		std::optional<double> uniformCrossoverSwapChance;  ///< Chance of a pair of genes being
+														   ///< swapped in uniform crossover.
 
 		bool isValid() const
 		{
 			return (
-				0 <= mutationPoolSize && mutationPoolSize <= 1.0 &&
-				0 <= crossoverPoolSize && crossoverPoolSize <= 1.0 &&
-				0 <= randomisationChance && randomisationChance <= 1.0 &&
-				0 <= deletionVsAdditionChance && deletionVsAdditionChance <= 1.0 &&
-				0 <= percentGenesToRandomise && percentGenesToRandomise <= 1.0 &&
-				0 <= percentGenesToAddOrDelete && percentGenesToAddOrDelete <= 1.0 &&
-				0 <= uniformCrossoverSwapChance && uniformCrossoverSwapChance <= 1.0 &&
-				mutationPoolSize + crossoverPoolSize <= 1.0
+				0 <= mutationPoolSize && mutationPoolSize <= 1.0 && 0 <= crossoverPoolSize &&
+				crossoverPoolSize <= 1.0 && 0 <= randomisationChance &&
+				randomisationChance <= 1.0 && 0 <= deletionVsAdditionChance &&
+				deletionVsAdditionChance <= 1.0 && 0 <= percentGenesToRandomise &&
+				percentGenesToRandomise <= 1.0 && 0 <= percentGenesToAddOrDelete &&
+				percentGenesToAddOrDelete <= 1.0 && 0 <= uniformCrossoverSwapChance &&
+				uniformCrossoverSwapChance <= 1.0 && mutationPoolSize + crossoverPoolSize <= 1.0
 			);
 		}
 	};
 
-	GenerationalElitistWithExclusivePools(Options const& _options):
-		m_options(_options)
+	GenerationalElitistWithExclusivePools(Options const& _options): m_options(_options)
 	{
 		assert(_options.isValid());
 	}
@@ -184,29 +188,32 @@ class ClassicGeneticAlgorithm: public GeneticAlgorithm
 public:
 	struct Options
 	{
-		double elitePoolSize;      ///< Percentage of the population treated as the elite.
-		double crossoverChance;    ///< The chance of a particular chromosome being selected for crossover.
-		double mutationChance;     ///< The chance of a particular gene being randomised in @a geneRandomisation mutation.
-		double deletionChance;     ///< The chance of a particular gene being deleted in @a geneDeletion mutation.
-		double additionChance;     ///< The chance of a particular gene being added in @a geneAddition mutation.
-		CrossoverChoice crossover; ///< The crossover operator to use
-		std::optional<double> uniformCrossoverSwapChance; ///< Chance of a pair of genes being swapped in uniform crossover.
+		double elitePoolSize;  ///< Percentage of the population treated as the elite.
+		double crossoverChance;	 ///< The chance of a particular chromosome being selected for
+								 ///< crossover.
+		double mutationChance;	///< The chance of a particular gene being randomised in @a
+								///< geneRandomisation mutation.
+		double deletionChance;	///< The chance of a particular gene being deleted in @a
+								///< geneDeletion mutation.
+		double additionChance;	///< The chance of a particular gene being added in @a geneAddition
+								///< mutation.
+		CrossoverChoice crossover;	///< The crossover operator to use
+		std::optional<double> uniformCrossoverSwapChance;  ///< Chance of a pair of genes being
+														   ///< swapped in uniform crossover.
 
 		bool isValid() const
 		{
 			return (
-				0 <= elitePoolSize && elitePoolSize <= 1.0 &&
-				0 <= crossoverChance && crossoverChance <= 1.0 &&
-				0 <= mutationChance && mutationChance <= 1.0 &&
-				0 <= deletionChance && deletionChance <= 1.0 &&
-				0 <= additionChance && additionChance <= 1.0 &&
-				0 <= uniformCrossoverSwapChance && uniformCrossoverSwapChance <= 1.0
+				0 <= elitePoolSize && elitePoolSize <= 1.0 && 0 <= crossoverChance &&
+				crossoverChance <= 1.0 && 0 <= mutationChance && mutationChance <= 1.0 &&
+				0 <= deletionChance && deletionChance <= 1.0 && 0 <= additionChance &&
+				additionChance <= 1.0 && 0 <= uniformCrossoverSwapChance &&
+				uniformCrossoverSwapChance <= 1.0
 			);
 		}
 	};
 
-	ClassicGeneticAlgorithm(Options const& _options):
-		m_options(_options)
+	ClassicGeneticAlgorithm(Options const& _options): m_options(_options)
 	{
 		assert(_options.isValid());
 	}

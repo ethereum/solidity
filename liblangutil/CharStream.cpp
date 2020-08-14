@@ -43,7 +43,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -107,7 +107,9 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 	using size_type = string::size_type;
 	using diff_type = string::difference_type;
 	size_type searchPosition = min<size_type>(m_source.size(), size_type(_position));
-	int lineNumber = static_cast<int>(count(m_source.begin(), m_source.begin() + diff_type(searchPosition), '\n'));
+	int lineNumber = static_cast<int>(
+		count(m_source.begin(), m_source.begin() + diff_type(searchPosition), '\n')
+	);
 	size_type lineStart;
 	if (searchPosition == 0)
 		lineStart = 0;

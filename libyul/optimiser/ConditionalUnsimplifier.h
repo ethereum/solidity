@@ -24,7 +24,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Reverse of conditional simplifier.
  *
@@ -43,9 +42,7 @@ public:
 	void operator()(Block& _block) override;
 
 private:
-	explicit ConditionalUnsimplifier(Dialect const& _dialect):
-		m_dialect(_dialect)
-	{}
+	explicit ConditionalUnsimplifier(Dialect const& _dialect): m_dialect(_dialect) {}
 	Dialect const& m_dialect;
 };
 

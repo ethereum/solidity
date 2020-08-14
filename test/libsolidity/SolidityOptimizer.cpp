@@ -40,7 +40,6 @@ using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
-
 class OptimizerTestFramework: public SolidityExecutionFramework
 {
 public:
@@ -70,16 +69,27 @@ public:
 		unsigned const _optimizeRuns = 200
 	)
 	{
-		m_nonOptimizedBytecode = compileAndRunWithOptimizer("pragma solidity >=0.0;\n" + _sourceCode, _value, _contractName, false, _optimizeRuns);
+		m_nonOptimizedBytecode = compileAndRunWithOptimizer(
+			"pragma solidity >=0.0;\n" + _sourceCode,
+			_value,
+			_contractName,
+			false,
+			_optimizeRuns
+		);
 		m_nonOptimizedContract = m_contractAddress;
-		m_optimizedBytecode = compileAndRunWithOptimizer("pragma solidity >=0.0;\n" + _sourceCode, _value, _contractName, true, _optimizeRuns);
+		m_optimizedBytecode = compileAndRunWithOptimizer(
+			"pragma solidity >=0.0;\n" + _sourceCode,
+			_value,
+			_contractName,
+			true,
+			_optimizeRuns
+		);
 		size_t nonOptimizedSize = numInstructions(m_nonOptimizedBytecode);
 		size_t optimizedSize = numInstructions(m_optimizedBytecode);
 		BOOST_CHECK_MESSAGE(
 			_optimizeRuns < 50 || optimizedSize < nonOptimizedSize,
 			string("Optimizer did not reduce bytecode size. Non-optimized size: ") +
-			to_string(nonOptimizedSize) + " - optimized size: " +
-			to_string(optimizedSize)
+				to_string(nonOptimizedSize) + " - optimized size: " + to_string(optimizedSize)
 		);
 		m_optimizedContract = m_contractAddress;
 	}
@@ -95,22 +105,32 @@ public:
 		m_gasUsedOptimized = m_gasUsed;
 		BOOST_CHECK_MESSAGE(!optimizedOutput.empty(), "No optimized output for " + _sig);
 		BOOST_CHECK_MESSAGE(!nonOptimizedOutput.empty(), "No un-optimized output for " + _sig);
-		BOOST_CHECK_MESSAGE(nonOptimizedOutput == optimizedOutput, "Computed values do not match."
-							"\nNon-Optimized: " + toHex(nonOptimizedOutput) +
-							"\nOptimized:     " + toHex(optimizedOutput));
+		BOOST_CHECK_MESSAGE(
+			nonOptimizedOutput == optimizedOutput,
+			"Computed values do not match."
+			"\nNon-Optimized: " +
+				toHex(nonOptimizedOutput) + "\nOptimized:     " + toHex(optimizedOutput)
+		);
 	}
 
 	/// @returns the number of instructions in the given bytecode, not taking the metadata hash
 	/// into account.
-	size_t numInstructions(bytes const& _bytecode, std::optional<Instruction> _which = std::optional<Instruction>{})
+	size_t numInstructions(
+		bytes const& _bytecode,
+		std::optional<Instruction> _which = std::optional<Instruction>{}
+	)
 	{
 		bytes realCode = bytecodeSansMetadata(_bytecode);
 		BOOST_REQUIRE_MESSAGE(!realCode.empty(), "Invalid or missing metadata in bytecode.");
 		size_t instructions = 0;
-		evmasm::eachInstruction(realCode, [&](Instruction _instr, u256 const&) {
-			if (!_which || *_which == _instr)
-				instructions++;
-		});
+		evmasm::eachInstruction(
+			realCode,
+			[&](Instruction _instr, u256 const&)
+			{
+				if (!_which || *_which == _instr)
+					instructions++;
+			}
+		);
 		return instructions;
 	}
 
@@ -259,7 +279,8 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 // Information in joining branches is not retained anymore.
 BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 {
-	// This tests that the optimizer knows that we already have "z == keccak256(abi.encodePacked(y))" inside both branches.
+	// This tests that the optimizer knows that we already have "z ==
+	// keccak256(abi.encodePacked(y))" inside both branches.
 	char const* sourceCode = R"(
 		contract c {
 			bytes32 d;
@@ -285,12 +306,16 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "c", true);
 	size_t numSHA3s = 0;
-	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == Instruction::KECCAK256)
-			numSHA3s++;
-	});
-// TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
-//	BOOST_CHECK_EQUAL(1, numSHA3s);
+	eachInstruction(
+		optimizedBytecode,
+		[&](Instruction _instr, u256 const&)
+		{
+			if (_instr == Instruction::KECCAK256)
+				numSHA3s++;
+		}
+	);
+	// TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
+	//	BOOST_CHECK_EQUAL(1, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(store_tags_as_unions)
@@ -328,12 +353,16 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "test", true);
 	size_t numSHA3s = 0;
-	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == Instruction::KECCAK256)
-			numSHA3s++;
-	});
-// TEST DISABLED UNTIL 93693404 IS IMPLEMENTED
-//	BOOST_CHECK_EQUAL(2, numSHA3s);
+	eachInstruction(
+		optimizedBytecode,
+		[&](Instruction _instr, u256 const&)
+		{
+			if (_instr == Instruction::KECCAK256)
+				numSHA3s++;
+		}
+	);
+	// TEST DISABLED UNTIL 93693404 IS IMPLEMENTED
+	//	BOOST_CHECK_EQUAL(2, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
@@ -410,23 +439,32 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 	compareVersions("get()");
 
 	bytes optimizedBytecode = compileAndRunWithOptimizer(sourceCode, 0, "C", true, 1);
-	bytes complicatedConstant = toBigEndian(u256("0x817416927846239487123469187231298734162934871263941234127518276"));
+	bytes complicatedConstant =
+		toBigEndian(u256("0x817416927846239487123469187231298734162934871263941234127518276"));
 	unsigned occurrences = 0;
 	for (auto iter = optimizedBytecode.cbegin(); iter < optimizedBytecode.cend(); ++occurrences)
 	{
-		iter = search(iter, optimizedBytecode.cend(), complicatedConstant.cbegin(), complicatedConstant.cend());
+		iter = search(
+			iter,
+			optimizedBytecode.cend(),
+			complicatedConstant.cbegin(),
+			complicatedConstant.cend()
+		);
 		if (iter < optimizedBytecode.cend())
 			++iter;
 	}
 	BOOST_CHECK_EQUAL(2, occurrences);
 
-	bytes constantWithZeros = toBigEndian(u256("0x77abc0000000000000000000000000000000000000000000000000000000001"));
-	BOOST_CHECK(search(
-		optimizedBytecode.cbegin(),
-		optimizedBytecode.cend(),
-		constantWithZeros.cbegin(),
-		constantWithZeros.cend()
-	) == optimizedBytecode.cend());
+	bytes constantWithZeros =
+		toBigEndian(u256("0x77abc0000000000000000000000000000000000000000000000000000000001"));
+	BOOST_CHECK(
+		search(
+			optimizedBytecode.cbegin(),
+			optimizedBytecode.cend(),
+			constantWithZeros.cbegin(),
+			constantWithZeros.cend()
+		) == optimizedBytecode.cend()
+	);
 }
 
 
@@ -483,8 +521,10 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	)";
 	auto start = std::chrono::steady_clock::now();
 	compileBothVersions(sourceCode);
-	double duration = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-	// Since run time on an ASan build is not really realistic, we disable this test for those builds.
+	double duration =
+		std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+	// Since run time on an ASan build is not really realistic, we disable this test for those
+	// builds.
 	size_t maxDuration = 20;
 #if !defined(__SANITIZE_ADDRESS__) && defined(__has_feature)
 #if __has_feature(address_sanitizer)
@@ -495,7 +535,10 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	maxDuration = numeric_limits<size_t>::max();
 	BOOST_TEST_MESSAGE("Disabled constant optimizer run time check for address sanitizer build.");
 #endif
-	BOOST_CHECK_MESSAGE(duration <= maxDuration, "Compilation of constants took longer than 20 seconds.");
+	BOOST_CHECK_MESSAGE(
+		duration <= maxDuration,
+		"Compilation of constants took longer than 20 seconds."
+	);
 	compareVersions("hexEncodeTest(address)", u256(0x123456789));
 }
 
@@ -686,7 +729,10 @@ BOOST_AUTO_TEST_CASE(byte_access)
 		}
 	)";
 	compileBothVersions(sourceCode);
-	compareVersions("f(bytes32)", u256("0x1223344556677889900112233445566778899001122334455667788990011223"));
+	compareVersions(
+		"f(bytes32)",
+		u256("0x1223344556677889900112233445566778899001122334455667788990011223")
+	);
 }
 
 BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
@@ -725,4 +771,4 @@ BOOST_AUTO_TEST_CASE(avoid_double_cleanup)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

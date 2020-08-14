@@ -28,7 +28,6 @@
 
 namespace solidity::frontend
 {
-
 extern char const* VersionNumber;
 extern std::string const VersionString;
 extern std::string const VersionStringStrict;

@@ -24,27 +24,36 @@
 using namespace solidity;
 namespace solidity::langutil
 {
-
-SourceLocation const parseSourceLocation(std::string const& _input, std::string const& _sourceName, size_t _maxIndex)
+SourceLocation const parseSourceLocation(
+	std::string const& _input,
+	std::string const& _sourceName,
+	size_t _maxIndex
+)
 {
 	// Expected input: "start:length:sourceindex"
-	enum SrcElem : size_t { Start, Length, Index };
+	enum SrcElem : size_t
+	{
+		Start,
+		Length,
+		Index
+	};
 
 	std::vector<std::string> pos;
 
 	boost::algorithm::split(pos, _input, boost::is_any_of(":"));
 
 	astAssert(
-		pos.size() == 3 &&
-		_maxIndex >= static_cast<size_t>(stoi(pos[Index])),
+		pos.size() == 3 && _maxIndex >= static_cast<size_t>(stoi(pos[Index])),
 		"'src'-field ill-formatted or src-index too high"
 	);
 
 	int start = stoi(pos[Start]);
 	int end = start + stoi(pos[Length]);
 
-	// ASSUMPTION: only the name of source is used from here on, the m_source of the CharStream-Object can be empty
-	std::shared_ptr<langutil::CharStream> source = std::make_shared<langutil::CharStream>("", _sourceName);
+	// ASSUMPTION: only the name of source is used from here on, the m_source of the
+	// CharStream-Object can be empty
+	std::shared_ptr<langutil::CharStream> source =
+		std::make_shared<langutil::CharStream>("", _sourceName);
 
 	return SourceLocation{start, end, source};
 }

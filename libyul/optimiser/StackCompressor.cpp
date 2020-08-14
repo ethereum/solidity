@@ -38,7 +38,6 @@ using namespace solidity::yul;
 
 namespace
 {
-
 /**
  * Class that discovers all variables that can be fully eliminated by rematerialization,
  * and the corresponding approximate costs.
@@ -57,7 +56,11 @@ public:
 		for (auto const& codeCost: m_expressionCodeCost)
 		{
 			size_t numRef = m_numReferences[codeCost.first];
-			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references.forward[codeCost.first]));
+			cand.emplace(make_tuple(
+				codeCost.second * numRef,
+				codeCost.first,
+				m_references.forward[codeCost.first]
+			));
 		}
 		return cand;
 	}
@@ -70,7 +73,8 @@ public:
 		{
 			YulString varName = _varDecl.variables.front().name;
 			if (m_value.count(varName))
-				m_expressionCodeCost[varName] = CodeCost::codeCost(m_dialect, *m_value[varName].value);
+				m_expressionCodeCost[varName] =
+					CodeCost::codeCost(m_dialect, *m_value[varName].value);
 		}
 	}
 
@@ -161,14 +165,15 @@ bool StackCompressor::run(
 )
 {
 	yulAssert(
-		_object.code &&
-		_object.code->statements.size() > 0 && holds_alternative<Block>(_object.code->statements.at(0)),
+		_object.code && _object.code->statements.size() > 0 &&
+			holds_alternative<Block>(_object.code->statements.at(0)),
 		"Need to run the function grouper before the stack compressor."
 	);
 	bool allowMSizeOptimzation = !MSizeFinder::containsMSize(_dialect, *_object.code);
 	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
-		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _object, _optimizeStackAllocation);
+		map<YulString, int> stackSurplus =
+			CompilabilityChecker::run(_dialect, _object, _optimizeStackAllocation);
 		if (stackSurplus.empty())
 			return true;
 
@@ -200,4 +205,3 @@ bool StackCompressor::run(
 	}
 	return false;
 }
-

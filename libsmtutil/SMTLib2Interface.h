@@ -34,7 +34,6 @@
 
 namespace solidity::smtutil
 {
-
 class SMTLib2Interface: public SolverInterface, public boost::noncopyable
 {
 public:
@@ -51,7 +50,9 @@ public:
 	void declareVariable(std::string const&, SortPointer const&) override;
 
 	void addAssertion(Expression const& _expr) override;
-	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	std::pair<CheckResult, std::vector<std::string>> check(
+		std::vector<Expression> const& _expressionsToEvaluate
+	) override;
 
 	std::vector<std::string> unhandledQueries() override { return m_unhandledQueries; }
 
@@ -68,7 +69,10 @@ private:
 	void write(std::string _data);
 
 	std::string checkSatAndGetValuesCommand(std::vector<Expression> const& _expressionsToEvaluate);
-	std::vector<std::string> parseValues(std::string::const_iterator _start, std::string::const_iterator _end);
+	std::vector<std::string> parseValues(
+		std::string::const_iterator _start,
+		std::string::const_iterator _end
+	);
 
 	/// Communicates with the solver via the callback. Throws SMTSolverError on error.
 	std::string querySolver(std::string const& _input);

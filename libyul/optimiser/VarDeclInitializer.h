@@ -24,7 +24,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Rewrites variable declarations so that all of them are initialized.
  * Declarations like ``let x, y`` are split into multiple declaration
@@ -35,7 +34,10 @@ class VarDeclInitializer: public ASTModifier
 {
 public:
 	static constexpr char const* name{"VarDeclInitializer"};
-	static void run(OptimiserStepContext& _ctx, Block& _ast) { VarDeclInitializer{_ctx.dialect}(_ast); }
+	static void run(OptimiserStepContext& _ctx, Block& _ast)
+	{
+		VarDeclInitializer{_ctx.dialect}(_ast);
+	}
 
 	void operator()(Block& _block) override;
 

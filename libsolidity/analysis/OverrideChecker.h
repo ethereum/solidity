@@ -117,11 +117,8 @@ public:
 	OverrideComparator const& overrideComparator() const;
 
 private:
-	std::variant<
-		FunctionDefinition const*,
-		ModifierDefinition const*,
-		VariableDeclaration const*
-	> m_item;
+	std::variant<FunctionDefinition const*, ModifierDefinition const*, VariableDeclaration const*>
+		m_item;
 
 	std::shared_ptr<OverrideComparator> mutable m_comparator;
 };
@@ -133,7 +130,8 @@ private:
 class OverrideChecker
 {
 public:
-	using OverrideProxyBySignatureMultiSet = std::multiset<OverrideProxy, OverrideProxy::CompareBySignature>;
+	using OverrideProxyBySignatureMultiSet =
+		std::multiset<OverrideProxy, OverrideProxy::CompareBySignature>;
 
 	/// @param _errorReporter provides the error logging functionality.
 	explicit OverrideChecker(langutil::ErrorReporter& _errorReporter):
@@ -147,10 +145,12 @@ public:
 		bool operator()(ContractDefinition const* _a, ContractDefinition const* _b) const;
 	};
 
-	/// Returns all functions of bases (including public state variables) that have not yet been overwritten.
-	/// May contain the same function multiple times when used with shared bases.
-	OverrideProxyBySignatureMultiSet const& inheritedFunctions(ContractDefinition const& _contract) const;
-	OverrideProxyBySignatureMultiSet const& inheritedModifiers(ContractDefinition const& _contract) const;
+	/// Returns all functions of bases (including public state variables) that have not yet been
+	/// overwritten. May contain the same function multiple times when used with shared bases.
+	OverrideProxyBySignatureMultiSet const& inheritedFunctions(ContractDefinition const& _contract)
+		const;
+	OverrideProxyBySignatureMultiSet const& inheritedModifiers(ContractDefinition const& _contract)
+		const;
 
 private:
 	void checkIllegalOverrides(ContractDefinition const& _contract);
@@ -183,17 +183,26 @@ private:
 	/// Checks for functions in different base contracts which conflict with each
 	/// other and thus need to be overridden explicitly.
 	void checkAmbiguousOverrides(ContractDefinition const& _contract) const;
-	void checkAmbiguousOverridesInternal(std::set<OverrideProxy> _baseCallables, langutil::SourceLocation const& _location) const;
+	void checkAmbiguousOverridesInternal(
+		std::set<OverrideProxy> _baseCallables,
+		langutil::SourceLocation const& _location
+	) const;
 	/// Resolves an override list of UserDefinedTypeNames to a list of contracts.
-	std::set<ContractDefinition const*, CompareByID> resolveOverrideList(OverrideSpecifier const& _overrides) const;
+	std::set<ContractDefinition const*, CompareByID> resolveOverrideList(
+		OverrideSpecifier const& _overrides
+	) const;
 
 	void checkOverrideList(OverrideProxy _item, OverrideProxyBySignatureMultiSet const& _inherited);
 
 	langutil::ErrorReporter& m_errorReporter;
 
 	/// Cache for inheritedFunctions().
-	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedFunctions;
-	std::map<ContractDefinition const*, OverrideProxyBySignatureMultiSet> mutable m_inheritedModifiers;
+	std::map<
+		ContractDefinition const*,
+		OverrideProxyBySignatureMultiSet> mutable m_inheritedFunctions;
+	std::map<
+		ContractDefinition const*,
+		OverrideProxyBySignatureMultiSet> mutable m_inheritedModifiers;
 };
 
 }

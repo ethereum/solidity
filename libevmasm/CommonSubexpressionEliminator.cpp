@@ -42,13 +42,15 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		nextInitialState.feedItem(*m_breakingItem);
 	KnownState nextState = nextInitialState;
 
-	ScopeGuard reset([&]()
-	{
-		m_breakingItem = nullptr;
-		m_storeOperations.clear();
-		m_initialState = move(nextInitialState);
-		m_state = move(nextState);
-	});
+	ScopeGuard reset(
+		[&]()
+		{
+			m_breakingItem = nullptr;
+			m_storeOperations.clear();
+			m_initialState = move(nextInitialState);
+			m_state = move(nextState);
+		}
+	);
 
 	map<int, Id> initialStackContents;
 	map<int, Id> targetStackContents;
@@ -60,12 +62,13 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	for (int height = minHeight; height <= m_state.stackHeight(); ++height)
 		targetStackContents[height] = m_state.stackElement(height, SourceLocation());
 
-	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations).generateCode(
-		m_initialState.sequenceNumber(),
-		m_initialState.stackHeight(),
-		initialStackContents,
-		targetStackContents
-	);
+	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations)
+							  .generateCode(
+								  m_initialState.sequenceNumber(),
+								  m_initialState.stackHeight(),
+								  initialStackContents,
+								  targetStackContents
+							  );
 	if (m_breakingItem)
 		items.push_back(*m_breakingItem);
 
@@ -144,7 +147,8 @@ AssemblyItems CSECodeGenerator::generateCode(
 	for (auto const& item: m_stack)
 		m_classPositions[item.second].insert(item.first);
 
-	// generate the dependency graph starting from final storage and memory writes and target stack contents
+	// generate the dependency graph starting from final storage and memory writes and target stack
+	// contents
 	for (auto const& p: m_storeOperations)
 		addDependencies(p.second.back().expression);
 	for (auto const& targetItem: m_targetStack)
@@ -175,7 +179,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 	for (auto const& targetItem: m_targetStack)
 	{
 		if (m_stack.count(targetItem.first) && m_stack.at(targetItem.first) == targetItem.second)
-			continue; // already there
+			continue;  // already there
 		generateClassElement(targetItem.second);
 		assertThrow(!m_classPositions[targetItem.second].empty(), OptimizerException, "");
 		if (m_classPositions[targetItem.second].count(targetItem.first))
@@ -217,30 +221,34 @@ AssemblyItems CSECodeGenerator::generateCode(
 void CSECodeGenerator::addDependencies(Id _c)
 {
 	if (m_classPositions.count(_c))
-		return; // it is already on the stack
+		return;	 // it is already on the stack
 	if (m_neededBy.count(_c))
-		return; // we already computed the dependencies for _c
+		return;	 // we already computed the dependencies for _c
 	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
 	assertThrow(expr.item, OptimizerException, "");
 	// If this exception happens, we need to find a different way to generate the
 	// compound expression.
-	assertThrow(expr.item->type() != UndefinedItem, ItemNotAvailableException, "Undefined item requested but not available.");
+	assertThrow(
+		expr.item->type() != UndefinedItem,
+		ItemNotAvailableException,
+		"Undefined item requested but not available."
+	);
 	for (Id argument: expr.arguments)
 	{
 		addDependencies(argument);
 		m_neededBy.insert(make_pair(argument, _c));
 	}
-	if (expr.item && expr.item->type() == Operation && (
-		expr.item->instruction() == Instruction::SLOAD ||
-		expr.item->instruction() == Instruction::MLOAD ||
-		expr.item->instruction() == Instruction::KECCAK256
-	))
+	if (expr.item && expr.item->type() == Operation &&
+		(expr.item->instruction() == Instruction::SLOAD ||
+		 expr.item->instruction() == Instruction::MLOAD ||
+		 expr.item->instruction() == Instruction::KECCAK256))
 	{
 		// this loads an unknown value from storage or memory and thus, in addition to its
 		// arguments, depends on all store operations to addresses where we do not know that
 		// they are different that occur before this load
 		StoreOperation::Target target = expr.item->instruction() == Instruction::SLOAD ?
-			StoreOperation::Storage : StoreOperation::Memory;
+			  StoreOperation::Storage :
+			  StoreOperation::Memory;
 		Id slotToLoadFrom = expr.arguments.at(0);
 		for (auto const& p: m_storeOperations)
 		{
@@ -257,7 +265,8 @@ void CSECodeGenerator::addDependencies(Id _c)
 				knownToBeIndependent = m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom);
 				break;
 			case Instruction::MLOAD:
-				knownToBeIndependent = m_expressionClasses.knownToBeDifferentBy32(slot, slotToLoadFrom);
+				knownToBeIndependent =
+					m_expressionClasses.knownToBeDifferentBy32(slot, slotToLoadFrom);
 				break;
 			case Instruction::KECCAK256:
 			{
@@ -271,8 +280,8 @@ void CSECodeGenerator::addDependencies(Id _c)
 				else if (o)
 				{
 					// We could get problems here if both *o and *l are larger than 2**254
-					// but it is probably ok for the optimizer to produce wrong code for such cases
-					// which cannot be executed anyway because of the non-payable price.
+					// but it is probably ok for the optimizer to produce wrong code for such
+					// cases which cannot be executed anyway because of the non-payable price.
 					if (u2s(*o) <= -32)
 						knownToBeIndependent = true;
 					else if (l && u2s(*o) >= 0 && *o >= *l)
@@ -334,8 +343,8 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		generateClassElement(arg);
 
 	SourceLocation const& itemLocation = expr.item->location();
-	// The arguments are somewhere on the stack now, so it remains to move them at the correct place.
-	// This is quite difficult as sometimes, the values also have to removed in this process
+	// The arguments are somewhere on the stack now, so it remains to move them at the correct
+	// place. This is quite difficult as sometimes, the values also have to removed in this process
 	// (if canBeRemoved() returns true) and the two arguments can be equal. For now, this is
 	// implemented for every single case for combinations of up to two arguments manually.
 	if (arguments.size() == 1)
@@ -393,14 +402,15 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 			"Expected arguments not present."
 		);
 
-	while (SemanticInformation::isCommutativeOperation(*expr.item) &&
-			!m_generatedItems.empty() &&
-			m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
+	while (SemanticInformation::isCommutativeOperation(*expr.item) && !m_generatedItems.empty() &&
+		   m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
 		// this will not append a swap but remove the one that is already there
 		appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
-		m_classPositions[m_stack[m_stackHeight - static_cast<int>(i)]].erase(m_stackHeight - static_cast<int>(i));
+		m_classPositions[m_stack[m_stackHeight - static_cast<int>(i)]].erase(
+			m_stackHeight - static_cast<int>(i)
+		);
 		m_stack.erase(m_stackHeight - static_cast<int>(i));
 	}
 	appendItem(*expr.item);
@@ -416,7 +426,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 			OptimizerException,
 			"Invalid number of return values."
 		);
-		m_classPositions[_c]; // ensure it is created to mark the expression as generated
+		m_classPositions[_c];  // ensure it is created to mark the expression as generated
 	}
 }
 
@@ -438,8 +448,10 @@ bool CSECodeGenerator::canBeRemoved(Id _element, Id _result, int _fromPosition)
 
 	bool haveCopy = m_classPositions.at(_element).size() > 1;
 	if (m_finalClasses.count(_element))
-		// It is part of the target stack. It can be removed if it is a copy that is not in the target position.
-		return haveCopy && (!m_targetStack.count(_fromPosition) || m_targetStack[_fromPosition] != _element);
+		// It is part of the target stack. It can be removed if it is a copy that is not in the
+		// target position.
+		return haveCopy &&
+			(!m_targetStack.count(_fromPosition) || m_targetStack[_fromPosition] != _element);
 	else if (!haveCopy)
 	{
 		// Can be removed unless it is needed by a class that has not been computed yet.
@@ -470,7 +482,11 @@ void CSECodeGenerator::appendDup(int _fromPosition, SourceLocation const& _locat
 {
 	assertThrow(_fromPosition != c_invalidPosition, OptimizerException, "");
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
+	assertThrow(
+		instructionNum <= 16,
+		StackTooDeepException,
+		"Stack too deep, try removing local variables."
+	);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(dupInstruction(static_cast<unsigned>(instructionNum)), _location));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
@@ -483,7 +499,11 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 	if (_fromPosition == m_stackHeight)
 		return;
 	int instructionNum = m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
+	assertThrow(
+		instructionNum <= 16,
+		StackTooDeepException,
+		"Stack too deep, try removing local variables."
+	);
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(swapInstruction(static_cast<unsigned>(instructionNum)), _location));
 

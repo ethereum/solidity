@@ -35,7 +35,6 @@ using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
-
 BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 
 SemVerMatchExpression parseExpression(string const& _input)
@@ -112,10 +111,10 @@ BOOST_AUTO_TEST_CASE(positive_range)
 		{"*", "1.2.3"},
 		{"2", "2.1.2"},
 		{"2.3", "2.3.1"},
-		{"~2.4", "2.4.0"}, // >=2.4.0 <2.5.0
+		{"~2.4", "2.4.0"},	// >=2.4.0 <2.5.0
 		{"~2.4", "2.4.5"},
-		{"~1", "1.2.3"}, // >=1.0.0 <2.0.0
-		{"~1.0", "1.0.2"}, // >=1.0.0 <1.1.0,
+		{"~1", "1.2.3"},  // >=1.0.0 <2.0.0
+		{"~1.0", "1.0.2"},	// >=1.0.0 <1.1.0,
 		{"~ 1.0", "1.0.2"},
 		{"~ 1.0.3", "1.0.12"},
 		{">=1", "1.0.0"},
@@ -200,10 +199,10 @@ BOOST_AUTO_TEST_CASE(negative_range)
 		{"1.2.* || 2.*", "1.1.3"},
 		{"2", "1.1.2"},
 		{"2.3", "2.4.1"},
-		{"~2.4", "2.5.0"}, // >=2.4.0 <2.5.0
+		{"~2.4", "2.5.0"},	// >=2.4.0 <2.5.0
 		{"~2.4", "2.3.9"},
-		{"~1", "0.2.3"}, // >=1.0.0 <2.0.0
-		{"~1.0", "1.1.0"}, // >=1.0.0 <1.1.0
+		{"~1", "0.2.3"},  // >=1.0.0 <2.0.0
+		{"~1.0", "1.1.0"},	// >=1.0.0 <1.1.0
 		{"<1", "1.0.0"},
 		{">=1.2", "1.1.1"},
 		{"=0.7.x", "0.8.2"},
@@ -230,11 +229,11 @@ BOOST_AUTO_TEST_CASE(negative_range)
 		BOOST_CHECK_MESSAGE(
 			!expression.matches(version),
 			"Version \"" + t.second + "\" did satisfy expression \"" + t.first + "\" " +
-			"(although it should not)"
+				"(although it should not)"
 		);
 	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

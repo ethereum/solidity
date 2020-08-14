@@ -45,10 +45,8 @@ void NowKeyword::endVisit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
 
-	if (
-		MagicVariableDeclaration const* magicVar =
-		dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration)
-	)
+	if (MagicVariableDeclaration const* magicVar =
+			dynamic_cast<MagicVariableDeclaration const*>(annotation.referencedDeclaration))
 		if (magicVar->type()->category() == Type::Category::Integer)
 		{
 			solAssert(_identifier.name() == "now", "");
@@ -64,15 +62,16 @@ void ConstructorVisibility::endVisit(ContractDefinition const& _contract)
 {
 	if (!_contract.abstract())
 		for (FunctionDefinition const* function: _contract.definedFunctions())
-			if (
-				function->isConstructor() &&
-				!function->noVisibilitySpecified() &&
-				function->visibility() == Visibility::Internal
-			)
+			if (function->isConstructor() && !function->noVisibilitySpecified() &&
+				function->visibility() == Visibility::Internal)
 				m_changes.emplace_back(
 					UpgradeChange::Level::Safe,
 					_contract.location(),
-					SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
+					SourceTransform::insertBeforeKeyword(
+						_contract.location(),
+						"contract",
+						"abstract"
+					)
 				);
 
 	for (FunctionDefinition const* function: _contract.definedFunctions())

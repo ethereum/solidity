@@ -32,14 +32,12 @@
 
 namespace solidity::langutil
 {
-
 class CharStream;
 
 }
 
 namespace solidity::yul
 {
-
 struct AsmAnalysisInfo;
 struct Dialect;
 struct CodeWeights;
@@ -48,14 +46,12 @@ struct CodeWeights;
 
 namespace std
 {
-
 std::ostream& operator<<(std::ostream& _outputStream, solidity::langutil::ErrorList const& _errors);
 
 }
 
 namespace solidity::phaser
 {
-
 /**
  * Class representing parsed and analysed Yul program that we can apply optimisations to.
  * The program is already disambiguated and has several prerequisite optimiser steps applied to it
@@ -80,20 +76,18 @@ public:
 	static std::variant<Program, langutil::ErrorList> load(langutil::CharStream& _sourceCode);
 	void optimise(std::vector<std::string> const& _optimisationSteps);
 
-	size_t codeSize(yul::CodeWeights const& _weights) const { return computeCodeSize(*m_ast, _weights); }
+	size_t codeSize(yul::CodeWeights const& _weights) const
+	{
+		return computeCodeSize(*m_ast, _weights);
+	}
 	yul::Block const& ast() const { return *m_ast; }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Program const& _program);
 	std::string toJson() const;
 
 private:
-	Program(
-		yul::Dialect const& _dialect,
-		std::unique_ptr<yul::Block> _ast
-	):
-		m_ast(std::move(_ast)),
-		m_dialect{_dialect},
-		m_nameDispenser(_dialect, *m_ast, {})
+	Program(yul::Dialect const& _dialect, std::unique_ptr<yul::Block> _ast):
+		m_ast(std::move(_ast)), m_dialect{_dialect}, m_nameDispenser(_dialect, *m_ast, {})
 	{}
 
 	static std::variant<std::unique_ptr<yul::Block>, langutil::ErrorList> parseObject(

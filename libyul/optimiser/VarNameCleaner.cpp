@@ -35,9 +35,7 @@ VarNameCleaner::VarNameCleaner(
 	Dialect const& _dialect,
 	set<YulString> _namesToKeep
 ):
-	m_dialect{_dialect},
-	m_namesToKeep{std::move(_namesToKeep)},
-	m_translatedNames{}
+	m_dialect{_dialect}, m_namesToKeep{std::move(_namesToKeep)}, m_translatedNames{}
 {
 	for (auto const& statement: _ast.statements)
 		if (holds_alternative<FunctionDefinition>(statement))

@@ -61,39 +61,45 @@ string inlinableFunctions(string const& _source)
 
 BOOST_AUTO_TEST_SUITE(YulInlinableFunctionFilter)
 
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	BOOST_CHECK_EQUAL(inlinableFunctions("{ }"), "");
-}
+BOOST_AUTO_TEST_CASE(smoke_test) { BOOST_CHECK_EQUAL(inlinableFunctions("{ }"), ""); }
 
 BOOST_AUTO_TEST_CASE(simple)
 {
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := 2:u256 } }"), "f");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{"
-		"function g(a:u256) -> b:u256 { b := a }"
-		"function f() -> x:u256 { x := g(2:u256) }"
-	"}"), "g,f");
+	BOOST_CHECK_EQUAL(
+		inlinableFunctions("{"
+						   "function g(a:u256) -> b:u256 { b := a }"
+						   "function f() -> x:u256 { x := g(2:u256) }"
+						   "}"),
+		"g,f"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(simple_inside_structures)
 {
-	BOOST_CHECK_EQUAL(inlinableFunctions("{"
-		"switch 2:u256 "
-		"case 2:u256 {"
-			"function g(a:u256) -> b:u256 { b := a }"
-			"function f() -> x:u256 { x := g(2:u256) }"
-		"}"
-	"}"), "g,f");
-	BOOST_CHECK_EQUAL(inlinableFunctions("{"
-		"function g(a:u256) -> b:u256 { b := a }"
-		"for {"
-		"} true {"
-			"function f() -> x:u256 { x := g(2:u256) }"
-		"}"
-		"{"
-			"function h() -> y:u256 { y := 2:u256 }"
-		"}"
-	"}"), "h,g,f");
+	BOOST_CHECK_EQUAL(
+		inlinableFunctions("{"
+						   "switch 2:u256 "
+						   "case 2:u256 {"
+						   "function g(a:u256) -> b:u256 { b := a }"
+						   "function f() -> x:u256 { x := g(2:u256) }"
+						   "}"
+						   "}"),
+		"g,f"
+	);
+	BOOST_CHECK_EQUAL(
+		inlinableFunctions("{"
+						   "function g(a:u256) -> b:u256 { b := a }"
+						   "for {"
+						   "} true {"
+						   "function f() -> x:u256 { x := g(2:u256) }"
+						   "}"
+						   "{"
+						   "function h() -> y:u256 { y := 2:u256 }"
+						   "}"
+						   "}"),
+		"h,g,f"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(negative)
@@ -103,8 +109,12 @@ BOOST_AUTO_TEST_CASE(negative)
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := f() } }"), "");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256 { x := x } }"), "");
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f() -> x:u256, y:u256 { x := 2:u256 } }"), "");
-  BOOST_CHECK_EQUAL(inlinableFunctions(
-    "{ function g() -> x:u256, y:u256 {} function f(y:u256) -> x:u256 { x,y := g() } }"), "");
+	BOOST_CHECK_EQUAL(
+		inlinableFunctions(
+			"{ function g() -> x:u256, y:u256 {} function f(y:u256) -> x:u256 { x,y := g() } }"
+		),
+		""
+	);
 	BOOST_CHECK_EQUAL(inlinableFunctions("{ function f(y:u256) -> x:u256 { y := 2:u256 } }"), "");
 }
 

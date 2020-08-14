@@ -49,8 +49,7 @@ class ConstantOptimiser: public ASTModifier
 {
 public:
 	ConstantOptimiser(EVMDialect const& _dialect, GasMeter const& _meter):
-		m_dialect(_dialect),
-		m_meter(_meter)
+		m_dialect(_dialect), m_meter(_meter)
 	{}
 
 	void visit(Expression& _e) override;
@@ -77,10 +76,7 @@ public:
 		langutil::SourceLocation _location,
 		std::map<u256, Representation>& _cache
 	):
-		m_dialect(_dialect),
-		m_meter(_meter),
-		m_location(std::move(_location)),
-		m_cache(_cache)
+		m_dialect(_dialect), m_meter(_meter), m_location(std::move(_location)), m_cache(_cache)
 	{}
 
 	/// @returns a cheaper representation for the number than its representation
@@ -94,7 +90,11 @@ private:
 
 	Representation represent(u256 const& _value) const;
 	Representation represent(YulString _instruction, Representation const& _arg) const;
-	Representation represent(YulString _instruction, Representation const& _arg1, Representation const& _arg2) const;
+	Representation represent(
+		YulString _instruction,
+		Representation const& _arg1,
+		Representation const& _arg2
+	) const;
 
 	Representation min(Representation _a, Representation _b);
 

@@ -47,7 +47,7 @@
 
 /// Output operator for arbitrary two-element tuples.
 /// Necessary to make BOOST_TEST() work with such tuples.
-template<typename T1, typename T2>
+template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& _output, std::tuple<T1, T2> const& _tuple)
 {
 	_output << "(" << std::get<0>(_tuple) << ", " << std::get<1>(_tuple) << ")";
@@ -56,20 +56,22 @@ std::ostream& operator<<(std::ostream& _output, std::tuple<T1, T2> const& _tuple
 
 namespace boost::test_tools::tt_detail
 {
-
 // Boost won't find find the << operator unless we put it in the std namespace which is illegal.
-// The recommended solution is to overload print_log_value<> struct and make it use our global operator.
-template<typename T1,typename T2>
+// The recommended solution is to overload print_log_value<> struct and make it use our global
+// operator.
+template <typename T1, typename T2>
 struct print_log_value<std::tuple<T1, T2>>
 {
-	void operator()(std::ostream& _output, std::tuple<T1, T2> const& _tuple) { ::operator<<(_output, _tuple); }
+	void operator()(std::ostream& _output, std::tuple<T1, T2> const& _tuple)
+	{
+		::operator<<(_output, _tuple);
+	}
 };
 
 }
 
 namespace solidity::phaser::test
 {
-
 /**
  * Fitness metric that only takes into account the number of optimisation steps in the chromosome.
  * Recommended for use in tests because it's much faster than ProgramSize metric and it's very
@@ -87,7 +89,8 @@ public:
 /// Mutation that always replaces the whole chromosome with the one specified in the parameter.
 std::function<Mutation> wholeChromosomeReplacement(Chromosome _newChromosome);
 
-/// Mutation that always replaces the optimisation step at position @a _geneIndex with @a _geneValue.
+/// Mutation that always replaces the optimisation step at position @a _geneIndex with @a
+/// _geneValue.
 ///
 /// The chromosome must be long enough for this position to exist.
 std::function<Mutation> geneSubstitution(size_t _geneIndex, std::string _geneValue);
@@ -134,7 +137,8 @@ private:
 
 // STRING UTILITIES
 
-/// Returns the input string with all the whitespace characters (spaces, line endings, etc.) removed.
+/// Returns the input string with all the whitespace characters (spaces, line endings, etc.)
+/// removed.
 std::string stripWhitespace(std::string const& input);
 
 /// Counts the number of times one strinng can be found inside another. Only non-overlapping

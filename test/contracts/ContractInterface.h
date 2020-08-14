@@ -25,7 +25,6 @@
 
 namespace solidity::test
 {
-
 class ContractInterface
 {
 public:
@@ -37,7 +36,8 @@ protected:
 	template <class... Args>
 	bytes const& call(std::string const& _sig, Args const&... _arguments)
 	{
-		auto const& ret = m_framework.callContractFunctionWithValue(_sig, m_nextValue, _arguments...);
+		auto const& ret =
+			m_framework.callContractFunctionWithValue(_sig, m_nextValue, _arguments...);
 		m_nextValue = 0;
 		return ret;
 	}
@@ -49,17 +49,33 @@ protected:
 
 	void callStringAddress(std::string const& _name, std::string const& _arg1, u160 const& _arg2)
 	{
-		BOOST_CHECK(call(_name + "(string,address)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
+		BOOST_CHECK(
+			call(_name + "(string,address)", u256(0x40), _arg2, _arg1.length(), _arg1).empty()
+		);
 	}
 
-	void callStringAddressBool(std::string const& _name, std::string const& _arg1, u160 const& _arg2, bool _arg3)
+	void callStringAddressBool(
+		std::string const& _name,
+		std::string const& _arg1,
+		u160 const& _arg2,
+		bool _arg3
+	)
 	{
-		BOOST_CHECK(call(_name + "(string,address,bool)", u256(0x60), _arg2, _arg3, _arg1.length(), _arg1).empty());
+		BOOST_CHECK(
+			call(_name + "(string,address,bool)", u256(0x60), _arg2, _arg3, _arg1.length(), _arg1)
+				.empty()
+		);
 	}
 
-	void callStringBytes32(std::string const& _name, std::string const& _arg1, util::h256 const& _arg2)
+	void callStringBytes32(
+		std::string const& _name,
+		std::string const& _arg1,
+		util::h256 const& _arg2
+	)
 	{
-		BOOST_CHECK(call(_name + "(string,bytes32)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
+		BOOST_CHECK(
+			call(_name + "(string,bytes32)", u256(0x40), _arg2, _arg1.length(), _arg1).empty()
+		);
 	}
 
 	u160 callStringReturnsAddress(std::string const& _name, std::string const& _arg)
@@ -93,5 +109,4 @@ private:
 	ExecutionFramework& m_framework;
 };
 
-} // end namespaces
-
+}  // end namespaces

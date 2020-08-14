@@ -42,10 +42,7 @@ void ExpressionInliner::run(OptimiserStepContext& _context, Block& _ast)
 	inliner(_ast);
 }
 
-void ExpressionInliner::operator()(FunctionDefinition& _fun)
-{
-	ASTModifier::operator()(_fun);
-}
+void ExpressionInliner::operator()(FunctionDefinition& _fun) { ASTModifier::operator()(_fun); }
 
 void ExpressionInliner::visit(Expression& _expression)
 {
@@ -75,6 +72,7 @@ void ExpressionInliner::visit(Expression& _expression)
 			substitutions[paraName] = &arg;
 		}
 
-		_expression = Substitution(substitutions).translate(*std::get<Assignment>(fun.body.statements.front()).value);
+		_expression = Substitution(substitutions)
+						  .translate(*std::get<Assignment>(fun.body.statements.front()).value);
 	}
 }

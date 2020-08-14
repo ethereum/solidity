@@ -31,7 +31,7 @@
 
 namespace solidity::util
 {
-struct Exception; // forward
+struct Exception;  // forward
 }
 
 namespace solidity::langutil
@@ -42,9 +42,7 @@ class Scanner;
 class SourceReferenceFormatter
 {
 public:
-	explicit SourceReferenceFormatter(std::ostream& _stream):
-		m_stream(_stream)
-	{}
+	explicit SourceReferenceFormatter(std::ostream& _stream): m_stream(_stream) {}
 
 	virtual ~SourceReferenceFormatter() = default;
 
@@ -53,7 +51,10 @@ public:
 	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
 
 	virtual void printSourceLocation(SourceLocation const* _location);
-	virtual void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
+	virtual void printExceptionInformation(
+		util::Exception const& _exception,
+		std::string const& _category
+	);
 	virtual void printErrorInformation(Error const& _error);
 
 	static std::string formatErrorInformation(Error const& _error)

@@ -40,7 +40,6 @@ namespace fs = boost::filesystem;
 
 namespace
 {
-
 int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 {
 	if (_it == _end || !isdigit(*_it))
@@ -62,17 +61,24 @@ CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion
 	m_sources(m_reader.sources().sources),
 	m_expectations(parseExpectations(m_reader.stream())),
 	m_evmVersion(_evmVersion)
-{
-}
+{}
 
-TestCase::TestResult CommonSyntaxTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult CommonSyntaxTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted
+)
 {
 	parseAndAnalyze();
 
 	return conclude(_stream, _linePrefix, _formatted);
 }
 
-TestCase::TestResult CommonSyntaxTest::conclude(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult CommonSyntaxTest::conclude(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted
+)
 {
 	if (m_expectations == m_errorList)
 		return TestResult::Success;
@@ -81,7 +87,11 @@ TestCase::TestResult CommonSyntaxTest::conclude(ostream& _stream, string const& 
 	return TestResult::Failure;
 }
 
-void CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& _linePrefix, bool _formatted)
+void CommonSyntaxTest::printExpectationAndError(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted
+)
 {
 	string nextIndentLevel = _linePrefix + "  ";
 	AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
@@ -90,7 +100,8 @@ void CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& 
 	printErrorList(_stream, m_errorList, nextIndentLevel, _formatted);
 }
 
-void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
+void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted)
+	const
 {
 	if (m_sources.empty())
 		return;
@@ -104,7 +115,8 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 				continue;
 
 			if (outputSourceNames)
-				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name << " ====" << formatting::RESET << endl;
+				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name
+						<< " ====" << formatting::RESET << endl;
 			vector<char const*> sourceFormatting(source.length(), formatting::RESET);
 			for (auto const& error: m_errorList)
 				if (error.sourceName == name && error.locationStart >= 0 && error.locationEnd >= 0)
@@ -116,7 +128,8 @@ void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, 
 						if (isWarning)
 						{
 							if (sourceFormatting[static_cast<size_t>(i)] == formatting::RESET)
-								sourceFormatting[static_cast<size_t>(i)] = formatting::ORANGE_BACKGROUND_256;
+								sourceFormatting[static_cast<size_t>(i)] =
+									formatting::ORANGE_BACKGROUND_256;
 						}
 						else
 							sourceFormatting[static_cast<size_t>(i)] = formatting::RED_BACKGROUND;
@@ -162,7 +175,11 @@ void CommonSyntaxTest::printErrorList(
 		for (auto const& error: _errorList)
 		{
 			{
-				AnsiColorized scope(_stream, _formatted, {BOLD, (error.type == "Warning") ? YELLOW : RED});
+				AnsiColorized scope(
+					_stream,
+					_formatted,
+					{BOLD, (error.type == "Warning") ? YELLOW : RED}
+				);
 				_stream << _linePrefix << error.type;
 				if (error.errorId.has_value())
 					_stream << ' ' << error.errorId->error;
@@ -203,7 +220,8 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 		skipSlashes(it, line.end());
 		skipWhitespace(it, line.end());
 
-		if (it == line.end()) continue;
+		if (it == line.end())
+			continue;
 
 		auto typeBegin = it;
 		while (it != line.end() && isalpha(*it))
@@ -214,7 +232,8 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 
 		optional<ErrorId> errorId;
 		if (it != line.end() && isdigit(*it))
-			errorId = ErrorId{static_cast<unsigned long long>(parseUnsignedInteger(it, line.end()))};
+			errorId =
+				ErrorId{static_cast<unsigned long long>(parseUnsignedInteger(it, line.end()))};
 
 		expect(it, line.end(), ':');
 		skipWhitespace(it, line.end());
@@ -250,8 +269,7 @@ vector<SyntaxTestError> CommonSyntaxTest::parseExpectations(istream& _stream)
 			move(errorMessage),
 			move(sourceName),
 			locationStart,
-			locationEnd
-		});
+			locationEnd});
 	}
 	return expectations;
 }

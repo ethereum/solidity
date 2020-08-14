@@ -52,19 +52,19 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 class BMC: public SMTEncoder
 {
 public:
-	BMC(
-		smt::EncodingContext& _context,
+	BMC(smt::EncodingContext& _context,
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers
-	);
+		smtutil::SMTSolverChoice _enabledSolvers);
 
-	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTarget::Type>> _solvedTargets);
+	void analyze(
+		SourceUnit const& _sources,
+		std::map<ASTNode const*, std::set<VerificationTarget::Type>> _solvedTargets
+	);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
@@ -128,7 +128,10 @@ private:
 	};
 
 	void checkVerificationTargets(smtutil::Expression const& _constraints);
-	void checkVerificationTarget(BMCVerificationTarget& _target, smtutil::Expression const& _constraints = smtutil::Expression(true));
+	void checkVerificationTarget(
+		BMCVerificationTarget& _target,
+		smtutil::Expression const& _constraints = smtutil::Expression(true)
+	);
 	void checkConstantCondition(BMCVerificationTarget& _target);
 	void checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression const& _constraints);
 	void checkOverflow(BMCVerificationTarget& _target, smtutil::Expression const& _constraints);
@@ -148,7 +151,8 @@ private:
 	void checkCondition(
 		smtutil::Expression _condition,
 		std::vector<CallStackEntry> const& _callStack,
-		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const& _modelExpressions,
+		std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> const&
+			_modelExpressions,
 		langutil::SourceLocation const& _location,
 		langutil::ErrorId _errorHappens,
 		langutil::ErrorId _errorMightHappen,
@@ -164,8 +168,9 @@ private:
 		smtutil::Expression const& _value,
 		std::vector<CallStackEntry> const& _callStack
 	);
-	std::pair<smtutil::CheckResult, std::vector<std::string>>
-	checkSatisfiableAndGenerateModel(std::vector<smtutil::Expression> const& _expressionsToEvaluate);
+	std::pair<smtutil::CheckResult, std::vector<std::string>> checkSatisfiableAndGenerateModel(
+		std::vector<smtutil::Expression> const& _expressionsToEvaluate
+	);
 
 	smtutil::CheckResult checkSatisfiable();
 	//@}

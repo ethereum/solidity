@@ -43,24 +43,28 @@ using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace boost::unit_test;
 
-SMTCheckerJSONTest::SMTCheckerJSONTest(string const& _filename, langutil::EVMVersion _evmVersion)
-: SyntaxTest(_filename, _evmVersion)
+SMTCheckerJSONTest::SMTCheckerJSONTest(string const& _filename, langutil::EVMVersion _evmVersion):
+	SyntaxTest(_filename, _evmVersion)
 {
 	if (!boost::algorithm::ends_with(_filename, ".sol"))
-		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
+		BOOST_THROW_EXCEPTION(
+			runtime_error("Invalid test contract file name: \"" + _filename + "\".")
+		);
 
 	string jsonFilename = _filename.substr(0, _filename.size() - 4) + ".json";
-	if (
-		!jsonParseStrict(readFileAsString(jsonFilename), m_smtResponses) ||
-		!m_smtResponses.isObject()
-	)
+	if (!jsonParseStrict(readFileAsString(jsonFilename), m_smtResponses) ||
+		!m_smtResponses.isObject())
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid JSON file."));
 
 	if (ModelChecker::availableSolvers().none())
 		m_shouldRun = false;
 }
 
-TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult SMTCheckerJSONTest::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted
+)
 {
 	StandardCompiler compiler;
 
@@ -75,16 +79,16 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 	// This is the list of responses provided in the test
 	string auxInput("auxiliaryInput");
 	if (!m_smtResponses.isMember(auxInput))
-		BOOST_THROW_EXCEPTION(runtime_error("JSON file does not contain field \"auxiliaryInput\"."));
+		BOOST_THROW_EXCEPTION(
+			runtime_error("JSON file does not contain field \"auxiliaryInput\".")
+		);
 
 	vector<string> inHashes = hashesFromJson(m_smtResponses, auxInput, "smtlib2responses");
 
 	// Ensure that the provided list matches the requested one
 	if (outHashes != inHashes)
 		BOOST_THROW_EXCEPTION(runtime_error(
-			"SMT query hashes differ: " +
-			boost::algorithm::join(outHashes, ", ") +
-			" x " +
+			"SMT query hashes differ: " + boost::algorithm::join(outHashes, ", ") + " x " +
 			boost::algorithm::join(inHashes, ", ")
 		));
 
@@ -97,26 +101,18 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 		Json::Value const& errors = endResult["errors"];
 		for (auto const& error: errors)
 		{
-			if (
-				!error.isMember("type") ||
-				!error["type"].isString()
-			)
+			if (!error.isMember("type") || !error["type"].isString())
 				BOOST_THROW_EXCEPTION(runtime_error("Error must have a type."));
-			if (
-				!error.isMember("message") ||
-				!error["message"].isString()
-			)
+			if (!error.isMember("message") || !error["message"].isString())
 				BOOST_THROW_EXCEPTION(runtime_error("Error must have a message."));
 			if (!error.isMember("sourceLocation"))
 				continue;
 			Json::Value const& location = error["sourceLocation"];
-			if (
-				!location.isMember("start") ||
-				!location["start"].isInt() ||
-				!location.isMember("end") ||
-				!location["end"].isInt()
-			)
-				BOOST_THROW_EXCEPTION(runtime_error("Error must have a SourceLocation with start and end."));
+			if (!location.isMember("start") || !location["start"].isInt() ||
+				!location.isMember("end") || !location["end"].isInt())
+				BOOST_THROW_EXCEPTION(
+					runtime_error("Error must have a SourceLocation with start and end.")
+				);
 			size_t start = location["start"].asUInt();
 			size_t end = location["end"].asUInt();
 			std::string sourceName;
@@ -128,19 +124,24 @@ TestCase::TestResult SMTCheckerJSONTest::run(ostream& _stream, string const& _li
 				end -= preamble.size();
 			m_errorList.emplace_back(SyntaxTestError{
 				error["type"].asString(),
-				error["errorId"].isNull() ?  nullopt : optional<langutil::ErrorId>(langutil::ErrorId{error["errorId"].asUInt()}),
+				error["errorId"].isNull() ?
+					  nullopt :
+					  optional<langutil::ErrorId>(langutil::ErrorId{error["errorId"].asUInt()}),
 				error["message"].asString(),
 				sourceName,
 				static_cast<int>(start),
-				static_cast<int>(end)
-			});
+				static_cast<int>(end)});
 		}
 	}
 
 	return conclude(_stream, _linePrefix, _formatted);
 }
 
-vector<string> SMTCheckerJSONTest::hashesFromJson(Json::Value const& _jsonObj, string const& _auxInput, string const& _smtlib)
+vector<string> SMTCheckerJSONTest::hashesFromJson(
+	Json::Value const& _jsonObj,
+	string const& _auxInput,
+	string const& _smtlib
+)
 {
 	vector<string> hashes;
 	Json::Value const& auxInputs = _jsonObj[_auxInput];

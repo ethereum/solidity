@@ -29,7 +29,6 @@
 
 namespace solidity::frontend
 {
-
 class IRGenerationContext;
 class YulUtilFunctions;
 
@@ -41,8 +40,7 @@ class IRGeneratorForStatements: public ASTConstVisitor
 {
 public:
 	IRGeneratorForStatements(IRGenerationContext& _context, YulUtilFunctions& _utils):
-		m_context(_context),
-		m_utils(_utils)
+		m_context(_context), m_utils(_utils)
 	{}
 
 	std::string code() const;
@@ -119,22 +117,33 @@ private:
 	/// be empty).
 	static std::string freeMemory();
 
-	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
-	/// converted to type @a _to.
+	/// Generates the required conversion code and @returns an IRVariable referring to the value of
+	/// @a _variable converted to type @a _to.
 	IRVariable convert(IRVariable const& _variable, Type const& _to);
 
 	/// @returns a Yul expression representing the current value of @a _expression,
 	/// converted to type @a _to if it does not yet have that type.
-	/// If @a _forceCleanup is set to true, it also cleans the value, in case it already has type @a _to.
-	std::string expressionAsType(Expression const& _expression, Type const& _to, bool _forceCleanup = false);
+	/// If @a _forceCleanup is set to true, it also cleans the value, in case it already has type @a
+	/// _to.
+	std::string expressionAsType(
+		Expression const& _expression,
+		Type const& _to,
+		bool _forceCleanup = false
+	);
 
 	/// @returns an output stream that can be used to define @a _var using a function call or
 	/// single stack slot expression.
 	std::ostream& define(IRVariable const& _var);
 	/// Defines @a _var using the value of @a _value while performing type conversions, if required.
-	void define(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, true); }
+	void define(IRVariable const& _var, IRVariable const& _value)
+	{
+		declareAssign(_var, _value, true);
+	}
 	/// Assigns @a _var to the value of @a _value while performing type conversions, if required.
-	void assign(IRVariable const& _var, IRVariable const& _value) { declareAssign(_var, _value, false); }
+	void assign(IRVariable const& _var, IRVariable const& _value)
+	{
+		declareAssign(_var, _value, false);
+	}
 	/// Declares variable @a _var.
 	void declare(IRVariable const& _var);
 
@@ -159,20 +168,24 @@ private:
 	/// @returns code to perform the given shift operation.
 	/// The operation itself will be performed in the type of the value,
 	/// while the amount to shift can have its own type.
-	std::string shiftOperation(langutil::Token _op, IRVariable const& _value, IRVariable const& _shiftAmount);
+	std::string shiftOperation(
+		langutil::Token _op,
+		IRVariable const& _value,
+		IRVariable const& _shiftAmount
+	);
 
 	/// Assigns the value of @a _value to the lvalue @a _lvalue.
 	void writeToLValue(IRLValue const& _lvalue, IRVariable const& _value);
 	/// @returns a fresh IR variable containing the value of the lvalue @a _lvalue.
 	IRVariable readFromLValue(IRLValue const& _lvalue);
 
-	/// Stores the given @a _lvalue in m_currentLValue, if it will be written to (willBeWrittenTo). Otherwise
-	/// defines the expression @a _expression by reading the value from @a _lvalue.
+	/// Stores the given @a _lvalue in m_currentLValue, if it will be written to (willBeWrittenTo).
+	/// Otherwise defines the expression @a _expression by reading the value from @a _lvalue.
 	void setLValue(Expression const& _expression, IRLValue _lvalue);
 	void generateLoop(
 		Statement const& _body,
 		Expression const* _conditionExpression,
-		Statement const*  _initExpression = nullptr,
+		Statement const* _initExpression = nullptr,
 		ExpressionStatement const* _loopExpression = nullptr,
 		bool _isDoWhile = false
 	);

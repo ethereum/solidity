@@ -44,7 +44,11 @@ bool JumpdestRemover::optimise(set<size_t> const& _tagsReferencedFromOutside)
 			if (_item.type() != Tag)
 				return false;
 			auto asmIdAndTag = _item.splitForeignPushTag();
-			assertThrow(asmIdAndTag.first == numeric_limits<size_t>::max(), OptimizerException, "Sub-assembly tag used as label.");
+			assertThrow(
+				asmIdAndTag.first == numeric_limits<size_t>::max(),
+				OptimizerException,
+				"Sub-assembly tag used as label."
+			);
 			size_t tag = asmIdAndTag.second;
 			return !references.count(tag);
 		}

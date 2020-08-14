@@ -22,7 +22,6 @@
 
 namespace solidity::yul
 {
-
 struct OptimiserStepContext;
 
 /**
@@ -37,7 +36,8 @@ struct OptimiserStepContext;
  *
  * Requirements:
  * - The Disambiguator must be run upfront.
- * - To avoid unnecessary rewrite, it is recommended to run this rewriter after StructuralSimplifier.
+ * - To avoid unnecessary rewrite, it is recommended to run this rewriter after
+ * StructuralSimplifier.
  * - Only works for dialects with a builtin boolean negation function.
  */
 class ForLoopConditionIntoBody: public ASTModifier

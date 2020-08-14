@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -37,7 +37,6 @@ using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
-
 BOOST_FIXTURE_TEST_SUITE(SolidityNameAndTypeResolution, AnalysisFramework)
 
 BOOST_AUTO_TEST_CASE(function_no_implementation)
@@ -167,7 +166,10 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			auto functions = contract->definedFunctions();
 			if (functions.empty())
 				continue;
-			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address,address[])", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL(
+				"boo(uint256,bool,bytes8,bool[2],uint256[],address,address[])",
+				functions[0]->externalSignature()
+			);
 		}
 }
 
@@ -219,9 +221,15 @@ BOOST_AUTO_TEST_CASE(external_struct_signatures)
 			auto functions = contract->definedFunctions();
 			BOOST_REQUIRE(!functions.empty());
 			BOOST_CHECK_EQUAL("f(uint8,uint256,(uint256))", functions[0]->externalSignature());
-			BOOST_CHECK_EQUAL("g(address,((bytes32,address,(uint256)[])[2][],uint256))", functions[1]->externalSignature());
+			BOOST_CHECK_EQUAL(
+				"g(address,((bytes32,address,(uint256)[])[2][],uint256))",
+				functions[1]->externalSignature()
+			);
 			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
-			BOOST_CHECK_EQUAL("i(((bytes32,address,(uint256)[])[2][],uint256)[])", functions[3]->externalSignature());
+			BOOST_CHECK_EQUAL(
+				"i(((bytes32,address,(uint256)[])[2][],uint256)[])",
+				functions[3]->externalSignature()
+			);
 		}
 }
 
@@ -249,7 +257,10 @@ BOOST_AUTO_TEST_CASE(external_struct_signatures_in_libraries)
 		{
 			auto functions = contract->definedFunctions();
 			BOOST_REQUIRE(!functions.empty());
-			BOOST_CHECK_EQUAL("f(Test.ActionChoices,uint256,Test.Simple)", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL(
+				"f(Test.ActionChoices,uint256,Test.Simple)",
+				functions[0]->externalSignature()
+			);
 			BOOST_CHECK_EQUAL("g(Test,Test.Nested)", functions[1]->externalSignature());
 			BOOST_CHECK_EQUAL("h(function[])", functions[2]->externalSignature());
 			BOOST_CHECK_EQUAL("i(Test.Nested[])", functions[3]->externalSignature());
@@ -333,9 +344,15 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK((contract = retrieveContractByName(*source, "test")) != nullptr);
 	FunctionTypePointer function;
 	function = retrieveFunctionBySignature(*contract, "foo()");
-	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
+	BOOST_CHECK_MESSAGE(
+		function == nullptr,
+		"Accessor function of a private variable should not exist"
+	);
 	function = retrieveFunctionBySignature(*contract, "bar()");
-	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
+	BOOST_CHECK_MESSAGE(
+		function == nullptr,
+		"Accessor function of an internal variable should not exist"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(string)
@@ -362,7 +379,12 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 		}
 	)";
 	if (solidity::test::CommonOptions::get().evmVersion() == EVMVersion::homestead())
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type string memory.");
+		CHECK_ERROR(
+			sourceCode,
+			TypeError,
+			"Type inaccessible dynamic type is not implicitly convertible to expected type string "
+			"memory."
+		);
 	else
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 }
@@ -376,7 +398,10 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 	auto sourceAndError = parseAnalyseAndReturnError(text, true, false);
 	BOOST_REQUIRE(!sourceAndError.second.empty());
 	BOOST_REQUIRE(!!sourceAndError.first);
-	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
+	BOOST_CHECK(searchErrorMessage(
+		*sourceAndError.second.front(),
+		"Source file does not specify required compiler version!"
+	));
 }
 
 BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
@@ -385,12 +410,20 @@ BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
 		contract C { function f() public pure { uint returndatasize; returndatasize; assembly { pop(returndatasize()) }}}
 	)";
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
+		{Error::Type::Warning,
+		 "Variable is shadowed in inline assembly by an instruction of the same name"}});
 	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
+		expectations.emplace_back(make_pair(
+			Error::Type::TypeError,
+			std::string(
+				"\"returndatasize\" instruction is only available for Byzantium-compatible VMs"
+			)
+		));
+		expectations.emplace_back(make_pair(
+			Error::Type::TypeError,
+			std::string("Expected expression to evaluate to one value, but got 0 values instead.")
+		));
 	}
 	CHECK_ALLOW_MULTI(text, expectations);
 }
@@ -403,12 +436,20 @@ BOOST_AUTO_TEST_CASE(create2_as_variable)
 	// This needs special treatment, because the message mentions the EVM version,
 	// so cannot be run via isoltest.
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
+		{Error::Type::Warning,
+		 "Variable is shadowed in inline assembly by an instruction of the same name"}});
 	if (!solidity::test::CommonOptions::get().evmVersion().hasCreate2())
 	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
+		expectations.emplace_back(make_pair(
+			Error::Type::TypeError,
+			std::string(
+				"\"create2\" instruction is only available for Constantinople-compatible VMs"
+			)
+		));
+		expectations.emplace_back(make_pair(
+			Error::Type::TypeError,
+			std::string("Expected expression to evaluate to one value, but got 0 values instead.")
+		));
 	}
 	CHECK_ALLOW_MULTI(text, expectations);
 }
@@ -421,12 +462,20 @@ BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
 	// This needs special treatment, because the message mentions the EVM version,
 	// so cannot be run via isoltest.
 	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
+		{Error::Type::Warning,
+		 "Variable is shadowed in inline assembly by an instruction of the same name"}});
 	if (!solidity::test::CommonOptions::get().evmVersion().hasExtCodeHash())
 	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
+		expectations.emplace_back(make_pair(
+			Error::Type::TypeError,
+			std::string(
+				"\"extcodehash\" instruction is only available for Constantinople-compatible VMs"
+			)
+		));
+		expectations.emplace_back(make_pair(
+			Error::Type::TypeError,
+			std::string("Expected expression to evaluate to one value, but got 0 values instead.")
+		));
 	}
 	CHECK_ALLOW_MULTI(text, expectations);
 }
@@ -442,7 +491,8 @@ BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 	)";
 	CHECK_SUCCESS_NO_WARNINGS(text);
 	// Check that the getters return a memory strings, not a storage strings.
-	ContractDefinition const& c = dynamic_cast<ContractDefinition const&>(*compiler().ast("").nodes().at(1));
+	ContractDefinition const& c =
+		dynamic_cast<ContractDefinition const&>(*compiler().ast("").nodes().at(1));
 	BOOST_CHECK(c.interfaceFunctions().size() == 2);
 	for (auto const& f: c.interfaceFunctions())
 	{
@@ -479,7 +529,11 @@ BOOST_AUTO_TEST_CASE(address_staticcall_value)
 				}
 			}
 		)";
-		CHECK_ERROR(sourceCode, TypeError, "Member \"value\" is only available for payable functions.");
+		CHECK_ERROR(
+			sourceCode,
+			TypeError,
+			"Member \"value\" is only available for payable functions."
+		);
 	}
 }
 
@@ -497,7 +551,12 @@ BOOST_AUTO_TEST_CASE(address_call_full_return_type)
 	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+		CHECK_ERROR(
+			sourceCode,
+			TypeError,
+			"Type inaccessible dynamic type is not implicitly convertible to expected type bytes "
+			"memory."
+		);
 }
 
 BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
@@ -514,7 +573,12 @@ BOOST_AUTO_TEST_CASE(address_delegatecall_full_return_type)
 	if (solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 		CHECK_SUCCESS_NO_WARNINGS(sourceCode);
 	else
-		CHECK_ERROR(sourceCode, TypeError, "Type inaccessible dynamic type is not implicitly convertible to expected type bytes memory.");
+		CHECK_ERROR(
+			sourceCode,
+			TypeError,
+			"Type inaccessible dynamic type is not implicitly convertible to expected type bytes "
+			"memory."
+		);
 }
 
 
@@ -537,4 +601,4 @@ BOOST_AUTO_TEST_CASE(address_staticcall_full_return_type)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

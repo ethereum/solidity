@@ -29,7 +29,6 @@ using namespace std;
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(IndentedWriterTest)
 
 BOOST_AUTO_TEST_CASE(empty)

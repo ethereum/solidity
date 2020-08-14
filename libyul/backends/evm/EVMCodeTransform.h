@@ -61,13 +61,13 @@ struct CodeTransformContext
 	struct JumpInfo
 	{
 		AbstractAssembly::LabelID label;  ///< Jump's LabelID to jump to.
-		int targetStackHeight;            ///< Stack height after the jump.
+		int targetStackHeight;	///< Stack height after the jump.
 	};
 
 	struct ForLoopLabels
 	{
-		JumpInfo post; ///< Jump info for jumping to post branch.
-		JumpInfo done; ///< Jump info for jumping to done branch.
+		JumpInfo post;	///< Jump info for jumping to post branch.
+		JumpInfo done;	///< Jump info for jumping to done branch.
 	};
 
 	std::stack<ForLoopLabels> forLoopStack;
@@ -89,7 +89,8 @@ public:
 	explicit VariableReferenceCounter(
 		CodeTransformContext& _context,
 		AsmAnalysisInfo const& _assemblyInfo
-	): m_context(_context), m_info(_assemblyInfo)
+	):
+		m_context(_context), m_info(_assemblyInfo)
 	{}
 
 public:
@@ -125,20 +126,20 @@ public:
 		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
-	): CodeTransform(
-		_assembly,
-		_analysisInfo,
-		_block,
-		_allowStackOpt,
-		_dialect,
-		_builtinContext,
-		_evm15,
-		_identifierAccess,
-		_useNamedLabelsForFunctions,
-		nullptr
-	)
-	{
-	}
+	):
+		CodeTransform(
+			_assembly,
+			_analysisInfo,
+			_block,
+			_allowStackOpt,
+			_dialect,
+			_builtinContext,
+			_evm15,
+			_identifierAccess,
+			_useNamedLabelsForFunctions,
+			nullptr
+		)
+	{}
 
 	std::vector<StackTooDeepError> const& stackErrors() const { return m_stackErrors; }
 
@@ -212,8 +213,8 @@ private:
 	/// and corrects the stack height to the target stack height.
 	void stackError(StackTooDeepError _error, int _targetStackSize);
 
-	/// Ensures stack height is down to @p _targetDepth by appending POP instructions to the output assembly.
-	/// Returns the number of POP statements that have been appended.
+	/// Ensures stack height is down to @p _targetDepth by appending POP instructions to the output
+	/// assembly. Returns the number of POP statements that have been appended.
 	int appendPopUntil(int _targetDepth);
 
 	AbstractAssembly& m_assembly;

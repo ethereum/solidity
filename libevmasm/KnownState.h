@@ -35,13 +35,13 @@
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wredeclared-class-member"
-#endif // defined(__clang__)
+#endif	// defined(__clang__)
 
 #include <boost/bimap.hpp>
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
-#endif // defined(__clang__)
+#endif	// defined(__clang__)
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
@@ -55,7 +55,6 @@ struct SourceLocation;
 
 namespace solidity::evmasm
 {
-
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 
@@ -73,7 +72,12 @@ public:
 	using Id = ExpressionClasses::Id;
 	struct StoreOperation
 	{
-		enum Target { Invalid, Memory, Storage };
+		enum Target
+		{
+			Invalid,
+			Memory,
+			Storage
+		};
 
 		bool isValid() const { return target != Invalid; }
 
@@ -84,10 +88,11 @@ public:
 	};
 
 	explicit KnownState(
-		std::shared_ptr<ExpressionClasses> _expressionClasses = std::make_shared<ExpressionClasses>()
-	): m_expressionClasses(std::move(_expressionClasses))
-	{
-	}
+		std::shared_ptr<ExpressionClasses> _expressionClasses =
+			std::make_shared<ExpressionClasses>()
+	):
+		m_expressionClasses(std::move(_expressionClasses))
+	{}
 
 	/// Streams debugging information to @a _out.
 	std::ostream& stream(std::ostream& _out) const;
@@ -101,9 +106,18 @@ public:
 	/// Resets any knowledge about storage.
 	void resetMemory() { m_memoryContent.clear(); }
 	/// Resets any knowledge about the current stack.
-	void resetStack() { m_stackElements.clear(); m_stackHeight = 0; }
+	void resetStack()
+	{
+		m_stackElements.clear();
+		m_stackHeight = 0;
+	}
 	/// Resets any knowledge.
-	void reset() { resetStorage(); resetMemory(); resetStack(); }
+	void reset()
+	{
+		resetStorage();
+		resetMemory();
+		resetStack();
+	}
 
 	unsigned sequenceNumber() const { return m_sequenceNumber; }
 
@@ -142,21 +156,28 @@ private:
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
 	void setStackElement(int _stackHeight, Id _class);
 	/// Swaps the given stack elements in their next sequence number.
-	void swapStackElements(int _stackHeightA, int _stackHeightB, langutil::SourceLocation const& _location);
+	void swapStackElements(
+		int _stackHeightA,
+		int _stackHeightB,
+		langutil::SourceLocation const& _location
+	);
 
 	/// Increments the sequence number, deletes all storage information that might be overwritten
 	/// and stores the new value at the given slot.
 	/// @returns the store operation, which might be invalid if storage was not modified
 	StoreOperation storeInStorage(Id _slot, Id _value, langutil::SourceLocation const& _location);
-	/// Retrieves the current value at the given slot in storage or creates a new special sload class.
+	/// Retrieves the current value at the given slot in storage or creates a new special sload
+	/// class.
 	Id loadFromStorage(Id _slot, langutil::SourceLocation const& _location);
 	/// Increments the sequence number, deletes all memory information that might be overwritten
 	/// and stores the new value at the given slot.
 	/// @returns the store operation, which might be invalid if memory was not modified
 	StoreOperation storeInMemory(Id _slot, Id _value, langutil::SourceLocation const& _location);
-	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
+	/// Retrieves the current value at the given slot in memory or creates a new special mload
+	/// class.
 	Id loadFromMemory(Id _slot, langutil::SourceLocation const& _location);
-	/// Finds or creates a new expression that applies the Keccak-256 hash function to the contents in memory.
+	/// Finds or creates a new expression that applies the Keccak-256 hash function to the contents
+	/// in memory.
 	Id applyKeccak256(Id _start, Id _length, langutil::SourceLocation const& _location);
 
 	/// @returns a new or already used Id representing the given set of tags.

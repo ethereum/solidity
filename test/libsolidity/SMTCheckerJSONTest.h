@@ -26,7 +26,6 @@
 
 namespace solidity::frontend::test
 {
-
 class SMTCheckerJSONTest: public SyntaxTest
 {
 public:
@@ -36,10 +35,18 @@ public:
 	}
 	SMTCheckerJSONTest(std::string const& _filename, langutil::EVMVersion _evmVersion);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	) override;
 
 private:
-	std::vector<std::string> hashesFromJson(Json::Value const& _jsonObj, std::string const& _auxInput, std::string const& _smtlib);
+	std::vector<std::string> hashesFromJson(
+		Json::Value const& _jsonObj,
+		std::string const& _auxInput,
+		std::string const& _smtlib
+	);
 	Json::Value buildJson(std::string const& _extra);
 
 	Json::Value m_smtResponses;

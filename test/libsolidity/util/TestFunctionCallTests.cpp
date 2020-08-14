@@ -31,7 +31,6 @@ using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
-
 BOOST_AUTO_TEST_SUITE(TestFunctionCallTest)
 
 BOOST_AUTO_TEST_CASE(format_unsigned_singleline)
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_CASE(format_unsigned_multiline)
 	call.displayMode = FunctionCall::DisplayMode::MultiLine;
 	TestFunctionCall test{call};
 
-	BOOST_REQUIRE_EQUAL(test.format(),	"// f(uint8)\n// -> 1");
+	BOOST_REQUIRE_EQUAL(test.format(), "// f(uint8)\n// -> 1");
 }
 
 BOOST_AUTO_TEST_CASE(format_multiple_unsigned_singleline)

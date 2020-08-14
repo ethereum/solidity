@@ -35,21 +35,18 @@
 
 namespace solidity::langutil
 {
-
 class CharStream;
 
 }
 
 namespace solidity::yul
 {
-
 struct CodeWeights;
 
 }
 
 namespace solidity::phaser
 {
-
 class FitnessMetric;
 class GeneticAlgorithm;
 class Population;
@@ -90,8 +87,14 @@ std::istream& operator>>(std::istream& _inputStream, solidity::phaser::Algorithm
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::Algorithm _algorithm);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricChoice& _metric);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricChoice _metric);
-std::istream& operator>>(std::istream& _inputStream, solidity::phaser::MetricAggregatorChoice& _aggregator);
-std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::MetricAggregatorChoice _aggregator);
+std::istream& operator>>(
+	std::istream& _inputStream,
+	solidity::phaser::MetricAggregatorChoice& _aggregator
+);
+std::ostream& operator<<(
+	std::ostream& _outputStream,
+	solidity::phaser::MetricAggregatorChoice _aggregator
+);
 std::istream& operator>>(std::istream& _inputStream, solidity::phaser::CrossoverChoice& _crossover);
 std::ostream& operator<<(std::ostream& _outputStream, solidity::phaser::CrossoverChoice _crossover);
 
@@ -127,10 +130,7 @@ public:
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
-	static std::unique_ptr<GeneticAlgorithm> build(
-		Options const& _options,
-		size_t _populationSize
-	);
+	static std::unique_ptr<GeneticAlgorithm> build(Options const& _options, size_t _populationSize);
 };
 
 /**
@@ -185,10 +185,7 @@ public:
 		static Options fromCommandLine(boost::program_options::variables_map const& _arguments);
 	};
 
-	static Population build(
-		Options const& _options,
-		std::shared_ptr<FitnessMetric> _fitnessMetric
-	);
+	static Population build(Options const& _options, std::shared_ptr<FitnessMetric> _fitnessMetric);
 	static Population buildFromStrings(
 		std::vector<std::string> const& _geneSequences,
 		std::shared_ptr<FitnessMetric> _fitnessMetric
@@ -262,9 +259,14 @@ private:
 	};
 
 	static CommandLineDescription buildCommandLineDescription();
-	static std::optional<boost::program_options::variables_map> parseCommandLine(int _argc, char** _argv);
+	static std::optional<boost::program_options::variables_map> parseCommandLine(
+		int _argc,
+		char** _argv
+	);
 	static void initialiseRNG(boost::program_options::variables_map const& _arguments);
-	static AlgorithmRunner::Options buildAlgorithmRunnerOptions(boost::program_options::variables_map const& _arguments);
+	static AlgorithmRunner::Options buildAlgorithmRunnerOptions(
+		boost::program_options::variables_map const& _arguments
+	);
 
 	static void runPhaser(boost::program_options::variables_map const& _arguments);
 	static void runAlgorithm(

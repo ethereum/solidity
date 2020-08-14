@@ -38,12 +38,18 @@ bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
 	{
 		auto const& functionFlow = m_cfg.functionFlow(_function);
 		checkUninitializedAccess(functionFlow.entry, functionFlow.exit);
-		checkUnreachable(functionFlow.entry, functionFlow.exit, functionFlow.revert, functionFlow.transactionReturn);
+		checkUnreachable(
+			functionFlow.entry,
+			functionFlow.exit,
+			functionFlow.revert,
+			functionFlow.transactionReturn
+		);
 	}
 	return false;
 }
 
-void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit) const
+void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit)
+	const
 {
 	struct NodeInfo
 	{
@@ -60,19 +66,17 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 			size_t previousUninitializedVariableAccessess = uninitializedVariableAccesses.size();
 			unassignedVariablesAtEntry += _entryNode.unassignedVariablesAtExit;
 			uninitializedVariableAccesses += _entryNode.uninitializedVariableAccesses;
-			return
-				unassignedVariablesAtEntry.size() > previousUnassignedVariablesAtEntry ||
-				uninitializedVariableAccesses.size() > previousUninitializedVariableAccessess
-			;
+			return unassignedVariablesAtEntry.size() > previousUnassignedVariablesAtEntry ||
+				uninitializedVariableAccesses.size() > previousUninitializedVariableAccessess;
 		}
 	};
 	map<CFGNode const*, NodeInfo> nodeInfos;
 	set<CFGNode const*> nodesToTraverse;
 	nodesToTraverse.insert(_entry);
 
-	// Walk all paths starting from the nodes in ``nodesToTraverse`` until ``NodeInfo::propagateFrom``
-	// returns false for all exits, i.e. until all paths have been walked with maximal sets of unassigned
-	// variables and accesses.
+	// Walk all paths starting from the nodes in ``nodesToTraverse`` until
+	// ``NodeInfo::propagateFrom`` returns false for all exits, i.e. until all paths have been
+	// walked with maximal sets of unassigned variables and accesses.
 	while (!nodesToTraverse.empty())
 	{
 		CFGNode const* currentNode = *nodesToTraverse.begin();
@@ -84,30 +88,33 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 		{
 			switch (variableOccurrence.kind())
 			{
-				case VariableOccurrence::Kind::Assignment:
-					unassignedVariables.erase(&variableOccurrence.declaration());
-					break;
-				case VariableOccurrence::Kind::InlineAssembly:
-					// We consider all variables referenced in inline assembly as accessed.
-					// So far any reference is enough, but we might want to actually analyze
-					// the control flow in the assembly at some point.
-				case VariableOccurrence::Kind::Access:
-				case VariableOccurrence::Kind::Return:
-					if (unassignedVariables.count(&variableOccurrence.declaration()))
-					{
-						if (
-							variableOccurrence.declaration().type()->dataStoredIn(DataLocation::Storage) ||
-							variableOccurrence.declaration().type()->dataStoredIn(DataLocation::CallData)
-						)
-							// Merely store the unassigned access. We do not generate an error right away, since this
-							// path might still always revert. It is only an error if this is propagated to the exit
-							// node of the function (i.e. there is a path with an uninitialized access).
-							nodeInfo.uninitializedVariableAccesses.insert(&variableOccurrence);
-					}
-					break;
-				case VariableOccurrence::Kind::Declaration:
-					unassignedVariables.insert(&variableOccurrence.declaration());
-					break;
+			case VariableOccurrence::Kind::Assignment:
+				unassignedVariables.erase(&variableOccurrence.declaration());
+				break;
+			case VariableOccurrence::Kind::InlineAssembly:
+				// We consider all variables referenced in inline assembly as accessed.
+				// So far any reference is enough, but we might want to actually analyze
+				// the control flow in the assembly at some point.
+			case VariableOccurrence::Kind::Access:
+			case VariableOccurrence::Kind::Return:
+				if (unassignedVariables.count(&variableOccurrence.declaration()))
+				{
+					if (variableOccurrence.declaration().type()->dataStoredIn(
+							DataLocation::Storage
+						) ||
+						variableOccurrence.declaration().type()->dataStoredIn(
+							DataLocation::CallData
+						))
+						// Merely store the unassigned access. We do not generate an error right
+						// away, since this path might still always revert. It is only an error
+						// if this is propagated to the exit node of the function (i.e. there is
+						// a path with an uninitialized access).
+						nodeInfo.uninitializedVariableAccesses.insert(&variableOccurrence);
+				}
+				break;
+			case VariableOccurrence::Kind::Declaration:
+				unassignedVariables.insert(&variableOccurrence.declaration());
+				break;
 			}
 		}
 		nodeInfo.unassignedVariablesAtExit = std::move(unassignedVariables);
@@ -128,49 +135,59 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 		boost::range::sort(
 			uninitializedAccessesOrdered,
 			[](VariableOccurrence const* lhs, VariableOccurrence const* rhs) -> bool
-			{
-				return *lhs < *rhs;
-			}
+			{ return *lhs < *rhs; }
 		);
 
 		for (auto const* variableOccurrence: uninitializedAccessesOrdered)
 		{
 			SecondarySourceLocation ssl;
 			if (variableOccurrence->occurrence())
-				ssl.append("The variable was declared here.", variableOccurrence->declaration().location());
+				ssl.append(
+					"The variable was declared here.",
+					variableOccurrence->declaration().location()
+				);
 
-			bool isStorage = variableOccurrence->declaration().type()->dataStoredIn(DataLocation::Storage);
+			bool isStorage =
+				variableOccurrence->declaration().type()->dataStoredIn(DataLocation::Storage);
 			m_errorReporter.typeError(
 				3464_error,
-				variableOccurrence->occurrence() ?
-					*variableOccurrence->occurrence() :
-					variableOccurrence->declaration().location(),
+				variableOccurrence->occurrence() ? *variableOccurrence->occurrence() :
+													 variableOccurrence->declaration().location(),
 				ssl,
-				"This variable is of " +
-				string(isStorage ? "storage" : "calldata") +
-				" pointer type and can be " +
-				(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" : "accessed") +
-				" without prior assignment, which would lead to undefined behaviour."
+				"This variable is of " + string(isStorage ? "storage" : "calldata") +
+					" pointer type and can be " +
+					(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" :
+																						"accessed") +
+					" without prior assignment, which would lead to undefined behaviour."
 			);
 		}
 	}
 }
 
-void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert, CFGNode const* _transactionReturn) const
+void ControlFlowAnalyzer::checkUnreachable(
+	CFGNode const* _entry,
+	CFGNode const* _exit,
+	CFGNode const* _revert,
+	CFGNode const* _transactionReturn
+) const
 {
 	// collect all nodes reachable from the entry point
-	std::set<CFGNode const*> reachable = util::BreadthFirstSearch<CFGNode const*>{{_entry}}.run(
-		[](CFGNode const* _node, auto&& _addChild) {
-			for (CFGNode const* exit: _node->exits)
-				_addChild(exit);
-		}
-	).visited;
+	std::set<CFGNode const*> reachable = util::BreadthFirstSearch<CFGNode const*>{{_entry}}
+											 .run(
+												 [](CFGNode const* _node, auto&& _addChild)
+												 {
+													 for (CFGNode const* exit: _node->exits)
+														 _addChild(exit);
+												 }
+											 )
+											 .visited;
 
 	// traverse all paths backwards from exit, revert and transaction return
 	// and extract (valid) source locations of unreachable nodes into sorted set
 	std::set<SourceLocation> unreachable;
 	util::BreadthFirstSearch<CFGNode const*>{{_exit, _revert, _transactionReturn}}.run(
-		[&](CFGNode const* _node, auto&& _addChild) {
+		[&](CFGNode const* _node, auto&& _addChild)
+		{
 			if (!reachable.count(_node) && _node->location.isValid())
 				unreachable.insert(_node->location);
 			for (CFGNode const* entry: _node->entries)

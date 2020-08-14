@@ -39,10 +39,8 @@ static_assert(
 
 namespace solidity::util
 {
-
 namespace
 {
-
 /// StreamWriterBuilder that can be constructed with specific settings
 class StreamWriterBuilder: public Json::StreamWriterBuilder
 {
@@ -58,10 +56,7 @@ public:
 class StrictModeCharReaderBuilder: public Json::CharReaderBuilder
 {
 public:
-	StrictModeCharReaderBuilder()
-	{
-		Json::CharReaderBuilder::strictMode(&this->settings_);
-	}
+	StrictModeCharReaderBuilder() { Json::CharReaderBuilder::strictMode(&this->settings_); }
 };
 
 /// Serialise the JSON object (@a _input) with specific builder (@a _builder)
@@ -76,13 +71,17 @@ string print(Json::Value const& _input, Json::StreamWriterBuilder const& _builde
 	return stream.str();
 }
 
-/// Parse a JSON string (@a _input) with specified builder (@ _builder) and writes resulting JSON object to (@a _json)
-/// \param _builder CharReaderBuilder that is used to create new Json::CharReaders
-/// \param _input JSON input string
-/// \param _json [out] resulting JSON object
+/// Parse a JSON string (@a _input) with specified builder (@ _builder) and writes resulting JSON
+/// object to (@a _json) \param _builder CharReaderBuilder that is used to create new
+/// Json::CharReaders \param _input JSON input string \param _json [out] resulting JSON object
 /// \param _errs [out] Formatted error messages
 /// \return \c true if the document was successfully parsed, \c false if an error occurred.
-bool parse(Json::CharReaderBuilder& _builder, string const& _input, Json::Value& _json, string* _errs)
+bool parse(
+	Json::CharReaderBuilder& _builder,
+	string const& _input,
+	Json::Value& _json,
+	string* _errs
+)
 {
 	unique_ptr<Json::CharReader> reader(_builder.newCharReader());
 	return reader->parse(_input.c_str(), _input.c_str() + _input.length(), &_json, _errs);
@@ -105,7 +104,7 @@ void removeNullMembersHelper(Json::Value& _json)
 		}
 }
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 Json::Value removeNullMembers(Json::Value _json)
 {
@@ -115,7 +114,9 @@ Json::Value removeNullMembers(Json::Value _json)
 
 string jsonPrettyPrint(Json::Value const& _input)
 {
-	static map<string, Json::Value> settings{{"indentation", "  "}, {"enableYAMLCompatibility", true}};
+	static map<string, Json::Value> settings{
+		{"indentation", "  "},
+		{"enableYAMLCompatibility", true}};
 	static StreamWriterBuilder writerBuilder(settings);
 	string result = print(_input, writerBuilder);
 	boost::replace_all(result, " \n", "\n");
@@ -135,4 +136,4 @@ bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* 
 	return parse(readerBuilder, _input, _json, _errs);
 }
 
-} // namespace solidity::util
+}  // namespace solidity::util

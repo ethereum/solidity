@@ -27,7 +27,6 @@
 
 namespace solidity::phaser
 {
-
 /**
  * Abstract base class for selections of elements from a collection.
  *
@@ -59,8 +58,7 @@ class RangeSelection: public Selection
 {
 public:
 	explicit RangeSelection(double _startPercent = 0.0, double _endPercent = 1.0):
-		m_startPercent(_startPercent),
-		m_endPercent(_endPercent)
+		m_startPercent(_startPercent), m_endPercent(_endPercent)
 	{
 		assert(0 <= m_startPercent && m_startPercent <= m_endPercent && m_endPercent <= 1.0);
 	}
@@ -73,9 +71,10 @@ private:
 };
 
 /**
- * A selection that selects elements at specific, fixed positions indicated by a repeating "pattern".
- * If the positions in the pattern exceed the size of the container, they are capped at the maximum
- * available position. Always selects as many elements as the size of the container multiplied by
+ * A selection that selects elements at specific, fixed positions indicated by a repeating
+ * "pattern". If the positions in the pattern exceed the size of the container, they are capped at
+ * the maximum available position. Always selects as many elements as the size of the container
+ * multiplied by
  * @a _selectionSize (unless the container is empty).
  *
  * E.g. if the pattern is {0, 9} and collection size is 5, the selection will materialise into
@@ -85,8 +84,7 @@ class MosaicSelection: public Selection
 {
 public:
 	explicit MosaicSelection(std::vector<size_t> _pattern, double _selectionSize = 1.0):
-		m_pattern(move(_pattern)),
-		m_selectionSize(_selectionSize)
+		m_pattern(move(_pattern)), m_selectionSize(_selectionSize)
 	{
 		assert(m_pattern.size() > 0 || _selectionSize == 0.0);
 	}
@@ -107,8 +105,7 @@ private:
 class RandomSelection: public Selection
 {
 public:
-	explicit RandomSelection(double _selectionSize):
-		m_selectionSize(_selectionSize)
+	explicit RandomSelection(double _selectionSize): m_selectionSize(_selectionSize)
 	{
 		assert(_selectionSize >= 0);
 	}
@@ -129,8 +126,7 @@ private:
 class RandomSubset: public Selection
 {
 public:
-	explicit RandomSubset(double _selectionChance):
-		m_selectionChance(_selectionChance)
+	explicit RandomSubset(double _selectionChance): m_selectionChance(_selectionChance)
 	{
 		assert(0.0 <= _selectionChance && _selectionChance <= 1.0);
 	}

@@ -115,10 +115,9 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	// Constant arguments might provide a means for further optimization, so they cause a bonus.
 	bool constantArg = false;
 	for (auto const& argument: _funCall.arguments)
-		if (holds_alternative<Literal>(argument) || (
-			holds_alternative<Identifier>(argument) &&
-			m_constants.count(std::get<Identifier>(argument).name)
-		))
+		if (holds_alternative<Literal>(argument) ||
+			(holds_alternative<Identifier>(argument) &&
+			 m_constants.count(std::get<Identifier>(argument).name)))
 		{
 			constantArg = true;
 			break;
@@ -150,7 +149,9 @@ bool FullInliner::recursive(FunctionDefinition const& _fun) const
 
 void InlineModifier::operator()(Block& _block)
 {
-	function<std::optional<vector<Statement>>(Statement&)> f = [&](Statement& _statement) -> std::optional<vector<Statement>> {
+	function<std::optional<vector<Statement>>(Statement&)> f =
+		[&](Statement& _statement) -> std::optional<vector<Statement>>
+	{
 		visit(_statement);
 		return tryInlineStatement(_statement);
 	};
@@ -160,19 +161,23 @@ void InlineModifier::operator()(Block& _block)
 std::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _statement)
 {
 	// Only inline for expression statements, assignments and variable declarations.
-	Expression* e = std::visit(util::GenericVisitor{
-		util::VisitorFallback<Expression*>{},
-		[](ExpressionStatement& _s) { return &_s.expression; },
-		[](Assignment& _s) { return _s.value.get(); },
-		[](VariableDeclaration& _s) { return _s.value.get(); }
-	}, _statement);
+	Expression* e = std::visit(
+		util::GenericVisitor{
+			util::VisitorFallback<Expression*>{},
+			[](ExpressionStatement& _s) { return &_s.expression; },
+			[](Assignment& _s) { return _s.value.get(); },
+			[](VariableDeclaration& _s) { return _s.value.get(); }},
+		_statement
+	);
 	if (e)
 	{
 		// Only inline direct function calls.
-		FunctionCall* funCall = std::visit(util::GenericVisitor{
-			util::VisitorFallback<FunctionCall*>{},
-			[](FunctionCall& _e) { return &_e; }
-		}, *e);
+		FunctionCall* funCall = std::visit(
+			util::GenericVisitor{
+				util::VisitorFallback<FunctionCall*>{},
+				[](FunctionCall& _e) { return &_e; }},
+			*e
+		);
 		if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
 			return performInline(_statement, *funCall);
 	}
@@ -191,14 +196,20 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 
 	// helper function to create a new variable that is supposed to model
 	// an existing variable.
-	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
+	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value)
+	{
 		YulString newName = m_nameDispenser.newName(_existingVariable.name);
 		variableReplacements[_existingVariable.name] = newName;
-		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
+		VariableDeclaration varDecl{
+			_funCall.location,
+			{{_funCall.location, newName, _existingVariable.type}},
+			{}};
 		if (_value)
 			varDecl.value = make_unique<Expression>(std::move(*_value));
 		else
-			varDecl.value = make_unique<Expression>(m_dialect.zeroLiteralForType(varDecl.variables.front().type));
+			varDecl.value = make_unique<Expression>(
+				m_dialect.zeroLiteralForType(varDecl.variables.front().type)
+			);
 		newStatements.emplace_back(std::move(varDecl));
 	};
 
@@ -210,34 +221,33 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	Statement newBody = BodyCopier(m_nameDispenser, variableReplacements)(function->body);
 	newStatements += std::move(std::get<Block>(newBody).statements);
 
-	std::visit(util::GenericVisitor{
-		util::VisitorFallback<>{},
-		[&](Assignment& _assignment)
-		{
-			for (size_t i = 0; i < _assignment.variableNames.size(); ++i)
-				newStatements.emplace_back(Assignment{
-					_assignment.location,
-					{_assignment.variableNames[i]},
-					make_unique<Expression>(Identifier{
+	std::visit(
+		util::GenericVisitor{
+			util::VisitorFallback<>{},
+			[&](Assignment& _assignment)
+			{
+				for (size_t i = 0; i < _assignment.variableNames.size(); ++i)
+					newStatements.emplace_back(Assignment{
 						_assignment.location,
-						variableReplacements.at(function->returnVariables[i].name)
-					})
-				});
-		},
-		[&](VariableDeclaration& _varDecl)
-		{
-			for (size_t i = 0; i < _varDecl.variables.size(); ++i)
-				newStatements.emplace_back(VariableDeclaration{
-					_varDecl.location,
-					{std::move(_varDecl.variables[i])},
-					make_unique<Expression>(Identifier{
+						{_assignment.variableNames[i]},
+						make_unique<Expression>(Identifier{
+							_assignment.location,
+							variableReplacements.at(function->returnVariables[i].name)})});
+			},
+			[&](VariableDeclaration& _varDecl)
+			{
+				for (size_t i = 0; i < _varDecl.variables.size(); ++i)
+					newStatements.emplace_back(VariableDeclaration{
 						_varDecl.location,
-						variableReplacements.at(function->returnVariables[i].name)
-					})
-				});
-		}
-		// nothing to be done for expression statement
-	}, _statement);
+						{std::move(_varDecl.variables[i])},
+						make_unique<Expression>(Identifier{
+							_varDecl.location,
+							variableReplacements.at(function->returnVariables[i].name)})});
+			}
+			// nothing to be done for expression statement
+		},
+		_statement
+	);
 	return newStatements;
 }
 
@@ -250,7 +260,11 @@ Statement BodyCopier::operator()(VariableDeclaration const& _varDecl)
 
 Statement BodyCopier::operator()(FunctionDefinition const&)
 {
-	assertThrow(false, OptimizerException, "Function hoisting has to be done before function inlining.");
+	assertThrow(
+		false,
+		OptimizerException,
+		"Function hoisting has to be done before function inlining."
+	);
 	return {};
 }
 

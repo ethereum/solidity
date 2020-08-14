@@ -42,7 +42,6 @@ struct SourceLocation;
 
 namespace solidity::evmasm
 {
-
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 
@@ -65,13 +64,19 @@ public:
 	using Id = ExpressionClasses::Id;
 	using StoreOperation = KnownState::StoreOperation;
 
-	explicit CommonSubexpressionEliminator(KnownState const& _state): m_initialState(_state), m_state(_state) {}
+	explicit CommonSubexpressionEliminator(KnownState const& _state):
+		m_initialState(_state), m_state(_state)
+	{}
 
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
 	/// @param _msizeImportant if false, do not consider modification of MSIZE a side-effect
 	template <class AssemblyItemIterator>
-	AssemblyItemIterator feedItems(AssemblyItemIterator _iterator, AssemblyItemIterator _end, bool _msizeImportant);
+	AssemblyItemIterator feedItems(
+		AssemblyItemIterator _iterator,
+		AssemblyItemIterator _end,
+		bool _msizeImportant
+	);
 
 	/// @returns the resulting items after optimization.
 	AssemblyItems getOptimizedItems();
@@ -107,7 +112,10 @@ public:
 
 	/// Initializes the code generator with the given classes and store operations.
 	/// The store operations have to be sorted by sequence number in ascending order.
-	CSECodeGenerator(ExpressionClasses& _expressionClasses, StoreOperations const& _storeOperations);
+	CSECodeGenerator(
+		ExpressionClasses& _expressionClasses,
+		StoreOperations const& _storeOperations
+	);
 
 	/// @returns the assembly items generated from the given requirements
 	/// @param _initialSequenceNumber starting sequence number, do not generate sequenced operations
@@ -140,9 +148,11 @@ private:
 	/// Appends code to remove the topmost stack element if it can be removed.
 	bool removeStackTopIfPossible();
 
-	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
+	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack
+	/// position.
 	void appendDup(int _fromPosition, langutil::SourceLocation const& _location);
-	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
+	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack
+	/// position.
 	/// @note this might also remove the last item if it exactly the same swap instruction.
 	void appendOrRemoveSwap(int _fromPosition, langutil::SourceLocation const& _location);
 	/// Appends the given assembly item.
@@ -177,8 +187,14 @@ AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	bool _msizeImportant
 )
 {
-	assertThrow(!m_breakingItem, OptimizerException, "Invalid use of CommonSubexpressionEliminator.");
-	for (; _iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator, _msizeImportant); ++_iterator)
+	assertThrow(
+		!m_breakingItem,
+		OptimizerException,
+		"Invalid use of CommonSubexpressionEliminator."
+	);
+	for (; _iterator != _end &&
+		 !SemanticInformation::breaksCSEAnalysisBlock(*_iterator, _msizeImportant);
+		 ++_iterator)
 		feedItem(*_iterator);
 	if (_iterator != _end)
 		m_breakingItem = &(*_iterator++);

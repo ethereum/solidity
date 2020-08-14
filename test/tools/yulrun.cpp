@@ -53,7 +53,6 @@ namespace po = boost::program_options;
 
 namespace
 {
-
 void printErrors(ErrorList const& _errors)
 {
 	for (auto const& error: _errors)
@@ -95,8 +94,7 @@ void interpret(string const& _source)
 		Interpreter::run(state, dialect, *ast);
 	}
 	catch (InterpreterTerminatedGeneric const&)
-	{
-	}
+	{}
 
 	state.dumpTraceAndState(cout);
 }
@@ -112,10 +110,12 @@ Reads a single source from stdin, runs it and prints a trace of all side-effects
 
 Allowed options)",
 		po::options_description::m_default_line_length,
-		po::options_description::m_default_line_length - 23);
-	options.add_options()
-		("help", "Show this help screen.")
-		("input-file", po::value<vector<string>>(), "input file");
+		po::options_description::m_default_line_length - 23
+	);
+	options.add_options()(
+		"help",
+		"Show this help screen."
+	)("input-file", po::value<vector<string>>(), "input file");
 	po::positional_options_description filesPositions;
 	filesPositions.add("input-file", -1);
 

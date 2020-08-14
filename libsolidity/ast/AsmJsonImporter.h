@@ -31,14 +31,13 @@
 
 namespace solidity::frontend
 {
-
 /**
  * Component that imports an AST from json format to the internal format
  */
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::string _sourceName) : m_sourceName(std::move(_sourceName)) {}
+	explicit AsmJsonImporter(std::string _sourceName): m_sourceName(std::move(_sourceName)) {}
 	yul::Block createBlock(Json::Value const& _node);
 
 private:
@@ -71,7 +70,6 @@ private:
 	yul::Continue createContinue(Json::Value const& _node);
 
 	std::string m_sourceName;
-
 };
 
 }

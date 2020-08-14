@@ -26,24 +26,18 @@
  */
 static inline bool evmc_is_abi_compatible(struct evmc_vm* vm)
 {
-    return vm->abi_version == EVMC_ABI_VERSION;
+	return vm->abi_version == EVMC_ABI_VERSION;
 }
 
 /**
  * Returns the name of the VM.
  */
-static inline const char* evmc_vm_name(struct evmc_vm* vm)
-{
-    return vm->name;
-}
+static inline const char* evmc_vm_name(struct evmc_vm* vm) { return vm->name; }
 
 /**
  * Returns the version of the VM.
  */
-static inline const char* evmc_vm_version(struct evmc_vm* vm)
-{
-    return vm->version;
-}
+static inline const char* evmc_vm_version(struct evmc_vm* vm) { return vm->version; }
 
 /**
  * Checks if the VM has the given capability.
@@ -52,7 +46,7 @@ static inline const char* evmc_vm_version(struct evmc_vm* vm)
  */
 static inline bool evmc_vm_has_capability(struct evmc_vm* vm, enum evmc_capabilities capability)
 {
-    return (vm->get_capabilities(vm) & (evmc_capabilities_flagset)capability) != 0;
+	return (vm->get_capabilities(vm) & (evmc_capabilities_flagset) capability) != 0;
 }
 
 /**
@@ -60,23 +54,22 @@ static inline bool evmc_vm_has_capability(struct evmc_vm* vm, enum evmc_capabili
  *
  * @see evmc_destroy_fn
  */
-static inline void evmc_destroy(struct evmc_vm* vm)
-{
-    vm->destroy(vm);
-}
+static inline void evmc_destroy(struct evmc_vm* vm) { vm->destroy(vm); }
 
 /**
  * Sets the option for the VM, if the feature is supported by the VM.
  *
  * @see evmc_set_option_fn
  */
-static inline enum evmc_set_option_result evmc_set_option(struct evmc_vm* vm,
-                                                          char const* name,
-                                                          char const* value)
+static inline enum evmc_set_option_result evmc_set_option(
+	struct evmc_vm* vm,
+	char const* name,
+	char const* value
+)
 {
-    if (vm->set_option)
-        return vm->set_option(vm, name, value);
-    return EVMC_SET_OPTION_INVALID_NAME;
+	if (vm->set_option)
+		return vm->set_option(vm, name, value);
+	return EVMC_SET_OPTION_INVALID_NAME;
 }
 
 /**
@@ -84,15 +77,17 @@ static inline enum evmc_set_option_result evmc_set_option(struct evmc_vm* vm,
  *
  * @see evmc_execute_fn.
  */
-static inline struct evmc_result evmc_execute(struct evmc_vm* vm,
-                                              const struct evmc_host_interface* host,
-                                              struct evmc_host_context* context,
-                                              enum evmc_revision rev,
-                                              const struct evmc_message* msg,
-                                              uint8_t const* code,
-                                              size_t code_size)
+static inline struct evmc_result evmc_execute(
+	struct evmc_vm* vm,
+	const struct evmc_host_interface* host,
+	struct evmc_host_context* context,
+	enum evmc_revision rev,
+	const struct evmc_message* msg,
+	uint8_t const* code,
+	size_t code_size
+)
 {
-    return vm->execute(vm, host, context, rev, msg, code, code_size);
+	return vm->execute(vm, host, context, rev, msg, code, code_size);
 }
 
 /// The evmc_result release function using free() for releasing the memory.
@@ -103,7 +98,7 @@ static inline struct evmc_result evmc_execute(struct evmc_vm* vm,
 /// @param result The result object.
 static void evmc_free_result_memory(const struct evmc_result* result)
 {
-    free((uint8_t*)result->output_data);
+	free((uint8_t*) result->output_data);
 }
 
 /// Creates the result from the provided arguments.
@@ -118,33 +113,35 @@ static void evmc_free_result_memory(const struct evmc_result* result)
 /// @param gas_left     The amount of gas left.
 /// @param output_data  The pointer to the output.
 /// @param output_size  The output size.
-static inline struct evmc_result evmc_make_result(enum evmc_status_code status_code,
-                                                  int64_t gas_left,
-                                                  const uint8_t* output_data,
-                                                  size_t output_size)
+static inline struct evmc_result evmc_make_result(
+	enum evmc_status_code status_code,
+	int64_t gas_left,
+	const uint8_t* output_data,
+	size_t output_size
+)
 {
-    struct evmc_result result;
-    memset(&result, 0, sizeof(result));
+	struct evmc_result result;
+	memset(&result, 0, sizeof(result));
 
-    if (output_size != 0)
-    {
-        uint8_t* buffer = (uint8_t*)malloc(output_size);
+	if (output_size != 0)
+	{
+		uint8_t* buffer = (uint8_t*) malloc(output_size);
 
-        if (!buffer)
-        {
-            result.status_code = EVMC_OUT_OF_MEMORY;
-            return result;
-        }
+		if (!buffer)
+		{
+			result.status_code = EVMC_OUT_OF_MEMORY;
+			return result;
+		}
 
-        memcpy(buffer, output_data, output_size);
-        result.output_data = buffer;
-        result.output_size = output_size;
-        result.release = evmc_free_result_memory;
-    }
+		memcpy(buffer, output_data, output_size);
+		result.output_data = buffer;
+		result.output_size = output_size;
+		result.release = evmc_free_result_memory;
+	}
 
-    result.status_code = status_code;
-    result.gas_left = gas_left;
-    return result;
+	result.status_code = status_code;
+	result.gas_left = gas_left;
+	return result;
 }
 
 /**
@@ -156,8 +153,8 @@ static inline struct evmc_result evmc_make_result(enum evmc_status_code status_c
  */
 static inline void evmc_release_result(struct evmc_result* result)
 {
-    if (result->release)
-        result->release(result);
+	if (result->release)
+		result->release(result);
 }
 
 
@@ -189,22 +186,24 @@ static inline void evmc_release_result(struct evmc_result* result)
  */
 union evmc_result_optional_storage
 {
-    uint8_t bytes[24]; /**< 24 bytes of optional storage. */
-    void* pointer;     /**< Optional pointer. */
+	uint8_t bytes[24]; /**< 24 bytes of optional storage. */
+	void* pointer; /**< Optional pointer. */
 };
 
 /** Provides read-write access to evmc_result "optional storage". */
 static inline union evmc_result_optional_storage* evmc_get_optional_storage(
-    struct evmc_result* result)
+	struct evmc_result* result
+)
 {
-    return (union evmc_result_optional_storage*)&result->create_address;
+	return (union evmc_result_optional_storage*) &result->create_address;
 }
 
 /** Provides read-only access to evmc_result "optional storage". */
 static inline const union evmc_result_optional_storage* evmc_get_const_optional_storage(
-    const struct evmc_result* result)
+	const struct evmc_result* result
+)
 {
-    return (const union evmc_result_optional_storage*)&result->create_address;
+	return (const union evmc_result_optional_storage*) &result->create_address;
 }
 
 /** @} */

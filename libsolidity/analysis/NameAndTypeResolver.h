@@ -43,7 +43,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 /**
  * Resolves name references, typenames and sets the (explicitly given) types for all variable
  * declarations.
@@ -65,7 +64,10 @@ public:
 	/// existing scopes, used by the snippets feature.
 	bool registerDeclarations(SourceUnit& _sourceUnit, ASTNode const* _currentScope = nullptr);
 	/// Applies the effect of import directives.
-	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
+	bool performImports(
+		SourceUnit& _sourceUnit,
+		std::map<std::string, SourceUnit const*> const& _sourceUnits
+	);
 	/// Resolves all names and types referenced from the given Source Node.
 	/// @returns false in case of error.
 	bool resolveNamesAndTypes(SourceUnit& _source);
@@ -81,11 +83,17 @@ public:
 	/// the global scope is used (i.e. the one containing only the pre-defined global variables).
 	/// @returns a pointer to the declaration on success or nullptr on failure.
 	/// SHOULD only be used for testing.
-	std::vector<Declaration const*> resolveName(ASTString const& _name, ASTNode const* _scope = nullptr) const;
+	std::vector<Declaration const*> resolveName(
+		ASTString const& _name,
+		ASTNode const* _scope = nullptr
+	) const;
 
 	/// Resolves a name in the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
-	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _includeInvisibles = false) const;
+	std::vector<Declaration const*> nameFromCurrentScope(
+		ASTString const& _name,
+		bool _includeInvisibles = false
+	) const;
 
 	/// Resolves a path starting from the "current" scope, but also searches parent scopes.
 	/// Should only be called during the initial resolving phase.
@@ -95,21 +103,24 @@ public:
 	/// Generate and store warnings about variables that are named like instructions.
 	void warnVariablesNamedLikeInstructions();
 
-	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
+	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty
+	/// string if no suggestions.
 	std::string similarNameSuggestions(ASTString const& _name) const;
 
 	/// Sets the current scope.
 	void setScope(ASTNode const* _node);
 
 private:
-	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal errors.
+	/// Internal version of @a resolveNamesAndTypes (called from there) throws exceptions on fatal
+	/// errors.
 	bool resolveNamesAndTypesInternal(ASTNode& _node, bool _resolveInsideCode = true);
 
-	/// Imports all members declared directly in the given contract (i.e. does not import inherited members)
-	/// into the current scope if they are not present already.
+	/// Imports all members declared directly in the given contract (i.e. does not import inherited
+	/// members) into the current scope if they are not present already.
 	void importInheritedScope(ContractDefinition const& _base);
 
-	/// Computes "C3-Linearization" of base contracts and stores it inside the contract. Reports errors if any
+	/// Computes "C3-Linearization" of base contracts and stores it inside the contract. Reports
+	/// errors if any
 	void linearizeBaseContracts(ContractDefinition& _contract);
 	/// Computes the C3-merge of the given list of lists of bases.
 	/// @returns the linearized vector or an empty vector if linearization is not possible.
@@ -189,7 +200,10 @@ private:
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 
-	static bool isOverloadedFunction(Declaration const& _declaration1, Declaration const& _declaration2);
+	static bool isOverloadedFunction(
+		Declaration const& _declaration1,
+		Declaration const& _declaration2
+	);
 
 	/// @returns the canonical name of the current scope.
 	std::string currentCanonicalName() const;

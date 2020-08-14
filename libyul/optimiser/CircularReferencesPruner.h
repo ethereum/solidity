@@ -30,7 +30,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Optimization stage that removes functions that call each other but are
  * neither externally referenced nor referenced from the outermost context.
@@ -43,6 +42,7 @@ public:
 
 	using ASTModifier::operator();
 	void operator()(Block& _block) override;
+
 private:
 	CircularReferencesPruner(std::set<YulString> const& _reservedIdentifiers):
 		m_reservedIdentifiers(_reservedIdentifiers)

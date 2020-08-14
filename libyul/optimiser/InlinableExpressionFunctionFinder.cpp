@@ -49,14 +49,19 @@ void InlinableExpressionFunctionFinder::operator()(FunctionDefinition const& _fu
 		if (holds_alternative<Assignment>(bodyStatement))
 		{
 			Assignment const& assignment = std::get<Assignment>(bodyStatement);
-			if (assignment.variableNames.size() == 1 && assignment.variableNames.front().name == retVariable)
+			if (assignment.variableNames.size() == 1 &&
+				assignment.variableNames.front().name == retVariable)
 			{
 				// TODO: use code size metric here
 
 				// We cannot overwrite previous settings, because this function definition
 				// would not be valid here if we were searching inside a functionally inlinable
 				// function body.
-				assertThrow(m_disallowedIdentifiers.empty() && !m_foundDisallowedIdentifier, OptimizerException, "");
+				assertThrow(
+					m_disallowedIdentifiers.empty() && !m_foundDisallowedIdentifier,
+					OptimizerException,
+					""
+				);
 				m_disallowedIdentifiers = set<YulString>{retVariable, _function.name};
 				std::visit(*this, *assignment.value);
 				if (!m_foundDisallowedIdentifier)

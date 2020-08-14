@@ -28,7 +28,6 @@
 
 namespace solidity::tools
 {
-
 /**
  * The base upgrade module that can be inherited from. Doing so
  * creates a basic upgrade module that facilitates access to
@@ -54,13 +53,12 @@ class AnalysisUpgrade: public Upgrade, public frontend::ASTConstVisitor
 {
 public:
 	AnalysisUpgrade(std::vector<UpgradeChange>& _changes):
-		Upgrade(_changes),
-		m_errorReporter(m_errors),
-		m_overrideChecker(m_errorReporter)
+		Upgrade(_changes), m_errorReporter(m_errors), m_overrideChecker(m_errorReporter)
 	{}
 	/// Interface function for all upgrade modules that are meant
 	/// be run after the analysis phase of the compiler.
 	void analyze(frontend::SourceUnit const&) {}
+
 protected:
 	langutil::ErrorList m_errors;
 	langutil::ErrorReporter m_errorReporter;

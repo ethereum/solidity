@@ -69,23 +69,27 @@ map<string, size_t> phaser::test::enumerateOptmisationSteps()
 	return stepIndices;
 }
 
-size_t phaser::test::countDifferences(Chromosome const& _chromosome1, Chromosome const& _chromosome2)
+size_t phaser::test::countDifferences(
+	Chromosome const& _chromosome1,
+	Chromosome const& _chromosome2
+)
 {
 	size_t count = 0;
 	for (size_t i = 0; i < min(_chromosome1.length(), _chromosome2.length()); ++i)
 		if (_chromosome1.optimisationSteps()[i] != _chromosome2.optimisationSteps()[i])
 			++count;
 
-	return count + static_cast<size_t>(abs(
-		static_cast<long>(_chromosome1.length()) -
-		static_cast<long>(_chromosome2.length())
-	));
+	return count +
+		static_cast<size_t>(abs(
+			static_cast<long>(_chromosome1.length()) - static_cast<long>(_chromosome2.length())
+		));
 }
 
 TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
 	m_path((fs::temp_directory_path() / fs::unique_path(_prefix + "%%%%-%%%%-%%%%-%%%%")).string())
 {
-	// Prefix should just be a file name and not contain anything that would make us step out of /tmp.
+	// Prefix should just be a file name and not contain anything that would make us step out of
+	// /tmp.
 	assert(fs::path(_prefix) == fs::path(_prefix).stem());
 
 	fs::create_directory(m_path);

@@ -20,7 +20,6 @@
 
 namespace solidity::frontend::test
 {
-
 /**
  * All soltest tokens.
  */
@@ -36,9 +35,9 @@ namespace solidity::frontend::test
 	T(RBrack, "]", 0)              \
 	T(LBrace, "{", 0)              \
 	T(RBrace, "}", 0)              \
-	T(Sub,    "-", 0)              \
-	T(Colon,  ":", 0)              \
-	T(Comma,  ",", 0)              \
+	T(Sub, "-", 0)                 \
+	T(Colon, ":", 0)               \
+	T(Comma, ",", 0)               \
 	T(Period, ".", 0)              \
 	T(Arrow, "->", 0)              \
 	T(Newline, "//", 0)            \
@@ -57,29 +56,31 @@ namespace solidity::frontend::test
 	K(Left, "left", 0)             \
 	K(Library, "library", 0)       \
 	K(Right, "right", 0)           \
-	K(Failure, "FAILURE", 0)       \
+	K(Failure, "FAILURE", 0)
 
 namespace soltest
 {
-	enum class Token : unsigned int {
-	#define T(name, string, precedence) name,
-		SOLT_TOKEN_LIST(T, T)
-		NUM_TOKENS
-	#undef T
-	};
+enum class Token : unsigned int
+{
+#define T(name, string, precedence) name,
+	SOLT_TOKEN_LIST(T, T) NUM_TOKENS
+#undef T
+};
 
-	/// Prints a friendly string representation of \param _token.
-	inline std::string formatToken(Token _token)
+/// Prints a friendly string representation of \param _token.
+inline std::string formatToken(Token _token)
+{
+	switch (_token)
 	{
-		switch (_token)
-		{
-	#define T(name, string, precedence) case Token::name: return string;
-			SOLT_TOKEN_LIST(T, T)
-	#undef T
-			default: // Token::NUM_TOKENS:
-				return "";
-		}
+#define T(name, string, precedence) \
+	case Token::name:               \
+		return string;
+		SOLT_TOKEN_LIST(T, T)
+#undef T
+	default:  // Token::NUM_TOKENS:
+		return "";
 	}
+}
 }
 
 /**
@@ -111,11 +112,9 @@ struct ABIType
 		AlignNone,
 	};
 
-	explicit ABIType(
-		Type _type,
-		Align _align = ABIType::AlignRight,
-		size_t _size = 32
-	): type(_type), align(_align), size(_size) {}
+	explicit ABIType(Type _type, Align _align = ABIType::AlignRight, size_t _size = 32):
+		type(_type), align(_align), size(_size)
+	{}
 
 	Type type = ABIType::None;
 	Align align = ABIType::AlignRight;
@@ -167,19 +166,16 @@ struct Parameter
 	/// Stores the parsed alignment, which can be either left(...) or right(...).
 	Alignment alignment = Alignment::None;
 	/// Compares _bytes to the bytes stored in this object.
-	bool matchesBytes(bytes const& _bytes) const
-	{
-		return rawBytes == _bytes;
-	}
+	bool matchesBytes(bytes const& _bytes) const { return rawBytes == _bytes; }
 };
 using ParameterList = std::vector<Parameter>;
 
 /**
- * Represents the expected result of a function call after it has been executed. This may be a single
- * return value or a comma-separated list of return values. It also contains the detected input
- * formats used to convert the values to `bytes` needed for the comparison with the actual result
- * of a call. In addition to that, it also stores the expected transaction status.
- * An optional comment can be assigned.
+ * Represents the expected result of a function call after it has been executed. This may be a
+ * single return value or a comma-separated list of return values. It also contains the detected
+ * input formats used to convert the values to `bytes` needed for the comparison with the actual
+ * result of a call. In addition to that, it also stores the expected transaction status. An
+ * optional comment can be assigned.
  */
 struct FunctionCallExpectations
 {
@@ -270,7 +266,8 @@ struct FunctionCall
 	/// that has its display mode set to multi-mode. Function and
 	/// result parameter lists are an exception: a single parameter
 	/// stores a format information that contains a newline definition.
-	enum DisplayMode {
+	enum DisplayMode
+	{
 		SingleLine,
 		MultiLine
 	};

@@ -40,7 +40,6 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 class ModelChecker
 {
 public:

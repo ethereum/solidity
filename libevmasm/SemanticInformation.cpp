@@ -54,18 +54,17 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 		if (isSwapInstruction(_item) || isDupInstruction(_item))
 			return false;
 		if (_item.instruction() == Instruction::GAS || _item.instruction() == Instruction::PC)
-			return true; // GAS and PC assume a specific order of opcodes
+			return true;  // GAS and PC assume a specific order of opcodes
 		if (_item.instruction() == Instruction::MSIZE)
-			return true; // msize is modified already by memory access, avoid that for now
+			return true;  // msize is modified already by memory access, avoid that for now
 		InstructionInfo info = instructionInfo(_item.instruction());
 		if (_item.instruction() == Instruction::SSTORE)
 			return false;
 		if (_item.instruction() == Instruction::MSTORE)
 			return false;
-		if (!_msizeImportant && (
-			_item.instruction() == Instruction::MLOAD ||
-			_item.instruction() == Instruction::KECCAK256
-		))
+		if (!_msizeImportant &&
+			(_item.instruction() == Instruction::MLOAD ||
+			 _item.instruction() == Instruction::KECCAK256))
 			return false;
 		//@todo: We do not handle the following memory instructions for now:
 		// calldatacopy, codecopy, extcodecopy, mstore8,
@@ -170,11 +169,11 @@ bool SemanticInformation::reverts(Instruction _instruction)
 {
 	switch (_instruction)
 	{
-		case Instruction::INVALID:
-		case Instruction::REVERT:
-			return true;
-		default:
-			return false;
+	case Instruction::INVALID:
+	case Instruction::REVERT:
+		return true;
+	default:
+		return false;
 	}
 }
 
@@ -193,12 +192,12 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	case Instruction::CREATE2:
 	case Instruction::GAS:
 	case Instruction::PC:
-	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
-	case Instruction::BALANCE: // depends on previous calls
-	case Instruction::SELFBALANCE: // depends on previous calls
+	case Instruction::MSIZE:  // depends on previous writes and reads, not only on content
+	case Instruction::BALANCE:	// depends on previous calls
+	case Instruction::SELFBALANCE:	// depends on previous calls
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
-	case Instruction::RETURNDATACOPY: // depends on previous calls
+	case Instruction::RETURNDATACOPY:  // depends on previous calls
 	case Instruction::RETURNDATASIZE:
 		return false;
 	default:
@@ -236,7 +235,11 @@ bool SemanticInformation::movable(Instruction _instruction)
 bool SemanticInformation::sideEffectFree(Instruction _instruction)
 {
 	// These are not really functional.
-	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
+	assertThrow(
+		!isDupInstruction(_instruction) && !isSwapInstruction(_instruction),
+		AssemblyException,
+		""
+	);
 
 	return !instructionInfo(_instruction).sideEffects;
 }

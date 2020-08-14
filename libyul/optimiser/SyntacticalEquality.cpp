@@ -32,36 +32,49 @@ using namespace solidity::yul;
 
 bool SyntacticallyEqual::operator()(Expression const& _lhs, Expression const& _rhs)
 {
-	return std::visit([this](auto&& _lhsExpr, auto&& _rhsExpr) -> bool {
-		// ``this->`` is redundant, but required to work around a bug present in gcc 6.x.
-		return this->expressionEqual(_lhsExpr, _rhsExpr);
-	}, _lhs, _rhs);
+	return std::visit(
+		[this](auto&& _lhsExpr, auto&& _rhsExpr) -> bool
+		{
+			// ``this->`` is redundant, but required to work around a bug present in gcc 6.x.
+			return this->expressionEqual(_lhsExpr, _rhsExpr);
+		},
+		_lhs,
+		_rhs
+	);
 }
 
 bool SyntacticallyEqual::operator()(Statement const& _lhs, Statement const& _rhs)
 {
-	return std::visit([this](auto&& _lhsStmt, auto&& _rhsStmt) -> bool {
-		// ``this->`` is redundant, but required to work around a bug present in gcc 6.x.
-		return this->statementEqual(_lhsStmt, _rhsStmt);
-	}, _lhs, _rhs);
+	return std::visit(
+		[this](auto&& _lhsStmt, auto&& _rhsStmt) -> bool
+		{
+			// ``this->`` is redundant, but required to work around a bug present in gcc 6.x.
+			return this->statementEqual(_lhsStmt, _rhsStmt);
+		},
+		_lhs,
+		_rhs
+	);
 }
 
 bool SyntacticallyEqual::expressionEqual(FunctionCall const& _lhs, FunctionCall const& _rhs)
 {
-	return
-		expressionEqual(_lhs.functionName, _rhs.functionName) &&
-		util::containerEqual(_lhs.arguments, _rhs.arguments, [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool {
-			return (*this)(_lhsExpr, _rhsExpr);
-		});
+	return expressionEqual(_lhs.functionName, _rhs.functionName) &&
+		util::containerEqual(
+			   _lhs.arguments,
+			   _rhs.arguments,
+			   [this](Expression const& _lhsExpr, Expression const& _rhsExpr) -> bool
+			   { return (*this)(_lhsExpr, _rhsExpr); }
+		);
 }
 
 bool SyntacticallyEqual::expressionEqual(Identifier const& _lhs, Identifier const& _rhs)
 {
 	auto lhsIt = m_identifiersLHS.find(_lhs.name);
 	auto rhsIt = m_identifiersRHS.find(_rhs.name);
-	return
-		(lhsIt == m_identifiersLHS.end() && rhsIt == m_identifiersRHS.end() && _lhs.name == _rhs.name) ||
-		(lhsIt != m_identifiersLHS.end() && rhsIt != m_identifiersRHS.end() && lhsIt->second == rhsIt->second);
+	return (lhsIt == m_identifiersLHS.end() && rhsIt == m_identifiersRHS.end() &&
+			_lhs.name == _rhs.name) ||
+		(lhsIt != m_identifiersLHS.end() && rhsIt != m_identifiersRHS.end() &&
+		 lhsIt->second == rhsIt->second);
 }
 bool SyntacticallyEqual::expressionEqual(Literal const& _lhs, Literal const& _rhs)
 {
@@ -73,36 +86,47 @@ bool SyntacticallyEqual::expressionEqual(Literal const& _lhs, Literal const& _rh
 		return _lhs.value == _rhs.value;
 }
 
-bool SyntacticallyEqual::statementEqual(ExpressionStatement const& _lhs, ExpressionStatement const& _rhs)
+bool SyntacticallyEqual::statementEqual(
+	ExpressionStatement const& _lhs,
+	ExpressionStatement const& _rhs
+)
 {
 	return (*this)(_lhs.expression, _rhs.expression);
 }
 bool SyntacticallyEqual::statementEqual(Assignment const& _lhs, Assignment const& _rhs)
 {
 	return util::containerEqual(
-		_lhs.variableNames,
-		_rhs.variableNames,
-		[this](Identifier const& _lhsVarName, Identifier const& _rhsVarName) -> bool {
-			return this->expressionEqual(_lhsVarName, _rhsVarName);
-		}
-	) && (*this)(*_lhs.value, *_rhs.value);
+			   _lhs.variableNames,
+			   _rhs.variableNames,
+			   [this](Identifier const& _lhsVarName, Identifier const& _rhsVarName) -> bool
+			   { return this->expressionEqual(_lhsVarName, _rhsVarName); }
+		   ) &&
+		(*this)(*_lhs.value, *_rhs.value);
 }
 
-bool SyntacticallyEqual::statementEqual(VariableDeclaration const& _lhs, VariableDeclaration const& _rhs)
+bool SyntacticallyEqual::statementEqual(
+	VariableDeclaration const& _lhs,
+	VariableDeclaration const& _rhs
+)
 {
 	// first visit expression, then variable declarations
 	if (!compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.value, _rhs.value))
 		return false;
-	return util::containerEqual(_lhs.variables, _rhs.variables, [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
-		return this->visitDeclaration(_lhsVarName, _rhsVarName);
-	});
+	return util::containerEqual(
+		_lhs.variables,
+		_rhs.variables,
+		[this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool
+		{ return this->visitDeclaration(_lhsVarName, _rhsVarName); }
+	);
 }
 
-bool SyntacticallyEqual::statementEqual(FunctionDefinition const& _lhs, FunctionDefinition const& _rhs)
+bool SyntacticallyEqual::statementEqual(
+	FunctionDefinition const& _lhs,
+	FunctionDefinition const& _rhs
+)
 {
-	auto compare = [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool {
-		return this->visitDeclaration(_lhsVarName, _rhsVarName);
-	};
+	auto compare = [this](TypedName const& _lhsVarName, TypedName const& _rhsVarName) -> bool
+	{ return this->visitDeclaration(_lhsVarName, _rhsVarName); };
 	// first visit parameter declarations, then body
 	if (!util::containerEqual(_lhs.parameters, _rhs.parameters, compare))
 		return false;
@@ -113,8 +137,10 @@ bool SyntacticallyEqual::statementEqual(FunctionDefinition const& _lhs, Function
 
 bool SyntacticallyEqual::statementEqual(If const& _lhs, If const& _rhs)
 {
-	return
-		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
+	return compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(
+			   _lhs.condition,
+			   _rhs.condition
+		   ) &&
 		statementEqual(_lhs.body, _rhs.body);
 }
 
@@ -126,35 +152,46 @@ bool SyntacticallyEqual::statementEqual(Switch const& _lhs, Switch const& _rhs)
 		lhsCases.insert(&lhsCase);
 	for (auto const& rhsCase: _rhs.cases)
 		rhsCases.insert(&rhsCase);
-	return
-		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.expression, _rhs.expression) &&
-		util::containerEqual(lhsCases, rhsCases, [this](Case const* _lhsCase, Case const* _rhsCase) -> bool {
-			return this->switchCaseEqual(*_lhsCase, *_rhsCase);
-		});
+	return compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(
+			   _lhs.expression,
+			   _rhs.expression
+		   ) &&
+		util::containerEqual(
+			   lhsCases,
+			   rhsCases,
+			   [this](Case const* _lhsCase, Case const* _rhsCase) -> bool
+			   { return this->switchCaseEqual(*_lhsCase, *_rhsCase); }
+		);
 }
 
 
 bool SyntacticallyEqual::switchCaseEqual(Case const& _lhs, Case const& _rhs)
 {
-	return
-		compareUniquePtr<Literal, &SyntacticallyEqual::expressionEqual>(_lhs.value, _rhs.value) &&
+	return compareUniquePtr<Literal, &SyntacticallyEqual::expressionEqual>(
+			   _lhs.value,
+			   _rhs.value
+		   ) &&
 		statementEqual(_lhs.body, _rhs.body);
 }
 
 bool SyntacticallyEqual::statementEqual(ForLoop const& _lhs, ForLoop const& _rhs)
 {
-	return
-		statementEqual(_lhs.pre, _rhs.pre) &&
-		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(_lhs.condition, _rhs.condition) &&
-		statementEqual(_lhs.body, _rhs.body) &&
-		statementEqual(_lhs.post, _rhs.post);
+	return statementEqual(_lhs.pre, _rhs.pre) &&
+		compareUniquePtr<Expression, &SyntacticallyEqual::operator()>(
+			   _lhs.condition,
+			   _rhs.condition
+		) &&
+		statementEqual(_lhs.body, _rhs.body) && statementEqual(_lhs.post, _rhs.post);
 }
 
 bool SyntacticallyEqual::statementEqual(Block const& _lhs, Block const& _rhs)
 {
-	return util::containerEqual(_lhs.statements, _rhs.statements, [this](Statement const& _lhsStmt, Statement const& _rhsStmt) -> bool {
-		return (*this)(_lhsStmt, _rhsStmt);
-	});
+	return util::containerEqual(
+		_lhs.statements,
+		_rhs.statements,
+		[this](Statement const& _lhsStmt, Statement const& _rhsStmt) -> bool
+		{ return (*this)(_lhsStmt, _rhsStmt); }
+	);
 }
 
 bool SyntacticallyEqual::visitDeclaration(TypedName const& _lhs, TypedName const& _rhs)

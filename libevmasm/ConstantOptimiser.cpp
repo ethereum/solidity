@@ -104,7 +104,7 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
 {
-	return evmasm::bytesRequired(_items, 3); // assume 3 byte addresses
+	return evmasm::bytesRequired(_items, 3);  // assume 3 byte addresses
 }
 
 void ConstantOptimisationMethod::replaceConstants(
@@ -134,7 +134,9 @@ bigint LiteralMethod::gasNeeded() const
 	return combineGas(
 		simpleRunGas({Instruction::PUSH1}),
 		// PUSHX plus data
-		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas) + dataGas(util::toCompactBigEndian(m_value, 1)),
+		(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) :
+								 GasCosts::createDataGas) +
+			dataGas(util::toCompactBigEndian(m_value, 1)),
 		0
 	);
 }
@@ -145,7 +147,9 @@ bigint CodeCopyMethod::gasNeeded() const
 		// Run gas: we ignore memory increase costs
 		simpleRunGas(copyRoutine()) + GasCosts::copyGas,
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
-		bytesRequired(copyRoutine()) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
+		bytesRequired(copyRoutine()) *
+			(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) :
+									 GasCosts::createDataGas),
 		// Data gas for data itself
 		dataGas(util::toBigEndian(m_value))
 	);
@@ -173,7 +177,7 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 
 		// codecopy(0, <offset>, 32)
 		u256(32),
-		AssemblyItem(PushData, u256(1) << 16), // replaced above in actualCopyRoutine[4]
+		AssemblyItem(PushData, u256(1) << 16),	// replaced above in actualCopyRoutine[4]
 		Instruction::DUP4,
 		Instruction::CODECOPY,
 
@@ -183,8 +187,7 @@ AssemblyItems const& CodeCopyMethod::copyRoutine()
 
 		// restore original memory
 		Instruction::SWAP2,
-		Instruction::MSTORE
-	};
+		Instruction::MSTORE};
 	return copyRoutine;
 }
 
@@ -213,7 +216,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			bigint lowerPart = _value & (powerOfTwo - 1);
 			if ((powerOfTwo - lowerPart) < lowerPart)
 			{
-				lowerPart = lowerPart - powerOfTwo; // make it negative
+				lowerPart = lowerPart - powerOfTwo;	 // make it negative
 				upperPart++;
 			}
 			if (upperPart == 0)
@@ -323,9 +326,12 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine) const
 {
 	auto numExps = static_cast<size_t>(count(_routine.begin(), _routine.end(), Instruction::EXP));
 	return combineGas(
-		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
+		simpleRunGas(_routine) +
+			numExps * (GasCosts::expGas + GasCosts::expByteGas(m_params.evmVersion)),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
-		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) : GasCosts::createDataGas),
+		bytesRequired(_routine) *
+			(m_params.isCreation ? GasCosts::txDataNonZeroGas(m_params.evmVersion) :
+									 GasCosts::createDataGas),
 		0
 	);
 }

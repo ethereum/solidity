@@ -34,23 +34,18 @@
 
 namespace solidity::langutil
 {
-
 class ErrorReporter
 {
 public:
-
-	explicit ErrorReporter(ErrorList& _errors):
-		m_errorList(_errors) { }
+	explicit ErrorReporter(ErrorList& _errors): m_errorList(_errors) {}
 
 	ErrorReporter(ErrorReporter const& _errorReporter) noexcept:
-		m_errorList(_errorReporter.m_errorList) { }
+		m_errorList(_errorReporter.m_errorList)
+	{}
 
 	ErrorReporter& operator=(ErrorReporter const& _errorReporter);
 
-	void append(ErrorList const& _errorList)
-	{
-		m_errorList += _errorList;
-	}
+	void append(ErrorList const& _errorList) { m_errorList += _errorList; }
 
 	void warning(ErrorId _error, std::string const& _description);
 
@@ -77,15 +72,35 @@ public:
 		std::string const& _description
 	);
 
-	void declarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void declarationError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
-	void fatalDeclarationError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void fatalDeclarationError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
-	void parserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void parserError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
-	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void fatalParserError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
-	void syntaxError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void syntaxError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
 	void typeError(
 		ErrorId _error,
@@ -94,42 +109,58 @@ public:
 		std::string const& _description = std::string()
 	);
 
-	void typeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void typeError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
 	template <typename... Strings>
-	void typeErrorConcatenateDescriptions(ErrorId _error, SourceLocation const& _location, Strings const&... _descriptions)
+	void typeErrorConcatenateDescriptions(
+		ErrorId _error,
+		SourceLocation const& _location,
+		Strings const&... _descriptions
+	)
 	{
-		std::initializer_list<std::string> const descs = { _descriptions... };
+		std::initializer_list<std::string> const descs = {_descriptions...};
 		solAssert(descs.size() > 0, "Need error descriptions!");
 
-		auto filterEmpty = boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
+		auto filterEmpty =
+			boost::adaptors::filtered([](std::string const& _s) { return !_s.empty(); });
 
 		std::string errorStr = util::joinHumanReadable(descs | filterEmpty, " ");
 
 		error(_error, Error::Type::TypeError, _location, errorStr);
 	}
 
-	void fatalTypeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
-	void fatalTypeError(ErrorId _error, SourceLocation const& _location, SecondarySourceLocation const& _secondLocation, std::string const& _description);
+	void fatalTypeError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
+	void fatalTypeError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		SecondarySourceLocation const& _secondLocation,
+		std::string const& _description
+	);
 
 	void docstringParsingError(ErrorId _error, std::string const& _description);
-	void docstringParsingError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+	void docstringParsingError(
+		ErrorId _error,
+		SourceLocation const& _location,
+		std::string const& _description
+	);
 
 	ErrorList const& errors() const;
 
 	void clear();
 
 	/// @returns true iff there is any error (ignores warnings).
-	bool hasErrors() const
-	{
-		return m_errorCount > 0;
-	}
+	bool hasErrors() const { return m_errorCount > 0; }
 
 	/// @returns the number of errors (ignores warnings).
-	unsigned errorCount() const
-	{
-		return m_errorCount;
-	}
+	unsigned errorCount() const { return m_errorCount; }
 
 	// @returns true if the maximum error count has been reached.
 	bool hasExcessiveErrors() const;
@@ -138,23 +169,23 @@ public:
 	{
 	public:
 		ErrorWatcher(ErrorReporter const& _errorReporter):
-			m_errorReporter(_errorReporter),
-			m_initialErrorCount(_errorReporter.errorCount())
+			m_errorReporter(_errorReporter), m_initialErrorCount(_errorReporter.errorCount())
 		{}
 		bool ok() const
 		{
-			solAssert(m_initialErrorCount <= m_errorReporter.errorCount(), "Unexpected error count.");
+			solAssert(
+				m_initialErrorCount <= m_errorReporter.errorCount(),
+				"Unexpected error count."
+			);
 			return m_initialErrorCount == m_errorReporter.errorCount();
 		}
+
 	private:
 		ErrorReporter const& m_errorReporter;
 		unsigned const m_initialErrorCount;
 	};
 
-	ErrorWatcher errorWatcher() const
-	{
-		return ErrorWatcher(*this);
-	}
+	ErrorWatcher errorWatcher() const { return ErrorWatcher(*this); }
 
 private:
 	void error(
@@ -162,20 +193,23 @@ private:
 		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
-		std::string const& _description = std::string());
+		std::string const& _description = std::string()
+	);
 
 	void fatalError(
 		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location,
 		SecondarySourceLocation const& _secondaryLocation,
-		std::string const& _description = std::string());
+		std::string const& _description = std::string()
+	);
 
 	void fatalError(
 		ErrorId _error,
 		Error::Type _type,
 		SourceLocation const& _location = SourceLocation(),
-		std::string const& _description = std::string());
+		std::string const& _description = std::string()
+	);
 
 	// @returns true if error shouldn't be stored
 	bool checkForExcessiveErrors(Error::Type _type);

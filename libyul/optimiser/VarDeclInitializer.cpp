@@ -41,7 +41,9 @@ void VarDeclInitializer::operator()(Block& _block)
 
 			if (_varDecl.variables.size() == 1)
 			{
-				_varDecl.value = make_unique<Expression>(m_dialect.zeroLiteralForType(_varDecl.variables.front().type));
+				_varDecl.value = make_unique<Expression>(
+					m_dialect.zeroLiteralForType(_varDecl.variables.front().type)
+				);
 				return {};
 			}
 			else
@@ -50,13 +52,16 @@ void VarDeclInitializer::operator()(Block& _block)
 				langutil::SourceLocation loc{std::move(_varDecl.location)};
 				for (auto& var: _varDecl.variables)
 				{
-					unique_ptr<Expression> expr = make_unique<Expression >(m_dialect.zeroLiteralForType(var.type));
+					unique_ptr<Expression> expr =
+						make_unique<Expression>(m_dialect.zeroLiteralForType(var.type));
 					ret->emplace_back(VariableDeclaration{loc, {std::move(var)}, std::move(expr)});
 				}
 				return ret;
 			}
-		}
-	};
+		}};
 
-	util::iterateReplacing(_block.statements, [&](auto&& _statement) { return std::visit(visitor, _statement); });
+	util::iterateReplacing(
+		_block.statements,
+		[&](auto&& _statement) { return std::visit(visitor, _statement); }
+	);
 }

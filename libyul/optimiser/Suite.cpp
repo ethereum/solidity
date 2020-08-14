@@ -87,11 +87,9 @@ void OptimiserSuite::run(
 	set<YulString> reservedIdentifiers = _externallyUsedIdentifiers;
 	reservedIdentifiers += _dialect.fixedFunctionNames();
 
-	*_object.code = std::get<Block>(Disambiguator(
-		_dialect,
-		*_object.analysisInfo,
-		reservedIdentifiers
-	)(*_object.code));
+	*_object.code = std::get<Block>(
+		Disambiguator(_dialect, *_object.analysisInfo, reservedIdentifiers)(*_object.code)
+	);
 	Block& ast = *_object.code;
 
 	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
@@ -109,12 +107,7 @@ void OptimiserSuite::run(
 
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
-	StackCompressor::run(
-		_dialect,
-		_object,
-		_optimizeStackAllocation,
-		stackCompressorMaxIterations
-	);
+	StackCompressor::run(_dialect, _object, _optimizeStackAllocation, stackCompressorMaxIterations);
 	suite.runSequence("fDnTOc g", ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
@@ -136,15 +129,13 @@ void OptimiserSuite::run(
 
 namespace
 {
-
-
 template <class... Step>
 map<string, unique_ptr<OptimiserStep>> optimiserStepCollection()
 {
 	map<string, unique_ptr<OptimiserStep>> ret;
 	for (unique_ptr<OptimiserStep>& s: util::make_vector<unique_ptr<OptimiserStep>>(
-		(make_unique<OptimiserStepInstance<Step>>())...
-	))
+			 (make_unique<OptimiserStepInstance<Step>>())...
+		 ))
 	{
 		yulAssert(!ret.count(s->name), "");
 		ret[s->name] = std::move(s);
@@ -186,8 +177,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			SSATransform,
 			StructuralSimplifier,
 			UnusedPruner,
-			VarDeclInitializer
-		>();
+			VarDeclInitializer>();
 	// Does not include VarNameCleaner because it destroys the property of unique names.
 	return instance;
 }
@@ -195,40 +185,40 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 {
 	static map<string, char> lookupTable{
-		{BlockFlattener::name,                'f'},
-		{CircularReferencesPruner::name,      'l'},
+		{BlockFlattener::name, 'f'},
+		{CircularReferencesPruner::name, 'l'},
 		{CommonSubexpressionEliminator::name, 'c'},
-		{ConditionalSimplifier::name,         'C'},
-		{ConditionalUnsimplifier::name,       'U'},
-		{ControlFlowSimplifier::name,         'n'},
-		{DeadCodeEliminator::name,            'D'},
-		{EquivalentFunctionCombiner::name,    'v'},
-		{ExpressionInliner::name,             'e'},
-		{ExpressionJoiner::name,              'j'},
-		{ExpressionSimplifier::name,          's'},
-		{ExpressionSplitter::name,            'x'},
-		{ForLoopConditionIntoBody::name,      'I'},
-		{ForLoopConditionOutOfBody::name,     'O'},
-		{ForLoopInitRewriter::name,           'o'},
-		{FullInliner::name,                   'i'},
-		{FunctionGrouper::name,               'g'},
-		{FunctionHoister::name,               'h'},
-		{LiteralRematerialiser::name,         'T'},
-		{LoadResolver::name,                  'L'},
-		{LoopInvariantCodeMotion::name,       'M'},
-		{RedundantAssignEliminator::name,     'r'},
-		{Rematerialiser::name,                'm'},
-		{SSAReverser::name,                   'V'},
-		{SSATransform::name,                  'a'},
-		{StructuralSimplifier::name,          't'},
-		{UnusedPruner::name,                  'u'},
-		{VarDeclInitializer::name,            'd'},
+		{ConditionalSimplifier::name, 'C'},
+		{ConditionalUnsimplifier::name, 'U'},
+		{ControlFlowSimplifier::name, 'n'},
+		{DeadCodeEliminator::name, 'D'},
+		{EquivalentFunctionCombiner::name, 'v'},
+		{ExpressionInliner::name, 'e'},
+		{ExpressionJoiner::name, 'j'},
+		{ExpressionSimplifier::name, 's'},
+		{ExpressionSplitter::name, 'x'},
+		{ForLoopConditionIntoBody::name, 'I'},
+		{ForLoopConditionOutOfBody::name, 'O'},
+		{ForLoopInitRewriter::name, 'o'},
+		{FullInliner::name, 'i'},
+		{FunctionGrouper::name, 'g'},
+		{FunctionHoister::name, 'h'},
+		{LiteralRematerialiser::name, 'T'},
+		{LoadResolver::name, 'L'},
+		{LoopInvariantCodeMotion::name, 'M'},
+		{RedundantAssignEliminator::name, 'r'},
+		{Rematerialiser::name, 'm'},
+		{SSAReverser::name, 'V'},
+		{SSATransform::name, 'a'},
+		{StructuralSimplifier::name, 't'},
+		{UnusedPruner::name, 'u'},
+		{VarDeclInitializer::name, 'd'},
 	};
 	yulAssert(lookupTable.size() == allSteps().size(), "");
-	yulAssert((
-			util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
-			util::convertContainer<set<char>>(lookupTable | boost::adaptors::map_values)
-		).size() == string(NonStepAbbreviations).size(),
+	yulAssert(
+		(util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
+		 util::convertContainer<set<char>>(lookupTable | boost::adaptors::map_values))
+				.size() == string(NonStepAbbreviations).size(),
 		"Step abbreviation conflicts with a character reserved for another syntactic element"
 	);
 
@@ -289,19 +279,26 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 		return steps;
 	};
 
-	// The sequence has now been validated and must consist of pairs of segments that look like this: `aaa[bbb]`
-	// `aaa` or `[bbb]` can be empty. For example we consider a sequence like `fgo[aaf]Oo` to have
-	// four segments, the last of which is an empty bracket.
+	// The sequence has now been validated and must consist of pairs of segments that look like
+	// this: `aaa[bbb]` `aaa` or `[bbb]` can be empty. For example we consider a sequence like
+	// `fgo[aaf]Oo` to have four segments, the last of which is an empty bracket.
 	size_t currentPairStart = 0;
 	while (currentPairStart < input.size())
 	{
 		size_t openingBracket = input.find('[', currentPairStart);
 		size_t closingBracket = input.find(']', openingBracket);
-		size_t firstCharInside = (openingBracket == string::npos ? input.size() : openingBracket + 1);
+		size_t firstCharInside =
+			(openingBracket == string::npos ? input.size() : openingBracket + 1);
 		yulAssert((openingBracket == string::npos) == (closingBracket == string::npos), "");
 
-		runSequence(abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)), _ast);
-		runSequenceUntilStable(abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)), _ast);
+		runSequence(
+			abbreviationsToSteps(input.substr(currentPairStart, openingBracket - currentPairStart)),
+			_ast
+		);
+		runSequenceUntilStable(
+			abbreviationsToSteps(input.substr(firstCharInside, closingBracket - firstCharInside)),
+			_ast
+		);
 
 		currentPairStart = (closingBracket == string::npos ? input.size() : closingBracket + 1);
 	}

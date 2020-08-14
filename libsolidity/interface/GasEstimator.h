@@ -34,7 +34,6 @@
 
 namespace solidity::frontend
 {
-
 class ASTNode;
 class FunctionDefinition;
 
@@ -50,13 +49,14 @@ public:
 
 	/// Estimates the gas consumption for every assembly item in the given assembly and stores
 	/// it by source location.
-	/// @returns a mapping from each AST node to a pair of its particular and syntactically accumulated gas costs.
+	/// @returns a mapping from each AST node to a pair of its particular and syntactically
+	/// accumulated gas costs.
 	ASTGasConsumptionSelfAccumulated structuralEstimation(
 		evmasm::AssemblyItems const& _items,
 		std::vector<ASTNode const*> const& _ast
 	) const;
-	/// @returns a mapping from nodes with non-overlapping source locations to gas consumptions such that
-	/// the following source locations are part of the mapping:
+	/// @returns a mapping from nodes with non-overlapping source locations to gas consumptions such
+	/// that the following source locations are part of the mapping:
 	/// 1. source locations of statements that do not contain other statements
 	/// 2. maximal source locations that do not overlap locations coming from the first rule
 	static ASTGasConsumption breakToStatementLevel(
@@ -82,7 +82,9 @@ public:
 
 private:
 	/// @returns the set of AST nodes which are the finest nodes at their location.
-	static std::set<ASTNode const*> finestNodesAtLocation(std::vector<ASTNode const*> const& _roots);
+	static std::set<ASTNode const*> finestNodesAtLocation(
+		std::vector<ASTNode const*> const& _roots
+	);
 	langutil::EVMVersion m_evmVersion;
 };
 

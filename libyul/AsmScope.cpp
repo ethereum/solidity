@@ -36,7 +36,11 @@ bool Scope::registerVariable(YulString _name, YulType const& _type)
 	return true;
 }
 
-bool Scope::registerFunction(YulString _name, std::vector<YulType> _arguments, std::vector<YulType> _returns)
+bool Scope::registerFunction(
+	YulString _name,
+	std::vector<YulType> _arguments,
+	std::vector<YulType> _returns
+)
 {
 	if (exists(_name))
 		return false;

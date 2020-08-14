@@ -43,7 +43,7 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	m_recursionDepth = 0;
 
 	_scanner->setScannerMode(ScannerKind::Yul);
-	ScopeGuard resetScanner([&]{ _scanner->setScannerMode(ScannerKind::Solidity); });
+	ScopeGuard resetScanner([&] { _scanner->setScannerMode(ScannerKind::Solidity); });
 
 	try
 	{
@@ -55,7 +55,10 @@ unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _
 	}
 	catch (FatalError const&)
 	{
-		yulAssert(!m_errorReporter.errors().empty(), "Fatal error detected, but no error is reported.");
+		yulAssert(
+			!m_errorReporter.errors().empty(),
+			"Fatal error detected, but no error is reported."
+		);
 	}
 
 	return nullptr;
@@ -131,7 +134,11 @@ Statement Parser::parseStatement()
 		{
 			Statement stmt{createWithLocation<Leave>()};
 			if (!m_insideFunction)
-				m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
+				m_errorReporter.syntaxError(
+					8149_error,
+					currentLocation(),
+					"Keyword \"leave\" can only be used inside a function."
+				);
 			m_scanner->next();
 			return stmt;
 		}
@@ -166,17 +173,19 @@ Statement Parser::parseStatement()
 
 				fatalParserError(
 					2856_error,
-					std::string("Variable name must precede \"") +
-					token +
-					"\"" +
-					(currentToken() == Token::Comma ? " in multiple assignment." : " in assignment.")
+					std::string("Variable name must precede \"") + token + "\"" +
+						(currentToken() == Token::Comma ? " in multiple assignment." :
+															" in assignment.")
 				);
 			}
 
 			auto const& identifier = std::get<Identifier>(elementary);
 
 			if (m_dialect.builtin(identifier.name))
-				fatalParserError(6272_error, "Cannot assign to builtin function \"" + identifier.name.str() + "\".");
+				fatalParserError(
+					6272_error,
+					"Cannot assign to builtin function \"" + identifier.name.str() + "\"."
+				);
 
 			assignment.variableNames.emplace_back(identifier);
 
@@ -203,7 +212,7 @@ Statement Parser::parseStatement()
 	if (holds_alternative<Identifier>(elementary))
 	{
 		Identifier& identifier = std::get<Identifier>(elementary);
-		return ExpressionStatement{identifier.location, { move(identifier) }};
+		return ExpressionStatement{identifier.location, {move(identifier)}};
 	}
 	else if (holds_alternative<Literal>(elementary))
 	{
@@ -332,8 +341,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			currentLocation(),
 			kind,
 			YulString{currentLiteral()},
-			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
-		};
+			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType};
 		advance();
 		if (currentToken() == Token::Colon)
 		{
@@ -489,7 +497,10 @@ YulString Parser::expectAsmIdentifier()
 	}
 
 	if (m_dialect.builtin(name))
-		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
+		fatalParserError(
+			5568_error,
+			"Cannot use builtin function name \"" + name.str() + "\" as identifier name."
+		);
 	advance();
 	return name;
 }
@@ -499,13 +510,25 @@ void Parser::checkBreakContinuePosition(string const& _which)
 	switch (m_currentForLoopComponent)
 	{
 	case ForLoopComponent::None:
-		m_errorReporter.syntaxError(2592_error, currentLocation(), "Keyword \"" + _which + "\" needs to be inside a for-loop body.");
+		m_errorReporter.syntaxError(
+			2592_error,
+			currentLocation(),
+			"Keyword \"" + _which + "\" needs to be inside a for-loop body."
+		);
 		break;
 	case ForLoopComponent::ForLoopPre:
-		m_errorReporter.syntaxError(9615_error, currentLocation(), "Keyword \"" + _which + "\" in for-loop init block is not allowed.");
+		m_errorReporter.syntaxError(
+			9615_error,
+			currentLocation(),
+			"Keyword \"" + _which + "\" in for-loop init block is not allowed."
+		);
 		break;
 	case ForLoopComponent::ForLoopPost:
-		m_errorReporter.syntaxError(2461_error, currentLocation(), "Keyword \"" + _which + "\" in for-loop post block is not allowed.");
+		m_errorReporter.syntaxError(
+			2461_error,
+			currentLocation(),
+			"Keyword \"" + _which + "\" in for-loop post block is not allowed."
+		);
 		break;
 	case ForLoopComponent::ForLoopBody:
 		break;

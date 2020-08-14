@@ -1,18 +1,18 @@
 /*
-    This file is part of solidity.
+	This file is part of solidity.
 
-    solidity is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	solidity is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    solidity is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	solidity is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with solidity.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -36,21 +36,23 @@ using namespace solidity::langutil;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
-ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors, bool errorRecovery = false)
+ASTPointer<ContractDefinition> parseText(
+	std::string const& _source,
+	ErrorList& _errors,
+	bool errorRecovery = false
+)
 {
 	ErrorReporter errorReporter(_errors);
-	ASTPointer<SourceUnit> sourceUnit = Parser(
-		errorReporter,
-		solidity::test::CommonOptions::get().evmVersion(),
-		errorRecovery
-	).parse(std::make_shared<Scanner>(CharStream(_source, "")));
+	ASTPointer<SourceUnit> sourceUnit =
+		Parser(errorReporter, solidity::test::CommonOptions::get().evmVersion(), errorRecovery)
+			.parse(std::make_shared<Scanner>(CharStream(_source, "")));
 	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-		if (ASTPointer<ContractDefinition> contract = dynamic_pointer_cast<ContractDefinition>(node))
+		if (ASTPointer<ContractDefinition> contract =
+				dynamic_pointer_cast<ContractDefinition>(node))
 			return contract;
 	BOOST_FAIL("No contract found in source.");
 	return ASTPointer<ContractDefinition>();
@@ -93,10 +95,7 @@ Error getError(std::string const& _source, bool errorRecovery = false)
 	return *error;
 }
 
-void checkFunctionNatspec(
-	FunctionDefinition const* _function,
-	std::string const& _expectedDoc
-)
+void checkFunctionNatspec(FunctionDefinition const* _function, std::string const& _expectedDoc)
 {
 	auto doc = _function->documentation()->text();
 	BOOST_CHECK_MESSAGE(doc != nullptr, "Function does not have Natspec Doc as expected");
@@ -105,13 +104,12 @@ void checkFunctionNatspec(
 
 }
 
-#define CHECK_PARSE_ERROR(source, substring) \
-do \
-{\
-	Error err = getError((source)); \
-	BOOST_CHECK(searchErrorMessage(err, (substring))); \
-}\
-while(0)
+#define CHECK_PARSE_ERROR(source, substring)               \
+	do                                                     \
+	{                                                      \
+		Error err = getError((source));                    \
+		BOOST_CHECK(searchErrorMessage(err, (substring))); \
+	} while (0)
 
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
@@ -187,8 +185,10 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
 	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
-						"Should not have gotten a Natspecc comment for this function");
+	BOOST_CHECK_MESSAGE(
+		function->documentation() == nullptr,
+		"Should not have gotten a Natspecc comment for this function"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
@@ -219,8 +219,10 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	checkFunctionNatspec(function, "This is test function 2");
 
 	BOOST_REQUIRE_MESSAGE(function = functions.at(2), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
-						"Should not have gotten natspec comment for functionName3()");
+	BOOST_CHECK_MESSAGE(
+		function->documentation() == nullptr,
+		"Should not have gotten natspec comment for functionName3()"
+	);
 
 	BOOST_REQUIRE_MESSAGE(function = functions.at(3), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is test function 4");
@@ -242,8 +244,11 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 	ASTPointer<ContractDefinition> contract = parseText(text, errors);
 	auto functions = contract->definedFunctions();
 	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
-	checkFunctionNatspec(function, "This is a test function\n"
-						 " and it has 2 lines");
+	checkFunctionNatspec(
+		function,
+		"This is a test function\n"
+		" and it has 2 lines"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
@@ -273,8 +278,11 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 	checkFunctionNatspec(function, "fun1 description");
 
 	BOOST_REQUIRE_MESSAGE(function = functions.at(1), "Failed to retrieve function");
-	checkFunctionNatspec(function, "This is a test function\n"
-						 " and it has 2 lines");
+	checkFunctionNatspec(
+		function,
+		"This is a test function\n"
+		" and it has 2 lines"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
@@ -299,8 +307,10 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 	auto functions = contract->definedFunctions();
 
 	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(!function->documentation(),
-						"Shouldn't get natspec docstring for this function");
+	BOOST_CHECK_MESSAGE(
+		!function->documentation(),
+		"Shouldn't get natspec docstring for this function"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
@@ -325,8 +335,10 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 	auto functions = contract->definedFunctions();
 
 	BOOST_REQUIRE_MESSAGE(function = functions.at(0), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(!function->documentation(),
-						"Shouldn't get natspec docstring for this function");
+	BOOST_CHECK_MESSAGE(
+		!function->documentation(),
+		"Shouldn't get natspec docstring for this function"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(variable_definition)
@@ -529,45 +541,24 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 
 BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 {
-	auto keywords = {
-		"after",
-		"alias",
-		"apply",
-		"auto",
-		"case",
-		"copyof",
-		"default",
-		"define",
-		"final",
-		"implements",
-		"in",
-		"inline",
-		"let",
-		"macro",
-		"match",
-		"mutable",
-		"null",
-		"of",
-		"partial",
-		"promise",
-		"reference",
-		"relocatable",
-		"sealed",
-		"sizeof",
-		"static",
-		"supports",
-		"switch",
-		"typedef",
-		"typeof",
-		"unchecked"
-	};
+	auto keywords = {"after",	"alias",	"apply",	 "auto",		"case",	  "copyof",
+					 "default", "define",	"final",	 "implements",	"in",	  "inline",
+					 "let",		"macro",	"match",	 "mutable",		"null",	  "of",
+					 "partial", "promise",	"reference", "relocatable", "sealed", "sizeof",
+					 "static",	"supports", "switch",	 "typedef",		"typeof", "unchecked"};
 
-	BOOST_CHECK_EQUAL(std::size(keywords), static_cast<int>(Token::Unchecked) - static_cast<int>(Token::After) + 1);
+	BOOST_CHECK_EQUAL(
+		std::size(keywords),
+		static_cast<int>(Token::Unchecked) - static_cast<int>(Token::After) + 1
+	);
 
 	for (auto const& keyword: keywords)
 	{
 		auto text = std::string("contract ") + keyword + " {}";
-		CHECK_PARSE_ERROR(text.c_str(), string("Expected identifier but got reserved keyword '") + keyword + "'");
+		CHECK_PARSE_ERROR(
+			text.c_str(),
+			string("Expected identifier but got reserved keyword '") + keyword + "'"
+		);
 	}
 }
 
@@ -673,7 +664,10 @@ BOOST_AUTO_TEST_CASE(inline_asm_end_location)
 		bool visit(InlineAssembly const& _inlineAsm) override
 		{
 			auto loc = _inlineAsm.location();
-			auto asmStr = loc.source->source().substr(static_cast<size_t>(loc.start), static_cast<size_t>(loc.end - loc.start));
+			auto asmStr = loc.source->source().substr(
+				static_cast<size_t>(loc.start),
+				static_cast<size_t>(loc.end - loc.start)
+			);
 			BOOST_CHECK_EQUAL(asmStr, "assembly { a := 0x12345678 }");
 			visited = true;
 
@@ -689,4 +683,4 @@ BOOST_AUTO_TEST_CASE(inline_asm_end_location)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

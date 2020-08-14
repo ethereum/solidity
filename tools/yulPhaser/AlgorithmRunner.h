@@ -31,7 +31,6 @@
 
 namespace solidity::phaser
 {
-
 /**
  * Manages a population and executes a genetic algorithm on it. It's independent of the
  * implementation details of a specific algorithm which is pluggable via @a GeneticAlgorithm class.
@@ -64,7 +63,8 @@ public:
 		m_population(std::move(_initialPopulation)),
 		m_programCaches(std::move(_programCaches)),
 		m_options(std::move(_options)),
-		m_outputStream(_outputStream) {}
+		m_outputStream(_outputStream)
+	{}
 
 	void run(GeneticAlgorithm& _algorithm);
 
@@ -72,11 +72,7 @@ public:
 	Population const& population() const { return m_population; }
 
 private:
-	void printRoundSummary(
-		size_t _round,
-		clock_t _roundTimeStart,
-		clock_t _totalTimeStart
-	) const;
+	void printRoundSummary(size_t _round, clock_t _roundTimeStart, clock_t _totalTimeStart) const;
 	void printInitialPopulation() const;
 	void printCacheStats() const;
 	void populationAutosave() const;

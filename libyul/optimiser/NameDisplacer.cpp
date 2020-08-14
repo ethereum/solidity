@@ -28,10 +28,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-void NameDisplacer::operator()(Identifier& _identifier)
-{
-	checkAndReplace(_identifier.name);
-}
+void NameDisplacer::operator()(Identifier& _identifier) { checkAndReplace(_identifier.name); }
 
 void NameDisplacer::operator()(VariableDeclaration& _varDecl)
 {
@@ -83,4 +80,3 @@ void NameDisplacer::checkAndReplace(YulString& _name) const
 	if (m_translations.count(_name))
 		_name = m_translations.at(_name);
 }
-

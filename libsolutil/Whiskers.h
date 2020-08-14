@@ -32,7 +32,6 @@
 
 namespace solidity::util
 {
-
 DEV_SIMPLE_EXCEPTION(WhiskersError);
 
 /**
@@ -77,14 +76,14 @@ public:
 
 	/// Sets a single regular parameter, <paramName>.
 	Whiskers& operator()(std::string _parameter, std::string _value);
-	Whiskers& operator()(std::string _parameter, char const* _value) { return (*this)(_parameter, std::string{_value}); }
+	Whiskers& operator()(std::string _parameter, char const* _value)
+	{
+		return (*this)(_parameter, std::string{_value});
+	}
 	/// Sets a condition parameter, <?paramName>...<!paramName>...</paramName>
 	Whiskers& operator()(std::string _parameter, bool _value);
 	/// Sets a list parameter, <#listName> </listName>.
-	Whiskers& operator()(
-		std::string _listParameter,
-		std::vector<StringMap> _values
-	);
+	Whiskers& operator()(std::string _listParameter, std::vector<StringMap> _values);
 
 	std::string render() const;
 

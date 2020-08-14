@@ -42,18 +42,15 @@ void ConditionalUnsimplifier::operator()(Switch& _switch)
 		if (_case.value)
 		{
 			(*this)(*_case.value);
-			if (
-				!_case.body.statements.empty() &&
-				holds_alternative<Assignment>(_case.body.statements.front())
-			)
+			if (!_case.body.statements.empty() &&
+				holds_alternative<Assignment>(_case.body.statements.front()))
 			{
 				Assignment const& assignment = std::get<Assignment>(_case.body.statements.front());
-				if (
-					assignment.variableNames.size() == 1 &&
+				if (assignment.variableNames.size() == 1 &&
 					assignment.variableNames.front().name == expr &&
 					holds_alternative<Literal>(*assignment.value) &&
-					valueOfLiteral(std::get<Literal>(*assignment.value)) == valueOfLiteral(*_case.value)
-				)
+					valueOfLiteral(std::get<Literal>(*assignment.value)) ==
+						valueOfLiteral(*_case.value))
 					_case.body.statements.erase(_case.body.statements.begin());
 			}
 		}
@@ -71,25 +68,18 @@ void ConditionalUnsimplifier::operator()(Block& _block)
 			if (holds_alternative<If>(_stmt1))
 			{
 				If& _if = std::get<If>(_stmt1);
-				if (
-					holds_alternative<Identifier>(*_if.condition) &&
-					!_if.body.statements.empty()
-				)
+				if (holds_alternative<Identifier>(*_if.condition) && !_if.body.statements.empty())
 				{
 					YulString condition = std::get<Identifier>(*_if.condition).name;
-					if (
-						holds_alternative<Assignment>(_stmt2) &&
+					if (holds_alternative<Assignment>(_stmt2) &&
 						TerminationFinder(m_dialect).controlFlowKind(_if.body.statements.back()) !=
-							TerminationFinder::ControlFlow::FlowOut
-					)
+							TerminationFinder::ControlFlow::FlowOut)
 					{
 						Assignment const& assignment = std::get<Assignment>(_stmt2);
-						if (
-							assignment.variableNames.size() == 1 &&
+						if (assignment.variableNames.size() == 1 &&
 							assignment.variableNames.front().name == condition &&
 							holds_alternative<Literal>(*assignment.value) &&
-							valueOfLiteral(std::get<Literal>(*assignment.value)) == 0
-						)
+							valueOfLiteral(std::get<Literal>(*assignment.value)) == 0)
 							return {make_vector<Statement>(std::move(_stmt1))};
 					}
 				}

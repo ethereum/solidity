@@ -27,7 +27,6 @@
 
 namespace solidity::frontend::smt
 {
-
 class EncodingContext;
 class Type;
 
@@ -53,7 +52,9 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	virtual smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
+	virtual smtutil::Expression currentValue(
+		frontend::TypePointer const& _targetType = TypePointer{}
+	) const;
 	std::string currentName() const;
 	virtual smtutil::Expression valueAtIndex(unsigned _index) const;
 	virtual std::string nameAtIndex(unsigned _index) const;
@@ -119,10 +120,7 @@ public:
 class SymbolicAddressVariable: public SymbolicIntVariable
 {
 public:
-	SymbolicAddressVariable(
-		std::string _uniqueName,
-		EncodingContext& _context
-	);
+	SymbolicAddressVariable(std::string _uniqueName, EncodingContext& _context);
 };
 
 /**
@@ -161,7 +159,8 @@ public:
 		EncodingContext& _context
 	);
 
-	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{})
+		const override;
 
 	// Explicit request the function declaration.
 	smtutil::Expression currentFunctionValue() const;
@@ -189,8 +188,7 @@ private:
 		TypeProvider::uint256(),
 		TypeProvider::uint256(),
 		m_uniqueName + "_abstract",
-		m_context
-	};
+		m_context};
 };
 
 /**
@@ -251,11 +249,24 @@ public:
 
 	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
 
-	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{})
+		const override;
 	smtutil::Expression valueAtIndex(unsigned _index) const override;
-	smtutil::Expression resetIndex() override { SymbolicVariable::resetIndex(); return m_pair.resetIndex(); }
-	smtutil::Expression setIndex(unsigned _index) override { SymbolicVariable::setIndex(_index); return m_pair.setIndex(_index); }
-	smtutil::Expression increaseIndex() override { SymbolicVariable::increaseIndex(); return m_pair.increaseIndex(); }
+	smtutil::Expression resetIndex() override
+	{
+		SymbolicVariable::resetIndex();
+		return m_pair.resetIndex();
+	}
+	smtutil::Expression setIndex(unsigned _index) override
+	{
+		SymbolicVariable::setIndex(_index);
+		return m_pair.setIndex(_index);
+	}
+	smtutil::Expression increaseIndex() override
+	{
+		SymbolicVariable::increaseIndex();
+		return m_pair.increaseIndex();
+	}
 	smtutil::Expression elements();
 	smtutil::Expression length();
 

@@ -42,7 +42,6 @@ using namespace soltest;
 
 namespace
 {
-
 using ParameterList = solidity::frontend::test::ParameterList;
 
 size_t arraySize(string const& _arrayType)
@@ -51,10 +50,8 @@ size_t arraySize(string const& _arrayType)
 	auto rightBrack = _arrayType.rfind("]");
 
 	soltestAssert(
-		leftBrack != string::npos &&
-		rightBrack != string::npos &&
-		rightBrack == _arrayType.size() - 1 &&
-		leftBrack < rightBrack,
+		leftBrack != string::npos && rightBrack != string::npos &&
+			rightBrack == _arrayType.size() - 1 && leftBrack < rightBrack,
 		""
 	);
 
@@ -63,65 +60,35 @@ size_t arraySize(string const& _arrayType)
 	return static_cast<size_t>(stoi(size));
 }
 
-bool isBool(string const& _type)
-{
-	return _type == "bool";
-}
+bool isBool(string const& _type) { return _type == "bool"; }
 
-bool isUint(string const& _type)
-{
-	return regex_match(_type, regex{"uint\\d*"});
-}
+bool isUint(string const& _type) { return regex_match(_type, regex{"uint\\d*"}); }
 
-bool isInt(string const& _type)
-{
-	return regex_match(_type, regex{"int\\d*"});
-}
+bool isInt(string const& _type) { return regex_match(_type, regex{"int\\d*"}); }
 
-bool isFixedBytes(string const& _type)
-{
-	return regex_match(_type, regex{"bytes\\d+"});
-}
+bool isFixedBytes(string const& _type) { return regex_match(_type, regex{"bytes\\d+"}); }
 
-bool isBytes(string const& _type)
-{
-	return regex_match(_type, regex{"\\bbytes\\b"});
-}
+bool isBytes(string const& _type) { return regex_match(_type, regex{"\\bbytes\\b"}); }
 
-bool isString(string const& _type)
-{
-	return _type == "string";
-}
+bool isString(string const& _type) { return _type == "string"; }
 
-bool isFixedBoolArray(string const& _type)
-{
-	return regex_match(_type, regex{"bool\\[\\d+\\]"});
-}
+bool isFixedBoolArray(string const& _type) { return regex_match(_type, regex{"bool\\[\\d+\\]"}); }
 
 bool isFixedUintArray(string const& _type)
 {
 	return regex_match(_type, regex{"uint\\d*\\[\\d+\\]"});
 }
 
-bool isFixedIntArray(string const& _type)
-{
-	return regex_match(_type, regex{"int\\d*\\[\\d+\\]"});
-}
+bool isFixedIntArray(string const& _type) { return regex_match(_type, regex{"int\\d*\\[\\d+\\]"}); }
 
 bool isFixedStringArray(string const& _type)
 {
 	return regex_match(_type, regex{"string\\[\\d+\\]"});
 }
 
-bool isTuple(string const& _type)
-{
-	return _type == "tuple";
-}
+bool isTuple(string const& _type) { return _type == "tuple"; }
 
-bool isFixedTupleArray(string const& _type)
-{
-	return regex_match(_type, regex{"tuple\\[\\d+\\]"});
-}
+bool isFixedTupleArray(string const& _type) { return regex_match(_type, regex{"tuple\\[\\d+\\]"}); }
 
 string functionSignatureFromABI(Json::Value const& _functionABI)
 {
@@ -266,10 +233,7 @@ void ContractABIUtils::overwriteParameters(
 		boost::bind<void>(
 			[&](Parameter _a, Parameter& _b) -> void
 			{
-				if (
-					_a.abiType.size != _b.abiType.size ||
-					_a.abiType.type != _b.abiType.type
-				)
+				if (_a.abiType.size != _b.abiType.size || _a.abiType.type != _b.abiType.type)
 				{
 					_errorReporter.warning("Type or size of parameter(s) does not match.");
 					_b = _a;
@@ -291,9 +255,8 @@ solidity::frontend::test::ParameterList ContractABIUtils::preferredParameters(
 	if (_targetParameters.size() != _sourceParameters.size())
 	{
 		_errorReporter.warning(
-			"Encoding does not match byte range. The call returned " +
-			to_string(_bytes.size()) + " bytes, but " +
-			to_string(encodingSize(_targetParameters)) + " bytes were expected."
+			"Encoding does not match byte range. The call returned " + to_string(_bytes.size()) +
+			" bytes, but " + to_string(encodingSize(_targetParameters)) + " bytes were expected."
 		);
 		return _sourceParameters;
 	}
@@ -318,21 +281,21 @@ solidity::frontend::test::ParameterList ContractABIUtils::failureParameters(byte
 {
 	ParameterList parameters;
 
-	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
+	parameters.push_back(
+		Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}}
+	);
 	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
 	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
 
-	/// If _bytes contains at least a 1 byte message (function selector + tail pointer + message length + message)
-	/// append an additional string parameter to represent that message.
+	/// If _bytes contains at least a 1 byte message (function selector + tail pointer + message
+	/// length + message) append an additional string parameter to represent that message.
 	if (_bytes.size() > 68)
 		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::String}, FormatInfo{}});
 
 	return parameters;
 }
 
-size_t ContractABIUtils::encodingSize(
-	solidity::frontend::test::ParameterList const& _parameters
-)
+size_t ContractABIUtils::encodingSize(solidity::frontend::test::ParameterList const& _parameters)
 {
 	auto sizeFold = [](size_t const _a, Parameter const& _b) { return _a + _b.abiType.size; };
 

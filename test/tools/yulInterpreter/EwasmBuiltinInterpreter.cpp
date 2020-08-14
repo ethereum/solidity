@@ -39,17 +39,20 @@ using solidity::util::h256;
 
 namespace
 {
-
 /// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
 /// continue with an infinite sequence of zero bytes beyond its end.
 void copyZeroExtended(
-	map<u256, uint8_t>& _target, bytes const& _source,
-	size_t _targetOffset, size_t _sourceOffset, size_t _size
+	map<u256, uint8_t>& _target,
+	bytes const& _source,
+	size_t _targetOffset,
+	size_t _sourceOffset,
+	size_t _size
 )
 {
 	for (size_t i = 0; i < _size; ++i)
-		_target[_targetOffset + i] = _sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
+		_target[_targetOffset + i] =
+			_sourceOffset + i < _source.size() ? _source[_sourceOffset + i] : 0;
 }
 
 /// Count leading zeros for uint64. Following WebAssembly rules, it returns 64 for @a _v being zero.
@@ -68,8 +71,8 @@ uint64_t clz64(uint64_t _v)
 	return r;
 }
 
-/// Count trailing zeros for uint32. Following WebAssembly rules, it returns 32 for @a _v being zero.
-/// NOTE: the ctz builtin of the compiler may or may not do this
+/// Count trailing zeros for uint32. Following WebAssembly rules, it returns 32 for @a _v being
+/// zero. NOTE: the ctz builtin of the compiler may or may not do this
 uint32_t ctz32(uint32_t _v)
 {
 	if (_v == 0)
@@ -84,8 +87,8 @@ uint32_t ctz32(uint32_t _v)
 	return r;
 }
 
-/// Count trailing zeros for uint64. Following WebAssembly rules, it returns 64 for @a _v being zero.
-/// NOTE: the ctz builtin of the compiler may or may not do this
+/// Count trailing zeros for uint64. Following WebAssembly rules, it returns 64 for @a _v being
+/// zero. NOTE: the ctz builtin of the compiler may or may not do this
 uint64_t ctz64(uint64_t _v)
 {
 	if (_v == 0)
@@ -114,7 +117,12 @@ uint64_t popcnt(uint64_t _v)
 
 }
 
-using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
+using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<
+	512,
+	256,
+	boost::multiprecision::unsigned_magnitude,
+	boost::multiprecision::unchecked,
+	void>>;
 
 u256 EwasmBuiltinInterpreter::evalBuiltin(YulString _fun, vector<u256> const& _arguments)
 {
@@ -313,8 +321,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 			throw ExplicitlyTerminated();
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
-				m_state.memory, m_state.calldata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+				m_state.memory,
+				m_state.calldata,
+				size_t(arg[0]),
+				size_t(arg[1]),
+				size_t(arg[2])
 			);
 		return {};
 	}
@@ -366,8 +377,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	{
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+				m_state.memory,
+				m_state.code,
+				size_t(arg[0]),
+				size_t(arg[1]),
+				size_t(arg[2])
 			);
 		return 0;
 	}
@@ -396,8 +410,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		if (accessMemory(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the same thing.
 			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
+				m_state.memory,
+				m_state.code,
+				size_t(arg[1]),
+				size_t(arg[2]),
+				size_t(arg[3])
 			);
 		return 0;
 	}
@@ -452,8 +469,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 			throw ExplicitlyTerminated();
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
-				m_state.memory, m_state.calldata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+				m_state.memory,
+				m_state.calldata,
+				size_t(arg[0]),
+				size_t(arg[1]),
+				size_t(arg[2])
 			);
 		return {};
 	}
@@ -547,12 +567,20 @@ u256 EwasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
 	return value;
 }
 
-void EwasmBuiltinInterpreter::logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EwasmBuiltinInterpreter::logTrace(
+	evmasm::Instruction _instruction,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
 	logTrace(evmasm::instructionInfo(_instruction).name, _arguments, _data);
 }
 
-void EwasmBuiltinInterpreter::logTrace(std::string const& _pseudoInstruction, std::vector<u256> const& _arguments, bytes const& _data)
+void EwasmBuiltinInterpreter::logTrace(
+	std::string const& _pseudoInstruction,
+	std::vector<u256> const& _arguments,
+	bytes const& _data
+)
 {
 	string message = _pseudoInstruction + "(";
 	for (size_t i = 0; i < _arguments.size(); ++i)

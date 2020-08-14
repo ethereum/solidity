@@ -79,10 +79,7 @@ public:
 		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul))"};
 	}
 
-	bool matches(string const& _name) const
-	{
-		return regex_match(_name, m_filterExpression);
-	}
+	bool matches(string const& _name) const { return regex_match(_name, m_filterExpression); }
 
 private:
 	string m_filter;
@@ -123,6 +120,7 @@ public:
 	);
 
 	static string editor;
+
 private:
 	enum class Request
 	{
@@ -158,26 +156,25 @@ TestTool::Result TestTool::process()
 		{
 			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
 
-			m_test = m_testCaseCreator(TestCase::Config{
-				m_path.string(),
-				m_options.evmVersion(),
-				m_options.enforceViaYul
-			});
+			m_test = m_testCaseCreator(
+				TestCase::Config{m_path.string(), m_options.evmVersion(), m_options.enforceViaYul}
+			);
 			if (m_test->shouldRun())
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
-					case TestCase::TestResult::Success:
-						AnsiColorized(cout, formatted, {BOLD, GREEN}) << "OK" << endl;
-						return Result::Success;
-					default:
-						AnsiColorized(cout, formatted, {BOLD, RED}) << "FAIL" << endl;
+				case TestCase::TestResult::Success:
+					AnsiColorized(cout, formatted, {BOLD, GREEN}) << "OK" << endl;
+					return Result::Success;
+				default:
+					AnsiColorized(cout, formatted, {BOLD, RED}) << "FAIL" << endl;
 
-						AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
-						m_test->printSource(cout, "    ", formatted);
-						m_test->printSettings(cout, "    ", formatted);
+					AnsiColorized(cout, formatted, {BOLD, CYAN}) << "  Contract:" << endl;
+					m_test->printSource(cout, "    ", formatted);
+					m_test->printSettings(cout, "    ", formatted);
 
-						cout << endl << outputMessages.str() << endl;
-						return result == TestCase::TestResult::FatalError ? Result::Exception : Result::Failure;
+					cout << endl << outputMessages.str() << endl;
+					return result == TestCase::TestResult::FatalError ? Result::Exception :
+																		  Result::Failure;
 				}
 			else
 			{
@@ -190,22 +187,19 @@ TestTool::Result TestTool::process()
 	}
 	catch (boost::exception const& _e)
 	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Exception during test: " << boost::diagnostic_information(_e) << endl;
+		AnsiColorized(cout, formatted, {BOLD, RED})
+			<< "Exception during test: " << boost::diagnostic_information(_e) << endl;
 		return Result::Exception;
 	}
 	catch (std::exception const& _e)
 	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Exception during test" <<
-			(_e.what() ? ": " + string(_e.what()) : ".") <<
-			endl;
+		AnsiColorized(cout, formatted, {BOLD, RED})
+			<< "Exception during test" << (_e.what() ? ": " + string(_e.what()) : ".") << endl;
 		return Result::Exception;
 	}
 	catch (...)
 	{
-		AnsiColorized(cout, formatted, {BOLD, RED}) <<
-			"Unknown exception during test." << endl;
+		AnsiColorized(cout, formatted, {BOLD, RED}) << "Unknown exception during test." << endl;
 		return Result::Exception;
 	}
 }
@@ -220,7 +214,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 
 	while (true)
 	{
-		switch(readStandardInputChar())
+		switch (readStandardInputChar())
 		{
 		case 's':
 			cout << endl;
@@ -274,10 +268,11 @@ TestStats TestTool::processPath(
 		{
 			paths.pop();
 			for (auto const& entry: boost::iterator_range<fs::directory_iterator>(
-				fs::directory_iterator(fullpath),
-				fs::directory_iterator()
-			))
-				if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
+					 fs::directory_iterator(fullpath),
+					 fs::directory_iterator()
+				 ))
+				if (fs::is_directory(entry.path()) ||
+					TestCase::isTestFilename(entry.path().filename()))
 					paths.push(currentPath / entry.path().filename());
 		}
 		else if (m_exitRequested)
@@ -288,19 +283,15 @@ TestStats TestTool::processPath(
 		else
 		{
 			++testCount;
-			TestTool testTool(
-				_testCaseCreator,
-				_options,
-				fullpath,
-				currentPath.generic_path().string()
-			);
+			TestTool
+				testTool(_testCaseCreator, _options, fullpath, currentPath.generic_path().string());
 			auto result = testTool.process();
 
-			switch(result)
+			switch (result)
 			{
 			case Result::Failure:
 			case Result::Exception:
-				switch(testTool.handleResponse(result == Result::Exception))
+				switch (testTool.handleResponse(result == Result::Exception))
 				{
 				case Request::Quit:
 					paths.pop();
@@ -328,13 +319,11 @@ TestStats TestTool::processPath(
 		}
 	}
 
-	return { successCount, testCount, skippedCount };
-
+	return {successCount, testCount, skippedCount};
 }
 
 namespace
 {
-
 void setupTerminal()
 {
 #if defined(_WIN32) && defined(ENABLE_VIRTUAL_TERMINAL_PROCESSING)
@@ -372,26 +361,19 @@ std::optional<TestStats> runTestSuite(
 		return std::nullopt;
 	}
 
-	TestStats stats = TestTool::processPath(
-		_testCaseCreator,
-		_options,
-		_basePath,
-		_subdirectory
-	);
+	TestStats stats = TestTool::processPath(_testCaseCreator, _options, _basePath, _subdirectory);
 
 	if (stats.skippedCount != stats.testCount)
 	{
 		cout << endl << _name << " Test Summary: ";
-		AnsiColorized(cout, formatted, {BOLD, stats ? GREEN : RED}) <<
-			stats.successCount <<
-			"/" <<
-			stats.testCount;
+		AnsiColorized(cout, formatted, {BOLD, stats ? GREEN : RED})
+			<< stats.successCount << "/" << stats.testCount;
 		cout << " tests successful";
 		if (stats.skippedCount > 0)
 		{
 			cout << " (";
 			AnsiColorized(cout, formatted, {BOLD, YELLOW}) << stats.skippedCount;
-			cout<< " tests skipped)";
+			cout << " tests skipped)";
 		}
 		cout << "." << endl << endl;
 	}
@@ -400,7 +382,7 @@ std::optional<TestStats> runTestSuite(
 
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char const* argv[])
 {
 	setupTerminal();
 
@@ -422,12 +404,14 @@ int main(int argc, char const *argv[])
 		}
 	}
 
-	auto& options = dynamic_cast<solidity::test::IsolTestOptions const&>(solidity::test::CommonOptions::get());
+	auto& options =
+		dynamic_cast<solidity::test::IsolTestOptions const&>(solidity::test::CommonOptions::get());
 
 	bool disableSemantics = !solidity::test::EVMHost::getVM(options.evmonePath.string());
 	if (disableSemantics)
 	{
-		cout << "Unable to find " << solidity::test::evmoneFilename << ". Please provide the path using --evmonepath <path>." << endl;
+		cout << "Unable to find " << solidity::test::evmoneFilename
+			 << ". Please provide the path using --evmonepath <path>." << endl;
 		cout << "You can download it at" << endl;
 		cout << solidity::test::evmoneDownloadLink << endl;
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
@@ -460,8 +444,8 @@ int main(int argc, char const *argv[])
 	}
 
 	cout << endl << "Summary: ";
-	AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
-		 global_stats.successCount << "/" << global_stats.testCount;
+	AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED})
+		<< global_stats.successCount << "/" << global_stats.testCount;
 	cout << " tests successful";
 	if (global_stats.skippedCount > 0)
 	{
@@ -472,7 +456,9 @@ int main(int argc, char const *argv[])
 	cout << "." << endl;
 
 	if (disableSemantics)
-		cout << "\nNOTE: Skipped semantics tests because " << solidity::test::evmoneFilename << " could not be found.\n" << endl;
+		cout << "\nNOTE: Skipped semantics tests because " << solidity::test::evmoneFilename
+			 << " could not be found.\n"
+			 << endl;
 
 	return global_stats ? 0 : 1;
 }

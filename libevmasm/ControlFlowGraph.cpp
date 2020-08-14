@@ -35,10 +35,9 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
 
-BlockId::BlockId(u256 const& _id):
-	m_id(unsigned(_id))
+BlockId::BlockId(u256 const& _id): m_id(unsigned(_id))
 {
-	assertThrow( _id < initial().m_id, OptimizerException, "Tag number too large.");
+	assertThrow(_id < initial().m_id, OptimizerException, "Tag number too large.");
 }
 
 BasicBlocks ControlFlowGraph::optimisedBlocks()
@@ -222,14 +221,17 @@ void ControlFlowGraph::gatherKnowledge()
 	KnownStatePointer emptyState = make_shared<KnownState>();
 	bool unknownJumpEncountered = false;
 
-	struct WorkQueueItem {
+	struct WorkQueueItem
+	{
 		BlockId blockId;
 		KnownStatePointer state;
 		set<BlockId> blocksSeen;
 	};
 
-	vector<WorkQueueItem> workQueue{WorkQueueItem{BlockId::initial(), emptyState->copy(), set<BlockId>()}};
-	auto addWorkQueueItem = [&](WorkQueueItem const& _currentItem, BlockId _to, KnownStatePointer const& _state)
+	vector<WorkQueueItem> workQueue{
+		WorkQueueItem{BlockId::initial(), emptyState->copy(), set<BlockId>()}};
+	auto addWorkQueueItem =
+		[&](WorkQueueItem const& _currentItem, BlockId _to, KnownStatePointer const& _state)
 	{
 		WorkQueueItem item;
 		item.blockId = _to;
@@ -243,10 +245,11 @@ void ControlFlowGraph::gatherKnowledge()
 	{
 		WorkQueueItem item = move(workQueue.back());
 		workQueue.pop_back();
-		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
+		//@todo we might have to do something like incrementing the sequence number for each
+		// JUMPDEST
 		assertThrow(!!item.blockId, OptimizerException, "");
 		if (!m_blocks.count(item.blockId))
-			continue; // too bad, we do not know the tag, probably an invalid jump
+			continue;  // too bad, we do not know the tag, probably an invalid jump
 		BasicBlock& block = m_blocks.at(item.blockId);
 		KnownStatePointer state = item.state;
 		if (block.startState)
@@ -267,10 +270,8 @@ void ControlFlowGraph::gatherKnowledge()
 		while (pc < block.end && !SemanticInformation::altersControlFlow(m_items.at(pc)))
 			state->feedItem(m_items.at(pc++));
 
-		if (
-			block.endType == BasicBlock::EndType::JUMP ||
-			block.endType == BasicBlock::EndType::JUMPI
-		)
+		if (block.endType == BasicBlock::EndType::JUMP ||
+			block.endType == BasicBlock::EndType::JUMPI)
 		{
 			assertThrow(block.begin <= pc && pc == block.end - 1, OptimizerException, "");
 			//@todo in the case of JUMPI, add knowledge about the condition to the state
@@ -288,8 +289,11 @@ void ControlFlowGraph::gatherKnowledge()
 					// JUMPDESTs.
 					unknownJumpEncountered = true;
 					for (auto const& it: m_blocks)
-						if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
-							workQueue.push_back(WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()});
+						if (it.second.begin < it.second.end &&
+							m_items[it.second.begin].type() == Tag)
+							workQueue.push_back(
+								WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()}
+							);
 				}
 			}
 			else
@@ -302,10 +306,8 @@ void ControlFlowGraph::gatherKnowledge()
 
 		block.endState = state;
 
-		if (
-			block.endType == BasicBlock::EndType::HANDOVER ||
-			block.endType == BasicBlock::EndType::JUMPI
-		)
+		if (block.endType == BasicBlock::EndType::HANDOVER ||
+			block.endType == BasicBlock::EndType::JUMPI)
 			addWorkQueueItem(item, block.next, state);
 	}
 
@@ -333,11 +335,8 @@ BasicBlocks ControlFlowGraph::rebuildCode()
 	set<BlockId> blocksAdded;
 	BasicBlocks blocks;
 
-	for (
-		BlockId blockId = BlockId::initial();
-		blockId;
-		blockId = blocksToAdd.empty() ? BlockId::invalid() : *blocksToAdd.begin()
-	)
+	for (BlockId blockId = BlockId::initial(); blockId;
+		 blockId = blocksToAdd.empty() ? BlockId::invalid() : *blocksToAdd.begin())
 	{
 		bool previousHandedOver = (blockId == BlockId::initial());
 		while (m_blocks.at(blockId).prev)

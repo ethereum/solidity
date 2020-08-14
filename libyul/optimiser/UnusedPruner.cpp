@@ -55,8 +55,7 @@ UnusedPruner::UnusedPruner(
 	bool _allowMSizeOptimization,
 	set<YulString> const& _externallyUsedFunctions
 ):
-	m_dialect(_dialect),
-	m_allowMSizeOptimization(_allowMSizeOptimization)
+	m_dialect(_dialect), m_allowMSizeOptimization(_allowMSizeOptimization)
 {
 	m_references = ReferencesCounter::countReferences(_function);
 	for (auto const& f: _externallyUsedFunctions)
@@ -84,36 +83,37 @@ void UnusedPruner::operator()(Block& _block)
 			// replace `let a := f()` by `pop(f())` (in pure Yul, this will be
 			// `drop(f())`).
 			if (std::none_of(
-				varDecl.variables.begin(),
-				varDecl.variables.end(),
-				[&](TypedName const& _typedName) { return used(_typedName.name); }
-			))
+					varDecl.variables.begin(),
+					varDecl.variables.end(),
+					[&](TypedName const& _typedName) { return used(_typedName.name); }
+				))
 			{
 				if (!varDecl.value)
 					statement = Block{std::move(varDecl.location), {}};
-				else if (
-					SideEffectsCollector(m_dialect, *varDecl.value, m_functionSideEffects).
-					sideEffectFree(m_allowMSizeOptimization)
-				)
+				else if (SideEffectsCollector(m_dialect, *varDecl.value, m_functionSideEffects)
+							 .sideEffectFree(m_allowMSizeOptimization))
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
 					statement = Block{std::move(varDecl.location), {}};
 				}
-				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction(varDecl.variables.front().type))
-					statement = ExpressionStatement{varDecl.location, FunctionCall{
+				else if (
+					varDecl.variables.size() == 1 &&
+					m_dialect.discardFunction(varDecl.variables.front().type)
+				)
+					statement = ExpressionStatement{
 						varDecl.location,
-						{varDecl.location, m_dialect.discardFunction(varDecl.variables.front().type)->name},
-						{*std::move(varDecl.value)}
-					}};
+						FunctionCall{
+							varDecl.location,
+							{varDecl.location,
+							 m_dialect.discardFunction(varDecl.variables.front().type)->name},
+							{*std::move(varDecl.value)}}};
 			}
 		}
 		else if (holds_alternative<ExpressionStatement>(statement))
 		{
 			ExpressionStatement& exprStmt = std::get<ExpressionStatement>(statement);
-			if (
-				SideEffectsCollector(m_dialect, exprStmt.expression, m_functionSideEffects).
-				sideEffectFree(m_allowMSizeOptimization)
-			)
+			if (SideEffectsCollector(m_dialect, exprStmt.expression, m_functionSideEffects)
+					.sideEffectFree(m_allowMSizeOptimization))
 			{
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
 				statement = Block{std::move(exprStmt.location), {}};
@@ -136,8 +136,12 @@ void UnusedPruner::runUntilStabilised(
 	while (true)
 	{
 		UnusedPruner pruner(
-			_dialect, _ast, _allowMSizeOptimization, _functionSideEffects,
-							_externallyUsedFunctions);
+			_dialect,
+			_ast,
+			_allowMSizeOptimization,
+			_functionSideEffects,
+			_externallyUsedFunctions
+		);
 		pruner(_ast);
 		if (!pruner.shouldRunAgain())
 			return;
@@ -153,7 +157,13 @@ void UnusedPruner::runUntilStabilisedOnFullAST(
 	map<YulString, SideEffects> functionSideEffects =
 		SideEffectsPropagator::sideEffects(_dialect, CallGraphGenerator::callGraph(_ast));
 	bool allowMSizeOptimization = !MSizeFinder::containsMSize(_dialect, _ast);
-	runUntilStabilised(_dialect, _ast, allowMSizeOptimization, &functionSideEffects, _externallyUsedFunctions);
+	runUntilStabilised(
+		_dialect,
+		_ast,
+		allowMSizeOptimization,
+		&functionSideEffects,
+		_externallyUsedFunctions
+	);
 }
 
 void UnusedPruner::runUntilStabilised(

@@ -39,12 +39,13 @@ using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
-
-#define REQUIRE_LOG_DATA(DATA) do { \
-	BOOST_REQUIRE_EQUAL(numLogs(), 1); \
-	BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress); \
-	ABI_CHECK(logData(0), DATA); \
-} while (false)
+#define REQUIRE_LOG_DATA(DATA)                               \
+	do                                                       \
+	{                                                        \
+		BOOST_REQUIRE_EQUAL(numLogs(), 1);                   \
+		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress); \
+		ABI_CHECK(logData(0), DATA);                         \
+	} while (false)
 
 BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
 
@@ -74,13 +75,16 @@ BOOST_AUTO_TEST_CASE(value_types)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			10, u256(65534), u256(0x121212), u256(-1), string("\x1b\xab\xab"), true, u160(u256(-5))
-		));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f()");
+				  REQUIRE_LOG_DATA(encodeArgs(
+					  10,
+					  u256(65534),
+					  u256(0x121212),
+					  u256(-1),
+					  string("\x1b\xab\xab"),
+					  true,
+					  u160(u256(-5))
+				  ));)
 }
 
 BOOST_AUTO_TEST_CASE(string_literal)
@@ -94,12 +98,15 @@ BOOST_AUTO_TEST_CASE(string_literal)
 		}
 	)";
 	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			0x60, string("abcde"), 0xa0,
-			6, string("abcdef"),
-			0x8b, string("abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasdfjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl")
+		compileAndRun(sourceCode); callContractFunction("f()"); REQUIRE_LOG_DATA(encodeArgs(
+			0x60,
+			string("abcde"),
+			0xa0,
+			6,
+			string("abcdef"),
+			0x8b,
+			string("abcdefabcdefgehabcabcasdfjklabcdefabcedefghabcabcasdfjklabcdefabcdefghabcabcasd"
+				   "fjklabcdeefabcdefghabcabcasdefjklabcdefabcdefghabcabcasdfjkl")
 		));
 	)
 }
@@ -115,12 +122,10 @@ BOOST_AUTO_TEST_CASE(enum_type_cleanup)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		BOOST_CHECK(callContractFunction("f(uint256)", 0) == encodeArgs(0));
-		BOOST_CHECK(callContractFunction("f(uint256)", 1) == encodeArgs(1));
-		BOOST_CHECK(callContractFunction("f(uint256)", 2) == encodeArgs());
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode);
+				  BOOST_CHECK(callContractFunction("f(uint256)", 0) == encodeArgs(0));
+				  BOOST_CHECK(callContractFunction("f(uint256)", 1) == encodeArgs(1));
+				  BOOST_CHECK(callContractFunction("f(uint256)", 2) == encodeArgs());)
 }
 
 BOOST_AUTO_TEST_CASE(conversion)
@@ -139,14 +144,15 @@ BOOST_AUTO_TEST_CASE(conversion)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			string(3, 0) + string("\x0a"), string("\xf1\xf2"),
-			0xff, 0xff, u256(-1), u256(1)
-		));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f()");
+				  REQUIRE_LOG_DATA(encodeArgs(
+					  string(3, 0) + string("\x0a"),
+					  string("\xf1\xf2"),
+					  0xff,
+					  0xff,
+					  u256(-1),
+					  u256(1)
+				  ));)
 }
 
 BOOST_AUTO_TEST_CASE(memory_array_one_dim)
@@ -171,7 +177,9 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		// The old encoder does not clean array elements.
-		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000")));
+		REQUIRE_LOG_DATA(
+			encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000"))
+		);
 	}
 
 	compileAndRun(NewEncoderPragma + sourceCode);
@@ -197,11 +205,9 @@ BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 			}
 		}
 	)";
-	NEW_ENCODER(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 0x40, 0xc0, 3, 7, 0x0506, u256(-1), 2, 4, 5));
-	)
+	NEW_ENCODER(compileAndRun(sourceCode); callContractFunction("f()"); REQUIRE_LOG_DATA(
+					encodeArgs(10, 0x60, 11, 0x40, 0xc0, 3, 7, 0x0506, u256(-1), 2, 4, 5)
+	);)
 }
 
 BOOST_AUTO_TEST_CASE(memory_byte_array)
@@ -217,16 +223,18 @@ BOOST_AUTO_TEST_CASE(memory_byte_array)
 			}
 		}
 	)";
-	NEW_ENCODER(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			10, 0x60, 11,
-			2, 0x40, 0xc0,
-			66, string("abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw"),
-			63, string("abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw")
-		));
-	)
+	NEW_ENCODER(compileAndRun(sourceCode); callContractFunction("f()"); REQUIRE_LOG_DATA(encodeArgs(
+		10,
+		0x60,
+		11,
+		2,
+		0x40,
+		0xc0,
+		66,
+		string("abcabcdefghjklmnopqrsuvwabcdefgijklmnopqrstuwabcdefgijklmnoprstuvw"),
+		63,
+		string("abcdefghijklmnopqrtuvwabcfghijklmnopqstuvwabcdeghijklmopqrstuvw")
+	));)
 }
 
 BOOST_AUTO_TEST_CASE(storage_byte_array)
@@ -244,12 +252,13 @@ BOOST_AUTO_TEST_CASE(storage_byte_array)
 		}
 	)";
 	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			0x40, 0x80,
-			31, string("123456789012345678901234567890a"),
-			75, string("ffff123456789012345678901234567890afffffffff123456789012345678901234567890a")
+		compileAndRun(sourceCode); callContractFunction("f()"); REQUIRE_LOG_DATA(encodeArgs(
+			0x40,
+			0x80,
+			31,
+			string("123456789012345678901234567890a"),
+			75,
+			string("ffff123456789012345678901234567890afffffffff123456789012345678901234567890a")
 		));
 	)
 }
@@ -270,11 +279,8 @@ BOOST_AUTO_TEST_CASE(storage_array)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(u160(-1), u160(-2), u160(-3)));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f()");
+				  REQUIRE_LOG_DATA(encodeArgs(u160(-1), u160(-2), u160(-3)));)
 }
 
 BOOST_AUTO_TEST_CASE(storage_array_dyn)
@@ -291,11 +297,8 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(0x20, 3, u160(1), u160(2), u160(3)));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f()");
+				  REQUIRE_LOG_DATA(encodeArgs(0x20, 3, u160(1), u160(2), u160(3)));)
 }
 
 BOOST_AUTO_TEST_CASE(storage_array_compact)
@@ -317,13 +320,9 @@ BOOST_AUTO_TEST_CASE(storage_array_compact)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(
-			0x20, 8, u256(-1), 2, u256(-3), 4, u256(-5), 6, u256(-7), 8
-		));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f()"); REQUIRE_LOG_DATA(
+					  encodeArgs(0x20, 8, u256(-1), 2, u256(-3), 4, u256(-5), 6, u256(-7), 8)
+	);)
 }
 
 BOOST_AUTO_TEST_CASE(external_function)
@@ -338,12 +337,10 @@ BOOST_AUTO_TEST_CASE(external_function)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f(uint256)", u256(0));
-		string functionIdF = asString(m_contractAddress.ref()) + asString(FixedHash<4>(keccak256("f(uint256)")).ref());
-		REQUIRE_LOG_DATA(encodeArgs(functionIdF, functionIdF));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f(uint256)", u256(0));
+				  string functionIdF = asString(m_contractAddress.ref()) +
+					  asString(FixedHash<4>(keccak256("f(uint256)")).ref());
+				  REQUIRE_LOG_DATA(encodeArgs(functionIdF, functionIdF));)
 }
 
 BOOST_AUTO_TEST_CASE(external_function_cleanup)
@@ -360,11 +357,8 @@ BOOST_AUTO_TEST_CASE(external_function_cleanup)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f(uint256)", u256(0));
-		REQUIRE_LOG_DATA(encodeArgs(string(24, char(-1)), string(24, char(-1))));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f(uint256)", u256(0));
+				  REQUIRE_LOG_DATA(encodeArgs(string(24, char(-1)), string(24, char(-1))));)
 }
 
 BOOST_AUTO_TEST_CASE(calldata)
@@ -378,14 +372,14 @@ BOOST_AUTO_TEST_CASE(calldata)
 		}
 	)";
 	string s("abcdef");
-	string t("abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggg");
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		callContractFunction("f(bytes)", 0x20, s.size(), s);
-		REQUIRE_LOG_DATA(encodeArgs(0x20, s.size(), s));
-		callContractFunction("f(bytes)", 0x20, t.size(), t);
-		REQUIRE_LOG_DATA(encodeArgs(0x20, t.size(), t));
-	)
+	string t(
+		"abcdefgggggggggggggggggggggggggggggggggggggggghhheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		"eggg"
+	);
+	BOTH_ENCODERS(compileAndRun(sourceCode); callContractFunction("f(bytes)", 0x20, s.size(), s);
+				  REQUIRE_LOG_DATA(encodeArgs(0x20, s.size(), s));
+				  callContractFunction("f(bytes)", 0x20, t.size(), t);
+				  REQUIRE_LOG_DATA(encodeArgs(0x20, t.size(), t));)
 }
 
 BOOST_AUTO_TEST_CASE(function_name_collision)
@@ -407,11 +401,9 @@ BOOST_AUTO_TEST_CASE(function_name_collision)
 			}
 		}
 	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(0)) == encodeArgs(7));
-		BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(1)) == encodeArgs(1));
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode);
+				  BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(0)) == encodeArgs(7));
+				  BOOST_CHECK(callContractFunction("f(uint256)", encodeArgs(1)) == encodeArgs(1));)
 }
 
 BOOST_AUTO_TEST_CASE(structs)
@@ -439,20 +431,14 @@ BOOST_AUTO_TEST_CASE(structs)
 		}
 	)";
 
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		bytes encoded = encodeArgs(
-			u256(7), 0x40,
-			8, 9, 0x80, 10,
-			3,
-			11, 0,
-			12, 0,
-			0, 13
-		);
-		BOOST_CHECK(callContractFunction("f()") == encoded);
-		REQUIRE_LOG_DATA(encoded);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))")));
-	)
+	NEW_ENCODER(compileAndRun(sourceCode, 0, "C");
+				bytes encoded = encodeArgs(u256(7), 0x40, 8, 9, 0x80, 10, 3, 11, 0, 12, 0, 0, 13);
+				BOOST_CHECK(callContractFunction("f()") == encoded);
+				REQUIRE_LOG_DATA(encoded);
+				BOOST_CHECK_EQUAL(
+					logTopic(0, 0),
+					keccak256(string("e(uint16,(uint16,uint16,(uint64[2])[],uint16))"))
+				);)
 }
 
 BOOST_AUTO_TEST_CASE(structs2)
@@ -480,38 +466,54 @@ BOOST_AUTO_TEST_CASE(structs2)
 		}
 	)";
 
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(
-			7, 0x80, 0x1e0, 8,
-			// S[2] s1
-			0x40,
-			0x100,
-			// S s1[0]
-			u256(u160(m_contractAddress)),
-			0x40,
-			// T s1[0].t
-			1, // length
-			// s1[0].t[0]
-			0x11, 1, 0x12,
-			// S s1[1]
-			0, 0x40,
-			// T s1[1].t
-			0,
-			// S[] s2 (0x1e0)
-			2, // length
-			0x40, 0xa0,
-			// S s2[0]
-			0, 0x40, 0,
-			// S s2[1]
-			0x1234, 0x40,
-			// s2[1].t
-			3, // length
-			0, 0, 0,
-			0x21, 2, 0x22,
-			0, 0, 0
-		));
-	)
+	NEW_ENCODER(compileAndRun(sourceCode, 0, "C"); ABI_CHECK(
+					callContractFunction("f()"),
+					encodeArgs(
+						7,
+						0x80,
+						0x1e0,
+						8,
+						// S[2] s1
+						0x40,
+						0x100,
+						// S s1[0]
+						u256(u160(m_contractAddress)),
+						0x40,
+						// T s1[0].t
+						1,	// length
+						// s1[0].t[0]
+						0x11,
+						1,
+						0x12,
+						// S s1[1]
+						0,
+						0x40,
+						// T s1[1].t
+						0,
+						// S[] s2 (0x1e0)
+						2,	// length
+						0x40,
+						0xa0,
+						// S s2[0]
+						0,
+						0x40,
+						0,
+						// S s2[1]
+						0x1234,
+						0x40,
+						// s2[1].t
+						3,	// length
+						0,
+						0,
+						0,
+						0x21,
+						2,
+						0x22,
+						0,
+						0,
+						0
+					)
+	);)
 }
 
 BOOST_AUTO_TEST_CASE(bool_arrays)
@@ -536,15 +538,10 @@ BOOST_AUTO_TEST_CASE(bool_arrays)
 		}
 	)";
 
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode, 0, "C");
-		bytes encoded = encodeArgs(
-			0xa0, 1, 0, 1, 0,
-			4, 1, 0, 1, 0
-		);
-		ABI_CHECK(callContractFunction("f()"), encoded);
-		REQUIRE_LOG_DATA(encoded);
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode, 0, "C");
+				  bytes encoded = encodeArgs(0xa0, 1, 0, 1, 0, 4, 1, 0, 1, 0);
+				  ABI_CHECK(callContractFunction("f()"), encoded);
+				  REQUIRE_LOG_DATA(encoded);)
 }
 
 BOOST_AUTO_TEST_CASE(bool_arrays_split)
@@ -571,16 +568,11 @@ BOOST_AUTO_TEST_CASE(bool_arrays_split)
 		}
 	)";
 
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode, 0, "C");
-		bytes encoded = encodeArgs(
-			0xa0, 1, 0, 1, 0,
-			4, 1, 0, 1, 0
-		);
-		ABI_CHECK(callContractFunction("store()"), bytes{});
-		ABI_CHECK(callContractFunction("f()"), encoded);
-		REQUIRE_LOG_DATA(encoded);
-	)
+	BOTH_ENCODERS(compileAndRun(sourceCode, 0, "C");
+				  bytes encoded = encodeArgs(0xa0, 1, 0, 1, 0, 4, 1, 0, 1, 0);
+				  ABI_CHECK(callContractFunction("store()"), bytes{});
+				  ABI_CHECK(callContractFunction("f()"), encoded);
+				  REQUIRE_LOG_DATA(encoded);)
 }
 
 BOOST_AUTO_TEST_CASE(bytesNN_arrays)
@@ -609,18 +601,17 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays)
 		{
 			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
-				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
-				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
+				string source =
+					boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
+				source =
+					boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
 				source = boost::algorithm::replace_all_copy(source, "WIDTH", to_string(width));
 				compileAndRun(source, 0, "C");
 				ABI_CHECK(callContractFunction("store()"), bytes{});
 				vector<u256> arr;
-				for (size_t i = 0; i < size; i ++)
+				for (size_t i = 0; i < size; i++)
 					arr.emplace_back(u256(i + 1) << (8 * (32 - width)));
-				bytes encoded = encodeArgs(
-					0x20 * (1 + size), arr,
-					2, "abc", "def"
-				);
+				bytes encoded = encodeArgs(0x20 * (1 + size), arr, 2, "abc", "def");
 				ABI_CHECK(callContractFunction("f()"), encoded);
 				REQUIRE_LOG_DATA(encoded);
 			}
@@ -654,19 +645,17 @@ BOOST_AUTO_TEST_CASE(bytesNN_arrays_dyn)
 		{
 			for (size_t width: {1u, 2u, 4u, 5u, 7u, 15u, 16u, 17u, 31u, 32u})
 			{
-				string source = boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
-				source = boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
+				string source =
+					boost::algorithm::replace_all_copy(sourceCode, "SIZE", to_string(size));
+				source =
+					boost::algorithm::replace_all_copy(source, "UINTWIDTH", to_string(width * 8));
 				source = boost::algorithm::replace_all_copy(source, "WIDTH", to_string(width));
 				compileAndRun(source, 0, "C");
 				ABI_CHECK(callContractFunction("store()"), bytes{});
 				vector<u256> arr;
-				for (size_t i = 0; i < size; i ++)
+				for (size_t i = 0; i < size; i++)
 					arr.emplace_back(u256(i + 1) << (8 * (32 - width)));
-				bytes encoded = encodeArgs(
-					0x20 * 2, 0x20 * (3 + size),
-					size, arr,
-					2, "abc", "def"
-				);
+				bytes encoded = encodeArgs(0x20 * 2, 0x20 * (3 + size), size, arr, 2, "abc", "def");
 				ABI_CHECK(callContractFunction("f()"), encoded);
 				REQUIRE_LOG_DATA(encoded);
 			}
@@ -696,16 +685,12 @@ BOOST_AUTO_TEST_CASE(packed_structs)
 		}
 	)";
 
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C");
-		ABI_CHECK(callContractFunction("store()"), bytes{});
-		bytes fun = m_contractAddress.asBytes() + fromHex("0xe2179b8e");
-		bytes encoded = encodeArgs(
-			0, u256(-5), asString(fun), "\x01\x02\x03", u256(-3)
-		);
-		ABI_CHECK(callContractFunction("f()"), encoded);
-		REQUIRE_LOG_DATA(encoded);
-	)
+	NEW_ENCODER(compileAndRun(sourceCode, 0, "C");
+				ABI_CHECK(callContractFunction("store()"), bytes{});
+				bytes fun = m_contractAddress.asBytes() + fromHex("0xe2179b8e");
+				bytes encoded = encodeArgs(0, u256(-5), asString(fun), "\x01\x02\x03", u256(-3));
+				ABI_CHECK(callContractFunction("f()"), encoded);
+				REQUIRE_LOG_DATA(encoded);)
 }
 
 
@@ -723,10 +708,8 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor)
 		}
 	)";
 
-	NEW_ENCODER(
-		compileAndRun(sourceCode, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00, 0x00));
-		ABI_CHECK(callContractFunction("x()"), encodeArgs(0x60, 0x03, 0x80, 0x00, 0x00));
-	)
+	NEW_ENCODER(compileAndRun(sourceCode, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00, 0x00));
+				ABI_CHECK(callContractFunction("x()"), encodeArgs(0x60, 0x03, 0x80, 0x00, 0x00));)
 }
 
 BOOST_AUTO_TEST_CASE(struct_in_constructor_indirect)
@@ -776,13 +759,15 @@ BOOST_AUTO_TEST_CASE(struct_in_constructor_data_short)
 		}
 	)";
 
-	NEW_ENCODER(
-		BOOST_CHECK(
-			compileAndRunWithoutCheck({{"", sourceCode}}, 0, "C", encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)).empty()
-		);
+	NEW_ENCODER(BOOST_CHECK(compileAndRunWithoutCheck(
+								{{"", sourceCode}},
+								0,
+								"C",
+								encodeArgs(0x20, 0x60, 0x03, 0x80, 0x00)
 	)
+								.empty());)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

@@ -40,15 +40,20 @@ string TextTransform::run(wasm::Module const& _module)
 {
 	string ret = "(module\n";
 	for (auto const& sub: _module.subModules)
-		ret +=
-			"    ;; sub-module \"" +
-			sub.first +
+		ret += "    ;; sub-module \"" + sub.first +
 			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
 	for (wasm::FunctionImport const& imp: _module.imports)
 	{
-		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
+		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" +
+			imp.internalName;
 		if (!imp.paramTypes.empty())
-			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | boost::adaptors::transformed(encodeType), " ", " ") + ")";
+			ret += " (param" +
+				joinHumanReadablePrefixed(
+					   imp.paramTypes | boost::adaptors::transformed(encodeType),
+					   " ",
+					   " "
+				) +
+				")";
 		if (imp.returnType)
 			ret += " (result " + encodeType(*imp.returnType) + ")";
 		ret += "))\n";
@@ -60,7 +65,8 @@ string TextTransform::run(wasm::Module const& _module)
 	ret += "    (export \"main\" (func $main))\n";
 
 	for (auto const& g: _module.globals)
-		ret += "    (global $" + g.variableName + " (mut " + encodeType(g.type) + ") (" + encodeType(g.type) + ".const 0))\n";
+		ret += "    (global $" + g.variableName + " (mut " + encodeType(g.type) + ") (" +
+			encodeType(g.type) + ".const 0))\n";
 	ret += "\n";
 	for (auto const& f: _module.functions)
 		ret += transform(f) + "\n";
@@ -69,10 +75,13 @@ string TextTransform::run(wasm::Module const& _module)
 
 string TextTransform::operator()(wasm::Literal const& _literal)
 {
-	return std::visit(GenericVisitor{
-		[&](uint32_t _value) -> string { return "(i32.const " + to_string(_value) + ")"; },
-		[&](uint64_t _value) -> string { return "(i64.const " + to_string(_value) + ")"; },
-	}, _literal.value);
+	return std::visit(
+		GenericVisitor{
+			[&](uint32_t _value) -> string { return "(i32.const " + to_string(_value) + ")"; },
+			[&](uint64_t _value) -> string { return "(i64.const " + to_string(_value) + ")"; },
+		},
+		_literal.value
+	);
 }
 
 string TextTransform::operator()(wasm::StringLiteral const& _literal)
@@ -119,7 +128,8 @@ string TextTransform::operator()(wasm::GlobalAssignment const& _assignment)
 
 string TextTransform::operator()(wasm::If const& _if)
 {
-	string text = "(if " + visit(*_if.condition) + " (then\n" + indented(joinTransformed(_if.statements, '\n')) + ")";
+	string text = "(if " + visit(*_if.condition) + " (then\n" +
+		indented(joinTransformed(_if.statements, '\n')) + ")";
 	if (_if.elseStatements)
 		text += "(else\n" + indented(joinTransformed(*_if.elseStatements, '\n')) + ")";
 	return std::move(text) + ")\n";
@@ -141,15 +151,13 @@ string TextTransform::operator()(wasm::BranchIf const& _branchIf)
 	return "(br_if $" + _branchIf.label.name + " " + visit(*_branchIf.condition) + ")\n";
 }
 
-string TextTransform::operator()(wasm::Return const&)
-{
-	return "(return)\n";
-}
+string TextTransform::operator()(wasm::Return const&) { return "(return)\n"; }
 
 string TextTransform::operator()(wasm::Block const& _block)
 {
 	string label = _block.labelName.empty() ? "" : " $" + _block.labelName;
-	return "(block" + move(label) + "\n" + indented(joinTransformed(_block.statements, '\n')) + "\n)\n";
+	return "(block" + move(label) + "\n" + indented(joinTransformed(_block.statements, '\n')) +
+		"\n)\n";
 }
 
 string TextTransform::indented(string const& _in)

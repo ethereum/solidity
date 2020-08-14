@@ -37,8 +37,7 @@ using namespace std;
 namespace fs = boost::filesystem;
 using namespace boost::unit_test;
 
-GasTest::GasTest(string const& _filename):
-	TestCase(_filename)
+GasTest::GasTest(string const& _filename): TestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_optimise = m_reader.boolSetting("optimize", false);
@@ -62,7 +61,10 @@ void GasTest::parseExpectations(std::istream& _stream)
 			currentKind = &m_expectations[move(kind)];
 		}
 		else if (!currentKind)
-			BOOST_THROW_EXCEPTION(runtime_error("No function kind specified. Expected \"creation:\", \"external:\" or \"internal:\"."));
+			BOOST_THROW_EXCEPTION(
+				runtime_error("No function kind specified. Expected \"creation:\", \"external:\" "
+							  "or \"internal:\".")
+			);
 		else
 		{
 			auto it = line.begin() + 3;
@@ -107,7 +109,8 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 	// This leads to volatile creation cost estimates. Therefore we force the compiler to
 	// release mode for testing gas estimates.
 	compiler().overwriteReleaseFlag(true);
-	OptimiserSettings settings = m_optimise ? OptimiserSettings::standard() : OptimiserSettings::minimal();
+	OptimiserSettings settings =
+		m_optimise ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	if (m_optimiseYul)
 	{
 		settings.runYulOptimiser = m_optimise;
@@ -126,16 +129,20 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 	}
 
 	Json::Value estimateGroups = compiler().gasEstimates(compiler().lastContractName());
-	if (
-		m_expectations.size() == estimateGroups.size() &&
-		boost::all(m_expectations, [&](auto const& expectations) {
-		auto const& estimates = estimateGroups[expectations.first];
-		return estimates.size() == expectations.second.size() &&
-			boost::all(expectations.second, [&](auto const& entry) {
-				return entry.second == estimates[entry.first].asString();
-			});
-		})
-	)
+	if (m_expectations.size() == estimateGroups.size() &&
+		boost::all(
+			m_expectations,
+			[&](auto const& expectations)
+			{
+				auto const& estimates = estimateGroups[expectations.first];
+				return estimates.size() == expectations.second.size() &&
+					boost::all(
+						   expectations.second,
+						   [&](auto const& entry)
+						   { return entry.second == estimates[entry.first].asString(); }
+					);
+			}
+		))
 		return TestResult::Success;
 	else
 	{
@@ -144,12 +151,8 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 		{
 			_stream << _linePrefix << "  " << expectations.first << ":" << std::endl;
 			for (auto const& entry: expectations.second)
-				_stream << _linePrefix
-					<< "    "
-					<< (entry.first.empty() ? "fallback" : entry.first)
-					<< ": "
-					<< entry.second
-					<< std::endl;
+				_stream << _linePrefix << "    " << (entry.first.empty() ? "fallback" : entry.first)
+						<< ": " << entry.second << std::endl;
 		}
 		_stream << _linePrefix << "Obtained:" << std::endl;
 		printUpdatedExpectations(_stream, _linePrefix + "  ");

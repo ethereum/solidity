@@ -27,7 +27,6 @@
 
 namespace solidity::yul
 {
-
 struct Dialect;
 struct AssignedValue;
 
@@ -39,9 +38,11 @@ struct AssignedValue;
 class KnowledgeBase
 {
 public:
-	KnowledgeBase(Dialect const& _dialect, std::map<YulString, AssignedValue> const& _variableValues):
-		m_dialect(_dialect),
-		m_variableValues(_variableValues)
+	KnowledgeBase(
+		Dialect const& _dialect,
+		std::map<YulString, AssignedValue> const& _variableValues
+	):
+		m_dialect(_dialect), m_variableValues(_variableValues)
 	{}
 
 	bool knownToBeDifferent(YulString _a, YulString _b);

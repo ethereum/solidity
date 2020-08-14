@@ -37,11 +37,11 @@
 
 namespace solidity::evmasm
 {
-class AssemblyItem; // forward
+class AssemblyItem;	 // forward
 }
 
-namespace solidity::frontend {
-
+namespace solidity::frontend
+{
 // forward declarations
 class CompilerContext;
 class CompilerUtils;
@@ -57,12 +57,8 @@ class ArrayType;
 class ExpressionCompiler: private ASTConstVisitor
 {
 public:
-	ExpressionCompiler(
-		CompilerContext& _compilerContext,
-		bool _optimiseOrderLiterals
-	):
-		m_optimiseOrderLiterals(_optimiseOrderLiterals),
-		m_context(_compilerContext)
+	ExpressionCompiler(CompilerContext& _compilerContext, bool _optimiseOrderLiterals):
+		m_optimiseOrderLiterals(_optimiseOrderLiterals), m_context(_compilerContext)
 	{}
 
 	/// Compile the given @a _expression and leave its value on the stack.
@@ -100,7 +96,11 @@ private:
 
 	void appendArithmeticOperatorCode(Token _operator, Type const& _type);
 	void appendBitOperatorCode(Token _operator);
-	void appendShiftOperatorCode(Token _operator, Type const& _valueType, Type const& _shiftAmountType);
+	void appendShiftOperatorCode(
+		Token _operator,
+		Type const& _valueType,
+		Type const& _shiftAmountType
+	);
 	void appendExpOperatorCode(Type const& _valueType, Type const& _exponentType);
 	/// @}
 
@@ -112,8 +112,8 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments,
 		bool _tryCall
 	);
-	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
-	/// expected to be on the stack and is updated by this call.
+	/// Appends code that evaluates a single expression and moves the result to memory. The memory
+	/// offset is expected to be on the stack and is updated by this call.
 	void appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression);
 
 	/// Appends code for a variable that might be a constant or not
@@ -121,9 +121,9 @@ private:
 	/// Sets the current LValue to a new one (of the appropriate type) from the given declaration.
 	/// Also retrieves the value if it was not requested by @a _expression.
 	void setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression);
-	/// Sets the current LValue to a StorageItem holding the type of @a _expression. The reference is assumed
-	/// to be on the stack.
-	/// Also retrieves the value if it was not requested by @a _expression.
+	/// Sets the current LValue to a StorageItem holding the type of @a _expression. The reference
+	/// is assumed to be on the stack. Also retrieves the value if it was not requested by @a
+	/// _expression.
 	void setLValueToStorageItem(Expression const& _expression);
 	/// Sets the current LValue to a new LValue constructed from the arguments.
 	/// Also retrieves the value if it was not requested by @a _expression.
@@ -134,7 +134,11 @@ private:
 	/// operation.
 	static bool cleanupNeededForOp(Type::Category _type, Token _op);
 
-	void acceptAndConvert(Expression const& _expression, Type const& _type, bool _cleanupNeeded = false);
+	void acceptAndConvert(
+		Expression const& _expression,
+		Type const& _type,
+		bool _cleanupNeeded = false
+	);
 
 	/// @returns the CompilerUtils object containing the current context.
 	CompilerUtils utils();
@@ -142,7 +146,6 @@ private:
 	bool m_optimiseOrderLiterals;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;
-
 };
 
 template <class LValueType, class... Arguments>

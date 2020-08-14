@@ -15,8 +15,8 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
-* Module providing metrics for the optimizer.
-*/
+ * Module providing metrics for the optimizer.
+ */
 
 #include <libyul/optimiser/Metrics.h>
 

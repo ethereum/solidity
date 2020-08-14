@@ -29,11 +29,10 @@
 
 namespace solidity::yul
 {
-
-
 /**
  * Component that can compare ASTs for equality on a syntactic basis.
- * Ignores source locations and allows for different variable names but requires exact matches otherwise.
+ * Ignores source locations and allows for different variable names but requires exact matches
+ * otherwise.
  *
  * Prerequisite: Disambiguator (unless only expressions are compared)
  */
@@ -59,22 +58,27 @@ public:
 	bool statementEqual(Continue const&, Continue const&) { return true; }
 	bool statementEqual(Leave const&, Leave const&) { return true; }
 	bool statementEqual(Block const& _lhs, Block const& _rhs);
+
 private:
 	bool visitDeclaration(TypedName const& _lhs, TypedName const& _rhs);
 
-	template<typename U, typename V>
-	bool expressionEqual(U const&, V const&, std::enable_if_t<!std::is_same<U, V>::value>* = nullptr)
+	template <typename U, typename V>
+	bool expressionEqual(
+		U const&,
+		V const&,
+		std::enable_if_t<!std::is_same<U, V>::value>* = nullptr
+	)
 	{
 		return false;
 	}
 
-	template<typename U, typename V>
+	template <typename U, typename V>
 	bool statementEqual(U const&, V const&, std::enable_if_t<!std::is_same<U, V>::value>* = nullptr)
 	{
 		return false;
 	}
 
-	template<typename T, bool (SyntacticallyEqual::*CompareMember)(T const&, T const&)>
+	template <typename T, bool (SyntacticallyEqual::*CompareMember)(T const&, T const&)>
 	bool compareUniquePtr(std::unique_ptr<T> const& _lhs, std::unique_ptr<T> const& _rhs)
 	{
 		return (_lhs == _rhs) || (_lhs && _rhs && (this->*CompareMember)(*_lhs, *_rhs));

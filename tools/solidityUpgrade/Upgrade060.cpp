@@ -33,7 +33,6 @@ using Contracts = set<ContractDefinition const*, OverrideChecker::CompareByID>;
 
 namespace
 {
-
 inline string appendOverride(
 	FunctionDefinition const& _function,
 	Contracts const& _expectedContracts
@@ -44,11 +43,7 @@ inline string appendOverride(
 	string overrideExpression = SourceGeneration::functionOverride(_expectedContracts);
 
 	if (SourceAnalysis::hasVirtualKeyword(location))
-		upgradedCode = SourceTransform::insertAfterKeyword(
-			location,
-			"virtual",
-			overrideExpression
-		);
+		upgradedCode = SourceTransform::insertAfterKeyword(location, "virtual", overrideExpression);
 	else if (SourceAnalysis::hasMutabilityKeyword(location))
 		upgradedCode = SourceTransform::insertAfterKeyword(
 			location,
@@ -62,10 +57,7 @@ inline string appendOverride(
 			overrideExpression
 		);
 	else
-		upgradedCode = SourceTransform::insertAfterRightParenthesis(
-			location,
-			overrideExpression
-		);
+		upgradedCode = SourceTransform::insertAfterRightParenthesis(location, overrideExpression);
 
 	return upgradedCode;
 }
@@ -88,10 +80,8 @@ inline string appendVirtual(FunctionDefinition const& _function)
 			"virtual"
 		);
 	else
-		upgradedCode = SourceTransform::insertAfterRightParenthesis(
-			_function.location(),
-			"virtual"
-		);
+		upgradedCode =
+			SourceTransform::insertAfterRightParenthesis(_function.location(), "virtual");
 
 	return upgradedCode;
 }
@@ -102,15 +92,11 @@ void AbstractContract::endVisit(ContractDefinition const& _contract)
 {
 	bool isFullyImplemented = _contract.annotation().unimplementedDeclarations.empty();
 
-	if (
-		!isFullyImplemented &&
-		!_contract.abstract() &&
-		!_contract.isInterface()
-	)
+	if (!isFullyImplemented && !_contract.abstract() && !_contract.isInterface())
 		m_changes.emplace_back(
-				UpgradeChange::Level::Safe,
-				_contract.location(),
-				SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
+			UpgradeChange::Level::Safe,
+			_contract.location(),
+			SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
 		);
 }
 
@@ -132,9 +118,9 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 			/// Add override with contract list, if needed.
 			if (!function->overrides() && expectedContracts.size() > 1)
 				m_changes.emplace_back(
-						UpgradeChange::Level::Safe,
-						function->location(),
-						appendOverride(*function, expectedContracts)
+					UpgradeChange::Level::Safe,
+					function->location(),
+					appendOverride(*function, expectedContracts)
 				);
 
 			for (auto [begin, end] = inheritedFunctions.equal_range(proxy); begin != end; begin++)
@@ -149,9 +135,9 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 					/// contract list was added before.
 					if (!function->overrides() && expectedContracts.size() <= 1)
 						m_changes.emplace_back(
-								UpgradeChange::Level::Safe,
-								function->location(),
-								appendOverride(*function, expectedContracts)
+							UpgradeChange::Level::Safe,
+							function->location(),
+							appendOverride(*function, expectedContracts)
 						);
 				}
 			}
@@ -169,32 +155,25 @@ void VirtualFunction::endVisit(ContractDefinition const& _contract)
 
 		if (!function->isConstructor())
 		{
-			if (
-				!function->markedVirtual() &&
-				!function->isImplemented() &&
-				!function->virtualSemantics() &&
-				function->visibility() > Visibility::Private
-			)
+			if (!function->markedVirtual() && !function->isImplemented() &&
+				!function->virtualSemantics() && function->visibility() > Visibility::Private)
 			{
 				m_changes.emplace_back(
-						UpgradeChange::Level::Safe,
-						function->location(),
-						appendVirtual(*function)
+					UpgradeChange::Level::Safe,
+					function->location(),
+					appendVirtual(*function)
 				);
 			}
 
 			for (auto [begin, end] = inheritedFunctions.equal_range(proxy); begin != end; begin++)
 			{
 				auto& super = (*begin);
-				if (
-					!function->markedVirtual() &&
-					!super.virtualSemantics()
-				)
+				if (!function->markedVirtual() && !super.virtualSemantics())
 				{
 					m_changes.emplace_back(
-							UpgradeChange::Level::Safe,
-							function->location(),
-							appendVirtual(*function)
+						UpgradeChange::Level::Safe,
+						function->location(),
+						appendVirtual(*function)
 					);
 				}
 			}

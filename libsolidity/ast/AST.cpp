@@ -39,10 +39,8 @@ using namespace solidity;
 using namespace solidity::frontend;
 
 ASTNode::ASTNode(int64_t _id, SourceLocation _location):
-	m_id(static_cast<size_t>(_id)),
-	m_location(std::move(_location))
-{
-}
+	m_id(static_cast<size_t>(_id)), m_location(std::move(_location))
+{}
 
 ASTAnnotation& ASTNode::annotation() const
 {
@@ -56,7 +54,10 @@ SourceUnitAnnotation& SourceUnit::annotation() const
 	return initAnnotation<SourceUnitAnnotation>();
 }
 
-set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<SourceUnit const*> _skipList) const
+set<SourceUnit const*> SourceUnit::referencedSourceUnits(
+	bool _recurse,
+	set<SourceUnit const*> _skipList
+) const
 {
 	set<SourceUnit const*> sourceUnits;
 	for (ImportDirective const* importDirective: filteredNodes<ImportDirective>(nodes()))
@@ -73,10 +74,7 @@ set<SourceUnit const*> SourceUnit::referencedSourceUnits(bool _recurse, set<Sour
 	return sourceUnits;
 }
 
-ImportAnnotation& ImportDirective::annotation() const
-{
-	return initAnnotation<ImportAnnotation>();
-}
+ImportAnnotation& ImportDirective::annotation() const { return initAnnotation<ImportAnnotation>(); }
 
 TypePointer ImportDirective::type() const
 {
@@ -99,7 +97,9 @@ bool ContractDefinition::derivesFrom(ContractDefinition const& _base) const
 	return util::contains(annotation().linearizedBaseContracts, &_base);
 }
 
-map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions(bool _includeInheritedFunctions) const
+map<util::FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions(
+	bool _includeInheritedFunctions
+) const
 {
 	auto exportedFunctionList = interfaceFunctionList(_includeInheritedFunctions);
 
@@ -123,10 +123,7 @@ FunctionDefinition const* ContractDefinition::constructor() const
 	return nullptr;
 }
 
-bool ContractDefinition::canBeDeployed() const
-{
-	return !abstract() && !isInterface();
-}
+bool ContractDefinition::canBeDeployed() const { return !abstract() && !isInterface(); }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
 {
@@ -148,64 +145,73 @@ FunctionDefinition const* ContractDefinition::receiveFunction() const
 
 vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
-	return m_interfaceEvents.init([&]{
-		set<string> eventsSeen;
-		vector<EventDefinition const*> interfaceEvents;
+	return m_interfaceEvents.init(
+		[&]
+		{
+			set<string> eventsSeen;
+			vector<EventDefinition const*> interfaceEvents;
 
-		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
-			for (EventDefinition const* e: contract->events())
-			{
-				/// NOTE: this requires the "internal" version of an Event,
-				///       though here internal strictly refers to visibility,
-				///       and not to function encoding (jump vs. call)
-				auto const& function = e->functionType(true);
-				solAssert(function, "");
-				string eventSignature = function->externalSignature();
-				if (eventsSeen.count(eventSignature) == 0)
+			for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+				for (EventDefinition const* e: contract->events())
 				{
-					eventsSeen.insert(eventSignature);
-					interfaceEvents.push_back(e);
+					/// NOTE: this requires the "internal" version of an Event,
+					///       though here internal strictly refers to visibility,
+					///       and not to function encoding (jump vs. call)
+					auto const& function = e->functionType(true);
+					solAssert(function, "");
+					string eventSignature = function->externalSignature();
+					if (eventsSeen.count(eventSignature) == 0)
+					{
+						eventsSeen.insert(eventSignature);
+						interfaceEvents.push_back(e);
+					}
 				}
-			}
 
-		return interfaceEvents;
-	});
+			return interfaceEvents;
+		}
+	);
 }
 
-vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
+vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::
+	interfaceFunctionList(bool _includeInheritedFunctions) const
 {
-	return m_interfaceFunctionList[_includeInheritedFunctions].init([&]{
-		set<string> signaturesSeen;
-		vector<pair<util::FixedHash<4>, FunctionTypePointer>> interfaceFunctionList;
-
-		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+	return m_interfaceFunctionList[_includeInheritedFunctions].init(
+		[&]
 		{
-			if (_includeInheritedFunctions == false && contract != this)
-				continue;
-			vector<FunctionTypePointer> functions;
-			for (FunctionDefinition const* f: contract->definedFunctions())
-				if (f->isPartOfExternalInterface())
-					functions.push_back(TypeProvider::function(*f, FunctionType::Kind::External));
-			for (VariableDeclaration const* v: contract->stateVariables())
-				if (v->isPartOfExternalInterface())
-					functions.push_back(TypeProvider::function(*v));
-			for (FunctionTypePointer const& fun: functions)
+			set<string> signaturesSeen;
+			vector<pair<util::FixedHash<4>, FunctionTypePointer>> interfaceFunctionList;
+
+			for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 			{
-				if (!fun->interfaceFunctionType())
-					// Fails hopefully because we already registered the error
+				if (_includeInheritedFunctions == false && contract != this)
 					continue;
-				string functionSignature = fun->externalSignature();
-				if (signaturesSeen.count(functionSignature) == 0)
+				vector<FunctionTypePointer> functions;
+				for (FunctionDefinition const* f: contract->definedFunctions())
+					if (f->isPartOfExternalInterface())
+						functions.push_back(
+							TypeProvider::function(*f, FunctionType::Kind::External)
+						);
+				for (VariableDeclaration const* v: contract->stateVariables())
+					if (v->isPartOfExternalInterface())
+						functions.push_back(TypeProvider::function(*v));
+				for (FunctionTypePointer const& fun: functions)
 				{
-					signaturesSeen.insert(functionSignature);
-					util::FixedHash<4> hash(util::keccak256(functionSignature));
-					interfaceFunctionList.emplace_back(hash, fun);
+					if (!fun->interfaceFunctionType())
+						// Fails hopefully because we already registered the error
+						continue;
+					string functionSignature = fun->externalSignature();
+					if (signaturesSeen.count(functionSignature) == 0)
+					{
+						signaturesSeen.insert(functionSignature);
+						util::FixedHash<4> hash(util::keccak256(functionSignature));
+						interfaceFunctionList.emplace_back(hash, fun);
+					}
 				}
 			}
-		}
 
-		return interfaceFunctionList;
-	});
+			return interfaceFunctionList;
+		}
+	);
 }
 
 TypePointer ContractDefinition::type() const
@@ -218,7 +224,9 @@ ContractDefinitionAnnotation& ContractDefinition::annotation() const
 	return initAnnotation<ContractDefinitionAnnotation>();
 }
 
-ContractDefinition const* ContractDefinition::superContract(ContractDefinition const& _mostDerivedContract) const
+ContractDefinition const* ContractDefinition::superContract(
+	ContractDefinition const& _mostDerivedContract
+) const
 {
 	auto const& hierarchy = _mostDerivedContract.annotation().linearizedBaseContracts;
 	auto it = find(hierarchy.begin(), hierarchy.end(), this);
@@ -233,7 +241,9 @@ ContractDefinition const* ContractDefinition::superContract(ContractDefinition c
 	}
 }
 
-FunctionDefinition const* ContractDefinition::nextConstructor(ContractDefinition const& _mostDerivedContract) const
+FunctionDefinition const* ContractDefinition::nextConstructor(
+	ContractDefinition const& _mostDerivedContract
+) const
 {
 	ContractDefinition const* next = superContract(_mostDerivedContract);
 	if (next == nullptr)
@@ -249,14 +259,14 @@ FunctionDefinition const* ContractDefinition::nextConstructor(ContractDefinition
 	return nullptr;
 }
 
-TypeNameAnnotation& TypeName::annotation() const
-{
-	return initAnnotation<TypeNameAnnotation>();
-}
+TypeNameAnnotation& TypeName::annotation() const { return initAnnotation<TypeNameAnnotation>(); }
 
 TypePointer StructDefinition::type() const
 {
-	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");
+	solAssert(
+		annotation().recursive.has_value(),
+		"Requested struct type before DeclarationTypeChecker."
+	);
 	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
 }
 
@@ -376,7 +386,8 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 
 	solAssert(!dynamic_cast<ContractDefinition const&>(*scope()).isLibrary(), "");
 
-	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
+	FunctionType const* functionType =
+		TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
 	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
 	{
@@ -384,21 +395,17 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 			continue;
 		_searchStart = nullptr;
 		for (FunctionDefinition const* function: c->definedFunctions())
-			if (
-				function->name() == name() &&
-				!function->isConstructor() &&
-				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*functionType)
-			)
+			if (function->name() == name() && !function->isConstructor() &&
+				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(
+					*functionType
+				))
 				return *function;
 	}
 	solAssert(false, "Virtual function " + name() + " not found.");
-	return *this; // not reached
+	return *this;  // not reached
 }
 
-TypePointer ModifierDefinition::type() const
-{
-	return TypeProvider::modifier(*this);
-}
+TypePointer ModifierDefinition::type() const { return TypeProvider::modifier(*this); }
 
 ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 {
@@ -428,14 +435,11 @@ ModifierDefinition const& ModifierDefinition::resolveVirtual(
 				return *modifier;
 	}
 	solAssert(false, "Virtual modifier " + name() + " not found.");
-	return *this; // not reached
+	return *this;  // not reached
 }
 
 
-TypePointer EventDefinition::type() const
-{
-	return TypeProvider::function(*this);
-}
+TypePointer EventDefinition::type() const { return TypeProvider::function(*this); }
 
 FunctionTypePointer EventDefinition::functionType(bool _internal) const
 {
@@ -480,10 +484,7 @@ CallableDeclaration const* Scopable::functionOrModifierDefinition() const
 	return nullptr;
 }
 
-string Scopable::sourceUnitName() const
-{
-	return sourceUnit().annotation().path;
-}
+string Scopable::sourceUnitName() const { return sourceUnit().annotation().path; }
 
 DeclarationAnnotation& Declaration::annotation() const
 {
@@ -499,12 +500,9 @@ bool VariableDeclaration::isLValue() const
 bool VariableDeclaration::isLocalVariable() const
 {
 	auto s = scope();
-	return
-		dynamic_cast<FunctionTypeName const*>(s) ||
-		dynamic_cast<CallableDeclaration const*>(s) ||
-		dynamic_cast<Block const*>(s) ||
-		dynamic_cast<TryCatchClause const*>(s) ||
-		dynamic_cast<ForStatement const*>(s);
+	return dynamic_cast<FunctionTypeName const*>(s) ||
+		dynamic_cast<CallableDeclaration const*>(s) || dynamic_cast<Block const*>(s) ||
+		dynamic_cast<TryCatchClause const*>(s) || dynamic_cast<ForStatement const*>(s);
 }
 
 bool VariableDeclaration::isCallableOrCatchParameter() const
@@ -625,16 +623,12 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	using Location = VariableDeclaration::Location;
 
 	if (!hasReferenceOrMappingType() || isStateVariable() || isEventParameter())
-		return set<Location>{ Location::Unspecified };
+		return set<Location>{Location::Unspecified};
 	else if (isCallableOrCatchParameter())
 	{
-		set<Location> locations{ Location::Memory };
-		if (
-			isConstructorParameter() ||
-			isInternalCallableParameter() ||
-			isLibraryFunctionParameter() ||
-			isTryCatchParameter()
-		)
+		set<Location> locations{Location::Memory};
+		if (isConstructorParameter() || isInternalCallableParameter() ||
+			isLibraryFunctionParameter() || isTryCatchParameter())
 			locations.insert(Location::Storage);
 		if (!isTryCatchParameter() && !isConstructorParameter())
 			locations.insert(Location::CallData);
@@ -643,10 +637,10 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 	}
 	else if (isLocalVariable())
 		// Further restrictions will be imposed later on.
-		return set<Location>{ Location::Memory, Location::Storage, Location::CallData };
+		return set<Location>{Location::Memory, Location::Storage, Location::CallData};
 	else
 		// Struct members etc.
-		return set<Location>{ Location::Unspecified };
+		return set<Location>{Location::Unspecified};
 }
 
 string VariableDeclaration::externalIdentifierHex() const
@@ -655,10 +649,7 @@ string VariableDeclaration::externalIdentifierHex() const
 	return TypeProvider::function(*this)->externalIdentifierHex();
 }
 
-TypePointer VariableDeclaration::type() const
-{
-	return annotation().type;
-}
+TypePointer VariableDeclaration::type() const { return annotation().type; }
 
 FunctionTypePointer VariableDeclaration::functionType(bool _internal) const
 {
@@ -685,20 +676,14 @@ VariableDeclarationAnnotation& VariableDeclaration::annotation() const
 	return initAnnotation<VariableDeclarationAnnotation>();
 }
 
-StatementAnnotation& Statement::annotation() const
-{
-	return initAnnotation<StatementAnnotation>();
-}
+StatementAnnotation& Statement::annotation() const { return initAnnotation<StatementAnnotation>(); }
 
 InlineAssemblyAnnotation& InlineAssembly::annotation() const
 {
 	return initAnnotation<InlineAssemblyAnnotation>();
 }
 
-BlockAnnotation& Block::annotation() const
-{
-	return initAnnotation<BlockAnnotation>();
-}
+BlockAnnotation& Block::annotation() const { return initAnnotation<BlockAnnotation>(); }
 
 TryCatchClauseAnnotation& TryCatchClause::annotation() const
 {
@@ -710,10 +695,7 @@ ForStatementAnnotation& ForStatement::annotation() const
 	return initAnnotation<ForStatementAnnotation>();
 }
 
-ReturnAnnotation& Return::annotation() const
-{
-	return initAnnotation<ReturnAnnotation>();
-}
+ReturnAnnotation& Return::annotation() const { return initAnnotation<ReturnAnnotation>(); }
 
 ExpressionAnnotation& Expression::annotation() const
 {
@@ -740,10 +722,7 @@ IdentifierAnnotation& Identifier::annotation() const
 	return initAnnotation<IdentifierAnnotation>();
 }
 
-ASTString Literal::valueWithoutUnderscores() const
-{
-	return boost::erase_all_copy(value(), "_");
-}
+ASTString Literal::valueWithoutUnderscores() const { return boost::erase_all_copy(value(), "_"); }
 
 bool Literal::isHexNumber() const
 {

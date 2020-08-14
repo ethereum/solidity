@@ -45,8 +45,7 @@ static vector<EVMVersion> s_evmVersions = {
 	EVMVersion::constantinople(),
 	EVMVersion::petersburg(),
 	EVMVersion::istanbul(),
-	EVMVersion::berlin()
-};
+	EVMVersion::berlin()};
 
 void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize, bool _quiet)
 {
@@ -89,17 +88,13 @@ void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned 
 		compiler.compile();
 	}
 	catch (Error const&)
-	{
-	}
+	{}
 	catch (FatalError const&)
-	{
-	}
+	{}
 	catch (UnimplementedFeatureError const&)
-	{
-	}
+	{}
 	catch (StackTooDeepError const&)
-	{
-	}
+	{}
 }
 
 void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
@@ -123,10 +118,10 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 	if (output.isMember("errors"))
 		for (auto const& error: output["errors"])
 		{
-			string invalid = findAnyOf(error["type"].asString(), vector<string>{
-					"Exception",
-					"InternalCompilerError"
-			});
+			string invalid = findAnyOf(
+				error["type"].asString(),
+				vector<string>{"Exception", "InternalCompilerError"}
+			);
 			if (!invalid.empty())
 			{
 				string msg = "Invalid error: \"" + error["type"].asString() + "\"";
@@ -146,7 +141,7 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 	while (!sin.eof())
 	{
 		h256 data;
-		sin.read(reinterpret_cast<char *>(data.data()), 32);
+		sin.read(reinterpret_cast<char*>(data.data()), 32);
 		numbers.push_back(u256(data));
 	}
 	if (!_quiet)
@@ -165,10 +160,10 @@ void FuzzerUtil::testConstantOptimizer(string const& _input, bool _quiet)
 			// Make a copy here so that each time we start with the original state.
 			Assembly tmp = assembly;
 			ConstantOptimisationMethod::optimiseConstants(
-					isCreation,
-					runs,
-					langutil::EVMVersion{},
-					tmp
+				isCreation,
+				runs,
+				langutil::EVMVersion{},
+				tmp
 			);
 		}
 }

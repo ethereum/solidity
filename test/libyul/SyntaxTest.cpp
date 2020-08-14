@@ -71,10 +71,8 @@ void SyntaxTest::parseAndAnalyze()
 			errorMessage(*error),
 			name,
 			locationStart,
-			locationEnd
-		});
+			locationEnd});
 	}
-
 }
 
 SyntaxTest::SyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):

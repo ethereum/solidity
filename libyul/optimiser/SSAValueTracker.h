@@ -30,7 +30,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Class that walks the AST and stores the initial value of each variable
  * that is never assigned to.

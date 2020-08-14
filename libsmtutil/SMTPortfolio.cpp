@@ -99,9 +99,9 @@ void SMTPortfolio::addAssertion(Expression const& _expr)
  *   Here SAT/UNSAT is preferred over UNKNOWN since it's an actual answer, and over ERROR
  *   because one buggy solver/integration shouldn't break the portfolio.
  *
- * 2) If at least one solver answers SAT and at least one answers UNSAT, at least one of them is buggy
- * and the result is CONFLICTING.
- *   In the future if we have more than 2 solvers enabled we could go with the majority.
+ * 2) If at least one solver answers SAT and at least one answers UNSAT, at least one of them is
+ * buggy and the result is CONFLICTING. In the future if we have more than 2 solvers enabled we
+ * could go with the majority.
  *
  * 3) If NO solver answers the query:
  *   If at least one solver returned UNKNOWN (where the rest returned ERROR), the result is UNKNOWN.
@@ -109,8 +109,10 @@ void SMTPortfolio::addAssertion(Expression const& _expr)
  *   when it is told that this is a hard query to solve.
  *
  *   If all solvers return ERROR, the result is ERROR.
-*/
-pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& _expressionsToEvaluate)
+ */
+pair<CheckResult, vector<string>> SMTPortfolio::check(
+	vector<Expression> const& _expressionsToEvaluate
+)
 {
 	CheckResult lastResult = CheckResult::ERROR;
 	vector<string> finalValues;

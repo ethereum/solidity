@@ -36,12 +36,10 @@ using namespace solidity::frontend;
 
 namespace
 {
-
 template <class T, class B>
 bool hasEqualNameAndParameters(T const& _a, B const& _b)
 {
-	return
-		_a.name() == _b.name() &&
+	return _a.name() == _b.name() &&
 		FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
 			*FunctionType(_b).asExternallyCallableFunction(false)
 		);
@@ -81,7 +79,8 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 				m_errorReporter.declarationError(
 					7997_error,
 					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", constructor->location()),
+					SecondarySourceLocation()
+						.append("Another declaration is here:", constructor->location()),
 					"More than one constructor defined."
 				);
 			constructor = function;
@@ -92,7 +91,8 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 				m_errorReporter.declarationError(
 					7301_error,
 					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", fallback->location()),
+					SecondarySourceLocation()
+						.append("Another declaration is here:", fallback->location()),
 					"Only one fallback function is allowed."
 				);
 			fallback = function;
@@ -103,7 +103,8 @@ void ContractLevelChecker::checkDuplicateFunctions(ContractDefinition const& _co
 				m_errorReporter.declarationError(
 					4046_error,
 					function->location(),
-					SecondarySourceLocation().append("Another declaration is here:", receive->location()),
+					SecondarySourceLocation()
+						.append("Another declaration is here:", receive->location()),
 					"Only one receive function is allowed."
 				);
 			receive = function;
@@ -158,19 +159,17 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 				}
 				else
 				{
-					static_assert(is_same_v<T, EventDefinition const*>, "Expected \"FunctionDefinition const*\" or \"EventDefinition const*\"");
+					static_assert(
+						is_same_v<T, EventDefinition const*>,
+						"Expected \"FunctionDefinition const*\" or \"EventDefinition const*\""
+					);
 					error = 5883_error;
 					message = "Event with same name and parameter types defined twice.";
 				}
 
 				ssl.limitSize(message);
 
-				m_errorReporter.declarationError(
-					error,
-					overloads[i]->location(),
-					ssl,
-					message
-				);
+				m_errorReporter.declarationError(error, overloads[i]->location(), ssl, message);
 			}
 		}
 	}
@@ -193,7 +192,8 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 
 	// Search from base to derived, collect all functions and modifiers and
 	// update proxies.
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract:
+		 boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 	{
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
@@ -217,20 +217,22 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	if (_contract.abstract())
 	{
 		if (_contract.contractKind() == ContractKind::Interface)
-			m_errorReporter.typeError(9348_error, _contract.location(), "Interfaces do not need the \"abstract\" keyword, they are abstract implicitly.");
+			m_errorReporter.typeError(
+				9348_error,
+				_contract.location(),
+				"Interfaces do not need the \"abstract\" keyword, they are abstract implicitly."
+			);
 		else if (_contract.contractKind() == ContractKind::Library)
-			m_errorReporter.typeError(9571_error, _contract.location(), "Libraries cannot be abstract.");
+			m_errorReporter
+				.typeError(9571_error, _contract.location(), "Libraries cannot be abstract.");
 		else
 			solAssert(_contract.contractKind() == ContractKind::Contract, "");
 	}
 
 	// For libraries, we emit errors on function-level, so this is fine as long as we do
 	// not have inheritance for libraries.
-	if (
-		_contract.contractKind() == ContractKind::Contract &&
-		!_contract.abstract() &&
-		!_contract.annotation().unimplementedDeclarations.empty()
-	)
+	if (_contract.contractKind() == ContractKind::Contract && !_contract.abstract() &&
+		!_contract.annotation().unimplementedDeclarations.empty())
 	{
 		SecondarySourceLocation ssl;
 		for (auto declaration: _contract.annotation().unimplementedDeclarations)
@@ -239,7 +241,8 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 			3656_error,
 			_contract.location(),
 			ssl,
-			"Contract \"" + _contract.annotation().canonicalName + "\" should be marked as abstract."
+			"Contract \"" + _contract.annotation().canonicalName +
+				"\" should be marked as abstract."
 		);
 	}
 }
@@ -255,13 +258,17 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 		if (FunctionDefinition const* constructor = contract->constructor())
 			for (auto const& modifier: constructor->modifiers())
 				if (auto baseContract = dynamic_cast<ContractDefinition const*>(
-					modifier->name()->annotation().referencedDeclaration
-				))
+						modifier->name()->annotation().referencedDeclaration
+					))
 				{
 					if (modifier->arguments())
 					{
 						if (baseContract->constructor())
-							annotateBaseConstructorArguments(_contract, baseContract->constructor(), modifier.get());
+							annotateBaseConstructorArguments(
+								_contract,
+								baseContract->constructor(),
+								modifier.get()
+							);
 					}
 					else
 						m_errorReporter.declarationError(
@@ -279,7 +286,11 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 			solAssert(baseContract, "");
 
 			if (baseContract->constructor() && base->arguments() && !base->arguments()->empty())
-				annotateBaseConstructorArguments(_contract, baseContract->constructor(), base.get());
+				annotateBaseConstructorArguments(
+					_contract,
+					baseContract->constructor(),
+					base.get()
+				);
 		}
 	}
 
@@ -311,10 +322,8 @@ void ContractLevelChecker::annotateBaseConstructorArguments(
 		SourceLocation const* mainLocation = nullptr;
 		SecondarySourceLocation ssl;
 
-		if (
-			_currentContract.location().contains(previousNode->location()) ||
-			_currentContract.location().contains(_argumentNode->location())
-		)
+		if (_currentContract.location().contains(previousNode->location()) ||
+			_currentContract.location().contains(_argumentNode->location()))
 		{
 			mainLocation = &previousNode->location();
 			ssl.append("Second constructor call is here:", _argumentNode->location());
@@ -333,7 +342,6 @@ void ContractLevelChecker::annotateBaseConstructorArguments(
 			"Base constructor arguments given twice."
 		);
 	}
-
 }
 
 void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _contract)
@@ -348,7 +356,8 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
-						f, functionType->asExternallyCallableFunction(false)
+						f,
+						functionType->asExternallyCallableFunction(false)
 					);
 			}
 		for (VariableDeclaration const* v: contract->stateVariables())
@@ -358,7 +367,8 @@ void ContractLevelChecker::checkExternalTypeClashes(ContractDefinition const& _c
 				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].emplace_back(
-						v, functionType->asExternallyCallableFunction(false)
+						v,
+						functionType->asExternallyCallableFunction(false)
 					);
 			}
 	}
@@ -395,16 +405,23 @@ void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _c
 		return;
 
 	if (!_contract.baseContracts().empty())
-		m_errorReporter.typeError(9469_error, _contract.location(), "Library is not allowed to inherit.");
+		m_errorReporter
+			.typeError(9469_error, _contract.location(), "Library is not allowed to inherit.");
 
 	for (auto const& var: _contract.stateVariables())
 		if (!var->isConstant())
-			m_errorReporter.typeError(9957_error, var->location(), "Library cannot have non-constant state variables");
+			m_errorReporter.typeError(
+				9957_error,
+				var->location(),
+				"Library cannot have non-constant state variables"
+			);
 }
 
 void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _contract)
 {
-	if (_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+	if (_contract.sourceUnit().annotation().experimentalFeatures.count(
+			ExperimentalFeature::ABIEncoderV2
+		))
 		return;
 
 	if (_contract.isLibrary())
@@ -423,12 +440,15 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 	{
 		solAssert(func.second->hasDeclaration(), "Function has no declaration?!");
 
-		if (!func.second->declaration().sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		if (!func.second->declaration().sourceUnit().annotation().experimentalFeatures.count(
+				ExperimentalFeature::ABIEncoderV2
+			))
 			continue;
 
 		auto const& currentLoc = func.second->declaration().location();
 
-		for (TypePointer const& paramType: func.second->parameterTypes() + func.second->parameterTypes())
+		for (TypePointer const& paramType:
+			 func.second->parameterTypes() + func.second->parameterTypes())
 			if (!TypeChecker::typeSupportedByOldABIEncoder(*paramType, false))
 			{
 				errors.append("Type only supported by ABIEncoderV2", currentLoc);
@@ -441,24 +461,26 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 			6594_error,
 			_contract.location(),
 			errors,
-			std::string("Contract \"") +
-			_contract.name() +
-			"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
-			"which uses types that require it. " +
-			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
+			std::string("Contract \"") + _contract.name() +
+				"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
+				"which uses types that require it. " +
+				"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to "
+				"enable the feature."
 		);
-
 }
 
 void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition const& _contract)
 {
 	if (auto const* fallback = _contract.fallbackFunction())
-		if (fallback->isPayable() && !_contract.interfaceFunctionList().empty() && !_contract.receiveFunction())
+		if (fallback->isPayable() && !_contract.interfaceFunctionList().empty() &&
+			!_contract.receiveFunction())
 			m_errorReporter.warning(
 				3628_error,
 				_contract.location(),
-				"This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.",
-				SecondarySourceLocation{}.append("The payable fallback function is defined here.", fallback->location())
+				"This contract has a payable fallback function, but no receive ether function. "
+				"Consider adding a receive ether function.",
+				SecondarySourceLocation{}
+					.append("The payable fallback function is defined here.", fallback->location())
 			);
 }
 
@@ -466,14 +488,19 @@ void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 {
 	bigint size = 0;
 	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract:
+		 boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
 			{
 				size += variable->annotation().type->storageSizeUpperBound();
 				if (size >= bigint(1) << 256)
 				{
-					m_errorReporter.typeError(7676_error, _contract.location(), "Contract too large for storage.");
+					m_errorReporter.typeError(
+						7676_error,
+						_contract.location(),
+						"Contract too large for storage."
+					);
 					break;
 				}
 			}

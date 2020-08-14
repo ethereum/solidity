@@ -28,22 +28,26 @@
 
 namespace solidity::util
 {
-
 DEV_SIMPLE_EXCEPTION(BadLazyInitAccess);
 
 /**
- * A value that is initialized at some point after construction of the LazyInit. The stored value can only be accessed
- * while calling "init", which initializes the stored value (if it has not already been initialized).
+ * A value that is initialized at some point after construction of the LazyInit. The stored value
+ * can only be accessed while calling "init", which initializes the stored value (if it has not
+ * already been initialized).
  *
- * @tparam T the type of the stored value; may not be a function, reference, array, or void type; may be const-qualified.
+ * @tparam T the type of the stored value; may not be a function, reference, array, or void type;
+ * may be const-qualified.
  */
-template<typename T>
+template <typename T>
 class LazyInit
 {
 public:
 	using value_type = T;
 
-	static_assert(std::is_object_v<value_type>, "Function, reference, and void types are not supported");
+	static_assert(
+		std::is_object_v<value_type>,
+		"Function, reference, and void types are not supported"
+	);
 	static_assert(!std::is_array_v<value_type>, "Array types are not supported.");
 	static_assert(!std::is_volatile_v<value_type>, "Volatile-qualified types are not supported.");
 
@@ -53,8 +57,7 @@ public:
 	LazyInit& operator=(LazyInit const&) = delete;
 
 	// Move constructor must be overridden to ensure that moved-from object is left empty.
-	constexpr LazyInit(LazyInit&& _other) noexcept:
-		m_value(std::move(_other.m_value))
+	constexpr LazyInit(LazyInit&& _other) noexcept: m_value(std::move(_other.m_value))
 	{
 		_other.m_value.reset();
 	}
@@ -65,14 +68,14 @@ public:
 		_other.m_value.reset();
 	}
 
-	template<typename F>
+	template <typename F>
 	value_type& init(F&& _fun)
 	{
 		doInit(std::forward<F>(_fun));
 		return m_value.value();
 	}
 
-	template<typename F>
+	template <typename F>
 	value_type const& init(F&& _fun) const
 	{
 		doInit(std::forward<F>(_fun));
@@ -80,9 +83,10 @@ public:
 	}
 
 private:
-	/// Although not quite logically const, this is marked const for pragmatic reasons. It doesn't change the platonic
-	/// value of the object (which is something that is initialized to some computed value on first use).
-	template<typename F>
+	/// Although not quite logically const, this is marked const for pragmatic reasons. It doesn't
+	/// change the platonic value of the object (which is something that is initialized to some
+	/// computed value on first use).
+	template <typename F>
 	void doInit(F&& _fun) const
 	{
 		if (!m_value.has_value())

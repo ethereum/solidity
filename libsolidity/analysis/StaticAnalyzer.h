@@ -36,7 +36,6 @@ class ErrorReporter;
 
 namespace solidity::frontend
 {
-
 class ConstructorUsesAssembly;
 
 
@@ -54,11 +53,11 @@ public:
 	~StaticAnalyzer() override;
 
 	/// Performs static analysis on the given source unit and all of its sub-nodes.
-	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
+	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still
+	/// contain warnings
 	bool analyze(SourceUnit const& _sourceUnit);
 
 private:
-
 	bool visit(ContractDefinition const& _contract) override;
 	void endVisit(ContractDefinition const& _contract) override;
 
@@ -79,9 +78,9 @@ private:
 	/// Flag that indicates whether the current contract definition is a library.
 	bool m_library = false;
 
-	/// Number of uses of each (named) local variable in a function, counter is initialized with zero.
-	/// Pairs of AST ids and pointers are used as keys to ensure a deterministic order
-	/// when traversing.
+	/// Number of uses of each (named) local variable in a function, counter is initialized with
+	/// zero. Pairs of AST ids and pointers are used as keys to ensure a deterministic order when
+	/// traversing.
 	std::map<std::pair<size_t, VariableDeclaration const*>, int> m_localVarUseCount;
 
 	/// Cache that holds information about whether a contract's constructor

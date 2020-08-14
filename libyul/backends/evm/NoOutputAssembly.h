@@ -36,8 +36,6 @@ struct SourceLocation;
 
 namespace solidity::yul
 {
-
-
 /**
  * Assembly class that just ignores everything and only performs stack counting.
  * The purpose is to use this assembly for compilation dry-runs.
@@ -45,7 +43,7 @@ namespace solidity::yul
 class NoOutputAssembly: public AbstractAssembly
 {
 public:
-	explicit NoOutputAssembly(bool _evm15 = false): m_evm15(_evm15) { }
+	explicit NoOutputAssembly(bool _evm15 = false): m_evm15(_evm15) {}
 	~NoOutputAssembly() override = default;
 
 	void setSourceLocation(langutil::SourceLocation const&) override {}
@@ -78,7 +76,7 @@ public:
 	void markAsInvalid() override {}
 
 private:
-	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
+	bool m_evm15 = false;  ///< if true, switch to evm1.5 mode
 	int m_stackHeight = 0;
 };
 

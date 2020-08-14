@@ -61,14 +61,17 @@ string toString(SideEffects const& _sideEffects)
 }
 }
 
-FunctionSideEffects::FunctionSideEffects(string const& _filename):
-	TestCase(_filename)
+FunctionSideEffects::FunctionSideEffects(string const& _filename): TestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
 }
 
-TestCase::TestResult FunctionSideEffects::run(ostream& _stream, string const& _linePrefix, bool _formatted)
+TestCase::TestResult FunctionSideEffects::run(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted
+)
 {
 	Object obj;
 	std::tie(obj.code, obj.analysisInfo) = yul::test::parse(m_source, false);

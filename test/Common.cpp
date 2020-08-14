@@ -28,7 +28,6 @@ namespace po = boost::program_options;
 
 namespace solidity::test
 {
-
 /// If non-empty returns the value of the env. variable ETH_TEST_PATH, otherwise
 /// it tries to find a path that contains the directories "libsolidity/syntaxTests"
 /// and returns it if found.
@@ -40,14 +39,12 @@ boost::filesystem::path testPath()
 	if (auto path = getenv("ETH_TEST_PATH"))
 		return path;
 
-	auto const searchPath =
-	{
+	auto const searchPath = {
 		fs::current_path() / ".." / ".." / ".." / "test",
 		fs::current_path() / ".." / ".." / "test",
 		fs::current_path() / ".." / "test",
 		fs::current_path() / "test",
-		fs::current_path()
-	};
+		fs::current_path()};
 	for (auto const& basePath: searchPath)
 	{
 		fs::path syntaxTestPath = basePath / "libsolidity" / "syntaxTests";
@@ -62,8 +59,7 @@ std::string EVMOneEnvOrDefaultPath()
 	if (auto path = getenv("ETH_EVMONE"))
 		return path;
 
-	auto const searchPath =
-	{
+	auto const searchPath = {
 		fs::path("/usr/local/lib"),
 		fs::path("/usr/lib"),
 		fs::current_path() / "deps",
@@ -72,8 +68,7 @@ std::string EVMOneEnvOrDefaultPath()
 		fs::current_path() / ".." / "deps" / "lib",
 		fs::current_path() / ".." / ".." / "deps",
 		fs::current_path() / ".." / ".." / "deps" / "lib",
-		fs::current_path()
-	};
+		fs::current_path()};
 	for (auto const& basePath: searchPath)
 	{
 		fs::path p = basePath / evmoneFilename;
@@ -84,21 +79,31 @@ std::string EVMOneEnvOrDefaultPath()
 }
 
 CommonOptions::CommonOptions(std::string _caption):
-	options(_caption,
+	options(
+		_caption,
 		po::options_description::m_default_line_length,
 		po::options_description::m_default_line_length - 23
 	)
 {
-	options.add_options()
-		("evm-version", po::value(&evmVersionString), "which evm version to use")
-		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
-		("evmonepath", po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()), "path to evmone library")
-		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
-		("optimize", po::bool_switch(&optimize), "enables optimization")
-		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
-		("abiencoderv2", po::bool_switch(&useABIEncoderV2), "enables abi encoder v2")
-		("show-messages", po::bool_switch(&showMessages), "enables message output")
-		("show-metadata", po::bool_switch(&showMetadata), "enables metadata output");
+	options.add_options()("evm-version", po::value(&evmVersionString), "which evm version to use")(
+		"testpath",
+		po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()),
+		"path to test files"
+	)("evmonepath",
+	  po::value<fs::path>(&evmonePath)->default_value(EVMOneEnvOrDefaultPath()),
+	  "path to evmone library")("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")(
+		"optimize",
+		po::bool_switch(&optimize),
+		"enables optimization"
+	)(
+		"enforce-via-yul",
+		po::bool_switch(&enforceViaYul),
+		"Enforce compiling all tests via yul to see if additional tests can be activated."
+	)("abiencoderv2", po::bool_switch(&useABIEncoderV2), "enables abi encoder v2")(
+		"show-messages",
+		po::bool_switch(&showMessages),
+		"enables message output"
+	)("show-metadata", po::bool_switch(&showMetadata), "enables metadata output");
 }
 
 void CommonOptions::validate() const
@@ -108,12 +113,7 @@ void CommonOptions::validate() const
 		ConfigException,
 		"No test path specified. The --testpath argument must not be empty when given."
 	);
-	assertThrow(
-		fs::exists(testPath),
-		ConfigException,
-		"Invalid test path specified."
-	);
-
+	assertThrow(fs::exists(testPath), ConfigException, "Invalid test path specified.");
 }
 
 bool CommonOptions::parse(int argc, char const* const* argv)
@@ -129,11 +129,10 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 	for (auto const& parsedOption: parsedOptions.options)
 		if (parsedOption.position_key >= 0)
 		{
-			if (
-				parsedOption.original_tokens.empty() ||
-				(parsedOption.original_tokens.size() == 1 && parsedOption.original_tokens.front().empty())
-			)
-				continue; // ignore empty options
+			if (parsedOption.original_tokens.empty() ||
+				(parsedOption.original_tokens.size() == 1 &&
+				 parsedOption.original_tokens.front().empty()))
+				continue;  // ignore empty options
 			std::stringstream errorMessage;
 			errorMessage << "Unrecognized option: ";
 			for (auto const& token: parsedOption.original_tokens)

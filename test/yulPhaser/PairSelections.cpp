@@ -31,7 +31,6 @@ using namespace std;
 
 namespace solidity::phaser::test
 {
-
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(PairSelectionsTest)
 BOOST_AUTO_TEST_SUITE(RandomPairSelectionTest)
@@ -45,7 +44,8 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	constexpr double variance = (collectionSize * collectionSize - 1) / 12.0;
 
 	SimulationRNG::reset(1);
-	vector<tuple<size_t, size_t>> pairs = RandomPairSelection(selectionSize).materialise(collectionSize);
+	vector<tuple<size_t, size_t>> pairs =
+		RandomPairSelection(selectionSize).materialise(collectionSize);
 	vector<size_t> samples;
 	for (auto& [first, second]: pairs)
 	{
@@ -54,7 +54,9 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	}
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
@@ -64,8 +66,16 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_c
 	vector<tuple<size_t, size_t>> pairs = RandomPairSelection(0.5).materialise(collectionSize);
 
 	BOOST_TEST(pairs.size() == 100);
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<0>(pair) <= collectionSize; }));
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<1>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(
+		pairs.begin(),
+		pairs.end(),
+		[&](auto const& pair) { return get<0>(pair) <= collectionSize; }
+	));
+	BOOST_TEST(all_of(
+		pairs.begin(),
+		pairs.end(),
+		[&](auto const& pair) { return get<1>(pair) <= collectionSize; }
+	));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_never_return_a_pair_of_identical_indices)
@@ -73,7 +83,11 @@ BOOST_AUTO_TEST_CASE(materialise_should_never_return_a_pair_of_identical_indices
 	vector<tuple<size_t, size_t>> pairs = RandomPairSelection(0.5).materialise(100);
 
 	BOOST_TEST(pairs.size() == 50);
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [](auto const& pair){ return get<0>(pair) != get<1>(pair); }));
+	BOOST_TEST(all_of(
+		pairs.begin(),
+		pairs.end(),
+		[](auto const& pair) { return get<0>(pair) != get<1>(pair); }
+	));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_number_of_pairs_thats_a_fraction_of_collection_size)
@@ -132,7 +146,8 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	constexpr double variance = selectionChance * (1 - selectionChance);
 
 	SimulationRNG::reset(1);
-	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	vector<tuple<size_t, size_t>> pairs =
+		PairsFromRandomSubset(selectionChance).materialise(collectionSize);
 	vector<double> bernoulliTrials(collectionSize, 0);
 	for (auto& pair: pairs)
 	{
@@ -143,7 +158,10 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 	}
 
 	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
-	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);
+	BOOST_TEST(
+		abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) <
+		variance * relativeTolerance
+	);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_collection_indices)
@@ -151,10 +169,19 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_only_values_that_can_be_used_as_c
 	const size_t collectionSize = 200;
 	constexpr double selectionChance = 0.5;
 
-	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	vector<tuple<size_t, size_t>> pairs =
+		PairsFromRandomSubset(selectionChance).materialise(collectionSize);
 
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<0>(pair) <= collectionSize; }));
-	BOOST_TEST(all_of(pairs.begin(), pairs.end(), [&](auto const& pair){ return get<1>(pair) <= collectionSize; }));
+	BOOST_TEST(all_of(
+		pairs.begin(),
+		pairs.end(),
+		[&](auto const& pair) { return get<0>(pair) <= collectionSize; }
+	));
+	BOOST_TEST(all_of(
+		pairs.begin(),
+		pairs.end(),
+		[&](auto const& pair) { return get<1>(pair) <= collectionSize; }
+	));
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_use_unique_indices)
@@ -162,7 +189,8 @@ BOOST_AUTO_TEST_CASE(materialise_should_use_unique_indices)
 	constexpr size_t collectionSize = 200;
 	constexpr double selectionChance = 0.5;
 
-	vector<tuple<size_t, size_t>> pairs = PairsFromRandomSubset(selectionChance).materialise(collectionSize);
+	vector<tuple<size_t, size_t>> pairs =
+		PairsFromRandomSubset(selectionChance).materialise(collectionSize);
 	set<size_t> indices;
 	for (auto& pair: pairs)
 	{
@@ -200,20 +228,38 @@ using IndexPairs = vector<tuple<size_t, size_t>>;
 BOOST_AUTO_TEST_CASE(materialise)
 {
 	BOOST_TEST(PairMosaicSelection({{1, 1}}, 0.5).materialise(4) == IndexPairs({{1, 1}, {1, 1}}));
-	BOOST_TEST(PairMosaicSelection({{1, 1}}, 1.0).materialise(4) == IndexPairs({{1, 1}, {1, 1}, {1, 1}, {1, 1}}));
-	BOOST_TEST(PairMosaicSelection({{1, 1}}, 2.0).materialise(4) == IndexPairs({{1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}}));
+	BOOST_TEST(
+		PairMosaicSelection({{1, 1}}, 1.0).materialise(4) ==
+		IndexPairs({{1, 1}, {1, 1}, {1, 1}, {1, 1}})
+	);
+	BOOST_TEST(
+		PairMosaicSelection({{1, 1}}, 2.0).materialise(4) ==
+		IndexPairs({{1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}})
+	);
 	BOOST_TEST(PairMosaicSelection({{1, 1}}, 1.0).materialise(2) == IndexPairs({{1, 1}, {1, 1}}));
 
 	IndexPairs pairs1{{0, 1}, {1, 0}};
 	BOOST_TEST(PairMosaicSelection(pairs1, 0.5).materialise(4) == IndexPairs({{0, 1}, {1, 0}}));
-	BOOST_TEST(PairMosaicSelection(pairs1, 1.0).materialise(4) == IndexPairs({{0, 1}, {1, 0}, {0, 1}, {1, 0}}));
-	BOOST_TEST(PairMosaicSelection(pairs1, 2.0).materialise(4) == IndexPairs({{0, 1}, {1, 0}, {0, 1}, {1, 0}, {0, 1}, {1, 0}, {0, 1}, {1, 0}}));
+	BOOST_TEST(
+		PairMosaicSelection(pairs1, 1.0).materialise(4) ==
+		IndexPairs({{0, 1}, {1, 0}, {0, 1}, {1, 0}})
+	);
+	BOOST_TEST(
+		PairMosaicSelection(pairs1, 2.0).materialise(4) ==
+		IndexPairs({{0, 1}, {1, 0}, {0, 1}, {1, 0}, {0, 1}, {1, 0}, {0, 1}, {1, 0}})
+	);
 	BOOST_TEST(PairMosaicSelection(pairs1, 1.0).materialise(2) == IndexPairs({{0, 1}, {1, 0}}));
 
 	IndexPairs pairs2{{3, 2}, {2, 3}, {1, 0}, {1, 1}};
 	BOOST_TEST(PairMosaicSelection(pairs2, 0.5).materialise(4) == IndexPairs({{3, 2}, {2, 3}}));
-	BOOST_TEST(PairMosaicSelection(pairs2, 1.0).materialise(4) == IndexPairs({{3, 2}, {2, 3}, {1, 0}, {1, 1}}));
-	BOOST_TEST(PairMosaicSelection(pairs2, 2.0).materialise(4) == IndexPairs({{3, 2}, {2, 3}, {1, 0}, {1, 1}, {3, 2}, {2, 3}, {1, 0}, {1, 1}}));
+	BOOST_TEST(
+		PairMosaicSelection(pairs2, 1.0).materialise(4) ==
+		IndexPairs({{3, 2}, {2, 3}, {1, 0}, {1, 1}})
+	);
+	BOOST_TEST(
+		PairMosaicSelection(pairs2, 2.0).materialise(4) ==
+		IndexPairs({{3, 2}, {2, 3}, {1, 0}, {1, 1}, {3, 2}, {2, 3}, {1, 0}, {1, 1}})
+	);
 
 	IndexPairs pairs3{{1, 0}, {1, 1}, {1, 0}, {1, 1}};
 	BOOST_TEST(PairMosaicSelection(pairs3, 1.0).materialise(2) == IndexPairs({{1, 0}, {1, 1}}));
@@ -223,8 +269,12 @@ BOOST_AUTO_TEST_CASE(materialise_should_round_indices)
 {
 	IndexPairs pairs{{4, 4}, {3, 3}, {2, 2}, {1, 1}, {0, 0}};
 	BOOST_TEST(PairMosaicSelection(pairs, 0.49).materialise(5) == IndexPairs({{4, 4}, {3, 3}}));
-	BOOST_TEST(PairMosaicSelection(pairs, 0.50).materialise(5) == IndexPairs({{4, 4}, {3, 3}, {2, 2}}));
-	BOOST_TEST(PairMosaicSelection(pairs, 0.51).materialise(5) == IndexPairs({{4, 4}, {3, 3}, {2, 2}}));
+	BOOST_TEST(
+		PairMosaicSelection(pairs, 0.50).materialise(5) == IndexPairs({{4, 4}, {3, 3}, {2, 2}})
+	);
+	BOOST_TEST(
+		PairMosaicSelection(pairs, 0.51).materialise(5) == IndexPairs({{4, 4}, {3, 3}, {2, 2}})
+	);
 }
 
 BOOST_AUTO_TEST_CASE(materialise_should_return_no_pairs_if_collection_is_empty)
@@ -246,9 +296,14 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_no_pairs_if_collection_has_one_el
 BOOST_AUTO_TEST_CASE(materialise_should_clamp_indices_at_collection_size)
 {
 	IndexPairs pairs{{4, 4}, {3, 3}, {2, 2}, {1, 1}, {0, 0}};
-	BOOST_TEST(PairMosaicSelection(pairs, 1.0).materialise(4) == IndexPairs({{3, 3}, {3, 3}, {2, 2}, {1, 1}}));
-	BOOST_TEST(PairMosaicSelection(pairs, 2.0).materialise(3) == IndexPairs({{2, 2}, {2, 2}, {2, 2}, {1, 1}, {0, 0}, {2, 2}}));
-
+	BOOST_TEST(
+		PairMosaicSelection(pairs, 1.0).materialise(4) ==
+		IndexPairs({{3, 3}, {3, 3}, {2, 2}, {1, 1}})
+	);
+	BOOST_TEST(
+		PairMosaicSelection(pairs, 2.0).materialise(3) ==
+		IndexPairs({{2, 2}, {2, 2}, {2, 2}, {1, 1}, {0, 0}, {2, 2}})
+	);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

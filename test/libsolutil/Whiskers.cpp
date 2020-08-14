@@ -29,7 +29,6 @@ using namespace std;
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(WhiskersTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(no_templates)
@@ -41,11 +40,7 @@ BOOST_AUTO_TEST_CASE(no_templates)
 BOOST_AUTO_TEST_CASE(basic_replacement)
 {
 	string templ = "a <b> x <c> -> <d>.";
-	string result = Whiskers(templ)
-		("b", "BE")
-		("c", "CE")
-		("d", "DE")
-		.render();
+	string result = Whiskers(templ)("b", "BE")("c", "CE")("d", "DE").render();
 	BOOST_CHECK_EQUAL(result, "a BE x CE -> DE.");
 }
 
@@ -131,11 +126,7 @@ BOOST_AUTO_TEST_CASE(string_as_conditional_wrong)
 BOOST_AUTO_TEST_CASE(complicated_replacement)
 {
 	string templ = "a <b> x <complicated> \n <nested>>.";
-	string result = Whiskers(templ)
-		("b", "BE")
-		("complicated", "CO<M>PL")
-		("nested", "NEST")
-		.render();
+	string result = Whiskers(templ)("b", "BE")("complicated", "CO<M>PL")("nested", "NEST").render();
 	BOOST_CHECK_EQUAL(result, "a BE x CO<M>PL \n NEST>.");
 }
 

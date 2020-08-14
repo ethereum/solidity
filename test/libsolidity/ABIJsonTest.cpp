@@ -34,8 +34,7 @@ using namespace solidity::util;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 
-ABIJsonTest::ABIJsonTest(string const& _filename):
-	TestCase(_filename)
+ABIJsonTest::ABIJsonTest(string const& _filename): TestCase(_filename)
 {
 	m_source = m_reader.source();
 	m_expectation = m_reader.simpleExpectations();
@@ -45,10 +44,9 @@ TestCase::TestResult ABIJsonTest::run(ostream& _stream, string const& _linePrefi
 {
 	CompilerStack compiler;
 
-	compiler.setSources({{
-		"",
-		"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + m_source
-	}});
+	compiler.setSources(
+		{{"", "pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + m_source}}
+	);
 	compiler.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 	if (!compiler.parseAndAnalyze())

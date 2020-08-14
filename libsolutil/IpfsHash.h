@@ -24,7 +24,6 @@
 
 namespace solidity::util
 {
-
 /// Compute the "ipfs hash" of a file with the content @a _data.
 /// The output will be the multihash of the UnixFS protobuf encoded data.
 /// As hash function it will use sha2-256.

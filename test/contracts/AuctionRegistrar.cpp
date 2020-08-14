@@ -39,7 +39,6 @@ using namespace solidity::test;
 
 namespace solidity::frontend::test
 {
-
 namespace
 {
 static char const* registrarCode = R"DELIMITER(
@@ -222,9 +221,9 @@ class AuctionRegistrarTestFramework: public SolidityExecutionFramework
 protected:
 	void deployRegistrar()
 	{
-		bytes const& compiled = s_compiledRegistrar.init([&]{
-			return compileContract(registrarCode, "GlobalRegistrar");
-		});
+		bytes const& compiled =
+			s_compiledRegistrar.init([&]
+									 { return compileContract(registrarCode, "GlobalRegistrar"); });
 
 		sendMessage(compiled, true);
 		BOOST_REQUIRE(m_transactionSuccessful);
@@ -235,26 +234,14 @@ protected:
 	{
 	public:
 		RegistrarInterface(SolidityExecutionFramework& _framework): ContractInterface(_framework) {}
-		void reserve(string const& _name)
-		{
-			callString("reserve", _name);
-		}
-		u160 owner(string const& _name)
-		{
-			return callStringReturnsAddress("owner", _name);
-		}
+		void reserve(string const& _name) { callString("reserve", _name); }
+		u160 owner(string const& _name) { return callStringReturnsAddress("owner", _name); }
 		void setAddress(string const& _name, u160 const& _address, bool _primary)
 		{
 			callStringAddressBool("setAddress", _name, _address, _primary);
 		}
-		u160 addr(string const& _name)
-		{
-			return callStringReturnsAddress("addr", _name);
-		}
-		string name(u160 const& _addr)
-		{
-			return callAddressReturnsString("name", _addr);
-		}
+		u160 addr(string const& _name) { return callStringReturnsAddress("addr", _name); }
+		string name(u160 const& _addr) { return callAddressReturnsString("name", _addr); }
 		void setSubRegistrar(string const& _name, u160 const& _address)
 		{
 			callStringAddress("setSubRegistrar", _name, _address);
@@ -267,18 +254,12 @@ protected:
 		{
 			callStringBytes32("setContent", _name, _content);
 		}
-		h256 content(string const& _name)
-		{
-			return callStringReturnsBytes32("content", _name);
-		}
+		h256 content(string const& _name) { return callStringReturnsBytes32("content", _name); }
 		void transfer(string const& _name, u160 const& _target)
 		{
 			return callStringAddress("transfer", _name, _target);
 		}
-		void disown(string const& _name)
-		{
-			return callString("disown", _name);
-		}
+		void disown(string const& _name) { return callString("disown", _name); }
 	};
 
 	int64_t const m_biddingTime = 7 * 24 * 3600;
@@ -289,16 +270,16 @@ protected:
 /// This is a test suite that tests optimised code!
 BOOST_FIXTURE_TEST_SUITE(SolidityAuctionRegistrar, AuctionRegistrarTestFramework)
 
-BOOST_AUTO_TEST_CASE(creation)
-{
-	deployRegistrar();
-}
+BOOST_AUTO_TEST_CASE(creation) { deployRegistrar(); }
 
 BOOST_AUTO_TEST_CASE(reserve)
 {
 	// Test that reserving works for long strings
 	deployRegistrar();
-	vector<string> names{"abcabcabcabcabc", "defdefdefdefdef", "ghighighighighighighighighighighighighighighi"};
+	vector<string> names{
+		"abcabcabcabcabc",
+		"defdefdefdefdef",
+		"ghighighighighighighighighighighighighighighi"};
 
 	RegistrarInterface registrar(*this);
 
@@ -457,4 +438,4 @@ BOOST_AUTO_TEST_CASE(auction_bidding)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // end namespaces
+}  // end namespaces

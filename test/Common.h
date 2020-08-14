@@ -27,20 +27,23 @@
 
 namespace solidity::test
 {
-
 #ifdef _WIN32
 static constexpr auto evmoneFilename = "evmone.dll";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-windows-amd64.zip";
+static constexpr auto evmoneDownloadLink =
+	"https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-windows-amd64.zip";
 #elif defined(__APPLE__)
 static constexpr auto evmoneFilename = "libevmone.dylib";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-darwin-x86_64.tar.gz";
+static constexpr auto evmoneDownloadLink =
+	"https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-darwin-x86_64.tar.gz";
 #else
 static constexpr auto evmoneFilename = "libevmone.so";
-static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-linux-x86_64.tar.gz";
+static constexpr auto evmoneDownloadLink =
+	"https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-linux-x86_64.tar.gz";
 #endif
 
 
-struct ConfigException : public util::Exception {};
+struct ConfigException: public util::Exception
+{};
 
 struct CommonOptions: boost::noncopyable
 {
@@ -63,9 +66,9 @@ struct CommonOptions: boost::noncopyable
 	static void setSingleton(std::unique_ptr<CommonOptions const>&& _instance);
 
 	CommonOptions(std::string caption = "");
-	virtual ~CommonOptions() {};
-protected:
+	virtual ~CommonOptions(){};
 
+protected:
 	boost::program_options::options_description options;
 
 private:

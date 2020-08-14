@@ -33,7 +33,6 @@
 
 namespace solidity::evmasm
 {
-
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 
@@ -73,7 +72,8 @@ private:
 			AssemblyItem const* _replaceItem = nullptr,
 			AssemblyItem const* _replaceWith = nullptr
 		):
-			it(_it), end(_end), replaceItem(_replaceItem), replaceWith(_replaceWith) {}
+			it(_it), end(_end), replaceItem(_replaceItem), replaceWith(_replaceWith)
+		{}
 		BlockIterator& operator++();
 		bool operator==(BlockIterator const& _other) const { return it == _other.it; }
 		bool operator!=(BlockIterator const& _other) const { return it != _other.it; }

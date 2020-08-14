@@ -23,8 +23,7 @@
 using namespace std;
 using namespace solidity::smtutil;
 
-Z3Interface::Z3Interface():
-	m_solver(m_context)
+Z3Interface::Z3Interface(): m_solver(m_context)
 {
 	// These need to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
@@ -38,15 +37,9 @@ void Z3Interface::reset()
 	m_solver.reset();
 }
 
-void Z3Interface::push()
-{
-	m_solver.push();
-}
+void Z3Interface::push() { m_solver.push(); }
 
-void Z3Interface::pop()
-{
-	m_solver.pop();
-}
+void Z3Interface::pop() { m_solver.pop(); }
 
 void Z3Interface::declareVariable(string const& _name, SortPointer const& _sort)
 {
@@ -64,17 +57,20 @@ void Z3Interface::declareFunction(string const& _name, Sort const& _sort)
 	smtAssert(_sort.kind == Kind::Function, "");
 	FunctionSort fSort = dynamic_cast<FunctionSort const&>(_sort);
 	if (m_functions.count(_name))
-		m_functions.at(_name) = m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain));
+		m_functions.at(_name) =
+			m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain));
 	else
-		m_functions.emplace(_name, m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain)));
+		m_functions.emplace(
+			_name,
+			m_context.function(_name.c_str(), z3Sort(fSort.domain), z3Sort(*fSort.codomain))
+		);
 }
 
-void Z3Interface::addAssertion(Expression const& _expr)
-{
-	m_solver.add(toZ3Expr(_expr));
-}
+void Z3Interface::addAssertion(Expression const& _expr) { m_solver.add(toZ3Expr(_expr)); }
 
-pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
+pair<CheckResult, vector<string>> Z3Interface::check(
+	vector<Expression> const& _expressionsToEvaluate
+)
 {
 	CheckResult result;
 	vector<string> values;
@@ -200,7 +196,8 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return z3::store(arguments[0], arguments[1], arguments[2]);
 		else if (n == "const_array")
 		{
-			shared_ptr<SortSort> sortSort = std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
+			shared_ptr<SortSort> sortSort =
+				std::dynamic_pointer_cast<SortSort>(_expr.arguments[0].sort);
 			smtAssert(sortSort, "");
 			auto arraySort = dynamic_pointer_cast<ArraySort>(sortSort->inner);
 			smtAssert(arraySort && arraySort->domain, "");
@@ -209,11 +206,15 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		else if (n == "tuple_get")
 		{
 			size_t index = stoul(_expr.arguments[1].name);
-			return z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), index))(arguments[0]);
+			return z3::func_decl(
+				m_context,
+				Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), index)
+			)(arguments[0]);
 		}
 		else if (n == "tuple_constructor")
 		{
-			auto constructor = z3::func_decl(m_context, Z3_get_tuple_sort_mk_decl(m_context, z3Sort(*_expr.sort)));
+			auto constructor =
+				z3::func_decl(m_context, Z3_get_tuple_sort_mk_decl(m_context, z3Sort(*_expr.sort)));
 			smtAssert(constructor.arity() == arguments.size(), "");
 			z3::expr_vector args(m_context);
 			for (auto const& arg: arguments)

@@ -36,7 +36,8 @@ void AlgorithmRunner::run(GeneticAlgorithm& _algorithm)
 	cacheClear();
 
 	clock_t totalTimeStart = clock();
-	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value(); ++round)
+	for (size_t round = 0; !m_options.maxRounds.has_value() || round < m_options.maxRounds.value();
+		 ++round)
 	{
 		clock_t roundTimeStart = clock();
 		cacheStartRound(round + 1);
@@ -146,7 +147,8 @@ void AlgorithmRunner::populationAutosave() const
 	assertThrow(
 		!outputStream.bad(),
 		FileWriteError,
-		"Error while writing to file '" + m_options.populationAutosaveFile.value() + "': " + strerror(errno)
+		"Error while writing to file '" + m_options.populationAutosaveFile.value() +
+			"': " + strerror(errno)
 	);
 }
 
@@ -198,6 +200,11 @@ Population AlgorithmRunner::randomiseDuplicates(
 
 	return (
 		Population(_population.fitnessMetric(), individuals) +
-		Population::makeRandom(_population.fitnessMetric(), duplicateCount, _minChromosomeLength, _maxChromosomeLength)
+		Population::makeRandom(
+			_population.fitnessMetric(),
+			duplicateCount,
+			_minChromosomeLength,
+			_maxChromosomeLength
+		)
 	);
 }

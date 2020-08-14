@@ -26,7 +26,6 @@
 
 namespace solidity::frontend::test
 {
-
 class SMTCheckerTest: public SyntaxTest
 {
 public:
@@ -36,7 +35,11 @@ public:
 	}
 	SMTCheckerTest(std::string const& _filename);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	) override;
 
 protected:
 	/// This is set via option SMTSolvers in the test.

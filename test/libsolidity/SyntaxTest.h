@@ -31,7 +31,6 @@
 
 namespace solidity::frontend::test
 {
-
 using solidity::test::SyntaxTestError;
 
 class SyntaxTest: public AnalysisFramework, public solidity::test::CommonSyntaxTest
@@ -45,9 +44,17 @@ public:
 	{
 		return std::make_unique<SyntaxTest>(_config.filename, _config.evmVersion, true);
 	}
-	SyntaxTest(std::string const& _filename, langutil::EVMVersion _evmVersion, bool _parserErrorRecovery = false);
+	SyntaxTest(
+		std::string const& _filename,
+		langutil::EVMVersion _evmVersion,
+		bool _parserErrorRecovery = false
+	);
 
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
+	TestResult run(
+		std::ostream& _stream,
+		std::string const& _linePrefix = "",
+		bool _formatted = false
+	) override;
 
 protected:
 	void setupCompiler();

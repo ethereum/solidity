@@ -23,10 +23,9 @@
 
 namespace solidity::smtutil
 {
+struct SMTLogicError: virtual util::Exception
+{};
 
-struct SMTLogicError: virtual util::Exception {};
-
-#define smtAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, SMTLogicError, DESCRIPTION)
+#define smtAssert(CONDITION, DESCRIPTION) assertThrow(CONDITION, SMTLogicError, DESCRIPTION)
 
 }

@@ -42,12 +42,8 @@ struct Dialect;
 class NameDisplacer: public ASTModifier
 {
 public:
-	explicit NameDisplacer(
-		NameDispenser& _dispenser,
-		std::set<YulString> const& _namesToFree
-	):
-		m_nameDispenser(_dispenser),
-		m_namesToFree(_namesToFree)
+	explicit NameDisplacer(NameDispenser& _dispenser, std::set<YulString> const& _namesToFree):
+		m_nameDispenser(_dispenser), m_namesToFree(_namesToFree)
 	{
 		for (YulString n: _namesToFree)
 			m_nameDispenser.markUsed(n);

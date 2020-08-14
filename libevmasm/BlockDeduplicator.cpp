@@ -43,10 +43,8 @@ bool BlockDeduplicator::deduplicate()
 	// Virtual tag that signifies "the current block" and which is used to optimise loops.
 	// We abort if this virtual tag actually exists.
 	AssemblyItem pushSelf{PushTag, u256(-4)};
-	if (
-		std::count(m_items.cbegin(), m_items.cend(), pushSelf.tag()) ||
-		std::count(m_items.cbegin(), m_items.cend(), pushSelf.pushTag())
-	)
+	if (std::count(m_items.cbegin(), m_items.cend(), pushSelf.tag()) ||
+		std::count(m_items.cbegin(), m_items.cend(), pushSelf.pushTag()))
 		return false;
 
 	function<bool(size_t, size_t)> comparator = [&](size_t _i, size_t _j)
@@ -65,8 +63,16 @@ bool BlockDeduplicator::deduplicate()
 			pushSecondTag = m_items.at(_j).pushTag();
 
 		using diff_type = BlockIterator::difference_type;
-		BlockIterator first{m_items.begin() + diff_type(_i), m_items.end(), &pushFirstTag, &pushSelf};
-		BlockIterator second{m_items.begin() + diff_type(_j), m_items.end(), &pushSecondTag, &pushSelf};
+		BlockIterator first{
+			m_items.begin() + diff_type(_i),
+			m_items.end(),
+			&pushFirstTag,
+			&pushSelf};
+		BlockIterator second{
+			m_items.begin() + diff_type(_j),
+			m_items.end(),
+			&pushSecondTag,
+			&pushSelf};
 		BlockIterator end{m_items.end(), m_items.end()};
 
 		if (first != end && (*first).type() == Tag)
@@ -78,7 +84,7 @@ bool BlockDeduplicator::deduplicate()
 	};
 
 	size_t iterations = 0;
-	for (; ; ++iterations)
+	for (;; ++iterations)
 	{
 		//@todo this should probably be optimized.
 		set<size_t, function<bool(size_t, size_t)>> blocksSeen(comparator);

@@ -21,7 +21,6 @@
 
 namespace solidity::util
 {
-
 /// Simple generic result that holds a value and an optional error message.
 /// Results can be implicitly converted to and created from the type of
 /// the value they hold. The class is mainly designed for a result type of
@@ -56,7 +55,7 @@ public:
 	/// @name Wrapper functions
 	/// Wrapper functions that provide implicit conversions to and explicit retrieval of
 	/// the value this result holds.
-	operator ResultType const&() const { return m_value; }
+	operator ResultType const &() const { return m_value; }
 	ResultType const& get() const { return m_value; }
 	/// @}
 
@@ -66,7 +65,7 @@ public:
 	/// Merges _other into this using the _merger
 	/// and appends the error messages. Meant to be called
 	/// with logical operators like logical_and, etc.
-	template<typename F>
+	template <typename F>
 	void merge(Result<ResultType> const& _other, F _merger)
 	{
 		m_value = _merger(m_value, _other.get());
@@ -75,8 +74,7 @@ public:
 
 private:
 	explicit Result(ResultType _value, std::string _message):
-		m_value(std::move(_value)),
-		m_message(std::move(_message))
+		m_value(std::move(_value)), m_message(std::move(_message))
 	{}
 
 	ResultType m_value;

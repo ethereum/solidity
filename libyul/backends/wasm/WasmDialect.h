@@ -27,7 +27,6 @@
 
 namespace solidity::yul
 {
-
 class YulString;
 using Type = YulString;
 struct FunctionCall;
@@ -48,7 +47,10 @@ struct WasmDialect: public Dialect
 	BuiltinFunction const* builtin(YulString _name) const override;
 	BuiltinFunction const* discardFunction(YulString _type) const override;
 	BuiltinFunction const* equalityFunction(YulString _type) const override;
-	BuiltinFunction const* booleanNegationFunction() const override { return builtin("i32.eqz"_yulstring); }
+	BuiltinFunction const* booleanNegationFunction() const override
+	{
+		return builtin("i32.eqz"_yulstring);
+	}
 
 	std::set<YulString> fixedFunctionNames() const override { return {"main"_yulstring}; }
 
@@ -62,7 +64,8 @@ private:
 		std::vector<YulString> _params,
 		std::vector<YulString> _returns,
 		bool _movable = true,
-		std::vector<std::optional<LiteralKind>> _literalArguments = std::vector<std::optional<LiteralKind>>{}
+		std::vector<std::optional<LiteralKind>> _literalArguments =
+			std::vector<std::optional<LiteralKind>>{}
 	);
 
 	std::map<YulString, BuiltinFunction> m_functions;

@@ -40,7 +40,6 @@ using namespace solidity::yul;
 
 namespace solidity::frontend
 {
-
 using SourceLocation = langutil::SourceLocation;
 
 SourceLocation const AsmJsonImporter::createSourceLocation(Json::Value const& _node)
@@ -160,7 +159,7 @@ yul::Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	string kind = member(_node, "kind").asString();
 
 	lit.value = YulString{member(_node, "value").asString()};
-	lit.type= YulString{member(_node, "type").asString()};
+	lit.type = YulString{member(_node, "type").asString()};
 
 	if (kind == "number")
 	{
@@ -168,7 +167,9 @@ yul::Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 		lit.kind = yul::LiteralKind::Number;
 		astAssert(
 			scanner.currentToken() == Token::Number,
-			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + string(" while scanning ") + lit.value.str()
+			"Expected number but got " +
+				langutil::TokenTraits::friendlyName(scanner.currentToken()) +
+				string(" while scanning ") + lit.value.str()
 		);
 	}
 	else if (kind == "bool")
@@ -177,7 +178,7 @@ yul::Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 		lit.kind = yul::LiteralKind::Boolean;
 		astAssert(
 			scanner.currentToken() == Token::TrueLiteral ||
-			scanner.currentToken() == Token::FalseLiteral,
+				scanner.currentToken() == Token::FalseLiteral,
 			"Expected true/false literal!"
 		);
 	}
@@ -267,7 +268,8 @@ yul::FunctionDefinition AsmJsonImporter::createFunctionDefinition(Json::Value co
 yul::If AsmJsonImporter::createIf(Json::Value const& _node)
 {
 	auto ifStatement = createAsmNode<yul::If>(_node);
-	ifStatement.condition = make_unique<yul::Expression>(createExpression(member(_node, "condition")));
+	ifStatement.condition =
+		make_unique<yul::Expression>(createExpression(member(_node, "condition")));
 	ifStatement.body = createBlock(member(_node, "body"));
 	return ifStatement;
 }
@@ -287,7 +289,8 @@ yul::Case AsmJsonImporter::createCase(Json::Value const& _node)
 yul::Switch AsmJsonImporter::createSwitch(Json::Value const& _node)
 {
 	auto switchStatement = createAsmNode<yul::Switch>(_node);
-	switchStatement.expression = make_unique<yul::Expression>(createExpression(member(_node, "expression")));
+	switchStatement.expression =
+		make_unique<yul::Expression>(createExpression(member(_node, "expression")));
 	for (auto const& var: member(_node, "cases"))
 		switchStatement.cases.emplace_back(createCase(var));
 	return switchStatement;

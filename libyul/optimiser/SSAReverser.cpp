@@ -54,11 +54,8 @@ void SSAReverser::operator()(Block& _block)
 			if (auto* assignment = std::get_if<Assignment>(&_stmt2))
 			{
 				auto* identifier = std::get_if<Identifier>(assignment->value.get());
-				if (
-					assignment->variableNames.size() == 1 &&
-					identifier &&
-					identifier->name == varDecl->variables.front().name
-				)
+				if (assignment->variableNames.size() == 1 && identifier &&
+					identifier->name == varDecl->variables.front().name)
 				{
 					// in the special case a == a_1, just remove the assignment
 					if (assignment->variableNames.front().name == identifier->name)
@@ -68,13 +65,13 @@ void SSAReverser::operator()(Block& _block)
 							Assignment{
 								std::move(assignment->location),
 								assignment->variableNames,
-								std::move(varDecl->value)
-							},
+								std::move(varDecl->value)},
 							VariableDeclaration{
 								std::move(varDecl->location),
 								std::move(varDecl->variables),
-								std::make_unique<Expression>(std::move(assignment->variableNames.front()))
-							}
+								std::make_unique<Expression>(
+									std::move(assignment->variableNames.front())
+								)}
 						);
 				}
 			}
@@ -87,30 +84,23 @@ void SSAReverser::operator()(Block& _block)
 			else if (auto* varDecl2 = std::get_if<VariableDeclaration>(&_stmt2))
 			{
 				auto* identifier = std::get_if<Identifier>(varDecl2->value.get());
-				if (
-					varDecl2->variables.size() == 1 &&
-					identifier &&
-					identifier->name == varDecl->variables.front().name && (
-						m_assignmentCounter.assignmentCount(varDecl2->variables.front().name) >
-						m_assignmentCounter.assignmentCount(varDecl->variables.front().name)
-					)
-				)
+				if (varDecl2->variables.size() == 1 && identifier &&
+					identifier->name == varDecl->variables.front().name &&
+					(m_assignmentCounter.assignmentCount(varDecl2->variables.front().name) >
+					 m_assignmentCounter.assignmentCount(varDecl->variables.front().name)))
 				{
 					auto varIdentifier2 = std::make_unique<Expression>(Identifier{
 						varDecl2->variables.front().location,
-						varDecl2->variables.front().name
-					});
+						varDecl2->variables.front().name});
 					return util::make_vector<Statement>(
 						VariableDeclaration{
 							std::move(varDecl2->location),
 							std::move(varDecl2->variables),
-							std::move(varDecl->value)
-						},
+							std::move(varDecl->value)},
 						VariableDeclaration{
 							std::move(varDecl->location),
 							std::move(varDecl->variables),
-							std::move(varIdentifier2)
-						}
+							std::move(varIdentifier2)}
 					);
 				}
 			}

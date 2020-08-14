@@ -32,7 +32,6 @@
 
 namespace solidity::frontend
 {
-
 class SourceUnit;
 
 class IRGenerator
@@ -81,12 +80,15 @@ private:
 
 	/// Generates implicit constructors for all contracts in the inheritance hierarchy of
 	/// @a _contract
-	/// If there are user defined constructors, their body will be included in implicit constructors body.
+	/// If there are user defined constructors, their body will be included in implicit constructors
+	/// body.
 	void generateImplicitConstructors(ContractDefinition const& _contract);
 
-	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers) of
+	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers)
+	/// of
 	/// @a _contract
-	/// @returns Pair of expressions needed to evaluate params and list of parameters in a map contract -> params
+	/// @returns Pair of expressions needed to evaluate params and list of parameters in a map
+	/// contract -> params
 	std::pair<std::string, std::map<ContractDefinition const*, std::vector<std::string>>>
 	evaluateConstructorArguments(ContractDefinition const& _contract);
 

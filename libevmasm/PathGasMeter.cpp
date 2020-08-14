@@ -54,10 +54,8 @@ GasMeter::GasConsumption PathGasMeter::estimateMax(
 
 void PathGasMeter::queue(std::unique_ptr<GasPath>&& _newPath)
 {
-	if (
-		m_highestGasUsagePerJumpdest.count(_newPath->index) &&
-		_newPath->gas < m_highestGasUsagePerJumpdest.at(_newPath->index)
-	)
+	if (m_highestGasUsagePerJumpdest.count(_newPath->index) &&
+		_newPath->gas < m_highestGasUsagePerJumpdest.at(_newPath->index))
 		return;
 	m_highestGasUsagePerJumpdest[_newPath->index] = _newPath->gas;
 	m_queue[_newPath->index] = move(_newPath);
@@ -100,7 +98,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 		{
 			branchStops = true;
 			jumpTags = state->tagsInExpression(state->relativeStackElement(0));
-			if (jumpTags.empty()) // unknown jump destination
+			if (jumpTags.empty())  // unknown jump destination
 				return GasMeter::GasConsumption::infinite();
 		}
 		else if (item == AssemblyItem(Instruction::JUMPI))
@@ -109,7 +107,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 			if (classes.knownNonZero(condition) || !classes.knownZero(condition))
 			{
 				jumpTags = state->tagsInExpression(state->relativeStackElement(0));
-				if (jumpTags.empty()) // unknown jump destination
+				if (jumpTags.empty())  // unknown jump destination
 					return GasMeter::GasConsumption::infinite();
 			}
 			branchStops = classes.knownNonZero(condition);

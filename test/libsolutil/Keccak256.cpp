@@ -26,7 +26,6 @@ using namespace std;
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(Keccak256, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(empty)

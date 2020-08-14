@@ -43,7 +43,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ */
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
@@ -59,7 +59,6 @@
 
 namespace solidity::langutil
 {
-
 /**
  * Bidirectional stream of characters.
  *
@@ -69,11 +68,15 @@ class CharStream
 {
 public:
 	CharStream() = default;
-	explicit CharStream(std::string  _source, std::string  name):
-		m_source(std::move(_source)), m_name(std::move(name)) {}
+	explicit CharStream(std::string _source, std::string name):
+		m_source(std::move(_source)), m_name(std::move(name))
+	{}
 
 	size_t position() const { return m_position; }
-	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
+	bool isPastEndOfInput(size_t _charsForward = 0) const
+	{
+		return (m_position + _charsForward) >= m_source.size();
+	}
 
 	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
 	char advanceAndGet(size_t _chars = 1);

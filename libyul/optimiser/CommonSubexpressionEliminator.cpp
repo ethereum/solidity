@@ -39,8 +39,7 @@ void CommonSubexpressionEliminator::run(OptimiserStepContext& _context, Block& _
 {
 	CommonSubexpressionEliminator cse{
 		_context.dialect,
-		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))
-	};
+		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast))};
 	cse(_ast);
 }
 
@@ -49,8 +48,7 @@ CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 	map<YulString, SideEffects> _functionSideEffects
 ):
 	DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
-{
-}
+{}
 
 void CommonSubexpressionEliminator::visit(Expression& _e)
 {

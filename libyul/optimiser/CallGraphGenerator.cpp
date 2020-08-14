@@ -43,10 +43,8 @@ struct CallGraphCycleFinder
 	{
 		if (visited.count(_function))
 			return;
-		if (
-			auto it = find(currentPath.begin(), currentPath.end(), _function);
-			it != currentPath.end()
-		)
+		if (auto it = find(currentPath.begin(), currentPath.end(), _function);
+			it != currentPath.end())
 			containedInCycle.insert(it, currentPath.end());
 		else
 		{
@@ -99,8 +97,4 @@ void CallGraphGenerator::operator()(FunctionDefinition const& _functionDefinitio
 	m_currentFunction = previousFunction;
 }
 
-CallGraphGenerator::CallGraphGenerator()
-{
-	m_callGraph.functionCalls[YulString{}] = {};
-}
-
+CallGraphGenerator::CallGraphGenerator() { m_callGraph.functionCalls[YulString{}] = {}; }

@@ -58,14 +58,8 @@ public:
 	wasm::Expression operator()(yul::Block const& _block);
 
 private:
-	WasmCodeTransform(
-		Dialect const& _dialect,
-		Block const& _ast,
-		TypeInfo& _typeInfo
-	):
-		m_dialect(_dialect),
-		m_nameDispenser(_dialect, _ast),
-		m_typeInfo(_typeInfo)
+	WasmCodeTransform(Dialect const& _dialect, Block const& _ast, TypeInfo& _typeInfo):
+		m_dialect(_dialect), m_nameDispenser(_dialect, _ast), m_typeInfo(_typeInfo)
 	{}
 
 	std::unique_ptr<wasm::Expression> visit(yul::Expression const& _expression);

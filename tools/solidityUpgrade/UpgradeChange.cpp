@@ -30,7 +30,8 @@ void UpgradeChange::apply()
 {
 	m_source.replace(
 		static_cast<size_t>(m_location.start),
-		static_cast<size_t>(m_location.end - m_location.start), m_patch
+		static_cast<size_t>(m_location.end - m_location.start),
+		m_patch
 	);
 }
 
@@ -46,7 +47,8 @@ void UpgradeChange::log(bool const _shorten) const
 	auto level = m_level == Level::Unsafe ? "unsafe" : "safe";
 
 	os << endl;
-	AnsiColorized(os, true, {formatting::BOLD, color}) << "Upgrade change (" << level << ")" << endl;
+	AnsiColorized(os, true, {formatting::BOLD, color})
+		<< "Upgrade change (" << level << ")" << endl;
 	os << "=======================" << endl;
 	formatter.printSourceLocation(SourceReferenceExtractor::extract(&m_location));
 	os << endl;

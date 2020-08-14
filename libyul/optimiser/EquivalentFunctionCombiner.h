@@ -27,12 +27,11 @@
 
 namespace solidity::yul
 {
-
 struct OptimiserStepContext;
 
 /**
- * Optimiser component that detects syntactically equivalent functions and replaces all calls to any of them by calls
- * to one particular of them.
+ * Optimiser component that detects syntactically equivalent functions and replaces all calls to any
+ * of them by calls to one particular of them.
  *
  * Prerequisite: Disambiguator, Function Hoister
  */
@@ -46,7 +45,9 @@ public:
 	void operator()(FunctionCall& _funCall) override;
 
 private:
-	EquivalentFunctionCombiner(std::map<YulString, FunctionDefinition const*> _duplicates): m_duplicates(std::move(_duplicates)) {}
+	EquivalentFunctionCombiner(std::map<YulString, FunctionDefinition const*> _duplicates):
+		m_duplicates(std::move(_duplicates))
+	{}
 	std::map<YulString, FunctionDefinition const*> m_duplicates;
 };
 

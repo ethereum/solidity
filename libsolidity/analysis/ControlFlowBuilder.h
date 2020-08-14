@@ -26,8 +26,8 @@
 #include <array>
 #include <memory>
 
-namespace solidity::frontend {
-
+namespace solidity::frontend
+{
 /** Helper class that builds the control flow of a function or modifier.
  * Modifiers are not yet applied to the functions. This is done in a second
  * step in the CFG class.
@@ -104,7 +104,7 @@ private:
 	/// Splits the control flow starting at the current node into n paths.
 	/// m_currentNode is set to nullptr and has to be set manually or
 	/// using mergeFlow later.
-	template<size_t n>
+	template <size_t n>
 	std::array<CFGNode*, n> splitFlow()
 	{
 		std::array<CFGNode*, n> result;
@@ -136,7 +136,7 @@ private:
 	/// If @a _endNode is nullptr, a new node is creates and used as end node.
 	/// Sets the merge destination as current node.
 	/// Note: @a _endNode may be one of the nodes in @a _nodes.
-	template<typename C>
+	template <typename C>
 	void mergeFlow(C const& _nodes, CFGNode* _endNode = nullptr)
 	{
 		CFGNode* mergeDestination = (_endNode == nullptr) ? m_nodeContainer.newNode() : _endNode;
@@ -148,7 +148,7 @@ private:
 
 	CFGNode* newLabel();
 	CFGNode* createLabelHere();
-	void placeAndConnectLabel(CFGNode *_node);
+	void placeAndConnectLabel(CFGNode* _node);
 
 	CFG::NodeContainer& m_nodeContainer;
 
@@ -172,8 +172,13 @@ private:
 	class BreakContinueScope
 	{
 	public:
-		BreakContinueScope(ControlFlowBuilder& _parser, CFGNode* _breakJump, CFGNode* _continueJump);
+		BreakContinueScope(
+			ControlFlowBuilder& _parser,
+			CFGNode* _breakJump,
+			CFGNode* _continueJump
+		);
 		~BreakContinueScope();
+
 	private:
 		ControlFlowBuilder& m_parser;
 		CFGNode* m_origBreakJump;

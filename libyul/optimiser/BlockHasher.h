@@ -27,7 +27,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Optimiser component that calculates hash values for blocks.
  * Syntactically equal blocks will have identical hashes and
@@ -45,7 +44,6 @@ namespace solidity::yul
 class BlockHasher: public ASTWalker
 {
 public:
-
 	using ASTWalker::operator();
 
 	void operator()(Literal const&) override;

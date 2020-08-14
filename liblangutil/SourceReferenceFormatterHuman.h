@@ -22,7 +22,7 @@
 #pragma once
 
 #include <liblangutil/SourceReferenceExtractor.h>
-#include <liblangutil/SourceReferenceFormatter.h> // SourceReferenceFormatterBase
+#include <liblangutil/SourceReferenceFormatter.h>  // SourceReferenceFormatterBase
 
 #include <libsolutil/AnsiColorized.h>
 
@@ -32,7 +32,6 @@
 
 namespace solidity::langutil
 {
-
 class SourceReferenceFormatterHuman: public SourceReferenceFormatter
 {
 public:

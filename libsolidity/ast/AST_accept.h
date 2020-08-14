@@ -29,7 +29,6 @@
 
 namespace solidity::frontend
 {
-
 void SourceUnit::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

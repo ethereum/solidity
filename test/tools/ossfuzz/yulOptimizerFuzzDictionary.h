@@ -773,5 +773,4 @@ static const std::vector<std::string> hexDictionary = {
 	"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 	"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 	"fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-	"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-};
+	"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};

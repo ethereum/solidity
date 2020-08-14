@@ -20,7 +20,6 @@
 
 namespace solidity::frontend::test
 {
-
 /**
  * Utility class that aids conversions from parsed strings to an
  * isoltest-internal, ABI-based bytes representation and vice-versa.
@@ -40,11 +39,7 @@ public:
 	/// bytes array.
 	/// TODO: Remove abiType reference from parameter list
 	/// and return the new alignment instead.
-	static bytes applyAlign(
-		Parameter::Alignment _alignment,
-		ABIType& _abiType,
-		bytes _bytes
-	);
+	static bytes applyAlign(Parameter::Alignment _alignment, ABIType& _abiType, bytes _bytes);
 
 	/// Tries to convert \param _literal to an unpadded `bytes`
 	/// representation of the boolean number literal. Throws if conversion fails.

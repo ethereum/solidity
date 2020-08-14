@@ -30,7 +30,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Component that checks whether all variables are reachable on the stack and
  * returns a mapping from function name to the largest stack difference found

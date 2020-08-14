@@ -11,8 +11,7 @@ using namespace std;
 using YPM = YulProtoMutator;
 
 MutationInfo::MutationInfo(ProtobufMessage const* _message, string const& _info):
-	ScopeGuard([&]{ exitInfo(); }),
-	m_protobufMsg(_message)
+	ScopeGuard([&] { exitInfo(); }), m_protobufMsg(_message)
 {
 	writeLine("----------------------------------");
 	writeLine("YULMUTATOR: " + _info);

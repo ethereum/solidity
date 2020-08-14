@@ -29,7 +29,6 @@
 
 namespace solidity::phaser
 {
-
 class PairSelection;
 class Selection;
 
@@ -43,13 +42,16 @@ struct Individual
 	size_t fitness;
 
 	Individual(Chromosome _chromosome, size_t _fitness):
-		chromosome(std::move(_chromosome)),
-		fitness(_fitness) {}
+		chromosome(std::move(_chromosome)), fitness(_fitness)
+	{}
 	Individual(Chromosome _chromosome, FitnessMetric& _fitnessMetric):
-		chromosome(std::move(_chromosome)),
-		fitness(_fitnessMetric.evaluate(chromosome)) {}
+		chromosome(std::move(_chromosome)), fitness(_fitnessMetric.evaluate(chromosome))
+	{}
 
-	bool operator==(Individual const& _other) const { return fitness == _other.fitness && chromosome == _other.chromosome; }
+	bool operator==(Individual const& _other) const
+	{
+		return fitness == _other.fitness && chromosome == _other.chromosome;
+	}
 	bool operator!=(Individual const& _other) const { return !(*this == _other); }
 
 	friend std::ostream& operator<<(std::ostream& _stream, Individual const& _individual);
@@ -66,7 +68,8 @@ bool isFitter(Individual const& a, Individual const& b);
  *
  * An individual is a sequence of optimiser steps represented by a @a Chromosome instance.
  * Individuals are always ordered by their fitness (based on @_fitnessMetric and @a isFitter()).
- * The fitness is computed using the metric as soon as an individual is inserted into the population.
+ * The fitness is computed using the metric as soon as an individual is inserted into the
+ * population.
  *
  * The population is immutable. Selections, mutations and crossover work by producing a new
  * instance and copying the individuals.
@@ -81,10 +84,15 @@ public:
 		Population(
 			_fitnessMetric,
 			chromosomesToIndividuals(*_fitnessMetric, std::move(_chromosomes))
-		) {}
-	explicit Population(std::shared_ptr<FitnessMetric> _fitnessMetric, std::vector<Individual> _individuals):
+		)
+	{}
+	explicit Population(
+		std::shared_ptr<FitnessMetric> _fitnessMetric,
+		std::vector<Individual> _individuals
+	):
 		m_fitnessMetric(std::move(_fitnessMetric)),
-		m_individuals{sortedIndividuals(std::move(_individuals))} {}
+		m_individuals{sortedIndividuals(std::move(_individuals))}
+	{}
 
 	static Population makeRandom(
 		std::shared_ptr<FitnessMetric> _fitnessMetric,
@@ -100,7 +108,8 @@ public:
 
 	Population select(Selection const& _selection) const;
 	Population mutate(Selection const& _selection, std::function<Mutation> _mutation) const;
-	Population crossover(PairSelection const& _selection, std::function<Crossover> _crossover) const;
+	Population crossover(PairSelection const& _selection, std::function<Crossover> _crossover)
+		const;
 	std::tuple<Population, Population> symmetricCrossoverWithRemainder(
 		PairSelection const& _selection,
 		std::function<SymmetricCrossover> _symmetricCrossover
@@ -112,8 +121,14 @@ public:
 	std::shared_ptr<FitnessMetric> fitnessMetric() { return m_fitnessMetric; }
 	std::vector<Individual> const& individuals() const { return m_individuals; }
 
-	static size_t uniformChromosomeLength(size_t _min, size_t _max) { return SimulationRNG::uniformInt(_min, _max); }
-	static size_t binomialChromosomeLength(size_t _max) { return SimulationRNG::binomialInt(_max, 0.5); }
+	static size_t uniformChromosomeLength(size_t _min, size_t _max)
+	{
+		return SimulationRNG::uniformInt(_min, _max);
+	}
+	static size_t binomialChromosomeLength(size_t _max)
+	{
+		return SimulationRNG::binomialInt(_max, 0.5);
+	}
 
 	bool operator==(Population const& _other) const;
 	bool operator!=(Population const& _other) const { return !(*this == _other); }

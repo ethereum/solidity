@@ -34,12 +34,14 @@
 
 namespace solidity::yul
 {
-
 struct Scope
 {
 	using YulType = YulString;
 
-	struct Variable { YulType type; };
+	struct Variable
+	{
+		YulType type;
+	};
 	struct Function
 	{
 		std::vector<YulType> arguments;
@@ -59,7 +61,8 @@ struct Scope
 	/// or a nullptr if not found. Variable lookups up across function boundaries will fail, as
 	/// will any lookups across assembly boundaries.
 	/// The pointer will be invalidated if the scope is modified.
-	/// @param _crossedFunction if true, we already crossed a function boundary during recursive lookup
+	/// @param _crossedFunction if true, we already crossed a function boundary during recursive
+	/// lookup
 	Identifier* lookup(YulString _name);
 	/// Looks up the identifier in this and super scopes (will not find variables across function
 	/// boundaries and generally stops at assembly boundaries) and calls the visitor, returns

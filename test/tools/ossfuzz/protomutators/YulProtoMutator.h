@@ -10,7 +10,6 @@
 
 namespace solidity::yul::test::yul_fuzzer
 {
-
 using ProtobufMessage = google::protobuf::Message;
 
 template <typename Proto>
@@ -21,10 +20,7 @@ class MutationInfo: public ScopeGuard
 public:
 	MutationInfo(ProtobufMessage const* _message, std::string const& _info);
 
-	static void writeLine(std::string const& _str)
-	{
-		std::cout << _str << std::endl;
-	}
+	static void writeLine(std::string const& _str) { std::cout << _str << std::endl; }
 	void exitInfo();
 
 	ProtobufMessage const* m_protobufMsg;
@@ -36,10 +32,7 @@ struct YulRandomNumGenerator
 
 	explicit YulRandomNumGenerator(unsigned _seed): m_random(RandomEngine(_seed)) {}
 
-	unsigned operator()()
-	{
-		return m_random();
-	}
+	unsigned operator()() { return m_random(); }
 
 	RandomEngine m_random;
 };
@@ -66,7 +59,9 @@ struct YulProtoMutator
 	static Expression* refExpression(YulRandomNumGenerator& _rand);
 
 	/// Helper type for type matching visitor.
-	template<class T> struct AlwaysFalse: std::false_type {};
+	template <class T>
+	struct AlwaysFalse: std::false_type
+	{};
 
 	/// Template struct for obtaining a valid enum value of
 	/// template type from a pseudo-random unsigned integer.
@@ -75,10 +70,7 @@ struct YulProtoMutator
 	template <typename T>
 	struct EnumTypeConverter
 	{
-		T enumFromSeed(unsigned _seed)
-		{
-			return validEnum(_seed);
-		}
+		T enumFromSeed(unsigned _seed) { return validEnum(_seed); }
 
 		/// @returns a valid enum of type T from _seed
 		T validEnum(unsigned _seed);

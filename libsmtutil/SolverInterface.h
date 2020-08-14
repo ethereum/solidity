@@ -32,7 +32,6 @@
 
 namespace solidity::smtutil
 {
-
 struct SMTSolverChoice
 {
 	bool cvc4 = false;
@@ -50,16 +49,23 @@ struct SMTSolverChoice
 
 enum class CheckResult
 {
-	SATISFIABLE, UNSATISFIABLE, UNKNOWN, CONFLICTING, ERROR
+	SATISFIABLE,
+	UNSATISFIABLE,
+	UNKNOWN,
+	CONFLICTING,
+	ERROR
 };
 
 /// C++ representation of an SMTLIB2 expression.
 class Expression
 {
 	friend class SolverInterface;
+
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
-	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""): Expression(std::move(_name), {}, _sort) {}
+	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""):
+		Expression(std::move(_name), {}, _sort)
+	{}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
 	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
 	Expression(s256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
@@ -80,29 +86,11 @@ public:
 		}
 
 		static std::map<std::string, unsigned> const operatorsArity{
-			{"ite", 3},
-			{"not", 1},
-			{"and", 2},
-			{"or", 2},
-			{"implies", 2},
-			{"=", 2},
-			{"<", 2},
-			{"<=", 2},
-			{">", 2},
-			{">=", 2},
-			{"+", 2},
-			{"-", 2},
-			{"*", 2},
-			{"/", 2},
-			{"mod", 2},
-			{"bvand", 2},
-			{"int2bv", 2},
-			{"bv2int", 1},
-			{"select", 2},
-			{"store", 3},
-			{"const_array", 2},
-			{"tuple_get", 2}
-		};
+			{"ite", 3},			{"not", 1},		 {"and", 2},	{"or", 2},	   {"implies", 2},
+			{"=", 2},			{"<", 2},		 {"<=", 2},		{">", 2},	   {">=", 2},
+			{"+", 2},			{"-", 2},		 {"*", 2},		{"/", 2},	   {"mod", 2},
+			{"bvand", 2},		{"int2bv", 2},	 {"bv2int", 1}, {"select", 2}, {"store", 3},
+			{"const_array", 2}, {"tuple_get", 2}};
 		return operatorsArity.count(name) && operatorsArity.at(name) == arguments.size();
 	}
 
@@ -110,19 +98,19 @@ public:
 	{
 		smtAssert(*_trueValue.sort == *_falseValue.sort, "");
 		SortPointer sort = _trueValue.sort;
-		return Expression("ite", std::vector<Expression>{
-			std::move(_condition), std::move(_trueValue), std::move(_falseValue)
-		}, std::move(sort));
+		return Expression(
+			"ite",
+			std::vector<Expression>{
+				std::move(_condition),
+				std::move(_trueValue),
+				std::move(_falseValue)},
+			std::move(sort)
+		);
 	}
 
 	static Expression implies(Expression _a, Expression _b)
 	{
-		return Expression(
-			"implies",
-			std::move(_a),
-			std::move(_b),
-			Kind::Bool
-		);
+		return Expression("implies", std::move(_a), std::move(_b), Kind::Bool);
 	}
 
 	/// select is the SMT representation of an array index access.
@@ -192,11 +180,7 @@ public:
 		auto tupleSort = std::dynamic_pointer_cast<TupleSort>(sortSort->inner);
 		smtAssert(tupleSort, "");
 		smtAssert(_arguments.size() == tupleSort->components.size(), "");
-		return Expression(
-			"tuple_constructor",
-			std::move(_arguments),
-			tupleSort
-		);
+		return Expression("tuple_constructor", std::move(_arguments), tupleSort);
 	}
 
 	static Expression int2bv(Expression _n, size_t _size)
@@ -293,10 +277,7 @@ public:
 	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
-		smtAssert(
-			sort->kind == Kind::Function,
-			"Attempted function application to non-function."
-		);
+		smtAssert(sort->kind == Kind::Function, "Attempted function application to non-function.");
 		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
 		smtAssert(fSort, "");
 		return Expression(name, std::move(_arguments), fSort->codomain);
@@ -309,16 +290,25 @@ public:
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
 	Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
-		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
+		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort))
+	{}
 	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
-		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
+		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind))
+	{}
 
 	explicit Expression(std::string _name, Kind _kind):
-		Expression(std::move(_name), std::vector<Expression>{}, _kind) {}
+		Expression(std::move(_name), std::vector<Expression>{}, _kind)
+	{}
 	Expression(std::string _name, Expression _arg, Kind _kind):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind) {}
+		Expression(std::move(_name), std::vector<Expression>{std::move(_arg)}, _kind)
+	{}
 	Expression(std::string _name, Expression _arg1, Expression _arg2, Kind _kind):
-		Expression(std::move(_name), std::vector<Expression>{std::move(_arg1), std::move(_arg2)}, _kind) {}
+		Expression(
+			std::move(_name),
+			std::vector<Expression>{std::move(_arg1), std::move(_arg2)},
+			_kind
+		)
+	{}
 };
 
 DEV_SIMPLE_EXCEPTION(SolverError);
@@ -345,8 +335,9 @@ public:
 
 	/// Checks for satisfiability, evaluates the expressions if a model
 	/// is available. Throws SMTSolverError on error.
-	virtual std::pair<CheckResult, std::vector<std::string>>
-	check(std::vector<Expression> const& _expressionsToEvaluate) = 0;
+	virtual std::pair<CheckResult, std::vector<std::string>> check(
+		std::vector<Expression> const& _expressionsToEvaluate
+	) = 0;
 
 	/// @returns a list of queries that the system was not able to respond to.
 	virtual std::vector<std::string> unhandledQueries() { return {}; }

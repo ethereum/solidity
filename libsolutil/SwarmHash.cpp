@@ -28,7 +28,6 @@ using namespace solidity::util;
 
 namespace
 {
-
 bytes toLittleEndian(size_t _size)
 {
 	bytes encoded(8);
@@ -70,8 +69,7 @@ h256 bmtHash(bytesConstRef _data)
 
 	size_t midPoint = _data.size() / 2;
 	return keccak256(
-		bmtHash(_data.cropped(0, midPoint)).asBytes() +
-		bmtHash(_data.cropped(midPoint)).asBytes()
+		bmtHash(_data.cropped(0, midPoint)).asBytes() + bmtHash(_data.cropped(midPoint)).asBytes()
 	);
 }
 

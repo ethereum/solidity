@@ -31,13 +31,13 @@ using namespace std;
 
 namespace solidity::test
 {
-
 bytes onlyMetadata(bytes const& _bytecode)
 {
 	unsigned size = _bytecode.size();
 	if (size < 5)
 		return bytes{};
-	size_t metadataSize = (static_cast<size_t>(_bytecode[size - 2]) << 8ul) + static_cast<size_t>(_bytecode[size - 1]);
+	size_t metadataSize = (static_cast<size_t>(_bytecode[size - 2]) << 8ul) +
+		static_cast<size_t>(_bytecode[size - 1]);
 	if (size < (metadataSize + 2))
 		return bytes{};
 	// Sanity check: assume the first byte is a fixed-size CBOR array with 1, 2 or 3 entries
@@ -74,33 +74,31 @@ public:
 		assertThrow(nextType() == MajorType::Map, CBORException, "Fixed-length map expected.");
 		return readLength();
 	}
-	string readKey()
-	{
-		return readString();
-	}
+	string readKey() { return readString(); }
 	string readValue()
 	{
-		switch(nextType())
+		switch (nextType())
 		{
-			case MajorType::ByteString:
-				return util::toHex(readBytes(readLength()));
-			case MajorType::TextString:
-				return readString();
-			case MajorType::SimpleData:
-			{
-				unsigned value = nextImmediate();
-				m_pos++;
-				if (value == 20)
-					return "false";
-				else if (value == 21)
-					return "true";
-				else
-					assertThrow(false, CBORException, "Unsupported simple value (not a boolean).");
-			}
-			default:
-				assertThrow(false, CBORException, "Unsupported value type.");
+		case MajorType::ByteString:
+			return util::toHex(readBytes(readLength()));
+		case MajorType::TextString:
+			return readString();
+		case MajorType::SimpleData:
+		{
+			unsigned value = nextImmediate();
+			m_pos++;
+			if (value == 20)
+				return "false";
+			else if (value == 21)
+				return "true";
+			else
+				assertThrow(false, CBORException, "Unsupported simple value (not a boolean).");
+		}
+		default:
+			assertThrow(false, CBORException, "Unsupported value type.");
 		}
 	}
+
 private:
 	enum class MajorType
 	{
@@ -114,11 +112,16 @@ private:
 		unsigned value = (m_metadata.at(m_pos) >> 5) & 0x7;
 		switch (value)
 		{
-			case 2: return MajorType::ByteString;
-			case 3: return MajorType::TextString;
-			case 5: return MajorType::Map;
-			case 7: return MajorType::SimpleData;
-			default: assertThrow(false, CBORException, "Unsupported major type.");
+		case 2:
+			return MajorType::ByteString;
+		case 3:
+			return MajorType::TextString;
+		case 5:
+			return MajorType::Map;
+		case 7:
+			return MajorType::SimpleData;
+		default:
+			assertThrow(false, CBORException, "Unsupported major type.");
 		}
 	}
 	unsigned nextImmediate() const { return m_metadata.at(m_pos) & 0x1f; }
@@ -176,18 +179,12 @@ bool isValidMetadata(string const& _metadata)
 	if (!util::jsonParseStrict(_metadata, metadata))
 		return false;
 
-	if (
-		!metadata.isObject() ||
-		!metadata.isMember("version") ||
-		!metadata.isMember("language") ||
-		!metadata.isMember("compiler") ||
-		!metadata.isMember("settings") ||
-		!metadata.isMember("sources") ||
-		!metadata.isMember("output") ||
+	if (!metadata.isObject() || !metadata.isMember("version") || !metadata.isMember("language") ||
+		!metadata.isMember("compiler") || !metadata.isMember("settings") ||
+		!metadata.isMember("sources") || !metadata.isMember("output") ||
 		!metadata["settings"].isMember("evmVersion") ||
 		!metadata["settings"].isMember("metadata") ||
-		!metadata["settings"]["metadata"].isMember("bytecodeHash")
-	)
+		!metadata["settings"]["metadata"].isMember("bytecodeHash"))
 		return false;
 
 	if (!metadata["version"].isNumeric() || metadata["version"] != 1)
@@ -201,4 +198,4 @@ bool isValidMetadata(string const& _metadata)
 	return true;
 }
 
-} // end namespaces
+}  // end namespaces

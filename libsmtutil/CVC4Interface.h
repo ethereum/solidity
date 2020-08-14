@@ -36,7 +36,6 @@
 
 namespace solidity::smtutil
 {
-
 class CVC4Interface: public SolverInterface, public boost::noncopyable
 {
 public:
@@ -50,7 +49,9 @@ public:
 	void declareVariable(std::string const&, SortPointer const&) override;
 
 	void addAssertion(Expression const& _expr) override;
-	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	std::pair<CheckResult, std::vector<std::string>> check(
+		std::vector<Expression> const& _expressionsToEvaluate
+	) override;
 
 private:
 	CVC4::Expr toCVC4Expr(Expression const& _expr);

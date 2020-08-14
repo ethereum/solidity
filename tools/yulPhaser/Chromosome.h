@@ -25,7 +25,6 @@
 
 namespace solidity::phaser
 {
-
 /**
  * An object that represents a sequence of optimiser steps that can be applied to a program.
  * Such sequences are used in our genetic algorithm to represent individual members of the
@@ -42,7 +41,8 @@ class Chromosome
 public:
 	Chromosome() = default;
 	explicit Chromosome(std::vector<std::string> _optimisationSteps):
-		m_optimisationSteps(std::move(_optimisationSteps)) {}
+		m_optimisationSteps(std::move(_optimisationSteps))
+	{}
 	explicit Chromosome(std::string const& _optimisationSteps);
 	static Chromosome makeRandom(size_t _length);
 
@@ -51,7 +51,10 @@ public:
 
 	friend std::ostream& operator<<(std::ostream& _stream, Chromosome const& _chromosome);
 
-	bool operator==(Chromosome const& _other) const { return m_optimisationSteps == _other.m_optimisationSteps; }
+	bool operator==(Chromosome const& _other) const
+	{
+		return m_optimisationSteps == _other.m_optimisationSteps;
+	}
 	bool operator!=(Chromosome const& _other) const { return !(*this == _other); }
 
 	static std::string const& randomOptimisationStep();

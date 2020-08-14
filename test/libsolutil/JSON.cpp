@@ -30,7 +30,6 @@ using namespace std;
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(JsonTest, *boost::unit_test::label("nooptions"))
 
 BOOST_AUTO_TEST_CASE(json_pretty_print)
@@ -45,15 +44,16 @@ BOOST_AUTO_TEST_CASE(json_pretty_print)
 	json["3"] = jsonChild;
 
 	BOOST_CHECK(
-	"{\n"
-	"  \"1\": 1,\n"
-	"  \"2\": \"2\",\n"
-	"  \"3\":\n"
-	"  {\n"
-	"    \"3.1\": \"3.1\",\n"
-	"    \"3.2\": 2\n"
-	"  }\n"
-	"}" == jsonPrettyPrint(json));
+		"{\n"
+		"  \"1\": 1,\n"
+		"  \"2\": \"2\",\n"
+		"  \"3\":\n"
+		"  {\n"
+		"    \"3.1\": \"3.1\",\n"
+		"    \"3.2\": 2\n"
+		"  }\n"
+		"}" == jsonPrettyPrint(json)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(json_compact_print)
@@ -67,7 +67,9 @@ BOOST_AUTO_TEST_CASE(json_compact_print)
 	json["2"] = "2";
 	json["3"] = jsonChild;
 
-	BOOST_CHECK("{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2}}" == jsonCompactPrint(json));
+	BOOST_CHECK(
+		"{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2}}" == jsonCompactPrint(json)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(parse_json_strict)
@@ -76,18 +78,26 @@ BOOST_AUTO_TEST_CASE(parse_json_strict)
 	std::string errors;
 
 	// just parse a valid json input
-	BOOST_CHECK(jsonParseStrict("{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2}}", json, &errors));
+	BOOST_CHECK(
+		jsonParseStrict("{\"1\":1,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":2}}", json, &errors)
+	);
 	BOOST_CHECK(json["1"] == 1);
 	BOOST_CHECK(json["2"] == "2");
 	BOOST_CHECK(json["3"]["3.1"] == "3.1");
 	BOOST_CHECK(json["3"]["3.2"] == 2);
 
 	// trailing garbage is not allowed in strict-mode
-	BOOST_CHECK(!jsonParseStrict("{\"1\":2,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":3}}}}}}}}}}", json, &errors));
+	BOOST_CHECK(!jsonParseStrict(
+		"{\"1\":2,\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":3}}}}}}}}}}",
+		json,
+		&errors
+	));
 
 	// comments are allowed in strict-mode? - that's strange...
 	BOOST_CHECK(jsonParseStrict(
-		"{\"1\":3, // awesome comment\n\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":5}}", json, &errors
+		"{\"1\":3, // awesome comment\n\"2\":\"2\",\"3\":{\"3.1\":\"3.1\",\"3.2\":5}}",
+		json,
+		&errors
 	));
 	BOOST_CHECK(json["1"] == 3);
 	BOOST_CHECK(json["2"] == "2");

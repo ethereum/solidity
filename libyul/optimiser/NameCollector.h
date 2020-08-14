@@ -28,23 +28,20 @@
 
 namespace solidity::yul
 {
-
 /**
  * Specific AST walker that collects all defined names.
  */
 class NameCollector: public ASTWalker
 {
 public:
-	explicit NameCollector(Block const& _block)
-	{
-		(*this)(_block);
-	}
+	explicit NameCollector(Block const& _block) { (*this)(_block); }
 
-	using ASTWalker::operator ();
+	using ASTWalker::operator();
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(FunctionDefinition const& _funDef) override;
 
 	std::set<YulString> names() const { return m_names; }
+
 private:
 	std::set<YulString> m_names;
 };
@@ -55,21 +52,35 @@ private:
 class ReferencesCounter: public ASTWalker
 {
 public:
-	enum CountWhat { VariablesAndFunctions, OnlyVariables };
+	enum CountWhat
+	{
+		VariablesAndFunctions,
+		OnlyVariables
+	};
 
 	explicit ReferencesCounter(CountWhat _countWhat = VariablesAndFunctions):
 		m_countWhat(_countWhat)
 	{}
 
-	using ASTWalker::operator ();
+	using ASTWalker::operator();
 	void operator()(Identifier const& _identifier) override;
 	void operator()(FunctionCall const& _funCall) override;
 
-	static std::map<YulString, size_t> countReferences(Block const& _block, CountWhat _countWhat = VariablesAndFunctions);
-	static std::map<YulString, size_t> countReferences(FunctionDefinition const& _function, CountWhat _countWhat = VariablesAndFunctions);
-	static std::map<YulString, size_t> countReferences(Expression const& _expression, CountWhat _countWhat = VariablesAndFunctions);
+	static std::map<YulString, size_t> countReferences(
+		Block const& _block,
+		CountWhat _countWhat = VariablesAndFunctions
+	);
+	static std::map<YulString, size_t> countReferences(
+		FunctionDefinition const& _function,
+		CountWhat _countWhat = VariablesAndFunctions
+	);
+	static std::map<YulString, size_t> countReferences(
+		Expression const& _expression,
+		CountWhat _countWhat = VariablesAndFunctions
+	);
 
 	std::map<YulString, size_t> const& references() const { return m_references; }
+
 private:
 	CountWhat m_countWhat = CountWhat::VariablesAndFunctions;
 	std::map<YulString, size_t> m_references;
@@ -81,10 +92,11 @@ private:
 class Assignments: public ASTWalker
 {
 public:
-	using ASTWalker::operator ();
+	using ASTWalker::operator();
 	void operator()(Assignment const& _assignment) override;
 
 	std::set<YulString> const& names() const { return m_names; }
+
 private:
 	std::set<YulString> m_names;
 };

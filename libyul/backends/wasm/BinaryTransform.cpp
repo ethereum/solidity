@@ -37,25 +37,21 @@ using namespace solidity::util;
 
 namespace
 {
+bytes toBytes(uint8_t _b) { return bytes(1, _b); }
 
-bytes toBytes(uint8_t _b)
-{
-	return bytes(1, _b);
-}
-
-enum class LimitsKind: uint8_t
+enum class LimitsKind : uint8_t
 {
 	Min = 0x00,
 	MinMax = 0x01,
 };
 
-enum class Mutability: uint8_t
+enum class Mutability : uint8_t
 {
 	Const = 0x00,
 	Var = 0x01,
 };
 
-enum class Section: uint8_t
+enum class Section : uint8_t
 {
 	CUSTOM = 0x00,
 	TYPE = 0x01,
@@ -67,12 +63,9 @@ enum class Section: uint8_t
 	CODE = 0x0a
 };
 
-bytes toBytes(Section _s)
-{
-	return toBytes(uint8_t(_s));
-}
+bytes toBytes(Section _s) { return toBytes(uint8_t(_s)); }
 
-enum class ValueType: uint8_t
+enum class ValueType : uint8_t
 {
 	Void = 0x40,
 	Function = 0x60,
@@ -80,10 +73,7 @@ enum class ValueType: uint8_t
 	I32 = 0x7f
 };
 
-bytes toBytes(ValueType _vt)
-{
-	return toBytes(uint8_t(_vt));
-}
+bytes toBytes(ValueType _vt) { return toBytes(uint8_t(_vt)); }
 
 ValueType toValueType(wasm::Type _type)
 {
@@ -95,18 +85,15 @@ ValueType toValueType(wasm::Type _type)
 		yulAssert(false, "Invalid wasm variable type");
 }
 
-enum class Export: uint8_t
+enum class Export : uint8_t
 {
 	Function = 0x0,
 	Memory = 0x2
 };
 
-bytes toBytes(Export _export)
-{
-	return toBytes(uint8_t(_export));
-}
+bytes toBytes(Export _export) { return toBytes(uint8_t(_export)); }
 
-enum class Opcode: uint8_t
+enum class Opcode : uint8_t
 {
 	Unreachable = 0x00,
 	Nop = 0x01,
@@ -139,10 +126,7 @@ enum class Opcode: uint8_t
 	I64Const = 0x42,
 };
 
-bytes toBytes(Opcode _o)
-{
-	return toBytes(uint8_t(_o));
-}
+bytes toBytes(Opcode _o) { return toBytes(uint8_t(_o)); }
 
 Opcode constOpcodeFor(ValueType _type)
 {
@@ -155,87 +139,33 @@ Opcode constOpcodeFor(ValueType _type)
 }
 
 static map<string, uint8_t> const builtins = {
-	{"i32.load", 0x28},
-	{"i64.load", 0x29},
-	{"i32.load8_s", 0x2c},
-	{"i32.load8_u", 0x2d},
-	{"i32.load16_s", 0x2e},
-	{"i32.load16_u", 0x2f},
-	{"i64.load8_s", 0x30},
-	{"i64.load8_u", 0x31},
-	{"i64.load16_s", 0x32},
-	{"i64.load16_u", 0x33},
-	{"i64.load32_s", 0x34},
-	{"i64.load32_u", 0x35},
-	{"i32.store", 0x36},
-	{"i64.store", 0x37},
-	{"i32.store8", 0x3a},
-	{"i32.store16", 0x3b},
-	{"i64.store8", 0x3c},
-	{"i64.store16", 0x3d},
-	{"i64.store32", 0x3e},
-	{"memory.size", 0x3f},
-	{"memory.grow", 0x40},
-	{"i32.eqz", 0x45},
-	{"i32.eq", 0x46},
-	{"i32.ne", 0x47},
-	{"i32.lt_s", 0x48},
-	{"i32.lt_u", 0x49},
-	{"i32.gt_s", 0x4a},
-	{"i32.gt_u", 0x4b},
-	{"i32.le_s", 0x4c},
-	{"i32.le_u", 0x4d},
-	{"i32.ge_s", 0x4e},
-	{"i32.ge_u", 0x4f},
-	{"i64.eqz", 0x50},
-	{"i64.eq", 0x51},
-	{"i64.ne", 0x52},
-	{"i64.lt_s", 0x53},
-	{"i64.lt_u", 0x54},
-	{"i64.gt_s", 0x55},
-	{"i64.gt_u", 0x56},
-	{"i64.le_s", 0x57},
-	{"i64.le_u", 0x58},
-	{"i64.ge_s", 0x59},
-	{"i64.ge_u", 0x5a},
-	{"i32.clz", 0x67},
-	{"i32.ctz", 0x68},
-	{"i32.popcnt", 0x69},
-	{"i32.add", 0x6a},
-	{"i32.sub", 0x6b},
-	{"i32.mul", 0x6c},
-	{"i32.div_s", 0x6d},
-	{"i32.div_u", 0x6e},
-	{"i32.rem_s", 0x6f},
-	{"i32.rem_u", 0x70},
-	{"i32.and", 0x71},
-	{"i32.or", 0x72},
-	{"i32.xor", 0x73},
-	{"i32.shl", 0x74},
-	{"i32.shr_s", 0x75},
-	{"i32.shr_u", 0x76},
-	{"i32.rotl", 0x77},
-	{"i32.rotr", 0x78},
-	{"i64.clz", 0x79},
-	{"i64.ctz", 0x7a},
-	{"i64.popcnt", 0x7b},
-	{"i64.add", 0x7c},
-	{"i64.sub", 0x7d},
-	{"i64.mul", 0x7e},
-	{"i64.div_s", 0x7f},
-	{"i64.div_u", 0x80},
-	{"i64.rem_s", 0x81},
-	{"i64.rem_u", 0x82},
-	{"i64.and", 0x83},
-	{"i64.or", 0x84},
-	{"i64.xor", 0x85},
-	{"i64.shl", 0x86},
-	{"i64.shr_s", 0x87},
-	{"i64.shr_u", 0x88},
-	{"i64.rotl", 0x89},
-	{"i64.rotr", 0x8a},
-	{"i32.wrap_i64", 0xa7},
-	{"i64.extend_i32_s", 0xac},
+	{"i32.load", 0x28},			{"i64.load", 0x29},		{"i32.load8_s", 0x2c},
+	{"i32.load8_u", 0x2d},		{"i32.load16_s", 0x2e}, {"i32.load16_u", 0x2f},
+	{"i64.load8_s", 0x30},		{"i64.load8_u", 0x31},	{"i64.load16_s", 0x32},
+	{"i64.load16_u", 0x33},		{"i64.load32_s", 0x34}, {"i64.load32_u", 0x35},
+	{"i32.store", 0x36},		{"i64.store", 0x37},	{"i32.store8", 0x3a},
+	{"i32.store16", 0x3b},		{"i64.store8", 0x3c},	{"i64.store16", 0x3d},
+	{"i64.store32", 0x3e},		{"memory.size", 0x3f},	{"memory.grow", 0x40},
+	{"i32.eqz", 0x45},			{"i32.eq", 0x46},		{"i32.ne", 0x47},
+	{"i32.lt_s", 0x48},			{"i32.lt_u", 0x49},		{"i32.gt_s", 0x4a},
+	{"i32.gt_u", 0x4b},			{"i32.le_s", 0x4c},		{"i32.le_u", 0x4d},
+	{"i32.ge_s", 0x4e},			{"i32.ge_u", 0x4f},		{"i64.eqz", 0x50},
+	{"i64.eq", 0x51},			{"i64.ne", 0x52},		{"i64.lt_s", 0x53},
+	{"i64.lt_u", 0x54},			{"i64.gt_s", 0x55},		{"i64.gt_u", 0x56},
+	{"i64.le_s", 0x57},			{"i64.le_u", 0x58},		{"i64.ge_s", 0x59},
+	{"i64.ge_u", 0x5a},			{"i32.clz", 0x67},		{"i32.ctz", 0x68},
+	{"i32.popcnt", 0x69},		{"i32.add", 0x6a},		{"i32.sub", 0x6b},
+	{"i32.mul", 0x6c},			{"i32.div_s", 0x6d},	{"i32.div_u", 0x6e},
+	{"i32.rem_s", 0x6f},		{"i32.rem_u", 0x70},	{"i32.and", 0x71},
+	{"i32.or", 0x72},			{"i32.xor", 0x73},		{"i32.shl", 0x74},
+	{"i32.shr_s", 0x75},		{"i32.shr_u", 0x76},	{"i32.rotl", 0x77},
+	{"i32.rotr", 0x78},			{"i64.clz", 0x79},		{"i64.ctz", 0x7a},
+	{"i64.popcnt", 0x7b},		{"i64.add", 0x7c},		{"i64.sub", 0x7d},
+	{"i64.mul", 0x7e},			{"i64.div_s", 0x7f},	{"i64.div_u", 0x80},
+	{"i64.rem_s", 0x81},		{"i64.rem_u", 0x82},	{"i64.and", 0x83},
+	{"i64.or", 0x84},			{"i64.xor", 0x85},		{"i64.shl", 0x86},
+	{"i64.shr_s", 0x87},		{"i64.shr_u", 0x88},	{"i64.rotl", 0x89},
+	{"i64.rotr", 0x8a},			{"i32.wrap_i64", 0xa7}, {"i64.extend_i32_s", 0xac},
 	{"i64.extend_i32_u", 0xad},
 };
 
@@ -278,7 +208,7 @@ vector<pair<size_t, ValueType>> groupLocalVariables(vector<VariableDeclaration> 
 	vector<pair<size_t, ValueType>> localEntries;
 
 	size_t entrySize = 0;
-	ValueType entryType = ValueType::I32; // Any type would work here
+	ValueType entryType = ValueType::I32;  // Any type would work here
 	for (VariableDeclaration const& localVariable: _localVariables)
 	{
 		ValueType variableType = toValueType(localVariable.type);
@@ -335,12 +265,8 @@ bytes BinaryTransform::run(Module const& _module)
 		subModulePosAndSize[sub.first] = {ret.size() - length, length};
 	}
 
-	BinaryTransform bt(
-		move(globalIDs),
-		move(functionIDs),
-		move(functionTypes),
-		move(subModulePosAndSize)
-	);
+	BinaryTransform
+		bt(move(globalIDs), move(functionIDs), move(functionTypes), move(subModulePosAndSize));
 
 	ret += bt.codeSection(_module.functions);
 	return ret;
@@ -348,10 +274,15 @@ bytes BinaryTransform::run(Module const& _module)
 
 bytes BinaryTransform::operator()(Literal const& _literal)
 {
-	return std::visit(GenericVisitor{
-		[&](uint32_t _value) -> bytes { return toBytes(Opcode::I32Const) + lebEncodeSigned(static_cast<int32_t>(_value)); },
-		[&](uint64_t _value) -> bytes { return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(_value)); },
-	}, _literal.value);
+	return std::visit(
+		GenericVisitor{
+			[&](uint32_t _value) -> bytes
+			{ return toBytes(Opcode::I32Const) + lebEncodeSigned(static_cast<int32_t>(_value)); },
+			[&](uint64_t _value) -> bytes
+			{ return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(_value)); },
+		},
+		_literal.value
+	);
 }
 
 bytes BinaryTransform::operator()(StringLiteral const&)
@@ -377,12 +308,14 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	if (_call.functionName == "dataoffset")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
-		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).first));
+		return toBytes(Opcode::I64Const) +
+			lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).first));
 	}
 	else if (_call.functionName == "datasize")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
-		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).second));
+		return toBytes(Opcode::I64Const) +
+			lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).second));
 	}
 
 	bytes args = visit(_call.arguments);
@@ -395,17 +328,18 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 		return toBytes(Opcode::Drop);
 	else
 	{
-		yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
+		yulAssert(
+			builtins.count(_call.functionName),
+			"Builtin " + _call.functionName + " not found"
+		);
 		bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
-		if (
-			_call.functionName.find(".load") != string::npos ||
-			_call.functionName.find(".store") != string::npos
-		)
+		if (_call.functionName.find(".load") != string::npos ||
+			_call.functionName.find(".store") != string::npos)
 			// Alignment hint and offset. Interpreters ignore the alignment. JITs/AOTs can take it
 			// into account to generate more efficient code but if the hint is invalid it could
 			// actually be more expensive. It's best to hint at 1-byte alignment if we don't plan
 			// to control the memory layout accordingly.
-			ret += bytes{{0, 0}}; // 2^0 == 1-byte alignment
+			ret += bytes{{0, 0}};  // 2^0 == 1-byte alignment
 
 		return ret;
 	}
@@ -413,31 +347,26 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 
 bytes BinaryTransform::operator()(FunctionCall const& _call)
 {
-	return visit(_call.arguments) + toBytes(Opcode::Call) + lebEncode(m_functionIDs.at(_call.functionName));
+	return visit(_call.arguments) + toBytes(Opcode::Call) +
+		lebEncode(m_functionIDs.at(_call.functionName));
 }
 
 bytes BinaryTransform::operator()(LocalAssignment const& _assignment)
 {
-	return
-		std::visit(*this, *_assignment.value) +
-		toBytes(Opcode::LocalSet) +
+	return std::visit(*this, *_assignment.value) + toBytes(Opcode::LocalSet) +
 		lebEncode(m_locals.at(_assignment.variableName));
 }
 
 bytes BinaryTransform::operator()(GlobalAssignment const& _assignment)
 {
-	return
-		std::visit(*this, *_assignment.value) +
-		toBytes(Opcode::GlobalSet) +
+	return std::visit(*this, *_assignment.value) + toBytes(Opcode::GlobalSet) +
 		lebEncode(m_globalIDs.at(_assignment.variableName));
 }
 
 bytes BinaryTransform::operator()(If const& _if)
 {
 	bytes result =
-		std::visit(*this, *_if.condition) +
-		toBytes(Opcode::If) +
-		toBytes(ValueType::Void);
+		std::visit(*this, *_if.condition) + toBytes(Opcode::If) + toBytes(ValueType::Void);
 
 	m_labels.emplace_back();
 
@@ -484,10 +413,7 @@ bytes BinaryTransform::operator()(Return const&)
 bytes BinaryTransform::operator()(Block const& _block)
 {
 	m_labels.emplace_back(_block.labelName);
-	bytes result =
-		toBytes(Opcode::Block) +
-		toBytes(ValueType::Void) +
-		visit(_block.statements) +
+	bytes result = toBytes(Opcode::Block) + toBytes(ValueType::Void) + visit(_block.statements) +
 		toBytes(Opcode::End);
 	m_labels.pop_back();
 	return result;
@@ -526,22 +452,21 @@ BinaryTransform::Type BinaryTransform::typeOf(FunctionImport const& _import)
 {
 	return {
 		encodeTypes(_import.paramTypes),
-		encodeTypes(_import.returnType ? vector<wasm::Type>(1, *_import.returnType) : vector<wasm::Type>())
-	};
+		encodeTypes(
+			_import.returnType ? vector<wasm::Type>(1, *_import.returnType) : vector<wasm::Type>()
+		)};
 }
 
 BinaryTransform::Type BinaryTransform::typeOf(FunctionDefinition const& _funDef)
 {
 	return {
 		encodeTypes(_funDef.parameters),
-		encodeTypes(_funDef.returnType ? vector<wasm::Type>(1, *_funDef.returnType) : vector<wasm::Type>())
-	};
+		encodeTypes(
+			_funDef.returnType ? vector<wasm::Type>(1, *_funDef.returnType) : vector<wasm::Type>()
+		)};
 }
 
-uint8_t BinaryTransform::encodeType(wasm::Type _type)
-{
-	return uint8_t(toValueType(_type));
-}
+uint8_t BinaryTransform::encodeType(wasm::Type _type) { return uint8_t(toValueType(_type)); }
 
 vector<uint8_t> BinaryTransform::encodeTypes(vector<wasm::Type> const& _types)
 {
@@ -594,7 +519,9 @@ map<string, size_t> BinaryTransform::enumerateFunctions(Module const& _module)
 	return functions;
 }
 
-map<string, size_t> BinaryTransform::enumerateFunctionTypes(map<Type, vector<string>> const& _typeToFunctionMap)
+map<string, size_t> BinaryTransform::enumerateFunctionTypes(
+	map<Type, vector<string>> const& _typeToFunctionMap
+)
 {
 	map<string, size_t> functionTypes;
 	size_t typeID = 0;
@@ -608,7 +535,9 @@ map<string, size_t> BinaryTransform::enumerateFunctionTypes(map<Type, vector<str
 	return functionTypes;
 }
 
-bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> const& _typeToFunctionMap)
+bytes BinaryTransform::typeSection(
+	map<BinaryTransform::Type, vector<string>> const& _typeToFunctionMap
+)
 {
 	bytes result;
 	size_t index = 0;
@@ -632,12 +561,9 @@ bytes BinaryTransform::importSection(
 	bytes result = lebEncode(_imports.size());
 	for (FunctionImport const& import: _imports)
 	{
-		uint8_t importKind = 0; // function
-		result +=
-			encodeName(import.module) +
-			encodeName(import.externalName) +
-			toBytes(importKind) +
-			lebEncode(_functionTypes.at(import.internalName));
+		uint8_t importKind = 0;	 // function
+		result += encodeName(import.module) + encodeName(import.externalName) +
+			toBytes(importKind) + lebEncode(_functionTypes.at(import.internalName));
 	}
 	return makeSection(Section::IMPORT, move(result));
 }
@@ -657,7 +583,7 @@ bytes BinaryTransform::memorySection()
 {
 	bytes result = lebEncode(1);
 	result.push_back(static_cast<uint8_t>(LimitsKind::Min));
-	result.push_back(1); // initial length
+	result.push_back(1);  // initial length
 	return makeSection(Section::MEMORY, move(result));
 }
 
@@ -667,12 +593,8 @@ bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> con
 	for (wasm::GlobalVariableDeclaration const& global: _globals)
 	{
 		ValueType globalType = toValueType(global.type);
-		result +=
-			toBytes(globalType) +
-			lebEncode(static_cast<uint8_t>(Mutability::Var)) +
-			toBytes(constOpcodeFor(globalType)) +
-			lebEncodeSigned(0) +
-			toBytes(Opcode::End);
+		result += toBytes(globalType) + lebEncode(static_cast<uint8_t>(Mutability::Var)) +
+			toBytes(constOpcodeFor(globalType)) + lebEncodeSigned(0) + toBytes(Opcode::End);
 	}
 
 	return makeSection(Section::GLOBAL, move(result));

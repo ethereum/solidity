@@ -31,16 +31,20 @@
 #include <functional>
 #include <ostream>
 
-namespace solidity::frontend {
-
+namespace solidity::frontend
+{
 class Compiler
 {
 public:
-	Compiler(langutil::EVMVersion _evmVersion, RevertStrings _revertStrings, OptimiserSettings _optimiserSettings):
+	Compiler(
+		langutil::EVMVersion _evmVersion,
+		RevertStrings _revertStrings,
+		OptimiserSettings _optimiserSettings
+	):
 		m_optimiserSettings(std::move(_optimiserSettings)),
 		m_runtimeContext(_evmVersion, _revertStrings),
 		m_context(_evmVersion, _revertStrings, &m_runtimeContext)
-	{ }
+	{}
 
 	/// Compiles a contract.
 	/// @arg _metadata contains the to be injected metadata CBOR
@@ -58,21 +62,29 @@ public:
 	/// @returns The entire assembled object (with constructor).
 	evmasm::LinkerObject assembledObject() const { return m_context.assembledObject(); }
 	/// @returns Only the runtime object (without constructor).
-	evmasm::LinkerObject runtimeObject() const { return m_context.assembledRuntimeObject(m_runtimeSub); }
+	evmasm::LinkerObject runtimeObject() const
+	{
+		return m_context.assembledRuntimeObject(m_runtimeSub);
+	}
 	/// @arg _sourceCodes is the map of input files to source code strings
 	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
 	{
 		return m_context.assemblyString(_sourceCodes);
 	}
 	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indices = std::map<std::string, unsigned>()) const
+	Json::Value assemblyJSON(
+		std::map<std::string, unsigned> const& _indices = std::map<std::string, unsigned>()
+	) const
 	{
 		return m_context.assemblyJSON(_indices);
 	}
 	/// @returns Assembly items of the normal compiler context
 	evmasm::AssemblyItems const& assemblyItems() const { return m_context.assembly().items(); }
 	/// @returns Assembly items of the runtime compiler context
-	evmasm::AssemblyItems const& runtimeAssemblyItems() const { return m_context.assembly().sub(m_runtimeSub).items(); }
+	evmasm::AssemblyItems const& runtimeAssemblyItems() const
+	{
+		return m_context.assembly().sub(m_runtimeSub).items();
+	}
 
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
@@ -81,7 +93,7 @@ public:
 private:
 	OptimiserSettings const m_optimiserSettings;
 	CompilerContext m_runtimeContext;
-	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
+	size_t m_runtimeSub = size_t(-1);  ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_context;
 };
 

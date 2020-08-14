@@ -26,7 +26,6 @@
 
 namespace solidity::yul
 {
-
 /**
  * Optimiser component that detects syntactically equivalent functions.
  *
@@ -46,7 +45,9 @@ public:
 	void operator()(FunctionDefinition const& _fun) override;
 
 private:
-	EquivalentFunctionDetector(std::map<Block const*, uint64_t> _blockHashes): m_blockHashes(std::move(_blockHashes)) {}
+	EquivalentFunctionDetector(std::map<Block const*, uint64_t> _blockHashes):
+		m_blockHashes(std::move(_blockHashes))
+	{}
 
 	std::map<Block const*, uint64_t> m_blockHashes;
 	std::map<uint64_t, std::vector<FunctionDefinition const*>> m_candidates;

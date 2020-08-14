@@ -11,7 +11,6 @@
 
 namespace solidity::test::abiv2fuzzer
 {
-
 class SolidityCompilationFramework
 {
 public:
@@ -27,6 +26,7 @@ public:
 		std::map<std::string, solidity::util::h160> const& _libraryAddresses = {},
 		frontend::OptimiserSettings _optimization = frontend::OptimiserSettings::minimal()
 	);
+
 protected:
 	frontend::CompilerStack m_compiler;
 	langutil::EVMVersion m_evmVersion;

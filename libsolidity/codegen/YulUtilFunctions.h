@@ -34,7 +34,6 @@
 
 namespace solidity::frontend
 {
-
 class Type;
 class ArrayType;
 class MappingType;
@@ -142,8 +141,8 @@ public:
 	/// signature: (array, value)
 	std::string storageArrayPushFunction(ArrayType const& _type);
 
-	/// @returns the name of a function that pushes the base type's zero element to a storage array and returns storage slot and offset of the added element.
-	/// signature: (array) -> slot, offset
+	/// @returns the name of a function that pushes the base type's zero element to a storage array
+	/// and returns storage slot and offset of the added element. signature: (array) -> slot, offset
 	std::string storageArrayPushZeroFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that will clear the storage area given
@@ -167,8 +166,9 @@ public:
 	std::string arrayAllocationSizeFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that converts a storage slot number
-	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata pointer
-	/// for the data position of an array which is stored in that slot / memory area / calldata area.
+	/// a memory pointer or a calldata pointer to the slot number / memory pointer / calldata
+	/// pointer for the data position of an array which is stored in that slot / memory area /
+	/// calldata area.
 	std::string arrayDataAreaFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that returns the slot and offset for the
@@ -198,7 +198,8 @@ public:
 	std::string accessCalldataTailFunction(Type const& _type);
 
 	/// @returns the name of a function that advances an array data pointer to the next element.
-	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
+	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies
+	/// one or multiple full slots.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that performs index access for mappings.
@@ -207,7 +208,8 @@ public:
 	std::string mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType);
 
 	/// @returns a function that reads a value type from storage.
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not
+	/// validation.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
@@ -223,17 +225,25 @@ public:
 
 	/// @returns a function that extracts a value type from storage slot that has been
 	/// retrieved already.
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not
+	/// validation.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
-	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string extractFromStorageValue(
+		Type const& _type,
+		size_t _offset,
+		bool _splitFunctionTypes
+	);
 	std::string extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes);
 
 	/// Returns the name of a function will write the given value to
 	/// the specified slot and offset. If offset is not given, it is expected as
 	/// runtime parameter.
 	/// signature: (slot, [offset,] value)
-	std::string updateStorageValueFunction(Type const& _type, std::optional<unsigned> const& _offset = std::optional<unsigned>());
+	std::string updateStorageValueFunction(
+		Type const& _type,
+		std::optional<unsigned> const& _offset = std::optional<unsigned>()
+	);
 
 	/// Returns the name of a function that will write the given value to
 	/// the specified address.
@@ -323,7 +333,10 @@ public:
 	/// This is used for data decoded from external sources.
 	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
 
-	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
+	std::string packedHashFunction(
+		std::vector<Type const*> const& _givenTypes,
+		std::vector<Type const*> const& _targetTypes
+	);
 
 	/// @returns the name of a function that reverts and uses returndata (if available)
 	/// as reason string.
@@ -347,7 +360,10 @@ public:
 	/// If revertStrings is debug, @returns inline assembly code that
 	/// stores @param _message in memory position 0 and reverts.
 	/// Otherwise returns "revert(0, 0)".
-	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
+	static std::string revertReasonIfDebug(
+		RevertStrings revertStrings,
+		std::string const& _message = ""
+	);
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
@@ -359,9 +375,11 @@ public:
 	std::string tryDecodeErrorMessageFunction();
 
 
-	/// Returns a function name that returns a newly allocated `bytes` array that contains the return data.
+	/// Returns a function name that returns a newly allocated `bytes` array that contains the
+	/// return data.
 	///
-	/// If returndatacopy() is not supported by the underlying target, a empty array will be returned instead.
+	/// If returndatacopy() is not supported by the underlying target, a empty array will be
+	/// returned instead.
 	std::string extractReturndataFunction();
 
 	/// @returns function name that returns constructor arguments copied to memory

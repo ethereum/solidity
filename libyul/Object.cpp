@@ -37,7 +37,6 @@ using namespace solidity::util;
 
 namespace
 {
-
 string indent(std::string const& _input)
 {
 	if (_input.empty())
@@ -74,7 +73,11 @@ set<YulString> Object::qualifiedDataNames() const
 			for (YulString const& subSubObj: subObject->qualifiedDataNames())
 				if (subObject->name != subSubObj)
 				{
-					yulAssert(qualifiedNames.count(YulString{subObject->name.str() + "." + subSubObj.str()}) == 0, "");
+					yulAssert(
+						qualifiedNames.count(YulString{
+							subObject->name.str() + "." + subSubObj.str()}) == 0,
+						""
+					);
 					qualifiedNames.insert(YulString{subObject->name.str() + "." + subSubObj.str()});
 				}
 	}
@@ -107,7 +110,10 @@ vector<size_t> Object::pathToSubObject(YulString _qualifiedName) const
 			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code."
 		);
 		object = dynamic_cast<Object const*>(object->subObjects[subIndexIt->second].get());
-		yulAssert(object, "Assembly object <" + _qualifiedName.str() + "> not found or does not contain code.");
+		yulAssert(
+			object,
+			"Assembly object <" + _qualifiedName.str() + "> not found or does not contain code."
+		);
 		yulAssert(object->subId != numeric_limits<size_t>::max(), "");
 		path.push_back({object->subId});
 	}

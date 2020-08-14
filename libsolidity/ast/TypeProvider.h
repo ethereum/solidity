@@ -28,7 +28,6 @@
 
 namespace solidity::frontend
 {
-
 /**
  * API for accessing the Solidity Type System.
  *
@@ -54,10 +53,14 @@ public:
 
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static Type const* fromElementaryTypeName(ElementaryTypeNameToken const& _type, std::optional<StateMutability> _stateMutability = {});
+	static Type const* fromElementaryTypeName(
+		ElementaryTypeNameToken const& _type,
+		std::optional<StateMutability> _stateMutability = {}
+	);
 
 	/// Converts a given elementary type name with optional data location
-	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults to " storage".
+	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults
+	/// to " storage".
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 
 	/// @returns boolean type.
@@ -79,7 +82,11 @@ public:
 	static ArrayType const* array(DataLocation _location, Type const* _baseType);
 
 	/// Constructor for a fixed-size array type ("type[20]")
-	static ArrayType const* array(DataLocation _location, Type const* _baseType, u256 const& _length);
+	static ArrayType const* array(
+		DataLocation _location,
+		Type const* _baseType,
+		u256 const& _length
+	);
 
 	static ArraySliceType const* arraySlice(ArrayType const& _arrayType);
 
@@ -94,27 +101,43 @@ public:
 		else
 			return m_intM.at(_bits / 8 - 1).get();
 	}
-	static IntegerType const* uint(unsigned _bits) { return integer(_bits, IntegerType::Modifier::Unsigned); }
+	static IntegerType const* uint(unsigned _bits)
+	{
+		return integer(_bits, IntegerType::Modifier::Unsigned);
+	}
 
 	static IntegerType const* uint256() { return uint(256); }
 	static IntegerType const* int256() { return integer(256, IntegerType::Modifier::Signed); }
 
-	static FixedPointType const* fixedPoint(unsigned m, unsigned n, FixedPointType::Modifier _modifier);
+	static FixedPointType const* fixedPoint(
+		unsigned m,
+		unsigned n,
+		FixedPointType::Modifier _modifier
+	);
 
 	static StringLiteralType const* stringLiteral(std::string const& literal);
 
-	/// @param members the member types the tuple type must contain. This is passed by value on purspose.
+	/// @param members the member types the tuple type must contain. This is passed by value on
+	/// purspose.
 	/// @returns a tuple type with the given members.
 	static TupleType const* tuple(std::vector<Type const*> members);
 
 	static TupleType const* emptyTuple() noexcept { return &m_emptyTuple; }
 
-	static ReferenceType const* withLocation(ReferenceType const* _type, DataLocation _location, bool _isPointer);
+	static ReferenceType const* withLocation(
+		ReferenceType const* _type,
+		DataLocation _location,
+		bool _isPointer
+	);
 
 	/// @returns a copy of @a _type having the same location as this (and is not a pointer type)
 	///          if _type is a reference type and an unmodified copy of _type otherwise.
 	///          This function is mostly useful to modify inner types appropriately.
-	static Type const* withLocationIfReference(DataLocation _location, Type const* _type, bool _isPointer = false)
+	static Type const* withLocationIfReference(
+		DataLocation _location,
+		Type const* _type,
+		bool _isPointer = false
+	)
 	{
 		if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 			return withLocation(refType, _location, _isPointer);
@@ -130,8 +153,12 @@ public:
 		return false;
 	}
 
-	/// @returns the internally-facing or externally-facing type of a function or the type of a function declaration.
-	static FunctionType const* function(FunctionDefinition const& _function, FunctionType::Kind _kind = FunctionType::Kind::Declaration);
+	/// @returns the internally-facing or externally-facing type of a function or the type of a
+	/// function declaration.
+	static FunctionType const* function(
+		FunctionDefinition const& _function,
+		FunctionType::Kind _kind = FunctionType::Kind::Declaration
+	);
 
 	/// @returns the accessor function type of a state variable.
 	static FunctionType const* function(VariableDeclaration const& _varDecl);
@@ -179,12 +206,17 @@ public:
 
 	static ContractType const* contract(ContractDefinition const& _contract, bool _isSuper = false);
 
-	static InaccessibleDynamicType const* inaccessibleDynamic() noexcept { return &m_inaccessibleDynamic; }
+	static InaccessibleDynamicType const* inaccessibleDynamic() noexcept
+	{
+		return &m_inaccessibleDynamic;
+	}
 
-	/// @returns the type of an enum instance for given definition, there is one distinct type per enum definition.
+	/// @returns the type of an enum instance for given definition, there is one distinct type per
+	/// enum definition.
 	static EnumType const* enumType(EnumDefinition const& _enum);
 
-	/// @returns special type for imported modules. These mainly give access to their scope via members.
+	/// @returns special type for imported modules. These mainly give access to their scope via
+	/// members.
 	static ModuleType const* module(SourceUnit const& _source);
 
 	static TypeType const* typeType(Type const* _actualType);
@@ -208,7 +240,7 @@ private:
 	}
 
 	template <typename T, typename... Args>
-	static inline T const* createAndGet(Args&& ... _args);
+	static inline T const* createAndGet(Args&&... _args);
 
 	static BoolType const m_boolean;
 	static InaccessibleDynamicType const m_inaccessibleDynamic;
@@ -226,7 +258,8 @@ private:
 	static std::array<std::unique_ptr<IntegerType>, 32> const m_intM;
 	static std::array<std::unique_ptr<IntegerType>, 32> const m_uintM;
 	static std::array<std::unique_ptr<FixedBytesType>, 32> const m_bytesM;
-	static std::array<std::unique_ptr<MagicType>, 4> const m_magics;        ///< MagicType's except MetaType
+	static std::array<std::unique_ptr<MagicType>, 4> const
+		m_magics;  ///< MagicType's except MetaType
 
 	std::map<std::pair<unsigned, unsigned>, std::unique_ptr<FixedPointType>> m_ufixedMxN{};
 	std::map<std::pair<unsigned, unsigned>, std::unique_ptr<FixedPointType>> m_fixedMxN{};

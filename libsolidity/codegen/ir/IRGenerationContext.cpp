@@ -64,25 +64,24 @@ ContractDefinition const& IRGenerationContext::mostDerivedContract() const
 
 IRVariable const& IRGenerationContext::addLocalVariable(VariableDeclaration const& _varDecl)
 {
-	auto const& [it, didInsert] = m_localVariables.emplace(
-		std::make_pair(&_varDecl, IRVariable{_varDecl})
-	);
+	auto const& [it, didInsert] =
+		m_localVariables.emplace(std::make_pair(&_varDecl, IRVariable{_varDecl}));
 	solAssert(didInsert, "Local variable added multiple times.");
 	return it->second;
 }
 
 IRVariable const& IRGenerationContext::localVariable(VariableDeclaration const& _varDecl)
 {
-	solAssert(
-		m_localVariables.count(&_varDecl),
-		"Unknown variable: " + _varDecl.name()
-	);
+	solAssert(m_localVariables.count(&_varDecl), "Unknown variable: " + _varDecl.name());
 	return m_localVariables.at(&_varDecl);
 }
 
 void IRGenerationContext::registerImmutableVariable(VariableDeclaration const& _variable)
 {
-	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");
+	solAssert(
+		_variable.immutable(),
+		"Attempted to register a non-immutable variable as immutable."
+	);
 	solUnimplementedAssert(
 		_variable.annotation().type->isValueType(),
 		"Only immutable variables of value type are supported."
@@ -119,16 +118,14 @@ void IRGenerationContext::addStateVariable(
 	m_stateVariables[&_declaration] = make_pair(move(_storageOffset), _byteOffset);
 }
 
-string IRGenerationContext::newYulVariable()
-{
-	return "_" + to_string(++m_varCounter);
-}
+string IRGenerationContext::newYulVariable() { return "_" + to_string(++m_varCounter); }
 
 void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _internalDispatch)
 {
 	solAssert(internalDispatchClean(), "");
 
-	for (set<FunctionDefinition const*> const& functions: _internalDispatch | boost::adaptors::map_values)
+	for (set<FunctionDefinition const*> const& functions:
+		 _internalDispatch | boost::adaptors::map_values)
 		for (auto function: functions)
 			enqueueFunctionForCodeGeneration(*function);
 
@@ -151,18 +148,23 @@ void IRGenerationContext::internalFunctionCalledDirectly(Expression const& _expr
 	m_directInternalFunctionCalls.insert(&_expression);
 }
 
-void IRGenerationContext::internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function)
+void IRGenerationContext::internalFunctionAccessed(
+	Expression const& _expression,
+	FunctionDefinition const& _function
+)
 {
 	solAssert(
 		IRHelpers::referencedFunctionDeclaration(_expression) &&
-		_function.resolveVirtual(mostDerivedContract()) ==
-		IRHelpers::referencedFunctionDeclaration(_expression)->resolveVirtual(mostDerivedContract()),
+			_function.resolveVirtual(mostDerivedContract()) ==
+				IRHelpers::referencedFunctionDeclaration(_expression)
+					->resolveVirtual(mostDerivedContract()),
 		"Function definition does not match the expression"
 	);
 
 	if (m_directInternalFunctionCalls.count(&_expression) == 0)
 	{
-		FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
+		FunctionType const* functionType =
+			TypeProvider::function(_function, FunctionType::Kind::Internal);
 		solAssert(functionType, "");
 
 		m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);

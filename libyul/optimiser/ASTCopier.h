@@ -32,7 +32,6 @@
 
 namespace solidity::yul
 {
-
 class ExpressionCopier
 {
 public:
@@ -86,6 +85,7 @@ public:
 	virtual Statement translate(Statement const& _statement);
 
 	Block translate(Block const& _block);
+
 protected:
 	template <typename T>
 	std::vector<T> translateVector(std::vector<T> const& _values);
@@ -101,10 +101,10 @@ protected:
 	Literal translate(Literal const& _literal);
 	TypedName translate(TypedName const& _typedName);
 
-	virtual void enterScope(Block const&) { }
-	virtual void leaveScope(Block const&) { }
-	virtual void enterFunction(FunctionDefinition const&) { }
-	virtual void leaveFunction(FunctionDefinition const&) { }
+	virtual void enterScope(Block const&) {}
+	virtual void leaveScope(Block const&) {}
+	virtual void enterFunction(FunctionDefinition const&) {}
+	virtual void leaveFunction(FunctionDefinition const&) {}
 	virtual YulString translateIdentifier(YulString _name) { return _name; }
 };
 

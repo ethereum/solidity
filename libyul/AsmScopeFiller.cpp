@@ -80,10 +80,7 @@ bool ScopeFiller::operator()(FunctionDefinition const& _funDef)
 	return success;
 }
 
-bool ScopeFiller::operator()(If const& _if)
-{
-	return (*this)(_if.body);
-}
+bool ScopeFiller::operator()(If const& _if) { return (*this)(_if.body); }
 
 bool ScopeFiller::operator()(Switch const& _switch)
 {
@@ -134,7 +131,11 @@ bool ScopeFiller::operator()(Block const& _block)
 	return success;
 }
 
-bool ScopeFiller::registerVariable(TypedName const& _name, SourceLocation const& _location, Scope& _scope)
+bool ScopeFiller::registerVariable(
+	TypedName const& _name,
+	SourceLocation const& _location,
+	Scope& _scope
+)
 {
 	if (!_scope.registerVariable(_name.name, _name.type))
 	{

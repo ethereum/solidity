@@ -22,7 +22,7 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/FixedHash.h>
-#include <libsolidity/ast/Types.h> // for IntegerType
+#include <libsolidity/ast/Types.h>	// for IntegerType
 
 #include <test/Common.h>
 
@@ -36,7 +36,6 @@ BOOST_TEST_DONT_PRINT_LOG_VALUE(solidity::bytes)
 
 namespace solidity::util::test
 {
-
 BOOST_AUTO_TEST_SUITE(CommonData)
 
 BOOST_AUTO_TEST_CASE(fromhex_char)
@@ -53,8 +52,41 @@ BOOST_AUTO_TEST_CASE(fromhex_char)
 
 BOOST_AUTO_TEST_CASE(fromhex_string)
 {
-	bytes expectation_even = {{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}};
-	bytes expectation_odd = {{0x00, 0x01, 0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78, 0x89, 0x9a, 0xab, 0xbc, 0xcd, 0xde, 0xef, 0xf0}};
+	bytes expectation_even = {
+		{0x00,
+		 0x11,
+		 0x22,
+		 0x33,
+		 0x44,
+		 0x55,
+		 0x66,
+		 0x77,
+		 0x88,
+		 0x99,
+		 0xaa,
+		 0xbb,
+		 0xcc,
+		 0xdd,
+		 0xee,
+		 0xff}};
+	bytes expectation_odd = {
+		{0x00,
+		 0x01,
+		 0x12,
+		 0x23,
+		 0x34,
+		 0x45,
+		 0x56,
+		 0x67,
+		 0x78,
+		 0x89,
+		 0x9a,
+		 0xab,
+		 0xbc,
+		 0xcd,
+		 0xde,
+		 0xef,
+		 0xf0}};
 
 	// Defaults to WhenError::DontThrow
 	BOOST_CHECK_EQUAL(fromHex(""), bytes());
@@ -65,9 +97,18 @@ BOOST_AUTO_TEST_CASE(fromhex_string)
 	BOOST_CHECK_EQUAL(fromHex("0xgg"), bytes());
 
 	BOOST_CHECK_EQUAL(fromHex("", WhenError::Throw), bytes());
-	BOOST_CHECK_EQUAL(fromHex("00112233445566778899aabbccddeeff", WhenError::Throw), expectation_even);
-	BOOST_CHECK_EQUAL(fromHex("0x00112233445566778899aabbccddeeff", WhenError::Throw), expectation_even);
-	BOOST_CHECK_EQUAL(fromHex("0x00112233445566778899aabbccddeeff0", WhenError::Throw), expectation_odd);
+	BOOST_CHECK_EQUAL(
+		fromHex("00112233445566778899aabbccddeeff", WhenError::Throw),
+		expectation_even
+	);
+	BOOST_CHECK_EQUAL(
+		fromHex("0x00112233445566778899aabbccddeeff", WhenError::Throw),
+		expectation_even
+	);
+	BOOST_CHECK_EQUAL(
+		fromHex("0x00112233445566778899aabbccddeeff0", WhenError::Throw),
+		expectation_odd
+	);
 	BOOST_CHECK_THROW(fromHex("gg", WhenError::Throw), BadHexCharacter);
 	BOOST_CHECK_THROW(fromHex("0xgg", WhenError::Throw), BadHexCharacter);
 }
@@ -84,17 +125,49 @@ BOOST_AUTO_TEST_CASE(tohex_uint8)
 
 BOOST_AUTO_TEST_CASE(tohex_bytes)
 {
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Lower), "00112233445566778899aabbccddeeff");
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Upper), "00112233445566778899AABBCCDDEEFF");
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Mixed), "00112233445566778899aabbCCDDeeff");
+	BOOST_CHECK_EQUAL(
+		toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Lower),
+		"00112233445566778899aabbccddeeff"
+	);
+	BOOST_CHECK_EQUAL(
+		toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Upper),
+		"00112233445566778899AABBCCDDEEFF"
+	);
+	BOOST_CHECK_EQUAL(
+		toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, HexCase::Mixed),
+		"00112233445566778899aabbCCDDeeff"
+	);
 	// Defaults to lower case on invalid setting.
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::DontAdd, static_cast<HexCase>(42)), "00112233445566778899aabbccddeeff");
+	BOOST_CHECK_EQUAL(
+		toHex(
+			fromHex("00112233445566778899aAbBcCdDeEfF"),
+			HexPrefix::DontAdd,
+			static_cast<HexCase>(42)
+		),
+		"00112233445566778899aabbccddeeff"
+	);
 
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, HexCase::Lower), "0x00112233445566778899aabbccddeeff");
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, HexCase::Upper), "0x00112233445566778899AABBCCDDEEFF");
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899AaBbCcDdEeFf"), HexPrefix::Add, HexCase::Mixed), "0x00112233445566778899aabbCCDDeeff");
+	BOOST_CHECK_EQUAL(
+		toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, HexCase::Lower),
+		"0x00112233445566778899aabbccddeeff"
+	);
+	BOOST_CHECK_EQUAL(
+		toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, HexCase::Upper),
+		"0x00112233445566778899AABBCCDDEEFF"
+	);
+	BOOST_CHECK_EQUAL(
+		toHex(fromHex("00112233445566778899AaBbCcDdEeFf"), HexPrefix::Add, HexCase::Mixed),
+		"0x00112233445566778899aabbCCDDeeff"
+	);
 	// Defaults to lower case on invalid setting.
-	BOOST_CHECK_EQUAL(toHex(fromHex("00112233445566778899aAbBcCdDeEfF"), HexPrefix::Add, static_cast<HexCase>(42)), "0x00112233445566778899aabbccddeeff");
+	BOOST_CHECK_EQUAL(
+		toHex(
+			fromHex("00112233445566778899aAbBcCdDeEfF"),
+			HexPrefix::Add,
+			static_cast<HexCase>(42)
+		),
+		"0x00112233445566778899aabbccddeeff"
+	);
 }
 
 BOOST_AUTO_TEST_CASE(test_format_number)
@@ -120,16 +193,23 @@ BOOST_AUTO_TEST_CASE(test_format_number)
 		b <<= 8;
 		b |= 0x55;
 	}
-	u256 c = u256(FixedHash<32>(
-		fromHex("0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789")
-	));
-	u256 d = u256(0xAAAAaaaaAAAAaaaa) << 192 |
-		u256(0xFFFFffffFFFFffff) << 128 |
-		u256(0xFFFFffffFFFFffff) << 64 |
-		u256(0xFFFFffffFFFFffff);
-	BOOST_CHECK_EQUAL(formatNumber(b), "0x5555555555555555555555555555555555555555555555555555555555555555");
-	BOOST_CHECK_EQUAL(formatNumber(c), "0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789");
-	BOOST_CHECK_EQUAL(formatNumber(d), "0xaaaaaaaaaaaaaaaaffffffffffffffffffffffffffffffffffffffffffffffff");
+	u256 c = u256(
+		FixedHash<32>(fromHex("0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"))
+	);
+	u256 d = u256(0xAAAAaaaaAAAAaaaa) << 192 | u256(0xFFFFffffFFFFffff) << 128 |
+		u256(0xFFFFffffFFFFffff) << 64 | u256(0xFFFFffffFFFFffff);
+	BOOST_CHECK_EQUAL(
+		formatNumber(b),
+		"0x5555555555555555555555555555555555555555555555555555555555555555"
+	);
+	BOOST_CHECK_EQUAL(
+		formatNumber(c),
+		"0xabcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+	);
+	BOOST_CHECK_EQUAL(
+		formatNumber(d),
+		"0xaaaaaaaaaaaaaaaaffffffffffffffffffffffffffffffffffffffffffffffff"
+	);
 
 	BOOST_CHECK_EQUAL(formatNumber(IntegerType(256).minValue()), "0");
 	BOOST_CHECK_EQUAL(

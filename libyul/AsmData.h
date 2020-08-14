@@ -32,57 +32,139 @@
 
 namespace solidity::yul
 {
-
 using Type = YulString;
 
-struct TypedName { langutil::SourceLocation location; YulString name; Type type; };
+struct TypedName
+{
+	langutil::SourceLocation location;
+	YulString name;
+	Type type;
+};
 using TypedNameList = std::vector<TypedName>;
 
 /// Literal number or string (up to 32 bytes)
-enum class LiteralKind { Number, Boolean, String };
-struct Literal { langutil::SourceLocation location; LiteralKind kind; YulString value; Type type; };
+enum class LiteralKind
+{
+	Number,
+	Boolean,
+	String
+};
+struct Literal
+{
+	langutil::SourceLocation location;
+	LiteralKind kind;
+	YulString value;
+	Type type;
+};
 /// External / internal identifier or label reference
-struct Identifier { langutil::SourceLocation location; YulString name; };
+struct Identifier
+{
+	langutil::SourceLocation location;
+	YulString name;
+};
 /// Assignment ("x := mload(20:u256)", expects push-1-expression on the right hand
 /// side and requires x to occupy exactly one stack slot.
 ///
 /// Multiple assignment ("x, y := f()"), where the left hand side variables each occupy
 /// a single stack slot and expects a single expression on the right hand returning
 /// the same amount of items as the number of variables.
-struct Assignment { langutil::SourceLocation location; std::vector<Identifier> variableNames; std::unique_ptr<Expression> value; };
-struct FunctionCall { langutil::SourceLocation location; Identifier functionName; std::vector<Expression> arguments; };
+struct Assignment
+{
+	langutil::SourceLocation location;
+	std::vector<Identifier> variableNames;
+	std::unique_ptr<Expression> value;
+};
+struct FunctionCall
+{
+	langutil::SourceLocation location;
+	Identifier functionName;
+	std::vector<Expression> arguments;
+};
 /// Statement that contains only a single expression
-struct ExpressionStatement { langutil::SourceLocation location; Expression expression; };
+struct ExpressionStatement
+{
+	langutil::SourceLocation location;
+	Expression expression;
+};
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
-struct VariableDeclaration { langutil::SourceLocation location; TypedNameList variables; std::unique_ptr<Expression> value; };
+struct VariableDeclaration
+{
+	langutil::SourceLocation location;
+	TypedNameList variables;
+	std::unique_ptr<Expression> value;
+};
 /// Block that creates a scope (frees declared stack variables)
-struct Block { langutil::SourceLocation location; std::vector<Statement> statements; };
+struct Block
+{
+	langutil::SourceLocation location;
+	std::vector<Statement> statements;
+};
 /// Function definition ("function f(a, b) -> (d, e) { ... }")
-struct FunctionDefinition { langutil::SourceLocation location; YulString name; TypedNameList parameters; TypedNameList returnVariables; Block body; };
+struct FunctionDefinition
+{
+	langutil::SourceLocation location;
+	YulString name;
+	TypedNameList parameters;
+	TypedNameList returnVariables;
+	Block body;
+};
 /// Conditional execution without "else" part.
-struct If { langutil::SourceLocation location; std::unique_ptr<Expression> condition; Block body; };
+struct If
+{
+	langutil::SourceLocation location;
+	std::unique_ptr<Expression> condition;
+	Block body;
+};
 /// Switch case or default case
-struct Case { langutil::SourceLocation location; std::unique_ptr<Literal> value; Block body; };
+struct Case
+{
+	langutil::SourceLocation location;
+	std::unique_ptr<Literal> value;
+	Block body;
+};
 /// Switch statement
-struct Switch { langutil::SourceLocation location; std::unique_ptr<Expression> expression; std::vector<Case> cases; };
-struct ForLoop { langutil::SourceLocation location; Block pre; std::unique_ptr<Expression> condition; Block post; Block body; };
+struct Switch
+{
+	langutil::SourceLocation location;
+	std::unique_ptr<Expression> expression;
+	std::vector<Case> cases;
+};
+struct ForLoop
+{
+	langutil::SourceLocation location;
+	Block pre;
+	std::unique_ptr<Expression> condition;
+	Block post;
+	Block body;
+};
 /// Break statement (valid within for loop)
-struct Break { langutil::SourceLocation location; };
+struct Break
+{
+	langutil::SourceLocation location;
+};
 /// Continue statement (valid within for loop)
-struct Continue { langutil::SourceLocation location; };
+struct Continue
+{
+	langutil::SourceLocation location;
+};
 /// Leave statement (valid within function)
-struct Leave { langutil::SourceLocation location; };
+struct Leave
+{
+	langutil::SourceLocation location;
+};
 
 struct LocationExtractor
 {
-	template <class T> langutil::SourceLocation operator()(T const& _node) const
+	template <class T>
+	langutil::SourceLocation operator()(T const& _node) const
 	{
 		return _node.location;
 	}
 };
 
 /// Extracts the source location from an inline assembly node.
-template <class T> inline langutil::SourceLocation locationOf(T const& _node)
+template <class T>
+inline langutil::SourceLocation locationOf(T const& _node)
 {
 	return std::visit(LocationExtractor(), _node);
 }

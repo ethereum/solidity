@@ -27,7 +27,6 @@
 
 namespace solidity::yul
 {
-
 struct EVMDialect;
 
 /**
@@ -41,9 +40,7 @@ class GasMeter
 {
 public:
 	GasMeter(EVMDialect const& _dialect, bool _isCreation, size_t _runs):
-		m_dialect(_dialect),
-		m_isCreation{_isCreation},
-		m_runs(_runs)
+		m_dialect(_dialect), m_isCreation{_isCreation}, m_runs(_runs)
 	{}
 
 	/// @returns the full combined costs of deploying and evaluating the expression.
@@ -77,8 +74,7 @@ public:
 
 public:
 	GasMeterVisitor(EVMDialect const& _dialect, bool _isCreation):
-		m_dialect(_dialect),
-		m_isCreation{_isCreation}
+		m_dialect(_dialect), m_isCreation{_isCreation}
 	{}
 
 	void operator()(FunctionCall const& _funCall) override;

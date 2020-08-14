@@ -66,7 +66,8 @@ int main(int argc, char** argv)
 	}
 	catch (boost::exception const& _exception)
 	{
-		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception) << endl;
+		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception)
+			 << endl;
 		success = false;
 	}
 

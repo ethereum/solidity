@@ -42,7 +42,6 @@ struct SourceLocation;
 
 namespace solidity::frontend
 {
-
 /**
  * Converter of the AST into JSON format
  */
@@ -146,18 +145,17 @@ private:
 	{
 		return _node ? toJson(*_node) : Json::nullValue;
 	}
-	Json::Value inlineAssemblyIdentifierToJson(std::pair<yul::Identifier const* , InlineAssemblyAnnotation::ExternalIdentifierInfo> _info) const;
+	Json::Value inlineAssemblyIdentifierToJson(
+		std::pair<yul::Identifier const*, InlineAssemblyAnnotation::ExternalIdentifierInfo> _info
+	) const;
 	static std::string location(VariableDeclaration::Location _location);
 	static std::string contractKind(ContractKind _kind);
 	static std::string functionCallKind(FunctionCallKind _kind);
 	static std::string literalTokenKind(Token _token);
 	static std::string type(Expression const& _expression);
 	static std::string type(VariableDeclaration const& _varDecl);
-	static int nodeId(ASTNode const& _node)
-	{
-		return _node.id();
-	}
-	template<class Container>
+	static int nodeId(ASTNode const& _node) { return _node.id(); }
+	template <class Container>
 	static Json::Value getContainerIds(Container const& _container, bool _order = false)
 	{
 		std::vector<int> tmp;
@@ -179,7 +177,7 @@ private:
 	static Json::Value typePointerToJson(TypePointer _tp, bool _short = false);
 	static Json::Value typePointerToJson(std::optional<FuncCallArguments> const& _tps);
 	void appendExpressionAttributes(
-		std::vector<std::pair<std::string, Json::Value>> &_attributes,
+		std::vector<std::pair<std::string, Json::Value>>& _attributes,
 		ExpressionAnnotation const& _annotation
 	);
 	static void appendMove(Json::Value& _array, Json::Value&& _value)
@@ -188,8 +186,8 @@ private:
 		_array.append(std::move(_value));
 	}
 
-	bool m_legacy = false; ///< if true, use legacy format
-	bool m_inEvent = false; ///< whether we are currently inside an event or not
+	bool m_legacy = false;	///< if true, use legacy format
+	bool m_inEvent = false;	 ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;
 	std::map<std::string, unsigned> m_sourceIndices;
 };

@@ -36,18 +36,18 @@ using OptionalStatements = std::optional<vector<Statement>>;
 
 namespace
 {
-
 ExpressionStatement makeDiscardCall(
 	langutil::SourceLocation const& _location,
 	BuiltinFunction const& _discardFunction,
 	Expression&& _expression
 )
 {
-	return {_location, FunctionCall{
+	return {
 		_location,
-		Identifier{_location, _discardFunction.name},
-		{std::move(_expression)}
-	}};
+		FunctionCall{
+			_location,
+			Identifier{_location, _discardFunction.name},
+			{std::move(_expression)}}};
 }
 
 void removeEmptyDefaultFromSwitch(Switch& _switchStmt)
@@ -83,15 +83,13 @@ void ControlFlowSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 	ControlFlowSimplifier{_context.dialect, typeInfo}(_ast);
 }
 
-void ControlFlowSimplifier::operator()(Block& _block)
-{
-	simplify(_block.statements);
-}
+void ControlFlowSimplifier::operator()(Block& _block) { simplify(_block.statements); }
 
 void ControlFlowSimplifier::operator()(FunctionDefinition& _funDef)
 {
 	ASTModifier::operator()(_funDef);
-	if (!_funDef.body.statements.empty() && holds_alternative<Leave>(_funDef.body.statements.back()))
+	if (!_funDef.body.statements.empty() &&
+		holds_alternative<Leave>(_funDef.body.statements.back()))
 		_funDef.body.statements.pop_back();
 }
 
@@ -112,7 +110,8 @@ void ControlFlowSimplifier::visit(Statement& _st)
 		if (!forLoop.body.statements.empty())
 		{
 			bool isTerminating = false;
-			TerminationFinder::ControlFlow controlFlow = TerminationFinder{m_dialect}.controlFlowKind(forLoop.body.statements.back());
+			TerminationFinder::ControlFlow controlFlow =
+				TerminationFinder{m_dialect}.controlFlowKind(forLoop.body.statements.back());
 			if (controlFlow == TerminationFinder::ControlFlow::Break)
 			{
 				isTerminating = true;
@@ -126,7 +125,10 @@ void ControlFlowSimplifier::visit(Statement& _st)
 
 			if (isTerminating && m_numContinueStatements == 0 && m_numBreakStatements == 0)
 			{
-				If replacement{forLoop.location, std::move(forLoop.condition), std::move(forLoop.body)};
+				If replacement{
+					forLoop.location,
+					std::move(forLoop.condition),
+					std::move(forLoop.body)};
 				if (controlFlow == TerminationFinder::ControlFlow::Break)
 					replacement.body.statements.resize(replacement.body.statements.size() - 1);
 				_st = std::move(replacement);
@@ -144,7 +146,8 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 {
 	GenericVisitor visitor{
 		VisitorFallback<OptionalStatements>{},
-		[&](If& _ifStmt) -> OptionalStatements {
+		[&](If& _ifStmt) -> OptionalStatements
+		{
 			if (_ifStmt.body.statements.empty() && m_dialect.discardFunction(m_dialect.boolType))
 			{
 				OptionalStatements s = vector<Statement>{};
@@ -157,7 +160,8 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 			}
 			return {};
 		},
-		[&](Switch& _switchStmt) -> OptionalStatements {
+		[&](Switch& _switchStmt) -> OptionalStatements
+		{
 			removeEmptyDefaultFromSwitch(_switchStmt);
 			removeEmptyCasesFromSwitch(_switchStmt);
 
@@ -167,8 +171,7 @@ void ControlFlowSimplifier::simplify(std::vector<yul::Statement>& _statements)
 				return reduceSingleCaseSwitch(_switchStmt);
 
 			return {};
-		}
-	};
+		}};
 	iterateReplacing(
 		_statements,
 		[&](Statement& _stmt) -> OptionalStatements
@@ -193,11 +196,9 @@ OptionalStatements ControlFlowSimplifier::reduceNoCaseSwitch(Switch& _switchStmt
 
 	auto loc = locationOf(*_switchStmt.expression);
 
-	return make_vector<Statement>(makeDiscardCall(
-		loc,
-		*discardFunction,
-		std::move(*_switchStmt.expression)
-	));
+	return make_vector<Statement>(
+		makeDiscardCall(loc, *discardFunction, std::move(*_switchStmt.expression))
+	);
 }
 
 OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switchStmt) const
@@ -216,10 +217,8 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 			make_unique<Expression>(FunctionCall{
 				loc,
 				Identifier{loc, m_dialect.equalityFunction(type)->name},
-				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}
-			}),
-			std::move(switchCase.body)
-		});
+				{std::move(*switchCase.value), std::move(*_switchStmt.expression)}}),
+			std::move(switchCase.body)});
 	}
 	else
 	{
@@ -236,4 +235,3 @@ OptionalStatements ControlFlowSimplifier::reduceSingleCaseSwitch(Switch& _switch
 		);
 	}
 }
-

@@ -31,14 +31,11 @@
 
 namespace solidity::langutil
 {
-
 /**
  * A version specifier of the EVM we want to compile to.
  * Defaults to the latest version deployed on Ethereum mainnet at the time of compiler release.
  */
-class EVMVersion:
-	boost::less_than_comparable<EVMVersion>,
-	boost::equality_comparable<EVMVersion>
+class EVMVersion: boost::less_than_comparable<EVMVersion>, boost::equality_comparable<EVMVersion>
 {
 public:
 	EVMVersion() = default;
@@ -54,7 +51,15 @@ public:
 
 	static std::optional<EVMVersion> fromString(std::string const& _version)
 	{
-		for (auto const& v: {homestead(), tangerineWhistle(), spuriousDragon(), byzantium(), constantinople(), petersburg(), istanbul(), berlin()})
+		for (auto const& v:
+			 {homestead(),
+			  tangerineWhistle(),
+			  spuriousDragon(),
+			  byzantium(),
+			  constantinople(),
+			  petersburg(),
+			  istanbul(),
+			  berlin()})
 			if (_version == v.name())
 				return v;
 		return std::nullopt;
@@ -67,14 +72,22 @@ public:
 	{
 		switch (m_version)
 		{
-		case Version::Homestead: return "homestead";
-		case Version::TangerineWhistle: return "tangerineWhistle";
-		case Version::SpuriousDragon: return "spuriousDragon";
-		case Version::Byzantium: return "byzantium";
-		case Version::Constantinople: return "constantinople";
-		case Version::Petersburg: return "petersburg";
-		case Version::Istanbul: return "istanbul";
-		case Version::Berlin: return "berlin";
+		case Version::Homestead:
+			return "homestead";
+		case Version::TangerineWhistle:
+			return "tangerineWhistle";
+		case Version::SpuriousDragon:
+			return "spuriousDragon";
+		case Version::Byzantium:
+			return "byzantium";
+		case Version::Constantinople:
+			return "constantinople";
+		case Version::Petersburg:
+			return "petersburg";
+		case Version::Istanbul:
+			return "istanbul";
+		case Version::Berlin:
+			return "berlin";
 		}
 		return "INVALID";
 	}
@@ -95,7 +108,17 @@ public:
 	bool canOverchargeGasForCall() const { return *this >= tangerineWhistle(); }
 
 private:
-	enum class Version { Homestead, TangerineWhistle, SpuriousDragon, Byzantium, Constantinople, Petersburg, Istanbul, Berlin };
+	enum class Version
+	{
+		Homestead,
+		TangerineWhistle,
+		SpuriousDragon,
+		Byzantium,
+		Constantinople,
+		Petersburg,
+		Istanbul,
+		Berlin
+	};
 
 	EVMVersion(Version _version): m_version(_version) {}
 

@@ -59,13 +59,32 @@ struct MachineAssemblyObject
 class AssemblyStack
 {
 public:
-	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
-	enum class Machine { EVM, EVM15, Ewasm };
+	enum class Language
+	{
+		Yul,
+		Assembly,
+		StrictAssembly,
+		Ewasm
+	};
+	enum class Machine
+	{
+		EVM,
+		EVM15,
+		Ewasm
+	};
 
 	AssemblyStack():
-		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, solidity::frontend::OptimiserSettings::none())
+		AssemblyStack(
+			langutil::EVMVersion{},
+			Language::Assembly,
+			solidity::frontend::OptimiserSettings::none()
+		)
 	{}
-	AssemblyStack(langutil::EVMVersion _evmVersion, Language _language, solidity::frontend::OptimiserSettings _optimiserSettings):
+	AssemblyStack(
+		langutil::EVMVersion _evmVersion,
+		Language _language,
+		solidity::frontend::OptimiserSettings _optimiserSettings
+	):
 		m_language(_language),
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(std::move(_optimiserSettings)),

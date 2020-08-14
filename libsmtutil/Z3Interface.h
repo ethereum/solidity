@@ -24,7 +24,6 @@
 
 namespace solidity::smtutil
 {
-
 class Z3Interface: public SolverInterface, public boost::noncopyable
 {
 public:
@@ -38,7 +37,9 @@ public:
 	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 
 	void addAssertion(Expression const& _expr) override;
-	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
+	std::pair<CheckResult, std::vector<std::string>> check(
+		std::vector<Expression> const& _expressionsToEvaluate
+	) override;
 
 	z3::expr toZ3Expr(Expression const& _expr);
 
