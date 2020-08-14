@@ -9,26 +9,57 @@
 # as the opening part (aka "dangling parenthesis", see https://reviews.llvm.org/D33029).
 
 Language: Cpp
-BasedOnStyle: LLVM
+BasedOnStyle: Google
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
 AlignEscapedNewlinesLeft: true
+AlignOperands: false
+AlignTrailingComments: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
+AllowShortBlocksOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: false
 BinPackArguments: false
 BinPackParameters: false
-BreakBeforeBinaryOperators: All
-BreakBeforeBraces: Allman
-ColumnLimit: 120
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterCaseLabel: true
+    AfterClass: true
+    AfterControlStatement: Always
+    AfterEnum: true
+    AfterFunction: true
+    AfterNamespace: true
+    AfterStruct: true
+    AfterUnion: true
+    BeforeCatch: true
+    BeforeElse: true
+    BeforeLambdaBody: true
+    BeforeWhile: false
+    IndentBraces: false
+    SplitEmptyRecord: false
+    SplitEmptyNamespace: true
+BreakConstructorInitializers: AfterColon
+ColumnLimit: 100
 ContinuationIndentWidth: 4
+DanglingParenthesis: true
 FixNamespaceComments: false
+IndentCaseBlocks: false
+IndentCaseLabels: false
 IndentWidth: 4
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 2
-PenaltyBreakBeforeFirstCallParameter: 2000
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyReturnTypeOnItsOwnLine: 10000
 PointerAlignment: Left
+SortIncludes: false
 SpaceAfterCStyleCast: true
-SpaceAfterTemplateKeyword: false
+SpaceAfterTemplateKeyword: true
 SpaceBeforeCtorInitializerColon: false
 SpaceBeforeInheritanceColon: false
 SpaceBeforeParens: ControlStatements
