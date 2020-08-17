@@ -1553,11 +1553,6 @@ string YulUtilFunctions::updateStorageValueFunction(
 
 				Whiskers templ(R"(
 					function <functionName>(slot, value) {
-						<?fromCalldata>
-							let valueMem := <convertToMemory>(value)
-						<!fromCalldata>
-							let valueMem := value
-						</fromCalldata>
 						<#member>
 						{
 							<updateMemberCall>
@@ -1566,12 +1561,6 @@ string YulUtilFunctions::updateStorageValueFunction(
 					}
 				)");
 				templ("functionName", functionName);
-				templ("fromCalldata", fromStructType.location() == DataLocation::CallData);
-				if (fromStructType.location() == DataLocation::CallData)
-					templ("convertToMemory", conversionFunction(
-						fromStructType,
-						*TypeProvider::structType(toStructType.structDefinition(), DataLocation::Memory)
-					));
 
 				MemberList::MemberMap toStructMembers = toStructType.nativeMembers(nullptr);
 				MemberList::MemberMap fromStructMembers = fromStructType.nativeMembers(nullptr);
@@ -1581,9 +1570,10 @@ string YulUtilFunctions::updateStorageValueFunction(
 				{
 					solAssert(toStructMembers[i].type->memoryHeadSize() == 32, "");
 					bool isStruct = toStructMembers[i].type->category() == Type::Category::Struct;
+					bool fromCalldata = fromStructType.location() == DataLocation::CallData;
 					auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(toStructMembers[i].name);
 					memberParams[i]["updateMemberCall"] = Whiskers(R"(
-						let memberValue := <loadFromMemory>(add(valueMem, <memberMemoryOffset>))
+						let memberValue := <loadFromMemoryOrCalldata>(add(value, <memberOffset>))
 						<updateMember>(add(slot, <memberStorageSlotDiff>), <?hasOffset><memberStorageOffset>,</hasOffset> memberValue)
 					)")
 					("hasOffset", !isStruct)
@@ -1595,8 +1585,12 @@ string YulUtilFunctions::updateStorageValueFunction(
 					)
 					("memberStorageSlotDiff", slotDiff.str())
 					("memberStorageOffset", to_string(offset))
-					("memberMemoryOffset", fromStructType.memoryOffsetOfMember(fromStructMembers[i].name).str())
-					("loadFromMemory", readFromMemory(*fromStructMembers[i].type))
+					("memberOffset",
+						fromCalldata ?
+							to_string(fromStructType.calldataOffsetOfMember(fromStructMembers[i].name)) :
+							fromStructType.memoryOffsetOfMember(fromStructMembers[i].name).str()
+					)
+					("loadFromMemoryOrCalldata", readFromMemoryOrCalldata(*fromStructMembers[i].type, fromCalldata))
 					.render();
 				}
 				templ("member", memberParams);

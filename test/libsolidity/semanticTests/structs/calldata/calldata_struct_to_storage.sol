@@ -3,10 +3,11 @@ pragma experimental ABIEncoderV2;
 contract C {
     struct S {
         uint256 a;
-        uint256 b;
+        uint64 b;
         bytes2 c;
     }
 
+    uint[153] r;
     S s;
 
     function f(uint32 a, S calldata c, uint256 b) external returns (uint256, uint256, byte) {
@@ -16,6 +17,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
-// f(uint32, (uint256, uint256, bytes2), uint256): 1, 42, 23, "ab", 1 -> 42, 23, "b"
+// f(uint32, (uint256, uint64, bytes2), uint256): 1, 42, 23, "ab", 1 -> 42, 23, "b"

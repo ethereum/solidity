@@ -357,38 +357,47 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				"Struct assignment with conversion."
 			);
 			solAssert(!structType.containsNestedMapping(), "");
-			solAssert(sourceType.location() != DataLocation::CallData, "Structs in calldata not supported.");
-			for (auto const& member: structType.members(nullptr))
+			if (sourceType.location() == DataLocation::CallData)
 			{
-				// assign each member that can live outside of storage
-				TypePointer const& memberType = member.type;
-				solAssert(memberType->nameable(), "");
-				TypePointer sourceMemberType = sourceType.memberType(member.name);
-				if (sourceType.location() == DataLocation::Storage)
+				solAssert(sourceType.sizeOnStack() == 1, "");
+				solAssert(structType.sizeOnStack() == 1, "");
+				m_context << Instruction::DUP2 << Instruction::DUP2;
+				m_context.callYulFunction(m_context.utilFunctions().updateStorageValueFunction(structType, &sourceType, 0), 2, 0);
+			}
+			else
+			{
+				for (auto const& member: structType.members(nullptr))
 				{
-					// stack layout: source_ref target_ref
-					pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
-					m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
+					// assign each member that can live outside of storage
+					TypePointer const& memberType = member.type;
+					solAssert(memberType->nameable(), "");
+					TypePointer sourceMemberType = sourceType.memberType(member.name);
+					if (sourceType.location() == DataLocation::Storage)
+					{
+						// stack layout: source_ref target_ref
+						pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
+						m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
+						m_context << u256(offsets.second);
+						// stack: source_ref target_ref source_member_ref source_member_off
+						StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
+						// stack: source_ref target_ref source_value...
+					}
+					else
+					{
+						solAssert(sourceType.location() == DataLocation::Memory, "");
+						// stack layout: source_ref target_ref
+						m_context << sourceType.memoryOffsetOfMember(member.name);
+						m_context << Instruction::DUP3 << Instruction::ADD;
+						MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
+						// stack layout: source_ref target_ref source_value...
+					}
+					unsigned stackSize = sourceMemberType->sizeOnStack();
+					pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
+					m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
 					m_context << u256(offsets.second);
-					// stack: source_ref target_ref source_member_ref source_member_off
-					StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
-					// stack: source_ref target_ref source_value...
+					// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
+					StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
 				}
-				else
-				{
-					solAssert(sourceType.location() == DataLocation::Memory, "");
-					// stack layout: source_ref target_ref
-					m_context << sourceType.memoryOffsetOfMember(member.name);
-					m_context << Instruction::DUP3 << Instruction::ADD;
-					MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
-					// stack layout: source_ref target_ref source_value...
-				}
-				unsigned stackSize = sourceMemberType->sizeOnStack();
-				pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
-				m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
-				m_context << u256(offsets.second);
-				// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
-				StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
 			}
 			// stack layout: source_ref target_ref
 			solAssert(sourceType.sizeOnStack() == 1, "Unexpected source size.");

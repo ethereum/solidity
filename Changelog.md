@@ -2,7 +2,7 @@
 
 Language Features:
  * Allow function definitions outside of contracts, behaving much like internal library functions.
-
+ * Code generator: Implementing copying structs from calldata to storage.
 
 Compiler Features:
  * SMTChecker: Add underflow and overflow as verification conditions in the CHC engine.
