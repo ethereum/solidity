@@ -1427,7 +1427,7 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 			bool isStruct = structMembers[i].type->category() == Type::Category::Struct;
 
 			memberSetValues[i]["setMember"] = Whiskers(R"(
-				mstore(add(value, <memberMemoryOffset>), <readFromStorage>(add(slot, <memberSlotDiff>)<?notStruct>, <memberStorageOffset></notStruct>))
+				mstore(add(value, <memberMemoryOffset>), <readFromStorage>(add(slot, <memberSlotDiff>)<?hasOffset>, <memberStorageOffset></hasOffset>))
 			)")
 			("memberMemoryOffset", structType.memoryOffsetOfMember(structMembers[i].name).str())
 			("memberSlotDiff",  memberSlotDiff.str())
@@ -1437,7 +1437,7 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 					readFromStorage(*structMembers[i].type, memberStorageOffset, true) :
 					readFromStorageDynamic(*structMembers[i].type, true)
 			)
-			("notStruct", !isStruct)
+			("hasOffset", !isStruct)
 			.render();
 		}
 
@@ -1548,11 +1548,16 @@ string YulUtilFunctions::updateStorageValueFunction(
 				auto const& fromStructType = dynamic_cast<StructType const&>(*_fromType);
 				auto const& toStructType = dynamic_cast<StructType const&>(_toType);
 				solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
-				solUnimplementedAssert(fromStructType.location() == DataLocation::Memory, "");
+				solAssert(fromStructType.location() != DataLocation::Storage, "");
 				solUnimplementedAssert(_offset.has_value() && _offset.value() == 0, "");
 
 				Whiskers templ(R"(
 					function <functionName>(slot, value) {
+						<?fromCalldata>
+							let valueMem := <convertToMemory>(value)
+						<!fromCalldata>
+							let valueMem := value
+						</fromCalldata>
 						<#member>
 						{
 							<updateMemberCall>
@@ -1561,6 +1566,12 @@ string YulUtilFunctions::updateStorageValueFunction(
 					}
 				)");
 				templ("functionName", functionName);
+				templ("fromCalldata", fromStructType.location() == DataLocation::CallData);
+				if (fromStructType.location() == DataLocation::CallData)
+					templ("convertToMemory", conversionFunction(
+						fromStructType,
+						*TypeProvider::structType(toStructType.structDefinition(), DataLocation::Memory)
+					));
 
 				MemberList::MemberMap toStructMembers = toStructType.nativeMembers(nullptr);
 				MemberList::MemberMap fromStructMembers = fromStructType.nativeMembers(nullptr);
