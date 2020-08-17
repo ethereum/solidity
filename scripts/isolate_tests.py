@@ -43,7 +43,7 @@ def extract_docs_cases(path):
     tests = []
 
     # Collect all snippets of indented blocks
-    for l in open(path, mode='r', encoding='utf8').read().splitlines():
+    for l in open(path, mode='r', errors='ignore', encoding='utf8').read().splitlines():
         if l != '':
             if not inside and l.startswith(' '):
                 # start new test
