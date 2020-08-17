@@ -885,7 +885,7 @@ bool TypeChecker::visit(IfStatement const& _ifStatement)
 void TypeChecker::endVisit(TryStatement const& _tryStatement)
 {
 	FunctionCall const* externalCall = dynamic_cast<FunctionCall const*>(&_tryStatement.externalCall());
-	if (!externalCall || externalCall->annotation().kind != FunctionCallKind::FunctionCall)
+	if (!externalCall || *externalCall->annotation().kind != FunctionCallKind::FunctionCall)
 	{
 		m_errorReporter.typeError(
 			5347_error,
@@ -1095,7 +1095,7 @@ void TypeChecker::endVisit(Return const& _return)
 void TypeChecker::endVisit(EmitStatement const& _emit)
 {
 	if (
-		_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
+		*_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
 		type(_emit.eventCall().expression())->category() != Type::Category::Function ||
 		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
 	)
@@ -1591,7 +1591,7 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 	FunctionCall const& _functionCall
 )
 {
-	solAssert(_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
+	solAssert(*_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	TypePointer const& expressionType = type(_functionCall.expression());
 
 	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
@@ -1956,8 +1956,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	bool const isPositionalCall = _functionCall.names().empty();
 	bool const isVariadic = _functionType->takesArbitraryParameters();
 
+	auto functionCallKind = *_functionCall.annotation().kind;
+
 	solAssert(
-		!isVariadic || _functionCall.annotation().kind == FunctionCallKind::FunctionCall,
+		!isVariadic || functionCallKind == FunctionCallKind::FunctionCall,
 		"Struct constructor calls cannot be variadic."
 	);
 
@@ -1972,7 +1974,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	)
 	{
 		bool const isStructConstructorCall =
-			_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
+			functionCallKind == FunctionCallKind::StructConstructorCall;
 
 		auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
 			string msg = isVariadic ?
@@ -2235,13 +2237,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	default:
 		m_errorReporter.fatalTypeError(5704_error, _functionCall.location(), "Type is not callable");
-		funcCallAnno.kind = FunctionCallKind::Unset;
+		// Unreachable, because fatalTypeError throws. We don't set kind, but that's okay because the switch below
+		// is never reached. And, even if it was, SetOnce would trigger an assertion violation and not UB.
 		funcCallAnno.isPure = argumentsArePure;
 		break;
 	}
 
 	// Determine return types
-	switch (funcCallAnno.kind)
+	switch (*funcCallAnno.kind)
 	{
 	case FunctionCallKind::TypeConversion:
 		funcCallAnno.type = typeCheckTypeConversionAndRetrieveReturnType(_functionCall);
@@ -2291,7 +2294,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		break;
 	}
 
-	case FunctionCallKind::Unset: // fall-through
 	default:
 		// for non-callables, ensure error reported and annotate node to void function
 		solAssert(m_errorReporter.hasErrors(), "");

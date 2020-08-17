@@ -337,8 +337,9 @@ void BMC::endVisit(UnaryOperation const& _op)
 
 void BMC::endVisit(FunctionCall const& _funCall)
 {
-	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+	auto functionCallKind = *_funCall.annotation().kind;
+
+	if (functionCallKind != FunctionCallKind::FunctionCall)
 	{
 		SMTEncoder::endVisit(_funCall);
 		return;
