@@ -198,6 +198,24 @@ bool BMC::visit(IfStatement const& _node)
 	return false;
 }
 
+bool BMC::visit(Conditional const& _op)
+{
+	m_context.pushSolver();
+	_op.condition().accept(*this);
+
+	if (isRootFunction())
+		addVerificationTarget(
+			VerificationTarget::Type::ConstantCondition,
+			expr(_op.condition()),
+			&_op.condition()
+		);
+	m_context.popSolver();
+
+	SMTEncoder::visit(_op);
+
+	return false;
+}
+
 // Here we consider the execution of two branches:
 // Branch 1 assumes the loop condition to be true and executes the loop once,
 // after resetting touched variables.

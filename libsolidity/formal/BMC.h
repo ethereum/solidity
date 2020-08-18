@@ -84,6 +84,7 @@ private:
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	bool visit(IfStatement const& _node) override;
+	bool visit(Conditional const& _node) override;
 	bool visit(WhileStatement const& _node) override;
 	bool visit(ForStatement const& _node) override;
 	void endVisit(UnaryOperation const& _node) override;

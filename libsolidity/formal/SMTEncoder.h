@@ -83,6 +83,7 @@ protected:
 	void endVisit(UnaryOperation const& _node) override;
 	bool visit(BinaryOperation const& _node) override;
 	void endVisit(BinaryOperation const& _node) override;
+	bool visit(Conditional const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	bool visit(ModifierInvocation const& _node) override;
 	void endVisit(Identifier const& _node) override;
