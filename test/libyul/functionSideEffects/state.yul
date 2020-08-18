@@ -4,7 +4,7 @@
     function g() { sstore(0, 1) }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: invalidatesStorage, invalidatesMemory
-// f: invalidatesStorage, invalidatesMemory
-// g: invalidatesStorage
+// : movable, movable apart from effects, can be removed, can be removed if no msize
+// a: writes other state, writes storage, writes memory
+// f: writes other state, writes storage, writes memory
+// g: writes storage

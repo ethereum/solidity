@@ -36,6 +36,15 @@ class AssemblyItem;
  */
 struct SemanticInformation
 {
+	/// Corresponds to the effect that a YUL-builtin has on a generic data location (storage, memory
+	/// and other blockchain state).
+	enum Effect
+	{
+		None,
+		Read,
+		Write
+	};
+
 	/// @returns true if the given items starts a new block for common subexpression analysis.
 	/// @param _msizeImportant if false, consider an operation non-breaking if its only side-effect is that it modifies msize.
 	static bool breaksCSEAnalysisBlock(AssemblyItem const& _item, bool _msizeImportant);
@@ -57,20 +66,23 @@ struct SemanticInformation
 	/// without altering the semantics. This means it cannot depend on storage or memory,
 	/// cannot have any side-effects, but it can depend on a call-constant state of the blockchain.
 	static bool movable(Instruction _instruction);
+	/// If true, the expressions in this code can be moved or copied (together with their arguments)
+	/// across control flow branches and instructions as long as these instructions' 'effects' do
+	/// not influence the 'effects' of the aforementioned expressions.
+	static bool movableApartFromEffects(Instruction _instruction);
 	/// @returns true if the instruction can be removed without changing the semantics.
 	/// This does not mean that it has to be deterministic or retrieve information from
 	/// somewhere else than purely the values of its arguments.
-	static bool sideEffectFree(Instruction _instruction);
+	static bool canBeRemoved(Instruction _instruction);
 	/// @returns true if the instruction can be removed without changing the semantics.
 	/// This does not mean that it has to be deterministic or retrieve information from
 	/// somewhere else than purely the values of its arguments.
 	/// If true, the instruction is still allowed to influence the value returned by the
 	/// msize instruction.
-	static bool sideEffectFreeIfNoMSize(Instruction _instruction);
-	/// @returns true if the given instruction modifies memory.
-	static bool invalidatesMemory(Instruction _instruction);
-	/// @returns true if the given instruction modifies storage (even indirectly).
-	static bool invalidatesStorage(Instruction _instruction);
+	static bool canBeRemovedIfNoMSize(Instruction _instruction);
+	static Effect memory(Instruction _instruction);
+	static Effect storage(Instruction _instruction);
+	static Effect otherState(Instruction _instruction);
 	static bool invalidInPureFunctions(Instruction _instruction);
 	static bool invalidInViewFunctions(Instruction _instruction);
 };

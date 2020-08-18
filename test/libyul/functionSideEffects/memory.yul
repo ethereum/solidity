@@ -6,9 +6,9 @@
     function i() { pop(msize()) }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: invalidatesMemory
-// f: invalidatesMemory
-// g: invalidatesStorage
-// h: sideEffectFreeIfNoMSize
-// i: sideEffectFree, sideEffectFreeIfNoMSize
+// : movable, movable apart from effects, can be removed, can be removed if no msize
+// a: writes memory
+// f: writes memory
+// g: writes storage
+// h: movable apart from effects, can be removed if no msize, reads memory
+// i: can be removed, can be removed if no msize, reads memory
