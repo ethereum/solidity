@@ -519,14 +519,13 @@ bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 	if (!m_scopes[&_sourceUnit])
 		// By importing, it is possible that the container already exists.
 		m_scopes[&_sourceUnit] = make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get());
-	m_currentScope = &_sourceUnit;
-	return true;
+	return ASTVisitor::visit(_sourceUnit);
 }
 
 void DeclarationRegistrationHelper::endVisit(SourceUnit& _sourceUnit)
 {
 	_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
-	closeCurrentScope();
+	ASTVisitor::endVisit(_sourceUnit);
 }
 
 bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
@@ -536,8 +535,7 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 	if (!m_scopes[importee])
 		m_scopes[importee] = make_shared<DeclarationContainer>(nullptr, m_scopes[nullptr].get());
 	m_scopes[&_import] = m_scopes[importee];
-	registerDeclaration(_import, false);
-	return true;
+	return ASTVisitor::visit(_import);
 }
 
 bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
@@ -547,122 +545,17 @@ bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, false, true);
 	m_currentContract = &_contract;
 
-	registerDeclaration(_contract, true);
-	_contract.annotation().canonicalName = currentCanonicalName();
-	return true;
+	return ASTVisitor::visit(_contract);
 }
 
-void DeclarationRegistrationHelper::endVisit(ContractDefinition&)
+void DeclarationRegistrationHelper::endVisit(ContractDefinition& _contract)
 {
 	// make "this" and "super" invisible.
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), nullptr, true, true);
 	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, true, true);
 	m_globalContext.resetCurrentContract();
 	m_currentContract = nullptr;
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(StructDefinition& _struct)
-{
-	registerDeclaration(_struct, true);
-	_struct.annotation().canonicalName = currentCanonicalName();
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(StructDefinition&)
-{
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(EnumDefinition& _enum)
-{
-	registerDeclaration(_enum, true);
-	_enum.annotation().canonicalName = currentCanonicalName();
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(EnumDefinition&)
-{
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(EnumValue& _value)
-{
-	registerDeclaration(_value, false);
-	return true;
-}
-
-bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
-{
-	registerDeclaration(_function, true);
-	m_currentFunction = &_function;
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
-{
-	m_currentFunction = nullptr;
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(TryCatchClause& _tryCatchClause)
-{
-	solAssert(_tryCatchClause.annotation().scope == m_currentScope, "");
-	enterNewSubScope(_tryCatchClause);
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(TryCatchClause&)
-{
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(ModifierDefinition& _modifier)
-{
-	registerDeclaration(_modifier, true);
-	m_currentFunction = &_modifier;
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
-{
-	m_currentFunction = nullptr;
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(FunctionTypeName& _funTypeName)
-{
-	enterNewSubScope(_funTypeName);
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(FunctionTypeName&)
-{
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(Block& _block)
-{
-	solAssert(_block.annotation().scope == m_currentScope, "");
-	enterNewSubScope(_block);
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(Block&)
-{
-	closeCurrentScope();
-}
-
-bool DeclarationRegistrationHelper::visit(ForStatement& _for)
-{
-	solAssert(_for.annotation().scope == m_currentScope, "");
-	enterNewSubScope(_for);
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(ForStatement&)
-{
-	closeCurrentScope();
+	ASTVisitor::endVisit(_contract);
 }
 
 void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _variableDeclarationStatement)
@@ -673,32 +566,42 @@ void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _vari
 	for (ASTPointer<VariableDeclaration> const& var: _variableDeclarationStatement.declarations())
 		if (var)
 			m_currentFunction->addLocalVariable(*var);
+	ASTVisitor::endVisit(_variableDeclarationStatement);
 }
 
-bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
+bool DeclarationRegistrationHelper::visitNode(ASTNode& _node)
 {
-	registerDeclaration(_declaration, false);
+	if (auto const* scopable = dynamic_cast<Scopable const*>(&_node))
+		solAssert(scopable->annotation().scope == m_currentScope, "");
+
+	if (auto* declaration = dynamic_cast<Declaration*>(&_node))
+		registerDeclaration(*declaration);
+	if (dynamic_cast<ScopeOpener const*>(&_node))
+		enterNewSubScope(_node);
+
+	if (auto* variableScope = dynamic_cast<VariableScope*>(&_node))
+		m_currentFunction = variableScope;
+	if (auto* annotation = dynamic_cast<TypeDeclarationAnnotation*>(&_node.annotation()))
+		annotation->canonicalName = currentCanonicalName();
+
 	return true;
 }
 
-bool DeclarationRegistrationHelper::visit(EventDefinition& _event)
+void DeclarationRegistrationHelper::endVisitNode(ASTNode& _node)
 {
-	registerDeclaration(_event, true);
-	return true;
-}
-
-void DeclarationRegistrationHelper::endVisit(EventDefinition&)
-{
-	closeCurrentScope();
+	if (dynamic_cast<ScopeOpener const*>(&_node))
+		closeCurrentScope();
+	if (dynamic_cast<VariableScope*>(&_node))
+		m_currentFunction = nullptr;
 }
 
 void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 {
-	map<ASTNode const*, shared_ptr<DeclarationContainer>>::iterator iter;
-	bool newlyAdded;
 	shared_ptr<DeclarationContainer> container{make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())};
-	tie(iter, newlyAdded) = m_scopes.emplace(&_subScope, move(container));
-	solAssert(newlyAdded, "Unable to add new scope.");
+	bool newlyAdded = m_scopes.emplace(&_subScope, move(container)).second;
+	// Source units are the only AST nodes for which containers can be created from multiple places
+	// due to imports.
+	solAssert(newlyAdded || dynamic_cast<SourceUnit const*>(&_subScope), "Unable to add new scope.");
 	m_currentScope = &_subScope;
 }
 
@@ -708,7 +611,7 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 	m_currentScope = m_scopes[m_currentScope]->enclosingNode();
 }
 
-void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
+void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration)
 {
 	solAssert(m_currentScope && m_scopes.count(m_currentScope), "No current scope.");
 
@@ -731,8 +634,6 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 
 	solAssert(_declaration.annotation().scope == m_currentScope, "");
 	solAssert(_declaration.annotation().contract == m_currentContract, "");
-	if (_opensScope)
-		enterNewSubScope(_declaration);
 }
 
 string DeclarationRegistrationHelper::currentCanonicalName() const
