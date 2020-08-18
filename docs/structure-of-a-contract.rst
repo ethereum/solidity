@@ -43,17 +43,24 @@ visibility.
 Functions
 =========
 
-Functions are the executable units of code within a contract.
+Functions are the executable units of code. Functions are usually
+defined inside a contract, but they can also be defined outside of
+contracts.
 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >0.7.0 <0.8.0;
 
     contract SimpleAuction {
         function bid() public payable { // Function
             // ...
         }
+    }
+
+    // Helper function defined outside of a contract
+    function helper(uint x) pure returns (uint) {
+        return x * 2;
     }
 
 :ref:`function-calls` can happen internally or externally

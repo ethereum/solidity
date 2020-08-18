@@ -18,7 +18,7 @@ if they are marked ``virtual``. For details, please see
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.7.0 <0.8.0;
 
     contract owned {
         constructor() { owner = msg.sender; }
