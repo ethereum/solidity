@@ -1404,58 +1404,35 @@ string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingT
 
 string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes)
 {
+	if (_type.isValueType())
+		return readFromStorageValueType(_type, _offset, _splitFunctionTypes);
+	else
+	{
+		solAssert(_offset == 0, "");
+		return readFromStorageReferenceType(_type);
+	}
+}
+
+string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
+{
+	solAssert(_type.isValueType(), "");
+	return readFromStorageValueTypeDynamic(_type, _splitFunctionTypes);
+}
+
+string YulUtilFunctions::readFromStorageValueType(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+{
+	solAssert(_type.isValueType(), "");
+
 	if (_type.category() == Type::Category::Function)
 		solUnimplementedAssert(!_splitFunctionTypes, "");
 	string functionName =
-		"read_from_storage_" +
-		string(_splitFunctionTypes ? "split_" : "") +
-		"offset_" +
-		to_string(_offset) +
-		"_" +
-		_type.identifier();
+			"read_from_storage_" +
+			string(_splitFunctionTypes ? "split_" : "") +
+			"offset_" +
+			to_string(_offset) +
+			"_" +
+			_type.identifier();
 
-	if (_type.category() == Type::Category::Struct)
-	{
-		solAssert(_offset == 0, "");
-		auto const& structType = dynamic_cast<StructType const&>(_type);
-		solUnimplementedAssert(structType.location() == DataLocation::Memory, "");
-		MemberList::MemberMap structMembers = structType.nativeMembers(nullptr);
-		vector<map<string, string>> memberSetValues(structMembers.size());
-		for (size_t i = 0; i < structMembers.size(); ++i)
-		{
-			auto const& [memberSlotDiff, memberStorageOffset] = structType.storageOffsetsOfMember(structMembers[i].name);
-			bool isStruct = structMembers[i].type->category() == Type::Category::Struct;
-
-			memberSetValues[i]["setMember"] = Whiskers(R"(
-				mstore(add(value, <memberMemoryOffset>), <readFromStorage>(add(slot, <memberSlotDiff>)<?hasOffset>, <memberStorageOffset></hasOffset>))
-			)")
-			("memberMemoryOffset", structType.memoryOffsetOfMember(structMembers[i].name).str())
-			("memberSlotDiff",  memberSlotDiff.str())
-			("memberStorageOffset", to_string(memberStorageOffset))
-			("readFromStorage",
-				isStruct ?
-					readFromStorage(*structMembers[i].type, memberStorageOffset, true) :
-					readFromStorageDynamic(*structMembers[i].type, true)
-			)
-			("hasOffset", !isStruct)
-			.render();
-		}
-
-		return m_functionCollector.createFunction(functionName, [&] {
-			return Whiskers(R"(
-				function <functionName>(slot) -> value {
-					value := <allocStruct>()
-					<#member>
-						<setMember>
-					</member>
-				}
-			)")
-			("functionName", functionName)
-			("allocStruct", allocateMemoryStructFunction(structType))
-			("member", memberSetValues)
-			.render();
-		});
-	}
 	return m_functionCollector.createFunction(functionName, [&] {
 		solAssert(_type.sizeOnStack() == 1, "");
 		return Whiskers(R"(
@@ -1463,19 +1440,19 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 				value := <extract>(sload(slot))
 			}
 		)")
-		("functionName", functionName)
-		("extract", extractFromStorageValue(_type, _offset, false))
-		.render();
+				("functionName", functionName)
+				("extract", extractFromStorageValue(_type, _offset, false))
+				.render();
 	});
 }
-
-string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
+string YulUtilFunctions::readFromStorageValueTypeDynamic(Type const& _type, bool _splitFunctionTypes)
 {
+	solAssert(_type.isValueType(), "");
 	if (_type.category() == Type::Category::Function)
 		solUnimplementedAssert(!_splitFunctionTypes, "");
 
 	string functionName =
-		"read_from_storage_dynamic" +
+		"read_from_storage_value_type_dynamic" +
 		string(_splitFunctionTypes ? "split_" : "") +
 		"_" +
 		_type.identifier();
@@ -1488,6 +1465,55 @@ string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFu
 		)")
 		("functionName", functionName)
 		("extract", extractFromStorageValueDynamic(_type, _splitFunctionTypes))
+		.render();
+	});
+}
+string YulUtilFunctions::readFromStorageReferenceType(Type const& _type)
+{
+	solUnimplementedAssert(_type.category() == Type::Category::Struct, "");
+
+	string functionName = "read_from_storage_reference_type_" + _type.identifier();
+
+	auto const& structType = dynamic_cast<StructType const&>(_type);
+	solAssert(structType.location() == DataLocation::Memory, "");
+	MemberList::MemberMap structMembers = structType.nativeMembers(nullptr);
+	vector<map<string, string>> memberSetValues(structMembers.size());
+	for (size_t i = 0; i < structMembers.size(); ++i)
+	{
+		auto const& [memberSlotDiff, memberStorageOffset] = structType.storageOffsetsOfMember(structMembers[i].name);
+
+		memberSetValues[i]["setMember"] = Whiskers(R"(
+			{
+				let <memberValues> := <readFromStorage>(add(slot, <memberSlotDiff>)<?hasOffset>, <memberStorageOffset></hasOffset>)
+				<writeToMemory>(add(value, <memberMemoryOffset>), <memberValues>)
+			}
+		)")
+		("memberValues", suffixedVariableNameList("memberValue_", 0, structMembers[i].type->stackItems().size()))
+		("memberMemoryOffset", structType.memoryOffsetOfMember(structMembers[i].name).str())
+		("memberSlotDiff",  memberSlotDiff.str())
+		("memberStorageOffset", to_string(memberStorageOffset))
+		("readFromStorage",
+			structMembers[i].type->isValueType() ?
+				readFromStorageDynamic(*structMembers[i].type, true) :
+				readFromStorage(*structMembers[i].type, memberStorageOffset, true)
+		)
+		("writeToMemory", writeToMemoryFunction(*structMembers[i].type))
+		("hasOffset", structMembers[i].type->isValueType())
+		.render();
+	}
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot) -> value {
+				value := <allocStruct>()
+				<#member>
+					<setMember>
+				</member>
+			}
+		)")
+		("functionName", functionName)
+		("allocStruct", allocateMemoryStructFunction(structType))
+		("member", memberSetValues)
 		.render();
 	});
 }
@@ -1562,35 +1588,33 @@ string YulUtilFunctions::updateStorageValueFunction(
 				)");
 				templ("functionName", functionName);
 
-				MemberList::MemberMap toStructMembers = toStructType.nativeMembers(nullptr);
-				MemberList::MemberMap fromStructMembers = fromStructType.nativeMembers(nullptr);
+				MemberList::MemberMap structMembers = fromStructType.nativeMembers(nullptr);
 
-				vector<map<string, string>> memberParams(toStructMembers.size());
-				for (size_t i = 0; i < toStructMembers.size(); ++i)
+				vector<map<string, string>> memberParams(structMembers.size());
+				for (size_t i = 0; i < structMembers.size(); ++i)
 				{
-					solAssert(toStructMembers[i].type->memoryHeadSize() == 32, "");
-					bool isStruct = toStructMembers[i].type->category() == Type::Category::Struct;
+					solAssert(structMembers[i].type->memoryHeadSize() == 32, "");
 					bool fromCalldata = fromStructType.location() == DataLocation::CallData;
-					auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(toStructMembers[i].name);
+					auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(structMembers[i].name);
 					memberParams[i]["updateMemberCall"] = Whiskers(R"(
 						let memberValue := <loadFromMemoryOrCalldata>(add(value, <memberOffset>))
 						<updateMember>(add(slot, <memberStorageSlotDiff>), <?hasOffset><memberStorageOffset>,</hasOffset> memberValue)
 					)")
-					("hasOffset", !isStruct)
+					("hasOffset", structMembers[i].type->isValueType())
 					(
 						"updateMember",
-						isStruct ?
-							updateStorageValueFunction(*toStructMembers[i].type, fromStructMembers[i].type, offset) :
-							updateStorageValueFunction(*toStructMembers[i].type, fromStructMembers[i].type)
+						structMembers[i].type->isValueType() ?
+							updateStorageValueFunction(*structMembers[i].type, structMembers[i].type) :
+							updateStorageValueFunction(*structMembers[i].type, structMembers[i].type, offset)
 					)
 					("memberStorageSlotDiff", slotDiff.str())
 					("memberStorageOffset", to_string(offset))
 					("memberOffset",
 						fromCalldata ?
-							to_string(fromStructType.calldataOffsetOfMember(fromStructMembers[i].name)) :
-							fromStructType.memoryOffsetOfMember(fromStructMembers[i].name).str()
+							to_string(fromStructType.calldataOffsetOfMember(structMembers[i].name)) :
+							fromStructType.memoryOffsetOfMember(structMembers[i].name).str()
 					)
-					("loadFromMemoryOrCalldata", readFromMemoryOrCalldata(*fromStructMembers[i].type, fromCalldata))
+					("loadFromMemoryOrCalldata", readFromMemoryOrCalldata(*structMembers[i].type, fromCalldata))
 					.render();
 				}
 				templ("member", memberParams);

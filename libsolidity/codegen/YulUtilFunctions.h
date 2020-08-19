@@ -221,9 +221,7 @@ public:
 	/// @param _keyType the type of the value provided
 	std::string mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType);
 
-	/// @returns a function that reads a value type from storage.
-	/// Will allocate memory if return type is struct with location set to memory
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @returns a function that reads a type from storage.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
@@ -405,6 +403,16 @@ private:
 	std::string storageByteArrayPopFunction(ArrayType const& _type);
 
 	std::string readFromMemoryOrCalldata(Type const& _type, bool _fromCalldata);
+
+	/// @returns a function that reads a value type from storage.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string readFromStorageValueType(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string readFromStorageValueTypeDynamic(Type const& _type, bool _splitFunctionTypes);
+
+	/// @returns a function that reads a reference type from storage to memory (performing a deep copy).
+	std::string readFromStorageReferenceType(Type const& _type);
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
