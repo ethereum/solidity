@@ -1,0 +1,83 @@
+Optimized IR:
+/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+object "Arraysum_33" {
+    code {
+        {
+            mstore(64, 128)
+            if callvalue() { revert(0, 0) }
+            let _1 := datasize("Arraysum_33_deployed")
+            codecopy(0, dataoffset("Arraysum_33_deployed"), _1)
+            return(0, _1)
+        }
+    }
+    object "Arraysum_33_deployed" {
+        code {
+            {
+                mstore(64, 128)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    if eq(0x81d73423, shr(224, calldataload(_1)))
+                    {
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        let vloc_sum := _1
+                        let vloc_i := _1
+                        let _2 := sload(_1)
+                        for { }
+                        lt(vloc_i, _2)
+                        {
+                            vloc_i := increment_t_uint256(vloc_i)
+                        }
+                        {
+                            let _3, _4 := storage_array_index_access_t_array$_t_uint256_$dyn_storage(_1, vloc_i)
+                            vloc_sum := checked_add_t_uint256(vloc_sum, extract_from_storage_value_dynamict_uint256(sload(_3), _4))
+                        }
+                        let memPos := allocateMemory(_1)
+                        return(memPos, sub(abi_encode_tuple_t_uint256__to_t_uint256__fromStack(memPos, _1), memPos))
+                    }
+                }
+                revert(0, 0)
+            }
+            function abi_encode_tuple_t_uint256__to_t_uint256__fromStack(headStart, value0) -> tail
+            {
+                tail := add(headStart, 32)
+                mstore(headStart, value0)
+            }
+            function allocateMemory(size) -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, size)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                mstore(64, newFreePtr)
+            }
+            function checked_add_t_uint256(x, y) -> sum
+            {
+                if gt(x, not(y)) { revert(sum, sum) }
+                sum := add(x, y)
+            }
+            function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
+            {
+                value := shr(mul(offset, 8), slot_value)
+            }
+            function increment_t_uint256(value) -> ret
+            {
+                if gt(value, not(1)) { revert(ret, ret) }
+                ret := add(value, 1)
+            }
+            function storage_array_index_access_t_array$_t_uint256_$dyn_storage(array, index) -> slot, offset
+            {
+                if iszero(lt(index, sload(array))) { invalid() }
+                mstore(slot, array)
+                slot := add(keccak256(slot, 0x20), index)
+                offset := offset
+            }
+        }
+    }
+}

@@ -62,6 +62,16 @@ SideEffectsCollector::SideEffectsCollector(
 	operator()(_ast);
 }
 
+SideEffectsCollector::SideEffectsCollector(
+	Dialect const& _dialect,
+	ForLoop const& _ast,
+	map<YulString, SideEffects> const* _functionSideEffects
+):
+	SideEffectsCollector(_dialect, _functionSideEffects)
+{
+	operator()(_ast);
+}
+
 void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
