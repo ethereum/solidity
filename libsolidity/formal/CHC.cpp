@@ -114,7 +114,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	initContract(_contract);
 
-	m_stateVariables = stateVariablesIncludingInheritedAndPrivate(_contract);
+	m_stateVariables = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
 	m_stateSorts = stateSorts(_contract);
 
 	clearIndices(&_contract);
@@ -738,24 +738,10 @@ set<frontend::Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTN
 	return assertions;
 }
 
-vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract)
-{
-	return fold(
-		_contract.annotation().linearizedBaseContracts,
-		vector<VariableDeclaration const*>{},
-		[](auto&& _acc, auto _contract) { return _acc + _contract->stateVariables(); }
-	);
-}
-
-vector<VariableDeclaration const*> CHC::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
-{
-	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
-}
-
 vector<smtutil::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
 {
 	return applyMap(
-		stateVariablesIncludingInheritedAndPrivate(_contract),
+		SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract),
 		[](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); }
 	);
 }
@@ -848,7 +834,7 @@ smtutil::SortPointer CHC::sort(ASTNode const* _node)
 
 smtutil::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
-	auto stateVariables = stateVariablesIncludingInheritedAndPrivate(_contract);
+	auto stateVariables = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
 	auto sorts = stateSorts(_contract);
 
 	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
@@ -878,7 +864,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
 			for (auto const* base: contract->annotation().linearizedBaseContracts)
 			{
-				for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*base))
+				for (auto const* var: SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*base))
 					if (!m_context.knownVariable(*var))
 						createVariable(*var);
 
@@ -1048,7 +1034,7 @@ vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index)
 vector<smtutil::Expression> CHC::stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract)
 {
 	return applyMap(
-		stateVariablesIncludingInheritedAndPrivate(_contract),
+		SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract),
 		[&](auto _var) { return valueAtIndex(*_var, _index); }
 	);
 }
@@ -1061,7 +1047,7 @@ vector<smtutil::Expression> CHC::currentStateVariables()
 
 vector<smtutil::Expression> CHC::currentStateVariables(ContractDefinition const& _contract)
 {
-	return applyMap(stateVariablesIncludingInheritedAndPrivate(_contract), [this](auto _var) { return currentValue(*_var); });
+	return applyMap(SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract), [this](auto _var) { return currentValue(*_var); });
 }
 
 vector<smtutil::Expression> CHC::currentFunctionVariables()
