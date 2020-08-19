@@ -102,7 +102,7 @@ The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
 including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest`` (or its wrapper ``scripts/soltest.sh``),
 as well as command line tests and compilation tests.
 
-The test system automatically tries try to discover the location of the ``evmone`` library
+The test system automatically tries to discover the location of the ``evmone`` library
 starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
 ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
 use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
