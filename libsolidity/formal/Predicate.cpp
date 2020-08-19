@@ -18,6 +18,8 @@
 
 #include <libsolidity/formal/Predicate.h>
 
+#include <libsolidity/formal/SMTEncoder.h>
+
 #include <libsolidity/ast/AST.h>
 
 #include <boost/algorithm/string/join.hpp>
@@ -87,6 +89,96 @@ void Predicate::newFunctor()
 	m_predicate.increaseIndex();
 }
 
-ASTNode const* Predicate::programNode() const {
+ASTNode const* Predicate::programNode() const
+{
 	return m_node;
+}
+
+ContractDefinition const* Predicate::programContract() const
+{
+	if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_node))
+		if (!contract->constructor())
+			return contract;
+
+	return nullptr;
+}
+
+FunctionDefinition const* Predicate::programFunction() const
+{
+	if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_node))
+	{
+		if (contract->constructor())
+			return contract->constructor();
+		return nullptr;
+	}
+
+	if (auto const* fun = dynamic_cast<FunctionDefinition const*>(m_node))
+		return fun;
+
+	return nullptr;
+}
+
+optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
+{
+	if (auto const* fun = programFunction())
+		return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*fun);
+	if (auto const* contract = programContract())
+		return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*contract);
+
+	auto const* node = m_node;
+	while (auto const* scopable = dynamic_cast<Scopable const*>(node))
+	{
+		node = scopable->scope();
+		if (auto const* fun = dynamic_cast<FunctionDefinition const*>(node))
+			return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*fun);
+	}
+
+	return nullopt;
+}
+
+bool Predicate::isSummary() const
+{
+	return functor().name.rfind("summary", 0) == 0;
+}
+
+bool Predicate::isInterface() const
+{
+	return functor().name.rfind("interface", 0) == 0;
+}
+
+string Predicate::formatSummaryCall(vector<string> const& _args) const
+{
+	if (programContract())
+		return "constructor()";
+
+	solAssert(isSummary(), "");
+
+	auto stateVars = stateVariables();
+	solAssert(stateVars.has_value(), "");
+	auto const* fun = programFunction();
+	solAssert(fun, "");
+
+	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// Here we are interested in preInputVars.
+	vector<string>::const_iterator first = _args.begin() + static_cast<int>(stateVars->size()) + 1;
+	vector<string>::const_iterator last = first + static_cast<int>(fun->parameters().size());
+	solAssert(first >= _args.begin() && first <= _args.end(), "");
+	solAssert(last >= _args.begin() && last <= _args.end(), "");
+	vector<string> functionArgsCex(first, last);
+	vector<string> functionArgs;
+
+	auto const& params = fun->parameters();
+	solAssert(params.size() == functionArgsCex.size(), "");
+	for (unsigned i = 0; i < params.size(); ++i)
+		if (params[i]->type()->isValueType())
+			functionArgs.emplace_back(functionArgsCex[i]);
+		else
+			functionArgs.emplace_back(params[i]->name());
+
+	string fName = fun->isConstructor() ? "constructor" :
+		fun->isFallback() ? "fallback" :
+		fun->isReceive() ? "receive" :
+		fun->name();
+	return fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
+
 }

@@ -1423,24 +1423,12 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		Predicate const* summaryPredicate = Predicate::predicate(summaryNode.first);
 		solAssert(summaryPredicate, "");
 
-		FunctionDefinition const* calledFun = nullptr;
-		ContractDefinition const* calledContract = nullptr;
-		if (auto const* contract = dynamic_cast<ContractDefinition const*>(summaryPredicate->programNode()))
-		{
-			if (auto const* constructor = contract->constructor())
-				calledFun = constructor;
-			else
-				calledContract = contract;
-		}
-		else if (auto const* fun = dynamic_cast<FunctionDefinition const*>(summaryPredicate->programNode()))
-			calledFun = fun;
-		else
-			solAssert(false, "");
+		FunctionDefinition const* calledFun = summaryPredicate->programFunction();
+		ContractDefinition const* calledContract = summaryPredicate->programContract();
 
 		solAssert((calledFun && !calledContract) || (!calledFun && calledContract), "");
-		auto const& stateVars = calledFun ? stateVariablesIncludingInheritedAndPrivate(*calledFun) : stateVariablesIncludingInheritedAndPrivate(*calledContract);
-		/// calledContract != nullptr implies that the constructor of the analyzed contract is implicit and
-		/// therefore takes no parameters.
+		auto stateVars = summaryPredicate->stateVariables();
+		solAssert(stateVars.has_value(), "");
 
 		/// This summary node is the end of a tx.
 		/// If it is the first summary node seen in this loop, it is the summary
@@ -1450,12 +1438,12 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		{
 			lastTxSeen = true;
 			/// Generate counterexample message local to the failed target.
-			localState = formatStateCounterexample(stateVars, calledFun, summaryNode.second) + "\n";
+			localState = formatStateCounterexample(*stateVars, calledFun, summaryNode.second) + "\n";
 			if (calledFun)
 			{
 				/// The signature of a summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
 				auto const& inParams = calledFun->parameters();
-				unsigned initLocals = stateVars.size() * 2 + 1 + inParams.size();
+				unsigned initLocals = stateVars->size() * 2 + 1 + inParams.size();
 				/// In this loop we are interested in postInputVars.
 				for (unsigned i = initLocals; i < initLocals + inParams.size(); ++i)
 				{
@@ -1477,9 +1465,9 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		else
 			/// We report the state after every tx in the trace except for the last, which is reported
 			/// first in the code above.
-			path.emplace_back("State: " + formatStateCounterexample(stateVars, calledFun, summaryNode.second));
+			path.emplace_back("State: " + formatStateCounterexample(*stateVars, calledFun, summaryNode.second));
 
-		string txCex = calledContract ? "constructor()" : formatFunctionCallCounterexample(stateVars, *calledFun, summaryNode.second);
+		string txCex = summaryPredicate->formatSummaryCall(summaryNode.second);
 		path.emplace_back(txCex);
 
 		/// Recurse on the next interface node which represents the previous transaction
@@ -1525,32 +1513,6 @@ string CHC::formatStateCounterexample(vector<VariableDeclaration const*> const& 
 	}
 
 	return boost::algorithm::join(stateCex, ", ");
-}
-
-string CHC::formatFunctionCallCounterexample(vector<VariableDeclaration const*> const& _stateVars, FunctionDefinition const& _function, vector<string> const& _summaryValues)
-{
-	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
-	/// Here we are interested in preInputVars.
-	vector<string>::const_iterator first = _summaryValues.begin() + static_cast<int>(_stateVars.size()) + 1;
-	vector<string>::const_iterator last = first + static_cast<int>(_function.parameters().size());
-	solAssert(first >= _summaryValues.begin() && first <= _summaryValues.end(), "");
-	solAssert(last >= _summaryValues.begin() && last <= _summaryValues.end(), "");
-	vector<string> functionArgsCex(first, last);
-	vector<string> functionArgs;
-
-	auto const& params = _function.parameters();
-	solAssert(params.size() == functionArgsCex.size(), "");
-	for (unsigned i = 0; i < params.size(); ++i)
-		if (params[i]->type()->isValueType())
-			functionArgs.emplace_back(functionArgsCex[i]);
-		else
-			functionArgs.emplace_back(params[i]->name());
-
-	string fName = _function.isConstructor() ? "constructor" :
-		_function.isFallback() ? "fallback" :
-		_function.isReceive() ? "receive" :
-		_function.name();
-	return fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
 }
 
 string CHC::cex2dot(smtutil::CHCSolverInterface::CexGraph const& _cex)

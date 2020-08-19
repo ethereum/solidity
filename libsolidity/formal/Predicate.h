@@ -24,6 +24,7 @@
 #include <libsmtutil/Sorts.h>
 
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace solidity::frontend
@@ -69,6 +70,27 @@ public:
 
 	/// @returns the program node this predicate represents.
 	ASTNode const* programNode() const;
+
+	/// @returns the ContractDefinition that this predicate represents
+	/// or nullptr otherwise.
+	ContractDefinition const* programContract() const;
+
+	/// @returns the FunctionDefinition that this predicate represents
+	/// or nullptr otherwise.
+	FunctionDefinition const* programFunction() const;
+
+	/// @returns the program state variables in the scope of this predicate.
+	std::optional<std::vector<VariableDeclaration const*>> stateVariables() const;
+
+	/// @returns true if this predicate represents a summary.
+	bool isSummary() const;
+
+	/// @returns true if this predicate represents an interface.
+	bool isInterface() const;
+
+	/// @returns a formatted string representing a call to this predicate
+	/// with _args.
+	std::string formatSummaryCall(std::vector<std::string> const& _args) const;
 
 private:
 	/// The actual SMT expression.
