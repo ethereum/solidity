@@ -182,3 +182,35 @@ string Predicate::formatSummaryCall(vector<string> const& _args) const
 	return fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
 
 }
+
+vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
+{
+	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// The signature of an implicit constructor summary predicate is: summary(error, postStateVars).
+	/// Here we are interested in postStateVars.
+
+	auto stateVars = stateVariables();
+	solAssert(stateVars.has_value(), "");
+
+	vector<string>::const_iterator stateFirst;
+	vector<string>::const_iterator stateLast;
+	if (auto const* function = programFunction())
+	{
+		stateFirst = _args.begin() + 1 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size());
+		stateLast = stateFirst + static_cast<int>(stateVars->size());
+	}
+	else if (programContract())
+	{
+		stateFirst = _args.begin() + 1;
+		stateLast = stateFirst + static_cast<int>(stateVars->size());
+	}
+	else
+		solAssert(false, "");
+
+	solAssert(stateFirst >= _args.begin() && stateFirst <= _args.end(), "");
+	solAssert(stateLast >= _args.begin() && stateLast <= _args.end(), "");
+
+	vector<string> stateArgs(stateFirst, stateLast);
+	solAssert(stateArgs.size() == stateVars->size(), "");
+	return stateArgs;
+}

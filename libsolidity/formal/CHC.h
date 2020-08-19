@@ -225,7 +225,7 @@ private:
 	/// _function was executed.
 	/// _function = nullptr means the transaction was the deployment of a
 	/// contract without an explicit constructor.
-	std::string formatStateCounterexample(std::vector<VariableDeclaration const*> const& _stateVariables, FunctionDefinition const* _function, std::vector<std::string> const& _summaryValues);
+	std::string formatStateCounterexample(std::vector<VariableDeclaration const*> const& _stateVariables, std::vector<std::string> const& _values);
 
 	/// @returns a DAG in the dot format.
 	/// Used for debugging purposes.
