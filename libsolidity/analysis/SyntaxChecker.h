@@ -87,8 +87,6 @@ private:
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(FunctionTypeName const& _node) override;
 
-	bool visit(VariableDeclarationStatement const& _statement) override;
-
 	bool visit(StructDefinition const& _struct) override;
 	bool visit(Literal const& _literal) override;
 

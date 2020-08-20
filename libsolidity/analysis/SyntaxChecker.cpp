@@ -364,23 +364,6 @@ bool SyntaxChecker::visit(FunctionTypeName const& _node)
 	return true;
 }
 
-bool SyntaxChecker::visit(VariableDeclarationStatement const& _statement)
-{
-	// Report if none of the variable components in the tuple have a name (only possible via deprecated "var")
-	if (std::all_of(
-		_statement.declarations().begin(),
-		_statement.declarations().end(),
-		[](ASTPointer<VariableDeclaration> const& declaration) { return declaration == nullptr; }
-	))
-		m_errorReporter.syntaxError(
-			3299_error,
-			_statement.location(),
-			"The use of the \"var\" keyword is disallowed. The declaration part of the statement can be removed, since it is empty."
-		);
-
-	return true;
-}
-
 bool SyntaxChecker::visit(StructDefinition const& _struct)
 {
 	if (_struct.members().empty())
