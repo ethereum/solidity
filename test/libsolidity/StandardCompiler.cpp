@@ -1235,9 +1235,27 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	BOOST_REQUIRE(contract["evm"]["bytecode"]["object"].isString());
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].asString().length() > 20);
 
-	// Now disable stack optimizations
+	// Now disable stack optimizations and UnusedFunctionParameterPruner
 	// results in "stack too deep"
 	parsedInput["settings"]["optimizer"]["details"]["yulDetails"]["stackAllocation"] = false;
+		parsedInput["settings"]["optimizer"]["details"]["yulDetails"]["optimizerSteps"] =
+		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
+		"["
+			"xarrscLM"                 // Turn into SSA and simplify
+			"cCTUtTOntnfDIul"          // Perform structural simplification
+			"Lcul"                     // Simplify again
+			"Vcul jj"                  // Reverse SSA
+
+			// should have good "compilability" property here.
+
+			"eul"                      // Run functional expression inliner
+			"xarulrul"                 // Prune a bit more in SSA
+			"xarrcL"                   // Turn into SSA again and simplify
+			"gvif"                     // Run full inliner
+			"CTUcarrLsTOtfDncarrIulc"  // SSA plus simplify
+		"]"
+		"jmuljuljul VcTOcul jmul";     // Make source short and pretty
+
 	result = compiler.compile(parsedInput);
 	BOOST_REQUIRE(result["errors"].isArray());
 	BOOST_CHECK(result["errors"][0]["severity"] == "error");
