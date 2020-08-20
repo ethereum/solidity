@@ -1,5 +1,12 @@
 ### 0.7.2 (unreleased)
 
+Language Features:
+
+
+Compiler Features:
+ * Yul Optimizer: Prune unused parameters in functions.
+
+Bugfixes:
 
 
 ### 0.7.1 (2020-09-02)
