@@ -1,0 +1,9 @@
+pragma experimental SMTChecker;
+
+contract C  {
+	function f(uint x, uint y) public pure returns (uint) {
+		return x * y;
+	}
+}
+// ----
+// Warning 4984: (113-118): Overflow (resulting value larger than 2**256 - 1) happens here

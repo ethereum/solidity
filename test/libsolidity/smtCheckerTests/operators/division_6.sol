@@ -11,3 +11,5 @@ contract C {
 		return c;
 	}
 }
+// ----
+// Warning 1218: (265-270): Error trying to invoke SMT solver.

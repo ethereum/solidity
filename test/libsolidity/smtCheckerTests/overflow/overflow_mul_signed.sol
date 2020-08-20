@@ -12,5 +12,5 @@ contract C
 	}
 }
 // ----
-// Warning 2661: (117-122): Overflow (resulting value larger than 127) happens here
-// Warning 2661: (150-157): Overflow (resulting value larger than 127) happens here
+// Warning 4984: (117-122): Overflow (resulting value larger than 127) happens here
+// Warning 4984: (150-157): Overflow (resulting value larger than 127) happens here
