@@ -10,12 +10,9 @@
 // step: unusedFunctionParameterPruner
 //
 // {
-//     sstore(f_1(1), 0)
+//     sstore(f_6(1), 0)
 //     function f() -> y
-//     {
-//         let w := mload(1)
-//         y := mload(w)
-//     }
-//     function f_1(x_2) -> y_3
-//     { y_3 := f() }
+//     { y := mload(mload(1)) }
+//     function f_6(x_7) -> y_8
+//     { y_8 := f() }
 // }

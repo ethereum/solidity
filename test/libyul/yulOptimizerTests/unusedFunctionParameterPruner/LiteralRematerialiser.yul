@@ -14,14 +14,13 @@
 // step: unusedFunctionParameterPruner
 //
 // {
-//     let a := f_1(mload(1))
-//     let b := f_1(a)
-//     sstore(a, b)
+//     let a := f_11(mload(1))
+//     sstore(a, f_11(a))
 //     function f(x)
 //     {
 //         if iszero(x) { revert(0, 0) }
 //         if iszero(add(x, 1)) { revert(0, 0) }
 //     }
-//     function f_1(x_2) -> y_3
-//     { f(x_2) }
+//     function f_11(x_12) -> y_13
+//     { f(x_12) }
 // }

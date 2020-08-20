@@ -1078,33 +1078,32 @@
 // {
 //     {
 //         let _1 := mload(1)
-//         let _2 := mload(0)
-//         if slt(sub(_1, _2), 64) { revert(0, 0) }
-//         sstore(0, and(calldataload(_2), sub(shl(160, 1), 1)))
-//         let x0, x1, x2, x3, x4 := abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(mload(7), mload(8))
-//         sstore(x1, x0)
-//         sstore(x3, x2)
-//         sstore(1, x4)
+//         let _2 := 0
+//         sstore(_2, abi_decode_tuple_t_contract$_Module_$1038t_contract$_Module_$1038(mload(_2), _1))
+//         let _3 := mload(8)
+//         let _4 := mload(7)
+//         if slt(sub(_3, _4), 128) { revert(_2, _2) }
+//         let offset := calldataload(add(_4, 64))
+//         if gt(offset, 0xffffffffffffffff) { revert(_2, _2) }
+//         let value2, value3 := abi_decode_t_bytes_calldata_ptr(add(_4, offset), _3)
+//         let value4 := cleanup_revert_t_enum$_Operation_$1949(calldataload(add(_4, 96)))
+//         sstore(calldataload(add(_4, 32)), and(calldataload(_4), sub(shl(160, 1), 1)))
+//         sstore(value3, value2)
+//         sstore(1, value4)
 //         pop(abi_encode_tuple_t_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_$1949_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256__to_t_bytes32_t_address_t_uint256_t_bytes32_t_uint8_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256_(mload(30), mload(31), mload(32), mload(33), mload(34), mload(35), mload(36), mload(37), mload(38), mload(39), mload(40), mload(41)))
 //     }
-//     function abi_decode_tuple_t_addresst_uint256t_bytes_calldata_ptrt_enum$_Operation_$1949(headStart, dataEnd) -> value0, value1, value2, value3, value4
+//     function abi_decode_t_bytes_calldata_ptr(offset, end) -> arrayPos, length
 //     {
-//         if slt(sub(dataEnd, headStart), 128) { revert(value4, value4) }
+//         if iszero(slt(add(offset, 0x1f), end)) { revert(arrayPos, arrayPos) }
+//         length := calldataload(offset)
+//         if gt(length, 0xffffffffffffffff) { revert(arrayPos, arrayPos) }
+//         arrayPos := add(offset, 0x20)
+//         if gt(add(add(offset, length), 0x20), end) { revert(0, 0) }
+//     }
+//     function abi_decode_tuple_t_contract$_Module_$1038t_contract$_Module_$1038(headStart, dataEnd) -> value0
+//     {
+//         if slt(sub(dataEnd, headStart), 64) { revert(value0, value0) }
 //         value0 := and(calldataload(headStart), sub(shl(160, 1), 1))
-//         value1 := calldataload(add(headStart, 32))
-//         let offset := calldataload(add(headStart, 64))
-//         let _1 := 0xffffffffffffffff
-//         if gt(offset, _1) { revert(value4, value4) }
-//         let _2 := add(headStart, offset)
-//         if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(value4, value4) }
-//         let length := calldataload(_2)
-//         if gt(length, _1) { revert(value4, value4) }
-//         if gt(add(add(_2, length), 32), dataEnd) { revert(value4, value4) }
-//         value2 := add(_2, 32)
-//         value3 := length
-//         let _3 := calldataload(add(headStart, 96))
-//         if iszero(lt(_3, 3)) { revert(value4, value4) }
-//         value4 := _3
 //     }
 //     function abi_encode_tuple_t_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_$1949_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256__to_t_bytes32_t_address_t_uint256_t_bytes32_t_uint8_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint256_(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail
 //     {
@@ -1122,5 +1121,10 @@
 //         mstore(add(headStart, 256), and(value8, _1))
 //         mstore(add(headStart, 288), and(value9, _1))
 //         mstore(add(headStart, 320), value10)
+//     }
+//     function cleanup_revert_t_enum$_Operation_$1949(value) -> cleaned
+//     {
+//         if iszero(lt(value, 3)) { revert(cleaned, cleaned) }
+//         cleaned := value
 //     }
 // }

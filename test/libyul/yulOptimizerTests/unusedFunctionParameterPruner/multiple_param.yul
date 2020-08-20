@@ -12,13 +12,14 @@
 // step: unusedFunctionParameterPruner
 //
 // {
-//     let d, e, i := f_1(1, 2, 3)
+//     let d, e, i := f_7(1, 2, 3)
 //     sstore(d, 0)
-//     function f(a, c) -> y, z
+//     function f(a, c)
 //     {
+//         let y, z
 //         y := mload(a)
 //         z := mload(c)
 //     }
-//     function f_1(a_2, b_3, c_4) -> x_5, y_6, z_7
-//     { y_6, z_7 := f(a_2, c_4) }
+//     function f_7(a_8, b_9, c_10) -> x_11, y_12, z_13
+//     { f(a_8, c_10) }
 // }

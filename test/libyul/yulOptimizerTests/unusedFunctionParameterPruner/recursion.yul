@@ -10,12 +10,15 @@
 // step: unusedFunctionParameterPruner
 //
 // {
-//     let a1, b1, c1 := f_1(1, 2, 3)
+//     let a1, b1, c1 := f_12(1, 2, 3)
 //     function f() -> x, y, z
 //     {
-//         x, y, z := f_1(1, 2, 3)
-//         x := add(x, 1)
+//         let x_1, y_2, z_3 := f_12(1, 2, 3)
+//         x := x_1
+//         y := y_2
+//         z := z_3
+//         x := add(x_1, 1)
 //     }
-//     function f_1(a_2, b_3, c_4) -> x_5, y_6, z_7
-//     { x_5, y_6, z_7 := f() }
+//     function f_12(a_13, b_14, c_15) -> x_16, y_17, z_18
+//     { x_16, y_17, z_18 := f() }
 // }

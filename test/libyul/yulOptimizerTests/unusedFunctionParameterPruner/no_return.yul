@@ -10,12 +10,13 @@
 // step: unusedFunctionParameterPruner
 //
 // {
-//     f_1(1, 2)
+//     f_7(1, 2)
 //     function f(a)
 //     {
-//         sstore(a, 0)
-//         a := add(a, 1)
+//         let a_2 := a
+//         sstore(a_2, 0)
+//         a := add(a_2, 1)
 //     }
-//     function f_1(a_2, b_3)
-//     { f(a_2) }
+//     function f_7(a_8, b_9)
+//     { f(a_8) }
 // }
