@@ -34,11 +34,21 @@ namespace solidity::yul
  *
  * and replace all references to `f` by `f2`.
  *
- * Prerequisites: Disambiguator, FunctionHoister, LiteralRematerialiser
+ * Prerequisites: Disambiguator, SSATransform, ForLoopConditionIntoBody, ExpressionSplitter,
+ * LiteralRematerialiser, FunctionHoister.
  *
- * The step LiteralRematerialiser is not required for correctness. It helps deal with cases such as:
- * `function f(x) -> y { revert(y, y} }` where the literal `y` will be replaced by its value `0`,
- * allowing us to rewrite the function.
+ * The steps LiteralRematerialiser and SSATransform are not required for correctness.
+
+ * LiteralRematerialiser helps deal with cases such as: `function f(x) -> y { revert(y, y} }` where
+ * the literal `y` will be replaced by its value `0`, allowing us to rewrite the function.
+
+ * The property "return variable is unused" is inferred by counting references to return variables.
+ * SSATransform helps identifying that the return parameter is unused in the following case:
+ *
+ *    {
+ *      let x := f()
+ *      x := 1
+ *    }
  *
  * The inliner should be run afterwards to make sure that all references to `f2` are replaced by
  * `f`.
