@@ -29,7 +29,6 @@
 #include <libsmtutil/CHCSmtLib2Interface.h>
 #include <libsolutil/Algorithms.h>
 
-#include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <queue>
@@ -1404,24 +1403,22 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		solAssert(edges.size() <= 2, "");
 
 		unsigned summaryId = edges.at(0);
-
 		optional<unsigned> interfaceId;
 		if (edges.size() == 2)
 		{
 			interfaceId = edges.at(1);
-			if (_graph.nodes.at(summaryId).first.rfind("summary", 0) != 0)
+			if (!Predicate::predicate(_graph.nodes.at(summaryId).first)->isSummary())
 				swap(summaryId, *interfaceId);
-			solAssert(_graph.nodes.at(*interfaceId).first.rfind("interface", 0) == 0, "");
+			auto interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).first);
+			solAssert(interfacePredicate && interfacePredicate->isInterface(), "");
 		}
 		/// The children are unordered, so we need to check which is the summary and
 		/// which is the interface.
 
-		solAssert(_graph.nodes.at(summaryId).first.rfind("summary", 0) == 0, "");
+		Predicate const* summaryPredicate = Predicate::predicate(_graph.nodes.at(summaryId).first);
+		solAssert(summaryPredicate && summaryPredicate->isSummary(), "");
 		/// At this point property 2 from the function description is verified for this node.
-
-		auto const& summaryNode = _graph.nodes.at(summaryId);
-		Predicate const* summaryPredicate = Predicate::predicate(summaryNode.first);
-		solAssert(summaryPredicate, "");
+		auto summaryArgs = _graph.nodes.at(summaryId).second;
 
 		FunctionDefinition const* calledFun = summaryPredicate->programFunction();
 		ContractDefinition const* calledContract = summaryPredicate->programContract();
@@ -1429,7 +1426,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		solAssert((calledFun && !calledContract) || (!calledFun && calledContract), "");
 		auto stateVars = summaryPredicate->stateVariables();
 		solAssert(stateVars.has_value(), "");
-		auto stateValues = summaryPredicate->summaryStateValues(summaryNode.second);
+		auto stateValues = summaryPredicate->summaryStateValues(summaryArgs);
 		solAssert(stateValues.size() == stateVars->size(), "");
 
 		/// This summary node is the end of a tx.
@@ -1440,36 +1437,23 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		{
 			lastTxSeen = true;
 			/// Generate counterexample message local to the failed target.
-			localState = formatStateCounterexample(*stateVars, stateValues) + "\n";
+			localState = formatVariableModel(*stateVars, stateValues, ", ") + "\n";
 			if (calledFun)
 			{
-				/// The signature of a summary predicate is: summary(error, preStateVars, preInputVars, postInputVars, outputVars).
+				auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
 				auto const& inParams = calledFun->parameters();
-				unsigned initLocals = stateVars->size() * 2 + 1 + inParams.size();
-				/// In this loop we are interested in postInputVars.
-				for (unsigned i = initLocals; i < initLocals + inParams.size(); ++i)
-				{
-					auto param = inParams.at(i - initLocals);
-					if (param->type()->isValueType())
-						localState += param->name() + " = " + summaryNode.second.at(i) + "\n";
-				}
+				localState += formatVariableModel(inParams, inValues, "\n") + "\n";
+				auto outValues = summaryPredicate->summaryPostOutputValues(summaryArgs);
 				auto const& outParams = calledFun->returnParameters();
-				initLocals += inParams.size();
-				/// In this loop we are interested in outputVars.
-				for (unsigned i = initLocals; i < initLocals + outParams.size(); ++i)
-				{
-					auto param = outParams.at(i - initLocals);
-					if (param->type()->isValueType())
-						localState += param->name() + " = " + summaryNode.second.at(i) + "\n";
-				}
+				localState += formatVariableModel(outParams, outValues, "\n") + "\n";
 			}
 		}
 		else
 			/// We report the state after every tx in the trace except for the last, which is reported
 			/// first in the code above.
-			path.emplace_back("State: " + formatStateCounterexample(*stateVars, stateValues));
+			path.emplace_back("State: " + formatVariableModel(*stateVars, stateValues, ", "));
 
-		string txCex = summaryPredicate->formatSummaryCall(summaryNode.second);
+		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
 		path.emplace_back(txCex);
 
 		/// Recurse on the next interface node which represents the previous transaction
@@ -1481,21 +1465,6 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 	}
 
 	return localState + "\nTransaction trace:\n" + boost::algorithm::join(boost::adaptors::reverse(path), "\n");
-}
-
-string CHC::formatStateCounterexample(vector<VariableDeclaration const*> const& _stateVars, vector<string> const& _values)
-{
-	solAssert(_stateVars.size() == _values.size(), "");
-
-	vector<string> stateCex;
-	for (unsigned i = 0; i < _values.size(); ++i)
-	{
-		auto var = _stateVars.at(i);
-		if (var->type()->isValueType())
-			stateCex.emplace_back(var->name() + " = " + _values.at(i));
-	}
-
-	return boost::algorithm::join(stateCex, ", ");
 }
 
 string CHC::cex2dot(smtutil::CHCSolverInterface::CexGraph const& _cex)

@@ -214,3 +214,47 @@ vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 	solAssert(stateArgs.size() == stateVars->size(), "");
 	return stateArgs;
 }
+
+vector<string> Predicate::summaryPostInputValues(vector<string> const& _args) const
+{
+	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// Here we are interested in postInputVars.
+	auto const* function = programFunction();
+	solAssert(function, "");
+
+	auto stateVars = stateVariables();
+	solAssert(stateVars.has_value(), "");
+
+	auto const& inParams = function->parameters();
+
+	vector<string>::const_iterator first = _args.begin() + 1 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size());
+	vector<string>::const_iterator last = first + static_cast<int>(inParams.size());
+
+	solAssert(first >= _args.begin() && first <= _args.end(), "");
+	solAssert(last >= _args.begin() && last <= _args.end(), "");
+
+	vector<string> inValues(first, last);
+	solAssert(inValues.size() == inParams.size(), "");
+	return inValues;
+}
+
+vector<string> Predicate::summaryPostOutputValues(vector<string> const& _args) const
+{
+	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// Here we are interested in outputVars.
+	auto const* function = programFunction();
+	solAssert(function, "");
+
+	auto stateVars = stateVariables();
+	solAssert(stateVars.has_value(), "");
+
+	auto const& inParams = function->parameters();
+
+	vector<string>::const_iterator first = _args.begin() + 1 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2;
+
+	solAssert(first >= _args.begin() && first <= _args.end(), "");
+
+	vector<string> outValues(first, _args.end());
+	solAssert(outValues.size() == function->returnParameters().size(), "");
+	return outValues;
+}

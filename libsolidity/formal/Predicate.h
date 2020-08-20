@@ -96,6 +96,14 @@ public:
 	/// where this summary was reached.
 	std::vector<std::string> summaryStateValues(std::vector<std::string> const& _args) const;
 
+	/// @returns the values of the function input variables from _args at the point
+	/// where this summary was reached.
+	std::vector<std::string> summaryPostInputValues(std::vector<std::string> const& _args) const;
+
+	/// @returns the values of the function output variables from _args at the point
+	/// where this summary was reached.
+	std::vector<std::string> summaryPostOutputValues(std::vector<std::string> const& _args) const;
+
 private:
 	/// The actual SMT expression.
 	smt::SymbolicFunctionVariable m_predicate;

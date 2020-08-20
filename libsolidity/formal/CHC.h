@@ -38,6 +38,8 @@
 
 #include <libsmtutil/CHCSolverInterface.h>
 
+#include <boost/algorithm/string/join.hpp>
+
 #include <map>
 #include <optional>
 #include <set>
@@ -221,11 +223,23 @@ private:
 	);
 
 	std::optional<std::string> generateCounterexample(smtutil::CHCSolverInterface::CexGraph const& _graph, std::string const& _root);
-	/// @returns values for the _stateVariables after a transaction calling
-	/// _function was executed.
-	/// _function = nullptr means the transaction was the deployment of a
-	/// contract without an explicit constructor.
-	std::string formatStateCounterexample(std::vector<VariableDeclaration const*> const& _stateVariables, std::vector<std::string> const& _values);
+
+	/// @returns a set of pairs _var = _value separated by _separator.
+	template <typename T>
+	std::string formatVariableModel(std::vector<T> const& _variables, std::vector<std::string> const& _values, std::string const& _separator) const
+	{
+		solAssert(_variables.size() == _values.size(), "");
+
+		std::vector<std::string> assignments;
+		for (unsigned i = 0; i < _values.size(); ++i)
+		{
+			auto var = _variables.at(i);
+			if (var && var->type()->isValueType())
+				assignments.emplace_back(var->name() + " = " + _values.at(i));
+		}
+
+		return boost::algorithm::join(assignments, _separator);
+	}
 
 	/// @returns a DAG in the dot format.
 	/// Used for debugging purposes.
