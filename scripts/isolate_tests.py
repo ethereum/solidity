@@ -10,7 +10,7 @@ import sys
 import re
 import os
 import hashlib
-from os.path import join, isfile
+from os.path import join, isfile, split
 
 def extract_test_cases(path):
     lines = open(path, encoding="utf8", errors='ignore', mode='r').read().splitlines()
@@ -99,5 +99,8 @@ if __name__ == '__main__':
             if 'compilationTests' in subdirs:
                 subdirs.remove('compilationTests')
             for f in files:
+                _, tail = split(f)
+                if tail == "invalid_utf8_sequence.sol":
+                    continue  # ignore the test with broken utf-8 encoding
                 path = join(root, f)
                 extract_and_write(f, path)

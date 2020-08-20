@@ -12,8 +12,10 @@ SOURCE_FILE_PATTERN = r"\b\d+_error\b"
 
 def read_file(file_name):
     content = None
+    _, tail = path.split(file_name)
+    is_latin = tail == "invalid_utf8_sequence.sol"
     try:
-        with open(file_name, "r", encoding=ENCODING) as f:
+        with open(file_name, "r", encoding="latin-1" if is_latin else ENCODING) as f:
             content = f.read()
     finally:
         if content == None:
@@ -219,12 +221,12 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     old_source_only_ids = {
         "1054", "1123", "1133", "1220", "1584", "1823", "1950", "1957",
         "1988", "2418", "2461", "2512", "2592", "2657", "2800", "2842", "2856",
-        "3263", "3299", "3356", "3441", "3682", "3876",
+        "3263", "3356", "3441", "3682", "3876",
         "3893", "3997", "4010", "4802", "4805", "4828",
         "4904", "4990", "5052", "5073", "5170", "5188", "5272", "5333", "5347", "5473",
         "5622", "6041", "6052", "6272", "6708", "6792", "6931", "7110", "7128", "7186",
         "7319", "7589", "7593", "7653", "7812", "7885", "8065", "8084", "8140",
-        "8261", "8312", "8452", "8592", "8758", "9011",
+        "8261", "8312", "8592", "8758", "9011",
         "9085", "9390", "9440", "9547", "9551", "9615", "9980"
     }
     new_source_only_ids = source_only_ids - old_source_only_ids
