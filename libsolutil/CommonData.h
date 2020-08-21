@@ -37,10 +37,7 @@
 #include <utility>
 #include <type_traits>
 
-namespace std
-{
-
-/// Operator overloads for STL containers should be in std namespace for ADL to work properly.
+/// Operators need to stay in the global namespace.
 
 /// Concatenate the contents of a container onto a vector
 template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U& _b)
@@ -146,8 +143,6 @@ inline std::multiset<T...>& operator-=(std::multiset<T...>& _a, C const& _b)
 		_a.erase(x);
 	return _a;
 }
-
-} // end namespace std
 
 namespace solidity::util
 {
