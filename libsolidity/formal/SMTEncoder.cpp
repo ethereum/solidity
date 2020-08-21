@@ -579,6 +579,27 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		);
 }
 
+bool SMTEncoder::visit(Conditional const& _op)
+{
+	_op.condition().accept(*this);
+
+	auto indicesEndTrue = visitBranch(&_op.trueExpression(), expr(_op.condition()));
+	auto touchedVars = touchedVariables(_op.trueExpression());
+
+	auto indicesEndFalse = visitBranch(&_op.falseExpression(), !expr(_op.condition()));
+	touchedVars += touchedVariables(_op.falseExpression());
+
+	mergeVariables(touchedVars, expr(_op.condition()), indicesEndTrue, indicesEndFalse);
+
+	defineExpr(_op, smtutil::Expression::ite(
+		expr(_op.condition()),
+		expr(_op.trueExpression()),
+		expr(_op.falseExpression())
+	));
+
+	return false;
+}
+
 void SMTEncoder::endVisit(FunctionCall const& _funCall)
 {
 	auto functionCallKind = *_funCall.annotation().kind;
