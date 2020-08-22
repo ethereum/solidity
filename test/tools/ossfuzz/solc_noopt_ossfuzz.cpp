@@ -19,6 +19,8 @@
 
 #include <test/tools/ossfuzz/SolidityConstMutations.h>
 
+#include <test/tools/ossfuzz/SolRegexpMutator.h>
+
 #include <test/TestCaseReader.h>
 
 #include <liblangutil/Exceptions.h>
@@ -28,6 +30,7 @@
 #include <sstream>
 #include <random>
 
+using namespace solidity::test::fuzzer;
 using namespace solidity::frontend::test;
 using namespace std;
 
@@ -39,8 +42,8 @@ struct CustomMutator {
 	explicit CustomMutator(unsigned _seed = 1337): Rand(_seed) {}
 
 	enum class Mutation {
-		DEFAULT,
 		ADDSTMT,
+		MUTATE,
 		NUMMUTATIONS
 	};
 
@@ -61,13 +64,22 @@ struct CustomMutator {
 
 		switch (_mut)
 		{
-		case Mutation::DEFAULT:
-			return LLVMFuzzerMutate(_data, _size, _maxSize);
 		case Mutation::ADDSTMT:
 			return addStmt(_data, _size, _maxSize);
+		case Mutation::MUTATE:
+			return mutate(_data, _size, _maxSize);
 		case Mutation::NUMMUTATIONS:
 			solAssert(false, "Solc fuzzer: Invalid mutation selected");
 		}
+	}
+
+	size_t mutate(uint8_t* _data, size_t _size, size_t _maxSize)
+	{
+		unsigned newSize = SRM{}.mutateInPlace(_data, _size, _maxSize, Rand());
+		if (newSize == 0)
+			return LLVMFuzzerMutate(_data, _size, _maxSize);
+		else
+			return newSize;
 	}
 
 	size_t addStmt(uint8_t* _data, size_t _size, size_t _maxSize)
