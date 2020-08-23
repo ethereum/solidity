@@ -115,6 +115,7 @@ protected:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 	void bitwiseOperation(BinaryOperation const& _op);
+	void bitwiseNotOperation(UnaryOperation const& _op);
 
 	void initContract(ContractDefinition const& _contract);
 	void initFunction(FunctionDefinition const& _function);

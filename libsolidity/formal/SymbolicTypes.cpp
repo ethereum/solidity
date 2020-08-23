@@ -432,6 +432,18 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 	return 0;
 }
 
+pair<unsigned, bool> typeBvSizeAndSignedness(frontend::TypePointer const& _type)
+{
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		return {intType->numBits(), intType->isSigned()};
+	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		return {fixedType->numBits(), fixedType->isSigned()};
+	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(_type))
+		return {fixedBytesType->numBytes() * 8, false};
+	else
+		solAssert(false, "");
+}
+
 void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context)
 {
 	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _context);

@@ -67,6 +67,8 @@ smtutil::Expression minValue(frontend::IntegerType const& _type);
 smtutil::Expression maxValue(frontend::IntegerType const& _type);
 smtutil::Expression zeroValue(frontend::TypePointer const& _type);
 
+std::pair<unsigned, bool> typeBvSizeAndSignedness(frontend::TypePointer const& type);
+
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context);
 void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context);
 void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context);
