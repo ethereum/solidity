@@ -893,13 +893,6 @@ workflows:
       - t_ubu_release_cli: *workflow_ubuntu2004_release
       - t_ubu_release_soltest: *workflow_ubuntu2004_release
 
-      # ASan build and tests
-      - b_ubu_asan: *workflow_trigger_on_tags
-      - b_ubu_asan_clang: *workflow_trigger_on_tags
-      - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
-      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
-      - t_ubu_asan_cli: *workflow_ubuntu2004_asan
-
       # Emscripten build and selected tests
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
@@ -926,3 +919,10 @@ workflows:
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
       - t_ubu_codecov: *workflow_ubuntu2004_codecov
+
+      # ASan build and tests
+      - b_ubu_asan: *workflow_trigger_on_tags
+      - b_ubu_asan_clang: *workflow_trigger_on_tags
+      - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
+      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
+      - t_ubu_asan_cli: *workflow_ubuntu2004_asan
