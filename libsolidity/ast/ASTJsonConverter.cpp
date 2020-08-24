@@ -203,13 +203,13 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
-	_stream << util::jsonPrettyPrint(util::removeNullMembers(toJson(_node)));
+	_stream << util::jsonPrettyPrint(toJson(_node));
 }
 
-Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)
+Json::Value ASTJsonConverter::toJson(ASTNode const& _node)
 {
 	_node.accept(*this);
-	return std::move(m_currentValue);
+	return util::removeNullMembers(std::move(m_currentValue));
 }
 
 bool ASTJsonConverter::visit(SourceUnit const& _node)
