@@ -57,6 +57,7 @@ bool isMapping(frontend::Type::Category _category);
 bool isArray(frontend::Type::Category _category);
 bool isTuple(frontend::Type::Category _category);
 bool isStringLiteral(frontend::Type::Category _category);
+bool isStruct(frontend::Type::Category _category);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,

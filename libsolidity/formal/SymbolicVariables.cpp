@@ -21,8 +21,11 @@
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/ast/AST.h>
 
+#include <libsolutil/Algorithms.h>
+
 using namespace std;
 using namespace solidity;
+using namespace solidity::util;
 using namespace solidity::smtutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
@@ -318,4 +321,48 @@ smtutil::Expression SymbolicArrayVariable::elements()
 smtutil::Expression SymbolicArrayVariable::length()
 {
 	return m_pair.component(1);
+}
+
+SymbolicStructVariable::SymbolicStructVariable(
+	frontend::TypePointer _type,
+	string _uniqueName,
+	EncodingContext& _context
+):
+	SymbolicVariable(_type, _type, move(_uniqueName), _context)
+{
+	solAssert(isStruct(m_type->category()), "");
+	auto const* structType = dynamic_cast<StructType const*>(_type);
+	solAssert(structType, "");
+	auto const& members = structType->structDefinition().members();
+	for (unsigned i = 0; i < members.size(); ++i)
+	{
+		solAssert(members.at(i), "");
+		m_memberIndices.emplace(members.at(i)->name(), i);
+	}
+}
+
+smtutil::Expression SymbolicStructVariable::member(string const& _member)
+{
+	return smtutil::Expression::tuple_get(currentValue(), m_memberIndices.at(_member));
+}
+
+smtutil::Expression SymbolicStructVariable::assignMember(string const& _member, smtutil::Expression const& _memberValue)
+{
+	auto const* structType = dynamic_cast<StructType const*>(m_type);
+	solAssert(structType, "");
+	auto const& structDef = structType->structDefinition();
+	auto const& structMembers = structDef.members();
+	auto oldMembers = applyMap(
+		structMembers,
+		[&](auto _member) { return member(_member->name()); }
+	);
+	increaseIndex();
+	for (unsigned i = 0; i < structMembers.size(); ++i)
+	{
+		auto const& memberName = structMembers.at(i)->name();
+		auto newMember = memberName == _member ? _memberValue : oldMembers.at(i);
+		m_context.addAssertion(member(memberName) == newMember);
+	}
+
+	return currentValue();
 }

@@ -146,8 +146,8 @@ protected:
 	/// to variable of some SMT array type
 	/// while aliasing is not supported.
 	void arrayAssignment();
-	/// Handles assignment to SMT array index.
-	void arrayIndexAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide);
+	/// Handles assignments to index or member access.
+	void indexOrMemberAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide);
 
 	void arrayPush(FunctionCall const& _funCall);
 	void arrayPop(FunctionCall const& _funCall);

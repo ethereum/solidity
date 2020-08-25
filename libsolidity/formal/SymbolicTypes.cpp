@@ -25,6 +25,7 @@
 #include <vector>
 
 using namespace std;
+using namespace solidity::util;
 using namespace solidity::smtutil;
 
 namespace solidity::frontend::smt
@@ -130,18 +131,31 @@ SortPointer smtSort(frontend::Type const& _type)
 	}
 	case Kind::Tuple:
 	{
-		auto tupleType = dynamic_cast<frontend::TupleType const*>(&_type);
-		solAssert(tupleType, "");
 		vector<string> members;
-		auto const& tupleName = _type.identifier();
-		auto const& components = tupleType->components();
-		for (unsigned i = 0; i < components.size(); ++i)
-			members.emplace_back(tupleName + "_accessor_" + to_string(i));
-		return make_shared<TupleSort>(
-			tupleName,
-			members,
-			smtSortAbstractFunction(tupleType->components())
-		);
+		auto const& tupleName = _type.toString(true);
+		vector<SortPointer> sorts;
+
+		if (auto const* tupleType = dynamic_cast<frontend::TupleType const*>(&_type))
+		{
+			auto const& components = tupleType->components();
+			for (unsigned i = 0; i < components.size(); ++i)
+				members.emplace_back(tupleName + "_accessor_" + to_string(i));
+			sorts = smtSortAbstractFunction(tupleType->components());
+		}
+		else if (auto const* structType = dynamic_cast<frontend::StructType const*>(&_type))
+		{
+			auto const& structMembers = structType->structDefinition().members();
+			for (auto member: structMembers)
+				members.emplace_back(tupleName + "_accessor_" + member->name());
+			sorts = smtSortAbstractFunction(applyMap(
+				structMembers,
+				[](auto var) { return var->type(); }
+			));
+		}
+		else
+			solAssert(false, "");
+
+		return make_shared<TupleSort>(tupleName, members, sorts);
 	}
 	default:
 		// Abstract case.
@@ -185,7 +199,7 @@ Kind smtKind(frontend::Type::Category _category)
 		return Kind::Function;
 	else if (isMapping(_category) || isArray(_category))
 		return Kind::Array;
-	else if (isTuple(_category))
+	else if (isTuple(_category) || isStruct(_category))
 		return Kind::Tuple;
 	// Abstract case.
 	return Kind::Int;
@@ -197,7 +211,8 @@ bool isSupportedType(frontend::Type::Category _category)
 		isBool(_category) ||
 		isMapping(_category) ||
 		isArray(_category) ||
-		isTuple(_category);
+		isTuple(_category) ||
+		isStruct(_category);
 }
 
 bool isSupportedTypeDeclaration(frontend::Type::Category _category)
@@ -277,6 +292,8 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		auto stringType = TypeProvider::stringMemory();
 		var = make_shared<SymbolicArrayVariable>(stringType, type, _uniqueName, _context);
 	}
+	else if (isStruct(_type.category()))
+		var = make_shared<SymbolicStructVariable>(type, _uniqueName, _context);
 	else
 		solAssert(false, "");
 	return make_pair(abstract, var);
@@ -370,6 +387,11 @@ bool isStringLiteral(frontend::Type::Category _category)
 	return _category == frontend::Type::Category::StringLiteral;
 }
 
+bool isStruct(frontend::Type::Category _category)
+{
+	return _category == frontend::Type::Category::Struct;
+}
+
 smtutil::Expression minValue(frontend::IntegerType const& _type)
 {
 	return smtutil::Expression(_type.minValue());
@@ -421,10 +443,23 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 
 			solAssert(zeroArray, "");
 			return smtutil::Expression::tuple_constructor(
-				smtutil::Expression(std::make_shared<SortSort>(smtSort(*_type)), _type->toString(true)),
+				smtutil::Expression(std::make_shared<SortSort>(tupleSort), tupleSort->name),
 				vector<smtutil::Expression>{*zeroArray, length}
 			);
 
+		}
+		if (isStruct(_type->category()))
+		{
+			auto const* structType = dynamic_cast<StructType const*>(_type);
+			solAssert(structType, "");
+			auto structSort = dynamic_pointer_cast<TupleSort>(smtSort(*_type));
+			return smtutil::Expression::tuple_constructor(
+				smtutil::Expression(make_shared<SortSort>(structSort), structSort->name),
+				applyMap(
+					structType->structDefinition().members(),
+					[](auto var) { return zeroValue(var->type()); }
+				)
+			);
 		}
 		solAssert(false, "");
 	}
