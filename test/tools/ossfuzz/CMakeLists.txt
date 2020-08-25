@@ -1,3 +1,5 @@
+link_directories(/usr/local/lib)
+add_subdirectory(antlr4-runtime)
 add_custom_target(ossfuzz)
 add_dependencies(ossfuzz
         solc_opt_ossfuzz
@@ -27,8 +29,13 @@ if (OSSFUZZ)
     target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm)
     set_target_properties(solc_opt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
-    add_executable(solc_noopt_ossfuzz solc_noopt_ossfuzz.cpp ../fuzzer_common.cpp ../../TestCaseReader.cpp)
-    target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
+    add_executable(solc_noopt_ossfuzz
+            solc_noopt_ossfuzz.cpp
+            ../fuzzer_common.cpp
+            ../../TestCaseReader.cpp
+            libFuzzerMutator.cpp
+    )
+    target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm antlr4mutator antlr4-runtime)
     set_target_properties(solc_noopt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(const_opt_ossfuzz const_opt_ossfuzz.cpp ../fuzzer_common.cpp)
