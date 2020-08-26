@@ -456,6 +456,8 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 
 void SMTEncoder::endVisit(UnaryOperation const& _op)
 {
+	if (TokenTraits::isBitOp(_op.getOperator()))
+		return bitwiseNotOperation(_op);
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
 
@@ -1406,20 +1408,7 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	auto commonType = _op.annotation().commonType;
 	solAssert(commonType, "");
 
-	unsigned bvSize = 256;
-	bool isSigned = false;
-	if (auto const* intType = dynamic_cast<IntegerType const*>(commonType))
-	{
-		bvSize = intType->numBits();
-		isSigned = intType->isSigned();
-	}
-	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(commonType))
-	{
-		bvSize = fixedType->numBits();
-		isSigned = fixedType->isSigned();
-	}
-	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(commonType))
-		bvSize = fixedBytesType->numBytes() * 8;
+	auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(commonType);
 
 	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression(), commonType), bvSize);
 	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
@@ -1427,16 +1416,24 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	optional<smtutil::Expression> result;
 	if (_op.getOperator() == Token::BitAnd)
 		result = bvLeft & bvRight;
-	// TODO implement the other operators
-	else
-		m_errorReporter.warning(
-			1093_error,
-			_op.location(),
-			"Assertion checker does not yet implement this bitwise operator."
-		);
+	else if (_op.getOperator() == Token::BitOr)
+		result = bvLeft | bvRight;
+	else if (_op.getOperator() == Token::BitXor)
+		result = bvLeft ^ bvRight;
 
+	solAssert(result, "");
 	if (result)
 		defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
+}
+
+void SMTEncoder::bitwiseNotOperation(UnaryOperation const& _op)
+{
+	solAssert(_op.getOperator() == Token::BitNot, "");
+
+	auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(_op.annotation().type);
+
+	auto bvOperand = smtutil::Expression::int2bv(expr(_op.subExpression(), _op.annotation().type), bvSize);
+	defineExpr(_op, smtutil::Expression::bv2int(~bvOperand, isSigned));
 }
 
 smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type)

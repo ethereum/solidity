@@ -6,4 +6,3 @@ contract Simp {
     }
 }
 // ----
-// Warning 1093: (142-152): Assertion checker does not yet implement this bitwise operator.

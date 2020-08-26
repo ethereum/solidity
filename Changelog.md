@@ -10,6 +10,7 @@ Compiler Features:
  * Yul: Report error when using non-string literals for ``datasize()``, ``dataoffset()``, ``linkersymbol()``, ``loadimmutable()``, ``setimmutable()``.
  * Yul Optimizer: LoopInvariantCodeMotion can move reading operations outside for-loops as long as the affected area is not modified inside the loop.
  * SMTChecker: Support conditional operator.
+ * SMTChecker: Support bitwise or, xor and not operators.
 
 Bugfixes:
  * AST: Remove ``null`` member values also when the compiler is used in standard-json-mode.

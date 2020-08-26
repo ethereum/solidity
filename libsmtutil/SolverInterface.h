@@ -95,7 +95,10 @@ public:
 			{"*", 2},
 			{"/", 2},
 			{"mod", 2},
+			{"bvnot", 1},
 			{"bvand", 2},
+			{"bvor", 2},
+			{"bvxor", 2},
 			{"int2bv", 2},
 			{"bv2int", 1},
 			{"select", 2},
@@ -286,10 +289,25 @@ public:
 		auto intSort = _a.sort;
 		return Expression("mod", {std::move(_a), std::move(_b)}, intSort);
 	}
+	friend Expression operator~(Expression _a)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvnot", {std::move(_a)}, bvSort);
+	}
 	friend Expression operator&(Expression _a, Expression _b)
 	{
 		auto bvSort = _a.sort;
 		return Expression("bvand", {std::move(_a), std::move(_b)}, bvSort);
+	}
+	friend Expression operator^(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvxor", {std::move(_a), std::move(_b)}, bvSort);
+	}
+	friend Expression operator|(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvor", {std::move(_a), std::move(_b)}, bvSort);
 	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{
