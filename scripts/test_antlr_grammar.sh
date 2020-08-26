@@ -41,6 +41,8 @@ then
   echo "Creating parser"
   (
   cd "${ROOT_DIR}"/docs/grammar
+  # Replace bool with boolean to suit Java syntax
+  sed -i 's/bool /boolean /g' Solidity.g4
   # Create lexer/parser from grammar
   java -jar "${ANTLR_JAR}" Solidity.g4 SolidityLexer.g4 -o "${WORKDIR}/src/"
 

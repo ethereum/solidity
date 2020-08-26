@@ -122,7 +122,7 @@ parameterDeclaration: type=typeName location=dataLocation? name=identifier?;
  * Note that specifying internal or public visibility is deprecated.
  */
 constructorDefinition
-locals[boolean payableSet = false, boolean visibilitySet = false]
+locals[bool payableSet = false, bool visibilitySet = false]
 :
 	Constructor LParen (arguments=parameterList)? RParen
 	(
@@ -151,10 +151,10 @@ overrideSpecifier: Override (LParen overrides+=userDefinedTypeName (Comma overri
  */
 functionDefinition
 locals[
-	boolean visibilitySet = false,
-	boolean mutabilitySet = false,
-	boolean virtualSet = false,
-	boolean overrideSpecifierSet = false
+	bool visibilitySet = false,
+	bool mutabilitySet = false,
+	bool virtualSet = false,
+	bool overrideSpecifierSet = false
 ]
 :
 	Function (identifier | Fallback | Receive)
@@ -175,8 +175,8 @@ locals[
  */
 modifierDefinition
 locals[
-	boolean virtualSet = false,
-	boolean overrideSpecifierSet = false
+	bool virtualSet = false,
+	bool overrideSpecifierSet = false
 ]
 :
 	Modifier name=identifier
@@ -192,10 +192,10 @@ locals[
  */
 fallbackReceiveFunctionDefinition
 locals[
-	boolean visibilitySet = false,
-	boolean mutabilitySet = false,
-	boolean virtualSet = false,
-	boolean overrideSpecifierSet = false
+	bool visibilitySet = false,
+	bool mutabilitySet = false,
+	bool virtualSet = false,
+	bool overrideSpecifierSet = false
 ]
 :
 	kind=(Fallback | Receive) LParen RParen
@@ -225,7 +225,7 @@ enumDefinition:	Enum name=identifier LBrace enumValues+=identifier (Comma enumVa
  * The declaration of a state variable.
  */
 stateVariableDeclaration
-locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean overrideSpecifierSet = false]
+locals [bool constantnessSet = false, bool visibilitySet = false, bool overrideSpecifierSet = false]
 :
 	type=typeName
 	(
@@ -263,9 +263,9 @@ usingDirective: Using userDefinedTypeName For (Mul | typeName) Semicolon;
  * (e.g. a contract or struct) or an array type.
  */
 typeName: elementaryTypeName[true] | functionTypeName | mappingType | userDefinedTypeName | typeName LBrack expression? RBrack;
-elementaryTypeName[boolean allowAddressPayable]: Address | {$allowAddressPayable}? Address Payable | Bool | String | Bytes | SignedIntegerType | UnsignedIntegerType | FixedBytes | Fixed | Ufixed;
+elementaryTypeName[bool allowAddressPayable]: Address | {$allowAddressPayable}? Address Payable | Bool | String | Bytes | SignedIntegerType | UnsignedIntegerType | FixedBytes | Fixed | Ufixed;
 functionTypeName
-locals [boolean visibilitySet = false, boolean mutabilitySet = false]
+locals [bool visibilitySet = false, bool mutabilitySet = false]
 :
 	Function LParen (arguments=parameterList)? RParen
 	(
