@@ -305,7 +305,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 
 		string code;
 
-		auto const& location = m_context.storageLocationOfVariable(_varDecl);
+		auto const& location = m_context.storageLocationOfStateVariable(_varDecl);
 		code += Whiskers(R"(
 			let slot := <slot>
 			let offset := <offset>
