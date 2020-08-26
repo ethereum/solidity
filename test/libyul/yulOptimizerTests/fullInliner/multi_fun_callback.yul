@@ -36,20 +36,15 @@
 //     function f(x)
 //     {
 //         mstore(0, x)
-//         let t_20 := 0
-//         t_20 := 2
-//         mstore(7, t_20)
-//         g(10)
+//         let t_14 := 0
+//         t_14 := 2
+//         mstore(7, t_14)
+//         let x_1_15 := 10
+//         f(1)
 //         mstore(1, x)
 //     }
 //     function g(x_1)
-//     {
-//         let x_14 := 1
-//         mstore(0, x_14)
-//         mstore(7, h())
-//         g(10)
-//         mstore(1, x_14)
-//     }
+//     { f(1) }
 //     function h() -> t
 //     { t := 2 }
 // }

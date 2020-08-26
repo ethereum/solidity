@@ -80,10 +80,20 @@ void FullInliner::run()
 
 	// TODO it might be good to determine a visiting order:
 	// first handle functions that are called from many places.
-	for (auto const& fun: m_functions)
+
+	// Note that the order of inlining can result in very different code.
+	// Since AST IDs and thus function names depend on whether or not a contract
+	// is compiled together with other source files, a change in AST IDs
+	// should have as little an impact as possible. This is the case
+	// if we handle inlining in source (and thus, for the IR generator,
+	// function name) order.
+	for (auto& statement: m_ast.statements)
 	{
-		handleBlock(fun.second->name, fun.second->body);
-		updateCodeSize(*fun.second);
+		if (!holds_alternative<FunctionDefinition>(statement))
+			continue;
+		FunctionDefinition& fun = std::get<FunctionDefinition>(statement);
+		handleBlock(fun.name, fun.body);
+		updateCodeSize(fun);
 	}
 }
 
