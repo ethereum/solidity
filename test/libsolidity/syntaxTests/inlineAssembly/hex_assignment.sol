@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 6913: (86-87): Call or assignment expected.
+// ParserError 3772: (72-81): Hex literals are not valid in this context.

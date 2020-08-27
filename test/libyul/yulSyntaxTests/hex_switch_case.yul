@@ -4,4 +4,4 @@
     case hex"1122" {}
 }
 // ----
-// ParserError 4805: (36-40): Literal expected.
+// ParserError 3772: (33-40): Hex literals are not valid in this context.

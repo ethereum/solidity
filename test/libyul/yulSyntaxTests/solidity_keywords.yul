@@ -19,7 +19,7 @@
   let fallback := 1
   // for is a Yul keyword
   // function is a Yul keyword
-  let hex := 1
+  // hex is a Yul keyword
   // if is a Yul keyword
   let indexed := 1
   let interface := 1

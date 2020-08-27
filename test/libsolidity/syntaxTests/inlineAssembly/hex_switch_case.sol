@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// ParserError 4805: (95-99): Literal expected.
+// ParserError 3772: (92-99): Hex literals are not valid in this context.

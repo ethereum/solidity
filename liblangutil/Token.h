@@ -324,7 +324,7 @@ namespace TokenTraits
 	{
 		return tok == Token::Function || tok == Token::Let || tok == Token::If || tok == Token::Switch || tok == Token::Case ||
 			tok == Token::Default || tok == Token::For || tok == Token::Break || tok == Token::Continue || tok == Token::Leave ||
-			tok == Token::TrueLiteral || tok == Token::FalseLiteral;
+			tok == Token::TrueLiteral || tok == Token::FalseLiteral || tok == Token::HexStringLiteral || tok == Token::Hex;
 	}
 
 	inline Token AssignmentToBinaryOp(Token op)

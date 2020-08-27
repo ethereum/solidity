@@ -337,6 +337,9 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		ret = std::move(literal);
 		break;
 	}
+	case Token::HexStringLiteral:
+		fatalParserError(3772_error, "Hex literals are not valid in this context.");
+		break;
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}

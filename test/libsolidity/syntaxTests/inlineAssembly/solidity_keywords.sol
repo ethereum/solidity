@@ -21,7 +21,7 @@ contract C {
   let fallback := 1
   // for is a Yul keyword
   // function is a Yul keyword
-  let hex := 1
+  // hex is a Yul keyword
   // if is a Yul keyword
   let indexed := 1
   let interface := 1
@@ -110,4 +110,4 @@ contract C {
   }
 }
 // ----
-// Warning 5740: (944-2157): Unreachable code.
+// Warning 5740: (955-2168): Unreachable code.

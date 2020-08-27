@@ -668,7 +668,7 @@ void Scanner::scanToken()
 				tie(token, m, n) = scanIdentifierOrKeyword();
 
 				// Special case for hexadecimal literals
-				if (token == Token::Hex && m_kind != ScannerKind::Yul)
+				if (token == Token::Hex)
 				{
 					// reset
 					m = 0;
