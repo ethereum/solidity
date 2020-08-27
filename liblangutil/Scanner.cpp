@@ -540,7 +540,7 @@ void Scanner::scanToken()
 			if (m_char == '=')
 				token = selectToken(Token::Equal);
 			else if (m_char == '>')
-				token = selectToken(Token::Arrow);
+				token = selectToken(Token::DoubleArrow);
 			else
 				token = Token::Assign;
 			break;
@@ -563,12 +563,14 @@ void Scanner::scanToken()
 				token = Token::Add;
 			break;
 		case '-':
-			// - -- -=
+			// - -- -= ->
 			advance();
 			if (m_char == '-')
 				token = selectToken(Token::Dec);
 			else if (m_char == '=')
 				token = selectToken(Token::AssignSub);
+			else if (m_char == '>')
+				token = selectToken(Token::RightArrow);
 			else
 				token = Token::Sub;
 			break;

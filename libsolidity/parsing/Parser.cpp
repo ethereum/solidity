@@ -1050,7 +1050,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	}
 	else
 		fatalParserError(1005_error, "Expected elementary type name or identifier for mapping key type");
-	expectToken(Token::Arrow);
+	expectToken(Token::DoubleArrow);
 	ASTPointer<TypeName> valueType = parseTypeName();
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);

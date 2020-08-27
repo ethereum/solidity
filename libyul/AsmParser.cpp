@@ -401,10 +401,9 @@ FunctionDefinition Parser::parseFunctionDefinition()
 		expectToken(Token::Comma);
 	}
 	expectToken(Token::RParen);
-	if (currentToken() == Token::Sub)
+	if (currentToken() == Token::RightArrow)
 	{
-		expectToken(Token::Sub);
-		expectToken(Token::GreaterThan);
+		expectToken(Token::RightArrow);
 		while (true)
 		{
 			funDef.returnVariables.emplace_back(parseTypedName());
