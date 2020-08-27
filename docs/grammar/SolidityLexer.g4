@@ -111,7 +111,7 @@ Colon: ':';
 Semicolon: ';';
 Period: '.';
 Conditional: '?';
-Arrow: '=>';
+DoubleArrow: '=>';
 RightArrow: '->';
 
 Assign: '=';

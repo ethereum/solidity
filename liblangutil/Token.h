@@ -83,7 +83,7 @@ namespace solidity::langutil
 	T(Semicolon, ";", 0)                                                \
 	T(Period, ".", 0)                                                   \
 	T(Conditional, "?", 3)                                              \
-	T(Arrow, "=>", 0)                                                   \
+	T(DoubleArrow, "=>", 0)                                             \
 	T(RightArrow, "->", 0)                                              \
 	\
 	/* Assignment operators. */										\

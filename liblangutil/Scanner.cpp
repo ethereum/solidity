@@ -540,7 +540,7 @@ void Scanner::scanToken()
 			if (m_char == '=')
 				token = selectToken(Token::Equal);
 			else if (m_char == '>')
-				token = selectToken(Token::Arrow);
+				token = selectToken(Token::DoubleArrow);
 			else
 				token = Token::Assign;
 			break;

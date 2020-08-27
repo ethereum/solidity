@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(ambiguities)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignAdd);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Inc);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::Arrow);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::DoubleArrow);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SHL);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SAR);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignSar);
