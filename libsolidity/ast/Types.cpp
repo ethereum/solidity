@@ -4079,6 +4079,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			else
 				return MemberList::MemberMap({
 					{"interfaceId", TypeProvider::fixedBytes(4)},
+					{"name", TypeProvider::stringMemory()},
 				});
 		}
 		else if (m_typeArgument->category() == Type::Category::Integer)
