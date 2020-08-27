@@ -22,6 +22,7 @@ Bugfixes:
  * Yul Optimizer: Make function inlining order more resilient to whether or not unrelated source files are present.
  * Type Checker: Disallow signed literals as exponent in exponentiation operator.
  * Allow `type(Contract).name` for abstract contracts and interfaces.
+ * Type Checker: Disallow structs containing nested mapping in memory as parameters for library functions.
 
 
 ### 0.7.0 (2020-07-28)

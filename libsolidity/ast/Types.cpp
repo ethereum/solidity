@@ -2463,52 +2463,56 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 
 	TypeResult result{TypePointer{}};
 
+	if (recursive() && !(_inLibrary && location() == DataLocation::Storage))
+		return TypeResult::err(
+			"Recursive structs can only be passed as storage pointers to libraries, "
+			"not as memory objects to contract functions."
+		);
+
 	util::BreadthFirstSearch<StructDefinition const*> breadthFirstSearch{{&m_struct}};
 	breadthFirstSearch.run(
-		[&](StructDefinition const* _struct, auto&& _addChild) {
-				// Check that all members have interface types.
-				// Return an error if at least one struct member does not have a type.
-				// This might happen, for example, if the type of the member does not exist.
-				for (ASTPointer<VariableDeclaration> const& variable: _struct->members())
+		[&](StructDefinition const* _struct, auto&& _addChild)
+		{
+			// Check that all members have interface types.
+			// Return an error if at least one struct member does not have a type.
+			// This might happen, for example, if the type of the member does not exist.
+			for (ASTPointer<VariableDeclaration> const& variable: _struct->members())
+			{
+				// If the struct member does not have a type return false.
+				// A TypeError is expected in this case.
+				if (!variable->annotation().type)
 				{
-					// If the struct member does not have a type return false.
-					// A TypeError is expected in this case.
-					if (!variable->annotation().type)
+					result = TypeResult::err("Invalid type!");
+					breadthFirstSearch.abort();
+					return;
+				}
+
+				Type const* memberType = variable->annotation().type;
+
+				while (
+					memberType->category() == Type::Category::Array ||
+					memberType->category() == Type::Category::Mapping
+				)
+				{
+					if (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+						memberType = arrayType->finalBaseType(false);
+					else if (auto mappingType = dynamic_cast<MappingType const*>(memberType))
+						memberType = mappingType->valueType();
+				}
+
+				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
+					_addChild(&innerStruct->structDefinition());
+				else
+				{
+					auto iType = memberType->interfaceType(_inLibrary);
+					if (!iType.get())
 					{
-						result = TypeResult::err("Invalid type!");
+						solAssert(!iType.message().empty(), "Expected detailed error message!");
+						result = iType;
 						breadthFirstSearch.abort();
 						return;
 					}
-
-					Type const* memberType = variable->annotation().type;
-
-					while (dynamic_cast<ArrayType const*>(memberType))
-						memberType = dynamic_cast<ArrayType const*>(memberType)->baseType();
-
-					if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-					{
-						if (innerStruct->recursive() && !(_inLibrary && location() == DataLocation::Storage))
-						{
-							result = TypeResult::err(
-								"Recursive structs can only be passed as storage pointers to libraries, not as memory objects to contract functions."
-							);
-							breadthFirstSearch.abort();
-							return;
-						}
-						else
-							_addChild(&innerStruct->structDefinition());
-					}
-					else
-					{
-						auto iType = memberType->interfaceType(_inLibrary);
-						if (!iType.get())
-						{
-							solAssert(!iType.message().empty(), "Expected detailed error message!");
-							result = iType;
-							breadthFirstSearch.abort();
-							return;
-						}
-					}
+				}
 			}
 		}
 	);
