@@ -34,10 +34,12 @@ void ImmutableValidator::analyze()
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (VariableDeclaration const* stateVar: contract->stateVariables())
 			if (stateVar->value())
-			{
+				m_initializedStateVariables.emplace(stateVar);
+
+	for (ContractDefinition const* contract: linearizedContracts)
+		for (VariableDeclaration const* stateVar: contract->stateVariables())
+			if (stateVar->value())
 				stateVar->value()->accept(*this);
-				solAssert(m_initializedStateVariables.emplace(stateVar).second, "");
-			}
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		if (contract->constructor())

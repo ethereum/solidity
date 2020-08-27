@@ -25,6 +25,7 @@ Bugfixes:
  * Allow `type(Contract).name` for abstract contracts and interfaces.
  * Type Checker: Disallow structs containing nested mapping in memory as parameters for library functions.
  * Type Checker: Disallow ``using for`` directive inside interfaces.
+ * Immutables: Disallow assigning immutables more than once during their declaration.
 
 
 ### 0.7.0 (2020-07-28)
