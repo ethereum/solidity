@@ -297,6 +297,10 @@ bool CompilerStack::parse()
 
 	storeContractDefinitions();
 
+	if (!m_hasError)
+		std::cout << "Fuzzer: Parsing successful" << std::endl;
+	else
+		std::cout << "Fuzzer: Parsing failure" << std::endl;
 	return !m_hasError;
 }
 
@@ -477,6 +481,11 @@ bool CompilerStack::analyze()
 	m_stackState = AnalysisPerformed;
 	if (!noErrors)
 		m_hasError = true;
+
+	if (!m_hasError)
+		std::cout << "Fuzzer: Analysis successful" << std::endl;
+	else
+		std::cout << "Fuzzer: Analysis failure" << std::endl;
 
 	return !m_hasError;
 }

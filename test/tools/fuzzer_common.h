@@ -27,6 +27,12 @@
  */
 struct FuzzerUtil
 {
+	enum class Error
+	{
+		SUCCESS,
+		FAILURE,
+		EXCEPTION
+	};
 	static void runCompiler(std::string const& _input, bool _quiet);
 	static void testCompilerJsonInterface(std::string const& _input, bool _optimize, bool _quiet);
 	static void testConstantOptimizer(std::string const& _input, bool _quiet);
@@ -37,7 +43,7 @@ struct FuzzerUtil
 	/// version to be compiled for, and bool @param _forceSMT that, if true,
 	/// adds the experimental SMTChecker pragma to each source file in the
 	/// source map.
-	static void testCompiler(
+	static Error testCompiler(
 		solidity::StringMap& _input,
 		bool _optimize,
 		unsigned _rand,

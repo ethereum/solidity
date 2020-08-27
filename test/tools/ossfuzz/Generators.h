@@ -41,6 +41,20 @@
  *
  */
 #define GENERATORLIST(MACRO, SEP, ENDSEP) \
+	MACRO(ConstantVariableDeclaration) SEP \
+	MACRO(ContractDefinitionGenerator) SEP \
+	MACRO(EnumDeclaration) SEP \
+	MACRO(ExpressionGenerator) SEP \
+	MACRO(FunctionDefinitionGenerator) SEP \
+	MACRO(ImportGenerator) SEP \
+	MACRO(LocationGenerator) SEP \
+	MACRO(NatSpecGenerator) SEP \
+	MACRO(ParameterListGenerator) SEP \
 	MACRO(PragmaGenerator) SEP \
+	MACRO(SimpleVarDeclGenerator) SEP \
 	MACRO(SourceUnitGenerator) SEP \
-	MACRO(TestCaseGenerator) ENDSEP
+	MACRO(StatementGenerator) SEP \
+	MACRO(StateVariableDeclarationGenerator) SEP \
+	MACRO(TestCaseGenerator) SEP \
+	MACRO(VariableDeclarationGenerator) ENDSEP
+

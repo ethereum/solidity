@@ -28,6 +28,7 @@
 #include <libsolc/libsolc.h>
 
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <sstream>
 
@@ -81,7 +82,7 @@ void FuzzerUtil::forceSMT(StringMap& _input)
 			sourceUnit.second += smtPragma;
 }
 
-void FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand, bool _forceSMT)
+FuzzerUtil::Error FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand, bool _forceSMT)
 {
 	frontend::CompilerStack compiler;
 	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
@@ -100,19 +101,35 @@ void FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand,
 	compiler.setOptimiserSettings(optimiserSettings);
 	try
 	{
-		compiler.compile();
+		if (!compiler.compile())
+		{
+			langutil::SourceReferenceFormatter formatter(std::cerr, false, false);
+
+			for (auto const& error: compiler.errors())
+				formatter.printExceptionInformation(
+					*error,
+					formatter.formatErrorInformation(*error)
+				);
+			return Error::FAILURE;
+		}
+		else
+			return Error::SUCCESS;
 	}
 	catch (Error const&)
 	{
+		return Error::EXCEPTION;
 	}
 	catch (FatalError const&)
 	{
+		return Error::EXCEPTION;
 	}
 	catch (UnimplementedFeatureError const&)
 	{
+		return Error::EXCEPTION;
 	}
 	catch (StackTooDeepError const&)
 	{
+		return Error::EXCEPTION;
 	}
 }
 
