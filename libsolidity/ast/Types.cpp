@@ -712,6 +712,8 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 				return TypeResult::err("Exponent is fractional.");
 			if (!rationalNumberType->integerType())
 				return TypeResult::err("Exponent too large.");
+			if (rationalNumberType->isNegative())
+				return TypeResult::err("Exponentiation power is not allowed to be a negative integer literal.");
 		}
 		return this;
 	}
