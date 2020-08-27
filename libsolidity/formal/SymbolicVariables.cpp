@@ -121,7 +121,7 @@ SymbolicIntVariable::SymbolicIntVariable(
 ):
 	SymbolicVariable(_type, _originalType, move(_uniqueName), _context)
 {
-	solAssert(isNumber(m_type->category()), "");
+	solAssert(isNumber(*m_type), "");
 }
 
 SymbolicAddressVariable::SymbolicAddressVariable(
@@ -221,7 +221,7 @@ SymbolicEnumVariable::SymbolicEnumVariable(
 ):
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
-	solAssert(isEnum(m_type->category()), "");
+	solAssert(isEnum(*m_type), "");
 }
 
 SymbolicTupleVariable::SymbolicTupleVariable(
@@ -231,7 +231,7 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 ):
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
-	solAssert(isTuple(m_type->category()), "");
+	solAssert(isTuple(*m_type), "");
 }
 
 SymbolicTupleVariable::SymbolicTupleVariable(
@@ -277,7 +277,7 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 		m_context
 	)
 {
-	solAssert(isArray(m_type->category()) || isMapping(m_type->category()), "");
+	solAssert(isArray(*m_type) || isMapping(*m_type), "");
 }
 
 SymbolicArrayVariable::SymbolicArrayVariable(
@@ -330,7 +330,7 @@ SymbolicStructVariable::SymbolicStructVariable(
 ):
 	SymbolicVariable(_type, _type, move(_uniqueName), _context)
 {
-	solAssert(isStruct(m_type->category()), "");
+	solAssert(isNonRecursiveStruct(*m_type), "");
 	auto const* structType = dynamic_cast<StructType const*>(_type);
 	solAssert(structType, "");
 	auto const& members = structType->structDefinition().members();

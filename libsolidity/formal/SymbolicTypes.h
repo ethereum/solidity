@@ -34,30 +34,30 @@ std::vector<smtutil::SortPointer> smtSort(std::vector<frontend::TypePointer> con
 smtutil::SortPointer smtSortAbstractFunction(frontend::Type const& _type);
 std::vector<smtutil::SortPointer> smtSortAbstractFunction(std::vector<frontend::TypePointer> const& _types);
 /// Returns the SMT kind that models the Solidity type type category _category.
-smtutil::Kind smtKind(frontend::Type::Category _category);
+smtutil::Kind smtKind(frontend::Type const& _type);
 
 /// Returns true if type is fully supported (declaration and operations).
-bool isSupportedType(frontend::Type::Category _category);
+bool isSupportedType(frontend::Type const& _type);
 bool isSupportedType(frontend::Type const& _type);
 /// Returns true if type is partially supported (declaration).
-bool isSupportedTypeDeclaration(frontend::Type::Category _category);
+bool isSupportedTypeDeclaration(frontend::Type const& _type);
 bool isSupportedTypeDeclaration(frontend::Type const& _type);
 
-bool isInteger(frontend::Type::Category _category);
-bool isFixedPoint(frontend::Type::Category _category);
-bool isRational(frontend::Type::Category _category);
-bool isFixedBytes(frontend::Type::Category _category);
-bool isAddress(frontend::Type::Category _category);
-bool isContract(frontend::Type::Category _category);
-bool isEnum(frontend::Type::Category _category);
-bool isNumber(frontend::Type::Category _category);
-bool isBool(frontend::Type::Category _category);
-bool isFunction(frontend::Type::Category _category);
-bool isMapping(frontend::Type::Category _category);
-bool isArray(frontend::Type::Category _category);
-bool isTuple(frontend::Type::Category _category);
-bool isStringLiteral(frontend::Type::Category _category);
-bool isStruct(frontend::Type::Category _category);
+bool isInteger(frontend::Type const& _type);
+bool isFixedPoint(frontend::Type const& _type);
+bool isRational(frontend::Type const& _type);
+bool isFixedBytes(frontend::Type const& _type);
+bool isAddress(frontend::Type const& _type);
+bool isContract(frontend::Type const& _type);
+bool isEnum(frontend::Type const& _type);
+bool isNumber(frontend::Type const& _type);
+bool isBool(frontend::Type const& _type);
+bool isFunction(frontend::Type const& _type);
+bool isMapping(frontend::Type const& _type);
+bool isArray(frontend::Type const& _type);
+bool isTuple(frontend::Type const& _type);
+bool isStringLiteral(frontend::Type const& _type);
+bool isNonRecursiveStruct(frontend::Type const& _type);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,
