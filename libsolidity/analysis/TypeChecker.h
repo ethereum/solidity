@@ -143,6 +143,7 @@ private:
 	bool visit(Identifier const& _identifier) override;
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
+	void endVisit(UsingForDirective const& _usingForDirective) override;
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,

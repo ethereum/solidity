@@ -3148,6 +3148,16 @@ void TypeChecker::endVisit(Literal const& _literal)
 	_literal.annotation().isPure = true;
 }
 
+void TypeChecker::endVisit(UsingForDirective const& _usingFor)
+{
+	if (m_currentContract->isInterface())
+		m_errorReporter.typeError(
+			9088_error,
+			_usingFor.location(),
+			"The \"using for\" directive is not allowed inside interfaces."
+		);
+}
+
 bool TypeChecker::contractDependenciesAreCyclic(
 	ContractDefinition const& _contract,
 	std::set<ContractDefinition const*> const& _seenContracts
