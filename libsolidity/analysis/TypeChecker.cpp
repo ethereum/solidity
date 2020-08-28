@@ -616,7 +616,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (_variable.isStateVariable())
 				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
 			else
-				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->canonicalName(), false));
+				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->toString(true), false));
 		}
 		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
 		for (Type const* subtype: oversizedSubtypes)
