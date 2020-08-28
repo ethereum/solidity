@@ -589,6 +589,30 @@ BOOST_AUTO_TEST_CASE(invalid_short_unicode_string_escape)
 
 // Unicode string literal
 
+BOOST_AUTO_TEST_CASE(unicode_prefix_only)
+{
+	Scanner scanner(CharStream("{ unicode", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_invalid_space)
+{
+	Scanner scanner(CharStream("{ unicode ", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+}
+
+BOOST_AUTO_TEST_CASE(unicode_invalid_token)
+{
+	Scanner scanner(CharStream("{ unicode test", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+}
+
 BOOST_AUTO_TEST_CASE(valid_unicode_literal)
 {
 	Scanner scanner(CharStream("{ unicode\"Hello 😃\"", ""));
@@ -606,7 +630,31 @@ BOOST_AUTO_TEST_CASE(valid_nonprintable_in_unicode_literal)
 	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("Hello \x07\xf0\x9f\x98\x83", 11));
 }
 
-//  HEX STRING LITERAL
+// Hex string literal
+
+BOOST_AUTO_TEST_CASE(hex_prefix_only)
+{
+	Scanner scanner(CharStream("{ hex", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+}
+
+BOOST_AUTO_TEST_CASE(hex_invalid_space)
+{
+	Scanner scanner(CharStream("{ hex ", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+}
+
+BOOST_AUTO_TEST_CASE(hex_invalid_token)
+{
+	Scanner scanner(CharStream("{ hex test", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+}
 
 BOOST_AUTO_TEST_CASE(valid_hex_literal)
 {
@@ -648,7 +696,7 @@ BOOST_AUTO_TEST_CASE(invalid_hex_literal_nonhex_string)
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalHexString);
 }
 
-//  COMMENTS
+// Comments
 
 BOOST_AUTO_TEST_CASE(invalid_multiline_comment_close)
 {
