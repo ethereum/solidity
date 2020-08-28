@@ -1111,11 +1111,11 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 	symbArray->increaseIndex();
 	m_context.addAssertion(symbArray->elements() == oldElements);
 	auto newLength = smtutil::Expression::ite(
-		oldLength == 0,
-		smt::maxValue(*TypeProvider::uint256()),
-		oldLength - 1
+		oldLength > 0,
+		oldLength - 1,
+		0
 	);
-	m_context.addAssertion(symbArray->length() == oldLength - 1);
+	m_context.addAssertion(symbArray->length() == newLength);
 
 	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
 }
