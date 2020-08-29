@@ -19,7 +19,7 @@ Solidity also supports exception handling in the form of ``try``/``catch``-state
 but only for :ref:`external function calls <external-function-calls>` and
 contract creation calls.
 
-Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
+Parentheses can *not* be omitted for conditionals, but curly braces can be omitted
 around single-statement bodies.
 
 Note that there is no type conversion from non-boolean to boolean types as
