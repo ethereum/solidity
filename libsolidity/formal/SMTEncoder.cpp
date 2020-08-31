@@ -420,8 +420,11 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 			_tuple.location(),
 			"Assertion checker does not yet implement inline arrays."
 		);
-	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
+	else if (_tuple.components().size() == 1)
+		defineExpr(_tuple, expr(*_tuple.components().front()));
+	else
 	{
+		solAssert(_tuple.annotation().type->category() == Type::Category::Tuple, "");
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
 		auto const& symbComponents = symbTuple->components();
@@ -444,13 +447,6 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 				}
 			}
 		}
-	}
-	else
-	{
-		/// Parenthesized expressions are also TupleExpression regardless their type.
-		auto const& components = _tuple.components();
-		solAssert(components.size() == 1, "");
-		defineExpr(_tuple, expr(*components.front()));
 	}
 }
 
