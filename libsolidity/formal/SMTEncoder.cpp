@@ -463,12 +463,14 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 
 	createExpr(_op);
 
+	auto const* subExpr = innermostTuple(_op.subExpression());
+
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
 	{
 		solAssert(smt::isBool(_op.annotation().type->category()), "");
-		defineExpr(_op, !expr(_op.subExpression()));
+		defineExpr(_op, !expr(*subExpr));
 		break;
 	}
 	case Token::Inc: // ++ (pre- or postfix)
@@ -476,8 +478,8 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 		auto cat = _op.annotation().type->category();
 		solAssert(smt::isInteger(cat) || smt::isFixedPoint(cat), "");
-		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
-		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
+		solAssert(subExpr->annotation().willBeWrittenTo, "");
+		if (auto identifier = dynamic_cast<Identifier const*>(subExpr))
 		{
 			auto decl = identifierToVariable(*identifier);
 			solAssert(decl, "");
@@ -486,12 +488,12 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			assignment(*decl, newValue);
 		}
-		else if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
+		else if (dynamic_cast<IndexAccess const*>(subExpr))
 		{
-			auto innerValue = expr(_op.subExpression());
+			auto innerValue = expr(*subExpr);
 			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			arrayIndexAssignment(_op.subExpression(), newValue);
+			arrayIndexAssignment(*subExpr, newValue);
 		}
 		else
 			m_errorReporter.warning(
@@ -504,25 +506,24 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	}
 	case Token::Sub: // -
 	{
-		defineExpr(_op, 0 - expr(_op.subExpression()));
+		defineExpr(_op, 0 - expr(*subExpr));
 		break;
 	}
 	case Token::Delete:
 	{
-		auto const& subExpr = _op.subExpression();
-		if (auto decl = identifierToVariable(subExpr))
+		if (auto decl = identifierToVariable(*subExpr))
 		{
 			m_context.newValue(*decl);
 			m_context.setZeroValue(*decl);
 		}
 		else
 		{
-			solAssert(m_context.knownExpression(subExpr), "");
-			auto const& symbVar = m_context.expression(subExpr);
+			solAssert(m_context.knownExpression(*subExpr), "");
+			auto const& symbVar = m_context.expression(*subExpr);
 			symbVar->increaseIndex();
 			m_context.setZeroValue(*symbVar);
-			if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
-				arrayIndexAssignment(_op.subExpression(), symbVar->currentValue());
+			if (dynamic_cast<IndexAccess const*>(subExpr))
+				arrayIndexAssignment(*subExpr, symbVar->currentValue());
 			else
 				m_errorReporter.warning(
 					2683_error,
@@ -1122,9 +1123,7 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 
 void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array)
 {
-	Expression const* expr = &_expr;
-	if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(expr))
-		expr = innermostTuple(*tupleExpr);
+	Expression const* expr = innermostTuple(_expr);
 
 	if (auto const* id = dynamic_cast<Identifier const*>(expr))
 	{
@@ -1461,9 +1460,7 @@ void SMTEncoder::assignment(
 		"Tuple assignments should be handled by tupleAssignment."
 	);
 
-	Expression const* left = &_left;
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(left))
-		left = innermostTuple(*tuple);
+	Expression const* left = innermostTuple(_left);
 
 	if (!smt::isSupportedType(_type->category()))
 	{
@@ -1491,7 +1488,7 @@ void SMTEncoder::assignment(
 
 void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _right)
 {
-	auto lTuple = dynamic_cast<TupleExpression const*>(innermostTuple(dynamic_cast<TupleExpression const&>(_left)));
+	auto lTuple = dynamic_cast<TupleExpression const*>(innermostTuple(_left));
 	solAssert(lTuple, "");
 
 	auto const& lComponents = lTuple->components();
@@ -1917,10 +1914,12 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 	return base;
 }
 
-Expression const* SMTEncoder::innermostTuple(TupleExpression const& _tuple)
+Expression const* SMTEncoder::innermostTuple(Expression const& _expr)
 {
-	solAssert(!_tuple.isInlineArray(), "");
-	TupleExpression const* tuple = &_tuple;
+	auto const* tuple = dynamic_cast<TupleExpression const*>(&_expr);
+	if (!tuple || tuple->isInlineArray())
+		return &_expr;
+
 	Expression const* expr = tuple;
 	while (tuple && !tuple->isInlineArray() && tuple->components().size() == 1)
 	{
