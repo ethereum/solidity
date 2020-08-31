@@ -300,7 +300,8 @@ string TestFunctionCall::formatRawParameters(
 		{
 			if (param.format.newline)
 				os << endl << _linePrefix << "// ";
-			os << param.rawString;
+			for (auto const c: param.rawString)
+				os << (c >= ' ' ? string(1, c) : "\\x" + toHex(static_cast<uint8_t>(c)));
 			if (&param != &_params.back())
 				os << ", ";
 		}
