@@ -735,6 +735,7 @@ jobs:
       - image: buildpack-deps:latest
     environment:
       TERM: xterm
+    parallelism: 3
     steps:
       - checkout
       - attach_workspace:

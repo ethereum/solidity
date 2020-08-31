@@ -27,7 +27,16 @@ VERSION="$2"
 
 function install_fn { echo "Nothing to install."; }
 function compile_fn { echo "Nothing to compile."; }
-function test_fn { npm test; }
+function test_fn
+{
+  if [ "$CIRCLECI" ]
+  then
+    # This does not run the linter.
+    npx tape $(circleci tests glob "./test/*.js" | grep -v "test/index.js" | circleci tests split --split-by=timings)
+  else
+    npm test
+  fi
+}
 
 function solcjs_test
 {
