@@ -195,8 +195,8 @@ JSON file as output:
     }
 
 Note that the key by which to find the methods is the function's
-canonical signature as defined in the `Contract
-ABI <Ethereum-Contract-ABI#signature>`__ and not simply the function's
+canonical signature as defined in the :ref:`Contract
+ABI <abi_function_selector>` and not simply the function's
 name.
 
 .. _header-developer-doc:
