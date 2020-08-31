@@ -254,7 +254,7 @@ inside the input. We have a specialized binary called ``solfuzzer`` which takes 
 and fails whenever it encounters an internal compiler error, segmentation fault or similar, but
 does not fail if e.g., the code contains an error. This way, fuzzing tools can find internal problems in the compiler.
 
-We mainly use `AFL <http://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
+We mainly use `AFL <https://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
 install the AFL packages from your repositories (afl, afl-clang) or build them manually.
 Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
 
@@ -388,7 +388,7 @@ local slang and references, making your language as clear to all readers as poss
 Title Case for Headings
 -----------------------
 
-Use `title case <http://titlecase.com>`_ for headings. This means capitalise all principal words in
+Use `title case <https://titlecase.com>`_ for headings. This means capitalise all principal words in
 titles, but not articles, conjunctions, and prepositions unless they start the
 title.
 

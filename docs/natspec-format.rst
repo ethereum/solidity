@@ -36,7 +36,7 @@ for the purposes of NatSpec.
 
 -  For Vyper, use ``"""`` indented to the inner contents with bare
    comments. See `Vyper
-   documentation <https://vyper.readthedocs.io/en/latest/structure-of-a-contract.html#natspec-metadata>`__.
+   documentation <https://vyper.readthedocs.io/en/latest/natspec.html>`__.
 
 The following example shows a contract and a function using all available tags.
 

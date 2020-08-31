@@ -160,6 +160,8 @@ more details on error handling and when to use which function.
 
 .. index:: keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography,
 
+.. _mathematical-and-cryptographic-functions:
+
 Mathematical and Cryptographic Functions
 ----------------------------------------
 
@@ -193,17 +195,17 @@ Mathematical and Cryptographic Functions
     ``ecrecover`` returns an ``address``, and not an ``address payable``. See :ref:`address payable<address>` for
     conversion, in case you need to transfer funds to the recovered address.
 
-    For further details, read `example usage <https://ethereum.stackexchange.com/q/1777/222>`_.
+    For further details, read `example usage <https://ethereum.stackexchange.com/questions/1777/workflow-on-signing-a-string-with-private-key-followed-by-signature-verificatio>`_.
 
 .. warning::
 
     If you use ``ecrecover``, be aware that a valid signature can be turned into a different valid signature without
     requiring knowledge of the corresponding private key. In the Homestead hard fork, this issue was fixed
-    for _transaction_ signatures (see `EIP-2 <http://eips.ethereum.org/EIPS/eip-2#specification>`_), but
+    for _transaction_ signatures (see `EIP-2 <https://eips.ethereum.org/EIPS/eip-2#specification>`_), but
     the ecrecover function remained unchanged.
 
     This is usually not a problem unless you require signatures to be unique or
-    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.org/v2.3.0/api/cryptography#ecdsa>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
+    use them to identify items. OpenZeppelin have a `ECDSA helper library <https://docs.openzeppelin.com/contracts/2.x/api/cryptography#ECDSA>`_ that you can use as a wrapper for ``ecrecover`` without this issue.
 
 .. note::
 
