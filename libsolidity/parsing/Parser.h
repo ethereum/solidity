@@ -106,6 +106,7 @@ private:
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
+	ASTPointer<IdentifierPath> parseIdentifierPath();
 	ASTPointer<TypeName> parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory);
 	ASTPointer<TypeName> parseTypeName();
 	ASTPointer<FunctionTypeName> parseFunctionType();

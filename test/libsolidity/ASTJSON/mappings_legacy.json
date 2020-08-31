@@ -6,7 +6,7 @@
     {
       "C":
       [
-        17
+        19
       ]
     }
   },
@@ -28,10 +28,10 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          17
+          19
         ],
         "name": "C",
-        "scope": 18
+        "scope": 20
       },
       "children":
       [
@@ -81,7 +81,7 @@
             "constant": false,
             "mutability": "mutable",
             "name": "a",
-            "scope": 17,
+            "scope": 19,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(contract C => bool)",
@@ -99,11 +99,23 @@
                 {
                   "attributes":
                   {
-                    "name": "C",
-                    "referencedDeclaration": 17,
+                    "referencedDeclaration": 19,
                     "type": "contract C"
                   },
-                  "id": 5,
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "name": "C",
+                        "referencedDeclaration": 19
+                      },
+                      "id": 5,
+                      "name": "IdentifierPath",
+                      "src": "48:1:1"
+                    }
+                  ],
+                  "id": 6,
                   "name": "UserDefinedTypeName",
                   "src": "48:1:1"
                 },
@@ -113,17 +125,17 @@
                     "name": "bool",
                     "type": "bool"
                   },
-                  "id": 6,
+                  "id": 7,
                   "name": "ElementaryTypeName",
                   "src": "53:4:1"
                 }
               ],
-              "id": 7,
+              "id": 8,
               "name": "Mapping",
               "src": "40:18:1"
             }
           ],
-          "id": 8,
+          "id": 9,
           "name": "VariableDeclaration",
           "src": "40:20:1"
         },
@@ -133,7 +145,7 @@
             "constant": false,
             "mutability": "mutable",
             "name": "b",
-            "scope": 17,
+            "scope": 19,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(address => bool)",
@@ -154,7 +166,7 @@
                     "name": "address",
                     "type": "address"
                   },
-                  "id": 9,
+                  "id": 10,
                   "name": "ElementaryTypeName",
                   "src": "74:7:1"
                 },
@@ -164,17 +176,17 @@
                     "name": "bool",
                     "type": "bool"
                   },
-                  "id": 10,
+                  "id": 11,
                   "name": "ElementaryTypeName",
                   "src": "85:4:1"
                 }
               ],
-              "id": 11,
+              "id": 12,
               "name": "Mapping",
               "src": "66:24:1"
             }
           ],
-          "id": 12,
+          "id": 13,
           "name": "VariableDeclaration",
           "src": "66:26:1"
         },
@@ -184,7 +196,7 @@
             "constant": false,
             "mutability": "mutable",
             "name": "c",
-            "scope": 17,
+            "scope": 19,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "mapping(enum C.E => bool)",
@@ -202,11 +214,23 @@
                 {
                   "attributes":
                   {
-                    "name": "E",
                     "referencedDeclaration": 4,
                     "type": "enum C.E"
                   },
-                  "id": 13,
+                  "children":
+                  [
+                    {
+                      "attributes":
+                      {
+                        "name": "E",
+                        "referencedDeclaration": 4
+                      },
+                      "id": 14,
+                      "name": "IdentifierPath",
+                      "src": "106:1:1"
+                    }
+                  ],
+                  "id": 15,
                   "name": "UserDefinedTypeName",
                   "src": "106:1:1"
                 },
@@ -216,27 +240,27 @@
                     "name": "bool",
                     "type": "bool"
                   },
-                  "id": 14,
+                  "id": 16,
                   "name": "ElementaryTypeName",
                   "src": "111:4:1"
                 }
               ],
-              "id": 15,
+              "id": 17,
               "name": "Mapping",
               "src": "98:18:1"
             }
           ],
-          "id": 16,
+          "id": 18,
           "name": "VariableDeclaration",
           "src": "98:20:1"
         }
       ],
-      "id": 17,
+      "id": 19,
       "name": "ContractDefinition",
       "src": "0:121:1"
     }
   ],
-  "id": 18,
+  "id": 20,
   "name": "SourceUnit",
   "src": "0:122:1"
 }

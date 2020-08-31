@@ -4,14 +4,14 @@
   {
     "C":
     [
-      5
+      6
     ],
     "L":
     [
       1
     ]
   },
-  "id": 6,
+  "id": 7,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -29,7 +29,7 @@
       "name": "L",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 6,
+      "scope": 7,
       "src": "0:12:1"
     },
     {
@@ -38,22 +38,29 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 5,
+      "id": 6,
       "linearizedBaseContracts":
       [
-        5
+        6
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
       [
         {
-          "id": 4,
+          "id": 5,
           "libraryName":
           {
-            "id": 2,
-            "name": "L",
+            "id": 3,
             "nodeType": "UserDefinedTypeName",
+            "pathNode":
+            {
+              "id": 2,
+              "name": "L",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 1,
+              "src": "32:1:1"
+            },
             "referencedDeclaration": 1,
             "src": "32:1:1",
             "typeDescriptions":
@@ -66,7 +73,7 @@
           "src": "26:17:1",
           "typeName":
           {
-            "id": 3,
+            "id": 4,
             "name": "uint",
             "nodeType": "ElementaryTypeName",
             "src": "38:4:1",
@@ -78,7 +85,7 @@
           }
         }
       ],
-      "scope": 6,
+      "scope": 7,
       "src": "13:32:1"
     }
   ],

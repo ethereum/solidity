@@ -8,22 +8,22 @@
     ],
     "B":
     [
-      4
+      5
     ],
     "C":
     [
-      7
+      9
     ],
     "D":
     [
-      10
+      13
     ],
     "E":
     [
-      13
+      17
     ]
   },
-  "id": 14,
+  "id": 18,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -41,7 +41,7 @@
       "name": "A",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 14,
+      "scope": 18,
       "src": "0:14:1"
     },
     {
@@ -51,9 +51,16 @@
         {
           "baseName":
           {
-            "id": 2,
-            "name": "A",
+            "id": 3,
             "nodeType": "UserDefinedTypeName",
+            "pathNode":
+            {
+              "id": 2,
+              "name": "A",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 1,
+              "src": "29:1:1"
+            },
             "referencedDeclaration": 1,
             "src": "29:1:1",
             "typeDescriptions":
@@ -62,7 +69,7 @@
               "typeString": "contract A"
             }
           },
-          "id": 3,
+          "id": 4,
           "nodeType": "InheritanceSpecifier",
           "src": "29:1:1"
         }
@@ -73,16 +80,16 @@
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 4,
+      "id": 5,
       "linearizedBaseContracts":
       [
-        4,
+        5,
         1
       ],
       "name": "B",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 14,
+      "scope": 18,
       "src": "15:19:1"
     },
     {
@@ -92,18 +99,25 @@
         {
           "baseName":
           {
-            "id": 5,
-            "name": "B",
+            "id": 7,
             "nodeType": "UserDefinedTypeName",
-            "referencedDeclaration": 4,
+            "pathNode":
+            {
+              "id": 6,
+              "name": "B",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 5,
+              "src": "49:1:1"
+            },
+            "referencedDeclaration": 5,
             "src": "49:1:1",
             "typeDescriptions":
             {
-              "typeIdentifier": "t_contract$_B_$4",
+              "typeIdentifier": "t_contract$_B_$5",
               "typeString": "contract B"
             }
           },
-          "id": 6,
+          "id": 8,
           "nodeType": "InheritanceSpecifier",
           "src": "49:1:1"
         }
@@ -111,21 +125,21 @@
       "contractDependencies":
       [
         1,
-        4
+        5
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 7,
+      "id": 9,
       "linearizedBaseContracts":
       [
-        7,
-        4,
+        9,
+        5,
         1
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 14,
+      "scope": 18,
       "src": "35:19:1"
     },
     {
@@ -135,18 +149,25 @@
         {
           "baseName":
           {
-            "id": 8,
-            "name": "C",
+            "id": 11,
             "nodeType": "UserDefinedTypeName",
-            "referencedDeclaration": 7,
+            "pathNode":
+            {
+              "id": 10,
+              "name": "C",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 9,
+              "src": "69:1:1"
+            },
+            "referencedDeclaration": 9,
             "src": "69:1:1",
             "typeDescriptions":
             {
-              "typeIdentifier": "t_contract$_C_$7",
+              "typeIdentifier": "t_contract$_C_$9",
               "typeString": "contract C"
             }
           },
-          "id": 9,
+          "id": 12,
           "nodeType": "InheritanceSpecifier",
           "src": "69:1:1"
         }
@@ -154,23 +175,23 @@
       "contractDependencies":
       [
         1,
-        4,
-        7
+        5,
+        9
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 10,
+      "id": 13,
       "linearizedBaseContracts":
       [
-        10,
-        7,
-        4,
+        13,
+        9,
+        5,
         1
       ],
       "name": "D",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 14,
+      "scope": 18,
       "src": "55:19:1"
     },
     {
@@ -180,18 +201,25 @@
         {
           "baseName":
           {
-            "id": 11,
-            "name": "D",
+            "id": 15,
             "nodeType": "UserDefinedTypeName",
-            "referencedDeclaration": 10,
+            "pathNode":
+            {
+              "id": 14,
+              "name": "D",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 13,
+              "src": "89:1:1"
+            },
+            "referencedDeclaration": 13,
             "src": "89:1:1",
             "typeDescriptions":
             {
-              "typeIdentifier": "t_contract$_D_$10",
+              "typeIdentifier": "t_contract$_D_$13",
               "typeString": "contract D"
             }
           },
-          "id": 12,
+          "id": 16,
           "nodeType": "InheritanceSpecifier",
           "src": "89:1:1"
         }
@@ -199,25 +227,25 @@
       "contractDependencies":
       [
         1,
-        4,
-        7,
-        10
+        5,
+        9,
+        13
       ],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 13,
+      "id": 17,
       "linearizedBaseContracts":
       [
+        17,
         13,
-        10,
-        7,
-        4,
+        9,
+        5,
         1
       ],
       "name": "E",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "scope": 14,
+      "scope": 18,
       "src": "75:19:1"
     }
   ],

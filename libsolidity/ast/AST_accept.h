@@ -104,6 +104,18 @@ void ContractDefinition::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void IdentifierPath::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void IdentifierPath::accept(ASTConstVisitor& _visitor) const
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
 void InheritanceSpecifier::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
@@ -368,13 +380,15 @@ void ElementaryTypeName::accept(ASTConstVisitor& _visitor) const
 
 void UserDefinedTypeName::accept(ASTVisitor& _visitor)
 {
-	_visitor.visit(*this);
+	if (_visitor.visit(*this))
+		this->pathNode()->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
 void UserDefinedTypeName::accept(ASTConstVisitor& _visitor) const
 {
-	_visitor.visit(*this);
+	if (_visitor.visit(*this))
+		this->pathNode()->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 

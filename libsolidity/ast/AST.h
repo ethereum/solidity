@@ -557,6 +557,27 @@ private:
 	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;
 };
 
+/**
+ * A sequence of identifiers separated by dots
+ */
+class IdentifierPath: public ASTNode
+{
+public:
+	IdentifierPath(int64_t _id, SourceLocation const& _location, std::vector<ASTString> _path):
+		ASTNode(_id, _location), m_path(std::move(_path)) {}
+
+	std::vector<ASTString> const& path() const { return m_path; }
+	IdentifierPathAnnotation& annotation() const override
+	{
+		return initAnnotation<IdentifierPathAnnotation>();
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+private:
+	std::vector<ASTString> m_path;
+};
+
 class InheritanceSpecifier: public ASTNode
 {
 public:
@@ -1203,18 +1224,19 @@ private:
 class UserDefinedTypeName: public TypeName
 {
 public:
-	UserDefinedTypeName(int64_t _id, SourceLocation const& _location, std::vector<ASTString> _namePath):
+	UserDefinedTypeName(int64_t _id, SourceLocation const& _location, ASTPointer<IdentifierPath> _namePath):
 		TypeName(_id, _location), m_namePath(std::move(_namePath)) {}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<ASTString> const& namePath() const { return m_namePath; }
+	std::vector<ASTString> const& namePath() const { return m_namePath->path(); }
+	ASTPointer<IdentifierPath> const& pathNode() const { return m_namePath; }
 
 	UserDefinedTypeNameAnnotation& annotation() const override;
 
 private:
-	std::vector<ASTString> m_namePath;
+	ASTPointer<IdentifierPath> m_namePath;
 };
 
 /**

@@ -115,6 +115,8 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 		return createImportDirective(_json);
 	if (nodeType == "ContractDefinition")
 		return createContractDefinition(_json);
+	if (nodeType == "IdentifierPath")
+		return createIdentifier(_json);
 	if (nodeType == "InheritanceSpecifier")
 		return createInheritanceSpecifier(_json);
 	if (nodeType == "UsingForDirective")
@@ -296,6 +298,22 @@ ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::V
 		subNodes,
 		contractKind(_node),
 		memberAsBool(_node, "abstract")
+	);
+}
+
+ASTPointer<IdentifierPath> ASTJsonImporter::createIdentifierPath(Json::Value const& _node)
+{
+	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
+
+	vector<ASTString> namePath;
+	vector<string> strs;
+	string nameString = member(_node, "name").asString();
+	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
+	for (string s: strs)
+		namePath.emplace_back(s);
+	return createASTNode<IdentifierPath>(
+		_node,
+		namePath
 	);
 }
 
@@ -518,17 +536,9 @@ ASTPointer<ElementaryTypeName> ASTJsonImporter::createElementaryTypeName(Json::V
 
 ASTPointer<UserDefinedTypeName> ASTJsonImporter::createUserDefinedTypeName(Json::Value const& _node)
 {
-	astAssert(_node["name"].isString(), "Expected 'name' to be a string!");
-
-	vector<ASTString> namePath;
-	vector<string> strs;
-	string nameString = member(_node, "name").asString();
-	boost::algorithm::split(strs, nameString, boost::is_any_of("."));
-	for (string s: strs)
-		namePath.emplace_back(s);
 	return createASTNode<UserDefinedTypeName>(
 		_node,
-		namePath
+		createIdentifierPath(member(_node, "pathNode"))
 	);
 }
 

@@ -74,6 +74,7 @@ private:
 	ASTPointer<PragmaDirective> createPragmaDirective(Json::Value const& _node);
 	ASTPointer<ImportDirective> createImportDirective(Json::Value const& _node);
 	ASTPointer<ContractDefinition> createContractDefinition(Json::Value const& _node);
+	ASTPointer<IdentifierPath> createIdentifierPath(Json::Value const& _node);
 	ASTPointer<InheritanceSpecifier> createInheritanceSpecifier(Json::Value const& _node);
 	ASTPointer<UsingForDirective> createUsingForDirective(Json::Value const& _node);
 	ASTPointer<ASTNode> createStructDefinition(Json::Value const& _node);

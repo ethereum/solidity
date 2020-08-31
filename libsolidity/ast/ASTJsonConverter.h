@@ -77,6 +77,7 @@ public:
 	bool visit(PragmaDirective const& _node) override;
 	bool visit(ImportDirective const& _node) override;
 	bool visit(ContractDefinition const& _node) override;
+	bool visit(IdentifierPath const& _node) override;
 	bool visit(InheritanceSpecifier const& _node) override;
 	bool visit(UsingForDirective const& _node) override;
 	bool visit(StructDefinition const& _node) override;

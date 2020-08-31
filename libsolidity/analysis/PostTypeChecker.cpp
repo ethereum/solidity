@@ -219,7 +219,7 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 	{
 		for (ASTPointer<UserDefinedTypeName> const& override: _overrideSpecifier.overrides())
 		{
-			Declaration const* decl  = override->annotation().referencedDeclaration;
+			Declaration const* decl = override->annotation().referencedDeclaration;
 			solAssert(decl, "Expected declaration to be resolved.");
 
 			if (dynamic_cast<ContractDefinition const*>(decl))
