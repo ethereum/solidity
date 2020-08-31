@@ -2,4 +2,4 @@
     pop(hex"2233")
 }
 // ----
-// ParserError 1856: (10-19): Literal or identifier expected.
+// ParserError 3772: (10-19): Hex literals are not valid in this context.

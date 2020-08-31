@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 1856: (67-76): Literal or identifier expected.
+// ParserError 3772: (67-76): Hex literals are not valid in this context.

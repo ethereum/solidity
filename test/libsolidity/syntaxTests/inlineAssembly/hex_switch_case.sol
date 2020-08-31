@@ -8,4 +8,4 @@ contract C {
   }
 }
 // ----
-// ParserError 1856: (92-99): Literal or identifier expected.
+// ParserError 3772: (92-99): Hex literals are not valid in this context.

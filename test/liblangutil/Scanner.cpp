@@ -595,6 +595,11 @@ BOOST_AUTO_TEST_CASE(unicode_prefix_only)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ unicode", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "unicode");
 }
 
 BOOST_AUTO_TEST_CASE(unicode_invalid_space)
@@ -611,6 +616,13 @@ BOOST_AUTO_TEST_CASE(unicode_invalid_token)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ unicode test", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "unicode");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "test");
 }
 
 BOOST_AUTO_TEST_CASE(valid_unicode_literal)
@@ -638,6 +650,10 @@ BOOST_AUTO_TEST_CASE(hex_prefix_only)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ hex", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
 }
 
 BOOST_AUTO_TEST_CASE(hex_invalid_space)
@@ -651,6 +667,11 @@ BOOST_AUTO_TEST_CASE(hex_invalid_space)
 BOOST_AUTO_TEST_CASE(hex_invalid_token)
 {
 	Scanner scanner(CharStream("{ hex test", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
+	scanner.reset(CharStream("{ hex test", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalToken);
@@ -817,6 +838,71 @@ BOOST_AUTO_TEST_CASE(irregular_line_breaks_in_strings)
 		BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
 		BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 	}
+}
+
+BOOST_AUTO_TEST_CASE(solidity_keywords)
+{
+	// These are tokens which have a different meaning in Yul.
+	string keywords = "return byte bool address var in true false leave switch case default";
+	Scanner scanner(CharStream(keywords, ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Return);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Byte);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Bool);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Address);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Var);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::In);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::TrueLiteral);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::FalseLiteral);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Switch);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Case);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Default);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream(keywords, ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::TrueLiteral);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::FalseLiteral);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Leave);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Switch);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Case);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Default);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(yul_keyword_like)
+{
+	Scanner scanner(CharStream("leave.function", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Function);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("leave.function", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
+BOOST_AUTO_TEST_CASE(yul_identifier_with_dots)
+{
+	Scanner scanner(CharStream("mystorage.slot := 1", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Period);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssemblyAssign);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	scanner.reset(CharStream("mystorage.slot := 1", ""));
+	scanner.setScannerMode(ScannerKind::Yul);
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Identifier);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::AssemblyAssign);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Number);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
 BOOST_AUTO_TEST_CASE(yul_function)

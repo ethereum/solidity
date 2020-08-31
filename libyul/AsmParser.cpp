@@ -116,26 +116,24 @@ Statement Parser::parseStatement()
 	{
 		Statement stmt{createWithLocation<Break>()};
 		checkBreakContinuePosition("break");
-		m_scanner->next();
+		advance();
 		return stmt;
 	}
 	case Token::Continue:
 	{
 		Statement stmt{createWithLocation<Continue>()};
 		checkBreakContinuePosition("continue");
-		m_scanner->next();
+		advance();
 		return stmt;
 	}
-	case Token::Identifier:
-		if (currentLiteral() == "leave")
-		{
-			Statement stmt{createWithLocation<Leave>()};
-			if (!m_insideFunction)
-				m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
-			m_scanner->next();
-			return stmt;
-		}
-		break;
+	case Token::Leave:
+	{
+		Statement stmt{createWithLocation<Leave>()};
+		if (!m_insideFunction)
+			m_errorReporter.syntaxError(8149_error, currentLocation(), "Keyword \"leave\" can only be used inside a function.");
+		advance();
+		return stmt;
+	}
 	default:
 		break;
 	}
@@ -284,12 +282,6 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	switch (currentToken())
 	{
 	case Token::Identifier:
-	case Token::Return:
-	case Token::Byte:
-	case Token::Bool:
-	case Token::Address:
-	case Token::Var:
-	case Token::In:
 	{
 		YulString literal{currentLiteral()};
 		if (m_dialect.builtin(literal))
@@ -345,6 +337,9 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		ret = std::move(literal);
 		break;
 	}
+	case Token::HexStringLiteral:
+		fatalParserError(3772_error, "Hex literals are not valid in this context.");
+		break;
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
@@ -472,24 +467,10 @@ TypedName Parser::parseTypedName()
 YulString Parser::expectAsmIdentifier()
 {
 	YulString name{currentLiteral()};
-	switch (currentToken())
-	{
-	case Token::Return:
-	case Token::Byte:
-	case Token::Address:
-	case Token::Bool:
-	case Token::Identifier:
-	case Token::Var:
-	case Token::In:
-		break;
-	default:
-		expectToken(Token::Identifier);
-		break;
-	}
-
-	if (m_dialect.builtin(name))
+	if (currentToken() == Token::Identifier && m_dialect.builtin(name))
 		fatalParserError(5568_error, "Cannot use builtin function name \"" + name.str() + "\" as identifier name.");
-	advance();
+	// NOTE: We keep the expectation here to ensure the correct source location for the error above.
+	expectToken(Token::Identifier);
 	return name;
 }
 
