@@ -21,8 +21,8 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a4d5271b5552139d9f2caefc50d42f401bf74132cf8f253e199e11c80ab42de"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:efaabb3c143f64171be596932c62013bcfd7f73b1fbcb832025a34dd2b6e6922"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:6fa6914bd81abcac4b162c738e6ff05d87cefe7655e3859c7a827e5a8ec20dc7"
   emscripten-docker-image:
     type: string
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc"
@@ -500,7 +500,6 @@ jobs:
       CC: clang
       CXX: clang++
       TERM: xterm
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
       MAKEFLAGS: -j 3
     steps:
       - checkout
