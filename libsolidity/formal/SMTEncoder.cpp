@@ -1490,13 +1490,14 @@ void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _rig
 {
 	auto lTuple = dynamic_cast<TupleExpression const*>(innermostTuple(_left));
 	solAssert(lTuple, "");
+	Expression const* right = innermostTuple(_right);
 
 	auto const& lComponents = lTuple->components();
 
 	// If both sides are tuple expressions, we individually and potentially
 	// recursively assign each pair of components.
 	// This is because of potential type conversion.
-	if (auto rTuple = dynamic_cast<TupleExpression const*>(&_right))
+	if (auto rTuple = dynamic_cast<TupleExpression const*>(right))
 	{
 		auto const& rComponents = rTuple->components();
 		solAssert(lComponents.size() == rComponents.size(), "");
@@ -1517,13 +1518,13 @@ void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _rig
 	}
 	else
 	{
-		auto rType = dynamic_cast<TupleType const*>(_right.annotation().type);
+		auto rType = dynamic_cast<TupleType const*>(right->annotation().type);
 		solAssert(rType, "");
 
 		auto const& rComponents = rType->components();
 		solAssert(lComponents.size() == rComponents.size(), "");
 
-		auto symbRight = expr(_right);
+		auto symbRight = expr(*right);
 		solAssert(symbRight.sort->kind == smtutil::Kind::Tuple, "");
 
 		for (unsigned i = 0; i < lComponents.size(); ++i)
