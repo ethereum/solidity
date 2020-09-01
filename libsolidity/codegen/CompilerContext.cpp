@@ -29,6 +29,7 @@
 #include <libsolidity/interface/Version.h>
 
 #include <libyul/AsmParser.h>
+#include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/backends/evm/AsmCodeGen.h>
@@ -52,9 +53,6 @@
 
 // Change to "define" to output all intermediate code
 #undef SOL_OUTPUT_ASM
-#ifdef SOL_OUTPUT_ASM
-#include <libyul/AsmPrinter.h>
-#endif
 
 
 using namespace std;
@@ -200,16 +198,15 @@ void CompilerContext::appendYulUtilityFunctions(OptimiserSettings const& _optimi
 	string code = m_yulFunctionCollector.requestedFunctions();
 	if (!code.empty())
 	{
-		m_generatedYulUtilityCode = yul::reindent("{\n" + move(code) + "\n}");
-
 		appendInlineAssembly(
-			m_generatedYulUtilityCode,
+			yul::reindent("{\n" + move(code) + "\n}"),
 			{},
 			m_externallyUsedYulFunctions,
 			true,
 			_optimiserSettings,
 			yulUtilityFileName()
 		);
+		solAssert(!m_generatedYulUtilityCode.empty(), "");
 	}
 }
 
@@ -482,6 +479,17 @@ void CompilerContext::appendInlineAssembly(
 
 		optimizeYul(obj, dialect, _optimiserSettings, externallyUsedIdentifiers);
 
+		if (_system)
+		{
+			// Store as generated sources, but first re-parse to update the source references.
+			solAssert(m_generatedYulUtilityCode.empty(), "");
+			m_generatedYulUtilityCode = yul::AsmPrinter(dialect)(*obj.code);
+			string code = yul::AsmPrinter{dialect}(*obj.code);
+			scanner = make_shared<langutil::Scanner>(langutil::CharStream(m_generatedYulUtilityCode, _sourceName));
+			obj.code = yul::Parser(errorReporter, dialect).parse(scanner, false);
+			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj);
+		}
+
 		analysisInfo = std::move(*obj.analysisInfo);
 		parserResult = std::move(obj.code);
 
@@ -489,6 +497,12 @@ void CompilerContext::appendInlineAssembly(
 		cout << "After optimizer:" << endl;
 		cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
+	}
+	else if (_system)
+	{
+		// Store as generated source.
+		solAssert(m_generatedYulUtilityCode.empty(), "");
+		m_generatedYulUtilityCode = _assembly;
 	}
 
 	if (!errorReporter.errors().empty())
