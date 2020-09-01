@@ -97,12 +97,15 @@ u256 ExecutionFramework::gasLimit() const
 
 u256 ExecutionFramework::gasPrice() const
 {
-	return {EVMHost::convertFromEVMC(m_evmHost->tx_context.tx_gas_price)};
+	// here and below we use "return u256{....}" instead of just "return {....}"
+	// to please MSVC and avoid unexpected
+	// warning C4927 : illegal conversion; more than one user - defined conversion has been implicitly applied
+	return u256{EVMHost::convertFromEVMC(m_evmHost->tx_context.tx_gas_price)};
 }
 
 u256 ExecutionFramework::blockHash(u256 const& _number) const
 {
-	return {EVMHost::convertFromEVMC(
+	return u256{EVMHost::convertFromEVMC(
 		m_evmHost->get_block_hash(static_cast<int64_t>(_number & numeric_limits<uint64_t>::max()))
 	)};
 }
