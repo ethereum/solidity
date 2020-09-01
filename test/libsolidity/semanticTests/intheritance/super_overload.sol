@@ -22,6 +22,8 @@ contract C is A, B {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // g() -> 10
 // h() -> 2
