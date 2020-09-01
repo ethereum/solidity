@@ -62,6 +62,9 @@ public:
 	/// if possible or nullptr.
 	static FunctionDefinition const* functionCallToDefinition(FunctionCall const& _funCall);
 
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined

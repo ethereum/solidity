@@ -1985,6 +1985,20 @@ FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall cons
 	return funDef;
 }
 
+vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract)
+{
+	return fold(
+		_contract.annotation().linearizedBaseContracts,
+		vector<VariableDeclaration const*>{},
+		[](auto&& _acc, auto _contract) { return _acc + _contract->stateVariables(); }
+	);
+}
+
+vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
+{
+	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+}
+
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 {
 	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
