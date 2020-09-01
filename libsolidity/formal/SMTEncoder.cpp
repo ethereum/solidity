@@ -452,10 +452,13 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 
 void SMTEncoder::endVisit(UnaryOperation const& _op)
 {
-	if (TokenTraits::isBitOp(_op.getOperator()))
-		return bitwiseNotOperation(_op);
+	/// We need to shortcut here due to potentially unknown
+	/// rational number sizes.
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
+
+	if (TokenTraits::isBitOp(_op.getOperator()))
+		return bitwiseNotOperation(_op);
 
 	createExpr(_op);
 
