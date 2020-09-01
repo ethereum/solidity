@@ -362,7 +362,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				solAssert(sourceType.sizeOnStack() == 1, "");
 				solAssert(structType.sizeOnStack() == 1, "");
 				m_context << Instruction::DUP2 << Instruction::DUP2;
-				m_context.callYulFunction(m_context.utilFunctions().updateStorageValueFunction(structType, &sourceType, 0), 2, 0);
+				m_context.callYulFunction(m_context.utilFunctions().updateStorageValueFunction(sourceType, structType, 0), 2, 0);
 			}
 			else
 			{

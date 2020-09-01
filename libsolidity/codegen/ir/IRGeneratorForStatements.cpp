@@ -2486,7 +2486,7 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					offset = std::get<unsigned>(_storage.offset);
 
 				m_code <<
-					m_utils.updateStorageValueFunction(_lvalue.type, &_value.type(), offset) <<
+					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, offset) <<
 					"(" <<
 					_storage.slot <<
 					(

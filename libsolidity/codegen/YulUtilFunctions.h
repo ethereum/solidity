@@ -248,8 +248,8 @@ public:
 	/// runtime parameter.
 	/// signature: (slot, [offset,] value)
 	std::string updateStorageValueFunction(
+		Type const& _fromType,
 		Type const& _toType,
-		Type const* _fromType = nullptr,
 		std::optional<unsigned> const& _offset = std::optional<unsigned>()
 	);
 

@@ -964,7 +964,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 			("dataAreaFunction", arrayDataAreaFunction(_type))
 			("isByteArray", _type.isByteArray())
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("storeValue", updateStorageValueFunction(*_type.baseType()))
+			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
 			("shl", shiftLeftFunctionDynamic())
 			("shr", shiftRightFunction(248))
@@ -994,7 +994,7 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 			("functionName", functionName)
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("storeValue", updateStorageValueFunction(*_type.baseType()))
+			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
 			("zeroValueFunction", zeroValueFunction(*_type.baseType()))
 			.render();
@@ -1529,21 +1529,22 @@ string YulUtilFunctions::readFromCalldata(Type const& _type)
 }
 
 string YulUtilFunctions::updateStorageValueFunction(
+	Type const& _fromType,
 	Type const& _toType,
-	Type const* _fromType,
 	std::optional<unsigned> const& _offset
 )
 {
 	string const functionName =
 		"update_storage_value_" +
 		(_offset.has_value() ? ("offset_" + to_string(*_offset)) : "") +
-		(_fromType ? "_from_" + _fromType->identifier() : "") +
+		_fromType.identifier() +
 		"_to_" +
 		_toType.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&] {
 		if (_toType.isValueType())
 		{
+			solAssert(_fromType.isImplicitlyConvertibleTo(_toType), "");
 			solAssert(_toType.storageBytes() <= 32, "Invalid storage bytes size.");
 			solAssert(_toType.storageBytes() > 0, "Invalid storage bytes size.");
 
@@ -1565,13 +1566,20 @@ string YulUtilFunctions::updateStorageValueFunction(
 		}
 		else
 		{
+			auto const* toReferenceType = dynamic_cast<ReferenceType const*>(&_toType);
+			auto const* fromReferenceType = dynamic_cast<ReferenceType const*>(&_toType);
+			solAssert(fromReferenceType && toReferenceType, "");
+			solAssert(*toReferenceType->copyForLocation(
+				fromReferenceType->location(),
+				fromReferenceType->isPointer()
+			).get() == *fromReferenceType, "");
+
 			if (_toType.category() == Type::Category::Array)
 				solUnimplementedAssert(false, "");
 			else if (_toType.category() == Type::Category::Struct)
 			{
-				solAssert(_fromType, "");
-				solAssert(_fromType->category() == Type::Category::Struct, "");
-				auto const& fromStructType = dynamic_cast<StructType const&>(*_fromType);
+				solAssert(_fromType.category() == Type::Category::Struct, "");
+				auto const& fromStructType = dynamic_cast<StructType const&>(_fromType);
 				auto const& toStructType = dynamic_cast<StructType const&>(_toType);
 				solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
 				solAssert(fromStructType.location() != DataLocation::Storage, "");
@@ -1597,15 +1605,20 @@ string YulUtilFunctions::updateStorageValueFunction(
 					bool fromCalldata = fromStructType.location() == DataLocation::CallData;
 					auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(structMembers[i].name);
 					memberParams[i]["updateMemberCall"] = Whiskers(R"(
-						let memberValue := <loadFromMemoryOrCalldata>(add(value, <memberOffset>))
-						<updateMember>(add(slot, <memberStorageSlotDiff>), <?hasOffset><memberStorageOffset>,</hasOffset> memberValue)
+						let <memberValues> := <loadFromMemoryOrCalldata>(add(value, <memberOffset>))
+						<updateMember>(add(slot, <memberStorageSlotDiff>), <?hasOffset><memberStorageOffset>,</hasOffset> <memberValues>)
 					)")
+					("memberValues", suffixedVariableNameList(
+						"memberValue_",
+						0,
+						structMembers[i].type->stackItems().size()
+					))
 					("hasOffset", structMembers[i].type->isValueType())
 					(
 						"updateMember",
 						structMembers[i].type->isValueType() ?
-							updateStorageValueFunction(*structMembers[i].type, structMembers[i].type) :
-							updateStorageValueFunction(*structMembers[i].type, structMembers[i].type, offset)
+							updateStorageValueFunction(*structMembers[i].type, *structMembers[i].type) :
+							updateStorageValueFunction(*structMembers[i].type, *structMembers[i].type, offset)
 					)
 					("memberStorageSlotDiff", slotDiff.str())
 					("memberStorageOffset", to_string(offset))
@@ -2632,7 +2645,7 @@ string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
 				}
 			)")
 			("functionName", functionName)
-			("store", updateStorageValueFunction(_type))
+			("store", updateStorageValueFunction(_type, _type))
 			("zeroValue", zeroValueFunction(_type))
 			.render();
 		else if (_type.category() == Type::Category::Array)
