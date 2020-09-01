@@ -6,9 +6,9 @@
     function i() { let z := mload(0) }
 }
 // ----
-// : movable, sideEffectFree, sideEffectFreeIfNoMSize
-// a: movable, sideEffectFree, sideEffectFreeIfNoMSize
-// f: invalidatesMemory
-// g: invalidatesStorage
-// h: sideEffectFree, sideEffectFreeIfNoMSize
-// i: sideEffectFreeIfNoMSize
+// : movable, movable apart from effects, can be removed, can be removed if no msize
+// a: movable, movable apart from effects, can be removed, can be removed if no msize
+// f: writes memory
+// g: writes storage
+// h: can be removed, can be removed if no msize, reads memory
+// i: movable apart from effects, can be removed if no msize, reads memory

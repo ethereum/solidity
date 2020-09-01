@@ -128,27 +128,11 @@ private:
 
 bool ViewPureChecker::check()
 {
-	vector<ContractDefinition const*> contracts;
-
-	for (auto const& node: m_ast)
-	{
-		SourceUnit const* source = dynamic_cast<SourceUnit const*>(node.get());
-		solAssert(source, "");
-		contracts += source->filteredNodes<ContractDefinition>(source->nodes());
-	}
-
-	// Check modifiers first to infer their state mutability.
-	for (auto const& contract: contracts)
-		for (ModifierDefinition const* mod: contract->functionModifiers())
-			mod->accept(*this);
-
-	for (auto const& contract: contracts)
-		contract->accept(*this);
+	for (auto const& source: m_ast)
+		source->accept(*this);
 
 	return !m_errors;
 }
-
-
 
 bool ViewPureChecker::visit(FunctionDefinition const& _funDef)
 {
@@ -304,12 +288,31 @@ void ViewPureChecker::reportMutability(
 		m_currentFunction->stateMutability() == StateMutability::Pure ||
 		m_currentFunction->stateMutability() == StateMutability::NonPayable,
 		""
-	);
+				);
+}
+
+ViewPureChecker::MutabilityAndLocation const& ViewPureChecker::modifierMutability(
+	ModifierDefinition const& _modifier
+)
+{
+	if (!m_inferredMutability.count(&_modifier))
+	{
+		MutabilityAndLocation bestMutabilityAndLocation{};
+		FunctionDefinition const* currentFunction = nullptr;
+		swap(bestMutabilityAndLocation, m_bestMutabilityAndLocation);
+		swap(currentFunction, m_currentFunction);
+
+		_modifier.accept(*this);
+
+		swap(bestMutabilityAndLocation, m_bestMutabilityAndLocation);
+		swap(currentFunction, m_currentFunction);
+	}
+	return m_inferredMutability.at(&_modifier);
 }
 
 void ViewPureChecker::endVisit(FunctionCall const& _functionCall)
 {
-	if (_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+	if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return;
 
 	StateMutability mutability = dynamic_cast<FunctionType const&>(*_functionCall.expression().annotation().type).stateMutability();
@@ -429,8 +432,7 @@ void ViewPureChecker::endVisit(ModifierInvocation const& _modifier)
 	solAssert(_modifier.name(), "");
 	if (ModifierDefinition const* mod = dynamic_cast<decltype(mod)>(_modifier.name()->annotation().referencedDeclaration))
 	{
-		solAssert(m_inferredMutability.count(mod), "");
-		auto const& mutAndLocation = m_inferredMutability.at(mod);
+		MutabilityAndLocation const& mutAndLocation = modifierMutability(*mod);
 		reportMutability(mutAndLocation.mutability, _modifier.location(), mutAndLocation.location);
 	}
 	else

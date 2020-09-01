@@ -93,7 +93,7 @@ void UnusedPruner::operator()(Block& _block)
 					statement = Block{std::move(varDecl.location), {}};
 				else if (
 					SideEffectsCollector(m_dialect, *varDecl.value, m_functionSideEffects).
-					sideEffectFree(m_allowMSizeOptimization)
+					canBeRemoved(m_allowMSizeOptimization)
 				)
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
@@ -112,7 +112,7 @@ void UnusedPruner::operator()(Block& _block)
 			ExpressionStatement& exprStmt = std::get<ExpressionStatement>(statement);
 			if (
 				SideEffectsCollector(m_dialect, exprStmt.expression, m_functionSideEffects).
-				sideEffectFree(m_allowMSizeOptimization)
+				canBeRemoved(m_allowMSizeOptimization)
 			)
 			{
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));

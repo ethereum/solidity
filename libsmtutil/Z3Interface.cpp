@@ -181,8 +181,14 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return arguments[0] / arguments[1];
 		else if (n == "mod")
 			return z3::mod(arguments[0], arguments[1]);
+		else if (n == "bvnot")
+			return ~arguments[0];
 		else if (n == "bvand")
 			return arguments[0] & arguments[1];
+		else if (n == "bvor")
+			return arguments[0] | arguments[1];
+		else if (n == "bvxor")
+			return arguments[0] ^ arguments[1];
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);

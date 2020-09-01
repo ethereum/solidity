@@ -190,7 +190,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"datacopy",
 			3,
 			0,
-			SideEffects{false, false, false, false, true},
+			SideEffects{false, true, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
 			{},
 			[](
 				FunctionCall const& _call,
@@ -206,7 +206,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"setimmutable",
 			2,
 			0,
-			SideEffects{false, false, false, false, true},
+			SideEffects{false, false, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
 			{LiteralKind::String, std::nullopt},
 			[](
 				FunctionCall const& _call,
@@ -281,12 +281,20 @@ EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _
 
 SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instruction)
 {
+	auto translate = [](evmasm::SemanticInformation::Effect _e) -> SideEffects::Effect
+	{
+		return static_cast<SideEffects::Effect>(_e);
+	};
+
 	return SideEffects{
 		evmasm::SemanticInformation::movable(_instruction),
-		evmasm::SemanticInformation::sideEffectFree(_instruction),
-		evmasm::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
-		evmasm::SemanticInformation::invalidatesStorage(_instruction),
-		evmasm::SemanticInformation::invalidatesMemory(_instruction)
+		evmasm::SemanticInformation::movableApartFromEffects(_instruction),
+		evmasm::SemanticInformation::canBeRemoved(_instruction),
+		evmasm::SemanticInformation::canBeRemovedIfNoMSize(_instruction),
+		true, // cannotLoop
+		translate(evmasm::SemanticInformation::otherState(_instruction)),
+		translate(evmasm::SemanticInformation::storage(_instruction)),
+		translate(evmasm::SemanticInformation::memory(_instruction)),
 	};
 }
 

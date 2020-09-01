@@ -16,6 +16,6 @@ contract C
 	}
 }
 // ----
-// Warning 4144: (116-123): Underflow (resulting value less than -128) happens here
-// Warning 4144: (163-170): Underflow (resulting value less than -128) happens here
-// Warning 2661: (207-217): Overflow (resulting value larger than 127) happens here
+// Warning 3944: (116-123): Underflow (resulting value less than -128) happens here
+// Warning 3944: (163-170): Underflow (resulting value less than -128) happens here
+// Warning 4984: (207-217): Overflow (resulting value larger than 127) happens here

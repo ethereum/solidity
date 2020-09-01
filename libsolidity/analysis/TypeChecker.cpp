@@ -271,6 +271,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 {
 	auto base = dynamic_cast<ContractDefinition const*>(&dereference(_inheritance.name()));
 	solAssert(base, "Base contract not available.");
+	solAssert(m_currentContract, "");
 
 	if (m_currentContract->isInterface() && !base->isInterface())
 		m_errorReporter.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
@@ -327,7 +328,9 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 {
 	if (_function.markedVirtual())
 	{
-		if (_function.isConstructor())
+		if (_function.isFree())
+			m_errorReporter.syntaxError(4493_error, _function.location(), "Free functions cannot be virtual.");
+		else if (_function.isConstructor())
 			m_errorReporter.typeError(7001_error, _function.location(), "Constructors cannot be virtual.");
 		else if (_function.annotation().contract->isInterface())
 			m_errorReporter.warning(5815_error, _function.location(), "Interface functions are implicitly \"virtual\"");
@@ -336,12 +339,16 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else if (_function.libraryFunction())
 			m_errorReporter.typeError(7801_error, _function.location(), "Library functions cannot be \"virtual\".");
 	}
+	if (_function.overrides() && _function.isFree())
+		m_errorReporter.syntaxError(1750_error, _function.location(), "Free functions cannot override.");
 
 	if (_function.isPayable())
 	{
 		if (_function.libraryFunction())
 			m_errorReporter.typeError(7708_error, _function.location(), "Library functions cannot be payable.");
-		if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
+		else if (_function.isFree())
+			m_errorReporter.typeError(9559_error, _function.location(), "Free functions cannot be payable.");
+		else if (_function.isOrdinary() && !_function.isPartOfExternalInterface())
 			m_errorReporter.typeError(5587_error, _function.location(), "\"internal\" and \"private\" functions cannot be payable.");
 	}
 
@@ -415,9 +422,13 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	set<Declaration const*> modifiers;
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 	{
-		auto baseContracts = dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts;
-		// Delete first base which is just the main contract itself
-		baseContracts.erase(baseContracts.begin());
+		vector<ContractDefinition const*> baseContracts;
+		if (auto contract = dynamic_cast<ContractDefinition const*>(_function.scope()))
+		{
+			baseContracts = contract->annotation().linearizedBaseContracts;
+			// Delete first base which is just the main contract itself
+			baseContracts.erase(baseContracts.begin());
+		}
 
 		visitManually(
 			*modifier,
@@ -432,7 +443,15 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		else
 			modifiers.insert(decl);
 	}
-	if (m_currentContract->isInterface())
+
+	solAssert(_function.isFree() == !m_currentContract, "");
+	if (!m_currentContract)
+	{
+		solAssert(!_function.isConstructor(), "");
+		solAssert(!_function.isFallback(), "");
+		solAssert(!_function.isReceive(), "");
+	}
+	else if (m_currentContract->isInterface())
 	{
 		if (_function.isImplemented())
 			m_errorReporter.typeError(4726_error, _function.location(), "Functions in interfaces cannot have an implementation.");
@@ -445,6 +464,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	else if (m_currentContract->contractKind() == ContractKind::Library)
 		if (_function.isConstructor())
 			m_errorReporter.typeError(7634_error, _function.location(), "Constructor cannot be defined in libraries.");
+
 	if (_function.isImplemented())
 		_function.body().accept(*this);
 	else if (_function.isConstructor())
@@ -452,7 +472,12 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 	else if (_function.libraryFunction())
 		m_errorReporter.typeError(9231_error, _function.location(), "Library functions must be implemented if declared.");
 	else if (!_function.virtualSemantics())
-		m_errorReporter.typeError(5424_error, _function.location(), "Functions without implementation must be marked virtual.");
+	{
+		if (_function.isFree())
+			solAssert(m_errorReporter.hasErrors(), "");
+		else
+			m_errorReporter.typeError(5424_error, _function.location(), "Functions without implementation must be marked virtual.");
+	}
 
 
 	if (_function.isFallback())
@@ -591,7 +616,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 			if (_variable.isStateVariable())
 				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
 			else
-				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->canonicalName(), false));
+				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->toString(true), false));
 		}
 		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
 		for (Type const* subtype: oversizedSubtypes)
@@ -885,7 +910,7 @@ bool TypeChecker::visit(IfStatement const& _ifStatement)
 void TypeChecker::endVisit(TryStatement const& _tryStatement)
 {
 	FunctionCall const* externalCall = dynamic_cast<FunctionCall const*>(&_tryStatement.externalCall());
-	if (!externalCall || externalCall->annotation().kind != FunctionCallKind::FunctionCall)
+	if (!externalCall || *externalCall->annotation().kind != FunctionCallKind::FunctionCall)
 	{
 		m_errorReporter.typeError(
 			5347_error,
@@ -1095,7 +1120,7 @@ void TypeChecker::endVisit(Return const& _return)
 void TypeChecker::endVisit(EmitStatement const& _emit)
 {
 	if (
-		_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
+		*_emit.eventCall().annotation().kind != FunctionCallKind::FunctionCall ||
 		type(_emit.eventCall().expression())->category() != Type::Category::Function ||
 		dynamic_cast<FunctionType const&>(*type(_emit.eventCall().expression())).kind() != FunctionType::Kind::Event
 	)
@@ -1591,7 +1616,7 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 	FunctionCall const& _functionCall
 )
 {
-	solAssert(_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
+	solAssert(*_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	TypePointer const& expressionType = type(_functionCall.expression());
 
 	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
@@ -1726,7 +1751,9 @@ void TypeChecker::typeCheckFunctionCall(
 
 	if (_functionType->kind() == FunctionType::Kind::Declaration)
 	{
+		solAssert(_functionType->declaration().annotation().contract, "");
 		if (
+			m_currentContract &&
 			m_currentContract->derivesFrom(*_functionType->declaration().annotation().contract) &&
 			!dynamic_cast<FunctionDefinition const&>(_functionType->declaration()).isImplemented()
 		)
@@ -1956,8 +1983,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	bool const isPositionalCall = _functionCall.names().empty();
 	bool const isVariadic = _functionType->takesArbitraryParameters();
 
+	auto functionCallKind = *_functionCall.annotation().kind;
+
 	solAssert(
-		!isVariadic || _functionCall.annotation().kind == FunctionCallKind::FunctionCall,
+		!isVariadic || functionCallKind == FunctionCallKind::FunctionCall,
 		"Struct constructor calls cannot be variadic."
 	);
 
@@ -1972,7 +2001,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	)
 	{
 		bool const isStructConstructorCall =
-			_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall;
+			functionCallKind == FunctionCallKind::StructConstructorCall;
 
 		auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
 			string msg = isVariadic ?
@@ -2235,13 +2264,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 	default:
 		m_errorReporter.fatalTypeError(5704_error, _functionCall.location(), "Type is not callable");
-		funcCallAnno.kind = FunctionCallKind::Unset;
+		// Unreachable, because fatalTypeError throws. We don't set kind, but that's okay because the switch below
+		// is never reached. And, even if it was, SetOnce would trigger an assertion violation and not UB.
 		funcCallAnno.isPure = argumentsArePure;
 		break;
 	}
 
 	// Determine return types
-	switch (funcCallAnno.kind)
+	switch (*funcCallAnno.kind)
 	{
 	case FunctionCallKind::TypeConversion:
 		funcCallAnno.type = typeCheckTypeConversionAndRetrieveReturnType(_functionCall);
@@ -2291,7 +2321,6 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		break;
 	}
 
-	case FunctionCallKind::Unset: // fall-through
 	default:
 		// for non-callables, ensure error reported and annotate node to void function
 		solAssert(m_errorReporter.hasErrors(), "");
@@ -2452,18 +2481,23 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 
-		solAssert(!!m_currentContract, "");
-		m_currentContract->annotation().contractDependencies.insert(contract);
-		solAssert(
-			!contract->annotation().linearizedBaseContracts.empty(),
-			"Linearized base contracts not yet available."
-		);
-		if (contractDependenciesAreCyclic(*m_currentContract))
-			m_errorReporter.typeError(
-				4579_error,
-				_newExpression.location(),
-				"Circular reference for contract creation (cannot create instance of derived or same contract)."
+		if (m_currentContract)
+		{
+			// TODO this is not properly detecting creation-cycles if they go through
+			// internal library functions or free functions. It will be caught at
+			// code generation time, but it would of course be better to catch it here.
+			m_currentContract->annotation().contractDependencies.insert(contract);
+			solAssert(
+				!contract->annotation().linearizedBaseContracts.empty(),
+				"Linearized base contracts not yet available."
 			);
+			if (contractDependenciesAreCyclic(*m_currentContract))
+				m_errorReporter.typeError(
+					4579_error,
+					_newExpression.location(),
+					"Circular reference for contract creation (cannot create instance of derived or same contract)."
+				);
+		}
 
 		_newExpression.annotation().type = FunctionType::newExpressionType(*contract);
 	}
@@ -2505,7 +2539,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	// Retrieve the types of the arguments if this is used to call a function.
 	auto const& arguments = _memberAccess.annotation().arguments;
-	MemberList::MemberMap possibleMembers = exprType->members(m_currentContract).membersByName(memberName);
+	MemberList::MemberMap possibleMembers = exprType->members(currentDefinitionScope()).membersByName(memberName);
 	size_t const initialMemberCount = possibleMembers.size();
 	if (initialMemberCount > 1 && arguments)
 	{
@@ -2531,7 +2565,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				DataLocation::Storage,
 				exprType
 			);
-			if (!storageType->members(m_currentContract).membersByName(memberName).empty())
+			if (!storageType->members(currentDefinitionScope()).membersByName(memberName).empty())
 				m_errorReporter.fatalTypeError(
 					4994_error,
 					_memberAccess.location(),
@@ -2689,8 +2723,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		{
 			annotation.isPure = true;
 			ContractType const& accessedContractType = dynamic_cast<ContractType const&>(*magicType->typeArgument());
-			m_currentContract->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
-
 			if (
 				memberName == "runtimeCode" &&
 				!accessedContractType.immutableVariables().empty()
@@ -2701,12 +2733,21 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					"\"runtimeCode\" is not available for contracts containing immutable variables."
 				);
 
-			if (contractDependenciesAreCyclic(*m_currentContract))
-				m_errorReporter.typeError(
-					4224_error,
-					_memberAccess.location(),
-					"Circular reference for contract code access."
-				);
+			if (m_currentContract)
+			{
+				// TODO in the same way as with ``new``,
+				// this is not properly detecting creation-cycles if they go through
+				// internal library functions or free functions. It will be caught at
+				// code generation time, but it would of course be better to catch it here.
+
+				m_currentContract->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
+				if (contractDependenciesAreCyclic(*m_currentContract))
+					m_errorReporter.typeError(
+						4224_error,
+						_memberAccess.location(),
+						"Circular reference for contract code access."
+					);
+			}
 		}
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
 			annotation.isPure = true;
@@ -3105,6 +3146,16 @@ void TypeChecker::endVisit(Literal const& _literal)
 		m_errorReporter.fatalTypeError(2826_error, _literal.location(), "Invalid literal value.");
 
 	_literal.annotation().isPure = true;
+}
+
+void TypeChecker::endVisit(UsingForDirective const& _usingFor)
+{
+	if (m_currentContract->isInterface())
+		m_errorReporter.typeError(
+			9088_error,
+			_usingFor.location(),
+			"The \"using for\" directive is not allowed inside interfaces."
+		);
 }
 
 bool TypeChecker::contractDependenciesAreCyclic(

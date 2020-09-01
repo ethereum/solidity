@@ -71,6 +71,9 @@ private:
 		std::optional<langutil::SourceLocation> const& _nestedLocation = {}
 	);
 
+	/// Determines the mutability of modifier if not already cached.
+	MutabilityAndLocation const& modifierMutability(ModifierDefinition const& _modifier);
+
 	std::vector<std::shared_ptr<ASTNode>> const& m_ast;
 	langutil::ErrorReporter& m_errorReporter;
 

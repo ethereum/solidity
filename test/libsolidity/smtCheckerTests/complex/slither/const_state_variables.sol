@@ -53,5 +53,4 @@ contract MyConc{
 // ----
 // Warning 2519: (773-792): This declaration shadows an existing declaration.
 // Warning 2018: (1009-1086): Function state mutability can be restricted to view
-// Warning 6084: (985-1002): Underflow (resulting value less than 0) happens here.
-// Warning 6084: (985-1002): Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (985-1002): Overflow (resulting value larger than 2**256 - 1) happens here

@@ -22,8 +22,10 @@
 #include <libyul/optimiser/NameDispenser.h>
 
 #include <libyul/optimiser/NameCollector.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
+#include <libyul/YulString.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -57,7 +59,5 @@ YulString NameDispenser::newName(YulString _nameHint)
 
 bool NameDispenser::illegalName(YulString _name)
 {
-	if (_name.empty() || m_usedNames.count(_name) || m_dialect.builtin(_name))
-		return true;
-	return false;
+	return isRestrictedIdentifier(m_dialect, _name) || m_usedNames.count(_name);
 }

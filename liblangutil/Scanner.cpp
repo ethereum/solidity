@@ -540,7 +540,7 @@ void Scanner::scanToken()
 			if (m_char == '=')
 				token = selectToken(Token::Equal);
 			else if (m_char == '>')
-				token = selectToken(Token::Arrow);
+				token = selectToken(Token::DoubleArrow);
 			else
 				token = Token::Assign;
 			break;
@@ -563,12 +563,14 @@ void Scanner::scanToken()
 				token = Token::Add;
 			break;
 		case '-':
-			// - -- -=
+			// - -- -= ->
 			advance();
 			if (m_char == '-')
 				token = selectToken(Token::Dec);
 			else if (m_char == '=')
 				token = selectToken(Token::AssignSub);
+			else if (m_char == '>')
+				token = selectToken(Token::RightArrow);
 			else
 				token = Token::Sub;
 			break;
@@ -678,7 +680,7 @@ void Scanner::scanToken()
 					else
 						token = setError(ScannerError::IllegalToken);
 				}
-				else if (token == Token::Unicode)
+				else if (token == Token::Unicode && m_kind != ScannerKind::Yul)
 				{
 					// reset
 					m = 0;
@@ -967,7 +969,17 @@ tuple<Token, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 	while (isIdentifierPart(m_char) || (m_char == '.' && m_kind == ScannerKind::Yul))
 		addLiteralCharAndAdvance();
 	literal.complete();
-	return TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
+	auto const token = TokenTraits::fromIdentifierOrKeyword(m_tokens[NextNext].literal);
+	if (m_kind == ScannerKind::Yul)
+	{
+		// Turn Solidity identifier into a Yul keyword
+		if (m_tokens[NextNext].literal == "leave")
+			return std::make_tuple(Token::Leave, 0, 0);
+		// Turn non-Yul keywords into identifiers.
+		if (!TokenTraits::isYulKeyword(std::get<0>(token)))
+			return std::make_tuple(Token::Identifier, 0, 0);
+	}
+	return token;
 }
 
 } // namespace solidity::langutil

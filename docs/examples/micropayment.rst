@@ -114,7 +114,7 @@ In general, ECDSA signatures consist of two parameters,
 parameter called ``v``, that you can use to verify which
 account's private key was used to sign the message, and
 the transaction's sender. Solidity provides a built-in
-function `ecrecover <mathematical-and-cryptographic-functions>`_ that
+function :ref:`ecrecover <mathematical-and-cryptographic-functions>` that
 accepts a message along with the ``r``, ``s`` and ``v`` parameters
 and returns the address that was used to sign the message.
 
@@ -127,7 +127,7 @@ apart. You can do this on the client-side, but doing it inside
 the smart contract means you only need to send one signature
 parameter rather than three. Splitting apart a byte array into
 its constituent parts is a mess, so we use
-`inline assembly <assembly>`_ to do the job in the ``splitSignature``
+:doc:`inline assembly <assembly>` to do the job in the ``splitSignature``
 function (the third function in the full contract at the end of this section).
 
 Computing the Message Hash

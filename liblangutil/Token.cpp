@@ -152,6 +152,11 @@ static Token keywordByName(string const& _name)
 	return it == keywords.end() ? Token::Identifier : it->second;
 }
 
+bool isYulKeyword(string const& _literal)
+{
+	return _literal == "leave" || isYulKeyword(keywordByName(_literal));
+}
+
 tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _literal)
 {
 	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
