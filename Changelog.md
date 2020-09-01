@@ -22,6 +22,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on fixed bytes index access.
  * SMTChecker: Fix internal error on lvalue unary operators with tuples.
  * SMTChecker: Fix internal error on tuple assignment.
+ * SMTChecker: Fix internal error on tuples of one element that have tuple type.
  * SMTChecker: Fix soundness of array ``pop``.
  * References Resolver: Fix internal bug when using constructor for library.
  * Yul Optimizer: Make function inlining order more resilient to whether or not unrelated source files are present.
