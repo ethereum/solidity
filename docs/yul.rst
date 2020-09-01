@@ -476,9 +476,8 @@ which are explained in their own chapter.
     TypeName = Identifier
     TypedIdentifierList = Identifier ( ':' TypeName )? ( ',' Identifier ( ':' TypeName )? )*
     Literal =
-        (NumberLiteral | StringLiteral | HexLiteral | TrueLiteral | FalseLiteral) ( ':' TypeName )?
+        (NumberLiteral | StringLiteral | TrueLiteral | FalseLiteral) ( ':' TypeName )?
     NumberLiteral = HexNumber | DecimalNumber
-    HexLiteral = 'hex' ('"' ([0-9a-fA-F]{2})* '"' | '\'' ([0-9a-fA-F]{2})* '\'')
     StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
     TrueLiteral = 'true'
     FalseLiteral = 'false'
@@ -688,8 +687,6 @@ We will use a destructuring notation for the AST nodes.
         L'[$parami] = vi and L'[$reti] = 0 for all i.
         Let G'', L'', mode = E(Gn, L', block)
         G'', Ln, L''[$ret1], ..., L''[$retm]
-    E(G, L, l: HexLiteral) = G, L, hexString(l),
-        where hexString decodes l from hex and left-aligns it into 32 bytes
     E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
         where utf8EncodeLeftAligned performs a utf8 encoding of l
         and aligns it left into 32 bytes

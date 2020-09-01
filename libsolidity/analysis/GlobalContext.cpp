@@ -134,15 +134,26 @@ vector<Declaration const*> GlobalContext::declarations() const
 MagicVariableDeclaration const* GlobalContext::currentThis() const
 {
 	if (!m_thisPointer[m_currentContract])
-		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(magicVariableToID("this"), "this", TypeProvider::contract(*m_currentContract));
+	{
+		Type const* type = TypeProvider::emptyTuple();
+		if (m_currentContract)
+			type = TypeProvider::contract(*m_currentContract);
+		m_thisPointer[m_currentContract] =
+			make_shared<MagicVariableDeclaration>(magicVariableToID("this"), "this", type);
+	}
 	return m_thisPointer[m_currentContract].get();
-
 }
 
 MagicVariableDeclaration const* GlobalContext::currentSuper() const
 {
 	if (!m_superPointer[m_currentContract])
-		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(magicVariableToID("super"), "super", TypeProvider::contract(*m_currentContract, true));
+	{
+		Type const* type = TypeProvider::emptyTuple();
+		if (m_currentContract)
+			type = TypeProvider::contract(*m_currentContract, true);
+		m_superPointer[m_currentContract] =
+			make_shared<MagicVariableDeclaration>(magicVariableToID("super"), "super", type);
+	}
 	return m_superPointer[m_currentContract].get();
 }
 

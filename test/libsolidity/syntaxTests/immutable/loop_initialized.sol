@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 6672: (88-89): Immutable variables can only be initialized once, not in a while statement.
+// TypeError 6672: (88-89): Cannot write to immutable here: Immutable variables cannot be initialized inside a loop.

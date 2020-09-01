@@ -3,9 +3,9 @@ contract C {
         assembly {
             let d:= 0x10
 
-            function asmfun(a, b, c) - > x, y, z {
+            function asmfun(a, b, c) -> x, y, z {
                 x := g(a)
-                function g(r) - > s {
+                function g(r) -> s {
                     s := mul(r, r)
                 }
                 y := g(b)

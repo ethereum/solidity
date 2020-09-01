@@ -39,7 +39,9 @@ def setup(sphinx):
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [ 'sphinx_a4doc' ]
+
+a4_base_path = os.path.dirname(__file__) + '/grammar'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -83,7 +85,7 @@ else:
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', 'contracts', 'types', 'examples']
+exclude_patterns = ['_build', 'contracts', 'types', 'examples', 'grammar']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

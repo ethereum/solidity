@@ -94,6 +94,8 @@ void ParserBase::expectToken(Token _value, bool _advance)
 
 void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentNodeName, bool _advance)
 {
+	solAssert(m_inParserRecovery, "The function is supposed to be called during parser recovery only.");
+
 	Token tok = m_scanner->currentToken();
 	if (tok != _value)
 	{
@@ -103,24 +105,20 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 			m_scanner->next();
 
 		string const expectedToken = ParserBase::tokenName(_value);
-		string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " +  ParserBase::tokenName(tok) +  " instead.";
 		if (m_scanner->currentToken() == Token::EOS)
 		{
 			// rollback to where the token started, and raise exception to be caught at a higher level.
 			m_scanner->setPosition(static_cast<size_t>(startPosition));
-			m_inParserRecovery = true;
+			string const msg = "In " + _currentNodeName + ", " + expectedToken + "is expected; got " + ParserBase::tokenName(tok) + " instead.";
 			fatalParserError(1957_error, errorLoc, msg);
 		}
 		else
 		{
-			if (m_inParserRecovery)
-				parserWarning(3796_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
-			else
-				parserError(1054_error, errorLoc, msg + "Recovered at next " + expectedToken);
+			parserWarning(3796_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");
 			m_inParserRecovery = false;
 		}
 	}
-	else if (m_inParserRecovery)
+	else
 	{
 		string expectedToken = ParserBase::tokenName(_value);
 		parserWarning(3347_error, "Recovered in " + _currentNodeName + " at " + expectedToken + ".");

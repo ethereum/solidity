@@ -71,6 +71,10 @@ public:
 	/// in ``m_type.stackItems()`` and may again occupy multiple stack slots.
 	IRVariable part(std::string const& _slot) const;
 
+	/// @returns true if variable contains @a _name component
+	/// @a _name name of the component that is being checked
+	bool hasPart(std::string const& _name) const;
+
 	/// @returns a vector containing the names of the stack slots of the variable.
 	std::vector<std::string> stackSlots() const;
 

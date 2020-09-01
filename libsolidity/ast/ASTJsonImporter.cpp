@@ -381,6 +381,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	astAssert(_node["kind"].isString(), "Expected 'kind' to be a string!");
 
 	Token kind;
+	bool freeFunction = false;
 	string kindStr = member(_node, "kind").asString();
 
 	if (kindStr == "constructor")
@@ -391,17 +392,27 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 		kind = Token::Fallback;
 	else if (kindStr == "receive")
 		kind = Token::Receive;
+	else if (kindStr == "freeFunction")
+	{
+		kind = Token::Function;
+		freeFunction = true;
+	}
 	else
 		astAssert(false, "Expected 'kind' to be one of [constructor, function, fallback, receive]");
 
 	std::vector<ASTPointer<ModifierInvocation>> modifiers;
 	for (auto& mod: member(_node, "modifiers"))
 		modifiers.push_back(createModifierInvocation(mod));
+
+	Visibility vis = Visibility::Default;
+	if (!freeFunction)
+		vis = visibility(_node);
 	return createASTNode<FunctionDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
-		kind == Token::Constructor ? Visibility::Default : visibility(_node),
+		vis,
 		stateMutability(_node),
+		freeFunction,
 		kind,
 		memberAsBool(_node, "virtual"),
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),

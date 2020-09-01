@@ -325,6 +325,17 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 
 		vector<string> path;
 		boost::split(path, name, boost::is_any_of("."));
+		if (any_of(path.begin(), path.end(), [](auto& _str) { return _str.empty(); }))
+		{
+			m_errorReporter.docstringParsingError(
+				5967_error,
+				_documentation.location(),
+				"Documentation tag @inheritdoc reference \"" +
+				name +
+				"\" is malformed."
+			);
+			return;
+		}
 		Declaration const* result = m_resolver.pathFromCurrentScope(path);
 
 		if (result == nullptr)

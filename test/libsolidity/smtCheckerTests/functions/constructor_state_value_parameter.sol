@@ -13,5 +13,5 @@ contract C {
 	}
 }
 // ----
+// Warning 4984: (115-120): Overflow (resulting value larger than 2**256 - 1) happens here
 // Warning 6328: (162-176): Assertion violation happens here
-// Warning 2661: (115-120): Overflow (resulting value larger than 2**256 - 1) happens here

@@ -292,7 +292,7 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 
 bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 {
-	if (_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
+	if (*_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
 	{
 		auto functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 		solAssert(functionType, "");
@@ -311,6 +311,7 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 						);
 		}
 		if (
+			m_currentContract &&
 			m_currentContract->isLibrary() &&
 			functionType->kind() == FunctionType::Kind::DelegateCall &&
 			functionType->declaration().scope() == m_currentContract

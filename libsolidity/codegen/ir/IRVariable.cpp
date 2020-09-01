@@ -53,6 +53,17 @@ IRVariable IRVariable::part(string const& _name) const
 	solAssert(false, "Invalid stack item name: " + _name);
 }
 
+bool IRVariable::hasPart(std::string const& _name) const
+{
+	for (auto const& [itemName, itemType]: m_type.stackItems())
+		if (itemName == _name)
+		{
+			solAssert(itemName.empty() || itemType, "");
+			return true;
+		}
+	return false;
+}
+
 vector<string> IRVariable::stackSlots() const
 {
 	vector<string> result;

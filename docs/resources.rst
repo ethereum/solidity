@@ -75,24 +75,13 @@ Solidity Integrations
     * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
         Plugin for the Vim editor providing syntax highlighting.
 
-    * `Vim Syntastic <https://github.com/scrooloose/syntastic>`_
+    * `Vim Syntastic <https://github.com/vim-syntastic/syntastic>`_
         Plugin for the Vim editor providing compile checking.
 
 * Visual Studio Code:
 
-    * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
+    * `Visual Studio Code extension <https://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
         Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
-
-Discontinued:
-
-* `Mix IDE <https://github.com/ethereum/mix/>`_
-    Qt based IDE for designing, debugging and testing solidity smart contracts.
-
-* `Ethereum Studio <https://live.ether.camp/>`_
-    Specialized web IDE that also provides shell access to a complete Ethereum environment.
-
-* `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
-    Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
 
 Solidity Tools
 ~~~~~~~~~~~~~~
@@ -142,8 +131,5 @@ Solidity Tools
 Third-Party Solidity Parsers and Grammars
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* `solidity-parser <https://github.com/ConsenSys/solidity-parser>`_
-    Solidity parser for JavaScript
-
-* `Solidity Grammar for ANTLR 4 <https://github.com/federicobond/solidity-antlr4>`_
-    Solidity grammar for the ANTLR 4 parser generator
+* `Solidity Parser for JavaScript <https://github.com/solidity-parser/parser>`_
+    A Solidity parser for JS built on top of a robust ANTLR4 grammar.

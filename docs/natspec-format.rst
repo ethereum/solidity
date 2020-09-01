@@ -36,7 +36,7 @@ for the purposes of NatSpec.
 
 -  For Vyper, use ``"""`` indented to the inner contents with bare
    comments. See `Vyper
-   documentation <https://vyper.readthedocs.io/en/latest/structure-of-a-contract.html#natspec-metadata>`__.
+   documentation <https://vyper.readthedocs.io/en/latest/natspec.html>`__.
 
 The following example shows a contract and a function using all available tags.
 
@@ -195,8 +195,8 @@ JSON file as output:
     }
 
 Note that the key by which to find the methods is the function's
-canonical signature as defined in the `Contract
-ABI <Ethereum-Contract-ABI#signature>`__ and not simply the function's
+canonical signature as defined in the :ref:`Contract
+ABI <abi_function_selector>` and not simply the function's
 name.
 
 .. _header-developer-doc:

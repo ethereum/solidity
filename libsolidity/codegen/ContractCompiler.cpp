@@ -404,7 +404,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have fallback functions");
 
 	FunctionDefinition const* etherReceiver = _contract.receiveFunction();
-	solAssert(!_contract.isLibrary() || !fallback, "Libraries can't have ether receiver functions");
+	solAssert(!_contract.isLibrary() || !etherReceiver, "Libraries can't have ether receiver functions");
 
 	bool needToAddCallvalueCheck = true;
 	if (!hasPayableFunctions(_contract) && !interfaceFunctions.empty() && !_contract.isLibrary())

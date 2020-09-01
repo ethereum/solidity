@@ -597,6 +597,139 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 	});
 }
 
+string YulUtilFunctions::overflowCheckedIntExpFunction(
+	IntegerType const& _type,
+	IntegerType const& _exponentType
+)
+{
+	solAssert(!_exponentType.isSigned(), "");
+
+	string functionName = "checked_exp_" + _type.identifier() + "_" + _exponentType.identifier();
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(base, exponent) -> power {
+				base := <baseCleanupFunction>(base)
+				exponent := <exponentCleanupFunction>(exponent)
+				<?signed>
+					power := <exp>(base, exponent, <minValue>, <maxValue>)
+				<!signed>
+					power := <exp>(base, exponent, <maxValue>)
+				</signed>
+
+			}
+			)")
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("exp", _type.isSigned() ? overflowCheckedSignedExpFunction() : overflowCheckedUnsignedExpFunction())
+			("maxValue", toCompactHexWithPrefix(_type.max()))
+			("minValue", toCompactHexWithPrefix(_type.min()))
+			("baseCleanupFunction", cleanupFunction(_type))
+			("exponentCleanupFunction", cleanupFunction(_exponentType))
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
+{
+	string functionName = "checked_exp_unsigned";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(base, exponent, max) -> power {
+				// This function currently cannot be inlined because of the
+				// "leave" statements. We have to improve the optimizer.
+
+				// Note that 0**0 == 1
+				if iszero(exponent) { power := 1 leave }
+				if iszero(base) { power := 0 leave }
+
+				power := 1
+
+				for { } gt(exponent, 1) {}
+				{
+					// overflow check for base * base
+					if gt(base, div(max, base)) { revert(0, 0) }
+					if and(exponent, 1)
+					{
+						// no check needed here because base >= power
+						power := mul(power, base)
+					}
+					base := mul(base, base)
+					exponent := <shr_1>(exponent)
+				}
+				if gt(power, div(max, base)) { revert(0, 0) }
+				power := mul(power, base)
+			}
+			)")
+			("functionName", functionName)
+			("shr_1", shiftRightFunction(1))
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedSignedExpFunction()
+{
+	string functionName = "checked_exp_signed";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(base, exponent, min, max) -> power {
+				// Currently, `leave` avoids this function being inlined.
+				// We have to improve the optimizer.
+
+				// Note that 0**0 == 1
+				switch exponent
+				case 0 { power := 1 leave }
+				case 1 { power := base leave }
+				if iszero(base) { power := 0 leave }
+
+				power := 1
+
+				// We pull out the first iteration because it is the only one in which
+				// base can be negative.
+				// Exponent is at least 2 here.
+
+				// overflow check for base * base
+				switch sgt(base, 0)
+				case 1 { if gt(base, div(max, base)) { revert(0, 0) } }
+				case 0 { if slt(base, sdiv(max, base)) { revert(0, 0) } }
+				if and(exponent, 1)
+				{
+					power := base
+				}
+				base := mul(base, base)
+				exponent := <shr_1>(exponent)
+
+				// Below this point, base is always positive.
+
+				for { } gt(exponent, 1) {}
+				{
+					// overflow check for base * base
+					if gt(base, div(max, base)) { revert(0, 0) }
+					if and(exponent, 1)
+					{
+						// No checks for power := mul(power, base) needed, because the check
+						// for base * base above is sufficient, since:
+						// |power| <= base (proof by induction) and thus:
+						// |power * base| <= base * base <= max <= |min|
+						power := mul(power, base)
+					}
+					base := mul(base, base)
+					exponent := <shr_1>(exponent)
+				}
+
+				if and(sgt(power, 0), gt(power, div(max, base))) { revert(0, 0) }
+				if and(slt(power, 0), slt(power, sdiv(min, base))) { revert(0, 0) }
+				power := mul(power, base)
+			}
+			)")
+			("functionName", functionName)
+			("shr_1", shiftRightFunction(1))
+			.render();
+	});
+}
+
 string YulUtilFunctions::extractByteArrayLengthFunction()
 {
 	string functionName = "extract_byte_array_length";
@@ -1911,8 +2044,23 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		}
 		case Type::Category::Struct:
-			solUnimplementedAssert(false, "Struct conversion not implemented.");
+		{
+			solAssert(toCategory == Type::Category::Struct, "");
+			auto const& fromStructType = dynamic_cast<StructType const &>(_from);
+			auto const& toStructType = dynamic_cast<StructType const &>(_to);
+			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
+
+			solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
+			solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
+			solUnimplementedAssert(fromStructType.location() == DataLocation::CallData, "");
+
+			body = Whiskers(R"(
+				converted := <abiDecode>(value, calldatasize())
+			)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
+				{&toStructType}
+			)).render();
 			break;
+		}
 		case Type::Category::FixedBytes:
 		{
 			FixedBytesType const& from = dynamic_cast<FixedBytesType const&>(_from);

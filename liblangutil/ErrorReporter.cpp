@@ -23,6 +23,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SourceLocation.h>
+#include <cstdlib>
 #include <memory>
 
 using namespace std;

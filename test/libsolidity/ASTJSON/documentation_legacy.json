@@ -1,3 +1,124 @@
+[
+{
+  "attributes":
+  {
+    "absolutePath": "a",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        2
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          2
+        ],
+        "name": "C",
+        "nodes":
+        [
+          null
+        ],
+        "scope": 3
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "text": "This contract is empty"
+          },
+          "id": 1,
+          "name": "StructuredDocumentation",
+          "src": "0:27:1"
+        }
+      ],
+      "id": 2,
+      "name": "ContractDefinition",
+      "src": "28:13:1"
+    }
+  ],
+  "id": 3,
+  "name": "SourceUnit",
+  "src": "28:14:1"
+},
+{
+  "attributes":
+  {
+    "absolutePath": "b",
+    "exportedSymbols":
+    {
+      "C":
+      [
+        5
+      ]
+    }
+  },
+  "children":
+  [
+    {
+      "attributes":
+      {
+        "abstract": false,
+        "baseContracts":
+        [
+          null
+        ],
+        "contractDependencies":
+        [
+          null
+        ],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts":
+        [
+          5
+        ],
+        "name": "C",
+        "nodes":
+        [
+          null
+        ],
+        "scope": 6
+      },
+      "children":
+      [
+        {
+          "attributes":
+          {
+            "text": "This contract is empty\nand has a line-breaking comment."
+          },
+          "id": 4,
+          "name": "StructuredDocumentation",
+          "src": "0:61:2"
+        }
+      ],
+      "id": 5,
+      "name": "ContractDefinition",
+      "src": "62:13:2"
+    }
+  ],
+  "id": 6,
+  "name": "SourceUnit",
+  "src": "62:14:2"
+},
 {
   "attributes":
   {
@@ -240,3 +361,4 @@
   "name": "SourceUnit",
   "src": "0:214:3"
 }
+]
