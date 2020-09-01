@@ -2,7 +2,11 @@
 
 set -e
 
-ROOT_DIR=$(readlink -f "$(dirname "$0")"/..)
+READLINK=readlink
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    READLINK=greadlink
+fi
+ROOT_DIR=$(${READLINK} -f "$(dirname "$0")"/..)
 WORKDIR="${ROOT_DIR}/build/antlr"
 ANTLR_JAR="${ROOT_DIR}/build/deps/antlr4.jar"
 ANTLR_JAR_URI="https://www.antlr.org/download/antlr-4.8-complete.jar"
@@ -54,7 +58,7 @@ failed_count=0
 test_file()
 {
   local SOL_FILE
-  SOL_FILE="$(readlink -m "${1}")"
+  SOL_FILE="$(${READLINK}  -m "${1}")"
   local cur=${2}
   local max=${3}
   local solOrYul=${4}
