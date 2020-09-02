@@ -54,21 +54,60 @@ public:
 		Block const& _ast,
 		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
 	);
+	SideEffectsCollector(
+		Dialect const& _dialect,
+		ForLoop const& _ast,
+		std::map<YulString, SideEffects> const* _functionSideEffects = nullptr
+	);
 
 	using ASTWalker::operator();
 	void operator()(FunctionCall const& _functionCall) override;
 
 	bool movable() const { return m_sideEffects.movable; }
-	bool sideEffectFree(bool _allowMSizeModification = false) const
+
+	bool movableRelativeTo(SideEffects const& _other, bool _codeContainsMSize)
+	{
+		if (!m_sideEffects.cannotLoop)
+			return false;
+
+		if (m_sideEffects.movable)
+			return true;
+
+		if (
+			!m_sideEffects.movableApartFromEffects ||
+			m_sideEffects.storage == SideEffects::Write ||
+			m_sideEffects.otherState == SideEffects::Write ||
+			m_sideEffects.memory == SideEffects::Write
+		)
+			return false;
+
+		if (m_sideEffects.otherState == SideEffects::Read)
+			if (_other.otherState == SideEffects::Write)
+				return false;
+
+		if (m_sideEffects.storage == SideEffects::Read)
+			if (_other.storage == SideEffects::Write)
+				return false;
+
+		if (m_sideEffects.memory == SideEffects::Read)
+			if (_codeContainsMSize || _other.memory == SideEffects::Write)
+				return false;
+
+		return true;
+	}
+
+	bool canBeRemoved(bool _allowMSizeModification = false) const
 	{
 		if (_allowMSizeModification)
-			return sideEffectFreeIfNoMSize();
+			return m_sideEffects.canBeRemovedIfNoMSize;
 		else
-			return m_sideEffects.sideEffectFree;
+			return m_sideEffects.canBeRemoved;
 	}
-	bool sideEffectFreeIfNoMSize() const { return m_sideEffects.sideEffectFreeIfNoMSize; }
-	bool invalidatesStorage() const { return m_sideEffects.invalidatesStorage; }
-	bool invalidatesMemory() const { return m_sideEffects.invalidatesMemory; }
+	bool cannotLoop() const { return m_sideEffects.cannotLoop; }
+	bool invalidatesStorage() const { return m_sideEffects.storage == SideEffects::Write; }
+	bool invalidatesMemory() const { return m_sideEffects.memory == SideEffects::Write; }
+
+	SideEffects sideEffects() { return m_sideEffects; }
 
 private:
 	Dialect const& m_dialect;

@@ -441,11 +441,11 @@ Output Description
               },
               "deployedBytecode": {
                 ..., // The same layout as above.
-                "immutableReferences": [
+                "immutableReferences": {
                   // There are two references to the immutable with AST ID 3, both 32 bytes long. One is
                   // at bytecode offset 42, the other at bytecode offset 80.
                   "3": [{ "start": 42, "length": 32 }, { "start": 80, "length": 32 }]
-                ]
+                }
               },
               // The list of function hashes
               "methodIdentifiers": {
@@ -637,7 +637,7 @@ Example
 
 Assume that you have the following contract in ``Source.sol``:
 
-.. code-block:: solidity
+.. code-block:: Solidity
 
     pragma solidity >=0.6.0 <0.6.4;
     // This will not compile after 0.7.0
@@ -691,7 +691,7 @@ It is recommended to explicitly specify the upgrade modules by using ``--modules
 The command above applies all changes as shown below. Please review them carefully (the pragmas will
 have to be updated manually.)
 
-.. code-block:: solidity
+.. code-block:: Solidity
 
     pragma solidity >0.6.99 <0.8.0;
     // SPDX-License-Identifier: GPL-3.0

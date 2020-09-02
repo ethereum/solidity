@@ -243,12 +243,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		solAssert(!m_errorReporter.errors().empty(), "");
 		return;
 	}
-	if (baseType->storageBytes() == 0)
-		m_errorReporter.fatalTypeError(
-			6493_error,
-			_typeName.baseType().location(),
-			"Illegal base type of storage size zero for array."
-		);
+	solAssert(baseType->storageBytes() != 0, "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
 		TypePointer& lengthTypeGeneric = length->annotation().type;

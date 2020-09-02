@@ -15,4 +15,4 @@ contract C
 	}
 }
 // ----
-// Warning 2661: (152-157): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4984: (152-157): Overflow (resulting value larger than 2**256 - 1) happens here

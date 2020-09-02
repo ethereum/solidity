@@ -54,12 +54,16 @@ public:
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
-	/// @returns the innermost element in a chain of 1-tuples.
-	static Expression const* innermostTuple(TupleExpression const& _tuple);
+	/// @returns the innermost element in a chain of 1-tuples if applicable,
+	/// otherwise _expr.
+	static Expression const* innermostTuple(Expression const& _expr);
 
 	/// @returns the FunctionDefinition of a FunctionCall
 	/// if possible or nullptr.
 	static FunctionDefinition const* functionCallToDefinition(FunctionCall const& _funCall);
+
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
 
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
@@ -83,6 +87,7 @@ protected:
 	void endVisit(UnaryOperation const& _node) override;
 	bool visit(BinaryOperation const& _node) override;
 	void endVisit(BinaryOperation const& _node) override;
+	bool visit(Conditional const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	bool visit(ModifierInvocation const& _node) override;
 	void endVisit(Identifier const& _node) override;
@@ -114,6 +119,7 @@ protected:
 	void compareOperation(BinaryOperation const& _op);
 	void booleanOperation(BinaryOperation const& _op);
 	void bitwiseOperation(BinaryOperation const& _op);
+	void bitwiseNotOperation(UnaryOperation const& _op);
 
 	void initContract(ContractDefinition const& _contract);
 	void initFunction(FunctionDefinition const& _function);

@@ -188,8 +188,14 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
 		else if (n == "mod")
 			return m_context.mkExpr(CVC4::kind::INTS_MODULUS, arguments[0], arguments[1]);
+		else if (n == "bvnot")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_NOT, arguments[0]);
 		else if (n == "bvand")
 			return m_context.mkExpr(CVC4::kind::BITVECTOR_AND, arguments[0], arguments[1]);
+		else if (n == "bvor")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_OR, arguments[0], arguments[1]);
+		else if (n == "bvxor")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_XOR, arguments[0], arguments[1]);
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);

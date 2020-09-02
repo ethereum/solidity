@@ -3,7 +3,7 @@ contract C {
         assembly {
             let a1, b1, c1
 
-            function asmfun(a, b, c) - > x, y, z {
+            function asmfun(a, b, c) -> x, y, z {
                 x := a
                 y := b
                 z := 7

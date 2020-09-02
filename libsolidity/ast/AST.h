@@ -774,6 +774,7 @@ public:
 		ASTPointer<ASTString> const& _name,
 		Visibility _visibility,
 		StateMutability _stateMutability,
+		bool _free,
 		Token _kind,
 		bool _isVirtual,
 		ASTPointer<OverrideSpecifier> const& _overrides,
@@ -787,11 +788,13 @@ public:
 		StructurallyDocumented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_stateMutability(_stateMutability),
+		m_free(_free),
 		m_kind(_kind),
 		m_functionModifiers(std::move(_modifiers)),
 		m_body(_body)
 	{
 		solAssert(_kind == Token::Constructor || _kind == Token::Function || _kind == Token::Fallback || _kind == Token::Receive, "");
+		solAssert(isOrdinary() == !name().empty(), "");
 	}
 
 	void accept(ASTVisitor& _visitor) override;
@@ -803,6 +806,7 @@ public:
 	bool isConstructor() const { return m_kind == Token::Constructor; }
 	bool isFallback() const { return m_kind == Token::Fallback; }
 	bool isReceive() const { return m_kind == Token::Receive; }
+	bool isFree() const { return m_free; }
 	Token kind() const { return m_kind; }
 	bool isPayable() const { return m_stateMutability == StateMutability::Payable; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
@@ -814,6 +818,7 @@ public:
 	}
 	bool isVisibleViaContractTypeAccess() const override
 	{
+		solAssert(!isFree(), "");
 		return isOrdinary() && visibility() >= Visibility::Public;
 	}
 	bool isPartOfExternalInterface() const override { return isOrdinary() && isPublic(); }
@@ -849,6 +854,7 @@ public:
 
 private:
 	StateMutability m_stateMutability;
+	bool m_free;
 	Token const m_kind;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
 	ASTPointer<Block> m_body;

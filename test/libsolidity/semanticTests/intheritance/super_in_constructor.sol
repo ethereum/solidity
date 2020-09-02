@@ -30,6 +30,7 @@ contract D is B, C {
         return data;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // f() -> 15

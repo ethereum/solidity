@@ -83,10 +83,9 @@ private:
 	bool visit(PlaceholderStatement const& _placeholderStatement) override;
 
 	bool visit(ContractDefinition const& _contract) override;
+	void endVisit(ContractDefinition const& _contract) override;
 	bool visit(FunctionDefinition const& _function) override;
 	bool visit(FunctionTypeName const& _node) override;
-
-	bool visit(VariableDeclarationStatement const& _statement) override;
 
 	bool visit(StructDefinition const& _struct) override;
 	bool visit(Literal const& _literal) override;
@@ -102,7 +101,7 @@ private:
 	bool m_versionPragmaFound = false;
 
 	int m_inLoopDepth = 0;
-	bool m_isInterface = false;
+	std::optional<ContractKind> m_currentContractKind;
 
 	SourceUnit const* m_sourceUnit = nullptr;
 };

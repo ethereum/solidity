@@ -62,6 +62,16 @@ SideEffectsCollector::SideEffectsCollector(
 	operator()(_ast);
 }
 
+SideEffectsCollector::SideEffectsCollector(
+	Dialect const& _dialect,
+	ForLoop const& _ast,
+	map<YulString, SideEffects> const* _functionSideEffects
+):
+	SideEffectsCollector(_dialect, _functionSideEffects)
+{
+	operator()(_ast);
+}
+
 void SideEffectsCollector::operator()(FunctionCall const& _functionCall)
 {
 	ASTWalker::operator()(_functionCall);
@@ -106,8 +116,9 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	for (auto const& function: _directCallGraph.functionsWithLoops + _directCallGraph.recursiveFunctions())
 	{
 		ret[function].movable = false;
-		ret[function].sideEffectFree = false;
-		ret[function].sideEffectFreeIfNoMSize = false;
+		ret[function].canBeRemoved = false;
+		ret[function].canBeRemovedIfNoMSize = false;
+		ret[function].cannotLoop = false;
 	}
 
 	for (auto const& call: _directCallGraph.functionCalls)

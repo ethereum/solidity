@@ -90,7 +90,7 @@ wasm::Expression WasmCodeTransform::generateMultiAssignment(
 	return { std::move(block) };
 }
 
-wasm::Expression WasmCodeTransform::operator()(VariableDeclaration const& _varDecl)
+wasm::Expression WasmCodeTransform::operator()(yul::VariableDeclaration const& _varDecl)
 {
 	vector<string> variableNames;
 	for (auto const& var: _varDecl.variables)
@@ -105,7 +105,7 @@ wasm::Expression WasmCodeTransform::operator()(VariableDeclaration const& _varDe
 		return wasm::BuiltinCall{"nop", {}};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Assignment const& _assignment)
+wasm::Expression WasmCodeTransform::operator()(yul::Assignment const& _assignment)
 {
 	vector<string> variableNames;
 	for (auto const& var: _assignment.variableNames)
@@ -113,12 +113,12 @@ wasm::Expression WasmCodeTransform::operator()(Assignment const& _assignment)
 	return generateMultiAssignment(move(variableNames), visit(*_assignment.value));
 }
 
-wasm::Expression WasmCodeTransform::operator()(ExpressionStatement const& _statement)
+wasm::Expression WasmCodeTransform::operator()(yul::ExpressionStatement const& _statement)
 {
 	return visitReturnByValue(_statement.expression);
 }
 
-wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
+wasm::Expression WasmCodeTransform::operator()(yul::FunctionCall const& _call)
 {
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
@@ -140,22 +140,20 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 				m_functionsToImport[builtin->name] = std::move(imp);
 			}
 		}
-		else if (builtin->literalArguments && contains(builtin->literalArguments.value(), true))
-		{
-			vector<wasm::Expression> literals;
-			for (size_t i = 0; i < _call.arguments.size(); i++)
-				if (builtin->literalArguments.value()[i])
-					literals.emplace_back(wasm::StringLiteral{std::get<Literal>(_call.arguments[i]).value.str()});
-				else
-					literals.emplace_back(visitReturnByValue(_call.arguments[i]));
-
-			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(literals)};
-		}
 		else
-			return wasm::BuiltinCall{
-				_call.functionName.name.str(),
-				visit(_call.arguments)
-			};
+		{
+			vector<wasm::Expression> arguments;
+			for (size_t i = 0; i < _call.arguments.size(); i++)
+				if (builtin->literalArgument(i))
+				{
+					yulAssert(builtin->literalArgument(i) == LiteralKind::String, "");
+					arguments.emplace_back(wasm::StringLiteral{std::get<Literal>(_call.arguments[i]).value.str()});
+				}
+				else
+					arguments.emplace_back(visitReturnByValue(_call.arguments[i]));
+
+			return wasm::BuiltinCall{_call.functionName.name.str(), std::move(arguments)};
+		}
 	}
 
 	// If this function returns multiple values, then the first one will
@@ -166,17 +164,17 @@ wasm::Expression WasmCodeTransform::operator()(FunctionCall const& _call)
 	return wasm::FunctionCall{_call.functionName.name.str(), visit(_call.arguments)};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Identifier const& _identifier)
+wasm::Expression WasmCodeTransform::operator()(yul::Identifier const& _identifier)
 {
 	return wasm::LocalVariable{_identifier.name.str()};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Literal const& _literal)
+wasm::Expression WasmCodeTransform::operator()(yul::Literal const& _literal)
 {
 	return makeLiteral(translatedType(_literal.type), valueOfLiteral(_literal));
 }
 
-wasm::Expression WasmCodeTransform::operator()(If const& _if)
+wasm::Expression WasmCodeTransform::operator()(yul::If const& _if)
 {
 	yul::Type conditionType = m_typeInfo.typeOf(*_if.condition);
 
@@ -198,7 +196,7 @@ wasm::Expression WasmCodeTransform::operator()(If const& _if)
 	return wasm::If{make_unique<wasm::Expression>(move(condition)), visit(_if.body.statements), {}};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
+wasm::Expression WasmCodeTransform::operator()(yul::Switch const& _switch)
 {
 	yul::Type expressionType = m_typeInfo.typeOf(*_switch.expression);
 	YulString eq_instruction = YulString(expressionType.str() + ".eq");
@@ -242,13 +240,13 @@ wasm::Expression WasmCodeTransform::operator()(Switch const& _switch)
 	return { std::move(block) };
 }
 
-wasm::Expression WasmCodeTransform::operator()(FunctionDefinition const&)
+wasm::Expression WasmCodeTransform::operator()(yul::FunctionDefinition const&)
 {
 	yulAssert(false, "Should not have visited here.");
 	return {};
 }
 
-wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
+wasm::Expression WasmCodeTransform::operator()(yul::ForLoop const& _for)
 {
 	string breakLabel = newLabel();
 	string continueLabel = newLabel();
@@ -275,23 +273,25 @@ wasm::Expression WasmCodeTransform::operator()(ForLoop const& _for)
 	return wasm::Block{breakLabel, move(statements)};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Break const&)
+wasm::Expression WasmCodeTransform::operator()(yul::Break const&)
 {
+	yulAssert(m_breakContinueLabelNames.size() > 0, "");
 	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().first}};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Continue const&)
+wasm::Expression WasmCodeTransform::operator()(yul::Continue const&)
 {
+	yulAssert(m_breakContinueLabelNames.size() > 0, "");
 	return wasm::Branch{wasm::Label{m_breakContinueLabelNames.top().second}};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Leave const&)
+wasm::Expression WasmCodeTransform::operator()(yul::Leave const&)
 {
 	yulAssert(!m_functionBodyLabel.empty(), "");
 	return wasm::Branch{wasm::Label{m_functionBodyLabel}};
 }
 
-wasm::Expression WasmCodeTransform::operator()(Block const& _block)
+wasm::Expression WasmCodeTransform::operator()(yul::Block const& _block)
 {
 	return wasm::Block{{}, visit(_block.statements)};
 }

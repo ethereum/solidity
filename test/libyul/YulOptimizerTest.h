@@ -38,7 +38,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 namespace solidity::yul
 {
 struct AsmAnalysisInfo;
-struct Block;
+struct Object;
 struct Dialect;
 }
 
@@ -58,7 +58,9 @@ public:
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 
 private:
-	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
+	std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> parse(
+		std::ostream& _stream, std::string const& _linePrefix, bool const _formatted, std::string const& _source
+	);
 	void disambiguate();
 	void updateContext();
 
@@ -71,7 +73,7 @@ private:
 	std::unique_ptr<NameDispenser> m_nameDispenser;
 	std::unique_ptr<OptimiserStepContext> m_context;
 
-	std::shared_ptr<Block> m_ast;
+	std::shared_ptr<Object> m_object;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 };
 

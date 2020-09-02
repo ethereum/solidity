@@ -46,14 +46,10 @@ void ExpressionSplitter::run(OptimiserStepContext& _context, Block& _ast)
 
 void ExpressionSplitter::operator()(FunctionCall& _funCall)
 {
-	vector<bool> const* literalArgs = nullptr;
-
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
-		if (builtin->literalArguments)
-			literalArgs = &builtin->literalArguments.value();
+	BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name);
 
 	for (size_t i = _funCall.arguments.size(); i > 0; i--)
-		if (!literalArgs || !(*literalArgs)[i - 1])
+		if (!builtin || !builtin->literalArgument(i - 1))
 			outlineExpression(_funCall.arguments[i - 1]);
 }
 

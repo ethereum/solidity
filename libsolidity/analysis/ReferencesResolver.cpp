@@ -231,15 +231,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			string(".slot").size() :
 			string(".offset").size()
 		));
-		if (realName.empty())
-		{
-			m_errorReporter.declarationError(
-				4794_error,
-				_identifier.location,
-				"In variable names .slot and .offset can only be used as a suffix."
-			);
-			return;
-		}
+		solAssert(!realName.empty(), "Empty name.");
 		declarations = m_resolver.nameFromCurrentScope(realName);
 		if (!declarations.empty())
 			// To support proper path resolution, we have to use pathFromCurrentScope.
@@ -321,8 +313,29 @@ void ReferencesResolver::resolveInheritDoc(StructuredDocumentation const& _docum
 	case 1:
 	{
 		string const& name = _annotation.docTags.find("inheritdoc")->second.content;
+		if (name.empty())
+		{
+			m_errorReporter.docstringParsingError(
+				1933_error,
+				_documentation.location(),
+				"Expected contract name following documentation tag @inheritdoc."
+			);
+			return;
+		}
+
 		vector<string> path;
 		boost::split(path, name, boost::is_any_of("."));
+		if (any_of(path.begin(), path.end(), [](auto& _str) { return _str.empty(); }))
+		{
+			m_errorReporter.docstringParsingError(
+				5967_error,
+				_documentation.location(),
+				"Documentation tag @inheritdoc reference \"" +
+				name +
+				"\" is malformed."
+			);
+			return;
+		}
 		Declaration const* result = m_resolver.pathFromCurrentScope(path);
 
 		if (result == nullptr)

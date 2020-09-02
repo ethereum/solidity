@@ -9,4 +9,4 @@ contract C {
     function f(uint a) internal pure {}
 }
 // ----
-// TypeError 1581: (59-60): Immutable variables can only be initialized inline or assigned directly in the constructor.
+// TypeError 1581: (59-60): Cannot write to immutable here: Immutable variables can only be initialized inline or assigned directly in the constructor.

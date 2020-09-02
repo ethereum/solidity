@@ -125,6 +125,21 @@ public:
 	/// signature: (x, y) -> diff
 	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
 
+	/// @returns the name of the exponentiation function.
+	/// signature: (base, exponent) -> power
+	std::string overflowCheckedIntExpFunction(IntegerType const& _type, IntegerType const& _exponentType);
+
+	/// Generic unsigned checked exponentiation function.
+	/// Reverts if the result is larger than max.
+	/// signature: (base, exponent, max) -> power
+	std::string overflowCheckedUnsignedExpFunction();
+
+	/// Generic signed checked exponentiation function.
+	/// Reverts if the result is smaller than min or larger than max.
+	/// The code relies on max <= |min| and min < 0.
+	/// signature: (base, exponent, min, max) -> power
+	std::string overflowCheckedSignedExpFunction();
+
 	/// @returns the name of a function that fetches the length of the given
 	/// array
 	/// signature: (array) -> length
@@ -206,8 +221,7 @@ public:
 	/// @param _keyType the type of the value provided
 	std::string mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType);
 
-	/// @returns a function that reads a value type from storage.
-	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @returns a function that reads a type from storage.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
 	std::string readFromStorage(Type const& _type, size_t _offset, bool _splitFunctionTypes);
@@ -233,7 +247,11 @@ public:
 	/// the specified slot and offset. If offset is not given, it is expected as
 	/// runtime parameter.
 	/// signature: (slot, [offset,] value)
-	std::string updateStorageValueFunction(Type const& _type, std::optional<unsigned> const& _offset = std::optional<unsigned>());
+	std::string updateStorageValueFunction(
+		Type const& _fromType,
+		Type const& _toType,
+		std::optional<unsigned> const& _offset = std::optional<unsigned>()
+	);
 
 	/// Returns the name of a function that will write the given value to
 	/// the specified address.
@@ -385,6 +403,16 @@ private:
 	std::string storageByteArrayPopFunction(ArrayType const& _type);
 
 	std::string readFromMemoryOrCalldata(Type const& _type, bool _fromCalldata);
+
+	/// @returns a function that reads a value type from storage.
+	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
+	/// @param _splitFunctionTypes if false, returns the address and function signature in a
+	/// single variable.
+	std::string readFromStorageValueType(Type const& _type, size_t _offset, bool _splitFunctionTypes);
+	std::string readFromStorageValueTypeDynamic(Type const& _type, bool _splitFunctionTypes);
+
+	/// @returns a function that reads a reference type from storage to memory (performing a deep copy).
+	std::string readFromStorageReferenceType(Type const& _type);
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;

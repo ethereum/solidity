@@ -22,8 +22,6 @@
 #include <libyul/AsmData.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 
-#include <libevmasm/Instruction.h>
-
 #include <stack>
 
 using namespace std;

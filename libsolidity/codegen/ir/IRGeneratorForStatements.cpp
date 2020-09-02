@@ -75,18 +75,30 @@ struct CopyTranslate: public yul::ASTCopier
 			{
 				solAssert(reference.isOffset != reference.isSlot, "");
 
-				pair<u256, unsigned> slot_offset = m_context.storageLocationOfVariable(*varDecl);
+				string value;
+				if (varDecl->isStateVariable())
+					value =
+						reference.isSlot ?
+							m_context.storageLocationOfStateVariable(*varDecl).first.str() :
+							to_string(m_context.storageLocationOfStateVariable(*varDecl).second);
+				else
+				{
+					solAssert(varDecl->isLocalVariable(), "");
+					if (reference.isSlot)
+						value = IRVariable{*varDecl}.part("slot").name();
+					else if (varDecl->type()->isValueType())
+						value = IRVariable{*varDecl}.part("offset").name();
+					else
+					{
+						solAssert(!IRVariable{*varDecl}.hasPart("offset"), "");
+						value = "0";
+					}
+				}
 
-				string const value = reference.isSlot ?
-					slot_offset.first.str() :
-					to_string(slot_offset.second);
-
-				return yul::Literal{
-					_identifier.location,
-					yul::LiteralKind::Number,
-					yul::YulString{value},
-					{}
-				};
+				if (isdigit(value.front()))
+					return yul::Literal{_identifier.location, yul::LiteralKind::Number, yul::YulString{value}, {}};
+				else
+					return yul::Identifier{_identifier.location, yul::YulString{value}};
 			}
 		}
 		return ASTCopier::operator()(_identifier);
@@ -152,8 +164,8 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 		_varDecl.immutable() ?
 		IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
 		IRLValue{*_varDecl.annotation().type, IRLValue::Storage{
-			util::toCompactHexWithPrefix(m_context.storageLocationOfVariable(_varDecl).first),
-			m_context.storageLocationOfVariable(_varDecl).second
+			util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
+			m_context.storageLocationOfStateVariable(_varDecl).second
 		}},
 		*_varDecl.value()
 	);
@@ -277,6 +289,7 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		solAssert(type(_assignment.leftHandSide()).isValueType(), "Compound operators only available for value types.");
 		solAssert(rightIntermediateType->isValueType(), "Compound operators only available for value types.");
 		IRVariable leftIntermediate = readFromLValue(*m_currentLValue);
+		solAssert(binaryOperator != Token::Exp, "");
 		if (TokenTraits::isShiftOp(binaryOperator))
 		{
 			solAssert(type(_assignment) == leftIntermediate.type(), "");
@@ -301,9 +314,9 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	writeToLValue(*m_currentLValue, value);
 
-	m_currentLValue.reset();
-	if (*_assignment.annotation().type != *TypeProvider::emptyTuple())
+	if (m_currentLValue->type.category() != Type::Category::Struct && *_assignment.annotation().type != *TypeProvider::emptyTuple())
 		define(_assignment, value);
+	m_currentLValue.reset();
 
 	return false;
 }
@@ -593,11 +606,17 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			solAssert(false, "Unknown comparison operator.");
 		define(_binOp) << expr << "\n";
 	}
-	else if (TokenTraits::isShiftOp(op))
+	else if (TokenTraits::isShiftOp(op) || op == Token::Exp)
 	{
 		IRVariable left = convert(_binOp.leftExpression(), *commonType);
 		IRVariable right = convert(_binOp.rightExpression(), *type(_binOp.rightExpression()).mobileType());
-		define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
+		if (op == Token::Exp)
+			define(_binOp) << m_utils.overflowCheckedIntExpFunction(
+				dynamic_cast<IntegerType const&>(left.type()),
+				dynamic_cast<IntegerType const&>(right.type())
+			) << "(" << left.name() << ", " << right.name() << ")\n";
+		else
+			define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
 	}
 	else
 	{
@@ -624,12 +643,9 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 
 void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 {
-	solUnimplementedAssert(
-		_functionCall.annotation().kind != FunctionCallKind::Unset,
-		"This type of function call is not yet implemented"
-	);
+	auto functionCallKind = *_functionCall.annotation().kind;
 
-	if (_functionCall.annotation().kind == FunctionCallKind::TypeConversion)
+	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
 		solAssert(
 			_functionCall.expression().annotation().type->category() == Type::Category::TypeType,
@@ -641,7 +657,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 
 	FunctionTypePointer functionType = nullptr;
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
@@ -672,7 +688,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			arguments.push_back(callArguments[static_cast<size_t>(std::distance(callArgumentNames.begin(), it))]);
 		}
 
-	if (_functionCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().annotation().type);
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
@@ -733,8 +749,18 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 			if (identifier)
 				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
+			else
+			{
+				ContractType const* type = dynamic_cast<ContractType const*>(memberAccess->expression().annotation().type);
+				if (type && type->isSuper())
+				{
+					ContractDefinition const* super = type->contractDefinition().superContract(m_context.mostDerivedContract());
+					solAssert(super, "Super contract not available.");
+					functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract(), super);
+				}
+			}
 
-			solAssert(functionDef->isImplemented(), "");
+			solAssert(functionDef && functionDef->isImplemented(), "");
 		}
 
 		solAssert(!functionType->takesArbitraryParameters(), "");
@@ -1381,7 +1407,17 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
 		if (type.isSuper())
 		{
-			solUnimplementedAssert(false, "");
+			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
+			ContractDefinition const* super = type.contractDefinition().superContract(m_context.mostDerivedContract());
+			solAssert(super, "Super contract not available.");
+			FunctionDefinition const& resolvedFunctionDef = dynamic_cast<FunctionDefinition const&>(
+				*_memberAccess.annotation().referencedDeclaration
+			).resolveVirtual(m_context.mostDerivedContract(), super);
+
+			define(_memberAccess) << to_string(resolvedFunctionDef.id()) << "\n";
+			solAssert(resolvedFunctionDef.functionType(true), "");
+			solAssert(resolvedFunctionDef.functionType(true)->kind() == FunctionType::Kind::Internal, "");
+			m_context.internalFunctionAccessed(_memberAccess, resolvedFunctionDef);
 		}
 		// ordinary contract type
 		else if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
@@ -2022,8 +2058,8 @@ void IRGeneratorForStatements::handleVariableReference(
 		setLValue(_referencingExpression, IRLValue{
 			*_variable.annotation().type,
 			IRLValue::Storage{
-				toCompactHexWithPrefix(m_context.storageLocationOfVariable(_variable).first),
-				m_context.storageLocationOfVariable(_variable).second
+				toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_variable).first),
+				m_context.storageLocationOfStateVariable(_variable).second
 			}
 		});
 	else
@@ -2470,7 +2506,7 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 					offset = std::get<unsigned>(_storage.offset);
 
 				m_code <<
-					m_utils.updateStorageValueFunction(_lvalue.type, offset) <<
+					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, offset) <<
 					"(" <<
 					_storage.slot <<
 					(

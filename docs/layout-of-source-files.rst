@@ -5,7 +5,7 @@ Layout of a Solidity Source File
 Source files can contain an arbitrary number of
 :ref:`contract definitions<contract_structure>`, import_ directives,
 :ref:`pragma directives<pragma>` and
-:ref:`struct<structs>` and :ref:`enum<enums>` definitions.
+:ref:`struct<structs>`, :ref:`enum<enums>` and :ref:`function<functions>` definitions.
 
 .. index:: ! license, spdx
 
@@ -14,7 +14,7 @@ SPDX License Identifier
 
 Trust in smart contract can be better established if their source code
 is available. Since making source code available always touches on legal problems
-with regards to copyright, the Solidity compiler encouranges the use
+with regards to copyright, the Solidity compiler encourages the use
 of machine-readable `SPDX license identifiers <https://spdx.org>`_.
 Every source file should start with a comment indicating its license:
 
@@ -22,7 +22,7 @@ Every source file should start with a comment indicating its license:
 
 The compiler does not validate that the license is part of the
 `list allowed by SPDX <https://spdx.org/licenses/>`_, but
-it does include the supplied string in the `bytecode metadata <metadata>`_.
+it does include the supplied string in the :ref:`bytecode metadata <metadata>`.
 
 If you do not want to specify a license or if the source code is
 not open-source, please use the special value ``UNLICENSED``.

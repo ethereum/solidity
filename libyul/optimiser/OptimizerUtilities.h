@@ -23,11 +23,17 @@
 
 #include <libsolutil/Common.h>
 #include <libyul/AsmDataForward.h>
+#include <libyul/Dialect.h>
+#include <libyul/YulString.h>
 
 namespace solidity::yul
 {
 
 /// Removes statements that are just empty blocks (non-recursive).
 void removeEmptyBlocks(Block& _block);
+
+/// Returns true if a given literal can not be used as an identifier.
+/// This includes Yul keywords and builtins of the given dialect.
+bool isRestrictedIdentifier(Dialect const& _dialect, YulString const& _identifier);
 
 }

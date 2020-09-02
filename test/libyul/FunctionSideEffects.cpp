@@ -49,14 +49,27 @@ string toString(SideEffects const& _sideEffects)
 	vector<string> ret;
 	if (_sideEffects.movable)
 		ret.emplace_back("movable");
-	if (_sideEffects.sideEffectFree)
-		ret.emplace_back("sideEffectFree");
-	if (_sideEffects.sideEffectFreeIfNoMSize)
-		ret.emplace_back("sideEffectFreeIfNoMSize");
-	if (_sideEffects.invalidatesStorage)
-		ret.emplace_back("invalidatesStorage");
-	if (_sideEffects.invalidatesMemory)
-		ret.emplace_back("invalidatesMemory");
+	if (_sideEffects.movableApartFromEffects)
+		ret.emplace_back("movable apart from effects");
+	if (_sideEffects.canBeRemoved)
+		ret.emplace_back("can be removed");
+	if (_sideEffects.canBeRemovedIfNoMSize)
+		ret.emplace_back("can be removed if no msize");
+	if (!_sideEffects.cannotLoop)
+		ret.emplace_back("can loop");
+	if (_sideEffects.otherState == SideEffects::Write)
+		ret.emplace_back("writes other state");
+	else if (_sideEffects.otherState == SideEffects::Read)
+		ret.emplace_back("reads other state");
+	if (_sideEffects.storage == SideEffects::Write)
+		ret.emplace_back("writes storage");
+	else if (_sideEffects.storage == SideEffects::Read)
+		ret.emplace_back("reads storage");
+	if (_sideEffects.memory == SideEffects::Write)
+		ret.emplace_back("writes memory");
+	else if (_sideEffects.memory == SideEffects::Read)
+		ret.emplace_back("reads memory");
+
 	return joinHumanReadable(ret);
 }
 }

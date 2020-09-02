@@ -176,6 +176,9 @@ public:
 		m_requestedContractNames = _contractNames;
 	}
 
+	/// Enable EVM Bytecode generation. This is enabled by default.
+	void enableEvmBytecodeGeneration(bool _enable = true) { m_generateEvmBytecode = _enable; }
+
 	/// Enable experimental generation of Yul IR code.
 	void enableIRGeneration(bool _enable = true) { m_generateIR = _enable; }
 
@@ -314,6 +317,9 @@ public:
 	/// @returns the Contract Metadata
 	std::string const& metadata(std::string const& _contractName) const;
 
+	/// @returns the cbor-encoded metadata.
+	bytes cborMetadata(std::string const& _contractName) const;
+
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
@@ -402,7 +408,7 @@ private:
 	std::string createMetadata(Contract const& _contract) const;
 
 	/// @returns the metadata CBOR for the given serialised metadata JSON.
-	bytes createCBORMetadata(std::string const& _metadata, bool _experimentalMode);
+	bytes createCBORMetadata(Contract const& _contract) const;
 
 	/// @returns the contract ABI as a JSON object.
 	/// This will generate the JSON object and store it in the Contract object if it is not present yet.
@@ -437,8 +443,9 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	smtutil::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
-	bool m_generateIR;
-	bool m_generateEwasm;
+	bool m_generateEvmBytecode = true;
+	bool m_generateIR = false;
+	bool m_generateEwasm = false;
 	std::map<std::string, util::h160> m_libraries;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"

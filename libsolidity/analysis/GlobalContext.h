@@ -46,6 +46,7 @@ class GlobalContext: private boost::noncopyable
 public:
 	GlobalContext();
 	void setCurrentContract(ContractDefinition const& _contract);
+	void resetCurrentContract() { m_currentContract = nullptr; }
 	MagicVariableDeclaration const* currentThis() const;
 	MagicVariableDeclaration const* currentSuper() const;
 

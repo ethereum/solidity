@@ -203,13 +203,13 @@ Json::Value ASTJsonConverter::inlineAssemblyIdentifierToJson(pair<yul::Identifie
 
 void ASTJsonConverter::print(ostream& _stream, ASTNode const& _node)
 {
-	_stream << util::jsonPrettyPrint(util::removeNullMembers(toJson(_node)));
+	_stream << util::jsonPrettyPrint(toJson(_node));
 }
 
-Json::Value&& ASTJsonConverter::toJson(ASTNode const& _node)
+Json::Value ASTJsonConverter::toJson(ASTNode const& _node)
 {
 	_node.accept(*this);
-	return std::move(m_currentValue);
+	return util::removeNullMembers(std::move(m_currentValue));
 }
 
 bool ASTJsonConverter::visit(SourceUnit const& _node)
@@ -360,7 +360,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 	std::vector<pair<string, Json::Value>> attributes = {
 		make_pair("name", _node.name()),
 		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
-		make_pair("kind", TokenTraits::toString(_node.kind())),
+		make_pair("kind", _node.isFree() ? "freeFunction" : TokenTraits::toString(_node.kind())),
 		make_pair("stateMutability", stateMutabilityToString(_node.stateMutability())),
 		make_pair("visibility", Declaration::visibilityToString(visibility)),
 		make_pair("virtual", _node.markedVirtual()),
@@ -467,7 +467,6 @@ bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 	setJsonNode(_node, "UserDefinedTypeName", {
 		make_pair("name", namePathToString(_node.namePath())),
 		make_pair("referencedDeclaration", idOrNull(_node.annotation().referencedDeclaration)),
-		make_pair("contractScope", idOrNull(_node.annotation().contractScope)),
 		make_pair("typeDescriptions", typePointerToJson(_node.annotation().type, true))
 	});
 	return false;
@@ -726,13 +725,16 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 		make_pair("arguments", toJson(_node.arguments())),
 		make_pair("tryCall", _node.annotation().tryCall)
 	};
+
+	FunctionCallKind nodeKind = *_node.annotation().kind;
+
 	if (m_legacy)
 	{
-		attributes.emplace_back("isStructConstructorCall", _node.annotation().kind == FunctionCallKind::StructConstructorCall);
-		attributes.emplace_back("type_conversion", _node.annotation().kind == FunctionCallKind::TypeConversion);
+		attributes.emplace_back("isStructConstructorCall", nodeKind == FunctionCallKind::StructConstructorCall);
+		attributes.emplace_back("type_conversion", nodeKind == FunctionCallKind::TypeConversion);
 	}
 	else
-		attributes.emplace_back("kind", functionCallKind(_node.annotation().kind));
+		attributes.emplace_back("kind", functionCallKind(nodeKind));
 	appendExpressionAttributes(attributes, _node.annotation());
 	setJsonNode(_node, "FunctionCall", std::move(attributes));
 	return false;

@@ -233,7 +233,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	return true;
 }
 
-bool SemanticInformation::sideEffectFree(Instruction _instruction)
+bool SemanticInformation::canBeRemoved(Instruction _instruction)
 {
 	// These are not really functional.
 	assertThrow(!isDupInstruction(_instruction) && !isSwapInstruction(_instruction), AssemblyException, "");
@@ -241,15 +241,15 @@ bool SemanticInformation::sideEffectFree(Instruction _instruction)
 	return !instructionInfo(_instruction).sideEffects;
 }
 
-bool SemanticInformation::sideEffectFreeIfNoMSize(Instruction _instruction)
+bool SemanticInformation::canBeRemovedIfNoMSize(Instruction _instruction)
 {
 	if (_instruction == Instruction::KECCAK256 || _instruction == Instruction::MLOAD)
 		return true;
 	else
-		return sideEffectFree(_instruction);
+		return canBeRemoved(_instruction);
 }
 
-bool SemanticInformation::invalidatesMemory(Instruction _instruction)
+SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction)
 {
 	switch (_instruction)
 	{
@@ -263,13 +263,47 @@ bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	case Instruction::STATICCALL:
-		return true;
+		return SemanticInformation::Write;
+
+	case Instruction::CREATE:
+	case Instruction::CREATE2:
+	case Instruction::KECCAK256:
+	case Instruction::MLOAD:
+	case Instruction::MSIZE:
+	case Instruction::RETURN:
+	case Instruction::REVERT:
+	case Instruction::LOG0:
+	case Instruction::LOG1:
+	case Instruction::LOG2:
+	case Instruction::LOG3:
+	case Instruction::LOG4:
+		return SemanticInformation::Read;
+
 	default:
-		return false;
+		return SemanticInformation::None;
 	}
 }
 
-bool SemanticInformation::invalidatesStorage(Instruction _instruction)
+bool SemanticInformation::movableApartFromEffects(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::EXTCODEHASH:
+	case Instruction::EXTCODESIZE:
+	case Instruction::RETURNDATASIZE:
+	case Instruction::BALANCE:
+	case Instruction::SELFBALANCE:
+	case Instruction::SLOAD:
+	case Instruction::KECCAK256:
+	case Instruction::MLOAD:
+		return true;
+
+	default:
+		return movable(_instruction);
+	}
+}
+
+SemanticInformation::Effect SemanticInformation::storage(Instruction _instruction)
 {
 	switch (_instruction)
 	{
@@ -279,9 +313,45 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	case Instruction::CREATE:
 	case Instruction::CREATE2:
 	case Instruction::SSTORE:
-		return true;
+		return SemanticInformation::Write;
+
+	case Instruction::SLOAD:
+	case Instruction::STATICCALL:
+		return SemanticInformation::Read;
+
 	default:
-		return false;
+		return SemanticInformation::None;
+	}
+}
+
+SemanticInformation::Effect SemanticInformation::otherState(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+	case Instruction::CREATE:
+	case Instruction::CREATE2:
+	case Instruction::SELFDESTRUCT:
+	case Instruction::STATICCALL: // because it can affect returndatasize
+		// Strictly speaking, log0, .., log4 writes to the state, but the EVM cannot read it, so they
+		// are just marked as having 'other side effects.'
+		return SemanticInformation::Write;
+
+	case Instruction::EXTCODESIZE:
+	case Instruction::EXTCODEHASH:
+	case Instruction::RETURNDATASIZE:
+	case Instruction::BALANCE:
+	case Instruction::SELFBALANCE:
+	case Instruction::RETURNDATACOPY:
+	case Instruction::EXTCODECOPY:
+		// PC and GAS are specifically excluded here. Instructions such as CALLER, CALLVALUE,
+		// ADDRESS are excluded because they cannot change during execution.
+		return SemanticInformation::Read;
+
+	default:
+		return SemanticInformation::None;
 	}
 }
 

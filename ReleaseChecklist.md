@@ -6,6 +6,9 @@
  - [ ] Readthedocs account, access to the Solidity project
  - [ ] Write access to https://github.com/ethereum/homebrew-ethereum
 
+### Documentation check
+ - [ ] Run `make linkcheck` from within `docs/` and fix any broken links it finds. Ignore false positives caused by `href` anchors and dummy links not meant to work.
+
 ### Blog Post
  - [ ] Create a post on https://github.com/ethereum/solidity-blog and explain some of the new features or concepts.
 

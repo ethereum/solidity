@@ -19,13 +19,17 @@
 #pragma once
 
 #include <test/TestCase.h>
-#include <libyul/Object.h>
 
 namespace solidity::langutil
 {
 class Scanner;
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
+}
+
+namespace solidity::yul
+{
+struct Object;
 }
 
 namespace solidity::yul::test

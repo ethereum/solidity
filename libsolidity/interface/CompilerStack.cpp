@@ -85,9 +85,6 @@ static int g_compilerStackCounts = 0;
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
 	m_enabledSMTSolvers{smtutil::SMTSolverChoice::All()},
-	m_generateIR{false},
-	m_generateEwasm{false},
-	m_errorList{},
 	m_errorReporter{m_errorList}
 {
 	// Because TypeProvider is currently a singleton API, we must ensure that
@@ -518,7 +515,8 @@ bool CompilerStack::compile()
 				{
 					try
 					{
-						compileContract(*contract, otherCompilers);
+						if (m_generateEvmBytecode)
+							compileContract(*contract, otherCompilers);
 					}
 					catch (Error const& _error)
 					{
@@ -824,6 +822,14 @@ string const& CompilerStack::metadata(string const& _contractName) const
 	return metadata(contract(_contractName));
 }
 
+bytes CompilerStack::cborMetadata(string const& _contractName) const
+{
+	if (m_stackState < AnalysisPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
+
+	return createCBORMetadata(contract(_contractName));
+}
+
 string const& CompilerStack::metadata(Contract const& _contract) const
 {
 	if (m_stackState < AnalysisPerformed)
@@ -1063,10 +1069,7 @@ void CompilerStack::compileContract(
 	shared_ptr<Compiler> compiler = make_shared<Compiler>(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	compiledContract.compiler = compiler;
 
-	bytes cborEncodedMetadata = createCBORMetadata(
-		metadata(compiledContract),
-		!onlySafeExperimentalFeaturesActivated(_contract.sourceUnit().annotation().experimentalFeatures)
-	);
+	bytes cborEncodedMetadata = createCBORMetadata(compiledContract);
 
 	try
 	{
@@ -1390,18 +1393,24 @@ private:
 	bytes m_data;
 };
 
-bytes CompilerStack::createCBORMetadata(string const& _metadata, bool _experimentalMode)
+bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
 {
+	bool const experimentalMode = !onlySafeExperimentalFeaturesActivated(
+		_contract.contract->sourceUnit().annotation().experimentalFeatures
+	);
+
+	string meta = metadata(_contract);
+
 	MetadataCBOREncoder encoder;
 
 	if (m_metadataHash == MetadataHash::IPFS)
-		encoder.pushBytes("ipfs", util::ipfsHash(_metadata));
+		encoder.pushBytes("ipfs", util::ipfsHash(meta));
 	else if (m_metadataHash == MetadataHash::Bzzr1)
-		encoder.pushBytes("bzzr1", util::bzzr1Hash(_metadata).asBytes());
+		encoder.pushBytes("bzzr1", util::bzzr1Hash(meta).asBytes());
 	else
 		solAssert(m_metadataHash == MetadataHash::None, "Invalid metadata hash");
 
-	if (_experimentalMode)
+	if (experimentalMode)
 		encoder.pushBool("experimental", true);
 	if (m_release)
 		encoder.pushBytes("solc", VersionCompactBytes);

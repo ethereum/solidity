@@ -511,22 +511,6 @@ BOOST_AUTO_TEST_CASE(contract_multiple_inheritance_with_arguments)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
-{
-	char const* text = R"(
-		contract c {
-			uint private internal a;
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
-	text = R"(
-		contract c {
-			function f() private external {}
-		}
-	)";
-	CHECK_PARSE_ERROR(text, "Visibility already specified as \"private\".");
-}
-
 BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 {
 	auto keywords = {

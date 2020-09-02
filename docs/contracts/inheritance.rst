@@ -331,7 +331,7 @@ Modifier Overriding
 ===================
 
 Function modifiers can override each other. This works in the same way as
-`function overriding <function-overriding>`_ (except that there is no overloading for modifiers). The
+:ref:`function overriding <function-overriding>` (except that there is no overloading for modifiers). The
 ``virtual`` keyword must be used on the overridden modifier
 and the ``override`` keyword must be used in the overriding modifier:
 

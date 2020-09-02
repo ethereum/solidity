@@ -26,6 +26,8 @@
 #include <test/libyul/Common.h>
 #include <test/libyul/SyntaxTest.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
+
 #include <test/Common.h>
 
 using namespace std;
@@ -43,17 +45,9 @@ void SyntaxTest::parseAndAnalyze()
 	string const& source = m_sources.begin()->second;
 
 	ErrorList errorList{};
-	ErrorReporter errorReporter{errorList};
-
-	auto scanner = make_shared<Scanner>(CharStream(source, name));
-	auto parserResult = yul::Parser(errorReporter, *m_dialect).parse(scanner, false);
-
-	if (parserResult)
-	{
-		yul::AsmAnalysisInfo analysisInfo;
-		yul::AsmAnalyzer(analysisInfo, errorReporter, *m_dialect).analyze(*parserResult);
-	}
-
+	soltestAssert(m_dialect, "");
+	// Silently ignoring the results.
+	yul::test::parse(source, *m_dialect, errorList);
 	for (auto const& error: errorList)
 	{
 		int locationStart = -1;

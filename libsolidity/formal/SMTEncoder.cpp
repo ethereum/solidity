@@ -420,8 +420,11 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 			_tuple.location(),
 			"Assertion checker does not yet implement inline arrays."
 		);
-	else if (_tuple.annotation().type->category() == Type::Category::Tuple)
+	else if (_tuple.components().size() == 1)
+		defineExpr(_tuple, expr(*_tuple.components().front()));
+	else
 	{
+		solAssert(_tuple.annotation().type->category() == Type::Category::Tuple, "");
 		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
 		solAssert(symbTuple, "");
 		auto const& symbComponents = symbTuple->components();
@@ -445,28 +448,28 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 			}
 		}
 	}
-	else
-	{
-		/// Parenthesized expressions are also TupleExpression regardless their type.
-		auto const& components = _tuple.components();
-		solAssert(components.size() == 1, "");
-		defineExpr(_tuple, expr(*components.front()));
-	}
 }
 
 void SMTEncoder::endVisit(UnaryOperation const& _op)
 {
+	/// We need to shortcut here due to potentially unknown
+	/// rational number sizes.
 	if (_op.annotation().type->category() == Type::Category::RationalNumber)
 		return;
 
+	if (TokenTraits::isBitOp(_op.getOperator()))
+		return bitwiseNotOperation(_op);
+
 	createExpr(_op);
+
+	auto const* subExpr = innermostTuple(_op.subExpression());
 
 	switch (_op.getOperator())
 	{
 	case Token::Not: // !
 	{
 		solAssert(smt::isBool(_op.annotation().type->category()), "");
-		defineExpr(_op, !expr(_op.subExpression()));
+		defineExpr(_op, !expr(*subExpr));
 		break;
 	}
 	case Token::Inc: // ++ (pre- or postfix)
@@ -474,8 +477,8 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 		auto cat = _op.annotation().type->category();
 		solAssert(smt::isInteger(cat) || smt::isFixedPoint(cat), "");
-		solAssert(_op.subExpression().annotation().willBeWrittenTo, "");
-		if (auto identifier = dynamic_cast<Identifier const*>(&_op.subExpression()))
+		solAssert(subExpr->annotation().willBeWrittenTo, "");
+		if (auto identifier = dynamic_cast<Identifier const*>(subExpr))
 		{
 			auto decl = identifierToVariable(*identifier);
 			solAssert(decl, "");
@@ -484,12 +487,12 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			assignment(*decl, newValue);
 		}
-		else if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
+		else if (dynamic_cast<IndexAccess const*>(subExpr))
 		{
-			auto innerValue = expr(_op.subExpression());
+			auto innerValue = expr(*subExpr);
 			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			arrayIndexAssignment(_op.subExpression(), newValue);
+			arrayIndexAssignment(*subExpr, newValue);
 		}
 		else
 			m_errorReporter.warning(
@@ -502,25 +505,24 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	}
 	case Token::Sub: // -
 	{
-		defineExpr(_op, 0 - expr(_op.subExpression()));
+		defineExpr(_op, 0 - expr(*subExpr));
 		break;
 	}
 	case Token::Delete:
 	{
-		auto const& subExpr = _op.subExpression();
-		if (auto decl = identifierToVariable(subExpr))
+		if (auto decl = identifierToVariable(*subExpr))
 		{
 			m_context.newValue(*decl);
 			m_context.setZeroValue(*decl);
 		}
 		else
 		{
-			solAssert(m_context.knownExpression(subExpr), "");
-			auto const& symbVar = m_context.expression(subExpr);
+			solAssert(m_context.knownExpression(*subExpr), "");
+			auto const& symbVar = m_context.expression(*subExpr);
 			symbVar->increaseIndex();
 			m_context.setZeroValue(*symbVar);
-			if (dynamic_cast<IndexAccess const*>(&_op.subExpression()))
-				arrayIndexAssignment(_op.subExpression(), symbVar->currentValue());
+			if (dynamic_cast<IndexAccess const*>(subExpr))
+				arrayIndexAssignment(*subExpr, symbVar->currentValue());
 			else
 				m_errorReporter.warning(
 					2683_error,
@@ -579,11 +581,33 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		);
 }
 
+bool SMTEncoder::visit(Conditional const& _op)
+{
+	_op.condition().accept(*this);
+
+	auto indicesEndTrue = visitBranch(&_op.trueExpression(), expr(_op.condition()));
+	auto touchedVars = touchedVariables(_op.trueExpression());
+
+	auto indicesEndFalse = visitBranch(&_op.falseExpression(), !expr(_op.condition()));
+	touchedVars += touchedVariables(_op.falseExpression());
+
+	mergeVariables(touchedVars, expr(_op.condition()), indicesEndTrue, indicesEndFalse);
+
+	defineExpr(_op, smtutil::Expression::ite(
+		expr(_op.condition()),
+		expr(_op.trueExpression()),
+		expr(_op.falseExpression())
+	));
+
+	return false;
+}
+
 void SMTEncoder::endVisit(FunctionCall const& _funCall)
 {
-	solAssert(_funCall.annotation().kind != FunctionCallKind::Unset, "");
+	auto functionCallKind = *_funCall.annotation().kind;
+
 	createExpr(_funCall);
-	if (_funCall.annotation().kind == FunctionCallKind::StructConstructorCall)
+	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
 		m_errorReporter.warning(
 			4639_error,
@@ -593,7 +617,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		return;
 	}
 
-	if (_funCall.annotation().kind == FunctionCallKind::TypeConversion)
+	if (functionCallKind == FunctionCallKind::TypeConversion)
 	{
 		visitTypeConversion(_funCall);
 		return;
@@ -753,7 +777,7 @@ void SMTEncoder::endVisit(ElementaryTypeNameExpression const& _typeName)
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 {
-	solAssert(_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
+	solAssert(*_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
 	solAssert(_funCall.arguments().size() == 1, "");
 	auto argument = _funCall.arguments().front();
 	unsigned argSize = argument->annotation().type->storageBytes();
@@ -923,6 +947,15 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
 		return;
+	if (_indexAccess.baseExpression().annotation().type->category() == Type::Category::FixedBytes)
+	{
+		m_errorReporter.warning(
+			7989_error,
+			_indexAccess.location(),
+			"Assertion checker does not yet support index accessing fixed bytes."
+		);
+		return;
+	}
 
 	shared_ptr<smt::SymbolicVariable> array;
 	if (auto const* id = dynamic_cast<Identifier const*>(&_indexAccess.baseExpression()))
@@ -930,16 +963,6 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
 		array = m_context.variable(*varDecl);
-
-		if (varDecl->type()->category() == Type::Category::FixedBytes)
-		{
-			m_errorReporter.warning(
-				7989_error,
-				_indexAccess.location(),
-				"Assertion checker does not yet support index accessing fixed bytes."
-			);
-			return;
-		}
 	}
 	else if (auto const* innerAccess = dynamic_cast<IndexAccess const*>(&_indexAccess.baseExpression()))
 	{
@@ -1084,25 +1107,22 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 
 	auto oldElements = symbArray->elements();
 	auto oldLength = symbArray->length();
-	m_context.addAssertion(oldLength > 0);
 
 	symbArray->increaseIndex();
 	m_context.addAssertion(symbArray->elements() == oldElements);
 	auto newLength = smtutil::Expression::ite(
-		oldLength == 0,
-		smt::maxValue(*TypeProvider::uint256()),
-		oldLength - 1
+		oldLength > 0,
+		oldLength - 1,
+		0
 	);
-	m_context.addAssertion(symbArray->length() == oldLength - 1);
+	m_context.addAssertion(symbArray->length() == newLength);
 
 	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
 }
 
 void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array)
 {
-	Expression const* expr = &_expr;
-	if (auto const* tupleExpr = dynamic_cast<TupleExpression const*>(expr))
-		expr = innermostTuple(*tupleExpr);
+	Expression const* expr = innermostTuple(_expr);
 
 	if (auto const* id = dynamic_cast<Identifier const*>(expr))
 	{
@@ -1386,20 +1406,7 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	auto commonType = _op.annotation().commonType;
 	solAssert(commonType, "");
 
-	unsigned bvSize = 256;
-	bool isSigned = false;
-	if (auto const* intType = dynamic_cast<IntegerType const*>(commonType))
-	{
-		bvSize = intType->numBits();
-		isSigned = intType->isSigned();
-	}
-	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(commonType))
-	{
-		bvSize = fixedType->numBits();
-		isSigned = fixedType->isSigned();
-	}
-	else if (auto const* fixedBytesType = dynamic_cast<FixedBytesType const*>(commonType))
-		bvSize = fixedBytesType->numBytes() * 8;
+	auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(commonType);
 
 	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression(), commonType), bvSize);
 	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
@@ -1407,16 +1414,24 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	optional<smtutil::Expression> result;
 	if (_op.getOperator() == Token::BitAnd)
 		result = bvLeft & bvRight;
-	// TODO implement the other operators
-	else
-		m_errorReporter.warning(
-			1093_error,
-			_op.location(),
-			"Assertion checker does not yet implement this bitwise operator."
-		);
+	else if (_op.getOperator() == Token::BitOr)
+		result = bvLeft | bvRight;
+	else if (_op.getOperator() == Token::BitXor)
+		result = bvLeft ^ bvRight;
 
+	solAssert(result, "");
 	if (result)
 		defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
+}
+
+void SMTEncoder::bitwiseNotOperation(UnaryOperation const& _op)
+{
+	solAssert(_op.getOperator() == Token::BitNot, "");
+
+	auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(_op.annotation().type);
+
+	auto bvOperand = smtutil::Expression::int2bv(expr(_op.subExpression(), _op.annotation().type), bvSize);
+	defineExpr(_op, smtutil::Expression::bv2int(~bvOperand, isSigned));
 }
 
 smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type)
@@ -1444,9 +1459,7 @@ void SMTEncoder::assignment(
 		"Tuple assignments should be handled by tupleAssignment."
 	);
 
-	Expression const* left = &_left;
-	if (auto const* tuple = dynamic_cast<TupleExpression const*>(left))
-		left = innermostTuple(*tuple);
+	Expression const* left = innermostTuple(_left);
 
 	if (!smt::isSupportedType(_type->category()))
 	{
@@ -1474,15 +1487,16 @@ void SMTEncoder::assignment(
 
 void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _right)
 {
-	auto lTuple = dynamic_cast<TupleExpression const*>(innermostTuple(dynamic_cast<TupleExpression const&>(_left)));
+	auto lTuple = dynamic_cast<TupleExpression const*>(innermostTuple(_left));
 	solAssert(lTuple, "");
+	Expression const* right = innermostTuple(_right);
 
 	auto const& lComponents = lTuple->components();
 
 	// If both sides are tuple expressions, we individually and potentially
 	// recursively assign each pair of components.
 	// This is because of potential type conversion.
-	if (auto rTuple = dynamic_cast<TupleExpression const*>(&_right))
+	if (auto rTuple = dynamic_cast<TupleExpression const*>(right))
 	{
 		auto const& rComponents = rTuple->components();
 		solAssert(lComponents.size() == rComponents.size(), "");
@@ -1503,13 +1517,13 @@ void SMTEncoder::tupleAssignment(Expression const& _left, Expression const& _rig
 	}
 	else
 	{
-		auto rType = dynamic_cast<TupleType const*>(_right.annotation().type);
+		auto rType = dynamic_cast<TupleType const*>(right->annotation().type);
 		solAssert(rType, "");
 
 		auto const& rComponents = rType->components();
 		solAssert(lComponents.size() == rComponents.size(), "");
 
-		auto symbRight = expr(_right);
+		auto symbRight = expr(*right);
 		solAssert(symbRight.sort->kind == smtutil::Kind::Tuple, "");
 
 		for (unsigned i = 0; i < lComponents.size(); ++i)
@@ -1900,10 +1914,12 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 	return base;
 }
 
-Expression const* SMTEncoder::innermostTuple(TupleExpression const& _tuple)
+Expression const* SMTEncoder::innermostTuple(Expression const& _expr)
 {
-	solAssert(!_tuple.isInlineArray(), "");
-	TupleExpression const* tuple = &_tuple;
+	auto const* tuple = dynamic_cast<TupleExpression const*>(&_expr);
+	if (!tuple || tuple->isInlineArray())
+		return &_expr;
+
 	Expression const* expr = tuple;
 	while (tuple && !tuple->isInlineArray() && tuple->components().size() == 1)
 	{
@@ -1949,7 +1965,7 @@ string SMTEncoder::extraComment()
 
 FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall const& _funCall)
 {
-	if (_funCall.annotation().kind != FunctionCallKind::FunctionCall)
+	if (*_funCall.annotation().kind != FunctionCallKind::FunctionCall)
 		return nullptr;
 
 	FunctionDefinition const* funDef = nullptr;
@@ -1967,6 +1983,20 @@ FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall cons
 		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
 
 	return funDef;
+}
+
+vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract)
+{
+	return fold(
+		_contract.annotation().linearizedBaseContracts,
+		vector<VariableDeclaration const*>{},
+		[](auto&& _acc, auto _contract) { return _acc + _contract->stateVariables(); }
+	);
+}
+
+vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
+{
+	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)

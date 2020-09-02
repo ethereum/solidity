@@ -1,3 +1,39 @@
+### 0.7.1 (2020-09-02)
+
+Language Features:
+ * Allow function definitions outside of contracts, behaving much like internal library functions.
+ * Code generator: Implementing copying structs from calldata to storage.
+
+Compiler Features:
+ * SMTChecker: Add underflow and overflow as verification conditions in the CHC engine.
+ * SMTChecker: Support bitwise or, xor and not operators.
+ * SMTChecker: Support conditional operator.
+ * Standard JSON Interface: Do not run EVM bytecode code generation, if only Yul IR or EWasm output is requested.
+ * Yul Optimizer: LoopInvariantCodeMotion can move reading operations outside for-loops as long as the affected area is not modified inside the loop.
+ * Yul: Report error when using non-string literals for ``datasize()``, ``dataoffset()``, ``linkersymbol()``, ``loadimmutable()``, ``setimmutable()``.
+
+Bugfixes:
+ * AST: Remove ``null`` member values also when the compiler is used in standard-json-mode.
+ * General: Allow `type(Contract).name` for abstract contracts and interfaces.
+ * Immutables: Disallow assigning immutables more than once during their declaration.
+ * Immutables: Properly treat complex assignment and increment/decrement as both reading and writing and thus disallow it everywhere for immutable variables.
+ * Optimizer: Keep side-effects of ``x`` in ``byte(a, shr(b, x))`` even if the constants ``a`` and ``b`` would make the expression zero unconditionally. This optimizer rule is very hard if not impossible to trigger in a way that it can result in invalid code, though.
+ * References Resolver: Fix internal bug when using constructor for library.
+ * Scanner: Fix bug where whitespace would be allowed within the ``->`` token (e.g. ``function f() -   > x {}`` becomes invalid in inline assembly and Yul).
+ * SMTChecker: Fix internal error in BMC function inlining.
+ * SMTChecker: Fix internal error on array implicit conversion.
+ * SMTChecker: Fix internal error on fixed bytes index access.
+ * SMTChecker: Fix internal error on lvalue unary operators with tuples.
+ * SMTChecker: Fix internal error on tuple assignment.
+ * SMTChecker: Fix internal error on tuples of one element that have tuple type.
+ * SMTChecker: Fix soundness of array ``pop``.
+ * Type Checker: Disallow ``using for`` directive inside interfaces.
+ * Type Checker: Disallow signed literals as exponent in exponentiation operator.
+ * Type Checker: Disallow structs containing nested mapping in memory as parameters for library functions.
+ * Yul Optimizer: Ensure that Yul keywords are not mistakenly used by the NameDispenser and VarNameCleaners. The bug would manifest as uncompilable code.
+ * Yul Optimizer: Make function inlining order more resilient to whether or not unrelated source files are present.
+
+
 ### 0.7.0 (2020-07-28)
 
 Breaking changes:

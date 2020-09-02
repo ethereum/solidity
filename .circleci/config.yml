@@ -21,8 +21,8 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a4d5271b5552139d9f2caefc50d42f401bf74132cf8f253e199e11c80ab42de"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:efaabb3c143f64171be596932c62013bcfd7f73b1fbcb832025a34dd2b6e6922"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:6fa6914bd81abcac4b162c738e6ff05d87cefe7655e3859c7a827e5a8ec20dc7"
   emscripten-docker-image:
     type: string
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc"
@@ -410,6 +410,7 @@ jobs:
       CC: clang
       CXX: clang++
       CMAKE_OPTIONS: -DSANITIZE=address
+      MAKEFLAGS: -j 3
     steps:
       - checkout
       - run: *run_build
@@ -433,6 +434,7 @@ jobs:
     <<: *build_ubuntu2004
     environment:
       FORCE_RELEASE: ON
+      MAKEFLAGS: -j 10
 
   b_ubu18: &build_ubuntu1804
     docker:
@@ -440,6 +442,7 @@ jobs:
     environment:
       CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
       CMAKE_BUILD_TYPE: RelWithDebugInfo
+      MAKEFLAGS: -j 3
     steps:
       - checkout
       - run: *run_build
@@ -451,6 +454,7 @@ jobs:
     environment:
       COVERAGE: ON
       CMAKE_BUILD_TYPE: Debug
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
@@ -483,7 +487,8 @@ jobs:
     <<: *build_ubuntu2004
     environment:
       CMAKE_BUILD_TYPE: Debug
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/cxx20.cmake -DUSE_CVC4=OFF
+      CMAKE_OPTIONS: -DCMAKE_CXX_STANDARD=20 -DUSE_CVC4=OFF
+      MAKEFLAGS: -j 10
     steps:
       - checkout
       - run: *run_build
@@ -495,7 +500,7 @@ jobs:
       CC: clang
       CXX: clang++
       TERM: xterm
-      CMAKE_OPTIONS: -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/libfuzzer.cmake
+      MAKEFLAGS: -j 3
     steps:
       - checkout
       - run: *setup_prerelease_commit_hash
@@ -524,6 +529,7 @@ jobs:
       - image: archlinux/base
     environment:
       TERM: xterm
+      MAKEFLAGS: -j 3
     steps:
       - run:
           name: Install build dependencies
@@ -540,6 +546,7 @@ jobs:
     environment:
       TERM: xterm
       CMAKE_BUILD_TYPE: Release
+      MAKEFLAGS: -j 5
     steps:
       - checkout
       - restore_cache:
@@ -625,6 +632,7 @@ jobs:
     <<: *build_ubuntu2004
     environment:
       CMAKE_OPTIONS: -DSANITIZE=address
+      MAKEFLAGS: -j 10
       CMAKE_BUILD_TYPE: Release
     steps:
       - checkout
@@ -884,13 +892,6 @@ workflows:
       - t_ubu_release_cli: *workflow_ubuntu2004_release
       - t_ubu_release_soltest: *workflow_ubuntu2004_release
 
-      # ASan build and tests
-      - b_ubu_asan: *workflow_trigger_on_tags
-      - b_ubu_asan_clang: *workflow_trigger_on_tags
-      - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
-      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
-      - t_ubu_asan_cli: *workflow_ubuntu2004_asan
-
       # Emscripten build and selected tests
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
@@ -917,3 +918,10 @@ workflows:
       # Code Coverage enabled build and tests
       - b_ubu_codecov: *workflow_trigger_on_tags
       - t_ubu_codecov: *workflow_ubuntu2004_codecov
+
+      # ASan build and tests
+      - b_ubu_asan: *workflow_trigger_on_tags
+      - b_ubu_asan_clang: *workflow_trigger_on_tags
+      - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
+      - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
+      - t_ubu_asan_cli: *workflow_ubuntu2004_asan

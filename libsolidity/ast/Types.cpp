@@ -451,7 +451,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 		);
 		for (FunctionDefinition const* function: library.definedFunctions())
 		{
-			if (!function->isVisibleAsLibraryMember() || seenFunctions.count(function))
+			if (!function->isOrdinary() || !function->isVisibleAsLibraryMember() || seenFunctions.count(function))
 				continue;
 			seenFunctions.insert(function);
 			if (function->parameters().empty())
@@ -712,6 +712,8 @@ TypeResult IntegerType::binaryOperatorResult(Token _operator, Type const* _other
 				return TypeResult::err("Exponent is fractional.");
 			if (!rationalNumberType->integerType())
 				return TypeResult::err("Exponent too large.");
+			if (rationalNumberType->isNegative())
+				return TypeResult::err("Exponentiation power is not allowed to be a negative integer literal.");
 		}
 		return this;
 	}
@@ -2461,52 +2463,56 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 
 	TypeResult result{TypePointer{}};
 
+	if (recursive() && !(_inLibrary && location() == DataLocation::Storage))
+		return TypeResult::err(
+			"Recursive structs can only be passed as storage pointers to libraries, "
+			"not as memory objects to contract functions."
+		);
+
 	util::BreadthFirstSearch<StructDefinition const*> breadthFirstSearch{{&m_struct}};
 	breadthFirstSearch.run(
-		[&](StructDefinition const* _struct, auto&& _addChild) {
-				// Check that all members have interface types.
-				// Return an error if at least one struct member does not have a type.
-				// This might happen, for example, if the type of the member does not exist.
-				for (ASTPointer<VariableDeclaration> const& variable: _struct->members())
+		[&](StructDefinition const* _struct, auto&& _addChild)
+		{
+			// Check that all members have interface types.
+			// Return an error if at least one struct member does not have a type.
+			// This might happen, for example, if the type of the member does not exist.
+			for (ASTPointer<VariableDeclaration> const& variable: _struct->members())
+			{
+				// If the struct member does not have a type return false.
+				// A TypeError is expected in this case.
+				if (!variable->annotation().type)
 				{
-					// If the struct member does not have a type return false.
-					// A TypeError is expected in this case.
-					if (!variable->annotation().type)
+					result = TypeResult::err("Invalid type!");
+					breadthFirstSearch.abort();
+					return;
+				}
+
+				Type const* memberType = variable->annotation().type;
+
+				while (
+					memberType->category() == Type::Category::Array ||
+					memberType->category() == Type::Category::Mapping
+				)
+				{
+					if (auto arrayType = dynamic_cast<ArrayType const*>(memberType))
+						memberType = arrayType->finalBaseType(false);
+					else if (auto mappingType = dynamic_cast<MappingType const*>(memberType))
+						memberType = mappingType->valueType();
+				}
+
+				if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
+					_addChild(&innerStruct->structDefinition());
+				else
+				{
+					auto iType = memberType->interfaceType(_inLibrary);
+					if (!iType.get())
 					{
-						result = TypeResult::err("Invalid type!");
+						solAssert(!iType.message().empty(), "Expected detailed error message!");
+						result = iType;
 						breadthFirstSearch.abort();
 						return;
 					}
-
-					Type const* memberType = variable->annotation().type;
-
-					while (dynamic_cast<ArrayType const*>(memberType))
-						memberType = dynamic_cast<ArrayType const*>(memberType)->baseType();
-
-					if (StructType const* innerStruct = dynamic_cast<StructType const*>(memberType))
-					{
-						if (innerStruct->recursive() && !(_inLibrary && location() == DataLocation::Storage))
-						{
-							result = TypeResult::err(
-								"Recursive structs can only be passed as storage pointers to libraries, not as memory objects to contract functions."
-							);
-							breadthFirstSearch.abort();
-							return;
-						}
-						else
-							_addChild(&innerStruct->structDefinition());
-					}
-					else
-					{
-						auto iType = memberType->interfaceType(_inLibrary);
-						if (!iType.get())
-						{
-							solAssert(!iType.message().empty(), "Expected detailed error message!");
-							result = iType;
-							breadthFirstSearch.abort();
-							return;
-						}
-					}
+				}
 			}
 		}
 	);
@@ -3151,10 +3157,8 @@ string FunctionType::toString(bool _short) const
 	{
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
-		auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope());
-		solAssert(contract, "");
-		name += contract->annotation().canonicalName;
-		name += '.';
+		if (auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope()))
+			name += contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
 	name += '(';
@@ -3275,7 +3279,10 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 {
 	// Note that m_declaration might also be a state variable!
 	solAssert(m_declaration, "Declaration needed to determine interface function type.");
-	bool isLibraryFunction = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+	bool isLibraryFunction = false;
+	if (kind() != Kind::Event)
+		if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope()))
+			isLibraryFunction = contract->isLibrary();
 
 	util::Result<TypePointers> paramTypes =
 		transformParametersToExternal(m_parameterTypes, isLibraryFunction);
@@ -3569,7 +3576,10 @@ string FunctionType::externalSignature() const
 	}
 
 	// "inLibrary" is only relevant if this is not an event.
-	bool const inLibrary = kind() != Kind::Event && dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+	bool inLibrary = false;
+	if (kind() != Kind::Event)
+		if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope()))
+			inLibrary = contract->isLibrary();
 
 	auto extParams = transformParametersToExternal(m_parameterTypes, inLibrary);
 
@@ -3838,6 +3848,8 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 		{
 			if (dynamic_cast<ModifierDefinition const*>(declaration))
 				continue;
+			if (declaration->name().empty())
+				continue;
 
 			if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
 			{
@@ -4071,6 +4083,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			else
 				return MemberList::MemberMap({
 					{"interfaceId", TypeProvider::fixedBytes(4)},
+					{"name", TypeProvider::stringMemory()},
 				});
 		}
 		else if (m_typeArgument->category() == Type::Category::Integer)

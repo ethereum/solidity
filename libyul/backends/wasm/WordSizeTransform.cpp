@@ -42,16 +42,16 @@ void WordSizeTransform::operator()(FunctionDefinition& _fd)
 
 void WordSizeTransform::operator()(FunctionCall& _fc)
 {
-	vector<bool> const* literalArguments = nullptr;
+	vector<optional<LiteralKind>> const* literalArguments = nullptr;
 
 	if (BuiltinFunction const* fun = m_inputDialect.builtin(_fc.functionName.name))
-		if (fun->literalArguments)
-			literalArguments = &fun->literalArguments.value();
+		if (!fun->literalArguments.empty())
+			literalArguments = &fun->literalArguments;
 
 	vector<Expression> newArgs;
 
 	for (size_t i = 0; i < _fc.arguments.size(); i++)
-		if (!literalArguments || !(*literalArguments)[i])
+		if (!literalArguments || !(*literalArguments)[i].has_value())
 			newArgs += expandValueToVector(_fc.arguments[i]);
 		else
 		{
@@ -109,7 +109,8 @@ void WordSizeTransform::operator()(Block& _block)
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*varDecl.value).functionName.name))
 						if (f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring)
 						{
-							yulAssert(f->literalArguments && f->literalArguments.value()[0], "");
+							yulAssert(f->literalArguments.size() == 1, "");
+							yulAssert(f->literalArguments.at(0) == LiteralKind::String, "");
 							yulAssert(varDecl.variables.size() == 1, "");
 							auto newLhs = generateU64IdentifierNames(varDecl.variables[0].name);
 							vector<Statement> ret;
@@ -169,7 +170,8 @@ void WordSizeTransform::operator()(Block& _block)
 					if (BuiltinFunction const* f = m_inputDialect.builtin(std::get<FunctionCall>(*assignment.value).functionName.name))
 						if (f->name == "datasize"_yulstring || f->name == "dataoffset"_yulstring)
 						{
-							yulAssert(f->literalArguments && f->literalArguments.value()[0], "");
+							yulAssert(f->literalArguments.size() == 1, "");
+							yulAssert(f->literalArguments[0] == LiteralKind::String, "");
 							yulAssert(assignment.variableNames.size() == 1, "");
 							auto newLhs = generateU64IdentifierNames(assignment.variableNames[0].name);
 							vector<Statement> ret;

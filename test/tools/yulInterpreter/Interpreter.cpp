@@ -261,14 +261,18 @@ void ExpressionEvaluator::operator()(Identifier const& _identifier)
 
 void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 {
-	evaluateArgs(_funCall.arguments);
+	vector<optional<LiteralKind>> const* literalArguments = nullptr;
+	if (BuiltinFunction const* builtin = m_dialect.builtin(_funCall.functionName.name))
+		if (!builtin->literalArguments.empty())
+			literalArguments = &builtin->literalArguments;
+	evaluateArgs(_funCall.arguments, literalArguments);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 	{
 		if (BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 		{
 			EVMInstructionInterpreter interpreter(m_state);
-			setValue(interpreter.evalBuiltin(*fun, values()));
+			setValue(interpreter.evalBuiltin(*fun, _funCall.arguments, values()));
 			return;
 		}
 	}
@@ -276,7 +280,7 @@ void ExpressionEvaluator::operator()(FunctionCall const& _funCall)
 		if (dialect->builtin(_funCall.functionName.name))
 		{
 			EwasmBuiltinInterpreter interpreter(m_state);
-			setValue(interpreter.evalBuiltin(_funCall.functionName.name, values()));
+			setValue(interpreter.evalBuiltin(_funCall.functionName.name, _funCall.arguments, values()));
 			return;
 		}
 
@@ -317,14 +321,22 @@ void ExpressionEvaluator::setValue(u256 _value)
 	m_values.emplace_back(std::move(_value));
 }
 
-void ExpressionEvaluator::evaluateArgs(vector<Expression> const& _expr)
+void ExpressionEvaluator::evaluateArgs(
+	vector<Expression> const& _expr,
+	vector<optional<LiteralKind>> const* _literalArguments
+)
 {
 	vector<u256> values;
+	size_t i = 0;
 	/// Function arguments are evaluated in reverse.
 	for (auto const& expr: _expr | boost::adaptors::reversed)
 	{
-		visit(expr);
+		if (!_literalArguments || !_literalArguments->at(_expr.size() - i - 1))
+			visit(expr);
+		else
+			m_values = {0};
 		values.push_back(value());
+		++i;
 	}
 	m_values = std::move(values);
 	std::reverse(m_values.begin(), m_values.end());

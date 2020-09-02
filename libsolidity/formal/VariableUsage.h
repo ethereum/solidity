@@ -36,7 +36,7 @@ public:
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack);
 
 	/// Sets whether to inline function calls.
-	void setFunctionInlining(bool _inlineFunction) { m_inlineFunctionCalls = _inlineFunction; }
+	void setFunctionInlining(std::function<bool(FunctionCall const&)> _inlineFunctionCalls) { m_inlineFunctionCalls = _inlineFunctionCalls; }
 
 private:
 	void endVisit(Identifier const& _node) override;
@@ -54,7 +54,7 @@ private:
 	std::vector<CallableDeclaration const*> m_callStack;
 	CallableDeclaration const* m_lastCall = nullptr;
 
-	bool m_inlineFunctionCalls = false;
+	std::function<bool(FunctionCall const&)> m_inlineFunctionCalls = [](FunctionCall const&) { return false; };
 };
 
 }

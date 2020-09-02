@@ -70,7 +70,7 @@ pair<YulString, BuiltinFunctionForEVM> createEVMFunction(
 	f.controlFlowSideEffects.terminates = evmasm::SemanticInformation::terminatesControlFlow(_instruction);
 	f.controlFlowSideEffects.reverts = evmasm::SemanticInformation::reverts(_instruction);
 	f.isMSize = _instruction == evmasm::Instruction::MSIZE;
-	f.literalArguments.reset();
+	f.literalArguments.clear();
 	f.instruction = _instruction;
 	f.generateCode = [_instruction](
 		FunctionCall const& _call,
@@ -90,7 +90,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	size_t _params,
 	size_t _returns,
 	SideEffects _sideEffects,
-	vector<bool> _literalArguments,
+	vector<optional<LiteralKind>> _literalArguments,
 	std::function<void(FunctionCall const&, AbstractAssembly&, BuiltinContext&, std::function<void(Expression const&)>)> _generateCode
 )
 {
@@ -102,10 +102,7 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 	f.parameters.resize(_params);
 	f.returns.resize(_returns);
 	f.sideEffects = std::move(_sideEffects);
-	if (!_literalArguments.empty())
-		f.literalArguments = std::move(_literalArguments);
-	else
-		f.literalArguments.reset();
+	f.literalArguments = std::move(_literalArguments);
 	f.isMSize = false;
 	f.instruction = {};
 	f.generateCode = std::move(_generateCode);
@@ -115,22 +112,27 @@ pair<YulString, BuiltinFunctionForEVM> createFunction(
 map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVersion, bool _objectAccess)
 {
 	map<YulString, BuiltinFunctionForEVM> builtins;
-	// NOTE: Parser::instructions() will filter JUMPDEST and PUSHnn too
-	for (auto const& instr: Parser::instructions())
+	for (auto const& instr: evmasm::c_instructions)
+	{
+		string name = instr.first;
+		transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
+		auto const opcode = instr.second;
+
 		if (
-			!evmasm::isDupInstruction(instr.second) &&
-			!evmasm::isSwapInstruction(instr.second) &&
-			!evmasm::isPushInstruction(instr.second) &&
-			instr.second != evmasm::Instruction::JUMP &&
-			instr.second != evmasm::Instruction::JUMPI &&
-			instr.second != evmasm::Instruction::JUMPDEST &&
-			_evmVersion.hasOpcode(instr.second)
+			!evmasm::isDupInstruction(opcode) &&
+			!evmasm::isSwapInstruction(opcode) &&
+			!evmasm::isPushInstruction(opcode) &&
+			opcode != evmasm::Instruction::JUMP &&
+			opcode != evmasm::Instruction::JUMPI &&
+			opcode != evmasm::Instruction::JUMPDEST &&
+			_evmVersion.hasOpcode(opcode)
 		)
-			builtins.emplace(createEVMFunction(instr.first, instr.second));
+			builtins.emplace(createEVMFunction(name, opcode));
+	}
 
 	if (_objectAccess)
 	{
-		builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {true}, [](
+		builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext&,
@@ -140,7 +142,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			Expression const& arg = _call.arguments.front();
 			_assembly.appendLinkerSymbol(std::get<Literal>(arg).value.str());
 		}));
-		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {true}, [](
+		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -162,7 +164,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_assembly.appendDataSize(subIdPath);
 			}
 		}));
-		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {true}, [](
+		builtins.emplace(createFunction("dataoffset", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,
 			BuiltinContext& _context,
@@ -188,7 +190,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"datacopy",
 			3,
 			0,
-			SideEffects{false, false, false, false, true},
+			SideEffects{false, true, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
 			{},
 			[](
 				FunctionCall const& _call,
@@ -204,8 +206,8 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			"setimmutable",
 			2,
 			0,
-			SideEffects{false, false, false, false, true},
-			{true, false},
+			SideEffects{false, false, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
+			{LiteralKind::String, std::nullopt},
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
@@ -225,7 +227,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			1,
 			1,
 			SideEffects{},
-			{true},
+			{LiteralKind::String},
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
@@ -279,12 +281,20 @@ EVMDialect const& EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion _
 
 SideEffects EVMDialect::sideEffectsOfInstruction(evmasm::Instruction _instruction)
 {
+	auto translate = [](evmasm::SemanticInformation::Effect _e) -> SideEffects::Effect
+	{
+		return static_cast<SideEffects::Effect>(_e);
+	};
+
 	return SideEffects{
 		evmasm::SemanticInformation::movable(_instruction),
-		evmasm::SemanticInformation::sideEffectFree(_instruction),
-		evmasm::SemanticInformation::sideEffectFreeIfNoMSize(_instruction),
-		evmasm::SemanticInformation::invalidatesStorage(_instruction),
-		evmasm::SemanticInformation::invalidatesMemory(_instruction)
+		evmasm::SemanticInformation::movableApartFromEffects(_instruction),
+		evmasm::SemanticInformation::canBeRemoved(_instruction),
+		evmasm::SemanticInformation::canBeRemovedIfNoMSize(_instruction),
+		true, // cannotLoop
+		translate(evmasm::SemanticInformation::otherState(_instruction)),
+		translate(evmasm::SemanticInformation::storage(_instruction)),
+		translate(evmasm::SemanticInformation::memory(_instruction)),
 	};
 }
 

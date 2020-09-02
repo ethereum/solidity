@@ -102,7 +102,7 @@ The ``./scripts/tests.sh`` script executes most Solidity tests automatically,
 including those bundled into the `Boost C++ Test Framework <https://www.boost.org/doc/libs/1_69_0/libs/test/doc/html/index.html>`_ application ``soltest`` (or its wrapper ``scripts/soltest.sh``),
 as well as command line tests and compilation tests.
 
-The test system automatically tries try to discover the location of the ``evmone`` library
+The test system automatically tries to discover the location of the ``evmone`` library
 starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
 ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
 use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
@@ -254,7 +254,7 @@ inside the input. We have a specialized binary called ``solfuzzer`` which takes 
 and fails whenever it encounters an internal compiler error, segmentation fault or similar, but
 does not fail if e.g., the code contains an error. This way, fuzzing tools can find internal problems in the compiler.
 
-We mainly use `AFL <http://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
+We mainly use `AFL <https://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to download and
 install the AFL packages from your repositories (afl, afl-clang) or build them manually.
 Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
 
@@ -388,7 +388,7 @@ local slang and references, making your language as clear to all readers as poss
 Title Case for Headings
 -----------------------
 
-Use `title case <http://titlecase.com>`_ for headings. This means capitalise all principal words in
+Use `title case <https://titlecase.com>`_ for headings. This means capitalise all principal words in
 titles, but not articles, conjunctions, and prepositions unless they start the
 title.
 
