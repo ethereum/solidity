@@ -25,6 +25,7 @@
 #include <vector>
 
 using namespace std;
+using namespace solidity::util;
 using namespace solidity::smtutil;
 
 namespace solidity::frontend::smt
@@ -32,7 +33,7 @@ namespace solidity::frontend::smt
 
 SortPointer smtSort(frontend::Type const& _type)
 {
-	switch (smtKind(_type.category()))
+	switch (smtKind(_type))
 	{
 	case Kind::Int:
 		if (auto const* intType = dynamic_cast<IntegerType const*>(&_type))
@@ -63,13 +64,13 @@ SortPointer smtSort(frontend::Type const& _type)
 	case Kind::Array:
 	{
 		shared_ptr<ArraySort> array;
-		if (isMapping(_type.category()))
+		if (isMapping(_type))
 		{
 			auto mapType = dynamic_cast<frontend::MappingType const*>(&_type);
 			solAssert(mapType, "");
 			array = make_shared<ArraySort>(smtSortAbstractFunction(*mapType->keyType()), smtSortAbstractFunction(*mapType->valueType()));
 		}
-		else if (isStringLiteral(_type.category()))
+		else if (isStringLiteral(_type))
 		{
 			auto stringLitType = dynamic_cast<frontend::StringLiteralType const*>(&_type);
 			solAssert(stringLitType, "");
@@ -130,18 +131,32 @@ SortPointer smtSort(frontend::Type const& _type)
 	}
 	case Kind::Tuple:
 	{
-		auto tupleType = dynamic_cast<frontend::TupleType const*>(&_type);
-		solAssert(tupleType, "");
 		vector<string> members;
-		auto const& tupleName = _type.identifier();
-		auto const& components = tupleType->components();
-		for (unsigned i = 0; i < components.size(); ++i)
-			members.emplace_back(tupleName + "_accessor_" + to_string(i));
-		return make_shared<TupleSort>(
-			tupleName,
-			members,
-			smtSortAbstractFunction(tupleType->components())
-		);
+		auto const& tupleName = _type.toString(true);
+		vector<SortPointer> sorts;
+
+		if (auto const* tupleType = dynamic_cast<frontend::TupleType const*>(&_type))
+		{
+			auto const& components = tupleType->components();
+			for (unsigned i = 0; i < components.size(); ++i)
+				members.emplace_back(tupleName + "_accessor_" + to_string(i));
+			sorts = smtSortAbstractFunction(tupleType->components());
+		}
+		else if (auto const* structType = dynamic_cast<frontend::StructType const*>(&_type))
+		{
+			solAssert(!structType->recursive(), "");
+			auto const& structMembers = structType->structDefinition().members();
+			for (auto member: structMembers)
+				members.emplace_back(tupleName + "_accessor_" + member->name());
+			sorts = smtSortAbstractFunction(applyMap(
+				structMembers,
+				[](auto var) { return var->type(); }
+			));
+		}
+		else
+			solAssert(false, "");
+
+		return make_shared<TupleSort>(tupleName, members, sorts);
 	}
 	default:
 		// Abstract case.
@@ -159,7 +174,7 @@ vector<SortPointer> smtSort(vector<frontend::TypePointer> const& _types)
 
 SortPointer smtSortAbstractFunction(frontend::Type const& _type)
 {
-	if (isFunction(_type.category()))
+	if (isFunction(_type))
 		return SortProvider::uintSort;
 	return smtSort(_type);
 }
@@ -175,35 +190,36 @@ vector<SortPointer> smtSortAbstractFunction(vector<frontend::TypePointer> const&
 	return sorts;
 }
 
-Kind smtKind(frontend::Type::Category _category)
+Kind smtKind(frontend::Type const& _type)
 {
-	if (isNumber(_category))
+	if (isNumber(_type))
 		return Kind::Int;
-	else if (isBool(_category))
+	else if (isBool(_type))
 		return Kind::Bool;
-	else if (isFunction(_category))
+	else if (isFunction(_type))
 		return Kind::Function;
-	else if (isMapping(_category) || isArray(_category))
+	else if (isMapping(_type) || isArray(_type))
 		return Kind::Array;
-	else if (isTuple(_category))
+	else if (isTuple(_type) || isNonRecursiveStruct(_type))
 		return Kind::Tuple;
 	// Abstract case.
 	return Kind::Int;
 }
 
-bool isSupportedType(frontend::Type::Category _category)
+bool isSupportedType(frontend::Type const& _type)
 {
-	return isNumber(_category) ||
-		isBool(_category) ||
-		isMapping(_category) ||
-		isArray(_category) ||
-		isTuple(_category);
+	return isNumber(_type) ||
+		isBool(_type) ||
+		isMapping(_type) ||
+		isArray(_type) ||
+		isTuple(_type) ||
+		isNonRecursiveStruct(_type);
 }
 
-bool isSupportedTypeDeclaration(frontend::Type::Category _category)
+bool isSupportedTypeDeclaration(frontend::Type const& _type)
 {
-	return isSupportedType(_category) ||
-		isFunction(_category);
+	return isSupportedType(_type) ||
+		isFunction(_type);
 }
 
 pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
@@ -220,9 +236,9 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		abstract = true;
 		var = make_shared<SymbolicIntVariable>(frontend::TypeProvider::uint256(), type, _uniqueName, _context);
 	}
-	else if (isBool(_type.category()))
+	else if (isBool(_type))
 		var = make_shared<SymbolicBoolVariable>(type, _uniqueName, _context);
-	else if (isFunction(_type.category()))
+	else if (isFunction(_type))
 	{
 		auto const& fType = dynamic_cast<FunctionType const*>(type);
 		auto const& paramsIn = fType->parameterTypes();
@@ -245,21 +261,21 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		else
 			var = make_shared<SymbolicFunctionVariable>(type, _uniqueName, _context);
 	}
-	else if (isInteger(_type.category()))
+	else if (isInteger(_type))
 		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
-	else if (isFixedPoint(_type.category()))
+	else if (isFixedPoint(_type))
 		var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
-	else if (isFixedBytes(_type.category()))
+	else if (isFixedBytes(_type))
 	{
 		auto fixedBytesType = dynamic_cast<frontend::FixedBytesType const*>(type);
 		solAssert(fixedBytesType, "");
 		var = make_shared<SymbolicFixedBytesVariable>(type, fixedBytesType->numBytes(), _uniqueName, _context);
 	}
-	else if (isAddress(_type.category()) || isContract(_type.category()))
+	else if (isAddress(_type) || isContract(_type))
 		var = make_shared<SymbolicAddressVariable>(_uniqueName, _context);
-	else if (isEnum(_type.category()))
+	else if (isEnum(_type))
 		var = make_shared<SymbolicEnumVariable>(type, _uniqueName, _context);
-	else if (isRational(_type.category()))
+	else if (isRational(_type))
 	{
 		auto rational = dynamic_cast<frontend::RationalNumberType const*>(&_type);
 		solAssert(rational, "");
@@ -268,106 +284,104 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 		else
 			var = make_shared<SymbolicIntVariable>(type, type, _uniqueName, _context);
 	}
-	else if (isMapping(_type.category()) || isArray(_type.category()))
+	else if (isMapping(_type) || isArray(_type))
 		var = make_shared<SymbolicArrayVariable>(type, type, _uniqueName, _context);
-	else if (isTuple(_type.category()))
+	else if (isTuple(_type))
 		var = make_shared<SymbolicTupleVariable>(type, _uniqueName, _context);
-	else if (isStringLiteral(_type.category()))
+	else if (isStringLiteral(_type))
 	{
 		auto stringType = TypeProvider::stringMemory();
 		var = make_shared<SymbolicArrayVariable>(stringType, type, _uniqueName, _context);
 	}
+	else if (isNonRecursiveStruct(_type))
+		var = make_shared<SymbolicStructVariable>(type, _uniqueName, _context);
 	else
 		solAssert(false, "");
 	return make_pair(abstract, var);
 }
 
-bool isSupportedType(frontend::Type const& _type)
+bool isInteger(frontend::Type const& _type)
 {
-	return isSupportedType(_type.category());
+	return _type.category() == frontend::Type::Category::Integer;
 }
 
-bool isSupportedTypeDeclaration(frontend::Type const& _type)
+bool isFixedPoint(frontend::Type const& _type)
 {
-	return isSupportedTypeDeclaration(_type.category());
+	return _type.category() == frontend::Type::Category::FixedPoint;
 }
 
-bool isInteger(frontend::Type::Category _category)
+bool isRational(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Integer;
+	return _type.category() == frontend::Type::Category::RationalNumber;
 }
 
-bool isFixedPoint(frontend::Type::Category _category)
+bool isFixedBytes(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::FixedPoint;
+	return _type.category() == frontend::Type::Category::FixedBytes;
 }
 
-bool isRational(frontend::Type::Category _category)
+bool isAddress(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::RationalNumber;
+	return _type.category() == frontend::Type::Category::Address;
 }
 
-bool isFixedBytes(frontend::Type::Category _category)
+bool isContract(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::FixedBytes;
+	return _type.category() == frontend::Type::Category::Contract;
 }
 
-bool isAddress(frontend::Type::Category _category)
+bool isEnum(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Address;
+	return _type.category() == frontend::Type::Category::Enum;
 }
 
-bool isContract(frontend::Type::Category _category)
+bool isNumber(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Contract;
+	return isInteger(_type) ||
+		isFixedPoint(_type) ||
+		isRational(_type) ||
+		isFixedBytes(_type) ||
+		isAddress(_type) ||
+		isContract(_type) ||
+		isEnum(_type);
 }
 
-bool isEnum(frontend::Type::Category _category)
+bool isBool(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Enum;
+	return _type.category() == frontend::Type::Category::Bool;
 }
 
-bool isNumber(frontend::Type::Category _category)
+bool isFunction(frontend::Type const& _type)
 {
-	return isInteger(_category) ||
-		isFixedPoint(_category) ||
-		isRational(_category) ||
-		isFixedBytes(_category) ||
-		isAddress(_category) ||
-		isContract(_category) ||
-		isEnum(_category);
+	return _type.category() == frontend::Type::Category::Function;
 }
 
-bool isBool(frontend::Type::Category _category)
+bool isMapping(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Bool;
+	return _type.category() == frontend::Type::Category::Mapping;
 }
 
-bool isFunction(frontend::Type::Category _category)
+bool isArray(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Function;
+	return _type.category() == frontend::Type::Category::Array ||
+		_type.category() == frontend::Type::Category::StringLiteral ||
+		_type.category() == frontend::Type::Category::ArraySlice;
 }
 
-bool isMapping(frontend::Type::Category _category)
+bool isTuple(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Mapping;
+	return _type.category() == frontend::Type::Category::Tuple;
 }
 
-bool isArray(frontend::Type::Category _category)
+bool isStringLiteral(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Array ||
-		_category == frontend::Type::Category::StringLiteral ||
-		_category == frontend::Type::Category::ArraySlice;
+	return _type.category() == frontend::Type::Category::StringLiteral;
 }
 
-bool isTuple(frontend::Type::Category _category)
+bool isNonRecursiveStruct(frontend::Type const& _type)
 {
-	return _category == frontend::Type::Category::Tuple;
-}
-
-bool isStringLiteral(frontend::Type::Category _category)
-{
-	return _category == frontend::Type::Category::StringLiteral;
+	auto structType = dynamic_cast<StructType const*>(&_type);
+	return structType && !structType->recursive();
 }
 
 smtutil::Expression minValue(frontend::IntegerType const& _type)
@@ -394,13 +408,13 @@ void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const
 smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 {
 	solAssert(_type, "");
-	if (isSupportedType(_type->category()))
+	if (isSupportedType(*_type))
 	{
-		if (isNumber(_type->category()))
+		if (isNumber(*_type))
 			return 0;
-		if (isBool(_type->category()))
+		if (isBool(*_type))
 			return smtutil::Expression(false);
-		if (isArray(_type->category()) || isMapping(_type->category()))
+		if (isArray(*_type) || isMapping(*_type))
 		{
 			auto tupleSort = dynamic_pointer_cast<TupleSort>(smtSort(*_type));
 			solAssert(tupleSort, "");
@@ -421,10 +435,22 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 
 			solAssert(zeroArray, "");
 			return smtutil::Expression::tuple_constructor(
-				smtutil::Expression(std::make_shared<SortSort>(smtSort(*_type)), _type->toString(true)),
+				smtutil::Expression(std::make_shared<SortSort>(tupleSort), tupleSort->name),
 				vector<smtutil::Expression>{*zeroArray, length}
 			);
 
+		}
+		if (isNonRecursiveStruct(*_type))
+		{
+			auto const* structType = dynamic_cast<StructType const*>(_type);
+			auto structSort = dynamic_pointer_cast<TupleSort>(smtSort(*_type));
+			return smtutil::Expression::tuple_constructor(
+				smtutil::Expression(make_shared<SortSort>(structSort), structSort->name),
+				applyMap(
+					structType->structDefinition().members(),
+					[](auto var) { return zeroValue(var->type()); }
+				)
+			);
 		}
 		solAssert(false, "");
 	}
@@ -452,14 +478,14 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
-	if (isEnum(_type->category()))
+	if (isEnum(*_type))
 	{
 		auto enumType = dynamic_cast<frontend::EnumType const*>(_type);
 		solAssert(enumType, "");
 		_context.addAssertion(_expr >= 0);
 		_context.addAssertion(_expr < enumType->numberOfMembers());
 	}
-	else if (isInteger(_type->category()))
+	else if (isInteger(*_type))
 	{
 		auto intType = dynamic_cast<frontend::IntegerType const*>(_type);
 		solAssert(intType, "");
