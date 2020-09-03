@@ -103,10 +103,10 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_iterate_over_gene_positions_and_insert_
 	SimulationRNG::reset(1);
 	//                                                                 f  c  C  U  n  D  v  e  j  s
 	BOOST_TEST(mutation01(chromosome) == Chromosome(stripWhitespace("  f  c  C  UC n  D  v  e  jx s")));  //  20% more
-	BOOST_TEST(mutation05(chromosome) == Chromosome(stripWhitespace("j f  cu C  U  ne D  v  eI j  sf"))); //  50% more
+	BOOST_TEST(mutation05(chromosome) == Chromosome(stripWhitespace("s f  cu C  U  nj D  v  eI j  sf"))); //  50% more
 	SimulationRNG::reset(2);
 	BOOST_TEST(mutation01(chromosome) == Chromosome(stripWhitespace("  f  cu C  U  n  D  v  e  j  s")));  //  10% more
-	BOOST_TEST(mutation05(chromosome) == Chromosome(stripWhitespace("L f  ce Cv U  n  D  v  e  jO s")));  //  40% more
+	BOOST_TEST(mutation05(chromosome) == Chromosome(stripWhitespace("M f  ce Cv U  n  D  v  e  jo s")));  //  40% more
 }
 
 BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_before_first_position)
