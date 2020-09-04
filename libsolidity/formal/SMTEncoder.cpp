@@ -571,7 +571,7 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
 		compareOperation(_op);
-	else if (TokenTraits::isBitOp(_op.getOperator()))
+	else if (TokenTraits::isBitOp(_op.getOperator()) || TokenTraits::isShiftOp(_op.getOperator()))
 		bitwiseOperation(_op);
 	else
 		m_errorReporter.warning(
@@ -1422,7 +1422,8 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 
 void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 {
-	solAssert(TokenTraits::isBitOp(_op.getOperator()), "");
+	auto op = _op.getOperator();
+	solAssert(TokenTraits::isBitOp(op) || TokenTraits::isShiftOp(op), "");
 	auto commonType = _op.annotation().commonType;
 	solAssert(commonType, "");
 
@@ -1432,16 +1433,33 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
 
 	optional<smtutil::Expression> result;
-	if (_op.getOperator() == Token::BitAnd)
+	switch (op)
+	{
+	case Token::BitAnd:
 		result = bvLeft & bvRight;
-	else if (_op.getOperator() == Token::BitOr)
+		break;
+	case Token::BitOr:
 		result = bvLeft | bvRight;
-	else if (_op.getOperator() == Token::BitXor)
+		break;
+	case Token::BitXor:
 		result = bvLeft ^ bvRight;
+		break;
+	case Token::SHL:
+		result = bvLeft << bvRight;
+		break;
+	case Token::SHR:
+		solAssert(false, "");
+	case Token::SAR:
+		result = isSigned ?
+			smtutil::Expression::ashr(bvLeft, bvRight) :
+			bvLeft >> bvRight;
+		break;
+	default:
+		solAssert(false, "");
+	}
 
 	solAssert(result, "");
-	if (result)
-		defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
+	defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
 }
 
 void SMTEncoder::bitwiseNotOperation(UnaryOperation const& _op)

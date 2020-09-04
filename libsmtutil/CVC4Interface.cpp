@@ -196,6 +196,12 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::BITVECTOR_OR, arguments[0], arguments[1]);
 		else if (n == "bvxor")
 			return m_context.mkExpr(CVC4::kind::BITVECTOR_XOR, arguments[0], arguments[1]);
+		else if (n == "bvshl")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_SHL, arguments[0], arguments[1]);
+		else if (n == "bvlshr")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_LSHR, arguments[0], arguments[1]);
+		else if (n == "bvashr")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_ASHR, arguments[0], arguments[1]);
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);
