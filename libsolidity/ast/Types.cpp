@@ -151,6 +151,33 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
+BoolResult validSizeForLocation(bigint const& _size, DataLocation _loc)
+{
+	if (_loc == DataLocation::Storage && _size >= (bigint(1) << 256))
+		return BoolResult::err("Type too large for storage.");
+	if (_loc == DataLocation::Memory && _size >= numeric_limits<unsigned>::max())
+		return BoolResult::err("Type too large for memory.");
+	if (_loc == DataLocation::CallData && _size >= numeric_limits<unsigned>::max())
+		return BoolResult::err("Type too large for calldata.");
+	return true;
+}
+
+}
+
+BoolResult Type::validForLocation(DataLocation _loc) const
+{
+	if (CompositeType const* composite = dynamic_cast<CompositeType const*>(this))
+	{
+		for (Type const* subtype: composite->fullDecomposition())
+		{
+			BoolResult result = validSizeForLocation(subtype->sizeUpperBound(_loc), _loc);
+			if (!result)
+				return result;
+		}
+		return true;
+	}
+
+	return validSizeForLocation(sizeUpperBound(_loc), _loc);
 }
 
 void Type::clearCache() const
@@ -1773,54 +1800,6 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || length() == other.length();
 }
 
-BoolResult ArrayType::validForLocation(DataLocation _loc) const
-{
-	if (auto arrayBaseType = dynamic_cast<ArrayType const*>(baseType()))
-	{
-		BoolResult result = arrayBaseType->validForLocation(_loc);
-		if (!result)
-			return result;
-	}
-	if (isDynamicallySized())
-		return true;
-	switch (_loc)
-	{
-		case DataLocation::Memory:
-		{
-			bigint size = bigint(length());
-			auto type = m_baseType;
-			while (auto arrayType = dynamic_cast<ArrayType const*>(type))
-			{
-				if (arrayType->isDynamicallySized())
-					break;
-				else
-				{
-					size *= arrayType->length();
-					type = arrayType->baseType();
-				}
-			}
-			if (type->isDynamicallySized())
-				size *= type->memoryHeadSize();
-			else
-				size *= type->memoryDataSize();
-			if (size >= numeric_limits<unsigned>::max())
-				return BoolResult::err("Type too large for memory.");
-			break;
-		}
-		case DataLocation::CallData:
-		{
-			if (unlimitedStaticCalldataSize(true) >= numeric_limits<unsigned>::max())
-				return BoolResult::err("Type too large for calldata.");
-			break;
-		}
-		case DataLocation::Storage:
-			if (storageSizeUpperBound() >= bigint(1) << 256)
-				return BoolResult::err("Type too large for storage.");
-			break;
-	}
-	return true;
-}
-
 bigint ArrayType::unlimitedStaticCalldataSize(bool _padded) const
 {
 	solAssert(!isDynamicallySized(), "");
@@ -1855,12 +1834,36 @@ bool ArrayType::isDynamicallyEncoded() const
 	return isDynamicallySized() || baseType()->isDynamicallyEncoded();
 }
 
-bigint ArrayType::storageSizeUpperBound() const
+bigint ArrayType::sizeUpperBound(DataLocation _loc) const
 {
+	if (_loc == DataLocation::Storage)
+		return isDynamicallySized() ? bigint(1) : length() * baseType()->sizeUpperBound(DataLocation::Storage);
+
+	if (_loc == DataLocation::CallData)
+		return isDynamicallySized() ? calldataHeadSize() : unlimitedStaticCalldataSize(true);
+
+	assert(_loc == DataLocation::Memory);
+
 	if (isDynamicallySized())
-		return 1;
+		return memoryHeadSize();
+
+	bigint size = bigint(length());
+	Type const* type = m_baseType;
+	while (auto arrayType = dynamic_cast<ArrayType const*>(type))
+	{
+		if (arrayType->isDynamicallySized())
+			break;
+		else
+		{
+			size *= arrayType->length();
+			type = arrayType->baseType();
+		}
+	}
+	if (type->isDynamicallySized())
+		size *= type->memoryHeadSize();
 	else
-		return length() * baseType()->storageSizeUpperBound();
+		size *= type->memoryDataSize();
+	return size;
 }
 
 u256 ArrayType::storageSize() const
@@ -2275,7 +2278,7 @@ unsigned StructType::calldataEncodedSize(bool) const
 	solAssert(!isDynamicallyEncoded(), "");
 
 	unsigned size = 0;
-	for (auto const& member: members(nullptr))
+	for (MemberList::Member const& member: members(nullptr))
 	{
 		solAssert(!member.type->containsNestedMapping(), "");
 		// Struct members are always padded.
@@ -2290,7 +2293,7 @@ unsigned StructType::calldataEncodedTailSize() const
 	solAssert(isDynamicallyEncoded(), "");
 
 	unsigned size = 0;
-	for (auto const& member: members(nullptr))
+	for (MemberList::Member const& member: members(nullptr))
 	{
 		solAssert(!member.type->containsNestedMapping(), "");
 		// Struct members are always padded.
@@ -2302,7 +2305,7 @@ unsigned StructType::calldataEncodedTailSize() const
 unsigned StructType::calldataOffsetOfMember(std::string const& _member) const
 {
 	unsigned offset = 0;
-	for (auto const& member: members(nullptr))
+	for (MemberList::Member const& member: members(nullptr))
 	{
 		solAssert(!member.type->containsNestedMapping(), "");
 		if (member.name == _member)
@@ -2336,11 +2339,11 @@ u256 StructType::memoryDataSize() const
 	return size;
 }
 
-bigint StructType::storageSizeUpperBound() const
+bigint StructType::sizeUpperBound(DataLocation _loc) const
 {
-	bigint size = 1;
-	for (auto const& member: members(nullptr))
-		size += member.type->storageSizeUpperBound();
+	bigint size = (_loc == DataLocation::Storage) ? 1 : 0; // 1 slot but 0 bytes
+	for (MemberList::Member const& member: members(nullptr))
+		size += member.type->sizeUpperBound(_loc);
 	return size;
 }
 
@@ -2513,25 +2516,6 @@ TypeResult StructType::interfaceType(bool _inLibrary) const
 	return *m_interfaceType_library;
 }
 
-BoolResult StructType::validForLocation(DataLocation _loc) const
-{
-	for (auto const& member: m_struct.members())
-		if (auto referenceType = dynamic_cast<ReferenceType const*>(member->annotation().type))
-		{
-			BoolResult result = referenceType->validForLocation(_loc);
-			if (!result)
-				return result;
-		}
-
-	if (
-		_loc == DataLocation::Storage &&
-		storageSizeUpperBound() >= bigint(1) << 256
-	)
-		return BoolResult::err("Type too large for storage.");
-
-	return true;
-}
-
 bool StructType::recursive() const
 {
 	solAssert(m_struct.annotation().recursive.has_value(), "Called StructType::recursive() before DeclarationTypeChecker.");
@@ -2574,7 +2558,7 @@ FunctionTypePointer StructType::constructorType() const
 	TypePointers paramTypes;
 	strings paramNames;
 	solAssert(!containsNestedMapping(), "");
-	for (auto const& member: members(nullptr))
+	for (MemberList::Member const& member: members(nullptr))
 	{
 		paramNames.push_back(member.name);
 		paramTypes.push_back(TypeProvider::withLocationIfReference(DataLocation::Memory, member.type));
@@ -2598,7 +2582,7 @@ pair<u256, unsigned> const& StructType::storageOffsetsOfMember(string const& _na
 u256 StructType::memoryOffsetOfMember(string const& _name) const
 {
 	u256 offset;
-	for (auto const& member: members(nullptr))
+	for (MemberList::Member const& member: members(nullptr))
 		if (member.name == _name)
 			return offset;
 		else
