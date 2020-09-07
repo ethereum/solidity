@@ -158,7 +158,7 @@ Vcs-Git: git://github.com/ethereum/solidity.git
 Vcs-Browser: https://github.com/ethereum/solidity
 
 Package: solc
-Architecture: any-i386 any-amd64
+Architecture: any-amd64
 Multi-Arch: same
 Depends: \${shlibs:Depends}, \${misc:Depends}
 Conflicts: libethereum (<= 1.2.9)

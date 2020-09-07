@@ -580,7 +580,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 		auto const& type = var.second->type();
 		if (
 			type->isValueType() &&
-			smt::smtKind(type->category()) != smtutil::Kind::Function
+			smt::smtKind(*type) != smtutil::Kind::Function
 		)
 		{
 			expressionsToEvaluate.emplace_back(var.second->currentValue());

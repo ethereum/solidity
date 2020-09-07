@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
+set -e
+
 # Bash script to test the ast-import option of the compiler by
 # first exporting a .sol file to JSON, then loading it into the compiler
 # and exporting it again. The second JSON should be identical to the first
-
-REPO_ROOT=$(readlink -f "$(dirname "$0")"/..)
+READLINK=readlink
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    READLINK=greadlink
+fi
+REPO_ROOT=$(${READLINK} -f "$(dirname "$0")"/..)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 SOLC=${SOLIDITY_BUILD_DIR}/solc/solc
 SPLITSOURCES=${REPO_ROOT}/scripts/splitSources.py
@@ -83,8 +88,11 @@ do
     FILETMP=$(mktemp -d)
     cd $FILETMP
 
+    set +e
     OUTPUT=$($SPLITSOURCES $solfile)
-    if [ $? != 1 ]
+    SPLITSOURCES_RC=$?
+    set -e
+    if [ ${SPLITSOURCES_RC} == 0 ]
     then
         # echo $OUTPUT
         NSOURCES=$((NSOURCES - 1))
@@ -93,9 +101,26 @@ do
             testImportExportEquivalence $i $OUTPUT
             NSOURCES=$((NSOURCES + 1))
         done
-
-    else
+    elif [ ${SPLITSOURCES_RC} == 1 ]
+    then
         testImportExportEquivalence $solfile
+    elif [ ${SPLITSOURCES_RC} == 2 ]
+    then
+        # The script will exit with return code 2, if an UnicodeDecodeError occurred.
+        # This is the case if e.g. some tests are using invalid utf-8 sequences. We will ignore
+        # these errors, but print the actual output of the script.
+        echo -e "\n${OUTPUT}\n"
+        testImportExportEquivalence $solfile
+    else
+        # All other return codes will be treated as critical errors. The script will exit.
+        echo -e "\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
+        echo -e "\n${OUTPUT}\n"
+
+        cd $WORKINGDIR
+        # Delete temporary files
+        rm -rf $FILETMP
+
+        exit 1
     fi
 
     cd $WORKINGDIR
