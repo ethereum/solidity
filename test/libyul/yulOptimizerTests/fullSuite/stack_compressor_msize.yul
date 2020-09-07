@@ -49,7 +49,7 @@
 //         sstore(not(gcd(10, 15)), 1)
 //         sstore(0, 0)
 //         sstore(2, 1)
-//         pop(foo_singlereturn_1(calldataload(0), calldataload(3)))
+//         extcodecopy(1, msize(), 1, 1)
 //         sstore(0, 0)
 //         sstore(3, 1)
 //     }
@@ -59,6 +59,4 @@
 //         case 0 { out := _a }
 //         default { out := gcd(_b, mod(_a, _b)) }
 //     }
-//     function foo_singlereturn_1(in, in_1) -> out
-//     { extcodecopy(1, msize(), 1, 1) }
 // }

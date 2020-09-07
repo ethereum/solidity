@@ -23,6 +23,8 @@
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libsmtutil/SolverInterface.h>
+
+#include <map>
 #include <memory>
 
 namespace solidity::frontend::smt
@@ -264,5 +266,30 @@ public:
 private:
 	SymbolicTupleVariable m_pair;
 };
+
+/**
+ * Specialization of SymbolicVariable for Struct.
+ */
+class SymbolicStructVariable: public SymbolicVariable
+{
+public:
+	SymbolicStructVariable(
+		frontend::TypePointer _type,
+		std::string _uniqueName,
+		EncodingContext& _context
+	);
+
+	/// @returns the symbolic expression representing _member.
+	smtutil::Expression member(std::string const& _member);
+
+	/// @returns the symbolic expression representing this struct
+	/// with field _member updated.
+	smtutil::Expression assignMember(std::string const& _member, smtutil::Expression const& _memberValue);
+
+private:
+	std::map<std::string, unsigned> m_memberIndices;
+};
+
+
 
 }

@@ -62,6 +62,9 @@ public:
 	/// if possible or nullptr.
 	static FunctionDefinition const* functionCallToDefinition(FunctionCall const& _funCall);
 
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
+	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined
@@ -143,8 +146,8 @@ protected:
 	/// to variable of some SMT array type
 	/// while aliasing is not supported.
 	void arrayAssignment();
-	/// Handles assignment to SMT array index.
-	void arrayIndexAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide);
+	/// Handles assignments to index or member access.
+	void indexOrMemberAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide);
 
 	void arrayPush(FunctionCall const& _funCall);
 	void arrayPop(FunctionCall const& _funCall);
@@ -165,8 +168,7 @@ protected:
 	void assignment(
 		Expression const& _left,
 		smtutil::Expression const& _right,
-		TypePointer const& _type,
-		langutil::SourceLocation const& _location
+		TypePointer const& _type
 	);
 	/// Handle assignments between tuples.
 	void tupleAssignment(Expression const& _left, Expression const& _right);
@@ -193,8 +195,12 @@ protected:
 	/// Resets all references/pointers that have the same type or have
 	/// a subexpression of the same type as _varDecl.
 	void resetReferences(VariableDeclaration const& _varDecl);
+	/// Resets all references/pointers that have type _type.
+	void resetReferences(TypePointer _type);
 	/// @returns the type without storage pointer information if it has it.
 	TypePointer typeWithoutPointer(TypePointer const& _type);
+	/// @returns whether _a or a subtype of _a is the same as _b.
+	bool sameTypeOrSubtype(TypePointer _a, TypePointer _b);
 
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables

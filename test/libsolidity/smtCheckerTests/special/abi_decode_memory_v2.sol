@@ -8,7 +8,6 @@ contract C {
   }
 }
 // ----
-// Warning 8115: (151-159): Assertion checker does not yet support the type of this variable.
 // Warning 8364: (206-209): Assertion checker does not yet implement type abi
 // Warning 8364: (225-226): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning 8364: (235-241): Assertion checker does not yet implement type type(uint256[] memory)
