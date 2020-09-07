@@ -118,6 +118,8 @@ Allowed options)",
 		else
 			input = readFileAsString(inputFile);
 
+		cout << inputFile << endl;
+
 		try
 		{
 			if (arguments.count("const-opt"))

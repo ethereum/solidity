@@ -29,4 +29,4 @@ contract C
 	}
 }
 // ====
-// SMTSolvers: z3
+// SMTSolvers: cvc4
