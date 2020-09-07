@@ -27,9 +27,17 @@ namespace solidity::frontend::smt
 {
 
 class EncodingContext;
+class SymbolicAddressVariable;
+class SymbolicArrayVariable;
 
 /**
- * Symbolic representation of the blockchain state.
+ * Symbolic representation of the blockchain context:
+ * - error flag
+ * - this (the address of the currently executing contract)
+ * - state, represented as a tuple of:
+ *   - balances
+ *   - TODO: potentially storage of contracts
+ * - TODO transaction variables
  */
 class SymbolicState
 {
@@ -42,12 +50,20 @@ public:
 	//@{
 	/// Value of `this` address.
 	smtutil::Expression thisAddress();
+	/// @returns the symbolic balances.
+	smtutil::Expression balances();
 	/// @returns the symbolic balance of address `this`.
 	smtutil::Expression balance();
 	/// @returns the symbolic balance of an address.
 	smtutil::Expression balance(smtutil::Expression _address);
 
 	SymbolicIntVariable& errorFlag();
+
+	/// @returns the state as a tuple.
+	smtutil::Expression state();
+
+	/// @returns the state sort.
+	smtutil::SortPointer stateSort();
 
 	/// Transfer _value from _from to _to.
 	void transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value);
@@ -57,27 +73,27 @@ private:
 	/// Adds _value to _account's balance.
 	void addBalance(smtutil::Expression _account, smtutil::Expression _value);
 
+	/// Generates a new tuple where _member is assigned _value.
+	smtutil::Expression assignStateMember(std::string const& _member, smtutil::Expression const& _value);
+
 	EncodingContext& m_context;
 
-	/// Symbolic `this` address.
-	SymbolicAddressVariable m_thisAddress{
-		"this",
-		m_context
-	};
-
-	/// Symbolic balances.
-	SymbolicArrayVariable m_balances{
-		std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort),
-		"balances",
-		m_context
-	};
-
-	smt::SymbolicIntVariable m_error{
+	SymbolicIntVariable m_error{
 		TypeProvider::uint256(),
 		TypeProvider::uint256(),
 		"error",
 		m_context
 	};
+
+	SymbolicAddressVariable m_thisAddress{
+		"this",
+		m_context
+	};
+
+	std::map<std::string, unsigned> m_componentIndices;
+	/// balances, TODO storage of other contracts
+	std::map<std::string, smtutil::SortPointer> m_stateMembers;
+	std::unique_ptr<SymbolicTupleVariable> m_stateTuple;
 };
 
 }
