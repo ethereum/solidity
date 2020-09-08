@@ -42,7 +42,7 @@ without a compiler change.
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
@@ -68,7 +68,7 @@ efficient code, for example:
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
 
     library VectorSum {
@@ -140,7 +140,7 @@ Local Solidity variables are available for assignments, for example:
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
     contract C {
         uint b;

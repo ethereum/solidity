@@ -55,7 +55,7 @@ return parameter list for functions.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract C {
         function f(uint a) private pure returns (uint b) { return a + 1; }
@@ -70,7 +70,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract C {
         uint private data;
@@ -115,7 +115,7 @@ when they are declared.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract C {
         uint public data = 42;
@@ -136,7 +136,7 @@ it evaluates to a state variable.  If it is accessed externally
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract C {
         uint public data;
@@ -156,7 +156,7 @@ to write a function, for example:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract arrayExample {
         // public state variable
@@ -183,7 +183,7 @@ The next example is more complex:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract Complex {
         struct Data {

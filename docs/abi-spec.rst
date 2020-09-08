@@ -233,7 +233,7 @@ Given the contract:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Foo {
         function bar(bytes3[2] memory) public pure {}
@@ -537,7 +537,7 @@ For example,
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
 
     contract Test {
@@ -586,7 +586,7 @@ As an example, the code
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.19 <0.8.0;
+    pragma solidity >=0.4.19 <0.9.0;
     pragma experimental ABIEncoderV2;
 
     contract Test {

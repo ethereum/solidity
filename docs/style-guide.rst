@@ -56,7 +56,7 @@ Surround top level declarations in solidity source with two blank lines.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract A {
         // ...
@@ -75,7 +75,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract A {
         // ...
@@ -95,7 +95,7 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     abstract contract A {
         function spam() public virtual pure;
@@ -116,7 +116,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     abstract contract A {
         function spam() virtual pure public;
@@ -251,7 +251,7 @@ Import statements should always be placed at the top of the file.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     import "./Owned.sol";
 
@@ -266,7 +266,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract A {
         // ...
@@ -300,7 +300,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
     contract A {
         constructor() {
@@ -337,7 +337,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
     contract A {
 
@@ -445,7 +445,7 @@ should:
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract Coin {
         struct Bank {
@@ -457,7 +457,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract Coin
     {
@@ -758,7 +758,7 @@ manner as modifiers if the function declaration is long or hard to read.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -790,7 +790,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
 
     // Base contracts just to make this compile
@@ -1012,7 +1012,7 @@ As shown in the example below, if the contract name is ``Congress`` and the libr
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
 
     // Owned.sol
@@ -1036,7 +1036,7 @@ Yes::
 and in ``Congress.sol``::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     import "./Owned.sol";
 
@@ -1048,7 +1048,7 @@ and in ``Congress.sol``::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >0.6.99 <0.9.0;
 
 
     // owned.sol
@@ -1153,7 +1153,7 @@ For example, the contract from :ref:`a simple smart contract <simple-smart-contr
 added looks like the one below::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
 
     /// @author The Solidity Team

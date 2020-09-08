@@ -443,7 +443,7 @@ or ``interface`` using the ``./test/cmdlineTests.sh`` script when you create a P
 ensure they work and pass tests before creating the PR.
 
 Ensure that all code examples begin with a ``pragma`` version that spans the largest where the contract code is valid.
-For example ``pragma solidity >=0.4.0 <0.8.0;``.
+For example ``pragma solidity >=0.4.0 <0.9.0;``.
 
 Running Documentation Tests
 ---------------------------
