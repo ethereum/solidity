@@ -107,14 +107,17 @@ defaults:
 
   - run_soltest: &run_soltest
       name: soltest
+      no_output_timeout: 30m
       command: ./.circleci/soltest.sh
 
   - run_soltest_all: &run_soltest_all
       name: soltest_all
+      no_output_timeout: 30m
       command: ./.circleci/soltest_all.sh
 
   - run_cmdline_tests: &run_cmdline_tests
       name: command line tests
+      no_output_timeout: 30m
       command: ./test/cmdlineTests.sh
 
   - run_docs_pragma_min_version: &run_docs_pragma_min_version
@@ -163,7 +166,6 @@ defaults:
           at: build
       - run:
           <<: *run_soltest
-          no_output_timeout: 30m
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -175,7 +177,6 @@ defaults:
           at: build
       - run:
           <<: *run_soltest
-          no_output_timeout: 30m
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -709,7 +710,6 @@ jobs:
           at: build
       - run:
           <<: *run_cmdline_tests
-          no_output_timeout: 30m
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -745,6 +745,7 @@ jobs:
             apt-get install -qqy --no-install-recommends nodejs npm cvc4
       - run:
           name: Test solcjs
+          no_output_timeout: 30m
           command: |
             node --version
             npm --version
