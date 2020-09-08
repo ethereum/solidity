@@ -1198,10 +1198,9 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 							slot := array
 						}
 					<!isBytesArray>
-						let itemsPerSlot := div(0x20, <storageBytes>)
 						let dataArea := <dataAreaFunc>(array)
-						slot := add(dataArea, div(index, itemsPerSlot))
-						offset := mod(index, itemsPerSlot)
+						slot := add(dataArea, div(index, <itemsPerSlot>))
+						offset := mul(mod(index, <itemsPerSlot>), <storageBytes>)
 					</isBytesArray>
 				<!multipleItemsPerSlot>
 					let dataArea := <dataAreaFunc>(array)
@@ -1217,6 +1216,7 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 		("isBytesArray", _type.isByteArray())
 		("storageSize", _type.baseType()->storageSize().str())
 		("storageBytes", toString(_type.baseType()->storageBytes()))
+		("itemsPerSlot", to_string(32 / _type.baseType()->storageBytes()))
 		.render();
 	});
 }
