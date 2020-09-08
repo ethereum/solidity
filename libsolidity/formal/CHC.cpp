@@ -22,6 +22,7 @@
 #include <libsmtutil/Z3CHCInterface.h>
 #endif
 
+#include <libsolidity/formal/PredicateSort.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsolidity/ast/TypeProvider.h>
@@ -39,13 +40,14 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::smtutil;
 using namespace solidity::frontend;
+using namespace solidity::frontend::smt;
 
 CHC::CHC(
-	smt::EncodingContext& _context,
+	EncodingContext& _context,
 	ErrorReporter& _errorReporter,
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
-	smtutil::SMTSolverChoice _enabledSolvers
+	SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
@@ -56,7 +58,7 @@ CHC::CHC(
 	usesZ3 = false;
 #endif
 	if (!usesZ3)
-		m_interface = make_unique<smtutil::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
+		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -79,7 +81,7 @@ void CHC::analyze(SourceUnit const& _source)
 
 vector<string> CHC::unhandledQueries() const
 {
-	if (auto smtlib2 = dynamic_cast<smtutil::CHCSmtLib2Interface const*>(m_interface.get()))
+	if (auto smtlib2 = dynamic_cast<CHCSmtLib2Interface const*>(m_interface.get()))
 		return smtlib2->unhandledQueries();
 
 	return {};
@@ -92,13 +94,15 @@ bool CHC::visit(ContractDefinition const& _contract)
 	initContract(_contract);
 
 	m_stateVariables = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
-	m_stateSorts = stateSorts(_contract);
 
 	clearIndices(&_contract);
 
-	string suffix = _contract.name() + "_" + to_string(_contract.id());
-	m_constructorSummaryPredicate = createSymbolicBlock(constructorSort(), "summary_constructor_" + suffix, &_contract);
-	m_implicitConstructorPredicate = createSymbolicBlock(arity0FunctionSort(), "implicit_constructor_" + suffix, &_contract);
+	solAssert(m_currentContract, "");
+	m_constructorSummaryPredicate = createSymbolicBlock(
+		constructorSort(*m_currentContract),
+		"summary_constructor_" + contractSuffix(_contract),
+		&_contract
+	);
 	auto stateExprs = currentStateVariables();
 	setCurrentBlock(*m_interfaces.at(m_currentContract), &stateExprs);
 
@@ -108,7 +112,12 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 void CHC::endVisit(ContractDefinition const& _contract)
 {
-	auto implicitConstructor = (*m_implicitConstructorPredicate)({});
+	auto implicitConstructorPredicate = createSymbolicBlock(
+		implicitConstructorSort(),
+		"implicit_constructor_" + contractSuffix(_contract),
+		&_contract
+	);
+	auto implicitConstructor = (*implicitConstructorPredicate)({});
 	addRule(implicitConstructor, implicitConstructor.name);
 	m_currentBlock = implicitConstructor;
 	m_context.addAssertion(m_error.currentValue() == 0);
@@ -204,7 +213,12 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		if (_function.isConstructor())
 		{
 			string suffix = m_currentContract->name() + "_" + to_string(m_currentContract->id());
-			auto constructorExit = createSymbolicBlock(constructorSort(), "constructor_exit_" + suffix, m_currentContract);
+			solAssert(m_currentContract, "");
+			auto constructorExit = createSymbolicBlock(
+				constructorSort(*m_currentContract),
+				"constructor_exit_" + suffix,
+				m_currentContract
+			);
 			connectBlocks(m_currentBlock, predicate(*constructorExit, currentFunctionVariables(*m_currentContract)));
 
 			clearIndices(m_currentContract, m_currentFunction);
@@ -566,7 +580,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 
 	auto memberAccess = dynamic_cast<MemberAccess const*>(&_arrayPop.expression());
 	solAssert(memberAccess, "");
-	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 
 	auto previousError = m_error.currentValue();
@@ -662,15 +676,15 @@ void CHC::resetSourceAnalysis()
 	if (usesZ3)
 	{
 		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
-		m_interface.reset(new smtutil::Z3CHCInterface());
-		auto z3Interface = dynamic_cast<smtutil::Z3CHCInterface const*>(m_interface.get());
+		m_interface.reset(new Z3CHCInterface());
+		auto z3Interface = dynamic_cast<Z3CHCInterface const*>(m_interface.get());
 		solAssert(z3Interface, "");
 		m_context.setSolver(z3Interface->z3Interface());
 	}
 #endif
 	if (!usesZ3)
 	{
-		auto smtlib2Interface = dynamic_cast<smtutil::CHCSmtLib2Interface*>(m_interface.get());
+		auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
 		smtlib2Interface->reset();
 		solAssert(smtlib2Interface, "");
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
@@ -682,7 +696,6 @@ void CHC::resetSourceAnalysis()
 
 void CHC::resetContractAnalysis()
 {
-	m_stateSorts.clear();
 	m_stateVariables.clear();
 	m_unknownFunctionCallSeen = false;
 	m_breakDest = nullptr;
@@ -739,117 +752,18 @@ set<frontend::Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTN
 	return assertions;
 }
 
-vector<smtutil::SortPointer> CHC::stateSorts(ContractDefinition const& _contract)
+SortPointer CHC::sort(FunctionDefinition const& _function)
 {
-	return applyMap(
-		SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract),
-		[](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); }
-	);
+	return functionSort(_function, m_currentContract);
 }
 
-smtutil::SortPointer CHC::constructorSort()
-{
-	solAssert(m_currentContract, "");
-	if (auto const* constructor = m_currentContract->constructor())
-		return sort(*constructor);
-
-	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} + m_stateSorts,
-		smtutil::SortProvider::boolSort
-	);
-}
-
-smtutil::SortPointer CHC::interfaceSort()
-{
-	solAssert(m_currentContract, "");
-	return interfaceSort(*m_currentContract);
-}
-
-smtutil::SortPointer CHC::nondetInterfaceSort()
-{
-	solAssert(m_currentContract, "");
-	return nondetInterfaceSort(*m_currentContract);
-}
-
-smtutil::SortPointer CHC::interfaceSort(ContractDefinition const& _contract)
-{
-	return make_shared<smtutil::FunctionSort>(
-		stateSorts(_contract),
-		smtutil::SortProvider::boolSort
-	);
-}
-
-smtutil::SortPointer CHC::nondetInterfaceSort(ContractDefinition const& _contract)
-{
-	auto sorts = stateSorts(_contract);
-	return make_shared<smtutil::FunctionSort>(
-		sorts + sorts,
-		smtutil::SortProvider::boolSort
-	);
-}
-
-smtutil::SortPointer CHC::arity0FunctionSort() const
-{
-	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>(),
-		smtutil::SortProvider::boolSort
-	);
-}
-
-/// A function in the symbolic CFG requires:
-/// - Index of failed assertion. 0 means no assertion failed.
-/// - 2 sets of state variables:
-///   - State variables at the beginning of the current function, immutable
-///   - Current state variables
-///    At the beginning of the function these must equal set 1
-/// - 2 sets of input variables:
-///   - Input variables at the beginning of the current function, immutable
-///   - Current input variables
-///    At the beginning of the function these must equal set 1
-/// - 1 set of output variables
-smtutil::SortPointer CHC::sort(FunctionDefinition const& _function)
-{
-	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
-	auto inputSorts = applyMap(_function.parameters(), smtSort);
-	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
-	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} + m_stateSorts + inputSorts + m_stateSorts + inputSorts + outputSorts,
-		smtutil::SortProvider::boolSort
-	);
-}
-
-smtutil::SortPointer CHC::sort(ASTNode const* _node)
+SortPointer CHC::sort(ASTNode const* _node)
 {
 	if (auto funDef = dynamic_cast<FunctionDefinition const*>(_node))
 		return sort(*funDef);
 
-	auto fSort = dynamic_pointer_cast<smtutil::FunctionSort>(sort(*m_currentFunction));
-	solAssert(fSort, "");
-
-	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
-	return make_shared<smtutil::FunctionSort>(
-		fSort->domain + applyMap(m_currentFunction->localVariables(), smtSort),
-		smtutil::SortProvider::boolSort
-	);
-}
-
-smtutil::SortPointer CHC::summarySort(FunctionDefinition const& _function, ContractDefinition const& _contract)
-{
-	auto stateVariables = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
-	auto sorts = stateSorts(_contract);
-
-	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
-	auto inputSorts = applyMap(_function.parameters(), smtSort);
-	auto outputSorts = applyMap(_function.returnParameters(), smtSort);
-	return make_shared<smtutil::FunctionSort>(
-		vector<smtutil::SortPointer>{smtutil::SortProvider::uintSort} +
-			sorts +
-			inputSorts +
-			sorts +
-			inputSorts +
-			outputSorts,
-		smtutil::SortProvider::boolSort
-	);
+	solAssert(m_currentFunction, "");
+	return functionBodySort(*m_currentFunction, m_currentContract);
 }
 
 Predicate const* CHC::createSymbolicBlock(SortPointer _sort, string const& _name, ASTNode const* _node)
@@ -987,7 +901,7 @@ Predicate const* CHC::createBlock(ASTNode const* _node, string const& _prefix)
 Predicate const* CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
 	auto block = createSymbolicBlock(
-		summarySort(_function, _contract),
+		functionSort(_function, &_contract),
 		"summary_" + uniquePrefix() + "_" + predicateName(&_function, &_contract),
 		&_function
 	);
@@ -1157,14 +1071,14 @@ void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
 	m_interface->addRule(_rule, _ruleName);
 }
 
-pair<smtutil::CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
+pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
 {
-	smtutil::CheckResult result;
+	CheckResult result;
 	CHCSolverInterface::CexGraph cex;
 	tie(result, cex) = m_interface->query(_query);
 	switch (result)
 	{
-	case smtutil::CheckResult::SATISFIABLE:
+	case CheckResult::SATISFIABLE:
 	{
 #ifdef HAVE_Z3
 		// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
@@ -1173,25 +1087,25 @@ pair<smtutil::CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Exp
 		solAssert(spacer, "");
 		spacer->setSpacerOptions(false);
 
-		smtutil::CheckResult resultNoOpt;
+		CheckResult resultNoOpt;
 		CHCSolverInterface::CexGraph cexNoOpt;
 		tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
 
-		if (resultNoOpt == smtutil::CheckResult::SATISFIABLE)
+		if (resultNoOpt == CheckResult::SATISFIABLE)
 			cex = move(cexNoOpt);
 
 		spacer->setSpacerOptions(true);
 #endif
 		break;
 	}
-	case smtutil::CheckResult::UNSATISFIABLE:
+	case CheckResult::UNSATISFIABLE:
 		break;
-	case smtutil::CheckResult::UNKNOWN:
+	case CheckResult::UNKNOWN:
 		break;
-	case smtutil::CheckResult::CONFLICTING:
+	case CheckResult::CONFLICTING:
 		m_outerErrorReporter.warning(1988_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
-	case smtutil::CheckResult::ERROR:
+	case CheckResult::ERROR:
 		m_outerErrorReporter.warning(1218_error, _location, "Error trying to invoke SMT solver.");
 		break;
 	}
@@ -1339,9 +1253,9 @@ void CHC::checkAndReportTarget(
 	createErrorBlock();
 	connectBlocks(_target.value, error(), _target.constraints && (_target.errorId == _errorId));
 	auto const& [result, model] = query(error(), _scope->location());
-	if (result == smtutil::CheckResult::UNSATISFIABLE)
+	if (result == CheckResult::UNSATISFIABLE)
 		m_safeTargets[_scope].insert(_target.type);
-	else if (result == smtutil::CheckResult::SATISFIABLE)
+	else if (result == CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
 		m_unsafeTargets[_scope].insert(_target.type);
@@ -1477,7 +1391,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 	return localState + "\nTransaction trace:\n" + boost::algorithm::join(boost::adaptors::reverse(path), "\n");
 }
 
-string CHC::cex2dot(smtutil::CHCSolverInterface::CexGraph const& _cex)
+string CHC::cex2dot(CHCSolverInterface::CexGraph const& _cex)
 {
 	string dot = "digraph {\n";
 
@@ -1496,6 +1410,11 @@ string CHC::cex2dot(smtutil::CHCSolverInterface::CexGraph const& _cex)
 string CHC::uniquePrefix()
 {
 	return to_string(m_blockCounter++);
+}
+
+string CHC::contractSuffix(ContractDefinition const& _contract)
+{
+	return _contract.name() + "_" + to_string(_contract.id());
 }
 
 unsigned CHC::newErrorId(frontend::Expression const& _expr)

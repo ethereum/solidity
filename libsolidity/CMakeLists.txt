@@ -104,6 +104,8 @@ set(sources
 	formal/ModelChecker.h
 	formal/Predicate.cpp
 	formal/Predicate.h
+	formal/PredicateSort.cpp
+	formal/PredicateSort.h
 	formal/SMTEncoder.cpp
 	formal/SMTEncoder.h
 	formal/SSAVariable.cpp
