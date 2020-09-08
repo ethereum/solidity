@@ -12,7 +12,8 @@ Compiler Features:
  * Yul Optimizer: Prune unused parameters in functions.
 
 Bugfixes:
-
+ * Type Checker: Disallow ``virtual`` for modifiers in libraries.
+ * ViewPureChecker: Prevent visibility check on constructors.
 
 ### 0.7.1 (2020-09-02)
 
