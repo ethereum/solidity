@@ -1569,12 +1569,15 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	if (_convertTo.category() == Category::Contract)
 	{
-		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
-		if (m_super && bases.size() <= 1)
+		auto const& targetContractType = dynamic_cast<ContractType const&>(_convertTo);
+		if (targetContractType.isSuper())
 			return false;
+
+		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
 		return find(
-			m_super ? ++bases.begin() : bases.begin(), bases.end(),
-			&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()
+			bases.begin(),
+			bases.end(),
+			&targetContractType.contractDefinition()
 		) != bases.end();
 	}
 	return false;
