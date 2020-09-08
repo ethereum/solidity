@@ -15,7 +15,7 @@ that call them, similar to internal library functions.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.0 <0.8.0;
+    pragma solidity >0.7.0 <0.9.0;
 
     function sum(uint[] memory _arr) pure returns (uint s) {
         for (uint i = 0; i < _arr.length; i++)
@@ -52,7 +52,7 @@ For example, if you want your contract to accept one kind of external call
 with two integers, you would use something like the following::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
         uint sum;
@@ -85,7 +85,7 @@ For example, suppose you want to return two results: the sum and the product of
 two integers passed as function parameters, then you use something like::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -110,7 +110,7 @@ or you can provide return values
 statement::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract Simple {
         function arithmetic(uint _a, uint _b)
@@ -174,7 +174,7 @@ The following statements are considered modifying the state:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >=0.5.0 <0.9.0;
 
     contract C {
         function f(uint a, uint b) public view returns (uint) {
@@ -220,7 +220,7 @@ In addition to the list of state modifying statements explained above, the follo
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >=0.5.0 <0.9.0;
 
     contract C {
         function f(uint a, uint b) public pure returns (uint) {
@@ -314,7 +314,7 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     // This contract keeps all Ether sent to it with no way
     // to get it back.
@@ -370,7 +370,7 @@ operations as long as there is enough gas passed on to it.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.2 <0.8.0;
+    pragma solidity >=0.6.2 <0.9.0;
 
     contract Test {
         // This function is called for all messages sent to
@@ -443,7 +443,7 @@ The following example shows overloading of the function
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
         function f(uint _in) public pure returns (uint out) {
@@ -462,7 +462,7 @@ externally visible functions differ by their Solidity types but not by their ext
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     // This will not compile
     contract A {
@@ -496,7 +496,7 @@ candidate, resolution fails.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract A {
         function f(uint8 _in) public pure returns (uint8 out) {

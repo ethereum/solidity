@@ -27,7 +27,7 @@ storage.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract SimpleStorage {
         uint storedData; // State variable
@@ -50,7 +50,7 @@ contracts.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.0 <0.8.0;
+    pragma solidity >0.7.0 <0.9.0;
 
     contract SimpleAuction {
         function bid() public payable { // Function
@@ -84,7 +84,7 @@ Like functions, modifiers can be :ref:`overridden <modifier-overriding>`.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >=0.4.22 <0.9.0;
 
     contract Purchase {
         address public seller;
@@ -112,7 +112,7 @@ Events are convenience interfaces with the EVM logging facilities.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.21 <0.8.0;
+    pragma solidity >=0.4.21 <0.9.0;
 
     contract SimpleAuction {
         event HighestBidIncreased(address bidder, uint amount); // Event
@@ -137,7 +137,7 @@ Structs are custom defined types that can group several variables (see
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract Ballot {
         struct Voter { // Struct
@@ -159,7 +159,7 @@ Enums can be used to create custom types with a finite set of 'constant values' 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract Purchase {
         enum State { Created, Locked, Inactive } // Enum

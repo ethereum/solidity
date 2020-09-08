@@ -561,7 +561,7 @@ subsequent unsigned integer values starting from ``0``.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract test {
         enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
@@ -674,7 +674,7 @@ External (or public) functions have the following members:
 Example that shows how to use the members::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.4 <0.8.0;
+    pragma solidity >=0.6.4 <0.9.0;
 
     contract Example {
         function f() public payable returns (bytes4) {
@@ -690,7 +690,7 @@ Example that shows how to use the members::
 Example that shows how to use internal function types::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     library ArrayUtils {
         // internal functions can be used in internal library functions because
@@ -748,7 +748,7 @@ Example that shows how to use internal function types::
 Another example that uses external function types::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >=0.4.22 <0.9.0;
 
 
     contract Oracle {
