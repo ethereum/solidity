@@ -208,6 +208,11 @@ defaults:
       requires:
         - b_ubu_release
 
+  - workflow_archlinux: &workflow_archlinux
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_archlinux
+
   - workflow_ubuntu2004_codecov: &workflow_ubuntu2004_codecov
       <<: *workflow_trigger_on_tags
       requires:
@@ -657,6 +662,25 @@ jobs:
   t_ubu_soltest: &t_ubu_soltest
     <<: *test_ubuntu2004
 
+  t_archlinux_soltest: &t_archlinux_soltest
+      docker:
+        - image: archlinux/base
+      environment:
+        EVM: constantinople
+        OPTIMIZE: 0
+        TERM: xterm
+      steps:
+        - run:
+            name: Install runtime dependencies
+            command: |
+              pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -870,7 +894,6 @@ workflows:
 
       # build-only
       - b_docs: *workflow_trigger_on_tags
-      - b_archlinux: *workflow_trigger_on_tags
       - b_ubu_cxx20: *workflow_trigger_on_tags
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
@@ -878,6 +901,10 @@ workflows:
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
       - t_osx_soltest: *workflow_osx
+
+      # ArchLinux build and tests
+      - b_archlinux: *workflow_trigger_on_tags
+      - t_archlinux_soltest: *workflow_archlinux
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
