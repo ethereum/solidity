@@ -42,7 +42,9 @@ using namespace solidity::yul;
 
 void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
-	FullInliner{_ast, _context.dispenser, _context.dialect}.run();
+	FullInliner inliner{_ast, _context.dispenser, _context.dialect};
+	inliner.run(Pass::InlineTiny);
+	inliner.run(Pass::InlineRest);
 }
 
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect):
@@ -73,8 +75,10 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 	}
 }
 
-void FullInliner::run()
+void FullInliner::run(Pass _pass)
 {
+	m_pass = _pass;
+
 	// Note that the order of inlining can result in very different code.
 	// Since AST IDs and thus function names depend on whether or not a contract
 	// is compiled together with other source files, a change in AST IDs
@@ -170,6 +174,10 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	size_t size = m_functionSizes.at(calledFunction->name);
 	if (size <= 1)
 		return true;
+
+	// In the first pass, only inline tiny functions.
+	if (m_pass == Pass::InlineTiny)
+		return false;
 
 	// Do not inline into already big functions.
 	if (m_functionSizes.at(_callSite) > 45)

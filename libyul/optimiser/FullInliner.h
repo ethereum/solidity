@@ -91,8 +91,10 @@ public:
 	void tentativelyUpdateCodeSize(YulString _function, YulString _callSite);
 
 private:
+	enum Pass { InlineTiny, InlineRest };
+
 	FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect);
-	void run();
+	void run(Pass _pass);
 
 	/// @returns a map containing the maximum depths of a call chain starting at each
 	/// function. For recursive functions, the value is one larger than for all others.
@@ -102,6 +104,7 @@ private:
 	void handleBlock(YulString _currentFunctionName, Block& _block);
 	bool recursive(FunctionDefinition const& _fun) const;
 
+	Pass m_pass;
 	/// The AST to be modified. The root block itself will not be modified, because
 	/// we store pointers to functions.
 	Block& m_ast;
