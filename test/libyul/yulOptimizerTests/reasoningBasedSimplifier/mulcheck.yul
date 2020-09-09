@@ -22,7 +22,7 @@
 //     {
 //         if lt(vloc_y, shl(100, 1))
 //         {
-//             if iszero(and(iszero(iszero(vloc_x)), gt(vloc_y, div(not(0), vloc_x))))
+//             if 1
 //             {
 //                 let vloc := mul(vloc_x, vloc_y)
 //                 sstore(0, vloc)

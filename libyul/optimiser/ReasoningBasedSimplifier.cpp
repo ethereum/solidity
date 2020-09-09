@@ -191,12 +191,31 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 			booleanValue(arguments.at(0) == 1 || arguments.at(1) == 1),
 			bv2int(int2bv(arguments.at(0)) | int2bv(arguments.at(1)))
 		);
-	// TODO XOR
+	case evmasm::Instruction::XOR:
+		return bv2int(int2bv(arguments.at(0)) ^ int2bv(arguments.at(1)));
 	case evmasm::Instruction::NOT:
 		return smtutil::Expression(u256(-1)) - arguments.at(0);
-	// TODO SHL
-	// TODO SHR
-	// TODO SAR
+	case evmasm::Instruction::SHL:
+		return smtutil::Expression::ite(
+			arguments.at(0) > 255,
+			constantValue(0),
+			bv2int(int2bv(arguments.at(1)) << int2bv(arguments.at(0)))
+		);
+	case evmasm::Instruction::SHR:
+		return smtutil::Expression::ite(
+			arguments.at(0) > 255,
+			constantValue(0),
+			bv2int(int2bv(arguments.at(1)) >> int2bv(arguments.at(0)))
+		);
+	case evmasm::Instruction::SAR:
+		return smtutil::Expression::ite(
+			arguments.at(0) > 255,
+			constantValue(0),
+			bv2int(smtutil::Expression::ashr(int2bv(arguments.at(1)), int2bv(arguments.at(0))))
+		);
+	// TODO ADDMOD
+	// TODO MULMOD
+	// TODO SIGNEXTEND
 	default:
 		break;
 	}
