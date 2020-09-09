@@ -20,4 +20,4 @@ contract A is B, B2 {
 }
 // ----
 // Warning 5667: (164-170): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (194-208): Assertion violation happens here
+// Warning 6328: (194-208): Assertion violation happens here.

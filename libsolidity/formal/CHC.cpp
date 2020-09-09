@@ -1251,7 +1251,7 @@ void CHC::checkVerificationTargets()
 			if (target.type == VerificationTarget::Type::PopEmptyArray)
 			{
 				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-				satMsg = "Empty array \"pop\" detected here";
+				satMsg = "Empty array \"pop\" detected here.";
 				unknownMsg = "Empty array \"pop\" might happen here.";
 				errorReporterId = 2529_error;
 			}
@@ -1267,8 +1267,8 @@ void CHC::checkVerificationTargets()
 				if (!intType)
 					intType = TypeProvider::uint256();
 
-				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here";
-				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here";
+				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here.";
+				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here.";
 				if (target.type == VerificationTarget::Type::Underflow)
 				{
 					satMsg = satMsgUnderflow;
@@ -1314,7 +1314,7 @@ void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& 
 		solAssert(it != m_errorIds.end(), "");
 		unsigned errorId = it->second;
 
-		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here");
+		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.");
 	}
 }
 
@@ -1345,13 +1345,13 @@ void CHC::checkAndReportTarget(
 				_errorReporterId,
 				_scope->location(),
 				_satMsg,
-				SecondarySourceLocation().append(" for:\n" + *cex, SourceLocation{})
+				SecondarySourceLocation().append("\nCounterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
 				_errorReporterId,
 				_scope->location(),
-				_satMsg + "."
+				_satMsg
 			);
 	}
 	else if (!_unknownMsg.empty())

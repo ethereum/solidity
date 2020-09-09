@@ -19,4 +19,4 @@ contract C {
 }
 // ----
 // Warning 2529: (133-142): Empty array "pop" detected here.
-// Warning 6328: (189-213): Assertion violation happens here
+// Warning 6328: (189-213): Assertion violation happens here.

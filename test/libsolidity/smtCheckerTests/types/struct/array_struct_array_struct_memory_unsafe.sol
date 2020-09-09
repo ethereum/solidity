@@ -27,9 +27,9 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (257-280): Assertion violation happens here
-// Warning 6328: (301-328): Assertion violation happens here
-// Warning 6328: (350-379): Assertion violation happens here
-// Warning 6328: (404-439): Assertion violation happens here
-// Warning 6328: (467-508): Assertion violation happens here
+// Warning 6328: (257-280): Assertion violation happens here.
+// Warning 6328: (301-328): Assertion violation happens here.
+// Warning 6328: (350-379): Assertion violation happens here.
+// Warning 6328: (404-439): Assertion violation happens here.
+// Warning 6328: (467-508): Assertion violation happens here.
 // Warning 4588: (228-238): Assertion checker does not yet implement this type of function call.

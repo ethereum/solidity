@@ -21,5 +21,5 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (121-130): Empty array "pop" detected here
-// Warning 6328: (230-254): Assertion violation happens here
+// Warning 2529: (121-130): Empty array "pop" detected here.
+// Warning 6328: (230-254): Assertion violation happens here.

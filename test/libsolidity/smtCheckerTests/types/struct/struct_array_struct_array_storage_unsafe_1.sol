@@ -26,8 +26,8 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (181-198): Assertion violation happens here
-// Warning 6328: (216-235): Assertion violation happens here
-// Warning 6328: (254-274): Assertion violation happens here
-// Warning 6328: (296-319): Assertion violation happens here
+// Warning 6328: (181-198): Assertion violation happens here.
+// Warning 6328: (216-235): Assertion violation happens here.
+// Warning 6328: (254-274): Assertion violation happens here.
+// Warning 6328: (296-319): Assertion violation happens here.
 // Warning 6328: (344-370): Assertion violation happens here.

@@ -12,4 +12,4 @@ contract C {
 // ----
 // Warning 1218: (163-184): Error trying to invoke SMT solver.
 // Warning 1218: (188-209): Error trying to invoke SMT solver.
-// Warning 4661: (188-209): Assertion violation happens here
+// Warning 4661: (188-209): Assertion violation happens here.

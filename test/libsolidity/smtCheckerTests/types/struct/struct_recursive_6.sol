@@ -21,10 +21,10 @@ contract C {
 	}
 }
 // ----
-// Warning 4984: (200-208): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning 6328: (185-209): Assertion violation happens here
-// Warning 6328: (213-247): Assertion violation happens here
-// Warning 6328: (264-281): Assertion violation happens here
+// Warning 4984: (200-208): Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (185-209): Assertion violation happens here.
+// Warning 6328: (213-247): Assertion violation happens here.
+// Warning 6328: (264-281): Assertion violation happens here.
 // Warning 8115: (81-85): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (88-92): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (119-123): Assertion checker does not yet support this expression.
@@ -56,11 +56,11 @@ contract C {
 // Warning 8364: (258-260): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (271-275): Assertion checker does not yet support this expression.
 // Warning 8364: (271-273): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4144: (132-138): Underflow (resulting value less than 0) happens here
-// Warning 2661: (132-138): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning 4144: (142-148): Underflow (resulting value less than 0) happens here
-// Warning 2661: (142-148): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning 4144: (165-171): Underflow (resulting value less than 0) happens here
-// Warning 2661: (165-171): Overflow (resulting value larger than 2**256 - 1) happens here
-// Warning 4144: (175-181): Underflow (resulting value less than 0) happens here
-// Warning 2661: (175-181): Overflow (resulting value larger than 2**256 - 1) happens here
+// Warning 4144: (132-138): Underflow (resulting value less than 0) happens here.
+// Warning 2661: (132-138): Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4144: (142-148): Underflow (resulting value less than 0) happens here.
+// Warning 2661: (142-148): Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4144: (165-171): Underflow (resulting value less than 0) happens here.
+// Warning 2661: (165-171): Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4144: (175-181): Underflow (resulting value less than 0) happens here.
+// Warning 2661: (175-181): Overflow (resulting value larger than 2**256 - 1) happens here.

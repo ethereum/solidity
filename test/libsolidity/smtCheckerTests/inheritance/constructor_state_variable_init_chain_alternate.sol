@@ -18,4 +18,4 @@ contract D is C {
 	}
 }
 // ----
-// Warning 6328: (185-199): Assertion violation happens here
+// Warning 6328: (185-199): Assertion violation happens here.

@@ -8,4 +8,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (97-111): Assertion violation happens here
+// Warning 6328: (97-111): Assertion violation happens here.

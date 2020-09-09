@@ -7,4 +7,4 @@ contract C {
 }
 // ----
 // Warning 1218: (127-132): Error trying to invoke SMT solver.
-// Warning 2661: (127-132): Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here
+// Warning 2661: (127-132): Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here.
