@@ -48,18 +48,38 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace solidity::langutil;
 
-#define ALSO_VIA_YUL(CODE) \
-{ \
-	{ CODE } \
-	reset(); \
-	m_compileViaYul = true; \
-	{ CODE } \
+#define ALSO_VIA_YUL(CODE)                      \
+{                                               \
+	m_doEwasmTestrun = true;                    \
+                                                \
+	m_compileViaYul = false;                    \
+	m_compileToEwasm = false;                   \
+	{ CODE }                                    \
+                                                \
+	m_compileViaYul = true;                     \
+	reset();                                    \
+	{ CODE }                                    \
+                                                \
+	if (m_doEwasmTestrun)                       \
+	{                                           \
+		m_compileToEwasm = true;                \
+		reset();                                \
+		{ CODE }                                \
+	}                                           \
 }
+
+#define DISABLE_EWASM_TESTRUN() \
+	{ m_doEwasmTestrun = false; }
 
 namespace solidity::frontend::test
 {
 
-BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityExecutionFramework)
+struct SolidityEndToEndTestExecutionFramework: public SolidityExecutionFramework
+{
+	bool m_doEwasmTestrun = false;
+};
+
+BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, SolidityEndToEndTestExecutionFramework)
 
 int constexpr roundTo32(int _num)
 {
@@ -115,6 +135,8 @@ BOOST_AUTO_TEST_CASE(recursive_calls)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		function<u256(u256)> recursive_calls_cpp = [&recursive_calls_cpp](u256 const& n) -> u256
 		{
@@ -140,6 +162,8 @@ BOOST_AUTO_TEST_CASE(while_loop)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto while_loop_cpp = [](u256 const& n) -> u256
@@ -168,6 +192,8 @@ BOOST_AUTO_TEST_CASE(do_while_loop)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto do_while_loop_cpp = [](u256 const& n) -> u256
@@ -213,6 +239,8 @@ BOOST_AUTO_TEST_CASE(do_while_loop_multiple_local_vars)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto do_while = [](u256 n) -> u256
@@ -263,6 +291,8 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto nested_loops_cpp = [](u256 n) -> u256
@@ -329,6 +359,8 @@ BOOST_AUTO_TEST_CASE(nested_loops_multiple_local_vars)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto nested_loops_cpp = [](u256 n) -> u256
@@ -383,6 +415,8 @@ BOOST_AUTO_TEST_CASE(for_loop_multiple_local_vars)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto for_loop = [](u256 n) -> u256
@@ -444,6 +478,8 @@ BOOST_AUTO_TEST_CASE(nested_for_loop_multiple_local_vars)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto for_loop = [](u256 n) -> u256
@@ -484,6 +520,8 @@ BOOST_AUTO_TEST_CASE(for_loop)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto for_loop_cpp = [](u256 const& n) -> u256
@@ -512,6 +550,8 @@ BOOST_AUTO_TEST_CASE(for_loop_empty)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto for_loop_empty_cpp = []() -> u256
@@ -542,6 +582,8 @@ BOOST_AUTO_TEST_CASE(for_loop_simple_init_expr)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto for_loop_simple_init_expr_cpp = [](u256 const& n) -> u256
@@ -665,6 +707,8 @@ BOOST_AUTO_TEST_CASE(many_local_variables)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		auto f = [](u256 const& x1, u256 const& x2, u256 const& x3) -> u256
 		{
@@ -689,6 +733,8 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		auto short_circuiting_cpp = [](u256 n) -> u256
@@ -801,6 +847,8 @@ BOOST_AUTO_TEST_CASE(compound_assign)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 
 		u256 value1;
@@ -863,6 +911,8 @@ BOOST_AUTO_TEST_CASE(mapping_state)
 		map<u160, bool> m_voted;
 	};
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		Ballot ballot;
 
@@ -936,6 +986,8 @@ BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
 		return --table[value++];
 	};
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		value = 0;
 		table.clear();
@@ -962,6 +1014,8 @@ BOOST_AUTO_TEST_CASE(multi_level_mapping)
 		else return table[_x][_y] = _z;
 	};
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		table.clear();
 
@@ -998,6 +1052,8 @@ BOOST_AUTO_TEST_CASE(constructor)
 	};
 
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		testContractAgainstCpp("get(uint256)", get, u256(6));
 		testContractAgainstCpp("get(uint256)", get, u256(7));
@@ -1016,12 +1072,12 @@ BOOST_AUTO_TEST_CASE(blockchain)
 			}
 		}
 	)";
-	m_evmHost->tx_context.block_coinbase = EVMHost::convertToEVMC(Address("0x1212121212121212121212121212121212121212"));
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
-	m_evmHost->newBlock();
+	m_evmcHost->tx_context.block_coinbase = EVMHost::convertToEVMC(Address("0x1212121212121212121212121212121212121212"));
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
+	m_evmcHost->newBlock();
 	compileAndRun(sourceCode, 27);
 	ABI_CHECK(callContractFunctionWithValue("someInfo()", 28), encodeArgs(28, u256("0x1212121212121212121212121212121212121212"), 7));
 }
@@ -1038,6 +1094,8 @@ BOOST_AUTO_TEST_CASE(send_ether)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		u256 amount(250);
 		compileAndRun(sourceCode, amount + 1);
 		u160 address(23);
@@ -1070,6 +1128,8 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode, 0, "B");
 		u160 const nonPayableRecipient = m_contractAddress;
 		compileAndRun(sourceCode, 0, "C");
@@ -1110,6 +1170,8 @@ BOOST_AUTO_TEST_CASE(log0)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("a()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1129,6 +1191,8 @@ BOOST_AUTO_TEST_CASE(log1)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("a()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1149,6 +1213,8 @@ BOOST_AUTO_TEST_CASE(log2)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("a()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1170,6 +1236,8 @@ BOOST_AUTO_TEST_CASE(log3)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("a()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1191,6 +1259,8 @@ BOOST_AUTO_TEST_CASE(log4)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("a()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1212,6 +1282,8 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
 		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
@@ -1235,6 +1307,8 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 	u256 amount(130);
 	u160 address(23);
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode, amount);
 		ABI_CHECK(callContractFunction("a(address)", address), bytes());
 		BOOST_CHECK(!addressHasCode(m_contractAddress));
@@ -1665,6 +1739,8 @@ BOOST_AUTO_TEST_CASE(gaslimit)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		auto result = callContractFunction("f()");
 		ABI_CHECK(result, encodeArgs(gasLimit()));
@@ -1681,6 +1757,8 @@ BOOST_AUTO_TEST_CASE(gasprice)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("f()"), encodeArgs(gasPrice()));
 	)
@@ -1772,6 +1850,8 @@ BOOST_AUTO_TEST_CASE(event)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		u256 value(18);
 		u256 id(0x1234);
@@ -1800,6 +1880,8 @@ BOOST_AUTO_TEST_CASE(event_emit)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		u256 value(18);
 		u256 id(0x1234);
@@ -1826,6 +1908,8 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 	)";
 
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("deposit()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1850,6 +1934,8 @@ BOOST_AUTO_TEST_CASE(event_access_through_base_name_emit)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1889,6 +1975,8 @@ BOOST_AUTO_TEST_CASE(events_with_same_name)
 	u160 const c_loggedAddress = m_contractAddress;
 
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1950,6 +2038,8 @@ BOOST_AUTO_TEST_CASE(events_with_same_name_inherited_emit)
 	u160 const c_loggedAddress = m_contractAddress;
 
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction("deposit()"), encodeArgs(u256(1)));
 		BOOST_REQUIRE_EQUAL(numLogs(), 1);
@@ -1985,6 +2075,8 @@ BOOST_AUTO_TEST_CASE(event_anonymous)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		callContractFunction("deposit()");
 		BOOST_REQUIRE_EQUAL(numLogTopics(0), 0);
@@ -2002,6 +2094,8 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		u256 value(18);
 		u256 id(0x1234);
@@ -2028,6 +2122,8 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		u256 value(18);
 		u256 id(0x1234);
@@ -2247,6 +2343,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		u256 x(42);
 		callContractFunction("createEvent(uint256)", x);
@@ -2276,6 +2374,8 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage_v2)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		u256 x(42);
 		callContractFunction("createEvent(uint256)", x);
@@ -2365,6 +2465,8 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		BOOST_CHECK(callContractFunction("f(uint256,uint256)", 5, 9) != encodeArgs(5, 8));
 		ABI_CHECK(callContractFunction("f(uint256,uint256)", 5, 9), encodeArgs(9, 8));
@@ -2987,6 +3089,8 @@ BOOST_AUTO_TEST_CASE(fixed_array_cleanup)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		BOOST_CHECK(storageEmpty(m_contractAddress));
 		ABI_CHECK(callContractFunction("fill()"), bytes());
@@ -3010,6 +3114,8 @@ BOOST_AUTO_TEST_CASE(short_fixed_array_cleanup)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		BOOST_CHECK(storageEmpty(m_contractAddress));
 		ABI_CHECK(callContractFunction("fill()"), bytes());
@@ -3037,6 +3143,8 @@ BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		BOOST_CHECK(storageEmpty(m_contractAddress));
 		ABI_CHECK(callContractFunction("fill()"), bytes());
@@ -4305,6 +4413,8 @@ BOOST_AUTO_TEST_CASE(string_as_mapping_key)
 	};
 
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode, 0, "Test");
 		for (unsigned i = 0; i < strings.size(); i++)
 			ABI_CHECK(callContractFunction(
@@ -5415,6 +5525,8 @@ BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
 		}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunctionWithValue("f()", 27), encodeArgs());
 		BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
@@ -5527,6 +5639,8 @@ BOOST_AUTO_TEST_CASE(contracts_separated_with_comment)
 		contract C2 {}
 	)";
 	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
 		compileAndRun(sourceCode, 0, "C1");
 		compileAndRun(sourceCode, 0, "C2");
 	)
