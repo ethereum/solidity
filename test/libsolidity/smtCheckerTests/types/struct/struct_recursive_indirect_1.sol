@@ -17,8 +17,8 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (158-178): Assertion violation happens here
-// Warning 6328: (182-216): Assertion violation happens here
+// Warning 6328: (158-178): Assertion violation happens here.
+// Warning 6328: (182-216): Assertion violation happens here.
 // Warning 8115: (115-119): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (122-126): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (165-169): Assertion checker does not yet support this expression.

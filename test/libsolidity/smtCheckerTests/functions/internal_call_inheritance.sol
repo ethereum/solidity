@@ -17,4 +17,4 @@ contract A is B {
 	}
 }
 // ----
-// Warning 6328: (254-268): Assertion violation happens here
+// Warning 6328: (254-268): Assertion violation happens here.

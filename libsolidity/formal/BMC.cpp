@@ -836,11 +836,11 @@ void BMC::checkCondition(
 	case smtutil::CheckResult::SATISFIABLE:
 	{
 		std::ostringstream message;
-		message << _description << " happens here";
+		message << _description << " happens here.";
 		if (_callStack.size())
 		{
 			std::ostringstream modelMessage;
-			modelMessage << "  for:\n";
+			modelMessage << "\nCounterexample:\n";
 			solAssert(values.size() == expressionNames.size(), "");
 			map<string, string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
@@ -859,10 +859,7 @@ void BMC::checkCondition(
 			);
 		}
 		else
-		{
-			message << ".";
 			m_errorReporter.warning(6084_error, _location, message.str(), secondaryLocation);
-		}
 		break;
 	}
 	case smtutil::CheckResult::UNSATISFIABLE:

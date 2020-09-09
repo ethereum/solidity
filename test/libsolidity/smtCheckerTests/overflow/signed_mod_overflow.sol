@@ -6,4 +6,4 @@ contract C  {
 	}
 }
 // ----
-// Warning 3046: (110-115): Division by zero happens here
+// Warning 3046: (110-115): Division by zero happens here.
