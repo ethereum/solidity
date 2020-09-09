@@ -245,6 +245,8 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		return m_context.bool_sort();
 	case Kind::Int:
 		return m_context.int_sort();
+	case Kind::BitVector:
+		return m_context.bv_sort(dynamic_cast<BitVectorSort const&>(_sort).size);
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);

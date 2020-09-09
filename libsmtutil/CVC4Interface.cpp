@@ -289,6 +289,8 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 		return m_context.booleanType();
 	case Kind::Int:
 		return m_context.integerType();
+	case Kind::BitVector:
+		return m_context.mkBitVectorType(dynamic_cast<BitVectorSort const&>(_sort).size);
 	case Kind::Function:
 	{
 		FunctionSort const& fSort = dynamic_cast<FunctionSort const&>(_sort);

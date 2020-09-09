@@ -35,4 +35,6 @@ shared_ptr<IntSort> SortProvider::intSort(bool _signed)
 	return uintSort;
 }
 
+shared_ptr<BitVectorSort> const SortProvider::bitVectorSort{make_shared<BitVectorSort>(256)};
+
 }
