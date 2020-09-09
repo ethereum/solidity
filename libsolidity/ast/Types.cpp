@@ -3485,12 +3485,12 @@ bool FunctionType::canTakeArguments(
 
 		size_t matchedNames = 0;
 
-		for (auto const& argName: _arguments.names)
-			for (size_t i = 0; i < paramNames.size(); i++)
-				if (*argName == paramNames[i])
+		for (size_t a = 0; a < _arguments.names.size(); a++)
+			for (size_t p = 0; p < paramNames.size(); p++)
+				if (*_arguments.names[a] == paramNames[p])
 				{
 					matchedNames++;
-					if (!_arguments.types[i]->isImplicitlyConvertibleTo(*paramTypes[i]))
+					if (!_arguments.types[a]->isImplicitlyConvertibleTo(*paramTypes[p]))
 						return false;
 				}
 

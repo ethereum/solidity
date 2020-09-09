@@ -11,6 +11,7 @@ Bugfixes:
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * ViewPureChecker: Prevent visibility check on constructors.
  * Type system: Fix internal error on implicit conversion of contract instance to the type of its ``super``.
+ * Type system: Fix named parameters in overloaded function and event calls being matched incorrectly if the order differs from the declaration.
 
 ### 0.7.1 (2020-09-02)
 
