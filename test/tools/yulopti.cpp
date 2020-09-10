@@ -158,8 +158,7 @@ public:
 			map<char, string> const& extraOptions = {
 				{'#', "quit"},
 				{',', "VarNameCleaner"},
-				{';', "StackCompressor"},
-				{'R', "ReasoningBasedSimplifier"}
+				{';', "StackCompressor"}
 			};
 
 			printUsageBanner(abbreviationMap, extraOptions, 4);
@@ -192,12 +191,6 @@ public:
 				StackCompressor::run(m_dialect, obj, true, 16);
 				break;
 			}
-			case 'R':
-			{
-				ReasoningBasedSimplifier::run(context, *m_ast);
-				break;
-			}
-
 			default:
 				cerr << "Unknown option." << endl;
 			}

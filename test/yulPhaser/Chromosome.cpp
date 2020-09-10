@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_different_chromosome_each_time)
 BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_probability)
 {
 	SimulationRNG::reset(1);
-	constexpr int samplesPerStep = 100;
+	constexpr int samplesPerStep = 1000;
 	constexpr double relativeTolerance = 0.01;
 
 	map<string, size_t> stepIndices = enumerateOptmisationSteps();
@@ -130,13 +130,13 @@ BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_strin
 
 	BOOST_TEST(chromosome.length() == allSteps.size());
 	BOOST_TEST(chromosome.optimisationSteps() == allSteps);
-	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighTLMNrmVatpud");
+	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighTLMNRrmVatpud");
 }
 
 BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_probability)
 {
 	SimulationRNG::reset(1);
-	constexpr int samplesPerStep = 100;
+	constexpr int samplesPerStep = 1000;
 	constexpr double relativeTolerance = 0.01;
 
 	map<string, size_t> stepIndices = enumerateOptmisationSteps();
