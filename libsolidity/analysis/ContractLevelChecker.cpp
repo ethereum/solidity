@@ -51,6 +51,8 @@ bool hasEqualNameAndParameters(T const& _a, B const& _b)
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
 {
+	_contract.annotation().unimplementedDeclarations = std::vector<Declaration const*>();
+
 	checkDuplicateFunctions(_contract);
 	checkDuplicateEvents(_contract);
 	m_overrideChecker.check(_contract);
@@ -210,9 +212,10 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	// Set to not fully implemented if at least one flag is false.
 	// Note that `_contract.annotation().unimplementedDeclarations` has already been
 	// pre-filled by `checkBaseConstructorArguments`.
+	//
 	for (auto const& proxy: proxies)
 		if (proxy.unimplemented())
-			_contract.annotation().unimplementedDeclarations.push_back(proxy.declaration());
+			_contract.annotation().unimplementedDeclarations->push_back(proxy.declaration());
 
 	if (_contract.abstract())
 	{
@@ -229,17 +232,17 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	if (
 		_contract.contractKind() == ContractKind::Contract &&
 		!_contract.abstract() &&
-		!_contract.annotation().unimplementedDeclarations.empty()
+		!_contract.annotation().unimplementedDeclarations->empty()
 	)
 	{
 		SecondarySourceLocation ssl;
-		for (auto declaration: _contract.annotation().unimplementedDeclarations)
+		for (auto declaration: *_contract.annotation().unimplementedDeclarations)
 			ssl.append("Missing implementation: ", declaration->location());
 		m_errorReporter.typeError(
 			3656_error,
 			_contract.location(),
 			ssl,
-			"Contract \"" + _contract.annotation().canonicalName + "\" should be marked as abstract."
+			"Contract \"" + *_contract.annotation().canonicalName + "\" should be marked as abstract."
 		);
 	}
 }
@@ -289,7 +292,7 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 		if (FunctionDefinition const* constructor = contract->constructor())
 			if (contract != &_contract && !constructor->parameters().empty())
 				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedDeclarations.push_back(constructor);
+					_contract.annotation().unimplementedDeclarations->push_back(constructor);
 }
 
 void ContractLevelChecker::annotateBaseConstructorArguments(
