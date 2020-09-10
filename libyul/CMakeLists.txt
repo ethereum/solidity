@@ -127,6 +127,8 @@ add_library(yul
 	optimiser/NameDispenser.h
 	optimiser/NameDisplacer.cpp
 	optimiser/NameDisplacer.h
+	optimiser/NameSimplifier.cpp
+	optimiser/NameSimplifier.h
 	optimiser/OptimiserStep.h
 	optimiser/OptimizerUtilities.cpp
 	optimiser/OptimizerUtilities.h

@@ -1,0 +1,131 @@
+Optimized IR:
+/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+object "C_56" {
+    code {
+        {
+            mstore(64, 128)
+            if callvalue() { revert(0, 0) }
+            let _1 := datasize("C_56_deployed")
+            codecopy(0, dataoffset("C_56_deployed"), _1)
+            return(0, _1)
+        }
+    }
+    object "C_56_deployed" {
+        code {
+            {
+                mstore(64, 128)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    if eq(0xf8eddcc6, shr(224, calldataload(_1)))
+                    {
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), 32) { revert(_1, _1) }
+                        let offset := calldataload(4)
+                        if gt(offset, 0xffffffffffffffff) { revert(_1, _1) }
+                        let value0 := abi_decode_t_array$_t_struct$_S_$dyn(add(4, offset), calldatasize())
+                        let value := mload(mload(memory_array_index_access$_t_struct$_S_$dyn(value0, _1)))
+                        let _2, _3 := storage_array_index_access$_t_struct$_S_storage(_1, _1)
+                        sstore(_2, value)
+                        let value_1 := mload(mload(memory_array_index_access$_t_struct$_S_$dyn(value0, 0x01)))
+                        let _4, _5 := storage_array_index_access$_t_struct$_S_storage(0x02, _1)
+                        update_storage_value_t_uint256_to_t_uint256(_4, _5, value_1)
+                        let _6, _7 := storage_array_index_access$_t_struct$_S_storage(0x02, _1)
+                        let vloc := extract_from_storage_value_dynamict_uint256(sload(_6), _7)
+                        let vloc__24_mpos := convert_t_stringliteral_6490_to_t_string()
+                        let memPos := allocateMemory(_1)
+                        return(memPos, sub(abi_encode_uint256_t_string(memPos, vloc, vloc__24_mpos), memPos))
+                    }
+                }
+                revert(0, 0)
+            }
+            function abi_decode_t_array$_t_struct$_S_$dyn(offset, end) -> array
+            {
+                if iszero(slt(add(offset, 0x1f), end)) { revert(array, array) }
+                let length := calldataload(offset)
+                if gt(length, 0xffffffffffffffff) { revert(array, array) }
+                let _1 := 0x20
+                let _2 := mul(length, _1)
+                array := allocateMemory(add(_2, _1))
+                let dst := array
+                mstore(array, length)
+                dst := add(array, _1)
+                let src := add(offset, _1)
+                if gt(add(add(offset, _2), _1), end) { revert(0, 0) }
+                let i := 0
+                let i_1 := i
+                for { } lt(i_1, length) { i_1 := add(i_1, 1) }
+                {
+                    if slt(sub(end, src), _1) { revert(i, i) }
+                    let value := allocateMemory(_1)
+                    mstore(value, calldataload(src))
+                    mstore(dst, value)
+                    dst := add(dst, _1)
+                    src := add(src, _1)
+                }
+            }
+            function abi_encode_uint256_t_string(headStart, value0, value1) -> tail
+            {
+                mstore(headStart, value0)
+                let _1 := 32
+                mstore(add(headStart, _1), 64)
+                let length := mload(value1)
+                mstore(add(headStart, 64), length)
+                let i := tail
+                for { } lt(i, length) { i := add(i, _1) }
+                {
+                    mstore(add(add(headStart, i), 96), mload(add(add(value1, i), _1)))
+                }
+                if gt(i, length)
+                {
+                    mstore(add(add(headStart, length), 96), tail)
+                }
+                tail := add(add(headStart, and(add(length, 31), not(31))), 96)
+            }
+            function allocateMemory(size) -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, size)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                mstore(64, newFreePtr)
+            }
+            function convert_t_stringliteral_6490_to_t_string() -> converted
+            {
+                converted := allocateMemory(160)
+                mstore(converted, 100)
+                mstore(add(converted, 32), "longstringlongstringlongstringlo")
+                mstore(add(converted, 64), "ngstringlongstringlongstringlong")
+                mstore(add(converted, 96), "stringlongstringlongstringlongst")
+                mstore(add(converted, 128), "ring")
+            }
+            function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
+            {
+                value := shr(mul(offset, 8), slot_value)
+            }
+            function memory_array_index_access$_t_struct$_S_$dyn(baseRef, index) -> addr
+            {
+                if iszero(lt(index, mload(baseRef))) { invalid() }
+                addr := add(add(baseRef, mul(index, 32)), 32)
+            }
+            function storage_array_index_access$_t_struct$_S_storage(array, index) -> slot, offset
+            {
+                if iszero(lt(index, 0x02)) { invalid() }
+                slot := add(array, index)
+                offset := offset
+            }
+            function update_storage_value_t_uint256_to_t_uint256(slot, offset, value)
+            {
+                let _1 := sload(slot)
+                let shiftBits := mul(offset, 8)
+                let mask := shl(shiftBits, not(0))
+                sstore(slot, or(and(_1, not(mask)), and(shl(shiftBits, value), mask)))
+            }
+        }
+    }
+}
