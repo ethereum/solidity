@@ -2,20 +2,20 @@ pragma experimental SMTChecker;
 
 contract C {
 	function f() pure public {
-		revert();
+		require(false);
 		// This is not reachable.
 		assert(false);
 	}
 
 	function g() pure public {
-		revert("revert message");
+		require(false, "require message");
 		// This is not reachable.
 		assert(false);
 	}
 
 	function h(bool b) pure public {
 		if (b)
-			revert();
+			require(false);
 		assert(!b);
 	}
 
@@ -26,10 +26,8 @@ contract C {
 	}
 	function i() public {
 		x = true;
-		revert(m());
+		require(false, m());
 	}
 }
 // ----
-// Warning 5740: (116-129): Unreachable code.
-// Warning 5740: (221-234): Unreachable code.
-// Warning 6328: (427-444): Assertion violation happens here.
+// Warning 6328: (448-465): Assertion violation happens here.

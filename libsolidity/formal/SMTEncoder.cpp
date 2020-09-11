@@ -631,6 +631,10 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::Require:
 		visitRequire(_funCall);
 		break;
+	case FunctionType::Kind::Revert:
+		// Revert is a special case of require and equals to `require(false)`
+		addPathImpliedExpression(smtutil::Expression(false));
+		break;
 	case FunctionType::Kind::GasLeft:
 		visitGasLeft(_funCall);
 		break;
