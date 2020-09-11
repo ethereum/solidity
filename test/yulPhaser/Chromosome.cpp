@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_return_different_chromosome_each_time)
 BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_probability)
 {
 	SimulationRNG::reset(1);
-	constexpr int samplesPerStep = 100;
-	constexpr double relativeTolerance = 0.01;
+	constexpr int samplesPerStep = 500;
+	constexpr double relativeTolerance = 0.02;
 
 	map<string, size_t> stepIndices = enumerateOptmisationSteps();
 	auto chromosome = Chromosome::makeRandom(stepIndices.size() * samplesPerStep);
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(optimisationSteps_should_translate_chromosomes_genes_to_opt
 BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_probability)
 {
 	SimulationRNG::reset(1);
-	constexpr int samplesPerStep = 100;
-	constexpr double relativeTolerance = 0.01;
+	constexpr int samplesPerStep = 500;
+	constexpr double relativeTolerance = 0.02;
 
 	map<string, size_t> stepIndices = enumerateOptmisationSteps();
 	vector<size_t> samples;
