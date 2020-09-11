@@ -46,6 +46,15 @@ void ReasoningBasedSimplifier::run(OptimiserStepContext& _context, Block& _ast)
 	ReasoningBasedSimplifier{_context.dialect, ssaVars}(_ast);
 }
 
+std::optional<string> ReasoningBasedSimplifier::invalidInCurrentEnvironment()
+{
+	// SMTLib2 interface is always available, but we would like to have synchronous answers.
+	if (smtutil::SMTPortfolio{}.solvers() <= 1)
+		return string{"No SMT solvers available."};
+	else
+		return nullopt;
+}
+
 void ReasoningBasedSimplifier::operator()(VariableDeclaration& _varDecl)
 {
 	if (_varDecl.variables.size() != 1 || !_varDecl.value)

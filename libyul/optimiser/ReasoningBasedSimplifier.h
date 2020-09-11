@@ -51,6 +51,7 @@ class ReasoningBasedSimplifier: public ASTModifier
 public:
 	static constexpr char const* name{"ReasoningBasedSimplifier"};
 	static void run(OptimiserStepContext& _context, Block& _ast);
+	static std::optional<std::string> invalidInCurrentEnvironment();
 
 	using ASTModifier::operator();
 	void operator()(VariableDeclaration& _varDecl) override;
