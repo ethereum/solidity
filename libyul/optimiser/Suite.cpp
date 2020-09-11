@@ -269,6 +269,7 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 			insideLoop = false;
 			break;
 		default:
+		{
 			yulAssert(
 				string(NonStepAbbreviations).find(abbreviation) == string::npos,
 				"Unhandled syntactic element in the abbreviation sequence"
@@ -278,6 +279,14 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 				OptimizerException,
 				"'"s + abbreviation + "' is not a valid step abbreviation"
 			);
+			optional<string> invalid = allSteps().at(stepAbbreviationToNameMap().at(abbreviation))->invalidInCurrentEnvironment();
+			assertThrow(
+				!invalid.has_value(),
+				OptimizerException,
+				"'"s + abbreviation + "' is invalid in the current environment: " + *invalid
+			);
+
+		}
 		}
 	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
 }
