@@ -48,7 +48,7 @@ Chromosome Chromosome::makeRandom(size_t _length)
 
 ostream& phaser::operator<<(ostream& _stream, Chromosome const& _chromosome)
 {
-	return _stream << Chromosome::stepsToGenes(_chromosome.m_optimisationSteps);
+	return _stream << _chromosome.m_genes;
 }
 
 vector<string> Chromosome::allStepNames()

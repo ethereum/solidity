@@ -63,11 +63,6 @@ vector<string> const ChrOmOsoMeSteps{
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ChromosomeTest)
 
-BOOST_AUTO_TEST_CASE(constructor_should_convert_from_string_to_optimisation_steps)
-{
-	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == ChrOmOsoMeSteps);
-}
-
 BOOST_AUTO_TEST_CASE(makeRandom_should_return_different_chromosome_each_time)
 {
 	SimulationRNG::reset(1);
@@ -95,6 +90,11 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_pro
 	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
 }
 
+BOOST_AUTO_TEST_CASE(constructor_should_store_genes)
+{
+	BOOST_TEST(Chromosome("ChrOmOsoMe").genes() == "ChrOmOsoMe");
+}
+
 BOOST_AUTO_TEST_CASE(constructor_should_store_optimisation_steps)
 {
 	vector<string> steps = {
@@ -102,9 +102,8 @@ BOOST_AUTO_TEST_CASE(constructor_should_store_optimisation_steps)
 		BlockFlattener::name,
 		UnusedPruner::name,
 	};
-	Chromosome chromosome(steps);
 
-	BOOST_TEST(steps == chromosome.optimisationSteps());
+	BOOST_TEST(Chromosome(steps).genes() == "tfu");
 }
 
 BOOST_AUTO_TEST_CASE(constructor_should_allow_duplicate_steps)
@@ -116,9 +115,9 @@ BOOST_AUTO_TEST_CASE(constructor_should_allow_duplicate_steps)
 		UnusedPruner::name,
 		BlockFlattener::name,
 	};
-	Chromosome chromosome(steps);
 
-	BOOST_TEST(steps == chromosome.optimisationSteps());
+	BOOST_TEST(Chromosome(steps).genes() == "ttfuf");
+	BOOST_TEST(Chromosome("ttfuf").genes() == "ttfuf");
 }
 
 BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_string_representation)
@@ -131,6 +130,11 @@ BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_strin
 	BOOST_TEST(chromosome.length() == allSteps.size());
 	BOOST_TEST(chromosome.optimisationSteps() == allSteps);
 	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighTLMNrmVatpud");
+}
+
+BOOST_AUTO_TEST_CASE(optimisationSteps_should_translate_chromosomes_genes_to_optimisation_step_names)
+{
+	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == ChrOmOsoMeSteps);
 }
 
 BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_probability)

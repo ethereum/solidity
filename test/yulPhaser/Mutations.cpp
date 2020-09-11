@@ -24,6 +24,7 @@
 #include <libsolutil/CommonIO.h>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -117,12 +118,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_before_first_position
 
 	Chromosome mutatedChromosome = mutation(chromosome);
 	BOOST_TEST(mutatedChromosome.length() > chromosome.length());
-
-	vector<string> suffix(
-		mutatedChromosome.optimisationSteps().end() - static_cast<ptrdiff_t>(chromosome.length()),
-		mutatedChromosome.optimisationSteps().end()
-	);
-	BOOST_TEST(suffix == chromosome.optimisationSteps());
+	BOOST_TEST(boost::ends_with(mutatedChromosome.genes(), chromosome.genes()));
 }
 
 BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_after_last_position)
@@ -133,12 +129,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_after_last_position)
 
 	Chromosome mutatedChromosome = mutation(chromosome);
 	BOOST_TEST(mutatedChromosome.length() > chromosome.length());
-
-	vector<string> prefix(
-		mutatedChromosome.optimisationSteps().begin(),
-		mutatedChromosome.optimisationSteps().begin() + static_cast<ptrdiff_t>(chromosome.length())
-	);
-	BOOST_TEST(prefix == chromosome.optimisationSteps());
+	BOOST_TEST(boost::starts_with(mutatedChromosome.genes(), chromosome.genes()));
 }
 
 BOOST_AUTO_TEST_CASE(geneAddition_should_return_identical_chromosome_if_probability_is_zero)
