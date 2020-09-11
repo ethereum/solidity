@@ -12,6 +12,7 @@ Compiler Features:
  * Yul Optimizer: Prune unused parameters in functions.
  * Yul Optimizer: Inline into functions further down in the call graph first.
  * Yul Optimizer: Try to simplify function names.
+ * Yul IR Generator: Report source locations related to unimplemented features.
 
 
 Bugfixes:
