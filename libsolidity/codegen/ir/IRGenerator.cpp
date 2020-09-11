@@ -164,7 +164,7 @@ string IRGenerator::generate(
 string IRGenerator::generate(Block const& _block)
 {
 	IRGeneratorForStatements generator(m_context, m_utils);
-	_block.accept(generator);
+	generator.generate(_block);
 	return generator.code();
 }
 

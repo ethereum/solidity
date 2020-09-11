@@ -524,6 +524,10 @@ bool CompilerStack::compile()
 					{
 						if (m_generateEvmBytecode)
 							compileContract(*contract, otherCompilers);
+						if (m_generateIR || m_generateEwasm)
+							generateIR(*contract);
+						if (m_generateEwasm)
+							generateEwasm(*contract);
 					}
 					catch (Error const& _error)
 					{
@@ -532,10 +536,28 @@ bool CompilerStack::compile()
 						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
 						return false;
 					}
-					if (m_generateIR || m_generateEwasm)
-						generateIR(*contract);
-					if (m_generateEwasm)
-						generateEwasm(*contract);
+					catch (UnimplementedFeatureError const& _unimplementedError)
+					{
+						if (
+							SourceLocation const* sourceLocation =
+							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
+						)
+						{
+							string const* comment = _unimplementedError.comment();
+							m_errorReporter.error(
+								1834_error,
+								Error::Type::CodeGenerationError,
+								*sourceLocation,
+								"Unimplemented feature error" +
+								((comment && !comment->empty()) ? ": " + *comment : string{}) +
+								" in " +
+								_unimplementedError.lineInfo()
+							);
+							return false;
+						}
+						else
+							throw;
+					}
 				}
 	m_stackState = CompilationSuccessful;
 	this->link();

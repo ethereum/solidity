@@ -47,6 +47,9 @@ public:
 
 	std::string code() const;
 
+	/// Generate the code for the statements in the block;
+	void generate(Block const& _block);
+
 	/// Generates code to initialize the given state variable.
 	void initializeStateVar(VariableDeclaration const& _varDecl);
 	/// Generates code to initialize the given local variable.

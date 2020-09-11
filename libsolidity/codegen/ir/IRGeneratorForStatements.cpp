@@ -38,6 +38,8 @@
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 
+#include <liblangutil/Exceptions.h>
+
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Keccak256.h>
@@ -152,74 +154,124 @@ string IRGeneratorForStatements::code() const
 	return m_code.str();
 }
 
+void IRGeneratorForStatements::generate(Block const& _block)
+{
+	try
+	{
+		_block.accept(*this);
+	}
+	catch (langutil::UnimplementedFeatureError const& _error)
+	{
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_currentLocation);
+		throw _error;
+	}
+}
+
 void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _varDecl)
 {
-	setLocation(_varDecl);
+	try
+	{
+		setLocation(_varDecl);
 
-	solAssert(_varDecl.immutable() || m_context.isStateVariable(_varDecl), "Must be immutable or a state variable.");
-	solAssert(!_varDecl.isConstant(), "");
-	if (!_varDecl.value())
-		return;
+		solAssert(_varDecl.immutable() || m_context.isStateVariable(_varDecl), "Must be immutable or a state variable.");
+		solAssert(!_varDecl.isConstant(), "");
+		if (!_varDecl.value())
+			return;
 
-	_varDecl.value()->accept(*this);
-	writeToLValue(
-		_varDecl.immutable() ?
-		IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
-		IRLValue{*_varDecl.annotation().type, IRLValue::Storage{
-			util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
-			m_context.storageLocationOfStateVariable(_varDecl).second
-		}},
-		*_varDecl.value()
-	);
+		_varDecl.value()->accept(*this);
+		writeToLValue(
+			_varDecl.immutable() ?
+			IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
+			IRLValue{*_varDecl.annotation().type, IRLValue::Storage{
+				util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
+				m_context.storageLocationOfStateVariable(_varDecl).second
+			}},
+			*_varDecl.value()
+		);
+	}
+	catch (langutil::UnimplementedFeatureError const& _error)
+	{
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_currentLocation);
+		throw _error;
+	}
 }
 
 void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _varDecl)
 {
-	setLocation(_varDecl);
+	try
+	{
+		setLocation(_varDecl);
 
-	solAssert(m_context.isLocalVariable(_varDecl), "Must be a local variable.");
+		solAssert(m_context.isLocalVariable(_varDecl), "Must be a local variable.");
 
-	auto const* type = _varDecl.type();
-	if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
-		if (refType->dataStoredIn(DataLocation::Storage) && refType->isPointer())
-			return;
+		auto const* type = _varDecl.type();
+		if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
+			if (refType->dataStoredIn(DataLocation::Storage) && refType->isPointer())
+				return;
 
-	IRVariable zero = zeroValue(*type);
-	assign(m_context.localVariable(_varDecl), zero);
+		IRVariable zero = zeroValue(*type);
+		assign(m_context.localVariable(_varDecl), zero);
+	}
+	catch (langutil::UnimplementedFeatureError const& _error)
+	{
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_currentLocation);
+		throw _error;
+	}
 }
 
 IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expression, Type const& _targetType)
 {
-	setLocation(_expression);
+	try
+	{
+		setLocation(_expression);
 
-	_expression.accept(*this);
-	IRVariable variable{m_context.newYulVariable(), _targetType};
-	define(variable, _expression);
-	return variable;
+		_expression.accept(*this);
+		IRVariable variable{m_context.newYulVariable(), _targetType};
+		define(variable, _expression);
+		return variable;
+	}
+	catch (langutil::UnimplementedFeatureError const& _error)
+	{
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_currentLocation);
+		throw _error;
+	}
 }
 
 string IRGeneratorForStatements::constantValueFunction(VariableDeclaration const& _constant)
 {
-	setLocation(_constant);
+	try
+	{
+		setLocation(_constant);
 
-	string functionName = IRNames::constantValueFunction(_constant);
-	return m_context.functionCollector().createFunction(functionName, [&] {
-		Whiskers templ(R"(
-			function <functionName>() -> <ret> {
-				<code>
-				<ret> := <value>
-			}
-		)");
-		templ("functionName", functionName);
-		IRGeneratorForStatements generator(m_context, m_utils);
-		solAssert(_constant.value(), "");
-		Type const& constantType = *_constant.type();
-		templ("value", generator.evaluateExpression(*_constant.value(), constantType).commaSeparatedList());
-		templ("code", generator.code());
-		templ("ret", IRVariable("ret", constantType).commaSeparatedList());
+		string functionName = IRNames::constantValueFunction(_constant);
+		return m_context.functionCollector().createFunction(functionName, [&] {
+			Whiskers templ(R"(
+				function <functionName>() -> <ret> {
+					<code>
+					<ret> := <value>
+				}
+			)");
+			templ("functionName", functionName);
+			IRGeneratorForStatements generator(m_context, m_utils);
+			solAssert(_constant.value(), "");
+			Type const& constantType = *_constant.type();
+			templ("value", generator.evaluateExpression(*_constant.value(), constantType).commaSeparatedList());
+			templ("code", generator.code());
+			templ("ret", IRVariable("ret", constantType).commaSeparatedList());
 
-		return templ.render();
-	});
+			return templ.render();
+		});
+	}
+	catch (langutil::UnimplementedFeatureError const& _error)
+	{
+		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
+			_error << langutil::errinfo_sourceLocation(m_currentLocation);
+		throw _error;
+	}
 }
 
 void IRGeneratorForStatements::endVisit(VariableDeclarationStatement const& _varDeclStatement)
