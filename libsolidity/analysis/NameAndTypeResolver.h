@@ -163,31 +163,15 @@ private:
 	bool visit(ImportDirective& _import) override;
 	bool visit(ContractDefinition& _contract) override;
 	void endVisit(ContractDefinition& _contract) override;
-	bool visit(StructDefinition& _struct) override;
-	void endVisit(StructDefinition& _struct) override;
-	bool visit(EnumDefinition& _enum) override;
-	void endVisit(EnumDefinition& _enum) override;
-	bool visit(EnumValue& _value) override;
-	bool visit(FunctionDefinition& _function) override;
-	void endVisit(FunctionDefinition& _function) override;
-	bool visit(TryCatchClause& _tryCatchClause) override;
-	void endVisit(TryCatchClause& _tryCatchClause) override;
-	bool visit(ModifierDefinition& _modifier) override;
-	void endVisit(ModifierDefinition& _modifier) override;
-	bool visit(FunctionTypeName& _funTypeName) override;
-	void endVisit(FunctionTypeName& _funTypeName) override;
-	bool visit(Block& _block) override;
-	void endVisit(Block& _block) override;
-	bool visit(ForStatement& _forLoop) override;
-	void endVisit(ForStatement& _forLoop) override;
 	void endVisit(VariableDeclarationStatement& _variableDeclarationStatement) override;
-	bool visit(VariableDeclaration& _declaration) override;
-	bool visit(EventDefinition& _event) override;
-	void endVisit(EventDefinition& _event) override;
+
+	bool visitNode(ASTNode& _node) override;
+	void endVisitNode(ASTNode& _node) override;
+
 
 	void enterNewSubScope(ASTNode& _subScope);
 	void closeCurrentScope();
-	void registerDeclaration(Declaration& _declaration, bool _opensScope);
+	void registerDeclaration(Declaration& _declaration);
 
 	static bool isOverloadedFunction(Declaration const& _declaration1, Declaration const& _declaration2);
 

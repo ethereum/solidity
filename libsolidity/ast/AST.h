@@ -153,9 +153,18 @@ std::vector<T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> co
 }
 
 /**
+ * Abstract marker class that specifies that this AST node opens a scope.
+ */
+class ScopeOpener
+{
+public:
+	virtual ~ScopeOpener() = default;
+};
+
+/**
  * Source unit containing import directives and contract definitions.
  */
-class SourceUnit: public ASTNode
+class SourceUnit: public ASTNode, public ScopeOpener
 {
 public:
 	SourceUnit(
@@ -455,7 +464,7 @@ protected:
  * document order. It first visits all struct declarations, then all variable declarations and
  * finally all function declarations.
  */
-class ContractDefinition: public Declaration, public StructurallyDocumented
+class ContractDefinition: public Declaration, public StructurallyDocumented, public ScopeOpener
 {
 public:
 	ContractDefinition(
@@ -593,7 +602,7 @@ private:
 	ASTPointer<TypeName> m_typeName;
 };
 
-class StructDefinition: public Declaration
+class StructDefinition: public Declaration, public ScopeOpener
 {
 public:
 	StructDefinition(
@@ -620,7 +629,7 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
 
-class EnumDefinition: public Declaration
+class EnumDefinition: public Declaration, public ScopeOpener
 {
 public:
 	EnumDefinition(
@@ -765,7 +774,7 @@ protected:
 	std::vector<ASTPointer<UserDefinedTypeName>> m_overrides;
 };
 
-class FunctionDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional
+class FunctionDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional, public ScopeOpener
 {
 public:
 	FunctionDefinition(
@@ -989,7 +998,7 @@ private:
 /**
  * Definition of a function modifier.
  */
-class ModifierDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional
+class ModifierDefinition: public CallableDeclaration, public StructurallyDocumented, public ImplementationOptional, public ScopeOpener
 {
 public:
 	ModifierDefinition(
@@ -1061,7 +1070,7 @@ private:
 /**
  * Definition of a (loggable) event.
  */
-class EventDefinition: public CallableDeclaration, public StructurallyDocumented
+class EventDefinition: public CallableDeclaration, public StructurallyDocumented, public ScopeOpener
 {
 public:
 	EventDefinition(
@@ -1199,7 +1208,7 @@ private:
 /**
  * A literal function type. Its source form is "function (paramType1, paramType2) internal / external returns (retType1, retType2)"
  */
-class FunctionTypeName: public TypeName
+class FunctionTypeName: public TypeName, public ScopeOpener
 {
 public:
 	FunctionTypeName(
@@ -1334,7 +1343,7 @@ private:
 /**
  * Brace-enclosed block containing zero or more statements.
  */
-class Block: public Statement, public Scopable
+class Block: public Statement, public Scopable, public ScopeOpener
 {
 public:
 	Block(
@@ -1411,7 +1420,7 @@ private:
  * unsuccessful cases.
  * Names are only allowed for the unsuccessful cases.
  */
-class TryCatchClause: public ASTNode, public Scopable
+class TryCatchClause: public ASTNode, public Scopable, public ScopeOpener
 {
 public:
 	TryCatchClause(
@@ -1526,7 +1535,7 @@ private:
 /**
  * For loop statement
  */
-class ForStatement: public BreakableStatement, public Scopable
+class ForStatement: public BreakableStatement, public Scopable, public ScopeOpener
 {
 public:
 	ForStatement(
