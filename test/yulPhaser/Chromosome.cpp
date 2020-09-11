@@ -120,6 +120,15 @@ BOOST_AUTO_TEST_CASE(constructor_should_allow_duplicate_steps)
 	BOOST_TEST(Chromosome("ttfuf").genes() == "ttfuf");
 }
 
+BOOST_AUTO_TEST_CASE(constructor_should_allow_genes_that_do_not_correspond_to_any_step)
+{
+	assert(OptimiserSuite::stepAbbreviationToNameMap().count('.') == 0);
+	assert(OptimiserSuite::stepAbbreviationToNameMap().count('b') == 0);
+
+	BOOST_TEST(Chromosome(".").genes() == ".");
+	BOOST_TEST(Chromosome("a..abatbb").genes() == "a..abatbb");
+}
+
 BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_string_representation)
 {
 	vector<string> allSteps;

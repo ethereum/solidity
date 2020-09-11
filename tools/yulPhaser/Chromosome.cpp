@@ -67,6 +67,11 @@ string const& Chromosome::randomOptimisationStep()
 	return stepNames[SimulationRNG::uniformInt(0, stepNames.size() - 1)];
 }
 
+char Chromosome::randomGene()
+{
+	return OptimiserSuite::stepNameToAbbreviationMap().at(randomOptimisationStep());
+}
+
 string Chromosome::stepsToGenes(vector<string> const& _optimisationSteps)
 {
 	string genes;

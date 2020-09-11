@@ -44,6 +44,8 @@ public:
 	explicit Chromosome(std::vector<std::string> _optimisationSteps):
 		m_genes(stepsToGenes(_optimisationSteps)) {}
 	explicit Chromosome(std::string _genes):
+		// NOTE: We don't validate the genes - they're only checked at the point of conversion to
+		// actual optimisation steps names. This is very convenient in mutation tests.
 		m_genes(std::move(_genes)) {}
 	static Chromosome makeRandom(size_t _length);
 
@@ -58,6 +60,7 @@ public:
 	bool operator!=(Chromosome const& _other) const { return !(*this == _other); }
 
 	static std::string const& randomOptimisationStep();
+	static char randomGene();
 	static std::string stepsToGenes(std::vector<std::string> const& _optimisationSteps);
 	static std::vector<std::string> genesToSteps(std::string const& _genes);
 
