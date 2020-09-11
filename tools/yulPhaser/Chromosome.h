@@ -43,7 +43,8 @@ public:
 	Chromosome() = default;
 	explicit Chromosome(std::vector<std::string> _optimisationSteps):
 		m_optimisationSteps(std::move(_optimisationSteps)) {}
-	explicit Chromosome(std::string const& _optimisationSteps);
+	explicit Chromosome(std::string const& _genes):
+		m_optimisationSteps(genesToSteps(_genes)) {}
 	static Chromosome makeRandom(size_t _length);
 
 	size_t length() const { return m_optimisationSteps.size(); }
@@ -55,6 +56,8 @@ public:
 	bool operator!=(Chromosome const& _other) const { return !(*this == _other); }
 
 	static std::string const& randomOptimisationStep();
+	static std::string stepsToGenes(std::vector<std::string> const& _optimisationSteps);
+	static std::vector<std::string> genesToSteps(std::string const& _genes);
 
 private:
 	static std::vector<std::string> allStepNames();

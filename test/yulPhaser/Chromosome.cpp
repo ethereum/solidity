@@ -47,25 +47,25 @@ using namespace solidity::util;
 namespace solidity::phaser::test
 {
 
+vector<string> const ChrOmOsoMeSteps{
+	ConditionalSimplifier::name,
+	FunctionHoister::name,
+	RedundantAssignEliminator::name,
+	ForLoopConditionOutOfBody::name,
+	Rematerialiser::name,
+	ForLoopConditionOutOfBody::name,
+	ExpressionSimplifier::name,
+	ForLoopInitRewriter::name,
+	LoopInvariantCodeMotion::name,
+	ExpressionInliner::name
+};
+
 BOOST_AUTO_TEST_SUITE(Phaser, *boost::unit_test::label("nooptions"))
 BOOST_AUTO_TEST_SUITE(ChromosomeTest)
 
 BOOST_AUTO_TEST_CASE(constructor_should_convert_from_string_to_optimisation_steps)
 {
-	vector<string> expectedSteps{
-		ConditionalSimplifier::name,
-		FunctionHoister::name,
-		RedundantAssignEliminator::name,
-		ForLoopConditionOutOfBody::name,
-		Rematerialiser::name,
-		ForLoopConditionOutOfBody::name,
-		ExpressionSimplifier::name,
-		ForLoopInitRewriter::name,
-		LoopInvariantCodeMotion::name,
-		ExpressionInliner::name
-	};
-
-	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == expectedSteps);
+	BOOST_TEST(Chromosome("ChrOmOsoMe").optimisationSteps() == ChrOmOsoMeSteps);
 }
 
 BOOST_AUTO_TEST_CASE(makeRandom_should_return_different_chromosome_each_time)
@@ -149,6 +149,18 @@ BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_pr
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
 	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
+}
+
+BOOST_AUTO_TEST_CASE(stepsToGenes_should_translate_optimisation_step_names_to_abbreviations)
+{
+	BOOST_TEST(Chromosome::stepsToGenes({}) == "");
+	BOOST_TEST(Chromosome::stepsToGenes(ChrOmOsoMeSteps) == "ChrOmOsoMe");
+}
+
+BOOST_AUTO_TEST_CASE(genesToSteps_should_translate_optimisation_step_abbreviations_to_names)
+{
+	BOOST_TEST(Chromosome::genesToSteps("") == vector<string>{});
+	BOOST_TEST(Chromosome::genesToSteps("ChrOmOsoMe") == ChrOmOsoMeSteps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

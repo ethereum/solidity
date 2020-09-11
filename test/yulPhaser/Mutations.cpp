@@ -218,10 +218,11 @@ BOOST_AUTO_TEST_CASE(alternativeMutations_should_always_choose_second_mutation_i
 BOOST_AUTO_TEST_CASE(mutationSequence_should_apply_all_mutations)
 {
 	Chromosome chromosome("aaaaa");
+	vector<string> steps = Chromosome::genesToSteps("gfc");
 	function<Mutation> mutation = mutationSequence({
-		geneSubstitution(3, Chromosome("g").optimisationSteps()[0]),
-		geneSubstitution(2, Chromosome("f").optimisationSteps()[0]),
-		geneSubstitution(1, Chromosome("c").optimisationSteps()[0]),
+		geneSubstitution(3, steps[0]),
+		geneSubstitution(2, steps[1]),
+		geneSubstitution(1, steps[2]),
 	});
 
 	BOOST_TEST(mutation(chromosome) == Chromosome("acfga"));
@@ -230,11 +231,12 @@ BOOST_AUTO_TEST_CASE(mutationSequence_should_apply_all_mutations)
 BOOST_AUTO_TEST_CASE(mutationSequence_apply_mutations_in_the_order_they_are_given)
 {
 	Chromosome chromosome("aa");
+	vector<string> steps = Chromosome::genesToSteps("gcfo");
 	function<Mutation> mutation = mutationSequence({
-		geneSubstitution(0, Chromosome("g").optimisationSteps()[0]),
-		geneSubstitution(1, Chromosome("c").optimisationSteps()[0]),
-		geneSubstitution(0, Chromosome("f").optimisationSteps()[0]),
-		geneSubstitution(1, Chromosome("o").optimisationSteps()[0]),
+		geneSubstitution(0, steps[0]),
+		geneSubstitution(1, steps[1]),
+		geneSubstitution(0, steps[2]),
+		geneSubstitution(1, steps[3]),
 	});
 
 	BOOST_TEST(mutation(chromosome) == Chromosome("fo"));
