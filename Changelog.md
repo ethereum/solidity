@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * SMTChecker: Support shifts.
  * SMTChecker: Support structs.
+ * SMTChecker: Support ``type(T).min`` and ``type(T).max``.
  * Yul Optimizer: Prune unused parameters in functions.
  * Yul Optimizer: Try to simplify function names.
 

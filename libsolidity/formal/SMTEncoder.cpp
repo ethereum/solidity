@@ -881,16 +881,31 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 	if (exprType->category() == Type::Category::Magic)
 	{
-		string accessedName;
 		if (identifier)
-			accessedName = identifier->name();
+			defineGlobalVariable(identifier->name() + "." + _memberAccess.memberName(), _memberAccess);
+		else if (auto magicType = dynamic_cast<MagicType const*>(exprType); magicType->kind() == MagicType::Kind::MetaType)
+		{
+			auto const& memberName = _memberAccess.memberName();
+			if (memberName == "min" || memberName == "max")
+			{
+				IntegerType const& integerType = dynamic_cast<IntegerType const&>(*magicType->typeArgument());
+				defineExpr(_memberAccess, memberName == "min" ? integerType.minValue() : integerType.maxValue());
+			}
+			else
+				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
+				//       at all useable in the SMT checker currently
+				m_errorReporter.warning(
+					7507_error,
+					_memberAccess.location(),
+					"Assertion checker does not yet support this expression."
+				);
+		}
 		else
 			m_errorReporter.warning(
 				9551_error,
 				_memberAccess.location(),
 				"Assertion checker does not yet support this expression."
 			);
-		defineGlobalVariable(accessedName + "." + _memberAccess.memberName(), _memberAccess);
 		return false;
 	}
 	else if (smt::isNonRecursiveStruct(*exprType))
