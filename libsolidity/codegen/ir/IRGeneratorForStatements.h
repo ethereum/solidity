@@ -179,10 +179,13 @@ private:
 
 	static Type const& type(Expression const& _expression);
 
+	void setLocation(ASTNode const& _node);
+
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;
 	YulUtilFunctions& m_utils;
 	std::optional<IRLValue> m_currentLValue;
+	langutil::SourceLocation m_currentLocation;
 };
 
 }
