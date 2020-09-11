@@ -133,10 +133,7 @@ bool SMTEncoder::visit(FunctionDefinition const& _function)
 	if (_function.isConstructor())
 		inlineConstructorHierarchy(dynamic_cast<ContractDefinition const&>(*_function.scope()));
 
-	// Base constructors' parameters should be set by explicit calls,
-	// but the most derived one needs to be initialized.
-	if (_function.scope() == m_currentContract)
-		initializeLocalVariables(_function);
+	initializeLocalVariables(_function);
 
 	_function.parameterList().accept(*this);
 	if (_function.returnParameterList())
@@ -2053,6 +2050,14 @@ vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedA
 vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
 {
 	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+}
+
+SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)
+{
+	for (auto const* s = &_scopable; s; s = dynamic_cast<Scopable const*>(s->scope()))
+		if (auto const* source = dynamic_cast<SourceUnit const*>(s->scope()))
+			return source;
+	solAssert(false, "");
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)

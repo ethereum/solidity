@@ -45,6 +45,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on lvalue unary operators with tuples.
  * SMTChecker: Fix internal error on tuple assignment.
  * SMTChecker: Fix internal error on tuples of one element that have tuple type.
+ * SMTChecker: Fix internal error when using imported code.
  * SMTChecker: Fix soundness of array ``pop``.
  * Type Checker: Disallow ``using for`` directive inside interfaces.
  * Type Checker: Disallow signed literals as exponent in exponentiation operator.
