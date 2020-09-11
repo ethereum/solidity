@@ -36,15 +36,15 @@ function<Mutation> phaser::geneRandomisation(double _chance)
 {
 	return [=](Chromosome const& _chromosome)
 	{
-		vector<string> optimisationSteps;
-		for (auto const& step: _chromosome.optimisationSteps())
-			optimisationSteps.push_back(
+		string genes;
+		for (char gene: _chromosome.genes())
+			genes.push_back(
 				SimulationRNG::bernoulliTrial(_chance) ?
-				Chromosome::randomOptimisationStep() :
-				step
+				Chromosome::randomGene() :
+				gene
 			);
 
-		return Chromosome(move(optimisationSteps));
+		return Chromosome(move(genes));
 	};
 }
 
@@ -52,12 +52,12 @@ function<Mutation> phaser::geneDeletion(double _chance)
 {
 	return [=](Chromosome const& _chromosome)
 	{
-		vector<string> optimisationSteps;
-		for (auto const& step: _chromosome.optimisationSteps())
+		string genes;
+		for (char gene: _chromosome.genes())
 			if (!SimulationRNG::bernoulliTrial(_chance))
-				optimisationSteps.push_back(step);
+				genes.push_back(gene);
 
-		return Chromosome(move(optimisationSteps));
+		return Chromosome(move(genes));
 	};
 }
 
@@ -65,19 +65,19 @@ function<Mutation> phaser::geneAddition(double _chance)
 {
 	return [=](Chromosome const& _chromosome)
 	{
-		vector<string> optimisationSteps;
+		string genes;
 
 		if (SimulationRNG::bernoulliTrial(_chance))
-			optimisationSteps.push_back(Chromosome::randomOptimisationStep());
+			genes.push_back(Chromosome::randomGene());
 
-		for (auto const& step: _chromosome.optimisationSteps())
+		for (char gene: _chromosome.genes())
 		{
-			optimisationSteps.push_back(step);
+			genes.push_back(gene);
 			if (SimulationRNG::bernoulliTrial(_chance))
-				optimisationSteps.push_back(Chromosome::randomOptimisationStep());
+				genes.push_back(Chromosome::randomGene());
 		}
 
-		return Chromosome(move(optimisationSteps));
+		return Chromosome(move(genes));
 	};
 }
 
