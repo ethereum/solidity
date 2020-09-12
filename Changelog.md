@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Export compiler-generated utility sources via standard-json or combined-json.
+ * SMTChecker: Support events and low-level logs.
  * SMTChecker: Support ``revert()``.
  * SMTChecker: Support shifts.
  * SMTChecker: Support structs.
