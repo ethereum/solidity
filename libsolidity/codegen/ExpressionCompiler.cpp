@@ -1598,10 +1598,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
-			uint64_t result{0};
-			for (auto const& function: contract.interfaceFunctionList(false))
-				result ^= fromBigEndian<uint64_t>(function.first.ref());
-			m_context << (u256{result} << (256 - 32));
+			m_context << (u256{contract.interfaceId()} << (256 - 32));
 		}
 		else if (member == "min" || member == "max")
 		{

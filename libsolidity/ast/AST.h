@@ -509,6 +509,8 @@ public:
 	/// as intended for use by the ABI.
 	std::map<util::FixedHash<4>, FunctionTypePointer> interfaceFunctions(bool _includeInheritedFunctions = true) const;
 	std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList(bool _includeInheritedFunctions = true) const;
+	/// @returns the EIP-165 compatible interface identifier. This will exclude inherited functions.
+	uint64_t interfaceId() const;
 
 	/// @returns a list of all declarations in this contract
 	std::vector<Declaration const*> declarations() const { return filteredNodes<Declaration>(m_subNodes); }

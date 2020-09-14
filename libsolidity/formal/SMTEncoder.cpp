@@ -890,12 +890,8 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			}
 			else if (memberName == "interfaceId")
 			{
-				// TODO: move this calculation into ContractDefinition and share with ExpressionCompiler
 				ContractDefinition const& contract = dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition();
-				uint64_t result{0};
-				for (auto const& function: contract.interfaceFunctionList(false))
-					result ^= fromBigEndian<uint64_t>(function.first.ref());
-				defineExpr(_memberAccess, result);
+				defineExpr(_memberAccess, contract.interfaceId());
 			}
 			else
 				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
