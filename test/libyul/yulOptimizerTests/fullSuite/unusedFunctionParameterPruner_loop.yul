@@ -7,6 +7,8 @@
         {
             a := calldataload(0)
             mstore(a, x)
+            // to prevent f from getting inlined
+            if iszero(a) { leave }
         }
     }
 }
@@ -15,19 +17,23 @@
 //
 // {
 //     {
+//         f()
+//         sstore(0, 1)
+//         f()
+//         sstore(0, 1)
+//         f()
+//         sstore(0, 1)
+//     }
+//     function f()
+//     {
 //         let b := 10
 //         let _1 := 0
 //         let a := calldataload(_1)
+//         let _2 := iszero(a)
 //         for { } iszero(b) { b := add(b, not(0)) }
-//         { mstore(a, _1) }
-//         sstore(_1, 1)
-//         let b_1 := 10
-//         for { } iszero(b_1) { b_1 := add(b_1, not(0)) }
-//         { mstore(a, _1) }
-//         sstore(_1, 1)
-//         let b_2 := 10
-//         for { } iszero(b_2) { b_2 := add(b_2, not(0)) }
-//         { mstore(a, _1) }
-//         sstore(_1, 1)
+//         {
+//             mstore(a, _1)
+//             if _2 { leave }
+//         }
 //     }
 // }

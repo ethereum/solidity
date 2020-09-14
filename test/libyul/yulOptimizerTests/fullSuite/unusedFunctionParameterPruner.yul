@@ -10,6 +10,8 @@
         out1 := sload(out1)
         out2 := add(out1, 1)
         extcodecopy(out1, out2, 1, b)
+        // to prevent foo from getting inlined
+        if iszero(out1) { leave }
     }
 }
 // ----
@@ -17,14 +19,16 @@
 //
 // {
 //     {
-//         let _1 := sload(32)
-//         let out1 := sload(mload(32))
-//         let out2 := add(out1, 1)
-//         extcodecopy(out1, out2, 1, _1)
+//         let out1, out2 := foo(sload(32))
 //         sstore(0, out1)
 //         sstore(0, out2)
-//         let _2 := sload(8)
-//         let out1_1 := sload(mload(32))
-//         extcodecopy(out1_1, add(out1_1, 1), 1, _2)
+//         let out1_1, out2_1 := foo(sload(8))
+//     }
+//     function foo(b) -> out1, out2
+//     {
+//         out1 := sload(mload(32))
+//         out2 := add(out1, 1)
+//         extcodecopy(out1, out2, 1, b)
+//         if iszero(out1) { leave }
 //     }
 // }
