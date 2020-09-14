@@ -24,6 +24,7 @@
 #pragma once
 
 #include <test/Common.h>
+#include <test/EVMHost.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -39,8 +40,6 @@
 
 namespace solidity::test
 {
-class EVMHost;
-
 using rational = boost::rational<bigint>;
 /// An Ethereum address: 20 bytes.
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
@@ -55,7 +54,7 @@ class ExecutionFramework
 
 public:
 	ExecutionFramework();
-	explicit ExecutionFramework(langutil::EVMVersion _evmVersion);
+	ExecutionFramework(langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _vmPaths);
 	virtual ~ExecutionFramework() = default;
 
 	virtual bytes const& compileAndRunWithoutCheck(
@@ -255,6 +254,7 @@ private:
 	}
 
 protected:
+	void selectVM(evmc_capabilities _cap = evmc_capabilities::EVMC_CAPABILITY_EVM1);
 	void reset();
 
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
@@ -279,7 +279,10 @@ protected:
 	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;
 	solidity::frontend::OptimiserSettings m_optimiserSettings = solidity::frontend::OptimiserSettings::minimal();
 	bool m_showMessages = false;
-	std::shared_ptr<EVMHost> m_evmHost;
+	bool m_supportsEwasm = false;
+	std::unique_ptr<EVMHost> m_evmcHost;
+
+	std::vector<boost::filesystem::path> m_vmPaths;
 
 	bool m_transactionSuccessful = true;
 	Address m_sender = account(0);

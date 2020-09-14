@@ -12,6 +12,8 @@
         out1 := sload(out1)
         out2 := add(out1, 1)
         extcodecopy(out1, out1, 1, b)
+        // to prevent foo from getting inlined
+        if iszero(out1) { leave }
     }
 }
 // ----
@@ -30,5 +32,6 @@
 //         out1 := sload(mload(32))
 //         out2 := add(out1, 1)
 //         extcodecopy(out1, out1, 1, b)
+//         if iszero(out1) { leave }
 //     }
 // }

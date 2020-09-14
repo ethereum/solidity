@@ -30,6 +30,8 @@ set(sources
 	analysis/PostTypeChecker.h
 	analysis/ReferencesResolver.cpp
 	analysis/ReferencesResolver.h
+	analysis/Scoper.cpp
+	analysis/Scoper.h
 	analysis/StaticAnalyzer.cpp
 	analysis/StaticAnalyzer.h
 	analysis/SyntaxChecker.cpp

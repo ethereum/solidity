@@ -8,12 +8,19 @@ Language Features:
 
 
 Compiler Features:
+ * SMTChecker: Support shifts.
  * SMTChecker: Support structs.
+ * SMTChecker: Support ``type(T).min`` and ``type(T).max``.
  * Yul Optimizer: Prune unused parameters in functions.
+ * Yul Optimizer: Inline into functions further down in the call graph first.
+ * Yul Optimizer: Try to simplify function names.
+
 
 Bugfixes:
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * ViewPureChecker: Prevent visibility check on constructors.
+ * Type system: Fix internal error on implicit conversion of contract instance to the type of its ``super``.
+ * Type system: Fix named parameters in overloaded function and event calls being matched incorrectly if the order differs from the declaration.
 
 ### 0.7.1 (2020-09-02)
 
@@ -43,6 +50,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on lvalue unary operators with tuples.
  * SMTChecker: Fix internal error on tuple assignment.
  * SMTChecker: Fix internal error on tuples of one element that have tuple type.
+ * SMTChecker: Fix internal error when using imported code.
  * SMTChecker: Fix soundness of array ``pop``.
  * Type Checker: Disallow ``using for`` directive inside interfaces.
  * Type Checker: Disallow signed literals as exponent in exponentiation operator.

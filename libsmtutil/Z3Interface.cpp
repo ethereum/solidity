@@ -189,6 +189,12 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return arguments[0] | arguments[1];
 		else if (n == "bvxor")
 			return arguments[0] ^ arguments[1];
+		else if (n == "bvshl")
+			return z3::shl(arguments[0], arguments[1]);
+		else if (n == "bvlshr")
+			return z3::lshr(arguments[0], arguments[1]);
+		else if (n == "bvashr")
+			return z3::ashr(arguments[0], arguments[1]);
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);
@@ -245,6 +251,8 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		return m_context.bool_sort();
 	case Kind::Int:
 		return m_context.int_sort();
+	case Kind::BitVector:
+		return m_context.bv_sort(dynamic_cast<BitVectorSort const&>(_sort).size);
 	case Kind::Array:
 	{
 		auto const& arraySort = dynamic_cast<ArraySort const&>(_sort);

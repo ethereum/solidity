@@ -54,7 +54,7 @@ bool phaser::isFitter(Individual const& a, Individual const& b)
 	return (
 		(a.fitness < b.fitness) ||
 		(a.fitness == b.fitness && a.chromosome.length() < b.chromosome.length()) ||
-		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && toString(a.chromosome) < toString(b.chromosome))
+		(a.fitness == b.fitness && a.chromosome.length() == b.chromosome.length() && a.chromosome.genes() < b.chromosome.genes())
 	);
 }
 

@@ -22,13 +22,10 @@ contract C {
 		assert(s1.a[2] != 4);
 		s1.ts[3].y = 5;
 		assert(s1.ts[3].y != 5);
-		s1.ts[4].a[5] = 6;
-		assert(s1.ts[4].a[5] != 6);
 	}
 }
 // ----
-// Warning 6328: (228-245): Assertion violation happens here
-// Warning 6328: (263-282): Assertion violation happens here
-// Warning 6328: (301-321): Assertion violation happens here
-// Warning 6328: (343-366): Assertion violation happens here
-// Warning 6328: (391-417): Assertion violation happens here
+// Warning 6328: (228-245): Assertion violation happens here.
+// Warning 6328: (263-282): Assertion violation happens here.
+// Warning 6328: (301-321): Assertion violation happens here.
+// Warning 6328: (343-366): Assertion violation happens here.

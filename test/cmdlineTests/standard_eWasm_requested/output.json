@@ -6,9 +6,6 @@
     (import \"ethereum\" \"finish\" (func $eth.finish (param i32 i32)))
     (memory $memory (export \"memory\") 1)
     (export \"main\" (func $main))
-    (global $global_ (mut i64) (i64.const 0))
-    (global $global__1 (mut i64) (i64.const 0))
-    (global $global__2 (mut i64) (i64.const 0))
 
 (func $main
     (local $_1 i64)
@@ -18,7 +15,6 @@
     (local $z1 i64)
     (local $z2 i64)
     (local $z3 i64)
-    (local $z4 i64)
     (local $_3 i64)
     (block $label_
         (local.set $_1 (i64.const 0))
@@ -32,18 +28,14 @@
         (i64.store (i32.add (local.get $r) (i32.const 16)) (local.get $_2))
         (i64.store (i32.add (local.get $r) (i32.const 24)) (call $endian_swap (i64.const 128)))
         (call $eth.getCallValue (i32.const 0))
-        (block
-            (local.set $z1 (call $mload_internal (i32.const 0)))
-            (local.set $z2 (global.get $global_))
-            (local.set $z3 (global.get $global__1))
-            (local.set $z4 (global.get $global__2))
-
-        )
-        (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (local.get $z4))))) (then
-            (call $eth.revert (call $to_internal_i32ptr (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)))))
+        (local.set $z1 (call $endian_swap (i64.load (i32.const 0))))
+        (local.set $z2 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 8)))))
+        (local.set $z3 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 16)))))
+        (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 24)))))))) (then
+            (call $revert (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))))
         (local.set $_3 (datasize \"C_2_deployed\"))
-        (call $eth.codeCopy (call $to_internal_i32ptr (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\")) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3)))
-        (call $eth.finish (call $to_internal_i32ptr (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1)) (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3)))
+        (call $codecopy (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_2_deployed\") (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
+        (call $return (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
     )
 )
 
@@ -54,7 +46,7 @@
     (param $x4 i64)
     (result i32)
     (local $v i32)
-    (block $label__3
+    (block $label__1
         (if (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
             (unreachable)))
         (if (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32))) (then
@@ -73,7 +65,7 @@
     (result i32)
     (local $r i32)
     (local $p i32)
-    (block $label__4
+    (block $label__2
         (local.set $p (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)))
         (local.set $r (i32.add (local.get $p) (i32.const 64)))
         (if (i32.lt_u (local.get $r) (local.get $p)) (then
@@ -83,11 +75,29 @@
     (local.get $r)
 )
 
+(func $codecopy
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
+    (param $y1 i64)
+    (param $y2 i64)
+    (param $y3 i64)
+    (param $y4 i64)
+    (param $z1 i64)
+    (param $z2 i64)
+    (param $z3 i64)
+    (param $z4 i64)
+    (block $label__3
+        (call $eth.codeCopy (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)) (call $u256_to_i32 (local.get $z1) (local.get $z2) (local.get $z3) (local.get $z4)))
+    )
+)
+
 (func $endian_swap_16
     (param $x i64)
     (result i64)
     (local $y i64)
-    (block $label__5
+    (block $label__4
         (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
 
     )
@@ -99,7 +109,7 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (block $label__6
+    (block $label__5
         (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
         (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
 
@@ -112,7 +122,7 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (block $label__7
+    (block $label__6
         (local.set $hi (i64.shl (call $endian_swap_32 (local.get $x)) (i64.const 32)))
         (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $x) (i64.const 32)))))
 
@@ -120,24 +130,32 @@
     (local.get $y)
 )
 
-(func $mload_internal
-    (param $pos i32)
-    (result i64)
-    (local $z1 i64)
-    (local $z2 i64)
-    (local $z3 i64)
-    (local $z4 i64)
-    (block $label__8
-        (local.set $z1 (call $endian_swap (i64.load (local.get $pos))))
-        (local.set $z2 (call $endian_swap (i64.load (i32.add (local.get $pos) (i32.const 8)))))
-        (local.set $z3 (call $endian_swap (i64.load (i32.add (local.get $pos) (i32.const 16)))))
-        (local.set $z4 (call $endian_swap (i64.load (i32.add (local.get $pos) (i32.const 24)))))
-
+(func $return
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
+    (param $y1 i64)
+    (param $y2 i64)
+    (param $y3 i64)
+    (param $y4 i64)
+    (block $label__7
+        (call $eth.finish (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
     )
-    (global.set $global_ (local.get $z2))
-    (global.set $global__1 (local.get $z3))
-    (global.set $global__2 (local.get $z4))
-    (local.get $z1)
+)
+
+(func $revert
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
+    (param $y1 i64)
+    (param $y2 i64)
+    (param $y3 i64)
+    (param $y4 i64)
+    (block $label__8
+        (call $eth.revert (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
+    )
 )
 
 )

@@ -48,6 +48,7 @@ function solcjs_test
 
     printLog "Copying SMTChecker tests..."
     cp -Rf "$TEST_DIR"/test/libsolidity/smtCheckerTests test/
+    rm -rf test/smtCheckerTests/imports
 
     # Update version (needed for some tests)
     echo "Updating package.json to version $VERSION"

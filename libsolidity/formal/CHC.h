@@ -141,8 +141,6 @@ private:
 	/// in a given _source.
 	void defineInterfacesAndSummaries(SourceUnit const& _source);
 
-	/// Genesis predicate.
-	smtutil::Expression genesis() { return (*m_genesisPredicate)({}); }
 	/// Interface predicate over current variables.
 	smtutil::Expression interface();
 	smtutil::Expression interface(ContractDefinition const& _contract);
@@ -259,9 +257,6 @@ private:
 
 	/// Predicates.
 	//@{
-	/// Genesis predicate.
-	Predicate const* m_genesisPredicate = nullptr;
-
 	/// Implicit constructor predicate.
 	/// Explicit constructors are handled as functions.
 	Predicate const* m_implicitConstructorPredicate = nullptr;
@@ -293,9 +288,6 @@ private:
 		"error",
 		m_context
 	};
-
-	/// Maps predicate names to the ASTNodes they came from.
-	std::map<std::string, ASTNode const*> m_symbolFunction;
 	//@}
 
 	/// Variables.

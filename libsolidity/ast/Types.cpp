@@ -205,7 +205,7 @@ vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Ty
 {
 	set<StructDefinition const*> structsSeen;
 	TypeSet oversized;
-	oversizedSubtypesInner(_type, false, structsSeen, oversized);
+	oversizedSubtypesInner(_type, true, structsSeen, oversized);
 	vector<frontend::Type const*> res;
 	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
 	return res;
@@ -1569,12 +1569,15 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	if (_convertTo.category() == Category::Contract)
 	{
-		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
-		if (m_super && bases.size() <= 1)
+		auto const& targetContractType = dynamic_cast<ContractType const&>(_convertTo);
+		if (targetContractType.isSuper())
 			return false;
+
+		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
 		return find(
-			m_super ? ++bases.begin() : bases.begin(), bases.end(),
-			&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()
+			bases.begin(),
+			bases.end(),
+			&targetContractType.contractDefinition()
 		) != bases.end();
 	}
 	return false;
@@ -3482,12 +3485,12 @@ bool FunctionType::canTakeArguments(
 
 		size_t matchedNames = 0;
 
-		for (auto const& argName: _arguments.names)
-			for (size_t i = 0; i < paramNames.size(); i++)
-				if (*argName == paramNames[i])
+		for (size_t a = 0; a < _arguments.names.size(); a++)
+			for (size_t p = 0; p < paramNames.size(); p++)
+				if (*_arguments.names[a] == paramNames[p])
 				{
 					matchedNames++;
-					if (!_arguments.types[i]->isImplicitlyConvertibleTo(*paramTypes[i]))
+					if (!_arguments.types[a]->isImplicitlyConvertibleTo(*paramTypes[p]))
 						return false;
 				}
 

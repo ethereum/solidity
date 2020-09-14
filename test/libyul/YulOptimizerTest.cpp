@@ -225,9 +225,14 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "expressionSimplifier")
 	{
 		disambiguate();
+		ExpressionSplitter::run(*m_context, *m_object->code);
+		CommonSubexpressionEliminator::run(*m_context, *m_object->code);
 		ExpressionSimplifier::run(*m_context, *m_object->code);
 		ExpressionSimplifier::run(*m_context, *m_object->code);
 		ExpressionSimplifier::run(*m_context, *m_object->code);
+		UnusedPruner::run(*m_context, *m_object->code);
+		ExpressionJoiner::run(*m_context, *m_object->code);
+		ExpressionJoiner::run(*m_context, *m_object->code);
 	}
 	else if (m_optimizerStep == "fullSimplify")
 	{

@@ -6,11 +6,8 @@
         // The usage of a is redundant
         a := calldataload(0)
         mstore(a, x)
-        // to prevent getting fully inlined
-        sstore(1, 1)
-        sstore(2, 2)
-        sstore(3, 3)
-        sstore(3, 3)
+        // to prevent f from getting inlined
+        if iszero(a) { leave }
     }
 }
 // ----
@@ -27,10 +24,8 @@
 //     }
 //     function f()
 //     {
-//         mstore(calldataload(0), 0)
-//         sstore(1, 1)
-//         sstore(2, 2)
-//         sstore(3, 3)
-//         sstore(3, 3)
+//         let a := calldataload(0)
+//         mstore(a, 0)
+//         if iszero(a) { leave }
 //     }
 // }

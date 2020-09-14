@@ -133,10 +133,7 @@ bool SMTEncoder::visit(FunctionDefinition const& _function)
 	if (_function.isConstructor())
 		inlineConstructorHierarchy(dynamic_cast<ContractDefinition const&>(*_function.scope()));
 
-	// Base constructors' parameters should be set by explicit calls,
-	// but the most derived one needs to be initialized.
-	if (_function.scope() == m_currentContract)
-		initializeLocalVariables(_function);
+	initializeLocalVariables(_function);
 
 	_function.parameterList().accept(*this);
 	if (_function.returnParameterList())
@@ -571,7 +568,7 @@ void SMTEncoder::endVisit(BinaryOperation const& _op)
 		arithmeticOperation(_op);
 	else if (TokenTraits::isCompareOp(_op.getOperator()))
 		compareOperation(_op);
-	else if (TokenTraits::isBitOp(_op.getOperator()))
+	else if (TokenTraits::isBitOp(_op.getOperator()) || TokenTraits::isShiftOp(_op.getOperator()))
 		bitwiseOperation(_op);
 	else
 		m_errorReporter.warning(
@@ -881,16 +878,31 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 	auto identifier = dynamic_cast<Identifier const*>(&_memberAccess.expression());
 	if (exprType->category() == Type::Category::Magic)
 	{
-		string accessedName;
 		if (identifier)
-			accessedName = identifier->name();
+			defineGlobalVariable(identifier->name() + "." + _memberAccess.memberName(), _memberAccess);
+		else if (auto magicType = dynamic_cast<MagicType const*>(exprType); magicType->kind() == MagicType::Kind::MetaType)
+		{
+			auto const& memberName = _memberAccess.memberName();
+			if (memberName == "min" || memberName == "max")
+			{
+				IntegerType const& integerType = dynamic_cast<IntegerType const&>(*magicType->typeArgument());
+				defineExpr(_memberAccess, memberName == "min" ? integerType.minValue() : integerType.maxValue());
+			}
+			else
+				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
+				//       at all useable in the SMT checker currently
+				m_errorReporter.warning(
+					7507_error,
+					_memberAccess.location(),
+					"Assertion checker does not yet support this expression."
+				);
+		}
 		else
 			m_errorReporter.warning(
 				9551_error,
 				_memberAccess.location(),
 				"Assertion checker does not yet support this expression."
 			);
-		defineGlobalVariable(accessedName + "." + _memberAccess.memberName(), _memberAccess);
 		return false;
 	}
 	else if (smt::isNonRecursiveStruct(*exprType))
@@ -1422,7 +1434,8 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 
 void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 {
-	solAssert(TokenTraits::isBitOp(_op.getOperator()), "");
+	auto op = _op.getOperator();
+	solAssert(TokenTraits::isBitOp(op) || TokenTraits::isShiftOp(op), "");
 	auto commonType = _op.annotation().commonType;
 	solAssert(commonType, "");
 
@@ -1432,16 +1445,33 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
 
 	optional<smtutil::Expression> result;
-	if (_op.getOperator() == Token::BitAnd)
+	switch (op)
+	{
+	case Token::BitAnd:
 		result = bvLeft & bvRight;
-	else if (_op.getOperator() == Token::BitOr)
+		break;
+	case Token::BitOr:
 		result = bvLeft | bvRight;
-	else if (_op.getOperator() == Token::BitXor)
+		break;
+	case Token::BitXor:
 		result = bvLeft ^ bvRight;
+		break;
+	case Token::SHL:
+		result = bvLeft << bvRight;
+		break;
+	case Token::SHR:
+		solAssert(false, "");
+	case Token::SAR:
+		result = isSigned ?
+			smtutil::Expression::ashr(bvLeft, bvRight) :
+			bvLeft >> bvRight;
+		break;
+	default:
+		solAssert(false, "");
+	}
 
 	solAssert(result, "");
-	if (result)
-		defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
+	defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
 }
 
 void SMTEncoder::bitwiseNotOperation(UnaryOperation const& _op)
@@ -2020,6 +2050,14 @@ vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedA
 vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
 {
 	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+}
+
+SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)
+{
+	for (auto const* s = &_scopable; s; s = dynamic_cast<Scopable const*>(s->scope()))
+		if (auto const* source = dynamic_cast<SourceUnit const*>(s->scope()))
+			return source;
+	solAssert(false, "");
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)

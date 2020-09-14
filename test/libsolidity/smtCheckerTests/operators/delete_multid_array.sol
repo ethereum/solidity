@@ -40,5 +40,5 @@ contract C {
 // ====
 // SMTSolvers: cvc4
 // ----
-// Warning 4661: (372-392): Assertion violation happens here
-// Warning 4661: (617-637): Assertion violation happens here
+// Warning 4661: (372-392): Assertion violation happens here.
+// Warning 4661: (617-637): Assertion violation happens here.

@@ -65,6 +65,9 @@ public:
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
 
+	/// @returns the SourceUnit that contains _scopable.
+	static SourceUnit const* sourceUnitContaining(Scopable const& _scopable);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined

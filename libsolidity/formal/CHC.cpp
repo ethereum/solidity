@@ -43,19 +43,19 @@ using namespace solidity::frontend;
 CHC::CHC(
 	smt::EncodingContext& _context,
 	ErrorReporter& _errorReporter,
-	map<util::h256, string> const& _smtlib2Responses,
-	ReadCallback::Callback const& _smtCallback,
-	[[maybe_unused]] smtutil::SMTSolverChoice _enabledSolvers
+	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
+	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
+	smtutil::SMTSolverChoice _enabledSolvers
 ):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
 	m_enabledSolvers(_enabledSolvers)
 {
-#ifdef HAVE_Z3
-	if (_enabledSolvers.z3)
-		m_interface = make_unique<smtutil::Z3CHCInterface>();
+	bool usesZ3 = _enabledSolvers.z3;
+#ifndef HAVE_Z3
+	usesZ3 = false;
 #endif
-	if (!m_interface)
+	if (!usesZ3)
 		m_interface = make_unique<smtutil::CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
 }
 
@@ -63,29 +63,7 @@ void CHC::analyze(SourceUnit const& _source)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
-	bool usesZ3 = false;
-#ifdef HAVE_Z3
-	usesZ3 = m_enabledSolvers.z3;
-	if (usesZ3)
-	{
-		auto z3Interface = dynamic_cast<smtutil::Z3CHCInterface const*>(m_interface.get());
-		solAssert(z3Interface, "");
-		m_context.setSolver(z3Interface->z3Interface());
-	}
-#endif
-	if (!usesZ3)
-	{
-		auto smtlib2Interface = dynamic_cast<smtutil::CHCSmtLib2Interface const*>(m_interface.get());
-		solAssert(smtlib2Interface, "");
-		m_context.setSolver(smtlib2Interface->smtlib2Interface());
-	}
-	m_context.clear();
-	m_context.setAssertionAccumulation(false);
-
 	resetSourceAnalysis();
-
-	m_genesisPredicate = createSymbolicBlock(arity0FunctionSort(), "genesis");
-	addRule(genesis(), "genesis");
 
 	set<SourceUnit const*, IdCompare> sources;
 	sources.insert(&_source);
@@ -131,7 +109,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 void CHC::endVisit(ContractDefinition const& _contract)
 {
 	auto implicitConstructor = (*m_implicitConstructorPredicate)({});
-	connectBlocks(genesis(), implicitConstructor);
+	addRule(implicitConstructor, implicitConstructor.name);
 	m_currentBlock = implicitConstructor;
 	m_context.addAssertion(m_error.currentValue() == 0);
 
@@ -156,7 +134,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 {
 	if (!_function.isImplemented())
 	{
-		connectBlocks(genesis(), summary(_function));
+		addRule(summary(_function), "summary_function_" + to_string(_function.id()));
 		return false;
 	}
 
@@ -184,7 +162,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 	if (_function.isConstructor())
 		connectBlocks(m_currentBlock, functionPred);
 	else
-		connectBlocks(genesis(), functionPred);
+		addRule(functionPred, functionPred.name);
 
 	m_context.addAssertion(m_error.currentValue() == 0);
 	for (auto const* var: m_stateVariables)
@@ -676,6 +654,30 @@ void CHC::resetSourceAnalysis()
 	m_interfaces.clear();
 	m_nondetInterfaces.clear();
 	Predicate::reset();
+	m_blockCounter = 0;
+
+	bool usesZ3 = false;
+#ifdef HAVE_Z3
+	usesZ3 = m_enabledSolvers.z3;
+	if (usesZ3)
+	{
+		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
+		m_interface.reset(new smtutil::Z3CHCInterface());
+		auto z3Interface = dynamic_cast<smtutil::Z3CHCInterface const*>(m_interface.get());
+		solAssert(z3Interface, "");
+		m_context.setSolver(z3Interface->z3Interface());
+	}
+#endif
+	if (!usesZ3)
+	{
+		auto smtlib2Interface = dynamic_cast<smtutil::CHCSmtLib2Interface*>(m_interface.get());
+		smtlib2Interface->reset();
+		solAssert(smtlib2Interface, "");
+		m_context.setSolver(smtlib2Interface->smtlib2Interface());
+	}
+
+	m_context.clear();
+	m_context.setAssertionAccumulation(false);
 }
 
 void CHC::resetContractAnalysis()
@@ -861,27 +863,23 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 {
 	for (auto const& node: _source.nodes())
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
+		{
+			string suffix = contract->name() + "_" + to_string(contract->id());
+			m_interfaces[contract] = createSymbolicBlock(interfaceSort(*contract), "interface_" + suffix);
+			m_nondetInterfaces[contract] = createSymbolicBlock(nondetInterfaceSort(*contract), "nondet_interface_" + suffix);
+
+			for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*contract))
+				if (!m_context.knownVariable(*var))
+					createVariable(*var);
+
+			/// Base nondeterministic interface that allows
+			/// 0 steps to be taken, used as base for the inductive
+			/// rule for each function.
+			auto const& iface = *m_nondetInterfaces.at(contract);
+			auto state0 = stateVariablesAtIndex(0, *contract);
+			addRule(iface(state0 + state0), "base_nondet");
+
 			for (auto const* base: contract->annotation().linearizedBaseContracts)
-			{
-				for (auto const* var: SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*base))
-					if (!m_context.knownVariable(*var))
-						createVariable(*var);
-
-				if (!m_interfaces.count(base))
-				{
-					solAssert(!m_nondetInterfaces.count(base), "");
-					string suffix = base->name() + "_" + to_string(base->id());
-					m_interfaces.emplace(base, createSymbolicBlock(interfaceSort(*base), "interface_" + suffix, base));
-					m_nondetInterfaces.emplace(base, createSymbolicBlock(nondetInterfaceSort(*base), "nondet_interface_" + suffix, base));
-
-					/// Base nondeterministic interface that allows
-					/// 0 steps to be taken, used as base for the inductive
-					/// rule for each function.
-					auto const* iface = m_nondetInterfaces.at(base);
-					auto state0 = stateVariablesAtIndex(0, *base);
-					addRule((*iface)(state0 + state0), "base_nondet");
-				}
-
 				for (auto const* function: base->definedFunctions())
 				{
 					for (auto var: function->parameters())
@@ -900,13 +898,11 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						!base->isInterface()
 					)
 					{
-						auto state1 = stateVariablesAtIndex(1, *base);
-						auto state2 = stateVariablesAtIndex(2, *base);
+						auto state1 = stateVariablesAtIndex(1, *contract);
+						auto state2 = stateVariablesAtIndex(2, *contract);
 
-						auto const* iface = m_nondetInterfaces.at(base);
-						auto state0 = stateVariablesAtIndex(0, *base);
-						auto nondetPre = (*iface)(state0 + state1);
-						auto nondetPost = (*iface)(state0 + state2);
+						auto nondetPre = iface(state0 + state1);
+						auto nondetPost = iface(state0 + state2);
 
 						vector<smtutil::Expression> args{m_error.currentValue()};
 						args += state1 +
@@ -915,10 +911,10 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
 							applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
 
-						connectBlocks(nondetPre, nondetPost, (*m_summaries.at(base).at(function))(args));
+						connectBlocks(nondetPre, nondetPost, (*m_summaries.at(contract).at(function))(args));
 					}
-				}
 			}
+		}
 }
 
 smtutil::Expression CHC::interface()
@@ -1210,6 +1206,16 @@ void CHC::addVerificationTarget(
 	smtutil::Expression _errorId
 )
 {
+	solAssert(m_currentContract || m_currentFunction, "");
+	SourceUnit const* source = nullptr;
+	if (m_currentContract)
+		source = sourceUnitContaining(*m_currentContract);
+	else
+		source = sourceUnitContaining(*m_currentFunction);
+	solAssert(source, "");
+	if (!source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+		return;
+
 	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
 }
 
@@ -1251,7 +1257,7 @@ void CHC::checkVerificationTargets()
 			if (target.type == VerificationTarget::Type::PopEmptyArray)
 			{
 				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-				satMsg = "Empty array \"pop\" detected here";
+				satMsg = "Empty array \"pop\" detected here.";
 				unknownMsg = "Empty array \"pop\" might happen here.";
 				errorReporterId = 2529_error;
 			}
@@ -1267,8 +1273,8 @@ void CHC::checkVerificationTargets()
 				if (!intType)
 					intType = TypeProvider::uint256();
 
-				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here";
-				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here";
+				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here.";
+				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here.";
 				if (target.type == VerificationTarget::Type::Underflow)
 				{
 					satMsg = satMsgUnderflow;
@@ -1314,7 +1320,7 @@ void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& 
 		solAssert(it != m_errorIds.end(), "");
 		unsigned errorId = it->second;
 
-		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here");
+		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.");
 	}
 }
 
@@ -1345,13 +1351,13 @@ void CHC::checkAndReportTarget(
 				_errorReporterId,
 				_scope->location(),
 				_satMsg,
-				SecondarySourceLocation().append(" for:\n" + *cex, SourceLocation{})
+				SecondarySourceLocation().append("\nCounterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
 				_errorReporterId,
 				_scope->location(),
-				_satMsg + "."
+				_satMsg
 			);
 	}
 	else if (!_unknownMsg.empty())
@@ -1459,7 +1465,11 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		/// Recurse on the next interface node which represents the previous transaction
 		/// or stop.
 		if (interfaceId)
+		{
+			Predicate const* interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).first);
+			solAssert(interfacePredicate && interfacePredicate->isInterface(), "");
 			node = *interfaceId;
+		}
 		else
 			break;
 	}

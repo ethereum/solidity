@@ -1,6 +1,6 @@
 {
   function f() -> x { mstore(0, 1337) }
-  pop(byte(0, shr(0x8, f())))
+  mstore(0, byte(0, shr(0x8, f())))
 }
 // ====
 // EVMVersion: >=constantinople
@@ -9,6 +9,7 @@
 //
 // {
 //     function f() -> x
-//     { mstore(0, 1337) }
-//     pop(byte(0, shr(0x8, f())))
+//     { mstore(x, 1337) }
+//     pop(f())
+//     mstore(0, 0)
 // }

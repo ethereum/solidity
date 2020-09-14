@@ -50,6 +50,7 @@ void CHCSmtLib2Interface::reset()
 {
 	m_accumulatedOutput.clear();
 	m_variables.clear();
+	m_unhandledQueries.clear();
 }
 
 void CHCSmtLib2Interface::registerRelation(Expression const& _expr)

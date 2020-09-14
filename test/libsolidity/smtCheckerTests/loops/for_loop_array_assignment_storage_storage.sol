@@ -19,6 +19,5 @@ contract LoopFor2 {
 	}
 }
 // ----
-// Warning 6328: (341-360): Assertion violation happens here
-// Warning 6328: (364-383): Assertion violation happens here
-// Warning 4661: (317-337): Assertion violation happens here
+// Warning 6328: (341-360): Assertion violation happens here.
+// Warning 6328: (364-383): Assertion violation happens here.

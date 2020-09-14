@@ -9,22 +9,25 @@
 // {
 //     {
 //         let _1 := 7
-//         let a_6 := 3
-//         let x_7 := 0
-//         x_7 := add(a_6, a_6)
-//         let b_8 := x_7
-//         let c_9 := _1
-//         let y_10 := 0
-//         y_10 := mul(mload(c_9), f(b_8))
-//         let y_1 := y_10
+//         let a_8 := 3
+//         let x_9 := 0
+//         x_9 := add(a_8, a_8)
+//         let b_10 := x_9
+//         let c_11 := _1
+//         let y_12 := 0
+//         let a_6_13 := b_10
+//         let x_7_14 := 0
+//         x_7_14 := add(a_6_13, a_6_13)
+//         y_12 := mul(mload(c_11), x_7_14)
+//         let y_1 := y_12
 //     }
 //     function f(a) -> x
 //     { x := add(a, a) }
 //     function g(b, c) -> y
 //     {
-//         let a_13 := b
-//         let x_14 := 0
-//         x_14 := add(a_13, a_13)
-//         y := mul(mload(c), x_14)
+//         let a_6 := b
+//         let x_7 := 0
+//         x_7 := add(a_6, a_6)
+//         y := mul(mload(c), x_7)
 //     }
 // }

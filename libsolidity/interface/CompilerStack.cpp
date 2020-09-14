@@ -36,6 +36,7 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
+#include <libsolidity/analysis/Scoper.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/analysis/ImmutableValidator.h>
@@ -296,6 +297,10 @@ bool CompilerStack::analyze()
 	if (m_stackState != ParsingPerformed || m_stackState >= AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call analyze only after parsing was performed."));
 	resolveImports();
+
+	for (Source const* source: m_sourceOrder)
+		if (source->ast)
+			Scoper::assignScopes(*source->ast);
 
 	bool noErrors = true;
 

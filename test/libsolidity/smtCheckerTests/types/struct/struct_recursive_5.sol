@@ -16,7 +16,7 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (192-236): Assertion violation happens here
+// Warning 6328: (192-236): Assertion violation happens here.
 // Warning 8364: (126-135): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (153-166): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (170-181): Assertion checker does not yet support this expression.
