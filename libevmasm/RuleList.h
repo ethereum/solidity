@@ -608,45 +608,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 	return rules;
 }
 
-template <class Pattern>
-std::vector<SimplificationRule<Pattern>> simplificationRuleListPart9(
-	Pattern,
-	Pattern,
-	Pattern,
-	Pattern W,
-	Pattern X,
-	Pattern Y,
-	Pattern Z
-)
-{
-	using Word = typename Pattern::Word;
-	using Builtins = typename Pattern::Builtins;
-	std::vector<SimplificationRule<Pattern>> rules;
-
-	assertThrow(Pattern::WordSize > 160, OptimizerException, "");
-	Word const mask = (Word(1) << 160) - 1;
-	// CREATE
-	rules.push_back({
-		Builtins::AND(Builtins::CREATE(W, X, Y), mask),
-		[=]() -> Pattern { return Builtins::CREATE(W, X, Y); }
-	});
-	rules.push_back({
-		Builtins::AND(mask, Builtins::CREATE(W, X, Y)),
-		[=]() -> Pattern { return Builtins::CREATE(W, X, Y); }
-	});
-	// CREATE2
-	rules.push_back({
-		Builtins::AND(Builtins::CREATE2(W, X, Y, Z), mask),
-		[=]() -> Pattern { return Builtins::CREATE2(W, X, Y, Z); }
-	});
-	rules.push_back({
-		Builtins::AND(mask, Builtins::CREATE2(W, X, Y, Z)),
-		[=]() -> Pattern { return Builtins::CREATE2(W, X, Y, Z); }
-	});
-
-	return rules;
-}
-
 template<class Pattern>
 std::vector<SimplificationRule<Pattern>> evmRuleList(
 	langutil::EVMVersion _evmVersion,
@@ -705,7 +666,6 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleList(
 	rules += simplificationRuleListPart6(A, B, C, W, X);
 	rules += simplificationRuleListPart7(A, B, C, W, X);
 	rules += simplificationRuleListPart8(A, B, C, W, X);
-	rules += simplificationRuleListPart9(A, B, C, W, X, Y, Z);
 
 	if (_evmVersion.has_value())
 		rules += evmRuleList(*_evmVersion, A, B, C, W, X, Y, Z);
