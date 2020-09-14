@@ -29,12 +29,12 @@
 #   make version=1.39.15 build
 #
 FROM emscripten/emsdk:1.39.15 AS base
-LABEL version="1"
+LABEL version="2"
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
 	cd /usr/src; \
-	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.8 --depth 1 ; \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.9 --depth 1 ; \
 	cd z3; \
 	mkdir build; \
 	cd build; \
