@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(build_should_apply_prefix)
 	CharStream nestedSource("{{{let x:= 1}}}", "");
 	Program nestedProgram = get<Program>(Program::load(nestedSource));
 	Program flatProgram = get<Program>(Program::load(nestedSource));
-	flatProgram.optimise(Chromosome("f").optimisationSteps());
+	flatProgram.optimise(Chromosome::genesToSteps("f"));
 	assert(toString(nestedProgram) != toString(flatProgram));
 
 	{

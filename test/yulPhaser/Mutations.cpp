@@ -24,6 +24,7 @@
 #include <libsolutil/CommonIO.h>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -117,12 +118,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_before_first_position
 
 	Chromosome mutatedChromosome = mutation(chromosome);
 	BOOST_TEST(mutatedChromosome.length() > chromosome.length());
-
-	vector<string> suffix(
-		mutatedChromosome.optimisationSteps().end() - static_cast<ptrdiff_t>(chromosome.length()),
-		mutatedChromosome.optimisationSteps().end()
-	);
-	BOOST_TEST(suffix == chromosome.optimisationSteps());
+	BOOST_TEST(boost::ends_with(mutatedChromosome.genes(), chromosome.genes()));
 }
 
 BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_after_last_position)
@@ -133,12 +129,7 @@ BOOST_AUTO_TEST_CASE(geneAddition_should_be_able_to_insert_after_last_position)
 
 	Chromosome mutatedChromosome = mutation(chromosome);
 	BOOST_TEST(mutatedChromosome.length() > chromosome.length());
-
-	vector<string> prefix(
-		mutatedChromosome.optimisationSteps().begin(),
-		mutatedChromosome.optimisationSteps().begin() + static_cast<ptrdiff_t>(chromosome.length())
-	);
-	BOOST_TEST(prefix == chromosome.optimisationSteps());
+	BOOST_TEST(boost::starts_with(mutatedChromosome.genes(), chromosome.genes()));
 }
 
 BOOST_AUTO_TEST_CASE(geneAddition_should_return_identical_chromosome_if_probability_is_zero)
@@ -218,10 +209,11 @@ BOOST_AUTO_TEST_CASE(alternativeMutations_should_always_choose_second_mutation_i
 BOOST_AUTO_TEST_CASE(mutationSequence_should_apply_all_mutations)
 {
 	Chromosome chromosome("aaaaa");
+	vector<string> steps = Chromosome::genesToSteps("gfc");
 	function<Mutation> mutation = mutationSequence({
-		geneSubstitution(3, Chromosome("g").optimisationSteps()[0]),
-		geneSubstitution(2, Chromosome("f").optimisationSteps()[0]),
-		geneSubstitution(1, Chromosome("c").optimisationSteps()[0]),
+		geneSubstitution(3, steps[0]),
+		geneSubstitution(2, steps[1]),
+		geneSubstitution(1, steps[2]),
 	});
 
 	BOOST_TEST(mutation(chromosome) == Chromosome("acfga"));
@@ -230,11 +222,12 @@ BOOST_AUTO_TEST_CASE(mutationSequence_should_apply_all_mutations)
 BOOST_AUTO_TEST_CASE(mutationSequence_apply_mutations_in_the_order_they_are_given)
 {
 	Chromosome chromosome("aa");
+	vector<string> steps = Chromosome::genesToSteps("gcfo");
 	function<Mutation> mutation = mutationSequence({
-		geneSubstitution(0, Chromosome("g").optimisationSteps()[0]),
-		geneSubstitution(1, Chromosome("c").optimisationSteps()[0]),
-		geneSubstitution(0, Chromosome("f").optimisationSteps()[0]),
-		geneSubstitution(1, Chromosome("o").optimisationSteps()[0]),
+		geneSubstitution(0, steps[0]),
+		geneSubstitution(1, steps[1]),
+		geneSubstitution(0, steps[2]),
+		geneSubstitution(1, steps[3]),
 	});
 
 	BOOST_TEST(mutation(chromosome) == Chromosome("fo"));

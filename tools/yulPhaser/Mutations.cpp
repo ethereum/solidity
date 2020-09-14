@@ -120,19 +120,14 @@ ChromosomePair fixedPointSwap(
 	assert(_crossoverPoint <= _chromosome1.length());
 	assert(_crossoverPoint <= _chromosome2.length());
 
-	auto begin1 = _chromosome1.optimisationSteps().begin();
-	auto begin2 = _chromosome2.optimisationSteps().begin();
-	auto end1 = _chromosome1.optimisationSteps().end();
-	auto end2 = _chromosome2.optimisationSteps().end();
-
 	return {
 		Chromosome(
-			vector<string>(begin1, begin1 + static_cast<ptrdiff_t>(_crossoverPoint)) +
-			vector<string>(begin2 + static_cast<ptrdiff_t>(_crossoverPoint), end2)
+			_chromosome1.genes().substr(0, _crossoverPoint) +
+			_chromosome2.genes().substr(_crossoverPoint, _chromosome2.length() - _crossoverPoint)
 		),
 		Chromosome(
-			vector<string>(begin2, begin2 + static_cast<ptrdiff_t>(_crossoverPoint)) +
-			vector<string>(begin1 + static_cast<ptrdiff_t>(_crossoverPoint), end1)
+			_chromosome2.genes().substr(0, _crossoverPoint) +
+			_chromosome1.genes().substr(_crossoverPoint, _chromosome1.length() - _crossoverPoint)
 		),
 	};
 }
@@ -197,24 +192,19 @@ ChromosomePair fixedTwoPointSwap(
 	assert(_crossoverPoint2 <= _chromosome1.length());
 	assert(_crossoverPoint2 <= _chromosome2.length());
 
-	auto lowPoint = static_cast<ptrdiff_t>(min(_crossoverPoint1, _crossoverPoint2));
-	auto highPoint = static_cast<ptrdiff_t>(max(_crossoverPoint1, _crossoverPoint2));
-
-	auto begin1 = _chromosome1.optimisationSteps().begin();
-	auto begin2 = _chromosome2.optimisationSteps().begin();
-	auto end1 = _chromosome1.optimisationSteps().end();
-	auto end2 = _chromosome2.optimisationSteps().end();
+	size_t lowPoint = min(_crossoverPoint1, _crossoverPoint2);
+	size_t highPoint = max(_crossoverPoint1, _crossoverPoint2);
 
 	return {
 		Chromosome(
-			vector<string>(begin1, begin1 + lowPoint) +
-			vector<string>(begin2 + lowPoint, begin2 + highPoint) +
-			vector<string>(begin1 + highPoint, end1)
+			_chromosome1.genes().substr(0, lowPoint) +
+			_chromosome2.genes().substr(lowPoint, highPoint - lowPoint) +
+			_chromosome1.genes().substr(highPoint, _chromosome1.length() - highPoint)
 		),
 		Chromosome(
-			vector<string>(begin2, begin2 + lowPoint) +
-			vector<string>(begin1 + lowPoint, begin1 + highPoint) +
-			vector<string>(begin2 + highPoint, end2)
+			_chromosome2.genes().substr(0, lowPoint) +
+			_chromosome1.genes().substr(lowPoint, highPoint - lowPoint) +
+			_chromosome2.genes().substr(highPoint, _chromosome2.length() - highPoint)
 		),
 	};
 }
@@ -258,42 +248,37 @@ namespace
 
 ChromosomePair uniformSwap(Chromosome const& _chromosome1, Chromosome const& _chromosome2, double _swapChance)
 {
-	vector<string> steps1;
-	vector<string> steps2;
+	string steps1;
+	string steps2;
 
 	size_t minLength = min(_chromosome1.length(), _chromosome2.length());
 	for (size_t i = 0; i < minLength; ++i)
 		if (SimulationRNG::bernoulliTrial(_swapChance))
 		{
-			steps1.push_back(_chromosome2.optimisationSteps()[i]);
-			steps2.push_back(_chromosome1.optimisationSteps()[i]);
+			steps1.push_back(_chromosome2.genes()[i]);
+			steps2.push_back(_chromosome1.genes()[i]);
 		}
 		else
 		{
-			steps1.push_back(_chromosome1.optimisationSteps()[i]);
-			steps2.push_back(_chromosome2.optimisationSteps()[i]);
+			steps1.push_back(_chromosome1.genes()[i]);
+			steps2.push_back(_chromosome2.genes()[i]);
 		}
-
-	auto begin1 = _chromosome1.optimisationSteps().begin();
-	auto begin2 = _chromosome2.optimisationSteps().begin();
-	auto end1 = _chromosome1.optimisationSteps().end();
-	auto end2 = _chromosome2.optimisationSteps().end();
 
 	bool swapTail = SimulationRNG::bernoulliTrial(_swapChance);
 	if (_chromosome1.length() > minLength)
 	{
 		if (swapTail)
-			steps2.insert(steps2.end(), begin1 + static_cast<ptrdiff_t>(minLength), end1);
+			steps2 += _chromosome1.genes().substr(minLength, _chromosome1.length() - minLength);
 		else
-			steps1.insert(steps1.end(), begin1 + static_cast<ptrdiff_t>(minLength), end1);
+			steps1 += _chromosome1.genes().substr(minLength, _chromosome1.length() - minLength);
 	}
 
 	if (_chromosome2.length() > minLength)
 	{
 		if (swapTail)
-			steps1.insert(steps1.end(), begin2 + static_cast<ptrdiff_t>(minLength), end2);
+			steps1 += _chromosome2.genes().substr(minLength, _chromosome2.length() - minLength);
 		else
-			steps2.insert(steps2.end(), begin2 + static_cast<ptrdiff_t>(minLength), end2);
+			steps2 += _chromosome2.genes().substr(minLength, _chromosome2.length() - minLength);
 	}
 
 	return {Chromosome(steps1), Chromosome(steps2)};
