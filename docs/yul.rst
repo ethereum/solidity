@@ -243,7 +243,7 @@ Since variables are stored on the stack, they do not directly
 influence memory or storage, but they can be used as pointers
 to memory or storage locations in the built-in functions
 ``mstore``, ``mload``, ``sstore`` and ``sload``.
-Future dialects migh introduce specific types for such pointers.
+Future dialects might introduce specific types for such pointers.
 
 When a variable is referenced, its current value is copied.
 For the EVM, this translates to a ``DUP`` instruction.
