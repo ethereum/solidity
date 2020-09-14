@@ -156,6 +156,20 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			// This is not a no-op, the entry might pre-exist.
 			m_localVarUseCount[make_pair(_variable.id(), &_variable)] += 0;
 	}
+
+	if (_variable.isStateVariable() || _variable.referenceLocation() == VariableDeclaration::Location::Storage)
+	{
+		TypePointer varType = _variable.annotation().type;
+		for (Type const* subtype: frontend::oversizedSubtypes(*varType))
+		{
+			string message = "Type " + subtype->toString(true) +
+				" covers a large part of storage and thus makes collisions likely."
+				" Either use mappings or dynamic arrays and allow their size to be increased only"
+				" in small quantities per transaction.";
+			m_errorReporter.warning(7325_error, _variable.typeName().location(), message);
+		}
+	}
+
 	return true;
 }
 

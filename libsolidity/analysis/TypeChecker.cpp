@@ -609,19 +609,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		}
 	}
 
-	if (varType->dataStoredIn(DataLocation::Storage))
-	{
-		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
-		for (Type const* subtype: oversizedSubtypes)
-		{
-			string message = "Type " + subtype->toString(true) +
-				" covers a large part of storage and thus makes collisions likely."
-				" Either use mappings or dynamic arrays and allow their size to be increased only"
-				" in small quantities per transaction.";
-			m_errorReporter.warning(7325_error, _variable.typeName().location(), message);
-		}
-	}
-
 	return false;
 }
 
