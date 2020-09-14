@@ -1,6 +1,7 @@
 {
     let a := address()
     let ret := balance(a)
+    sstore(a, ret)
 }
 // ====
 // EVMVersion: >=istanbul
@@ -9,5 +10,5 @@
 //
 // {
 //     let a := address()
-//     let ret := selfbalance()
+//     sstore(a, selfbalance())
 // }

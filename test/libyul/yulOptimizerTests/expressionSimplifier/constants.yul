@@ -1,5 +1,8 @@
-{ let a := add(1, mul(3, 4)) }
+{
+  let a := add(1, mul(3, 4))
+  sstore(7, a)
+}
 // ----
 // step: expressionSimplifier
 //
-// { let a := 13 }
+// { sstore(7, 13) }

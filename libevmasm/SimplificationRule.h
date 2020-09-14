@@ -30,9 +30,8 @@ namespace solidity::evmasm
 
 /**
  * Rule that contains a pattern, an action that can be applied
- * after the pattern has matched and a bool that indicates
- * whether the action would remove something from the expression
- * than is not a constant literal.
+ * after the pattern has matched and optional condition to check if the
+ * action should be applied.
  */
 template <class Pattern>
 struct SimplificationRule
@@ -40,18 +39,15 @@ struct SimplificationRule
 	SimplificationRule(
 		Pattern _pattern,
 		std::function<Pattern()> _action,
-		bool _removesNonConstants,
 		std::function<bool()> _feasible = {}
 	):
 		pattern(std::move(_pattern)),
 		action(std::move(_action)),
-		removesNonConstants(_removesNonConstants),
 		feasible(std::move(_feasible))
 	{}
 
 	Pattern pattern;
 	std::function<Pattern()> action;
-	bool removesNonConstants;
 	std::function<bool()> feasible;
 };
 
