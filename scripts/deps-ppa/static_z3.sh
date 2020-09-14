@@ -27,7 +27,7 @@ email=builds@ethereum.org
 packagename=libz3-static-dev
 version=4.8.9
 
-DISTRIBUTIONS="bionic eoan focal"
+DISTRIBUTIONS="bionic focal"
 
 for distribution in $DISTRIBUTIONS
 do
