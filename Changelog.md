@@ -15,6 +15,7 @@ Compiler Features:
  * SMTChecker: Support ``type(T).min``, ``type(T).max``, and ``type(I).interfaceId``.
  * SMTChecker: Support ``address`` type conversion with literals, e.g. ``address(0)``.
  * SMTChecker: Support fixed bytes index access.
+ * SMTChecker: Support type conversions with number literals.
  * Type Checker: Report position of first invalid UTF-8 sequence in ``unicode""`` literals.
  * Type Checker: More detailed error messages why implicit conversions fail.
  * Type Checker: Explain why oversized hex string literals can not be explicitly converted to a shorter ``bytesNN`` type.
