@@ -609,29 +609,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		}
 	}
 
-	if (varType->dataStoredIn(DataLocation::Storage))
-	{
-		auto collisionMessage = [&](string const& variableOrType, bool isVariable) -> string {
-			return
-				(isVariable ? "Variable " : "Type ") +
-				util::escapeAndQuoteString(variableOrType) +
-				" covers a large part of storage and thus makes collisions likely."
-				" Either use mappings or dynamic arrays and allow their size to be increased only"
-				" in small quantities per transaction.";
-		};
-
-		if (varType->storageSizeUpperBound() >= bigint(1) << 64)
-		{
-			if (_variable.isStateVariable())
-				m_errorReporter.warning(3408_error, _variable.location(), collisionMessage(_variable.name(), true));
-			else
-				m_errorReporter.warning(2332_error, _variable.typeName().location(), collisionMessage(varType->toString(true), false));
-		}
-		vector<Type const*> oversizedSubtypes = frontend::oversizedSubtypes(*varType);
-		for (Type const* subtype: oversizedSubtypes)
-			m_errorReporter.warning(7325_error, _variable.typeName().location(), collisionMessage(subtype->canonicalName(), false));
-	}
-
 	return false;
 }
 

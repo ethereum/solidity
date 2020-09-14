@@ -205,7 +205,7 @@ vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Ty
 {
 	set<StructDefinition const*> structsSeen;
 	TypeSet oversized;
-	oversizedSubtypesInner(_type, false, structsSeen, oversized);
+	oversizedSubtypesInner(_type, true, structsSeen, oversized);
 	vector<frontend::Type const*> res;
 	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
 	return res;
