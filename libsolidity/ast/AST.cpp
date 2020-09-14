@@ -191,9 +191,7 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 					functions.push_back(TypeProvider::function(*v));
 			for (FunctionTypePointer const& fun: functions)
 			{
-				if (!fun->interfaceFunctionType())
-					// Fails hopefully because we already registered the error
-					continue;
+				solAssert(fun->interfaceFunctionType(), "");
 				string functionSignature = fun->externalSignature();
 				if (signaturesSeen.count(functionSignature) == 0)
 				{
