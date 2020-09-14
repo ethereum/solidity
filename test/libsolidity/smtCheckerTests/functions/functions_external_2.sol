@@ -17,4 +17,5 @@ contract C
 	}
 }
 // ----
+// Warning 1218: (297-321): Error trying to invoke SMT solver.
 // Warning 4661: (297-321): Assertion violation happens here.
