@@ -57,7 +57,7 @@ packagename=solc
 
 static_build_distribution=focal
 
-DISTRIBUTIONS="bionic eoan focal"
+DISTRIBUTIONS="bionic focal"
 
 if is_release
 then
