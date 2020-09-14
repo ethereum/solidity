@@ -25,7 +25,7 @@ set -ev
 keyid=70D110489D66E2F6
 email=builds@ethereum.org
 packagename=libz3-static-dev
-version=4.8.8
+version=4.8.9
 
 DISTRIBUTIONS="bionic eoan focal"
 
@@ -80,7 +80,9 @@ Vcs-Browser: https://github.com/Z3Prover/z3
 
 Package: libz3-static-dev
 Section: libdevel
-Architecture: any-i386 any-amd64
+Architecture: any-amd64
+Breaks: libz3-dev
+Replaces: libz3-dev
 Multi-Arch: same
 Depends: \${shlibs:Depends}, \${misc:Depends}
 Description: theorem prover from Microsoft Research - development files (static library)
