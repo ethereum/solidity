@@ -888,6 +888,11 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 				IntegerType const& integerType = dynamic_cast<IntegerType const&>(*magicType->typeArgument());
 				defineExpr(_memberAccess, memberName == "min" ? integerType.minValue() : integerType.maxValue());
 			}
+			else if (memberName == "interfaceId")
+			{
+				ContractDefinition const& contract = dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition();
+				defineExpr(_memberAccess, contract.interfaceId());
+			}
 			else
 				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
 				//       at all useable in the SMT checker currently
