@@ -10,4 +10,3 @@ contract C
 }
 // ----
 // Warning 6328: (149-163): CHC: Assertion violation happens here.
-// Warning 5084: (108-117): Type conversion is not yet fully supported and might yield false positives.

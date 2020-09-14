@@ -389,9 +389,45 @@ smtutil::Expression minValue(frontend::IntegerType const& _type)
 	return smtutil::Expression(_type.minValue());
 }
 
+smtutil::Expression minValue(frontend::TypePointer _type)
+{
+	solAssert(isNumber(*_type), "");
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		return intType->minValue();
+	if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		return fixedType->minIntegerValue();
+	if (
+		dynamic_cast<AddressType const*>(_type) ||
+		dynamic_cast<ContractType const*>(_type) ||
+		dynamic_cast<EnumType const*>(_type) ||
+		dynamic_cast<FixedBytesType const*>(_type)
+	)
+		return 0;
+	solAssert(false, "");
+}
+
 smtutil::Expression maxValue(frontend::IntegerType const& _type)
 {
 	return smtutil::Expression(_type.maxValue());
+}
+
+smtutil::Expression maxValue(frontend::TypePointer _type)
+{
+	solAssert(isNumber(*_type), "");
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		return intType->maxValue();
+	if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		return fixedType->maxIntegerValue();
+	if (
+		dynamic_cast<AddressType const*>(_type) ||
+		dynamic_cast<ContractType const*>(_type)
+	)
+		return TypeProvider::uint(160)->maxValue();
+	if (auto const* enumType = dynamic_cast<EnumType const*>(_type))
+		return enumType->numberOfMembers();
+	if (auto const* bytesType = dynamic_cast<FixedBytesType const*>(_type))
+		return TypeProvider::uint(bytesType->numBytes() * 8)->maxValue();
+	solAssert(false, "");
 }
 
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context)
@@ -456,6 +492,29 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 	}
 	// Unsupported types are abstracted as Int.
 	return 0;
+}
+
+bool isSigned(TypePointer const& _type)
+{
+	solAssert(smt::isNumber(*_type), "");
+	bool isSigned = false;
+	if (auto const* numberType = dynamic_cast<RationalNumberType const*>(_type))
+		isSigned |= numberType->isNegative();
+	else if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		isSigned |= intType->isSigned();
+	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		isSigned |= fixedType->isSigned();
+	else if (
+		dynamic_cast<AddressType const*>(_type) ||
+		dynamic_cast<ContractType const*>(_type) ||
+		dynamic_cast<EnumType const*>(_type) ||
+		dynamic_cast<FixedBytesType const*>(_type)
+	)
+		return false;
+	else
+		solAssert(false, "");
+
+	return isSigned;
 }
 
 pair<unsigned, bool> typeBvSizeAndSignedness(frontend::TypePointer const& _type)
