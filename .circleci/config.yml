@@ -9,23 +9,23 @@ version: 2.1
 parameters:
   ubuntu-1804-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:9ab317e583c395e50884ba82e9f99811c374344cea4c550725be8ec836e07acc"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:19f613d2ac47fedff654dacef984d8a64726c4d67ae8f2667a85ee7d97ac4c1c"
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:cbfa42d8ecbe94391ba8837e218869242666de7a0da6ccac065a856c85b6a6a0"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:aeedbe7390a7383815f0cf0f8a1b8bf84dc5e334a3b0043ebcdf8b1bdbe80a81"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a4d5271b5552139d9f2caefc50d42f401bf74132cf8f253e199e11c80ab42de"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2593c15689dee5b5bdfff96a36c8c68a468cd3b147c41f75b820b8fabc257be9"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-3
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:6fa6914bd81abcac4b162c738e6ff05d87cefe7655e3859c7a827e5a8ec20dc7"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-4
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:842126b164b3542f05bff2611459e21edc7e3e2c81ca9d1f43396c8cf066f7ca"
   emscripten-docker-image:
     type: string
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc"
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c"
 
 defaults:
 
