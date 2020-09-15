@@ -675,25 +675,14 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 					leave
 				}
 
-				power := 1
+				power, base := <expLoop>(1, base, exponent, max)
 
-				for { } gt(exponent, 1) {}
-				{
-					// overflow check for base * base
-					if gt(base, div(max, base)) { revert(0, 0) }
-					if and(exponent, 1)
-					{
-						// no check needed here because base >= power
-						power := mul(power, base)
-					}
-					base := mul(base, base)
-					exponent := <shr_1>(exponent)
-				}
 				if gt(power, div(max, base)) { revert(0, 0) }
 				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)
+			("expLoop", overflowCheckedExpLoopFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
 	});
@@ -734,6 +723,35 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 
 				// Below this point, base is always positive.
 
+				power, base := <expLoop>(power, base, exponent, max)
+
+				if and(sgt(power, 0), gt(power, div(max, base))) { revert(0, 0) }
+				if and(slt(power, 0), slt(power, sdiv(min, base))) { revert(0, 0) }
+				power := mul(power, base)
+			}
+			)")
+			("functionName", functionName)
+			("expLoop", overflowCheckedExpLoopFunction())
+			("shr_1", shiftRightFunction(1))
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedExpLoopFunction()
+{
+	// We use this loop for both signed and unsigned exponentiation
+	// because we pull out the first iteration in the signed case which
+	// results in the base always being positive.
+
+	// This function does not include the final multiplication.
+
+	string functionName = "checked_exp_helper";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(_power, _base, exponent, max) -> power, base {
+				power := _power
+				base  := _base
 				for { } gt(exponent, 1) {}
 				{
 					// overflow check for base * base
@@ -743,16 +761,13 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 						// No checks for power := mul(power, base) needed, because the check
 						// for base * base above is sufficient, since:
 						// |power| <= base (proof by induction) and thus:
-						// |power * base| <= base * base <= max <= |min|
+						// |power * base| <= base * base <= max <= |min| (for signed)
+						// (this is equally true for signed and unsigned exp)
 						power := mul(power, base)
 					}
 					base := mul(base, base)
 					exponent := <shr_1>(exponent)
 				}
-
-				if and(sgt(power, 0), gt(power, div(max, base))) { revert(0, 0) }
-				if and(slt(power, 0), slt(power, sdiv(min, base))) { revert(0, 0) }
-				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)
