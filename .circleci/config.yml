@@ -27,6 +27,9 @@ parameters:
     type: string
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c"
 
+orbs:
+  win: circleci/windows@2.2.0
+
 defaults:
 
   # --------------------------------------------------------------------------
@@ -63,6 +66,11 @@ defaults:
   - artifacts_solc: &artifacts_solc
       path: build/solc/solc
       destination: solc
+
+  # windows binary archive
+  - artifact_solc_windows: &artifact_solc_windows
+      path: upload/solidity-windows.zip
+      destination: solidity-windows.zip
 
   # compiled tool executable target
   - artifacts_tools: &artifacts_tools
@@ -876,6 +884,32 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
+  b_win:
+    executor:
+      name: win/default
+      shell: powershell.exe
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+      - run:
+          name: "Installing dependencies"
+          command: if ( -not (Test-Path .\deps\boost) ) { .\scripts\install_deps.ps1 }
+      - save_cache:
+          key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+          paths:
+            - .\deps\boost
+            - .\deps\cmake
+      - run:
+          name: "Building solidity"
+          command: .circleci/build_win.ps1
+      - run:
+          name: "Package solidity"
+          command: Compress-Archive -Path .\upload\bin\* -DestinationPath .\upload\solidity-windows.zip
+      - store_artifacts: *artifact_solc_windows
+      - persist_to_workspace: *artifacts_build_dir
+
 workflows:
   version: 2
 
@@ -926,6 +960,9 @@ workflows:
       - t_ems_compile_ext_colony: *workflow_emscripten
       - t_ems_compile_ext_gnosis: *workflow_emscripten
       - t_ems_compile_ext_zeppelin: *workflow_emscripten
+
+      # Windows build and tests
+      - b_win: *workflow_trigger_on_tags
 
   nightly:
 
