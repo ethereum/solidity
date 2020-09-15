@@ -54,6 +54,12 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 	m_compiler.setRevertStringBehaviour(m_revertStrings);
 	if (!m_compiler.compile())
 	{
+		// The testing framework expects an exception for
+		// "unimplemented" yul IR generation.
+		if (m_compileViaYul)
+			for (auto const& error: m_compiler.errors())
+				if (error->type() == langutil::Error::Type::CodeGenerationError)
+					BOOST_THROW_EXCEPTION(*error);
 		langutil::SourceReferenceFormatter formatter(std::cerr);
 
 		for (auto const& error: m_compiler.errors())
