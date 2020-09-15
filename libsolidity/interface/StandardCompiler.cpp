@@ -230,6 +230,16 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 	return false;
 }
 
+/// @returns all artifact names of the EVM object, either for creation or deploy time.
+vector<string> evmObjectComponents(string const& _objectKind)
+{
+	solAssert(_objectKind == "bytecode" || _objectKind == "deployedBytecode", "");
+	vector<string> components{"", ".object", ".opcodes", ".sourceMap", ".generatedSources", ".linkReferences"};
+	if (_objectKind == "deployedBytecode")
+		components.push_back(".immutableReferences");
+	return util::applyMap(components, [&](auto const& _s) { return "evm." + _objectKind + _s; });
+}
+
 /// @returns true if any binary was requested, i.e. we actually have to perform compilation.
 bool isBinaryRequested(Json::Value const& _outputSelection)
 {
@@ -237,19 +247,12 @@ bool isBinaryRequested(Json::Value const& _outputSelection)
 		return false;
 
 	// This does not include "evm.methodIdentifiers" on purpose!
-	static vector<string> const outputsThatRequireBinaries{
+	static vector<string> const outputsThatRequireBinaries = vector<string>{
 		"*",
 		"ir", "irOptimized",
 		"wast", "wasm", "ewasm.wast", "ewasm.wasm",
-		"evm.deployedBytecode", "evm.deployedBytecode.generatedSources",
-		"evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
-		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
-		"evm.deployedBytecode.immutableReferences",
-		"evm.bytecode", "evm.bytecode.generatedSources",
-		"evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
-		"evm.bytecode.linkReferences",
 		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
-	};
+	} + evmObjectComponents("bytecode") + evmObjectComponents("deployedBytecode");
 
 	for (auto const& fileRequests: _outputSelection)
 		for (auto const& requests: fileRequests)
@@ -265,15 +268,10 @@ bool isEvmBytecodeRequested(Json::Value const& _outputSelection)
 	if (!_outputSelection.isObject())
 		return false;
 
-	static vector<string> const outputsThatRequireEvmBinaries{
+	static vector<string> const outputsThatRequireEvmBinaries = vector<string>{
 		"*",
-		"evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes",
-		"evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences",
-		"evm.deployedBytecode.immutableReferences",
-		"evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.sourceMap",
-		"evm.bytecode.linkReferences",
 		"evm.gasEstimates", "evm.legacyAssembly", "evm.assembly"
-	};
+	} + evmObjectComponents("bytecode") + evmObjectComponents("deployedBytecode");
 
 	for (auto const& fileRequests: _outputSelection)
 		for (auto const& requests: fileRequests)
@@ -1082,7 +1080,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			_inputsAndSettings.outputSelection,
 			file,
 			name,
-			{ "evm.bytecode", "evm.bytecode.object", "evm.bytecode.opcodes", "evm.bytecode.generatedSources", "evm.bytecode.sourceMap", "evm.bytecode.linkReferences" },
+			evmObjectComponents("bytecode"),
 			wildcardMatchesExperimental
 		))
 			evmData["bytecode"] = collectEVMObject(
@@ -1096,7 +1094,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			_inputsAndSettings.outputSelection,
 			file,
 			name,
-			{ "evm.deployedBytecode", "evm.deployedBytecode.object", "evm.deployedBytecode.opcodes", "evm.deployedBytecode.generatedSources", "evm.deployedBytecode.sourceMap", "evm.deployedBytecode.linkReferences", "evm.deployedBytecode.immutableReferences" },
+			evmObjectComponents("deployedBytecode"),
 			wildcardMatchesExperimental
 		))
 			evmData["deployedBytecode"] = collectEVMObject(
@@ -1186,16 +1184,11 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	tie(object, runtimeObject) = stack.assembleAndGuessRuntime();
 
 	for (string const& objectKind: vector<string>{"bytecode", "deployedBytecode"})
-	{
-		auto artifacts = util::applyMap(
-			vector<string>{"", ".object", ".opcodes", ".sourceMap", ".generatedSources", ".linkReferences"},
-			[&](auto const& _s) { return "evm." + objectKind + _s; }
-		);
 		if (isArtifactRequested(
 			_inputsAndSettings.outputSelection,
 			sourceName,
 			contractName,
-			artifacts,
+			evmObjectComponents(objectKind),
 			wildcardMatchesExperimental
 		))
 		{
@@ -1204,7 +1197,6 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 				output["contracts"][sourceName][contractName]["evm"][objectKind] =
 					collectEVMObject(*o.bytecode, o.sourceMappings.get(), Json::arrayValue, false);
 		}
-	}
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
 		output["contracts"][sourceName][contractName]["irOptimized"] = stack.print();
