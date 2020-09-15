@@ -36,6 +36,7 @@
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -157,7 +158,7 @@ public:
 			map<char, string> const& extraOptions = {
 				{'#', "quit"},
 				{',', "VarNameCleaner"},
-				{';', "StackCompressor"},
+				{';', "StackCompressor"}
 			};
 
 			printUsageBanner(abbreviationMap, extraOptions, 4);
