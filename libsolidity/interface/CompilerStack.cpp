@@ -57,7 +57,9 @@
 
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AsmJsonConverter.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/AsmParser.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
@@ -591,6 +593,48 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(string const& _
 	return currentContract.compiler ? &contract(_contractName).compiler->runtimeAssemblyItems() : nullptr;
 }
 
+Json::Value CompilerStack::generatedSources(string const& _contractName, bool _runtime) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	Contract const& c = contract(_contractName);
+	util::LazyInit<Json::Value const> const& sources =
+		_runtime ?
+		c.runtimeGeneratedSources :
+		c.generatedSources;
+	return sources.init([&]{
+		Json::Value sources{Json::arrayValue};
+		// If there is no compiler, then no bytecode was generated and thus no
+		// sources were generated.
+		if (c.compiler)
+		{
+			string source =
+				_runtime ?
+				c.compiler->runtimeGeneratedYulUtilityCode() :
+				c.compiler->generatedYulUtilityCode();
+			if (!source.empty())
+			{
+				string sourceName = CompilerContext::yulUtilityFileName();
+				unsigned sourceIndex = sourceIndices()[sourceName];
+				ErrorList errors;
+				ErrorReporter errorReporter(errors);
+				auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(source, sourceName));
+				yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+				shared_ptr<yul::Block> parserResult = yul::Parser{errorReporter, dialect}.parse(scanner, false);
+				solAssert(parserResult, "");
+				sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(*parserResult);
+				sources[0]["name"] = sourceName;
+				sources[0]["id"] = sourceIndex;
+				sources[0]["language"] = "Yul";
+				sources[0]["contents"] = move(source);
+
+			}
+		}
+		return sources;
+	});
+}
+
 string const* CompilerStack::sourceMapping(string const& _contractName) const
 {
 	if (m_stackState != CompilationSuccessful)
@@ -733,6 +777,8 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	unsigned index = 0;
 	for (auto const& s: m_sources)
 		indices[s.first] = index++;
+	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
+	indices[CompilerContext::yulUtilityFileName()] = index++;
 	return indices;
 }
 

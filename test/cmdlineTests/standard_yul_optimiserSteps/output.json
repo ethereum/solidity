@@ -13,7 +13,7 @@
     /* \"A\":20:40   */
   sstore
   pop
-","bytecode":{"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":"sourceMap removed"}},"ir":"object \"object\" {
+","bytecode":{"generatedSources":[],"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":"sourceMap removed"}},"ir":"object \"object\" {
     code {
         let x := mload(0)
         sstore(add(x, 0), 0)

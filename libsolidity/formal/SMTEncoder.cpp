@@ -631,6 +631,10 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::Require:
 		visitRequire(_funCall);
 		break;
+	case FunctionType::Kind::Revert:
+		// Revert is a special case of require and equals to `require(false)`
+		addPathImpliedExpression(smtutil::Expression(false));
+		break;
 	case FunctionType::Kind::GasLeft:
 		visitGasLeft(_funCall);
 		break;
@@ -887,6 +891,11 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			{
 				IntegerType const& integerType = dynamic_cast<IntegerType const&>(*magicType->typeArgument());
 				defineExpr(_memberAccess, memberName == "min" ? integerType.minValue() : integerType.maxValue());
+			}
+			else if (memberName == "interfaceId")
+			{
+				ContractDefinition const& contract = dynamic_cast<ContractType const&>(*magicType->typeArgument()).contractDefinition();
+				defineExpr(_memberAccess, contract.interfaceId());
 			}
 			else
 				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not

@@ -143,6 +143,7 @@ private:
 	/// Pointer to the runtime compiler in case this is a creation compiler.
 	ContractCompiler* m_runtimeCompiler = nullptr;
 	CompilerContext& m_context;
+
 	/// Tag to jump to for a "break" statement and the stack height after freeing the local loop variables.
 	std::vector<std::pair<evmasm::AssemblyItem, unsigned>> m_breakTags;
 	/// Tag to jump to for a "continue" statement and the stack height after freeing the local loop variables.

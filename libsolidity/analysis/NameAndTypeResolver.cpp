@@ -503,11 +503,20 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 		else
 		{
 			auto shadowedLocation = shadowedDeclaration->location();
-			_errorReporter.warning(
-				2519_error,
-				_declaration.location(),
-				"This declaration shadows an existing declaration.",
-				SecondarySourceLocation().append("The shadowed declaration is here:", shadowedLocation)
+
+			if (!shadowedDeclaration->isVisibleInContract())
+				_errorReporter.warning(
+					8760_error,
+					_declaration.location(),
+					"This declaration has the same name as another declaration.",
+					SecondarySourceLocation().append("The other declaration is here:", shadowedLocation)
+				);
+			else
+				_errorReporter.warning(
+					2519_error,
+					_declaration.location(),
+					"This declaration shadows an existing declaration.",
+					SecondarySourceLocation().append("The shadowed declaration is here:", shadowedLocation)
 			);
 		}
 	}

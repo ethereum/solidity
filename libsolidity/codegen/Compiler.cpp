@@ -51,8 +51,8 @@ void Compiler::compileContract(
 
 	m_context.optimise(m_optimiserSettings);
 
-	solAssert(m_context.requestedYulFunctionsRan(), "requestedYulFunctions() was not called.");
-	solAssert(m_runtimeContext.requestedYulFunctionsRan(), "requestedYulFunctions() was not called.");
+	solAssert(m_context.appendYulUtilityFunctionsRan(), "appendYulUtilityFunctions() was not called.");
+	solAssert(m_runtimeContext.appendYulUtilityFunctionsRan(), "appendYulUtilityFunctions() was not called.");
 }
 
 std::shared_ptr<evmasm::Assembly> Compiler::runtimeAssemblyPtr() const
