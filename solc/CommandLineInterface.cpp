@@ -127,6 +127,8 @@ static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strGeneratedSources = "generated-sources";
+static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strImportAst = "import-ast";
@@ -238,6 +240,8 @@ static set<string> const g_combinedJsonArgs
 	g_strBinary,
 	g_strBinaryRuntime,
 	g_strCompactJSON,
+	g_strGeneratedSources,
+	g_strGeneratedSourcesRuntime,
 	g_strInterface,
 	g_strMetadata,
 	g_strNatspecUser,
@@ -1523,6 +1527,10 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (requests.count(g_strStorageLayout) && m_compiler->compilationSuccessful())
 			contractData[g_strStorageLayout] = jsonCompactPrint(m_compiler->storageLayout(contractName));
+		if (requests.count(g_strGeneratedSources) && m_compiler->compilationSuccessful())
+			contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
+		if (requests.count(g_strGeneratedSourcesRuntime) && m_compiler->compilationSuccessful())
+			contractData[g_strGeneratedSourcesRuntime] = m_compiler->generatedSources(contractName, true);
 		if (requests.count(g_strSrcMap) && m_compiler->compilationSuccessful())
 		{
 			auto map = m_compiler->sourceMapping(contractName);
