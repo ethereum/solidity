@@ -25,6 +25,9 @@ set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 option(Boost_USE_STATIC_LIBS "Link Boost statically" ON)
+if(WIN32)
+	option(Boost_USE_STATIC_RUNTIME "Link Boost against static C++ runtime libraries" ON)
+endif()
 
 set(BOOST_COMPONENTS "filesystem;unit_test_framework;program_options;system")
 
