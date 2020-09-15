@@ -163,8 +163,13 @@ Homebrew formula directly from Github.
 View
 `solidity.rb commits on Github <https://github.com/ethereum/homebrew-ethereum/commits/master/solidity.rb>`_.
 
-Follow the history links until you have a raw file link of a
-specific commit of ``solidity.rb``.
+Copy the commit hash of the version you want and check it out on your machine.
+
+.. code-block:: bash
+
+    git clone https://github.com/ethereum/homebrew-ethereum.git
+    cd homebrew-ethereum
+    git checkout <your-hash-goes-here>
 
 Install it using ``brew``:
 
@@ -172,7 +177,7 @@ Install it using ``brew``:
 
     brew unlink solidity
     # eg. Install 0.4.8
-    brew install https://raw.githubusercontent.com/ethereum/homebrew-ethereum/77cce03da9f289e5a3ffe579840d3c5dc0a62717/solidity.rb
+    brew install solidity.rb
 
 Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a solidity package.
 After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
