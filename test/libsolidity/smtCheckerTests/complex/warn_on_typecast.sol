@@ -5,4 +5,3 @@ contract C {
     }
 }
 // ----
-// Warning 5084: (106-114): Type conversion is not yet fully supported and might yield false positives.
