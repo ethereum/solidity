@@ -2,16 +2,16 @@ pragma experimental ABIEncoderV2;
 
 contract C {
 	function exp_neg_one(uint exponent) public returns(int) {
-		return (-1)**exponent;
+		unchecked { return (-1)**exponent; }
 	}
 	function exp_two(uint exponent) public returns(uint) {
-		return 2**exponent;
+		unchecked { return 2**exponent; }
 	}
 	function exp_zero(uint exponent) public returns(uint) {
-		return 0**exponent;
+		unchecked { return 0**exponent; }
 	}
 	function exp_one(uint exponent) public returns(uint) {
-		return 1**exponent;
+		unchecked { return 1**exponent; }
 	}
 }
 // ====

@@ -33,7 +33,7 @@ object "Arraysum_33" {
                         for { }
                         lt(vloc_i, _2)
                         {
-                            if gt(vloc_i, not(1)) { invalid() }
+                            if eq(vloc_i, not(0)) { invalid() }
                             vloc_i := add(vloc_i, 1)
                         }
                         {

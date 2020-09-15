@@ -7,7 +7,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // f(int8,uint256): 2, 6 -> 64
 // f(int8,uint256): 2, 7 -> FAILURE

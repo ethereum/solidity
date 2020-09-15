@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(function_calls)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f1(uint x) public returns (uint) { return x*x; }
-			function f(uint x) public returns (uint) { return f1(7+x) - this.f1(x**9); }
+			function f1(uint x) public returns (uint) { unchecked { return x*x; } }
+			function f(uint x) public returns (uint) { unchecked { return f1(7+x) - this.f1(x**9); } }
 		}
 	)";
 	compileBothVersions(sourceCode);
