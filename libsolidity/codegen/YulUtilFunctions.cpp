@@ -118,10 +118,10 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 		if (!_messageType)
 			return Whiskers(R"(
 				function <functionName>(condition) {
-					if iszero(condition) { <invalidOrRevert> }
+					if iszero(condition) { <error> }
 				}
 			)")
-			("invalidOrRevert", _assert ? "invalid()" : "revert(0, 0)")
+			("error", _assert ? panicFunction() + "()" : "revert(0, 0)")
 			("functionName", functionName)
 			.render();
 
@@ -457,7 +457,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 	string functionName = "checked_add_" + _type.identifier();
 	// TODO: Consider to add a special case for unsigned 256-bit integers
 	//       and use the following instead:
-	//       sum := add(x, y) if lt(sum, x) { revert(0, 0) }
+	//       sum := add(x, y) if lt(sum, x) { <error>() }
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -466,12 +466,12 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x >= 0 and y > (maxValue - x)
-					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
+					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { <error>() }
 					// underflow, if x < 0 and y < (minValue - x)
-					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { revert(0, 0) }
+					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { <error>() }
 				<!signed>
 					// overflow, if x > (maxValue - y)
-					if gt(x, sub(<maxValue>, y)) { revert(0, 0) }
+					if gt(x, sub(<maxValue>, y)) { <error>() }
 				</signed>
 				sum := add(x, y)
 			}
@@ -481,6 +481,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("error", panicFunction())
 			.render();
 	});
 }
@@ -497,16 +498,16 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x > 0, y > 0 and x > (maxValue / y)
-					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
+					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { <error>() }
 					// underflow, if x > 0, y < 0 and y < (minValue / x)
-					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { revert(0, 0) }
+					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { <error>() }
 					// underflow, if x < 0, y > 0 and x < (minValue / y)
-					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { revert(0, 0) }
+					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { <error>() }
 					// overflow, if x < 0, y < 0 and x < (maxValue / y)
-					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { revert(0, 0) }
+					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { <error>() }
 				<!signed>
 					// overflow, if x != 0 and y > (maxValue / x)
-					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { revert(0, 0) }
+					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { <error>() }
 				</signed>
 				product := mul(x, y)
 			}
@@ -516,6 +517,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("error", panicFunction())
 			.render();
 	});
 }
@@ -529,13 +531,13 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				if iszero(y) { revert(0, 0) }
+				if iszero(y) { <error>() }
 				<?signed>
 				// overflow for minVal / -1
 				if and(
 					eq(x, <minVal>),
 					eq(y, sub(0, 1))
-				) { revert(0, 0) }
+				) { <error>() }
 				</signed>
 				r := <?signed>s</signed>div(x, y)
 			}
@@ -544,6 +546,7 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("error", panicFunction())
 			.render();
 	});
 }
@@ -557,13 +560,14 @@ string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				if iszero(y) { revert(0, 0) }
+				if iszero(y) { <error>() }
 				r := <?signed>s</signed>mod(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
 			("cleanupFunction", cleanupFunction(_type))
+			("error", panicFunction())
 			.render();
 	});
 }
@@ -579,11 +583,11 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				<?signed>
 					// underflow, if y >= 0 and x < (minValue + y)
-					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
+					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { <error>() }
 					// overflow, if y < 0 and x > (maxValue + y)
-					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { revert(0, 0) }
+					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { <error>() }
 				<!signed>
-					if lt(x, y) { revert(0, 0) }
+					if lt(x, y) { <error>() }
 				</signed>
 				diff := sub(x, y)
 			}
@@ -593,6 +597,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("error", panicFunction())
 			.render();
 	});
 }
@@ -649,7 +654,7 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 				for { } gt(exponent, 1) {}
 				{
 					// overflow check for base * base
-					if gt(base, div(max, base)) { revert(0, 0) }
+					if gt(base, div(max, base)) { <error>() }
 					if and(exponent, 1)
 					{
 						// no check needed here because base >= power
@@ -658,12 +663,13 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 					base := mul(base, base)
 					exponent := <shr_1>(exponent)
 				}
-				if gt(power, div(max, base)) { revert(0, 0) }
+				if gt(power, div(max, base)) { <error>() }
 				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)
 			("shr_1", shiftRightFunction(1))
+			("error", panicFunction())
 			.render();
 	});
 }
@@ -692,8 +698,8 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 
 				// overflow check for base * base
 				switch sgt(base, 0)
-				case 1 { if gt(base, div(max, base)) { revert(0, 0) } }
-				case 0 { if slt(base, sdiv(max, base)) { revert(0, 0) } }
+				case 1 { if gt(base, div(max, base)) { <error>() } }
+				case 0 { if slt(base, sdiv(max, base)) { <error>() } }
 				if and(exponent, 1)
 				{
 					power := base
@@ -725,6 +731,7 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 			}
 			)")
 			("functionName", functionName)
+			("error", panicFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
 	});
@@ -2887,6 +2894,25 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 string YulUtilFunctions::revertReasonIfDebug(string const& _message)
 {
 	return revertReasonIfDebug(m_revertStrings, _message);
+}
+
+string YulUtilFunctions::panicFunction()
+{
+	string functionName = "panic_error";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>() {
+				mstore(0, <sig>)
+				mstore(0x20, 0)
+				revert(0, 0x24)
+			}
+		)")
+		("functionName", functionName)
+		("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(
+			util::keccak256("Panic(uint256)")
+		))) << (256 - 32)).str())
+		.render();
+	});
 }
 
 string YulUtilFunctions::tryDecodeErrorMessageFunction()

@@ -369,6 +369,9 @@ public:
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
+	/// Reverts with Panic(uint256), potentially adding a special error code in the future.
+	std::string panicFunction();
+
 	/// Returns the name of a function that decodes an error message.
 	/// signature: () -> arrayPtr
 	///
