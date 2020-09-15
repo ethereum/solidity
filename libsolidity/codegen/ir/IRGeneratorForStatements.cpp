@@ -1247,8 +1247,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 
 		IRVariable modulus(m_context.newYulVariable(), *(parameterTypes[2]));
 		define(modulus, *arguments[2]);
-		Whiskers templ("if iszero(<modulus>) { invalid() }\n");
-		m_code << templ("modulus", modulus.name()).render();
+		Whiskers templ("if iszero(<modulus>) { <panic>() }\n");
+		templ("modulus", modulus.name());
+		templ("panic", m_utils.panicFunction());
+		m_code << templ.render();
 
 		string args;
 		for (size_t i = 0; i < 2; ++i)
@@ -1325,7 +1327,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		Whiskers t(R"(
 			let <memPos> := <allocateTemporaryMemory>()
 			let <memEnd> := add(<memPos>, datasize("<object>"))
-			if or(gt(<memEnd>, 0xffffffffffffffff), lt(<memEnd>, <memPos>)) { revert(0, 0) }
+			if or(gt(<memEnd>, 0xffffffffffffffff), lt(<memEnd>, <memPos>)) { <panic>() }
 			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
 			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
 			<?saltSet>
@@ -1340,6 +1342,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("allocateTemporaryMemory", m_utils.allocationTemporaryMemoryFunction());
 		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
 		t("object", IRNames::creationObject(*contract));
+		t("panic", m_utils.panicFunction());
 		t("abiEncode",
 			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(), false)
 		);
@@ -1987,11 +1990,12 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		IRVariable index{m_context.newYulVariable(), *TypeProvider::uint256()};
 		define(index, *_indexAccess.indexExpression());
 		m_code << Whiskers(R"(
-			if iszero(lt(<index>, <length>)) { invalid() }
+			if iszero(lt(<index>, <length>)) { <panic>() }
 			let <result> := <shl248>(byte(<index>, <array>))
 		)")
 		("index", index.name())
 		("length", to_string(fixedBytesType.numBytes()))
+		("panic", m_utils.panicFunction())
 		("array", IRVariable(_indexAccess.baseExpression()).name())
 		("shl248", m_utils.shiftLeftFunction(256 - 8))
 		("result", IRVariable(_indexAccess).name())

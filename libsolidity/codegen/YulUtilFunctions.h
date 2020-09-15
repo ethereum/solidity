@@ -373,6 +373,10 @@ public:
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
+	/// Executes the invalid opcode.
+	/// Might use revert with special error code in the future.
+	std::string panicFunction();
+
 	/// Returns the name of a function that decodes an error message.
 	/// signature: () -> arrayPtr
 	///
