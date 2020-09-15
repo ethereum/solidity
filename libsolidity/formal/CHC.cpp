@@ -115,12 +115,13 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	auto implicitConstructorPredicate = createSymbolicBlock(
 		implicitConstructorSort(),
 		"implicit_constructor_" + contractSuffix(_contract),
+		PredicateType::ImplicitConstructor,
 		&_contract
 	);
 	auto implicitConstructor = (*implicitConstructorPredicate)({});
 	addRule(implicitConstructor, implicitConstructor.name);
 	m_currentBlock = implicitConstructor;
-	m_context.addAssertion(m_error.currentValue() == 0);
+	m_context.addAssertion(errorFlag().currentValue() == 0);
 
 	if (auto constructor = _contract.constructor())
 		constructor->accept(*this);
@@ -133,8 +134,8 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	vector<smtutil::Expression> symbArgs = currentFunctionVariables(*m_currentContract);
 	setCurrentBlock(*m_constructorSummaryPredicate, &symbArgs);
 
-	addAssertVerificationTarget(m_currentContract, m_currentBlock, smtutil::Expression(true), m_error.currentValue());
-	connectBlocks(m_currentBlock, interface(), m_error.currentValue() == 0);
+	addAssertVerificationTarget(m_currentContract, m_currentBlock, smtutil::Expression(true), errorFlag().currentValue());
+	connectBlocks(m_currentBlock, interface(), errorFlag().currentValue() == 0);
 
 	SMTEncoder::endVisit(_contract);
 }
@@ -173,7 +174,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 	else
 		addRule(functionPred, functionPred.name);
 
-	m_context.addAssertion(m_error.currentValue() == 0);
+	m_context.addAssertion(errorFlag().currentValue() == 0);
 	for (auto const* var: m_stateVariables)
 		m_context.addAssertion(m_context.variable(*var)->valueAtIndex(0) == currentValue(*var));
 	for (auto const& var: _function.parameters())
@@ -227,7 +228,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		}
 		else
 		{
-			auto assertionError = m_error.currentValue();
+			auto assertionError = errorFlag().currentValue();
 			auto sum = summary(_function);
 			connectBlocks(m_currentBlock, sum);
 
@@ -485,18 +486,18 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	else
 		m_functionAssertions[m_currentFunction].insert(&_funCall);
 
-	auto previousError = m_error.currentValue();
-	m_error.increaseIndex();
+	auto previousError = errorFlag().currentValue();
+	errorFlag().increaseIndex();
 
 	connectBlocks(
 		m_currentBlock,
 		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
 		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (
-			m_error.currentValue() == newErrorId(_funCall)
+			errorFlag().currentValue() == newErrorId(_funCall)
 		)
 	);
 
-	m_context.addAssertion(m_error.currentValue() == previousError);
+	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
 
 void CHC::internalFunctionCall(FunctionCall const& _funCall)
@@ -518,18 +519,18 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 			m_context.addAssertion(interface(*contract));
 	}
 
-	auto previousError = m_error.currentValue();
+	auto previousError = errorFlag().currentValue();
 
 	m_context.addAssertion(predicate(_funCall));
 
 	connectBlocks(
 		m_currentBlock,
 		(m_currentFunction && !m_currentFunction->isConstructor()) ? summary(*m_currentFunction) : summary(*m_currentContract),
-		(m_error.currentValue() > 0)
+		(errorFlag().currentValue() > 0)
 	);
-	m_context.addAssertion(m_error.currentValue() == 0);
-	m_error.increaseIndex();
-	m_context.addAssertion(m_error.currentValue() == previousError);
+	m_context.addAssertion(errorFlag().currentValue() == 0);
+	errorFlag().increaseIndex();
+	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
 
 void CHC::externalFunctionCall(FunctionCall const& _funCall)
@@ -558,7 +559,7 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + currentStateVariables());
 	m_context.addAssertion(nondet);
 
-	m_context.addAssertion(m_error.currentValue() == 0);
+	m_context.addAssertion(errorFlag().currentValue() == 0);
 }
 
 void CHC::unknownFunctionCall(FunctionCall const&)
@@ -583,13 +584,13 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 
-	auto previousError = m_error.currentValue();
-	m_error.increaseIndex();
+	auto previousError = errorFlag().currentValue();
+	errorFlag().increaseIndex();
 
-	addVerificationTarget(&_arrayPop, VerificationTarget::Type::PopEmptyArray, m_error.currentValue());
+	addVerificationTarget(&_arrayPop, VerificationTarget::Type::PopEmptyArray, errorFlag().currentValue());
 
-	smtutil::Expression target = (symbArray->length() <= 0) && (m_error.currentValue() == newErrorId(_arrayPop));
-	m_context.addAssertion((m_error.currentValue() == previousError) || target);
+	smtutil::Expression target = (symbArray->length() <= 0) && (errorFlag().currentValue() == newErrorId(_arrayPop));
+	m_context.addAssertion((errorFlag().currentValue() == previousError) || target);
 }
 
 pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
@@ -613,8 +614,8 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	if (_op == Token::Mod || (_op == Token::Div && !intType->isSigned()))
 		return values;
 
-	auto previousError = m_error.currentValue();
-	m_error.increaseIndex();
+	auto previousError = errorFlag().currentValue();
+	errorFlag().increaseIndex();
 
 	VerificationTarget::Type targetType;
 	unsigned errorId = newErrorId(_expression);
@@ -623,24 +624,24 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	if (_op == Token::Div)
 	{
 		targetType = VerificationTarget::Type::Overflow;
-		target = values.second > intType->maxValue() && m_error.currentValue() == errorId;
+		target = values.second > intType->maxValue() && errorFlag().currentValue() == errorId;
 	}
 	else if (intType->isSigned())
 	{
 		unsigned secondErrorId = newErrorId(_expression);
 		targetType = VerificationTarget::Type::UnderOverflow;
-		target = (values.second < intType->minValue() && m_error.currentValue() == errorId) ||
-			(values.second > intType->maxValue() && m_error.currentValue() == secondErrorId);
+		target = (values.second < intType->minValue() && errorFlag().currentValue() == errorId) ||
+			(values.second > intType->maxValue() && errorFlag().currentValue() == secondErrorId);
 	}
 	else if (_op == Token::Sub)
 	{
 		targetType = VerificationTarget::Type::Underflow;
-		target = values.second < intType->minValue() && m_error.currentValue() == errorId;
+		target = values.second < intType->minValue() && errorFlag().currentValue() == errorId;
 	}
 	else if (_op == Token::Add || _op == Token::Mul)
 	{
 		targetType = VerificationTarget::Type::Overflow;
-		target = values.second > intType->maxValue() && m_error.currentValue() == errorId;
+		target = values.second > intType->maxValue() && errorFlag().currentValue() == errorId;
 	}
 	else
 		solAssert(false, "");
@@ -648,10 +649,10 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	addVerificationTarget(
 		&_expression,
 		targetType,
-		m_error.currentValue()
+		errorFlag().currentValue()
 	);
 
-	m_context.addAssertion((m_error.currentValue() == previousError) || *target);
+	m_context.addAssertion((errorFlag().currentValue() == previousError) || *target);
 
 	return values;
 }
@@ -700,7 +701,7 @@ void CHC::resetContractAnalysis()
 	m_unknownFunctionCallSeen = false;
 	m_breakDest = nullptr;
 	m_continueDest = nullptr;
-	m_error.resetIndex();
+	errorFlag().resetIndex();
 }
 
 void CHC::eraseKnowledge()
@@ -818,7 +819,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						auto nondetPre = iface(state0 + state1);
 						auto nondetPost = iface(state0 + state2);
 
-						vector<smtutil::Expression> args{m_error.currentValue()};
+						vector<smtutil::Expression> args{errorFlag().currentValue()};
 						args += state1 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 							state2 +
@@ -1035,8 +1036,8 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	if (!function)
 		return smtutil::Expression(true);
 
-	m_error.increaseIndex();
-	vector<smtutil::Expression> args{m_error.currentValue()};
+	errorFlag().increaseIndex();
+	vector<smtutil::Expression> args{errorFlag().currentValue()};
 	auto const* contract = function->annotation().contract;
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	bool otherContract = contract->isLibrary() ||
@@ -1426,4 +1427,9 @@ unsigned CHC::newErrorId(frontend::Expression const& _expr)
 		errorId = m_context.newUniqueId();
 	m_errorIds.emplace(_expr.id(), errorId);
 	return errorId;
+}
+
+SymbolicIntVariable& CHC::errorFlag()
+{
+	return m_context.state().errorFlag();
 }

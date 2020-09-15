@@ -245,6 +245,8 @@ private:
 	/// @returns a new unique error id associated with _expr and stores
 	/// it into m_errorIds.
 	unsigned newErrorId(Expression const& _expr);
+
+	smt::SymbolicIntVariable& errorFlag();
 	//@}
 
 	/// Predicates.
@@ -269,13 +271,6 @@ private:
 
 	/// Function predicates.
 	std::map<ContractDefinition const*, std::map<FunctionDefinition const*, Predicate const*>> m_summaries;
-
-	smt::SymbolicIntVariable m_error{
-		TypeProvider::uint256(),
-		TypeProvider::uint256(),
-		"error",
-		m_context
-	};
 	//@}
 
 	/// Variables.
