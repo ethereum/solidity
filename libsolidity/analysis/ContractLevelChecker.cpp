@@ -465,7 +465,6 @@ void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition
 void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 {
 	bigint size = 0;
-	vector<VariableDeclaration const*> variables;
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
@@ -473,7 +472,7 @@ void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 				size += variable->annotation().type->storageSizeUpperBound();
 				if (size >= bigint(1) << 256)
 				{
-					m_errorReporter.typeError(7676_error, _contract.location(), "Contract too large for storage.");
+					m_errorReporter.typeError(7676_error, _contract.location(), "Contract requires too much storage.");
 					break;
 				}
 			}
