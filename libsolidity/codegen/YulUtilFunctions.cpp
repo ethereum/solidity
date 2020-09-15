@@ -632,6 +632,16 @@ string YulUtilFunctions::overflowCheckedIntExpFunction(
 
 string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 {
+	// Checks for the "small number specialization" below.
+	using namespace boost::multiprecision;
+	solAssert(pow(bigint(10), 77) < pow(bigint(2), 256), "");
+	solAssert(pow(bigint(11), 77) >= pow(bigint(2), 256), "");
+	solAssert(pow(bigint(10), 78) >= pow(bigint(2), 256), "");
+
+	solAssert(pow(bigint(306), 31) < pow(bigint(2), 256), "");
+	solAssert(pow(bigint(307), 31) >= pow(bigint(2), 256), "");
+	solAssert(pow(bigint(306), 32) >= pow(bigint(2), 256), "");
+
 	string functionName = "checked_exp_unsigned";
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
@@ -643,6 +653,27 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 				// Note that 0**0 == 1
 				if iszero(exponent) { power := 1 leave }
 				if iszero(base) { power := 0 leave }
+
+				// Specializations for small bases
+				switch base
+				// 0 is handled above
+				case 1 { power := 1 leave }
+				case 2
+				{
+					if gt(exponent, 255) { revert(0, 0) }
+					power := exp(2, exponent)
+					if gt(power, max) { revert(0, 0) }
+					leave
+				}
+				if or(
+					and(lt(base, 11), lt(exponent, 78)),
+					and(lt(base, 307), lt(exponent, 32))
+				)
+				{
+					power := exp(base, exponent)
+					if gt(power, max) { revert(0, 0) }
+					leave
+				}
 
 				power := 1
 
