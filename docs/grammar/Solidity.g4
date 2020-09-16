@@ -368,7 +368,10 @@ numberLiteral: (DecimalNumber | HexNumber) NumberUnit?;
 /**
  * A curly-braced block of statements. Opens its own scope.
  */
-block: LBrace statement* RBrace;
+block:
+	LBrace ( statement | uncheckedBlock )* RBrace;
+
+uncheckedBlock: Unchecked block;
 
 statement:
 	block
