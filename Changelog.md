@@ -16,6 +16,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code generator: Fix internal error on stripping dynamic types from return parameters on EVM versions without ``RETURNDATACOPY``.
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * Type Checker: Correct the warning for homonymous, but not shadowing declarations.
  * ViewPureChecker: Prevent visibility check on constructors.
