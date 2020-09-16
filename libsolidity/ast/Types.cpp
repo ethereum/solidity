@@ -3010,7 +3010,7 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 		m_kind == Kind::BareStaticCall
 	)
 		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
+			if (param->isDynamicallyEncoded() && !param->dataStoredIn(DataLocation::Storage))
 				param = TypeProvider::inaccessibleDynamic();
 
 	return returnParameterTypes;
