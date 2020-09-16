@@ -53,6 +53,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
@@ -101,6 +102,9 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	if (path.empty() || std::next(path.begin()) == path.end() || std::next(std::next(path.begin())) == path.end())
 		BOOST_THROW_EXCEPTION(runtime_error("Filename path has to contain a directory: \"" + _filename + "\"."));
 	m_optimizerStep = std::prev(std::prev(path.end()))->string();
+
+	if (m_optimizerStep == "reasoningBasedSimplifier" && solidity::test::CommonOptions::get().disableSMT)
+		m_shouldRun = false;
 
 	m_source = m_reader.source();
 
@@ -319,6 +323,11 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		ForLoopInitRewriter::run(*m_context, *m_object->code);
 		LiteralRematerialiser::run(*m_context, *m_object->code);
 		StructuralSimplifier::run(*m_context, *m_object->code);
+	}
+	else if (m_optimizerStep == "reasoningBasedSimplifier")
+	{
+		disambiguate();
+		ReasoningBasedSimplifier::run(*m_context, *m_object->code);
 	}
 	else if (m_optimizerStep == "equivalentFunctionCombiner")
 	{

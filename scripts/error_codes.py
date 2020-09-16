@@ -188,6 +188,7 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     # Warning (1878): SPDX license identifier not provided in source file. ....
     # Warning (3420): Source file does not specify required compiler version!
     test_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "error_codes", "err"))
+    test_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "yul_unimplemented", "err"))
 
     # white list of ids which are not covered by tests
     white_ids = {

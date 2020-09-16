@@ -1408,6 +1408,7 @@ BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) 
 		return static_cast<size_t>(fixedBytes->numBytes()) >= m_value.size();
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
 		return
+			arrayType->location() != DataLocation::CallData &&
 			arrayType->isByteArray() &&
 			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
 			!(arrayType->isString() && !util::validateUTF8(value()));
@@ -3010,7 +3011,7 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 		m_kind == Kind::BareStaticCall
 	)
 		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
+			if (param->isDynamicallyEncoded() && !param->dataStoredIn(DataLocation::Storage))
 				param = TypeProvider::inaccessibleDynamic();
 
 	return returnParameterTypes;

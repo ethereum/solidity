@@ -117,19 +117,8 @@ private:
 
 	/// Sort helpers.
 	//@{
-	static std::vector<smtutil::SortPointer> stateSorts(ContractDefinition const& _contract);
-	smtutil::SortPointer constructorSort();
-	smtutil::SortPointer interfaceSort();
-	smtutil::SortPointer nondetInterfaceSort();
-	static smtutil::SortPointer interfaceSort(ContractDefinition const& _const);
-	static smtutil::SortPointer nondetInterfaceSort(ContractDefinition const& _const);
-	smtutil::SortPointer arity0FunctionSort() const;
 	smtutil::SortPointer sort(FunctionDefinition const& _function);
 	smtutil::SortPointer sort(ASTNode const* _block);
-	/// @returns the sort of a predicate that represents the summary of _function in the scope of _contract.
-	/// The _contract is also needed because the same function might be in many contracts due to inheritance,
-	/// where the sort changes because the set of state variables might change.
-	static smtutil::SortPointer summarySort(FunctionDefinition const& _function, ContractDefinition const& _contract);
 	//@}
 
 	/// Predicate helpers.
@@ -246,9 +235,12 @@ private:
 
 	/// Misc.
 	//@{
-	/// Returns a prefix to be used in a new unique block name
+	/// @returns a prefix to be used in a new unique block name
 	/// and increases the block counter.
 	std::string uniquePrefix();
+
+	/// @returns a suffix to be used by contract related predicates.
+	std::string contractSuffix(ContractDefinition const& _contract);
 
 	/// @returns a new unique error id associated with _expr and stores
 	/// it into m_errorIds.
@@ -257,10 +249,6 @@ private:
 
 	/// Predicates.
 	//@{
-	/// Implicit constructor predicate.
-	/// Explicit constructors are handled as functions.
-	Predicate const* m_implicitConstructorPredicate = nullptr;
-
 	/// Constructor summary predicate, exists after the constructor
 	/// (implicit or explicit) and before the interface.
 	Predicate const* m_constructorSummaryPredicate = nullptr;
@@ -292,9 +280,6 @@ private:
 
 	/// Variables.
 	//@{
-	/// State variables sorts.
-	/// Used by all predicates.
-	std::vector<smtutil::SortPointer> m_stateSorts;
 	/// State variables.
 	/// Used to create all predicates.
 	std::vector<VariableDeclaration const*> m_stateVariables;

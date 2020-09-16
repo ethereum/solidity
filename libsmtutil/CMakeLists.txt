@@ -9,6 +9,7 @@ set(sources
 	SolverInterface.h
 	Sorts.cpp
 	Sorts.h
+	Helpers.h
 )
 
 if (${Z3_FOUND})

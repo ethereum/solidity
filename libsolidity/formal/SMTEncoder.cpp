@@ -23,6 +23,7 @@
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsmtutil/SMTPortfolio.h>
+#include <libsmtutil/Helpers.h>
 
 #include <boost/range/adaptors.hpp>
 #include <boost/range/adaptor/reversed.hpp>
@@ -674,6 +675,14 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		break;
 	case FunctionType::Kind::ArrayPop:
 		arrayPop(_funCall);
+		break;
+	case FunctionType::Kind::Log0:
+	case FunctionType::Kind::Log1:
+	case FunctionType::Kind::Log2:
+	case FunctionType::Kind::Log3:
+	case FunctionType::Kind::Log4:
+	case FunctionType::Kind::Event:
+		// These can be safely ignored.
 		break;
 	default:
 		m_errorReporter.warning(
@@ -1497,11 +1506,7 @@ smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Exp
 {
 	// Signed division in SMTLIB2 rounds differently for negative division.
 	if (_type.isSigned())
-		return (smtutil::Expression::ite(
-			_left >= 0,
-			smtutil::Expression::ite(_right >= 0, _left / _right, 0 - (_left / (0 - _right))),
-			smtutil::Expression::ite(_right >= 0, 0 - ((0 - _left) / _right), (0 - _left) / (0 - _right))
-		));
+		return signedDivision(_left, _right);
 	else
 		return _left / _right;
 }

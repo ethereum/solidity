@@ -9,6 +9,7 @@ Language Features:
 
 Compiler Features:
  * Export compiler-generated utility sources via standard-json or combined-json.
+ * SMTChecker: Support events and low-level logs.
  * SMTChecker: Support ``revert()``.
  * SMTChecker: Support shifts.
  * SMTChecker: Support structs.
@@ -16,13 +17,16 @@ Compiler Features:
  * Yul Optimizer: Prune unused parameters in functions.
  * Yul Optimizer: Inline into functions further down in the call graph first.
  * Yul Optimizer: Try to simplify function names.
+ * Yul IR Generator: Report source locations related to unimplemented features.
 
 
 Bugfixes:
+ * Code generator: Fix internal error on stripping dynamic types from return parameters on EVM versions without ``RETURNDATACOPY``.
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * Type Checker: Correct the warning for homonymous, but not shadowing declarations.
  * ViewPureChecker: Prevent visibility check on constructors.
  * Type system: Fix internal error on implicit conversion of contract instance to the type of its ``super``.
+ * Type system: Fix internal error on implicit conversion of string literal to a calldata string.
  * Type system: Fix named parameters in overloaded function and event calls being matched incorrectly if the order differs from the declaration.
 
 ### 0.7.1 (2020-09-02)
