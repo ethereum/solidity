@@ -1506,7 +1506,7 @@ smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Exp
 {
 	// Signed division in SMTLIB2 rounds differently for negative division.
 	if (_type.isSigned())
-		return signedDivision(_left, _right);
+		return signedDivisionEVM(_left, _right);
 	else
 		return _left / _right;
 }

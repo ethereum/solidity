@@ -176,12 +176,11 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 			// No `wrap()` needed here, because -2**255 / -1 results
 			// in 2**255 which is "converted" to its two's complement
 			// representation 2**255 in `signedToUnsigned`
-			signedToUnsigned(smtutil::signedDivision(
+			signedToUnsigned(smtutil::signedDivisionEVM(
 				unsignedToSigned(arguments.at(0)),
 				unsignedToSigned(arguments.at(1))
 			))
 		);
-		break;
 	case evmasm::Instruction::MOD:
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
@@ -192,12 +191,11 @@ smtutil::Expression ReasoningBasedSimplifier::encodeEVMBuiltin(
 		return smtutil::Expression::ite(
 			arguments.at(1) == constantValue(0),
 			constantValue(0),
-			signedToUnsigned(signedModulo(
+			signedToUnsigned(signedModuloEVM(
 				unsignedToSigned(arguments.at(0)),
 				unsignedToSigned(arguments.at(1))
 			))
 		);
-		break;
 	case evmasm::Instruction::LT:
 		return booleanValue(arguments.at(0) < arguments.at(1));
 	case evmasm::Instruction::SLT:
