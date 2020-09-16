@@ -67,10 +67,9 @@ defaults:
       path: build/solc/solc
       destination: solc
 
-  # windows binary archive
+  # windows artifacts
   - artifact_solc_windows: &artifact_solc_windows
-      path: upload/solidity-windows.zip
-      destination: solidity-windows.zip
+      path: upload/
 
   # compiled tool executable target
   - artifacts_tools: &artifacts_tools
@@ -904,9 +903,6 @@ jobs:
       - run:
           name: "Building solidity"
           command: .circleci/build_win.ps1
-      - run:
-          name: "Package solidity"
-          command: Compress-Archive -Path .\upload\bin\* -DestinationPath .\upload\solidity-windows.zip
       - store_artifacts: *artifact_solc_windows
       - persist_to_workspace: *artifacts_build_dir
 
