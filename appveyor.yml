@@ -59,7 +59,7 @@ install:
 before_build:
     - if not exist build mkdir build
     - cd build
-    - cmake -G "Visual Studio 15 2017 Win64" .. -DTESTS=On
+    - cmake -G "Visual Studio 15 2017 Win64" .. -DTESTS=On -DBoost_USE_STATIC_RUNTIME=OFF
 build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
