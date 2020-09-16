@@ -560,7 +560,10 @@ public:
 		ASTPointer<UserDefinedTypeName> _baseName,
 		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_id, _location), m_baseName(std::move(_baseName)), m_arguments(std::move(_arguments)) {}
+		ASTNode(_id, _location), m_baseName(std::move(_baseName)), m_arguments(std::move(_arguments))
+	{
+		solAssert(m_baseName != nullptr, "Name cannot be null.");
+	}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -590,7 +593,10 @@ public:
 		ASTPointer<UserDefinedTypeName> _libraryName,
 		ASTPointer<TypeName> _typeName
 	):
-		ASTNode(_id, _location), m_libraryName(std::move(_libraryName)), m_typeName(std::move(_typeName)) {}
+		ASTNode(_id, _location), m_libraryName(std::move(_libraryName)), m_typeName(std::move(_typeName))
+	{
+		solAssert(m_libraryName != nullptr, "Name cannot be null.");
+	}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -1053,7 +1059,10 @@ public:
 		ASTPointer<Identifier> _name,
 		std::unique_ptr<std::vector<ASTPointer<Expression>>> _arguments
 	):
-		ASTNode(_id, _location), m_modifierName(std::move(_name)), m_arguments(std::move(_arguments)) {}
+		ASTNode(_id, _location), m_modifierName(std::move(_name)), m_arguments(std::move(_arguments))
+	{
+		solAssert(m_modifierName != nullptr, "Name cannot be null.");
+	}
 
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
@@ -1196,6 +1205,7 @@ class UserDefinedTypeName: public TypeName
 public:
 	UserDefinedTypeName(int64_t _id, SourceLocation const& _location, std::vector<ASTString> _namePath):
 		TypeName(_id, _location), m_namePath(std::move(_namePath)) {}
+
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
