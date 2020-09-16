@@ -778,7 +778,7 @@ BOOST_AUTO_TEST_CASE(sign_extension)
 			function run() public returns(uint256 y) {
 				int64 x = -int32(0xff);
 				if (x >= 0xff) return 0;
-				return -uint256(x);
+				return 0 - uint256(x);
 			}
 		}
 	)";

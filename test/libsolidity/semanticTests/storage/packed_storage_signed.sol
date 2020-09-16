@@ -9,7 +9,7 @@ contract C {
         returns (uint256 x1, uint256 x2, uint256 x3, uint256 x4)
     {
         a = -2;
-        b = -uint8(a) * 2;
+        b = (0 - uint8(a)) * 2;
         c = a * int8(120) * int8(121);
         x1 = uint256(a);
         x2 = b;
