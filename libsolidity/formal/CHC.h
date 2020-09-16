@@ -111,7 +111,7 @@ private:
 	void resetContractAnalysis();
 	void eraseKnowledge();
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
-	void setCurrentBlock(Predicate const& _block, std::vector<smtutil::Expression> const* _arguments = nullptr);
+	void setCurrentBlock(Predicate const& _block);
 	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
 	//@}
 
@@ -124,7 +124,7 @@ private:
 	/// Predicate helpers.
 	//@{
 	/// @returns a new block of given _sort and _name.
-	Predicate const* createSymbolicBlock(smtutil::SortPointer _sort, std::string const& _name, ASTNode const* _node = nullptr);
+	Predicate const* createSymbolicBlock(smtutil::SortPointer _sort, std::string const& _name, PredicateType _predType, ASTNode const* _node = nullptr);
 
 	/// Creates summary predicates for all functions of all contracts
 	/// in a given _source.
@@ -138,7 +138,7 @@ private:
 	smtutil::Expression error(unsigned _idx);
 
 	/// Creates a block for the given _node.
-	Predicate const* createBlock(ASTNode const* _node, std::string const& _prefix = "");
+	Predicate const* createBlock(ASTNode const* _node, PredicateType _predType, std::string const& _prefix = "");
 	/// Creates a call block for the given function _function from contract _contract.
 	/// The contract is needed here because of inheritance.
 	Predicate const* createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract);
@@ -152,29 +152,16 @@ private:
 	/// @returns the symbolic values of the state variables at the beginning
 	/// of the current transaction.
 	std::vector<smtutil::Expression> initialStateVariables();
-	std::vector<smtutil::Expression> initialStateVariables(ContractDefinition const& _contract);
 	std::vector<smtutil::Expression> stateVariablesAtIndex(unsigned _index);
 	std::vector<smtutil::Expression> stateVariablesAtIndex(unsigned _index, ContractDefinition const& _contract);
 	/// @returns the current symbolic values of the current state variables.
 	std::vector<smtutil::Expression> currentStateVariables();
 	std::vector<smtutil::Expression> currentStateVariables(ContractDefinition const& _contract);
 
-	/// @returns the current symbolic values of the current function's
-	/// input and output parameters.
-	std::vector<smtutil::Expression> currentFunctionVariables();
-	std::vector<smtutil::Expression> currentFunctionVariables(FunctionDefinition const& _function);
-	std::vector<smtutil::Expression> currentFunctionVariables(ContractDefinition const& _contract);
-
-	/// @returns the same as currentFunctionVariables plus
-	/// local variables.
-	std::vector<smtutil::Expression> currentBlockVariables();
-
 	/// @returns the predicate name for a given node.
 	std::string predicateName(ASTNode const* _node, ContractDefinition const* _contract = nullptr);
-	/// @returns a predicate application over the current scoped variables.
+	/// @returns a predicate application after checking the predicate's type.
 	smtutil::Expression predicate(Predicate const& _block);
-	/// @returns a predicate application over @param _arguments.
-	smtutil::Expression predicate(Predicate const& _block, std::vector<smtutil::Expression> const& _arguments);
 	/// @returns the summary predicate for the called function.
 	smtutil::Expression predicate(FunctionCall const& _funCall);
 	/// @returns a predicate that defines a constructor summary.
