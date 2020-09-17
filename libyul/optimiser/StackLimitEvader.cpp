@@ -132,7 +132,7 @@ void StackLimitEvader::run(
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 
-	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, *_object.code);
+	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
 
 	yulAssert(requiredSlots < std::numeric_limits<uint64_t>::max() / 32, "");
 	reservedMemory += 32 * requiredSlots;

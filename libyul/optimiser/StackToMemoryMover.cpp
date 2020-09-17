@@ -52,18 +52,24 @@ void StackToMemoryMover::run(
 	OptimiserStepContext& _context,
 	u256 _reservedMemory,
 	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
+	uint64_t _numRequiredSlots,
 	Block& _block
 )
 {
-	StackToMemoryMover stackToMemoryMover(_context, _reservedMemory, _memorySlots);
+	StackToMemoryMover stackToMemoryMover(_context, _reservedMemory, _memorySlots, _numRequiredSlots);
 	stackToMemoryMover(_block);
 }
 
 StackToMemoryMover::StackToMemoryMover(
 	OptimiserStepContext& _context,
 	u256 _reservedMemory,
-	map<YulString, map<YulString, uint64_t>> const& _memorySlots
-): m_reservedMemory(std::move(_reservedMemory)), m_memorySlots(_memorySlots), m_nameDispenser(_context.dispenser)
+	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
+	uint64_t _numRequiredSlots
+):
+m_reservedMemory(std::move(_reservedMemory)),
+m_memorySlots(_memorySlots),
+m_numRequiredSlots(_numRequiredSlots),
+m_nameDispenser(_context.dispenser)
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
@@ -210,6 +216,8 @@ void StackToMemoryMover::visit(Expression& _expression)
 YulString StackToMemoryMover::memoryOffset(YulString _variable)
 {
 	yulAssert(m_currentFunctionMemorySlots, "");
-	return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * m_currentFunctionMemorySlots->at(_variable))};
+	uint64_t slot = m_currentFunctionMemorySlots->at(_variable);
+	yulAssert(slot < m_numRequiredSlots, "");
+	return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
 }
 

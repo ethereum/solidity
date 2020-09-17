@@ -82,13 +82,16 @@ public:
 	 * Runs the stack to memory mover.
 	 * @param _reservedMemory Is the amount of previously reserved memory,
 	 *                        i.e. the lowest memory offset to which variables can be moved.
-	 * @param _memorySlots A map from variables to a slot in memory. The offset to which a variables will be moved
-	 *                       is given by _reservedMemory plus 32 times its entry in @a _memorySlots.
+	 * @param _memorySlots A map from variables to a slot in memory. Based on the slot a unique offset in the memory range
+	 *                     between _reservedMemory and _reservedMemory + 32 * _numRequiredSlots is calculated for each
+	 *                     variable.
+	 * @param _numRequiredSlots The number of slots required in total. The maximum value that may occur in @a _memorySlots.
 	 */
 	static void run(
 		OptimiserStepContext& _context,
 		u256 _reservedMemory,
 		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
+		uint64_t _numRequiredSlots,
 		Block& _block
 	);
 	using ASTModifier::operator();
@@ -100,13 +103,15 @@ private:
 	StackToMemoryMover(
 		OptimiserStepContext& _context,
 		u256 _reservedMemory,
-		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots
+		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
+		uint64_t _numRequiredSlots
 	);
 
 	/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal.
 	YulString memoryOffset(YulString _variable);
 	u256 m_reservedMemory;
 	std::map<YulString, std::map<YulString, uint64_t>> const& m_memorySlots;
+	uint64_t m_numRequiredSlots = 0;
 	NameDispenser& m_nameDispenser;
 	std::map<YulString, uint64_t> const* m_currentFunctionMemorySlots = nullptr;
 };
