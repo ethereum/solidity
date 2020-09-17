@@ -109,6 +109,8 @@ private:
 
 	/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal.
 	YulString memoryOffset(YulString _variable);
+
+	OptimiserStepContext& m_context;
 	u256 m_reservedMemory;
 	std::map<YulString, std::map<YulString, uint64_t>> const& m_memorySlots;
 	uint64_t m_numRequiredSlots = 0;

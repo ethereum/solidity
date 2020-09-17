@@ -30,15 +30,18 @@ using namespace solidity::yul;
 namespace
 {
 vector<Statement> generateMemoryStore(
+	Dialect const& _dialect,
 	langutil::SourceLocation const& _loc,
 	YulString _mpos,
 	Expression _value
 )
 {
+	BuiltinFunction const* memoryStoreFunction = _dialect.memoryStoreFunction(_dialect.defaultType);
+	yulAssert(memoryStoreFunction, "");
 	vector<Statement> result;
 	result.emplace_back(ExpressionStatement{_loc, FunctionCall{
 		_loc,
-		Identifier{_loc, "mstore"_yulstring},
+		Identifier{_loc, memoryStoreFunction->name},
 		{
 			Literal{_loc, LiteralKind::Number, _mpos, {}},
 			std::move(_value)
@@ -66,6 +69,7 @@ StackToMemoryMover::StackToMemoryMover(
 	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
 	uint64_t _numRequiredSlots
 ):
+m_context(_context),
 m_reservedMemory(std::move(_reservedMemory)),
 m_memorySlots(_memorySlots),
 m_numRequiredSlots(_numRequiredSlots),
@@ -120,6 +124,7 @@ void StackToMemoryMover::operator()(Block& _block)
 	) -> std::vector<Statement> {
 		if (_variables.size() == 1)
 			return generateMemoryStore(
+				m_context.dialect,
 				_loc,
 				memoryOffset(_variables.front().name),
 				_value ? *std::move(_value) : Literal{_loc, LiteralKind::Number, "0"_yulstring, {}}
@@ -134,7 +139,12 @@ void StackToMemoryMover::operator()(Block& _block)
 			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
 
 			if (m_currentFunctionMemorySlots->count(var.name))
-				memoryAssignments += generateMemoryStore(_loc, memoryOffset(var.name), Identifier{_loc, tempVarName});
+				memoryAssignments += generateMemoryStore(
+					m_context.dialect,
+					_loc,
+					memoryOffset(var.name),
+					Identifier{_loc, tempVarName}
+				);
 			else if constexpr (std::is_same_v<std::decay_t<decltype(var)>, Identifier>)
 				variableAssignments.emplace_back(Assignment{
 					_loc, { Identifier{var.location, var.name} },
@@ -196,10 +206,12 @@ void StackToMemoryMover::visit(Expression& _expression)
 		identifier && m_currentFunctionMemorySlots && m_currentFunctionMemorySlots->count(identifier->name)
 	)
 	{
+		BuiltinFunction const* memoryLoadFunction = m_context.dialect.memoryLoadFunction(m_context.dialect.defaultType);
+		yulAssert(memoryLoadFunction, "");
 		langutil::SourceLocation loc = identifier->location;
 		_expression = FunctionCall{
 			loc,
-			Identifier{loc, "mload"_yulstring}, {
+			Identifier{loc, memoryLoadFunction->name}, {
 				Literal{
 					loc,
 					LiteralKind::Number,
