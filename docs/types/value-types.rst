@@ -38,7 +38,7 @@ Operators:
 * Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
 * Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
-* Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
+* Arithmetic operators: ``+``, ``-``, unary ``-`` (only for signed integers), ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
 
 For an integer type ``X``, you can use ``type(X).min`` and ``type(X).max`` to
 access the minimum and maximum value representable by the type.
@@ -83,8 +83,8 @@ for example ``uint256(0) - uint256(1) == 2**256 - 1``. You have to take these ov
 into account when designing safe smart contracts.
 
 The expression ``-x`` is equivalent to ``(T(0) - x)`` where
-``T`` is the type of ``x``. This means that ``-x`` will not be negative
-if the type of ``x`` is an unsigned integer type. Also, ``-x`` can be
+``T`` is the type of ``x``. It can only be applied to signed types.
+The value of ``-x`` can be
 positive if ``x`` is negative. There is another caveat also resulting
 from two's complement representation::
 

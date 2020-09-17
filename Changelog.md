@@ -1,5 +1,7 @@
 ### 0.8.0 (unreleased)
 
+Breaking Changes:
+ * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
 
 
 ### 0.7.2 (unreleased)
