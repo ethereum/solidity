@@ -913,6 +913,9 @@ jobs:
       - run:
           name: "Building solidity"
           command: .circleci/build_win.ps1
+      - run:
+          name: "Run solc.exe to make sure build was successful."
+          command: .\build\solc\Release\solc.exe --version
       - store_artifacts: *artifact_solc_windows
       - persist_to_workspace: *artifacts_build_dir
 
