@@ -1,11 +1,13 @@
 contract test {
-    function a(uint a, uint b) public returns (uint r) {
-        r = a + b;
+    function f(uint a, bool b, bytes memory c, uint d, bool e) public returns (uint r) {
+        if (b && !e)
+            r = a + d;
+        else
+            r = c.length;
     }
-    function b() public returns (uint r) {
-        r = a({a: 1, c: 2});
+    function g() public returns (uint r) {
+        r = f({c: "abc", x: 1, e: 2, a: 11, b: 12});
     }
 }
 // ----
-// Warning 2519: (31-37): This declaration shadows an existing declaration.
-// TypeError 4974: (153-168): Named argument "c" does not match function declaration.
+// TypeError 4974: (249-288): Named argument "a" does not match function declaration.
