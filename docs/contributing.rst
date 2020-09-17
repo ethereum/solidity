@@ -2,22 +2,25 @@
 Contributing
 ############
 
-Help is always appreciated!
+Help is always welcome and there are plenty of options how you can contribute to Solidity.
 
-To get started, you can try :ref:`building-from-source` in order to familiarize
-yourself with the components of Solidity and the build process. Also, it may be
-useful to become well-versed at writing smart-contracts in Solidity.
+In particular, we appreciate support in the following areas:
 
-In particular, we need help in the following areas:
-
-* Improving the documentation
-* Responding to questions from other users on `StackExchange
-  <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter
-  <https://gitter.im/ethereum/solidity>`_
+* Reporting issues.
 * Fixing and responding to `Solidity's GitHub issues
   <https://github.com/ethereum/solidity/issues>`_, especially those tagged as
   `good first issue <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
   meant as introductory issues for external contributors.
+* Improving the documentation.
+* Translating the documentation into more languages.
+* Responding to questions from other users on `StackExchange
+  <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter Chat
+  <https://gitter.im/ethereum/solidity>`_.
+* Getting involved in the language design process by joining language design calls, proposing language changes or new features and providing feedback.
+
+To get started, you can try :ref:`building-from-source` in order to familiarize
+yourself with the components of Solidity and the build process. Also, it may be
+useful to become well-versed at writing smart-contracts in Solidity.
 
 Please note that this project is released with a `Contributor Code of Conduct <https://raw.githubusercontent.com/ethereum/solidity/develop/CODE_OF_CONDUCT.md>`_. By participating in this project - in the issues, pull requests, or Gitter channels - you agree to abide by its terms.
 
@@ -27,8 +30,8 @@ Team Calls
 If you have issues or pull requests to discuss, or are interested in hearing what
 the team and contributors are working on, you can join our public team calls:
 
-- Mondays at 12pm CET/CEST
-- Wednesdays at 2pm CET/CEST
+- Mondays at 12pm CET/CEST.
+- Wednesdays at 2pm CET/CEST.
 
 Both calls take place on `Google Meet <https://meet.google.com/mrq-kbwv-edg>`_.
 
@@ -39,12 +42,12 @@ To report an issue, please use the
 `GitHub issues tracker <https://github.com/ethereum/solidity/issues>`_. When
 reporting issues, please mention the following details:
 
-* Which version of Solidity you are using
-* What was the source code (if applicable)
-* Which platform are you running on
-* How to reproduce the issue
-* What was the result of the issue
-* What the expected behaviour is
+* Which version of Solidity you are using.
+* What was the source code (if applicable).
+* Which platform are you running on.
+* How to reproduce the issue.
+* What was the result of the issue.
+* What the expected behaviour is.
 
 Reducing the source code that caused the issue to a bare minimum is always
 very helpful and sometimes even clarifies a misunderstanding.
@@ -66,7 +69,7 @@ test cases under ``test/`` (see below).
 
 However, if you are making a larger change, please consult with the `Solidity Development Gitter channel
 <https://gitter.im/ethereum/solidity-dev>`_ (different from the one mentioned above, this one is
-focused on compiler and language development instead of language use) first.
+focused on compiler and language development instead of language usage) first.
 
 New features and bugfixes should be added to the ``Changelog.md`` file: please
 follow the style of previous entries, when applicable.
@@ -78,7 +81,7 @@ ensure that it builds locally before submitting a pull request.
 
 Thank you for your help!
 
-Running the compiler tests
+Running the Compiler Tests
 ==========================
 
 Prerequisites
@@ -91,7 +94,7 @@ in the current directory, installed on the system level, or the ``deps`` folder
 in the project top level. The required file is called ``libevmone.so`` on Linux
 systems, ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS.
 
-Running the tests
+Running the Tests
 -----------------
 
 Solidity includes different types of tests, most of them bundled into the
@@ -155,7 +158,7 @@ you have access to functions and variables in which you can break or print with.
 The CI runs additional tests (including ``solc-js`` and testing third party Solidity
 frameworks) that require compiling the Emscripten target.
 
-Writing and running syntax tests
+Writing and Running Syntax Tests
 --------------------------------
 
 Syntax tests check that the compiler generates the correct error messages for invalid code
@@ -366,7 +369,7 @@ the string parameter ``name`` is non-empty.
 Documentation Style Guide
 =========================
 
-The following are style recommendations specifically for documentation
+In the following section you find style recommendations specifically focusing on documentation
 contributions to Solidity.
 
 English Language
@@ -394,10 +397,10 @@ title.
 
 For example, the following are all correct:
 
-* Title Case for Headings
-* For Headings Use Title Case
-* Local and State Variable Names
-* Order of Layout
+* Title Case for Headings.
+* For Headings Use Title Case.
+* Local and State Variable Names.
+* Order of Layout.
 
 Expand Contractions
 -------------------
@@ -450,3 +453,21 @@ Running Documentation Tests
 
 Make sure your contributions pass our documentation tests by running ``./scripts/docs.sh`` that installs dependencies
 needed for documentation and checks for any problems such as broken links or syntax issues.
+
+Solidity Language Design
+========================
+
+If you want to get involved in the language design process and share your ideas, please join the `solidity-users forum <https://groups.google.com/g/solidity-users>`_,
+where existing properties of the language and proposals for new features can be discussed.
+
+We regularly host language design discussion calls, in which selected topics, issues or feature implementations are debated in detail. The invitation
+to those calls is shared via the aforementioned forum. We are also sharing feedback surveys and other language design relevant content in this forum.
+
+For ad-hoc cases and questions you can reach out to us via the `Solidity-dev Gitter channel <https://gitter.im/ethereum/solidity-dev>`_, a
+dedicated chatroom for conversations around the Solidity compiler and language development.
+
+You can follow the implementation status of new features in the `Solidity Github project <https://github.com/ethereum/solidity/projects/43>`_.
+Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
+see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
+
+We are happy to hear your thoughts on how we can improve the language design process to be even more collaborative and transparent.
