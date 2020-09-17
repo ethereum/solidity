@@ -77,7 +77,7 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 
 void IsolTestOptions::validate() const
 {
-	static std::string filterString{"[a-zA-Z1-9_/*]*"};
+	static std::string filterString{"[a-zA-Z0-9_/*]*"};
 	static std::regex filterExpression{filterString};
 	assertThrow(
 		regex_match(testFilter, filterExpression),
