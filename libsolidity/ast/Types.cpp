@@ -404,10 +404,16 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 		return encodingType;
 	TypePointer baseType = encodingType;
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
+	{
 		baseType = arrayType->baseType();
-	if (dynamic_cast<StructType const*>(baseType))
-		if (!_encoderV2)
+
+		auto const* baseArrayType = dynamic_cast<ArrayType const*>(baseType);
+		if (!_encoderV2 && baseArrayType && baseArrayType->isDynamicallySized())
 			return nullptr;
+	}
+	if (!_encoderV2 && dynamic_cast<StructType const*>(baseType))
+		return nullptr;
+
 	return encodingType;
 }
 
