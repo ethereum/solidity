@@ -2091,18 +2091,17 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		{
 			bool not_all_mapped = false;
 
-			for (size_t i = 0; i < paramArgMap.size(); i++)
+			for (size_t i = 0; i < argumentNames.size(); i++)
 			{
 				size_t j;
-				for (j = 0; j < argumentNames.size(); j++)
-					if (parameterNames[i] == *argumentNames[j])
+				for (j = 0; j < parameterNames.size(); j++)
+					if (parameterNames[j] == *argumentNames[i])
 						break;
 
-				if (j < argumentNames.size())
-					paramArgMap[i] = arguments[j].get();
+				if (j < parameterNames.size())
+					paramArgMap[j] = arguments[i].get();
 				else
 				{
-					paramArgMap[i] = nullptr;
 					not_all_mapped = true;
 					m_errorReporter.typeError(
 						4974_error,

@@ -10,4 +10,4 @@ contract test {
     }
 }
 // ----
-// TypeError 4974: (249-288): Named argument "a" does not match function declaration.
+// TypeError 4974: (249-288): Named argument "x" does not match function declaration.
