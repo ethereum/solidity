@@ -70,6 +70,8 @@ Solidity Logo Guidelines
 .. image:: logo.svg
   :width: 256
 
+*(Right click on the logo to download it.)*
+
 Please do not:
 
 - Change the ratio of the logo (do not stretch it or cut it).
