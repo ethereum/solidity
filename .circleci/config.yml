@@ -883,7 +883,7 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
-  b_win:
+  b_win: &b_win
     executor:
       name: win/default
       shell: powershell.exe
@@ -905,6 +905,12 @@ jobs:
           command: .circleci/build_win.ps1
       - store_artifacts: *artifact_solc_windows
       - persist_to_workspace: *artifacts_build_dir
+
+  b_win_release:
+    <<: *b_win
+    environment:
+      FORCE_RELEASE: ON
+
 
 workflows:
   version: 2
@@ -959,6 +965,7 @@ workflows:
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
+      - b_win_release: *workflow_trigger_on_tags
 
   nightly:
 
