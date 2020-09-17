@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 # Needed for Invoke-WebRequest to work via CI.
 $progressPreference = "silentlyContinue"
 
