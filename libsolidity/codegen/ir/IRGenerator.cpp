@@ -142,7 +142,10 @@ string IRGenerator::generate(
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
 	t("functions", m_context.functionCollector().requestedFunctions());
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
-	t("memoryInitCreation", memoryInit(!m_context.inlineAssemblySeen()));
+
+	// This has to be called only after all other code generation for the creation object is complete.
+	bool creationInvolvesAssembly = m_context.inlineAssemblySeen();
+	t("memoryInitCreation", memoryInit(!creationInvolvesAssembly));
 
 	resetContext(_contract);
 
@@ -158,7 +161,10 @@ string IRGenerator::generate(
 	generateInternalDispatchFunctions();
 	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
 	t("runtimeSubObjects", subObjectSources(m_context.subObjectsCreated()));
-	t("memoryInitRuntime", memoryInit(!m_context.inlineAssemblySeen()));
+
+	// This has to be called only after all other code generation for the runtime object is complete.
+	bool runtimeInvolvesAssembly = m_context.inlineAssemblySeen();
+	t("memoryInitRuntime", memoryInit(!runtimeInvolvesAssembly));
 	return t.render();
 }
 

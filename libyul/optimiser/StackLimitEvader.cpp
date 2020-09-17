@@ -35,31 +35,33 @@ using namespace solidity::yul;
 
 namespace
 {
-// Walks the call graph using a Depth-First-Search assigning memory offsets to variables.
-// - The leaves of the call graph will get the lowest offsets, increasing towards the root.
-// - ``nextAvailableSlot`` maps a function to the next available slot that can be used by another
-//   function that calls it.
-// - For each function starting from the root of the call graph:
-//   - Visit all children that are not already visited.
-//   - Determine the maximum value ``n`` of the values of ``nextAvailableSlot`` among the children.
-//   - If the function itself contains variables that need memory slots, but is contained in a cycle,
-//     abort the process as failure.
-//   - If not, assign each variable its slot starting from ``n`` (incrementing it).
-//   - Assign ``n`` to ``nextAvailableSlot`` of the function.
+/**
+ * Walks the call graph using a Depth-First-Search assigning memory slots to variables.
+ * - The leaves of the call graph will get the lowest slot, increasing towards the root.
+ * - ``slotsRequiredForFunction`` maps a function to the number of slots it requires (which is also the
+ *   next available slot that can be used by another function that calls this function).
+ * - For each function starting from the root of the call graph:
+ * - Visit all children that are not already visited.
+ * - Determine the maximum value ``n`` of the values of ``slotsRequiredForFunction`` among the children.
+ * - If the function itself contains variables that need memory slots, but is contained in a cycle,
+ *   abort the process as failure.
+ * - If not, assign each variable its slot starting from ``n`` (incrementing it).
+ * - Assign ``n`` to ``slotsRequiredForFunction`` of the function.
+ */
 struct MemoryOffsetAllocator
 {
 	uint64_t run(YulString _function = YulString{})
 	{
-		if (nextAvailableSlot.count(_function))
-			return nextAvailableSlot[_function];
+		if (slotsRequiredForFunction.count(_function))
+			return slotsRequiredForFunction[_function];
 
 		// Assign to zero early to guard against recursive calls.
-		nextAvailableSlot[_function] = 0;
+		slotsRequiredForFunction[_function] = 0;
 
-		uint64_t nextSlot = 0;
+		uint64_t requiredSlots = 0;
 		if (callGraph.count(_function))
 			for (YulString child: callGraph.at(_function))
-				nextSlot = std::max(run(child), nextSlot);
+				requiredSlots = std::max(run(child), requiredSlots);
 
 		if (unreachableVariables.count(_function))
 		{
@@ -71,17 +73,17 @@ struct MemoryOffsetAllocator
 					// TODO: Too many function arguments or return parameters.
 				}
 				else
-					assignedSlots[variable] = nextSlot++;
+					assignedSlots[variable] = requiredSlots++;
 		}
 
-		return nextAvailableSlot[_function] = nextSlot;
+		return slotsRequiredForFunction[_function] = requiredSlots;
 	}
 
 	map<YulString, set<YulString>> const& unreachableVariables;
 	map<YulString, set<YulString>> const& callGraph;
 
 	map<YulString, map<YulString, uint64_t>> slotAllocations{};
-	map<YulString, uint64_t> nextAvailableSlot{};
+	map<YulString, uint64_t> slotsRequiredForFunction{};
 };
 
 u256 literalArgumentValue(FunctionCall const& _call)
@@ -116,8 +118,8 @@ void StackLimitEvader::run(
 
 	// Make sure all calls to ``memoryguard`` we found have the same value as argument (otherwise, abort).
 	u256 reservedMemory = literalArgumentValue(*memoryGuardCalls.front());
-	for (FunctionCall const* getFreeMemoryStartCall: memoryGuardCalls)
-		if (reservedMemory != literalArgumentValue(*getFreeMemoryStartCall))
+	for (FunctionCall const* memoryGuardCall: memoryGuardCalls)
+		if (reservedMemory != literalArgumentValue(*memoryGuardCall))
 			return;
 
 	CallGraph callGraph = CallGraphGenerator::callGraph(*_object.code);
@@ -130,13 +132,14 @@ void StackLimitEvader::run(
 	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 
-	StackToMemoryMover{_context, reservedMemory, memoryOffsetAllocator.slotAllocations}(*_object.code);
+	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, *_object.code);
+
+	yulAssert(requiredSlots < std::numeric_limits<uint64_t>::max() / 32, "");
 	reservedMemory += 32 * requiredSlots;
-	YulString reservedMemoryString{util::toCompactHexWithPrefix(reservedMemory)};
-	for (FunctionCall* memoryGuardCall: memoryGuardCalls)
+	for (FunctionCall* memoryGuardCall: FunctionCallFinder::run(*_object.code, "memoryguard"_yulstring))
 	{
 		Literal* literal = std::get_if<Literal>(&memoryGuardCall->arguments.front());
 		yulAssert(literal && literal->kind == LiteralKind::Number, "");
-		literal->value = reservedMemoryString;
+		literal->value = YulString{util::toCompactHexWithPrefix(reservedMemory)};
 	}
 }

@@ -73,23 +73,37 @@ namespace solidity::yul
  * If a visited function has arguments or return parameters that are contained in the map,
  * the entire function is skipped (no local variables in the function will be moved at all).
  *
- * Prerequisite: Disambiguator, ForLoopInitRewriter.
+ * Prerequisite: Disambiguator, ForLoopInitRewriter, FunctionHoister.
  */
 class StackToMemoryMover: ASTModifier
 {
 public:
-	StackToMemoryMover(
+	/**
+	 * Runs the stack to memory mover.
+	 * @param _reservedMemory Is the amount of previously reserved memory,
+	 *                        i.e. the lowest memory offset to which variables can be moved.
+	 * @param _memorySlots A map from variables to a slot in memory. The offset to which a variables will be moved
+	 *                       is given by _reservedMemory plus 32 times its entry in @a _memorySlots.
+	 */
+	static void run(
 		OptimiserStepContext& _context,
 		u256 _reservedMemory,
-		std::map<YulString, std::map<YulString, uint64_t>> const& _memoryOffsets
+		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
+		Block& _block
 	);
-
 	using ASTModifier::operator();
 
 	void operator()(FunctionDefinition& _functionDefinition) override;
 	void operator()(Block& _block) override;
 	void visit(Expression& _expression) override;
 private:
+	StackToMemoryMover(
+		OptimiserStepContext& _context,
+		u256 _reservedMemory,
+		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots
+	);
+
+	/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal.
 	YulString memoryOffset(YulString _variable);
 	u256 m_reservedMemory;
 	std::map<YulString, std::map<YulString, uint64_t>> const& m_memorySlots;

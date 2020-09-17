@@ -29,14 +29,14 @@ using namespace solidity::yul;
 
 namespace
 {
-void appendMemoryStore(
-	vector<Statement>& _statements,
+vector<Statement> generateMemoryStore(
 	langutil::SourceLocation const& _loc,
 	YulString _mpos,
 	Expression _value
 )
 {
-	_statements.emplace_back(ExpressionStatement{_loc, FunctionCall{
+	vector<Statement> result;
+	result.emplace_back(ExpressionStatement{_loc, FunctionCall{
 		_loc,
 		Identifier{_loc, "mstore"_yulstring},
 		{
@@ -44,7 +44,19 @@ void appendMemoryStore(
 			std::move(_value)
 		}
 	}});
+	return result;
 }
+}
+
+void StackToMemoryMover::run(
+	OptimiserStepContext& _context,
+	u256 _reservedMemory,
+	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
+	Block& _block
+)
+{
+	StackToMemoryMover stackToMemoryMover(_context, _reservedMemory, _memorySlots);
+	stackToMemoryMover(_block);
 }
 
 StackToMemoryMover::StackToMemoryMover(
@@ -66,22 +78,20 @@ StackToMemoryMover::StackToMemoryMover(
 
 void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 {
-	map<YulString, uint64_t> const* saved = m_currentFunctionMemorySlots;
 	if (m_memorySlots.count(_functionDefinition.name))
 	{
+		map<YulString, uint64_t> const* saved = m_currentFunctionMemorySlots;
 		m_currentFunctionMemorySlots = &m_memorySlots.at(_functionDefinition.name);
 		for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
 			if (m_currentFunctionMemorySlots->count(param.name))
 			{
 				// TODO: we cannot handle function parameters yet.
-				m_currentFunctionMemorySlots = nullptr;
-				break;
+				m_currentFunctionMemorySlots = saved;
+				return;
 			}
+		ASTModifier::operator()(_functionDefinition);
+		m_currentFunctionMemorySlots = saved;
 	}
-	else
-		m_currentFunctionMemorySlots = nullptr;
-	ASTModifier::operator()(_functionDefinition);
-	m_currentFunctionMemorySlots = saved;
 }
 
 void StackToMemoryMover::operator()(Block& _block)
@@ -103,16 +113,11 @@ void StackToMemoryMover::operator()(Block& _block)
 		std::unique_ptr<Expression> _value
 	) -> std::vector<Statement> {
 		if (_variables.size() == 1)
-		{
-			std::vector<Statement> result;
-			appendMemoryStore(
-				result,
+			return generateMemoryStore(
 				_loc,
 				memoryOffset(_variables.front().name),
 				_value ? *std::move(_value) : Literal{_loc, LiteralKind::Number, "0"_yulstring, {}}
 			);
-			return result;
-		}
 
 		VariableDeclaration tempDecl{_loc, {}, std::move(_value)};
 		vector<Statement> memoryAssignments;
@@ -123,7 +128,7 @@ void StackToMemoryMover::operator()(Block& _block)
 			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
 
 			if (m_currentFunctionMemorySlots->count(var.name))
-				appendMemoryStore(memoryAssignments, _loc, memoryOffset(var.name), Identifier{_loc, tempVarName});
+				memoryAssignments += generateMemoryStore(_loc, memoryOffset(var.name), Identifier{_loc, tempVarName});
 			else if constexpr (std::is_same_v<std::decay_t<decltype(var)>, Identifier>)
 				variableAssignments.emplace_back(Assignment{
 					_loc, { Identifier{var.location, var.name} },
@@ -186,10 +191,10 @@ void StackToMemoryMover::visit(Expression& _expression)
 	)
 	{
 		langutil::SourceLocation loc = identifier->location;
-		_expression = FunctionCall {
+		_expression = FunctionCall{
 			loc,
 			Identifier{loc, "mload"_yulstring}, {
-				Literal {
+				Literal{
 					loc,
 					LiteralKind::Number,
 					memoryOffset(identifier->name),

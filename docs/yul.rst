@@ -958,7 +958,7 @@ memoryguard
 This function is available in the EVM dialect with objects. The caller of
 ``let ptr := memoryguard(size)`` (where ``size`` has to be a literal number)
 promises that they only use memory in either the range ``[0, size)`` or the
-unbounded range above ``ptr``.
+unbounded range starting at ``ptr``.
 
 Since the presence of a ``memoryguard`` call indicates that all memory access
 adheres to this restriction, it allows the optimizer to perform additional
