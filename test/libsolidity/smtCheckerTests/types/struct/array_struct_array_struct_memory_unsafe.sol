@@ -23,8 +23,6 @@ contract C {
 		assert(s1[2].a[2] == s2.a[2]);
 		s1[0].ts[3].y = 5;
 		assert(s1[0].ts[3].y == s2.ts[3].y);
-		s1[1].ts[4].a[5] = 6;
-		assert(s1[1].ts[4].a[5] == s2.ts[4].a[5]);
 	}
 }
 // ----

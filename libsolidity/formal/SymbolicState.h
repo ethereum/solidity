@@ -48,22 +48,26 @@ public:
 
 	/// Blockchain.
 	//@{
-	/// Value of `this` address.
+	SymbolicIntVariable& errorFlag();
+	smtutil::SortPointer errorFlagSort();
+
+	/// @returns the symbolic value of the currently executing contract's address.
 	smtutil::Expression thisAddress();
+	smtutil::Expression thisAddress(unsigned _idx);
+	smtutil::SortPointer thisAddressSort();
+
+	/// @returns the state as a tuple.
+	smtutil::Expression state();
+	smtutil::Expression state(unsigned _idx);
+	smtutil::SortPointer stateSort();
+	void newState();
+
 	/// @returns the symbolic balances.
 	smtutil::Expression balances();
 	/// @returns the symbolic balance of address `this`.
 	smtutil::Expression balance();
 	/// @returns the symbolic balance of an address.
 	smtutil::Expression balance(smtutil::Expression _address);
-
-	SymbolicIntVariable& errorFlag();
-
-	/// @returns the state as a tuple.
-	smtutil::Expression state();
-
-	/// @returns the state sort.
-	smtutil::SortPointer stateSort();
 
 	/// Transfer _value from _from to _to.
 	void transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value);

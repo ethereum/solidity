@@ -161,9 +161,9 @@ string Predicate::formatSummaryCall(vector<string> const& _args) const
 	auto const* fun = programFunction();
 	solAssert(fun, "");
 
-	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars.
-	vector<string>::const_iterator first = _args.begin() + static_cast<int>(stateVars->size()) + 1;
+	vector<string>::const_iterator first = _args.begin() + 3 + static_cast<int>(stateVars->size());
 	vector<string>::const_iterator last = first + static_cast<int>(fun->parameters().size());
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
@@ -188,8 +188,8 @@ string Predicate::formatSummaryCall(vector<string> const& _args) const
 
 vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
-	/// The signature of an implicit constructor summary predicate is: summary(error, postStateVars).
+	/// The signature of a function summary predicate is: summary(error, this, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of an implicit constructor summary predicate is: summary(error, this, postBlockchainState, postStateVars).
 	/// Here we are interested in postStateVars.
 
 	auto stateVars = stateVariables();
@@ -199,12 +199,12 @@ vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 	vector<string>::const_iterator stateLast;
 	if (auto const* function = programFunction())
 	{
-		stateFirst = _args.begin() + 1 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size());
+		stateFirst = _args.begin() + 3 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else if (programContract())
 	{
-		stateFirst = _args.begin() + 1;
+		stateFirst = _args.begin() + 3;
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else
@@ -220,7 +220,7 @@ vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 
 vector<string> Predicate::summaryPostInputValues(vector<string> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in postInputVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -230,7 +230,7 @@ vector<string> Predicate::summaryPostInputValues(vector<string> const& _args) co
 
 	auto const& inParams = function->parameters();
 
-	vector<string>::const_iterator first = _args.begin() + 1 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size());
+	vector<string>::const_iterator first = _args.begin() + 3 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
 	vector<string>::const_iterator last = first + static_cast<int>(inParams.size());
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
@@ -243,7 +243,7 @@ vector<string> Predicate::summaryPostInputValues(vector<string> const& _args) co
 
 vector<string> Predicate::summaryPostOutputValues(vector<string> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, preStateVars, preInputVars, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in outputVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -253,7 +253,7 @@ vector<string> Predicate::summaryPostOutputValues(vector<string> const& _args) c
 
 	auto const& inParams = function->parameters();
 
-	vector<string>::const_iterator first = _args.begin() + 1 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2;
+	vector<string>::const_iterator first = _args.begin() + 3 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 
