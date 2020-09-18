@@ -427,6 +427,10 @@ private:
 	/// signature: (slot, offset)
 	std::string partialClearStorageSlotFunction();
 
+	/// @returns the name of a function that will clear the given storage struct
+	/// signature: (slot) ->
+	std::string clearStorageStructFunction(StructType const& _type);
+
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	MultiUseYulFunctionCollector& m_functionCollector;
