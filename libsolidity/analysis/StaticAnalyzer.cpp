@@ -158,17 +158,16 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 	}
 
 	if (_variable.isStateVariable() || _variable.referenceLocation() == VariableDeclaration::Location::Storage)
-	{
-		TypePointer varType = _variable.annotation().type;
-		for (Type const* subtype: frontend::oversizedSubtypes(*varType))
-		{
-			string message = "Type " + subtype->toString(true) +
-				" covers a large part of storage and thus makes collisions likely."
-				" Either use mappings or dynamic arrays and allow their size to be increased only"
-				" in small quantities per transaction.";
-			m_errorReporter.warning(7325_error, _variable.typeName().location(), message);
-		}
-	}
+		if (auto varType = dynamic_cast<CompositeType const*>(_variable.annotation().type))
+			for (Type const* type: varType->fullDecomposition())
+				if (type->storageSizeUpperBound() >= (bigint(1) << 64))
+				{
+					string message = "Type " + type->toString(true) +
+						" covers a large part of storage and thus makes collisions likely."
+						" Either use mappings or dynamic arrays and allow their size to be increased only"
+						" in small quantities per transaction.";
+					m_errorReporter.warning(7325_error, _variable.typeName().location(), message);
+				}
 
 	return true;
 }

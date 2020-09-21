@@ -5,4 +5,4 @@ contract C {
     uint[2**255] b;
 }
 // ----
-// TypeError 7676: (60-114): Contract too large for storage.
+// TypeError 7676: (60-114): Contract requires too much storage.
