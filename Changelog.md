@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code generator: Fix internal error on returning structs containing mappings from library function.
  * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.
  * Code generator: Fix ``ABIEncoderV2`` pragma from the current module affecting inherited functions and applied modifiers.
  * Type Checker: Fix internal compiler error caused by storage parameters with nested mappings in libraries.
