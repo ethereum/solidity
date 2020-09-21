@@ -8,6 +8,7 @@ Compiler Features:
  * SMTChecker: Support events and low-level logs.
  * SMTChecker: Support ``revert()``.
  * SMTChecker: Support shifts.
+ * SMTChecker: Support compound and, or, and xor operators.
  * SMTChecker: Support structs.
  * SMTChecker: Support ``type(T).min``, ``type(T).max``, and ``type(I).interfaceId``.
  * Yul Optimizer: Prune unused parameters in functions.
