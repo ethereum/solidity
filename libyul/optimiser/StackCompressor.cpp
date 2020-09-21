@@ -168,7 +168,7 @@ bool StackCompressor::run(
 	bool allowMSizeOptimzation = !MSizeFinder::containsMSize(_dialect, *_object.code);
 	for (size_t iterations = 0; iterations < _maxIterations; iterations++)
 	{
-		map<YulString, int> stackSurplus = CompilabilityChecker::run(_dialect, _object, _optimizeStackAllocation);
+		map<YulString, int> stackSurplus = CompilabilityChecker(_dialect, _object, _optimizeStackAllocation).stackDeficit;
 		if (stackSurplus.empty())
 			return true;
 

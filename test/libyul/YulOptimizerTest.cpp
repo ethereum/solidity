@@ -46,6 +46,7 @@
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/MainFunction.h>
+#include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -60,6 +61,7 @@
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
+#include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -70,6 +72,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/CompilabilityChecker.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -377,6 +380,58 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		obj.code = m_object->code;
 		obj.analysisInfo = m_analysisInfo;
 		OptimiserSuite::run(*m_dialect, &meter, obj, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
+	}
+	else if (m_optimizerStep == "stackLimitEvader")
+	{
+		yul::Object obj;
+		obj.code = m_object->code;
+		obj.analysisInfo = m_analysisInfo;
+		disambiguate();
+		StackLimitEvader::run(*m_context, obj, CompilabilityChecker{
+			*m_dialect,
+			obj,
+			true
+		}.unreachableVariables);
+	}
+	else if (m_optimizerStep == "fakeStackLimitEvader")
+	{
+		yul::Object obj;
+		obj.code = m_object->code;
+		obj.analysisInfo = m_analysisInfo;
+		disambiguate();
+		// Mark all variables with a name starting with "$" for escalation to memory.
+		struct FakeUnreachableGenerator: ASTWalker
+		{
+			map<YulString, set<YulString>> fakeUnreachables;
+			using ASTWalker::operator();
+			void operator()(FunctionDefinition const& _function) override
+			{
+				YulString originalFunctionName = m_currentFunction;
+				m_currentFunction = _function.name;
+				ASTWalker::operator()(_function);
+				m_currentFunction = originalFunctionName;
+			}
+			void visitVariableName(YulString _var)
+			{
+				if (!_var.empty() && _var.str().front() == '$')
+					fakeUnreachables[m_currentFunction].insert(_var);
+			}
+			void operator()(VariableDeclaration const& _varDecl) override
+			{
+				for (auto const& var: _varDecl.variables)
+					visitVariableName(var.name);
+				ASTWalker::operator()(_varDecl);
+			}
+			void operator()(Identifier const& _identifier) override
+			{
+				visitVariableName(_identifier.name);
+				ASTWalker::operator()(_identifier);
+			}
+			YulString m_currentFunction = YulString{};
+		};
+		FakeUnreachableGenerator fakeUnreachableGenerator;
+		fakeUnreachableGenerator(*obj.code);
+		StackLimitEvader::run(*m_context, obj, fakeUnreachableGenerator.fakeUnreachables);
 	}
 	else
 	{
