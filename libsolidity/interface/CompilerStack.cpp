@@ -366,12 +366,10 @@ bool CompilerStack::analyze()
 		// This also calculates whether a contract is abstract, which is needed by the
 		// type checker.
 		ContractLevelChecker contractLevelChecker(m_errorReporter);
+
 		for (Source const* source: m_sourceOrder)
-			if (source->ast)
-				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-						if (!contractLevelChecker.check(*contract))
-							noErrors = false;
+			if (auto sourceAst = source->ast)
+				noErrors = contractLevelChecker.check(*sourceAst);
 
 		// Requires ContractLevelChecker
 		DocStringAnalyser docStringAnalyser(m_errorReporter);

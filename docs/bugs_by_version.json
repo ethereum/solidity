@@ -1187,7 +1187,9 @@
         "released": "2020-07-28"
     },
     "0.7.1": {
-        "bugs": [],
+        "bugs": [
+            "FreeFunctionRedefinition"
+        ],
         "released": "2020-09-02"
     }
 }

@@ -1,5 +1,8 @@
 ### 0.7.2 (unreleased)
 
+Important Bugfixes:
+ * Type Checker: Disallow two or more free functions with identical name (potentially imported and aliased) and parameter types.
+
 Language Features:
 
 
