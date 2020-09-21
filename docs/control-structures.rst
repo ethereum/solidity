@@ -105,8 +105,12 @@ otherwise, the ``value`` option would not be available.
   parentheses at the end perform the actual call. So in this case, the
   function is not called and the ``value`` and ``gas`` settings are lost.
 
-Function calls cause exceptions if the called contract does not exist (in the
-sense that the account does not contain code) or if the called contract itself
+Due to the fact that the EVM considers a call to a non-existing contract to
+always succeed, Solidity uses the ``extcodesize`` opcode to check that
+the contract that is about to be called actually exists (it contains code)
+and causes an exception if it does not.
+
+Function calls also cause exceptions if the called contract itself
 throws an exception or goes out of gas.
 
 .. warning::
