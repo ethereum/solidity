@@ -13,4 +13,3 @@ contract C {
 	}
 }
 // ----
-// Warning 5084: (198-208): Type conversion is not yet fully supported and might yield false positives.
