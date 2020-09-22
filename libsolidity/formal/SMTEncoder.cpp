@@ -352,34 +352,10 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 {
 	createExpr(_assignment);
 
-	static set<Token> const compoundOps{
-		Token::AssignAdd,
-		Token::AssignSub,
-		Token::AssignMul,
-		Token::AssignDiv,
-		Token::AssignMod,
-		Token::AssignBitAnd,
-		Token::AssignBitOr,
-		Token::AssignBitXor
-	};
 	Token op = _assignment.assignmentOperator();
-	if (op != Token::Assign && !compoundOps.count(op))
-	{
-		Expression const* identifier = &_assignment.leftHandSide();
-		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(identifier))
-			identifier = leftmostBase(*indexAccess);
-		// Give it a new index anyway to keep the SSA scheme sound.
-		solAssert(identifier, "");
-		if (auto varDecl = identifierToVariable(*identifier))
-			m_context.newValue(*varDecl);
+	solAssert(TokenTraits::isAssignmentOp(op), "");
 
-		m_errorReporter.warning(
-			9149_error,
-			_assignment.location(),
-			"Assertion checker does not yet implement this assignment operator."
-		);
-	}
-	else if (!smt::isSupportedType(*_assignment.annotation().type))
+	if (!smt::isSupportedType(*_assignment.annotation().type))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
 
@@ -397,9 +373,9 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 		else
 		{
 			auto const& type = _assignment.annotation().type;
-			auto rightHandSide = compoundOps.count(op) ?
-				compoundAssignment(_assignment) :
-				expr(_assignment.rightHandSide(), type);
+			auto rightHandSide = op == Token::Assign ?
+				expr(_assignment.rightHandSide(), type) :
+				compoundAssignment(_assignment);
 			defineExpr(_assignment, rightHandSide);
 			assignment(
 				_assignment.leftHandSide(),
@@ -1629,7 +1605,10 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 	static map<Token, Token> const compoundToBitwise{
 		{Token::AssignBitAnd, Token::BitAnd},
 		{Token::AssignBitOr, Token::BitOr},
-		{Token::AssignBitXor, Token::BitXor}
+		{Token::AssignBitXor, Token::BitXor},
+		{Token::AssignShl, Token::SHL},
+		{Token::AssignShr, Token::SHR},
+		{Token::AssignSar, Token::SAR}
 	};
 	Token op = _assignment.assignmentOperator();
 	solAssert(compoundToArithmetic.count(op) || compoundToBitwise.count(op), "");
