@@ -18,6 +18,7 @@ Compiler Features:
 
 Bugfixes:
  * Code generator: Fix internal error on stripping dynamic types from return parameters on EVM versions without ``RETURNDATACOPY``.
+ * Type Checker: Add missing check against nested dynamic arrays in ABI encoding functions when ABIEncoderV2 is disabled.
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * Type Checker: Correct the error message for invalid named parameter in a call to refer to the right argument.
  * Type Checker: Correct the warning for homonymous, but not shadowing declarations.
