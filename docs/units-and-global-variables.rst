@@ -69,6 +69,7 @@ Block and Transaction Properties
 --------------------------------
 
 - ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks
+- ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit

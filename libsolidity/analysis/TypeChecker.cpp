@@ -2922,6 +2922,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			(memberName == "min" ||	memberName == "max")
 		)
 			annotation.isPure = true;
+		else if (magicType->kind() == MagicType::Kind::Block && memberName == "chainid" && !m_evmVersion.hasChainID())
+			m_errorReporter.typeError(
+				3081_error,
+				_memberAccess.location(),
+				"\"chainid\" is not supported by the VM version."
+			);
 	}
 
 	if (

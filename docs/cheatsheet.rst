@@ -82,6 +82,7 @@ Global Variables
   the given arguments starting from the second and prepends the given four-byte selector
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent
   to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
+- ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit

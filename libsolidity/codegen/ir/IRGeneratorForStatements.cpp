@@ -1688,6 +1688,8 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			define(_memberAccess) << "origin()\n";
 		else if (member == "gasprice")
 			define(_memberAccess) << "gasprice()\n";
+		else if (member == "chainid")
+			define(_memberAccess) << "chainid()\n";
 		else if (member == "data")
 		{
 			IRVariable var(_memberAccess);
