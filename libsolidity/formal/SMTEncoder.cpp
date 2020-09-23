@@ -352,31 +352,10 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 {
 	createExpr(_assignment);
 
-	static set<Token> const compoundOps{
-		Token::AssignAdd,
-		Token::AssignSub,
-		Token::AssignMul,
-		Token::AssignDiv,
-		Token::AssignMod
-	};
 	Token op = _assignment.assignmentOperator();
-	if (op != Token::Assign && !compoundOps.count(op))
-	{
-		Expression const* identifier = &_assignment.leftHandSide();
-		if (auto const* indexAccess = dynamic_cast<IndexAccess const*>(identifier))
-			identifier = leftmostBase(*indexAccess);
-		// Give it a new index anyway to keep the SSA scheme sound.
-		solAssert(identifier, "");
-		if (auto varDecl = identifierToVariable(*identifier))
-			m_context.newValue(*varDecl);
+	solAssert(TokenTraits::isAssignmentOp(op), "");
 
-		m_errorReporter.warning(
-			9149_error,
-			_assignment.location(),
-			"Assertion checker does not yet implement this assignment operator."
-		);
-	}
-	else if (!smt::isSupportedType(*_assignment.annotation().type))
+	if (!smt::isSupportedType(*_assignment.annotation().type))
 	{
 		// Give it a new index anyway to keep the SSA scheme sound.
 
@@ -394,9 +373,9 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 		else
 		{
 			auto const& type = _assignment.annotation().type;
-			auto rightHandSide = compoundOps.count(op) ?
-				compoundAssignment(_assignment) :
-				expr(_assignment.rightHandSide(), type);
+			auto rightHandSide = op == Token::Assign ?
+				expr(_assignment.rightHandSide(), type) :
+				compoundAssignment(_assignment);
 			defineExpr(_assignment, rightHandSide);
 			assignment(
 				_assignment.leftHandSide(),
@@ -1388,6 +1367,59 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	return {value, valueUnbounded};
 }
 
+smtutil::Expression SMTEncoder::bitwiseOperation(
+	Token _op,
+	smtutil::Expression const& _left,
+	smtutil::Expression const& _right,
+	TypePointer const& _commonType
+)
+{
+	static set<Token> validOperators{
+		Token::BitAnd,
+		Token::BitOr,
+		Token::BitXor,
+		Token::SHL,
+		Token::SHR,
+		Token::SAR
+	};
+	solAssert(validOperators.count(_op), "");
+	solAssert(_commonType, "");
+
+	auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(_commonType);
+
+	auto bvLeft = smtutil::Expression::int2bv(_left, bvSize);
+	auto bvRight = smtutil::Expression::int2bv(_right, bvSize);
+
+	optional<smtutil::Expression> result;
+	switch (_op)
+	{
+		case Token::BitAnd:
+			result = bvLeft & bvRight;
+			break;
+		case Token::BitOr:
+			result = bvLeft | bvRight;
+			break;
+		case Token::BitXor:
+			result = bvLeft ^ bvRight;
+			break;
+		case Token::SHL:
+			result = bvLeft << bvRight;
+			break;
+		case Token::SHR:
+			solAssert(false, "");
+		case Token::SAR:
+			result = isSigned ?
+				smtutil::Expression::ashr(bvLeft, bvRight) :
+				bvLeft >> bvRight;
+			break;
+		default:
+			solAssert(false, "");
+	}
+
+	solAssert(result.has_value(), "");
+	return smtutil::Expression::bv2int(*result, isSigned);
+}
+
 void SMTEncoder::compareOperation(BinaryOperation const& _op)
 {
 	auto const& commonType = _op.annotation().commonType;
@@ -1464,39 +1496,12 @@ void SMTEncoder::bitwiseOperation(BinaryOperation const& _op)
 	auto commonType = _op.annotation().commonType;
 	solAssert(commonType, "");
 
-	auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(commonType);
-
-	auto bvLeft = smtutil::Expression::int2bv(expr(_op.leftExpression(), commonType), bvSize);
-	auto bvRight = smtutil::Expression::int2bv(expr(_op.rightExpression(), commonType), bvSize);
-
-	optional<smtutil::Expression> result;
-	switch (op)
-	{
-	case Token::BitAnd:
-		result = bvLeft & bvRight;
-		break;
-	case Token::BitOr:
-		result = bvLeft | bvRight;
-		break;
-	case Token::BitXor:
-		result = bvLeft ^ bvRight;
-		break;
-	case Token::SHL:
-		result = bvLeft << bvRight;
-		break;
-	case Token::SHR:
-		solAssert(false, "");
-	case Token::SAR:
-		result = isSigned ?
-			smtutil::Expression::ashr(bvLeft, bvRight) :
-			bvLeft >> bvRight;
-		break;
-	default:
-		solAssert(false, "");
-	}
-
-	solAssert(result, "");
-	defineExpr(_op, smtutil::Expression::bv2int(*result, isSigned));
+	defineExpr(_op, bitwiseOperation(
+		_op.getOperator(),
+		expr(_op.leftExpression(), commonType),
+		expr(_op.rightExpression(), commonType),
+		commonType
+	));
 }
 
 void SMTEncoder::bitwiseNotOperation(UnaryOperation const& _op)
@@ -1604,9 +1609,27 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 		{Token::AssignDiv, Token::Div},
 		{Token::AssignMod, Token::Mod}
 	};
+	static map<Token, Token> const compoundToBitwise{
+		{Token::AssignBitAnd, Token::BitAnd},
+		{Token::AssignBitOr, Token::BitOr},
+		{Token::AssignBitXor, Token::BitXor},
+		{Token::AssignShl, Token::SHL},
+		{Token::AssignShr, Token::SHR},
+		{Token::AssignSar, Token::SAR}
+	};
 	Token op = _assignment.assignmentOperator();
-	solAssert(compoundToArithmetic.count(op), "");
+	solAssert(compoundToArithmetic.count(op) || compoundToBitwise.count(op), "");
+
 	auto decl = identifierToVariable(_assignment.leftHandSide());
+
+	if (compoundToBitwise.count(op))
+		return bitwiseOperation(
+			compoundToBitwise.at(op),
+			decl ? currentValue(*decl) : expr(_assignment.leftHandSide()),
+			expr(_assignment.rightHandSide()),
+			_assignment.annotation().type
+		);
+
 	auto values = arithmeticOperation(
 		compoundToArithmetic.at(op),
 		decl ? currentValue(*decl) : expr(_assignment.leftHandSide()),
