@@ -51,6 +51,7 @@
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
+#include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
@@ -73,6 +74,7 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <libyul/CompilabilityChecker.h>
 
 using namespace std;
 using namespace solidity;
@@ -124,6 +126,12 @@ void OptimiserSuite::run(
 	{
 		yulAssert(_meter, "");
 		ConstantOptimiser{*dialect, *_meter}(ast);
+		if (dialect->providesObjectAccess())
+			StackLimitEvader::run(suite.m_context, _object, CompilabilityChecker{
+				_dialect,
+				_object,
+				_optimizeStackAllocation
+			}.unreachableVariables);
 	}
 	else if (dynamic_cast<WasmDialect const*>(&_dialect))
 	{

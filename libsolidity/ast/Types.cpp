@@ -44,6 +44,7 @@
 #include <boost/range/algorithm/copy.hpp>
 
 #include <limits>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -53,57 +54,6 @@ using namespace solidity::frontend;
 
 namespace
 {
-
-struct TypeComp
-{
-	bool operator()(Type const* lhs, Type const* rhs) const
-	{
-		solAssert(lhs && rhs, "");
-		return lhs->richIdentifier() < rhs->richIdentifier();
-	}
-};
-using TypeSet = std::set<Type const*, TypeComp>;
-
-void oversizedSubtypesInner(
-	Type const& _type,
-	bool _includeType,
-	set<StructDefinition const*>& _structsSeen,
-	TypeSet& _oversizedSubtypes
-)
-{
-	switch (_type.category())
-	{
-	case Type::Category::Array:
-	{
-		auto const& t = dynamic_cast<ArrayType const&>(_type);
-		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
-			_oversizedSubtypes.insert(&t);
-		oversizedSubtypesInner(*t.baseType(), t.isDynamicallySized(), _structsSeen, _oversizedSubtypes);
-		break;
-	}
-	case Type::Category::Struct:
-	{
-		auto const& t = dynamic_cast<StructType const&>(_type);
-		if (_structsSeen.count(&t.structDefinition()))
-			return;
-		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
-			_oversizedSubtypes.insert(&t);
-		_structsSeen.insert(&t.structDefinition());
-		for (auto const& m: t.members(nullptr))
-			oversizedSubtypesInner(*m.type, false, _structsSeen, _oversizedSubtypes);
-		_structsSeen.erase(&t.structDefinition());
-		break;
-	}
-	case Type::Category::Mapping:
-	{
-		auto const* valueType = dynamic_cast<MappingType const&>(_type).valueType();
-		oversizedSubtypesInner(*valueType, true, _structsSeen, _oversizedSubtypes);
-		break;
-	}
-	default:
-		break;
-	}
-}
 
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
@@ -199,16 +149,6 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
-}
-
-vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Type const& _type)
-{
-	set<StructDefinition const*> structsSeen;
-	TypeSet oversized;
-	oversizedSubtypesInner(_type, true, structsSeen, oversized);
-	vector<frontend::Type const*> res;
-	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
-	return res;
 }
 
 void Type::clearCache() const
@@ -404,10 +344,16 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 		return encodingType;
 	TypePointer baseType = encodingType;
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
+	{
 		baseType = arrayType->baseType();
-	if (dynamic_cast<StructType const*>(baseType))
-		if (!_encoderV2)
+
+		auto const* baseArrayType = dynamic_cast<ArrayType const*>(baseType);
+		if (!_encoderV2 && baseArrayType && baseArrayType->isDynamicallySized())
 			return nullptr;
+	}
+	if (!_encoderV2 && dynamic_cast<StructType const*>(baseType))
+		return nullptr;
+
 	return encodingType;
 }
 
@@ -1613,6 +1559,21 @@ TypeResult ContractType::unaryOperatorResult(Token _operator) const
 		return nullptr;
 }
 
+vector<Type const*> CompositeType::fullDecomposition() const
+{
+	vector<Type const*> res = {this};
+	unordered_set<string> seen = {richIdentifier()};
+	for (size_t k = 0; k < res.size(); ++k)
+		if (auto composite = dynamic_cast<CompositeType const*>(res[k]))
+			for (Type const* next: composite->decomposition())
+				if (seen.count(next->richIdentifier()) == 0)
+				{
+					seen.insert(next->richIdentifier());
+					res.push_back(next);
+				}
+	return res;
+}
+
 Type const* ReferenceType::withLocation(DataLocation _location, bool _isPointer) const
 {
 	return TypeProvider::withLocation(this, _location, _isPointer);
@@ -2155,7 +2116,7 @@ string ContractType::toString(bool) const
 
 string ContractType::canonicalName() const
 {
-	return m_contract.annotation().canonicalName;
+	return *m_contract.annotation().canonicalName;
 }
 
 MemberList::MemberMap ContractType::nativeMembers(ASTNode const*) const
@@ -2406,7 +2367,7 @@ bool StructType::containsNestedMapping() const
 
 string StructType::toString(bool _short) const
 {
-	string ret = "struct " + m_struct.annotation().canonicalName;
+	string ret = "struct " + *m_struct.annotation().canonicalName;
 	if (!_short)
 		ret += " " + stringForReferencePart();
 	return ret;
@@ -2585,7 +2546,7 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 
 string StructType::canonicalName() const
 {
-	return m_struct.annotation().canonicalName;
+	return *m_struct.annotation().canonicalName;
 }
 
 FunctionTypePointer StructType::constructorType() const
@@ -2650,6 +2611,13 @@ vector<tuple<string, TypePointer>> StructType::makeStackItems() const
 	solAssert(false, "");
 }
 
+vector<Type const*> StructType::decomposition() const
+{
+	vector<Type const*> res;
+	for (MemberList::Member const& member: members(nullptr))
+		res.push_back(member.type);
+	return res;
+}
 
 TypePointer EnumType::encodingType() const
 {
@@ -2685,12 +2653,12 @@ unsigned EnumType::storageBytes() const
 
 string EnumType::toString(bool) const
 {
-	return string("enum ") + m_enum.annotation().canonicalName;
+	return string("enum ") + *m_enum.annotation().canonicalName;
 }
 
 string EnumType::canonicalName() const
 {
-	return m_enum.annotation().canonicalName;
+	return *m_enum.annotation().canonicalName;
 }
 
 size_t EnumType::numberOfMembers() const
@@ -3163,7 +3131,7 @@ string FunctionType::toString(bool _short) const
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope()))
-			name += contract->annotation().canonicalName + ".";
+			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
 	name += '(';
@@ -3954,7 +3922,7 @@ bool ModuleType::operator==(Type const& _other) const
 MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap symbols;
-	for (auto const& symbolName: m_sourceUnit.annotation().exportedSymbols)
+	for (auto const& symbolName: *m_sourceUnit.annotation().exportedSymbols)
 		for (Declaration const* symbol: symbolName.second)
 			symbols.emplace_back(symbolName.first, symbol->type(), symbol);
 	return symbols;
@@ -3962,7 +3930,7 @@ MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 
 string ModuleType::toString(bool) const
 {
-	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
+	return string("module \"") + *m_sourceUnit.annotation().path + string("\"");
 }
 
 string MagicType::richIdentifier() const

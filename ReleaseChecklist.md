@@ -31,6 +31,7 @@
  - [ ] Take the tarball from the upload directory (its name should be ``solidity_x.x.x.tar.gz``, otherwise ``prerelease.txt`` was missing in the step before) and upload the source tarball to the release page.
 
 ### Homebrew and MacOS
+ - [ ] Update the version and the hash (``sha256sum solidity_x.x.x.tar.gz``) in https://github.com/Homebrew/homebrew-core/blob/master/Formula/solidity.rb
  - [ ] Update the version and the hash (``sha256sum solidity_x.x.x.tar.gz``) in https://github.com/ethereum/homebrew-ethereum/blob/master/solidity.rb
  - [ ] Take the binary from the ``b_osx`` run of the released commit in circle-ci and add it to the release page as ``solc-macos``.
 

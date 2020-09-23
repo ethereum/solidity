@@ -142,6 +142,23 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			Expression const& arg = _call.arguments.front();
 			_assembly.appendLinkerSymbol(std::get<Literal>(arg).value.str());
 		}));
+
+		builtins.emplace(createFunction(
+			"memoryguard",
+			1,
+			1,
+			SideEffects{},
+			{LiteralKind::Number},
+			[](
+				FunctionCall const& _call,
+				AbstractAssembly& _assembly,
+				BuiltinContext&,
+				function<void(Expression const&)> _visitExpression
+			) {
+				visitArguments(_assembly, _call, _visitExpression);
+			})
+		);
+
 		builtins.emplace(createFunction("datasize", 1, 1, SideEffects{}, {LiteralKind::String}, [](
 			FunctionCall const& _call,
 			AbstractAssembly& _assembly,

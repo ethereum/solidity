@@ -779,7 +779,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(function.parameterTypes().size() == 1, "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
-					if (!arguments.front()->annotation().isPure)
+					if (!*arguments.front()->annotation().isPure)
 					{
 						arguments.front()->accept(*this);
 						utils().popStackElement(*arguments.front()->annotation().type);
@@ -1078,7 +1078,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
-					if (!arguments.at(1)->annotation().isPure)
+					if (!*arguments.at(1)->annotation().isPure)
 					{
 						arguments.at(1)->accept(*this);
 						utils().popStackElement(*arguments.at(1)->annotation().type);

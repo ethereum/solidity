@@ -250,6 +250,16 @@ defaults:
       requires:
         - b_ubu_ossfuzz
 
+  - workflow_win: &workflow_win
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_win
+
+  - workflow_win_release: &workflow_win_release
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_win_release
+
   # --------------------------------------------------------------------------
   # Notification Templates
   - gitter_notify_failure: &gitter_notify_failure
@@ -903,6 +913,9 @@ jobs:
       - run:
           name: "Building solidity"
           command: .circleci/build_win.ps1
+      - run:
+          name: "Run solc.exe to make sure build was successful."
+          command: .\build\solc\Release\solc.exe --version
       - store_artifacts: *artifact_solc_windows
       - persist_to_workspace: *artifacts_build_dir
 
@@ -911,6 +924,24 @@ jobs:
     environment:
       FORCE_RELEASE: ON
 
+  t_win: &t_win
+    executor:
+      name: win/default
+      shell: powershell.exe
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: "Install evmone"
+          command: scripts/install_evmone.ps1
+      - run:
+          name: "Run soltest"
+          command: .circleci/soltest.ps1
+      - store_artifacts: *artifacts_test_results
+
+  t_win_release:
+    <<: *t_win
 
 workflows:
   version: 2
@@ -966,6 +997,8 @@ workflows:
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
       - b_win_release: *workflow_trigger_on_tags
+      - t_win: *workflow_win
+      - t_win_release: *workflow_win_release
 
   nightly:
 
