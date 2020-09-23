@@ -664,6 +664,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		break;
 	case FunctionType::Kind::Send:
 	case FunctionType::Kind::Transfer:
+	case FunctionType::Kind::Selfdestruct:
 	{
 		auto const& memberAccess = dynamic_cast<MemberAccess const&>(_funCall.expression());
 		auto const& address = memberAccess.expression();
@@ -674,6 +675,10 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), m_context);
 
 		m_context.state().transfer(m_context.state().thisAddress(), expr(address), expr(*value));
+
+		// Execution is stopped after selfdestruct.
+		if (funType.kind() == FunctionType::Kind::Selfdestruct)
+			addPathImplifiedExpression(smtutil::Expression(false));
 		break;
 	}
 	case FunctionType::Kind::ArrayPush:
