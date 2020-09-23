@@ -25,7 +25,6 @@
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SemanticTest.h>
 #include <test/libsolidity/SMTCheckerTest.h>
-#include <test/libsolidity/SMTCheckerJSONTest.h>
 #include <test/libyul/EwasmTranslationTest.h>
 #include <test/libyul/YulOptimizerTest.h>
 #include <test/libyul/YulInterpreterTest.h>
