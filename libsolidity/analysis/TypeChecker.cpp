@@ -1645,7 +1645,8 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 			dataLoc = argRefType->location();
 		if (auto type = dynamic_cast<ReferenceType const*>(resultType))
 			resultType = TypeProvider::withLocation(type, dataLoc, type->isPointer());
-		if (argType->isExplicitlyConvertibleTo(*resultType))
+		BoolResult result = argType->isExplicitlyConvertibleTo(*resultType);
+		if (result)
 		{
 			if (auto argArrayType = dynamic_cast<ArrayType const*>(argType))
 			{
@@ -1716,14 +1717,15 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					"you can use the .address member of the function."
 				);
 			else
-				m_errorReporter.typeError(
+				m_errorReporter.typeErrorConcatenateDescriptions(
 					9640_error,
 					_functionCall.location(),
 					"Explicit type conversion not allowed from \"" +
 					argType->toString() +
 					"\" to \"" +
 					resultType->toString() +
-					"\"."
+					"\".",
+					result.message()
 				);
 		}
 		if (auto addressType = dynamic_cast<AddressType const*>(resultType))
@@ -3217,7 +3219,8 @@ Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName
 bool TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
 {
 	_expression.accept(*this);
-	if (!type(_expression)->isImplicitlyConvertibleTo(_expectedType))
+	BoolResult result = type(_expression)->isImplicitlyConvertibleTo(_expectedType);
+	if (!result)
 	{
 		auto errorMsg = "Type " +
 			type(_expression)->toString() +
@@ -3236,17 +3239,23 @@ bool TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 					errorMsg + ", but it can be explicitly converted."
 				);
 			else
-				m_errorReporter.typeError(
+				m_errorReporter.typeErrorConcatenateDescriptions(
 					2326_error,
 					_expression.location(),
 					errorMsg +
 					". Try converting to type " +
 					type(_expression)->mobileType()->toString() +
-					" or use an explicit conversion."
+					" or use an explicit conversion.",
+					result.message()
 				);
 		}
 		else
-			m_errorReporter.typeError(7407_error, _expression.location(), errorMsg + ".");
+			m_errorReporter.typeErrorConcatenateDescriptions(
+				7407_error,
+				_expression.location(),
+				errorMsg + ".",
+				result.message()
+			);
 		return false;
 	}
 	return true;
