@@ -801,7 +801,7 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	unsigned argSize = argument->annotation().type->storageBytes();
 	unsigned castSize = _funCall.annotation().type->storageBytes();
 	auto const& funCallCategory = _funCall.annotation().type->category();
-	// TODO: remove the isNegative() check for address once the type checker disallows this
+	// TODO: remove the isNegative() check for literals once the type checker disallows this
 	if (
 		auto const* numberType = dynamic_cast<RationalNumberType const*>(argument->annotation().type);
 		numberType &&
