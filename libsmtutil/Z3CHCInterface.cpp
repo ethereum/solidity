@@ -142,14 +142,17 @@ instead of a path.
 */
 CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
 {
-	CexGraph graph;
-
 	/// The root fact of the refutation proof is `false`.
 	/// The node itself is not a hyper resolution, so we need to
 	/// extract the `query` hyper resolution node from the
 	/// `false` node (the first child).
-	smtAssert(_proof.is_app(), "");
-	smtAssert(fact(_proof).decl().decl_kind() == Z3_OP_FALSE, "");
+	/// The proof has the shape above for z3 >=4.8.8.
+	/// If an older version is used, this check will fail and no
+	/// counterexample will be generated.
+	if (!_proof.is_app() || fact(_proof).decl().decl_kind() != Z3_OP_FALSE)
+		return {};
+
+	CexGraph graph;
 
 	stack<z3::expr> proofStack;
 	proofStack.push(_proof.arg(0));
