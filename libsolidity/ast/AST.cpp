@@ -492,7 +492,7 @@ CallableDeclaration const* Scopable::functionOrModifierDefinition() const
 
 string Scopable::sourceUnitName() const
 {
-	return sourceUnit().annotation().path;
+	return *sourceUnit().annotation().path;
 }
 
 DeclarationAnnotation& Declaration::annotation() const

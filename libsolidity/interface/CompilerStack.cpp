@@ -1097,7 +1097,7 @@ void CompilerStack::resolveImports()
 			for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 				if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 				{
-					string const& path = import->annotation().absolutePath;
+					string const& path = *import->annotation().absolutePath;
 					solAssert(m_sources.count(path), "");
 					import->annotation().sourceUnit = m_sources[path].ast.get();
 					toposort(&m_sources[path]);
@@ -1295,9 +1295,9 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 	/// All the source files (including self), which should be included in the metadata.
 	set<string> referencedSources;
-	referencedSources.insert(_contract.contract->sourceUnit().annotation().path);
+	referencedSources.insert(*_contract.contract->sourceUnit().annotation().path);
 	for (auto const sourceUnit: _contract.contract->sourceUnit().referencedSourceUnits(true))
-		referencedSources.insert(sourceUnit->annotation().path);
+		referencedSources.insert(*sourceUnit->annotation().path);
 
 	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)
@@ -1363,7 +1363,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
-		_contract.contract->annotation().canonicalName;
+		*_contract.contract->annotation().canonicalName;
 
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;

@@ -74,7 +74,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 	for (auto const& node: _sourceUnit.nodes())
 		if (auto imp = dynamic_cast<ImportDirective const*>(node.get()))
 		{
-			string const& path = imp->annotation().absolutePath;
+			string const& path = *imp->annotation().absolutePath;
 			if (!_sourceUnits.count(path))
 			{
 				m_errorReporter.declarationError(

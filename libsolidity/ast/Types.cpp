@@ -2115,7 +2115,7 @@ string ContractType::toString(bool) const
 
 string ContractType::canonicalName() const
 {
-	return m_contract.annotation().canonicalName;
+	return *m_contract.annotation().canonicalName;
 }
 
 MemberList::MemberMap ContractType::nativeMembers(ASTNode const*) const
@@ -2366,7 +2366,7 @@ bool StructType::containsNestedMapping() const
 
 string StructType::toString(bool _short) const
 {
-	string ret = "struct " + m_struct.annotation().canonicalName;
+	string ret = "struct " + *m_struct.annotation().canonicalName;
 	if (!_short)
 		ret += " " + stringForReferencePart();
 	return ret;
@@ -2545,7 +2545,7 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 
 string StructType::canonicalName() const
 {
-	return m_struct.annotation().canonicalName;
+	return *m_struct.annotation().canonicalName;
 }
 
 FunctionTypePointer StructType::constructorType() const
@@ -2652,12 +2652,12 @@ unsigned EnumType::storageBytes() const
 
 string EnumType::toString(bool) const
 {
-	return string("enum ") + m_enum.annotation().canonicalName;
+	return string("enum ") + *m_enum.annotation().canonicalName;
 }
 
 string EnumType::canonicalName() const
 {
-	return m_enum.annotation().canonicalName;
+	return *m_enum.annotation().canonicalName;
 }
 
 size_t EnumType::numberOfMembers() const
@@ -3130,7 +3130,7 @@ string FunctionType::toString(bool _short) const
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope()))
-			name += contract->annotation().canonicalName + ".";
+			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
 	name += '(';
@@ -3921,7 +3921,7 @@ bool ModuleType::operator==(Type const& _other) const
 MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap symbols;
-	for (auto const& symbolName: m_sourceUnit.annotation().exportedSymbols)
+	for (auto const& symbolName: *m_sourceUnit.annotation().exportedSymbols)
 		for (Declaration const* symbol: symbolName.second)
 			symbols.emplace_back(symbolName.first, symbol->type(), symbol);
 	return symbols;
@@ -3929,7 +3929,7 @@ MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 
 string ModuleType::toString(bool) const
 {
-	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
+	return string("module \"") + *m_sourceUnit.annotation().path + string("\"");
 }
 
 string MagicType::richIdentifier() const

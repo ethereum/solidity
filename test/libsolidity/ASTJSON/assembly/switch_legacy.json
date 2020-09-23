@@ -25,7 +25,6 @@
           null
         ],
         "contractKind": "contract",
-        "fullyImplemented": true,
         "linearizedBaseContracts":
         [
           6
