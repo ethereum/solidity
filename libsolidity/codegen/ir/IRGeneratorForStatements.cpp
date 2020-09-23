@@ -929,6 +929,20 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 						"(" <<
 						IRVariable(arg).commaSeparatedList() <<
 						")";
+				else if (auto functionType = dynamic_cast<FunctionType const*>(paramTypes[i]))
+				{
+					solAssert(
+						IRVariable(arg).type() == *functionType &&
+						functionType->kind() == FunctionType::Kind::External &&
+						!functionType->bound(),
+						""
+					);
+					define(indexedArgs.emplace_back(m_context.newYulVariable(), *TypeProvider::fixedBytes(32))) <<
+						m_utils.combineExternalFunctionIdFunction() <<
+						"(" <<
+						IRVariable(arg).commaSeparatedList() <<
+						")\n";
+				}
 				else
 					indexedArgs.emplace_back(convert(arg, *paramTypes[i]));
 			}
