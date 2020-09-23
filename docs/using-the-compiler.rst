@@ -613,8 +613,8 @@ Available upgrade modules
 +----------------------------+---------+--------------------------------------------------+
 
 Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
-:doc:`0.6.0 release notes <060-breaking-changes>` and
-:doc:`0.7.0 release notes <070-breaking-changes>` for further details.
+:doc:`0.6.0 release notes <060-breaking-changes>`,
+:doc:`0.7.0 release notes <070-breaking-changes>` and :doc:`0.8.0 release notes <080-breaking-changes>` for further details.
 
 Synopsis
 ~~~~~~~~
