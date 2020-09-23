@@ -1382,12 +1382,25 @@ bool StringLiteralType::operator==(Type const& _other) const
 
 std::string StringLiteralType::toString(bool) const
 {
+	auto isPrintableASCII = [](string const& s)
+	{
+		for (auto c: s)
+		{
+			if (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f)
+				return false;
+		}
+		return true;
+	};
+
+	string ret = isPrintableASCII(m_value) ?
+		("literal_string \"" + m_value + "\"") :
+		("literal_string hex\"" + util::toHex(util::asBytes(m_value)) + "\"");
+
 	size_t invalidSequence;
-
 	if (!util::validateUTF8(m_value, invalidSequence))
-		return "literal_string (contains invalid UTF-8 sequence at position " + util::toString(invalidSequence) + ")";
+		ret += " (contains invalid UTF-8 sequence at position " + util::toString(invalidSequence) + ")";
 
-	return "literal_string \"" + m_value + "\"";
+	return ret;
 }
 
 TypePointer StringLiteralType::mobileType() const
