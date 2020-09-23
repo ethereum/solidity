@@ -1357,11 +1357,19 @@ BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) 
 		return true;
 	}
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
+	{
+		size_t invalidSequence;
+		if (arrayType->isString() && !util::validateUTF8(value(), invalidSequence))
+			return BoolResult::err(
+				"Contains invalid UTF-8 sequence at position " +
+				util::toString(invalidSequence) +
+				"."
+			);
 		return
 			arrayType->location() != DataLocation::CallData &&
 			arrayType->isByteArray() &&
-			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
-			!(arrayType->isString() && !util::validateUTF8(value()));
+			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer());
+	}
 	else
 		return false;
 }
@@ -1392,15 +1400,9 @@ std::string StringLiteralType::toString(bool) const
 		return true;
 	};
 
-	string ret = isPrintableASCII(m_value) ?
+	return isPrintableASCII(m_value) ?
 		("literal_string \"" + m_value + "\"") :
 		("literal_string hex\"" + util::toHex(util::asBytes(m_value)) + "\"");
-
-	size_t invalidSequence;
-	if (!util::validateUTF8(m_value, invalidSequence))
-		ret += " (contains invalid UTF-8 sequence at position " + util::toString(invalidSequence) + ")";
-
-	return ret;
 }
 
 TypePointer StringLiteralType::mobileType() const
