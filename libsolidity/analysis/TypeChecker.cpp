@@ -2171,7 +2171,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 	for (size_t i = 0; i < paramArgMap.size(); ++i)
 	{
 		solAssert(!!paramArgMap[i], "unmapped parameter");
-		if (!type(*paramArgMap[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
+		BoolResult result = type(*paramArgMap[i])->isImplicitlyConvertibleTo(*parameterTypes[i]);
+		if (!result)
 		{
 			auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
 				string msg =
@@ -2181,6 +2182,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 					" to " +
 					parameterTypes[i]->toString() +
 					" requested.";
+				if (!result.message().empty())
+					msg += " " + result.message();
 				if (
 					_functionType->kind() == FunctionType::Kind::BareCall ||
 					_functionType->kind() == FunctionType::Kind::BareCallCode ||
