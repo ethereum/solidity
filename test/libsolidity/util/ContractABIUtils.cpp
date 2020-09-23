@@ -319,8 +319,11 @@ solidity::frontend::test::ParameterList ContractABIUtils::failureParameters(byte
 	ParameterList parameters;
 
 	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::HexString, ABIType::AlignNone, 4}, FormatInfo{}});
-	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
-	parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
+	if (_bytes.size() > 4)
+	{
+		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::Hex}, FormatInfo{}});
+		parameters.push_back(Parameter{bytes(), "", ABIType{ABIType::UnsignedDec}, FormatInfo{}});
+	}
 
 	/// If _bytes contains at least a 1 byte message (function selector + tail pointer + message length + message)
 	/// append an additional string parameter to represent that message.
