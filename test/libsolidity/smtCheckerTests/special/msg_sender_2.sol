@@ -10,4 +10,3 @@ contract C
 	}
 }
 // ----
-// Warning 5084: (98-108): Type conversion is not yet fully supported and might yield false positives.

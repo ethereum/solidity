@@ -792,12 +792,19 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	auto argument = _funCall.arguments().front();
 	unsigned argSize = argument->annotation().type->storageBytes();
 	unsigned castSize = _funCall.annotation().type->storageBytes();
-	if (argSize == castSize)
+	auto const& funCallCategory = _funCall.annotation().type->category();
+	// Allow casting number literals to address.
+	// TODO: remove the isNegative() check once the type checker disallows this
+	if (
+		auto const* numberType = dynamic_cast<RationalNumberType const*>(argument->annotation().type);
+		numberType && !numberType->isNegative() && (funCallCategory == Type::Category::Address)
+	)
+		defineExpr(_funCall, numberType->literalValue(nullptr));
+	else if (argSize == castSize)
 		defineExpr(_funCall, expr(*argument));
 	else
 	{
 		m_context.setUnknownValue(*m_context.expression(_funCall));
-		auto const& funCallCategory = _funCall.annotation().type->category();
 		// TODO: truncating and bytesX needs a different approach because of right padding.
 		if (funCallCategory == Type::Category::Integer || funCallCategory == Type::Category::Address)
 		{
