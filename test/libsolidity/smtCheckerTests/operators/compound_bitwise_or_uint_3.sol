@@ -10,3 +10,5 @@ contract C {
     }
 }
 // ----
+// Warning 1218: (157-172): Error trying to invoke SMT solver.
+// Warning 7812: (157-172): Assertion violation might happen here.

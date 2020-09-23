@@ -49,7 +49,7 @@ public:
 
 	// Z3 "basic resources" limit.
 	// This is used to make the runs more deterministic and platform/machine independent.
-	static int const resourceLimit = 12500000;
+	static int const resourceLimit = 1000000;
 
 private:
 	void declareFunction(std::string const& _name, Sort const& _sort);
