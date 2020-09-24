@@ -1,8 +1,13 @@
 pragma experimental SMTChecker;
+
 contract C {
-    bytes20 x;
-    function f(bytes16 b) public view {
-        b[uint8(x[2])];
+    function f(uint i) public pure {
+        bytes memory x = hex"00112233";
+        assert(x[0] == 0x00);
+        assert(x[1] == 0x11);
+        require(i > 3);
+        assert(x[i] == 0x00);
     }
 }
 // ----
+// Warning 6328: (161-181): Assertion violation happens here.
