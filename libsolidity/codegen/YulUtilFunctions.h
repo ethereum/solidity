@@ -140,6 +140,10 @@ public:
 	/// signature: (base, exponent, min, max) -> power
 	std::string overflowCheckedSignedExpFunction();
 
+	/// Helper function for the two checked exponentiation functions.
+	/// signature: (power, base, exponent, max) -> power
+	std::string overflowCheckedExpLoopFunction();
+
 	/// @returns the name of a function that fetches the length of the given
 	/// array
 	/// signature: (array) -> length

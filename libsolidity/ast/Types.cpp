@@ -1352,13 +1352,25 @@ StringLiteralType::StringLiteralType(string _value):
 BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (auto fixedBytes = dynamic_cast<FixedBytesType const*>(&_convertTo))
-		return static_cast<size_t>(fixedBytes->numBytes()) >= m_value.size();
+	{
+		if (static_cast<size_t>(fixedBytes->numBytes()) < m_value.size())
+			return BoolResult::err("Literal is larger than the type.");
+		return true;
+	}
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
+	{
+		size_t invalidSequence;
+		if (arrayType->isString() && !util::validateUTF8(value(), invalidSequence))
+			return BoolResult::err(
+				"Contains invalid UTF-8 sequence at position " +
+				util::toString(invalidSequence) +
+				"."
+			);
 		return
 			arrayType->location() != DataLocation::CallData &&
 			arrayType->isByteArray() &&
-			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
-			!(arrayType->isString() && !util::validateUTF8(value()));
+			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer());
+	}
 	else
 		return false;
 }
@@ -1379,12 +1391,19 @@ bool StringLiteralType::operator==(Type const& _other) const
 
 std::string StringLiteralType::toString(bool) const
 {
-	size_t invalidSequence;
+	auto isPrintableASCII = [](string const& s)
+	{
+		for (auto c: s)
+		{
+			if (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f)
+				return false;
+		}
+		return true;
+	};
 
-	if (!util::validateUTF8(m_value, invalidSequence))
-		return "literal_string (contains invalid UTF-8 sequence at position " + util::toString(invalidSequence) + ")";
-
-	return "literal_string \"" + m_value + "\"";
+	return isPrintableASCII(m_value) ?
+		("literal_string \"" + m_value + "\"") :
+		("literal_string hex\"" + util::toHex(util::asBytes(m_value)) + "\"");
 }
 
 TypePointer StringLiteralType::mobileType() const

@@ -10,4 +10,3 @@ contract C {
 }
 // ----
 // Warning 6328: (117-130): Assertion violation happens here.
-// Warning 9149: (106-113): Assertion checker does not yet implement this assignment operator.

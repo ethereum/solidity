@@ -632,6 +632,16 @@ string YulUtilFunctions::overflowCheckedIntExpFunction(
 
 string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 {
+	// Checks for the "small number specialization" below.
+	using namespace boost::multiprecision;
+	solAssert(pow(bigint(10), 77) < pow(bigint(2), 256), "");
+	solAssert(pow(bigint(11), 77) >= pow(bigint(2), 256), "");
+	solAssert(pow(bigint(10), 78) >= pow(bigint(2), 256), "");
+
+	solAssert(pow(bigint(306), 31) < pow(bigint(2), 256), "");
+	solAssert(pow(bigint(307), 31) >= pow(bigint(2), 256), "");
+	solAssert(pow(bigint(306), 32) >= pow(bigint(2), 256), "");
+
 	string functionName = "checked_exp_unsigned";
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
@@ -644,25 +654,35 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 				if iszero(exponent) { power := 1 leave }
 				if iszero(base) { power := 0 leave }
 
-				power := 1
-
-				for { } gt(exponent, 1) {}
+				// Specializations for small bases
+				switch base
+				// 0 is handled above
+				case 1 { power := 1 leave }
+				case 2
 				{
-					// overflow check for base * base
-					if gt(base, div(max, base)) { revert(0, 0) }
-					if and(exponent, 1)
-					{
-						// no check needed here because base >= power
-						power := mul(power, base)
-					}
-					base := mul(base, base)
-					exponent := <shr_1>(exponent)
+					if gt(exponent, 255) { revert(0, 0) }
+					power := exp(2, exponent)
+					if gt(power, max) { revert(0, 0) }
+					leave
 				}
+				if or(
+					and(lt(base, 11), lt(exponent, 78)),
+					and(lt(base, 307), lt(exponent, 32))
+				)
+				{
+					power := exp(base, exponent)
+					if gt(power, max) { revert(0, 0) }
+					leave
+				}
+
+				power, base := <expLoop>(1, base, exponent, max)
+
 				if gt(power, div(max, base)) { revert(0, 0) }
 				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)
+			("expLoop", overflowCheckedExpLoopFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
 	});
@@ -703,6 +723,35 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 
 				// Below this point, base is always positive.
 
+				power, base := <expLoop>(power, base, exponent, max)
+
+				if and(sgt(power, 0), gt(power, div(max, base))) { revert(0, 0) }
+				if and(slt(power, 0), slt(power, sdiv(min, base))) { revert(0, 0) }
+				power := mul(power, base)
+			}
+			)")
+			("functionName", functionName)
+			("expLoop", overflowCheckedExpLoopFunction())
+			("shr_1", shiftRightFunction(1))
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedExpLoopFunction()
+{
+	// We use this loop for both signed and unsigned exponentiation
+	// because we pull out the first iteration in the signed case which
+	// results in the base always being positive.
+
+	// This function does not include the final multiplication.
+
+	string functionName = "checked_exp_helper";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return
+			Whiskers(R"(
+			function <functionName>(_power, _base, exponent, max) -> power, base {
+				power := _power
+				base  := _base
 				for { } gt(exponent, 1) {}
 				{
 					// overflow check for base * base
@@ -712,16 +761,13 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 						// No checks for power := mul(power, base) needed, because the check
 						// for base * base above is sufficient, since:
 						// |power| <= base (proof by induction) and thus:
-						// |power * base| <= base * base <= max <= |min|
+						// |power * base| <= base * base <= max <= |min| (for signed)
+						// (this is equally true for signed and unsigned exp)
 						power := mul(power, base)
 					}
 					base := mul(base, base)
 					exponent := <shr_1>(exponent)
 				}
-
-				if and(sgt(power, 0), gt(power, div(max, base))) { revert(0, 0) }
-				if and(slt(power, 0), slt(power, sdiv(min, base))) { revert(0, 0) }
-				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)

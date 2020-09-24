@@ -86,7 +86,7 @@
                   "typeDescriptions":
                   {
                     "typeIdentifier": "t_stringliteral_8b1a944cf13a9a1c08facb2c9e98623ef3254d2ddb48113885c3e8e97fec8db9",
-                    "typeString": "literal_string (contains invalid UTF-8 sequence at position 0)"
+                    "typeString": "literal_string hex\"ff\""
                   }
                 },
                 "nodeType": "VariableDeclarationStatement",
