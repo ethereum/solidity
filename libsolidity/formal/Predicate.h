@@ -39,7 +39,8 @@ enum class PredicateType
 	FunctionEntry,
 	FunctionSummary,
 	FunctionBlock,
-	Error
+	Error,
+	Custom
 };
 
 /**

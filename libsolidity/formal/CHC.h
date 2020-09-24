@@ -81,6 +81,7 @@ private:
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Break const& _node) override;
 	void endVisit(Continue const& _node) override;
+	void endVisit(IndexRangeAccess const& _node) override;
 
 	void visitAssert(FunctionCall const& _funCall);
 	void visitAddMulMod(FunctionCall const& _funCall) override;

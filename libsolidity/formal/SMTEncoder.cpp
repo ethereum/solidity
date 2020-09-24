@@ -1095,11 +1095,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 void SMTEncoder::endVisit(IndexRangeAccess const& _indexRangeAccess)
 {
 	createExpr(_indexRangeAccess);
-	m_errorReporter.warning(
-		2923_error,
-		_indexRangeAccess.location(),
-		"Assertion checker does not yet implement this expression."
-	);
+	/// The actual slice is created by CHC which also assigns the length.
 }
 
 void SMTEncoder::arrayAssignment()
