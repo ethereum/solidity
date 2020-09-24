@@ -123,6 +123,22 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 
+	tx_context.block_difficulty = evmc::uint256be{200000000};
+	tx_context.block_gas_limit = 20000000;
+	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
+	tx_context.tx_gas_price = evmc::uint256be{3000000000};
+	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
+	// Mainnet according to EIP-155
+	tx_context.chain_id = evmc::uint256be{1};
+
+	reset();
+}
+
+void EVMHost::reset()
+{
+	accounts.clear();
+	m_currentAddress = {};
+
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
 	//
@@ -131,19 +147,13 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	// roughly 22 days before the update went live.
 	for (unsigned precompiledAddress = 1; precompiledAddress <= 8; precompiledAddress++)
 	{
-		evmc::address address{};
-		address.bytes[19] = precompiledAddress;
+		evmc::address address{precompiledAddress};
 		// 1wei
 		accounts[address].balance = evmc::uint256be{1};
+		// Set according to EIP-1052.
+		if (precompiledAddress < 5 || m_evmVersion >= langutil::EVMVersion::byzantium())
+			accounts[address].codehash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470_bytes32;
 	}
-
-	tx_context.block_difficulty = evmc::uint256be{200000000};
-	tx_context.block_gas_limit = 20000000;
-	tx_context.block_coinbase = 0x7878787878787878787878787878787878787878_address;
-	tx_context.tx_gas_price = evmc::uint256be{3000000000};
-	tx_context.tx_origin = 0x9292929292929292929292929292929292929292_address;
-	// Mainnet according to EIP-155
-	tx_context.chain_id = evmc::uint256be{1};
 }
 
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
