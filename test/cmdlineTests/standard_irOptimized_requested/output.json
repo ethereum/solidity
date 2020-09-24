@@ -44,11 +44,13 @@ object \"C_6\" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error() }
                 mstore(64, newFreePtr)
             }
             function fun_f_5()
             { }
+            function panic_error()
+            { invalid() }
             function shift_right_224_unsigned(value) -> newValue
             { newValue := shr(224, value) }
         }

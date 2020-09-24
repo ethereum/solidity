@@ -33,7 +33,7 @@ object "C_56" {
                         if gt(offset, _3) { revert(_1, _1) }
                         if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
                         let length := calldataload(add(4, offset))
-                        if gt(length, _3) { revert(_1, _1) }
+                        if gt(length, _3) { invalid() }
                         let _4 := mul(length, _2)
                         let dst := allocateMemory(add(_4, _2))
                         let dst_1 := dst
@@ -58,8 +58,12 @@ object "C_56" {
             function abi_decode_t_struct$_S(headStart, end) -> value
             {
                 if slt(sub(end, headStart), 0x20) { revert(value, value) }
-                value := allocateMemory(0x20)
-                mstore(value, calldataload(headStart))
+                let memPtr := mload(64)
+                let newFreePtr := add(memPtr, 0x20)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                mstore(64, newFreePtr)
+                value := memPtr
+                mstore(memPtr, calldataload(headStart))
             }
             function abi_encode_uint256_t_string(headStart, value0, value1) -> tail
             {
@@ -83,17 +87,21 @@ object "C_56" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
                 mstore(64, newFreePtr)
             }
             function convert_t_stringliteral_6490_to_t_string() -> converted
             {
-                converted := allocateMemory(160)
-                mstore(converted, 100)
-                mstore(add(converted, 32), "longstringlongstringlongstringlo")
-                mstore(add(converted, 64), "ngstringlongstringlongstringlong")
-                mstore(add(converted, 96), "stringlongstringlongstringlongst")
-                mstore(add(converted, 128), "ring")
+                let memPtr := mload(64)
+                let newFreePtr := add(memPtr, 160)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                mstore(64, newFreePtr)
+                converted := memPtr
+                mstore(memPtr, 100)
+                mstore(add(memPtr, 32), "longstringlongstringlongstringlo")
+                mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
+                mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
+                mstore(add(memPtr, 128), "ring")
             }
             function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
             {

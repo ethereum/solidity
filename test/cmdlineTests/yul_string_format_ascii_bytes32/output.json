@@ -67,7 +67,7 @@ object \"C_10\" {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
                 // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error() }
                 mstore(64, newFreePtr)
             }
 
@@ -86,6 +86,10 @@ object \"C_10\" {
                 vloc__4 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
                 leave
 
+            }
+
+            function panic_error() {
+                invalid()
             }
 
             function shift_right_224_unsigned(value) -> newValue {

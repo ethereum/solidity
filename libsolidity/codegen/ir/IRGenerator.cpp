@@ -204,10 +204,11 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 						<?+out> <out> :=</+out> <name>(<in>)
 					}
 					</cases>
-					default { invalid() }
+					default { <panic>() }
 				}
 			)");
 			templ("functionName", funName);
+			templ("panic", m_utils.panicFunction());
 			templ("in", suffixedVariableNameList("in_", 0, arity.in));
 			templ("out", suffixedVariableNameList("out_", 0, arity.out));
 

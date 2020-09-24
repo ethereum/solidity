@@ -58,7 +58,7 @@ object "D_13" {
                         if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
                         let _3 := datasize("C_2")
                         let _4 := add(_1, _3)
-                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1)) { revert(_2, _2) }
+                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1)) { invalid() }
                         datacopy(_1, dataoffset("C_2"), _3)
                         pop(create(_2, _1, sub(_4, _1)))
                         return(allocateMemory(_2), _2)
@@ -70,7 +70,7 @@ object "D_13" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
                 mstore(64, newFreePtr)
             }
         }
