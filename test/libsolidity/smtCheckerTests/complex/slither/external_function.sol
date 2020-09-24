@@ -83,7 +83,6 @@ contract InternalCall {
 // Warning 2018: (1144-1206): Function state mutability can be restricted to pure
 // Warning 2018: (1212-1274): Function state mutability can be restricted to pure
 // Warning 2018: (1280-1342): Function state mutability can be restricted to pure
-// Warning 8364: (771-774): Assertion checker does not yet implement type abi
 // Warning 5084: (782-813): Type conversion is not yet fully supported and might yield false positives.
 // Warning 4588: (771-814): Assertion checker does not yet implement this type of function call.
 // Warning 5729: (1403-1408): Assertion checker does not yet implement this type of function call.
