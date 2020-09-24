@@ -118,10 +118,10 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 		if (!_messageType)
 			return Whiskers(R"(
 				function <functionName>(condition) {
-					if iszero(condition) { <invalidOrRevert> }
+					if iszero(condition) { <error> }
 				}
 			)")
-			("invalidOrRevert", _assert ? "invalid()" : "revert(0, 0)")
+			("error", _assert ? panicFunction() + "()" : "revert(0, 0)")
 			("functionName", functionName)
 			.render();
 
@@ -457,7 +457,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 	string functionName = "checked_add_" + _type.identifier();
 	// TODO: Consider to add a special case for unsigned 256-bit integers
 	//       and use the following instead:
-	//       sum := add(x, y) if lt(sum, x) { revert(0, 0) }
+	//       sum := add(x, y) if lt(sum, x) { <panic>() }
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return
 			Whiskers(R"(
@@ -466,12 +466,12 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x >= 0 and y > (maxValue - x)
-					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { revert(0, 0) }
+					if and(iszero(slt(x, 0)), sgt(y, sub(<maxValue>, x))) { <panic>() }
 					// underflow, if x < 0 and y < (minValue - x)
-					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { revert(0, 0) }
+					if and(slt(x, 0), slt(y, sub(<minValue>, x))) { <panic>() }
 				<!signed>
 					// overflow, if x > (maxValue - y)
-					if gt(x, sub(<maxValue>, y)) { revert(0, 0) }
+					if gt(x, sub(<maxValue>, y)) { <panic>() }
 				</signed>
 				sum := add(x, y)
 			}
@@ -481,6 +481,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("panic", panicFunction())
 			.render();
 	});
 }
@@ -497,16 +498,16 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				<?signed>
 					// overflow, if x > 0, y > 0 and x > (maxValue / y)
-					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { revert(0, 0) }
+					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { <panic>() }
 					// underflow, if x > 0, y < 0 and y < (minValue / x)
-					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { revert(0, 0) }
+					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { <panic>() }
 					// underflow, if x < 0, y > 0 and x < (minValue / y)
-					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { revert(0, 0) }
+					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { <panic>() }
 					// overflow, if x < 0, y < 0 and x < (maxValue / y)
-					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { revert(0, 0) }
+					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { <panic>() }
 				<!signed>
 					// overflow, if x != 0 and y > (maxValue / x)
-					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { revert(0, 0) }
+					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { <panic>() }
 				</signed>
 				product := mul(x, y)
 			}
@@ -516,6 +517,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("panic", panicFunction())
 			.render();
 	});
 }
@@ -529,13 +531,13 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				if iszero(y) { revert(0, 0) }
+				if iszero(y) { <panic>() }
 				<?signed>
 				// overflow for minVal / -1
 				if and(
 					eq(x, <minVal>),
 					eq(y, sub(0, 1))
-				) { revert(0, 0) }
+				) { <panic>() }
 				</signed>
 				r := <?signed>s</signed>div(x, y)
 			}
@@ -544,6 +546,7 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("panic", panicFunction())
 			.render();
 	});
 }
@@ -557,13 +560,14 @@ string YulUtilFunctions::checkedIntModFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				if iszero(y) { revert(0, 0) }
+				if iszero(y) { <panic>() }
 				r := <?signed>s</signed>mod(x, y)
 			}
 			)")
 			("functionName", functionName)
 			("signed", _type.isSigned())
 			("cleanupFunction", cleanupFunction(_type))
+			("panic", panicFunction())
 			.render();
 	});
 }
@@ -579,11 +583,11 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 				y := <cleanupFunction>(y)
 				<?signed>
 					// underflow, if y >= 0 and x < (minValue + y)
-					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { revert(0, 0) }
+					if and(iszero(slt(y, 0)), slt(x, add(<minValue>, y))) { <panic>() }
 					// overflow, if y < 0 and x > (maxValue + y)
-					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { revert(0, 0) }
+					if and(slt(y, 0), sgt(x, add(<maxValue>, y))) { <panic>() }
 				<!signed>
-					if lt(x, y) { revert(0, 0) }
+					if lt(x, y) { <panic>() }
 				</signed>
 				diff := sub(x, y)
 			}
@@ -593,6 +597,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
+			("panic", panicFunction())
 			.render();
 	});
 }
@@ -660,9 +665,9 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 				case 1 { power := 1 leave }
 				case 2
 				{
-					if gt(exponent, 255) { revert(0, 0) }
+					if gt(exponent, 255) { <panic>() }
 					power := exp(2, exponent)
-					if gt(power, max) { revert(0, 0) }
+					if gt(power, max) { <panic>() }
 					leave
 				}
 				if or(
@@ -671,17 +676,18 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 				)
 				{
 					power := exp(base, exponent)
-					if gt(power, max) { revert(0, 0) }
+					if gt(power, max) { <panic>() }
 					leave
 				}
 
 				power, base := <expLoop>(1, base, exponent, max)
 
-				if gt(power, div(max, base)) { revert(0, 0) }
+				if gt(power, div(max, base)) { <panic>() }
 				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("expLoop", overflowCheckedExpLoopFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
@@ -712,8 +718,8 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 
 				// overflow check for base * base
 				switch sgt(base, 0)
-				case 1 { if gt(base, div(max, base)) { revert(0, 0) } }
-				case 0 { if slt(base, sdiv(max, base)) { revert(0, 0) } }
+				case 1 { if gt(base, div(max, base)) { <panic>() } }
+				case 0 { if slt(base, sdiv(max, base)) { <panic>() } }
 				if and(exponent, 1)
 				{
 					power := base
@@ -725,12 +731,13 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 
 				power, base := <expLoop>(power, base, exponent, max)
 
-				if and(sgt(power, 0), gt(power, div(max, base))) { revert(0, 0) }
-				if and(slt(power, 0), slt(power, sdiv(min, base))) { revert(0, 0) }
+				if and(sgt(power, 0), gt(power, div(max, base))) { <panic>() }
+				if and(slt(power, 0), slt(power, sdiv(min, base))) { <panic>() }
 				power := mul(power, base)
 			}
 			)")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("expLoop", overflowCheckedExpLoopFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
@@ -755,7 +762,7 @@ string YulUtilFunctions::overflowCheckedExpLoopFunction()
 				for { } gt(exponent, 1) {}
 				{
 					// overflow check for base * base
-					if gt(base, div(max, base)) { revert(0, 0) }
+					if gt(base, div(max, base)) { <panic>() }
 					if and(exponent, 1)
 					{
 						// No checks for power := mul(power, base) needed, because the check
@@ -771,6 +778,7 @@ string YulUtilFunctions::overflowCheckedExpLoopFunction()
 			}
 			)")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
 	});
@@ -850,7 +858,7 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 		return Whiskers(R"(
 			function <functionName>(array, newLen) {
 				if gt(newLen, <maxArrayLength>) {
-					invalid()
+					<panic>()
 				}
 
 				let oldLen := <fetchLength>(array)
@@ -869,6 +877,7 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 				}
 			})")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
 			("convertToSize", arrayConvertLengthToSize(_type))
 			("dataPosition", arrayDataAreaFunction(_type))
@@ -891,13 +900,14 @@ string YulUtilFunctions::storageArrayPopFunction(ArrayType const& _type)
 		return Whiskers(R"(
 			function <functionName>(array) {
 				let oldLen := <fetchLength>(array)
-				if iszero(oldLen) { invalid() }
+				if iszero(oldLen) { <panic>() }
 				let newLen := sub(oldLen, 1)
 				let slot, offset := <indexAccess>(array, newLen)
 				<setToZero>(slot, offset)
 				sstore(array, newLen)
 			})")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("setToZero", storageSetToZeroFunction(*_type.baseType()))
@@ -917,7 +927,7 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 			function <functionName>(array) {
 				let data := sload(array)
 				let oldLen := <extractByteArrayLength>(data)
-				if iszero(oldLen) { invalid() }
+				if iszero(oldLen) { <panic>() }
 
 				switch eq(oldLen, 32)
 				case 1 {
@@ -946,6 +956,7 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 				sstore(array, data)
 			})")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("extractByteArrayLength", extractByteArrayLengthFunction())
 			("dataAreaFunction", arrayDataAreaFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
@@ -968,7 +979,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 				<?isByteArray>
 					let data := sload(array)
 					let oldLen := <extractByteArrayLength>(data)
-					if iszero(lt(oldLen, <maxArrayLength>)) { invalid() }
+					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 
 					switch gt(oldLen, 31)
 					case 0 {
@@ -999,13 +1010,14 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 					}
 				<!isByteArray>
 					let oldLen := sload(array)
-					if iszero(lt(oldLen, <maxArrayLength>)) { invalid() }
+					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 					sstore(array, add(oldLen, 1))
 					let slot, offset := <indexAccess>(array, oldLen)
 					<storeValue>(slot, offset, value)
 				</isByteArray>
 			})")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("extractByteArrayLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
 			("dataAreaFunction", arrayDataAreaFunction(_type))
 			("isByteArray", _type.isByteArray())
@@ -1032,12 +1044,13 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 		return Whiskers(R"(
 			function <functionName>(array) -> slot, offset {
 				let oldLen := <fetchLength>(array)
-				if iszero(lt(oldLen, <maxArrayLength>)) { invalid() }
+				if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 				sstore(array, add(oldLen, 1))
 				slot, offset := <indexAccess>(array, oldLen)
 				<storeValue>(slot, offset, <zeroValueFunction>())
 			})")
 			("functionName", functionName)
+			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
@@ -1172,7 +1185,7 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 		Whiskers w(R"(
 			function <functionName>(length) -> size {
 				// Make sure we can allocate memory without overflow
-				if gt(length, 0xffffffffffffffff) { revert(0, 0) }
+				if gt(length, 0xffffffffffffffff) { <panic>() }
 				<?byteArray>
 					// round up
 					size := and(add(length, 0x1f), not(0x1f))
@@ -1186,6 +1199,7 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 			}
 		)");
 		w("functionName", functionName);
+		w("panic", panicFunction());
 		w("byteArray", _type.isByteArray());
 		w("dynamic", _type.isDynamicallySized());
 		return w.render();
@@ -1230,7 +1244,7 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 		return Whiskers(R"(
 			function <functionName>(array, index) -> slot, offset {
 				let arrayLength := <arrayLen>(array)
-				if iszero(lt(index, arrayLength)) { invalid() }
+				if iszero(lt(index, arrayLength)) { <panic>() }
 
 				<?multipleItemsPerSlot>
 					<?isBytesArray>
@@ -1256,6 +1270,7 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 			}
 		)")
 		("functionName", functionName)
+		("panic", panicFunction())
 		("arrayLen", arrayLengthFunction(_type))
 		("dataAreaFunc", arrayDataAreaFunction(_type))
 		("multipleItemsPerSlot", _type.baseType()->storageBytes() <= 16)
@@ -1274,7 +1289,7 @@ string YulUtilFunctions::memoryArrayIndexAccessFunction(ArrayType const& _type)
 		return Whiskers(R"(
 			function <functionName>(baseRef, index) -> addr {
 				if iszero(lt(index, <arrayLen>(baseRef))) {
-					invalid()
+					<panic>()
 				}
 
 				let offset := mul(index, <stride>)
@@ -1285,6 +1300,7 @@ string YulUtilFunctions::memoryArrayIndexAccessFunction(ArrayType const& _type)
 			}
 		)")
 		("functionName", functionName)
+		("panic", panicFunction())
 		("arrayLen", arrayLengthFunction(_type))
 		("stride", to_string(_type.memoryStride()))
 		("dynamicallySized", _type.isDynamicallySized())
@@ -1299,7 +1315,7 @@ string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& _type
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(base_ref<?dynamicallySized>, length</dynamicallySized>, index) -> addr<?dynamicallySizedBase>, len</dynamicallySizedBase> {
-				if iszero(lt(index, <?dynamicallySized>length<!dynamicallySized><arrayLen></dynamicallySized>)) { invalid() }
+				if iszero(lt(index, <?dynamicallySized>length<!dynamicallySized><arrayLen></dynamicallySized>)) { <panic>() }
 				addr := add(base_ref, mul(index, <stride>))
 				<?dynamicallyEncodedBase>
 					addr<?dynamicallySizedBase>, len</dynamicallySizedBase> := <accessCalldataTail>(base_ref, addr)
@@ -1307,6 +1323,7 @@ string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& _type
 			}
 		)")
 		("functionName", functionName)
+		("panic", panicFunction())
 		("stride", to_string(_type.calldataStride()))
 		("dynamicallySized", _type.isDynamicallySized())
 		("dynamicallyEncodedBase", _type.baseType()->isDynamicallyEncoded())
@@ -1852,12 +1869,13 @@ string YulUtilFunctions::allocationFunction()
 				memPtr := mload(<freeMemoryPointer>)
 				let newFreePtr := add(memPtr, size)
 				// protect against overflow
-				if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+				if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { <panic>() }
 				mstore(<freeMemoryPointer>, newFreePtr)
 			}
 		)")
-		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
 		("functionName", functionName)
+		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+		("panic", panicFunction())
 		.render();
 	});
 }
@@ -2427,7 +2445,7 @@ string YulUtilFunctions::validatorFunction(Type const& _type, bool _revertOnFail
 		if (_revertOnFailure)
 			templ("failure", "revert(0, 0)");
 		else
-			templ("failure", "invalid()");
+			templ("failure", panicFunction() + "()");
 
 		switch (_type.category())
 		{
@@ -2538,11 +2556,12 @@ std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
 				value := <cleanupFunction>(value)
-				if <lt>(value, <minval>) { revert(0,0) }
+				if <lt>(value, <minval>) { <panic>() }
 				ret := sub(value, 1)
 			}
 		)")
 		("functionName", functionName)
+		("panic", panicFunction())
 		("minval", toCompactHexWithPrefix(minintval))
 		("lt", type.isSigned() ? "slt" : "lt")
 		("cleanupFunction", cleanupFunction(_type))
@@ -2568,13 +2587,14 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
 				value := <cleanupFunction>(value)
-				if <gt>(value, <maxval>) { revert(0,0) }
+				if <gt>(value, <maxval>) { <panic>() }
 				ret := add(value, 1)
 			}
 		)")
 		("functionName", functionName)
 		("maxval", toCompactHexWithPrefix(maxintval))
 		("gt", type.isSigned() ? "sgt" : "gt")
+		("panic", panicFunction())
 		("cleanupFunction", cleanupFunction(_type))
 		.render();
 	});
@@ -2593,13 +2613,14 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
 				value := <cleanupFunction>(value)
-				if slt(value, <minval>) { revert(0,0) }
+				if slt(value, <minval>) { <panic>() }
 				ret := sub(0, value)
 			}
 		)")
 		("functionName", functionName)
 		("minval", toCompactHexWithPrefix(minintval))
 		("cleanupFunction", cleanupFunction(_type))
+		("panic", panicFunction())
 		.render();
 	});
 }
@@ -2933,6 +2954,20 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 string YulUtilFunctions::revertReasonIfDebug(string const& _message)
 {
 	return revertReasonIfDebug(m_revertStrings, _message);
+}
+
+string YulUtilFunctions::panicFunction()
+{
+	string functionName = "panic_error";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>() {
+				invalid()
+			}
+		)")
+		("functionName", functionName)
+		.render();
+	});
 }
 
 string YulUtilFunctions::tryDecodeErrorMessageFunction()

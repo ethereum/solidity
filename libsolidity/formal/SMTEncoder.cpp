@@ -748,6 +748,13 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineExpr(_identifier, m_context.state().thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
+	// Ignore the builtin abi, it is handled in FunctionCall.
+	// TODO: ignore MagicType in general (abi, block, msg, tx, type)
+	else if (auto magicType = dynamic_cast<MagicType const*>(_identifier.annotation().type); magicType && magicType->kind() == MagicType::Kind::ABI)
+	{
+		solAssert(_identifier.name() == "abi", "");
+		return;
+	}
 	else
 		createExpr(_identifier);
 }
