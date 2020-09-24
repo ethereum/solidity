@@ -205,9 +205,6 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			removeTestSuite(suite);
 	}
 
-	if (solidity::test::CommonOptions::get().disableSMT)
-		removeTestSuite("SMTChecker");
-
 	return nullptr;
 }
 
