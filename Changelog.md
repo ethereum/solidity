@@ -19,6 +19,7 @@ Breaking Changes:
  * Type System: Disallow ``type(super)``.
  * Type System: Disallow enums with more than 256 members.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
+ * Type System: Introduce ``address(...).code`` to retrieve the code as ``bytes memory``. The size can be obtained via ``address(...).code.length``, but it will currently always include copying the code.
  * Type System: Explicit conversions between two types are disallowed if it changes more than one of sign, width or kind at the same time.
  * Type System: Explicit conversions from literals to enums are only allowed if the value fits in the enum.
  * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.

@@ -115,6 +115,7 @@ Global Variables
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address payable recipient)``: destroy the current contract, sending its funds to the given address
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
+- ``<address>.code`` (``bytes memory``): code at the :ref:`address` (can be empty)
 - ``<address>.codehash`` (``bytes32``): the codehash of the :ref:`address`
 - ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`,
   returns ``false`` on failure

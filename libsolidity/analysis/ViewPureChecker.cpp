@@ -356,7 +356,7 @@ void ViewPureChecker::endVisit(MemberAccess const& _memberAccess)
 	switch (_memberAccess.expression().annotation().type->category())
 	{
 	case Type::Category::Address:
-		if (member == "balance" || member == "codehash")
+		if (member == "balance" || member == "code" || member == "codehash")
 			mutability = StateMutability::View;
 		break;
 	case Type::Category::Magic:
