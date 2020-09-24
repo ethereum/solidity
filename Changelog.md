@@ -12,6 +12,7 @@ Compiler Features:
  * SMTChecker: Support structs.
  * SMTChecker: Support ``type(T).min``, ``type(T).max``, and ``type(I).interfaceId``.
  * SMTChecker: Support ``address`` type conversion with literals, e.g. ``address(0)``.
+ * Type Checker: Report position of first invalid UTF-8 sequence in ``unicode""`` literals.
  * Type Checker: More detailed error messages why implicit conversions fail.
  * Type Checker: Explain why oversized hex string literals can not be explicitly converted to a shorter ``bytesNN`` type.
  * Yul Optimizer: Prune unused parameters in functions.

@@ -219,11 +219,12 @@ bool SyntaxChecker::visit(Throw const& _throwStatement)
 
 bool SyntaxChecker::visit(Literal const& _literal)
 {
-	if ((_literal.token() == Token::UnicodeStringLiteral) && !validateUTF8(_literal.value()))
+	size_t invalidSequence;
+	if ((_literal.token() == Token::UnicodeStringLiteral) && !validateUTF8(_literal.value(), invalidSequence))
 		m_errorReporter.syntaxError(
 			8452_error,
 			_literal.location(),
-			"Invalid UTF-8 sequence found"
+			"Contains invalid UTF-8 sequence at position " + toString(invalidSequence) + "."
 		);
 
 	if (_literal.token() != Token::Number)

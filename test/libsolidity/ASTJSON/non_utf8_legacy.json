@@ -131,7 +131,7 @@
                         "isPure": true,
                         "lValueRequested": false,
                         "token": "hexString",
-                        "type": "literal_string (contains invalid UTF-8 sequence at position 0)"
+                        "type": "literal_string hex\"ff\""
                       },
                       "id": 5,
                       "name": "Literal",
