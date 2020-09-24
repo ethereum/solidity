@@ -14,10 +14,22 @@ contract C {
     function h() view public {
         assembly { function g() { pop(blockhash(20)) } }
     }
-    function j() public {
+    function i() public {
         assembly { pop(call(0, 1, 2, 3, 4, 5, 6)) }
     }
-    function k() public {
+    function j() public {
         assembly { pop(call(gas(), 1, 2, 3, 4, 5, 6)) }
+    }
+    function k() public view {
+        assembly { pop(balance(0)) }
+    }
+    function l() public view {
+        assembly { pop(extcodesize(0)) }
+    }
+    function m() public view {
+        assembly { pop(extcodehash(0)) }
+    }
+    function n() public pure {
+        assembly { pop(chainid()) }
     }
 }

@@ -1,7 +1,7 @@
 ### 0.7.2 (unreleased)
 
 Language Features:
-
+ * Support ``address(..).codehash`` to retrieve the code hash of an account.
 
 Compiler Features:
  * Export compiler-generated utility sources via standard-json or combined-json.

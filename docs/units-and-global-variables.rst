@@ -211,7 +211,7 @@ Mathematical and Cryptographic Functions
 
     When running ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*, you might encounter Out-of-Gas. This is because these functions are implemented as "precompiled contracts" and only really exist after they receive the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution might run into an Out-of-Gas error. A workaround for this problem is to first send Wei (1 for example) to each of the contracts before you use them in your actual contracts. This is not an issue on the main or test net.
 
-.. index:: balance, send, transfer, call, callcode, delegatecall, staticcall
+.. index:: balance, codehash, send, transfer, call, callcode, delegatecall, staticcall
 
 .. _address_related:
 
@@ -220,6 +220,9 @@ Members of Address Types
 
 ``<address>.balance`` (``uint256``)
     balance of the :ref:`address` in Wei
+
+``<address>.codehash`` (``bytes32``)
+    the codehash of the :ref:`address`
 
 ``<address payable>.transfer(uint256 amount)``
     send given amount of Wei to :ref:`address`, reverts on failure, forwards 2300 gas stipend, not adjustable
