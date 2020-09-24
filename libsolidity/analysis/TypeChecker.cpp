@@ -2924,6 +2924,17 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			annotation.isPure = true;
 	}
 
+	if (
+		_memberAccess.expression().annotation().type->category() == Type::Category::Address &&
+		memberName == "codehash" &&
+		!m_evmVersion.hasExtCodeHash()
+	)
+		m_errorReporter.typeError(
+			7598_error,
+			_memberAccess.location(),
+			"\"codehash\" is not supported by the VM version."
+		);
+
 	if (!annotation.isPure.set())
 		annotation.isPure = false;
 

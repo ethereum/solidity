@@ -67,7 +67,7 @@ The following is the order of precedence for operators, listed in order of evalu
 | *15*       | Comma operator                      | ``,``                                      |
 +------------+-------------------------------------+--------------------------------------------+
 
-.. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
 
 Global Variables
 ================
@@ -114,6 +114,7 @@ Global Variables
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address payable recipient)``: destroy the current contract, sending its funds to the given address
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
+- ``<address>.codehash`` (``bytes32``): the codehash of the :ref:`address`
 - ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`,
   returns ``false`` on failure
 - ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure
