@@ -54,7 +54,7 @@ public:
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm);
 
-	void reset() { accounts.clear(); m_currentAddress = {}; }
+	void reset();
 	void newBlock()
 	{
 		tx_context.block_number++;
