@@ -2,6 +2,7 @@
 
 Compiler Features:
  * SMTChecker: Support ``addmod`` and ``mulmod``.
+ * Optimizer: Optimize ``exp`` when base is -1.
 
 
 ### 0.7.2 (2020-09-28)
