@@ -95,9 +95,12 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 		}
 		// TODO retrieve model / invariants
 	}
-	catch (z3::exception const&)
+	catch (z3::exception const& _err)
 	{
-		result = CheckResult::ERROR;
+		if (_err.msg() == string("max. resource limit exceeded"))
+			result = CheckResult::UNKNOWN;
+		else
+			result = CheckResult::ERROR;
 		cex = {};
 	}
 
