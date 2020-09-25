@@ -834,7 +834,20 @@ void SMTEncoder::endVisit(Literal const& _literal)
 	else if (smt::isBool(type))
 		defineExpr(_literal, smtutil::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else if (smt::isStringLiteral(type))
+	{
 		createExpr(_literal);
+
+		// Add constraints for the length and values as it is known.
+		auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_literal));
+		solAssert(symbArray, "");
+
+		auto value = _literal.value();
+		m_context.addAssertion(symbArray->length() == value.length());
+		for (size_t i = 0; i < value.length(); i++)
+			m_context.addAssertion(
+				smtutil::Expression::select(symbArray->elements(), i) == size_t(value[i])
+			);
+	}
 	else
 	{
 		m_errorReporter.warning(
@@ -1677,9 +1690,7 @@ void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression con
 	// This is a special case where the SMT sorts are different.
 	// For now we are unaware of other cases where this happens, but if they do appear
 	// we should extract this into an `implicitConversion` function.
-	if (_variable.type()->category() != Type::Category::Array || _value.annotation().type->category() != Type::Category::StringLiteral)
-		assignment(_variable, expr(_value, _variable.type()));
-	// TODO else { store each string literal byte into the array }
+	assignment(_variable, expr(_value, _variable.type()));
 }
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value)
