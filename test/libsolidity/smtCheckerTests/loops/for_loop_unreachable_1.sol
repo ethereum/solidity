@@ -9,4 +9,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning 6838: (122-127): Condition is always false.
+// Warning 6838: (122-127): BMC: Condition is always false.

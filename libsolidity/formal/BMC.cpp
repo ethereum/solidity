@@ -836,7 +836,7 @@ void BMC::checkCondition(
 	case smtutil::CheckResult::SATISFIABLE:
 	{
 		std::ostringstream message;
-		message << _description << " happens here.";
+		message << "BMC: " << _description << " happens here.";
 		if (_callStack.size())
 		{
 			std::ostringstream modelMessage;
@@ -865,13 +865,13 @@ void BMC::checkCondition(
 	case smtutil::CheckResult::UNSATISFIABLE:
 		break;
 	case smtutil::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_errorMightHappen, _location, _description + " might happen here.", secondaryLocation);
+		m_errorReporter.warning(_errorMightHappen, _location, "BMC: " + _description + " might happen here.", secondaryLocation);
 		break;
 	case smtutil::CheckResult::CONFLICTING:
-		m_errorReporter.warning(1584_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(1584_error, _location, "BMC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case smtutil::CheckResult::ERROR:
-		m_errorReporter.warning(1823_error, _location, "Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1823_error, _location, "BMC: Error trying to invoke SMT solver.");
 		break;
 	}
 
@@ -919,13 +919,13 @@ void BMC::checkBooleanNotConstant(
 		if (positiveResult == smtutil::CheckResult::SATISFIABLE)
 		{
 			solAssert(negatedResult == smtutil::CheckResult::UNSATISFIABLE, "");
-			description = "Condition is always true.";
+			description = "BMC: Condition is always true.";
 		}
 		else
 		{
 			solAssert(positiveResult == smtutil::CheckResult::UNSATISFIABLE, "");
 			solAssert(negatedResult == smtutil::CheckResult::SATISFIABLE, "");
-			description = "Condition is always false.";
+			description = "BMC: Condition is always false.";
 		}
 		m_errorReporter.warning(
 			6838_error,

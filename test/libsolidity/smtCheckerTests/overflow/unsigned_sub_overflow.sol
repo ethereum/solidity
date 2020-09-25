@@ -6,4 +6,4 @@ contract C  {
 	}
 }
 // ----
-// Warning 3944: (113-118): Underflow (resulting value less than 0) happens here.
+// Warning 3944: (113-118): CHC: Underflow (resulting value less than 0) happens here.

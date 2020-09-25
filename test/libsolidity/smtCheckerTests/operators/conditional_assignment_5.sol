@@ -24,4 +24,4 @@ contract C {
 }
 // ----
 // Warning 2072: (288-294): Unused local variable.
-// Warning 6328: (318-342): Assertion violation happens here.
+// Warning 6328: (318-342): CHC: Assertion violation happens here.
