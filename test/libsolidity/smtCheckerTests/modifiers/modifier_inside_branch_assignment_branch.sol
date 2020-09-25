@@ -24,4 +24,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6838: (266-271): Condition is always true.
+// Warning 6838: (266-271): BMC: Condition is always true.

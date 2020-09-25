@@ -14,5 +14,5 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (183-197): Assertion violation happens here.
-// Warning 6838: (155-156): Condition is always false.
+// Warning 6328: (183-197): CHC: Assertion violation happens here.
+// Warning 6838: (155-156): BMC: Condition is always false.

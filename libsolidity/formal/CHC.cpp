@@ -1103,10 +1103,10 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 	case CheckResult::UNKNOWN:
 		break;
 	case CheckResult::CONFLICTING:
-		m_outerErrorReporter.warning(1988_error, _location, "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_outerErrorReporter.warning(1988_error, _location, "CHC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case CheckResult::ERROR:
-		m_outerErrorReporter.warning(1218_error, _location, "Error trying to invoke SMT solver.");
+		m_outerErrorReporter.warning(1218_error, _location, "CHC: Error trying to invoke SMT solver.");
 		break;
 	}
 	return {result, cex};
@@ -1264,21 +1264,21 @@ void CHC::checkAndReportTarget(
 			m_outerErrorReporter.warning(
 				_errorReporterId,
 				_scope->location(),
-				_satMsg,
+				"CHC: " + _satMsg,
 				SecondarySourceLocation().append("\nCounterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
 				_errorReporterId,
 				_scope->location(),
-				_satMsg
+				"CHC: " + _satMsg
 			);
 	}
 	else if (!_unknownMsg.empty())
 		m_outerErrorReporter.warning(
 			_errorReporterId,
 			_scope->location(),
-			_unknownMsg
+			"CHC: " + _unknownMsg
 		);
 }
 

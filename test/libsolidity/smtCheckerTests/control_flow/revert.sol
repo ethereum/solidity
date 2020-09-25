@@ -32,4 +32,4 @@ contract C {
 // ----
 // Warning 5740: (116-129): Unreachable code.
 // Warning 5740: (221-234): Unreachable code.
-// Warning 6328: (427-444): Assertion violation happens here.
+// Warning 6328: (427-444): CHC: Assertion violation happens here.

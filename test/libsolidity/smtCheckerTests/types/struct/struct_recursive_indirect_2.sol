@@ -20,7 +20,7 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (223-263): Assertion violation happens here.
+// Warning 6328: (223-263): CHC: Assertion violation happens here.
 // Warning 8115: (115-119): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (122-126): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (153-157): Assertion checker does not yet support this expression.

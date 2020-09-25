@@ -13,4 +13,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (145-159): Assertion violation happens here.
+// Warning 6328: (145-159): CHC: Assertion violation happens here.

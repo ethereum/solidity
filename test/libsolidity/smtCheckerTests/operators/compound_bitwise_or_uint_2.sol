@@ -11,4 +11,4 @@ contract C {
     }
 }
 // ----
-// Warning 7812: (173-192): Assertion violation might happen here.
+// Warning 7812: (173-192): BMC: Assertion violation might happen here.

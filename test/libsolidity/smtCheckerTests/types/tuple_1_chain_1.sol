@@ -7,4 +7,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6838: (96-100): Condition is always true.
+// Warning 6838: (96-100): BMC: Condition is always true.

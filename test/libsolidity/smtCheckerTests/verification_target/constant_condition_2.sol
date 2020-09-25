@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning 6838: (109-115): Condition is always false.
+// Warning 6838: (109-115): BMC: Condition is always false.
