@@ -977,13 +977,36 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
 		return;
-	if (_indexAccess.baseExpression().annotation().type->category() == Type::Category::FixedBytes)
+	if (auto const* type = dynamic_cast<FixedBytesType const*>(_indexAccess.baseExpression().annotation().type))
 	{
-		m_errorReporter.warning(
-			7989_error,
-			_indexAccess.location(),
-			"Assertion checker does not yet support index accessing fixed bytes."
-		);
+		smtutil::Expression base = expr(_indexAccess.baseExpression());
+
+		if (type->numBytes() == 1)
+			defineExpr(_indexAccess, base);
+		else
+		{
+			auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(_indexAccess.baseExpression().annotation().type);
+			solAssert(!isSigned, "");
+			solAssert(bvSize >= 16, "");
+			solAssert(bvSize % 8 == 0, "");
+
+			smtutil::Expression idx = expr(*_indexAccess.indexExpression());
+
+			auto bvBase = smtutil::Expression::int2bv(base, bvSize);
+			auto bvShl = smtutil::Expression::int2bv(idx * 8, bvSize);
+			auto bvShr = smtutil::Expression::int2bv(bvSize - 8, bvSize);
+			auto result = (bvBase << bvShl) >> bvShr;
+
+			auto anyValue = expr(_indexAccess);
+			m_context.expression(_indexAccess)->increaseIndex();
+			unsigned numBytes = bvSize / 8;
+			auto withBound = smtutil::Expression::ite(
+				idx < numBytes,
+				smtutil::Expression::bv2int(result, false),
+				anyValue
+			);
+			defineExpr(_indexAccess, withBound);
+		}
 		return;
 	}
 
