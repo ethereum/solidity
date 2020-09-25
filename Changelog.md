@@ -10,6 +10,7 @@ Compiler Features:
  * SMTChecker: Support ``revert()``.
  * SMTChecker: Support shifts.
  * SMTChecker: Support compound and, or, and xor operators.
+ * SMTChecker: Support memory allocation, e.g. ``new bytes(123)``.
  * SMTChecker: Support structs.
  * SMTChecker: Support ``type(T).min``, ``type(T).max``, and ``type(I).interfaceId``.
  * SMTChecker: Support ``address`` type conversion with literals, e.g. ``address(0)``.
