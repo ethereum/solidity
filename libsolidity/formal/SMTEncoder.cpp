@@ -663,6 +663,9 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::Event:
 		// These can be safely ignored.
 		break;
+	case FunctionType::Kind::ObjectCreation:
+		visitObjectCreation(_funCall);
+		return;
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -733,6 +736,25 @@ void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 	m_context.setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_context.addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
+}
+
+void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
+{
+	auto const& args = _funCall.arguments();
+	solAssert(args.size() >= 1, "");
+	auto argType = args.front()->annotation().type->category();
+	solAssert(argType == Type::Category::Integer || argType == Type::Category::RationalNumber, "");
+
+	smtutil::Expression arraySize = expr(*args.front());
+	setSymbolicUnknownValue(arraySize, TypeProvider::uint256(), m_context);
+
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_funCall));
+	solAssert(symbArray, "");
+	smt::setSymbolicZeroValue(*symbArray, m_context);
+	auto zeroElements = symbArray->elements();
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->length() == arraySize);
+	m_context.addAssertion(symbArray->elements() == zeroElements);
 }
 
 void SMTEncoder::endVisit(Identifier const& _identifier)
