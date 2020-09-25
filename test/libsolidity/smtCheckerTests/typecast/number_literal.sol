@@ -34,8 +34,8 @@ contract C {
   }
 }
 // ----
-// Warning 6328: (475-489): Assertion violation happens here.
-// Warning 6328: (753-767): Assertion violation happens here.
-// Warning 6328: (830-844): Assertion violation happens here.
-// Warning 6328: (931-945): Assertion violation happens here.
+// Warning 6328: (475-489): CHC: Assertion violation happens here.
+// Warning 6328: (753-767): CHC: Assertion violation happens here.
+// Warning 6328: (830-844): CHC: Assertion violation happens here.
+// Warning 6328: (931-945): CHC: Assertion violation happens here.
 // Warning 5084: (666-676): Type conversion is not yet fully supported and might yield false positives.

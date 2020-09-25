@@ -805,8 +805,8 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	if (
 		auto const* numberType = dynamic_cast<RationalNumberType const*>(argument->annotation().type);
 		numberType &&
-		!numberType->isNegative() &&
-		(funCallCategory == Type::Category::Integer || funCallCategory == Type::Category::Address)
+		((funCallCategory == Type::Category::Address && !numberType->isNegative()) ||
+		(funCallCategory == Type::Category::Integer && (numberType->isNegative() == dynamic_cast<IntegerType const&>(*m_context.expression(_funCall)->type()).isSigned())))
 	)
 		defineExpr(_funCall, numberType->literalValue(nullptr));
 	else if (argSize == castSize)
