@@ -2162,7 +2162,7 @@ void IRGeneratorForStatements::handleVariableReference(
 )
 {
 	setLocation(_referencingExpression);
-	if (_variable.isStateVariable() && _variable.isConstant())
+	if ((_variable.isStateVariable() || _variable.isFileLevelVariable()) && _variable.isConstant())
 		define(_referencingExpression) << constantValueFunction(_variable) << "()\n";
 	else if (_variable.isStateVariable() && _variable.immutable())
 		setLValue(_referencingExpression, IRLValue{

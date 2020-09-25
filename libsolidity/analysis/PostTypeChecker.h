@@ -35,7 +35,7 @@ namespace solidity::frontend
 
 /**
  * This module performs analyses on the AST that are done after type checking and assignments of types:
- *  - whether there are circular references in constant state variables
+ *  - whether there are circular references in constant variables
  *  - whether override specifiers are actually contracts
  *  - whether a modifier is in a function header
  *  - whether an event is used outside of an emit statement
