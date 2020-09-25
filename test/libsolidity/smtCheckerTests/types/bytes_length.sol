@@ -11,4 +11,3 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (106-127): Assertion violation happens here.

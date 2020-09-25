@@ -1690,9 +1690,7 @@ void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression con
 	// This is a special case where the SMT sorts are different.
 	// For now we are unaware of other cases where this happens, but if they do appear
 	// we should extract this into an `implicitConversion` function.
-	if (_variable.type()->category() != Type::Category::Array || _value.annotation().type->category() != Type::Category::StringLiteral)
-		assignment(_variable, expr(_value, _variable.type()));
-	// TODO else { store each string literal byte into the array }
+	assignment(_variable, expr(_value, _variable.type()));
 }
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value)
