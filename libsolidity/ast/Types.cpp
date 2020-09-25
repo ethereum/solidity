@@ -4057,9 +4057,10 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 		solAssert(
 			m_typeArgument && (
 					m_typeArgument->category() == Type::Category::Contract ||
-					m_typeArgument->category() == Type::Category::Integer
+					m_typeArgument->category() == Type::Category::Integer ||
+					m_typeArgument->category() == Type::Category::Address
 			),
-			"Only contracts or integer types supported for now"
+			"Only contract, integer or address types supported for now"
 		);
 
 		if (m_typeArgument->category() == Type::Category::Contract)
@@ -4083,6 +4084,14 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 			return MemberList::MemberMap({
 				{"min", integerTypePointer},
 				{"max", integerTypePointer},
+			});
+		}
+		else if (m_typeArgument->category() == Type::Category::Address)
+		{
+			auto addressTypePointer = dynamic_cast<AddressType const*>(m_typeArgument);
+			return MemberList::MemberMap({
+				{"min", addressTypePointer},
+				{"max", addressTypePointer},
 			});
 		}
 	}

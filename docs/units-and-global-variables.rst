@@ -301,7 +301,7 @@ Type Information
 
 The expression ``type(X)`` can be used to retrieve information about the type
 ``X``. Currently, there is limited support for this feature (``X`` can be either
-a contract or an integer type) but it might be expanded in the future.
+a contract, an integer or an address type) but it might be expanded in the future.
 
 The following properties are available for a contract type ``C``:
 
@@ -334,7 +334,7 @@ for an interface type ``I``:
     interface identifier of the given interface ``I``. This identifier is defined as the ``XOR`` of all
     function selectors defined within the interface itself - excluding all inherited functions.
 
-The following properties are available for an integer type ``T``:
+The following properties are available for an integer or an address type ``T``:
 
 ``type(T).min``
     The smallest value representable by type ``T``.

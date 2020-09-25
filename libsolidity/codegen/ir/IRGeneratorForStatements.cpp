@@ -1650,12 +1650,25 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
-			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
+			Type const* typePointer = arg->typeArgument();
 
-			if (member == "min")
-				define(_memberAccess) << formatNumber(integerType->min()) << "\n";
+			if (auto integerType = dynamic_cast<IntegerType const*>(typePointer))
+			{
+				if (member == "min")
+					define(_memberAccess) << formatNumber(integerType->min()) << "\n";
+				else
+					define(_memberAccess) << formatNumber(integerType->max()) << "\n";
+			}
+			else if (dynamic_cast<AddressType const*>(typePointer))
+			{
+				auto integerType = IntegerType(160, IntegerType::Modifier::Unsigned);
+				if (member == "min")
+					define(_memberAccess) << formatNumber(integerType.min()) << "\n";
+				else
+					define(_memberAccess) << formatNumber(integerType.max()) << "\n";
+			}
 			else
-				define(_memberAccess) << formatNumber(integerType->max()) << "\n";
+				solAssert(false, "");
 		}
 		else if (set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}.count(member))
 		{

@@ -1,7 +1,7 @@
 ### 0.7.2 (unreleased)
 
 Language Features:
-
+ * Implemented ``type(address).min`` and ``type(address).max`` that returns ``0`` and ``2**160 - 1`` respectively.
 
 Compiler Features:
  * Export compiler-generated utility sources via standard-json or combined-json.

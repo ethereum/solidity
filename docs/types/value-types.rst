@@ -40,7 +40,7 @@ Operators:
 * Shift operators: ``<<`` (left shift), ``>>`` (right shift)
 * Arithmetic operators: ``+``, ``-``, unary ``-``, ``*``, ``/``, ``%`` (modulo), ``**`` (exponentiation)
 
-For an integer type ``X``, you can use ``type(X).min`` and ``type(X).max`` to
+For an integer or an address type ``X``, you can use ``type(X).min`` and ``type(X).max`` to
 access the minimum and maximum value representable by the type.
 
 .. warning::

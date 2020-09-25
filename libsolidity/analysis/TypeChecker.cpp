@@ -245,7 +245,8 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 		Type::Category typeCategory = typeTypePtr->actualType()->category();
 		if (
 			typeCategory != Type::Category::Contract &&
-			typeCategory != Type::Category::Integer
+			typeCategory != Type::Category::Integer &&
+			typeCategory != Type::Category::Address
 		)
 			wrongType = true;
 	}
@@ -258,7 +259,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			4259_error,
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
-			"A contract type or an integer type is required, but " +
+			"A contract type, an integer type or an address type is required, but " +
 			type(*arguments.front())->toString(true) + " provided."
 		);
 		return {};

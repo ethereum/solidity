@@ -1603,12 +1603,26 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "min" || member == "max")
 		{
 			MagicType const* arg = dynamic_cast<MagicType const*>(_memberAccess.expression().annotation().type);
-			IntegerType const* integerType = dynamic_cast<IntegerType const*>(arg->typeArgument());
+			Type const* typePointer = arg->typeArgument();
 
-			if (member == "min")
-				m_context << integerType->min();
+			if (auto integerType = dynamic_cast<IntegerType const*>(typePointer))
+			{
+				if (member == "min")
+					m_context << integerType->min();
+				else
+					m_context << integerType->max();
+			}
+			else if (dynamic_cast<AddressType const*>(typePointer))
+			{
+				auto integerType = IntegerType(160, IntegerType::Modifier::Unsigned);
+
+				if (member == "min")
+					m_context << integerType.min();
+				else
+					m_context << integerType.max();
+			}
 			else
-				m_context << integerType->max();
+				solAssert(false, "");
 		}
 		else if ((set<string>{"encode", "encodePacked", "encodeWithSelector", "encodeWithSignature", "decode"}).count(member))
 		{
