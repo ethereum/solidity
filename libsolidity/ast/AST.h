@@ -258,9 +258,15 @@ public:
 	bool isVisibleAsLibraryMember() const { return visibility() >= Visibility::Internal; }
 	virtual bool isVisibleViaContractTypeAccess() const { return false; }
 
-
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
+
+	/// @returns true if this is a declaration of an enum member.
+	bool isEnumValue() const;
+	/// @returns true if this is a declaration of a struct member.
+	bool isStructMember() const;
+	/// @returns true if this is a declaration of a parameter of an event.
+	bool isEventParameter() const;
 
 	/// @returns the type of expressions referencing this declaration.
 	/// This can only be called once types of variable declarations have already been resolved.
@@ -952,10 +958,6 @@ public:
 	bool isConstructorParameter() const;
 	/// @returns true iff this variable is a parameter(or return parameter of a library function
 	bool isLibraryFunctionParameter() const;
-	/// @returns true if the type of the variable does not need to be specified, i.e. it is declared
-	/// in the body of a function or modifier.
-	/// @returns true if this variable is a parameter of an event.
-	bool isEventParameter() const;
 	/// @returns true if the type of the variable is a reference or mapping type, i.e.
 	/// array, struct or mapping. These types can take a data location (and often require it).
 	/// Can only be called after reference resolution.

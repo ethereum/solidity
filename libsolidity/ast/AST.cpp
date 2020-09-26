@@ -495,6 +495,24 @@ string Scopable::sourceUnitName() const
 	return *sourceUnit().annotation().path;
 }
 
+bool Declaration::isEnumValue() const
+{
+	solAssert(scope(), "");
+	return dynamic_cast<EnumDefinition const*>(scope());
+}
+
+bool Declaration::isStructMember() const
+{
+	solAssert(scope(), "");
+	return dynamic_cast<StructDefinition const*>(scope());
+}
+
+bool Declaration::isEventParameter() const
+{
+	solAssert(scope(), "");
+	return dynamic_cast<EventDefinition const*>(scope());
+}
+
 DeclarationAnnotation& Declaration::annotation() const
 {
 	return initAnnotation<DeclarationAnnotation>();
@@ -615,11 +633,6 @@ bool VariableDeclaration::isLibraryFunctionParameter() const
 	if (auto const* funDef = dynamic_cast<FunctionDefinition const*>(scope()))
 		return funDef->libraryFunction();
 	return false;
-}
-
-bool VariableDeclaration::isEventParameter() const
-{
-	return dynamic_cast<EventDefinition const*>(scope()) != nullptr;
 }
 
 bool VariableDeclaration::hasReferenceOrMappingType() const

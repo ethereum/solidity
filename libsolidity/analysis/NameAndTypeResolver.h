@@ -152,7 +152,6 @@ public:
 		Declaration const& _declaration,
 		std::string const* _name,
 		langutil::SourceLocation const* _errorLocation,
-		bool _warnOnShadow,
 		bool _inactive,
 		langutil::ErrorReporter& _errorReporter
 	);
