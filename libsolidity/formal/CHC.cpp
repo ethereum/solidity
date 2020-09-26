@@ -532,6 +532,10 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 
 void CHC::externalFunctionCall(FunctionCall const& _funCall)
 {
+	/// In external function calls we do not add a "predicate call"
+	/// because we do not trust their function body anyway,
+	/// so we just add the nondet_interface predicate.
+
 	solAssert(m_currentContract, "");
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
@@ -978,24 +982,35 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 
 smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 {
+	/// Used only for internal calls.
+
 	auto const* function = functionCallToDefinition(_funCall);
 	if (!function)
 		return smtutil::Expression(true);
 
 	errorFlag().increaseIndex();
 	vector<smtutil::Expression> args{errorFlag().currentValue()};
-	auto const* contract = function->annotation().contract;
-	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	bool otherContract = contract->isLibrary() ||
-		funType.kind() == FunctionType::Kind::External ||
-		funType.kind() == FunctionType::Kind::BareStaticCall;
 
-	args += otherContract ? stateVariablesAtIndex(0, *contract) : currentStateVariables();
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	solAssert(funType.kind() == FunctionType::Kind::Internal, "");
+
+	/// Internal calls can be made to the contract itself or a library.
+	auto const* contract = function->annotation().contract;
+	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
+	solAssert(contract->isLibrary() || find(hierarchy.begin(), hierarchy.end(), contract) != hierarchy.end(), "");
+
+	/// If the call is to a library, we use that library as the called contract.
+	/// If it is not, we use the current contract even if it is a call to a contract
+	/// up in the inheritance hierarchy, since the interfaces/predicates are different.
+	auto const* calledContract = contract->isLibrary() ? contract : m_currentContract;
+	solAssert(calledContract, "");
+
+	args += currentStateVariables(*calledContract);
 	args += symbolicArguments(_funCall);
-	if (!otherContract)
+	if (!calledContract->isLibrary())
 		for (auto const& var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
-	args += otherContract ? stateVariablesAtIndex(1, *contract) : currentStateVariables();
+	args += currentStateVariables(*calledContract);
 
 	for (auto var: function->parameters() + function->returnParameters())
 	{
@@ -1006,11 +1021,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		args.push_back(currentValue(*var));
 	}
 
-	if (otherContract)
-		return (*m_summaries.at(contract).at(function))(args);
-
-	solAssert(m_currentContract, "");
-	return (*m_summaries.at(m_currentContract).at(function))(args);
+	return (*m_summaries.at(calledContract).at(function))(args);
 }
 
 void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
