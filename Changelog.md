@@ -4,6 +4,10 @@ Compiler Features:
  * SMTChecker: Support ``addmod`` and ``mulmod``.
 
 
+Bugfixes:
+ * Type Checker: Fix internal compiler error when calling `.push(<arg>)` for a storage array with a nested mapping.
+
+
 ### 0.7.2 (2020-09-28)
 
 Important Bugfixes:
