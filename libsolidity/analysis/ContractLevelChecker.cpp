@@ -38,15 +38,45 @@ namespace
 {
 
 template <class T, class B>
-bool hasEqualNameAndParameters(T const& _a, B const& _b)
+bool hasEqualParameters(T const& _a, B const& _b)
 {
-	return
-		_a.name() == _b.name() &&
-		FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
-			*FunctionType(_b).asExternallyCallableFunction(false)
-		);
+	return FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
+		*FunctionType(_b).asExternallyCallableFunction(false)
+	);
 }
 
+template<typename T>
+map<ASTString, vector<T const*>> filterDeclarations(
+	map<ASTString, vector<Declaration const*>> const& _declarations)
+{
+	map<ASTString, vector<T const*>> filteredDeclarations;
+	for (auto const& [name, overloads]: _declarations)
+		for (auto const* declaration: overloads)
+			if (auto typedDeclaration = dynamic_cast<T const*>(declaration))
+				filteredDeclarations[name].push_back(typedDeclaration);
+	return filteredDeclarations;
+}
+
+}
+
+bool ContractLevelChecker::check(SourceUnit const& _sourceUnit)
+{
+	bool noErrors = true;
+	findDuplicateDefinitions(
+		filterDeclarations<FunctionDefinition>(*_sourceUnit.annotation().exportedSymbols)
+	);
+	// This check flags duplicate free events when free events become
+	// a Solidity feature
+	findDuplicateDefinitions(
+		filterDeclarations<EventDefinition>(*_sourceUnit.annotation().exportedSymbols)
+	);
+	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
+		noErrors = false;
+	for (ASTPointer<ASTNode> const& node: _sourceUnit.nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			if (!check(*contract))
+				noErrors = false;
+	return noErrors;
 }
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
@@ -143,8 +173,21 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (hasEqualNameAndParameters(*overloads[i], *overloads[j]))
+				if (hasEqualParameters(*overloads[i], *overloads[j]))
 				{
+					solAssert(
+						(
+							dynamic_cast<ContractDefinition const*>(overloads[i]->scope()) &&
+							dynamic_cast<ContractDefinition const*>(overloads[j]->scope()) &&
+							overloads[i]->name() == overloads[j]->name()
+						) ||
+						(
+							dynamic_cast<SourceUnit const*>(overloads[i]->scope()) &&
+							dynamic_cast<SourceUnit const*>(overloads[j]->scope())
+						),
+						"Override is neither a namesake function/event in contract scope nor "
+						"a free function/event (alias)."
+					);
 					ssl.append("Other declaration is here:", overloads[j]->location());
 					reported.insert(j);
 				}

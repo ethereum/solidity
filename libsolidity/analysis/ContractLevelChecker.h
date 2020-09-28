@@ -39,7 +39,7 @@ namespace solidity::frontend
 
 /**
  * Component that verifies overloads, abstract contracts, function clashes and others
- * checks at contract or function level.
+ * checks at file, contract, or function level.
  */
 class ContractLevelChecker
 {
@@ -51,11 +51,14 @@ public:
 		m_errorReporter(_errorReporter)
 	{}
 
+	/// Performs checks on the given source ast.
+	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
+	bool check(SourceUnit const& _sourceUnit);
+
+private:
 	/// Performs checks on the given contract.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
 	bool check(ContractDefinition const& _contract);
-
-private:
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
 	void checkDuplicateFunctions(ContractDefinition const& _contract);

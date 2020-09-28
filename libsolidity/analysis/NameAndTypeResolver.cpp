@@ -121,6 +121,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 						))
 							error =  true;
 		}
+	_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
 	return !error;
 }
 
@@ -533,7 +534,6 @@ bool DeclarationRegistrationHelper::visit(SourceUnit& _sourceUnit)
 
 void DeclarationRegistrationHelper::endVisit(SourceUnit& _sourceUnit)
 {
-	_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
 	ASTVisitor::endVisit(_sourceUnit);
 }
 
