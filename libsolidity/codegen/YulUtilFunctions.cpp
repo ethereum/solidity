@@ -1047,8 +1047,6 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
 
-	solAssert(_type.baseType()->isValueType(), "");
-
 	string functionName = "array_push_zero_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
@@ -1057,15 +1055,12 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 				if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 				sstore(array, add(oldLen, 1))
 				slot, offset := <indexAccess>(array, oldLen)
-				<storeValue>(slot, offset, <zeroValueFunction>())
 			})")
 			("functionName", functionName)
 			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
-			("zeroValueFunction", zeroValueFunction(*_type.baseType()))
 			.render();
 	});
 }
