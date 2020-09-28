@@ -71,6 +71,7 @@ protected:
 	langutil::ErrorList filterErrors(langutil::ErrorList const& _errorList, bool _includeWarnings) const;
 
 	std::vector<std::string> m_warningsToFilter = {"This is a pre-release compiler version"};
+	std::vector<std::string> m_messagesToCut = {"Source file requires different compiler version (current compiler is"};
 
 	/// @returns reference to lazy-instanciated CompilerStack.
 	solidity::frontend::CompilerStack& compiler()
