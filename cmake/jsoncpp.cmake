@@ -34,6 +34,12 @@ if(CMAKE_VERSION VERSION_GREATER 3.1)
     set(byproducts BUILD_BYPRODUCTS "${JSONCPP_LIBRARY}")
 endif()
 
+# Propagate CMAKE_MSVC_RUNTIME_LIBRARY on Windows builds, if set.
+if (WIN32 AND POLICY CMP0091 AND CMAKE_MSVC_RUNTIME_LIBRARY)
+    list(APPEND JSONCPP_CMAKE_ARGS "-DCMAKE_POLICY_DEFAULT_CMP0091:STRING=NEW")
+    list(APPEND JSONCPP_CMAKE_ARGS "-DCMAKE_MSVC_RUNTIME_LIBRARY=${CMAKE_MSVC_RUNTIME_LIBRARY}")
+endif()
+
 ExternalProject_Add(jsoncpp-project
     PREFIX "${prefix}"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
@@ -51,6 +57,7 @@ ExternalProject_Add(jsoncpp-project
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
                -DCMAKE_CXX_FLAGS=${JSONCPP_CXX_FLAGS}
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               ${JSONCPP_CMAKE_ARGS}
     ${byproducts}
 )
 

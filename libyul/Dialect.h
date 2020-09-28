@@ -72,11 +72,15 @@ struct Dialect: boost::noncopyable
 	virtual BuiltinFunction const* equalityFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* booleanNegationFunction() const { return nullptr; }
 
+	virtual BuiltinFunction const* memoryStoreFunction(YulString /* _type */) const { return nullptr; }
+	virtual BuiltinFunction const* memoryLoadFunction(YulString /* _type */) const { return nullptr; }
+
 	/// Check whether the given type is legal for the given literal value.
 	/// Should only be called if the type exists in the dialect at all.
 	virtual bool validTypeForLiteral(LiteralKind _kind, YulString _value, YulString _type) const;
 
 	virtual Literal zeroLiteralForType(YulString _type) const;
+	virtual Literal trueLiteral() const;
 
 	virtual std::set<YulString> fixedFunctionNames() const { return {}; }
 

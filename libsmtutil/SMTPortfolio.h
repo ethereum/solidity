@@ -40,9 +40,9 @@ class SMTPortfolio: public SolverInterface, public boost::noncopyable
 {
 public:
 	SMTPortfolio(
-		std::map<util::h256, std::string> const& _smtlib2Responses,
-		frontend::ReadCallback::Callback const& _smtCallback,
-		SMTSolverChoice _enabledSolvers
+		std::map<util::h256, std::string> _smtlib2Responses = {},
+		frontend::ReadCallback::Callback _smtCallback = {},
+		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All()
 	);
 
 	void reset() override;

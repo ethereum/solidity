@@ -9,7 +9,7 @@ Optimized IR:
 object "Arraysum_33" {
     code {
         {
-            mstore(64, 128)
+            mstore(64, memoryguard(0x80))
             if callvalue() { revert(0, 0) }
             let _1 := datasize("Arraysum_33_deployed")
             codecopy(0, dataoffset("Arraysum_33_deployed"), _1)
@@ -19,7 +19,7 @@ object "Arraysum_33" {
     object "Arraysum_33_deployed" {
         code {
             {
-                mstore(64, 128)
+                mstore(64, memoryguard(0x80))
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0
@@ -33,19 +33,22 @@ object "Arraysum_33" {
                         for { }
                         lt(vloc_i, _2)
                         {
-                            vloc_i := increment_t_uint256(vloc_i)
+                            if gt(vloc_i, not(1)) { invalid() }
+                            vloc_i := add(vloc_i, 1)
                         }
                         {
-                            let _3, _4 := storage_array_index_access_t_array$_t_uint256_$dyn_storage(_1, vloc_i)
-                            vloc_sum := checked_add_t_uint256(vloc_sum, extract_from_storage_value_dynamict_uint256(sload(_3), _4))
+                            mstore(_1, _1)
+                            let _3 := sload(add(keccak256(_1, 0x20), vloc_i))
+                            if gt(vloc_sum, not(_3)) { invalid() }
+                            vloc_sum := add(vloc_sum, _3)
                         }
                         let memPos := allocateMemory(_1)
-                        return(memPos, sub(abi_encode_tuple_t_uint256__to_t_uint256__fromStack(memPos, _1), memPos))
+                        return(memPos, sub(abi_encode_uint(memPos, _1), memPos))
                     }
                 }
                 revert(0, 0)
             }
-            function abi_encode_tuple_t_uint256__to_t_uint256__fromStack(headStart, value0) -> tail
+            function abi_encode_uint(headStart, value0) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
@@ -54,29 +57,8 @@ object "Arraysum_33" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
                 mstore(64, newFreePtr)
-            }
-            function checked_add_t_uint256(x, y) -> sum
-            {
-                if gt(x, not(y)) { revert(sum, sum) }
-                sum := add(x, y)
-            }
-            function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
-            {
-                value := shr(mul(offset, 8), slot_value)
-            }
-            function increment_t_uint256(value) -> ret
-            {
-                if gt(value, not(1)) { revert(ret, ret) }
-                ret := add(value, 1)
-            }
-            function storage_array_index_access_t_array$_t_uint256_$dyn_storage(array, index) -> slot, offset
-            {
-                if iszero(lt(index, sload(array))) { invalid() }
-                mstore(slot, array)
-                slot := add(keccak256(slot, 0x20), index)
-                offset := offset
             }
         }
     }

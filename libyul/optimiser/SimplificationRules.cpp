@@ -171,12 +171,22 @@ bool Pattern::matches(
 			return false;
 		assertThrow(m_arguments.size() == instrAndArgs->second->size(), OptimizerException, "");
 		for (size_t i = 0; i < m_arguments.size(); ++i)
-			if (!m_arguments[i].matches(instrAndArgs->second->at(i), _dialect, _ssaValues))
+		{
+			Expression const& arg = instrAndArgs->second->at(i);
+			// If this is a direct function call instead of a variable or literal,
+			// we reject the match because side-effects could prevent us from
+			// arbitrarily modifying the code.
+			if (
+				holds_alternative<FunctionCall>(arg) ||
+				!m_arguments[i].matches(arg, _dialect, _ssaValues)
+			)
 				return false;
+		}
 	}
 	else
 	{
 		assertThrow(m_arguments.empty(), OptimizerException, "\"Any\" should not have arguments.");
+		assertThrow(!holds_alternative<FunctionCall>(*expr), OptimizerException, "\"Any\" at top-level.");
 	}
 
 	if (m_matchGroup)
@@ -197,9 +207,14 @@ bool Pattern::matches(
 			assertThrow(m_kind == PatternKind::Any, OptimizerException, "Match group repetition for non-any.");
 			Expression const* firstMatch = (*m_matchGroups)[m_matchGroup];
 			assertThrow(firstMatch, OptimizerException, "Match set but to null.");
-			return
-				SyntacticallyEqual{}(*firstMatch, _expr) &&
-				SideEffectsCollector(_dialect, _expr).movable();
+			assertThrow(
+				!holds_alternative<FunctionCall>(_expr) &&
+				!holds_alternative<FunctionCall>(*firstMatch),
+				OptimizerException,
+				"Group matches have to be literals or variables."
+			);
+
+			return SyntacticallyEqual{}(*firstMatch, _expr);
 		}
 		else if (m_kind == PatternKind::Any)
 			(*m_matchGroups)[m_matchGroup] = &_expr;

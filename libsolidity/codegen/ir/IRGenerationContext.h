@@ -142,6 +142,9 @@ public:
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }
 
+	bool inlineAssemblySeen() const { return m_inlineAssemblySeen; }
+	void setInlineAssemblySeen() { m_inlineAssemblySeen = true; }
+
 private:
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
@@ -158,6 +161,9 @@ private:
 	std::map<VariableDeclaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	MultiUseYulFunctionCollector m_functions;
 	size_t m_varCounter = 0;
+
+	/// Flag indicating whether any inline assembly block was seen.
+	bool m_inlineAssemblySeen = false;
 
 	/// Function definitions queued for code generation. They're the Solidity functions whose calls
 	/// were discovered by the IR generator during AST traversal.

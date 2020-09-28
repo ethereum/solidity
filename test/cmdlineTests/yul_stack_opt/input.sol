@@ -17,6 +17,21 @@
 		sstore(add(a, 10), b)
 		sstore(add(a, 11), b)
 		sstore(add(a, 12), b)
+		a3 := 1
+		b3 := 1
+		c3 := 1
+		d3 := 1
+		e3 := 1
+		f3 := 1
+		g3 := 1
+		h3 := 1
+		i3 := 1
+		j3 := 1
+		k3 := 1
+		l3 := 1
+		m3 := 1
+		o3 := 1
+		p3 := 1
 	}
 	let a1, b1, c1, d1, e1, f1, g1, h1, i1, j1, k1, l1, m1, n1, o1, p1 := fun()
 	let a2, b2, c2, d2, e2, f2, g2, h2, i2, j2, k2, l2, m2, n2, o2, p2 := fun()

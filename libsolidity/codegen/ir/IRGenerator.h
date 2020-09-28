@@ -100,7 +100,9 @@ private:
 
 	std::string dispatchRoutine(ContractDefinition const& _contract);
 
-	std::string memoryInit();
+	/// @a _useMemoryGuard If true, use a memory guard, allowing the optimiser
+	/// to perform memory optimizations.
+	std::string memoryInit(bool _useMemoryGuard);
 
 	void resetContext(ContractDefinition const& _contract);
 

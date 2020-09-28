@@ -131,7 +131,7 @@
                         "isPure": true,
                         "lValueRequested": false,
                         "token": "unicodeString",
-                        "type": "literal_string \"Hello \ud83d\ude03\"",
+                        "type": "literal_string hex\"48656c6c6f20f09f9883\"",
                         "value": "Hello \ud83d\ude03"
                       },
                       "id": 5,

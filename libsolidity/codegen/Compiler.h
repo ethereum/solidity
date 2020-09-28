@@ -74,6 +74,9 @@ public:
 	/// @returns Assembly items of the runtime compiler context
 	evmasm::AssemblyItems const& runtimeAssemblyItems() const { return m_context.assembly().sub(m_runtimeSub).items(); }
 
+	std::string generatedYulUtilityCode() const { return m_context.generatedYulUtilityCode(); }
+	std::string runtimeGeneratedYulUtilityCode() const { return m_runtimeContext.generatedYulUtilityCode(); }
+
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
 	evmasm::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;

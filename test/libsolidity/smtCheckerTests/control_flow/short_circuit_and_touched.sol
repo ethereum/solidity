@@ -12,8 +12,8 @@ contract C
 	}
 }
 // ----
-// Warning 6838: (84-110): Condition is always false.
-// Warning 6838: (121-147): Condition is always true.
-// Warning 6838: (158-183): Condition is always false.
-// Warning 6838: (194-221): Condition is always false.
-// Warning 6838: (232-247): Condition is always true.
+// Warning 6838: (84-110): BMC: Condition is always false.
+// Warning 6838: (121-147): BMC: Condition is always true.
+// Warning 6838: (158-183): BMC: Condition is always false.
+// Warning 6838: (194-221): BMC: Condition is always false.
+// Warning 6838: (232-247): BMC: Condition is always true.

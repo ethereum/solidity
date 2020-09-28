@@ -39,7 +39,7 @@ Details are given in the following example.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
 
     contract Owned {
@@ -127,7 +127,7 @@ destruction request. The way this is done is problematic, as
 seen in the following example::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract owned {
         constructor() { owner = msg.sender; }
@@ -157,7 +157,7 @@ explicitly in the final override, but this function will bypass
 ``Base1.destroy``. The way around this is to use ``super``::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract owned {
         constructor() { owner = msg.sender; }
@@ -214,7 +214,7 @@ The following example demonstrates changing mutability and visibility:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract Base
     {
@@ -405,7 +405,7 @@ equivalent to ``constructor() {}``. For example:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     abstract contract A {
         uint public a;
@@ -442,7 +442,7 @@ linearization rules explained below. If the base constructors have arguments,
 derived contracts need to specify all of them. This can be done in two ways::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract Base {
         uint x;
@@ -523,7 +523,7 @@ One area where inheritance linearization is especially important and perhaps not
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract Base1 {
         constructor() {}

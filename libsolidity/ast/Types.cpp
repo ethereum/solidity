@@ -44,6 +44,7 @@
 #include <boost/range/algorithm/copy.hpp>
 
 #include <limits>
+#include <unordered_set>
 #include <utility>
 
 using namespace std;
@@ -53,57 +54,6 @@ using namespace solidity::frontend;
 
 namespace
 {
-
-struct TypeComp
-{
-	bool operator()(Type const* lhs, Type const* rhs) const
-	{
-		solAssert(lhs && rhs, "");
-		return lhs->richIdentifier() < rhs->richIdentifier();
-	}
-};
-using TypeSet = std::set<Type const*, TypeComp>;
-
-void oversizedSubtypesInner(
-	Type const& _type,
-	bool _includeType,
-	set<StructDefinition const*>& _structsSeen,
-	TypeSet& _oversizedSubtypes
-)
-{
-	switch (_type.category())
-	{
-	case Type::Category::Array:
-	{
-		auto const& t = dynamic_cast<ArrayType const&>(_type);
-		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
-			_oversizedSubtypes.insert(&t);
-		oversizedSubtypesInner(*t.baseType(), t.isDynamicallySized(), _structsSeen, _oversizedSubtypes);
-		break;
-	}
-	case Type::Category::Struct:
-	{
-		auto const& t = dynamic_cast<StructType const&>(_type);
-		if (_structsSeen.count(&t.structDefinition()))
-			return;
-		if (_includeType && t.storageSizeUpperBound() >= bigint(1) << 64)
-			_oversizedSubtypes.insert(&t);
-		_structsSeen.insert(&t.structDefinition());
-		for (auto const& m: t.members(nullptr))
-			oversizedSubtypesInner(*m.type, false, _structsSeen, _oversizedSubtypes);
-		_structsSeen.erase(&t.structDefinition());
-		break;
-	}
-	case Type::Category::Mapping:
-	{
-		auto const* valueType = dynamic_cast<MappingType const&>(_type).valueType();
-		oversizedSubtypesInner(*valueType, true, _structsSeen, _oversizedSubtypes);
-		break;
-	}
-	default:
-		break;
-	}
-}
 
 /// Check whether (_base ** _exp) fits into 4096 bits.
 bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
@@ -199,16 +149,6 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 	return transformed;
 }
 
-}
-
-vector<frontend::Type const*> solidity::frontend::oversizedSubtypes(frontend::Type const& _type)
-{
-	set<StructDefinition const*> structsSeen;
-	TypeSet oversized;
-	oversizedSubtypesInner(_type, false, structsSeen, oversized);
-	vector<frontend::Type const*> res;
-	copy(oversized.cbegin(), oversized.cend(), back_inserter(res));
-	return res;
 }
 
 void Type::clearCache() const
@@ -404,10 +344,16 @@ TypePointer Type::fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool) c
 		return encodingType;
 	TypePointer baseType = encodingType;
 	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
+	{
 		baseType = arrayType->baseType();
-	if (dynamic_cast<StructType const*>(baseType))
-		if (!_encoderV2)
+
+		auto const* baseArrayType = dynamic_cast<ArrayType const*>(baseType);
+		if (!_encoderV2 && baseArrayType && baseArrayType->isDynamicallySized())
 			return nullptr;
+	}
+	if (!_encoderV2 && dynamic_cast<StructType const*>(baseType))
+		return nullptr;
+
 	return encodingType;
 }
 
@@ -1405,12 +1351,25 @@ StringLiteralType::StringLiteralType(string _value):
 BoolResult StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (auto fixedBytes = dynamic_cast<FixedBytesType const*>(&_convertTo))
-		return static_cast<size_t>(fixedBytes->numBytes()) >= m_value.size();
+	{
+		if (static_cast<size_t>(fixedBytes->numBytes()) < m_value.size())
+			return BoolResult::err("Literal is larger than the type.");
+		return true;
+	}
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
+	{
+		size_t invalidSequence;
+		if (arrayType->isString() && !util::validateUTF8(value(), invalidSequence))
+			return BoolResult::err(
+				"Contains invalid UTF-8 sequence at position " +
+				util::toString(invalidSequence) +
+				"."
+			);
 		return
+			arrayType->location() != DataLocation::CallData &&
 			arrayType->isByteArray() &&
-			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer()) &&
-			!(arrayType->isString() && !util::validateUTF8(value()));
+			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer());
+	}
 	else
 		return false;
 }
@@ -1431,12 +1390,19 @@ bool StringLiteralType::operator==(Type const& _other) const
 
 std::string StringLiteralType::toString(bool) const
 {
-	size_t invalidSequence;
+	auto isPrintableASCII = [](string const& s)
+	{
+		for (auto c: s)
+		{
+			if (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f)
+				return false;
+		}
+		return true;
+	};
 
-	if (!util::validateUTF8(m_value, invalidSequence))
-		return "literal_string (contains invalid UTF-8 sequence at position " + util::toString(invalidSequence) + ")";
-
-	return "literal_string \"" + m_value + "\"";
+	return isPrintableASCII(m_value) ?
+		("literal_string \"" + m_value + "\"") :
+		("literal_string hex\"" + util::toHex(util::asBytes(m_value)) + "\"");
 }
 
 TypePointer StringLiteralType::mobileType() const
@@ -1569,12 +1535,15 @@ BoolResult ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	if (_convertTo.category() == Category::Contract)
 	{
-		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
-		if (m_super && bases.size() <= 1)
+		auto const& targetContractType = dynamic_cast<ContractType const&>(_convertTo);
+		if (targetContractType.isSuper())
 			return false;
+
+		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
 		return find(
-			m_super ? ++bases.begin() : bases.begin(), bases.end(),
-			&dynamic_cast<ContractType const&>(_convertTo).contractDefinition()
+			bases.begin(),
+			bases.end(),
+			&targetContractType.contractDefinition()
 		) != bases.end();
 	}
 	return false;
@@ -1606,6 +1575,21 @@ TypeResult ContractType::unaryOperatorResult(Token _operator) const
 		return TypeProvider::emptyTuple();
 	else
 		return nullptr;
+}
+
+vector<Type const*> CompositeType::fullDecomposition() const
+{
+	vector<Type const*> res = {this};
+	unordered_set<string> seen = {richIdentifier()};
+	for (size_t k = 0; k < res.size(); ++k)
+		if (auto composite = dynamic_cast<CompositeType const*>(res[k]))
+			for (Type const* next: composite->decomposition())
+				if (seen.count(next->richIdentifier()) == 0)
+				{
+					seen.insert(next->richIdentifier());
+					res.push_back(next);
+				}
+	return res;
 }
 
 Type const* ReferenceType::withLocation(DataLocation _location, bool _isPointer) const
@@ -2150,7 +2134,7 @@ string ContractType::toString(bool) const
 
 string ContractType::canonicalName() const
 {
-	return m_contract.annotation().canonicalName;
+	return *m_contract.annotation().canonicalName;
 }
 
 MemberList::MemberMap ContractType::nativeMembers(ASTNode const*) const
@@ -2401,7 +2385,7 @@ bool StructType::containsNestedMapping() const
 
 string StructType::toString(bool _short) const
 {
-	string ret = "struct " + m_struct.annotation().canonicalName;
+	string ret = "struct " + *m_struct.annotation().canonicalName;
 	if (!_short)
 		ret += " " + stringForReferencePart();
 	return ret;
@@ -2580,7 +2564,7 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 
 string StructType::canonicalName() const
 {
-	return m_struct.annotation().canonicalName;
+	return *m_struct.annotation().canonicalName;
 }
 
 FunctionTypePointer StructType::constructorType() const
@@ -2645,6 +2629,13 @@ vector<tuple<string, TypePointer>> StructType::makeStackItems() const
 	solAssert(false, "");
 }
 
+vector<Type const*> StructType::decomposition() const
+{
+	vector<Type const*> res;
+	for (MemberList::Member const& member: members(nullptr))
+		res.push_back(member.type);
+	return res;
+}
 
 TypePointer EnumType::encodingType() const
 {
@@ -2680,12 +2671,12 @@ unsigned EnumType::storageBytes() const
 
 string EnumType::toString(bool) const
 {
-	return string("enum ") + m_enum.annotation().canonicalName;
+	return string("enum ") + *m_enum.annotation().canonicalName;
 }
 
 string EnumType::canonicalName() const
 {
-	return m_enum.annotation().canonicalName;
+	return *m_enum.annotation().canonicalName;
 }
 
 size_t EnumType::numberOfMembers() const
@@ -3007,7 +2998,7 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 		m_kind == Kind::BareStaticCall
 	)
 		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallySized() && !param->dataStoredIn(DataLocation::Storage))
+			if (param->isDynamicallyEncoded() && !param->dataStoredIn(DataLocation::Storage))
 				param = TypeProvider::inaccessibleDynamic();
 
 	return returnParameterTypes;
@@ -3158,7 +3149,7 @@ string FunctionType::toString(bool _short) const
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope()))
-			name += contract->annotation().canonicalName + ".";
+			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
 	name += '(';
@@ -3482,12 +3473,12 @@ bool FunctionType::canTakeArguments(
 
 		size_t matchedNames = 0;
 
-		for (auto const& argName: _arguments.names)
-			for (size_t i = 0; i < paramNames.size(); i++)
-				if (*argName == paramNames[i])
+		for (size_t a = 0; a < _arguments.names.size(); a++)
+			for (size_t p = 0; p < paramNames.size(); p++)
+				if (*_arguments.names[a] == paramNames[p])
 				{
 					matchedNames++;
-					if (!_arguments.types[i]->isImplicitlyConvertibleTo(*paramTypes[i]))
+					if (!_arguments.types[a]->isImplicitlyConvertibleTo(*paramTypes[p]))
 						return false;
 				}
 
@@ -3949,7 +3940,7 @@ bool ModuleType::operator==(Type const& _other) const
 MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap symbols;
-	for (auto const& symbolName: m_sourceUnit.annotation().exportedSymbols)
+	for (auto const& symbolName: *m_sourceUnit.annotation().exportedSymbols)
 		for (Declaration const* symbol: symbolName.second)
 			symbols.emplace_back(symbolName.first, symbol->type(), symbol);
 	return symbols;
@@ -3957,7 +3948,7 @@ MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 
 string ModuleType::toString(bool) const
 {
-	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
+	return string("module \"") + *m_sourceUnit.annotation().path + string("\"");
 }
 
 string MagicType::richIdentifier() const

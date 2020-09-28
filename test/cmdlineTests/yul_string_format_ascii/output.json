@@ -8,7 +8,7 @@
 
 object \"C_10\" {
     code {
-        mstore(64, 128)
+        mstore(64, memoryguard(128))
         if callvalue() { revert(0, 0) }
 
         constructor_C_10()
@@ -24,7 +24,7 @@ object \"C_10\" {
     }
     object \"C_10_deployed\" {
         code {
-            mstore(64, 128)
+            mstore(64, memoryguard(128))
 
             if iszero(lt(calldatasize(), 4))
             {
@@ -71,7 +71,7 @@ object \"C_10\" {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
                 // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error() }
                 mstore(64, newFreePtr)
             }
 
@@ -114,6 +114,10 @@ object \"C_10\" {
                 vloc__4_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
                 leave
 
+            }
+
+            function panic_error() {
+                invalid()
             }
 
             function round_up_to_mul_of_32(value) -> result {

@@ -37,12 +37,6 @@ ostream& operator<<(ostream& _stream, Chromosome const& _chromosome);
 
 }
 
-Chromosome::Chromosome(string const& _optimisationSteps)
-{
-	for (char abbreviation: _optimisationSteps)
-		m_optimisationSteps.push_back(OptimiserSuite::stepAbbreviationToNameMap().at(abbreviation));
-}
-
 Chromosome Chromosome::makeRandom(size_t _length)
 {
 	vector<string> steps;
@@ -54,10 +48,7 @@ Chromosome Chromosome::makeRandom(size_t _length)
 
 ostream& phaser::operator<<(ostream& _stream, Chromosome const& _chromosome)
 {
-	for (auto const& stepName: _chromosome.m_optimisationSteps)
-		_stream << OptimiserSuite::stepNameToAbbreviationMap().at(stepName);
-
-	return _stream;
+	return _stream << _chromosome.m_genes;
 }
 
 vector<string> Chromosome::allStepNames()
@@ -74,4 +65,27 @@ string const& Chromosome::randomOptimisationStep()
 	static vector<string> stepNames = allStepNames();
 
 	return stepNames[SimulationRNG::uniformInt(0, stepNames.size() - 1)];
+}
+
+char Chromosome::randomGene()
+{
+	return OptimiserSuite::stepNameToAbbreviationMap().at(randomOptimisationStep());
+}
+
+string Chromosome::stepsToGenes(vector<string> const& _optimisationSteps)
+{
+	string genes;
+	for (string const& stepName: _optimisationSteps)
+		genes.push_back(OptimiserSuite::stepNameToAbbreviationMap().at(stepName));
+
+	return genes;
+}
+
+vector<string> Chromosome::genesToSteps(string const& _genes)
+{
+	vector<string> steps;
+	for (char abbreviation: _genes)
+		steps.push_back(OptimiserSuite::stepAbbreviationToNameMap().at(abbreviation));
+
+	return steps;
 }

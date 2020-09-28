@@ -243,7 +243,7 @@ Since variables are stored on the stack, they do not directly
 influence memory or storage, but they can be used as pointers
 to memory or storage locations in the built-in functions
 ``mstore``, ``mload``, ``sstore`` and ``sload``.
-Future dialects migh introduce specific types for such pointers.
+Future dialects might introduce specific types for such pointers.
 
 When a variable is referenced, its current value is copied.
 For the EVM, this translates to a ``DUP`` instruction.
@@ -952,6 +952,26 @@ option.
 
 See :ref:`Using the Commandline Compiler <commandline-compiler>` for details about the Solidity linker.
 
+memoryguard
+^^^^^^^^^^^
+
+This function is available in the EVM dialect with objects. The caller of
+``let ptr := memoryguard(size)`` (where ``size`` has to be a literal number)
+promises that they only use memory in either the range ``[0, size)`` or the
+unbounded range starting at ``ptr``.
+
+Since the presence of a ``memoryguard`` call indicates that all memory access
+adheres to this restriction, it allows the optimizer to perform additional
+optimization steps, for example the stack limit evader, which attempts to move
+stack variables that would otherwise be unreachable to memory.
+
+The Yul optimizer promises to only use the memory range ``[size, ptr)`` for its purposes.
+If the optimizer does not need to reserve any memory, it holds that ``ptr == size``.
+
+``memoryguard`` can be called multiple times, but needs to have the same literal as argument
+within one Yul subobject. If at least one ``memoryguard`` call is found in a subobject,
+the additional optimiser steps will be run on it.
+
 
 .. _yul-object:
 
@@ -1110,6 +1130,7 @@ Abbreviation Full name
 ``L``        ``LoadResolver``
 ``M``        ``LoopInvariantCodeMotion``
 ``r``        ``RedundantAssignEliminator``
+``R``        ``ReasoningBasedSimplifier`` - highly experimental
 ``m``        ``Rematerialiser``
 ``V``        ``SSAReverser``
 ``a``        ``SSATransform``
@@ -1121,6 +1142,10 @@ Abbreviation Full name
 Some steps depend on properties ensured by ``BlockFlattener``, ``FunctionGrouper``, ``ForLoopInitRewriter``.
 For this reason the Yul optimizer always applies them before applying any steps supplied by the user.
 
+The ReasoningBasedSimplifier is an optimizer step that is currently not enabled
+in the default set of steps. It uses an SMT solver to simplify arithmetic expressions
+and boolean conditions. It has not received thorough testing or validation yet and can produce
+non-reproducible results, so please use with care!
 
 .. _erc20yul:
 

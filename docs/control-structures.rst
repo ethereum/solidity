@@ -19,7 +19,7 @@ Solidity also supports exception handling in the form of ``try``/``catch``-state
 but only for :ref:`external function calls <external-function-calls>` and
 contract creation calls.
 
-Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
+Parentheses can *not* be omitted for conditionals, but curly braces can be omitted
 around single-statement bodies.
 
 Note that there is no type conversion from non-boolean to boolean types as
@@ -105,8 +105,12 @@ otherwise, the ``value`` option would not be available.
   parentheses at the end perform the actual call. So in this case, the
   function is not called and the ``value`` and ``gas`` settings are lost.
 
-Function calls cause exceptions if the called contract does not exist (in the
-sense that the account does not contain code) or if the called contract itself
+Due to the fact that the EVM considers a call to a non-existing contract to
+always succeed, Solidity uses the ``extcodesize`` opcode to check that
+the contract that is about to be called actually exists (it contains code)
+and causes an exception if it does not.
+
+Function calls also cause exceptions if the called contract itself
 throws an exception or goes out of gas.
 
 .. warning::
@@ -188,7 +192,7 @@ is compiled so recursive creation-dependencies are not possible.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract D {
         uint public x;
@@ -244,7 +248,7 @@ which only need to be created if there is a dispute.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract D {
         uint public x;

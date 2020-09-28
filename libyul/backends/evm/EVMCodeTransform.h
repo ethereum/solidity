@@ -193,7 +193,7 @@ private:
 	void visitStatements(std::vector<Statement> const& _statements);
 
 	/// Pops all variables declared in the block and checks that the stack height is equal
-	/// to @a _blackStartStackHeight.
+	/// to @a _blockStartStackHeight.
 	void finalizeBlock(Block const& _block, int _blockStartStackHeight);
 
 	void generateMultiAssignment(std::vector<Identifier> const& _variableNames);

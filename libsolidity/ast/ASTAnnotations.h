@@ -47,6 +47,7 @@ namespace solidity::frontend
 
 class Type;
 using TypePointer = Type const*;
+using namespace util;
 
 struct ASTAnnotation
 {
@@ -88,9 +89,9 @@ struct StructurallyDocumentedAnnotation
 struct SourceUnitAnnotation: ASTAnnotation
 {
 	/// The "absolute" (in the compiler sense) path of this source unit.
-	std::string path;
+	SetOnce<std::string> path;
 	/// The exported symbols (all global symbols).
-	std::map<ASTString, std::vector<Declaration const*>> exportedSymbols;
+	SetOnce<std::map<ASTString, std::vector<Declaration const*>>> exportedSymbols;
 	/// Experimental features.
 	std::set<ExperimentalFeature> experimentalFeatures;
 };
@@ -108,10 +109,10 @@ struct ScopableAnnotation
 	virtual ~ScopableAnnotation() = default;
 
 	/// The scope this declaration resides in. Can be nullptr if it is the global scope.
-	/// Available only after name and type resolution step.
+	/// Filled by the Scoper.
 	ASTNode const* scope = nullptr;
 	/// Pointer to the contract this declaration resides in. Can be nullptr if the current scope
-	/// is not part of a contract. Available only after name and type resolution step.
+	/// is not part of a contract. Filled by the Scoper.
 	ContractDefinition const* contract = nullptr;
 };
 
@@ -122,7 +123,7 @@ struct DeclarationAnnotation: ASTAnnotation, ScopableAnnotation
 struct ImportAnnotation: DeclarationAnnotation
 {
 	/// The absolute path of the source unit to import.
-	std::string absolutePath;
+	SetOnce<std::string> absolutePath;
 	/// The actual source unit.
 	SourceUnit const* sourceUnit = nullptr;
 };
@@ -130,7 +131,7 @@ struct ImportAnnotation: DeclarationAnnotation
 struct TypeDeclarationAnnotation: DeclarationAnnotation
 {
 	/// The name of this type, prefixed by proper namespaces if globally accessible.
-	std::string canonicalName;
+	SetOnce<std::string> canonicalName;
 };
 
 struct StructDeclarationAnnotation: TypeDeclarationAnnotation
@@ -149,7 +150,7 @@ struct StructDeclarationAnnotation: TypeDeclarationAnnotation
 struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// List of functions and modifiers without a body. Can also contain functions from base classes.
-	std::vector<Declaration const*> unimplementedDeclarations;
+	std::optional<std::vector<Declaration const*>> unimplementedDeclarations;
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;
@@ -243,16 +244,16 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Inferred type of the expression.
 	TypePointer type = nullptr;
 	/// Whether the expression is a constant variable
-	bool isConstant = false;
+	SetOnce<bool> isConstant;
 	/// Whether the expression is pure, i.e. compile-time constant.
-	bool isPure = false;
+	SetOnce<bool> isPure;
 	/// Whether it is an LValue (i.e. something that can be assigned to).
-	bool isLValue = false;
+	SetOnce<bool> isLValue;
 	/// Whether the expression is used in a context where the LValue is actually required.
 	bool willBeWrittenTo = false;
 	/// Whether the expression is an lvalue that is only assigned.
 	/// Would be false for --, ++, delete, +=, -=, ....
-	bool lValueOfOrdinaryAssignment = false;
+	SetOnce<bool> lValueOfOrdinaryAssignment;
 
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resolution

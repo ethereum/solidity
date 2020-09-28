@@ -38,19 +38,51 @@ namespace
 {
 
 template <class T, class B>
-bool hasEqualNameAndParameters(T const& _a, B const& _b)
+bool hasEqualParameters(T const& _a, B const& _b)
 {
-	return
-		_a.name() == _b.name() &&
-		FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
-			*FunctionType(_b).asExternallyCallableFunction(false)
-		);
+	return FunctionType(_a).asExternallyCallableFunction(false)->hasEqualParameterTypes(
+		*FunctionType(_b).asExternallyCallableFunction(false)
+	);
 }
 
+template<typename T>
+map<ASTString, vector<T const*>> filterDeclarations(
+	map<ASTString, vector<Declaration const*>> const& _declarations)
+{
+	map<ASTString, vector<T const*>> filteredDeclarations;
+	for (auto const& [name, overloads]: _declarations)
+		for (auto const* declaration: overloads)
+			if (auto typedDeclaration = dynamic_cast<T const*>(declaration))
+				filteredDeclarations[name].push_back(typedDeclaration);
+	return filteredDeclarations;
+}
+
+}
+
+bool ContractLevelChecker::check(SourceUnit const& _sourceUnit)
+{
+	bool noErrors = true;
+	findDuplicateDefinitions(
+		filterDeclarations<FunctionDefinition>(*_sourceUnit.annotation().exportedSymbols)
+	);
+	// This check flags duplicate free events when free events become
+	// a Solidity feature
+	findDuplicateDefinitions(
+		filterDeclarations<EventDefinition>(*_sourceUnit.annotation().exportedSymbols)
+	);
+	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
+		noErrors = false;
+	for (ASTPointer<ASTNode> const& node: _sourceUnit.nodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			if (!check(*contract))
+				noErrors = false;
+	return noErrors;
 }
 
 bool ContractLevelChecker::check(ContractDefinition const& _contract)
 {
+	_contract.annotation().unimplementedDeclarations = std::vector<Declaration const*>();
+
 	checkDuplicateFunctions(_contract);
 	checkDuplicateEvents(_contract);
 	m_overrideChecker.check(_contract);
@@ -141,8 +173,21 @@ void ContractLevelChecker::findDuplicateDefinitions(map<string, vector<T>> const
 			SecondarySourceLocation ssl;
 
 			for (size_t j = i + 1; j < overloads.size(); ++j)
-				if (hasEqualNameAndParameters(*overloads[i], *overloads[j]))
+				if (hasEqualParameters(*overloads[i], *overloads[j]))
 				{
+					solAssert(
+						(
+							dynamic_cast<ContractDefinition const*>(overloads[i]->scope()) &&
+							dynamic_cast<ContractDefinition const*>(overloads[j]->scope()) &&
+							overloads[i]->name() == overloads[j]->name()
+						) ||
+						(
+							dynamic_cast<SourceUnit const*>(overloads[i]->scope()) &&
+							dynamic_cast<SourceUnit const*>(overloads[j]->scope())
+						),
+						"Override is neither a namesake function/event in contract scope nor "
+						"a free function/event (alias)."
+					);
 					ssl.append("Other declaration is here:", overloads[j]->location());
 					reported.insert(j);
 				}
@@ -210,9 +255,10 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	// Set to not fully implemented if at least one flag is false.
 	// Note that `_contract.annotation().unimplementedDeclarations` has already been
 	// pre-filled by `checkBaseConstructorArguments`.
+	//
 	for (auto const& proxy: proxies)
 		if (proxy.unimplemented())
-			_contract.annotation().unimplementedDeclarations.push_back(proxy.declaration());
+			_contract.annotation().unimplementedDeclarations->push_back(proxy.declaration());
 
 	if (_contract.abstract())
 	{
@@ -229,17 +275,17 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 	if (
 		_contract.contractKind() == ContractKind::Contract &&
 		!_contract.abstract() &&
-		!_contract.annotation().unimplementedDeclarations.empty()
+		!_contract.annotation().unimplementedDeclarations->empty()
 	)
 	{
 		SecondarySourceLocation ssl;
-		for (auto declaration: _contract.annotation().unimplementedDeclarations)
+		for (auto declaration: *_contract.annotation().unimplementedDeclarations)
 			ssl.append("Missing implementation: ", declaration->location());
 		m_errorReporter.typeError(
 			3656_error,
 			_contract.location(),
 			ssl,
-			"Contract \"" + _contract.annotation().canonicalName + "\" should be marked as abstract."
+			"Contract \"" + *_contract.annotation().canonicalName + "\" should be marked as abstract."
 		);
 	}
 }
@@ -289,7 +335,7 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 		if (FunctionDefinition const* constructor = contract->constructor())
 			if (contract != &_contract && !constructor->parameters().empty())
 				if (!_contract.annotation().baseConstructorArguments.count(constructor))
-					_contract.annotation().unimplementedDeclarations.push_back(constructor);
+					_contract.annotation().unimplementedDeclarations->push_back(constructor);
 }
 
 void ContractLevelChecker::annotateBaseConstructorArguments(
@@ -465,7 +511,6 @@ void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition
 void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 {
 	bigint size = 0;
-	vector<VariableDeclaration const*> variables;
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
@@ -473,7 +518,7 @@ void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 				size += variable->annotation().type->storageSizeUpperBound();
 				if (size >= bigint(1) << 256)
 				{
-					m_errorReporter.typeError(7676_error, _contract.location(), "Contract too large for storage.");
+					m_errorReporter.typeError(7676_error, _contract.location(), "Contract requires too much storage.");
 					break;
 				}
 			}

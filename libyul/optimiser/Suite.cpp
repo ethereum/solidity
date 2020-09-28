@@ -41,7 +41,9 @@
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/Rematerialiser.h>
+#include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -49,6 +51,7 @@
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/StackCompressor.h>
+#include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
@@ -56,6 +59,7 @@
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/NameSimplifier.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -70,6 +74,7 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <libyul/CompilabilityChecker.h>
 
 using namespace std;
 using namespace solidity;
@@ -121,6 +126,12 @@ void OptimiserSuite::run(
 	{
 		yulAssert(_meter, "");
 		ConstantOptimiser{*dialect, *_meter}(ast);
+		if (dialect->providesObjectAccess())
+			StackLimitEvader::run(suite.m_context, _object, CompilabilityChecker{
+				_dialect,
+				_object,
+				_optimizeStackAllocation
+			}.unreachableVariables);
 	}
 	else if (dynamic_cast<WasmDialect const*>(&_dialect))
 	{
@@ -180,11 +191,14 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			LiteralRematerialiser,
 			LoadResolver,
 			LoopInvariantCodeMotion,
+			NameSimplifier,
 			RedundantAssignEliminator,
+			ReasoningBasedSimplifier,
 			Rematerialiser,
 			SSAReverser,
 			SSATransform,
 			StructuralSimplifier,
+			UnusedFunctionParameterPruner,
 			UnusedPruner,
 			VarDeclInitializer
 		>();
@@ -216,11 +230,14 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{LiteralRematerialiser::name,         'T'},
 		{LoadResolver::name,                  'L'},
 		{LoopInvariantCodeMotion::name,       'M'},
+		{NameSimplifier::name,                'N'},
+		{ReasoningBasedSimplifier::name,      'R'},
 		{RedundantAssignEliminator::name,     'r'},
 		{Rematerialiser::name,                'm'},
 		{SSAReverser::name,                   'V'},
 		{SSATransform::name,                  'a'},
 		{StructuralSimplifier::name,          't'},
+		{UnusedFunctionParameterPruner::name, 'p'},
 		{UnusedPruner::name,                  'u'},
 		{VarDeclInitializer::name,            'd'},
 	};
@@ -260,6 +277,7 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 			insideLoop = false;
 			break;
 		default:
+		{
 			yulAssert(
 				string(NonStepAbbreviations).find(abbreviation) == string::npos,
 				"Unhandled syntactic element in the abbreviation sequence"
@@ -269,6 +287,14 @@ void OptimiserSuite::validateSequence(string const& _stepAbbreviations)
 				OptimizerException,
 				"'"s + abbreviation + "' is not a valid step abbreviation"
 			);
+			optional<string> invalid = allSteps().at(stepAbbreviationToNameMap().at(abbreviation))->invalidInCurrentEnvironment();
+			assertThrow(
+				!invalid.has_value(),
+				OptimizerException,
+				"'"s + abbreviation + "' is invalid in the current environment: " + *invalid
+			);
+
+		}
 		}
 	assertThrow(!insideLoop, OptimizerException, "Unbalanced brackets");
 }

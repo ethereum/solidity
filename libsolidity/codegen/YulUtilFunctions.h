@@ -140,6 +140,10 @@ public:
 	/// signature: (base, exponent, min, max) -> power
 	std::string overflowCheckedSignedExpFunction();
 
+	/// Helper function for the two checked exponentiation functions.
+	/// signature: (power, base, exponent, max) -> power
+	std::string overflowCheckedExpLoopFunction();
+
 	/// @returns the name of a function that fetches the length of the given
 	/// array
 	/// signature: (array) -> length
@@ -368,6 +372,10 @@ public:
 	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
+
+	/// Executes the invalid opcode.
+	/// Might use revert with special error code in the future.
+	std::string panicFunction();
 
 	/// Returns the name of a function that decodes an error message.
 	/// signature: () -> arrayPtr

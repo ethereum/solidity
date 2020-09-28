@@ -25,7 +25,7 @@ to receive their money - contracts cannot activate themselves.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract SimpleAuction {
         // Parameters of the auction. Times are either
@@ -186,7 +186,7 @@ invalid bids.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract BlindAuction {
         struct Bid {

@@ -208,6 +208,14 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 	});
 }
 
+uint64_t ContractDefinition::interfaceId() const
+{
+	uint64_t result{0};
+	for (auto const& function: interfaceFunctionList(false))
+		result ^= util::fromBigEndian<uint64_t>(function.first.ref());
+	return result;
+}
+
 TypePointer ContractDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::contract(*this));
@@ -484,7 +492,7 @@ CallableDeclaration const* Scopable::functionOrModifierDefinition() const
 
 string Scopable::sourceUnitName() const
 {
-	return sourceUnit().annotation().path;
+	return *sourceUnit().annotation().path;
 }
 
 DeclarationAnnotation& Declaration::annotation() const

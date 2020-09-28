@@ -99,6 +99,9 @@ public:
 			{"bvand", 2},
 			{"bvor", 2},
 			{"bvxor", 2},
+			{"bvshl", 2},
+			{"bvlshr", 2},
+			{"bvashr", 2},
 			{"int2bv", 2},
 			{"bv2int", 1},
 			{"select", 2},
@@ -299,15 +302,30 @@ public:
 		auto bvSort = _a.sort;
 		return Expression("bvand", {std::move(_a), std::move(_b)}, bvSort);
 	}
+	friend Expression operator|(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvor", {std::move(_a), std::move(_b)}, bvSort);
+	}
 	friend Expression operator^(Expression _a, Expression _b)
 	{
 		auto bvSort = _a.sort;
 		return Expression("bvxor", {std::move(_a), std::move(_b)}, bvSort);
 	}
-	friend Expression operator|(Expression _a, Expression _b)
+	friend Expression operator<<(Expression _a, Expression _b)
 	{
 		auto bvSort = _a.sort;
-		return Expression("bvor", {std::move(_a), std::move(_b)}, bvSort);
+		return Expression("bvshl", {std::move(_a), std::move(_b)}, bvSort);
+	}
+	friend Expression operator>>(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvlshr", {std::move(_a), std::move(_b)}, bvSort);
+	}
+	static Expression ashr(Expression _a, Expression _b)
+	{
+		auto bvSort = _a.sort;
+		return Expression("bvashr", {std::move(_a), std::move(_b)}, bvSort);
 	}
 	Expression operator()(std::vector<Expression> _arguments) const
 	{

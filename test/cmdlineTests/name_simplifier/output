@@ -1,0 +1,137 @@
+Optimized IR:
+/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+object "C_56" {
+    code {
+        {
+            mstore(64, memoryguard(0x80))
+            if callvalue() { revert(0, 0) }
+            let _1 := datasize("C_56_deployed")
+            codecopy(0, dataoffset("C_56_deployed"), _1)
+            return(0, _1)
+        }
+    }
+    object "C_56_deployed" {
+        code {
+            {
+                mstore(64, memoryguard(0x80))
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    if eq(0xf8eddcc6, shr(224, calldataload(_1)))
+                    {
+                        if callvalue() { revert(_1, _1) }
+                        let _2 := 32
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_1, _1) }
+                        let offset := calldataload(4)
+                        let _3 := 0xffffffffffffffff
+                        if gt(offset, _3) { revert(_1, _1) }
+                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
+                        let length := calldataload(add(4, offset))
+                        if gt(length, _3) { invalid() }
+                        let _4 := mul(length, _2)
+                        let dst := allocateMemory(add(_4, _2))
+                        let dst_1 := dst
+                        mstore(dst, length)
+                        dst := add(dst, _2)
+                        let src := add(offset, 36)
+                        if gt(add(add(offset, _4), 36), calldatasize()) { revert(_1, _1) }
+                        let i := _1
+                        for { } lt(i, length) { i := add(i, 1) }
+                        {
+                            mstore(dst, abi_decode_t_struct$_S(src, calldatasize()))
+                            dst := add(dst, _2)
+                            src := add(src, _2)
+                        }
+                        let ret, ret_1 := fun_sumArray_55(dst_1)
+                        let memPos := allocateMemory(_1)
+                        return(memPos, sub(abi_encode_uint256_t_string(memPos, ret, ret_1), memPos))
+                    }
+                }
+                revert(0, 0)
+            }
+            function abi_decode_t_struct$_S(headStart, end) -> value
+            {
+                if slt(sub(end, headStart), 0x20) { revert(value, value) }
+                let memPtr := mload(64)
+                let newFreePtr := add(memPtr, 0x20)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                mstore(64, newFreePtr)
+                value := memPtr
+                mstore(memPtr, calldataload(headStart))
+            }
+            function abi_encode_uint256_t_string(headStart, value0, value1) -> tail
+            {
+                mstore(headStart, value0)
+                let _1 := 32
+                mstore(add(headStart, _1), 64)
+                let length := mload(value1)
+                mstore(add(headStart, 64), length)
+                let i := tail
+                for { } lt(i, length) { i := add(i, _1) }
+                {
+                    mstore(add(add(headStart, i), 96), mload(add(add(value1, i), _1)))
+                }
+                if gt(i, length)
+                {
+                    mstore(add(add(headStart, length), 96), tail)
+                }
+                tail := add(add(headStart, and(add(length, 31), not(31))), 96)
+            }
+            function allocateMemory(size) -> memPtr
+            {
+                memPtr := mload(64)
+                let newFreePtr := add(memPtr, size)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                mstore(64, newFreePtr)
+            }
+            function convert_t_stringliteral_6490_to_t_string() -> converted
+            {
+                let memPtr := mload(64)
+                let newFreePtr := add(memPtr, 160)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                mstore(64, newFreePtr)
+                converted := memPtr
+                mstore(memPtr, 100)
+                mstore(add(memPtr, 32), "longstringlongstringlongstringlo")
+                mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
+                mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
+                mstore(add(memPtr, 128), "ring")
+            }
+            function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
+            {
+                value := shr(mul(offset, 8), slot_value)
+            }
+            function fun_sumArray_55(vloc__s_19_mpos) -> vloc, vloc__24_mpos
+            {
+                let _1 := mload(vloc__s_19_mpos)
+                if iszero(lt(vloc, _1)) { invalid() }
+                let _2 := mload(mload(add(add(vloc__s_19_mpos, mul(vloc, 32)), 32)))
+                let _3, _4 := storage_array_index_access$_t_struct$_S_storage(vloc, vloc)
+                sstore(_3, _2)
+                if iszero(lt(0x01, _1)) { invalid() }
+                let _5 := mload(mload(add(vloc__s_19_mpos, 64)))
+                if iszero(lt(vloc, 0x02)) { invalid() }
+                let slot := add(0x02, vloc)
+                let _6 := sload(slot)
+                let shiftBits := mul(vloc, 8)
+                let mask := shl(shiftBits, not(0))
+                sstore(slot, or(and(_6, not(mask)), and(shl(shiftBits, _5), mask)))
+                let _7, _8 := storage_array_index_access$_t_struct$_S_storage(0x02, vloc)
+                vloc := extract_from_storage_value_dynamict_uint256(sload(_7), _8)
+                vloc__24_mpos := convert_t_stringliteral_6490_to_t_string()
+            }
+            function storage_array_index_access$_t_struct$_S_storage(array, index) -> slot, offset
+            {
+                if iszero(lt(index, 0x02)) { invalid() }
+                slot := add(array, index)
+                offset := offset
+            }
+        }
+    }
+}

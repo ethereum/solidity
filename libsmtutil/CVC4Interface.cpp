@@ -196,6 +196,12 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::BITVECTOR_OR, arguments[0], arguments[1]);
 		else if (n == "bvxor")
 			return m_context.mkExpr(CVC4::kind::BITVECTOR_XOR, arguments[0], arguments[1]);
+		else if (n == "bvshl")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_SHL, arguments[0], arguments[1]);
+		else if (n == "bvlshr")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_LSHR, arguments[0], arguments[1]);
+		else if (n == "bvashr")
+			return m_context.mkExpr(CVC4::kind::BITVECTOR_ASHR, arguments[0], arguments[1]);
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);
@@ -289,6 +295,8 @@ CVC4::Type CVC4Interface::cvc4Sort(Sort const& _sort)
 		return m_context.booleanType();
 	case Kind::Int:
 		return m_context.integerType();
+	case Kind::BitVector:
+		return m_context.mkBitVectorType(dynamic_cast<BitVectorSort const&>(_sort).size);
 	case Kind::Function:
 	{
 		FunctionSort const& fSort = dynamic_cast<FunctionSort const&>(_sort);

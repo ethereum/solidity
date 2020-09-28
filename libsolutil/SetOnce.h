@@ -79,6 +79,8 @@ public:
 	/// @throws BadSetOnceAccess when the stored value has not yet been set
 	T const* operator->() const { return std::addressof(**this); }
 
+	/// @return true if a value was assigned
+	bool set() const { return m_value.has_value(); }
 private:
 	std::optional<T> m_value = std::nullopt;
 };

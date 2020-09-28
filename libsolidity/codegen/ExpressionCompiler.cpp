@@ -779,7 +779,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(function.parameterTypes().size() == 1, "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
-					if (!arguments.front()->annotation().isPure)
+					if (!*arguments.front()->annotation().isPure)
 					{
 						arguments.front()->accept(*this);
 						utils().popStackElement(*arguments.front()->annotation().type);
@@ -1078,7 +1078,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
-					if (!arguments.at(1)->annotation().isPure)
+					if (!*arguments.at(1)->annotation().isPure)
 					{
 						arguments.at(1)->accept(*this);
 						utils().popStackElement(*arguments.at(1)->annotation().type);
@@ -1598,10 +1598,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		{
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
-			uint64_t result{0};
-			for (auto const& function: contract.interfaceFunctionList(false))
-				result ^= fromBigEndian<uint64_t>(function.first.ref());
-			m_context << (u256{result} << (256 - 32));
+			m_context << (u256{contract.interfaceId()} << (256 - 32));
 		}
 		else if (member == "min" || member == "max")
 		{

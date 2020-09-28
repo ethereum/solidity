@@ -9,23 +9,26 @@ version: 2.1
 parameters:
   ubuntu-1804-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:9ab317e583c395e50884ba82e9f99811c374344cea4c550725be8ec836e07acc"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:19f613d2ac47fedff654dacef984d8a64726c4d67ae8f2667a85ee7d97ac4c1c"
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:cbfa42d8ecbe94391ba8837e218869242666de7a0da6ccac065a856c85b6a6a0"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:aeedbe7390a7383815f0cf0f8a1b8bf84dc5e334a3b0043ebcdf8b1bdbe80a81"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-2
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:7a4d5271b5552139d9f2caefc50d42f401bf74132cf8f253e199e11c80ab42de"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-3
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2593c15689dee5b5bdfff96a36c8c68a468cd3b147c41f75b820b8fabc257be9"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-3
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:6fa6914bd81abcac4b162c738e6ff05d87cefe7655e3859c7a827e5a8ec20dc7"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-4
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:842126b164b3542f05bff2611459e21edc7e3e2c81ca9d1f43396c8cf066f7ca"
   emscripten-docker-image:
     type: string
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:d557d015918c3cf68b0d22839bab41013f0757b651a7fef21595f89721dbebcc"
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c"
+
+orbs:
+  win: circleci/windows@2.2.0
 
 defaults:
 
@@ -63,6 +66,10 @@ defaults:
   - artifacts_solc: &artifacts_solc
       path: build/solc/solc
       destination: solc
+
+  # windows artifacts
+  - artifact_solc_windows: &artifact_solc_windows
+      path: upload/
 
   # compiled tool executable target
   - artifacts_tools: &artifacts_tools
@@ -107,14 +114,17 @@ defaults:
 
   - run_soltest: &run_soltest
       name: soltest
+      no_output_timeout: 30m
       command: ./.circleci/soltest.sh
 
   - run_soltest_all: &run_soltest_all
       name: soltest_all
+      no_output_timeout: 30m
       command: ./.circleci/soltest_all.sh
 
   - run_cmdline_tests: &run_cmdline_tests
       name: command line tests
+      no_output_timeout: 30m
       command: ./test/cmdlineTests.sh
 
   - run_docs_pragma_min_version: &run_docs_pragma_min_version
@@ -163,7 +173,6 @@ defaults:
           at: build
       - run:
           <<: *run_soltest
-          no_output_timeout: 30m
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -175,7 +184,6 @@ defaults:
           at: build
       - run:
           <<: *run_soltest
-          no_output_timeout: 30m
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -207,6 +215,11 @@ defaults:
       requires:
         - b_ubu_release
 
+  - workflow_archlinux: &workflow_archlinux
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_archlinux
+
   - workflow_ubuntu2004_codecov: &workflow_ubuntu2004_codecov
       <<: *workflow_trigger_on_tags
       requires:
@@ -236,6 +249,16 @@ defaults:
       <<: *workflow_trigger_on_tags
       requires:
         - b_ubu_ossfuzz
+
+  - workflow_win: &workflow_win
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_win
+
+  - workflow_win_release: &workflow_win_release
+      <<: *workflow_trigger_on_tags
+      requires:
+        - b_win_release
 
   # --------------------------------------------------------------------------
   # Notification Templates
@@ -656,6 +679,25 @@ jobs:
   t_ubu_soltest: &t_ubu_soltest
     <<: *test_ubuntu2004
 
+  t_archlinux_soltest: &t_archlinux_soltest
+      docker:
+        - image: archlinux/base
+      environment:
+        EVM: constantinople
+        OPTIMIZE: 0
+        TERM: xterm
+      steps:
+        - run:
+            name: Install runtime dependencies
+            command: |
+              pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+        - checkout
+        - attach_workspace:
+            at: build
+        - run: *run_soltest
+        - store_test_results: *store_test_results
+        - store_artifacts: *artifacts_test_results
+
   t_ubu_soltest_enforce_yul: &t_ubu_soltest_enforce_yul
     docker:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
@@ -709,7 +751,6 @@ jobs:
           at: build
       - run:
           <<: *run_cmdline_tests
-          no_output_timeout: 30m
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
@@ -745,6 +786,7 @@ jobs:
             apt-get install -qqy --no-install-recommends nodejs npm cvc4
       - run:
           name: Test solcjs
+          no_output_timeout: 30m
           command: |
             node --version
             npm --version
@@ -851,6 +893,56 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
+  b_win: &b_win
+    executor:
+      name: win/default
+      shell: powershell.exe
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+      - run:
+          name: "Installing dependencies"
+          command: if ( -not (Test-Path .\deps\boost) ) { .\scripts\install_deps.ps1 }
+      - save_cache:
+          key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+          paths:
+            - .\deps\boost
+            - .\deps\cmake
+      - run:
+          name: "Building solidity"
+          command: .circleci/build_win.ps1
+      - run:
+          name: "Run solc.exe to make sure build was successful."
+          command: .\build\solc\Release\solc.exe --version
+      - store_artifacts: *artifact_solc_windows
+      - persist_to_workspace: *artifacts_build_dir
+
+  b_win_release:
+    <<: *b_win
+    environment:
+      FORCE_RELEASE: ON
+
+  t_win: &t_win
+    executor:
+      name: win/default
+      shell: powershell.exe
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: "Install evmone"
+          command: scripts/install_evmone.ps1
+      - run:
+          name: "Run soltest"
+          command: .circleci/soltest.ps1
+      - store_artifacts: *artifacts_test_results
+
+  t_win_release:
+    <<: *t_win
+
 workflows:
   version: 2
 
@@ -869,7 +961,6 @@ workflows:
 
       # build-only
       - b_docs: *workflow_trigger_on_tags
-      - b_archlinux: *workflow_trigger_on_tags
       - b_ubu_cxx20: *workflow_trigger_on_tags
       - b_ubu_ossfuzz: *workflow_trigger_on_tags
 
@@ -877,6 +968,10 @@ workflows:
       - b_osx: *workflow_trigger_on_tags
       - t_osx_cli: *workflow_osx
       - t_osx_soltest: *workflow_osx
+
+      # ArchLinux build and tests
+      - b_archlinux: *workflow_trigger_on_tags
+      - t_archlinux_soltest: *workflow_archlinux
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
@@ -898,6 +993,12 @@ workflows:
       - t_ems_compile_ext_colony: *workflow_emscripten
       - t_ems_compile_ext_gnosis: *workflow_emscripten
       - t_ems_compile_ext_zeppelin: *workflow_emscripten
+
+      # Windows build and tests
+      - b_win: *workflow_trigger_on_tags
+      - b_win_release: *workflow_trigger_on_tags
+      - t_win: *workflow_win
+      - t_win_release: *workflow_win_release
 
   nightly:
 

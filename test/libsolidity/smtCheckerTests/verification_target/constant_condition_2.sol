@@ -5,5 +5,4 @@ contract C {
     }
 }
 // ----
-// Warning 6838: (109-115): Condition is always false.
-// Warning 4588: (119-127): Assertion checker does not yet implement this type of function call.
+// Warning 6838: (109-115): BMC: Condition is always false.

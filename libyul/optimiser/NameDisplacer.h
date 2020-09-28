@@ -60,6 +60,8 @@ public:
 	void operator()(FunctionCall& _funCall) override;
 	void operator()(Block& _block) override;
 
+	std::map<YulString, YulString> const& translations() const { return m_translations; }
+
 protected:
 	/// Check if the newly introduced identifier @a _name has to be replaced.
 	void checkAndReplaceNew(YulString& _name);

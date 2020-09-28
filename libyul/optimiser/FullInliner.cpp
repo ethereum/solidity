@@ -28,6 +28,7 @@
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
@@ -41,7 +42,9 @@ using namespace solidity::yul;
 
 void FullInliner::run(OptimiserStepContext& _context, Block& _ast)
 {
-	FullInliner{_ast, _context.dispenser, _context.dialect}.run();
+	FullInliner inliner{_ast, _context.dispenser, _context.dialect};
+	inliner.run(Pass::InlineTiny);
+	inliner.run(Pass::InlineRest);
 }
 
 FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& _dialect):
@@ -72,14 +75,9 @@ FullInliner::FullInliner(Block& _ast, NameDispenser& _dispenser, Dialect const& 
 	}
 }
 
-void FullInliner::run()
+void FullInliner::run(Pass _pass)
 {
-	for (auto& statement: m_ast.statements)
-		if (holds_alternative<Block>(statement))
-			handleBlock({}, std::get<Block>(statement));
-
-	// TODO it might be good to determine a visiting order:
-	// first handle functions that are called from many places.
+	m_pass = _pass;
 
 	// Note that the order of inlining can result in very different code.
 	// Since AST IDs and thus function names depend on whether or not a contract
@@ -87,14 +85,76 @@ void FullInliner::run()
 	// should have as little an impact as possible. This is the case
 	// if we handle inlining in source (and thus, for the IR generator,
 	// function name) order.
+	// We use stable_sort below to keep the inlining order of two functions
+	// with the same depth.
+	map<YulString, size_t> depths = callDepths();
+	vector<FunctionDefinition*> functions;
 	for (auto& statement: m_ast.statements)
+		if (holds_alternative<FunctionDefinition>(statement))
+			functions.emplace_back(&std::get<FunctionDefinition>(statement));
+	std::stable_sort(functions.begin(), functions.end(), [depths](
+		FunctionDefinition const* _a,
+		FunctionDefinition const* _b
+	) {
+		return depths.at(_a->name) < depths.at(_b->name);
+	});
+	for (FunctionDefinition* fun: functions)
 	{
-		if (!holds_alternative<FunctionDefinition>(statement))
-			continue;
-		FunctionDefinition& fun = std::get<FunctionDefinition>(statement);
-		handleBlock(fun.name, fun.body);
-		updateCodeSize(fun);
+		handleBlock(fun->name, fun->body);
+		updateCodeSize(*fun);
 	}
+
+	for (auto& statement: m_ast.statements)
+		if (holds_alternative<Block>(statement))
+			handleBlock({}, std::get<Block>(statement));
+}
+
+map<YulString, size_t> FullInliner::callDepths() const
+{
+	CallGraph cg = CallGraphGenerator::callGraph(m_ast);
+	cg.functionCalls.erase(""_yulstring);
+
+	// Remove calls to builtin functions.
+	for (auto& call: cg.functionCalls)
+		for (auto it = call.second.begin(); it != call.second.end();)
+			if (m_dialect.builtin(*it))
+				it = call.second.erase(it);
+			else
+				++it;
+
+	map<YulString, size_t> depths;
+	size_t currentDepth = 0;
+
+	while (true)
+	{
+		vector<YulString> removed;
+		for (auto it = cg.functionCalls.begin(); it != cg.functionCalls.end();)
+		{
+			auto const& [fun, callees] = *it;
+			if (callees.empty())
+			{
+				removed.emplace_back(fun);
+				depths[fun] = currentDepth;
+				it = cg.functionCalls.erase(it);
+			}
+			else
+				++it;
+		}
+
+		for (auto& call: cg.functionCalls)
+			call.second -= removed;
+
+		currentDepth++;
+
+		if (removed.empty())
+			break;
+	}
+
+	// Only recursive functions left here.
+	for (auto const& fun: cg.functionCalls)
+		depths[fun.first] = currentDepth;
+
+	return depths;
 }
 
 bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
@@ -114,6 +174,10 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	size_t size = m_functionSizes.at(calledFunction->name);
 	if (size <= 1)
 		return true;
+
+	// In the first pass, only inline tiny functions.
+	if (m_pass == Pass::InlineTiny)
+		return false;
 
 	// Do not inline into already big functions.
 	if (m_functionSizes.at(_callSite) > 45)

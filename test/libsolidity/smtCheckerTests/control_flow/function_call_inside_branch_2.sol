@@ -20,8 +20,3 @@ contract C
 	}
 }
 // ----
-// Warning 5084: (271-281): Type conversion is not yet fully supported and might yield false positives.
-// Warning 5084: (123-133): Type conversion is not yet fully supported and might yield false positives.
-// Warning 5084: (271-281): Type conversion is not yet fully supported and might yield false positives.
-// Warning 5084: (186-196): Type conversion is not yet fully supported and might yield false positives.
-// Warning 5084: (271-281): Type conversion is not yet fully supported and might yield false positives.

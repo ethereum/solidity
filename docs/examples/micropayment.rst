@@ -61,12 +61,11 @@ For a contract that fulfils payments, the signed message must include:
     2. The amount to be transferred.
     3. Protection against replay attacks.
 
-A replay attack is when a signed message is reused to claim authorization for
-a second action.
-To avoid replay attacks we use the same as in Ethereum transactions
-themselves, a so-called nonce, which is the number of transactions sent by an
-account.
-The smart contract checks if a nonce is used multiple times.
+A replay attack is when a signed message is reused to claim
+authorization for a second action. To avoid replay attacks
+we use the same technique as in Ethereum transactions themselves,
+a so-called nonce, which is the number of transactions sent by
+an account. The smart contract checks if a nonce is used multiple times.
 
 Another type of replay attack can occur when the owner
 deploys a ``ReceiverPays`` smart contract, makes some
@@ -143,7 +142,7 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract ReceiverPays {
         address owner = msg.sender;
@@ -340,7 +339,7 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity ^0.7.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.

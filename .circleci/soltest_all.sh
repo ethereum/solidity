@@ -30,7 +30,7 @@ REPODIR="$(realpath $(dirname $0)/..)"
 
 EVM_VALUES=(homestead byzantium constantinople petersburg istanbul)
 OPTIMIZE_VALUES=(0 1)
-STEPS=$(( 1 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))
+STEPS=$(( 2 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))
 
 if (( $CIRCLE_NODE_TOTAL )) && (( $CIRCLE_NODE_TOTAL > 1 ))
 then
@@ -57,7 +57,12 @@ echo "Running steps $RUN_STEPS..."
 
 STEP=1
 
-[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 "${REPODIR}/.circleci/soltest.sh"
+# Run SMTChecker tests separately, as the heaviest expected run.
+[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 BOOST_TEST_ARGS="-t smtCheckerTests/*" "${REPODIR}/.circleci/soltest.sh"
+STEP=$(($STEP + 1))
+
+# Run without SMTChecker tests.
+[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
 STEP=$(($STEP + 1))
 
 for OPTIMIZE in ${OPTIMIZE_VALUES[@]}

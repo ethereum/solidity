@@ -25,4 +25,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (286-303): Assertion violation happens here
+// Warning 6328: (286-303): CHC: Assertion violation happens here.

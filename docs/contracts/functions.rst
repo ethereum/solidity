@@ -277,7 +277,7 @@ neither a receive Ether nor a payable fallback function is present, the
 contract cannot receive Ether through regular transactions and throws an
 exception.
 
-In the worst case, the fallback function can only rely on 2300 gas being
+In the worst case, the ``receive`` function can only rely on 2300 gas being
 available (for example when ``send`` or ``transfer`` is used), leaving little
 room to perform other operations except basic logging. The following operations
 will consume more gas than the 2300 gas stipend:

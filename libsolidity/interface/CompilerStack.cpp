@@ -36,6 +36,7 @@
 #include <libsolidity/analysis/PostTypeChecker.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
+#include <libsolidity/analysis/Scoper.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/ViewPureChecker.h>
 #include <libsolidity/analysis/ImmutableValidator.h>
@@ -56,7 +57,9 @@
 
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AsmJsonConverter.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/AsmParser.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
@@ -297,6 +300,10 @@ bool CompilerStack::analyze()
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must call analyze only after parsing was performed."));
 	resolveImports();
 
+	for (Source const* source: m_sourceOrder)
+		if (source->ast)
+			Scoper::assignScopes(*source->ast);
+
 	bool noErrors = true;
 
 	try
@@ -359,12 +366,10 @@ bool CompilerStack::analyze()
 		// This also calculates whether a contract is abstract, which is needed by the
 		// type checker.
 		ContractLevelChecker contractLevelChecker(m_errorReporter);
+
 		for (Source const* source: m_sourceOrder)
-			if (source->ast)
-				for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-					if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-						if (!contractLevelChecker.check(*contract))
-							noErrors = false;
+			if (auto sourceAst = source->ast)
+				noErrors = contractLevelChecker.check(*sourceAst);
 
 		// Requires ContractLevelChecker
 		DocStringAnalyser docStringAnalyser(m_errorReporter);
@@ -517,6 +522,10 @@ bool CompilerStack::compile()
 					{
 						if (m_generateEvmBytecode)
 							compileContract(*contract, otherCompilers);
+						if (m_generateIR || m_generateEwasm)
+							generateIR(*contract);
+						if (m_generateEwasm)
+							generateEwasm(*contract);
 					}
 					catch (Error const& _error)
 					{
@@ -525,10 +534,28 @@ bool CompilerStack::compile()
 						m_errorReporter.error(_error.errorId(), _error.type(), SourceLocation(), _error.what());
 						return false;
 					}
-					if (m_generateIR || m_generateEwasm)
-						generateIR(*contract);
-					if (m_generateEwasm)
-						generateEwasm(*contract);
+					catch (UnimplementedFeatureError const& _unimplementedError)
+					{
+						if (
+							SourceLocation const* sourceLocation =
+							boost::get_error_info<langutil::errinfo_sourceLocation>(_unimplementedError)
+						)
+						{
+							string const* comment = _unimplementedError.comment();
+							m_errorReporter.error(
+								1834_error,
+								Error::Type::CodeGenerationError,
+								*sourceLocation,
+								"Unimplemented feature error" +
+								((comment && !comment->empty()) ? ": " + *comment : string{}) +
+								" in " +
+								_unimplementedError.lineInfo()
+							);
+							return false;
+						}
+						else
+							throw;
+					}
 				}
 	m_stackState = CompilationSuccessful;
 	this->link();
@@ -584,6 +611,48 @@ evmasm::AssemblyItems const* CompilerStack::runtimeAssemblyItems(string const& _
 
 	Contract const& currentContract = contract(_contractName);
 	return currentContract.compiler ? &contract(_contractName).compiler->runtimeAssemblyItems() : nullptr;
+}
+
+Json::Value CompilerStack::generatedSources(string const& _contractName, bool _runtime) const
+{
+	if (m_stackState != CompilationSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
+
+	Contract const& c = contract(_contractName);
+	util::LazyInit<Json::Value const> const& sources =
+		_runtime ?
+		c.runtimeGeneratedSources :
+		c.generatedSources;
+	return sources.init([&]{
+		Json::Value sources{Json::arrayValue};
+		// If there is no compiler, then no bytecode was generated and thus no
+		// sources were generated.
+		if (c.compiler)
+		{
+			string source =
+				_runtime ?
+				c.compiler->runtimeGeneratedYulUtilityCode() :
+				c.compiler->generatedYulUtilityCode();
+			if (!source.empty())
+			{
+				string sourceName = CompilerContext::yulUtilityFileName();
+				unsigned sourceIndex = sourceIndices()[sourceName];
+				ErrorList errors;
+				ErrorReporter errorReporter(errors);
+				auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(source, sourceName));
+				yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
+				shared_ptr<yul::Block> parserResult = yul::Parser{errorReporter, dialect}.parse(scanner, false);
+				solAssert(parserResult, "");
+				sources[0]["ast"] = yul::AsmJsonConverter{sourceIndex}(*parserResult);
+				sources[0]["name"] = sourceName;
+				sources[0]["id"] = sourceIndex;
+				sources[0]["language"] = "Yul";
+				sources[0]["contents"] = move(source);
+
+			}
+		}
+		return sources;
+	});
 }
 
 string const* CompilerStack::sourceMapping(string const& _contractName) const
@@ -728,6 +797,8 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	unsigned index = 0;
 	for (auto const& s: m_sources)
 		indices[s.first] = index++;
+	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
+	indices[CompilerContext::yulUtilityFileName()] = index++;
 	return indices;
 }
 
@@ -1024,7 +1095,7 @@ void CompilerStack::resolveImports()
 			for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 				if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 				{
-					string const& path = import->annotation().absolutePath;
+					string const& path = *import->annotation().absolutePath;
 					solAssert(m_sources.count(path), "");
 					import->annotation().sourceUnit = m_sources[path].ast.get();
 					toposort(&m_sources[path]);
@@ -1222,9 +1293,9 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 	/// All the source files (including self), which should be included in the metadata.
 	set<string> referencedSources;
-	referencedSources.insert(_contract.contract->sourceUnit().annotation().path);
+	referencedSources.insert(*_contract.contract->sourceUnit().annotation().path);
 	for (auto const sourceUnit: _contract.contract->sourceUnit().referencedSourceUnits(true))
-		referencedSources.insert(sourceUnit->annotation().path);
+		referencedSources.insert(*sourceUnit->annotation().path);
 
 	meta["sources"] = Json::objectValue;
 	for (auto const& s: m_sources)
@@ -1290,7 +1361,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
-		_contract.contract->annotation().canonicalName;
+		*_contract.contract->annotation().canonicalName;
 
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;

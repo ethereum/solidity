@@ -60,8 +60,6 @@ using BoolResult = util::Result<bool>;
 namespace solidity::frontend
 {
 
-std::vector<frontend::Type const*> oversizedSubtypes(frontend::Type const& _type);
-
 inline rational makeRational(bigint const& _numerator, bigint const& _denominator)
 {
 	solAssert(_denominator != 0, "division by zero");
@@ -695,10 +693,36 @@ public:
 };
 
 /**
+ * Base class for types which can be thought of as several elements of other types put together.
+ * For example a struct is composed of its members, an array is composed of multiple copies of its
+ * base element and a mapping is composed of its value type elements (note that keys are not
+ * stored anywhere).
+ */
+class CompositeType: public Type
+{
+protected:
+	CompositeType() = default;
+
+public:
+	/// @returns a list containing the type itself, elements of its decomposition,
+	/// elements of decomposition of these elements and so on, up to non-composite types.
+	/// Each type is included only once.
+	std::vector<Type const*> fullDecomposition() const;
+
+protected:
+	/// @returns a list of types that together make up the data part of this type.
+	/// Contains all types that will have to be implicitly stored, whenever an object of this type is stored.
+	/// In particular, it returns the base type for arrays and array slices, the member types for structs,
+	/// the component types for tuples and the value type for mappings
+	/// (note that the key type of a mapping is *not* part of the list).
+	virtual std::vector<Type const*> decomposition() const = 0;
+};
+
+/**
  * Base class used by types which are not value types and can be stored either in storage, memory
  * or calldata. This is currently used by arrays and structs.
  */
-class ReferenceType: public Type
+class ReferenceType: public CompositeType
 {
 protected:
 	explicit ReferenceType(DataLocation _location): m_location(_location) {}
@@ -829,6 +853,8 @@ public:
 
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<Type const*> decomposition() const override { return {m_baseType}; }
+
 private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
@@ -869,6 +895,8 @@ public:
 
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<Type const*> decomposition() const override { return {m_arrayType.baseType()}; }
+
 private:
 	ArrayType const& m_arrayType;
 };
@@ -994,6 +1022,8 @@ public:
 
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<Type const*> decomposition() const override;
+
 private:
 	StructDefinition const& m_struct;
 	// Caches for interfaceType(bool)
@@ -1044,7 +1074,7 @@ private:
  * Type that can hold a finite sequence of values of different types.
  * In some cases, the components are empty pointers (when used as placeholders).
  */
-class TupleType: public Type
+class TupleType: public CompositeType
 {
 public:
 	explicit TupleType(std::vector<TypePointer> _types = {}): m_components(std::move(_types)) {}
@@ -1067,6 +1097,16 @@ public:
 
 protected:
 	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<Type const*> decomposition() const override
+	{
+		// Currently calling TupleType::decomposition() is not expected, because we cannot declare a variable of a tuple type.
+		// If that changes, before removing the solAssert, make sure the function does the right thing and is used properly.
+		// Note that different tuple members can have different data locations, so using decomposition() to check
+		// the tuple validity for a data location might require special care.
+		solUnimplemented("Tuple decomposition is not expected.");
+		return m_components;
+	}
+
 private:
 	std::vector<TypePointer> const m_components;
 };
@@ -1349,7 +1389,7 @@ private:
  * The type of a mapping, there is one distinct type per key/value type pair.
  * Mappings always occupy their own storage slot, but do not actually use it.
  */
-class MappingType: public Type
+class MappingType: public CompositeType
 {
 public:
 	MappingType(Type const* _keyType, Type const* _valueType):
@@ -1372,6 +1412,9 @@ public:
 
 	Type const* keyType() const { return m_keyType; }
 	Type const* valueType() const { return m_valueType; }
+
+protected:
+	std::vector<Type const*> decomposition() const override { return {m_valueType}; }
 
 private:
 	TypePointer m_keyType;

@@ -156,6 +156,19 @@ bool StaticAnalyzer::visit(VariableDeclaration const& _variable)
 			// This is not a no-op, the entry might pre-exist.
 			m_localVarUseCount[make_pair(_variable.id(), &_variable)] += 0;
 	}
+
+	if (_variable.isStateVariable() || _variable.referenceLocation() == VariableDeclaration::Location::Storage)
+		if (auto varType = dynamic_cast<CompositeType const*>(_variable.annotation().type))
+			for (Type const* type: varType->fullDecomposition())
+				if (type->storageSizeUpperBound() >= (bigint(1) << 64))
+				{
+					string message = "Type " + type->toString(true) +
+						" covers a large part of storage and thus makes collisions likely."
+						" Either use mappings or dynamic arrays and allow their size to be increased only"
+						" in small quantities per transaction.";
+					m_errorReporter.warning(7325_error, _variable.typeName().location(), message);
+				}
+
 	return true;
 }
 
@@ -172,7 +185,7 @@ bool StaticAnalyzer::visit(Return const& _return)
 
 bool StaticAnalyzer::visit(ExpressionStatement const& _statement)
 {
-	if (_statement.expression().annotation().isPure)
+	if (*_statement.expression().annotation().isPure)
 		m_errorReporter.warning(
 			6133_error,
 			_statement.location(),
@@ -274,7 +287,7 @@ bool StaticAnalyzer::visit(InlineAssembly const& _inlineAssembly)
 bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 {
 	if (
-		_operation.rightExpression().annotation().isPure &&
+		*_operation.rightExpression().annotation().isPure &&
 		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
 	)
 		if (auto rhs = dynamic_cast<RationalNumberType const*>(
@@ -299,7 +312,7 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 		if (functionType->kind() == FunctionType::Kind::AddMod || functionType->kind() == FunctionType::Kind::MulMod)
 		{
 			solAssert(_functionCall.arguments().size() == 3, "");
-			if (_functionCall.arguments()[2]->annotation().isPure)
+			if (*_functionCall.arguments()[2]->annotation().isPure)
 				if (auto lastArg = dynamic_cast<RationalNumberType const*>(
 					ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
 				))
