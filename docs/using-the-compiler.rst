@@ -693,7 +693,7 @@ have to be updated manually.)
 
 .. code-block:: Solidity
 
-    pragma solidity >0.6.99 <0.8.0;
+    pragma solidity >=0.7.0;
     // SPDX-License-Identifier: GPL-3.0
     abstract contract C {
         // FIXME: remove constructor visibility and make the contract abstract
