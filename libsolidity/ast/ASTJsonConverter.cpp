@@ -433,8 +433,8 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 		make_pair("name", _node.name()),
 		make_pair("typeName", toJson(_node.typeName())),
 		make_pair("constant", _node.isConstant()),
+		make_pair("documentation", toJsonOrNull(_node.documentation().get())),
 		make_pair("mutability", VariableDeclaration::mutabilityToString(_node.mutability())),
-		make_pair("stateVariable", _node.isStateVariable()),
 		make_pair("storageLocation", location(_node.referenceLocation())),
 		make_pair("overrides", _node.overrides() ? toJson(*_node.overrides()) : Json::nullValue),
 		make_pair("visibility", Declaration::visibilityToString(_node.visibility())),
@@ -444,8 +444,6 @@ bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 	};
 	if (_node.isStateVariable() && _node.isPublic())
 		attributes.emplace_back("functionSelector", _node.externalIdentifierHex());
-	if (_node.isStateVariable() && _node.documentation())
-		attributes.emplace_back("documentation", toJson(*_node.documentation()));
 	if (m_inEvent)
 		attributes.emplace_back("indexed", _node.isIndexed());
 	if (!_node.annotation().baseFunctions.empty())
