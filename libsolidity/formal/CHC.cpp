@@ -497,6 +497,24 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
 
+void CHC::visitAddMulMod(FunctionCall const& _funCall)
+{
+	auto previousError = errorFlag().currentValue();
+	errorFlag().increaseIndex();
+
+	addVerificationTarget(
+		&_funCall,
+		VerificationTarget::Type::DivByZero,
+		errorFlag().currentValue()
+	);
+
+	solAssert(_funCall.arguments().at(2), "");
+	smtutil::Expression target = expr(*_funCall.arguments().at(2)) == 0 && errorFlag().currentValue() == newErrorId(_funCall);
+	m_context.addAssertion((errorFlag().currentValue() == previousError) || target);
+
+	SMTEncoder::visitAddMulMod(_funCall);
+}
+
 void CHC::internalFunctionCall(FunctionCall const& _funCall)
 {
 	solAssert(m_currentContract, "");
@@ -1157,6 +1175,11 @@ void CHC::checkVerificationTargets()
 					satMsg = satMsgOverflow;
 					errorReporterId = overflowErrorId;
 				}
+			}
+			else if (target.type == VerificationTarget::Type::DivByZero)
+			{
+				satMsg = "Division by zero happens here.";
+				errorReporterId = 4281_error;
 			}
 			else
 				solAssert(false, "");
