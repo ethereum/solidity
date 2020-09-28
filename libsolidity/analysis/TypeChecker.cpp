@@ -2922,6 +2922,9 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 			isPure = false;
 	}
 
+	_access.annotation().isLValue = isLValue;
+	_access.annotation().isPure = isPure;
+
 	TypePointer exprType = type(_access.baseExpression());
 	if (exprType->category() == Type::Category::TypeType)
 	{
@@ -2936,14 +2939,11 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	else if (!(arrayType = dynamic_cast<ArrayType const*>(exprType)))
 		m_errorReporter.fatalTypeError(4781_error, _access.location(), "Index range access is only possible for arrays and array slices.");
 
-
 	if (arrayType->location() != DataLocation::CallData || !arrayType->isDynamicallySized())
 		m_errorReporter.typeError(1227_error, _access.location(), "Index range access is only supported for dynamic calldata arrays.");
 	else if (arrayType->baseType()->isDynamicallyEncoded())
 		m_errorReporter.typeError(2148_error, _access.location(), "Index range access is not supported for arrays with dynamically encoded base types.");
 	_access.annotation().type = TypeProvider::arraySlice(*arrayType);
-	_access.annotation().isLValue = isLValue;
-	_access.annotation().isPure = isPure;
 
 	return false;
 }
