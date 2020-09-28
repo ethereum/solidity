@@ -109,7 +109,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					else
 						for (Declaration const* declaration: declarations)
 							if (!DeclarationRegistrationHelper::registerDeclaration(
-								target, *declaration, alias.alias.get(), &alias.location, true, false, m_errorReporter
+								target, *declaration, alias.alias.get(), &alias.location, false, m_errorReporter
 							))
 								error = true;
 				}
@@ -117,7 +117,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 				for (auto const& nameAndDeclaration: scope->second->declarations())
 					for (auto const& declaration: nameAndDeclaration.second)
 						if (!DeclarationRegistrationHelper::registerDeclaration(
-							target, *declaration, &nameAndDeclaration.first, &imp->location(), true, false, m_errorReporter
+							target, *declaration, &nameAndDeclaration.first, &imp->location(), false, m_errorReporter
 						))
 							error =  true;
 		}
@@ -447,7 +447,6 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	Declaration const& _declaration,
 	string const* _name,
 	SourceLocation const* _errorLocation,
-	bool _warnOnShadow,
 	bool _inactive,
 	ErrorReporter& _errorReporter
 )
@@ -457,7 +456,11 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 
 	string name = _name ? *_name : _declaration.name();
 	Declaration const* shadowedDeclaration = nullptr;
-	if (_warnOnShadow && !name.empty() && _container.enclosingContainer())
+	// Do not warn about shadowing for structs and enums because their members are
+	// not accessible without prefixes. Also do not warn about event parameters
+	// because they do not participate in any proper scope.
+	bool warnOnShadow = !_declaration.isStructMember() && !_declaration.isEnumValue() && !_declaration.isEventParameter();
+	if (warnOnShadow && !name.empty() && _container.enclosingContainer())
 		for (auto const* decl: _container.enclosingContainer()->resolveName(name, true, true))
 			shadowedDeclaration = decl;
 
@@ -623,23 +626,13 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration)
 {
 	solAssert(m_currentScope && m_scopes.count(m_currentScope), "No current scope.");
-
-	bool warnAboutShadowing = true;
-	// Do not warn about shadowing for structs and enums because their members are
-	// not accessible without prefixes. Also do not warn about event parameters
-	// because they don't participate in any proper scope.
-	if (
-		dynamic_cast<StructDefinition const*>(m_currentScope) ||
-		dynamic_cast<EnumDefinition const*>(m_currentScope) ||
-		dynamic_cast<EventDefinition const*>(m_currentScope)
-	)
-		warnAboutShadowing = false;
+	solAssert(m_currentScope == _declaration.scope(), "Unexpected current scope.");
 
 	// Register declaration as inactive if we are in block scope.
 	bool inactive =
 		(dynamic_cast<Block const*>(m_currentScope) || dynamic_cast<ForStatement const*>(m_currentScope));
 
-	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, warnAboutShadowing, inactive, m_errorReporter);
+	registerDeclaration(*m_scopes[m_currentScope], _declaration, nullptr, nullptr, inactive, m_errorReporter);
 
 	solAssert(_declaration.annotation().scope == m_currentScope, "");
 	solAssert(_declaration.annotation().contract == m_currentContract, "");
