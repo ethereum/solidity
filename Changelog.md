@@ -6,32 +6,32 @@ Important Bugfixes:
 
 Compiler Features:
  * Export compiler-generated utility sources via standard-json or combined-json.
- * SMTChecker: Keep knowledge about string literals, even through assignment, and thus support the ``.length`` property properly.
- * SMTChecker: Support events and low-level logs.
- * SMTChecker: Support ``revert()``.
- * SMTChecker: Support shifts.
- * SMTChecker: Support compound and, or, and xor operators.
- * SMTChecker: Support memory allocation, e.g. ``new bytes(123)``.
- * SMTChecker: Support structs.
- * SMTChecker: Support ``type(T).min``, ``type(T).max``, and ``type(I).interfaceId``.
- * SMTChecker: Support ``address`` type conversion with literals, e.g. ``address(0)``.
- * SMTChecker: Support fixed bytes index access.
- * Type Checker: Report position of first invalid UTF-8 sequence in ``unicode""`` literals.
- * Type Checker: More detailed error messages why implicit conversions fail.
- * Type Checker: Explain why oversized hex string literals can not be explicitly converted to a shorter ``bytesNN`` type.
- * Yul Optimizer: Prune unused parameters in functions.
- * Yul Optimizer: Inline into functions further down in the call graph first.
- * Yul Optimizer: Try to simplify function names.
- * Yul IR Generator: Report source locations related to unimplemented features.
  * Optimizer: Optimize ``exp`` when base is 0, 1 or 2.
+ * SMTChecker: Keep knowledge about string literals, even through assignment, and thus support the ``.length`` property properly.
+ * SMTChecker: Support ``address`` type conversion with literals, e.g. ``address(0)``.
+ * SMTChecker: Support ``revert()``.
+ * SMTChecker: Support ``type(T).min``, ``type(T).max``, and ``type(I).interfaceId``.
+ * SMTChecker: Support compound and, or, and xor operators.
+ * SMTChecker: Support events and low-level logs.
+ * SMTChecker: Support fixed bytes index access.
+ * SMTChecker: Support memory allocation, e.g. ``new bytes(123)``.
+ * SMTChecker: Support shifts.
+ * SMTChecker: Support structs.
+ * Type Checker: Explain why oversized hex string literals can not be explicitly converted to a shorter ``bytesNN`` type.
+ * Type Checker: More detailed error messages why implicit conversions fail.
+ * Type Checker: Report position of first invalid UTF-8 sequence in ``unicode""`` literals.
+ * Yul IR Generator: Report source locations related to unimplemented features.
+ * Yul Optimizer: Inline into functions further down in the call graph first.
+ * Yul Optimizer: Prune unused parameters in functions.
+ * Yul Optimizer: Try to simplify function names.
 
 
 Bugfixes:
  * Code generator: Fix internal error on stripping dynamic types from return parameters on EVM versions without ``RETURNDATACOPY``.
  * Type Checker: Add missing check against nested dynamic arrays in ABI encoding functions when ABIEncoderV2 is disabled.
- * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * Type Checker: Correct the error message for invalid named parameter in a call to refer to the right argument.
  * Type Checker: Correct the warning for homonymous, but not shadowing declarations.
+ * Type Checker: Disallow ``virtual`` for modifiers in libraries.
  * Type system: Fix internal error on implicit conversion of contract instance to the type of its ``super``.
  * Type system: Fix internal error on implicit conversion of string literal to a calldata string.
  * Type system: Fix named parameters in overloaded function and event calls being matched incorrectly if the order differs from the declaration.
