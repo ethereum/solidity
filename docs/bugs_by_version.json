@@ -1191,5 +1191,9 @@
             "FreeFunctionRedefinition"
         ],
         "released": "2020-09-02"
+    },
+    "0.7.2": {
+        "bugs": [],
+        "released": "2020-09-28"
     }
 }
