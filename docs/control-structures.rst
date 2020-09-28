@@ -192,7 +192,7 @@ is compiled so recursive creation-dependencies are not possible.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0;
+    pragma solidity ^0.7.0;
 
     contract D {
         uint public x;
@@ -248,7 +248,7 @@ which only need to be created if there is a dispute.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0;
+    pragma solidity ^0.7.0;
 
     contract D {
         uint public x;
