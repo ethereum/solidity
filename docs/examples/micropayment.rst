@@ -142,7 +142,7 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0;
+    pragma solidity ^0.7.0;
 
     contract ReceiverPays {
         address owner = msg.sender;
@@ -339,7 +339,7 @@ The full contract
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0;
+    pragma solidity ^0.7.0;
 
     contract SimplePaymentChannel {
         address payable public sender;      // The account sending payments.
