@@ -1,4 +1,4 @@
-==== Source:  ====
+==== Source: B.sol ====
 import "A.sol";
 pragma experimental SMTChecker;
 contract C is A {}
