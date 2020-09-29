@@ -24,6 +24,7 @@
 #include <libyul/Exceptions.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
+#include <libsolutil/LEB128.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/map.hpp>
@@ -238,28 +239,6 @@ static map<string, uint8_t> const builtins = {
 	{"i64.extend_i32_s", 0xac},
 	{"i64.extend_i32_u", 0xad},
 };
-
-bytes lebEncode(uint64_t _n)
-{
-	bytes encoded;
-	while (_n > 0x7f)
-	{
-		encoded.emplace_back(uint8_t(0x80 | (_n & 0x7f)));
-		_n >>= 7;
-	}
-	encoded.emplace_back(_n);
-	return encoded;
-}
-
-bytes lebEncodeSigned(int64_t _n)
-{
-	if (_n >= 0 && _n < 0x40)
-		return toBytes(uint8_t(uint64_t(_n) & 0xff));
-	else if (-_n > 0 && -_n < 0x40)
-		return toBytes(uint8_t(uint64_t(_n + 0x80) & 0xff));
-	else
-		return toBytes(uint8_t(0x80 | uint8_t(_n & 0x7f))) + lebEncodeSigned(_n / 0x80);
-}
 
 bytes prefixSize(bytes _data)
 {
