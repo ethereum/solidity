@@ -800,7 +800,6 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		value,
 		visibility,
 		documentation,
-		_options.isStateVariable,
 		isIndexed,
 		mutability,
 		overrides,

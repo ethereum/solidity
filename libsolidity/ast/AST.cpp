@@ -642,6 +642,11 @@ bool VariableDeclaration::hasReferenceOrMappingType() const
 	return type->category() == Type::Category::Mapping || dynamic_cast<ReferenceType const*>(type);
 }
 
+bool VariableDeclaration::isStateVariable() const
+{
+	return dynamic_cast<ContractDefinition const*>(scope());
+}
+
 set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() const
 {
 	using Location = VariableDeclaration::Location;

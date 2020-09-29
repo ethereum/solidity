@@ -454,7 +454,6 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		nullOrCast<Expression>(member(_node, "value")),
 		visibility(_node),
 		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
-		memberAsBool(_node, "stateVariable"),
 		_node.isMember("indexed") ? memberAsBool(_node, "indexed") : false,
 		mutability,
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),
