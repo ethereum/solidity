@@ -41,19 +41,19 @@ namespace solidity::frontend::smt
  *
  * 3. Implicit constructor
  * The implicit constructor of a contract, that is, without input parameters. Signature:
- * implicit_constructor(error, this, blockchainState).
+ * implicit_constructor(error, this, txData, blockchainState).
  *
  * 4. Constructor entry/summary
  * The summary of an implicit constructor. Signature:
- * constructor_summary(error, this, blockchainState, blockchainState', stateVariables').
+ * constructor_summary(error, this, txData, blockchainState, blockchainState', stateVariables').
  *
  * 5. Function entry/summary
  * The entry point of a function definition. Signature:
- * function_entry(error, this, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables').
+ * function_entry(error, this, txData, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables').
  *
  * 6. Function body
  * Use for any predicate within a function. Signature:
- * function_body(error, this, blockchainState, stateVariables, inputVariables, blockchainState' ,stateVariables', inputVariables', outputVariables', localVariables).
+ * function_body(error, this, txData, blockchainState, stateVariables, inputVariables, blockchainState' ,stateVariables', inputVariables', outputVariables', localVariables).
  */
 
 /// @returns the interface predicate sort for _contract.
