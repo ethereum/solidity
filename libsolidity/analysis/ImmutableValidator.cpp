@@ -125,7 +125,7 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 void ImmutableValidator::endVisit(Identifier const& _identifier)
 {
 	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
-		visitCallableIfNew(callableDef->resolveVirtual(m_currentContract));
+		visitCallableIfNew(*_identifier.annotation().requiredLookup == VirtualLookup::Virtual ? callableDef->resolveVirtual(m_currentContract) : *callableDef);
 	if (auto const varDecl = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 		analyseVariableReference(*varDecl, _identifier);
 }
