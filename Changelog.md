@@ -1,5 +1,7 @@
 ### 0.7.3 (unreleased)
 
+Compiler Features:
+ * SMTChecker: Support ``addmod`` and ``mulmod``.
 
 
 ### 0.7.2 (2020-09-28)
