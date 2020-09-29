@@ -36,6 +36,7 @@ map<string, Predicate> Predicate::m_predicates;
 Predicate const* Predicate::create(
 	SortPointer _sort,
 	string _name,
+	PredicateType _type,
 	EncodingContext& _context,
 	ASTNode const* _node
 )
@@ -46,15 +47,17 @@ Predicate const* Predicate::create(
 	return &m_predicates.emplace(
 		std::piecewise_construct,
 		std::forward_as_tuple(functorName),
-		std::forward_as_tuple(move(predicate), _node)
+		std::forward_as_tuple(move(predicate), _type, _node)
 	).first->second;
 }
 
 Predicate::Predicate(
 	smt::SymbolicFunctionVariable&& _predicate,
+	PredicateType _type,
 	ASTNode const* _node
 ):
 	m_predicate(move(_predicate)),
+	m_type(_type),
 	m_node(_node)
 {
 }

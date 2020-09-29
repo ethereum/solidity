@@ -20,6 +20,7 @@ set(sources
 	Keccak256.cpp
 	Keccak256.h
 	LazyInit.h
+	LEB128.h
 	picosha2.h
 	Result.h
 	SetOnce.h

@@ -30,6 +30,18 @@
 namespace solidity::frontend
 {
 
+enum class PredicateType
+{
+	Interface,
+	NondetInterface,
+	ImplicitConstructor,
+	ConstructorSummary,
+	FunctionEntry,
+	FunctionSummary,
+	FunctionBlock,
+	Error
+};
+
 /**
  * Represents a predicate used by the CHC engine.
  */
@@ -39,12 +51,14 @@ public:
 	static Predicate const* create(
 		smtutil::SortPointer _sort,
 		std::string _name,
+		PredicateType _type,
 		smt::EncodingContext& _context,
 		ASTNode const* _node = nullptr
 	);
 
 	Predicate(
 		smt::SymbolicFunctionVariable&& _predicate,
+		PredicateType _type,
 		ASTNode const* _node = nullptr
 	);
 
@@ -88,6 +102,8 @@ public:
 	/// @returns true if this predicate represents an interface.
 	bool isInterface() const;
 
+	PredicateType type() const { return m_type; }
+
 	/// @returns a formatted string representing a call to this predicate
 	/// with _args.
 	std::string formatSummaryCall(std::vector<std::string> const& _args) const;
@@ -107,6 +123,9 @@ public:
 private:
 	/// The actual SMT expression.
 	smt::SymbolicFunctionVariable m_predicate;
+
+	/// The type of this predicate.
+	PredicateType m_type;
 
 	/// The ASTNode that this predicate represents.
 	/// nullptr if this predicate is not associated with a specific program AST node.

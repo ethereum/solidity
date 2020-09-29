@@ -595,6 +595,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 						// Do not directly visit the identifier, because this way, we can avoid
 						// the runtime entry label to be created at the creation time context.
 						CompilerContext::LocationSetter locationSetter2(m_context, *identifier);
+						solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
 						utils().pushCombinedFunctionEntryLabel(
 							functionDef->resolveVirtual(m_context.mostDerivedContract()),
 							false
@@ -1311,6 +1312,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			if (funType->kind() == FunctionType::Kind::Internal)
 			{
 				FunctionDefinition const& funDef = dynamic_cast<decltype(funDef)>(funType->declaration());
+				solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 				utils().pushCombinedFunctionEntryLabel(funDef);
 				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 1);
 			}
@@ -1346,7 +1348,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					// internal library function call, this would push the library address forcing
 					// us to link against it although we actually do not need it.
 					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+					{
+						solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 						utils().pushCombinedFunctionEntryLabel(*function);
+					}
 					else
 						solAssert(false, "Function not found in member access");
 					break;
@@ -1460,6 +1465,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		if (type.isSuper())
 		{
 			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
+			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Super, "");
 			utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
 				dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
 				type.contractDefinition()
@@ -1742,6 +1748,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			auto const* funDef = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
 			solAssert(funDef && funDef->isFree(), "");
 			solAssert(funType->kind() == FunctionType::Kind::Internal, "");
+			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 			utils().pushCombinedFunctionEntryLabel(*funDef);
 		}
 		break;
@@ -1933,11 +1940,14 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		}
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
+	{
 		// If the identifier is called right away, this code is executed in visit(FunctionCall...), because
 		// we want to avoid having a reference to the runtime function entry point in the
 		// constructor context, since this would force the compiler to include unreferenced
 		// internal functions in the runtime context.
+		solAssert(*_identifier.annotation().requiredLookup == VirtualLookup::Virtual, "");
 		utils().pushCombinedFunctionEntryLabel(functionDef->resolveVirtual(m_context.mostDerivedContract()));
+	}
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 		appendVariable(*variable, static_cast<Expression const&>(_identifier));
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))

@@ -33,6 +33,7 @@ void SymbolicState::reset()
 {
 	m_thisAddress.resetIndex();
 	m_balances.resetIndex();
+	m_error.resetIndex();
 }
 
 // Blockchain
@@ -50,6 +51,11 @@ smtutil::Expression SymbolicState::balance()
 smtutil::Expression SymbolicState::balance(smtutil::Expression _address)
 {
 	return smtutil::Expression::select(m_balances.elements(), move(_address));
+}
+
+SymbolicIntVariable& SymbolicState::errorFlag()
+{
+	return m_error;
 }
 
 void SymbolicState::transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value)

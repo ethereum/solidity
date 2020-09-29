@@ -1380,7 +1380,9 @@ private:
 	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
-	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
+	/// true iff the function is called as arg1.fun(arg2, ..., argn).
+	/// This is achieved through the "using for" directive.
+	bool const m_bound = false;
 	Declaration const* m_declaration = nullptr;
 	bool m_saltSet = false; ///< true iff the salt value to be used is on the stack
 };

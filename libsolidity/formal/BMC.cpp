@@ -390,8 +390,6 @@ void BMC::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::SHA256:
 	case FunctionType::Kind::RIPEMD160:
 	case FunctionType::Kind::BlockHash:
-	case FunctionType::Kind::AddMod:
-	case FunctionType::Kind::MulMod:
 		SMTEncoder::endVisit(_funCall);
 		abstractFunctionCall(_funCall);
 		break;
@@ -410,6 +408,9 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		);
 		break;
 	}
+	case FunctionType::Kind::AddMod:
+	case FunctionType::Kind::MulMod:
+		[[fallthrough]];
 	default:
 		SMTEncoder::endVisit(_funCall);
 		break;
@@ -441,6 +442,18 @@ void BMC::visitRequire(FunctionCall const& _funCall)
 			expr(*args.front()),
 			args.front().get()
 		);
+}
+
+void BMC::visitAddMulMod(FunctionCall const& _funCall)
+{
+	solAssert(_funCall.arguments().at(2), "");
+	addVerificationTarget(
+		VerificationTarget::Type::DivByZero,
+		expr(*_funCall.arguments().at(2)),
+		&_funCall
+	);
+
+	SMTEncoder::visitAddMulMod(_funCall);
 }
 
 void BMC::inlineFunctionCall(FunctionCall const& _funCall)
