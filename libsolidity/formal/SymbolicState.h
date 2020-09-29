@@ -46,6 +46,9 @@ public:
 	smtutil::Expression balance();
 	/// @returns the symbolic balance of an address.
 	smtutil::Expression balance(smtutil::Expression _address);
+
+	SymbolicIntVariable& errorFlag();
+
 	/// Transfer _value from _from to _to.
 	void transfer(smtutil::Expression _from, smtutil::Expression _to, smtutil::Expression _value);
 	//@}
@@ -66,6 +69,13 @@ private:
 	SymbolicArrayVariable m_balances{
 		std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort),
 		"balances",
+		m_context
+	};
+
+	smt::SymbolicIntVariable m_error{
+		TypeProvider::uint256(),
+		TypeProvider::uint256(),
+		"error",
 		m_context
 	};
 };

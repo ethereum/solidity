@@ -3,6 +3,8 @@
 Breaking Changes:
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
 
+Compiler Features:
+ * SMTChecker: Support ``addmod`` and ``mulmod``.
 
 ### 0.7.3 (unreleased)
 

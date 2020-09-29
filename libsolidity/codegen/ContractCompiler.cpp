@@ -1299,6 +1299,8 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			appendModifierOrFunctionCode();
 		else
 		{
+			solAssert(*modifierInvocation->name()->annotation().requiredLookup == VirtualLookup::Virtual, "");
+
 			ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
 				*modifierInvocation->name()->annotation().referencedDeclaration
 			).resolveVirtual(m_context.mostDerivedContract());
