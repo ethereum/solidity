@@ -38,6 +38,13 @@ bool PostTypeChecker::check(ASTNode const& _astRoot)
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
+bool PostTypeChecker::finalize()
+{
+	for (auto& checker: m_checkers)
+		checker->finalize();
+	return Error::containsOnlyWarnings(m_errorReporter.errors());
+}
+
 bool PostTypeChecker::visit(ContractDefinition const& _contractDefinition)
 {
 	return callVisit(_contractDefinition);
@@ -83,6 +90,11 @@ bool PostTypeChecker::visit(Identifier const& _identifier)
 	return callVisit(_identifier);
 }
 
+bool PostTypeChecker::visit(MemberAccess const& _memberAccess)
+{
+	return callVisit(_memberAccess);
+}
+
 bool PostTypeChecker::visit(StructDefinition const& _struct)
 {
 	return callVisit(_struct);
@@ -110,14 +122,7 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 	ConstStateVarCircularReferenceChecker(ErrorReporter& _errorReporter):
 		Checker(_errorReporter) {}
 
-	bool visit(ContractDefinition const&) override
-	{
-		solAssert(!m_currentConstVariable, "");
-		solAssert(m_constVariableDependencies.empty(), "");
-		return true;
-	}
-
-	void endVisit(ContractDefinition const&) override
+	void finalize() override
 	{
 		solAssert(!m_currentConstVariable, "");
 		for (auto declaration: m_constVariables)
@@ -128,9 +133,12 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 					"The value of the constant " + declaration->name() +
 					" has a cyclic dependency via " + identifier->name() + "."
 				);
+	}
 
-		m_constVariables.clear();
-		m_constVariableDependencies.clear();
+	bool visit(ContractDefinition const&) override
+	{
+		solAssert(!m_currentConstVariable, "");
+		return true;
 	}
 
 	bool visit(VariableDeclaration const& _variable) override
@@ -157,6 +165,15 @@ struct ConstStateVarCircularReferenceChecker: public PostTypeChecker::Checker
 	{
 		if (m_currentConstVariable)
 			if (auto var = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+				if (var->isConstant())
+					m_constVariableDependencies[m_currentConstVariable].insert(var);
+		return true;
+	}
+
+	bool visit(MemberAccess const& _memberAccess) override
+	{
+		if (m_currentConstVariable)
+			if (auto var = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 				if (var->isConstant())
 					m_constVariableDependencies[m_currentConstVariable].insert(var);
 		return true;
