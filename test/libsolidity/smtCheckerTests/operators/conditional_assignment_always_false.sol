@@ -8,4 +8,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6838: (148-153): Condition is always false.
+// Warning 6838: (148-153): BMC: Condition is always false.

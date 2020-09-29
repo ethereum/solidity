@@ -6,6 +6,4 @@ contract C {
 	}
 }
 // ----
-// Warning 7989: (101-108): Assertion checker does not yet support index accessing fixed bytes.
-// Warning 7989: (112-121): Assertion checker does not yet support index accessing fixed bytes.
-// Warning 3046: (117-120): Division by zero happens here.
+// Warning 3046: (117-120): BMC: Division by zero happens here.

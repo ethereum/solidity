@@ -12,5 +12,5 @@ contract C {
 	}
 }
 // ----
-// Warning 4984: (109-116): Overflow (resulting value larger than 65535) happens here.
-// Warning 6328: (193-208): Assertion violation happens here.
+// Warning 4984: (109-116): CHC: Overflow (resulting value larger than 65535) happens here.
+// Warning 6328: (193-208): CHC: Assertion violation happens here.

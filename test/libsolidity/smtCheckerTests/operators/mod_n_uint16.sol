@@ -9,4 +9,4 @@ contract C
 	}
 }
 // ----
-// Warning 1218: (130-149): Error trying to invoke SMT solver.
+// Warning 1218: (130-149): CHC: Error trying to invoke SMT solver.

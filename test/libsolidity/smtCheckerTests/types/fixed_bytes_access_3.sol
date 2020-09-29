@@ -13,5 +13,3 @@ contract C {
 	}
 }
 // ----
-// Warning 7989: (238-247): Assertion checker does not yet support index accessing fixed bytes.
-// Warning 7989: (251-257): Assertion checker does not yet support index accessing fixed bytes.

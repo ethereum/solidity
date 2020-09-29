@@ -663,6 +663,9 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::Event:
 		// These can be safely ignored.
 		break;
+	case FunctionType::Kind::ObjectCreation:
+		visitObjectCreation(_funCall);
+		return;
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -733,6 +736,25 @@ void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 	m_context.setUnknownValue(*symbolicVar);
 	if (index > 0)
 		m_context.addAssertion(symbolicVar->currentValue() <= symbolicVar->valueAtIndex(index - 1));
+}
+
+void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
+{
+	auto const& args = _funCall.arguments();
+	solAssert(args.size() >= 1, "");
+	auto argType = args.front()->annotation().type->category();
+	solAssert(argType == Type::Category::Integer || argType == Type::Category::RationalNumber, "");
+
+	smtutil::Expression arraySize = expr(*args.front());
+	setSymbolicUnknownValue(arraySize, TypeProvider::uint256(), m_context);
+
+	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_funCall));
+	solAssert(symbArray, "");
+	smt::setSymbolicZeroValue(*symbArray, m_context);
+	auto zeroElements = symbArray->elements();
+	symbArray->increaseIndex();
+	m_context.addAssertion(symbArray->length() == arraySize);
+	m_context.addAssertion(symbArray->elements() == zeroElements);
 }
 
 void SMTEncoder::endVisit(Identifier const& _identifier)
@@ -834,7 +856,20 @@ void SMTEncoder::endVisit(Literal const& _literal)
 	else if (smt::isBool(type))
 		defineExpr(_literal, smtutil::Expression(_literal.token() == Token::TrueLiteral ? true : false));
 	else if (smt::isStringLiteral(type))
+	{
 		createExpr(_literal);
+
+		// Add constraints for the length and values as it is known.
+		auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(_literal));
+		solAssert(symbArray, "");
+
+		auto value = _literal.value();
+		m_context.addAssertion(symbArray->length() == value.length());
+		for (size_t i = 0; i < value.length(); i++)
+			m_context.addAssertion(
+				smtutil::Expression::select(symbArray->elements(), i) == size_t(value[i])
+			);
+	}
 	else
 	{
 		m_errorReporter.warning(
@@ -977,13 +1012,36 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
 		return;
-	if (_indexAccess.baseExpression().annotation().type->category() == Type::Category::FixedBytes)
+	if (auto const* type = dynamic_cast<FixedBytesType const*>(_indexAccess.baseExpression().annotation().type))
 	{
-		m_errorReporter.warning(
-			7989_error,
-			_indexAccess.location(),
-			"Assertion checker does not yet support index accessing fixed bytes."
-		);
+		smtutil::Expression base = expr(_indexAccess.baseExpression());
+
+		if (type->numBytes() == 1)
+			defineExpr(_indexAccess, base);
+		else
+		{
+			auto [bvSize, isSigned] = smt::typeBvSizeAndSignedness(_indexAccess.baseExpression().annotation().type);
+			solAssert(!isSigned, "");
+			solAssert(bvSize >= 16, "");
+			solAssert(bvSize % 8 == 0, "");
+
+			smtutil::Expression idx = expr(*_indexAccess.indexExpression());
+
+			auto bvBase = smtutil::Expression::int2bv(base, bvSize);
+			auto bvShl = smtutil::Expression::int2bv(idx * 8, bvSize);
+			auto bvShr = smtutil::Expression::int2bv(bvSize - 8, bvSize);
+			auto result = (bvBase << bvShl) >> bvShr;
+
+			auto anyValue = expr(_indexAccess);
+			m_context.expression(_indexAccess)->increaseIndex();
+			unsigned numBytes = bvSize / 8;
+			auto withBound = smtutil::Expression::ite(
+				idx < numBytes,
+				smtutil::Expression::bv2int(result, false),
+				anyValue
+			);
+			defineExpr(_indexAccess, withBound);
+		}
 		return;
 	}
 
@@ -1654,9 +1712,7 @@ void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression con
 	// This is a special case where the SMT sorts are different.
 	// For now we are unaware of other cases where this happens, but if they do appear
 	// we should extract this into an `implicitConversion` function.
-	if (_variable.type()->category() != Type::Category::Array || _value.annotation().type->category() != Type::Category::StringLiteral)
-		assignment(_variable, expr(_value, _variable.type()));
-	// TODO else { store each string literal byte into the array }
+	assignment(_variable, expr(_value, _variable.type()));
 }
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value)

@@ -14,5 +14,4 @@ contract C
 	}
 }
 // ----
-// Warning 1218: (176-181): Error trying to invoke SMT solver.
-// Warning 2661: (176-181): Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 2661: (176-181): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

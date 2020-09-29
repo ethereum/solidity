@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (118-131): Assertion violation happens here.
-// Warning 6838: (105-106): Condition is always true.
+// Warning 6328: (118-131): CHC: Assertion violation happens here.
+// Warning 6838: (105-106): BMC: Condition is always true.

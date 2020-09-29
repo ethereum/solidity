@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// Warning 6838: (147-149): Condition is always true.
+// Warning 6838: (147-149): BMC: Condition is always true.

@@ -300,8 +300,7 @@ Within a grouping, place the ``view`` and ``pure`` functions last.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.9.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
     contract A {
         constructor() {
             // ...
@@ -337,8 +336,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.9.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
     contract A {
 
         // External functions
@@ -758,8 +756,7 @@ manner as modifiers if the function declaration is long or hard to read.
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.9.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
     // Base contracts just to make this compile
     contract B {
         constructor(uint) {
@@ -790,8 +787,7 @@ Yes::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.9.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
 
     // Base contracts just to make this compile
     contract B {
@@ -1012,8 +1008,7 @@ As shown in the example below, if the contract name is ``Congress`` and the libr
 Yes::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.9.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
 
     // Owned.sol
     contract Owned {
@@ -1048,8 +1043,7 @@ and in ``Congress.sol``::
 No::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.99 <0.9.0;
-
+    pragma solidity >=0.7.0 <0.9.0;
 
     // owned.sol
     contract owned {

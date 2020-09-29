@@ -14,6 +14,7 @@ contract C {
 	}
 	function f() public pure {
 		S[] memory s1 = new S[](3);
+		assert(s1.length == 3);
 		s1[0].x = 2;
 		assert(s1[0].x == 2);
 		s1[1].t.y = 3;
@@ -27,4 +28,3 @@ contract C {
 	}
 }
 // ----
-// Warning 4588: (217-227): Assertion checker does not yet implement this type of function call.
