@@ -414,7 +414,7 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -724,6 +724,17 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	if (auto result = checkSettingsKeys(settings))
 		return *result;
 
+	if (settings.isMember("stopAfter"))
+	{
+		if (!settings["stopAfter"].isString())
+			return formatFatalError("JSONError", "\"settings.stopAfter\" must be a string.");
+
+		if (settings["stopAfter"].asString() != "parsing")
+			return formatFatalError("JSONError", "Invalid value for \"settings.stopAfter\". Only valid value is \"parsing\".");
+
+		ret.stopAfter = CompilerStack::State::Parsed;
+	}
+
 	if (settings.isMember("parserErrorRecovery"))
 	{
 		if (!settings["parserErrorRecovery"].isBool())
@@ -849,6 +860,12 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 	ret.outputSelection = std::move(outputSelection);
 
+	if (ret.stopAfter != CompilerStack::State::CompilationSuccessful && isBinaryRequested(ret.outputSelection))
+		return formatFatalError(
+			"JSONError",
+			"Requested output selection conflicts with \"settings.stopAfter\"."
+		);
+
 	return { std::move(ret) };
 }
 
@@ -883,7 +900,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		if (binariesRequested)
 			compilerStack.compile();
 		else
-			compilerStack.parseAndAnalyze();
+			compilerStack.parseAndAnalyze(_inputsAndSettings.stopAfter);
 
 		for (auto const& error: compilerStack.errors())
 		{
@@ -1005,7 +1022,10 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		analysisPerformed = false;
 
 	/// Inconsistent state - stop here to receive error reports from users
-	if (((binariesRequested && !compilationSuccess) || !analysisPerformed) && errors.empty())
+	if (
+		((binariesRequested && !compilationSuccess) || !analysisPerformed) &&
+		(errors.empty() && _inputsAndSettings.stopAfter >= CompilerStack::State::AnalysisPerformed)
+	)
 		return formatFatalError("InternalCompilerError", "No error reported, but compilation failed.");
 
 	Json::Value output = Json::objectValue;
@@ -1021,16 +1041,17 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 
 	output["sources"] = Json::objectValue;
 	unsigned sourceIndex = 0;
-	for (string const& sourceName: analysisPerformed ? compilerStack.sourceNames() : vector<string>())
-	{
-		Json::Value sourceResult = Json::objectValue;
-		sourceResult["id"] = sourceIndex++;
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesExperimental))
-			sourceResult["ast"] = ASTJsonConverter(false, compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
-		if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "legacyAST", wildcardMatchesExperimental))
-			sourceResult["legacyAST"] = ASTJsonConverter(true, compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
-		output["sources"][sourceName] = sourceResult;
-	}
+	if (compilerStack.state() >= CompilerStack::State::Parsed && (!compilerStack.hasError() || _inputsAndSettings.parserErrorRecovery))
+		for (string const& sourceName: compilerStack.sourceNames())
+		{
+			Json::Value sourceResult = Json::objectValue;
+			sourceResult["id"] = sourceIndex++;
+			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesExperimental))
+				sourceResult["ast"] = ASTJsonConverter(false, compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
+			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "legacyAST", wildcardMatchesExperimental))
+				sourceResult["legacyAST"] = ASTJsonConverter(true, compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
+			output["sources"][sourceName] = sourceResult;
+		}
 
 	Json::Value contractsOutput = Json::objectValue;
 	for (string const& contractName: analysisPerformed ? compilerStack.contractNames() : vector<string>())

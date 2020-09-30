@@ -60,6 +60,7 @@ private:
 		std::string language;
 		Json::Value errors;
 		bool parserErrorRecovery = false;
+		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
 		std::map<std::string, std::string> sources;
 		std::map<util::h256, std::string> smtLib2Responses;
 		langutil::EVMVersion evmVersion;

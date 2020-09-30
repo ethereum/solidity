@@ -73,6 +73,7 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid test contract file name: \"" + _filename + "\"."));
 
 	m_astFilename = _filename.substr(0, _filename.size() - 4) + ".json";
+	m_astParseOnlyFilename = _filename.substr(0, _filename.size() - 4) + "_parseOnly.json";
 	m_legacyAstFilename = _filename.substr(0, _filename.size() - 4) + "_legacy.json";
 
 	ifstream file(_filename);
@@ -113,6 +114,15 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	}
 
 	file.close();
+	file.open(m_astParseOnlyFilename);
+	if (file)
+	{
+		string line;
+		while (getline(file, line))
+			m_expectationParseOnly += line + "\n";
+	}
+
+	file.close();
 	file.open(m_legacyAstFilename);
 	if (file)
 	{
@@ -120,6 +130,7 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 		while (getline(file, line))
 			m_expectationLegacy += line + "\n";
 	}
+	file.close();
 }
 
 TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -136,8 +147,36 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 	c.setSources(sources);
 	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 
+
+	if (!c.compile(CompilerStack::State::Parsed))
+	{
+		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
+		for (auto const& error: c.errors())
+			formatter.printErrorInformation(*error);
+		return TestResult::FatalError;
+	}
+
+	bool resultsMatch = runTest(
+		m_expectationParseOnly,
+		m_resultParseOnly,
+		sourceIndices,
+		c,
+		false,
+		"parseOnly",
+		_stream,
+		_linePrefix,
+		_formatted
+	);
+
+	c.reset();
+	c.setSources(sources);
+	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 	if (!c.parse())
 	{
+		// Empty Expectations means we expect failure
+		if (m_expectation.empty() && m_expectationLegacy.empty())
+			return resultsMatch ? TestResult::Success : TestResult::Failure;
+
 		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
 		for (auto const& error: c.errors())
 			formatter.printErrorInformation(*error);
@@ -146,7 +185,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 	c.analyze();
 
-	bool resultsMatch = runTest(
+	resultsMatch = runTest(
 		m_expectation,
 		m_result,
 		sourceIndices,
@@ -156,7 +195,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		_stream,
 		_linePrefix,
 		_formatted
-	);
+	) && resultsMatch;
 
 	resultsMatch = runTest(
 		m_expectationLegacy,
@@ -191,7 +230,7 @@ bool ASTJSONTest::runTest(
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		ostringstream result;
-		ASTJsonConverter(_legacy, _sourceIndices).print(result, _compiler.ast(m_sources[i].first));
+		ASTJsonConverter(_legacy, _compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first));
 		_result += result.str();
 		if (i != m_sources.size() - 1)
 			_result += ",";
@@ -234,7 +273,7 @@ bool ASTJSONTest::runTest(
 		return false;
 	}
 
-	return true;;
+	return true;
 }
 
 void ASTJSONTest::printSource(ostream& _stream, string const& _linePrefix, bool const) const
@@ -255,6 +294,7 @@ void ASTJSONTest::printUpdatedExpectations(std::ostream&, std::string const&) co
 {
 	updateExpectation(m_astFilename, m_result, "");
 	updateExpectation(m_legacyAstFilename, m_resultLegacy, "legacy ");
+	updateExpectation(m_astParseOnlyFilename, m_resultParseOnly, "parseOnly ");
 }
 
 void ASTJSONTest::updateExpectation(string const& _filename, string const& _expectation, string const& _variation) const

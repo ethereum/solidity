@@ -1420,6 +1420,91 @@ BOOST_AUTO_TEST_CASE(standard_output_selection_wildcard_multiple_sources)
 	BOOST_REQUIRE(result["sources"]["B"].isObject());
 }
 
+BOOST_AUTO_TEST_CASE(stopAfter_invalid_value)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources":
+		{ "": { "content": "pragma solidity >=0.0; contract C { function f() public pure {} }" } },
+		"settings":
+		{
+			"stopAfter": "rrr",
+			"outputSelection":
+			{
+				"*": { "C": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "Invalid value for \"settings.stopAfter\". Only valid value is \"parsing\"."));
+}
+
+BOOST_AUTO_TEST_CASE(stopAfter_invalid_type)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources":
+		{ "": { "content": "pragma solidity >=0.0; contract C { function f() public pure {} }" } },
+		"settings":
+		{
+			"stopAfter": 3,
+			"outputSelection":
+			{
+				"*": { "C": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "\"settings.stopAfter\" must be a string."));
+}
+
+BOOST_AUTO_TEST_CASE(stopAfter_bin_conflict)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources":
+		{ "": { "content": "pragma solidity >=0.0; contract C { function f() public pure {} }" } },
+		"settings":
+		{
+			"stopAfter": "parsing",
+			"outputSelection":
+			{
+				"*": { "C": ["evm.bytecode"] }
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(containsError(result, "JSONError", "Requested output selection conflicts with \"settings.stopAfter\"."));
+}
+
+BOOST_AUTO_TEST_CASE(stopAfter_ast_output)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"a.sol": {
+				"content": "// SPDX-License-Identifier: GPL-3.0\nimport \"tes32.sol\";\n contract C is X { constructor() {} }"
+			}
+		},
+		"settings": {
+			"stopAfter": "parsing",
+			"outputSelection": { "*": { "": [ "ast" ] } }
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_CHECK(result["sources"].isObject());
+	BOOST_CHECK(result["sources"]["a.sol"].isObject());
+	BOOST_CHECK(result["sources"]["a.sol"]["ast"].isObject());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces

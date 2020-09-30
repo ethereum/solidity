@@ -4,6 +4,7 @@ Compiler Features:
  * SMTChecker: Support ``addmod`` and ``mulmod``.
  * Optimizer: Optimize ``exp`` when base is -1.
  * Code generator: Implemented events with function type as one of its indexed parameters.
+ * General: Option to stop compilation after parsing stage. Can be used with ``solc --stop-after parsing``
 
 
 ### 0.7.2 (2020-09-28)
