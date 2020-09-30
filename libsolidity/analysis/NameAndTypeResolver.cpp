@@ -130,8 +130,11 @@ bool NameAndTypeResolver::resolveNamesAndTypes(SourceUnit& _source)
 	try
 	{
 		for (shared_ptr<ASTNode> const& node: _source.nodes())
+		{
+			setScope(&_source);
 			if (!resolveNamesAndTypesInternal(*node, true))
 				return false;
+		}
 	}
 	catch (langutil::FatalError const&)
 	{
