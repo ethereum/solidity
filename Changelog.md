@@ -7,6 +7,10 @@ Compiler Features:
  * General: Option to stop compilation after parsing stage. Can be used with ``solc --stop-after parsing``
 
 
+Bugfixes:
+ * Type Checker: Fix internal compiler error when calling `.push(<arg>)` for a storage array with a nested mapping.
+
+
 ### 0.7.2 (2020-09-28)
 
 Important Bugfixes:
