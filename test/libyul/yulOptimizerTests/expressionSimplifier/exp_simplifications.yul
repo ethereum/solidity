@@ -5,6 +5,7 @@
     sstore(2, exp(2, t))
     // The following should not be simplified
     sstore(3, exp(8, t))
+    sstore(4, exp(115792089237316195423570985008687907853269984665640564039457584007913129639935, t))
 }
 // ====
 // EVMVersion: >=constantinople
@@ -19,4 +20,5 @@
 //     let _8 := 2
 //     sstore(_8, shl(t, 1))
 //     sstore(3, exp(8, t))
+//     sstore(4, sub(iszero(and(t, 1)), and(t, 1)))
 // }

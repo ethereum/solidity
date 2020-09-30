@@ -643,6 +643,16 @@ std::vector<SimplificationRule<Pattern>> evmRuleList(
 			Builtins::EXP(2, X),
 			[=]() -> Pattern { return Builtins::SHL(X, 1); }
 		);
+	rules.emplace_back(
+		Builtins::EXP(Word(-1), X),
+		[=]() -> Pattern
+		{
+			return Builtins::SUB(
+				Builtins::ISZERO(Builtins::AND(X, Word(1))),
+				Builtins::AND(X, Word(1))
+			);
+		}
+	);
 
 	return rules;
 }
