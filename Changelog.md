@@ -3,6 +3,7 @@
 Compiler Features:
  * SMTChecker: Support ``addmod`` and ``mulmod``.
  * Optimizer: Optimize ``exp`` when base is -1.
+ * Code generator: Implemented events with function type as one of its indexed parameters.
 
 
 ### 0.7.2 (2020-09-28)

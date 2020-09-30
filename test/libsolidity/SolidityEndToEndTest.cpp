@@ -2453,6 +2453,38 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 	BOOST_CHECK_EQUAL(logTopic(0, 0), util::keccak256(string("E(string,uint256[4])")));
 }
 
+BOOST_AUTO_TEST_CASE(event_indexed_function)
+{
+	char const* sourceCode = R"(
+		contract C {
+			event Test(function() external indexed);
+			function f() public {
+				emit Test(this.f);
+			}
+		}
+	)";
+
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
+		compileAndRun(sourceCode);
+		callContractFunction("f()");
+		BOOST_REQUIRE_EQUAL(numLogs(), 1);
+		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
+		BOOST_CHECK(logData(0) == bytes());
+		BOOST_REQUIRE_EQUAL(numLogTopics(0), 2);
+
+		bytes functionHash = util::keccak256("f()").asBytes();
+		bytes address = m_contractAddress.asBytes();
+		bytes selector = bytes(functionHash.cbegin(), functionHash.cbegin() + 4);
+		bytes padding = bytes(8, 0);
+		bytes functionABI = address + selector + padding;
+
+		BOOST_CHECK_EQUAL(logTopic(0, 1).hex(), util::toHex(functionABI));
+		BOOST_CHECK_EQUAL(logTopic(0, 0), util::keccak256(string("Test(function)")));
+	)
+}
+
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 {
 	char const* sourceCode = R"(
