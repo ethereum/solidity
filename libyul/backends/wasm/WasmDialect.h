@@ -56,6 +56,15 @@ struct WasmDialect: public Dialect
 
 private:
 	void addEthereumExternals();
+	void addDebugExternals();
+
+	BuiltinFunction& addBuiltinFunction(
+		std::string _prefix,
+		std::string _name,
+		std::vector<std::string> const& _params,
+		std::vector<std::string> const& _returns,
+		ControlFlowSideEffects _sideEffects
+	);
 
 	void addFunction(
 		std::string _name,

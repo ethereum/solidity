@@ -122,7 +122,25 @@ wasm::Expression WasmCodeTransform::operator()(yul::FunctionCall const& _call)
 {
 	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
 	{
-		if (_call.functionName.name.str().substr(0, 4) == "eth.")
+		if (_call.functionName.name.str().substr(0, 6) == "debug.")
+		{
+			yulAssert(builtin->returns.size() <= 1, "");
+			// Imported function, use regular call, but mark for import.
+			if (!m_functionsToImport.count(builtin->name))
+			{
+				wasm::FunctionImport imp{
+					"debug",
+					builtin->name.str().substr(6),
+					builtin->name.str(),
+					{},
+					builtin->returns.empty() ? nullopt : make_optional<wasm::Type>(translatedType(builtin->returns.front()))
+				};
+				for (auto const& param: builtin->parameters)
+					imp.paramTypes.emplace_back(translatedType(param));
+				m_functionsToImport[builtin->name] = std::move(imp);
+			}
+		}
+		else if (_call.functionName.name.str().substr(0, 4) == "eth.")
 		{
 			yulAssert(builtin->returns.size() <= 1, "");
 			// Imported function, use regular call, but mark for import.
