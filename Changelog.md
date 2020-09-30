@@ -1,6 +1,7 @@
 ### 0.7.4 (unreleased)
 
-Important Bugfixes:
+Language Features:
+ * Constants can be defined at file level.
 
 
 Compiler Features:
