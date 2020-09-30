@@ -55,7 +55,7 @@ struct WasmDialect: public Dialect
 	static WasmDialect const& instance();
 
 private:
-	void addEthereumExternals();
+	void addExternals();
 
 	void addFunction(
 		std::string _name,
