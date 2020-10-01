@@ -1446,6 +1446,70 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 	});
 }
 
+string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType const& _from, ArrayType const& _to)
+{
+	solAssert(_from.dataStoredIn(DataLocation::Storage), "");
+	solAssert(_to.dataStoredIn(DataLocation::Memory), "");
+	solAssert(_from.isDynamicallySized() == _to.isDynamicallySized(), "");
+	if (!_from.isDynamicallySized())
+		solAssert(_from.length() == _to.length(), "");
+
+	string functionName = "copy_array_from_storage_to_memory_" + _from.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		if (_from.baseType()->isValueType())
+		{
+			solAssert(_from.baseType() == _to.baseType(), "");
+			ABIFunctions abi(m_evmVersion, m_revertStrings, m_functionCollector);
+			return Whiskers(R"(
+				function <functionName>(slot) -> memptr {
+					memptr := <allocateTemp>()
+					let end := <encode>(slot, memptr)
+					mstore(<freeMemoryPointer>, end)
+				}
+			)")
+			("functionName", functionName)
+			("allocateTemp", allocationTemporaryMemoryFunction())
+			(
+				"encode",
+				abi.abiEncodeAndReturnUpdatedPosFunction(_from, _to, ABIFunctions::EncodingOptions{})
+			)
+			("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+			.render();
+		}
+		else
+		{
+			solAssert(_to.memoryStride() == 32, "");
+			solAssert(_to.baseType()->dataStoredIn(DataLocation::Memory), "");
+			solAssert(_from.baseType()->dataStoredIn(DataLocation::Storage), "");
+			solAssert(!_from.isByteArray(), "");
+			solAssert(*_to.withLocation(DataLocation::Storage, _from.isPointer()) == _from, "");
+			return Whiskers(R"(
+				function <functionName>(slot) -> memptr {
+					let length := <lengthFunction>(slot)
+					memptr := <allocateArray>(length)
+					let mpos := memptr
+					<?dynamic>mpos := add(mpos, 0x20)</dynamic>
+					let spos := <arrayDataArea>(slot)
+					for { let i := 0 } lt(i, length) { i := add(i, 1) } {
+						mstore(mpos, <convert>(spos))
+						mpos := add(mpos, 0x20)
+						spos := add(spos, <baseStorageSize>)
+					}
+				}
+			)")
+			("functionName", functionName)
+			("lengthFunction", arrayLengthFunction(_from))
+			("allocateArray", allocateMemoryArrayFunction(_to))
+			("arrayDataArea", arrayDataAreaFunction(_from))
+			("dynamic", _to.isDynamicallySized())
+			("convert", conversionFunction(*_from.baseType(), *_to.baseType()))
+			("baseStorageSize", _from.baseType()->storageSize().str())
+			.render();
+		}
+	});
+}
+
 string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType)
 {
 	solAssert(_keyType.sizeOnStack() <= 1, "");
@@ -2261,8 +2325,12 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					break;
 				case DataLocation::Memory:
 					// Copy the array to a free position in memory, unless it is already in memory.
-					solUnimplementedAssert(from.location() == DataLocation::Memory, "Not implemented yet.");
-					body = "converted := value";
+					if (from.location() == DataLocation::Memory)
+						body = "converted := value";
+					else if (from.location() == DataLocation::CallData)
+						solUnimplemented("Conversion of calldata types not yet implemented.");
+					else
+						body = "converted := " + copyArrayFromStorageToMemoryFunction(from, to) + "(value)";
 					break;
 				case DataLocation::CallData:
 					solUnimplemented("Conversion of calldata types not yet implemented.");
