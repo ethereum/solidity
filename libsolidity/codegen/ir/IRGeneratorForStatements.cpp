@@ -1871,6 +1871,35 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			solAssert(false, "");
 		break;
 	}
+	case Type::Category::Module:
+	{
+		Type::Category category = _memberAccess.annotation().type->category();
+		solAssert(
+			dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration) ||
+			dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
+			category == Type::Category::TypeType ||
+			category == Type::Category::Module,
+			""
+		);
+		if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			solAssert(variable->isConstant(), "");
+			handleVariableReference(*variable, static_cast<Expression const&>(_memberAccess));
+		}
+		else if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+			solAssert(function && function->isFree(), "");
+			solAssert(function->functionType(true), "");
+			solAssert(function->functionType(true)->kind() == FunctionType::Kind::Internal, "");
+			solAssert(funType->kind() == FunctionType::Kind::Internal, "");
+			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
+
+			define(_memberAccess) << to_string(function->id()) << "\n";
+			m_context.internalFunctionAccessed(_memberAccess, *function);
+		}
+		break;
+	}
 	default:
 		solAssert(false, "Member access to unknown type.");
 	}
@@ -2127,6 +2156,10 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<StructDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<ImportDirective const*>(declaration))
 	{
 		// no-op
 	}
