@@ -1,5 +1,8 @@
 ### 0.7.3 (unreleased)
 
+Important Bugfixes:
+ * Code Generator: Properly cleanup after copying dynamic-array to storage for packed types.
+
 Compiler Features:
  * SMTChecker: Support ``addmod`` and ``mulmod``.
  * SMTChecker: Support array slices.
