@@ -291,7 +291,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref multiplier
 			// fetch old value
 			m_context << Instruction::DUP2 << Instruction::SLOAD;
-			// stack: value storege_ref multiplier old_full_value
+			// stack: value storage_ref multiplier old_full_value
 			// clear bytes in old value
 			m_context
 				<< Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
@@ -461,7 +461,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 			// stack: storage_ref multiplier
 			// fetch old value
 			m_context << Instruction::DUP2 << Instruction::SLOAD;
-			// stack: storege_ref multiplier old_full_value
+			// stack: storage_ref multiplier old_full_value
 			// clear bytes in old value
 			m_context
 				<< Instruction::SWAP1 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
