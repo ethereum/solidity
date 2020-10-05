@@ -253,7 +253,8 @@ struct ExpressionAnnotation: ASTAnnotation
 	bool willBeWrittenTo = false;
 	/// Whether the expression is an lvalue that is only assigned.
 	/// Would be false for --, ++, delete, +=, -=, ....
-	SetOnce<bool> lValueOfOrdinaryAssignment;
+	/// Only relevant if isLvalue == true
+	bool lValueOfOrdinaryAssignment;
 
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resolution

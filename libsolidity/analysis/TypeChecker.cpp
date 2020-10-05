@@ -1420,7 +1420,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				requireLValue(
 					*component,
-					*_tuple.annotation().lValueOfOrdinaryAssignment
+					_tuple.annotation().lValueOfOrdinaryAssignment
 				);
 				types.push_back(type(*component));
 			}
@@ -1534,6 +1534,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	_operation.annotation().isConstant = false;
 	_operation.annotation().isPure = !modifying && *_operation.subExpression().annotation().isPure;
 	_operation.annotation().isLValue = false;
+
 	return false;
 }
 
@@ -2391,6 +2392,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 
 	_functionCallOptions.annotation().isPure = false;
 	_functionCallOptions.annotation().isConstant = false;
+	_functionCallOptions.annotation().isLValue = false;
 
 	auto expressionFunctionType = dynamic_cast<FunctionType const*>(type(_functionCallOptions.expression()));
 	if (!expressionFunctionType)
@@ -2523,6 +2525,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 	solAssert(!!type, "Type name not resolved.");
 
 	_newExpression.annotation().isConstant = false;
+	_newExpression.annotation().isLValue = false;
 
 	if (auto contractName = dynamic_cast<UserDefinedTypeName const*>(&_newExpression.typeName()))
 	{
@@ -2583,7 +2586,10 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		_newExpression.annotation().isPure = true;
 	}
 	else
+	{
+		_newExpression.annotation().isPure = false;
 		m_errorReporter.fatalTypeError(8807_error, _newExpression.location(), "Contract or array type expected.");
+	}
 }
 
 bool TypeChecker::visit(MemberAccess const& _memberAccess)
@@ -2766,6 +2772,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			)
 				annotation.isPure = *_memberAccess.expression().annotation().isPure;
 		}
+		else
+			annotation.isLValue = false;
 	}
 	else if (exprType->category() == Type::Category::Module)
 	{
@@ -3061,6 +3069,7 @@ vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
 bool TypeChecker::visit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
+
 	if (!annotation.referencedDeclaration)
 	{
 		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);
