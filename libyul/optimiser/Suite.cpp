@@ -103,7 +103,7 @@ void OptimiserSuite::run(
 
 	// Some steps depend on properties ensured by FunctionHoister, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
-	suite.runSequence("fgo", ast);
+	suite.runSequence("hfgo", ast);
 
 	// Now the user-supplied part
 	suite.runSequence(_optimisationSequence, ast);
