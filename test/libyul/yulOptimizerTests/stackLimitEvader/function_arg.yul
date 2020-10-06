@@ -1,7 +1,7 @@
 {
     {
         mstore(0x40, memoryguard(128))
-        sstore(0, f(0))
+        sstore(0, f(23))
     }
     function f(a1) -> v {
 	let a2 := calldataload(mul(2,4))
@@ -46,9 +46,10 @@
 // {
 //     {
 //         mstore(0x40, memoryguard(0xa0))
-//         sstore(0, f(0))
+//         mstore(0x80, 23)
+//         sstore(0, f())
 //     }
-//     function f(a1) -> v
+//     function f() -> v
 //     {
 //         let a2 := calldataload(mul(2, 4))
 //         let a3 := calldataload(mul(3, 4))
@@ -66,7 +67,7 @@
 //         let a15 := calldataload(mul(15, 4))
 //         let a16 := calldataload(mul(16, 4))
 //         let a17 := calldataload(mul(17, 4))
-//         sstore(0, a1)
+//         sstore(0, mload(0x80))
 //         sstore(mul(17, 4), a17)
 //         sstore(mul(16, 4), a16)
 //         sstore(mul(15, 4), a15)
@@ -83,6 +84,6 @@
 //         sstore(mul(4, 4), a4)
 //         sstore(mul(3, 4), a3)
 //         sstore(mul(2, 4), a2)
-//         sstore(mul(1, 4), a1)
+//         sstore(mul(1, 4), mload(0x80))
 //     }
 // }
