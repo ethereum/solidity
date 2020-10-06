@@ -56,7 +56,7 @@ namespace solidity::yul
  * and then all references to a variable ``a`` in the map are replaced by ``mload(<memory offset for a>)``.
  *
  * If a visited function has arguments or return parameters that are contained in the map,
- * the entire function is skipped (no local variables in the function will be moved at all).
+ * TODO: document exactly what happens.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter, FunctionHoister.
  */
@@ -108,7 +108,6 @@ private:
 		{
 		}
 		using ASTModifier::operator();
-		void operator()(FunctionDefinition& _functionDefinition) override;
 		void operator()(Block& _block) override;
 	private:
 		OptimiserStepContext& m_context;
@@ -124,11 +123,49 @@ private:
 		{
 		}
 		using ASTModifier::operator();
-		void operator()(FunctionDefinition& _functionDefinition) override;
 		void visit(Expression& _expression) override;
 	private:
 		OptimiserStepContext& m_context;
 		VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
+	};
+	class FunctionDefinitionRewriter: ASTModifier
+	{
+	public:
+		FunctionDefinitionRewriter(
+			OptimiserStepContext& _context,
+			VariableMemoryOffsetTracker const& _memoryOffsetTracker
+		): m_context(_context), m_memoryOffsetTracker(_memoryOffsetTracker)
+		{
+		}
+		using ASTModifier::operator();
+		void operator()(FunctionDefinition& _functionDefinition) override;
+	private:
+		OptimiserStepContext& m_context;
+		VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
+	};
+	class FunctionCallRewriter: ASTModifier
+	{
+	public:
+		FunctionCallRewriter(
+			OptimiserStepContext& _context,
+			VariableMemoryOffsetTracker const& _memoryOffsetTracker,
+			std::map<YulString, FunctionDefinition const*> const& _functionDefinitions
+		);
+		using ASTModifier::operator();
+		using ASTModifier::visit;
+		void operator()(FunctionCall& _functionCall) override;
+		void operator()(Block& _block) override;
+	private:
+		OptimiserStepContext& m_context;
+		VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
+		struct FunctionArguments
+		{
+			std::vector<YulString> parameters;
+			std::vector<YulString> returnVariables;
+		};
+		std::map<YulString, FunctionArguments> m_functionArguments;
+		std::vector<Statement> m_statementsToPrefix;
+		std::vector<std::optional<YulString>> m_slotsForCurrentReturns;
 	};
 };
 

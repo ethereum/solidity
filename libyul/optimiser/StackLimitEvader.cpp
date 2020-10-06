@@ -18,6 +18,7 @@
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
+#include <libyul/optimiser/FunctionDefinitionCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -66,13 +67,29 @@ struct MemoryOffsetAllocator
 		if (unreachableVariables.count(_function))
 		{
 			yulAssert(!slotAllocations.count(_function), "");
+			set<YulString> arguments;
+			if (functionDefinitions.count(_function))
+			{
+				FunctionDefinition const* functionDefinition = functionDefinitions.at(_function);
+				yulAssert(functionDefinition, "");
+				for (TypedName const& argument: functionDefinition->parameters + functionDefinition->returnVariables)
+					arguments.emplace(argument.name);
+			}
+
 			for (YulString variable: unreachableVariables.at(_function))
-				if (variable.empty())
+				// The variable is empty in case the function has too many arguments, which is handled separately below.
+				if (!variable.empty())
 				{
-					// TODO: Too many function arguments or return parameters.
-				}
-				else
 					slotAllocations[variable] = requiredSlots++;
+					arguments.erase(variable);
+				}
+
+			// TODO: use a clever choice of arguments to move instead.
+			while (arguments.size() > 16)
+			{
+				slotAllocations[*arguments.begin()] = requiredSlots++;
+				arguments.erase(arguments.begin());
+			}
 		}
 
 		return slotsRequiredForFunction[_function] = requiredSlots;
@@ -80,6 +97,7 @@ struct MemoryOffsetAllocator
 
 	map<YulString, set<YulString>> const& unreachableVariables;
 	map<YulString, set<YulString>> const& callGraph;
+	map<YulString, FunctionDefinition const*> const& functionDefinitions;
 
 	map<YulString, uint64_t> slotAllocations{};
 	map<YulString, uint64_t> slotsRequiredForFunction{};
@@ -128,7 +146,9 @@ void StackLimitEvader::run(
 		if (_unreachableVariables.count(function))
 			return;
 
-	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls};
+	map<YulString, FunctionDefinition const*> functionDefinitions = FunctionDefinitionCollector::run(*_object.code);
+
+	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 
 	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
