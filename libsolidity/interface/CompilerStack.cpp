@@ -1124,11 +1124,6 @@ void CompilerStack::storeContractDefinitions()
 				// should already cause a double-declaration error elsewhere.
 				if (!m_contracts.count(fullyQualifiedName))
 					m_contracts[fullyQualifiedName].contract = contract;
-				else
-					solAssert(
-						m_errorReporter.hasErrors(),
-						"Contract already present (name clash?), but no error was reported."
-					);
 			}
 }
 
