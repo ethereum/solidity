@@ -59,20 +59,17 @@ void StackToMemoryMover::run(
 	Block& _block
 )
 {
-	StackToMemoryMover stackToMemoryMover(_context, _reservedMemory, _memorySlots, _numRequiredSlots);
+	VariableMemoryOffsetTracker memoryOffsetTracker(_reservedMemory, _memorySlots, _numRequiredSlots);
+	StackToMemoryMover stackToMemoryMover(_context, memoryOffsetTracker);
 	stackToMemoryMover(_block);
 }
 
 StackToMemoryMover::StackToMemoryMover(
 	OptimiserStepContext& _context,
-	u256 _reservedMemory,
-	map<YulString, uint64_t> const& _memorySlots,
-	uint64_t _numRequiredSlots
+	VariableMemoryOffsetTracker const& _memoryOffsetTracker
 ):
 m_context(_context),
-m_reservedMemory(std::move(_reservedMemory)),
-m_memorySlots(_memorySlots),
-m_numRequiredSlots(_numRequiredSlots),
+m_memoryOffsetTracker(_memoryOffsetTracker),
 m_nameDispenser(_context.dispenser)
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
@@ -85,7 +82,7 @@ m_nameDispenser(_context.dispenser)
 void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 {
 	for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
-		if (m_memorySlots.count(param.name))
+		if (m_memoryOffsetTracker(param.name))
 		{
 			// TODO: we cannot handle function parameters yet.
 			return;
@@ -98,7 +95,7 @@ void StackToMemoryMover::operator()(Block& _block)
 	using OptionalStatements = std::optional<vector<Statement>>;
 	auto containsVariableNeedingEscalation = [&](auto const& _variables) {
 		return util::contains_if(_variables, [&](auto const& var) {
-			return m_memorySlots.count(var.name);
+			return m_memoryOffsetTracker(var.name);
 		});
 	};
 	auto rewriteAssignmentOrVariableDeclaration = [&](
@@ -107,12 +104,16 @@ void StackToMemoryMover::operator()(Block& _block)
 		std::unique_ptr<Expression> _value
 	) -> std::vector<Statement> {
 		if (_variables.size() == 1)
+		{
+			optional<YulString> offset = m_memoryOffsetTracker(_variables.front().name);
+			yulAssert(offset, "");
 			return generateMemoryStore(
 				m_context.dialect,
 				_loc,
-				memoryOffset(_variables.front().name),
+				*offset,
 				_value ? *std::move(_value) : Literal{_loc, LiteralKind::Number, "0"_yulstring, {}}
 			);
+		}
 
 		VariableDeclaration tempDecl{_loc, {}, std::move(_value)};
 		vector<Statement> memoryAssignments;
@@ -122,11 +123,11 @@ void StackToMemoryMover::operator()(Block& _block)
 			YulString tempVarName = m_nameDispenser.newName(var.name);
 			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
 
-			if (m_memorySlots.count(var.name))
+			if (optional<YulString> offset = m_memoryOffsetTracker(var.name))
 				memoryAssignments += generateMemoryStore(
 					m_context.dialect,
 					_loc,
-					memoryOffset(var.name),
+					*offset,
 					Identifier{_loc, tempVarName}
 				);
 			else if constexpr (std::is_same_v<std::decay_t<decltype(var)>, Identifier>)
@@ -185,35 +186,36 @@ void StackToMemoryMover::operator()(Block& _block)
 
 void StackToMemoryMover::visit(Expression& _expression)
 {
-	if (
-		Identifier* identifier = std::get_if<Identifier>(&_expression);
-		identifier && m_memorySlots.count(identifier->name)
-	)
-	{
-		BuiltinFunction const* memoryLoadFunction = m_context.dialect.memoryLoadFunction(m_context.dialect.defaultType);
-		yulAssert(memoryLoadFunction, "");
-		langutil::SourceLocation loc = identifier->location;
-		_expression = FunctionCall{
-			loc,
-			Identifier{loc, memoryLoadFunction->name}, {
-				Literal{
-					loc,
-					LiteralKind::Number,
-					memoryOffset(identifier->name),
-					{}
+	if (Identifier* identifier = std::get_if<Identifier>(&_expression))
+		if (optional<YulString> offset = m_memoryOffsetTracker(identifier->name))
+		{
+			BuiltinFunction const* memoryLoadFunction = m_context.dialect.memoryLoadFunction(m_context.dialect.defaultType);
+			yulAssert(memoryLoadFunction, "");
+			langutil::SourceLocation loc = identifier->location;
+			_expression = FunctionCall{
+				loc,
+				Identifier{loc, memoryLoadFunction->name}, {
+					Literal{
+						loc,
+						LiteralKind::Number,
+						*offset,
+						{}
+					}
 				}
-			}
-		};
+			};
+			return;
+		}
+	ASTModifier::visit(_expression);
+}
+
+optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(YulString _variable) const
+{
+	if (m_memorySlots.count(_variable))
+	{
+		uint64_t slot = m_memorySlots.at(_variable);
+		yulAssert(slot < m_numRequiredSlots, "");
+		return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
 	}
 	else
-		ASTModifier::visit(_expression);
+		return std::nullopt;
 }
-
-YulString StackToMemoryMover::memoryOffset(YulString _variable)
-{
-	yulAssert(m_memorySlots.count(_variable), "");
-	uint64_t slot = m_memorySlots.at(_variable);
-	yulAssert(slot < m_numRequiredSlots, "");
-	return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
-}
-
