@@ -59,27 +59,21 @@ void StackToMemoryMover::run(
 	Block& _block
 )
 {
-	VariableMemoryOffsetTracker memoryOffsetTracker(_reservedMemory, _memorySlots, _numRequiredSlots);
-	StackToMemoryMover stackToMemoryMover(_context, memoryOffsetTracker);
-	stackToMemoryMover(_block);
-}
-
-StackToMemoryMover::StackToMemoryMover(
-	OptimiserStepContext& _context,
-	VariableMemoryOffsetTracker const& _memoryOffsetTracker
-):
-m_context(_context),
-m_memoryOffsetTracker(_memoryOffsetTracker),
-m_nameDispenser(_context.dispenser)
-{
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
 		evmDialect && evmDialect->providesObjectAccess(),
 		"StackToMemoryMover can only be run on objects using the EVMDialect with object access."
 	);
+	VariableMemoryOffsetTracker memoryOffsetTracker(_reservedMemory, _memorySlots, _numRequiredSlots);
+
+	VariableDeclarationAndAssignmentMover declarationAndAssignmentMover(_context, memoryOffsetTracker);
+	declarationAndAssignmentMover(_block);
+
+	IdentifierMover identifierMover(_context, memoryOffsetTracker);
+	identifierMover(_block);
 }
 
-void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
+void StackToMemoryMover::VariableDeclarationAndAssignmentMover::operator()(FunctionDefinition& _functionDefinition)
 {
 	for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
 		if (m_memoryOffsetTracker(param.name))
@@ -90,7 +84,18 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 	ASTModifier::operator()(_functionDefinition);
 }
 
-void StackToMemoryMover::operator()(Block& _block)
+void StackToMemoryMover::IdentifierMover::operator()(FunctionDefinition& _functionDefinition)
+{
+	for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
+		if (m_memoryOffsetTracker(param.name))
+		{
+			// TODO: we cannot handle function parameters yet.
+			return;
+		}
+	ASTModifier::operator()(_functionDefinition);
+}
+
+void StackToMemoryMover::VariableDeclarationAndAssignmentMover::operator()(Block& _block)
 {
 	using OptionalStatements = std::optional<vector<Statement>>;
 	auto containsVariableNeedingEscalation = [&](auto const& _variables) {
@@ -120,7 +125,7 @@ void StackToMemoryMover::operator()(Block& _block)
 		vector<Statement> variableAssignments;
 		for (auto& var: _variables)
 		{
-			YulString tempVarName = m_nameDispenser.newName(var.name);
+			YulString tempVarName = m_context.dispenser.newName(var.name);
 			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
 
 			if (optional<YulString> offset = m_memoryOffsetTracker(var.name))
@@ -184,7 +189,7 @@ void StackToMemoryMover::operator()(Block& _block)
 		});
 }
 
-void StackToMemoryMover::visit(Expression& _expression)
+void StackToMemoryMover::IdentifierMover::visit(Expression& _expression)
 {
 	if (Identifier* identifier = std::get_if<Identifier>(&_expression))
 		if (optional<YulString> offset = m_memoryOffsetTracker(identifier->name))

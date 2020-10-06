@@ -75,7 +75,7 @@ namespace solidity::yul
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter, FunctionHoister.
  */
-class StackToMemoryMover: ASTModifier
+class StackToMemoryMover
 {
 public:
 	/**
@@ -94,11 +94,6 @@ public:
 		uint64_t _numRequiredSlots,
 		Block& _block
 	);
-	using ASTModifier::operator();
-
-	void operator()(FunctionDefinition& _functionDefinition) override;
-	void operator()(Block& _block) override;
-	void visit(Expression& _expression) override;
 private:
 	class VariableMemoryOffsetTracker
 	{
@@ -118,15 +113,38 @@ private:
 		std::map<YulString, uint64_t> const& m_memorySlots;
 		uint64_t m_numRequiredSlots = 0;
 	};
-
-	StackToMemoryMover(
-		OptimiserStepContext& _context,
-		VariableMemoryOffsetTracker const& _memoryOffsetTracker
-	);
-
-	OptimiserStepContext& m_context;
-	VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
-	NameDispenser& m_nameDispenser;
+	class VariableDeclarationAndAssignmentMover: ASTModifier
+	{
+	public:
+		VariableDeclarationAndAssignmentMover(
+			OptimiserStepContext& _context,
+			VariableMemoryOffsetTracker const& _memoryOffsetTracker
+		): m_context(_context), m_memoryOffsetTracker(_memoryOffsetTracker)
+		{
+		}
+		using ASTModifier::operator();
+		void operator()(FunctionDefinition& _functionDefinition) override;
+		void operator()(Block& _block) override;
+	private:
+		OptimiserStepContext& m_context;
+		VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
+	};
+	class IdentifierMover: ASTModifier
+	{
+	public:
+		IdentifierMover(
+			OptimiserStepContext& _context,
+			VariableMemoryOffsetTracker const& _memoryOffsetTracker
+		): m_context(_context), m_memoryOffsetTracker(_memoryOffsetTracker)
+		{
+		}
+		using ASTModifier::operator();
+		void operator()(FunctionDefinition& _functionDefinition) override;
+		void visit(Expression& _expression) override;
+	private:
+		OptimiserStepContext& m_context;
+		VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
+	};
 };
 
 }
