@@ -40,6 +40,17 @@ void ExpressionJoiner::run(OptimiserStepContext&, Block& _ast)
 	ExpressionJoiner{_ast}(_ast);
 }
 
+void ExpressionJoiner::runUntilStabilized(OptimiserStepContext&, Block& _ast)
+{
+	while (true)
+	{
+		ExpressionJoiner expressionJoiner{_ast};
+		expressionJoiner(_ast);
+		if (!expressionJoiner.m_expressionWasJoined)
+			break;
+	}
+}
+
 
 void ExpressionJoiner::operator()(FunctionCall& _funCall)
 {
@@ -74,6 +85,7 @@ void ExpressionJoiner::visit(Expression& _e)
 			*latestStatement() = Block();
 
 			decrementLatestStatementPointer();
+			m_expressionWasJoined = true;
 		}
 	}
 	else

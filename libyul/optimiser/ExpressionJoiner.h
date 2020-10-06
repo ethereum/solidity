@@ -74,6 +74,7 @@ class ExpressionJoiner: public ASTModifier
 public:
 	static constexpr char const* name{"ExpressionJoiner"};
 	static void run(OptimiserStepContext&, Block& _ast);
+	static void runUntilStabilized(OptimiserStepContext&, Block& _ast);
 
 private:
 	explicit ExpressionJoiner(Block& _ast);
@@ -92,9 +93,10 @@ private:
 	bool isLatestStatementVarDeclJoinable(Identifier const& _identifier);
 
 private:
-	Block* m_currentBlock = nullptr;		///< Pointer to current block holding the statement being visited.
+	Block* m_currentBlock = nullptr;			///< Pointer to current block holding the statement being visited.
 	size_t m_latestStatementInBlock = 0;		///< Offset to m_currentBlock's statements of the last visited statement.
 	std::map<YulString, size_t> m_references;	///< Holds reference counts to all variable declarations in current block.
+	bool m_expressionWasJoined = false;			///< True, if any expression was joined during the visit.
 };
 
 }
