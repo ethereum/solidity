@@ -63,6 +63,12 @@ void StackToMemoryMover::run(
 	Block& _block
 )
 {
+	if (!_numRequiredSlots)
+	{
+		yulAssert(_memorySlots.empty(), "");
+		return;
+	}
+
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
 	yulAssert(
 		evmDialect && evmDialect->providesObjectAccess(),
