@@ -25,6 +25,7 @@
 
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/interface/CompilerStack.h>
 #include <liblangutil/Exceptions.h>
 
 #include <json/json.h>
@@ -51,9 +52,11 @@ class ASTJsonConverter: public ASTConstVisitor
 public:
 	/// Create a converter to JSON for the given abstract syntax tree.
 	/// @a _legacy if true, use legacy format
+	/// @a _stackState state of the compiler stack to avoid outputting incomplete data
 	/// @a _sourceIndices is used to abbreviate source names in source locations.
 	explicit ASTJsonConverter(
 		bool _legacy,
+		CompilerStack::State _stackState,
 		std::map<std::string, unsigned> _sourceIndices = std::map<std::string, unsigned>()
 	);
 	/// Output the json representation of the AST to _stream.
@@ -189,6 +192,7 @@ private:
 	}
 
 	bool m_legacy = false; ///< if true, use legacy format
+	CompilerStack::State m_stackState = CompilerStack::State::Empty; ///< Used to only access information that already exists
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;
 	std::map<std::string, unsigned> m_sourceIndices;

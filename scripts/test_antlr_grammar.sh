@@ -114,7 +114,7 @@ do
   SOL_FILES+=("$line")
 done < <(
   grep -riL -E \
-    "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (6275|3716|6281|2837|6933)|^==== Source:" \
+    "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (2837|3716|3997|5333|6275|6281|6933|7319)|^==== Source:" \
     "${ROOT_DIR}/test/libsolidity/syntaxTests" \
     "${ROOT_DIR}/test/libsolidity/semanticTests" \
 )

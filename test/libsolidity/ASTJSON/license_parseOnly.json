@@ -1,0 +1,21 @@
+{
+  "absolutePath": "a",
+  "id": 2,
+  "license": "GPL-3.0",
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 1,
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes": [],
+      "src": "36:13:1"
+    }
+  ],
+  "src": "36:14:1"
+}

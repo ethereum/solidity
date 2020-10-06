@@ -127,6 +127,7 @@ private:
 	std::map<std::string, util::h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
+	CompilerStack::State m_stopAfter = CompilerStack::State::CompilationSuccessful;
 	/// EVM version to use
 	langutil::EVMVersion m_evmVersion;
 	/// How to handle revert strings

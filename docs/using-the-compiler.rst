@@ -200,6 +200,8 @@ Input Description
       // Optional
       "settings":
       {
+        // Optional: Stop compilation after the given stage. Currently only "parsing" is valid here
+        "stopAfter": "parsing",
         // Optional: Sorted list of remappings
         "remappings": [ ":g=/dir" ],
         // Optional: Optimizer settings

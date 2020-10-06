@@ -21,6 +21,10 @@ Both kinds of source mappings use integer identifiers to refer to source files.
 The identifier of a source file is stored in
 ``output['sources'][sourceName]['id']`` where ``output`` is the output of the
 standard-json compiler interface parsed as JSON.
+For some utility routines, the compiler generates "internal" source files
+that are not part of the original input but are referenced from the source
+mappings. These source files together with their identifiers can be
+obtained via ``output['contracts'][sourceName][contractName]['evm']['bytecode']['generatedSources']``.
 
 .. note ::
     In the case of instructions that are not associated with any particular source file,

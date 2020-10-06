@@ -422,6 +422,11 @@ private:
 	/// @returns a function that reads a reference type from storage to memory (performing a deep copy).
 	std::string readFromStorageReferenceType(Type const& _type);
 
+	/// @returns the name of a function that will clear given storage slot
+	/// starting with given offset until the end of the slot
+	/// signature: (slot, offset)
+	std::string partialClearStorageSlotFunction();
+
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	MultiUseYulFunctionCollector& m_functionCollector;

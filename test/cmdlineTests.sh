@@ -439,6 +439,9 @@ SOLTMPDIR=$(mktemp -d)
 )
 rm -rf "$SOLTMPDIR"
 
+printTask "Testing AST export with stop-after=parsing..."
+"$REPO_ROOT/test/stopAfterParseTests.sh"
+
 printTask "Testing soljson via the fuzzer..."
 SOLTMPDIR=$(mktemp -d)
 (

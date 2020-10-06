@@ -1,4 +1,4 @@
-==== Source:  ====
+==== Source: C.sol ====
 import "B.sol";
 pragma experimental SMTChecker;
 contract C is B {
@@ -23,5 +23,5 @@ contract B is A {
 }
 // ----
 // Warning 6328: (B.sol:103-117): CHC: Assertion violation happens here.
-// Warning 6328: (103-117): CHC: Assertion violation happens here.
 // Warning 6328: (B.sol:103-117): CHC: Assertion violation happens here.
+// Warning 6328: (C.sol:103-117): CHC: Assertion violation happens here.

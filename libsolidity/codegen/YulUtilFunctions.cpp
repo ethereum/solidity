@@ -873,6 +873,12 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 					let arrayDataStart := <dataPosition>(array)
 					let deleteStart := add(arrayDataStart, newSlotCount)
 					let deleteEnd := add(arrayDataStart, oldSlotCount)
+					<?packed>
+						// if we are dealing with packed array and offset is greater than zero
+						// we have  to partially clear last slot that is still used, so decreasing start by one
+						let offset := mul(mod(newLen, <itemsPerSlot>), <storageBytes>)
+						if gt(offset, 0) { <partialClearStorageSlot>(sub(deleteStart, 1), offset) }
+					</packed>
 					<clearStorageRange>(deleteStart, deleteEnd)
 				}
 			})")
@@ -883,6 +889,10 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 			("dataPosition", arrayDataAreaFunction(_type))
 			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
+			("packed", _type.baseType()->storageBytes() <= 16)
+			("itemsPerSlot", to_string(32 / _type.baseType()->storageBytes()))
+			("storageBytes", to_string(_type.baseType()->storageBytes()))
+			("partialClearStorageSlot", partialClearStorageSlotFunction())
 			.render();
 	});
 }
@@ -1037,8 +1047,6 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
 
-	solAssert(_type.baseType()->isValueType(), "");
-
 	string functionName = "array_push_zero_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
@@ -1047,24 +1055,39 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 				if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 				sstore(array, add(oldLen, 1))
 				slot, offset := <indexAccess>(array, oldLen)
-				<storeValue>(slot, offset, <zeroValueFunction>())
 			})")
 			("functionName", functionName)
 			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
-			("zeroValueFunction", zeroValueFunction(*_type.baseType()))
 			.render();
+	});
+}
+
+string YulUtilFunctions::partialClearStorageSlotFunction()
+{
+	string functionName = "partial_clear_storage_slot";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+		function <functionName>(slot, offset) {
+			let mask := <shr>(mul(8, sub(32, offset)), <ones>)
+			sstore(slot, and(mask, sload(slot)))
+		}
+		)")
+		("functionName", functionName)
+		("ones", formatNumber((bigint(1) << 256) - 1))
+		("shr", shiftRightFunctionDynamic())
+		.render();
 	});
 }
 
 string YulUtilFunctions::clearStorageRangeFunction(Type const& _type)
 {
-	string functionName = "clear_storage_range_" + _type.identifier();
+	if (_type.storageBytes() < 32)
+		solAssert(_type.isValueType(), "");
 
-	solAssert(_type.storageBytes() >= 32, "Expected smaller value for storage bytes");
+	string functionName = "clear_storage_range_" + _type.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
@@ -1076,7 +1099,7 @@ string YulUtilFunctions::clearStorageRangeFunction(Type const& _type)
 			}
 		)")
 		("functionName", functionName)
-		("setToZero", storageSetToZeroFunction(_type))
+		("setToZero", storageSetToZeroFunction(_type.storageBytes() < 32 ? *TypeProvider::uint256() : _type))
 		("increment", _type.storageSize().str())
 		.render();
 	});

@@ -1,0 +1,97 @@
+{
+  "absolutePath": "a",
+  "id": 11,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "file": "notexisting.sol",
+      "id": 1,
+      "nodeType": "ImportDirective",
+      "src": "0:40:1",
+      "symbolAliases": [],
+      "unitAlias": "NotExisting"
+    },
+    {
+      "abstract": false,
+      "baseContracts":
+      [
+        {
+          "baseName":
+          {
+            "id": 2,
+            "name": "NotExisting.X",
+            "nodeType": "UserDefinedTypeName",
+            "src": "55:13:1",
+            "typeDescriptions": {}
+          },
+          "id": 3,
+          "nodeType": "InheritanceSpecifier",
+          "src": "55:13:1"
+        }
+      ],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 10,
+      "name": "C",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "constant": false,
+          "id": 5,
+          "mutability": "mutable",
+          "name": "myStruct",
+          "nodeType": "VariableDeclaration",
+          "src": "72:38:1",
+          "stateVariable": false,
+          "storageLocation": "default",
+          "typeDescriptions": {},
+          "typeName":
+          {
+            "id": 4,
+            "name": "NotExisting.SomeStruct",
+            "nodeType": "UserDefinedTypeName",
+            "src": "72:22:1",
+            "typeDescriptions": {}
+          },
+          "visibility": "public"
+        },
+        {
+          "body":
+          {
+            "id": 8,
+            "nodeType": "Block",
+            "src": "127:2:1",
+            "statements": []
+          },
+          "id": 9,
+          "implemented": true,
+          "kind": "constructor",
+          "modifiers": [],
+          "name": "",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 6,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "124:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 7,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "127:0:1"
+          },
+          "src": "113:16:1",
+          "stateMutability": "nonpayable",
+          "virtual": false
+        }
+      ],
+      "src": "41:90:1"
+    }
+  ],
+  "src": "0:132:1"
+}

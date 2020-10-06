@@ -867,11 +867,26 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					else
 					{
 						solAssert(paramTypes[arg - 1]->isValueType(), "");
-						utils().convertType(
-							*arguments[arg - 1]->annotation().type,
-							*paramTypes[arg - 1],
-							true
-						);
+						if (auto functionType =	dynamic_cast<FunctionType const*>(paramTypes[arg - 1]))
+						{
+							auto argumentType =
+								dynamic_cast<FunctionType const*>(arguments[arg-1]->annotation().type);
+							solAssert(
+								argumentType &&
+								functionType->kind() == FunctionType::Kind::External &&
+								argumentType->kind() == FunctionType::Kind::External &&
+								!argumentType->bound(),
+								""
+							);
+
+							utils().combineExternalFunctionType(true);
+						}
+						else
+							utils().convertType(
+								*arguments[arg - 1]->annotation().type,
+								*paramTypes[arg - 1],
+								true
+							);
 					}
 				}
 			if (!event.isAnonymous())

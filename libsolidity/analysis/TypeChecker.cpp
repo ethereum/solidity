@@ -2684,10 +2684,20 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				"Using \"." + memberName + "(...)\" is deprecated. Use \"{" + memberName + ": ...}\" instead."
 			);
 
+		if (
+			funType->kind() == FunctionType::Kind::ArrayPush &&
+			arguments.value().numArguments() != 0 &&
+			exprType->containsNestedMapping()
+		)
+			m_errorReporter.typeError(
+				8871_error,
+				_memberAccess.location(),
+				"Storage arrays with nested mappings do not support .push(<arg>)."
+			);
+
 		if (!funType->bound())
 			if (auto contractType = dynamic_cast<ContractType const*>(exprType))
 				requiredLookup = contractType->isSuper() ? VirtualLookup::Super : VirtualLookup::Virtual;
-
 	}
 
 	annotation.requiredLookup = requiredLookup;

@@ -65,8 +65,11 @@ bool isNonRecursiveStruct(frontend::Type const& _type);
 std::pair<bool, std::shared_ptr<SymbolicVariable>> newSymbolicVariable(frontend::Type const& _type, std::string const& _uniqueName, EncodingContext& _context);
 
 smtutil::Expression minValue(frontend::IntegerType const& _type);
+smtutil::Expression minValue(frontend::TypePointer _type);
 smtutil::Expression maxValue(frontend::IntegerType const& _type);
+smtutil::Expression maxValue(frontend::TypePointer _type);
 smtutil::Expression zeroValue(frontend::TypePointer const& _type);
+bool isSigned(frontend::TypePointer const& _type);
 
 std::pair<unsigned, bool> typeBvSizeAndSignedness(frontend::TypePointer const& type);
 

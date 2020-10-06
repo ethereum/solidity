@@ -22,6 +22,7 @@
 #include <libsmtutil/Z3CHCInterface.h>
 #endif
 
+#include <libsolidity/formal/ArraySlicePredicate.h>
 #include <libsolidity/formal/PredicateInstance.h>
 #include <libsolidity/formal/PredicateSort.h>
 #include <libsolidity/formal/SymbolicTypes.h>
@@ -470,6 +471,36 @@ void CHC::endVisit(Continue const& _continue)
 	m_currentBlock = predicate(*continueGhost);
 }
 
+void CHC::endVisit(IndexRangeAccess const& _range)
+{
+	createExpr(_range);
+
+	auto baseArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(_range.baseExpression()));
+	auto sliceArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(_range));
+	solAssert(baseArray && sliceArray, "");
+
+	auto const& sliceData = ArraySlicePredicate::create(sliceArray->sort(), m_context);
+	if (!sliceData.first)
+	{
+		for (auto pred: sliceData.second.predicates)
+			m_interface->registerRelation(pred->functor());
+		for (auto const& rule: sliceData.second.rules)
+			addRule(rule, "");
+	}
+
+	auto start = _range.startExpression() ? expr(*_range.startExpression()) : 0;
+	auto end = _range.endExpression() ? expr(*_range.endExpression()) : baseArray->length();
+	auto slicePred = (*sliceData.second.predicates.at(0))({
+		baseArray->elements(),
+		sliceArray->elements(),
+		start,
+		end
+	});
+
+	m_context.addAssertion(slicePred);
+	m_context.addAssertion(sliceArray->length() == end - start);
+}
+
 void CHC::visitAssert(FunctionCall const& _funCall)
 {
 	auto const& args = _funCall.arguments();
@@ -688,6 +719,7 @@ void CHC::resetSourceAnalysis()
 	m_interfaces.clear();
 	m_nondetInterfaces.clear();
 	Predicate::reset();
+	ArraySlicePredicate::reset();
 	m_blockCounter = 0;
 
 	bool usesZ3 = false;
@@ -993,6 +1025,9 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 		return _block({});
 	case PredicateType::NondetInterface:
 		// Nondeterministic interface predicates are handled differently.
+		solAssert(false, "");
+	case PredicateType::Custom:
+		// Custom rules are handled separately.
 		solAssert(false, "");
 	}
 	solAssert(false, "");

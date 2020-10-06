@@ -121,36 +121,8 @@ BOOST_AUTO_TEST_CASE(reserved_keywords)
 	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Identifier));
 	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::After));
 	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Unchecked));
+	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Var));
 	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Illegal));
-}
-
-BOOST_AUTO_TEST_CASE(unsatisfied_version)
-{
-	char const* text = R"(
-		pragma solidity ^99.99.0;
-	)";
-	CHECK_PARSE_ERROR(text, "Source file requires different compiler version");
-}
-
-BOOST_AUTO_TEST_CASE(unsatisfied_version_followed_by_invalid_syntax)
-{
-	char const* text = R"(
-		pragma solidity ^99.99.0;
-		this is surely invalid
-	)";
-	CHECK_PARSE_ERROR(text, "Source file requires different compiler version");
-}
-
-BOOST_AUTO_TEST_CASE(unsatisfied_version_with_recovery)
-{
-	char const* text = R"(
-		pragma solidity ^99.99.0;
-		contract test {
-			uint ;
-		}
-	)";
-	Error err = getError(text, true);
-	BOOST_CHECK(searchErrorMessage(err, "Expected identifier but got ';'"));
 }
 
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
@@ -543,10 +515,11 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"switch",
 		"typedef",
 		"typeof",
-		"unchecked"
+		"unchecked",
+		"var"
 	};
 
-	BOOST_CHECK_EQUAL(std::size(keywords), static_cast<int>(Token::Unchecked) - static_cast<int>(Token::After) + 1);
+	BOOST_CHECK_EQUAL(std::size(keywords), static_cast<int>(Token::Var) - static_cast<int>(Token::After) + 1);
 
 	for (auto const& keyword: keywords)
 	{
