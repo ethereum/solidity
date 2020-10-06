@@ -360,6 +360,6 @@ void StackToMemoryMover::FunctionCallRewriter::operator()(Block& _block)
 		result.emplace_back(std::move(_statement));
 		result += std::move(statementsToSuffix);
 		statementsToSuffix.clear();
-		return result;
+		return optional<vector<Statement>>(move(result));
 	});
 }
