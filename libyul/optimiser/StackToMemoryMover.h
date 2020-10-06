@@ -30,19 +30,9 @@ namespace solidity::yul
 /**
  * Optimisation stage that moves Yul variables from stack to memory.
  * It takes a map from functions names and variable names to memory offsets.
- * It then transforms the AST as follows:
+ * It then transforms the AST as follows (after running ForLoopConditionIntoBody and ExpressionSplitter):
  *
- * Single variable declarations are replaced by mstore's as follows:
- *   If a is in the map, replace
- *     let a
- *   by
- *     mstore(<memory offset for a>, 0)
- *   respectively, replace
- *     let a := expr
- *   by
- *     mstore(<memory offset for a>, expr)
- *
- * In a multi-variable declaration, variables to be moved are replaced by fresh variables and then moved to memory:
+ * In variable declarations, variables to be moved are replaced by fresh variables and then moved to memory:
  *   If b and d are in the map, replace
  *     let a, b, c, d := f()
  *   by
@@ -52,13 +42,7 @@ namespace solidity::yul
  *     let c := _3
  *     let a := _1
  *
- * Assignments to single variables are replaced by mstore's:
- *   If a is in the map, replace
- *     a := expr
- *   by
- *     mstore(<memory offset for a>, expr)
- *
- * Assignments to multiple variables are split up similarly to multi-variable declarations:
+ * Assignments are split up similarly to multi-variable declarations:
  *   If b and d are in the map, replace
  *     a, b, c, d := f()
  *   by
@@ -68,7 +52,8 @@ namespace solidity::yul
  *     c := _3
  *     a := _1
  *
- * Replace all references to a variable ``a`` in the map by ``mload(<memory offset for a>)``.
+ * After that, the ExpressionJoiner and ForLoopConditionOutOfBody transformations are run to reverse the preprocessing
+ * and then all references to a variable ``a`` in the map are replaced by ``mload(<memory offset for a>)``.
  *
  * If a visited function has arguments or return parameters that are contained in the map,
  * the entire function is skipped (no local variables in the function will be moved at all).

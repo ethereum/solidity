@@ -16,6 +16,10 @@
 */
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/optimiser/NameDispenser.h>
+#include <libyul/optimiser/ExpressionSplitter.h>
+#include <libyul/optimiser/ExpressionJoiner.h>
+#include <libyul/optimiser/ForLoopConditionIntoBody.h>
+#include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libyul/AsmData.h>
@@ -66,8 +70,14 @@ void StackToMemoryMover::run(
 	);
 	VariableMemoryOffsetTracker memoryOffsetTracker(_reservedMemory, _memorySlots, _numRequiredSlots);
 
+	ForLoopConditionIntoBody::run(_context, _block);
+	ExpressionSplitter::run(_context, _block);
+
 	VariableDeclarationAndAssignmentMover declarationAndAssignmentMover(_context, memoryOffsetTracker);
 	declarationAndAssignmentMover(_block);
+
+	ExpressionJoiner::runUntilStabilized(_context, _block);
+	ForLoopConditionOutOfBody::run(_context, _block);
 
 	IdentifierMover identifierMover(_context, memoryOffsetTracker);
 	identifierMover(_block);
@@ -108,18 +118,6 @@ void StackToMemoryMover::VariableDeclarationAndAssignmentMover::operator()(Block
 		auto const& _variables,
 		std::unique_ptr<Expression> _value
 	) -> std::vector<Statement> {
-		if (_variables.size() == 1)
-		{
-			optional<YulString> offset = m_memoryOffsetTracker(_variables.front().name);
-			yulAssert(offset, "");
-			return generateMemoryStore(
-				m_context.dialect,
-				_loc,
-				*offset,
-				_value ? *std::move(_value) : Literal{_loc, LiteralKind::Number, "0"_yulstring, {}}
-			);
-		}
-
 		VariableDeclaration tempDecl{_loc, {}, std::move(_value)};
 		vector<Statement> memoryAssignments;
 		vector<Statement> variableAssignments;
