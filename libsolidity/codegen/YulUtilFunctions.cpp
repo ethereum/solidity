@@ -851,7 +851,6 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 	solAssert(_type.isDynamicallySized(), "");
 	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
-	solUnimplementedAssert(_type.baseType()->storageSize() == 1, "");
 
 	string functionName = "resize_array_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
@@ -2317,27 +2316,32 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			auto const& toStructType = dynamic_cast<StructType const &>(_to);
 			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
 
-			solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
-			solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
-			solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
-
-			if (fromStructType.location() == DataLocation::CallData)
-			{
-				body = Whiskers(R"(
-					converted := <abiDecode>(value, calldatasize())
-				)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
-					{&toStructType}
-				)).render();
-			}
+			if (fromStructType.location() == toStructType.location() && toStructType.isPointer())
+				body = "converted := value";
 			else
 			{
-				solAssert(fromStructType.location() == DataLocation::Storage, "");
+				solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
+				solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
 
-				body = Whiskers(R"(
-					converted := <readFromStorage>(value)
-				)")
-				("readFromStorage", readFromStorage(toStructType, 0, true))
-				.render();
+				if (fromStructType.location() == DataLocation::CallData)
+				{
+					solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
+					body = Whiskers(R"(
+						converted := <abiDecode>(value, calldatasize())
+					)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
+						{&toStructType}
+					)).render();
+				}
+				else
+				{
+					solAssert(fromStructType.location() == DataLocation::Storage, "");
+
+					body = Whiskers(R"(
+						converted := <readFromStorage>(value)
+					)")
+					("readFromStorage", readFromStorage(toStructType, 0, true))
+					.render();
+				}
 			}
 
 			break;
@@ -2780,22 +2784,24 @@ string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
 		else if (_type.category() == Type::Category::Array)
 			return Whiskers(R"(
 				function <functionName>(slot, offset) {
-					if iszero(eq(offset, 0)) { panic() }
+					if iszero(eq(offset, 0)) { <panic>() }
 					<clearArray>(slot)
 				}
 			)")
 			("functionName", functionName)
 			("clearArray", clearStorageArrayFunction(dynamic_cast<ArrayType const&>(_type)))
+			("panic", panicFunction())
 			.render();
 		else if (_type.category() == Type::Category::Struct)
 			return Whiskers(R"(
 				function <functionName>(slot, offset) {
-					if iszero(eq(offset, 0)) { panic() }
+					if iszero(eq(offset, 0)) { <panic>() }
 					<clearStruct>(slot)
 				}
 			)")
 			("functionName", functionName)
 			("clearStruct", clearStorageStructFunction(dynamic_cast<StructType const&>(_type)))
+			("panic", panicFunction())
 			.render();
 		else
 			solUnimplemented("setToZero for type " + _type.identifier() + " not yet implemented!");

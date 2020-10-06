@@ -16,5 +16,7 @@ contract test {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // deleteMember() -> 0
