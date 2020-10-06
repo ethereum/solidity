@@ -54,7 +54,7 @@ vector<Statement> generateMemoryStore(
 void StackToMemoryMover::run(
 	OptimiserStepContext& _context,
 	u256 _reservedMemory,
-	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
+	map<YulString, uint64_t> const& _memorySlots,
 	uint64_t _numRequiredSlots,
 	Block& _block
 )
@@ -66,7 +66,7 @@ void StackToMemoryMover::run(
 StackToMemoryMover::StackToMemoryMover(
 	OptimiserStepContext& _context,
 	u256 _reservedMemory,
-	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
+	map<YulString, uint64_t> const& _memorySlots,
 	uint64_t _numRequiredSlots
 ):
 m_context(_context),
@@ -80,41 +80,25 @@ m_nameDispenser(_context.dispenser)
 		evmDialect && evmDialect->providesObjectAccess(),
 		"StackToMemoryMover can only be run on objects using the EVMDialect with object access."
 	);
-
-	if (m_memorySlots.count(YulString{}))
-		// If the global scope contains variables to be moved, start with those as if it were a function.
-		m_currentFunctionMemorySlots = &m_memorySlots.at(YulString{});
 }
 
 void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 {
-	if (m_memorySlots.count(_functionDefinition.name))
-	{
-		map<YulString, uint64_t> const* saved = m_currentFunctionMemorySlots;
-		m_currentFunctionMemorySlots = &m_memorySlots.at(_functionDefinition.name);
-		for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
-			if (m_currentFunctionMemorySlots->count(param.name))
-			{
-				// TODO: we cannot handle function parameters yet.
-				m_currentFunctionMemorySlots = saved;
-				return;
-			}
-		ASTModifier::operator()(_functionDefinition);
-		m_currentFunctionMemorySlots = saved;
-	}
+	for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
+		if (m_memorySlots.count(param.name))
+		{
+			// TODO: we cannot handle function parameters yet.
+			return;
+		}
+	ASTModifier::operator()(_functionDefinition);
 }
 
 void StackToMemoryMover::operator()(Block& _block)
 {
 	using OptionalStatements = std::optional<vector<Statement>>;
-	if (!m_currentFunctionMemorySlots)
-	{
-		ASTModifier::operator()(_block);
-		return;
-	}
 	auto containsVariableNeedingEscalation = [&](auto const& _variables) {
 		return util::contains_if(_variables, [&](auto const& var) {
-			return m_currentFunctionMemorySlots->count(var.name);
+			return m_memorySlots.count(var.name);
 		});
 	};
 	auto rewriteAssignmentOrVariableDeclaration = [&](
@@ -138,7 +122,7 @@ void StackToMemoryMover::operator()(Block& _block)
 			YulString tempVarName = m_nameDispenser.newName(var.name);
 			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
 
-			if (m_currentFunctionMemorySlots->count(var.name))
+			if (m_memorySlots.count(var.name))
 				memoryAssignments += generateMemoryStore(
 					m_context.dialect,
 					_loc,
@@ -203,7 +187,7 @@ void StackToMemoryMover::visit(Expression& _expression)
 {
 	if (
 		Identifier* identifier = std::get_if<Identifier>(&_expression);
-		identifier && m_currentFunctionMemorySlots && m_currentFunctionMemorySlots->count(identifier->name)
+		identifier && m_memorySlots.count(identifier->name)
 	)
 	{
 		BuiltinFunction const* memoryLoadFunction = m_context.dialect.memoryLoadFunction(m_context.dialect.defaultType);
@@ -227,8 +211,8 @@ void StackToMemoryMover::visit(Expression& _expression)
 
 YulString StackToMemoryMover::memoryOffset(YulString _variable)
 {
-	yulAssert(m_currentFunctionMemorySlots, "");
-	uint64_t slot = m_currentFunctionMemorySlots->at(_variable);
+	yulAssert(m_memorySlots.count(_variable), "");
+	uint64_t slot = m_memorySlots.at(_variable);
 	yulAssert(slot < m_numRequiredSlots, "");
 	return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
 }

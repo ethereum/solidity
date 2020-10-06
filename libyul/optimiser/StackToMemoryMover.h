@@ -90,7 +90,7 @@ public:
 	static void run(
 		OptimiserStepContext& _context,
 		u256 _reservedMemory,
-		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
+		std::map<YulString, uint64_t> const& _memorySlots,
 		uint64_t _numRequiredSlots,
 		Block& _block
 	);
@@ -103,7 +103,7 @@ private:
 	StackToMemoryMover(
 		OptimiserStepContext& _context,
 		u256 _reservedMemory,
-		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
+		std::map<YulString, uint64_t> const& _memorySlots,
 		uint64_t _numRequiredSlots
 	);
 
@@ -112,10 +112,9 @@ private:
 
 	OptimiserStepContext& m_context;
 	u256 m_reservedMemory;
-	std::map<YulString, std::map<YulString, uint64_t>> const& m_memorySlots;
+	std::map<YulString, uint64_t> const& m_memorySlots;
 	uint64_t m_numRequiredSlots = 0;
 	NameDispenser& m_nameDispenser;
-	std::map<YulString, uint64_t> const* m_currentFunctionMemorySlots = nullptr;
 };
 
 }
