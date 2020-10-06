@@ -121,6 +121,7 @@ BOOST_AUTO_TEST_CASE(reserved_keywords)
 	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Identifier));
 	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::After));
 	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Unchecked));
+	BOOST_CHECK(TokenTraits::isReservedKeyword(Token::Var));
 	BOOST_CHECK(!TokenTraits::isReservedKeyword(Token::Illegal));
 }
 
@@ -514,10 +515,11 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"switch",
 		"typedef",
 		"typeof",
-		"unchecked"
+		"unchecked",
+		"var"
 	};
 
-	BOOST_CHECK_EQUAL(std::size(keywords), static_cast<int>(Token::Unchecked) - static_cast<int>(Token::After) + 1);
+	BOOST_CHECK_EQUAL(std::size(keywords), static_cast<int>(Token::Var) - static_cast<int>(Token::After) + 1);
 
 	for (auto const& keyword: keywords)
 	{
