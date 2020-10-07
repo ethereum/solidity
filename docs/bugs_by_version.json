@@ -1,6 +1,7 @@
 {
     "0.1.0": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -19,6 +20,7 @@
     },
     "0.1.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -37,6 +39,7 @@
     },
     "0.1.2": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -55,6 +58,7 @@
     },
     "0.1.3": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ExpExponentCleanup",
             "ZeroFunctionSelector",
             "ECRecoverMalformedInput",
@@ -73,6 +77,7 @@
     },
     "0.1.4": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -92,6 +97,7 @@
     },
     "0.1.5": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
             "ZeroFunctionSelector",
@@ -111,6 +117,7 @@
     },
     "0.1.6": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -132,6 +139,7 @@
     },
     "0.1.7": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "ExpExponentCleanup",
             "NestedArrayFunctionCallDecoder",
@@ -153,6 +161,7 @@
     },
     "0.2.0": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "ExpExponentCleanup",
@@ -175,6 +184,7 @@
     },
     "0.2.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "ExpExponentCleanup",
@@ -197,6 +207,7 @@
     },
     "0.2.2": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "ExpExponentCleanup",
@@ -219,6 +230,7 @@
     },
     "0.3.0": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -243,6 +255,7 @@
     },
     "0.3.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -266,6 +279,7 @@
     },
     "0.3.2": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -289,6 +303,7 @@
     },
     "0.3.3": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -311,6 +326,7 @@
     },
     "0.3.4": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -333,6 +349,7 @@
     },
     "0.3.5": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -355,6 +372,7 @@
     },
     "0.3.6": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -375,6 +393,7 @@
     },
     "0.4.0": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -395,6 +414,7 @@
     },
     "0.4.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -415,6 +435,7 @@
     },
     "0.4.10": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -434,6 +455,7 @@
     },
     "0.4.11": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -452,6 +474,7 @@
     },
     "0.4.12": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -469,6 +492,7 @@
     },
     "0.4.13": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -486,6 +510,7 @@
     },
     "0.4.14": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -502,6 +527,7 @@
     },
     "0.4.15": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -517,6 +543,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -534,6 +561,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -552,6 +580,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -569,6 +598,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -587,6 +617,7 @@
     },
     "0.4.2": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -606,6 +637,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -624,6 +656,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -642,6 +675,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -660,6 +694,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -677,6 +712,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -694,6 +730,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -709,6 +746,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -721,6 +759,7 @@
     },
     "0.4.3": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -739,6 +778,7 @@
     },
     "0.4.4": {
         "bugs": [
+            "DynamicArrayCleanup",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
             "privateCanBeOverridden",
@@ -756,6 +796,7 @@
     },
     "0.4.5": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -776,6 +817,7 @@
     },
     "0.4.6": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -795,6 +837,7 @@
     },
     "0.4.7": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -814,6 +857,7 @@
     },
     "0.4.8": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -833,6 +877,7 @@
     },
     "0.4.9": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -852,6 +897,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -867,6 +913,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -882,6 +929,7 @@
     },
     "0.5.10": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -893,6 +941,7 @@
     },
     "0.5.11": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -903,6 +952,7 @@
     },
     "0.5.12": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -913,6 +963,7 @@
     },
     "0.5.13": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -923,6 +974,7 @@
     },
     "0.5.14": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
@@ -935,6 +987,7 @@
     },
     "0.5.15": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
@@ -946,6 +999,7 @@
     },
     "0.5.16": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
@@ -956,6 +1010,7 @@
     },
     "0.5.17": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
@@ -965,6 +1020,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -980,6 +1036,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -995,6 +1052,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1010,6 +1068,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1027,6 +1086,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1044,6 +1104,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1059,6 +1120,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1073,6 +1135,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "DynamicArrayCleanup",
             "ImplicitConstructorCallvalueCheck",
             "TupleAssignmentMultiStackSlotComponents",
             "MemoryArrayCreationOverflow",
@@ -1086,6 +1149,7 @@
     },
     "0.6.0": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
@@ -1097,6 +1161,7 @@
     },
     "0.6.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
@@ -1106,19 +1171,26 @@
         "released": "2020-01-02"
     },
     "0.6.10": {
-        "bugs": [],
+        "bugs": [
+            "DynamicArrayCleanup"
+        ],
         "released": "2020-06-11"
     },
     "0.6.11": {
-        "bugs": [],
+        "bugs": [
+            "DynamicArrayCleanup"
+        ],
         "released": "2020-07-07"
     },
     "0.6.12": {
-        "bugs": [],
+        "bugs": [
+            "DynamicArrayCleanup"
+        ],
         "released": "2020-07-22"
     },
     "0.6.2": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
@@ -1129,6 +1201,7 @@
     },
     "0.6.3": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
@@ -1139,6 +1212,7 @@
     },
     "0.6.4": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
@@ -1149,6 +1223,7 @@
     },
     "0.6.5": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck",
@@ -1158,6 +1233,7 @@
     },
     "0.6.6": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck"
@@ -1166,6 +1242,7 @@
     },
     "0.6.7": {
         "bugs": [
+            "DynamicArrayCleanup",
             "MissingEscapingInFormatting",
             "ArraySliceDynamicallyEncodedBaseType",
             "ImplicitConstructorCallvalueCheck"
@@ -1173,27 +1250,35 @@
         "released": "2020-05-04"
     },
     "0.6.8": {
-        "bugs": [],
+        "bugs": [
+            "DynamicArrayCleanup"
+        ],
         "released": "2020-05-14"
     },
     "0.6.9": {
         "bugs": [
+            "DynamicArrayCleanup",
             "UsingForCalldata"
         ],
         "released": "2020-06-04"
     },
     "0.7.0": {
-        "bugs": [],
+        "bugs": [
+            "DynamicArrayCleanup"
+        ],
         "released": "2020-07-28"
     },
     "0.7.1": {
         "bugs": [
+            "DynamicArrayCleanup",
             "FreeFunctionRedefinition"
         ],
         "released": "2020-09-02"
     },
     "0.7.2": {
-        "bugs": [],
+        "bugs": [
+            "DynamicArrayCleanup"
+        ],
         "released": "2020-09-28"
     }
 }

@@ -290,7 +290,10 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			// stack: target_ref target_data_end source_data_pos target_data_pos_updated source_data_end
 			_context << Instruction::POP << Instruction::SWAP1 << Instruction::POP;
 			// stack: target_ref target_data_end target_data_pos_updated
-			utils.clearStorageLoop(targetBaseType);
+			if (targetBaseType->storageBytes() < 32)
+				utils.clearStorageLoop(TypeProvider::uint256());
+			else
+				utils.clearStorageLoop(targetBaseType);
 			_context << Instruction::POP;
 		}
 	);
@@ -922,6 +925,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 
 void ArrayUtils::clearStorageLoop(TypePointer _type) const
 {
+	solAssert(_type->storageBytes() >= 32, "");
 	m_context.callLowLevelFunction(
 		"$clearStorageLoop_" + _type->identifier(),
 		2,
