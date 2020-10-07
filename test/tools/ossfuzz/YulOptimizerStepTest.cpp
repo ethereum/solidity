@@ -42,15 +42,19 @@
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
+#include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
+#include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
+#include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
+#include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/optimiser/Suite.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -59,6 +63,7 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/CompilabilityChecker.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolidity/interface/OptimiserSettings.h>
@@ -338,6 +343,71 @@ shared_ptr<Block> YulOptimizerStepTest::run()
 	{
 		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
 		OptimiserSuite::run(*m_dialect, &meter, *m_object, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
+	}
+	else if (m_optimizerStep == "stackLimitEvader")
+	{
+		yul::Object obj;
+		obj.code = m_object->code;
+		obj.analysisInfo = m_analysisInfo;
+		disambiguate();
+		StackLimitEvader::run(*m_context, obj, CompilabilityChecker{
+			*m_dialect,
+			obj,
+			true
+		}.unreachableVariables);
+	}
+	else if (m_optimizerStep == "fakeStackLimitEvader")
+	{
+		yul::Object obj;
+		obj.code = m_object->code;
+		obj.analysisInfo = m_analysisInfo;
+		disambiguate();
+		// Mark all variables with a name starting with "$" for escalation to memory.
+		struct FakeUnreachableGenerator: ASTWalker
+		{
+			map<YulString, set<YulString>> fakeUnreachables;
+			using ASTWalker::operator();
+			void operator()(FunctionDefinition const& _function) override
+			{
+				YulString originalFunctionName = m_currentFunction;
+				m_currentFunction = _function.name;
+				ASTWalker::operator()(_function);
+				m_currentFunction = originalFunctionName;
+			}
+			void visitVariableName(YulString _var)
+			{
+				if (!_var.empty() && _var.str().front() == '$')
+					fakeUnreachables[m_currentFunction].insert(_var);
+			}
+			void operator()(VariableDeclaration const& _varDecl) override
+			{
+				for (auto const& var: _varDecl.variables)
+					visitVariableName(var.name);
+				ASTWalker::operator()(_varDecl);
+			}
+			void operator()(Identifier const& _identifier) override
+			{
+				visitVariableName(_identifier.name);
+				ASTWalker::operator()(_identifier);
+			}
+			YulString m_currentFunction = YulString{};
+		};
+		FakeUnreachableGenerator fakeUnreachableGenerator;
+		fakeUnreachableGenerator(*obj.code);
+		StackLimitEvader::run(*m_context, obj, fakeUnreachableGenerator.fakeUnreachables);
+	}
+	else if (m_optimizerStep == "unusedFunctionParameterPruner")
+	{
+		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_object->code);
+		LiteralRematerialiser::run(*m_context, *m_object->code);
+		UnusedFunctionParameterPruner::run(*m_context, *m_object->code);
+	}
+	else if (m_optimizerStep == "reasoningBasedSimplifier")
+	{
+		disambiguate();
+		ReasoningBasedSimplifier::run(*m_context, *m_object->code);
 	}
 	else
 		solUnimplemented("Invalid optimization step");

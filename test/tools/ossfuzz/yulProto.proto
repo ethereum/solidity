@@ -447,6 +447,10 @@ message Program {
     SSAREVERSER = 33;
     SSAANDBACK = 34;
     STACKCOMPRESSION = 35;
+    FAKESTACKLIMITEVADER = 36;
+    STACKLIMITEVADER = 37;
+    REASONINGBASEDSIMPLIFIER = 38;
+    UNUSEDFUNCTIONPARAMPRUNER = 39;
   }
   oneof program_oneof {
     Block block = 1;
