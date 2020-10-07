@@ -1638,18 +1638,6 @@ void CommandLineInterface::handleAst(string const& _argStr)
 		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->ast(sourceCode.first));
-		map<ASTNode const*, evmasm::GasMeter::GasConsumption> gasCosts;
-		for (auto const& contract: m_compiler->contractNames())
-			if (m_compiler->compilationSuccessful())
-				if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
-				{
-					auto ret = GasEstimator::breakToStatementLevel(
-						GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
-						asts
-					);
-					for (auto const& it: ret)
-						gasCosts[it.first] += it.second;
-				}
 
 		bool legacyFormat = !m_args.count(g_argAstCompactJson);
 		if (m_args.count(g_argOutputDir))

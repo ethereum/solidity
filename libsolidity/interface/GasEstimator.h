@@ -48,22 +48,6 @@ public:
 
 	explicit GasEstimator(langutil::EVMVersion _evmVersion): m_evmVersion(_evmVersion) {}
 
-	/// Estimates the gas consumption for every assembly item in the given assembly and stores
-	/// it by source location.
-	/// @returns a mapping from each AST node to a pair of its particular and syntactically accumulated gas costs.
-	ASTGasConsumptionSelfAccumulated structuralEstimation(
-		evmasm::AssemblyItems const& _items,
-		std::vector<ASTNode const*> const& _ast
-	) const;
-	/// @returns a mapping from nodes with non-overlapping source locations to gas consumptions such that
-	/// the following source locations are part of the mapping:
-	/// 1. source locations of statements that do not contain other statements
-	/// 2. maximal source locations that do not overlap locations coming from the first rule
-	static ASTGasConsumption breakToStatementLevel(
-		ASTGasConsumptionSelfAccumulated const& _gasCosts,
-		std::vector<ASTNode const*> const& _roots
-	);
-
 	/// @returns the estimated gas consumption by the (public or external) function with the
 	/// given signature. If no signature is given, estimates the maximum gas usage.
 	GasConsumption functionalEstimation(
