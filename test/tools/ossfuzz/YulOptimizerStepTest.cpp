@@ -346,21 +346,15 @@ shared_ptr<Block> YulOptimizerStepTest::run()
 	}
 	else if (m_optimizerStep == "stackLimitEvader")
 	{
-		yul::Object obj;
-		obj.code = m_object->code;
-		obj.analysisInfo = m_analysisInfo;
 		disambiguate();
-		StackLimitEvader::run(*m_context, obj, CompilabilityChecker{
+		StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
 			*m_dialect,
-			obj,
+			*m_object,
 			true
 		}.unreachableVariables);
 	}
 	else if (m_optimizerStep == "fakeStackLimitEvader")
 	{
-		yul::Object obj;
-		obj.code = m_object->code;
-		obj.analysisInfo = m_analysisInfo;
 		disambiguate();
 		// Mark all variables with a name starting with "$" for escalation to memory.
 		struct FakeUnreachableGenerator: ASTWalker
@@ -393,8 +387,8 @@ shared_ptr<Block> YulOptimizerStepTest::run()
 			YulString m_currentFunction = YulString{};
 		};
 		FakeUnreachableGenerator fakeUnreachableGenerator;
-		fakeUnreachableGenerator(*obj.code);
-		StackLimitEvader::run(*m_context, obj, fakeUnreachableGenerator.fakeUnreachables);
+		fakeUnreachableGenerator(*m_object->code);
+		StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
 	}
 	else if (m_optimizerStep == "unusedFunctionParameterPruner")
 	{
