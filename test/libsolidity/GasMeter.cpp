@@ -49,14 +49,6 @@ public:
 		m_compiler.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
 		m_compiler.setEVMVersion(m_evmVersion);
 		BOOST_REQUIRE_MESSAGE(m_compiler.compile(), "Compiling contract failed");
-
-		AssemblyItems const* items = m_compiler.runtimeAssemblyItems(m_compiler.lastContractName());
-		ASTNode const& sourceUnit = m_compiler.ast("");
-		BOOST_REQUIRE(items != nullptr);
-		m_gasCosts = GasEstimator::breakToStatementLevel(
-			GasEstimator(solidity::test::CommonOptions::get().evmVersion()).structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
-			{&sourceUnit}
-		);
 	}
 
 	void testCreationTimeGas(string const& _sourceCode, u256 const& _tolerance = u256(0))
@@ -118,42 +110,9 @@ public:
 			gas += i != 0 ? GasCosts::txDataNonZeroGas(evmVersion) : GasCosts::txDataZeroGas;
 		return gas;
 	}
-
-protected:
-	map<ASTNode const*, evmasm::GasMeter::GasConsumption> m_gasCosts;
 };
 
 BOOST_FIXTURE_TEST_SUITE(GasMeterTests, GasMeterTestFramework)
-
-BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
-{
-	char const* sourceCode = R"(
-		contract test {
-			bytes x;
-			function f(uint a) public returns (uint b) {
-				for (; a < 200; ++a) {
-					x.push(0x09);
-					b = a * a;
-				}
-				return f(a - 1);
-			}
-		}
-	)";
-	compile(sourceCode);
-	for (auto first = m_gasCosts.cbegin(); first != m_gasCosts.cend(); ++first)
-	{
-		auto second = first;
-		for (++second; second != m_gasCosts.cend(); ++second)
-			if (first->first->location().intersects(second->first->location()))
-			{
-				BOOST_CHECK_MESSAGE(false, "Source locations should not overlap!");
-				langutil::SourceReferenceFormatter formatter(cout);
-
-				formatter.printSourceLocation(&first->first->location());
-				formatter.printSourceLocation(&second->first->location());
-			}
-	}
-}
 
 BOOST_AUTO_TEST_CASE(simple_contract)
 {
