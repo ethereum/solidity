@@ -415,6 +415,7 @@ message Program {
     Object obj = 2;
   }
   required Version ver = 3;
+  required uint32 step = 4;
 }
 
 package solidity.yul.test.yul_fuzzer;

@@ -64,7 +64,6 @@ public:
 	{
 		return m_evmVersion;
 	}
-
 private:
 	void visit(BinaryOp const&);
 
