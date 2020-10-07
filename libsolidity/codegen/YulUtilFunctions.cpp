@@ -1266,19 +1266,31 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 		MemberList::MemberMap structMembers = _type.nativeMembers(nullptr);
 		vector<map<string, string>> memberSetValues;
 
+		set<u256> slotsCleared;
 		for (auto const& member: structMembers)
-		{
-			auto const& [memberSlotDiff, memberStorageOffset] = _type.storageOffsetsOfMember(member.name);
+			if (member.type->storageBytes() < 32)
+			{
+				auto const& slotDiff = _type.storageOffsetsOfMember(member.name).first;
+				if (!slotsCleared.count(slotDiff))
+				{
+					memberSetValues.emplace_back().emplace("clearMember", "sstore(add(slot, " + slotDiff.str() + "), 0)");
+					slotsCleared.emplace(slotDiff);
+				}
+			}
+			else
+			{
+				auto const& [memberSlotDiff, memberStorageOffset] = _type.storageOffsetsOfMember(member.name);
+				solAssert(memberStorageOffset == 0, "");
 
-			memberSetValues.emplace_back().emplace("clearMember", Whiskers(R"(
-					<setZero>(add(slot, <memberSlotDiff>), <memberStorageOffset>)
-				)")
-				("setZero", storageSetToZeroFunction(*member.type))
-				("memberSlotDiff",  memberSlotDiff.str())
-				("memberStorageOffset", to_string(memberStorageOffset))
-				.render()
-			);
-		}
+				memberSetValues.emplace_back().emplace("clearMember", Whiskers(R"(
+						<setZero>(add(slot, <memberSlotDiff>), <memberStorageOffset>)
+					)")
+					("setZero", storageSetToZeroFunction(*member.type))
+					("memberSlotDiff",  memberSlotDiff.str())
+					("memberStorageOffset", to_string(memberStorageOffset))
+					.render()
+				);
+			}
 
 		return Whiskers(R"(
 			function <functionName>(slot) {
