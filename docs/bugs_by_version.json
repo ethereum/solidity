@@ -1280,5 +1280,9 @@
             "DynamicArrayCleanup"
         ],
         "released": "2020-09-28"
+    },
+    "0.7.3": {
+        "bugs": [],
+        "released": "2020-10-07"
     }
 }
