@@ -15,6 +15,7 @@ Compiler Features:
 Bugfixes:
  * Type Checker: Fix internal compiler error when calling `.push(<arg>)` for a storage array with a nested mapping.
  * Type Checker: Add missing checks for calls using types incompatible with ABIEncoderV1 in modules where ABIEncoderV2 is not enabled.
+ * Fixed internal compiler errors for certain contracts involving the ``new`` expression
 
 
 ### 0.7.2 (2020-09-28)
