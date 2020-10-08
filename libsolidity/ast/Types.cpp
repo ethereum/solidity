@@ -963,13 +963,17 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 {
 	if (isImplicitlyConvertibleTo(_convertTo))
 		return true;
-	else if (_convertTo.category() != Category::FixedBytes)
-	{
-		TypePointer mobType = mobileType();
-		return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
-	}
-	else
+
+	auto category = _convertTo.category();
+	if (category == Category::FixedBytes)
 		return false;
+	if (category == Category::Address)
+		if (isNegative() || isFractional() || integerType()->numBits() > 160)
+			return false;
+
+	TypePointer mobType = mobileType();
+	return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
+
 }
 
 TypeResult RationalNumberType::unaryOperatorResult(Token _operator) const

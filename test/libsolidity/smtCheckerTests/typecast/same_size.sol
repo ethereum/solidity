@@ -17,9 +17,9 @@ contract C {
 		assert(t == 200);
 		int256 v = int256(bytes32(uint256(2**255 + 10)));
 		assert(v == -(2**255) + 10);
-		int160 a = int160(address(-1));
+		int160 a = int160(address(type(uint160).max));
 		assert(a == -1);
-		int160 b = int160(address(2**159 + 10));
+		int160 b = int160(address(uint(2**159 + 10)));
 		assert(b == -(2**159) + 10);
 		D d;
 		int160 e = int160(address(d));
@@ -42,7 +42,7 @@ contract C {
 		assert(w == 2**256 - 2);
 		bytes4 b = bytes4(uint32(-2));
 		assert(uint32(b) == uint32(2**32 - 2));
-		address a = address(-1);
+		address a = address(type(uint160).max);
 		assert(uint160(a) == uint160(2**160 - 1));
 		address c = address(0);
 		assert(uint160(c) == 0);
@@ -71,4 +71,4 @@ contract C {
 	}
 }
 // ----
-// Warning 8364: (1304-1305): Assertion checker does not yet implement type type(enum E)
+// Warning 8364: (1340-1341): Assertion checker does not yet implement type type(enum E)

@@ -128,6 +128,7 @@ Contents
    050-breaking-changes.rst
    060-breaking-changes.rst
    070-breaking-changes.rst
+   080-breaking-changes.rst
    natspec-format.rst
    security-considerations.rst
    resources.rst
