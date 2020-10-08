@@ -16,5 +16,4 @@ contract D is C {
 // ----
 // Warning 2519: (s1.sol:65-134): This declaration shadows an existing declaration.
 // Warning 2519: (s2.sol:85-155): This declaration shadows an existing declaration.
-// Warning 2519: (s2.sol:85-155): This declaration shadows an existing declaration.
 // DeclarationError 1686: (s2.sol:17-64): Function with same name and parameter types defined twice.

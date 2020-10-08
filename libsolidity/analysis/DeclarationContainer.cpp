@@ -191,6 +191,9 @@ void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) 
 		innerContainer->populateHomonyms(_it);
 
 	for (auto [name, location]: m_homonymCandidates)
-		for (auto const* declaration: m_enclosingContainer->resolveName(name, true, true))
-			_it = make_pair(location, declaration);
+	{
+		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, true, true);
+		if (!declarations.empty())
+			_it = make_pair(location, declarations);
+	}
 }

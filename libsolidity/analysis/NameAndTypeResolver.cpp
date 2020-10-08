@@ -229,41 +229,44 @@ void NameAndTypeResolver::warnHomonymDeclarations() const
 	DeclarationContainer::Homonyms homonyms;
 	m_scopes.at(nullptr)->populateHomonyms(back_inserter(homonyms));
 
-	unordered_set<SourceLocation const*> noMoreMagic;
-	for (auto [innerLocation, outerDeclaration]: homonyms)
+	for (auto [innerLocation, outerDeclarations]: homonyms)
 	{
-		solAssert(innerLocation && outerDeclaration, "");
+		solAssert(innerLocation && !outerDeclarations.empty(), "");
 
-		if (dynamic_cast<MagicVariableDeclaration const*>(outerDeclaration))
+		bool magicShadowed = false;
+		SecondarySourceLocation homonymousLocations;
+		SecondarySourceLocation shadowedLocations;
+		for (Declaration const* outerDeclaration: outerDeclarations)
 		{
-			// avoids duplecated warnings
-			// (some magic variables ("revert", "require") appear in different flavors under the same name)
-			if (noMoreMagic.insert(innerLocation).second)
-				m_errorReporter.warning(
-					2319_error,
-					*innerLocation,
-					"This declaration shadows a builtin symbol."
-				);
-		}
-		else
-		{
-			SourceLocation const& outerLocation = outerDeclaration->location();
-
-			if (!outerDeclaration->isVisibleInContract())
-				m_errorReporter.warning(
-					8760_error,
-					*innerLocation,
-					"This declaration has the same name as another declaration.",
-					SecondarySourceLocation().append("The other declaration is here:", outerLocation)
-				);
+			solAssert(outerDeclaration, "");
+			if (dynamic_cast<MagicVariableDeclaration const*>(outerDeclaration))
+				magicShadowed = true;
+			else if (!outerDeclaration->isVisibleInContract())
+				homonymousLocations.append("The other declaration is here:", outerDeclaration->location());
 			else
-				m_errorReporter.warning(
-					2519_error,
-					*innerLocation,
-					"This declaration shadows an existing declaration.",
-					SecondarySourceLocation().append("The shadowed declaration is here:", outerLocation)
-				);
+				shadowedLocations.append("The shadowed declaration is here:", outerDeclaration->location());
 		}
+
+		if (magicShadowed)
+			m_errorReporter.warning(
+				2319_error,
+				*innerLocation,
+				"This declaration shadows a builtin symbol."
+			);
+		if (!homonymousLocations.infos.empty())
+			m_errorReporter.warning(
+				8760_error,
+				*innerLocation,
+				"This declaration has the same name as another declaration.",
+				homonymousLocations
+			);
+		if (!shadowedLocations.infos.empty())
+			m_errorReporter.warning(
+				2519_error,
+				*innerLocation,
+				"This declaration shadows an existing declaration.",
+				shadowedLocations
+			);
 	}
 }
 

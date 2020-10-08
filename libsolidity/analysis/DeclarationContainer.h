@@ -27,8 +27,6 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
 #include <boost/noncopyable.hpp>
-#include <map>
-#include <set>
 
 namespace solidity::frontend
 {
@@ -40,7 +38,7 @@ namespace solidity::frontend
 class DeclarationContainer
 {
 public:
-	using Homonyms = std::vector<std::pair<langutil::SourceLocation const*, Declaration const*>>;
+	using Homonyms = std::vector<std::pair<langutil::SourceLocation const*, std::vector<Declaration const*>>>;
 
 	explicit DeclarationContainer(
 		ASTNode const* _enclosingNode = nullptr,
