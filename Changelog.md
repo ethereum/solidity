@@ -1,5 +1,14 @@
 ### 0.7.4 (unreleased)
 
+Important Bugfixes:
+
+
+Compiler Features:
+
+
+Bugfixes:
+ * Type Checker: Fix internal compiler error caused by storage parameters with nested mappings in libraries.
+
 
 ### 0.7.3 (2020-10-07)
 
