@@ -252,7 +252,10 @@ public:
 	/// @returns an upper bound on the total storage size required by this type, descending
 	/// into structs and statically-sized arrays. This is mainly to ensure that the storage
 	/// slot allocation algorithm does not overflow, it is not a protection against collisions.
-	virtual bigint storageSizeUpperBound() const { return 1; }
+	bigint storageSizeUpperBound() const { return sizeUpperBound(DataLocation::Storage); }
+	/// @returns an upper bound on the total size required by this type
+	/// for the given location (in slots for storage, in bytes otherwise)
+	virtual bigint sizeUpperBound(DataLocation _loc) const { return (_loc == DataLocation::Storage) ? 1 : memoryHeadSize(); }
 	/// Multiple small types can be packed into a single storage slot. If such a packing is possible
 	/// this function @returns the size in bytes smaller than 32. Data is moved to the next slot if
 	/// it does not fit.
@@ -369,6 +372,10 @@ public:
 	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
 	/// are returned without modification.
 	virtual TypeResult interfaceType(bool /*_inLibrary*/) const { return nullptr; }
+
+	/// Verifies if this type can be stored in @a _loc,
+	/// current implementation is limited to size checking.
+	BoolResult validForLocation(DataLocation _loc) const;
 
 	/// Clears all internally cached values (if any).
 	virtual void clearCache() const;
@@ -702,6 +709,7 @@ class CompositeType: public Type
 {
 protected:
 	CompositeType() = default;
+	explicit CompositeType(DataLocation _location): m_location(_location) {}
 
 public:
 	/// @returns a list containing the type itself, elements of its decomposition,
@@ -709,13 +717,18 @@ public:
 	/// Each type is included only once.
 	std::vector<Type const*> fullDecomposition() const;
 
+	DataLocation location() const { return m_location; }
+
 protected:
 	/// @returns a list of types that together make up the data part of this type.
 	/// Contains all types that will have to be implicitly stored, whenever an object of this type is stored.
 	/// In particular, it returns the base type for arrays and array slices, the member types for structs,
 	/// the component types for tuples and the value type for mappings
 	/// (note that the key type of a mapping is *not* part of the list).
+	/// The list can contain duplicates.
 	virtual std::vector<Type const*> decomposition() const = 0;
+
+	DataLocation m_location = DataLocation::Storage;
 };
 
 /**
@@ -725,11 +738,9 @@ protected:
 class ReferenceType: public CompositeType
 {
 protected:
-	explicit ReferenceType(DataLocation _location): m_location(_location) {}
+	explicit ReferenceType(DataLocation _location): CompositeType(_location) {}
 
 public:
-	DataLocation location() const { return m_location; }
-
 	TypeResult unaryOperatorResult(Token _operator) const override;
 	TypeResult binaryOperatorResult(Token, Type const*) const override
 	{
@@ -757,9 +768,6 @@ public:
 	/// never change the contents of the original value.
 	bool isPointer() const;
 
-	/// @returns true if this is valid to be stored in data location _loc
-	virtual BoolResult validForLocation(DataLocation _loc) const = 0;
-
 	bool operator==(ReferenceType const& _other) const
 	{
 		return location() == _other.location() && isPointer() == _other.isPointer();
@@ -774,7 +782,6 @@ protected:
 	/// @returns the suffix computed from the reference part to be used by identifier();
 	std::string identifierLocationSuffix() const;
 
-	DataLocation m_location = DataLocation::Storage;
 	bool m_isPointer = true;
 };
 
@@ -816,7 +823,7 @@ public:
 	unsigned calldataEncodedTailSize() const override;
 	bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	bool isDynamicallyEncoded() const override;
-	bigint storageSizeUpperBound() const override;
+	bigint sizeUpperBound(DataLocation _loc) const override;
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override { return m_baseType->containsNestedMapping(); }
 	bool nameable() const override { return true; }
@@ -828,8 +835,6 @@ public:
 	TypePointer encodingType() const override;
 	TypePointer decodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
-
-	BoolResult validForLocation(DataLocation _loc) const override;
 
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
@@ -885,8 +890,6 @@ public:
 	bool isDynamicallyEncoded() const override { return true; }
 	std::string toString(bool _short) const override;
 	TypePointer mobileType() const override;
-
-	BoolResult validForLocation(DataLocation _loc) const override { return m_arrayType.validForLocation(_loc); }
 
 	ArrayType const& arrayType() const { return m_arrayType; }
 	u256 memoryDataSize() const override { solAssert(false, ""); }
@@ -985,7 +988,7 @@ public:
 	unsigned calldataEncodedTailSize() const override;
 	bool isDynamicallyEncoded() const override;
 	u256 memoryDataSize() const override;
-	bigint storageSizeUpperBound() const override;
+	bigint sizeUpperBound(DataLocation _loc) const override;
 	u256 storageSize() const override;
 	bool containsNestedMapping() const override;
 	bool nameable() const override { return true; }
@@ -995,8 +998,6 @@ public:
 
 	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
-
-	BoolResult validForLocation(DataLocation _loc) const override;
 
 	bool recursive() const;
 

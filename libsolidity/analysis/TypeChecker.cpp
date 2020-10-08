@@ -596,19 +596,33 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (isStructMemberDeclaration)
 		return false;
 
-	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
+	auto compositeType = dynamic_cast<CompositeType const*>(varType);
+	if (compositeType == nullptr)
+		return false;
+
+	bool callDataCheckRequired = true;
+	if (
+		(_variable.isLibraryFunctionParameter() && compositeType->location() == DataLocation::Storage) ||
+		(!_variable.isConstructorParameter() && !_variable.isPublicCallableParameter())
+	)
+		callDataCheckRequired = false;
+	else if (_variable.isEventParameter() && _variable.isIndexed() && _variable.annotation().type->containsNestedMapping())
 	{
-		auto result = referenceType->validForLocation(referenceType->location());
-		if (result && (_variable.isConstructorParameter() || _variable.isPublicCallableParameter()))
-			result = referenceType->validForLocation(DataLocation::CallData);
-		if (!result)
-		{
-			solAssert(!result.message().empty(), "Expected detailed error message");
-			m_errorReporter.typeError(1534_error, _variable.location(), result.message());
-			return false;
-		}
+		solAssert(
+			m_errorReporter.errorCount() > 0,
+			"Expected \"Type containing a (nested) mapping is not allowed as event parameter type.\""
+		);
+		callDataCheckRequired = false;
 	}
 
+	BoolResult result = varType->validForLocation(compositeType->location());
+	if (result && callDataCheckRequired)
+		result = varType->validForLocation(DataLocation::CallData);
+	if (!result)
+	{
+		solAssert(!result.message().empty(), "Expected detailed error message");
+		m_errorReporter.typeError(1534_error, _variable.location(), result.message());
+	}
 	return false;
 }
 
