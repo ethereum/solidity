@@ -86,7 +86,6 @@ public:
 
 	/// @returns the name of a function that performs a left shift and subsequent cleanup
 	/// and, if needed, prior cleanup.
-	/// If the amount to shift by is signed, a check for negativeness is performed.
 	/// signature: (value, amountToShift) -> result
 	std::string typedShiftLeftFunction(Type const& _type, Type const& _amountType);
 	std::string typedShiftRightFunction(Type const& _type, Type const& _amountType);
