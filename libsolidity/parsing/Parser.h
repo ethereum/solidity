@@ -52,13 +52,13 @@ public:
 private:
 	class ASTNodeFactory;
 
+	enum class VarDeclKind { FileLevel, State, Other };
 	struct VarDeclParserOptions
 	{
 		// This is actually not needed, but due to a defect in the C++ standard, we have to.
 		// https://stackoverflow.com/questions/17430377
 		VarDeclParserOptions() {}
-
-		bool isStateVariable = false;
+		VarDeclKind kind = VarDeclKind::Other;
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
 		bool allowInitialValue = false;
@@ -154,6 +154,9 @@ private:
 
 	///@{
 	///@name Helper functions
+
+	/// @return true if we are at the start of a variable declaration.
+	bool variableDeclarationStart();
 
 	/// Used as return value of @see peekStatementType.
 	enum class LookAheadInfo

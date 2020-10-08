@@ -35,7 +35,7 @@ namespace solidity::frontend
 
 /**
  * This module performs analyses on the AST that are done after type checking and assignments of types:
- *  - whether there are circular references in constant state variables
+ *  - whether there are circular references in constant variables
  *  - whether override specifiers are actually contracts
  *  - whether a modifier is in a function header
  *  - whether an event is used outside of an emit statement
@@ -54,6 +54,9 @@ public:
 	{
 		Checker(langutil::ErrorReporter& _errorReporter):
 			m_errorReporter(_errorReporter) {}
+
+		/// Called after all source units have been visited.
+		virtual void finalize() {}
 	protected:
 		langutil::ErrorReporter& m_errorReporter;
 	};
@@ -62,6 +65,9 @@ public:
 	PostTypeChecker(langutil::ErrorReporter& _errorReporter);
 
 	bool check(ASTNode const& _astRoot);
+
+	/// Called after all source units have been visited.
+	bool finalize();
 
 private:
 	bool visit(ContractDefinition const& _contract) override;
@@ -77,6 +83,7 @@ private:
 	bool visit(FunctionCall const& _functionCall) override;
 
 	bool visit(Identifier const& _identifier) override;
+	bool visit(MemberAccess const& _identifier) override;
 
 	bool visit(StructDefinition const& _struct) override;
 	void endVisit(StructDefinition const& _struct) override;
