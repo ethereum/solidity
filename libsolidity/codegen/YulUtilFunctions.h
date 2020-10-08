@@ -347,7 +347,7 @@ public:
 	/// otherwise an assertion failure.
 	///
 	/// This is used for data decoded from external sources.
-	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
+	std::string validatorFunction(Type const& _type, bool _revertOnFailure);
 
 	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
 

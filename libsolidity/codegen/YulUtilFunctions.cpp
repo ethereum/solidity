@@ -2552,7 +2552,7 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 		case Type::Category::Enum:
 		{
 			// Out of range enums cannot be truncated unambigiously and therefore it should be an error.
-			templ("body", "cleaned := value " + validatorFunction(_type) + "(value)");
+			templ("body", "cleaned := value " + validatorFunction(_type, false) + "(value)");
 			break;
 		}
 		case Type::Category::InaccessibleDynamic:
@@ -3057,7 +3057,7 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		)")
 		("functionName", functionName)
 		("fromCalldata", _fromCalldata)
-		("validate", validatorFunction(_type))
+		("validate", validatorFunction(_type, true))
 		// Byte array elements generally need cleanup.
 		// Other types are cleaned as well to account for dirty memory e.g. due to inline assembly.
 		("cleanup", cleanupFunction(_type))
