@@ -8,3 +8,5 @@ contract Second {
         if (First(2).fun() == true) return 1;
     }
 }
+// ----
+// Warning 6321: (183-187): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

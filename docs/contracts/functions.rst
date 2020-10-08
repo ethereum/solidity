@@ -424,6 +424,8 @@ operations as long as there is enough gas passed on to it.
             // If someone sends Ether to that contract, the receive function in TestPayable will be called.
             require(address(test).send(2 ether));
             // results in test.x becoming == 2 and test.y becoming 2 ether.
+
+            return true;
         }
     }
 
