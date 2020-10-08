@@ -66,14 +66,13 @@ struct MemoryOffsetAllocator
 		if (unreachableVariables.count(_function))
 		{
 			yulAssert(!slotAllocations.count(_function), "");
-			auto& assignedSlots = slotAllocations[_function];
 			for (YulString variable: unreachableVariables.at(_function))
 				if (variable.empty())
 				{
 					// TODO: Too many function arguments or return parameters.
 				}
 				else
-					assignedSlots[variable] = requiredSlots++;
+					slotAllocations[variable] = requiredSlots++;
 		}
 
 		return slotsRequiredForFunction[_function] = requiredSlots;
@@ -82,7 +81,7 @@ struct MemoryOffsetAllocator
 	map<YulString, set<YulString>> const& unreachableVariables;
 	map<YulString, set<YulString>> const& callGraph;
 
-	map<YulString, map<YulString, uint64_t>> slotAllocations{};
+	map<YulString, uint64_t> slotAllocations{};
 	map<YulString, uint64_t> slotsRequiredForFunction{};
 };
 
