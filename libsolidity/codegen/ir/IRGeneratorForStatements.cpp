@@ -386,7 +386,11 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	writeToLValue(*m_currentLValue, value);
 
-	if (m_currentLValue->type.category() != Type::Category::Struct && *_assignment.annotation().type != *TypeProvider::emptyTuple())
+	if (
+		m_currentLValue->type.category() != Type::Category::Struct &&
+		m_currentLValue->type.category() != Type::Category::Array &&
+		*_assignment.annotation().type != *TypeProvider::emptyTuple()
+	)
 		define(_assignment, value);
 	m_currentLValue.reset();
 
