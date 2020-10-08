@@ -105,7 +105,7 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 
 	if (!_ref.multiline)
 	{
-		auto const locationLength = static_cast<size_t>(_ref.endColumn - _ref.startColumn);
+		size_t const locationLength = static_cast<size_t>(_ref.endColumn - _ref.startColumn);
 
 		// line 1:
 		m_stream << leftpad << ' ';
@@ -124,7 +124,11 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 		frameColored() << '|';
 
 		m_stream << ' ' << replaceNonTabs(text.substr(0, static_cast<size_t>(_ref.startColumn)), ' ');
-		diagColored() << replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^');
+		diagColored() << (
+			locationLength == 0 ?
+			"^" :
+			replaceNonTabs(text.substr(static_cast<size_t>(_ref.startColumn), locationLength), '^')
+		);
 		m_stream << '\n';
 	}
 	else

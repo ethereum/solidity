@@ -1,5 +1,5 @@
-Error (1834): Unimplemented feature error: setToZero for type t_struct$_S_$4_storage not yet implemented! in FILENAME REMOVED
- --> yul_unimplemented/input.sol:9:9:
+Error (1834): Unimplemented feature error: Byte Arrays not yet implemented! in FILENAME REMOVED
+ --> yul_unimplemented/input.sol:6:9:
   |
-9 |         delete str;
-  |         ^^^^^^^^^^
+6 |         delete a;
+  |         ^^^^^^^^

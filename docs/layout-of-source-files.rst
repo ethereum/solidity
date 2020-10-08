@@ -5,7 +5,8 @@ Layout of a Solidity Source File
 Source files can contain an arbitrary number of
 :ref:`contract definitions<contract_structure>`, import_ directives,
 :ref:`pragma directives<pragma>` and
-:ref:`struct<structs>`, :ref:`enum<enums>` and :ref:`function<functions>` definitions.
+:ref:`struct<structs>`, :ref:`enum<enums>`, :ref:`function<functions>`
+and :ref:`constant variable<constants>` definitions.
 
 .. index:: ! license, spdx
 

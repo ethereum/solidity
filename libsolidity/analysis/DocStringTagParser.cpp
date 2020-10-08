@@ -61,13 +61,13 @@ bool DocStringTagParser::visit(VariableDeclaration const& _variable)
 {
 	if (_variable.isStateVariable())
 	{
-		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "inheritdoc"};
-		static set<string> const validNonPublicTags = set<string>{"dev", "inheritdoc"};
 		if (_variable.isPublic())
-			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
+			parseDocStrings(_variable, _variable.annotation(), {"dev", "notice", "return", "inheritdoc"}, "public state variables");
 		else
-			parseDocStrings(_variable, _variable.annotation(), validNonPublicTags, "non-public state variables");
+			parseDocStrings(_variable, _variable.annotation(), {"dev", "inheritdoc"}, "non-public state variables");
 	}
+	else if (_variable.isFileLevelVariable())
+		parseDocStrings(_variable, _variable.annotation(), {"dev"}, "file-level variables");
 	return false;
 }
 

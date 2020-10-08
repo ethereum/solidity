@@ -967,6 +967,7 @@ public:
 	/// Can only be called after reference resolution.
 	bool hasReferenceOrMappingType() const;
 	bool isStateVariable() const;
+	bool isFileLevelVariable() const;
 	bool isIndexed() const { return m_isIndexed; }
 	Mutability mutability() const { return m_mutability; }
 	bool isConstant() const { return m_mutability == Mutability::Constant; }

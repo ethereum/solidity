@@ -111,7 +111,17 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
 			default:
-				fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum/function definition.");
+				// Constant variable.
+				if (variableDeclarationStart() && m_scanner->peekNextToken() != Token::EOS)
+				{
+					VarDeclParserOptions options;
+					options.kind = VarDeclKind::FileLevel;
+					options.allowInitialValue = true;
+					nodes.push_back(parseVariableDeclaration(options));
+					expectToken(Token::Semicolon);
+				}
+				else
+					fatalParserError(7858_error, "Expected pragma, import directive or contract/interface/library/struct/enum/constant/function definition.");
 			}
 		}
 		solAssert(m_recursionDepth == 0, "");
@@ -332,15 +342,10 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				subNodes.push_back(parseStructDefinition());
 			else if (currentTokenValue == Token::Enum)
 				subNodes.push_back(parseEnumDefinition());
-			else if (
-				currentTokenValue == Token::Identifier ||
-				currentTokenValue == Token::Mapping ||
-				TokenTraits::isElementaryTypeName(currentTokenValue) ||
-				(currentTokenValue == Token::Function && m_scanner->peekNextToken() == Token::LParen)
-			)
+			else if (variableDeclarationStart())
 			{
 				VarDeclParserOptions options;
-				options.isStateVariable = true;
+				options.kind = VarDeclKind::State;
 				options.allowInitialValue = true;
 				subNodes.push_back(parseVariableDeclaration(options));
 				expectToken(Token::Semicolon);
@@ -687,10 +692,10 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	ASTPointer<TypeName> type = _lookAheadArrayType ? _lookAheadArrayType : parseTypeName();
 	nodeFactory.setEndPositionFromNode(type);
 
-	if (!_options.isStateVariable && documentation != nullptr)
-		parserError(2837_error, "Only state variables can have a docstring.");
+	if (_options.kind == VarDeclKind::Other && documentation != nullptr)
+		parserError(2837_error, "Only state variables or file-level variables can have a docstring.");
 
-	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.isStateVariable && m_scanner->currentToken() == Token::LBrace)
+	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.kind == VarDeclKind::State && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
 			2915_error,
 			"Expected a state variable declaration. If you intended this as a fallback function "
@@ -708,7 +713,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	while (true)
 	{
 		Token token = m_scanner->currentToken();
-		if (_options.isStateVariable && TokenTraits::isVariableVisibilitySpecifier(token))
+		if (_options.kind == VarDeclKind::State && TokenTraits::isVariableVisibilitySpecifier(token))
 		{
 			nodeFactory.markEndPosition();
 			if (visibility != Visibility::Default)
@@ -724,7 +729,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			else
 				visibility = parseVisibilitySpecifier();
 		}
-		else if (_options.isStateVariable && token == Token::Override)
+		else if (_options.kind == VarDeclKind::State && token == Token::Override)
 		{
 			if (overrides)
 				parserError(9125_error, "Override already specified.");
@@ -1926,6 +1931,16 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	}
 
 	return ret;
+}
+
+bool Parser::variableDeclarationStart()
+{
+	Token currentToken = m_scanner->currentToken();
+	return
+		currentToken == Token::Identifier ||
+		currentToken == Token::Mapping ||
+		TokenTraits::isElementaryTypeName(currentToken) ||
+		(currentToken == Token::Function && m_scanner->peekNextToken() == Token::LParen);
 }
 
 optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)

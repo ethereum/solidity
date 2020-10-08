@@ -1753,18 +1753,24 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	{
 		Type::Category category = _memberAccess.annotation().type->category();
 		solAssert(
+			dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration) ||
+			dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
 			category == Type::Category::TypeType ||
-			category == Type::Category::Module ||
-			category == Type::Category::Function,
+			category == Type::Category::Module,
 			""
 		);
-		if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+		if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 		{
-			auto const* funDef = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
-			solAssert(funDef && funDef->isFree(), "");
+			solAssert(variable->isConstant(), "");
+			appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
+		}
+		else if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+			solAssert(function && function->isFree(), "");
 			solAssert(funType->kind() == FunctionType::Kind::Internal, "");
 			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
-			utils().pushCombinedFunctionEntryLabel(*funDef);
+			utils().pushCombinedFunctionEntryLabel(*function);
 		}
 		break;
 	}

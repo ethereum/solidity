@@ -87,7 +87,7 @@ bool DocStringAnalyser::visit(FunctionDefinition const& _function)
 
 bool DocStringAnalyser::visit(VariableDeclaration const& _variable)
 {
-	if (!_variable.isStateVariable())
+	if (!_variable.isStateVariable() && !_variable.isFileLevelVariable())
 		return false;
 
 	if (CallableDeclaration const* baseFunction = resolveInheritDoc(_variable.annotation().baseFunctions, _variable, _variable.annotation()))

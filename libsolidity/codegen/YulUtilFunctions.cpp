@@ -851,7 +851,6 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 	solAssert(_type.isDynamicallySized(), "");
 	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
-	solUnimplementedAssert(_type.baseType()->storageSize() == 1, "");
 
 	string functionName = "resize_array_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
@@ -1143,6 +1142,45 @@ string YulUtilFunctions::clearStorageArrayFunction(ArrayType const& _type)
 		)
 		("lenToSize", arrayConvertLengthToSize(_type))
 		("len", _type.length().str())
+		.render();
+	});
+}
+
+string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
+{
+	solAssert(_type.location() == DataLocation::Storage, "");
+
+	string functionName = "clear_struct_storage_" + _type.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		MemberList::MemberMap structMembers = _type.nativeMembers(nullptr);
+		vector<map<string, string>> memberSetValues;
+
+		for (auto const& member: structMembers)
+		{
+			auto const& [memberSlotDiff, memberStorageOffset] = _type.storageOffsetsOfMember(member.name);
+
+			memberSetValues.emplace_back().emplace("clearMember", Whiskers(R"(
+					<setZero>(add(slot, <memberSlotDiff>), <memberStorageOffset>)
+				)")
+				("setZero", storageSetToZeroFunction(*member.type))
+				("memberSlotDiff",  memberSlotDiff.str())
+				("memberStorageOffset", to_string(memberStorageOffset))
+				.render()
+			);
+		}
+
+		return Whiskers(R"(
+			function <functionName>(slot) {
+				<#member>
+					<clearMember>
+				</member>
+			}
+		)")
+		("functionName", functionName)
+		("allocStruct", allocateMemoryStructFunction(_type))
+		("storageSize", _type.storageSize().str())
+		("member", memberSetValues)
 		.render();
 	});
 }
@@ -1443,6 +1481,70 @@ string YulUtilFunctions::nextArrayElementFunction(ArrayType const& _type)
 		}
 		}
 		return templ.render();
+	});
+}
+
+string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType const& _from, ArrayType const& _to)
+{
+	solAssert(_from.dataStoredIn(DataLocation::Storage), "");
+	solAssert(_to.dataStoredIn(DataLocation::Memory), "");
+	solAssert(_from.isDynamicallySized() == _to.isDynamicallySized(), "");
+	if (!_from.isDynamicallySized())
+		solAssert(_from.length() == _to.length(), "");
+
+	string functionName = "copy_array_from_storage_to_memory_" + _from.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		if (_from.baseType()->isValueType())
+		{
+			solAssert(_from.baseType() == _to.baseType(), "");
+			ABIFunctions abi(m_evmVersion, m_revertStrings, m_functionCollector);
+			return Whiskers(R"(
+				function <functionName>(slot) -> memptr {
+					memptr := <allocateTemp>()
+					let end := <encode>(slot, memptr)
+					mstore(<freeMemoryPointer>, end)
+				}
+			)")
+			("functionName", functionName)
+			("allocateTemp", allocationTemporaryMemoryFunction())
+			(
+				"encode",
+				abi.abiEncodeAndReturnUpdatedPosFunction(_from, _to, ABIFunctions::EncodingOptions{})
+			)
+			("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+			.render();
+		}
+		else
+		{
+			solAssert(_to.memoryStride() == 32, "");
+			solAssert(_to.baseType()->dataStoredIn(DataLocation::Memory), "");
+			solAssert(_from.baseType()->dataStoredIn(DataLocation::Storage), "");
+			solAssert(!_from.isByteArray(), "");
+			solAssert(*_to.withLocation(DataLocation::Storage, _from.isPointer()) == _from, "");
+			return Whiskers(R"(
+				function <functionName>(slot) -> memptr {
+					let length := <lengthFunction>(slot)
+					memptr := <allocateArray>(length)
+					let mpos := memptr
+					<?dynamic>mpos := add(mpos, 0x20)</dynamic>
+					let spos := <arrayDataArea>(slot)
+					for { let i := 0 } lt(i, length) { i := add(i, 1) } {
+						mstore(mpos, <convert>(spos))
+						mpos := add(mpos, 0x20)
+						spos := add(spos, <baseStorageSize>)
+					}
+				}
+			)")
+			("functionName", functionName)
+			("lengthFunction", arrayLengthFunction(_from))
+			("allocateArray", allocateMemoryArrayFunction(_to))
+			("arrayDataArea", arrayDataAreaFunction(_from))
+			("dynamic", _to.isDynamicallySized())
+			("convert", conversionFunction(*_from.baseType(), *_to.baseType()))
+			("baseStorageSize", _from.baseType()->storageSize().str())
+			.render();
+		}
 	});
 }
 
@@ -2261,8 +2363,12 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					break;
 				case DataLocation::Memory:
 					// Copy the array to a free position in memory, unless it is already in memory.
-					solUnimplementedAssert(from.location() == DataLocation::Memory, "Not implemented yet.");
-					body = "converted := value";
+					if (from.location() == DataLocation::Memory)
+						body = "converted := value";
+					else if (from.location() == DataLocation::CallData)
+						solUnimplemented("Conversion of calldata types not yet implemented.");
+					else
+						body = "converted := " + copyArrayFromStorageToMemoryFunction(from, to) + "(value)";
 					break;
 				case DataLocation::CallData:
 					solUnimplemented("Conversion of calldata types not yet implemented.");
@@ -2278,27 +2384,32 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			auto const& toStructType = dynamic_cast<StructType const &>(_to);
 			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
 
-			solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
-			solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
-			solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
-
-			if (fromStructType.location() == DataLocation::CallData)
-			{
-				body = Whiskers(R"(
-					converted := <abiDecode>(value, calldatasize())
-				)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
-					{&toStructType}
-				)).render();
-			}
+			if (fromStructType.location() == toStructType.location() && toStructType.isPointer())
+				body = "converted := value";
 			else
 			{
-				solAssert(fromStructType.location() == DataLocation::Storage, "");
+				solUnimplementedAssert(toStructType.location() == DataLocation::Memory, "");
+				solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
 
-				body = Whiskers(R"(
-					converted := <readFromStorage>(value)
-				)")
-				("readFromStorage", readFromStorage(toStructType, 0, true))
-				.render();
+				if (fromStructType.location() == DataLocation::CallData)
+				{
+					solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
+					body = Whiskers(R"(
+						converted := <abiDecode>(value, calldatasize())
+					)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
+						{&toStructType}
+					)).render();
+				}
+				else
+				{
+					solAssert(fromStructType.location() == DataLocation::Storage, "");
+
+					body = Whiskers(R"(
+						converted := <readFromStorage>(value)
+					)")
+					("readFromStorage", readFromStorage(toStructType, 0, true))
+					.render();
+				}
 			}
 
 			break;
@@ -2441,7 +2552,7 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 		case Type::Category::Enum:
 		{
 			// Out of range enums cannot be truncated unambigiously and therefore it should be an error.
-			templ("body", "cleaned := value " + validatorFunction(_type) + "(value)");
+			templ("body", "cleaned := value " + validatorFunction(_type, false) + "(value)");
 			break;
 		}
 		case Type::Category::InaccessibleDynamic:
@@ -2741,11 +2852,24 @@ string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
 		else if (_type.category() == Type::Category::Array)
 			return Whiskers(R"(
 				function <functionName>(slot, offset) {
+					if iszero(eq(offset, 0)) { <panic>() }
 					<clearArray>(slot)
 				}
 			)")
 			("functionName", functionName)
 			("clearArray", clearStorageArrayFunction(dynamic_cast<ArrayType const&>(_type)))
+			("panic", panicFunction())
+			.render();
+		else if (_type.category() == Type::Category::Struct)
+			return Whiskers(R"(
+				function <functionName>(slot, offset) {
+					if iszero(eq(offset, 0)) { <panic>() }
+					<clearStruct>(slot)
+				}
+			)")
+			("functionName", functionName)
+			("clearStruct", clearStorageStructFunction(dynamic_cast<StructType const&>(_type)))
+			("panic", panicFunction())
 			.render();
 		else
 			solUnimplemented("setToZero for type " + _type.identifier() + " not yet implemented!");
@@ -2933,7 +3057,7 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		)")
 		("functionName", functionName)
 		("fromCalldata", _fromCalldata)
-		("validate", validatorFunction(_type))
+		("validate", validatorFunction(_type, true))
 		// Byte array elements generally need cleanup.
 		// Other types are cleaned as well to account for dirty memory e.g. due to inline assembly.
 		("cleanup", cleanupFunction(_type))

@@ -220,6 +220,10 @@ public:
 	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that allocates a memory array and copies the contents
+	/// of the storage array into it.
+	std::string copyArrayFromStorageToMemoryFunction(ArrayType const& _from, ArrayType const& _to);
+
 	/// @returns the name of a function that performs index access for mappings.
 	/// @param _mappingType the type of the mapping
 	/// @param _keyType the type of the value provided
@@ -343,7 +347,7 @@ public:
 	/// otherwise an assertion failure.
 	///
 	/// This is used for data decoded from external sources.
-	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
+	std::string validatorFunction(Type const& _type, bool _revertOnFailure);
 
 	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
 
@@ -426,6 +430,10 @@ private:
 	/// starting with given offset until the end of the slot
 	/// signature: (slot, offset)
 	std::string partialClearStorageSlotFunction();
+
+	/// @returns the name of a function that will clear the given storage struct
+	/// signature: (slot) ->
+	std::string clearStorageStructFunction(StructType const& _type);
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
