@@ -1420,7 +1420,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				requireLValue(
 					*component,
-					*_tuple.annotation().lValueOfOrdinaryAssignment
+					_tuple.annotation().lValueOfOrdinaryAssignment
 				);
 				types.push_back(type(*component));
 			}
@@ -1534,6 +1534,7 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 	_operation.annotation().isConstant = false;
 	_operation.annotation().isPure = !modifying && *_operation.subExpression().annotation().isPure;
 	_operation.annotation().isLValue = false;
+
 	return false;
 }
 
@@ -2178,6 +2179,52 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 			m_errorReporter.typeError(errorId, paramArgMap[i]->location(), description);
 		}
 	}
+
+	TypePointers const& returnParameterTypes = _functionType->returnParameterTypes();
+	bool isLibraryCall = (_functionType->kind() == FunctionType::Kind::DelegateCall);
+	bool callRequiresABIEncoding =
+		// ABIEncode/ABIDecode calls not included because they should have been already validated
+		// at this point and they have variadic arguments so they need special handling.
+		_functionType->kind() == FunctionType::Kind::DelegateCall ||
+		_functionType->kind() == FunctionType::Kind::External ||
+		_functionType->kind() == FunctionType::Kind::Creation ||
+		_functionType->kind() == FunctionType::Kind::Event;
+
+	if (callRequiresABIEncoding && !experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+	{
+		solAssert(!isVariadic, "");
+		solAssert(parameterTypes.size() == arguments.size(), "");
+		solAssert(!_functionType->isBareCall(), "");
+		solAssert(*_functionCall.annotation().kind == FunctionCallKind::FunctionCall, "");
+
+		for (size_t i = 0; i < parameterTypes.size(); ++i)
+		{
+			solAssert(parameterTypes[i], "");
+
+			if (!typeSupportedByOldABIEncoder(*parameterTypes[i], isLibraryCall))
+				m_errorReporter.typeError(
+					2443_error,
+					paramArgMap[i]->location(),
+					"The type of this parameter, " + parameterTypes[i]->toString(true) + ", "
+					"is only supported in ABIEncoderV2. "
+					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+				);
+		}
+
+		for (size_t i = 0; i < returnParameterTypes.size(); ++i)
+		{
+			solAssert(returnParameterTypes[i], "");
+
+			if (!typeSupportedByOldABIEncoder(*returnParameterTypes[i], isLibraryCall))
+				m_errorReporter.typeError(
+					2428_error,
+					_functionCall.location(),
+					"The type of return parameter " + toString(i + 1) + ", " + returnParameterTypes[i]->toString(true) + ", "
+					"is only supported in ABIEncoderV2. "
+					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+				);
+		}
+	}
 }
 
 bool TypeChecker::visit(FunctionCall const& _functionCall)
@@ -2345,6 +2392,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 
 	_functionCallOptions.annotation().isPure = false;
 	_functionCallOptions.annotation().isConstant = false;
+	_functionCallOptions.annotation().isLValue = false;
 
 	auto expressionFunctionType = dynamic_cast<FunctionType const*>(type(_functionCallOptions.expression()));
 	if (!expressionFunctionType)
@@ -2477,6 +2525,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 	solAssert(!!type, "Type name not resolved.");
 
 	_newExpression.annotation().isConstant = false;
+	_newExpression.annotation().isLValue = false;
 
 	if (auto contractName = dynamic_cast<UserDefinedTypeName const*>(&_newExpression.typeName()))
 	{
@@ -2537,7 +2586,10 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		_newExpression.annotation().isPure = true;
 	}
 	else
+	{
+		_newExpression.annotation().isPure = false;
 		m_errorReporter.fatalTypeError(8807_error, _newExpression.location(), "Contract or array type expected.");
+	}
 }
 
 bool TypeChecker::visit(MemberAccess const& _memberAccess)
@@ -2720,6 +2772,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			)
 				annotation.isPure = *_memberAccess.expression().annotation().isPure;
 		}
+		else
+			annotation.isLValue = false;
 	}
 	else if (exprType->category() == Type::Category::Module)
 	{
@@ -3015,6 +3069,7 @@ vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
 bool TypeChecker::visit(Identifier const& _identifier)
 {
 	IdentifierAnnotation& annotation = _identifier.annotation();
+
 	if (!annotation.referencedDeclaration)
 	{
 		annotation.overloadedDeclarations = cleanOverloadedDeclarations(_identifier, annotation.candidateDeclarations);

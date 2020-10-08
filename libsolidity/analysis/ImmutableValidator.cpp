@@ -167,7 +167,7 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 
 	// If this is not an ordinary assignment, we write and read at the same time.
 	bool write = _expression.annotation().willBeWrittenTo;
-	bool read = !_expression.annotation().willBeWrittenTo || !*_expression.annotation().lValueOfOrdinaryAssignment;
+	bool read = !_expression.annotation().willBeWrittenTo || !_expression.annotation().lValueOfOrdinaryAssignment;
 	if (write)
 	{
 		if (!m_currentConstructor)
