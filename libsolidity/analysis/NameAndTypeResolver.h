@@ -93,7 +93,10 @@ public:
 	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
 
 	/// Generate and store warnings about variables that are named like instructions.
-	void warnVariablesNamedLikeInstructions();
+	void warnVariablesNamedLikeInstructions() const;
+
+	/// Generate and store warnings about declarations with the same name.
+	void warnHomonymDeclarations() const;
 
 	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
 	std::string similarNameSuggestions(ASTString const& _name) const;
