@@ -26,6 +26,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
@@ -126,11 +127,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 			.render();
 
 		int const hashHeaderSize = 4;
-		int const byteSize = 8;
-		u256 const errorHash =
-			u256(FixedHash<hashHeaderSize>::Arith(
-				FixedHash<hashHeaderSize>(keccak256("Error(string)"))
-			)) << (256 - hashHeaderSize * byteSize);
+		u256 const errorHash = util::selectorFromSignature("Error(string)");
 
 		string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
 			.tupleEncoder(
@@ -3192,7 +3189,7 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 			</word>
 			revert(0, add(reasonPos, <end>))
 		})");
-		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str());
+		templ("sig", util::selectorFromSignature("Error(string)").str());
 		templ("length", to_string(_message.length()));
 
 		size_t words = (_message.length() + 31) / 32;
