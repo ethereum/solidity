@@ -1772,6 +1772,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 			utils().pushCombinedFunctionEntryLabel(*function);
 		}
+		else if (auto const* contract = dynamic_cast<ContractDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			if (contract->isLibrary())
+				m_context.appendLibraryAddress(contract->fullyQualifiedName());
+		}
 		break;
 	}
 	default:

@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.
  * Type Checker: Fix internal compiler error caused by storage parameters with nested mappings in libraries.
  * Name Resolver: Fix shadowing/same-name warnings for later declarations.
 
