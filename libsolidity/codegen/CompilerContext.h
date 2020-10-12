@@ -78,6 +78,7 @@ public:
 
 	/// Update currently enabled set of experimental features.
 	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
+	std::set<ExperimentalFeature> const& experimentalFeaturesActive() const { return m_experimentalFeatures; }
 	/// @returns true if the given feature is enabled.
 	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
 
