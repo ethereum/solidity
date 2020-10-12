@@ -22,6 +22,8 @@ contract Child is Base {
 		return s(n);
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // g(uint256): 4 -> 12
 // h(uint256): 4 -> 16
