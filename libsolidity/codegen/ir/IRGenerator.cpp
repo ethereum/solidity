@@ -208,7 +208,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 				}
 			)");
 			templ("functionName", funName);
-			templ("panic", m_utils.panicFunction());
+			templ("panic", m_utils.panicFunction(PanicCode::InvalidInternalFunction));
 			templ("in", suffixedVariableNameList("in_", 0, arity.in));
 			templ("out", suffixedVariableNameList("out_", 0, arity.out));
 

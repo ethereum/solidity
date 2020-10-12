@@ -810,7 +810,7 @@ void CompilerUtils::convertType(
 			if (_asPartOfArgumentDecoding)
 				m_context.appendConditionalRevert(false, "Enum out of range");
 			else
-				m_context.appendConditionalInvalid();
+				m_context.appendConditionalPanic(util::PanicCode::EnumConversionError);
 			enumOverflowCheckPending = false;
 		}
 		break;
@@ -849,7 +849,7 @@ void CompilerUtils::convertType(
 			EnumType const& enumType = dynamic_cast<decltype(enumType)>(_targetType);
 			solAssert(enumType.numberOfMembers() > 0, "empty enum should have caused a parser error.");
 			m_context << u256(enumType.numberOfMembers() - 1) << Instruction::DUP2 << Instruction::GT;
-			m_context.appendConditionalInvalid();
+			m_context.appendConditionalPanic(util::PanicCode::EnumConversionError);
 			enumOverflowCheckPending = false;
 		}
 		else if (targetTypeCategory == Type::Category::FixedPoint)
@@ -1213,13 +1213,13 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		if (funType->kind() == FunctionType::Kind::Internal)
 		{
 			m_context << m_context.lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
-				_context.appendInvalid();
+				_context.appendPanic(util::PanicCode::InvalidInternalFunction);
 			});
 			if (CompilerContext* runCon = m_context.runtimeContext())
 			{
 				leftShiftNumberOnStack(32);
 				m_context << runCon->lowLevelFunctionTag("$invalidFunction", 0, 0, [](CompilerContext& _context) {
-					_context.appendInvalid();
+					_context.appendPanic(util::PanicCode::InvalidInternalFunction);
 				}).toSubAssemblyTag(m_context.runtimeSub());
 				m_context << Instruction::OR;
 			}

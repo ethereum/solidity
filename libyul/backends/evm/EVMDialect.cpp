@@ -378,6 +378,7 @@ EVMDialectTyped::EVMDialectTyped(langutil::EVMVersion _evmVersion, bool _objectA
 		BuiltinContext&,
 		std::function<void(Expression const&)> _visitExpression
 	) {
+		// TODO this should use a Panic.
 		// A value larger than 1 causes an invalid instruction.
 		visitArguments(_assembly, _call, _visitExpression);
 		_assembly.appendConstant(2);

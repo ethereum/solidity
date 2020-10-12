@@ -1302,7 +1302,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		define(modulus, *arguments[2]);
 		Whiskers templ("if iszero(<modulus>) { <panic>() }\n");
 		templ("modulus", modulus.name());
-		templ("panic", m_utils.panicFunction());
+		templ("panic", m_utils.panicFunction(PanicCode::DivisionByZero));
 		m_code << templ.render();
 
 		string args;
@@ -1367,7 +1367,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("allocateTemporaryMemory", m_utils.allocationTemporaryMemoryFunction());
 		t("releaseTemporaryMemory", m_utils.releaseTemporaryMemoryFunction());
 		t("object", IRNames::creationObject(*contract));
-		t("panic", m_utils.panicFunction());
+		t("panic", m_utils.panicFunction(PanicCode::ResourceError));
 		t("abiEncode",
 			m_context.abiFunctions().tupleEncoder(argumentTypes, functionType->parameterTypes(), false)
 		);
@@ -2023,7 +2023,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 		)")
 		("index", index.name())
 		("length", to_string(fixedBytesType.numBytes()))
-		("panic", m_utils.panicFunction())
+		("panic", m_utils.panicFunction(PanicCode::ArrayOutOfBounds))
 		("array", IRVariable(_indexAccess.baseExpression()).name())
 		("shl248", m_utils.shiftLeftFunction(256 - 8))
 		("result", IRVariable(_indexAccess).name())

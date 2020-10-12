@@ -72,7 +72,7 @@ public:
 	/// Stack pre: reference (excludes byte offset)
 	/// Stack post: new_length
 	void incrementDynamicArraySize(ArrayType const& _type) const;
-	/// Decrements the size of a dynamic array by one if length is nonzero. Causes an invalid instruction otherwise.
+	/// Decrements the size of a dynamic array by one if length is nonzero. Causes a Panic otherwise.
 	/// Clears the removed data element. In case of a byte array, this might move the data.
 	/// Stack pre: reference
 	/// Stack post:
