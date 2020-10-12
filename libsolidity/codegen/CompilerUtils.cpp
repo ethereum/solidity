@@ -28,6 +28,7 @@
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/ArrayUtils.h>
 #include <libsolidity/codegen/LValue.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libevmasm/Instruction.h>
 #include <libsolutil/Whiskers.h>
 
@@ -93,7 +94,7 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 {
 	solAssert(_argumentType.isImplicitlyConvertibleTo(*TypeProvider::fromElementaryTypeName("string memory")), "");
 	fetchFreeMemoryPointer();
-	m_context << (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32));
+	m_context << util::selectorFromSignature("Error(string)");
 	m_context << Instruction::DUP2 << Instruction::MSTORE;
 	m_context << u256(4) << Instruction::ADD;
 	// Stack: <string data> <mem pos of encoding start>
@@ -916,7 +917,7 @@ void CompilerUtils::convertType(
 		{
 			unsigned const numBytes = dynamic_cast<FixedBytesType const&>(_targetType).numBytes();
 			solAssert(data.size() <= 32, "");
-			m_context << (h256::Arith(h256(data, h256::AlignLeft)) & (~(u256(-1) >> (8 * numBytes))));
+			m_context << (u256(h256(data, h256::AlignLeft)) & (~(u256(-1) >> (8 * numBytes))));
 		}
 		else if (targetTypeCategory == Type::Category::Array)
 		{
@@ -1421,7 +1422,7 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 	{
 		for (unsigned i = 0; i < _data.size(); i += 32)
 		{
-			m_context << h256::Arith(h256(_data.cropped(i), h256::AlignLeft));
+			m_context << u256(h256(_data.cropped(i), h256::AlignLeft));
 			storeInMemoryDynamic(*TypeProvider::uint256());
 		}
 		m_context << Instruction::POP;

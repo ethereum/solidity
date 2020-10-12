@@ -33,6 +33,7 @@
 
 #include <libevmasm/GasMeter.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Whiskers.h>
 
@@ -1187,8 +1188,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					// hash the signature
 					if (auto const* stringType = dynamic_cast<StringLiteralType const*>(selectorType))
 					{
-						FixedHash<4> hash(keccak256(stringType->value()));
-						m_context << (u256(FixedHash<4>::Arith(hash)) << (256 - 32));
+						m_context << util::selectorFromSignature(stringType->value());
 						dataOnStack = TypeProvider::fixedBytes(4);
 					}
 					else

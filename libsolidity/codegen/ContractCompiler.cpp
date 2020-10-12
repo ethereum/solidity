@@ -953,8 +953,6 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		);
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
-		string errorHash = FixedHash<4>(util::keccak256("Error(string)")).hex();
-
 		// Try to decode the error message.
 		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
 		m_context.callYulFunction(m_context.utilFunctions().tryDecodeErrorMessageFunction(), 0, 1);

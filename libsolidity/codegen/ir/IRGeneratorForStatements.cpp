@@ -43,6 +43,7 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
 #include <boost/range/adaptor/transformed.hpp>
@@ -1020,10 +1021,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			// hash the signature
 			Type const& selectorType = type(*arguments.front());
 			if (auto const* stringType = dynamic_cast<StringLiteralType const*>(&selectorType))
-			{
-				FixedHash<4> hash(keccak256(stringType->value()));
-				selector = formatNumber(u256(FixedHash<4>::Arith(hash)) << (256 - 32));
-			}
+				selector = formatNumber(util::selectorFromSignature(stringType->value()));
 			else
 			{
 				// Used to reset the free memory pointer later.
@@ -1140,10 +1138,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				})");
 				templ("pos", m_context.newYulVariable());
 				templ("end", m_context.newYulVariable());
-				templ(
-					"hash",
-					(u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str()
-				);
+				templ("hash", util::selectorFromSignature("Error(string)").str());
 				templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
 				templ(
 					"argumentVars",

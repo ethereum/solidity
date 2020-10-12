@@ -10,6 +10,7 @@ set(sources
 	Exceptions.cpp
 	Exceptions.h
 	FixedHash.h
+	FunctionSelector.h
 	IndentedWriter.cpp
 	IndentedWriter.h
 	InvertibleMap.h
