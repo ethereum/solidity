@@ -5,7 +5,7 @@ Language Features:
 
 
 Compiler Features:
-
+ * SMTChecker: Support inline arrays.
 
 Bugfixes:
  * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.
