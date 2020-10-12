@@ -30,7 +30,11 @@ class EncodingContext;
  * The predicates follow the specification in PredicateSort.h.
  * */
 
+smtutil::Expression interfacePre(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context);
+
 smtutil::Expression interface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context);
+
+smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context, unsigned _preIdx, unsigned _postIdx);
 
 smtutil::Expression constructor(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context);
 

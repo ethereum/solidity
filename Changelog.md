@@ -15,7 +15,10 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.
+ * Code generator: Fix ``ABIEncoderV2`` pragma from the current module affecting inherited functions and applied modifiers.
  * Type Checker: Fix internal compiler error caused by storage parameters with nested mappings in libraries.
+ * Name Resolver: Fix shadowing/same-name warnings for later declarations.
 
 
 ### 0.7.3 (2020-10-07)
@@ -71,8 +74,8 @@ Bugfixes:
  * Code generator: Fix internal error on stripping dynamic types from return parameters on EVM versions without ``RETURNDATACOPY``.
  * Type Checker: Add missing check against nested dynamic arrays in ABI encoding functions when ABIEncoderV2 is disabled.
  * Type Checker: Correct the error message for invalid named parameter in a call to refer to the right argument.
- * Type Checker: Correct the warning for homonymous, but not shadowing declarations.
  * Type Checker: Disallow ``virtual`` for modifiers in libraries.
+ * Name Resolver: Correct the warning for homonymous, but not shadowing declarations.
  * Type system: Fix internal error on implicit conversion of contract instance to the type of its ``super``.
  * Type system: Fix internal error on implicit conversion of string literal to a calldata string.
  * Type system: Fix named parameters in overloaded function and event calls being matched incorrectly if the order differs from the declaration.

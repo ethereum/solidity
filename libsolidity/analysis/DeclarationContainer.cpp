@@ -100,6 +100,7 @@ bool DeclarationContainer::isInvisible(ASTString const& _name) const
 bool DeclarationContainer::registerDeclaration(
 	Declaration const& _declaration,
 	ASTString const* _name,
+	langutil::SourceLocation const* _location,
 	bool _invisible,
 	bool _update
 )
@@ -115,13 +116,32 @@ bool DeclarationContainer::registerDeclaration(
 		m_declarations.erase(*_name);
 		m_invisibleDeclarations.erase(*_name);
 	}
-	else if (conflictingDeclaration(_declaration, _name))
-		return false;
+	else
+	{
+		if (conflictingDeclaration(_declaration, _name))
+			return false;
+
+		// Do not warn about shadowing for structs and enums because their members are
+		// not accessible without prefixes. Also do not warn about event parameters
+		// because they do not participate in any proper scope.
+		bool special = _declaration.scope() && (_declaration.isStructMember() || _declaration.isEnumValue() || _declaration.isEventParameter());
+		if (m_enclosingContainer && !special)
+			m_homonymCandidates.emplace_back(*_name, _location ? _location : &_declaration.location());
+	}
 
 	vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
 	if (!util::contains(decls, &_declaration))
 		decls.push_back(&_declaration);
 	return true;
+}
+
+bool DeclarationContainer::registerDeclaration(
+	Declaration const& _declaration,
+	bool _invisible,
+	bool _update
+)
+{
+	return registerDeclaration(_declaration, nullptr, nullptr, _invisible, _update);
 }
 
 vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive, bool _alsoInvisible) const
@@ -163,4 +183,17 @@ vector<ASTString> DeclarationContainer::similarNames(ASTString const& _name) con
 		similar += m_enclosingContainer->similarNames(_name);
 
 	return similar;
+}
+
+void DeclarationContainer::populateHomonyms(back_insert_iterator<Homonyms> _it) const
+{
+	for (DeclarationContainer const* innerContainer: m_innerContainers)
+		innerContainer->populateHomonyms(_it);
+
+	for (auto [name, location]: m_homonymCandidates)
+	{
+		vector<Declaration const*> const& declarations = m_enclosingContainer->resolveName(name, true, true);
+		if (!declarations.empty())
+			_it = make_pair(location, declarations);
+	}
 }

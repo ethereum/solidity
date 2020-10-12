@@ -27,10 +27,35 @@ using namespace solidity::smtutil;
 
 namespace solidity::frontend::smt
 {
+smtutil::Expression interfacePre(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context)
+{
+	auto& state = _context.state();
+	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.state(0)};
+	return _pred(stateExprs + initialStateVariables(_contract, _context));
+}
 
 smtutil::Expression interface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context)
 {
-	return _pred(currentStateVariables(_contract, _context));
+	auto& state = _context.state();
+	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.state()};
+	return _pred(stateExprs + currentStateVariables(_contract, _context));
+}
+
+smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context, unsigned _preIdx, unsigned _postIdx)
+{
+	return _pred(
+		vector<smtutil::Expression>{_context.state().state(_preIdx)} +
+		stateVariablesAtIndex(_preIdx, _contract, _context) +
+		vector<smtutil::Expression>{_context.state().state(_postIdx)} +
+		stateVariablesAtIndex(_postIdx, _contract, _context)
+	);
+}
+
+smtutil::Expression implicitConstructor(Predicate const& _pred, ContractDefinition const&, EncodingContext& _context)
+{
+	auto& state = _context.state();
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.state(0)};
+	return _pred(stateExprs);
 }
 
 smtutil::Expression constructor(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context)
@@ -38,16 +63,9 @@ smtutil::Expression constructor(Predicate const& _pred, ContractDefinition const
 	if (auto const* constructor = _contract.constructor())
 		return _pred(currentFunctionVariables(*constructor, &_contract, _context));
 
-	return _pred(
-		vector<smtutil::Expression>{_context.state().errorFlag().currentValue()} +
-		currentStateVariables(_contract, _context)
-	);
-}
-
-/// Currently it does not have arguments but it will have tx data in the future.
-smtutil::Expression implicitConstructor(Predicate const& _pred, ContractDefinition const&, EncodingContext&)
-{
-	return _pred({});
+	auto& state = _context.state();
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.state()};
+	return _pred(stateExprs + currentStateVariables(_contract, _context));
 }
 
 smtutil::Expression function(
@@ -99,9 +117,11 @@ vector<smtutil::Expression> currentFunctionVariables(
 	EncodingContext& _context
 )
 {
-	vector<smtutil::Expression> exprs{_context.state().errorFlag().currentValue()};
+	auto& state = _context.state();
+	vector<smtutil::Expression> exprs{_context.state().errorFlag().currentValue(), state.thisAddress(0), state.state(0)};
 	exprs += _contract ? initialStateVariables(*_contract, _context) : vector<smtutil::Expression>{};
 	exprs += applyMap(_function.parameters(), [&](auto _var) { return _context.variable(*_var)->valueAtIndex(0); });
+	exprs += vector<smtutil::Expression>{state.state()};
 	exprs += _contract ? currentStateVariables(*_contract, _context) : vector<smtutil::Expression>{};
 	exprs += applyMap(_function.parameters(), [&](auto _var) { return _context.variable(*_var)->currentValue(); });
 	exprs += applyMap(_function.returnParameters(), [&](auto _var) { return _context.variable(*_var)->currentValue(); });

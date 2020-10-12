@@ -111,6 +111,14 @@ activate it using ``pragma experimental ABIEncoderV2;`` - we kept
 the same pragma, even though it is not considered experimental
 anymore.
 
+The set of types supported by the new encoder is a strict superset of
+the ones supported by the old one. Contracts that use it can interact with ones
+that do not without limitations. The reverse is possible only as long as the
+non-``ABIEncoderV2`` contract does not try to make calls that would require
+decoding types only supported by the new encoder. The compiler can detect this
+and will issue an error. Simply enabling ``ABIEncoderV2`` for your contract is
+enough to make the error go away.
+
 .. _smt_checker:
 
 SMTChecker

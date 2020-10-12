@@ -28,6 +28,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/StringUtils.h>
 #include <boost/algorithm/string.hpp>
+#include <unordered_set>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -47,7 +48,7 @@ NameAndTypeResolver::NameAndTypeResolver(
 	m_scopes[nullptr] = make_shared<DeclarationContainer>();
 	for (Declaration const* declaration: _globalContext.declarations())
 	{
-		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration), "Unable to register global declaration.");
+		solAssert(m_scopes[nullptr]->registerDeclaration(*declaration, false, false), "Unable to register global declaration.");
 	}
 }
 
@@ -149,7 +150,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 {
 	try
 	{
-		m_scopes[nullptr]->registerDeclaration(_declaration, nullptr, false, true);
+		m_scopes[nullptr]->registerDeclaration(_declaration, false, true);
 		solAssert(_declaration.scope() == nullptr, "Updated declaration outside global scope.");
 	}
 	catch (langutil::FatalError const&)
@@ -202,7 +203,7 @@ Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> c
 		return nullptr;
 }
 
-void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
+void NameAndTypeResolver::warnVariablesNamedLikeInstructions() const
 {
 	for (auto const& instruction: evmasm::c_instructions)
 	{
@@ -220,6 +221,52 @@ void NameAndTypeResolver::warnVariablesNamedLikeInstructions()
 				"Variable is shadowed in inline assembly by an instruction of the same name"
 			);
 		}
+	}
+}
+
+void NameAndTypeResolver::warnHomonymDeclarations() const
+{
+	DeclarationContainer::Homonyms homonyms;
+	m_scopes.at(nullptr)->populateHomonyms(back_inserter(homonyms));
+
+	for (auto [innerLocation, outerDeclarations]: homonyms)
+	{
+		solAssert(innerLocation && !outerDeclarations.empty(), "");
+
+		bool magicShadowed = false;
+		SecondarySourceLocation homonymousLocations;
+		SecondarySourceLocation shadowedLocations;
+		for (Declaration const* outerDeclaration: outerDeclarations)
+		{
+			solAssert(outerDeclaration, "");
+			if (dynamic_cast<MagicVariableDeclaration const*>(outerDeclaration))
+				magicShadowed = true;
+			else if (!outerDeclaration->isVisibleInContract())
+				homonymousLocations.append("The other declaration is here:", outerDeclaration->location());
+			else
+				shadowedLocations.append("The shadowed declaration is here:", outerDeclaration->location());
+		}
+
+		if (magicShadowed)
+			m_errorReporter.warning(
+				2319_error,
+				*innerLocation,
+				"This declaration shadows a builtin symbol."
+			);
+		if (!homonymousLocations.infos.empty())
+			m_errorReporter.warning(
+				8760_error,
+				*innerLocation,
+				"This declaration has the same name as another declaration.",
+				homonymousLocations
+			);
+		if (!shadowedLocations.infos.empty())
+			m_errorReporter.warning(
+				2519_error,
+				*innerLocation,
+				"This declaration shadows an existing declaration.",
+				shadowedLocations
+			);
 	}
 }
 
@@ -281,8 +328,8 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		}
 
 		// make "this" and "super" invisible.
-		m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), nullptr, true, true);
-		m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, true, true);
+		m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), true, true);
+		m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), true, true);
 		m_globalContext.resetCurrentContract();
 
 		return success;
@@ -303,7 +350,7 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 		for (auto const& declaration: nameAndDeclaration.second)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->scope() == &_base && declaration->isVisibleInDerivedContracts())
-				if (!m_currentScope->registerDeclaration(*declaration))
+				if (!m_currentScope->registerDeclaration(*declaration, false, false))
 				{
 					SourceLocation firstDeclarationLocation;
 					SourceLocation secondDeclarationLocation;
@@ -458,19 +505,11 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 		_errorLocation = &_declaration.location();
 
 	string name = _name ? *_name : _declaration.name();
-	Declaration const* shadowedDeclaration = nullptr;
-	// Do not warn about shadowing for structs and enums because their members are
-	// not accessible without prefixes. Also do not warn about event parameters
-	// because they do not participate in any proper scope.
-	bool warnOnShadow = !_declaration.isStructMember() && !_declaration.isEnumValue() && !_declaration.isEventParameter();
-	if (warnOnShadow && !name.empty() && _container.enclosingContainer())
-		for (auto const* decl: _container.enclosingContainer()->resolveName(name, true, true))
-			shadowedDeclaration = decl;
 
 	// We use "invisible" for both inactive variables in blocks and for members invisible in contracts.
 	// They cannot both be true at the same time.
 	solAssert(!(_inactive && !_declaration.isVisibleInContract()), "");
-	if (!_container.registerDeclaration(_declaration, _name, !_declaration.isVisibleInContract() || _inactive))
+	if (!_container.registerDeclaration(_declaration, _name, _errorLocation, !_declaration.isVisibleInContract() || _inactive, false))
 	{
 		SourceLocation firstDeclarationLocation;
 		SourceLocation secondDeclarationLocation;
@@ -499,34 +538,7 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 		);
 		return false;
 	}
-	else if (shadowedDeclaration)
-	{
-		if (dynamic_cast<MagicVariableDeclaration const*>(shadowedDeclaration))
-			_errorReporter.warning(
-				2319_error,
-				*_errorLocation,
-				"This declaration shadows a builtin symbol."
-			);
-		else
-		{
-			auto shadowedLocation = shadowedDeclaration->location();
 
-			if (!shadowedDeclaration->isVisibleInContract())
-				_errorReporter.warning(
-					8760_error,
-					_declaration.location(),
-					"This declaration has the same name as another declaration.",
-					SecondarySourceLocation().append("The other declaration is here:", shadowedLocation)
-				);
-			else
-				_errorReporter.warning(
-					2519_error,
-					_declaration.location(),
-					"This declaration shadows an existing declaration.",
-					SecondarySourceLocation().append("The shadowed declaration is here:", shadowedLocation)
-			);
-		}
-	}
 	return true;
 }
 
@@ -556,8 +568,8 @@ bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
 bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 {
 	m_globalContext.setCurrentContract(_contract);
-	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), nullptr, false, true);
-	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, false, true);
+	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), false, true);
+	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), false, true);
 	m_currentContract = &_contract;
 
 	return ASTVisitor::visit(_contract);
@@ -566,8 +578,8 @@ bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 void DeclarationRegistrationHelper::endVisit(ContractDefinition& _contract)
 {
 	// make "this" and "super" invisible.
-	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), nullptr, true, true);
-	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), nullptr, true, true);
+	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentThis(), true, true);
+	m_scopes[nullptr]->registerDeclaration(*m_globalContext.currentSuper(), true, true);
 	m_globalContext.resetCurrentContract();
 	m_currentContract = nullptr;
 	ASTVisitor::endVisit(_contract);
@@ -612,11 +624,14 @@ void DeclarationRegistrationHelper::endVisitNode(ASTNode& _node)
 
 void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _subScope)
 {
-	shared_ptr<DeclarationContainer> container{make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())};
-	bool newlyAdded = m_scopes.emplace(&_subScope, move(container)).second;
-	// Source units are the only AST nodes for which containers can be created from multiple places
-	// due to imports.
-	solAssert(newlyAdded || dynamic_cast<SourceUnit const*>(&_subScope), "Unable to add new scope.");
+	if (m_scopes.count(&_subScope))
+		// Source units are the only AST nodes for which containers can be created from multiple places due to imports.
+		solAssert(dynamic_cast<SourceUnit const*>(&_subScope), "Unexpected scope type.");
+	else
+	{
+		bool newlyAdded = m_scopes.emplace(&_subScope, make_shared<DeclarationContainer>(m_currentScope, m_scopes[m_currentScope].get())).second;
+		solAssert(newlyAdded, "Unable to add new scope.");
+	}
 	m_currentScope = &_subScope;
 }
 
