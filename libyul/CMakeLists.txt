@@ -127,6 +127,8 @@ add_library(yul
 	optimiser/FullInliner.h
 	optimiser/FunctionCallFinder.cpp
 	optimiser/FunctionCallFinder.h
+	optimiser/FunctionDefinitionCollector.cpp
+	optimiser/FunctionDefinitionCollector.h
 	optimiser/FunctionGrouper.cpp
 	optimiser/FunctionGrouper.h
 	optimiser/FunctionHoister.cpp
