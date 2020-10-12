@@ -119,6 +119,13 @@ decoding types only supported by the new encoder. The compiler can detect this
 and will issue an error. Simply enabling ``ABIEncoderV2`` for your contract is
 enough to make the error go away.
 
+.. note::
+  This pragma applies to all the code defined in the file where it is activated,
+  regardless of where that code ends up eventually. This means that a contract
+  without the ``ABIEncoderV2`` pragma can still contain code that uses the new encoder
+  by inheriting it from another contract. This is allowed if the new types are only
+  used internally and not in external function signatures.
+
 .. _smt_checker:
 
 SMTChecker
