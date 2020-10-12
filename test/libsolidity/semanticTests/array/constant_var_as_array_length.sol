@@ -7,6 +7,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // constructor(): 1, 2, 3 ->
 // a(uint256): 0 -> 1
