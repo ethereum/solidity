@@ -2162,6 +2162,7 @@ void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefin
 		for (auto const& var: _function->localVariables())
 			m_context.variable(*var)->resetIndex();
 	}
+	m_context.state().reset();
 }
 
 Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)

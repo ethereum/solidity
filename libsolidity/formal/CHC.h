@@ -235,6 +235,7 @@ private:
 	/// it into m_errorIds.
 	unsigned newErrorId(Expression const& _expr);
 
+	smt::SymbolicState& state();
 	smt::SymbolicIntVariable& errorFlag();
 	//@}
 

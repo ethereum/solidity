@@ -20,6 +20,8 @@
 
 #include <libsolidity/formal/Predicate.h>
 
+#include <libsolidity/formal/SymbolicState.h>
+
 #include <libsmtutil/Sorts.h>
 
 namespace solidity::frontend::smt
@@ -31,46 +33,46 @@ namespace solidity::frontend::smt
  *
  * 1. Interface
  * The idle state of a contract. Signature:
- * interface(stateVariables).
+ * interface(this, blockchainState, stateVariables).
  *
  * 2. Nondet interface
  * The nondeterminism behavior of a contract. Signature:
- * nondet_interface(stateVariables, stateVariables').
+ * nondet_interface(blockchainState, stateVariables, blockchainState', stateVariables').
  *
  * 3. Implicit constructor
  * The implicit constructor of a contract, that is, without input parameters. Signature:
- * implicit_constructor().
+ * implicit_constructor(error, this, blockchainState).
  *
  * 4. Constructor entry/summary
  * The summary of an implicit constructor. Signature:
- * constructor_summary(error, stateVariables').
+ * constructor_summary(error, this, blockchainState, blockchainState', stateVariables').
  *
  * 5. Function entry/summary
  * The entry point of a function definition. Signature:
- * function_entry(error, stateVariables, inputVariables, stateVariables', inputVariables', outputVariables').
+ * function_entry(error, this, blockchainState, stateVariables, inputVariables, blockchainState', stateVariables', inputVariables', outputVariables').
  *
  * 6. Function body
  * Use for any predicate within a function. Signature:
- * function_body(error, stateVariables, inputVariables, stateVariables', inputVariables', outputVariables', localVariables).
+ * function_body(error, this, blockchainState, stateVariables, inputVariables, blockchainState' ,stateVariables', inputVariables', outputVariables', localVariables).
  */
 
 /// @returns the interface predicate sort for _contract.
-smtutil::SortPointer interfaceSort(ContractDefinition const& _contract);
+smtutil::SortPointer interfaceSort(ContractDefinition const& _contract, SymbolicState& _state);
 
 /// @returns the nondeterminisc interface predicate sort for _contract.
-smtutil::SortPointer nondetInterfaceSort(ContractDefinition const& _contract);
+smtutil::SortPointer nondetInterfaceSort(ContractDefinition const& _contract, SymbolicState& _state);
 
 /// @returns the implicit constructor predicate sort.
-smtutil::SortPointer implicitConstructorSort();
+smtutil::SortPointer implicitConstructorSort(SymbolicState& _state);
 
 /// @returns the constructor entry/summary predicate sort for _contract.
-smtutil::SortPointer constructorSort(ContractDefinition const& _contract);
+smtutil::SortPointer constructorSort(ContractDefinition const& _contract, SymbolicState& _state);
 
 /// @returns the function entry/summary predicate sort for _function contained in _contract.
-smtutil::SortPointer functionSort(FunctionDefinition const& _function, ContractDefinition const* _contract);
+smtutil::SortPointer functionSort(FunctionDefinition const& _function, ContractDefinition const* _contract, SymbolicState& _state);
 
 /// @returns the function body predicate sort for _function contained in _contract.
-smtutil::SortPointer functionBodySort(FunctionDefinition const& _function, ContractDefinition const* _contract);
+smtutil::SortPointer functionBodySort(FunctionDefinition const& _function, ContractDefinition const* _contract, SymbolicState& _state);
 
 /// @returns the sort of a predicate without parameters.
 smtutil::SortPointer arity0FunctionSort();

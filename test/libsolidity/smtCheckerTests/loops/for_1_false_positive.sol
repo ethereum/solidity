@@ -15,3 +15,4 @@ contract C
 }
 // ----
 // Warning 2661: (176-181): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4661: (296-309): BMC: Assertion violation happens here.
