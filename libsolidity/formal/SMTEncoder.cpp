@@ -633,6 +633,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ECRecover:
 	case FunctionType::Kind::SHA256:
 	case FunctionType::Kind::RIPEMD160:
+		visitCryptoFunction(_funCall);
 		break;
 	case FunctionType::Kind::BlockHash:
 		defineExpr(_funCall, m_context.state().blockhash(expr(*_funCall.arguments().at(0))));
@@ -728,6 +729,38 @@ void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 	solAssert(args.size() >= 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
 	addPathImpliedExpression(expr(*args.front()));
+}
+
+void SMTEncoder::visitCryptoFunction(FunctionCall const& _funCall)
+{
+	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	auto arg0 = expr(*_funCall.arguments().at(0));
+	optional<smtutil::Expression> result;
+	if (kind == FunctionType::Kind::KECCAK256)
+		result = smtutil::Expression::select(m_context.state().cryptoFunction("keccak256"), arg0);
+	else if (kind == FunctionType::Kind::SHA256)
+		result = smtutil::Expression::select(m_context.state().cryptoFunction("sha256"), arg0);
+	else if (kind == FunctionType::Kind::RIPEMD160)
+		result = smtutil::Expression::select(m_context.state().cryptoFunction("ripemd160"), arg0);
+	else if (kind == FunctionType::Kind::ECRecover)
+	{
+		auto e = m_context.state().cryptoFunction("ecrecover");
+		auto arg0 = expr(*_funCall.arguments().at(0));
+		auto arg1 = expr(*_funCall.arguments().at(1));
+		auto arg2 = expr(*_funCall.arguments().at(2));
+		auto arg3 = expr(*_funCall.arguments().at(3));
+		auto inputSort = dynamic_cast<smtutil::ArraySort&>(*e.sort).domain;
+		auto ecrecoverInput = smtutil::Expression::tuple_constructor(
+			smtutil::Expression(make_shared<smtutil::SortSort>(inputSort), ""),
+			{arg0, arg1, arg2, arg3}
+		);
+		result = smtutil::Expression::select(e, ecrecoverInput);
+	}
+	else
+		solAssert(false, "");
+
+	defineExpr(_funCall, *result);
 }
 
 void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)

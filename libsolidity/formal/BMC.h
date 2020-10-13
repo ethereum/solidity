@@ -99,8 +99,6 @@ private:
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const& _funCall);
-	/// Creates an uninterpreted function call.
-	void abstractFunctionCall(FunctionCall const& _funCall);
 	/// Inlines if the function call is internal or external to `this`.
 	/// Erases knowledge about state variables if external.
 	void internalOrExternalFunctionCall(FunctionCall const& _funCall);

@@ -7,6 +7,7 @@ Language Features:
 Compiler Features:
  * SMTChecker: Support inline arrays.
  * SMTChecker: Support variables ``block``, ``msg`` and ``tx`` in the CHC engine.
+ * SMTChecker: Support ``keccak256``, ``sha256``, ``ripemd160`` and ``ecrecover`` in the CHC engine.
  * Control Flow Graph: Print warning for non-empty functions with unnamed return parameters that are not assigned a value in all code paths.
 
 

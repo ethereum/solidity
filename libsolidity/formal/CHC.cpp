@@ -120,7 +120,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 		&_contract
 	);
 	addRule(
-		(*implicitConstructorPredicate)({0, state().thisAddress(), state().tx(), state().state()}),
+		(*implicitConstructorPredicate)({0, state().thisAddress(), state().crypto(), state().tx(), state().state()}),
 		implicitConstructorPredicate->functor().name
 	);
 	setCurrentBlock(*implicitConstructorPredicate);
@@ -874,7 +874,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
 						auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().tx(), state().state(1)};
+						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state(1)};
 						args += state1 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 							vector<smtutil::Expression>{state().state(2)} +
@@ -1053,7 +1053,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		return smtutil::Expression(true);
 
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().tx(), state().state()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state()};
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	solAssert(funType.kind() == FunctionType::Kind::Internal, "");
