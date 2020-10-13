@@ -18,13 +18,14 @@
 
 #pragma once
 
-#include <libsolidity/formal/EncodingContext.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 
 namespace solidity::frontend::smt
 {
+
+class EncodingContext;
 
 /// Returns the SMT sort that models the Solidity type _type.
 smtutil::SortPointer smtSort(frontend::Type const& _type);
@@ -77,6 +78,7 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context);
 void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext& _context);
 void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context);
+smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::TypePointer const& _type);
 
 std::optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to);
 }
