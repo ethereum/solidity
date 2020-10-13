@@ -50,6 +50,7 @@
 //     }
 //     function f(a1) -> v
 //     {
+//         mstore(0x80, a1)
 //         let a2 := calldataload(mul(2, 4))
 //         let a3 := calldataload(mul(3, 4))
 //         let a4 := calldataload(mul(4, 4))
@@ -66,7 +67,7 @@
 //         let a15 := calldataload(mul(15, 4))
 //         let a16 := calldataload(mul(16, 4))
 //         let a17 := calldataload(mul(17, 4))
-//         sstore(0, a1)
+//         sstore(0, mload(0x80))
 //         sstore(mul(17, 4), a17)
 //         sstore(mul(16, 4), a16)
 //         sstore(mul(15, 4), a15)
@@ -83,6 +84,6 @@
 //         sstore(mul(4, 4), a4)
 //         sstore(mul(3, 4), a3)
 //         sstore(mul(2, 4), a2)
-//         sstore(mul(1, 4), a1)
+//         sstore(mul(1, 4), mload(0x80))
 //     }
 // }
