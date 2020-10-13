@@ -189,7 +189,7 @@ string Predicate::formatSummaryCall(vector<string> const& _args) const
 vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
-	/// The signature of an implicit constructor summary predicate is: summary(error, this, txData, postBlockchainState, postStateVars).
+	/// The signature of an implicit constructor summary predicate is: summary(error, this, txData, preBlockSchainState, postBlockchainState, postStateVars).
 	/// Here we are interested in postStateVars.
 
 	auto stateVars = stateVariables();
@@ -204,7 +204,7 @@ vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 	}
 	else if (programContract())
 	{
-		stateFirst = _args.begin() + 4;
+		stateFirst = _args.begin() + 5;
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else
