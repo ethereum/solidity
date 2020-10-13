@@ -15,6 +15,9 @@
 //     mstore(0x00, 0)
 //     sstore(0, mload(0x00))
 //     function h($hx) -> y
-//     { y := $hx }
+//     {
+//         mstore(0x20, $hx)
+//         y := mload(0x20)
+//     }
 //     sstore(1, h(32))
 // }
