@@ -9,9 +9,9 @@ contract Small {
 // optimize-runs: 2
 // ----
 // creation:
-//   codeDepositCost: 60600
+//   codeDepositCost: 61200
 //   executionCost: 111
-//   totalCost: 60711
+//   totalCost: 61311
 // external:
 //   fallback: 118
 //   a(): 976
