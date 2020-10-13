@@ -26,6 +26,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
@@ -126,11 +127,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 			.render();
 
 		int const hashHeaderSize = 4;
-		int const byteSize = 8;
-		u256 const errorHash =
-			u256(FixedHash<hashHeaderSize>::Arith(
-				FixedHash<hashHeaderSize>(keccak256("Error(string)"))
-			)) << (256 - hashHeaderSize * byteSize);
+		u256 const errorHash = util::selectorFromSignature("Error(string)");
 
 		string const encodeFunc = ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector)
 			.tupleEncoder(
@@ -631,6 +628,119 @@ string YulUtilFunctions::overflowCheckedIntExpFunction(
 			("minValue", toCompactHexWithPrefix(_type.min()))
 			("baseCleanupFunction", cleanupFunction(_type))
 			("exponentCleanupFunction", cleanupFunction(_exponentType))
+			.render();
+	});
+}
+
+string YulUtilFunctions::overflowCheckedIntLiteralExpFunction(
+	RationalNumberType const& _baseType,
+	IntegerType const& _exponentType,
+	IntegerType const& _commonType
+)
+{
+	solAssert(!_exponentType.isSigned(), "");
+	solAssert(_baseType.isNegative() == _commonType.isSigned(), "");
+	solAssert(_commonType.numBits() == 256, "");
+
+	string functionName = "checked_exp_" + _baseType.richIdentifier() + "_" + _exponentType.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]()
+	{
+		// Converts a bigint number into u256 (negative numbers represented in two's complement form.)
+		// We assume that `_v` fits in 256 bits.
+		auto bigint2u = [&](bigint const& _v) -> u256
+		{
+			if (_v < 0)
+				return s2u(s256(_v));
+			return u256(_v);
+		};
+
+		// Calculates the upperbound for exponentiation, that is, calculate `b`, such that
+		// _base**b <= _maxValue and _base**(b + 1) > _maxValue
+		auto findExponentUpperbound = [](bigint const _base, bigint const _maxValue) -> unsigned
+		{
+			// There is no overflow for these cases
+			if (_base == 0 || _base == -1 || _base == 1)
+				return 0;
+
+			unsigned first = 0;
+			unsigned last = 255;
+			unsigned middle;
+
+			while (first < last)
+			{
+				middle = (first + last) / 2;
+
+				if (
+					// The condition on msb is a shortcut that avoids computing large powers in
+					// arbitrary precision.
+					boost::multiprecision::msb(_base) * middle <= boost::multiprecision::msb(_maxValue) &&
+					boost::multiprecision::pow(_base, middle) <= _maxValue
+				)
+				{
+					if (boost::multiprecision::pow(_base, middle + 1) > _maxValue)
+						return middle;
+					else
+						first = middle + 1;
+				}
+				else
+					last = middle;
+			}
+
+			return last;
+		};
+
+		bigint baseValue = _baseType.isNegative() ?
+			u2s(_baseType.literalValue(nullptr)) :
+			_baseType.literalValue(nullptr);
+		bool needsOverflowCheck = !((baseValue == 0) || (baseValue == -1) || (baseValue == 1));
+		unsigned exponentUpperbound;
+
+		if (_baseType.isNegative())
+		{
+			// Only checks for underflow. The only case where this can be a problem is when, for a
+			// negative base, say `b`, and an even exponent, say `e`, `b**e = 2**255` (which is an
+			// overflow.) But this never happens because, `255 = 3*5*17`, and therefore there is no even
+			// number `e` such that `b**e = 2**255`.
+			exponentUpperbound = findExponentUpperbound(abs(baseValue), abs(_commonType.minValue()));
+
+			bigint power = boost::multiprecision::pow(baseValue, exponentUpperbound);
+			bigint overflowedPower = boost::multiprecision::pow(baseValue, exponentUpperbound + 1);
+
+			if (needsOverflowCheck)
+				solAssert(
+					(power <= _commonType.maxValue()) && (power >= _commonType.minValue()) &&
+					!((overflowedPower <= _commonType.maxValue()) && (overflowedPower >= _commonType.minValue())),
+					"Incorrect exponent upper bound calculated."
+				);
+		}
+		else
+		{
+			exponentUpperbound = findExponentUpperbound(baseValue, _commonType.maxValue());
+
+			if (needsOverflowCheck)
+				solAssert(
+					boost::multiprecision::pow(baseValue, exponentUpperbound) <= _commonType.maxValue() &&
+					boost::multiprecision::pow(baseValue, exponentUpperbound + 1) > _commonType.maxValue(),
+					"Incorrect exponent upper bound calculated."
+				);
+		}
+
+		return Whiskers(R"(
+			function <functionName>(exponent) -> power {
+				exponent := <exponentCleanupFunction>(exponent)
+				<?needsOverflowCheck>
+				if gt(exponent, <exponentUpperbound>) { <panic>() }
+				</needsOverflowCheck>
+				power := exp(<base>, exponent)
+			}
+			)")
+			("functionName", functionName)
+			("exponentCleanupFunction", cleanupFunction(_exponentType))
+			("needsOverflowCheck", needsOverflowCheck)
+			("exponentUpperbound", to_string(exponentUpperbound))
+			("panic", panicFunction())
+			("base", bigint2u(baseValue).str())
 			.render();
 	});
 }
@@ -3079,7 +3189,7 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 			</word>
 			revert(0, add(reasonPos, <end>))
 		})");
-		templ("sig", (u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str());
+		templ("sig", util::selectorFromSignature("Error(string)").str());
 		templ("length", to_string(_message.length()));
 
 		size_t words = (_message.length() + 31) / 32;

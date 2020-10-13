@@ -29,6 +29,7 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/UTF8.h>
 
@@ -3596,7 +3597,7 @@ string FunctionType::externalSignature() const
 
 u256 FunctionType::externalIdentifier() const
 {
-	return util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(externalSignature())));
+	return util::selectorFromSignature32(externalSignature());
 }
 
 string FunctionType::externalIdentifierHex() const

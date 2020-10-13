@@ -169,6 +169,11 @@ protected:
 	/// an empty array.
 	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
 
+	void addArrayLiteralAssertions(
+		smt::SymbolicArrayVariable& _symArray,
+		std::vector<smtutil::Expression> const& _elementValues
+	);
+
 	/// Division expression in the given type. Requires special treatment because
 	/// of rounding for signed division.
 	smtutil::Expression division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type);

@@ -12,13 +12,14 @@ Language Features:
 
 
 Compiler Features:
-
+ * SMTChecker: Support inline arrays.
 
 Bugfixes:
  * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.
  * Code generator: Fix ``ABIEncoderV2`` pragma from the current module affecting inherited functions and applied modifiers.
  * Type Checker: Fix internal compiler error caused by storage parameters with nested mappings in libraries.
  * Name Resolver: Fix shadowing/same-name warnings for later declarations.
+ * Contract Level Checker: Add missing check against inheriting functions with ABIEncoderV2 return types in ABIEncoderV1 contracts.
 
 
 ### 0.7.3 (2020-10-07)
