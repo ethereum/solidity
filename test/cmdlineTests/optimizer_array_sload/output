@@ -33,14 +33,12 @@ object "Arraysum_33" {
                         for { }
                         lt(vloc_i, _2)
                         {
-                            if eq(vloc_i, not(0)) { invalid() }
+                            if eq(vloc_i, not(0)) { panic_error_0x11() }
                             vloc_i := add(vloc_i, 1)
                         }
                         {
                             mstore(_1, _1)
-                            let _3 := sload(add(keccak256(_1, 0x20), vloc_i))
-                            if gt(vloc_sum, not(_3)) { invalid() }
-                            vloc_sum := add(vloc_sum, _3)
+                            vloc_sum := checked_add_t_uint256(vloc_sum, sload(add(keccak256(_1, 0x20), vloc_i)))
                         }
                         let memPos := allocateMemory(_1)
                         return(memPos, sub(abi_encode_uint(memPos, vloc_sum), memPos))
@@ -57,8 +55,24 @@ object "Arraysum_33" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr))
+                {
+                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(4, 0x41)
+                    revert(0, 0x24)
+                }
                 mstore(64, newFreePtr)
+            }
+            function checked_add_t_uint256(x, y) -> sum
+            {
+                if gt(x, not(y)) { panic_error_0x11() }
+                sum := add(x, y)
+            }
+            function panic_error_0x11()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x11)
+                revert(0, 0x24)
             }
         }
     }

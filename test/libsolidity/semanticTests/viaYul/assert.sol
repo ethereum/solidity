@@ -17,6 +17,6 @@ contract C {
 // compileViaYul: true
 // ----
 // f(bool): true -> true
-// f(bool): false -> FAILURE
-// fail() -> FAILURE
+// f(bool): false -> FAILURE, hex"4e487b71", 0x01
+// fail() -> FAILURE, hex"4e487b71", 0x01
 // succeed() -> true

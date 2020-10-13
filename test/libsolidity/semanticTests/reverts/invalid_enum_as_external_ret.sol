@@ -26,7 +26,8 @@ contract C {
 
 // ====
 // compileViaYul: also
+// EVMVersion: >=byzantium
 // ----
-// test_return() -> FAILURE # both should throw #
-// test_inline_assignment() -> FAILURE
-// test_assignment() -> FAILURE
+// test_return() -> FAILURE, hex"4e487b71", 33 # both should throw #
+// test_inline_assignment() -> FAILURE, hex"4e487b71", 33
+// test_assignment() -> FAILURE, hex"4e487b71", 33

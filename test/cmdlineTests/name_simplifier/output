@@ -33,7 +33,7 @@ object "C_59" {
                         if gt(offset, _3) { revert(_1, _1) }
                         if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
                         let length := calldataload(add(4, offset))
-                        if gt(length, _3) { invalid() }
+                        if gt(length, _3) { panic_error_0x41() }
                         let _4 := mul(length, _2)
                         let dst := allocateMemory(add(_4, _2))
                         let dst_1 := dst
@@ -60,7 +60,7 @@ object "C_59" {
                 if slt(sub(end, headStart), 0x20) { revert(value, value) }
                 let memPtr := mload(64)
                 let newFreePtr := add(memPtr, 0x20)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
                 value := memPtr
                 mstore(memPtr, calldataload(headStart))
@@ -87,14 +87,14 @@ object "C_59" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
             function convert_t_stringliteral_6490_to_t_string() -> converted
             {
                 let memPtr := mload(64)
                 let newFreePtr := add(memPtr, 160)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
                 converted := memPtr
                 mstore(memPtr, 100)
@@ -109,26 +109,37 @@ object "C_59" {
             }
             function fun_sumArray_58(vloc__s_22_mpos) -> vloc, vloc__27_mpos
             {
-                let _1 := mload(vloc__s_22_mpos)
-                if iszero(lt(vloc, _1)) { invalid() }
-                let _2 := mload(mload(add(add(vloc__s_22_mpos, mul(vloc, 32)), 32)))
-                let _3, _4 := storage_array_index_access$_t_struct$_S_storage(vloc, vloc)
-                sstore(_3, _2)
-                if iszero(lt(0x01, _1)) { invalid() }
-                let _5 := mload(mload(add(vloc__s_22_mpos, 64)))
-                if iszero(lt(vloc, 0x02)) { invalid() }
+                if iszero(lt(vloc, mload(vloc__s_22_mpos))) { panic_error_0x32() }
+                let _1 := mload(mload(add(add(vloc__s_22_mpos, mul(vloc, 32)), 32)))
+                let _2, _3 := storage_array_index_access$_t_struct$_S_storage(vloc, vloc)
+                sstore(_2, _1)
+                if iszero(lt(0x01, mload(vloc__s_22_mpos))) { panic_error_0x32() }
+                let _4 := mload(mload(add(vloc__s_22_mpos, 64)))
+                if iszero(lt(vloc, 0x02)) { panic_error_0x32() }
                 let slot := add(0x02, vloc)
-                let _6 := sload(slot)
+                let _5 := sload(slot)
                 let shiftBits := mul(vloc, 8)
                 let mask := shl(shiftBits, not(0))
-                sstore(slot, or(and(_6, not(mask)), and(shl(shiftBits, _5), mask)))
-                let _7, _8 := storage_array_index_access$_t_struct$_S_storage(0x02, vloc)
-                vloc := extract_from_storage_value_dynamict_uint256(sload(_7), _8)
+                sstore(slot, or(and(_5, not(mask)), and(shl(shiftBits, _4), mask)))
+                let _6, _7 := storage_array_index_access$_t_struct$_S_storage(0x02, vloc)
+                vloc := extract_from_storage_value_dynamict_uint256(sload(_6), _7)
                 vloc__27_mpos := convert_t_stringliteral_6490_to_t_string()
+            }
+            function panic_error_0x32()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x32)
+                revert(0, 0x24)
+            }
+            function panic_error_0x41()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(0, 0x24)
             }
             function storage_array_index_access$_t_struct$_S_storage(array, index) -> slot, offset
             {
-                if iszero(lt(index, 0x02)) { invalid() }
+                if iszero(lt(index, 0x02)) { panic_error_0x32() }
                 slot := add(array, index)
                 offset := offset
             }

@@ -33,6 +33,7 @@
 
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/ErrorCodes.h>
 
 #include <functional>
 
@@ -200,6 +201,9 @@ public:
 	{
 		return bytes();
 	}
+	/// @returns error returndata corresponding to the Panic(uint256) error code,
+	/// if REVERT is supported by the current EVM version and the empty string otherwise.
+	bytes panicData(util::PanicCode _code);
 
 	//@todo might be extended in the future
 	template <class Arg>

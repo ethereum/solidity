@@ -9,4 +9,4 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// test() -> FAILURE
+// test() -> FAILURE, hex"4e487b71", 0x31

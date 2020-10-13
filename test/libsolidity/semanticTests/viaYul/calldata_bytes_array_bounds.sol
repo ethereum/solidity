@@ -9,4 +9,4 @@ contract C {
 // ----
 // f(bytes[],uint256): 0x40, 0, 1, 0x20, 2, hex"6162" -> 0x61
 // f(bytes[],uint256): 0x40, 1, 1, 0x20, 2, hex"6162" -> 0x62
-// f(bytes[],uint256): 0x40, 2, 1, 0x20, 2, hex"6162" -> FAILURE
+// f(bytes[],uint256): 0x40, 2, 1, 0x20, 2, hex"6162" -> FAILURE, hex"4e487b71", 0x32

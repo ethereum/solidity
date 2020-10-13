@@ -24,7 +24,8 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// EVMVersion: >=byzantium
 // ----
 // test_eq_ok() -> 1
-// test_eq() -> FAILURE # both should throw #
-// test_neq() -> FAILURE
+// test_eq() -> FAILURE, hex"4e487b71", 33 # both should throw #
+// test_neq() -> FAILURE, hex"4e487b71", 33

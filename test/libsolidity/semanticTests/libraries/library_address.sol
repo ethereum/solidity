@@ -51,6 +51,6 @@ contract C {
 // j(uint256): 1 -> 1
 // j(uint256): 2 -> 4
 // j(uint256): 4 -> 16
-// k(uint256): 1 -> FAILURE
-// k(uint256): 2 -> FAILURE
-// k(uint256): 4 -> FAILURE
+// k(uint256): 1 -> FAILURE, hex"4e487b71", 0x01
+// k(uint256): 2 -> FAILURE, hex"4e487b71", 0x01
+// k(uint256): 4 -> FAILURE, hex"4e487b71", 0x01

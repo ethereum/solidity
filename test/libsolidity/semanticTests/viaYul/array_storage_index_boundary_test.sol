@@ -12,12 +12,12 @@ contract C {
 // ====
 // compileViaYul: true
 // ----
-// test_boundary_check(uint256, uint256): 10, 11 -> FAILURE
-// test_boundary_check(uint256, uint256): 10, 9 -> 0
-// test_boundary_check(uint256, uint256): 1, 9 -> FAILURE
-// test_boundary_check(uint256, uint256): 1, 1 -> FAILURE
-// test_boundary_check(uint256, uint256): 10, 10 -> FAILURE
-// test_boundary_check(uint256, uint256): 256, 256 -> FAILURE
-// test_boundary_check(uint256, uint256): 256, 255 -> 0
-// test_boundary_check(uint256, uint256): 256, 0xFFFF -> FAILURE
-// test_boundary_check(uint256, uint256): 256, 2 -> 0
+// test_boundary_check(uint256,uint256): 10, 11 -> FAILURE, hex"4e487b71", 0x32
+// test_boundary_check(uint256,uint256): 10, 9 -> 0
+// test_boundary_check(uint256,uint256): 1, 9 -> FAILURE, hex"4e487b71", 0x32
+// test_boundary_check(uint256,uint256): 1, 1 -> FAILURE, hex"4e487b71", 0x32
+// test_boundary_check(uint256,uint256): 10, 10 -> FAILURE, hex"4e487b71", 0x32
+// test_boundary_check(uint256,uint256): 256, 256 -> FAILURE, hex"4e487b71", 0x32
+// test_boundary_check(uint256,uint256): 256, 255 -> 0
+// test_boundary_check(uint256,uint256): 256, 0xFFFF -> FAILURE, hex"4e487b71", 0x32
+// test_boundary_check(uint256,uint256): 256, 2 -> 0

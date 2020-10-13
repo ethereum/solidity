@@ -61,7 +61,7 @@ object \"C_6\" {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
                 // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
 
@@ -69,8 +69,10 @@ object \"C_6\" {
 
             }
 
-            function panic_error() {
-                invalid()
+            function panic_error_0x41() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x41)
+                revert(0, 0x24)
             }
 
             function shift_right_224_unsigned(value) -> newValue {

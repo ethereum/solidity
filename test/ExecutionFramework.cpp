@@ -28,6 +28,7 @@
 #include <test/evmc/evmc.hpp>
 
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -110,6 +111,14 @@ std::pair<bool, string> ExecutionFramework::compareAndCreateMessage(
 			"\n";
 	}
 	return make_pair(false, message);
+}
+
+bytes ExecutionFramework::panicData(util::PanicCode _code)
+{
+	return
+		m_evmVersion.supportsReturndata() ?
+		toCompactBigEndian(selectorFromSignature32("Panic(uint256)"), 4) + encode(u256(_code)) :
+		bytes();
 }
 
 u256 ExecutionFramework::gasLimit() const

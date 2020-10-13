@@ -103,7 +103,7 @@ object "C_80" {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
                 // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
 
@@ -116,7 +116,7 @@ object "C_80" {
             function checked_exp_t_rational_10_by_1_t_uint256(exponent) -> power {
                 exponent := cleanup_t_uint256(exponent)
 
-                if gt(exponent, 77) { panic_error() }
+                if gt(exponent, 77) { panic_error_0x11() }
 
                 power := exp(10, exponent)
             }
@@ -124,7 +124,7 @@ object "C_80" {
             function checked_exp_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_t_uint256(exponent) -> power {
                 exponent := cleanup_t_uint256(exponent)
 
-                if gt(exponent, 1) { panic_error() }
+                if gt(exponent, 1) { panic_error_0x11() }
 
                 power := exp(115792089237316195423570985008687907853269984665640564039457584007913129639935, exponent)
             }
@@ -138,7 +138,7 @@ object "C_80" {
             function checked_exp_t_rational_2_by_1_t_uint256(exponent) -> power {
                 exponent := cleanup_t_uint256(exponent)
 
-                if gt(exponent, 255) { panic_error() }
+                if gt(exponent, 255) { panic_error_0x11() }
 
                 power := exp(2, exponent)
             }
@@ -152,7 +152,7 @@ object "C_80" {
             function checked_exp_t_rational_minus_2_by_1_t_uint256(exponent) -> power {
                 exponent := cleanup_t_uint256(exponent)
 
-                if gt(exponent, 255) { panic_error() }
+                if gt(exponent, 255) { panic_error_0x11() }
 
                 power := exp(115792089237316195423570985008687907853269984665640564039457584007913129639934, exponent)
             }
@@ -274,8 +274,16 @@ object "C_80" {
 
             }
 
-            function panic_error() {
-                invalid()
+            function panic_error_0x11() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x11)
+                revert(0, 0x24)
+            }
+
+            function panic_error_0x41() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x41)
+                revert(0, 0x24)
             }
 
             function shift_right_224_unsigned(value) -> newValue {
