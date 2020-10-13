@@ -3,6 +3,7 @@
 Breaking Changes:
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
+ * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.
 
 
 Language Features:
