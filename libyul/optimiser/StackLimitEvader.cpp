@@ -18,6 +18,7 @@
 #include <libyul/optimiser/StackLimitEvader.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/FunctionCallFinder.h>
+#include <libyul/optimiser/FunctionDefinitionCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -66,12 +67,37 @@ struct MemoryOffsetAllocator
 		if (unreachableVariables.count(_function))
 		{
 			yulAssert(!slotAllocations.count(_function), "");
+
+			if (functionDefinitions.count(_function))
+			{
+				FunctionDefinition const* functionDefinition = functionDefinitions.at(_function);
+				yulAssert(functionDefinition, "");
+				size_t totalArgCount = functionDefinition->returnVariables.size() + functionDefinition->parameters.size();
+				size_t slotsNeeded = (totalArgCount > 16) ? totalArgCount - 16 : 0;
+
+				if (slotsNeeded)
+					for (TypedName const& param: functionDefinition->parameters)
+					{
+						slotAllocations[param.name] = requiredSlots++;
+						if (!--slotsNeeded)
+							break;
+					}
+				if (slotsNeeded)
+					for (TypedName const& returnVar: functionDefinition->returnVariables)
+					{
+						slotAllocations[returnVar.name] = requiredSlots++;
+						if (!--slotsNeeded)
+							break;
+					}
+				yulAssert(!slotsNeeded, "");
+			}
+
+			// Assign slots for all variables that become unreachable in the function body, if the above did not
+			// assign a slot for them already.
 			for (YulString variable: unreachableVariables.at(_function))
-				if (variable.empty())
-				{
-					// TODO: Too many function arguments or return parameters.
-				}
-				else
+				// The empty case is a function with too many arguments or return values,
+				// which was already handled above.
+				if (!variable.empty() && !slotAllocations.count(variable))
 					slotAllocations[variable] = requiredSlots++;
 		}
 
@@ -80,6 +106,7 @@ struct MemoryOffsetAllocator
 
 	map<YulString, set<YulString>> const& unreachableVariables;
 	map<YulString, set<YulString>> const& callGraph;
+	map<YulString, FunctionDefinition const*> const& functionDefinitions;
 
 	map<YulString, uint64_t> slotAllocations{};
 	map<YulString, uint64_t> slotsRequiredForFunction{};
@@ -128,7 +155,9 @@ void StackLimitEvader::run(
 		if (_unreachableVariables.count(function))
 			return;
 
-	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls};
+	map<YulString, FunctionDefinition const*> functionDefinitions = FunctionDefinitionCollector::run(*_object.code);
+
+	MemoryOffsetAllocator memoryOffsetAllocator{_unreachableVariables, callGraph.functionCalls, functionDefinitions};
 	uint64_t requiredSlots = memoryOffsetAllocator.run();
 
 	StackToMemoryMover::run(_context, reservedMemory, memoryOffsetAllocator.slotAllocations, requiredSlots, *_object.code);
