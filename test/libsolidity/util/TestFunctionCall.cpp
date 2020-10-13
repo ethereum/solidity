@@ -159,7 +159,7 @@ string TestFunctionCall::format(
 					BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
 					BytesUtils::formatRawBytes(
 						output,
-						ContractABIUtils::defaultParameters(ceil(output.size() / 32)),
+						ContractABIUtils::defaultParameters((output.size() + 31) / 32),
 						_linePrefix
 					);
 
@@ -248,7 +248,7 @@ string TestFunctionCall::formatBytesParameters(
 		}
 		else
 		{
-			ParameterList defaultParameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+			ParameterList defaultParameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 
 			ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
 			os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
