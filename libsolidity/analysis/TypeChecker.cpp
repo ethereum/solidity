@@ -22,6 +22,8 @@
  */
 
 #include <libsolidity/analysis/TypeChecker.h>
+
+#include <libsolidity/analysis/ConstantEvaluator.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -1548,7 +1550,8 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	TypePointer const& leftType = type(_operation.leftExpression());
 	TypePointer const& rightType = type(_operation.rightExpression());
 	TypeResult result = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
-	TypePointer commonType = result.get();
+	TypePointer originalCommonType = result.get();
+	TypePointer commonType = originalCommonType;
 	if (!commonType)
 	{
 		m_errorReporter.typeError(
@@ -1565,10 +1568,15 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 		commonType = leftType;
 	}
 	_operation.annotation().commonType = commonType;
-	_operation.annotation().type =
-		TokenTraits::isCompareOp(_operation.getOperator()) ?
-		TypeProvider::boolean() :
-		commonType;
+	if (TokenTraits::isCompareOp(_operation.getOperator()))
+		_operation.annotation().type = TypeProvider::boolean();
+	else
+	{
+		_operation.annotation().type = commonType;
+		if (originalCommonType)
+			if (TypePointer constantType = ConstantEvaluator(m_errorReporter).evaluate(_operation))
+				_operation.annotation().type = constantType;
+	}
 	_operation.annotation().isPure =
 		*_operation.leftExpression().annotation().isPure &&
 		*_operation.rightExpression().annotation().isPure;

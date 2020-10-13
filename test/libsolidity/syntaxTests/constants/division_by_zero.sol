@@ -5,5 +5,4 @@ contract c {
     uint constant b2 = 7 / (a2 - 1);
 }
 // ----
-// TypeError 1211: (88-94): Division by zero.
-// TypeError 1211: (119-131): Division by zero.
+// TypeError 6020: (88-94): Operator / not compatible with types int_const 7 and int_const 0

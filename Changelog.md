@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * SMTChecker: Support inline arrays.
+ * TypeChecker: Propagate constant values inside an arithmetic operation.
 
 Bugfixes:
  * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.

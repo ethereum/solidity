@@ -5,5 +5,4 @@ contract c {
     uint constant b2 = 3 % (a2 - 1);
 }
 // ----
-// TypeError 1211: (88-94): Modulo zero.
-// TypeError 1211: (119-131): Modulo zero.
+// TypeError 6020: (88-94): Operator % not compatible with types int_const 3 and int_const 0
