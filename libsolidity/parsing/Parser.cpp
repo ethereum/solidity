@@ -1606,7 +1606,13 @@ ASTPointer<Expression> Parser::parseBinaryExpression(
 		{
 			Token op = m_scanner->currentToken();
 			m_scanner->next();
-			ASTPointer<Expression> right = parseBinaryExpression(precedence + 1);
+
+			static_assert(TokenTraits::hasExpHighestPrecedence(), "Exp does not have the highest precedence");
+
+			// Parse a**b**c as a**(b**c)
+			ASTPointer<Expression> right = (op == Token::Exp) ?
+				parseBinaryExpression(precedence) :
+				parseBinaryExpression(precedence + 1);
 			nodeFactory.setEndPositionFromNode(right);
 			expression = nodeFactory.createNode<BinaryOperation>(expression, op, right);
 		}

@@ -337,7 +337,28 @@ namespace TokenTraits
 
 	// @returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
-	int precedence(Token tok);
+	constexpr int precedence(Token tok)
+	{
+		int8_t constexpr precs[TokenTraits::count()] =
+		{
+			#define T(name, string, precedence) precedence,
+			TOKEN_LIST(T, T)
+			#undef T
+		};
+		return precs[static_cast<size_t>(tok)];
+	}
+
+	constexpr bool hasExpHighestPrecedence()
+	{
+		constexpr int expPrecedence = TokenTraits::precedence(Token::Exp);
+		static_assert(expPrecedence == 14, "Exp precedence changed.");
+
+		#define T(name, string, precedence) ((Token::name == Token::Exp) || precedence < expPrecedence) &&
+		return
+			TOKEN_LIST(T, T)
+			true;
+		#undef T
+	}
 
 	std::tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(std::string const& _literal);
 
