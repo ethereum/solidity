@@ -444,7 +444,7 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		for (ASTPointer<ModifierInvocation> const& modifier: constructor->modifiers())
 			if (auto const* baseContract = dynamic_cast<ContractDefinition const*>(
-				modifier->name()->annotation().referencedDeclaration
+				modifier->name().annotation().referencedDeclaration
 			))
 				if (
 					FunctionDefinition const* baseConstructor = baseContract->constructor();

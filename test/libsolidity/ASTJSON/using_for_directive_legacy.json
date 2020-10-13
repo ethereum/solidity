@@ -75,11 +75,10 @@
               "attributes":
               {
                 "name": "L",
-                "referencedDeclaration": 1,
-                "type": "library L"
+                "referencedDeclaration": 1
               },
               "id": 2,
-              "name": "UserDefinedTypeName",
+              "name": "IdentifierPath",
               "src": "32:1:1"
             },
             {

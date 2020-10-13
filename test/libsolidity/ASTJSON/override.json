@@ -82,14 +82,9 @@
           {
             "id": 6,
             "name": "A",
-            "nodeType": "UserDefinedTypeName",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 5,
-            "src": "55:1:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_A_$5",
-              "typeString": "contract A"
-            }
+            "src": "55:1:1"
           },
           "id": 7,
           "nodeType": "InheritanceSpecifier",
@@ -199,14 +194,9 @@
           {
             "id": 17,
             "name": "B",
-            "nodeType": "UserDefinedTypeName",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 16,
-            "src": "134:1:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_B_$16",
-              "typeString": "contract B"
-            }
+            "src": "134:1:1"
           },
           "id": 18,
           "nodeType": "InheritanceSpecifier",
@@ -305,26 +295,16 @@
               {
                 "id": 25,
                 "name": "A",
-                "nodeType": "UserDefinedTypeName",
+                "nodeType": "IdentifierPath",
                 "referencedDeclaration": 5,
-                "src": "206:1:1",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": "t_contract$_A_$5",
-                  "typeString": "contract A"
-                }
+                "src": "206:1:1"
               },
               {
                 "id": 26,
                 "name": "B",
-                "nodeType": "UserDefinedTypeName",
+                "nodeType": "IdentifierPath",
                 "referencedDeclaration": 16,
-                "src": "209:1:1",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": "t_contract$_B_$16",
-                  "typeString": "contract B"
-                }
+                "src": "209:1:1"
               }
             ],
             "src": "197:14:1"

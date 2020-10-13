@@ -1293,14 +1293,14 @@ void ContractCompiler::appendModifierOrFunctionCode()
 		ASTPointer<ModifierInvocation> const& modifierInvocation = m_currentFunction->modifiers()[m_modifierDepth];
 
 		// constructor call should be excluded
-		if (dynamic_cast<ContractDefinition const*>(modifierInvocation->name()->annotation().referencedDeclaration))
+		if (dynamic_cast<ContractDefinition const*>(modifierInvocation->name().annotation().referencedDeclaration))
 			appendModifierOrFunctionCode();
 		else
 		{
-			solAssert(*modifierInvocation->name()->annotation().requiredLookup == VirtualLookup::Virtual, "");
+			solAssert(*modifierInvocation->name().annotation().requiredLookup == VirtualLookup::Virtual, "");
 
 			ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
-				*modifierInvocation->name()->annotation().referencedDeclaration
+				*modifierInvocation->name().annotation().referencedDeclaration
 			).resolveVirtual(m_context.mostDerivedContract());
 			CompilerContext::LocationSetter locationSetter(m_context, modifier);
 			std::vector<ASTPointer<Expression>> const& modifierArguments =

@@ -6,7 +6,7 @@
     {
       "C":
       [
-        11
+        12
       ]
     }
   },
@@ -28,10 +28,10 @@
         "fullyImplemented": true,
         "linearizedBaseContracts":
         [
-          11
+          12
         ],
         "name": "C",
-        "scope": 12
+        "scope": 13
       },
       "children":
       [
@@ -40,7 +40,7 @@
           {
             "canonicalName": "C.S",
             "name": "S",
-            "scope": 11,
+            "scope": 12,
             "visibility": "public"
           },
           "children":
@@ -85,7 +85,7 @@
             "constant": false,
             "mutability": "mutable",
             "name": "s",
-            "scope": 11,
+            "scope": 12,
             "stateVariable": true,
             "storageLocation": "default",
             "type": "struct C.S",
@@ -96,16 +96,28 @@
             {
               "attributes":
               {
-                "name": "S",
                 "referencedDeclaration": 3,
                 "type": "struct C.S"
               },
-              "id": 4,
+              "children":
+              [
+                {
+                  "attributes":
+                  {
+                    "name": "S",
+                    "referencedDeclaration": 3
+                  },
+                  "id": 4,
+                  "name": "IdentifierPath",
+                  "src": "42:1:1"
+                }
+              ],
+              "id": 5,
               "name": "UserDefinedTypeName",
               "src": "42:1:1"
             }
           ],
-          "id": 5,
+          "id": 6,
           "name": "VariableDeclaration",
           "src": "42:3:1"
         },
@@ -121,7 +133,7 @@
               null
             ],
             "name": "e",
-            "scope": 11,
+            "scope": 12,
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "public"
@@ -137,7 +149,7 @@
                 ]
               },
               "children": [],
-              "id": 6,
+              "id": 7,
               "name": "ParameterList",
               "src": "61:2:1"
             },
@@ -150,7 +162,7 @@
                 ]
               },
               "children": [],
-              "id": 7,
+              "id": 8,
               "name": "ParameterList",
               "src": "76:0:1"
             },
@@ -164,14 +176,14 @@
                     "externalReferences":
                     [
                       {
-                        "declaration": 5,
+                        "declaration": 6,
                         "isOffset": true,
                         "isSlot": false,
                         "src": "106:8:1",
                         "valueSize": 1
                       },
                       {
-                        "declaration": 5,
+                        "declaration": 6,
                         "isOffset": false,
                         "isSlot": true,
                         "src": "128:6:1",
@@ -181,27 +193,27 @@
                     "operations": "{\n    let x := s.offset\n    let y := mul(s.slot, 2)\n}"
                   },
                   "children": [],
-                  "id": 8,
+                  "id": 9,
                   "name": "InlineAssembly",
                   "src": "86:54:1"
                 }
               ],
-              "id": 9,
+              "id": 10,
               "name": "Block",
               "src": "76:70:1"
             }
           ],
-          "id": 10,
+          "id": 11,
           "name": "FunctionDefinition",
           "src": "51:95:1"
         }
       ],
-      "id": 11,
+      "id": 12,
       "name": "ContractDefinition",
       "src": "0:148:1"
     }
   ],
-  "id": 12,
+  "id": 13,
   "name": "SourceUnit",
   "src": "0:149:1"
 }

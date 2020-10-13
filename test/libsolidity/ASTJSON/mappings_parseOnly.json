@@ -1,6 +1,6 @@
 {
   "absolutePath": "a",
-  "id": 18,
+  "id": 20,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -9,7 +9,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
-      "id": 17,
+      "id": 19,
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
@@ -43,7 +43,7 @@
         },
         {
           "constant": false,
-          "id": 8,
+          "id": 9,
           "mutability": "mutable",
           "name": "a",
           "nodeType": "VariableDeclaration",
@@ -53,12 +53,18 @@
           "typeDescriptions": {},
           "typeName":
           {
-            "id": 7,
+            "id": 8,
             "keyType":
             {
-              "id": 5,
-              "name": "C",
+              "id": 6,
               "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 5,
+                "name": "C",
+                "nodeType": "IdentifierPath",
+                "src": "48:1:1"
+              },
               "src": "48:1:1",
               "typeDescriptions": {}
             },
@@ -67,7 +73,7 @@
             "typeDescriptions": {},
             "valueType":
             {
-              "id": 6,
+              "id": 7,
               "name": "bool",
               "nodeType": "ElementaryTypeName",
               "src": "53:4:1",
@@ -78,7 +84,7 @@
         },
         {
           "constant": false,
-          "id": 12,
+          "id": 13,
           "mutability": "mutable",
           "name": "b",
           "nodeType": "VariableDeclaration",
@@ -88,10 +94,10 @@
           "typeDescriptions": {},
           "typeName":
           {
-            "id": 11,
+            "id": 12,
             "keyType":
             {
-              "id": 9,
+              "id": 10,
               "name": "address",
               "nodeType": "ElementaryTypeName",
               "src": "74:7:1",
@@ -102,7 +108,7 @@
             "typeDescriptions": {},
             "valueType":
             {
-              "id": 10,
+              "id": 11,
               "name": "bool",
               "nodeType": "ElementaryTypeName",
               "src": "85:4:1",
@@ -113,7 +119,7 @@
         },
         {
           "constant": false,
-          "id": 16,
+          "id": 18,
           "mutability": "mutable",
           "name": "c",
           "nodeType": "VariableDeclaration",
@@ -123,12 +129,18 @@
           "typeDescriptions": {},
           "typeName":
           {
-            "id": 15,
+            "id": 17,
             "keyType":
             {
-              "id": 13,
-              "name": "E",
+              "id": 15,
               "nodeType": "UserDefinedTypeName",
+              "pathNode":
+              {
+                "id": 14,
+                "name": "E",
+                "nodeType": "IdentifierPath",
+                "src": "106:1:1"
+              },
               "src": "106:1:1",
               "typeDescriptions": {}
             },
@@ -137,7 +149,7 @@
             "typeDescriptions": {},
             "valueType":
             {
-              "id": 14,
+              "id": 16,
               "name": "bool",
               "nodeType": "ElementaryTypeName",
               "src": "111:4:1",

@@ -233,10 +233,12 @@ struct TypeNameAnnotation: ASTAnnotation
 	TypePointer type = nullptr;
 };
 
-struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
+struct IdentifierPathAnnotation: ASTAnnotation
 {
 	/// Referenced declaration, set during reference resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
+	/// What kind of lookup needs to be done (static, virtual, super) find the declaration.
+	SetOnce<VirtualLookup> requiredLookup;
 };
 
 struct ExpressionAnnotation: ASTAnnotation

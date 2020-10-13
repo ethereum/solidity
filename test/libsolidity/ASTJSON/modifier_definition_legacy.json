@@ -146,16 +146,11 @@
                 {
                   "attributes":
                   {
-                    "overloadedDeclarations":
-                    [
-                      null
-                    ],
-                    "referencedDeclaration": 6,
-                    "type": "modifier (uint256)",
-                    "value": "M"
+                    "name": "M",
+                    "referencedDeclaration": 6
                   },
                   "id": 8,
-                  "name": "Identifier",
+                  "name": "IdentifierPath",
                   "src": "52:1:1"
                 },
                 {

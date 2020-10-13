@@ -89,11 +89,10 @@
               "attributes":
               {
                 "name": "A",
-                "referencedDeclaration": 1,
-                "type": "contract A"
+                "referencedDeclaration": 1
               },
               "id": 2,
-              "name": "UserDefinedTypeName",
+              "name": "IdentifierPath",
               "src": "29:1:1"
             }
           ],
@@ -140,11 +139,10 @@
               "attributes":
               {
                 "name": "B",
-                "referencedDeclaration": 4,
-                "type": "contract B"
+                "referencedDeclaration": 4
               },
               "id": 5,
-              "name": "UserDefinedTypeName",
+              "name": "IdentifierPath",
               "src": "49:1:1"
             }
           ],
@@ -193,11 +191,10 @@
               "attributes":
               {
                 "name": "C",
-                "referencedDeclaration": 7,
-                "type": "contract C"
+                "referencedDeclaration": 7
               },
               "id": 8,
-              "name": "UserDefinedTypeName",
+              "name": "IdentifierPath",
               "src": "69:1:1"
             }
           ],
@@ -248,11 +245,10 @@
               "attributes":
               {
                 "name": "D",
-                "referencedDeclaration": 10,
-                "type": "contract D"
+                "referencedDeclaration": 10
               },
               "id": 11,
-              "name": "UserDefinedTypeName",
+              "name": "IdentifierPath",
               "src": "89:1:1"
             }
           ],

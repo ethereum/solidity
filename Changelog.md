@@ -5,6 +5,14 @@ Breaking Changes:
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
 
 
+Language Features:
+ * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
+
+
+ AST Changes:
+ * New AST Node ``IdentifierPath`` replacing in many places the ``UserDefinedTypeName``
+
+
 ### 0.7.4 (unreleased)
 
 Language Features:

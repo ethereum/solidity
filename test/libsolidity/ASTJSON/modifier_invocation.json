@@ -126,15 +126,9 @@
               {
                 "id": 8,
                 "name": "M",
-                "nodeType": "Identifier",
-                "overloadedDeclarations": [],
+                "nodeType": "IdentifierPath",
                 "referencedDeclaration": 6,
-                "src": "52:1:1",
-                "typeDescriptions":
-                {
-                  "typeIdentifier": "t_modifier$_t_uint256_$",
-                  "typeString": "modifier (uint256)"
-                }
+                "src": "52:1:1"
               },
               "nodeType": "ModifierInvocation",
               "src": "52:4:1"

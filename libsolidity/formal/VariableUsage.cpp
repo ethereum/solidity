@@ -83,7 +83,7 @@ void VariableUsage::endVisit(FunctionDefinition const&)
 
 void VariableUsage::endVisit(ModifierInvocation const& _modifierInv)
 {
-	auto const& modifierDef = dynamic_cast<ModifierDefinition const*>(_modifierInv.name()->annotation().referencedDeclaration);
+	auto const& modifierDef = dynamic_cast<ModifierDefinition const*>(_modifierInv.name().annotation().referencedDeclaration);
 	if (modifierDef)
 		modifierDef->accept(*this);
 }

@@ -34,17 +34,17 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "D_13" {
+object "D_15" {
     code {
         {
             mstore(64, memoryguard(0x80))
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_13_deployed")
-            codecopy(0, dataoffset("D_13_deployed"), _1)
+            let _1 := datasize("D_15_deployed")
+            codecopy(0, dataoffset("D_15_deployed"), _1)
             return(0, _1)
         }
     }
-    object "D_13_deployed" {
+    object "D_15_deployed" {
         code {
             {
                 let _1 := memoryguard(0x80)

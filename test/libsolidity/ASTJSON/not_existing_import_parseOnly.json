@@ -1,6 +1,6 @@
 {
   "absolutePath": "a",
-  "id": 11,
+  "id": 12,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -21,9 +21,8 @@
           {
             "id": 2,
             "name": "NotExisting.X",
-            "nodeType": "UserDefinedTypeName",
-            "src": "55:13:1",
-            "typeDescriptions": {}
+            "nodeType": "IdentifierPath",
+            "src": "55:13:1"
           },
           "id": 3,
           "nodeType": "InheritanceSpecifier",
@@ -32,14 +31,14 @@
       ],
       "contractDependencies": [],
       "contractKind": "contract",
-      "id": 10,
+      "id": 11,
       "name": "C",
       "nodeType": "ContractDefinition",
       "nodes":
       [
         {
           "constant": false,
-          "id": 5,
+          "id": 6,
           "mutability": "mutable",
           "name": "myStruct",
           "nodeType": "VariableDeclaration",
@@ -49,9 +48,15 @@
           "typeDescriptions": {},
           "typeName":
           {
-            "id": 4,
-            "name": "NotExisting.SomeStruct",
+            "id": 5,
             "nodeType": "UserDefinedTypeName",
+            "pathNode":
+            {
+              "id": 4,
+              "name": "NotExisting.SomeStruct",
+              "nodeType": "IdentifierPath",
+              "src": "72:22:1"
+            },
             "src": "72:22:1",
             "typeDescriptions": {}
           },
@@ -60,12 +65,12 @@
         {
           "body":
           {
-            "id": 8,
+            "id": 9,
             "nodeType": "Block",
             "src": "127:2:1",
             "statements": []
           },
-          "id": 9,
+          "id": 10,
           "implemented": true,
           "kind": "constructor",
           "modifiers": [],
@@ -73,14 +78,14 @@
           "nodeType": "FunctionDefinition",
           "parameters":
           {
-            "id": 6,
+            "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "124:2:1"
           },
           "returnParameters":
           {
-            "id": 7,
+            "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "127:0:1"

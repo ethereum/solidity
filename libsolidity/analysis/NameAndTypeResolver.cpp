@@ -400,7 +400,7 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 	list<list<ContractDefinition const*>> input(1, list<ContractDefinition const*>{});
 	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: _contract.baseContracts())
 	{
-		UserDefinedTypeName const& baseName = baseSpecifier->name();
+		IdentifierPath const& baseName = baseSpecifier->name();
 		auto base = dynamic_cast<ContractDefinition const*>(baseName.annotation().referencedDeclaration);
 		if (!base)
 			m_errorReporter.fatalTypeError(8758_error, baseName.location(), "Contract expected.");

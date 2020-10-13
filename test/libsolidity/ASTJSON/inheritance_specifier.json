@@ -41,14 +41,9 @@
           {
             "id": 2,
             "name": "C1",
-            "nodeType": "UserDefinedTypeName",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 1,
-            "src": "30:2:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_C1_$1",
-              "typeString": "contract C1"
-            }
+            "src": "30:2:1"
           },
           "id": 3,
           "nodeType": "InheritanceSpecifier",

@@ -77,11 +77,10 @@
               "attributes":
               {
                 "name": "C1",
-                "referencedDeclaration": 1,
-                "type": "contract C1"
+                "referencedDeclaration": 1
               },
               "id": 2,
-              "name": "UserDefinedTypeName",
+              "name": "IdentifierPath",
               "src": "30:2:1"
             }
           ],

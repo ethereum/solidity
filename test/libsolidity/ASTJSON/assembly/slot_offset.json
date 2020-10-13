@@ -4,10 +4,10 @@
   {
     "C":
     [
-      11
+      12
     ]
   },
-  "id": 12,
+  "id": 13,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,10 +17,10 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 11,
+      "id": 12,
       "linearizedBaseContracts":
       [
-        11
+        12
       ],
       "name": "C",
       "nodeType": "ContractDefinition",
@@ -63,17 +63,17 @@
           ],
           "name": "S",
           "nodeType": "StructDefinition",
-          "scope": 11,
+          "scope": 12,
           "src": "17:20:1",
           "visibility": "public"
         },
         {
           "constant": false,
-          "id": 5,
+          "id": 6,
           "mutability": "mutable",
           "name": "s",
           "nodeType": "VariableDeclaration",
-          "scope": 11,
+          "scope": 12,
           "src": "42:3:1",
           "stateVariable": true,
           "storageLocation": "default",
@@ -84,9 +84,16 @@
           },
           "typeName":
           {
-            "id": 4,
-            "name": "S",
+            "id": 5,
             "nodeType": "UserDefinedTypeName",
+            "pathNode":
+            {
+              "id": 4,
+              "name": "S",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 3,
+              "src": "42:1:1"
+            },
             "referencedDeclaration": 3,
             "src": "42:1:1",
             "typeDescriptions":
@@ -100,7 +107,7 @@
         {
           "body":
           {
-            "id": 9,
+            "id": 10,
             "nodeType": "Block",
             "src": "76:70:1",
             "statements":
@@ -176,28 +183,28 @@
                 "externalReferences":
                 [
                   {
-                    "declaration": 5,
+                    "declaration": 6,
                     "isOffset": true,
                     "isSlot": false,
                     "src": "106:8:1",
                     "valueSize": 1
                   },
                   {
-                    "declaration": 5,
+                    "declaration": 6,
                     "isOffset": false,
                     "isSlot": true,
                     "src": "128:6:1",
                     "valueSize": 1
                   }
                 ],
-                "id": 8,
+                "id": 9,
                 "nodeType": "InlineAssembly",
                 "src": "86:54:1"
               }
             ]
           },
           "functionSelector": "ffae15ba",
-          "id": 10,
+          "id": 11,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
@@ -205,26 +212,26 @@
           "nodeType": "FunctionDefinition",
           "parameters":
           {
-            "id": 6,
+            "id": 7,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "61:2:1"
           },
           "returnParameters":
           {
-            "id": 7,
+            "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
             "src": "76:0:1"
           },
-          "scope": 11,
+          "scope": 12,
           "src": "51:95:1",
           "stateMutability": "pure",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 12,
+      "scope": 13,
       "src": "0:148:1"
     }
   ],

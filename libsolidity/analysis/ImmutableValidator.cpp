@@ -122,6 +122,18 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
+void ImmutableValidator::endVisit(IdentifierPath const& _identifierPath)
+{
+	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifierPath.annotation().referencedDeclaration))
+		visitCallableIfNew(
+			*_identifierPath.annotation().requiredLookup == VirtualLookup::Virtual ?
+			callableDef->resolveVirtual(m_currentContract) :
+			*callableDef
+		);
+
+	solAssert(!dynamic_cast<VariableDeclaration const*>(_identifierPath.annotation().referencedDeclaration), "");
+}
+
 void ImmutableValidator::endVisit(Identifier const& _identifier)
 {
 	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))

@@ -53,6 +53,7 @@ private:
 	bool visit(MemberAccess const& _memberAccess);
 	bool visit(IfStatement const& _ifStatement);
 	bool visit(WhileStatement const& _whileStatement);
+	void endVisit(IdentifierPath const& _identifierPath);
 	void endVisit(Identifier const& _identifier);
 	void endVisit(Return const& _return);
 

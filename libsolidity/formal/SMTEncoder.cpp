@@ -58,7 +58,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 		if (auto const& constructor =  base->constructor())
 			for (auto const& invocation: constructor->modifiers())
 			{
-				auto refDecl = invocation->name()->annotation().referencedDeclaration;
+				auto refDecl = invocation->name().annotation().referencedDeclaration;
 				if (auto const& baseContract = dynamic_cast<ContractDefinition const*>(refDecl))
 				{
 					solAssert(!m_baseConstructorCalls.count(baseContract), "");
@@ -164,7 +164,7 @@ void SMTEncoder::visitFunctionOrModifier()
 		ASTPointer<ModifierInvocation> const& modifierInvocation =
 			function.modifiers()[static_cast<size_t>(m_modifierDepthStack.back())];
 		solAssert(modifierInvocation, "");
-		auto refDecl = modifierInvocation->name()->annotation().referencedDeclaration;
+		auto refDecl = modifierInvocation->name().annotation().referencedDeclaration;
 		if (dynamic_cast<ContractDefinition const*>(refDecl))
 			visitFunctionOrModifier();
 		else if (auto modifierDef = dynamic_cast<ModifierDefinition const*>(refDecl))
