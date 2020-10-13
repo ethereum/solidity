@@ -5,3 +5,5 @@ contract C {
 		(((, a),)) = ((1, 2), 3);
 	}
 }
+// ----
+// Warning 6321: (80-83): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

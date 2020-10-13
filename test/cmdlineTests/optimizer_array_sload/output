@@ -43,7 +43,7 @@ object "Arraysum_33" {
                             vloc_sum := add(vloc_sum, _3)
                         }
                         let memPos := allocateMemory(_1)
-                        return(memPos, sub(abi_encode_uint(memPos, _1), memPos))
+                        return(memPos, sub(abi_encode_uint(memPos, vloc_sum), memPos))
                     }
                 }
                 revert(0, 0)
