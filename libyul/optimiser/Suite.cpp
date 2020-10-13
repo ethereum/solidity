@@ -126,7 +126,7 @@ void OptimiserSuite::run(
 	{
 		yulAssert(_meter, "");
 		ConstantOptimiser{*dialect, *_meter}(ast);
-		if (dialect->providesObjectAccess())
+		if (dialect->providesObjectAccess() && _optimizeStackAllocation)
 			StackLimitEvader::run(suite.m_context, _object, CompilabilityChecker{
 				_dialect,
 				_object,
