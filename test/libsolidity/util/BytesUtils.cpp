@@ -218,7 +218,7 @@ string BytesUtils::formatRawBytes(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
 
@@ -320,7 +320,7 @@ string BytesUtils::formatBytesRange(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
 
