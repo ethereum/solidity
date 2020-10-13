@@ -21,6 +21,7 @@ contract C {
 	}
 }
 // ----
+// Warning 6321: (253-260): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
 // Warning 1218: (94-109): CHC: Error trying to invoke SMT solver.
 // Warning 1218: (113-126): CHC: Error trying to invoke SMT solver.
 // Warning 1218: (180-195): CHC: Error trying to invoke SMT solver.
