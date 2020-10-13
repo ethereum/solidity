@@ -64,7 +64,7 @@ smtutil::Expression constructor(Predicate const& _pred, ContractDefinition const
 		return _pred(currentFunctionVariables(*constructor, &_contract, _context));
 
 	auto& state = _context.state();
-	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.state()};
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.state(0), state.state()};
 	return _pred(stateExprs + currentStateVariables(_contract, _context));
 }
 
