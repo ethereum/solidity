@@ -60,7 +60,7 @@ SortPointer constructorSort(ContractDefinition const& _contract, SymbolicState& 
 		return functionSort(*constructor, &_contract, _state);
 
 	return make_shared<FunctionSort>(
-		vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.stateSort()} + stateSorts(_contract),
+		vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.stateSort(), _state.stateSort()} + stateSorts(_contract),
 		SortProvider::boolSort
 	);
 }
