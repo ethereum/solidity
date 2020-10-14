@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 cd "$PSScriptRoot\.."
 
-if ("$Env:FORCE_RELEASE") {
+if ("$Env:FORCE_RELEASE" -Or "$Env:CIRCLE_TAG") {
 	New-Item prerelease.txt -type file
 	Write-Host "Building release version."
 }
