@@ -574,12 +574,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
             - /usr/local/bin
             - /usr/local/sbin
@@ -603,7 +605,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: build
       - run: *run_soltest
@@ -619,7 +621,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: build
       - run: *run_cmdline_tests
@@ -902,14 +904,14 @@ jobs:
       - restore_cache:
           keys:
             - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
-      - run:
+      # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.                                    - run:
           name: "Installing dependencies"
-          command: if ( -not (Test-Path .\deps\boost) ) { .\scripts\install_deps.ps1 }
+          command: .\scripts\install_deps.ps1
       - save_cache:
           key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
           paths:
-            - .\deps\boost
-            - .\deps\cmake
+            - .\deps
       - run:
           name: "Building solidity"
           command: .circleci/build_win.ps1
