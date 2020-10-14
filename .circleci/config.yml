@@ -481,7 +481,7 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - persist_to_workspace: *artifacts_build_dir
+      - persist_to_workspace: *artifacts_executables
 
   t_ubu_codecov:
     <<: *test_ubuntu2004
@@ -592,7 +592,7 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - store_artifacts: *artifacts_tools
-      - persist_to_workspace: *artifacts_build_dir
+      - persist_to_workspace: *artifacts_executables
 
   t_osx_soltest:
     macos:
@@ -919,7 +919,11 @@ jobs:
           name: "Run solc.exe to make sure build was successful."
           command: .\build\solc\Release\solc.exe --version
       - store_artifacts: *artifact_solc_windows
-      - persist_to_workspace: *artifacts_build_dir
+      - persist_to_workspace:
+          root: build
+          paths:
+            - .\solc\*\solc.exe
+            - .\test\*\soltest.exe
 
   b_win_release:
     <<: *b_win
