@@ -170,7 +170,16 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			// pop offset
 			m_context << Instruction::POP;
 			utils().copyToStackTop(paramTypes.size() - i + 1, 1);
-			ArrayUtils(m_context).accessIndex(*arrayType);
+
+			ArrayUtils(m_context).retrieveLength(*arrayType, 1);
+			// Stack: ref [length] index length
+			// check out-of-bounds access
+			m_context << Instruction::DUP2 << Instruction::LT;
+			auto tag = m_context.appendConditionalJump();
+			m_context << u256(0) << Instruction::DUP1 << Instruction::REVERT;
+			m_context << tag;
+
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
 			returnType = arrayType->baseType();
 		}
 		else

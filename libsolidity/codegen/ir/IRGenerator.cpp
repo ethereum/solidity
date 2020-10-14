@@ -348,18 +348,25 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 				mappingType ? *mappingType->keyType() : *TypeProvider::uint256()
 			).stackSlots();
 			parameters += keys;
-			code += Whiskers(R"(
+
+			Whiskers templ(R"(
+				<?array>
+					if iszero(lt(<keys>, <length>(slot))) { revert(0, 0) }
+				</array>
 				slot<?array>, offset</array> := <indexAccess>(slot<?+keys>, <keys></+keys>)
-			)")
-			(
+			)");
+			templ(
 				"indexAccess",
 				mappingType ?
 				m_utils.mappingIndexAccessFunction(*mappingType, *mappingType->keyType()) :
 				m_utils.storageArrayIndexAccessFunction(*arrayType)
 			)
 			("array", arrayType != nullptr)
-			("keys", joinHumanReadable(keys))
-			.render();
+			("keys", joinHumanReadable(keys));
+			if (arrayType)
+				templ("length", m_utils.arrayLengthFunction(*arrayType));
+
+			code += templ.render();
 
 			currentType = mappingType ? mappingType->valueType() : arrayType->baseType();
 		}

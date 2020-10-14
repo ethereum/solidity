@@ -22,6 +22,8 @@ contract test {
         return ret;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(bool): true -> 1
 // f(bool): false -> 2

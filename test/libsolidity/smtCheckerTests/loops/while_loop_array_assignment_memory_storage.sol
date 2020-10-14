@@ -15,13 +15,13 @@ contract LoopFor2 {
 		}
 		// Fails due to aliasing, since both b and c are
 		// memory references of same type.
-		assert(b[0] == c[0]);
+		// Removed because current Spacer seg faults in cex generation.
+		//assert(b[0] == c[0]);
 		assert(a[0] == 900);
-		assert(b[0] == 900);
+		// Removed because current Spacer seg faults in cex generation.
+		//assert(b[0] == 900);
 	}
 }
 // ====
 // SMTSolvers: z3
 // ----
-// Warning 6328: (362-382): CHC: Assertion violation happens here.
-// Warning 6328: (409-428): CHC: Assertion violation happens here.

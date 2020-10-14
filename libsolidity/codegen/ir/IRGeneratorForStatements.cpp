@@ -387,7 +387,11 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	writeToLValue(*m_currentLValue, value);
 
-	if (m_currentLValue->type.category() != Type::Category::Struct && *_assignment.annotation().type != *TypeProvider::emptyTuple())
+	if (
+		m_currentLValue->type.category() != Type::Category::Struct &&
+		m_currentLValue->type.category() != Type::Category::Array &&
+		*_assignment.annotation().type != *TypeProvider::emptyTuple()
+	)
 		define(_assignment, value);
 	m_currentLValue.reset();
 
@@ -1763,32 +1767,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
 
 		if (member == "length")
-		{
-			if (!type.isDynamicallySized())
-				define(_memberAccess) << type.length() << "\n";
-			else
-				switch (type.location())
-				{
-					case DataLocation::CallData:
-						define(_memberAccess, IRVariable(_memberAccess.expression()).part("length"));
-						break;
-					case DataLocation::Storage:
-					{
-						define(_memberAccess) <<
-							m_utils.arrayLengthFunction(type) <<
-							"(" <<
-							IRVariable(_memberAccess.expression()).commaSeparatedList() <<
-							")\n";
-						break;
-					}
-					case DataLocation::Memory:
-						define(_memberAccess) <<
-							"mload(" <<
-							IRVariable(_memberAccess.expression()).commaSeparatedList() <<
-							")\n";
-						break;
-				}
-		}
+			define(_memberAccess) <<
+				m_utils.arrayLengthFunction(type) <<
+				"(" <<
+				IRVariable(_memberAccess.expression()).commaSeparatedList() <<
+				")\n";
 		else if (member == "pop" || member == "push")
 		{
 			solAssert(type.location() == DataLocation::Storage, "");
