@@ -126,46 +126,6 @@ do \
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
-BOOST_AUTO_TEST_CASE(function_defined_in_init_block)
-{
-	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
-	BOOST_CHECK(successParse("{ for { } 1 { function f() {} } {} }", dialect));
-	BOOST_CHECK(successParse("{ for { } 1 {} { function f() {} } }", dialect));
-	CHECK_ERROR_DIALECT(
-		"{ for { function f() {} } 1 {} {} }",
-		SyntaxError,
-		"Functions cannot be defined inside a for-loop init block.",
-		dialect
-	);
-}
-
-BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
-{
-	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
-	BOOST_CHECK(successParse(
-		"{ for {"
-			"for { } 1 { function f() {} } {}"
-		"} 1 {} {} }", dialect));
-	CHECK_ERROR_DIALECT(
-		"{ for { for {function foo() {}} 1 {} {} } 1 {} {} }",
-		SyntaxError,
-		"Functions cannot be defined inside a for-loop init block.",
-		dialect
-	);
-	CHECK_ERROR_DIALECT(
-		"{ for {} 1 {for {function foo() {}} 1 {} {} } {} }",
-		SyntaxError,
-		"Functions cannot be defined inside a for-loop init block.",
-		dialect
-	);
-}
-
-BOOST_AUTO_TEST_CASE(function_shadowing_outside_vars)
-{
-	CHECK_ERROR("{ let x:u256 function f() -> x:u256 {} }", DeclarationError, "already taken in this scope");
-	BOOST_CHECK(successParse("{ { let x:u256 } function f() -> x:u256 {} }"));
-}
-
 BOOST_AUTO_TEST_CASE(builtins_parser)
 {
 	struct SimpleDialect: public Dialect
