@@ -53,13 +53,13 @@ public:
 	/// (or just pretty-printed, depending on the optimizer settings).
 	std::pair<std::string, std::string> run(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, std::string const> const& _otherYulSources
+		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 
 private:
 	std::string generate(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, std::string const> const& _otherYulSources
+		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 	std::string generate(Block const& _block);
 

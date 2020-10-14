@@ -525,6 +525,7 @@ bool CompilerStack::compile(State _stopAfter)
 
 	// Only compile contracts individually which have been requested.
 	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
+
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
@@ -1231,21 +1232,20 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateIR with errors."));
 
-	if (!_contract.canBeDeployed())
-		return;
-
-	map<ContractDefinition const*, string const> otherYulSources;
-
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
 		return;
 
 	string dependenciesSource;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
-	{
 		generateIR(*dependency);
-		otherYulSources.emplace(dependency, m_contracts.at(dependency->fullyQualifiedName()).yulIR);
-	}
+
+	if (!_contract.canBeDeployed())
+		return;
+
+	map<ContractDefinition const*, string_view const> otherYulSources;
+	for (auto const& pair: m_contracts)
+		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);

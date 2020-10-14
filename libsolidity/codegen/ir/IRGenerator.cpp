@@ -50,7 +50,7 @@ using namespace solidity::frontend;
 
 pair<string, string> IRGenerator::run(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, string const> const& _otherYulSources
+	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
 	string const ir = yul::reindent(generate(_contract, _otherYulSources));
@@ -78,7 +78,7 @@ pair<string, string> IRGenerator::run(
 
 string IRGenerator::generate(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, string const> const& _otherYulSources
+	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
 	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> string
