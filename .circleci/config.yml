@@ -592,7 +592,12 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - store_artifacts: *artifacts_tools
-      - persist_to_workspace: *artifacts_executables
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/solc/solc
+            - build/test/soltest
+            - build/test/tools/solfuzzer
 
   t_osx_soltest:
     macos:
@@ -607,7 +612,7 @@ jobs:
           keys:
             - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
-          at: build
+          at: .
       - run: *run_soltest
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
@@ -623,7 +628,7 @@ jobs:
           keys:
             - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
-          at: build
+          at: .
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
 
@@ -972,7 +977,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: build
+          at: .
       - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-osx.txt
       - store_artifacts:
           path: report.txt
