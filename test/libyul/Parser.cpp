@@ -192,24 +192,6 @@ BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(switch_duplicate_case)
-{
-	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case 0x0:u256 {} }", DeclarationError, "Duplicate case defined.");
-	BOOST_CHECK(successParse("{ switch 0:u256 case 42:u256 {} case 0x42:u256 {} }"));
-}
-
-BOOST_AUTO_TEST_CASE(switch_duplicate_case_different_literal)
-{
-	CHECK_ERROR("{ switch 0:u256 case 0:u256 {} case \"\":u256 {} }", DeclarationError, "Duplicate case defined.");
-	BOOST_CHECK(successParse("{ switch 1:u256 case \"1\":u256 {} case \"2\":u256 {} }"));
-}
-
-BOOST_AUTO_TEST_CASE(switch_case_string_literal_too_long)
-{
-	BOOST_CHECK(successParse("{let x:u256 switch x case \"01234567890123456789012345678901\":u256 {}}"));
-	CHECK_ERROR("{let x:u256 switch x case \"012345678901234567890123456789012\":u256 {}}", TypeError, "String literal too long (33 > 32)");
-}
-
 BOOST_AUTO_TEST_CASE(function_shadowing_outside_vars)
 {
 	CHECK_ERROR("{ let x:u256 function f() -> x:u256 {} }", DeclarationError, "already taken in this scope");
