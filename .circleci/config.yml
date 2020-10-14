@@ -35,12 +35,6 @@ defaults:
   # --------------------------------------------------------------------------
   # Build Templates
 
-  - setup_prerelease_commit_hash: &setup_prerelease_commit_hash
-      name: Store commit hash and prerelease
-      command: |
-        if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" ]; then echo -n > prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" > prerelease.txt; fi
-        echo -n "$CIRCLE_SHA1" > commit_hash.txt
-
   - run_build: &run_build
       name: Build
       command: scripts/ci/build.sh
@@ -526,7 +520,6 @@ jobs:
       MAKEFLAGS: -j 3
     steps:
       - checkout
-      - run: *setup_prerelease_commit_hash
       - run: *run_build_ossfuzz
       - persist_to_workspace: *artifacts_executables_ossfuzz
 
@@ -668,7 +661,6 @@ jobs:
       - image: << pipeline.parameters.ubuntu-2004-docker-image >>
     steps:
       - checkout
-      - run: *setup_prerelease_commit_hash
       - run:
           name: Build documentation
           command: ./scripts/docs.sh
