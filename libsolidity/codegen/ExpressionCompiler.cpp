@@ -1355,59 +1355,72 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	// for internal functions, or enum/struct definitions.
 	if (TypeType const* type = dynamic_cast<TypeType const*>(_memberAccess.expression().annotation().type))
 	{
-		if (dynamic_cast<ContractType const*>(type->actualType()))
+		if (auto contractType = dynamic_cast<ContractType const*>(type->actualType()))
 		{
 			solAssert(_memberAccess.annotation().type, "_memberAccess has no type");
-			if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
-				appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
-			else if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+			if (contractType->isSuper())
 			{
-				switch (funType->kind())
-				{
-				case FunctionType::Kind::Declaration:
-					break;
-				case FunctionType::Kind::Internal:
-					// We do not visit the expression here on purpose, because in the case of an
-					// internal library function call, this would push the library address forcing
-					// us to link against it although we actually do not need it.
-					if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
-					{
-						solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
-						utils().pushCombinedFunctionEntryLabel(*function);
-					}
-					else
-						solAssert(false, "Function not found in member access");
-					break;
-				case FunctionType::Kind::Event:
-					if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
-						solAssert(false, "event not found");
-					// no-op, because the parent node will do the job
-					break;
-				case FunctionType::Kind::DelegateCall:
-					_memberAccess.expression().accept(*this);
-					m_context << funType->externalIdentifier();
-					break;
-				case FunctionType::Kind::External:
-				case FunctionType::Kind::Creation:
-				case FunctionType::Kind::Send:
-				case FunctionType::Kind::BareCall:
-				case FunctionType::Kind::BareCallCode:
-				case FunctionType::Kind::BareDelegateCall:
-				case FunctionType::Kind::BareStaticCall:
-				case FunctionType::Kind::Transfer:
-				case FunctionType::Kind::ECRecover:
-				case FunctionType::Kind::SHA256:
-				case FunctionType::Kind::RIPEMD160:
-				default:
-					solAssert(false, "unsupported member function");
-				}
-			}
-			else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type))
-			{
-				// no-op
+				_memberAccess.expression().accept(*this);
+				solAssert(_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
+				solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Super, "");
+				utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
+					dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
+					contractType->contractDefinition()
+				));
 			}
 			else
-				_memberAccess.expression().accept(*this);
+			{
+				if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+					appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
+				else if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+				{
+					switch (funType->kind())
+					{
+					case FunctionType::Kind::Declaration:
+						break;
+					case FunctionType::Kind::Internal:
+						// We do not visit the expression here on purpose, because in the case of an
+						// internal library function call, this would push the library address forcing
+						// us to link against it although we actually do not need it.
+						if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+						{
+							solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
+							utils().pushCombinedFunctionEntryLabel(*function);
+						}
+						else
+							solAssert(false, "Function not found in member access");
+						break;
+					case FunctionType::Kind::Event:
+						if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+							solAssert(false, "event not found");
+						// no-op, because the parent node will do the job
+						break;
+					case FunctionType::Kind::DelegateCall:
+						_memberAccess.expression().accept(*this);
+						m_context << funType->externalIdentifier();
+					break;
+					case FunctionType::Kind::External:
+					case FunctionType::Kind::Creation:
+					case FunctionType::Kind::Send:
+					case FunctionType::Kind::BareCall:
+					case FunctionType::Kind::BareCallCode:
+					case FunctionType::Kind::BareDelegateCall:
+					case FunctionType::Kind::BareStaticCall:
+					case FunctionType::Kind::Transfer:
+					case FunctionType::Kind::ECRecover:
+					case FunctionType::Kind::SHA256:
+					case FunctionType::Kind::RIPEMD160:
+					default:
+						solAssert(false, "unsupported member function");
+					}
+				}
+				else if (dynamic_cast<TypeType const*>(_memberAccess.annotation().type))
+				{
+					// no-op
+				}
+				else
+					_memberAccess.expression().accept(*this);
+			}
 		}
 		else if (auto enumType = dynamic_cast<EnumType const*>(type->actualType()))
 		{
@@ -1480,17 +1493,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	case Type::Category::Contract:
 	{
 		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.expression().annotation().type);
-		if (type.isSuper())
-		{
-			solAssert(!!_memberAccess.annotation().referencedDeclaration, "Referenced declaration not resolved.");
-			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Super, "");
-			utils().pushCombinedFunctionEntryLabel(m_context.superFunction(
-				dynamic_cast<FunctionDefinition const&>(*_memberAccess.annotation().referencedDeclaration),
-				type.contractDefinition()
-			));
-		}
 		// ordinary contract type
-		else if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
+		if (Declaration const* declaration = _memberAccess.annotation().referencedDeclaration)
 		{
 			u256 identifier;
 			if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
@@ -1592,8 +1596,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Blockhash has been removed.");
 		else if (member == "creationCode" || member == "runtimeCode")
 		{
+			// FIXME For super this needs to be fixed
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
-			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
+			solAssert(!contractType.isSuper(), "");
+			ContractDefinition const& contract = contractType.contractDefinition();
 			utils().fetchFreeMemoryPointer();
 			m_context << Instruction::DUP1 << u256(32) << Instruction::ADD;
 			utils().copyContractCodeToMemory(contract, member == "creationCode");
@@ -1610,7 +1617,10 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		else if (member == "name")
 		{
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
-			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
+			ContractDefinition const& contract = contractType.isSuper() ?
+				*contractType.contractDefinition().superContract(m_context.mostDerivedContract()) :
+				dynamic_cast<ContractType const&>(*arg).contractDefinition();
 			utils().allocateMemory(((contract.name().length() + 31) / 32) * 32 + 32);
 			// store string length
 			m_context << u256(contract.name().length()) << Instruction::DUP2 << Instruction::MSTORE;
@@ -1960,9 +1970,11 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		switch (magicVar->type()->category())
 		{
 		case Type::Category::Contract:
-			// "this" or "super"
-			if (!dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
+			if (dynamic_cast<ContractType const*>(magicVar->type()))
+			{
+				solAssert(_identifier.name() == "this", "");
 				m_context << Instruction::ADDRESS;
+			}
 			break;
 		default:
 			break;
