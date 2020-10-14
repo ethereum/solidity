@@ -126,18 +126,6 @@ do \
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
-BOOST_AUTO_TEST_CASE(recursion_depth)
-{
-	string input;
-	for (size_t i = 0; i < 20000; i++)
-		input += "{";
-	input += "let x:u256 := 0:u256";
-	for (size_t i = 0; i < 20000; i++)
-		input += "}";
-
-	CHECK_ERROR(input, ParserError, "recursion");
-}
-
 BOOST_AUTO_TEST_CASE(multiple_assignment)
 {
 	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
