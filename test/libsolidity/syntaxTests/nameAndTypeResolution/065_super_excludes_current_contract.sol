@@ -8,4 +8,4 @@ contract B is A {
     }
 }
 // ----
-// TypeError 9582: (95-102): Member "f" not found or not visible after argument-dependent lookup in contract super B.
+// TypeError 9582: (95-102): Member "f" not found or not visible after argument-dependent lookup in type(contract super B).

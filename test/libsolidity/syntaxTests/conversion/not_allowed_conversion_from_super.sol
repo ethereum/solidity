@@ -12,4 +12,4 @@ contract B is S
 	}
 }
 // ----
-// TypeError 9640: (129-137): Explicit type conversion not allowed from "contract super B" to "contract S".
+// TypeError 9640: (129-137): Explicit type conversion not allowed from "type(contract super B)" to "contract S".

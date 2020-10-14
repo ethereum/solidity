@@ -1596,7 +1596,6 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			solAssert(false, "Blockhash has been removed.");
 		else if (member == "creationCode" || member == "runtimeCode")
 		{
-			// FIXME For super this needs to be fixed
 			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
 			solAssert(!contractType.isSuper(), "");
