@@ -393,7 +393,10 @@ private:
 
 	/// Generate Yul IR for a single contract.
 	/// The IR is stored but otherwise unused.
-	void generateIR(ContractDefinition const& _contract);
+	void generateIR(
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, std::string const>& _otherYulSources
+	);
 
 	/// Generate Ewasm representation for a single contract.
 	void generateEwasm(ContractDefinition const& _contract);

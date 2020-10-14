@@ -1521,7 +1521,7 @@ BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract)
 		"settings": {
 			"outputSelection": {
 				"BlockRewardAuRaCoins.sol": {
-					"BlockRewardAuRaCoins": ["evm.bytecode.sourceMap"]
+					"BlockRewardAuRaCoins": ["ir", "evm.bytecode.sourceMap"]
 				}
 			}
 		}
@@ -1540,6 +1540,7 @@ BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract)
 	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"].size() == 1);
 	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"].isObject());
 	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"]["evm"].isObject());
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"]["ir"].isString());
 	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"]["evm"]["bytecode"].isObject());
 	BOOST_REQUIRE(result["sources"].isObject());
 	BOOST_REQUIRE(result["sources"].size() == 2);
