@@ -574,12 +574,12 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
             - /usr/local/bin
             - /usr/local/sbin
@@ -603,7 +603,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: build
       - run: *run_soltest
@@ -619,7 +619,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
           at: build
       - run: *run_cmdline_tests
