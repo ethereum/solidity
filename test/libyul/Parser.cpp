@@ -126,25 +126,6 @@ do \
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
-BOOST_AUTO_TEST_CASE(builtins_parser)
-{
-	struct SimpleDialect: public Dialect
-	{
-		BuiltinFunction const* builtin(YulString _name) const override
-		{
-			return _name == "builtin"_yulstring ? &f : nullptr;
-		}
-		BuiltinFunction f;
-	};
-
-	SimpleDialect dialect;
-	CHECK_ERROR_DIALECT("{ let builtin := 6 }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function builtin() {} }", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function f(x) { f(builtin) } }", ParserError, "Expected '(' but got ')'", dialect);
-	CHECK_ERROR_DIALECT("{ function f(builtin) {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-	CHECK_ERROR_DIALECT("{ function f() -> builtin {}", ParserError, "Cannot use builtin function name \"builtin\" as identifier name.", dialect);
-}
-
 BOOST_AUTO_TEST_CASE(builtins_analysis)
 {
 	struct SimpleDialect: public Dialect
