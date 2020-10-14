@@ -2123,7 +2123,10 @@ string YulUtilFunctions::updateStorageValueFunction(
 				fromReferenceType->location(),
 				fromReferenceType->isPointer()
 			).get() == *fromReferenceType, "");
-			solUnimplementedAssert(fromReferenceType->location() != DataLocation::Storage, "");
+			solUnimplementedAssert(
+				fromReferenceType->location() != DataLocation::Storage,
+				"Copying from storage to storage is not yet implemented."
+			);
 			solAssert(toReferenceType->category() == fromReferenceType->category(), "");
 
 			if (_toType.category() == Type::Category::Array)
