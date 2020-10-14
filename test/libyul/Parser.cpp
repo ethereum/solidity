@@ -158,13 +158,6 @@ BOOST_AUTO_TEST_CASE(multiple_assignment)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(if_statement)
-{
-	BOOST_CHECK(successParse("{ if true:bool {} }"));
-	BOOST_CHECK(successParse("{ if false:bool { let x:u256 := 3:u256 } }"));
-	BOOST_CHECK(successParse("{ function f() -> x:bool {} if f() { let b:bool := f() } }"));
-}
-
 BOOST_AUTO_TEST_CASE(break_outside_of_for_loop)
 {
 	CHECK_ERROR_DIALECT(
@@ -336,13 +329,6 @@ BOOST_AUTO_TEST_CASE(function_defined_in_init_nested)
 		"Functions cannot be defined inside a for-loop init block.",
 		dialect
 	);
-}
-
-BOOST_AUTO_TEST_CASE(if_statement_invalid)
-{
-	CHECK_ERROR("{ if let x:u256 {} }", ParserError, "Literal or identifier expected.");
-	CHECK_ERROR("{ if true:bool let x:u256 := 3:u256 }", ParserError, "Expected '{' but got reserved keyword 'let'");
-	CHECK_ERROR("{ if 42:u256 { } }", TypeError, "Expected a value of boolean type");
 }
 
 BOOST_AUTO_TEST_CASE(switch_duplicate_case)
