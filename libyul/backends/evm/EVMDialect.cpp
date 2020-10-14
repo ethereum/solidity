@@ -221,21 +221,22 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 		));
 		builtins.emplace(createFunction(
 			"setimmutable",
-			2,
+			3,
 			0,
 			SideEffects{false, false, false, false, true, SideEffects::None, SideEffects::None, SideEffects::Write},
-			{LiteralKind::String, std::nullopt},
+			{std::nullopt, LiteralKind::String, std::nullopt},
 			[](
 				FunctionCall const& _call,
 				AbstractAssembly& _assembly,
 				BuiltinContext&,
 				std::function<void(Expression const&)> _visitExpression
 			) {
-				yulAssert(_call.arguments.size() == 2, "");
+				yulAssert(_call.arguments.size() == 3, "");
 
-				_visitExpression(_call.arguments[1]);
+				_visitExpression(_call.arguments[2]);
+				YulString identifier = std::get<Literal>(_call.arguments[1]).value;
+				_visitExpression(_call.arguments[0]);
 				_assembly.setSourceLocation(_call.location);
-				YulString identifier = std::get<Literal>(_call.arguments.front()).value;
 				_assembly.appendImmutableAssignment(identifier.str());
 			}
 		));

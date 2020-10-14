@@ -102,7 +102,7 @@ size_t AssemblyItem::arguments() const
 	if (type() == Operation)
 		return static_cast<size_t>(instructionInfo(instruction()).args);
 	else if (type() == AssignImmutable)
-		return 1;
+		return 2;
 	else
 		return 0;
 }

@@ -674,14 +674,17 @@ LinkerObject const& Assembly::assemble() const
 		case AssignImmutable:
 			for (auto const& offset: immutableReferencesBySub[i.data()].second)
 			{
-				ret.bytecode.push_back(uint8_t(Instruction::DUP1));
+				ret.bytecode.push_back(uint8_t(Instruction::DUP2));
+				ret.bytecode.push_back(uint8_t(Instruction::DUP2));
 				// TODO: should we make use of the constant optimizer methods for pushing the offsets?
 				bytes offsetBytes = toCompactBigEndian(u256(offset));
 				ret.bytecode.push_back(uint8_t(Instruction::PUSH1) - 1 + offsetBytes.size());
 				ret.bytecode += offsetBytes;
+				ret.bytecode.push_back(uint8_t(Instruction::ADD));
 				ret.bytecode.push_back(uint8_t(Instruction::MSTORE));
 			}
 			immutableReferencesBySub.erase(i.data());
+			ret.bytecode.push_back(uint8_t(Instruction::POP));
 			ret.bytecode.push_back(uint8_t(Instruction::POP));
 			break;
 		case PushDeployTimeAddress:
