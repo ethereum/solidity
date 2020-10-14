@@ -1160,10 +1160,14 @@ void CompilerStack::compileContract(
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
 
-	if (_otherCompilers.count(&_contract) || !_contract.canBeDeployed())
+	if (_otherCompilers.count(&_contract))
 		return;
+
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _otherCompilers);
+
+	if (!_contract.canBeDeployed())
+		return;
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
