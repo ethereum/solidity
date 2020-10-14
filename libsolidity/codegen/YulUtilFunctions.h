@@ -181,6 +181,10 @@ public:
 	/// signature: (slot) ->
 	std::string clearStorageArrayFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that will copy array from calldata or memory to storage
+	/// signature (to_slot, from_ptr) ->
+	std::string copyArrayToStorage(ArrayType const& _fromType, ArrayType const& _toType);
+
 	/// Returns the name of a function that will convert a given length to the
 	/// size in memory (number of storage slots or calldata/memory bytes) it
 	/// will require.
