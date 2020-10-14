@@ -71,6 +71,7 @@ private:
 		bool metadataLiteralSources = false;
 		CompilerStack::MetadataHash metadataHash = CompilerStack::MetadataHash::IPFS;
 		Json::Value outputSelection;
+		ModelCheckerEngine modelCheckerEngine = ModelCheckerEngine::All();
 	};
 
 	/// Parses the input json (and potentially invokes the read callback) and either returns

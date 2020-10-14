@@ -414,7 +414,7 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter", "modelCheckerEngine"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -527,6 +527,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 
 	return std::nullopt;
 }
+
 /// Validates the optimizer settings and returns them in a parsed object.
 /// On error returns the json-formatted error message.
 std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value const& _jsonInput)
@@ -866,6 +867,16 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			"Requested output selection conflicts with \"settings.stopAfter\"."
 		);
 
+	if (settings.isMember("modelCheckerEngine"))
+	{
+		if (!settings["modelCheckerEngine"].isString())
+			return formatFatalError("JSONError", "modelCheckerEngine must be a string.");
+		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(settings["modelCheckerEngine"].asString());
+		if (!engine)
+			return formatFatalError("JSONError", "Invalid model checker engine requested.");
+		ret.modelCheckerEngine = *engine;
+	}
+
 	return { std::move(ret) };
 }
 
@@ -886,6 +897,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
+	compilerStack.setModelCheckerEngine(_inputsAndSettings.modelCheckerEngine);
 
 	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));

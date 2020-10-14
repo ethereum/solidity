@@ -29,6 +29,8 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
 
+#include <libsolidity/formal/ModelChecker.h>
+
 #include <libsmtutil/SolverInterface.h>
 
 #include <liblangutil/ErrorReporter.h>
@@ -165,6 +167,8 @@ public:
 	/// Must be set before parsing.
 	void setEVMVersion(langutil::EVMVersion _version = langutil::EVMVersion{});
 
+	/// Set which model checking engines should be used.
+	void setModelCheckerEngine(ModelCheckerEngine _engine);
 	/// Set which SMT solvers should be enabled.
 	void setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSolvers);
 
@@ -452,6 +456,7 @@ private:
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	State m_stopAfter = State::CompilationSuccessful;
 	langutil::EVMVersion m_evmVersion;
+	ModelCheckerEngine m_modelCheckerEngine;
 	smtutil::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateEvmBytecode = true;

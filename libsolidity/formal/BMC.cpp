@@ -836,7 +836,7 @@ void BMC::checkCondition(
 			"\nNote that some information is erased after the execution of loops.\n"
 			"You can re-introduce information using require().";
 	if (m_externalFunctionCallHappened)
-		extraComment+=
+		extraComment +=
 			"\nNote that external function calls are not inlined,"
 			" even if the source code of the function is available."
 			" This is due to the possibility that the actual called contract"
@@ -854,7 +854,7 @@ void BMC::checkCondition(
 		if (_callStack.size())
 		{
 			std::ostringstream modelMessage;
-			modelMessage << "\nCounterexample:\n";
+			modelMessage << "Counterexample:\n";
 			solAssert(values.size() == expressionNames.size(), "");
 			map<string, string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
@@ -863,6 +863,7 @@ void BMC::checkCondition(
 
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+
 			m_errorReporter.warning(
 				_errorHappens,
 				_location,

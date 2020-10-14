@@ -27,9 +27,11 @@ using namespace solidity::frontend;
 ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
+	ModelCheckerEngine _engine,
 	ReadCallback::Callback const& _smtCallback,
 	smtutil::SMTSolverChoice _enabledSolvers
 ):
+	m_engine(_engine),
 	m_context(),
 	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers),
 	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers)
@@ -41,13 +43,15 @@ void ModelChecker::analyze(SourceUnit const& _source)
 	if (!_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		return;
 
-	m_chc.analyze(_source);
+	if (m_engine.chc)
+		m_chc.analyze(_source);
 
 	auto solvedTargets = m_chc.safeTargets();
 	for (auto const& target: m_chc.unsafeTargets())
 		solvedTargets[target.first] += target.second;
 
-	m_bmc.analyze(_source, solvedTargets);
+	if (m_engine.bmc)
+		m_bmc.analyze(_source, solvedTargets);
 }
 
 vector<string> ModelChecker::unhandledQueries()
