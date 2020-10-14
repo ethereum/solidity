@@ -104,9 +104,9 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 
 	BOOST_CHECK_EQUAL(
 		_assembly.assemble().toHex(),
-		"5b6001600220607373__$bf005014d9d0f534b8fcb268bd84c491a2$__"
-		"600056606b602260497300000000000000000000000000000000000000005050"
-		"60028181600101525050"
+		"5b6001600220606f73__$bf005014d9d0f534b8fcb268bd84c491a2$__"
+		"6000566067602260457300000000000000000000000000000000000000005050"
+		"600260010152"
 		"00fe"
 		"7f0000000000000000000000000000000000000000000000000000000000000000"
 		"fe010203044266eeaa"
@@ -205,21 +205,17 @@ BOOST_AUTO_TEST_CASE(immutable)
 		"6001" // PUSH1 1 - offset of first someImmutable in sub_0
 		"01" // ADD - add offset of immutable to offset of code
 		"52" // MSTORE
-		"8181" // DUP2 DUP2
 		"6043" // PUSH1 67 - offset of second someImmutable in sub_0
 		"01" // ADD - add offset of immutable to offset of code
 		"52" // MSTORE
-		"5050" // POP POP
 		// assign "someOtherImmutable"
 		"6017" // PUSH1 23 - value for someOtherImmutable
 		"6000" // PUSH1 0 - offset of code into which to insert the immutable
-		"8181" // DUP2 DUP2
 		"6022" // PUSH1 34 - offset of someOtherImmutable in sub_0
 		"01" // ADD - add offset of immutable to offset of code
 		"52" // MSTORE
-		"5050" // POP POP
 		"6063" // PUSH1 0x63 - dataSize(sub_0)
-		"6023" // PUSH1 0x23 - dataOffset(sub_0)
+		"601b" // PUSH1 0x23 - dataOffset(sub_0)
 		"fe" // INVALID
 		// end of root.asm
 		// sub.asm
