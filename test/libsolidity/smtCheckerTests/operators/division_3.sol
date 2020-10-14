@@ -6,5 +6,4 @@ contract C {
 	}
 }
 // ----
-// Warning 1218: (127-132): CHC: Error trying to invoke SMT solver.
-// Warning 2661: (127-132): BMC: Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here.
+// Warning 4984: (127-132): CHC: Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here.

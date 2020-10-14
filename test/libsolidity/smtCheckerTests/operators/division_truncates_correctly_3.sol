@@ -7,5 +7,3 @@ contract C {
 	}
 }
 // ----
-// Warning 1218: (113-118): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (106-125): CHC: Error trying to invoke SMT solver.
