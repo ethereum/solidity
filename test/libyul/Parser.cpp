@@ -126,26 +126,6 @@ do \
 
 BOOST_AUTO_TEST_SUITE(YulParser)
 
-BOOST_AUTO_TEST_CASE(multiple_assignment)
-{
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} 123:u256, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
-	CHECK_ERROR("{ let x:u256 function f() -> a:u256, b:u256 {} x, 123:u256 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
-
-	/// NOTE: Travis hiccups if not having a variable
-	char const* text = R"(
-	{
-		function f(a:u256) -> r1:u256, r2:u256 {
-			r1 := a
-			r2 := 7:u256
-		}
-		let x:u256 := 9:u256
-		let y:u256 := 2:u256
-		x, y := f(x)
-	}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
 BOOST_AUTO_TEST_CASE(function_defined_in_init_block)
 {
 	auto const& dialect = EVMDialect::strictAssemblyForEVMObjects(EVMVersion{});
