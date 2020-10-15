@@ -144,7 +144,7 @@ See the dedicated section on :ref:`assert and require<assert-and-require>` for
 more details on error handling and when to use which function.
 
 ``assert(bool condition)``
-    causes an invalid opcode and thus state change reversion if the condition is not met - to be used for internal errors.
+    causes a Panic error and thus state change reversion if the condition is not met - to be used for internal errors.
 
 ``require(bool condition)``
     reverts if the condition is not met - to be used for errors in inputs or external components.
