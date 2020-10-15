@@ -9,7 +9,7 @@ Optimized IR:
 object "Arraysum_33" {
     code {
         {
-            mstore(64, memoryguard(0x80))
+            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("Arraysum_33_deployed")
             codecopy(0, dataoffset("Arraysum_33_deployed"), _1)
@@ -19,7 +19,7 @@ object "Arraysum_33" {
     object "Arraysum_33_deployed" {
         code {
             {
-                mstore(64, memoryguard(0x80))
+                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0
