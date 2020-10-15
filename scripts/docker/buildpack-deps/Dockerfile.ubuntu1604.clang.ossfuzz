@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang as base
-LABEL version="4"
+LABEL version="5"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -32,7 +32,7 @@ RUN apt-get update; \
 		software-properties-common \
 		ninja-build git wget \
 		libbz2-dev zlib1g-dev git curl uuid-dev \
-		pkg-config openjdk-8-jdk liblzma-dev unzip; \
+		pkg-config openjdk-8-jdk liblzma-dev unzip mlton; \
     apt-get install -qy python-pip python-sphinx;
 
 # Install cmake 3.14 (minimum requirement is cmake 3.10)
@@ -109,23 +109,16 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/hera
 
-# ANTLR4 RUNTIME
+# libabicoder
 RUN set -ex; \
     cd /usr/src; \
-    wget https://www.antlr.org/download/antlr4-cpp-runtime-4.8-source.zip; \
-    rm -rf antlr4-runtime && mkdir antlr4-runtime; \
-    unzip antlr4-cpp-runtime-4.8-source.zip -d antlr4-runtime; \
-    cd antlr4-runtime && mkdir build && cd build; \
-    cmake .. -DWITH_LIBCXX=On -DCMAKE_BUILD_TYPE=Release -DWITH_DEMO=False; \
-    make -j; \
-    DESTDIR=run make install; \
-    # Manually copy needed library and includes since install script
-    # does not respect -DCMAKE_INSTALL_DIR and there is no option
-    # to disable shared library build/installation
-    cp -Rf run/usr/local/include/antlr4-runtime /usr/include; \
-    cp -f run/usr/local/lib/libantlr4-runtime.a /usr/lib; \
-    rm -rf /usr/src/antlr4-cpp-runtime-4.8-source.zip; \
-    rm -rf /usr/src/antlr4-runtime
+    git clone https://github.com/ekpyron/Yul-Isabelle; \
+    cd Yul-Isabelle; \
+    cd libabicoder; \
+    CXX=clang++ CXXFLAGS="-stdlib=libc++" make; \
+    cp libabicoder.a /usr/lib; \
+    cp abicoder.hpp /usr/include; \
+    rm -rf /usr/src/Yul-Isabelle
 
 FROM base
 COPY --from=libraries /usr/lib /usr/lib
