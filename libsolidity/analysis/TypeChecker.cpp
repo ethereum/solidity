@@ -2532,6 +2532,19 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 	_newExpression.annotation().isConstant = false;
 	_newExpression.annotation().isLValue = false;
 
+	TypePointer baseType = type;
+	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
+		baseType = arrayType->baseType();
+
+	if (auto const* contractType = dynamic_cast<ContractType const*>(baseType))
+		if (contractType->contractDefinition().isLibrary())
+		{
+			if (type == baseType)
+				m_errorReporter.fatalTypeError(8696_error, _newExpression.location(), "Cannot instantiate a library.");
+			else
+				m_errorReporter.fatalTypeError(4409_error, _newExpression.location(), "Cannot create arrays of libraries.");
+		}
+
 	if (auto contractName = dynamic_cast<UserDefinedTypeName const*>(&_newExpression.typeName()))
 	{
 		auto contract = dynamic_cast<ContractDefinition const*>(&dereference(*contractName));

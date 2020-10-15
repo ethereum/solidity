@@ -4,3 +4,5 @@ contract C {
         new L();
     }
 }
+// ----
+// TypeError 8696: (60-65): Cannot instantiate a library.
