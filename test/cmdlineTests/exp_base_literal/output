@@ -9,7 +9,7 @@ IR:
 
 object "C_80" {
     code {
-        mstore(64, memoryguard(128))
+        mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
         constructor_C_80()
@@ -25,7 +25,7 @@ object "C_80" {
     }
     object "C_80_deployed" {
         code {
-            mstore(64, memoryguard(128))
+            mstore(64, 128)
 
             if iszero(lt(calldatasize(), 4))
             {

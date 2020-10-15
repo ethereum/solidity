@@ -9,7 +9,7 @@ Optimized IR:
 object "C_6" {
     code {
         {
-            mstore(64, memoryguard(0x80))
+            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             codecopy(0, dataoffset("C_6_deployed"), datasize("C_6_deployed"))
             return(0, datasize("C_6_deployed"))
@@ -18,7 +18,7 @@ object "C_6" {
     object "C_6_deployed" {
         code {
             {
-                mstore(64, memoryguard(0x80))
+                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     let selector := shift_right_224_unsigned(calldataload(0))
