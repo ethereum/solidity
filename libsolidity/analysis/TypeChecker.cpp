@@ -508,9 +508,17 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
-	if (auto contractType = dynamic_cast<ContractType const*>(varType))
+	TypePointer baseType = varType;
+	while (auto const* arrayType = dynamic_cast<ArrayType const*>(baseType))
+		baseType = arrayType->baseType();
+	if (auto contractType = dynamic_cast<ContractType const*>(baseType))
 		if (contractType->contractDefinition().isLibrary())
-			m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
+		{
+			if (baseType == varType)
+				m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
+			else
+				m_errorReporter.typeError(7486_error, _variable.location(), "Arrays of libraries are not allowed.");
+		}
 	if (_variable.value())
 	{
 		if (_variable.isStateVariable() && varType->containsNestedMapping())
