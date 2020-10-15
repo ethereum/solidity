@@ -1,5 +1,5 @@
 {
-    setimmutable(loadimmutable("abc"), "abc")
+    setimmutable(0, loadimmutable("abc"), "abc")
 }
 // ====
 // dialect: evm

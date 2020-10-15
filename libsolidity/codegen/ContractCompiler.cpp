@@ -203,7 +203,10 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	{
 		auto slotNames = m_context.immutableVariableSlotNames(*immutable);
 		for (auto&& slotName: slotNames | boost::adaptors::reversed)
+		{
+			m_context << u256(0);
 			m_context.appendImmutableAssignment(slotName);
+		}
 	}
 	if (!immutables.empty())
 		m_context.pushSubroutineSize(m_context.runtimeSub());

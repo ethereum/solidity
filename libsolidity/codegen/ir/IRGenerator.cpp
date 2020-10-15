@@ -558,7 +558,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 		codecopy(0, dataoffset("<object>"), datasize("<object>"))
 
 		<#storeImmutables>
-			setimmutable("<immutableName>", <var>)
+			setimmutable(0, "<immutableName>", <var>)
 		</storeImmutables>
 
 		return(0, datasize("<object>"))

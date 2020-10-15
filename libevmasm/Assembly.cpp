@@ -672,18 +672,30 @@ LinkerObject const& Assembly::assemble() const
 			ret.bytecode.resize(ret.bytecode.size() + 32);
 			break;
 		case AssignImmutable:
-			for (auto const& offset: immutableReferencesBySub[i.data()].second)
+		{
+			auto const& offsets = immutableReferencesBySub[i.data()].second;
+			for (size_t i = 0; i < offsets.size(); ++i)
 			{
-				ret.bytecode.push_back(uint8_t(Instruction::DUP1));
+				if (i != offsets.size() - 1)
+				{
+					ret.bytecode.push_back(uint8_t(Instruction::DUP2));
+					ret.bytecode.push_back(uint8_t(Instruction::DUP2));
+				}
 				// TODO: should we make use of the constant optimizer methods for pushing the offsets?
-				bytes offsetBytes = toCompactBigEndian(u256(offset));
+				bytes offsetBytes = toCompactBigEndian(u256(offsets[i]));
 				ret.bytecode.push_back(uint8_t(Instruction::PUSH1) - 1 + offsetBytes.size());
 				ret.bytecode += offsetBytes;
+				ret.bytecode.push_back(uint8_t(Instruction::ADD));
 				ret.bytecode.push_back(uint8_t(Instruction::MSTORE));
 			}
+			if (offsets.empty())
+			{
+				ret.bytecode.push_back(uint8_t(Instruction::POP));
+				ret.bytecode.push_back(uint8_t(Instruction::POP));
+			}
 			immutableReferencesBySub.erase(i.data());
-			ret.bytecode.push_back(uint8_t(Instruction::POP));
 			break;
+		}
 		case PushDeployTimeAddress:
 			ret.bytecode.push_back(uint8_t(Instruction::PUSH20));
 			ret.bytecode.resize(ret.bytecode.size() + 20);
