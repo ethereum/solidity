@@ -43,20 +43,24 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.5/cmake-3.14.5
 FROM base AS libraries
 
 # Boost
-RUN git clone -b boost-1.69.0 https://github.com/boostorg/boost.git \
-    /usr/src/boost; \
-    cd /usr/src/boost; \
-    git submodule update --init --recursive; \
+RUN set -ex; \
+    cd /usr/src; \
+    wget -q 'https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.bz2' -O boost.tar.bz2; \
+    test "$(sha256sum boost.tar.bz2)" = "4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402  boost.tar.bz2"; \
+    tar -xf boost.tar.bz2; \
+    rm boost.tar.bz2; \
+    cd boost_1_73_0; \
     ./bootstrap.sh --with-toolset=clang --prefix=/usr; \
     ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++" headers; \
     ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++" \
         link=static variant=release runtime-link=static \
         system filesystem unit_test_framework program_options \
         install -j $(($(nproc)/2)); \
-    rm -rf /usr/src/boost
+    rm -rf /usr/src/boost_1_73_0
 
 # Z3
-RUN git clone --depth 1 -b z3-4.8.9 https://github.com/Z3Prover/z3.git \
+RUN set -ex; \
+    git clone --depth 1 -b z3-4.8.9 https://github.com/Z3Prover/z3.git \
     /usr/src/z3; \
     cd /usr/src/z3; \
     mkdir build; \
