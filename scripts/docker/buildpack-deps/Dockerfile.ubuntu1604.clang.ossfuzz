@@ -50,9 +50,9 @@ RUN set -ex; \
     tar -xf boost.tar.bz2; \
     rm boost.tar.bz2; \
     cd boost_1_73_0; \
-    ./bootstrap.sh --with-toolset=clang --prefix=/usr; \
-    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++" headers; \
-    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++" \
+    CXXFLAGS="-stdlib=libc++ -pthread" LDFLAGS="-stdlib=libc++" ./bootstrap.sh --with-toolset=clang --prefix=/usr; \
+    ./b2 toolset=clang cxxflags="-stdlib=libc++ -pthread" linkflags="-stdlib=libc++ -pthread" headers; \
+    ./b2 toolset=clang cxxflags="-stdlib=libc++ -pthread" linkflags="-stdlib=libc++ -pthread" \
         link=static variant=release runtime-link=static \
         system filesystem unit_test_framework program_options \
         install -j $(($(nproc)/2)); \
@@ -119,7 +119,7 @@ RUN set -ex; \
     git clone https://github.com/ekpyron/Yul-Isabelle; \
     cd Yul-Isabelle; \
     cd libabicoder; \
-    CXX=clang++ CXXFLAGS="-stdlib=libc++" make; \
+    CXX=clang++ CXXFLAGS="-stdlib=libc++ -pthread" make; \
     cp libabicoder.a /usr/lib; \
     cp abicoder.hpp /usr/include; \
     rm -rf /usr/src/Yul-Isabelle
