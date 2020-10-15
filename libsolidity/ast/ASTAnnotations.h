@@ -256,7 +256,7 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Whether the expression is an lvalue that is only assigned.
 	/// Would be false for --, ++, delete, +=, -=, ....
 	/// Only relevant if isLvalue == true
-	bool lValueOfOrdinaryAssignment;
+	bool lValueOfOrdinaryAssignment = false;
 
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resolution

@@ -27,13 +27,6 @@
 
 set -e
 
-if [[ "${TRAVIS_PULL_REQUEST_BRANCH}" != "" ]]; then
-    # Variable is set to the branch's name iff current job is a pull request,
-    # or is set to empty string if it is a push build.
-    echo "Skipping bytecode comparison."
-    exit 0
-fi
-
 REPO_ROOT="$(dirname "$0")"/../..
 
 if test -z "$1"; then
@@ -120,34 +113,7 @@ EOF
         $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/$BUILD_DIR/solc/solc
     fi
 
-    if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]
-    then
-        openssl aes-256-cbc -K $encrypted_60701c962b9c_key -iv $encrypted_60701c962b9c_iv -in "$REPO_ROOT"/scripts/bytecodecompare/deploy_key.enc -out deploy_key -d
-        chmod 600 deploy_key
-        eval `ssh-agent -s`
-        ssh-add deploy_key
-
-        git clone --depth 2 git@github.com:ethereum/solidity-test-bytecode.git
-        cd solidity-test-bytecode
-        git config user.name "travis"
-        git config user.email "chris@ethereum.org"
-        git clean -f -d -x
-
-        DIRNAME=$(cd "$REPO_ROOT" && git show -s --format="%cd-%H" --date="format:%Y-%m-%d-%H-%M")
-        mkdir -p "$DIRNAME"
-        REPORT="$DIRNAME/$ZIP_SUFFIX.txt"
-        cp ../report.txt "$REPORT"
-        # Only push if adding actually worked, i.e. there were changes.
-        if git add "$REPORT" && git commit -a -m "Added report $REPORT"
-        then
-            git pull --rebase
-            git push origin
-        else
-            echo "Adding report failed, it might already exist in the repository."
-        fi
-    else
-        echo "Not storing bytecode because the keys are not available."
-    fi
+    cp report.txt $REPO_ROOT
 )
 rm -rf "$TMPDIR"
 echo "Storebytecode finished."

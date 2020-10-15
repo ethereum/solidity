@@ -16,6 +16,10 @@ Language Features:
 
 ### 0.7.4 (unreleased)
 
+Important Bugfixes:
+ * Code Generator: Fix data corruption bug when copying empty byte arrays from memory or calldata to storage.
+
+
 Language Features:
  * Constants can be defined at file level.
 
