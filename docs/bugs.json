@@ -1,5 +1,12 @@
 [
     {
+        "name": "EmptyByteArrayCopy",
+        "summary": "Copying an empty byte array (or string) from memory or calldata to storage can result in data corruption if the target array's length is increased subsequently without storing new data.",
+        "description": "The routine that copies byte arrays from memory or calldata to storage stores unrelated data from after the source array in the storage slot if the source array is empty. If the storage array's length is subsequently increased either by using ``.push()`` or by assigning to its ``.length`` attribute (only before 0.6.0), the newly created byte array elements will not be zero-initialized, but contain the unrelated data. You are not affected if you do not assign to ``.length`` and do not use ``.push()`` on byte arrays, or only use ``.push(<arg>)`` or manually initialize the new elements.",
+        "fixed": "0.7.4",
+        "severity": "medium"
+    },
+    {
         "name": "DynamicArrayCleanup",
         "summary": "When assigning a dynamically-sized array with types of size at most 16 bytes in storage causing the assigned array to shrink, some parts of deleted slots were not zeroed out.",
         "description": "Consider a dynamically-sized array in storage whose base-type is small enough such that multiple values can be packed into a single slot, such as `uint128[]`. Let us define its length to be `l`. When this array gets assigned from another array with a smaller length, say `m`, the slots between elements `m` and `l` have to be cleaned by zeroing them out. However, this cleaning was not performed properly. Specifically, after the slot corresponding to `m`, only the first packed value was cleaned up. If this array gets resized to a length larger than `m`, the indices corresponding to the unclean parts of the slot contained the original value, instead of 0. The resizing here is performed by assigning to the array `length`, by a `push()` or via inline assembly. You are not affected if you are only using `.push(<arg>)` or if you assign a value (even zero) to the new elements after increasing the length of the array.",
