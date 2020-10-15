@@ -622,27 +622,30 @@ BOOST_AUTO_TEST_CASE(for_loop_break_continue)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
 
-	auto breakContinue = [](u256 const& n) -> u256
-	{
-		u256 i = 1;
-		u256 k = 0;
-		for (i *= 5; k < n; i *= 7)
+		auto breakContinue = [](u256 const& n) -> u256
 		{
-			k++;
-			i += 4;
-			if (n % 3 == 0)
-				break;
-			i += 9;
-			if (n % 2 == 0)
-				continue;
-			i += 19;
-		}
-		return i;
-	};
+			u256 i = 1;
+			u256 k = 0;
+			for (i *= 5; k < n; i *= 7)
+			{
+				k++;
+				i += 4;
+				if (n % 3 == 0)
+					break;
+				i += 9;
+				if (n % 2 == 0)
+					continue;
+				i += 19;
+			}
+			return i;
+		};
 
-	testContractAgainstCppOnRange("f(uint256)", breakContinue, 0, 10);
+		testContractAgainstCppOnRange("f(uint256)", breakContinue, 0, 10);
+	);
 }
 
 BOOST_AUTO_TEST_CASE(calling_other_functions)
@@ -663,8 +666,6 @@ BOOST_AUTO_TEST_CASE(calling_other_functions)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-
 	auto evenStep_cpp = [](u256 const& n) -> u256
 	{
 		return n / 2;
@@ -687,12 +688,16 @@ BOOST_AUTO_TEST_CASE(calling_other_functions)
 		}
 		return y;
 	};
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
 
-	testContractAgainstCpp("run(uint256)", collatz_cpp, u256(0));
-	testContractAgainstCpp("run(uint256)", collatz_cpp, u256(1));
-	testContractAgainstCpp("run(uint256)", collatz_cpp, u256(2));
-	testContractAgainstCpp("run(uint256)", collatz_cpp, u256(8));
-	testContractAgainstCpp("run(uint256)", collatz_cpp, u256(127));
+		testContractAgainstCpp("run(uint256)", collatz_cpp, u256(0));
+		testContractAgainstCpp("run(uint256)", collatz_cpp, u256(1));
+		testContractAgainstCpp("run(uint256)", collatz_cpp, u256(2));
+		testContractAgainstCpp("run(uint256)", collatz_cpp, u256(8));
+		testContractAgainstCpp("run(uint256)", collatz_cpp, u256(127));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(many_local_variables)
@@ -706,18 +711,18 @@ BOOST_AUTO_TEST_CASE(many_local_variables)
 			}
 		}
 	)";
+	auto f = [](u256 const& x1, u256 const& x2, u256 const& x3) -> u256
+	{
+		u256 a = 0x1;
+		u256 b = 0x10;
+		u256 c = 0x100;
+		u256 y = a + b + c + x1 + x2 + x3;
+		return y + b + x2;
+	};
 	ALSO_VIA_YUL(
 		DISABLE_EWASM_TESTRUN()
 
 		compileAndRun(sourceCode);
-		auto f = [](u256 const& x1, u256 const& x2, u256 const& x3) -> u256
-		{
-			u256 a = 0x1;
-			u256 b = 0x10;
-			u256 c = 0x100;
-			u256 y = a + b + c + x1 + x2 + x3;
-			return y + b + x2;
-		};
 		testContractAgainstCpp("run(uint256,uint256,uint256)", f, u256(0x1000), u256(0x10000), u256(0x100000));
 	)
 }
@@ -823,12 +828,15 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	auto small_signed_types_cpp = []() -> u256
-	{
-		return -int32_t(10) * -int64_t(20);
-	};
-	testContractAgainstCpp("run()", small_signed_types_cpp);
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		auto small_signed_types_cpp = []() -> u256
+		{
+			return -int32_t(10) * -int64_t(20);
+		};
+		testContractAgainstCpp("run()", small_signed_types_cpp);
+	);
 }
 
 BOOST_AUTO_TEST_CASE(compound_assign)
@@ -1154,10 +1162,13 @@ BOOST_AUTO_TEST_CASE(uncalled_blockhash)
 			}
 		}
 	)";
-	compileAndRun(code, 0, "C");
-	bytes result = callContractFunction("f()");
-	BOOST_REQUIRE_EQUAL(result.size(), 32);
-	BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(code, 0, "C");
+		bytes result = callContractFunction("f()");
+		BOOST_REQUIRE_EQUAL(result.size(), 32);
+		BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
+	)
 }
 
 BOOST_AUTO_TEST_CASE(log0)
@@ -1325,14 +1336,17 @@ BOOST_AUTO_TEST_CASE(keccak256)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	auto f = [&](u256 const& _x) -> u256
-	{
-		return util::keccak256(toBigEndian(_x));
-	};
-	testContractAgainstCpp("a(bytes32)", f, u256(4));
-	testContractAgainstCpp("a(bytes32)", f, u256(5));
-	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		auto f = [&](u256 const& _x) -> u256
+		{
+			return util::keccak256(toBigEndian(_x));
+		};
+		testContractAgainstCpp("a(bytes32)", f, u256(4));
+		testContractAgainstCpp("a(bytes32)", f, u256(5));
+		testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(sha256)
@@ -1344,7 +1358,6 @@ BOOST_AUTO_TEST_CASE(sha256)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _x) -> bytes
 	{
 		if (_x == u256(4))
@@ -1355,9 +1368,13 @@ BOOST_AUTO_TEST_CASE(sha256)
 			return fromHex("af9613760f72635fbdb44a5a0a63c39f12af30f950a6ee5c971be188e89c4051");
 		return fromHex("");
 	};
-	testContractAgainstCpp("a(bytes32)", f, u256(4));
-	testContractAgainstCpp("a(bytes32)", f, u256(5));
-	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		testContractAgainstCpp("a(bytes32)", f, u256(4));
+		testContractAgainstCpp("a(bytes32)", f, u256(5));
+		testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(ripemd)
@@ -1369,7 +1386,6 @@ BOOST_AUTO_TEST_CASE(ripemd)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _x) -> bytes
 	{
 		if (_x == u256(4))
@@ -1380,9 +1396,13 @@ BOOST_AUTO_TEST_CASE(ripemd)
 			return fromHex("1cf4e77f5966e13e109703cd8a0df7ceda7f3dc3000000000000000000000000");
 		return fromHex("");
 	};
-	testContractAgainstCpp("a(bytes32)", f, u256(4));
-	testContractAgainstCpp("a(bytes32)", f, u256(5));
-	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		testContractAgainstCpp("a(bytes32)", f, u256(4));
+		testContractAgainstCpp("a(bytes32)", f, u256(5));
+		testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(packed_keccak256)
@@ -1396,7 +1416,6 @@ BOOST_AUTO_TEST_CASE(packed_keccak256)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _x) -> u256
 	{
 		return util::keccak256(
@@ -1407,9 +1426,13 @@ BOOST_AUTO_TEST_CASE(packed_keccak256)
 			toBigEndian(u256(256))
 		);
 	};
-	testContractAgainstCpp("a(bytes32)", f, u256(4));
-	testContractAgainstCpp("a(bytes32)", f, u256(5));
-	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		testContractAgainstCpp("a(bytes32)", f, u256(4));
+		testContractAgainstCpp("a(bytes32)", f, u256(5));
+		testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(packed_keccak256_complex_types)
@@ -1428,13 +1451,16 @@ BOOST_AUTO_TEST_CASE(packed_keccak256_complex_types)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	// Strangely, arrays are encoded with intra-element padding.
-	ABI_CHECK(callContractFunction("f()"), encodeArgs(
-		util::keccak256(encodeArgs(u256("0xfffffffffffffffffffffffffffffe"), u256("0xfffffffffffffffffffffffffffffd"), u256("0xfffffffffffffffffffffffffffffc"))),
-		util::keccak256(encodeArgs(u256("0xfffffffffffffffffffffffffffffe"), u256("0xfffffffffffffffffffffffffffffd"), u256("0xfffffffffffffffffffffffffffffc"))),
-		util::keccak256(fromHex(m_contractAddress.hex() + "26121ff0"))
-	));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		// Strangely, arrays are encoded with intra-element padding.
+		ABI_CHECK(callContractFunction("f()"), encodeArgs(
+			util::keccak256(encodeArgs(u256("0xfffffffffffffffffffffffffffffe"), u256("0xfffffffffffffffffffffffffffffd"), u256("0xfffffffffffffffffffffffffffffc"))),
+			util::keccak256(encodeArgs(u256("0xfffffffffffffffffffffffffffffe"), u256("0xfffffffffffffffffffffffffffffd"), u256("0xfffffffffffffffffffffffffffffc"))),
+			util::keccak256(fromHex(m_contractAddress.hex() + "26121ff0"))
+		));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(packed_sha256)
@@ -1448,7 +1474,6 @@ BOOST_AUTO_TEST_CASE(packed_sha256)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _x) -> bytes
 	{
 		if (_x == u256(4))
@@ -1459,9 +1484,13 @@ BOOST_AUTO_TEST_CASE(packed_sha256)
 			return fromHex("f14def4d07cd185ddd8b10a81b2238326196a38867e6e6adbcc956dc913488c7");
 		return fromHex("");
 	};
-	testContractAgainstCpp("a(bytes32)", f, u256(4));
-	testContractAgainstCpp("a(bytes32)", f, u256(5));
-	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		testContractAgainstCpp("a(bytes32)", f, u256(4));
+		testContractAgainstCpp("a(bytes32)", f, u256(5));
+		testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(packed_ripemd160)
@@ -1475,7 +1504,6 @@ BOOST_AUTO_TEST_CASE(packed_ripemd160)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _x) -> bytes
 	{
 		if (_x == u256(4))
@@ -1486,9 +1514,13 @@ BOOST_AUTO_TEST_CASE(packed_ripemd160)
 			return fromHex("c0a2e4b1f3ff766a9a0089e7a410391730872495000000000000000000000000");
 		return fromHex("");
 	};
-	testContractAgainstCpp("a(bytes32)", f, u256(4));
-	testContractAgainstCpp("a(bytes32)", f, u256(5));
-	testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode);
+		testContractAgainstCpp("a(bytes32)", f, u256(4));
+		testContractAgainstCpp("a(bytes32)", f, u256(5));
+		testContractAgainstCpp("a(bytes32)", f, u256(-1));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(inter_contract_calls)
