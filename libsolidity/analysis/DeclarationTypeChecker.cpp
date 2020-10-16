@@ -145,7 +145,11 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
+	{
+		if (contract->isLibrary())
+			m_errorReporter.typeError(1130_error, _typeName.location(), "Invalid use of a library name.");
 		_typeName.annotation().type = TypeProvider::contract(*contract);
+	}
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
@@ -201,23 +205,19 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 		return;
 
 	if (auto const* typeName = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
-	{
-		if (auto const* contractType = dynamic_cast<ContractType const*>(typeName->annotation().type))
+		switch (typeName->annotation().type->category())
 		{
-			if (contractType->contractDefinition().isLibrary())
+			case Type::Category::Enum:
+			case Type::Category::Contract:
+				break;
+			default:
 				m_errorReporter.fatalTypeError(
-					1665_error,
+					7804_error,
 					typeName->location(),
-					"Library types cannot be used as mapping keys."
+					"Only elementary types, contract types or enums are allowed as mapping keys."
 				);
+				break;
 		}
-		else if (typeName->annotation().type->category() != Type::Category::Enum)
-			m_errorReporter.fatalTypeError(
-				7804_error,
-				typeName->location(),
-				"Only elementary types, contract types or enums are allowed as mapping keys."
-			);
-	}
 	else
 		solAssert(dynamic_cast<ElementaryTypeName const*>(&_mapping.keyType()), "");
 
@@ -243,6 +243,7 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 		solAssert(!m_errorReporter.errors().empty(), "");
 		return;
 	}
+
 	solAssert(baseType->storageBytes() != 0, "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
@@ -393,13 +394,36 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 
 }
 
-void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)
+bool DeclarationTypeChecker::visit(UsingForDirective const& _usingFor)
 {
 	ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
 		_usingFor.libraryName().annotation().referencedDeclaration
 	);
+
 	if (!library || !library->isLibrary())
 		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
+
+	_usingFor.libraryName().annotation().type = TypeProvider::contract(*library);
+	if (_usingFor.typeName())
+		_usingFor.typeName()->accept(*this);
+
+	return false;
+}
+
+bool DeclarationTypeChecker::visit(InheritanceSpecifier const& _inheritanceSpecifier)
+{
+	auto const* contract = dynamic_cast<ContractDefinition const*>(_inheritanceSpecifier.name().annotation().referencedDeclaration);
+	solAssert(contract, "");
+	if (contract->isLibrary())
+	{
+		m_errorReporter.typeError(
+			2571_error,
+			_inheritanceSpecifier.name().location(),
+			"Libraries cannot be inherited from."
+		);
+		return false;
+	}
+	return true;
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)

@@ -59,7 +59,8 @@ private:
 	void endVisit(ArrayTypeName const& _typeName) override;
 	void endVisit(VariableDeclaration const& _variable) override;
 	bool visit(StructDefinition const& _struct) override;
-	void endVisit(UsingForDirective const& _usingForDirective) override;
+	bool visit(UsingForDirective const& _usingForDirective) override;
+	bool visit(InheritanceSpecifier const& _inheritanceSpecifier) override;
 
 	langutil::ErrorReporter& m_errorReporter;
 	langutil::EVMVersion m_evmVersion;
