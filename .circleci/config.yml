@@ -910,7 +910,8 @@ jobs:
           keys:
             - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
       # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
-      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.                                    - run:
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
+      - run:
           name: "Installing dependencies"
           command: .\scripts\install_deps.ps1
       - save_cache:
