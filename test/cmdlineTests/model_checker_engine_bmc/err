@@ -1,0 +1,10 @@
+Warning: BMC: Assertion violation happens here.
+ --> model_checker_engine_bmc/input.sol:6:3:
+  |
+6 | 		assert(x > 0);
+  | 		^^^^^^^^^^^^^
+Note: Counterexample:
+  x = 0
+
+Note: Callstack:
+Note:

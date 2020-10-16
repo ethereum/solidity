@@ -1298,7 +1298,7 @@ void CHC::checkAndReportTarget(
 				_errorReporterId,
 				_scope->location(),
 				"CHC: " + _satMsg,
-				SecondarySourceLocation().append("\nCounterexample:\n" + *cex, SourceLocation{})
+				SecondarySourceLocation().append("Counterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
@@ -1402,9 +1402,13 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			}
 		}
 		else
+		{
+			auto modelMsg = formatVariableModel(*stateVars, stateValues, ", ");
 			/// We report the state after every tx in the trace except for the last, which is reported
 			/// first in the code above.
-			path.emplace_back("State: " + formatVariableModel(*stateVars, stateValues, ", "));
+			if (!modelMsg.empty())
+				path.emplace_back("State: " + modelMsg);
+		}
 
 		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
 		path.emplace_back(txCex);

@@ -341,7 +341,9 @@ Input Description
           "def": {
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           }
-        }
+        },
+        // Choose which model checker engine to use: all (default), bmc, chc, none.
+        "modelCheckerEngine": "chc"
       }
     }
 

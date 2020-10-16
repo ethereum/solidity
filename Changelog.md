@@ -12,6 +12,8 @@ Compiler Features:
  * SMTChecker: Support inline arrays.
  * SMTChecker: Support variables ``block``, ``msg`` and ``tx`` in the CHC engine.
  * Control Flow Graph: Print warning for non-empty functions with unnamed return parameters that are not assigned a value in all code paths.
+ * Command Line Interface: New option ``model-checker-engine`` allows to choose a specific SMTChecker engine. Options are ``all`` (default), ``bmc``, ``chc`` and ``none``.
+ * Standard JSON: New option ``settings.modelCheckerEngine`` allows to choose a specific SMTChecker engine. Options are ``all`` (default), ``bmc``, ``chc`` and ``none``.
 
 
 Bugfixes:

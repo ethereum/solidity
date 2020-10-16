@@ -2132,7 +2132,7 @@ SecondarySourceLocation SMTEncoder::callStackMessage(vector<CallStackEntry> cons
 {
 	SecondarySourceLocation callStackLocation;
 	solAssert(!_callStack.empty(), "");
-	callStackLocation.append("Callstack: ", SourceLocation());
+	callStackLocation.append("Callstack:", SourceLocation());
 	for (auto const& call: _callStack | boost::adaptors::reversed)
 		if (call.second)
 			callStackLocation.append("", call.second->location());
