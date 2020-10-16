@@ -17,8 +17,3 @@ contract C {
 	}
 }
 // ----
-// Warning 1218: (158-174): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (178-192): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (309-325): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (329-343): CHC: Error trying to invoke SMT solver.
-// Warning 7812: (329-343): BMC: Assertion violation might happen here.
