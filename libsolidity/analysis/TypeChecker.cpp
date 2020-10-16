@@ -276,9 +276,6 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	if (m_currentContract->isInterface() && !base->isInterface())
 		m_errorReporter.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
-	if (base->isLibrary())
-		m_errorReporter.typeError(2571_error, _inheritance.location(), "Libraries cannot be inherited from.");
-
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes;
 	if (!base->isInterface())
@@ -508,9 +505,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
-	if (auto contractType = dynamic_cast<ContractType const*>(varType))
-		if (contractType->contractDefinition().isLibrary())
-			m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
 	{
 		if (_variable.isStateVariable() && varType->containsNestedMapping())

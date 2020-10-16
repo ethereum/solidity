@@ -1,4 +1,9 @@
 library L {}
-contract C { mapping(L => bool) i; }
+contract C
+{
+  mapping(bool => L) j;
+  mapping(L => bool) i;
+}
 // ----
-// TypeError 1665: (34-35): Library types cannot be used as mapping keys.
+// TypeError 1130: (44-45): Invalid use of a library name.
+// TypeError 1130: (60-61): Invalid use of a library name.
