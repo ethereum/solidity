@@ -385,13 +385,6 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		internalOrExternalFunctionCall(_funCall);
 		break;
-	case FunctionType::Kind::KECCAK256:
-	case FunctionType::Kind::ECRecover:
-	case FunctionType::Kind::SHA256:
-	case FunctionType::Kind::RIPEMD160:
-		SMTEncoder::endVisit(_funCall);
-		abstractFunctionCall(_funCall);
-		break;
 	case FunctionType::Kind::Send:
 	case FunctionType::Kind::Transfer:
 	{
@@ -408,6 +401,10 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		break;
 	}
+	case FunctionType::Kind::KECCAK256:
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::SHA256:
+	case FunctionType::Kind::RIPEMD160:
 	case FunctionType::Kind::BlockHash:
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
@@ -483,16 +480,6 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	}
 
 	createReturnedExpressions(_funCall);
-}
-
-void BMC::abstractFunctionCall(FunctionCall const& _funCall)
-{
-	vector<smtutil::Expression> smtArguments;
-	for (auto const& arg: _funCall.arguments())
-		smtArguments.push_back(expr(*arg));
-	defineExpr(_funCall, (*m_context.expression(_funCall.expression()))(smtArguments));
-	m_uninterpretedTerms.insert(&_funCall);
-	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, m_context);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
