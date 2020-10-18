@@ -22,6 +22,7 @@ Bugfixes:
  * Code generator: Fix internal compiler error when referencing members via module name but not using the reference.
  * Code generator: Fix ``ABIEncoderV2`` pragma from the current module affecting inherited functions and applied modifiers.
  * Code generator: Use revert instead of invalid opcode for out-of-bounds array index access in getter.
+ * Type Checker: Allow arrays of contract types as type expressions and as arguments for ``abi.decode``.
  * Type Checker: Disallow invalid use of library names as type name.
  * Type Checker: Fix internal compiler error caused by storage parameters with nested mappings in libraries.
  * Name Resolver: Fix shadowing/same-name warnings for later declarations.

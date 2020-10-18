@@ -2915,8 +2915,9 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	case Type::Category::TypeType:
 	{
 		TypeType const& typeType = dynamic_cast<TypeType const&>(*baseType);
-		if (dynamic_cast<ContractType const*>(typeType.actualType()))
-			m_errorReporter.typeError(2876_error, _access.location(), "Index access for contracts or libraries is not possible.");
+		if (auto const* contractType = dynamic_cast<ContractType const*>(typeType.actualType()))
+			if (contractType->contractDefinition().isLibrary())
+				m_errorReporter.typeError(2876_error, _access.location(), "Index access for library types and arrays of libraries are not possible.");
 		if (!index)
 			resultType = TypeProvider::typeType(TypeProvider::array(DataLocation::Memory, typeType.actualType()));
 		else
