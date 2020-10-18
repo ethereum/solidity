@@ -236,7 +236,7 @@ Example:
 #include <numeric>
 ```
 
-See [this issue](http://stackoverflow.com/questions/614302/c-header-order/614333#614333 "C header order") for the reason: this makes it easier to find missing includes in header files.
+See [this issue](https://stackoverflow.com/questions/614302/c-header-order/614333#614333 "C header order") for the reason: this makes it easier to find missing includes in header files.
 
 ## 13. Recommended reading
 
