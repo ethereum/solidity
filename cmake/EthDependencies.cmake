@@ -31,7 +31,7 @@ endif()
 
 set(BOOST_COMPONENTS "filesystem;unit_test_framework;program_options;system")
 
-find_package(Boost 1.65.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+find_package(Boost 1.69.0 QUIET REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 # If cmake is older than boost and boost is older than 1.70,
 # find_package does not define imported targets, so we have to
