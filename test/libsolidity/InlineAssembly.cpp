@@ -203,31 +203,6 @@ BOOST_AUTO_TEST_CASE(constants)
 	BOOST_CHECK(successParse("{ pop(mul(7, 8)) }"));
 }
 
-BOOST_AUTO_TEST_CASE(functional)
-{
-	BOOST_CHECK(successParse("{ let x := 2 x := add(add(7, mul(6, x)), mul(7, 8)) }"));
-}
-
-BOOST_AUTO_TEST_CASE(functional_partial)
-{
-	CHECK_PARSE_ERROR("{ let x := byte }", ParserError, "Expected '(' but got '}'");
-}
-
-BOOST_AUTO_TEST_CASE(functional_partial_success)
-{
-	BOOST_CHECK(successParse("{ let x := byte(1, 2) }"));
-}
-
-BOOST_AUTO_TEST_CASE(functional_assignment)
-{
-	BOOST_CHECK(successParse("{ let x := 2 x := 7 }"));
-}
-
-BOOST_AUTO_TEST_CASE(functional_assignment_complex)
-{
-	BOOST_CHECK(successParse("{ let x := 2 x := add(add(7, mul(6, x)), mul(7, 8)) }"));
-}
-
 BOOST_AUTO_TEST_CASE(for_statement)
 {
 	BOOST_CHECK(successParse("{ for {} 1 {} {} }"));
@@ -566,13 +541,6 @@ BOOST_AUTO_TEST_CASE(returndatasize)
 }
 
 BOOST_AUTO_TEST_CASE(returndatacopy)
-{
-	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-		return;
-	BOOST_CHECK(successAssemble("{ returndatacopy(0, 32, 64) }"));
-}
-
-BOOST_AUTO_TEST_CASE(returndatacopy_functional)
 {
 	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
 		return;
