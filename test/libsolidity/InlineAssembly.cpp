@@ -203,37 +203,6 @@ BOOST_AUTO_TEST_CASE(constants)
 	BOOST_CHECK(successParse("{ pop(mul(7, 8)) }"));
 }
 
-BOOST_AUTO_TEST_CASE(vardecl)
-{
-	BOOST_CHECK(successParse("{ let x := 7 }"));
-}
-
-BOOST_AUTO_TEST_CASE(vardecl_name_clashes)
-{
-	CHECK_PARSE_ERROR("{ let x := 1 let x := 2 }", DeclarationError, "Variable name x already taken in this scope.");
-}
-
-BOOST_AUTO_TEST_CASE(vardecl_multi)
-{
-	BOOST_CHECK(successParse("{ function f() -> x, y {} let x, y := f() }"));
-}
-
-BOOST_AUTO_TEST_CASE(vardecl_multi_conflict)
-{
-	CHECK_PARSE_ERROR("{ function f() -> x, y {} let x, x := f() }", DeclarationError, "Variable name x already taken in this scope.");
-}
-
-BOOST_AUTO_TEST_CASE(vardecl_bool)
-{
-	successParse("{ let x := true }");
-	successParse("{ let x := false }");
-}
-
-BOOST_AUTO_TEST_CASE(vardecl_empty)
-{
-	BOOST_CHECK(successParse("{ let x }"));
-}
-
 BOOST_AUTO_TEST_CASE(functional)
 {
 	BOOST_CHECK(successParse("{ let x := 2 x := add(add(7, mul(6, x)), mul(7, 8)) }"));
@@ -257,17 +226,6 @@ BOOST_AUTO_TEST_CASE(functional_assignment)
 BOOST_AUTO_TEST_CASE(functional_assignment_complex)
 {
 	BOOST_CHECK(successParse("{ let x := 2 x := add(add(7, mul(6, x)), mul(7, 8)) }"));
-}
-
-BOOST_AUTO_TEST_CASE(vardecl_complex)
-{
-	BOOST_CHECK(successParse("{ let y := 2 let x := add(add(7, mul(6, y)), mul(7, 8)) }"));
-}
-
-BOOST_AUTO_TEST_CASE(variable_use_before_decl)
-{
-	CHECK_PARSE_ERROR("{ x := 2 let x := 3 }", DeclarationError, "Variable x used before it was declared.");
-	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
 }
 
 BOOST_AUTO_TEST_CASE(for_statement)
