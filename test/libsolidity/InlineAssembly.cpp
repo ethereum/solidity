@@ -217,21 +217,6 @@ BOOST_AUTO_TEST_CASE(number_literals)
 	CHECK_STRICT_ERROR("{ let x := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff }", TypeError, "Number literal too large (> 256 bits)");
 }
 
-BOOST_AUTO_TEST_CASE(function_definitions)
-{
-	BOOST_CHECK(successParse("{ function f() { } function g(a) -> x { } }"));
-}
-
-BOOST_AUTO_TEST_CASE(function_definitions_multiple_args)
-{
-	BOOST_CHECK(successParse("{ function f(a, d) { } function g(a, d) -> x, y { } }"));
-}
-
-BOOST_AUTO_TEST_CASE(function_calls)
-{
-	BOOST_CHECK(successParse("{ function f(a) -> b {} function g(a, b, c) {} function x() { g(1, 2, f(mul(2, 3))) x() } }"));
-}
-
 BOOST_AUTO_TEST_CASE(opcode_for_functions)
 {
 	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use builtin");
@@ -267,11 +252,6 @@ BOOST_AUTO_TEST_CASE(name_clashes_function_variable_subscope_reverse)
 {
 	CHECK_PARSE_ERROR("{ { let g := 0 } function g() { } }", DeclarationError, "Variable name g already taken in this scope");
 }
-BOOST_AUTO_TEST_CASE(functions_in_parallel_scopes)
-{
-	BOOST_CHECK(successParse("{ { function g() {} } { function g() {} } }"));
-}
-
 BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
 {
 	CHECK_PARSE_ERROR("{ let x := 2 function g() { pop(x) } }", DeclarationError, "Identifier not found.");
@@ -452,29 +432,6 @@ BOOST_AUTO_TEST_CASE(inline_assembly_shadowed_instruction_declaration)
 BOOST_AUTO_TEST_CASE(revert)
 {
 	BOOST_CHECK(successAssemble("{ revert(0, 0) }"));
-}
-
-BOOST_AUTO_TEST_CASE(function_calls)
-{
-	BOOST_CHECK(successAssemble("{ function f() {} }"));
-	BOOST_CHECK(successAssemble("{ function f() { let y := 2 } }"));
-	BOOST_CHECK(successAssemble("{ function f() -> z { let y := 2 } }"));
-	BOOST_CHECK(successAssemble("{ function f(a) { let y := 2 } }"));
-	BOOST_CHECK(successAssemble("{ function f(a) { let y := a } }"));
-	BOOST_CHECK(successAssemble("{ function f() -> x, y, z {} }"));
-	BOOST_CHECK(successAssemble("{ function f(x, y, z) {} }"));
-	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y, z { y := a } }"));
-	BOOST_CHECK(successAssemble("{ function f() {} f() }"));
-	BOOST_CHECK(successAssemble("{ function f() -> x, y { x := 1 y := 2} let a, b := f() }"));
-	BOOST_CHECK(successAssemble("{ function f(a, b) -> x, y { x := b y := a } let a, b := f(2, 3) }"));
-	BOOST_CHECK(successAssemble("{ function rec(a) { rec(sub(a, 1)) } rec(2) }"));
-	BOOST_CHECK(successAssemble("{ let r := 2 function f() -> x, y { x := 1 y := 2} let a, b := f() b := r }"));
-	BOOST_CHECK(successAssemble("{ function f() { g() } function g() { f() } }"));
-}
-
-BOOST_AUTO_TEST_CASE(embedded_functions)
-{
-	BOOST_CHECK(successAssemble("{ function f(r, s) -> x { function g(a) -> b { } x := g(2) } let x := f(2, 3) }"));
 }
 
 BOOST_AUTO_TEST_CASE(large_constant)
