@@ -203,41 +203,6 @@ BOOST_AUTO_TEST_CASE(constants)
 	BOOST_CHECK(successParse("{ pop(mul(7, 8)) }"));
 }
 
-BOOST_AUTO_TEST_CASE(for_statement)
-{
-	BOOST_CHECK(successParse("{ for {} 1 {} {} }"));
-	BOOST_CHECK(successParse("{ for { let i := 1 } lt(i, 5) { i := add(i, 1) } {} }"));
-}
-
-BOOST_AUTO_TEST_CASE(for_invalid_expression)
-{
-	CHECK_PARSE_ERROR("{ for {} {} {} {} }", ParserError, "Literal or identifier expected.");
-	CHECK_PARSE_ERROR("{ for 1 1 {} {} }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} 1 1 {} }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} 1 {} 1 }", ParserError, "Expected '{' but got 'Number'");
-	CHECK_PARSE_ERROR("{ for {} mload {} {} }", ParserError, "Expected '(' but got '{'");
-	CHECK_PARSE_ERROR("{ for {} mstore(1, 1) {} {} }", TypeError, "Expected expression to evaluate to one value, but got 0 values instead.");
-}
-
-BOOST_AUTO_TEST_CASE(for_visibility)
-{
-	BOOST_CHECK(successParse("{ for { let i := 1 } i { pop(i) } { pop(i) } }"));
-	CHECK_PARSE_ERROR("{ for {} i { let i := 1 } {} }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} 1 { let i := 1 } { pop(i) } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { let i := 1 } {} }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { pop(i) } 1 { } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} i {} { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for {} 1 { pop(i) } { let i := 1 } }", DeclarationError, "Identifier not found");
-	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 { let x := 1 } {} }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ for { let x := 1 } 1 {} { let x := 1 } }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for { let x := 1 } 1 {} {} }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 { let x := 1 } {} }", DeclarationError, "Variable name x already taken in this scope");
-	CHECK_PARSE_ERROR("{ let x := 1 for {} 1 {} { let x := 1 } }", DeclarationError, "Variable name x already taken in this scope");
-	// Check that body and post are not sub-scopes of each other.
-	BOOST_CHECK(successParse("{ for {} 1 { let x := 1 } { let x := 1 } }"));
-}
-
 BOOST_AUTO_TEST_CASE(blocks)
 {
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
@@ -510,12 +475,6 @@ BOOST_AUTO_TEST_CASE(function_calls)
 BOOST_AUTO_TEST_CASE(embedded_functions)
 {
 	BOOST_CHECK(successAssemble("{ function f(r, s) -> x { function g(a) -> b { } x := g(2) } let x := f(2, 3) }"));
-}
-
-BOOST_AUTO_TEST_CASE(for_statement)
-{
-	BOOST_CHECK(successAssemble("{ for {} 1 {} {} }"));
-	BOOST_CHECK(successAssemble("{ let x := calldatasize() for { let i := 0} lt(i, x) { i := add(i, 1) } { mstore(i, 2) } }"));
 }
 
 BOOST_AUTO_TEST_CASE(large_constant)
