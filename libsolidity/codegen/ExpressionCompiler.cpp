@@ -275,7 +275,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		solAssert(*_assignment.annotation().type == leftType, "");
 	bool cleanupNeeded = false;
 	if (op != Token::Assign)
-		cleanupNeeded = cleanupNeededForOp(leftType.category(), binOp);
+		cleanupNeeded = cleanupNeededForOp(leftType.category(), binOp, m_context.arithmetic());
 	_assignment.rightHandSide().accept(*this);
 	// Perform some conversion already. This will convert storage types to memory and literals
 	// to their actual type, but will not convert e.g. memory to storage.
@@ -381,9 +381,10 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
-	if (_unaryOperation.annotation().type->category() == Type::Category::RationalNumber)
+	Type const& type = *_unaryOperation.annotation().type;
+	if (type.category() == Type::Category::RationalNumber)
 	{
-		m_context << _unaryOperation.annotation().type->literalValue(nullptr);
+		m_context << type.literalValue(nullptr);
 		return false;
 	}
 
@@ -406,24 +407,39 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::Dec: // -- (pre- or postfix)
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		solUnimplementedAssert(
-			_unaryOperation.annotation().type->category() != Type::Category::FixedPoint,
+			type.category() != Type::Category::FixedPoint,
 			"Not yet implemented - FixedPointType."
 		);
 		m_currentLValue->retrieveValue(_unaryOperation.location());
 		if (!_unaryOperation.isPrefixOperation())
 		{
 			// store value for later
-			solUnimplementedAssert(_unaryOperation.annotation().type->sizeOnStack() == 1, "Stack size != 1 not implemented.");
+			solUnimplementedAssert(type.sizeOnStack() == 1, "Stack size != 1 not implemented.");
 			m_context << Instruction::DUP1;
 			if (m_currentLValue->sizeOnStack() > 0)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
 					m_context << swapInstruction(i);
 		}
-		m_context << u256(1);
 		if (_unaryOperation.getOperator() == Token::Inc)
-			m_context << Instruction::ADD;
+		{
+			if (m_context.arithmetic() == Arithmetic::Checked)
+				m_context.callYulFunction(m_context.utilFunctions().incrementCheckedFunction(type), 1, 1);
+			else
+			{
+				m_context << u256(1);
+				m_context << Instruction::ADD;
+			}
+		}
 		else
-			m_context << Instruction::SWAP1 << Instruction::SUB;
+		{
+			if (m_context.arithmetic() == Arithmetic::Checked)
+				m_context.callYulFunction(m_context.utilFunctions().decrementCheckedFunction(type), 1, 1);
+			else
+			{
+				m_context << u256(1);
+				m_context << Instruction::SWAP1 << Instruction::SUB;
+			}
+		}
 		// Stack for prefix: [ref...] (*ref)+-1
 		// Stack for postfix: *ref [ref...] (*ref)+-1
 		for (unsigned i = m_currentLValue->sizeOnStack(); i > 0; --i)
@@ -437,7 +453,10 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		// unary add, so basically no-op
 		break;
 	case Token::Sub: // -
-		m_context << u256(0) << Instruction::SUB;
+		if (m_context.arithmetic() == Arithmetic::Checked)
+			m_context.callYulFunction(m_context.utilFunctions().negateNumberCheckedFunction(type), 1, 1);
+		else
+			m_context << u256(0) << Instruction::SUB;
 		break;
 	default:
 		solAssert(false, "Invalid unary operator: " + string(TokenTraits::toString(_unaryOperation.getOperator())));
@@ -460,7 +479,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		m_context << commonType->literalValue(nullptr);
 	else
 	{
-		bool cleanupNeeded = cleanupNeededForOp(commonType->category(), c_op);
+		bool cleanupNeeded = cleanupNeededForOp(commonType->category(), c_op, m_context.arithmetic());
 
 		TypePointer leftTargetType = commonType;
 		TypePointer rightTargetType =
@@ -2112,34 +2131,65 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token _operator, Type cons
 		solUnimplemented("Not yet implemented - FixedPointType.");
 
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
-
-	switch (_operator)
+	if (m_context.arithmetic() == Arithmetic::Checked)
 	{
-	case Token::Add:
-		m_context << Instruction::ADD;
-		break;
-	case Token::Sub:
-		m_context << Instruction::SUB;
-		break;
-	case Token::Mul:
-		m_context << Instruction::MUL;
-		break;
-	case Token::Div:
-	case Token::Mod:
-	{
-		// Test for division by zero
-		m_context << Instruction::DUP2 << Instruction::ISZERO;
-		m_context.appendConditionalInvalid();
-
-		if (_operator == Token::Div)
-			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-		else
-			m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
-		break;
+		string functionName;
+		switch (_operator)
+		{
+		case Token::Add:
+			functionName = m_context.utilFunctions().overflowCheckedIntAddFunction(type);
+			break;
+		case Token::Sub:
+			functionName = m_context.utilFunctions().overflowCheckedIntSubFunction(type);
+			break;
+		case Token::Mul:
+			functionName = m_context.utilFunctions().overflowCheckedIntMulFunction(type);
+			break;
+		case Token::Div:
+			functionName = m_context.utilFunctions().overflowCheckedIntDivFunction(type);
+			break;
+		case Token::Mod:
+			functionName = m_context.utilFunctions().intModFunction(type);
+			break;
+		case Token::Exp:
+			// EXP is handled in a different function.
+		default:
+			solAssert(false, "Unknown arithmetic operator.");
+		}
+		// TODO Maybe we want to force-inline this?
+		m_context.callYulFunction(functionName, 2, 1);
 	}
-	default:
-		solAssert(false, "Unknown arithmetic operator.");
+	else
+	{
+		bool const c_isSigned = type.isSigned();
+
+		switch (_operator)
+		{
+		case Token::Add:
+			m_context << Instruction::ADD;
+			break;
+		case Token::Sub:
+			m_context << Instruction::SUB;
+			break;
+		case Token::Mul:
+			m_context << Instruction::MUL;
+			break;
+		case Token::Div:
+		case Token::Mod:
+		{
+			// Test for division by zero
+			m_context << Instruction::DUP2 << Instruction::ISZERO;
+			m_context.appendConditionalInvalid();
+
+			if (_operator == Token::Div)
+				m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+			else
+				m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+			break;
+		}
+		default:
+			solAssert(false, "Unknown arithmetic operator.");
+		}
 	}
 }
 
@@ -2237,7 +2287,14 @@ void ExpressionCompiler::appendExpOperatorCode(Type const& _valueType, Type cons
 	solAssert(_valueType.category() == Type::Category::Integer, "");
 	solAssert(!dynamic_cast<IntegerType const&>(_exponentType).isSigned(), "");
 
-	m_context << Instruction::EXP;
+
+	if (m_context.arithmetic() == Arithmetic::Checked)
+		m_context.callYulFunction(m_context.utilFunctions().overflowCheckedIntExpFunction(
+			dynamic_cast<IntegerType const&>(_valueType),
+			dynamic_cast<IntegerType const&>(_exponentType)
+		), 2, 1);
+	else
+		m_context << Instruction::EXP;
 }
 
 void ExpressionCompiler::appendExternalFunctionCall(
@@ -2561,11 +2618,15 @@ void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 	setLValue<StorageItem>(_expression, *_expression.annotation().type);
 }
 
-bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op)
+bool ExpressionCompiler::cleanupNeededForOp(Type::Category _type, Token _op, Arithmetic _arithmetic)
 {
 	if (TokenTraits::isCompareOp(_op) || TokenTraits::isShiftOp(_op))
 		return true;
-	else if (_type == Type::Category::Integer && (_op == Token::Div || _op == Token::Mod || _op == Token::Exp))
+	else if (
+		_arithmetic == Arithmetic::Wrapping &&
+		_type == Type::Category::Integer &&
+		(_op == Token::Div || _op == Token::Mod || _op == Token::Exp)
+	)
 		// We need cleanup for EXP because 0**0 == 1, but 0**0x100 == 0
 		// It would suffice to clean the exponent, though.
 		return true;

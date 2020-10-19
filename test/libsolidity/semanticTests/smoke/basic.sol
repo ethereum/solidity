@@ -13,7 +13,7 @@ contract C {
         return (2, 3);
     }
     function h(uint x, uint y) public  pure returns (uint) {
-        return x - y;
+        unchecked { return x - y; }
     }
     function i(bool b) public  pure returns (bool) {
         return !b;
@@ -28,6 +28,8 @@ contract C {
         return a * 7;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // d() ->
 // e(), 1 wei -> 1

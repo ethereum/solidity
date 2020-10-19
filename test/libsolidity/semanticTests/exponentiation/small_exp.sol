@@ -1,12 +1,13 @@
 contract test {
-    function f() public pure returns (uint) {
+    function f() public pure returns (uint r) {
         uint32 x;
         uint8 y;
         assembly {
             x := 0xfffffffffe
             y := 0x102
         }
-        return x**y;
+        unchecked { r = x**y; }
+        return r;
     }
 }
 // ----

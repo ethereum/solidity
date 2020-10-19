@@ -757,10 +757,12 @@ BOOST_AUTO_TEST_CASE(high_bits_cleaning)
 	char const* sourceCode = R"(
 		contract test {
 			function run() public returns(uint256 y) {
-				uint32 t = uint32(0xffffffff);
-				uint32 x = t + 10;
-				if (x >= 0xffffffff) return 0;
-				return x;
+				unchecked {
+					uint32 t = uint32(0xffffffff);
+					uint32 x = t + 10;
+					if (x >= 0xffffffff) return 0;
+					return x;
+				}
 			}
 		}
 	)";
@@ -781,9 +783,11 @@ BOOST_AUTO_TEST_CASE(sign_extension)
 	char const* sourceCode = R"(
 		contract test {
 			function run() public returns(uint256 y) {
-				int64 x = -int32(0xff);
-				if (x >= 0xff) return 0;
-				return 0 - uint256(x);
+				unchecked {
+					int64 x = -int32(0xff);
+					if (x >= 0xff) return 0;
+					return 0 - uint256(x);
+				}
 			}
 		}
 	)";
@@ -803,9 +807,11 @@ BOOST_AUTO_TEST_CASE(small_unsigned_types)
 	char const* sourceCode = R"(
 		contract test {
 			function run() public returns(uint256 y) {
-				uint32 t = uint32(0xffffff);
-				uint32 x = t * 0xffffff;
-				return x / 0x100;
+				unchecked {
+					uint32 t = uint32(0xffffff);
+					uint32 x = t * 0xffffff;
+					return x / 0x100;
+				}
 			}
 		}
 	)";
@@ -1804,8 +1810,11 @@ BOOST_AUTO_TEST_CASE(blockhash)
 			function g() public returns (bool) { counter++; return true; }
 			function f() public returns (bytes32[] memory r) {
 				r = new bytes32[](259);
-				for (uint i = 0; i < 259; i++)
-					r[i] = blockhash(block.number - 257 + i);
+				for (uint i = 0; i < 259; i++) {
+					unchecked {
+						r[i] = blockhash(block.number - 257 + i);
+					}
+				}
 			}
 		}
 	)";
@@ -6881,7 +6890,7 @@ BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
 				}
 				uint x = 0x0000000000001234123412431234123412412342112341234124312341234124;
 				// This is just to create many instances of x
-				emit X(x + f() * g(tx.origin) ^ h(block.number));
+				unchecked { emit X(x + f() * g(tx.origin) ^ h(block.number)); }
 				assembly {
 					// make scratch space dirty
 					mstore(0, 0x4242424242424242424242424242424242424242424242424242424242424242)
@@ -6892,10 +6901,10 @@ BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
 				return 0x0000000000001234123412431234123412412342112341234124312341234124;
 			}
 			function g(address a) internal pure returns (uint) {
-				return uint(a) * 0x0000000000001234123412431234123412412342112341234124312341234124;
+				unchecked { return uint(a) * 0x0000000000001234123412431234123412412342112341234124312341234124; }
 			}
 			function h(uint a) internal pure returns (uint) {
-				return a * 0x0000000000001234123412431234123412412342112341234124312341234124;
+				unchecked { return a * 0x0000000000001234123412431234123412412342112341234124312341234124; }
 			}
 		}
 	)";

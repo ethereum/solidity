@@ -46,8 +46,10 @@ access the minimum and maximum value representable by the type.
 .. warning::
 
   Integers in Solidity are restricted to a certain range. For example, with ``uint32``, this is ``0`` up to ``2**32 - 1``.
-  If the result of some operation on those numbers does not fit inside this range, it is truncated. These truncations can have
-  serious consequences that you should :ref:`be aware of and mitigate against<underflow-overflow>`.
+  There are two modes in which arithmetic is performed on these types: The "wrapping" or "unchecked" mode and the "checked" mode.
+  By default, arithmetic is always "checked", which mean that if the result of an operation falls outside the value range
+  of the type, the call is reverted through a :ref:`failing assertion<assert-and-require>`. You can switch to "unchecked" mode
+  using ``unchecked { ... }``. More details can be found in the section about :ref:`unchecked <unchecked>`.
 
 Comparisons
 ^^^^^^^^^^^
@@ -77,23 +79,22 @@ Right operand must be unsigned type. Trying to shift by signed type will produce
 Addition, Subtraction and Multiplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Addition, subtraction and multiplication have the usual semantics.
-They wrap in two's complement representation, meaning that
-for example ``uint256(0) - uint256(1) == 2**256 - 1``. You have to take these overflows
-into account when designing safe smart contracts.
+Addition, subtraction and multiplication have the usual semantics, with two different
+modes in regard to over- and underflow:
+
+By default, all arithmetic is checked for under- or overflow, but this can be disabled
+using the :ref:`unchecked block<unchecked>`, resulting in wrapping arithmetic. More details
+can be found in that section.
 
 The expression ``-x`` is equivalent to ``(T(0) - x)`` where
 ``T`` is the type of ``x``. It can only be applied to signed types.
 The value of ``-x`` can be
 positive if ``x`` is negative. There is another caveat also resulting
-from two's complement representation::
+from two's complement representation:
 
-    int x = -2**255;
-    assert(-x == x);
-
-This means that even if a number is negative, you cannot assume that
-its negation will be positive.
-
+If you have ``int x = type(int).min;``, then ``-x`` does not fit the positive range.
+This means that ``unchecked { assert(-x == x); }`` works, and the expression ``-x``
+when used in checked mode will result in a failing assertion.
 
 Division
 ^^^^^^^^
@@ -106,7 +107,12 @@ Note that in contrast, division on :ref:`literals<rational_literals>` results in
 of arbitrary precision.
 
 .. note::
-  Division by zero causes a failing assert.
+  Division by zero causes a failing assert. This check can **not** be disabled through ``unchecked { ... }``.
+
+.. note::
+  The expression ``type(int).min / (-1)`` is the only case where division causes an overflow.
+  In checked arithmetic mode, this will cause a failing assertion, while in wrapping
+  mode, the value will be ``type(int).min``.
 
 Modulo
 ^^^^^^
@@ -121,14 +127,19 @@ results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`
  * ``int256(-5) % int256(-2) == int256(-1)``
 
 .. note::
-  Modulo with zero causes a failing assert.
+  Modulo with zero causes a failing assert. This check can **not** be disabled through ``unchecked { ... }``.
 
 Exponentiation
 ^^^^^^^^^^^^^^
 
 Exponentiation is only available for unsigned types in the exponent. The resulting type
 of an exponentiation is always equal to the type of the base. Please take care that it is
-large enough to hold the result and prepare for potential wrapping behaviour.
+large enough to hold the result and prepare for potential assertion failures or wrapping behaviour.
+
+.. note::
+  In checked mode, exponentiation only uses the comparatively cheap ``exp`` opcode for small bases.
+  For the cases of ``x**3``, the expression ``x*x*x`` might be cheaper.
+  In any case, gas cost tests and the use of the optimizer are advisable.
 
 .. note::
   Note that ``0**0`` is defined by the EVM as ``1``.

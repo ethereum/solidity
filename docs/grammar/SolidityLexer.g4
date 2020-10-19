@@ -7,7 +7,7 @@ ReservedKeywords:
 	'after' | 'alias' | 'apply' | 'auto' | 'case' | 'copyof' | 'default' | 'define' | 'final'
 	| 'implements' | 'in' | 'inline' | 'let' | 'macro' | 'match' | 'mutable' | 'null' | 'of'
 	| 'partial' | 'promise' | 'reference' | 'relocatable' | 'sealed' | 'sizeof' | 'static'
-	| 'supports' | 'switch' | 'typedef' | 'typeof' | 'unchecked' | 'var';
+	| 'supports' | 'switch' | 'typedef' | 'typeof' | 'var';
 
 Pragma: 'pragma' -> pushMode(PragmaMode);
 Abstract: 'abstract';
@@ -87,6 +87,7 @@ True: 'true';
 Try: 'try';
 Type: 'type';
 Ufixed: 'ufixed' | ('ufixed' [0-9]+ 'x' [0-9]+);
+Unchecked: 'unchecked';
 /**
  * Sized unsigned integer types.
  * uint is an alias of uint256.

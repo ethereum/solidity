@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(does_not_include_creation_time_only_internal_functions)
 		contract C {
 			uint x;
 			constructor() { f(); }
-			function f() internal { for (uint i = 0; i < 10; ++i) x += 3 + i; }
+			function f() internal { unchecked { for (uint i = 0; i < 10; ++i) x += 3 + i; } }
 		}
 	)";
 	compiler().setOptimiserSettings(solidity::test::CommonOptions::get().optimize);

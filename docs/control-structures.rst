@@ -475,6 +475,69 @@ In any case, you will get a warning about the outer variable being shadowed.
         }
     }
 
+
+.. _unchecked:
+
+Checked or Unchecked Arithmetic
+===============================
+
+An overflow or underflow is the situation where the resulting value of an arithmetic operation,
+when executed on an unrestricted integer, falls outside the range of the result type.
+
+Prior to Solidity 0.8.0, arithmetic operations would always wrap in case of
+under- or overflow leading to widespread use of libraries that introduce
+additional checks.
+
+Since Solidity 0.8.0, all arithmetic operations revert on over- and underflow by default,
+thus making the use of these libraries unnecessary.
+
+To obtain the previous behaviour, an ``unchecked`` block can be used:
+
+::
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.7.99;
+    contract C {
+        function f(uint a, uint b) pure public returns (uint) {
+            // This addition will wrap on underflow.
+            unchecked { return a - b; }
+        }
+        function g(uint a, uint b) pure public returns (uint) {
+            // This addition will revert on underflow.
+            return a - b;
+        }
+    }
+
+The call to ``f(2, 3)`` will return ``2**256-1``, while ``g(2, 3)`` will cause
+a failing assertion.
+
+The ``unchecked`` block can be used everywhere inside a block, but not as a replacement
+for a block. It also cannot be nested.
+
+The setting only affects the statements that are syntactically inside the block.
+Functions called from within an ``unchecked`` block do not inherit the property.
+
+.. note::
+    To avoid ambiguity, you cannot use ``_;`` inside an ``unchecked`` block.
+
+The following operators will cause a failing assertion on overflow or underflow
+and will wrap without an error if used inside an unchecked block:
+
+``++``, ``--``, ``+``, binary ``-``, unary ``-``, ``*``, ``/``, ``%``, ``**``
+
+``+=``, ``-=``, ``*=``, ``/=``, ``%=``
+
+.. warning::
+    It is not possible to disable the check for division by zero
+    or modulo by zero using the ``unchecked`` block.
+
+.. note::
+    The second statement in ``int x = type(int).min; -x;`` will result in an overflow
+    because the negative range can hold one more value than the positive range.
+
+Explicit type conversions will always truncate and never cause a failing assertion
+with the exception of a conversion from an integer to an enum type.
+
 .. index:: ! exception, ! throw, ! assert, ! require, ! revert, ! errors
 
 .. _assert-and-require:
@@ -519,6 +582,7 @@ An ``assert``-style exception is generated in the following situations:
 #. If you access an array or an array slice at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+#. If an arithmetic operation results in under- or overflow outside of an ``unchecked { ... }`` block.
 #. If you convert a value too big or negative into an enum type.
 #. If you call a zero-initialized variable of internal function type.
 #. If you call ``assert`` with an argument that evaluates to false.

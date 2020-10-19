@@ -154,7 +154,9 @@ ASTPointer<ASTNode> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _js
 	if (nodeType == "InlineAssembly")
 		return createInlineAssembly(_json);
 	if (nodeType == "Block")
-		return createBlock(_json);
+		return createBlock(_json, false);
+	if (nodeType == "UncheckedBlock")
+		return createBlock(_json, true);
 	if (nodeType == "PlaceholderStatement")
 		return createPlaceholderStatement(_json);
 	if (nodeType == "IfStatement")
@@ -439,7 +441,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 		createParameterList(member(_node, "parameters")),
 		modifiers,
 		createParameterList(member(_node, "returnParameters")),
-		memberAsBool(_node, "implemented") ? createBlock(member(_node, "body")) : nullptr
+		memberAsBool(_node, "implemented") ? createBlock(member(_node, "body"), false) : nullptr
 	);
 }
 
@@ -489,7 +491,7 @@ ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::V
 		createParameterList(member(_node, "parameters")),
 		memberAsBool(_node, "virtual"),
 		_node["overrides"].isNull() ? nullptr : createOverrideSpecifier(member(_node, "overrides")),
-		_node["body"].isNull() ? nullptr: createBlock(member(_node, "body"))
+		_node["body"].isNull() ? nullptr: createBlock(member(_node, "body"), false)
 	);
 }
 
@@ -589,7 +591,7 @@ ASTPointer<InlineAssembly> ASTJsonImporter::createInlineAssembly(Json::Value con
 	);
 }
 
-ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const& _node)
+ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const& _node, bool _unchecked)
 {
 	std::vector<ASTPointer<Statement>> statements;
 	for (auto& stat: member(_node, "statements"))
@@ -597,6 +599,7 @@ ASTPointer<Block> ASTJsonImporter::createBlock(Json::Value const& _node)
 	return createASTNode<Block>(
 		_node,
 		nullOrASTString(_node, "documentation"),
+		_unchecked,
 		statements
 	);
 }

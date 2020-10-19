@@ -139,6 +139,7 @@ bytes compileFirstExpression(
 			);
 			context.resetVisitedNodes(contract);
 			context.setMostDerivedContract(*contract);
+			context.setArithmetic(Arithmetic::Wrapping);
 			size_t parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(static_cast<int>(parametersSize));
 			for (vector<string> const& variable: _localVariables)
@@ -321,7 +322,7 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint y) { ((((((((y ^ 8) & 7) | 6) - 5) + 4) % 3) / 2) * 1); }
+			function f(uint y) { unchecked { ((((((((y ^ 8) & 7) | 6) - 5) + 4) % 3) / 2) * 1); } }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
@@ -402,7 +403,7 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(int y) { !(~- y == 2); }
+			function f(int y) { unchecked { !(~- y == 2); } }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
@@ -435,7 +436,7 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) public returns (uint x) { x = --a ^ (a-- ^ (++a ^ a++)); }
+			function f(uint a) public returns (uint x) { unchecked { x = --a ^ (a-- ^ (++a ^ a++)); } }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
@@ -492,7 +493,7 @@ BOOST_AUTO_TEST_CASE(assignment)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a, uint b) { (a += b) * 2; }
+			function f(uint a, uint b) { unchecked { (a += b) * 2; } }
 		}
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "b"}});

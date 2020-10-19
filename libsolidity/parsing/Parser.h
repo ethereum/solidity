@@ -115,8 +115,8 @@ private:
 		VarDeclParserOptions const& _options = {},
 		bool _allowEmpty = true
 	);
-	ASTPointer<Block> parseBlock(ASTPointer<ASTString> const& _docString = {});
-	ASTPointer<Statement> parseStatement();
+	ASTPointer<Block> parseBlock(bool _allowUncheckedBlock = false, ASTPointer<ASTString> const& _docString = {});
+	ASTPointer<Statement> parseStatement(bool _allowUncheckedBlock = false);
 	ASTPointer<InlineAssembly> parseInlineAssembly(ASTPointer<ASTString> const& _docString = {});
 	ASTPointer<IfStatement> parseIfStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<TryStatement> parseTryStatement(ASTPointer<ASTString> const& _docString);

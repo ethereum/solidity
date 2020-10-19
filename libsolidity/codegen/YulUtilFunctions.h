@@ -106,23 +106,34 @@ public:
 
 	/// signature: (x, y) -> sum
 	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
+	/// signature: (x, y) -> sum
+	std::string wrappingIntAddFunction(IntegerType const& _type);
 
 	/// signature: (x, y) -> product
 	std::string overflowCheckedIntMulFunction(IntegerType const& _type);
+	/// signature: (x, y) -> product
+	std::string wrappingIntMulFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform division on integers.
 	/// Checks for division by zero and the special case of
 	/// signed division of the smallest number by -1.
 	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
+	/// @returns name of function to perform division on integers.
+	/// Checks for division by zero.
+	std::string wrappingIntDivFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform modulo on integers.
 	/// Reverts for modulo by zero.
-	std::string checkedIntModFunction(IntegerType const& _type);
+	std::string intModFunction(IntegerType const& _type);
 
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
 	/// signature: (x, y) -> diff
 	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
+
+	/// @returns computes the difference between two values.
+	/// signature: (x, y) -> diff
+	std::string wrappingIntSubFunction(IntegerType const& _type);
 
 	/// @returns the name of the exponentiation function.
 	/// signature: (base, exponent) -> power
@@ -150,6 +161,10 @@ public:
 	/// Helper function for the two checked exponentiation functions.
 	/// signature: (power, base, exponent, max) -> power
 	std::string overflowCheckedExpLoopFunction();
+
+	/// @returns the name of the exponentiation function.
+	/// signature: (base, exponent) -> power
+	std::string wrappingIntExpFunction(IntegerType const& _type, IntegerType const& _exponentType);
 
 	/// @returns the name of a function that fetches the length of the given
 	/// array
@@ -367,9 +382,12 @@ public:
 	std::string forwardingRevertFunction();
 
 	std::string incrementCheckedFunction(Type const& _type);
+	std::string incrementWrappingFunction(Type const& _type);
 	std::string decrementCheckedFunction(Type const& _type);
+	std::string decrementWrappingFunction(Type const& _type);
 
 	std::string negateNumberCheckedFunction(Type const& _type);
+	std::string negateNumberWrappingFunction(Type const& _type);
 
 	/// @returns the name of a function that returns the zero value for the
 	/// provided type.
