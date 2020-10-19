@@ -1,6 +1,10 @@
 ### 0.7.5 (unreleased)
 
 
+Bugfixes:
+ * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.
+
+
 
 ### 0.7.4 (2020-10-19)
 

@@ -9,5 +9,6 @@ contract C {
 	}
 }
 // ----
+// Warning 6328: (157-189): CHC: Assertion violation might happen here.
 // Warning 6328: (193-225): CHC: Assertion violation happens here.
 // Warning 4661: (157-189): BMC: Assertion violation happens here.
