@@ -9,7 +9,7 @@ Language Features:
 
 
 Compiler Features:
- * Command Line Interface: New option ``model-checker-engine`` allows to choose a specific SMTChecker engine. Options are ``all`` (default), ``bmc``, ``chc`` and ``none``.
+ * Command Line Interface: New option ``--model-checker-engine`` allows to choose a specific SMTChecker engine. Options are ``all`` (default), ``bmc``, ``chc`` and ``none``.
  * Control Flow Graph: Print warning for non-empty functions with unnamed return parameters that are not assigned a value in all code paths.
  * SMTChecker: Support ``keccak256``, ``sha256``, ``ripemd160`` and ``ecrecover`` in the CHC engine.
  * SMTChecker: Support inline arrays.
