@@ -5,4 +5,4 @@ contract C {
 	uint x = 2 / z;
 }
 // ----
-// Warning 6084: (69-74): BMC: Division by zero happens here.
+// Warning 4281: (69-74): CHC: Division by zero happens here.
