@@ -270,62 +270,6 @@ BOOST_AUTO_TEST_CASE(variable_use_before_decl)
 	CHECK_PARSE_ERROR("{ let x := mul(2, x) }", DeclarationError, "Variable x used before it was declared.");
 }
 
-BOOST_AUTO_TEST_CASE(switch_statement)
-{
-	BOOST_CHECK(successParse("{ switch 42 default {} }"));
-	BOOST_CHECK(successParse("{ switch 42 case 1 {} }"));
-	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} }"));
-	BOOST_CHECK(successParse("{ switch 42 case 1 {} default {} }"));
-	BOOST_CHECK(successParse("{ switch 42 case 1 {} case 2 {} default {} }"));
-	BOOST_CHECK(successParse("{ switch mul(1, 2) case 1 {} case 2 {} default {} }"));
-	BOOST_CHECK(successParse("{ function f() -> x {} switch f() case 1 {} case 2 {} default {} }"));
-}
-
-BOOST_AUTO_TEST_CASE(switch_no_cases)
-{
-	CHECK_PARSE_ERROR("{ switch 42 }", ParserError, "Switch statement without any cases.");
-}
-
-BOOST_AUTO_TEST_CASE(switch_duplicate_case)
-{
-	CHECK_PARSE_ERROR("{ switch 42 case 1 {} case 1 {} default {} }", DeclarationError, "Duplicate case defined.");
-}
-
-BOOST_AUTO_TEST_CASE(switch_invalid_expression)
-{
-	CHECK_PARSE_ERROR("{ switch {} case 1 {} default {} }", ParserError, "Literal or identifier expected.");
-	CHECK_PARSE_ERROR(
-		"{ switch mload case 1 {} default {} }",
-		ParserError,
-		"Expected '(' but got reserved keyword 'case'"
-	);
-	CHECK_PARSE_ERROR(
-		"{ switch mstore(1, 1) case 1 {} default {} }",
-		TypeError,
-		"Expected expression to evaluate to one value, but got 0 values instead."
-	);
-}
-
-BOOST_AUTO_TEST_CASE(switch_default_before_case)
-{
-	CHECK_PARSE_ERROR("{ switch 42 default {} case 1 {} }", ParserError, "Case not allowed after default case.");
-}
-
-BOOST_AUTO_TEST_CASE(switch_duplicate_default_case)
-{
-	CHECK_PARSE_ERROR("{ switch 42 default {} default {} }", ParserError, "Only one default case allowed.");
-}
-
-BOOST_AUTO_TEST_CASE(switch_invalid_case)
-{
-	CHECK_PARSE_ERROR("{ switch 42 case mul(1, 2) {} case 2 {} default {} }", ParserError, "Literal expected.");
-}
-
-BOOST_AUTO_TEST_CASE(switch_invalid_body)
-{
-	CHECK_PARSE_ERROR("{ switch 42 case 1 mul case 2 {} default {} }", ParserError, "Expected '{' but got identifier");
-}
-
 BOOST_AUTO_TEST_CASE(for_statement)
 {
 	BOOST_CHECK(successParse("{ for {} 1 {} {} }"));
@@ -633,15 +577,6 @@ BOOST_AUTO_TEST_CASE(function_calls)
 BOOST_AUTO_TEST_CASE(embedded_functions)
 {
 	BOOST_CHECK(successAssemble("{ function f(r, s) -> x { function g(a) -> b { } x := g(2) } let x := f(2, 3) }"));
-}
-
-BOOST_AUTO_TEST_CASE(switch_statement)
-{
-	BOOST_CHECK(successAssemble("{ switch 1 default {} }"));
-	BOOST_CHECK(successAssemble("{ switch 1 case 1 {} default {} }"));
-	BOOST_CHECK(successAssemble("{ switch 1 case 1 {} }"));
-	BOOST_CHECK(successAssemble("{ let a := 3 switch a case 1 { a := 1 } case 2 { a := 5 } a := 9}"));
-	BOOST_CHECK(successAssemble("{ let a := 2 switch calldataload(0) case 1 { a := 1 } case 2 { a := 5 } }"));
 }
 
 BOOST_AUTO_TEST_CASE(for_statement)
