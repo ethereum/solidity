@@ -459,6 +459,19 @@ jobs:
       FORCE_RELEASE: ON
       MAKEFLAGS: -j 10
 
+  b_ubu_static:
+    <<: *build_ubuntu2004
+    environment:
+      MAKEFLAGS: -j 10
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DSOLC_LINK_STATIC=1 -DUSE_CVC4=OFF -DUSE_Z3=OFF
+    steps:
+      - checkout
+      - run: *run_build
+      - run:
+          name: strip binary
+          command: strip build/solc/solc
+      - store_artifacts: *artifacts_solc
+
   b_ubu18: &build_ubuntu1804
     docker:
       - image: << pipeline.parameters.ubuntu-1804-docker-image >>
@@ -1060,6 +1073,9 @@ workflows:
       # ArchLinux build and tests
       - b_archlinux: *workflow_trigger_on_tags
       - t_archlinux_soltest: *workflow_archlinux
+
+      # Static build
+      - b_ubu_static: *workflow_trigger_on_tags
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
