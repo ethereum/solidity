@@ -42,8 +42,18 @@ fi
 
 WORKSPACE=/root/project
 
-echo -en 'travis_fold:start:compiling_solidity\\r'
 cd $WORKSPACE
+
+# shellcheck disable=SC2166
+if [[ "$CIRCLE_BRANCH" = release || -n "$CIRCLE_TAG" || -n "$FORCE_RELEASE" || "$(git tag --points-at HEAD 2>/dev/null)" == v* ]]
+then
+  echo -n >prerelease.txt
+fi
+if [ -n "$CIRCLE_SHA1" ]
+then
+  echo -n "$CIRCLE_SHA1" >commit_hash.txt
+fi
+
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 cmake \
@@ -67,5 +77,3 @@ cp $BUILD_DIR/libsolc/soljson.js ./
 OUTPUT_SIZE=`ls -la soljson.js`
 
 echo "Emscripten output size: $OUTPUT_SIZE"
-
-echo -en 'travis_fold:end:compiling_solidity\\r'
