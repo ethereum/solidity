@@ -657,7 +657,7 @@ jobs:
       - run:
           name: Build
           command: |
-            scripts/travis-emscripten/build_emscripten.sh
+            scripts/ci/build_emscripten.sh
       - store_artifacts:
           path: emscripten_build/libsolc/soljson.js
           destination: soljson.js
