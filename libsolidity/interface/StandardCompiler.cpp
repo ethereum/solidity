@@ -396,7 +396,7 @@ std::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> cons
 
 std::optional<Json::Value> checkRootKeys(Json::Value const& _input)
 {
-	static set<string> keys{"auxiliaryInput", "language", "settings", "sources"};
+	static set<string> keys{"auxiliaryInput", "language", "modelCheckerSettings", "settings", "sources"};
 	return checkKeys(_input, keys, "root");
 }
 
@@ -414,8 +414,14 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter", "modelCheckerEngine"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter"};
 	return checkKeys(_input, keys, "settings");
+}
+
+std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
+{
+	static set<string> keys{"engine"};
+	return checkKeys(_input, keys, "modelCheckerSettings");
 }
 
 std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
@@ -867,11 +873,16 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			"Requested output selection conflicts with \"settings.stopAfter\"."
 		);
 
-	if (settings.isMember("modelCheckerEngine"))
+	Json::Value const& modelCheckerSettings = _input.get("modelCheckerSettings", Json::Value());
+
+	if (auto result = checkModelCheckerSettingsKeys(modelCheckerSettings))
+		return *result;
+
+	if (modelCheckerSettings.isMember("engine"))
 	{
-		if (!settings["modelCheckerEngine"].isString())
-			return formatFatalError("JSONError", "modelCheckerEngine must be a string.");
-		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(settings["modelCheckerEngine"].asString());
+		if (!modelCheckerSettings["engine"].isString())
+			return formatFatalError("JSONError", "modelCheckerSettings.engine must be a string.");
+		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].asString());
 		if (!engine)
 			return formatFatalError("JSONError", "Invalid model checker engine requested.");
 		ret.modelCheckerEngine = *engine;
