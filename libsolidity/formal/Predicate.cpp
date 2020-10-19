@@ -149,7 +149,7 @@ bool Predicate::isInterface() const
 	return functor().name.rfind("interface", 0) == 0;
 }
 
-string Predicate::formatSummaryCall(vector<string> const& _args) const
+string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) const
 {
 	if (programContract())
 		return "constructor()";
@@ -163,18 +163,22 @@ string Predicate::formatSummaryCall(vector<string> const& _args) const
 
 	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars.
-	vector<string>::const_iterator first = _args.begin() + 5 + static_cast<int>(stateVars->size());
-	vector<string>::const_iterator last = first + static_cast<int>(fun->parameters().size());
+	auto first = _args.begin() + 5 + static_cast<int>(stateVars->size());
+	auto last = first + static_cast<int>(fun->parameters().size());
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
-	vector<string> functionArgsCex(first, last);
+	auto inTypes = FunctionType(*fun).parameterTypes();
+	vector<optional<string>> functionArgsCex = formatExpressions(vector<smtutil::Expression>(first, last), inTypes);
 	vector<string> functionArgs;
 
 	auto const& params = fun->parameters();
 	solAssert(params.size() == functionArgsCex.size(), "");
 	for (unsigned i = 0; i < params.size(); ++i)
 		if (params[i]->type()->isValueType())
-			functionArgs.emplace_back(functionArgsCex[i]);
+		{
+			solAssert(functionArgsCex.at(i), "");
+			functionArgs.emplace_back(*functionArgsCex.at(i));
+		}
 		else
 			functionArgs.emplace_back(params[i]->name());
 
@@ -186,7 +190,7 @@ string Predicate::formatSummaryCall(vector<string> const& _args) const
 
 }
 
-vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
+vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// The signature of an implicit constructor summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, postBlockchainState, postStateVars).
@@ -194,8 +198,8 @@ vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");
 
-	vector<string>::const_iterator stateFirst;
-	vector<string>::const_iterator stateLast;
+	vector<smtutil::Expression>::const_iterator stateFirst;
+	vector<smtutil::Expression>::const_iterator stateLast;
 	if (auto const* function = programFunction())
 	{
 		stateFirst = _args.begin() + 5 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
@@ -212,12 +216,13 @@ vector<string> Predicate::summaryStateValues(vector<string> const& _args) const
 	solAssert(stateFirst >= _args.begin() && stateFirst <= _args.end(), "");
 	solAssert(stateLast >= _args.begin() && stateLast <= _args.end(), "");
 
-	vector<string> stateArgs(stateFirst, stateLast);
+	vector<smtutil::Expression> stateArgs(stateFirst, stateLast);
 	solAssert(stateArgs.size() == stateVars->size(), "");
-	return stateArgs;
+	auto stateTypes = applyMap(*stateVars, [&](auto const& _var) { return _var->type(); });
+	return formatExpressions(stateArgs, stateTypes);
 }
 
-vector<string> Predicate::summaryPostInputValues(vector<string> const& _args) const
+vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in postInputVars.
@@ -229,18 +234,19 @@ vector<string> Predicate::summaryPostInputValues(vector<string> const& _args) co
 
 	auto const& inParams = function->parameters();
 
-	vector<string>::const_iterator first = _args.begin() + 5 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
-	vector<string>::const_iterator last = first + static_cast<int>(inParams.size());
+	auto first = _args.begin() + 5 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
+	auto last = first + static_cast<int>(inParams.size());
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
 
-	vector<string> inValues(first, last);
+	vector<smtutil::Expression> inValues(first, last);
 	solAssert(inValues.size() == inParams.size(), "");
-	return inValues;
+	auto inTypes = FunctionType(*function).parameterTypes();
+	return formatExpressions(inValues, inTypes);
 }
 
-vector<string> Predicate::summaryPostOutputValues(vector<string> const& _args) const
+vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in outputVars.
@@ -252,11 +258,46 @@ vector<string> Predicate::summaryPostOutputValues(vector<string> const& _args) c
 
 	auto const& inParams = function->parameters();
 
-	vector<string>::const_iterator first = _args.begin() + 5 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
+	auto first = _args.begin() + 5 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 
-	vector<string> outValues(first, _args.end());
+	vector<smtutil::Expression> outValues(first, _args.end());
 	solAssert(outValues.size() == function->returnParameters().size(), "");
-	return outValues;
+	auto outTypes = FunctionType(*function).returnParameterTypes();
+	return formatExpressions(outValues, outTypes);
+}
+
+vector<optional<string>> Predicate::formatExpressions(vector<smtutil::Expression> const& _exprs, vector<TypePointer> const& _types) const
+{
+	solAssert(_exprs.size() == _types.size(), "");
+	vector<optional<string>> strExprs;
+	for (unsigned i = 0; i < _exprs.size(); ++i)
+		strExprs.push_back(expressionToString(_exprs.at(i), _types.at(i)));
+	return strExprs;
+}
+
+optional<string> Predicate::expressionToString(smtutil::Expression const& _expr, TypePointer _type) const
+{
+	if (smt::isNumber(*_type))
+	{
+		solAssert(_expr.sort->kind == Kind::Int, "");
+		solAssert(_expr.arguments.empty(), "");
+		// TODO assert that _expr.name is a number.
+		return _expr.name;
+	}
+	if (smt::isBool(*_type))
+	{
+		solAssert(_expr.sort->kind == Kind::Bool, "");
+		solAssert(_expr.arguments.empty(), "");
+		solAssert(_expr.name == "true" || _expr.name == "false", "");
+		return _expr.name;
+	}
+	if (smt::isFunction(*_type))
+	{
+		solAssert(_expr.arguments.empty(), "");
+		return _expr.name;
+	}
+
+	return {};
 }

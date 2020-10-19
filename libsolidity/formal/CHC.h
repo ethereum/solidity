@@ -203,7 +203,7 @@ private:
 
 	/// @returns a set of pairs _var = _value separated by _separator.
 	template <typename T>
-	std::string formatVariableModel(std::vector<T> const& _variables, std::vector<std::string> const& _values, std::string const& _separator) const
+	std::string formatVariableModel(std::vector<T> const& _variables, std::vector<std::optional<std::string>> const& _values, std::string const& _separator) const
 	{
 		solAssert(_variables.size() == _values.size(), "");
 
@@ -212,7 +212,10 @@ private:
 		{
 			auto var = _variables.at(i);
 			if (var && var->type()->isValueType())
-				assignments.emplace_back(var->name() + " = " + _values.at(i));
+			{
+				solAssert(_values.at(i), "");
+				assignments.emplace_back(var->name() + " = " + *_values.at(i));
+			}
 		}
 
 		return boost::algorithm::join(assignments, _separator);
