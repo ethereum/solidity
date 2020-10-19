@@ -174,11 +174,8 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 	auto const& params = fun->parameters();
 	solAssert(params.size() == functionArgsCex.size(), "");
 	for (unsigned i = 0; i < params.size(); ++i)
-		if (params[i]->type()->isValueType())
-		{
-			solAssert(functionArgsCex.at(i), "");
+		if (params.at(i) && functionArgsCex.at(i))
 			functionArgs.emplace_back(*functionArgsCex.at(i));
-		}
 		else
 			functionArgs.emplace_back(params[i]->name());
 
@@ -298,6 +295,68 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		solAssert(_expr.arguments.empty(), "");
 		return _expr.name;
 	}
+	if (smt::isArray(*_type))
+	{
+		auto const& arrayType = dynamic_cast<ArrayType const&>(*_type);
+		solAssert(_expr.name == "tuple_constructor", "");
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
+		solAssert(tupleSort.components.size() == 2, "");
+		try
+		{
+			vector<string> array(stoul(_expr.arguments.at(1).name));
+			if (!fillArray(_expr.arguments.at(0), array, arrayType))
+				return {};
+			return "[" + boost::algorithm::join(array, ", ") + "]";
+		}
+		catch (bad_alloc const&)
+		{
+			// Solver gave a concrete array but length is too large.
+		}
+	}
 
 	return {};
+}
+
+bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _array, ArrayType const& _type) const
+{
+	// Base case
+	if (_expr.name == "const_array")
+	{
+		auto length = _array.size();
+		optional<string> elemStr = expressionToString(_expr.arguments.at(1), _type.baseType());
+		if (!elemStr)
+			return false;
+		_array.clear();
+		_array.resize(length, *elemStr);
+		return true;
+	}
+
+	// Recursive case.
+	if (_expr.name == "store")
+	{
+		if (!fillArray(_expr.arguments.at(0), _array, _type))
+			return false;
+		optional<string> indexStr = expressionToString(_expr.arguments.at(1), TypeProvider::uint256());
+		if (!indexStr)
+			return false;
+		// Sometimes the solver assigns huge lengths that are not related,
+		// we should catch and ignore those.
+		unsigned index;
+		try
+		{
+			index = stoul(*indexStr);
+		}
+		catch (out_of_range const&)
+		{
+			return true;
+		}
+		optional<string> elemStr = expressionToString(_expr.arguments.at(2), _type.baseType());
+		if (!elemStr)
+			return false;
+		if (index < _array.size())
+			_array.at(index) = *elemStr;
+		return true;
+	}
+
+	solAssert(false, "");
 }

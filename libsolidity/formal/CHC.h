@@ -211,11 +211,8 @@ private:
 		for (unsigned i = 0; i < _values.size(); ++i)
 		{
 			auto var = _variables.at(i);
-			if (var && var->type()->isValueType())
-			{
-				solAssert(_values.at(i), "");
+			if (var && _values.at(i))
 				assignments.emplace_back(var->name() + " = " + *_values.at(i));
-			}
 		}
 
 		return boost::algorithm::join(assignments, _separator);
