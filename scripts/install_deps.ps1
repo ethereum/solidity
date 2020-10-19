@@ -1,9 +1,9 @@
+$ErrorActionPreference = "Stop"
+
+# Needed for Invoke-WebRequest to work via CI.
+$progressPreference = "silentlyContinue"
+
 if ( -not (Test-Path "$PSScriptRoot\..\deps\boost") ) {
-  $ErrorActionPreference = "Stop"
-
-  # Needed for Invoke-WebRequest to work via CI.
-  $progressPreference = "silentlyContinue"
-
   New-Item -ItemType Directory -Force -Path "$PSScriptRoot\..\deps"
 
   Invoke-WebRequest -URI "https://github.com/Kitware/CMake/releases/download/v3.18.2/cmake-3.18.2-win64-x64.zip" -OutFile cmake.zip

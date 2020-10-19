@@ -128,6 +128,16 @@ public:
 	smtutil::Expression blockhash(smtutil::Expression _blockNumber) const;
 	//@}
 
+	/// Crypto functions.
+	//@{
+	/// @returns the crypto functions represented as a tuple of arrays.
+	smtutil::Expression crypto() const { return m_crypto.value(); }
+	smtutil::Expression crypto(unsigned _idx) const { return m_crypto.value(_idx); }
+	smtutil::SortPointer const& cryptoSort() const { return m_crypto.sort(); }
+	void newCrypto() { m_crypto.newVar(); }
+	smtutil::Expression cryptoFunction(std::string const& _member) const { return m_crypto.member(_member); }
+	//@}
+
 private:
 	/// Adds _value to _account's balance.
 	void addBalance(smtutil::Expression _account, smtutil::Expression _value);
@@ -168,6 +178,38 @@ private:
 			{"msg.value", smtutil::SortProvider::uintSort},
 			{"tx.gasprice", smtutil::SortProvider::uintSort},
 			{"tx.origin", smt::smtSort(*TypeProvider::address())}
+		},
+		m_context
+	};
+
+	BlockchainVariable m_crypto{
+		"crypto",
+		{
+			{"keccak256", std::make_shared<smtutil::ArraySort>(
+				smt::smtSort(*TypeProvider::bytesStorage()),
+				smtSort(*TypeProvider::fixedBytes(32))
+			)},
+			{"sha256", std::make_shared<smtutil::ArraySort>(
+				smt::smtSort(*TypeProvider::bytesStorage()),
+				smtSort(*TypeProvider::fixedBytes(32))
+			)},
+			{"ripemd160", std::make_shared<smtutil::ArraySort>(
+				smt::smtSort(*TypeProvider::bytesStorage()),
+				smtSort(*TypeProvider::fixedBytes(20))
+			)},
+			{"ecrecover", std::make_shared<smtutil::ArraySort>(
+				std::make_shared<smtutil::TupleSort>(
+					"ecrecover_input_type",
+					std::vector<std::string>{"hash", "v", "r", "s"},
+					std::vector<smtutil::SortPointer>{
+						smt::smtSort(*TypeProvider::fixedBytes(32)),
+						smt::smtSort(*TypeProvider::uint(8)),
+						smt::smtSort(*TypeProvider::fixedBytes(32)),
+						smt::smtSort(*TypeProvider::fixedBytes(32))
+					}
+				),
+				smtSort(*TypeProvider::address())
+			)}
 		},
 		m_context
 	};

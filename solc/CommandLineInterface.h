@@ -79,7 +79,6 @@ private:
 	void handleABI(std::string const& _contract);
 	void handleNatspec(bool _natspecDev, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
-	void handleFormal();
 	void handleStorageLayout(std::string const& _contract);
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
@@ -134,6 +133,8 @@ private:
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	/// Chosen hash method for the bytecode metadata.
 	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
+	/// Chosen model checker engine.
+	ModelCheckerEngine m_modelCheckerEngine = ModelCheckerEngine::All();
 	/// Whether or not to colorize diagnostics output.
 	bool m_coloredOutput = true;
 	/// Whether or not to output error IDs.

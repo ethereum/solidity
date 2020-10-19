@@ -120,7 +120,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 		&_contract
 	);
 	addRule(
-		(*implicitConstructorPredicate)({0, state().thisAddress(), state().tx(), state().state()}),
+		(*implicitConstructorPredicate)({0, state().thisAddress(), state().crypto(), state().tx(), state().state()}),
 		implicitConstructorPredicate->functor().name
 	);
 	setCurrentBlock(*implicitConstructorPredicate);
@@ -874,7 +874,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
 						auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().tx(), state().state(1)};
+						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state(1)};
 						args += state1 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 							vector<smtutil::Expression>{state().state(2)} +
@@ -1053,7 +1053,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		return smtutil::Expression(true);
 
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().tx(), state().state()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state()};
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	solAssert(funType.kind() == FunctionType::Kind::Internal, "");
@@ -1298,7 +1298,7 @@ void CHC::checkAndReportTarget(
 				_errorReporterId,
 				_scope->location(),
 				"CHC: " + _satMsg,
-				SecondarySourceLocation().append("\nCounterexample:\n" + *cex, SourceLocation{})
+				SecondarySourceLocation().append("Counterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
@@ -1402,9 +1402,13 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			}
 		}
 		else
+		{
+			auto modelMsg = formatVariableModel(*stateVars, stateValues, ", ");
 			/// We report the state after every tx in the trace except for the last, which is reported
 			/// first in the code above.
-			path.emplace_back("State: " + formatVariableModel(*stateVars, stateValues, ", "));
+			if (!modelMsg.empty())
+				path.emplace_back("State: " + modelMsg);
+		}
 
 		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
 		path.emplace_back(txCex);

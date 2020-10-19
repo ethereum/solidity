@@ -76,6 +76,7 @@ void SymbolicState::reset()
 	m_thisAddress.resetIndex();
 	m_state.reset();
 	m_tx.reset();
+	m_crypto.reset();
 }
 
 smtutil::Expression SymbolicState::balances() const

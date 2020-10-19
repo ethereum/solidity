@@ -6,5 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError 1273: (87-90): The type of a variable cannot be a library.
-// TypeError 9582: (100-103): Member "l" not found or not visible after argument-dependent lookup in library L.
+// TypeError 1130: (87-88): Invalid use of a library name.

@@ -1,0 +1,19 @@
+{"errors":[{"component":"general","errorCode":"6328","formattedMessage":"A:4:47: Warning: CHC: Assertion violation happens here.
+contract C { function f(uint x) public pure { assert(x > 0); } }
+                                              ^-----------^
+Counterexample:
+
+x = 0
+
+
+Transaction trace:
+constructor()
+f(0)
+","message":"CHC: Assertion violation happens here.","secondarySourceLocations":[{"message":"Counterexample:
+
+x = 0
+
+
+Transaction trace:
+constructor()
+f(0)"}],"severity":"warning","sourceLocation":{"end":150,"file":"A","start":137},"type":"Warning"}],"sources":{"A":{"id":0}}}

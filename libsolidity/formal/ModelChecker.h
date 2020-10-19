@@ -32,6 +32,8 @@
 #include <libsmtutil/SolverInterface.h>
 #include <liblangutil/ErrorReporter.h>
 
+#include <optional>
+
 namespace solidity::langutil
 {
 class ErrorReporter;
@@ -41,6 +43,34 @@ struct SourceLocation;
 namespace solidity::frontend
 {
 
+struct ModelCheckerEngine
+{
+	bool bmc = false;
+	bool chc = false;
+
+	static constexpr ModelCheckerEngine All() { return {true, true}; }
+	static constexpr ModelCheckerEngine BMC() { return {true, false}; }
+	static constexpr ModelCheckerEngine CHC() { return {false, true}; }
+	static constexpr ModelCheckerEngine None() { return {false, false}; }
+
+	bool none() const { return !any(); }
+	bool any() const { return bmc || chc; }
+	bool all() const { return bmc && chc; }
+
+	static std::optional<ModelCheckerEngine> fromString(std::string const& _engine)
+	{
+		static std::map<std::string, ModelCheckerEngine> engineMap{
+			{"all", All()},
+			{"bmc", BMC()},
+			{"chc", CHC()},
+			{"none", None()}
+		};
+		if (engineMap.count(_engine))
+			return engineMap.at(_engine);
+		return {};
+	}
+};
+
 class ModelChecker
 {
 public:
@@ -49,6 +79,7 @@ public:
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
+		ModelCheckerEngine _engine = ModelCheckerEngine::All(),
 		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
 		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
 	);
@@ -64,6 +95,8 @@ public:
 	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
+	ModelCheckerEngine m_engine;
+
 	/// Stores the context of the encoding.
 	smt::EncodingContext m_context;
 

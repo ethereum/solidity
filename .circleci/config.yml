@@ -21,8 +21,8 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2593c15689dee5b5bdfff96a36c8c68a468cd3b147c41f75b820b8fabc257be9"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-4
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:842126b164b3542f05bff2611459e21edc7e3e2c81ca9d1f43396c8cf066f7ca"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-5
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:65901cd8b64b5959bc4c907df47bb7be3d3b00c9ae8948c75aad7d4c57875cf0"
   emscripten-docker-image:
     type: string
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c"
@@ -458,6 +458,19 @@ jobs:
     environment:
       FORCE_RELEASE: ON
       MAKEFLAGS: -j 10
+
+  b_ubu_static:
+    <<: *build_ubuntu2004
+    environment:
+      MAKEFLAGS: -j 10
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DSOLC_LINK_STATIC=1 -DUSE_CVC4=OFF -DUSE_Z3=OFF
+    steps:
+      - checkout
+      - run: *run_build
+      - run:
+          name: strip binary
+          command: strip build/solc/solc
+      - store_artifacts: *artifacts_solc
 
   b_ubu18: &build_ubuntu1804
     docker:
@@ -910,7 +923,8 @@ jobs:
           keys:
             - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
       # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
-      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.                                    - run:
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
+      - run:
           name: "Installing dependencies"
           command: .\scripts\install_deps.ps1
       - save_cache:
@@ -949,6 +963,7 @@ jobs:
       - run:
           name: "Run soltest"
           command: .circleci/soltest.ps1
+      - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
   t_win_release:
@@ -1058,6 +1073,9 @@ workflows:
       # ArchLinux build and tests
       - b_archlinux: *workflow_trigger_on_tags
       - t_archlinux_soltest: *workflow_archlinux
+
+      # Static build
+      - b_ubu_static: *workflow_trigger_on_tags
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags

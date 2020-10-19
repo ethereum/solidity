@@ -165,7 +165,7 @@ void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExt
 	for (auto const& secondary: _msg.secondary)
 	{
 		secondaryColored() << "Note";
-		messageColored() << ": " << secondary.message << '\n';
+		messageColored() << ":" << (secondary.message.empty() ? "" : (" " + secondary.message)) << '\n';
 		printSourceLocation(secondary);
 	}
 

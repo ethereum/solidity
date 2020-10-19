@@ -36,6 +36,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 namespace solidity::langutil
 {
@@ -136,6 +137,7 @@ protected:
 	void initFunction(FunctionDefinition const& _function);
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
+	void visitCryptoFunction(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
 	void visitObjectCreation(FunctionCall const& _funCall);
@@ -174,9 +176,14 @@ protected:
 		std::vector<smtutil::Expression> const& _elementValues
 	);
 
-	/// Division expression in the given type. Requires special treatment because
-	/// of rounding for signed division.
-	smtutil::Expression division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type);
+	/// @returns a pair of expressions representing _left / _right and _left mod _right, respectively.
+	/// Uses slack variables and additional constraints to express the results using only operations
+	/// more friendly to the SMT solver (multiplication, addition, subtraction and comparison).
+	std::pair<smtutil::Expression, smtutil::Expression>	divModWithSlacks(
+		smtutil::Expression _left,
+		smtutil::Expression _right,
+		IntegerType const& _type
+	);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.

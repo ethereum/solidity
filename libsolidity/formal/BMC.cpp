@@ -385,13 +385,6 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		internalOrExternalFunctionCall(_funCall);
 		break;
-	case FunctionType::Kind::KECCAK256:
-	case FunctionType::Kind::ECRecover:
-	case FunctionType::Kind::SHA256:
-	case FunctionType::Kind::RIPEMD160:
-		SMTEncoder::endVisit(_funCall);
-		abstractFunctionCall(_funCall);
-		break;
 	case FunctionType::Kind::Send:
 	case FunctionType::Kind::Transfer:
 	{
@@ -408,6 +401,10 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		SMTEncoder::endVisit(_funCall);
 		break;
 	}
+	case FunctionType::Kind::KECCAK256:
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::SHA256:
+	case FunctionType::Kind::RIPEMD160:
 	case FunctionType::Kind::BlockHash:
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
@@ -483,16 +480,6 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	}
 
 	createReturnedExpressions(_funCall);
-}
-
-void BMC::abstractFunctionCall(FunctionCall const& _funCall)
-{
-	vector<smtutil::Expression> smtArguments;
-	for (auto const& arg: _funCall.arguments())
-		smtArguments.push_back(expr(*arg));
-	defineExpr(_funCall, (*m_context.expression(_funCall.expression()))(smtArguments));
-	m_uninterpretedTerms.insert(&_funCall);
-	setSymbolicUnknownValue(expr(_funCall), _funCall.annotation().type, m_context);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
@@ -836,7 +823,7 @@ void BMC::checkCondition(
 			"\nNote that some information is erased after the execution of loops.\n"
 			"You can re-introduce information using require().";
 	if (m_externalFunctionCallHappened)
-		extraComment+=
+		extraComment +=
 			"\nNote that external function calls are not inlined,"
 			" even if the source code of the function is available."
 			" This is due to the possibility that the actual called contract"
@@ -854,7 +841,7 @@ void BMC::checkCondition(
 		if (_callStack.size())
 		{
 			std::ostringstream modelMessage;
-			modelMessage << "\nCounterexample:\n";
+			modelMessage << "Counterexample:\n";
 			solAssert(values.size() == expressionNames.size(), "");
 			map<string, string> sortedModel;
 			for (size_t i = 0; i < values.size(); ++i)
@@ -863,6 +850,7 @@ void BMC::checkCondition(
 
 			for (auto const& eval: sortedModel)
 				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+
 			m_errorReporter.warning(
 				_errorHappens,
 				_location,

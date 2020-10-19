@@ -1365,5 +1365,9 @@
             "EmptyByteArrayCopy"
         ],
         "released": "2020-10-07"
+    },
+    "0.7.4": {
+        "bugs": [],
+        "released": "2020-10-19"
     }
 }

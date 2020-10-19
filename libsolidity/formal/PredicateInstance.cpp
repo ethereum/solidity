@@ -30,14 +30,14 @@ namespace solidity::frontend::smt
 smtutil::Expression interfacePre(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context)
 {
 	auto& state = _context.state();
-	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.state(0)};
+	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.crypto(0), state.state(0)};
 	return _pred(stateExprs + initialStateVariables(_contract, _context));
 }
 
 smtutil::Expression interface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context)
 {
 	auto& state = _context.state();
-	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.state()};
+	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.crypto(0), state.state()};
 	return _pred(stateExprs + currentStateVariables(_contract, _context));
 }
 
@@ -54,7 +54,7 @@ smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition c
 smtutil::Expression implicitConstructor(Predicate const& _pred, ContractDefinition const&, EncodingContext& _context)
 {
 	auto& state = _context.state();
-	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.tx(0), state.state(0)};
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.crypto(0), state.tx(0), state.state(0)};
 	return _pred(stateExprs);
 }
 
@@ -64,7 +64,7 @@ smtutil::Expression constructor(Predicate const& _pred, ContractDefinition const
 		return _pred(currentFunctionVariables(*constructor, &_contract, _context));
 
 	auto& state = _context.state();
-	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.tx(0), state.state(0), state.state()};
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(0), state.crypto(0), state.tx(0), state.state(0), state.state()};
 	return _pred(stateExprs + currentStateVariables(_contract, _context));
 }
 
@@ -118,7 +118,7 @@ vector<smtutil::Expression> currentFunctionVariables(
 )
 {
 	auto& state = _context.state();
-	vector<smtutil::Expression> exprs{_context.state().errorFlag().currentValue(), state.thisAddress(0), state.tx(0), state.state(0)};
+	vector<smtutil::Expression> exprs{_context.state().errorFlag().currentValue(), state.thisAddress(0), state.crypto(0), state.tx(0), state.state(0)};
 	exprs += _contract ? initialStateVariables(*_contract, _context) : vector<smtutil::Expression>{};
 	exprs += applyMap(_function.parameters(), [&](auto _var) { return _context.variable(*_var)->valueAtIndex(0); });
 	exprs += vector<smtutil::Expression>{state.state()};

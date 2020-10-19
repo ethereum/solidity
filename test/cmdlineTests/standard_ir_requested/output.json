@@ -8,7 +8,7 @@
 
 object \"C_6\" {
     code {
-        mstore(64, memoryguard(128))
+        mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
         constructor_C_6()
@@ -24,7 +24,7 @@ object \"C_6\" {
     }
     object \"C_6_deployed\" {
         code {
-            mstore(64, memoryguard(128))
+            mstore(64, 128)
 
             if iszero(lt(calldatasize(), 4))
             {

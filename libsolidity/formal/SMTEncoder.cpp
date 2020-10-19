@@ -633,6 +633,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ECRecover:
 	case FunctionType::Kind::SHA256:
 	case FunctionType::Kind::RIPEMD160:
+		visitCryptoFunction(_funCall);
 		break;
 	case FunctionType::Kind::BlockHash:
 		defineExpr(_funCall, m_context.state().blockhash(expr(*_funCall.arguments().at(0))));
@@ -730,6 +731,38 @@ void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 	addPathImpliedExpression(expr(*args.front()));
 }
 
+void SMTEncoder::visitCryptoFunction(FunctionCall const& _funCall)
+{
+	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	auto arg0 = expr(*_funCall.arguments().at(0));
+	optional<smtutil::Expression> result;
+	if (kind == FunctionType::Kind::KECCAK256)
+		result = smtutil::Expression::select(m_context.state().cryptoFunction("keccak256"), arg0);
+	else if (kind == FunctionType::Kind::SHA256)
+		result = smtutil::Expression::select(m_context.state().cryptoFunction("sha256"), arg0);
+	else if (kind == FunctionType::Kind::RIPEMD160)
+		result = smtutil::Expression::select(m_context.state().cryptoFunction("ripemd160"), arg0);
+	else if (kind == FunctionType::Kind::ECRecover)
+	{
+		auto e = m_context.state().cryptoFunction("ecrecover");
+		auto arg0 = expr(*_funCall.arguments().at(0));
+		auto arg1 = expr(*_funCall.arguments().at(1));
+		auto arg2 = expr(*_funCall.arguments().at(2));
+		auto arg3 = expr(*_funCall.arguments().at(3));
+		auto inputSort = dynamic_cast<smtutil::ArraySort&>(*e.sort).domain;
+		auto ecrecoverInput = smtutil::Expression::tuple_constructor(
+			smtutil::Expression(make_shared<smtutil::SortSort>(inputSort), ""),
+			{arg0, arg1, arg2, arg3}
+		);
+		result = smtutil::Expression::select(e, ecrecoverInput);
+	}
+	else
+		solAssert(false, "");
+
+	defineExpr(_funCall, *result);
+}
+
 void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 {
 	string gasLeft = "gasleft()";
@@ -755,11 +788,12 @@ void SMTEncoder::visitAddMulMod(FunctionCall const& _funCall)
 	auto y = expr(*args.at(1));
 	auto k = expr(*args.at(2));
 	m_context.addAssertion(k != 0);
+	auto const& intType = dynamic_cast<IntegerType const&>(*_funCall.annotation().type);
 
 	if (kind == FunctionType::Kind::AddMod)
-		defineExpr(_funCall, (x + y) % k);
+		defineExpr(_funCall, divModWithSlacks(x + y, k, intType).second);
 	else
-		defineExpr(_funCall, (x * y) % k);
+		defineExpr(_funCall, divModWithSlacks(x * y, k, intType).second);
 }
 
 void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
@@ -1490,8 +1524,8 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 		case Token::Add: return _left + _right;
 		case Token::Sub: return _left - _right;
 		case Token::Mul: return _left * _right;
-		case Token::Div: return division(_left, _right, *intType);
-		case Token::Mod: return _left % _right;
+		case Token::Div: return divModWithSlacks(_left, _right, *intType).first;
+		case Token::Mod: return divModWithSlacks(_left, _right, *intType).second;
 		default: solAssert(false, "");
 		}
 	}();
@@ -1693,13 +1727,30 @@ void SMTEncoder::bitwiseNotOperation(UnaryOperation const& _op)
 	defineExpr(_op, smtutil::Expression::bv2int(~bvOperand, isSigned));
 }
 
-smtutil::Expression SMTEncoder::division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type)
+pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
+	smtutil::Expression _left,
+	smtutil::Expression _right,
+	IntegerType const& _type
+)
 {
-	// Signed division in SMTLIB2 rounds differently for negative division.
+	IntegerType const* intType = &_type;
+	string suffix = "div_mod_" + to_string(m_context.newUniqueId());
+	smt::SymbolicIntVariable d(intType, intType, "d_" + suffix, m_context);
+	smt::SymbolicIntVariable r(intType, intType, "r_" + suffix, m_context);
+
+	// x / y = d and x % y = r iff d * y + r = x and
+	// either x >= 0 and 0 <= r < abs(y) (or just 0 <= r < y for unsigned)
+	// or     x < 0 and -abs(y) < r <= 0
+	m_context.addAssertion(((d.currentValue() * _right) + r.currentValue()) == _left);
 	if (_type.isSigned())
-		return signedDivisionEVM(_left, _right);
-	else
-		return _left / _right;
+		m_context.addAssertion(
+			(_left >= 0 && 0 <= r.currentValue() && r.currentValue() < smtutil::abs(_right)) ||
+			(_left < 0 && (0 - smtutil::abs(_right)) < r.currentValue() && r.currentValue() <= 0)
+		);
+	else // unsigned version
+		m_context.addAssertion(0 <= r.currentValue() && r.currentValue() < _right);
+
+	return {d.currentValue(), r.currentValue()};
 }
 
 void SMTEncoder::assignment(
@@ -2114,7 +2165,7 @@ SecondarySourceLocation SMTEncoder::callStackMessage(vector<CallStackEntry> cons
 {
 	SecondarySourceLocation callStackLocation;
 	solAssert(!_callStack.empty(), "");
-	callStackLocation.append("Callstack: ", SourceLocation());
+	callStackLocation.append("Callstack:", SourceLocation());
 	for (auto const& call: _callStack | boost::adaptors::reversed)
 		if (call.second)
 			callStackLocation.append("", call.second->location());

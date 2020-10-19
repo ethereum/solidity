@@ -2,7 +2,8 @@
 pragma solidity >=0.0;
 contract test {
     bytes a;
+    bytes b;
     function f() public {
-        delete a;
+        a = b;
     }
 }

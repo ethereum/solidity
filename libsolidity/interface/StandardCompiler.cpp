@@ -396,7 +396,7 @@ std::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> cons
 
 std::optional<Json::Value> checkRootKeys(Json::Value const& _input)
 {
-	static set<string> keys{"auxiliaryInput", "language", "settings", "sources"};
+	static set<string> keys{"auxiliaryInput", "language", "modelCheckerSettings", "settings", "sources"};
 	return checkKeys(_input, keys, "root");
 }
 
@@ -416,6 +416,12 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
 	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter"};
 	return checkKeys(_input, keys, "settings");
+}
+
+std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
+{
+	static set<string> keys{"engine"};
+	return checkKeys(_input, keys, "modelCheckerSettings");
 }
 
 std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
@@ -527,6 +533,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 
 	return std::nullopt;
 }
+
 /// Validates the optimizer settings and returns them in a parsed object.
 /// On error returns the json-formatted error message.
 std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value const& _jsonInput)
@@ -866,6 +873,21 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			"Requested output selection conflicts with \"settings.stopAfter\"."
 		);
 
+	Json::Value const& modelCheckerSettings = _input.get("modelCheckerSettings", Json::Value());
+
+	if (auto result = checkModelCheckerSettingsKeys(modelCheckerSettings))
+		return *result;
+
+	if (modelCheckerSettings.isMember("engine"))
+	{
+		if (!modelCheckerSettings["engine"].isString())
+			return formatFatalError("JSONError", "modelCheckerSettings.engine must be a string.");
+		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].asString());
+		if (!engine)
+			return formatFatalError("JSONError", "Invalid model checker engine requested.");
+		ret.modelCheckerEngine = *engine;
+	}
+
 	return { std::move(ret) };
 }
 
@@ -886,6 +908,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
+	compilerStack.setModelCheckerEngine(_inputsAndSettings.modelCheckerEngine);
 
 	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
