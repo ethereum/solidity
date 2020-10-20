@@ -145,11 +145,7 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
 		_typeName.annotation().type = TypeProvider::enumType(*enumDef);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
-	{
-		if (contract->isLibrary())
-			m_errorReporter.typeError(1130_error, _typeName.location(), "Invalid use of a library name.");
 		_typeName.annotation().type = TypeProvider::contract(*contract);
-	}
 	else
 	{
 		_typeName.annotation().type = TypeProvider::emptyTuple();
@@ -159,6 +155,16 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 			"Name has to refer to a struct, enum or contract."
 		);
 	}
+}
+
+void DeclarationTypeChecker::endVisit(IdentifierPath const& _path)
+{
+	Declaration const* declaration = _path.annotation().referencedDeclaration;
+	solAssert(declaration, "");
+
+	if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
+		if (contract->isLibrary())
+			m_errorReporter.typeError(1130_error, _path.location(), "Invalid use of a library name.");
 }
 
 bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
@@ -402,7 +408,6 @@ bool DeclarationTypeChecker::visit(UsingForDirective const& _usingFor)
 	if (!library || !library->isLibrary())
 		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
 
-	_usingFor.libraryName().annotation().type = TypeProvider::contract(*library);
 	if (_usingFor.typeName())
 		_usingFor.typeName()->accept(*this);
 

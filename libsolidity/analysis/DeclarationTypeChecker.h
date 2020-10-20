@@ -54,6 +54,7 @@ private:
 
 	bool visit(ElementaryTypeName const& _typeName) override;
 	void endVisit(UserDefinedTypeName const& _typeName) override;
+	void endVisit(IdentifierPath const& _identifierPath) override;
 	bool visit(FunctionTypeName const& _typeName) override;
 	void endVisit(Mapping const& _mapping) override;
 	void endVisit(ArrayTypeName const& _typeName) override;
