@@ -1085,7 +1085,7 @@
 //         sstore(x1, x0)
 //         sstore(x3, x2)
 //         sstore(1, x4)
-//         pop(abi_encode_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint(mload(30), mload(31), mload(32), mload(33), mload(34), mload(35), mload(36), mload(37), mload(38), mload(39), mload(40), mload(41)))
+//         abi_encode_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint_461(mload(30), mload(31), mload(32), mload(33), mload(34), mload(35), mload(36), mload(37), mload(38), mload(39), mload(40), mload(41))
 //     }
 //     function abi_decode_addresst_uint256t_bytes_calldatat_enum$_Operation(headStart, dataEnd) -> value0, value1, value2, value3, value4
 //     {
@@ -1106,9 +1106,8 @@
 //         if iszero(lt(_3, 3)) { revert(value4, value4) }
 //         value4 := _3
 //     }
-//     function abi_encode_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail
+//     function abi_encode_bytes32_t_address_t_uint256_t_bytes32_t_enum$_Operation_t_uint256_t_uint256_t_uint256_t_address_t_address_t_uint_461(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0)
 //     {
-//         tail := add(headStart, 352)
 //         mstore(headStart, value0)
 //         let _1 := sub(shl(160, 1), 1)
 //         mstore(add(headStart, 32), and(value1, _1))

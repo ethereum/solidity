@@ -43,7 +43,7 @@ object "object" {
                 x_7 := x_11
             }
             {
-                let _5, _6, _7, _8 := iszero_169_788(_1, _1, _1, lt_171(x_4, x_5, x_6, x_7, _1, _1, _1, 10))
+                let _5, _6, _7, _8 := iszero_169_864(_1, _1, _1, lt_171(x_4, x_5, x_6, x_7, _1, _1, _1, 10))
                 if i32.eqz(i64.eqz(i64.or(i64.or(_5, _6), i64.or(_7, _8)))) { break }
                 if i32.eqz(i64.eqz(i64.or(_3, i64.or(_1, eq(x_4, x_5, x_6, x_7, _1, _1, _1, 2))))) { break }
                 if i32.eqz(i64.eqz(i64.or(_3, i64.or(_1, eq(x_4, x_5, x_6, x_7, _1, _1, _1, 4))))) { continue }
@@ -67,7 +67,7 @@ object "object" {
             let r1_1, carry_2 := add_carry(x1, y1, carry_1)
             r1 := r1_1
         }
-        function iszero_169_788(x1, x2, x3, x4) -> r1, r2, r3, r4
+        function iszero_169_864(x1, x2, x3, x4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4))))
         }
@@ -206,7 +206,7 @@ Text representation:
                 (br_if $label__3 (i32.eqz (i32.eqz (local.get $_4))))
                 (block $label__4
                     (block
-                        (local.set $_5 (call $iszero_169_788 (local.get $_1) (local.get $_1) (local.get $_1) (call $lt_171 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10))))
+                        (local.set $_5 (call $iszero_169_864 (local.get $_1) (local.get $_1) (local.get $_1) (call $lt_171 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10))))
                         (local.set $_6 (global.get $global_))
                         (local.set $_7 (global.get $global__1))
                         (local.set $_8 (global.get $global__2))
@@ -310,7 +310,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $iszero_169_788
+(func $iszero_169_864
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)

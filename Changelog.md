@@ -2,6 +2,7 @@
 
 Compiler Features:
  * SMTChecker: Support named arguments in function calls.
+ * Yul Optimizer: Prune return parameters of functions that are unused at callsite.
 
 
 ### 0.7.5 (2020-11-18)

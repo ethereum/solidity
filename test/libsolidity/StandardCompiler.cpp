@@ -1396,11 +1396,11 @@ BOOST_AUTO_TEST_CASE(use_stack_optimization)
 	BOOST_REQUIRE(contract["evm"]["bytecode"]["object"].isString());
 	BOOST_CHECK(contract["evm"]["bytecode"]["object"].asString().length() > 20);
 
-	// Now disable stack optimizations and UnusedFunctionParameterPruner (p)
-	// results in "stack too deep"
+	// Now disable stack optimizations, UnusedFunctionParameterPruner (p) and
+	// UnusedFunctionReturnParameterPruner (P). Results in "stack too deep"
 	string optimiserSteps = OptimiserSettings::DefaultYulOptimiserSteps;
 	optimiserSteps.erase(
-		remove_if(optimiserSteps.begin(), optimiserSteps.end(), [](char ch) { return ch == 'p'; }),
+		remove_if(optimiserSteps.begin(), optimiserSteps.end(), [](char ch) { return ch == 'p' || ch == 'P'; }),
 		optimiserSteps.end()
 	);
 	parsedInput["settings"]["optimizer"]["details"]["yulDetails"]["stackAllocation"] = false;

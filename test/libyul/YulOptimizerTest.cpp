@@ -51,6 +51,7 @@
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/UnusedFunctionParameterPruner.h>
+#include <libyul/optimiser/UnusedFunctionReturnParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/OptimiserStep.h>
@@ -263,6 +264,12 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		FunctionHoister::run(*m_context, *m_object->code);
 		LiteralRematerialiser::run(*m_context, *m_object->code);
 		UnusedFunctionParameterPruner::run(*m_context, *m_object->code);
+	}
+	else if (m_optimizerStep == "unusedFunctionReturnParameterPruner")
+	{
+		disambiguate();
+		FunctionHoister::run(*m_context, *m_object->code);
+		UnusedFunctionReturnParameterPruner::run(*m_context, *m_object->code);
 	}
 	else if (m_optimizerStep == "unusedPruner")
 	{
