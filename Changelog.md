@@ -3,7 +3,7 @@
 
 Bugfixes:
  * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.
-
+ * Code generator: Fix missing creation dependency tracking for abstract contracts.
 
 
 ### 0.7.4 (2020-10-19)
