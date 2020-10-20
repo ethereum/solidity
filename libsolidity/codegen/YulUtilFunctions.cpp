@@ -434,6 +434,21 @@ string YulUtilFunctions::updateByteSliceFunctionDynamic(size_t _numBytes)
 	});
 }
 
+string YulUtilFunctions::maskBytesFunctionDynamic()
+{
+	string functionName = "mask_bytes_dynamic";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(data, bytes) -> result {
+				let mask := not(<shr>(mul(8, bytes), not(0)))
+				result := and(data, mask)
+			})")
+			("functionName", functionName)
+			("shr", shiftRightFunctionDynamic())
+			.render();
+	});
+}
+
 string YulUtilFunctions::roundUpFunction()
 {
 	string functionName = "round_up_to_mul_of_32";
@@ -1143,12 +1158,11 @@ string YulUtilFunctions::shortByteArrayEncodeUsedAreaSetLengthFunction()
 			function <functionName>(data, len) -> used {
 				// we want to save only elements that are part of the array after resizing
 				// others should be set to zero
-				let mask := <shl>(mul(8, sub(32, len)), <ones>)
-				used := or(and(data, mask), mul(2, len))
+				data := <maskBytes>(data, len)
+				used := or(data, mul(2, len))
 			})")
 			("functionName", functionName)
-			("shl", shiftLeftFunctionDynamic())
-			("ones", formatNumber((bigint(1) << 256) - 1))
+			("maskBytes", maskBytesFunctionDynamic())
 			.render();
 	});
 }
