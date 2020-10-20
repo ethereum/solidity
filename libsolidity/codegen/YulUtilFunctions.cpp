@@ -1462,7 +1462,7 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 	});
 }
 
-string YulUtilFunctions::copyArrayToStorage(ArrayType const& _fromType, ArrayType const& _toType)
+string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
 {
 	solAssert(
 		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
@@ -2154,7 +2154,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 				)");
 				templ("functionName", functionName);
 				templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
-				templ("copyArrayToStorage", copyArrayToStorage(
+				templ("copyArrayToStorage", copyArrayToStorageFunction(
 					dynamic_cast<ArrayType const&>(_fromType),
 					dynamic_cast<ArrayType const&>(_toType)
 				));
