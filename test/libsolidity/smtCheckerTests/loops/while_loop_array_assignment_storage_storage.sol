@@ -20,5 +20,6 @@ contract LoopFor2 {
 	}
 }
 // ----
+// Warning 4984: (229-234): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 6328: (290-309): CHC: Assertion violation happens here.
 // Warning 6328: (313-332): CHC: Assertion violation happens here.

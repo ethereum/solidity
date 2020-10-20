@@ -18,6 +18,7 @@ contract Der is Base {
 	}
 }
 // ----
+// Warning 4984: (der:101-109): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 6328: (der:113-126): CHC: Assertion violation happens here.
 // Warning 2661: (base:100-103): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 2661: (der:101-109): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

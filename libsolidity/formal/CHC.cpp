@@ -1215,22 +1215,25 @@ void CHC::checkVerificationTargets()
 				if (!intType)
 					intType = TypeProvider::uint256();
 
-				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here.";
-				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here.";
+				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
+				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
 				if (target.type == VerificationTarget::Type::Underflow)
 				{
-					satMsg = satMsgUnderflow;
+					satMsg = satMsgUnderflow + " happens here.";
+					unknownMsg = satMsgUnderflow + " might happen here.";
 					errorReporterId = underflowErrorId;
 				}
 				else if (target.type == VerificationTarget::Type::Overflow)
 				{
-					satMsg = satMsgOverflow;
+					satMsg = satMsgOverflow + " happens here.";
+					unknownMsg = satMsgOverflow + " might happen here.";
 					errorReporterId = overflowErrorId;
 				}
 			}
 			else if (target.type == VerificationTarget::Type::DivByZero)
 			{
 				satMsg = "Division by zero happens here.";
+				unknownMsg = "Division by zero might happen here.";
 				errorReporterId = 4281_error;
 			}
 			else
@@ -1246,12 +1249,12 @@ void CHC::checkVerificationTargets()
 			{
 				auto specificTarget = target;
 				specificTarget.type = VerificationTarget::Type::Underflow;
-				checkAndReportTarget(scope, specificTarget, errorId, underflowErrorId, satMsgUnderflow, unknownMsg);
+				checkAndReportTarget(scope, specificTarget, errorId, underflowErrorId, satMsgUnderflow + " happens here.", satMsgUnderflow + " might happen here.");
 
 				++it;
 				solAssert(it != m_errorIds.end(), "");
 				specificTarget.type = VerificationTarget::Type::Overflow;
-				checkAndReportTarget(scope, specificTarget, it->second, overflowErrorId, satMsgOverflow, unknownMsg);
+				checkAndReportTarget(scope, specificTarget, it->second, overflowErrorId, satMsgOverflow + " happens here.", satMsgOverflow + " might happen here.");
 			}
 		}
 	}
@@ -1267,7 +1270,7 @@ void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& 
 		solAssert(it != m_errorIds.end(), "");
 		unsigned errorId = it->second;
 
-		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.");
+		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.", "Assertion violation might happen here.");
 	}
 }
 
