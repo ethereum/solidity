@@ -2969,46 +2969,53 @@ bool IRGeneratorForStatements::visit(TryStatement const& _tryStatement)
 
 void IRGeneratorForStatements::handleCatch(TryStatement const& _tryStatement)
 {
-	if (_tryStatement.structuredClause())
-		handleCatchStructuredAndFallback(*_tryStatement.structuredClause(), _tryStatement.fallbackClause());
-	else if (_tryStatement.fallbackClause())
-		handleCatchFallback(*_tryStatement.fallbackClause());
-	else
-		rethrow();
-}
+	string const runFallback = m_context.newYulVariable();
+	m_code << "let " << runFallback << " := 1\n";
 
-void IRGeneratorForStatements::handleCatchStructuredAndFallback(
-	TryCatchClause const& _structured,
-	TryCatchClause const* _fallback
-)
-{
-	solAssert(
-		_structured.parameters() &&
-		_structured.parameters()->parameters().size() == 1 &&
-		_structured.parameters()->parameters().front() &&
-		*_structured.parameters()->parameters().front()->annotation().type == *TypeProvider::stringMemory(),
-		""
-	);
-	solAssert(m_context.evmVersion().supportsReturndata(), "");
+	// This function returns zero on "short returndata". We have to add a success flag
+	// once we implement custom error codes.
+	if (_tryStatement.errorClause() || _tryStatement.panicClause())
+		m_code << "switch " << m_utils.returnDataSelectorFunction() << "()\n";
 
-	// Try to decode the error message.
-	// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
-	string const dataVariable = m_context.newYulVariable();
-
-	m_code << "let " << dataVariable << " := " << m_utils.tryDecodeErrorMessageFunction() << "()\n";
-	m_code << "switch iszero(" << dataVariable << ") \n";
-	m_code << "case 0 { // decoding success\n";
-	if (_structured.parameters())
+	if (TryCatchClause const* errorClause = _tryStatement.errorClause())
 	{
-		solAssert(_structured.parameters()->parameters().size() == 1, "");
-		IRVariable const& var = m_context.addLocalVariable(*_structured.parameters()->parameters().front());
-		define(var) << dataVariable << "\n";
+		m_code << "case " << selectorFromSignature32("Error(string)") << " {\n";
+		string const dataVariable = m_context.newYulVariable();
+		m_code << "let " << dataVariable << " := " << m_utils.tryDecodeErrorMessageFunction() << "()\n";
+		m_code << "if " << dataVariable << " {\n";
+		m_code << runFallback << " := 0\n";
+		if (errorClause->parameters())
+		{
+			solAssert(errorClause->parameters()->parameters().size() == 1, "");
+			IRVariable const& var = m_context.addLocalVariable(*errorClause->parameters()->parameters().front());
+			define(var) << dataVariable << "\n";
+		}
+		errorClause->accept(*this);
+		m_code << "}\n";
+		m_code << "}\n";
 	}
-	_structured.accept(*this);
-	m_code << "}\n";
-	m_code << "default { // decoding failure\n";
-	if (_fallback)
-		handleCatchFallback(*_fallback);
+	if (TryCatchClause const* panicClause = _tryStatement.panicClause())
+	{
+		m_code << "case " << selectorFromSignature32("Panic(uint256)") << " {\n";
+		string const success = m_context.newYulVariable();
+		string const code = m_context.newYulVariable();
+		m_code << "let " << success << ", " << code << " := " << m_utils.tryDecodePanicDataFunction() << "()\n";
+		m_code << "if " << success << " {\n";
+		m_code << runFallback << " := 0\n";
+		if (panicClause->parameters())
+		{
+			solAssert(panicClause->parameters()->parameters().size() == 1, "");
+			IRVariable const& var = m_context.addLocalVariable(*panicClause->parameters()->parameters().front());
+			define(var) << code << "\n";
+		}
+		panicClause->accept(*this);
+		m_code << "}\n";
+		m_code << "}\n";
+	}
+
+	m_code << "if " << runFallback << " {\n";
+	if (_tryStatement.fallbackClause())
+		handleCatchFallback(*_tryStatement.fallbackClause());
 	else
 		rethrow();
 	m_code << "}\n";

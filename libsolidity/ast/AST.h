@@ -1494,6 +1494,8 @@ private:
  * Syntax:
  * try <call> returns (uint x, uint y) {
  *   // success code
+ * } catch Panic(uint errorCode) {
+ *   // panic
  * } catch Error(string memory cause) {
  *   // error code, reason provided
  * } catch (bytes memory lowLevelData) {
@@ -1524,7 +1526,8 @@ public:
 	std::vector<ASTPointer<TryCatchClause>> const& clauses() const { return m_clauses; }
 
 	TryCatchClause const* successClause() const;
-	TryCatchClause const* structuredClause() const;
+	TryCatchClause const* panicClause() const;
+	TryCatchClause const* errorClause() const;
 	TryCatchClause const* fallbackClause() const;
 
 private:

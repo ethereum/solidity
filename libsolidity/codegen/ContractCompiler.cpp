@@ -971,30 +971,45 @@ bool ContractCompiler::visit(TryStatement const& _tryStatement)
 void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _catchClauses)
 {
 	// Stack is empty.
-	ASTPointer<TryCatchClause> structured{};
+	ASTPointer<TryCatchClause> error{};
+	ASTPointer<TryCatchClause> panic{};
 	ASTPointer<TryCatchClause> fallback{};
 	for (size_t i = 1; i < _catchClauses.size(); ++i)
 		if (_catchClauses[i]->errorName() == "Error")
-			structured = _catchClauses[i];
+			error = _catchClauses[i];
+		else if (_catchClauses[i]->errorName() == "Panic")
+			panic = _catchClauses[i];
 		else if (_catchClauses[i]->errorName().empty())
 			fallback = _catchClauses[i];
 		else
 			solAssert(false, "");
 
-	solAssert(_catchClauses.size() == 1ul + (structured ? 1 : 0) + (fallback ? 1 : 0), "");
+	solAssert(_catchClauses.size() == 1ul + (error ? 1 : 0) + (panic ? 1 : 0) + (fallback ? 1 : 0), "");
 
 	evmasm::AssemblyItem endTag = m_context.newTag();
 	evmasm::AssemblyItem fallbackTag = m_context.newTag();
-	if (structured)
+	evmasm::AssemblyItem panicTag = m_context.newTag();
+	if (error || panic)
+		// Note that this function returns zero on failure, which is not a problem yet,
+		// but will be a problem once we allow user-defined errors.
+		m_context.callYulFunction(m_context.utilFunctions().returnDataSelectorFunction(), 0, 1);
+		// stack: <selector>
+	if (error)
 	{
 		solAssert(
-			structured->parameters() &&
-			structured->parameters()->parameters().size() == 1 &&
-			structured->parameters()->parameters().front() &&
-			*structured->parameters()->parameters().front()->annotation().type == *TypeProvider::stringMemory(),
+			error->parameters() &&
+			error->parameters()->parameters().size() == 1 &&
+			error->parameters()->parameters().front() &&
+			*error->parameters()->parameters().front()->annotation().type == *TypeProvider::stringMemory(),
 			""
 		);
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
+
+		// stack: <selector>
+		m_context << Instruction::DUP1 << selectorFromSignature32("Error(string)") << Instruction::EQ;
+		m_context << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(panicTag);
+		m_context << Instruction::POP; // remove selector
 
 		// Try to decode the error message.
 		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
@@ -1006,9 +1021,42 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		m_context.adjustStackOffset(1);
 
 		m_context << decodeSuccessTag;
-		structured->accept(*this);
+		error->accept(*this);
 		m_context.appendJumpTo(endTag);
+		m_context.adjustStackOffset(1);
 	}
+	m_context << panicTag;
+	if (panic)
+	{
+		solAssert(
+			panic->parameters() &&
+			panic->parameters()->parameters().size() == 1 &&
+			panic->parameters()->parameters().front() &&
+			*panic->parameters()->parameters().front()->annotation().type == *TypeProvider::uint256(),
+			""
+		);
+		solAssert(m_context.evmVersion().supportsReturndata(), "");
+
+		// stack: <selector>
+		m_context << selectorFromSignature32("Panic(uint256)") << Instruction::EQ;
+		m_context << Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(fallbackTag);
+
+		m_context.callYulFunction(m_context.utilFunctions().tryDecodePanicDataFunction(), 0, 2);
+		m_context << Instruction::SWAP1;
+		// stack: <code> <success>
+		AssemblyItem decodeSuccessTag = m_context.appendConditionalJump();
+		m_context << Instruction::POP;
+		m_context.appendJumpTo(fallbackTag);
+		m_context.adjustStackOffset(1);
+
+		m_context << decodeSuccessTag;
+		panic->accept(*this);
+		m_context.appendJumpTo(endTag);
+		m_context.adjustStackOffset(1);
+	}
+	if (error || panic)
+		m_context << Instruction::POP; // selector
 	m_context << fallbackTag;
 	if (fallback)
 	{

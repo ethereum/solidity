@@ -1,5 +1,8 @@
 ### 0.8.1 (unreleased)
 
+Language Features:
+ * Possibility to use ``catch Panic(uint code)`` to catch a panic failure from an external call.
+
 Compiler Features:
  * Parser: Report meaningful error if parsing a version pragma failed.
  * SMTChecker: Support ABI functions as uninterpreted functions.

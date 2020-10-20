@@ -440,13 +440,21 @@ public:
 	/// Reverts with ``Panic(uint256)`` and the given code.
 	std::string panicFunction(util::PanicCode _code);
 
-	/// Returns the name of a function that decodes an error message.
-	/// signature: () -> arrayPtr
-	///
-	/// Returns a newly allocated `bytes memory` array containing the decoded error message
-	/// or 0 on failure.
+	/// @returns the name of a function that returns the return data selector.
+	/// Returns zero if return data is too short.
+	std::string returnDataSelectorFunction();
+
+	/// @returns the name of a function that tries to abi-decode a string from offset 4 in the
+	/// return data. On failure, returns 0, otherwise a pointer to the newly allocated string.
+	/// Does not check the return data signature.
+	/// signature: () -> ptr
 	std::string tryDecodeErrorMessageFunction();
 
+	/// @returns the name of a function that tries to abi-decode a uint256 value from offset 4 in the
+	/// return data.
+	/// Does not check the return data signature.
+	/// signature: () -> success, value
+	std::string tryDecodePanicDataFunction();
 
 	/// Returns a function name that returns a newly allocated `bytes` array that contains the return data.
 	///
