@@ -44,6 +44,7 @@
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedFunctionParameterPruner.h>
+#include <libyul/optimiser/UnusedFunctionReturnParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
@@ -199,6 +200,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			SSATransform,
 			StructuralSimplifier,
 			UnusedFunctionParameterPruner,
+			UnusedFunctionReturnParameterPruner,
 			UnusedPruner,
 			VarDeclInitializer
 		>();
@@ -209,37 +211,38 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 {
 	static map<string, char> lookupTable{
-		{BlockFlattener::name,                'f'},
-		{CircularReferencesPruner::name,      'l'},
-		{CommonSubexpressionEliminator::name, 'c'},
-		{ConditionalSimplifier::name,         'C'},
-		{ConditionalUnsimplifier::name,       'U'},
-		{ControlFlowSimplifier::name,         'n'},
-		{DeadCodeEliminator::name,            'D'},
-		{EquivalentFunctionCombiner::name,    'v'},
-		{ExpressionInliner::name,             'e'},
-		{ExpressionJoiner::name,              'j'},
-		{ExpressionSimplifier::name,          's'},
-		{ExpressionSplitter::name,            'x'},
-		{ForLoopConditionIntoBody::name,      'I'},
-		{ForLoopConditionOutOfBody::name,     'O'},
-		{ForLoopInitRewriter::name,           'o'},
-		{FullInliner::name,                   'i'},
-		{FunctionGrouper::name,               'g'},
-		{FunctionHoister::name,               'h'},
-		{LiteralRematerialiser::name,         'T'},
-		{LoadResolver::name,                  'L'},
-		{LoopInvariantCodeMotion::name,       'M'},
-		{NameSimplifier::name,                'N'},
-		{ReasoningBasedSimplifier::name,      'R'},
-		{RedundantAssignEliminator::name,     'r'},
-		{Rematerialiser::name,                'm'},
-		{SSAReverser::name,                   'V'},
-		{SSATransform::name,                  'a'},
-		{StructuralSimplifier::name,          't'},
-		{UnusedFunctionParameterPruner::name, 'p'},
-		{UnusedPruner::name,                  'u'},
-		{VarDeclInitializer::name,            'd'},
+		{BlockFlattener::name,                      'f'},
+		{CircularReferencesPruner::name,            'l'},
+		{CommonSubexpressionEliminator::name,       'c'},
+		{ConditionalSimplifier::name,               'C'},
+		{ConditionalUnsimplifier::name,             'U'},
+		{ControlFlowSimplifier::name,               'n'},
+		{DeadCodeEliminator::name,                  'D'},
+		{EquivalentFunctionCombiner::name,          'v'},
+		{ExpressionInliner::name,                   'e'},
+		{ExpressionJoiner::name,                    'j'},
+		{ExpressionSimplifier::name,                's'},
+		{ExpressionSplitter::name,                  'x'},
+		{ForLoopConditionIntoBody::name,            'I'},
+		{ForLoopConditionOutOfBody::name,           'O'},
+		{ForLoopInitRewriter::name,                 'o'},
+		{FullInliner::name,                         'i'},
+		{FunctionGrouper::name,                     'g'},
+		{FunctionHoister::name,                     'h'},
+		{LiteralRematerialiser::name,               'T'},
+		{LoadResolver::name,                        'L'},
+		{LoopInvariantCodeMotion::name,             'M'},
+		{NameSimplifier::name,                      'N'},
+		{ReasoningBasedSimplifier::name,            'R'},
+		{RedundantAssignEliminator::name,           'r'},
+		{Rematerialiser::name,                      'm'},
+		{SSAReverser::name,                         'V'},
+		{SSATransform::name,                        'a'},
+		{StructuralSimplifier::name,                't'},
+		{UnusedFunctionParameterPruner::name,       'p'},
+		{UnusedFunctionReturnParameterPruner::name, 'P'},
+		{UnusedPruner::name,                        'u'},
+		{VarDeclInitializer::name,                  'd'},
 	};
 	yulAssert(lookupTable.size() == allSteps().size(), "");
 	yulAssert((

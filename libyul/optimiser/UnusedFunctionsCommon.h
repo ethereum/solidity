@@ -48,12 +48,12 @@ std::vector<T> filter(std::vector<T> const& _vec, std::vector<bool> const& _mask
 
 /// Returns true if applying UnusedFunctionParameterPruner is not helpful or redundant because the
 /// inliner will be able to handle it anyway.
-bool tooSimpleToBePruned(FunctionDefinition const& _f)
+inline bool tooSimpleToBePruned(FunctionDefinition const& _f)
 {
 	return _f.body.statements.size() <= 1 && CodeSize::codeSize(_f.body) <= 1;
 }
 
-FunctionDefinition createLinkingFunction(
+inline FunctionDefinition createLinkingFunction(
 	FunctionDefinition const& _original,
 	std::pair<std::vector<bool>, std::vector<bool>> const& _usedParametersAndReturns,
 	YulString const& _originalFunctionName,

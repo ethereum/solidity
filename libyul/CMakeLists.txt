@@ -178,6 +178,8 @@ add_library(yul
 	optimiser/TypeInfo.h
 	optimiser/UnusedFunctionParameterPruner.cpp
 	optimiser/UnusedFunctionParameterPruner.h
+	optimiser/UnusedFunctionReturnParameterPruner.cpp
+	optimiser/UnusedFunctionReturnParameterPruner.h
 	optimiser/UnusedFunctionsCommon.h
 	optimiser/UnusedPruner.cpp
 	optimiser/UnusedPruner.h

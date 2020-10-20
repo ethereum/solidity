@@ -93,10 +93,8 @@ template <class T>
 inline std::vector<T> operator+(std::vector<T>&& _a, std::vector<T>&& _b)
 {
 	std::vector<T> ret(std::move(_a));
-	if (&_a == &_b)
-		ret += ret;
-	else
-		ret += std::move(_b);
+	assert(&_a != &_b);
+	ret += std::move(_b);
 	return ret;
 }
 
