@@ -99,6 +99,11 @@ public:
 	/// signature: (value, shiftBytes, toInsert) -> result
 	std::string updateByteSliceFunctionDynamic(size_t _numBytes);
 
+	/// Function that sets all but the first ``bytes`` bytes of ``value`` to zero.
+	/// @note ``bytes`` has to be small enough not to overflow ``8 * bytes``.
+	/// signature: (value, bytes) -> result
+	std::string maskBytesFunctionDynamic();
+
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
 	/// signature: (value) -> result
