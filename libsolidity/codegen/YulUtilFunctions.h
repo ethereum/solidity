@@ -100,7 +100,7 @@ public:
 	std::string updateByteSliceFunctionDynamic(size_t _numBytes);
 
 	/// Function that sets all but the first ``bytes`` bytes of ``value`` to zero.
-	/// @note ``bytes`` has to be small enough not to overflo ``8 * bytes``.
+	/// @note ``bytes`` has to be small enough not to overflow ``8 * bytes``.
 	/// signature: (value, bytes) -> result
 	std::string maskBytesFunctionDynamic();
 
