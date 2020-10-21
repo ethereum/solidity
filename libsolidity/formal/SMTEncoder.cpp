@@ -1145,6 +1145,16 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		}
 		return false;
 	}
+	else if (
+		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		functionType &&
+		_memberAccess.memberName() == "selector" &&
+		functionType->hasDeclaration()
+	)
+	{
+		defineExpr(_memberAccess, functionType->externalIdentifier());
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			7650_error,

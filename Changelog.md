@@ -2,6 +2,8 @@
 
 Compiler Features:
  * SMTChecker: Add division by zero checks in the CHC engine.
+ * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
+
 
 Bugfixes:
  * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.
