@@ -716,6 +716,13 @@ void BMC::checkOverflow(BMCVerificationTarget& _target, smtutil::Expression cons
 void BMC::checkDivByZero(BMCVerificationTarget& _target)
 {
 	solAssert(_target.type == VerificationTarget::Type::DivByZero, "");
+
+	if (
+		m_solvedTargets.count(_target.expression) &&
+		m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::DivByZero)
+	)
+		return;
+
 	checkCondition(
 		_target.constraints && (_target.value == 0),
 		_target.callStack,

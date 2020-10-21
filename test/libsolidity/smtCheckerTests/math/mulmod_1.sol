@@ -12,5 +12,6 @@ contract C {
 	}
 }
 // ----
-// Warning 3046: (141-166): BMC: Division by zero happens here.
-// Warning 3046: (263-278): BMC: Division by zero happens here.
+// Warning 4281: (141-166): CHC: Division by zero happens here.
+// Warning 6328: (170-184): CHC: Assertion violation happens here.
+// Warning 4281: (263-278): CHC: Division by zero happens here.

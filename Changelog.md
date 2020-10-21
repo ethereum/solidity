@@ -1,5 +1,7 @@
 ### 0.7.5 (unreleased)
 
+Compiler Features:
+ * SMTChecker: Add division by zero checks in the CHC engine.
 
 Bugfixes:
  * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.

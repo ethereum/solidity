@@ -787,7 +787,6 @@ void SMTEncoder::visitAddMulMod(FunctionCall const& _funCall)
 	auto x = expr(*args.at(0));
 	auto y = expr(*args.at(1));
 	auto k = expr(*args.at(2));
-	m_context.addAssertion(k != 0);
 	auto const& intType = dynamic_cast<IntegerType const&>(*_funCall.annotation().type);
 
 	if (kind == FunctionType::Kind::AddMod)
@@ -1532,8 +1531,6 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 
 	if (_op == Token::Div || _op == Token::Mod)
 	{
-		m_context.addAssertion(_right != 0);
-
 		// mod and unsigned division never underflow/overflow
 		if (_op == Token::Mod || !intType->isSigned())
 			return {valueUnbounded, valueUnbounded};
@@ -1744,13 +1741,15 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
 	m_context.addAssertion(((d.currentValue() * _right) + r.currentValue()) == _left);
 	if (_type.isSigned())
 		m_context.addAssertion(
-			(_left >= 0 && 0 <= r.currentValue() && r.currentValue() < smtutil::abs(_right)) ||
-			(_left < 0 && (0 - smtutil::abs(_right)) < r.currentValue() && r.currentValue() <= 0)
+			(_left >= 0 && 0 <= r.currentValue() && (_right == 0 || r.currentValue() < smtutil::abs(_right))) ||
+			(_left < 0 && ((_right == 0 || 0 - smtutil::abs(_right) < r.currentValue()) && r.currentValue() <= 0))
 		);
 	else // unsigned version
-		m_context.addAssertion(0 <= r.currentValue() && r.currentValue() < _right);
+		m_context.addAssertion(0 <= r.currentValue() && (_right == 0 || r.currentValue() < _right));
 
-	return {d.currentValue(), r.currentValue()};
+	auto divResult = smtutil::Expression::ite(_right == 0, 0, d.currentValue());
+	auto modResult = smtutil::Expression::ite(_right == 0, 0, r.currentValue());
+	return {divResult, modResult};
 }
 
 void SMTEncoder::assignment(

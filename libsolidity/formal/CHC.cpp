@@ -533,18 +533,9 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 
 void CHC::visitAddMulMod(FunctionCall const& _funCall)
 {
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	addVerificationTarget(
-		&_funCall,
-		VerificationTarget::Type::DivByZero,
-		errorFlag().currentValue()
-	);
-
 	solAssert(_funCall.arguments().at(2), "");
-	smtutil::Expression target = expr(*_funCall.arguments().at(2)) == 0 && errorFlag().currentValue() == newErrorId(_funCall);
-	m_context.addAssertion((errorFlag().currentValue() == previousError) || target);
+
+	addVerificationTarget(_funCall, VerificationTarget::Type::DivByZero, expr(*_funCall.arguments().at(2)) == 0);
 
 	SMTEncoder::visitAddMulMod(_funCall);
 }
@@ -643,13 +634,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	addVerificationTarget(&_arrayPop, VerificationTarget::Type::PopEmptyArray, errorFlag().currentValue());
-
-	smtutil::Expression target = (symbArray->length() <= 0) && (errorFlag().currentValue() == newErrorId(_arrayPop));
-	m_context.addAssertion((errorFlag().currentValue() == previousError) || target);
+	addVerificationTarget(_arrayPop, VerificationTarget::Type::PopEmptyArray, symbArray->length() <= 0);
 }
 
 pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
@@ -660,6 +645,9 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	frontend::Expression const& _expression
 )
 {
+	if (_op == Token::Mod || _op == Token::Div)
+		addVerificationTarget(_expression, VerificationTarget::Type::DivByZero, _right == 0);
+
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
 
 	IntegerType const* intType = nullptr;
@@ -673,46 +661,19 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	if (_op == Token::Mod || (_op == Token::Div && !intType->isSigned()))
 		return values;
 
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	VerificationTarget::Type targetType;
-	unsigned errorId = newErrorId(_expression);
-
-	optional<smtutil::Expression> target;
 	if (_op == Token::Div)
-	{
-		targetType = VerificationTarget::Type::Overflow;
-		target = values.second > intType->maxValue() && errorFlag().currentValue() == errorId;
-	}
+		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	else if (intType->isSigned())
 	{
-		unsigned secondErrorId = newErrorId(_expression);
-		targetType = VerificationTarget::Type::UnderOverflow;
-		target = (values.second < intType->minValue() && errorFlag().currentValue() == errorId) ||
-			(values.second > intType->maxValue() && errorFlag().currentValue() == secondErrorId);
+		addVerificationTarget(_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
+		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	}
 	else if (_op == Token::Sub)
-	{
-		targetType = VerificationTarget::Type::Underflow;
-		target = values.second < intType->minValue() && errorFlag().currentValue() == errorId;
-	}
+		addVerificationTarget(_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
 	else if (_op == Token::Add || _op == Token::Mul)
-	{
-		targetType = VerificationTarget::Type::Overflow;
-		target = values.second > intType->maxValue() && errorFlag().currentValue() == errorId;
-	}
+		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	else
 		solAssert(false, "");
-
-	addVerificationTarget(
-		&_expression,
-		targetType,
-		errorFlag().currentValue()
-	);
-
-	m_context.addAssertion((errorFlag().currentValue() == previousError) || *target);
-
 	return values;
 }
 
@@ -1158,7 +1119,7 @@ void CHC::addVerificationTarget(
 	if (!source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		return;
 
-	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
+	m_verificationTargets[_scope].push_back(CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
 }
 
 void CHC::addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId)
@@ -1175,6 +1136,18 @@ void CHC::addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type 
 	}
 }
 
+void CHC::addVerificationTarget(frontend::Expression const& _scope, VerificationTarget::Type _type, smtutil::Expression const& _target)
+{
+	auto previousError = errorFlag().currentValue();
+	errorFlag().increaseIndex();
+	addVerificationTarget(&_scope, _type, errorFlag().currentValue());
+
+	m_context.addAssertion(
+		errorFlag().currentValue() == previousError ||
+		(_target && errorFlag().currentValue() == newErrorId(_scope))
+	);
+}
+
 void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId)
 {
 	addVerificationTarget(_scope, VerificationTarget::Type::Assert, _from, _constraints, _errorId);
@@ -1182,79 +1155,72 @@ void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression
 
 void CHC::checkVerificationTargets()
 {
-	for (auto const& [scope, target]: m_verificationTargets)
+	for (auto const& [scope, targets]: m_verificationTargets)
 	{
-		if (target.type == VerificationTarget::Type::Assert)
-			checkAssertTarget(scope, target);
-		else
+		for (size_t i = 0; i < targets.size(); ++i)
 		{
-			string satMsg;
-			string satMsgUnderflow;
-			string satMsgOverflow;
-			string unknownMsg;
-			ErrorId errorReporterId;
-			ErrorId underflowErrorId = 3944_error;
-			ErrorId overflowErrorId = 4984_error;
+			auto const& target = targets[i];
 
-			if (target.type == VerificationTarget::Type::PopEmptyArray)
-			{
-				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-				satMsg = "Empty array \"pop\" detected here.";
-				unknownMsg = "Empty array \"pop\" might happen here.";
-				errorReporterId = 2529_error;
-			}
-			else if (
-				target.type == VerificationTarget::Type::Underflow ||
-				target.type == VerificationTarget::Type::Overflow ||
-				target.type == VerificationTarget::Type::UnderOverflow
-			)
-			{
-				auto const* expr = dynamic_cast<Expression const*>(scope);
-				solAssert(expr, "");
-				auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
-				if (!intType)
-					intType = TypeProvider::uint256();
-
-				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
-				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
-				if (target.type == VerificationTarget::Type::Underflow)
-				{
-					satMsg = satMsgUnderflow + " happens here.";
-					unknownMsg = satMsgUnderflow + " might happen here.";
-					errorReporterId = underflowErrorId;
-				}
-				else if (target.type == VerificationTarget::Type::Overflow)
-				{
-					satMsg = satMsgOverflow + " happens here.";
-					unknownMsg = satMsgOverflow + " might happen here.";
-					errorReporterId = overflowErrorId;
-				}
-			}
-			else if (target.type == VerificationTarget::Type::DivByZero)
-			{
-				satMsg = "Division by zero happens here.";
-				unknownMsg = "Division by zero might happen here.";
-				errorReporterId = 4281_error;
-			}
-			else
-				solAssert(false, "");
-
-			auto it = m_errorIds.find(scope->id());
-			solAssert(it != m_errorIds.end(), "");
-			unsigned errorId = it->second;
-
-			if (target.type != VerificationTarget::Type::UnderOverflow)
-				checkAndReportTarget(scope, target, errorId, errorReporterId, satMsg, unknownMsg);
+			if (target.type == VerificationTarget::Type::Assert)
+				checkAssertTarget(scope, target);
 			else
 			{
-				auto specificTarget = target;
-				specificTarget.type = VerificationTarget::Type::Underflow;
-				checkAndReportTarget(scope, specificTarget, errorId, underflowErrorId, satMsgUnderflow + " happens here.", satMsgUnderflow + " might happen here.");
+				string satMsg;
+				string satMsgUnderflow;
+				string satMsgOverflow;
+				string unknownMsg;
+				ErrorId errorReporterId;
+				ErrorId underflowErrorId = 3944_error;
+				ErrorId overflowErrorId = 4984_error;
 
-				++it;
+				if (target.type == VerificationTarget::Type::PopEmptyArray)
+				{
+					solAssert(dynamic_cast<FunctionCall const*>(scope), "");
+					satMsg = "Empty array \"pop\" detected here.";
+					unknownMsg = "Empty array \"pop\" might happen here.";
+					errorReporterId = 2529_error;
+				}
+				else if (
+					target.type == VerificationTarget::Type::Underflow ||
+					target.type == VerificationTarget::Type::Overflow
+				)
+				{
+					auto const* expr = dynamic_cast<Expression const*>(scope);
+					solAssert(expr, "");
+					auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
+					if (!intType)
+						intType = TypeProvider::uint256();
+
+					satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
+					satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
+					if (target.type == VerificationTarget::Type::Underflow)
+					{
+						satMsg = satMsgUnderflow + " happens here.";
+						unknownMsg = satMsgUnderflow + " might happen here.";
+						errorReporterId = underflowErrorId;
+					}
+					else if (target.type == VerificationTarget::Type::Overflow)
+					{
+						satMsg = satMsgOverflow + " happens here.";
+						unknownMsg = satMsgOverflow + " might happen here.";
+						errorReporterId = overflowErrorId;
+					}
+				}
+				else if (target.type == VerificationTarget::Type::DivByZero)
+				{
+					satMsg = "Division by zero happens here.";
+					unknownMsg = "Division by zero might happen here.";
+					errorReporterId = 4281_error;
+				}
+				else
+					solAssert(false, "");
+
+				auto it = m_errorIds.find(scope->id());
 				solAssert(it != m_errorIds.end(), "");
-				specificTarget.type = VerificationTarget::Type::Overflow;
-				checkAndReportTarget(scope, specificTarget, it->second, overflowErrorId, satMsgOverflow + " happens here.", satMsgOverflow + " might happen here.");
+				solAssert(i < it->second.size(), "");
+				unsigned errorId = it->second[i];
+
+				checkAndReportTarget(scope, target, errorId, errorReporterId, satMsg, unknownMsg);
 			}
 		}
 	}
@@ -1268,7 +1234,8 @@ void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& 
 	{
 		auto it = m_errorIds.find(assertion->id());
 		solAssert(it != m_errorIds.end(), "");
-		unsigned errorId = it->second;
+		solAssert(!it->second.empty(), "");
+		unsigned errorId = it->second[0];
 
 		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.", "Assertion violation might happen here.");
 	}
@@ -1464,7 +1431,7 @@ unsigned CHC::newErrorId(frontend::Expression const& _expr)
 	// because error id zero actually means no error in the CHC encoding.
 	if (errorId == 0)
 		errorId = m_context.newUniqueId();
-	m_errorIds.emplace(_expr.id(), errorId);
+	m_errorIds[_expr.id()].push_back(errorId);
 	return errorId;
 }
 
