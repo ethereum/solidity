@@ -3,6 +3,7 @@
 Breaking Changes:
  * Assembler: The artificial ASSIGNIMMUTABLE opcode and the corresponding builtin in the "EVM with object access" dialect of Yul take the base offset of the code to modify as additional argument.
  * Code Generator: All arithmetic is checked by default. These checks can be disabled using ``unchecked { ... }``.
+ * General: Remove global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
  * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.

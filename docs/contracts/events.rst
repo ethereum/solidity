@@ -126,37 +126,6 @@ The output of the above looks like the following (trimmed):
      }
   }
 
-.. index:: ! log
-
-Low-Level Interface to Logs
-===========================
-
-It is also possible to access the low-level interface to the logging
-mechanism via the functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
-Each function ``logi`` takes ``i + 1`` parameter of type ``bytes32``, where the first
-argument will be used for the data part of the log and the others
-as topics. The event call above can be performed in the same way as
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.10 <0.9.0;
-
-    contract C {
-        function f() public payable {
-            uint256 _id = 0x420042;
-            log3(
-                bytes32(msg.value),
-                bytes32(0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20),
-                bytes32(uint256(msg.sender)),
-                bytes32(_id)
-            );
-        }
-    }
-
-where the long hexadecimal number is equal to
-``keccak256("Deposit(address,bytes32,uint256)")``, the signature of the event.
-
 Additional Resources for Understanding Events
 ==============================================
 

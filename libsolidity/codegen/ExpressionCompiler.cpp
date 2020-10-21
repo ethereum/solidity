@@ -851,26 +851,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			break;
 		}
-		case FunctionType::Kind::Log0:
-		case FunctionType::Kind::Log1:
-		case FunctionType::Kind::Log2:
-		case FunctionType::Kind::Log3:
-		case FunctionType::Kind::Log4:
-		{
-			unsigned logNumber = static_cast<unsigned>(function.kind()) - static_cast<unsigned>(FunctionType::Kind::Log0);
-			for (unsigned arg = logNumber; arg > 0; --arg)
-				acceptAndConvert(*arguments[arg], *function.parameterTypes()[arg], true);
-			arguments.front()->accept(*this);
-			utils().fetchFreeMemoryPointer();
-			solAssert(function.parameterTypes().front()->isValueType(), "");
-			utils().packedEncode(
-				{arguments.front()->annotation().type},
-				{function.parameterTypes().front()}
-			);
-			utils().toSizeAfterFreeMemoryPointer();
-			m_context << logInstruction(logNumber);
-			break;
-		}
 		case FunctionType::Kind::Event:
 		{
 			_functionCall.expression().accept(*this);
@@ -1415,11 +1395,6 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				case FunctionType::Kind::BareDelegateCall:
 				case FunctionType::Kind::BareStaticCall:
 				case FunctionType::Kind::Transfer:
-				case FunctionType::Kind::Log0:
-				case FunctionType::Kind::Log1:
-				case FunctionType::Kind::Log2:
-				case FunctionType::Kind::Log3:
-				case FunctionType::Kind::Log4:
 				case FunctionType::Kind::ECRecover:
 				case FunctionType::Kind::SHA256:
 				case FunctionType::Kind::RIPEMD160:
