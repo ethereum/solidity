@@ -225,12 +225,14 @@ public:
 		EncodingContext& _context
 	);
 
-	std::vector<smtutil::SortPointer> const& components();
+	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+
+	std::vector<smtutil::SortPointer> const& components() const;
 	smtutil::Expression component(
 		size_t _index,
 		TypePointer _fromType = nullptr,
 		TypePointer _toType = nullptr
-	);
+	) const;
 };
 
 /**
