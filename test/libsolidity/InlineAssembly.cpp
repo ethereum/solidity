@@ -170,16 +170,6 @@ do { successParse((text), false, false, AssemblyStack::Language::StrictAssembly)
 
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
 
-
-BOOST_AUTO_TEST_SUITE(Parsing) // {{{
-
-BOOST_AUTO_TEST_CASE(surplus_input)
-{
-	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected end of source but got '{'");
-}
-
-BOOST_AUTO_TEST_SUITE_END() // }}}
-
 BOOST_AUTO_TEST_SUITE(Printing) // {{{
 
 BOOST_AUTO_TEST_CASE(print_smoke)
