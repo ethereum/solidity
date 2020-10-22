@@ -1177,139 +1177,6 @@ BOOST_AUTO_TEST_CASE(uncalled_blockhash)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(log0)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function a() public {
-				log0(bytes32(uint256(1)));
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		callContractFunction("a()");
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(1)));
-		BOOST_CHECK_EQUAL(numLogTopics(0), 0);
-	)
-}
-
-BOOST_AUTO_TEST_CASE(log1)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function a() public {
-				log1(bytes32(uint256(1)), bytes32(uint256(2)));
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		callContractFunction("a()");
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(1)));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), h256(u256(2)));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(log2)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function a() public {
-				log2(bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)));
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		callContractFunction("a()");
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(1)));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 2);
-		for (unsigned i = 0; i < 2; ++i)
-			BOOST_CHECK_EQUAL(logTopic(0, i), h256(u256(i + 2)));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(log3)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function a() public {
-				log3(bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), bytes32(uint256(4)));
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		callContractFunction("a()");
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(1)));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 3);
-		for (unsigned i = 0; i < 3; ++i)
-			BOOST_CHECK_EQUAL(logTopic(0, i), h256(u256(i + 2)));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(log4)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function a() public {
-				log4(bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), bytes32(uint256(4)), bytes32(uint256(5)));
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		callContractFunction("a()");
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(1)));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 4);
-		for (unsigned i = 0; i < 4; ++i)
-			BOOST_CHECK_EQUAL(logTopic(0, i), h256(u256(i + 2)));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(log_in_constructor)
-{
-	char const* sourceCode = R"(
-		contract test {
-			constructor() {
-				log1(bytes32(uint256(1)), bytes32(uint256(2)));
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		BOOST_REQUIRE_EQUAL(numLogs(), 1);
-		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
-		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(1)));
-		BOOST_REQUIRE_EQUAL(numLogTopics(0), 1);
-		BOOST_CHECK_EQUAL(logTopic(0, 0), h256(u256(2)));
-	)
-}
-
 BOOST_AUTO_TEST_CASE(selfdestruct)
 {
 	char const* sourceCode = R"(
@@ -1883,7 +1750,12 @@ BOOST_AUTO_TEST_CASE(event)
 			function deposit(bytes32 _id, bool _manually) public payable {
 				if (_manually) {
 					bytes32 s = 0x19dacbf83c5de6658e14cbf7bcae5c15eca2eedecf1c66fbca928e4d351bea0f;
-					log3(bytes32(msg.value), s, bytes32(uint256(msg.sender)), _id);
+					uint value = msg.value;
+					address sender = msg.sender;
+					assembly {
+						mstore(0, value)
+						log3(0, 0x20, s, sender, _id)
+					}
 				} else {
 					emit Deposit(msg.sender, _id, msg.value);
 				}
@@ -1936,6 +1808,31 @@ BOOST_AUTO_TEST_CASE(event_emit)
 		BOOST_CHECK_EQUAL(logTopic(0, 2), h256(id));
 	)
 }
+
+BOOST_AUTO_TEST_CASE(event_constructor)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(address indexed _from, bytes32 indexed _id, uint _value);
+			constructor() {
+				emit Deposit(msg.sender, bytes32("abc"), 7);
+			}
+		}
+	)";
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+
+		compileAndRun(sourceCode);
+		BOOST_REQUIRE_EQUAL(numLogs(), 1);
+		BOOST_CHECK_EQUAL(logAddress(0), m_contractAddress);
+		BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(7)));
+		BOOST_REQUIRE_EQUAL(numLogTopics(0), 3);
+		BOOST_CHECK_EQUAL(logTopic(0, 0), util::keccak256(string("Deposit(address,bytes32,uint256)")));
+		BOOST_CHECK_EQUAL(logTopic(0, 1), h256(m_sender, h256::AlignRight));
+		BOOST_CHECK_EQUAL(logTopic(0, 2), h256(string{"abc"}, h256::FromBinary, h256::AlignLeft));
+	)
+}
+
 
 BOOST_AUTO_TEST_CASE(event_no_arguments)
 {

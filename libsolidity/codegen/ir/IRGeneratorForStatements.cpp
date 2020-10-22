@@ -1329,34 +1329,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		define(_functionCall) << functions[functionType->kind()] << "(" << args << ")\n";
 		break;
 	}
-	case FunctionType::Kind::Log0:
-	case FunctionType::Kind::Log1:
-	case FunctionType::Kind::Log2:
-	case FunctionType::Kind::Log3:
-	case FunctionType::Kind::Log4:
-	{
-		unsigned logNumber = static_cast<unsigned>(functionType->kind()) - static_cast<unsigned>(FunctionType::Kind::Log0);
-		solAssert(arguments.size() == logNumber + 1, "");
-		ABIFunctions abi(m_context.evmVersion(), m_context.revertStrings(), m_context.functionCollector());
-		string indexedArgs;
-		for (unsigned arg = 0; arg < logNumber; ++arg)
-			indexedArgs += ", " + expressionAsType(*arguments[arg + 1], *(parameterTypes[arg + 1]));
-		Whiskers templ(R"({
-			let <pos> := <freeMemory>
-			let <end> := <encode>(<pos>, <nonIndexedArgs>)
-			<log>(<pos>, sub(<end>, <pos>) <indexedArgs>)
-		})");
-		templ("pos", m_context.newYulVariable());
-		templ("end", m_context.newYulVariable());
-		templ("freeMemory", freeMemory());
-		templ("encode", abi.tupleEncoder({arguments.front()->annotation().type}, {parameterTypes.front()}));
-		templ("nonIndexedArgs", IRVariable(*arguments.front()).commaSeparatedList());
-		templ("log", "log" + to_string(logNumber));
-		templ("indexedArgs", indexedArgs);
-		m_code << templ.render();
-
-		break;
-	}
 	case FunctionType::Kind::Creation:
 	{
 		solAssert(!functionType->gasSet(), "Gas limit set for contract creation.");
@@ -1854,11 +1826,6 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				case FunctionType::Kind::BareDelegateCall:
 				case FunctionType::Kind::BareStaticCall:
 				case FunctionType::Kind::Transfer:
-				case FunctionType::Kind::Log0:
-				case FunctionType::Kind::Log1:
-				case FunctionType::Kind::Log2:
-				case FunctionType::Kind::Log3:
-				case FunctionType::Kind::Log4:
 				case FunctionType::Kind::ECRecover:
 				case FunctionType::Kind::SHA256:
 				case FunctionType::Kind::RIPEMD160:

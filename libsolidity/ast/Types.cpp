@@ -3044,11 +3044,6 @@ string FunctionType::richIdentifier() const
 	case Kind::ECRecover: id += "ecrecover"; break;
 	case Kind::SHA256: id += "sha256"; break;
 	case Kind::RIPEMD160: id += "ripemd160"; break;
-	case Kind::Log0: id += "log0"; break;
-	case Kind::Log1: id += "log1"; break;
-	case Kind::Log2: id += "log2"; break;
-	case Kind::Log3: id += "log3"; break;
-	case Kind::Log4: id += "log4"; break;
 	case Kind::GasLeft: id += "gasleft"; break;
 	case Kind::Event: id += "event"; break;
 	case Kind::SetGas: id += "setgas"; break;

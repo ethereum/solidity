@@ -662,13 +662,8 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ArrayPop:
 		arrayPop(_funCall);
 		break;
-	case FunctionType::Kind::Log0:
-	case FunctionType::Kind::Log1:
-	case FunctionType::Kind::Log2:
-	case FunctionType::Kind::Log3:
-	case FunctionType::Kind::Log4:
 	case FunctionType::Kind::Event:
-		// These can be safely ignored.
+		// This can be safely ignored.
 		break;
 	case FunctionType::Kind::ObjectCreation:
 		visitObjectCreation(_funCall);
