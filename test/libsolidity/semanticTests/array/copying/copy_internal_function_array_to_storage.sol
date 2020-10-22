@@ -19,4 +19,4 @@ contract C {
 
 // ----
 // one() -> 3
-// two() -> FAILURE
+// two() -> FAILURE, hex"4e487b71", 0x51

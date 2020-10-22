@@ -60,6 +60,6 @@ contract C {
 // mod() -> 1, 0
 // inc_pre() -> 1
 // inc_post() -> 0
-// dec_pre() -> FAILURE
-// dec_post() -> FAILURE
-// neg() -> FAILURE
+// dec_pre() -> FAILURE, hex"4e487b71", 0x11
+// dec_post() -> FAILURE, hex"4e487b71", 0x11
+// neg() -> FAILURE, hex"4e487b71", 0x11

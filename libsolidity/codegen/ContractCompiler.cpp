@@ -47,6 +47,7 @@
 #include <liblangutil/ErrorReporter.h>
 
 #include <libsolutil/Whiskers.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -229,19 +230,26 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 	m_context.pushSubroutineSize(m_context.runtimeSub());
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
 	// This code replaces the address added by appendDeployTimeAddress().
-	m_context.appendInlineAssembly(R"(
-	{
-		// If code starts at 11, an mstore(0) writes to the full PUSH20 plus data
-		// without the need for a shift.
-		let codepos := 11
-		codecopy(codepos, subOffset, subSize)
-		// Check that the first opcode is a PUSH20
-		if iszero(eq(0x73, byte(0, mload(codepos)))) { invalid() }
-		mstore(0, address())
-		mstore8(codepos, 0x73)
-		return(codepos, subSize)
-	}
-	)", {"subSize", "subOffset"});
+	m_context.appendInlineAssembly(
+		Whiskers(R"(
+		{
+			// If code starts at 11, an mstore(0) writes to the full PUSH20 plus data
+			// without the need for a shift.
+			let codepos := 11
+			codecopy(codepos, subOffset, subSize)
+			// Check that the first opcode is a PUSH20
+			if iszero(eq(0x73, byte(0, mload(codepos)))) {
+				mstore(0, <panicSig>)
+				mstore(4, 0)
+				revert(0, 0x24)
+			}
+			mstore(0, address())
+			mstore8(codepos, 0x73)
+			return(codepos, subSize)
+		}
+		)")("panicSig", util::selectorFromSignature("Panic(uint256)").str()).render(),
+		{"subSize", "subOffset"}
+	);
 
 	return m_context.runtimeSub();
 }

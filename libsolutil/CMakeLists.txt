@@ -9,6 +9,7 @@ set(sources
 	CommonIO.h
 	Exceptions.cpp
 	Exceptions.h
+	ErrorCodes.h
 	FixedHash.h
 	FunctionSelector.h
 	IndentedWriter.cpp

@@ -327,9 +327,23 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 	)";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}});
 
+	bytes panic =
+		bytes{uint8_t(Instruction::PUSH32)} +
+		fromHex("4E487B7100000000000000000000000000000000000000000000000000000000") +
+		bytes{
+			uint8_t(Instruction::PUSH1), 0x0,
+			uint8_t(Instruction::MSTORE),
+			uint8_t(Instruction::PUSH1), 0x12,
+			uint8_t(Instruction::PUSH1), 0x4,
+			uint8_t(Instruction::MSTORE),
+			uint8_t(Instruction::PUSH1), 0x24,
+			uint8_t(Instruction::PUSH1), 0x0,
+			uint8_t(Instruction::REVERT)
+		};
+
 	bytes expectation;
 	if (solidity::test::CommonOptions::get().optimize)
-		expectation = {
+		expectation = bytes{
 			uint8_t(Instruction::PUSH1), 0x2,
 			uint8_t(Instruction::PUSH1), 0x3,
 			uint8_t(Instruction::PUSH1), 0x5,
@@ -346,24 +360,24 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 			uint8_t(Instruction::DUP2),
 			uint8_t(Instruction::ISZERO),
 			uint8_t(Instruction::ISZERO),
-			uint8_t(Instruction::PUSH1), 0x1b,
-			uint8_t(Instruction::JUMPI),
-			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::PUSH1), 0x48,
+			uint8_t(Instruction::JUMPI)
+		} + panic + bytes{
 			uint8_t(Instruction::JUMPDEST),
 			uint8_t(Instruction::MOD),
 			uint8_t(Instruction::DUP2),
 			uint8_t(Instruction::ISZERO),
 			uint8_t(Instruction::ISZERO),
-			uint8_t(Instruction::PUSH1), 0x24,
-			uint8_t(Instruction::JUMPI),
-			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::PUSH1), 0x7e,
+			uint8_t(Instruction::JUMPI)
+		} + panic + bytes{
 			uint8_t(Instruction::JUMPDEST),
 			uint8_t(Instruction::DIV),
 			uint8_t(Instruction::PUSH1), 0x1,
 			uint8_t(Instruction::MUL)
 		};
 	else
-		expectation = {
+		expectation = bytes{
 			uint8_t(Instruction::PUSH1), 0x1,
 			uint8_t(Instruction::PUSH1), 0x2,
 			uint8_t(Instruction::PUSH1), 0x3,
@@ -381,21 +395,22 @@ BOOST_AUTO_TEST_CASE(arithmetic)
 			uint8_t(Instruction::DUP2),
 			uint8_t(Instruction::ISZERO),
 			uint8_t(Instruction::ISZERO),
-			uint8_t(Instruction::PUSH1), 0x1d,
-			uint8_t(Instruction::JUMPI),
-			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::PUSH1), 0x4a,
+			uint8_t(Instruction::JUMPI)
+		} + panic + bytes{
 			uint8_t(Instruction::JUMPDEST),
 			uint8_t(Instruction::MOD),
 			uint8_t(Instruction::DUP2),
 			uint8_t(Instruction::ISZERO),
 			uint8_t(Instruction::ISZERO),
-			uint8_t(Instruction::PUSH1), 0x26,
-			uint8_t(Instruction::JUMPI),
-			uint8_t(Instruction::INVALID),
+			uint8_t(Instruction::PUSH1), 0x80,
+			uint8_t(Instruction::JUMPI)
+		} + panic + bytes{
 			uint8_t(Instruction::JUMPDEST),
 			uint8_t(Instruction::DIV),
 			uint8_t(Instruction::MUL)
 		};
+
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

@@ -107,7 +107,7 @@ Note that in contrast, division on :ref:`literals<rational_literals>` results in
 of arbitrary precision.
 
 .. note::
-  Division by zero causes a failing assert. This check can **not** be disabled through ``unchecked { ... }``.
+  Division by zero causes a :ref:`Panic error<assert-and-require>`. This check can **not** be disabled through ``unchecked { ... }``.
 
 .. note::
   The expression ``type(int).min / (-1)`` is the only case where division causes an overflow.
@@ -127,7 +127,7 @@ results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`
  * ``int256(-5) % int256(-2) == int256(-1)``
 
 .. note::
-  Modulo with zero causes a failing assert. This check can **not** be disabled through ``unchecked { ... }``.
+  Modulo with zero causes a :ref:`Panic error<assert-and-require>`. This check can **not** be disabled through ``unchecked { ... }``.
 
 Exponentiation
 ^^^^^^^^^^^^^^
@@ -562,7 +562,8 @@ Enums
 
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
 to and from all integer types but implicit conversion is not allowed.  The explicit conversion
-from integer checks at runtime that the value lies inside the range of the enum and causes a failing assert otherwise.
+from integer checks at runtime that the value lies inside the range of the enum and causes a
+:ref:`Panic error<assert-and-require>` otherwise.
 Enums require at least one member, and its default value when declared is the first member.
 
 The data representation is the same as for enums in C: The options are represented by
@@ -656,7 +657,7 @@ On the other hand, a ``non-payable`` function will reject Ether sent to it,
 so ``non-payable`` functions cannot be converted to ``payable`` functions.
 
 If a function type variable is not initialised, calling it results
-in a failed assertion. The same happens if you call a function after using ``delete``
+in a :ref:`Panic error<assert-and-require>`. The same happens if you call a function after using ``delete``
 on it.
 
 If external function types are used outside of the context of Solidity,

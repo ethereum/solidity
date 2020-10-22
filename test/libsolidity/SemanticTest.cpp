@@ -201,8 +201,12 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 					);
 				}
 
-				if ((m_transactionSuccessful == test.call().expectations.failure)
-					|| (output != test.call().expectations.rawBytes()))
+				bool outputMismatch = (output != test.call().expectations.rawBytes());
+				// Pre byzantium, it was not possible to return failure data, so we disregard
+				// output mismatch for those EVM versions.
+				if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
+					outputMismatch = false;
+				if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
 					success = false;
 
 				test.setFailure(!m_transactionSuccessful);

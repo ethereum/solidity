@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(enum_type_cleanup)
 		compileAndRun(sourceCode);
 		BOOST_CHECK(callContractFunction("f(uint256)", 0) == encodeArgs(0));
 		BOOST_CHECK(callContractFunction("f(uint256)", 1) == encodeArgs(1));
-		BOOST_CHECK(callContractFunction("f(uint256)", 2) == encodeArgs());
+		BOOST_CHECK(callContractFunction("f(uint256)", 2) == panicData(PanicCode::EnumConversionError));
 	)
 }
 

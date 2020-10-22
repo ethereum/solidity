@@ -33,6 +33,7 @@
 #include <libevmasm/Assembly.h>
 
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/ErrorCodes.h>
 
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/test/unit_test.hpp>
@@ -2554,7 +2555,7 @@ BOOST_AUTO_TEST_CASE(generic_staticcall)
 		ABI_CHECK(callContractFunction("g(address)", c_addressA), encodeArgs(true, 0x40, 0x20, 23 + 42));
 		ABI_CHECK(callContractFunction("h(address)", c_addressA), encodeArgs(false, 0x40, 0x00));
 		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 42), encodeArgs(true, 0x40, 0x20, 42));
-		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false, 0x40, 0x00));
+		ABI_CHECK(callContractFunction("i(address,uint256)", c_addressA, 23), encodeArgs(false, 0x40, 0x24) + panicData(PanicCode::Assert) + bytes(32 - 4, 0));
 	}
 }
 
@@ -3678,8 +3679,7 @@ BOOST_AUTO_TEST_CASE(invalid_enum_logged)
 	BOOST_REQUIRE_EQUAL(logTopic(0, 0), util::keccak256(string("Log(uint8)")));
 	BOOST_CHECK_EQUAL(h256(logData(0)), h256(u256(0)));
 
-	// should throw
-	ABI_CHECK(callContractFunction("test_log()"), encodeArgs());
+	ABI_CHECK(callContractFunction("test_log()"), panicData(PanicCode::EnumConversionError));
 }
 
 BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
@@ -3696,7 +3696,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 			}
 		}
 	)";
-	ABI_CHECK(compileAndRunWithoutCheck({{"", sourceCode}}, 0, "A"), encodeArgs());
+	ABI_CHECK(compileAndRunWithoutCheck({{"", sourceCode}}, 0, "A"), panicData(PanicCode::ArrayOutOfBounds));
 	BOOST_CHECK(!m_transactionSuccessful);
 }
 
@@ -4176,7 +4176,7 @@ BOOST_AUTO_TEST_CASE(calldata_bytes_array_bounds)
 	);
 	ABI_CHECK(
 		callContractFunction("f(bytes[],uint256)", 0x40, 2, 1, 0x20, 2, bytes{'a', 'b'} + bytes(30, 0)),
-		encodeArgs()
+		panicData(PanicCode::ArrayOutOfBounds)
 	);
 }
 
@@ -4226,11 +4226,9 @@ BOOST_AUTO_TEST_CASE(calldata_array_two_dimensional)
 				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j]));
 				ABI_CHECK(callContractFunction("reenc(" + arrayType + ",uint256,uint256)", 0x60, i, j, encoding), encodeArgs(data[i][j]));
 			}
-			// out of bounds access
-			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
+			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), panicData(PanicCode::ArrayOutOfBounds));
 		}
-		// out of bounds access
-		ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), encodeArgs());
+		ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), panicData(PanicCode::ArrayOutOfBounds));
 	}
 }
 
@@ -4308,14 +4306,11 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_three_dimensional)
 					ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, k, encoding), encodeArgs(data[i][j][k]));
 					ABI_CHECK(callContractFunction("reenc(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, k, encoding), encodeArgs(data[i][j][k]));
 				}
-				// out of bounds access
-				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, data[i][j].size(), encoding), encodeArgs());
+				ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256,uint256)", 0x80, i, j, data[i][j].size(), encoding), panicData(PanicCode::ArrayOutOfBounds));
 			}
-			// out of bounds access
-			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), encodeArgs());
+			ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256,uint256)", 0x60, i, data[i].size(), encoding), panicData(PanicCode::ArrayOutOfBounds));
 		}
-		// out of bounds access
-		ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), encodeArgs());
+		ABI_CHECK(callContractFunction("test(" + arrayType + ",uint256)", 0x40, data.size(), encoding), panicData(PanicCode::ArrayOutOfBounds));
 	}
 }
 

@@ -18,6 +18,15 @@ and it does something else afterwards.
 * Exponentiation is right associative, i.e., the expression ``a**b**c`` is parsed as ``a**(b**c)``.
   Before 0.8.0, it was parsed as ``(a**b)**c``.
 
+Semantic only Changes
+=====================
+
+* Failing assertions (and other internal checks like division by zero) do not use the invalid opcode anymore but instead revert
+  with error data equal to a function call to ``Panic(uint256)`` with an error code specific to the circumstances.
+
+This will save gas on errors while it still allows static analysis tools to detect these situations.
+
+
 Syntactic Only Changes
 ======================
 

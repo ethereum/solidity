@@ -8,4 +8,4 @@ contract C {
 // EVMVersion: >=petersburg
 // compileViaYul: true
 // ----
-// popEmpty() -> FAILURE
+// popEmpty() -> FAILURE, hex"4e487b71", 0x31

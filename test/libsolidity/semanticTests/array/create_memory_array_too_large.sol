@@ -22,5 +22,5 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f() -> FAILURE
-// g() -> FAILURE
+// f() -> FAILURE, hex"4e487b71", 0x41
+// g() -> FAILURE, hex"4e487b71", 0x41

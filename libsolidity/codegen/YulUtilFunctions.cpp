@@ -122,7 +122,7 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 					if iszero(condition) { <error> }
 				}
 			)")
-			("error", _assert ? panicFunction() + "()" : "revert(0, 0)")
+			("error", _assert ? panicFunction(PanicCode::Assert) + "()" : "revert(0, 0)")
 			("functionName", functionName)
 			.render();
 
@@ -478,7 +478,7 @@ string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			.render();
 	});
 }
@@ -530,7 +530,7 @@ string YulUtilFunctions::overflowCheckedIntMulFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			.render();
 	});
 }
@@ -560,13 +560,13 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			function <functionName>(x, y) -> r {
 				x := <cleanupFunction>(x)
 				y := <cleanupFunction>(y)
-				if iszero(y) { <panic>() }
+				if iszero(y) { <panicDivZero>() }
 				<?signed>
 				// overflow for minVal / -1
 				if and(
 					eq(x, <minVal>),
 					eq(y, sub(0, 1))
-				) { <panic>() }
+				) { <panicOverflow>() }
 				</signed>
 				r := <?signed>s</signed>div(x, y)
 			}
@@ -575,7 +575,8 @@ string YulUtilFunctions::overflowCheckedIntDivFunction(IntegerType const& _type)
 			("signed", _type.isSigned())
 			("minVal", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
-			("panic", panicFunction())
+			("panicDivZero", panicFunction(PanicCode::DivisionByZero))
+			("panicOverflow", panicFunction(PanicCode::UnderOverflow))
 			.render();
 	});
 }
@@ -596,7 +597,7 @@ string YulUtilFunctions::wrappingIntDivFunction(IntegerType const& _type)
 			("functionName", functionName)
 			("cleanupFunction", cleanupFunction(_type))
 			("signed", _type.isSigned())
-			("error", panicFunction())
+			("error", panicFunction(PanicCode::DivisionByZero))
 			.render();
 	});
 }
@@ -617,7 +618,7 @@ string YulUtilFunctions::intModFunction(IntegerType const& _type)
 			("functionName", functionName)
 			("signed", _type.isSigned())
 			("cleanupFunction", cleanupFunction(_type))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::DivisionByZero))
 			.render();
 	});
 }
@@ -647,7 +648,7 @@ string YulUtilFunctions::overflowCheckedIntSubFunction(IntegerType const& _type)
 			("maxValue", toCompactHexWithPrefix(u256(_type.maxValue())))
 			("minValue", toCompactHexWithPrefix(u256(_type.minValue())))
 			("cleanupFunction", cleanupFunction(_type))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			.render();
 	});
 }
@@ -808,7 +809,7 @@ string YulUtilFunctions::overflowCheckedIntLiteralExpFunction(
 			("exponentCleanupFunction", cleanupFunction(_exponentType))
 			("needsOverflowCheck", needsOverflowCheck)
 			("exponentUpperbound", to_string(exponentUpperbound))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			("base", bigint2u(baseValue).str())
 			.render();
 	});
@@ -866,7 +867,7 @@ string YulUtilFunctions::overflowCheckedUnsignedExpFunction()
 			}
 			)")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			("expLoop", overflowCheckedExpLoopFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
@@ -916,7 +917,7 @@ string YulUtilFunctions::overflowCheckedSignedExpFunction()
 			}
 			)")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			("expLoop", overflowCheckedExpLoopFunction())
 			("shr_1", shiftRightFunction(1))
 			.render();
@@ -957,7 +958,7 @@ string YulUtilFunctions::overflowCheckedExpLoopFunction()
 			}
 			)")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::UnderOverflow))
 			("shr_1", shiftRightFunction(1))
 			.render();
 	});
@@ -1087,7 +1088,7 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 				}
 			})")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::ResourceError))
 			("fetchLength", arrayLengthFunction(_type))
 			("convertToSize", arrayConvertLengthToSize(_type))
 			("dataPosition", arrayDataAreaFunction(_type))
@@ -1123,7 +1124,7 @@ string YulUtilFunctions::resizeDynamicByteArrayFunction(ArrayType const& _type)
 				}
 			})")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::ResourceError))
 			("extractLength", extractByteArrayLengthFunction())
 			("maxArrayLength", (u256(1) << 64).str())
 			("decreaseSize", decreaseByteArraySizeFunction(_type))
@@ -1266,7 +1267,7 @@ string YulUtilFunctions::storageArrayPopFunction(ArrayType const& _type)
 				sstore(array, newLen)
 			})")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::EmptyArrayPop))
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("setToZero", storageSetToZeroFunction(*_type.baseType()))
@@ -1308,7 +1309,7 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 				}
 			})")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::EmptyArrayPop))
 			("extractByteArrayLength", extractByteArrayLengthFunction())
 			("transitLongToShort", byteArrayTransitLongToShortFunction(_type))
 			("encodeUsedSetLen", shortByteArrayEncodeUsedAreaSetLengthFunction())
@@ -1370,7 +1371,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 				</isByteArray>
 			})")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::ResourceError))
 			("extractByteArrayLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
 			("dataAreaFunction", arrayDataAreaFunction(_type))
 			("isByteArray", _type.isByteArray())
@@ -1400,7 +1401,7 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 				slot, offset := <indexAccess>(array, oldLen)
 			})")
 			("functionName", functionName)
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::ResourceError))
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
 			("maxArrayLength", (u256(1) << 64).str())
@@ -1715,7 +1716,7 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 			}
 		)");
 		w("functionName", functionName);
-		w("panic", panicFunction());
+		w("panic", panicFunction(PanicCode::ResourceError));
 		w("byteArray", _type.isByteArray());
 		w("dynamic", _type.isDynamicallySized());
 		return w.render();
@@ -1786,7 +1787,7 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 			}
 		)")
 		("functionName", functionName)
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::ArrayOutOfBounds))
 		("arrayLen", arrayLengthFunction(_type))
 		("dataAreaFunc", arrayDataAreaFunction(_type))
 		("multipleItemsPerSlot", _type.baseType()->storageBytes() <= 16)
@@ -1816,7 +1817,7 @@ string YulUtilFunctions::memoryArrayIndexAccessFunction(ArrayType const& _type)
 			}
 		)")
 		("functionName", functionName)
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::ArrayOutOfBounds))
 		("arrayLen", arrayLengthFunction(_type))
 		("stride", to_string(_type.memoryStride()))
 		("dynamicallySized", _type.isDynamicallySized())
@@ -1839,7 +1840,7 @@ string YulUtilFunctions::calldataArrayIndexAccessFunction(ArrayType const& _type
 			}
 		)")
 		("functionName", functionName)
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::ArrayOutOfBounds))
 		("stride", to_string(_type.calldataStride()))
 		("dynamicallySized", _type.isDynamicallySized())
 		("dynamicallyEncodedBase", _type.baseType()->isDynamicallyEncoded())
@@ -2509,7 +2510,7 @@ string YulUtilFunctions::allocationFunction()
 		)")
 		("functionName", functionName)
 		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::ResourceError))
 		.render();
 	});
 }
@@ -3085,10 +3086,7 @@ string YulUtilFunctions::validatorFunction(Type const& _type, bool _revertOnFail
 			}
 		)");
 		templ("functionName", functionName);
-		if (_revertOnFailure)
-			templ("failure", "revert(0, 0)");
-		else
-			templ("failure", panicFunction() + "()");
+		PanicCode panicCode = PanicCode::Generic;
 
 		switch (_type.category())
 		{
@@ -3111,6 +3109,7 @@ string YulUtilFunctions::validatorFunction(Type const& _type, bool _revertOnFail
 		{
 			size_t members = dynamic_cast<EnumType const&>(_type).numberOfMembers();
 			solAssert(members > 0, "empty enum should have caused a parser error.");
+			panicCode = PanicCode::EnumConversionError;
 			templ("condition", "lt(value, " + to_string(members) + ")");
 			break;
 		}
@@ -3120,6 +3119,11 @@ string YulUtilFunctions::validatorFunction(Type const& _type, bool _revertOnFail
 		default:
 			solAssert(false, "Validation of type " + _type.identifier() + " requested.");
 		}
+
+		if (_revertOnFailure)
+			templ("failure", "revert(0, 0)");
+		else
+			templ("failure", panicFunction(panicCode) + "()");
 
 		return templ.render();
 	});
@@ -3196,7 +3200,7 @@ std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 			}
 		)")
 		("functionName", functionName)
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::UnderOverflow))
 		("minval", toCompactHexWithPrefix(type.min()))
 		("cleanupFunction", cleanupFunction(_type))
 		.render();
@@ -3237,7 +3241,7 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 		)")
 		("functionName", functionName)
 		("maxval", toCompactHexWithPrefix(type.max()))
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::UnderOverflow))
 		("cleanupFunction", cleanupFunction(_type))
 		.render();
 	});
@@ -3278,7 +3282,7 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 		("functionName", functionName)
 		("minval", toCompactHexWithPrefix(type.min()))
 		("cleanupFunction", cleanupFunction(_type))
-		("panic", panicFunction())
+		("panic", panicFunction(PanicCode::UnderOverflow))
 		.render();
 	});
 }
@@ -3400,7 +3404,7 @@ string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
 			)")
 			("functionName", functionName)
 			("clearArray", clearStorageArrayFunction(dynamic_cast<ArrayType const&>(_type)))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::Generic))
 			.render();
 		else if (_type.category() == Type::Category::Struct)
 			return Whiskers(R"(
@@ -3411,7 +3415,7 @@ string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
 			)")
 			("functionName", functionName)
 			("clearStruct", clearStorageStructFunction(dynamic_cast<StructType const&>(_type)))
-			("panic", panicFunction())
+			("panic", panicFunction(PanicCode::Generic))
 			.render();
 		else
 			solUnimplemented("setToZero for type " + _type.identifier() + " not yet implemented!");
@@ -3645,16 +3649,20 @@ string YulUtilFunctions::revertReasonIfDebug(string const& _message)
 	return revertReasonIfDebug(m_revertStrings, _message);
 }
 
-string YulUtilFunctions::panicFunction()
+string YulUtilFunctions::panicFunction(util::PanicCode _code)
 {
-	string functionName = "panic_error";
+	string functionName = "panic_error_" + toCompactHexWithPrefix(uint64_t(_code));
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>() {
-				invalid()
+				mstore(0, <selector>)
+				mstore(4, <code>)
+				revert(0, 0x24)
 			}
 		)")
 		("functionName", functionName)
+		("selector", util::selectorFromSignature("Panic(uint256)").str())
+		("code", toCompactHexWithPrefix(_code))
 		.render();
 	});
 }

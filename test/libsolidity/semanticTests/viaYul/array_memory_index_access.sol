@@ -28,8 +28,8 @@ contract C {
 // index(uint256): 10 -> true
 // index(uint256): 20 -> true
 // index(uint256): 0xFF -> true
-// accessIndex(uint256,int256): 10,1 -> 2
-// accessIndex(uint256,int256): 10,0 -> 1
-// accessIndex(uint256,int256): 10,11 -> FAILURE
-// accessIndex(uint256,int256): 10,10 -> FAILURE
-// accessIndex(uint256,int256): 10,-1 -> FAILURE
+// accessIndex(uint256,int256): 10, 1 -> 2
+// accessIndex(uint256,int256): 10, 0 -> 1
+// accessIndex(uint256,int256): 10, 11 -> FAILURE, hex"4e487b71", 0x32
+// accessIndex(uint256,int256): 10, 10 -> FAILURE, hex"4e487b71", 0x32
+// accessIndex(uint256,int256): 10, -1 -> FAILURE, hex"4e487b71", 0x32

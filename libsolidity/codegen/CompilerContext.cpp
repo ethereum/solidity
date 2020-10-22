@@ -41,6 +41,7 @@
 #include <libyul/Utilities.h>
 
 #include <libsolutil/Whiskers.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
@@ -330,16 +331,24 @@ CompilerContext& CompilerContext::appendJump(evmasm::AssemblyItem::JumpType _jum
 	return *this << item;
 }
 
-CompilerContext& CompilerContext::appendInvalid()
+CompilerContext& CompilerContext::appendPanic(util::PanicCode _code)
 {
-	return *this << Instruction::INVALID;
+	Whiskers templ(R"({
+		mstore(0, <selector>)
+		mstore(4, <code>)
+		revert(0, 0x24)
+	})");
+	templ("selector", util::selectorFromSignature("Panic(uint256)").str());
+	templ("code", u256(_code).str());
+	appendInlineAssembly(templ.render());
+	return *this;
 }
 
-CompilerContext& CompilerContext::appendConditionalInvalid()
+CompilerContext& CompilerContext::appendConditionalPanic(util::PanicCode _code)
 {
 	*this << Instruction::ISZERO;
 	evmasm::AssemblyItem afterTag = appendConditionalJump();
-	*this << Instruction::INVALID;
+	appendPanic(_code);
 	*this << afterTag;
 	return *this;
 }

@@ -28,6 +28,8 @@
 
 #include <libsolidity/interface/DebugSettings.h>
 
+#include <libsolutil/ErrorCodes.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -406,9 +408,8 @@ public:
 
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
-	/// Executes the invalid opcode.
-	/// Might use revert with special error code in the future.
-	std::string panicFunction();
+	/// Reverts with ``Panic(uint256)`` and the given code.
+	std::string panicFunction(util::PanicCode _code);
 
 	/// Returns the name of a function that decodes an error message.
 	/// signature: () -> arrayPtr

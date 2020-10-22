@@ -564,35 +564,53 @@ of an exception instead of "bubbling up".
 
 Exceptions can be caught with the ``try``/``catch`` statement.
 
-``assert`` and ``require``
---------------------------
+Exceptions can contain data that is passed back to the caller.
+This data consists of a 4-byte selector and subsequent :ref:`ABI-encoded<abi>` data.
+The selector is computed in the same way as a function selector, i.e.,
+the first four bytes of the keccak256-hash of a function
+signature - in this case an error signature.
+
+Currently, Solidity supports two error signatures: ``Error(string)``
+and ``Panic(uint256)``. The first ("error") is used for "regular" error conditions
+while the second ("panic") is used for errors that should not be present in bug-free code.
+
+Panic via ``assert`` and Error via ``require``
+----------------------------------------------
 
 The convenience functions ``assert`` and ``require`` can be used to check for conditions and throw an exception
 if the condition is not met.
 
-The ``assert`` function should only be used to test for internal
+The ``assert`` function creates an error of type ``Panic(uint256)``.
+The same error is created by the compiler in certain situations as listed below.
+
+Assert should only be used to test for internal
 errors, and to check invariants. Properly functioning code should
-never reach a failing ``assert`` statement; if this happens there
+never create a Panic, not even on invalid external input.
+If this happens, then there
 is a bug in your contract which you should fix. Language analysis
 tools can evaluate your contract to identify the conditions and
-function calls which will reach a failing ``assert``.
+function calls which will cause a Panic.
 
-An ``assert``-style exception is generated in the following situations:
+A Panic exception is generated in the following situations.
+The error code supplied with the error data indicates the kind of panic.
 
-#. If you access an array or an array slice at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
-#. If you access a fixed-length ``bytesN`` at a too large or negative index.
-#. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-#. If an arithmetic operation results in under- or overflow outside of an ``unchecked { ... }`` block.
-#. If you convert a value too big or negative into an enum type.
-#. If you call a zero-initialized variable of internal function type.
-#. If you call ``assert`` with an argument that evaluates to false.
+#. 0x01: If you call ``assert`` with an argument that evaluates to false.
+#. 0x11: If an arithmetic operation results in underflow or overflow outside of an ``unchecked { ... }`` block.
+#. 0x12; If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
+#. 0x21: If you convert a value that is too big or negative into an enum type.
+#. 0x31: If you call ``.pop()`` on an empty array.
+#. 0x32: If you access an array, ``bytesN`` or an array slice at an out-of-bounds or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
+#. 0x41: If you allocate too much memory or create an array that is too large.
+#. 0x51: If you call a zero-initialized variable of internal function type.
 
-The ``require`` function should be used to ensure valid conditions
+The ``require`` function either creates an error of type ``Error(string)``
+or an error without any error data and it
+should be used to ensure valid conditions
 that cannot be detected until execution time.
 This includes conditions on inputs
 or return values from calls to external contracts.
 
-A ``require``-style exception is generated in the following situations:
+A ``Error(string)`` exception is generated in the following situations:
 
 #. Calling ``require`` with an argument that evaluates to ``false``.
 #. If you call a function via a message call but it does not finish
@@ -610,6 +628,11 @@ A ``require``-style exception is generated in the following situations:
 #. If a ``.transfer()`` fails.
 
 You can optionally provide a message string for ``require``, but not for ``assert``.
+
+.. note::
+    If you do not provide a string argument to ``require``, it will revert
+    with empty error data, not even including the error selector.
+
 
 The following example shows how you can use ``require`` to check conditions on inputs
 and ``assert`` for internal error checking.
@@ -633,29 +656,29 @@ and ``assert`` for internal error checking.
     }
 
 Internally, Solidity performs a revert operation (instruction
-``0xfd``) for a ``require``-style exception and executes an invalid operation
-(instruction ``0xfe``) to throw an ``assert``-style exception. In both cases, this causes
+``0xfd``). This causes
 the EVM to revert all changes made to the state. The reason for reverting
 is that there is no safe way to continue execution, because an expected effect
 did not occur. Because we want to keep the atomicity of transactions, the
 safest action is to revert all changes and make the whole transaction
 (or at least call) without effect.
 
-In both cases, the caller can react on such failures using ``try``/``catch``
-(in the failing ``assert``-style exception only if enough gas is left), but
+In both cases, the caller can react on such failures using ``try``/``catch``, but
 the changes in the caller will always be reverted.
 
 .. note::
 
-    ``assert``-style exceptions consume all gas available to the call,
-    while ``require``-style exceptions do not consume any gas starting from the Metropolis release.
+    Panic exceptions used to use the ``invalid`` opcode before Solidity 0.8.0,
+    which consumed all gas available to the call.
+    Exceptions that use ``require`` used to consume all gas until before the Metropolis release.
 
 ``revert``
 ----------
 
 The ``revert`` function is another way to trigger exceptions from within other code blocks to flag an error and
 revert the current call. The function takes an optional string
-message containing details about the error that is passed back to the caller.
+message containing details about the error that is passed back to the caller
+and it will create an ``Error(string)`` exception.
 
 The following example shows how to use an error string together with ``revert`` and the equivalent ``require``:
 
@@ -726,9 +749,7 @@ A failure in an external call can be caught using a try/catch statement, as foll
                 errorCount++;
                 return (0, false);
             } catch (bytes memory /*lowLevelData*/) {
-                // This is executed in case revert() was used
-                // or there was a failing assertion, division
-                // by zero, etc. inside getData.
+                // This is executed in case revert() was used.
                 errorCount++;
                 return (0, false);
             }
@@ -754,9 +775,8 @@ It is planned to support other types of error data in the future.
 The string ``Error`` is currently parsed as is and is not treated as an identifier.
 
 The clause ``catch (bytes memory lowLevelData)`` is executed if the error signature
-does not match any other clause, there was an error during decoding of the error
-message, if there was a failing assertion in the external
-call (for example due to a division by zero or a failing ``assert()``) or
+does not match any other clause, if there was an error while decoding the error
+message, or
 if no error data was provided with the exception.
 The declared variable provides access to the low-level error data in that case.
 

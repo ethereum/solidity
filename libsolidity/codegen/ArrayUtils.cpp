@@ -29,6 +29,9 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
 
+#include <libsolutil/FunctionSelector.h>
+#include <libsolutil/Whiskers.h>
+
 #include <libevmasm/Instruction.h>
 #include <liblangutil/Exceptions.h>
 
@@ -857,13 +860,17 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 
 	if (_type.isByteArray())
 	{
-		m_context.appendInlineAssembly(R"({
+		util::Whiskers code(R"({
 			let slot_value := sload(ref)
 			switch and(slot_value, 1)
 			case 0 {
 				// short byte array
 				let length := and(div(slot_value, 2), 0x1f)
-				if iszero(length) { invalid() }
+				if iszero(length) {
+					mstore(0, <panicSelector>)
+					mstore(4, <emptyArrayPop>)
+					revert(0, 0x24)
+				}
 
 				// Zero-out the suffix including the least significant byte.
 				let mask := sub(exp(0x100, sub(33, length)), 1)
@@ -901,7 +908,10 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 					sstore(ref, slot_value)
 				}
 			}
-		})", {"ref"});
+		})");
+		code("panicSelector", util::selectorFromSignature("Panic(uint256)").str());
+		code("emptyArrayPop", to_string(unsigned(util::PanicCode::EmptyArrayPop)));
+		m_context.appendInlineAssembly(code.render(), {"ref"});
 		m_context << Instruction::POP;
 	}
 	else
@@ -912,7 +922,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 		m_context << Instruction::DUP1;
 		// stack: ArrayReference oldLength oldLength
 		m_context << Instruction::ISZERO;
-		m_context.appendConditionalInvalid();
+		m_context.appendConditionalPanic(util::PanicCode::EmptyArrayPop);
 
 		// Stack: ArrayReference oldLength
 		m_context << u256(1) << Instruction::SWAP1 << Instruction::SUB;
@@ -1058,7 +1068,7 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck, b
 		// check out-of-bounds access
 		m_context << Instruction::DUP2 << Instruction::LT << Instruction::ISZERO;
 		// out-of-bounds access throws exception
-		m_context.appendConditionalInvalid();
+		m_context.appendConditionalPanic(util::PanicCode::ArrayOutOfBounds);
 	}
 	if (location == DataLocation::CallData && _arrayType.isDynamicallySized())
 		// remove length if present

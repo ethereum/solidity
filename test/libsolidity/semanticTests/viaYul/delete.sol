@@ -21,5 +21,5 @@ contract C {
 // ====
 // compileViaYul: true
 // ----
-// call_deleted_internal_func() -> FAILURE
+// call_deleted_internal_func() -> FAILURE, hex"4e487b71", 0x51
 // call_internal_func() -> true
