@@ -450,7 +450,7 @@ void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _c
 
 void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _contract)
 {
-	if (_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+	if (*_contract.sourceUnit().annotation().useABICoderV2)
 		return;
 
 	if (_contract.isLibrary())
@@ -469,7 +469,7 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 	{
 		solAssert(func.second->hasDeclaration(), "Function has no declaration?!");
 
-		if (!func.second->declaration().sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		if (!*func.second->declaration().sourceUnit().annotation().useABICoderV2)
 			continue;
 
 		auto const& currentLoc = func.second->declaration().location();

@@ -166,7 +166,7 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression, bool _ordinaryAssignment);
 
-	bool experimentalFeatureActive(ExperimentalFeature _feature) const;
+	bool useABICoderV2() const;
 
 	/// @returns the current scope that can have function or type definitions.
 	/// This is either a contract or a source unit.

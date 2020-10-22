@@ -395,7 +395,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 				m_errorReporter.typeError(4103_error, _var.location(), message);
 			}
 			else if (
-				!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
+				!useABICoderV2() &&
 				!typeSupportedByOldABIEncoder(*type(_var), _function.libraryFunction())
 			)
 			{
@@ -567,7 +567,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	else if (_variable.visibility() >= Visibility::Public)
 	{
 		FunctionType getter(_variable);
-		if (!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+		if (!useABICoderV2())
 		{
 			vector<string> unsupportedTypes;
 			for (auto const& param: getter.parameterTypes() + getter.returnParameterTypes())
@@ -692,7 +692,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 		if (!type(*var)->interfaceType(false))
 			m_errorReporter.typeError(3417_error, var->location(), "Internal or recursive type is not allowed as event parameter type.");
 		if (
-			!experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2) &&
+			!useABICoderV2() &&
 			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
 		)
 			m_errorReporter.typeError(
@@ -1897,7 +1897,7 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	bool const isPacked = _functionType->kind() == FunctionType::Kind::ABIEncodePacked;
 	solAssert(_functionType->padArguments() != isPacked, "ABI function with unexpected padding");
 
-	bool const abiEncoderV2 = experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2);
+	bool const abiEncoderV2 = useABICoderV2();
 
 	// Check for named arguments
 	if (!_functionCall.names().empty())
@@ -2189,7 +2189,7 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		_functionType->kind() == FunctionType::Kind::Creation ||
 		_functionType->kind() == FunctionType::Kind::Event;
 
-	if (callRequiresABIEncoding && !experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+	if (callRequiresABIEncoding && !useABICoderV2())
 	{
 		solAssert(!isVariadic, "");
 		solAssert(parameterTypes.size() == arguments.size(), "");
@@ -2337,7 +2337,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		{
 			returnTypes = typeCheckABIDecodeAndRetrieveReturnType(
 				_functionCall,
-				experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+				useABICoderV2()
 			);
 			break;
 		}
@@ -3384,10 +3384,11 @@ void TypeChecker::requireLValue(Expression const& _expression, bool _ordinaryAss
 	m_errorReporter.typeError(errorId, _expression.location(), description);
 }
 
-bool TypeChecker::experimentalFeatureActive(ExperimentalFeature _feature) const
+bool TypeChecker::useABICoderV2() const
 {
 	solAssert(m_currentSourceUnit, "");
 	if (m_currentContract)
 		solAssert(m_currentSourceUnit == &m_currentContract->sourceUnit(), "");
-	return m_currentSourceUnit->annotation().experimentalFeatures.count(_feature);
+	return *m_currentSourceUnit->annotation().useABICoderV2;
+
 }

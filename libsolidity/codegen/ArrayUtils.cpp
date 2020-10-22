@@ -1162,7 +1162,7 @@ void ArrayUtils::accessCallDataArrayElement(ArrayType const& _arrayType, bool _d
 			if (
 				!_arrayType.isByteArray() &&
 				_arrayType.baseType()->storageBytes() < 32 &&
-				m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2)
+				m_context.useABICoderV2()
 			)
 			{
 				m_context << u256(32);
