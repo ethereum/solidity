@@ -55,6 +55,11 @@ public:
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
+	/// @returns the key type in _type.
+	/// _type must allow IndexAccess, that is,
+	/// it must be either ArrayType or MappingType
+	static TypePointer keyType(TypePointer _type);
+
 	/// @returns the innermost element in a chain of 1-tuples if applicable,
 	/// otherwise _expr.
 	static Expression const* innermostTuple(Expression const& _expr);
