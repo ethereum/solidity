@@ -24,6 +24,15 @@ AST Changes:
 
 ### 0.7.5 (unreleased)
 
+Compiler Features:
+ * SMTChecker: Add division by zero checks in the CHC engine.
+ * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
+
+
+Bugfixes:
+ * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.
+ * SMTChecker: Fix internal error on conversion from string literal to byte.
+ * Code generator: Fix missing creation dependency tracking for abstract contracts.
 
 
 ### 0.7.4 (2020-10-19)

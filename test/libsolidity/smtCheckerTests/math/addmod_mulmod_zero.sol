@@ -22,5 +22,7 @@ contract C {
 }
 // ----
 // Warning 6321: (253-260): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 3046: (94-109): BMC: Division by zero happens here.
-// Warning 3046: (180-195): BMC: Division by zero happens here.
+// Warning 4281: (94-109): CHC: Division by zero happens here.
+// Warning 6328: (113-126): CHC: Assertion violation happens here.
+// Warning 4281: (180-195): CHC: Division by zero happens here.
+// Warning 6328: (199-212): CHC: Assertion violation happens here.

@@ -782,7 +782,6 @@ void SMTEncoder::visitAddMulMod(FunctionCall const& _funCall)
 	auto x = expr(*args.at(0));
 	auto y = expr(*args.at(1));
 	auto k = expr(*args.at(2));
-	m_context.addAssertion(k != 0);
 	auto const& intType = dynamic_cast<IntegerType const&>(*_funCall.annotation().type);
 
 	if (kind == FunctionType::Kind::AddMod)
@@ -874,10 +873,8 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	if (argSize == castSize)
 	{
 		// If sizes are the same, it's possible that the signs are different.
-		if (smt::isNumber(*funCallType))
+		if (smt::isNumber(*funCallType) && smt::isNumber(*argType))
 		{
-			solAssert(smt::isNumber(*argType), "");
-
 			// castIsSigned && !argIsSigned => might overflow if arg > castType.max
 			// !castIsSigned && argIsSigned => might underflow if arg < castType.min
 			// !castIsSigned && !argIsSigned => ok
@@ -1143,6 +1140,16 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		}
 		return false;
 	}
+	else if (
+		auto const* functionType = dynamic_cast<FunctionType const*>(exprType);
+		functionType &&
+		_memberAccess.memberName() == "selector" &&
+		functionType->hasDeclaration()
+	)
+	{
+		defineExpr(_memberAccess, functionType->externalIdentifier());
+		return false;
+	}
 	else
 		m_errorReporter.warning(
 			7650_error,
@@ -1207,9 +1214,10 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	auto arrayVar = dynamic_pointer_cast<smt::SymbolicArrayVariable>(array);
 	solAssert(arrayVar, "");
+	TypePointer baseType = _indexAccess.baseExpression().annotation().type;
 	defineExpr(_indexAccess, smtutil::Expression::select(
 		arrayVar->elements(),
-		expr(*_indexAccess.indexExpression())
+		expr(*_indexAccess.indexExpression(), keyType(baseType))
 	));
 	setSymbolicUnknownValue(
 		expr(_indexAccess),
@@ -1241,17 +1249,19 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 			auto const& base = indexAccess->baseExpression();
 			if (dynamic_cast<Identifier const*>(&base))
 				base.accept(*this);
+
+			TypePointer baseType = base.annotation().type;
+			auto indexExpr = expr(*indexAccess->indexExpression(), keyType(baseType));
 			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(base));
 			solAssert(symbArray, "");
-			auto baseType = symbArray->type();
 			toStore = smtutil::Expression::tuple_constructor(
 				smtutil::Expression(make_shared<smtutil::SortSort>(smt::smtSort(*baseType)), baseType->toString(true)),
-				{smtutil::Expression::store(symbArray->elements(), expr(*indexAccess->indexExpression()), toStore), symbArray->length()}
+				{smtutil::Expression::store(symbArray->elements(), indexExpr, toStore), symbArray->length()}
 			);
 			m_context.expression(*indexAccess)->increaseIndex();
 			defineExpr(*indexAccess, smtutil::Expression::select(
 				symbArray->elements(),
-				expr(*indexAccess->indexExpression())
+				indexExpr
 			));
 			lastExpr = &indexAccess->baseExpression();
 		}
@@ -1527,8 +1537,6 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 
 	if (_op == Token::Div || _op == Token::Mod)
 	{
-		m_context.addAssertion(_right != 0);
-
 		// mod and unsigned division never underflow/overflow
 		if (_op == Token::Mod || !intType->isSigned())
 			return {valueUnbounded, valueUnbounded};
@@ -1739,13 +1747,15 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
 	m_context.addAssertion(((d.currentValue() * _right) + r.currentValue()) == _left);
 	if (_type.isSigned())
 		m_context.addAssertion(
-			(_left >= 0 && 0 <= r.currentValue() && r.currentValue() < smtutil::abs(_right)) ||
-			(_left < 0 && (0 - smtutil::abs(_right)) < r.currentValue() && r.currentValue() <= 0)
+			(_left >= 0 && 0 <= r.currentValue() && (_right == 0 || r.currentValue() < smtutil::abs(_right))) ||
+			(_left < 0 && ((_right == 0 || 0 - smtutil::abs(_right) < r.currentValue()) && r.currentValue() <= 0))
 		);
 	else // unsigned version
-		m_context.addAssertion(0 <= r.currentValue() && r.currentValue() < _right);
+		m_context.addAssertion(0 <= r.currentValue() && (_right == 0 || r.currentValue() < _right));
 
-	return {d.currentValue(), r.currentValue()};
+	auto divResult = smtutil::Expression::ite(_right == 0, 0, d.currentValue());
+	auto modResult = smtutil::Expression::ite(_right == 0, 0, r.currentValue());
+	return {divResult, modResult};
 }
 
 void SMTEncoder::assignment(
@@ -2233,6 +2243,19 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 	while (auto access = dynamic_cast<IndexAccess const*>(base))
 		base = &access->baseExpression();
 	return base;
+}
+
+TypePointer SMTEncoder::keyType(TypePointer _type)
+{
+	if (auto const* mappingType = dynamic_cast<MappingType const*>(_type))
+		return mappingType->keyType();
+	if (
+		dynamic_cast<ArrayType const*>(_type) ||
+		dynamic_cast<ArraySliceType const*>(_type)
+	)
+		return TypeProvider::uint256();
+	else
+		solAssert(false, "");
 }
 
 Expression const* SMTEncoder::innermostTuple(Expression const& _expr)
