@@ -615,7 +615,13 @@ The following example shows how to use an error string together with ``revert`` 
         }
     }
 
-The two syntax options are equivalent, it's developer preference which to use.
+If you provide the reason string directly, then the two syntax options are equivalent, it is the developer's preference which one to use.
+
+.. note::
+    The ``require`` function is evaluated just as any other function.
+    This means that all arguments are evaluated before the function itself is executed.
+    In particular, in ``require(condition, f())`` the function ``f`` is executed even if
+    ``condition`` is true.
 
 The provided string is :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
 In the above example, ``revert("Not enough Ether provided.");`` returns the following hexadecimal as error return data:
