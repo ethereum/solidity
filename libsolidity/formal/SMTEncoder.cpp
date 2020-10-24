@@ -1290,7 +1290,15 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 			}
 
 			auto symbStruct = dynamic_pointer_cast<smt::SymbolicStructVariable>(m_context.expression(base));
-			solAssert(symbStruct, "");
+			if (!symbStruct)
+            {
+                m_errorReporter.warning(
+                    4375_error,
+                    memberAccess->location(),
+                    "Assertion checker does not support such kind of member access."
+                );
+                return;
+            }
 			symbStruct->assignMember(memberAccess->memberName(), toStore);
 			toStore = symbStruct->currentValue();
 			defineExpr(*memberAccess, symbStruct->member(memberAccess->memberName()));
