@@ -211,7 +211,7 @@ library strings {
             }
             if (a != b) {
                 // Mask out irrelevant bytes and check again
-                uint256 mask = uint256(-1); // 0xffff...
+                uint256 mask = type(uint256).max; // 0xffff...
                 if(shortest < 32) {
                   mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
                 }

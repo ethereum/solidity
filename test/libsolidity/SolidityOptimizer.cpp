@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
 			function f() public returns (uint)
 			{
 				if (data[block.timestamp] == 0)
-					data[uint(-7)] = 5;
+					data[type(uint).max - 6] = 5;
 				return data[block.timestamp];
 			}
 		}
@@ -696,11 +696,11 @@ BOOST_AUTO_TEST_CASE(shift_optimizer_bug)
 		{
 			function f(uint x) public returns (uint)
 			{
-				return (x << 1) << uint(-1);
+				return (x << 1) << type(uint).max;
 			}
 			function g(uint x) public returns (uint)
 			{
-				return (x >> 1) >> uint(-1);
+				return (x >> 1) >> type(uint).max;
 			}
 		}
 	)";

@@ -10,7 +10,7 @@ contract C {
   }
   function g() public pure {
     uint a = uint(0);
-    uint b = uint(-1);
+    uint b = type(uint256).max;
     uint c = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
     int d = -1;
     uint e = uint(d);
@@ -20,7 +20,7 @@ contract C {
   }
   function h() public pure {
     uint32 a = uint32(0);
-    uint32 b = uint32(-1);
+    uint32 b = type(uint32).max;
     uint32 c = 4294967295;
     int32 d = -1;
     uint32 e = uint32(d);

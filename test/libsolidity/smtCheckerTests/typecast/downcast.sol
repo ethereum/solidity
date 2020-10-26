@@ -5,23 +5,23 @@ contract C {
 		// signed <- signed
 		int8 z = int8(-1);
 		assert(z == -1);
-		z = int8(0xf0ff);
+		z = int8(int(0) - 1);
 		assert(z == -1);
-		z = int8(0xcafecafef0ff);
+		z = int8(int(0) - 1);
 		assert(z == -1);
-		z = int8(0xcafecafe);
+		z = int8(int(0) - 2);
 		assert(z == -2);
-		z = int8(255);
+		z = int8(int(0) - 1);
 		assert(z == -1);
 
 		// unsigned <= unsigned
-		uint8 x = uint8(uint16(-1));
+		uint8 x = uint8(type(uint256).max);
 		assert(x == 255);
-		x = uint8(uint256(-1));
+		x = uint8(type(uint256).max);
 		assert(x == 255);
 
 		// signed <- unsigned
-		int8 y = int8(uint16(-1));
+		int8 y = int8(type(uint16).max);
 		assert(y == -1);
 		y = int8(uint16(100));
 		assert(y == 100);
@@ -29,7 +29,7 @@ contract C {
 		assert(y == -56);
 
 		// unsigned <- signed
-		uint8 v = uint8(int16(-1));
+		uint8 v = uint8(type(uint16).max);
 		assert(v == 255);
 		v = uint8(int16(300));
 		assert(v == 44);

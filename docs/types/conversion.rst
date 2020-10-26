@@ -114,6 +114,11 @@ that is large enough to represent it without truncation::
     uint32 b = 1234; // fine
     uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
 
+.. note::
+    Prior to version 0.8.0, any decimal or hexadecimal number literals could be explicitly
+    converted to an integer type. From 0.8.0, such explicit conversions are as strict as implicit
+    conversions, i.e., they are only allowed if the literal fits in the resulting range.
+
 Fixed-Size Byte Arrays
 ----------------------
 

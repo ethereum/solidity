@@ -39,7 +39,7 @@ function colony_test
 
     cd lib
     rm -Rf dappsys
-    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_060 dappsys
+    git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_080 dappsys
     cd ..
 
     truffle_run_test compile_fn test_fn

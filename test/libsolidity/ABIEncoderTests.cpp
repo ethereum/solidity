@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 				assembly { b := 7 }
 				C c;
 				assembly { c := sub(0, 5) }
-				emit E(10, uint16(uint256(-2)), uint24(0x12121212), int24(int256(-1)), bytes3(x), b, c);
+				emit E(10, uint16(type(uint).max - 1), uint24(uint(0x12121212)), int24(int256(-1)), bytes3(x), b, c);
 			}
 		}
 	)";
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(memory_array_two_dim)
 				x[0] = new int16[](3);
 				x[1] = new int16[](2);
 				x[0][0] = 7;
-				x[0][1] = int16(0x010203040506);
+				x[0][1] = int16(int(0x010203040506));
 				x[0][2] = -1;
 				x[1][0] = 4;
 				x[1][1] = 5;
