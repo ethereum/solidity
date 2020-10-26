@@ -574,8 +574,8 @@ bool SMTEncoder::visit(Conditional const& _op)
 
 	defineExpr(_op, smtutil::Expression::ite(
 		expr(_op.condition()),
-		expr(_op.trueExpression()),
-		expr(_op.falseExpression())
+		expr(_op.trueExpression(), _op.annotation().type),
+		expr(_op.falseExpression(), _op.annotation().type)
 	));
 
 	return false;
