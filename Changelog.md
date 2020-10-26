@@ -13,6 +13,7 @@ Bugfixes:
  * SMTChecker: Fix incorrect counterexamples reported by the CHC engine.
  * SMTChecker: Fix false negative in modifier applied multiple times.
  * SMTChecker: Fix internal error in the BMC engine when inherited contract from a different source unit has private state variables.
+ * SMTChecker: Fix internal error when ``array.push()`` is used as the LHS of an assignment.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
 
 
