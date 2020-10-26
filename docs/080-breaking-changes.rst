@@ -3,33 +3,43 @@ Solidity v0.8.0 Breaking Changes
 ********************************
 
 This section highlights the main breaking changes introduced in Solidity
-version 0.8.0, along with the reasoning behind the changes and how to update
-affected code.
+version 0.8.0.
 For the full list check
 `the release changelog <https://github.com/ethereum/solidity/releases/tag/v0.8.0>`_.
 
-Semantic and Syntactic Changes
-==============================
+Silent Changes of the Semantics
+===============================
 
-This section lists changes where you have to modify your code
-and it does something else afterwards.
+This section lists changes where existing code changes its behaviour without
+the compiler notifying you about it.
 
-* Explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` are now disallowed.
+* Arithmetic operations revert on underflow and overflow. You can use ``unchecked { ... }`` to use
+  the previous wrapping behaviour.
+
+  Checks for overflow are very common, so we made them the default to increase readability of code,
+  even if it comes at a slight increase of gas costs.
+
 * Exponentiation is right associative, i.e., the expression ``a**b**c`` is parsed as ``a**(b**c)``.
   Before 0.8.0, it was parsed as ``(a**b)**c``.
 
-Semantic only Changes
-=====================
+  This is the common way to parse the exponentiation operator.
 
-* Failing assertions (and other internal checks like division by zero) do not use the invalid opcode anymore but instead revert
-  with error data equal to a function call to ``Panic(uint256)`` with an error code specific to the circumstances.
+* Failing assertions and other internal checks like division by zero or arithmetic overflow do
+  not use the invalid opcode but instead the revert opcode.
+  More specifically, they will use error data equal to a function call to ``Panic(uint256)`` with an error code specific
+  to the circumstances.
 
-This will save gas on errors while it still allows static analysis tools to detect these situations.
+  This will save gas on errors while it still allows static analysis tools to distinguish
+  these situations from a revert on invalid input, like a failing ``require``.
 
+New Restrictions
+================
 
-Syntactic Only Changes
-======================
+* Explicit conversions from negative literals and literals larger
+  than ``type(uint160).max`` to ``address`` are disallowed.
+
+  The previous behaviour was likely ambiguous.
 
 * The global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4`` have been removed.
 
-These are low-level functions that were largely unused. Their behaviour can be accessed from inline assembly.
+  These are low-level functions that were largely unused. Their behaviour can be accessed from inline assembly.
