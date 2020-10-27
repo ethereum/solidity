@@ -1211,6 +1211,9 @@ function revert(x1, x2, x3, x4, y1, y2, y3, y4) {
 function invalid() {
 	unreachable()
 }
+function stop() {
+	eth.finish(0:i32, 0:i32)
+}
 function memoryguard(x:i64) -> y1, y2, y3, y4 {
 	y4 := x
 }
