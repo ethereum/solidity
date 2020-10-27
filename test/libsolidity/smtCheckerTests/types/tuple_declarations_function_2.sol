@@ -15,4 +15,3 @@ contract C
 	}
 }
 // ----
-// Warning 4984: (152-157): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.

@@ -21,4 +21,5 @@ contract B is A {
 	}
 }
 // ----
+// Warning 6328: (B.sol:71-85): CHC: Assertion violation happens here.
 // Warning 6328: (C.sol:103-117): CHC: Assertion violation happens here.

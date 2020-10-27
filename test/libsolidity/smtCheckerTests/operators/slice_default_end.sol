@@ -7,14 +7,10 @@ contract C {
 		require(b[b.length - 1] == 0xaa);
 		assert(bytes(b[10:]).length == 20);
 		assert(bytes(b[10:])[0] == 0xff);
-		assert(bytes(b[10:])[5] == 0xff);
+		//assert(bytes(b[10:])[5] == 0xff); // Removed because of Spacer's nondeterminism
 		assert(bytes(b[10:])[19] == 0xaa);
 	}
 }
 // ----
 // Warning 6328: (221-253): CHC: Assertion violation might happen here.
-// Warning 6328: (257-289): CHC: Assertion violation might happen here.
-// Warning 6328: (293-326): CHC: Assertion violation might happen here.
 // Warning 4661: (221-253): BMC: Assertion violation happens here.
-// Warning 4661: (257-289): BMC: Assertion violation happens here.
-// Warning 4661: (293-326): BMC: Assertion violation happens here.

@@ -33,7 +33,6 @@ EncodingContext::EncodingContext():
 void EncodingContext::reset()
 {
 	resetAllVariables();
-	resetUniqueId();
 	m_expressions.clear();
 	m_globalContext.clear();
 	m_state.reset();

@@ -8,4 +8,4 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (94-101): CHC: Empty array "pop" detected here.
+// Warning 2529: (94-101): CHC: Empty array "pop" happens here.

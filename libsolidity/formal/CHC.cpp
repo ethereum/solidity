@@ -134,7 +134,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 
 	setCurrentBlock(*m_constructorSummaryPredicate);
 
-	addAssertVerificationTarget(m_currentContract, m_currentBlock, smtutil::Expression(true), errorFlag().currentValue());
+	m_queryPlaceholders[&_contract].push_back({smtutil::Expression(true), errorFlag().currentValue(), m_currentBlock});
 	connectBlocks(m_currentBlock, interface(), errorFlag().currentValue() == 0);
 
 	SMTEncoder::endVisit(_contract);
@@ -231,16 +231,14 @@ void CHC::endVisit(FunctionDefinition const& _function)
 			auto assertionError = errorFlag().currentValue();
 			auto sum = summary(_function);
 			connectBlocks(m_currentBlock, sum);
-
 			auto iface = interface();
-
 			setCurrentBlock(*m_interfaces.at(m_currentContract));
 
 			auto ifacePre = smt::interfacePre(*m_interfaces.at(m_currentContract), *m_currentContract, m_context);
 			if (_function.isPublic())
 			{
 				auto txConstraints = m_context.state().txConstraints(_function);
-				addAssertVerificationTarget(&_function, ifacePre, txConstraints && sum, assertionError);
+				m_queryPlaceholders[&_function].push_back({txConstraints && sum, assertionError, ifacePre});
 				connectBlocks(ifacePre, iface, txConstraints && sum && (assertionError == 0));
 			}
 		}
@@ -512,30 +510,15 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 
 	solAssert(m_currentContract, "");
 	solAssert(m_currentFunction, "");
-	if (m_currentFunction->isConstructor())
-		m_functionAssertions[m_currentContract].insert(&_funCall);
-	else
-		m_functionAssertions[m_currentFunction].insert(&_funCall);
-
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	connectBlocks(
-		m_currentBlock,
-		m_currentFunction->isConstructor() ? summary(*m_currentContract) : summary(*m_currentFunction),
-		currentPathConditions() && !m_context.expression(*args.front())->currentValue() && (
-			errorFlag().currentValue() == newErrorId(_funCall)
-		)
-	);
-
-	m_context.addAssertion(errorFlag().currentValue() == previousError);
+	auto errorCondition = !m_context.expression(*args.front())->currentValue();
+	verificationTargetEncountered(&_funCall, VerificationTarget::Type::Assert, errorCondition);
 }
 
 void CHC::visitAddMulMod(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.arguments().at(2), "");
 
-	addVerificationTarget(_funCall, VerificationTarget::Type::DivByZero, expr(*_funCall.arguments().at(2)) == 0);
+	verificationTargetEncountered(&_funCall, VerificationTarget::Type::DivByZero, expr(*_funCall.arguments().at(2)) == 0);
 
 	SMTEncoder::visitAddMulMod(_funCall);
 }
@@ -634,7 +617,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 
-	addVerificationTarget(_arrayPop, VerificationTarget::Type::PopEmptyArray, symbArray->length() <= 0);
+	verificationTargetEncountered(&_arrayPop, VerificationTarget::Type::PopEmptyArray, symbArray->length() <= 0);
 }
 
 pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
@@ -646,7 +629,7 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 )
 {
 	if (_op == Token::Mod || _op == Token::Div)
-		addVerificationTarget(_expression, VerificationTarget::Type::DivByZero, _right == 0);
+		verificationTargetEncountered(&_expression, VerificationTarget::Type::DivByZero, _right == 0);
 
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
 
@@ -662,16 +645,16 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 		return values;
 
 	if (_op == Token::Div)
-		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
+		verificationTargetEncountered(&_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	else if (intType->isSigned())
 	{
-		addVerificationTarget(_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
-		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
+		verificationTargetEncountered(&_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
+		verificationTargetEncountered(&_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	}
 	else if (_op == Token::Sub)
-		addVerificationTarget(_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
+		verificationTargetEncountered(&_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
 	else if (_op == Token::Add || _op == Token::Mul)
-		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
+		verificationTargetEncountered(&_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	else
 		solAssert(false, "");
 	return values;
@@ -679,11 +662,11 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 
 void CHC::resetSourceAnalysis()
 {
-	m_verificationTargets.clear();
 	m_safeTargets.clear();
 	m_unsafeTargets.clear();
-	m_functionAssertions.clear();
-	m_errorIds.clear();
+	m_functionTargetIds.clear();
+	m_verificationTargets.clear();
+	m_queryPlaceholders.clear();
 	m_callGraph.clear();
 	m_summaries.clear();
 	m_interfaces.clear();
@@ -713,6 +696,7 @@ void CHC::resetSourceAnalysis()
 	}
 
 	m_context.clear();
+	m_context.resetUniqueId();
 	m_context.setAssertionAccumulation(false);
 }
 
@@ -759,15 +743,15 @@ void CHC::setCurrentBlock(Predicate const& _block)
 	m_currentBlock = predicate(_block);
 }
 
-set<frontend::Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTNode const* _txRoot)
+set<unsigned> CHC::transactionVerificationTargetsIds(ASTNode const* _txRoot)
 {
-	set<Expression const*, IdCompare> assertions;
+	set<unsigned> verificationTargetsIds;
 	solidity::util::BreadthFirstSearch<ASTNode const*>{{_txRoot}}.run([&](auto const* function, auto&& _addChild) {
-		assertions.insert(m_functionAssertions[function].begin(), m_functionAssertions[function].end());
+		verificationTargetsIds.insert(m_functionTargetIds[function].begin(), m_functionTargetIds[function].end());
 		for (auto const* called: m_callGraph[function])
 		_addChild(called);
 	});
-	return assertions;
+	return verificationTargetsIds;
 }
 
 SortPointer CHC::sort(FunctionDefinition const& _function)
@@ -1101,186 +1085,171 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 	return {result, cex};
 }
 
-void CHC::addVerificationTarget(
-	ASTNode const* _scope,
+void CHC::verificationTargetEncountered(
+	ASTNode const* const _errorNode,
 	VerificationTarget::Type _type,
-	smtutil::Expression _from,
-	smtutil::Expression _constraints,
-	smtutil::Expression _errorId
+	smtutil::Expression const& _errorCondition
 )
 {
 	solAssert(m_currentContract || m_currentFunction, "");
-	SourceUnit const* source = nullptr;
-	if (m_currentContract)
-		source = sourceUnitContaining(*m_currentContract);
-	else
-		source = sourceUnitContaining(*m_currentFunction);
+	SourceUnit const* source = m_currentContract ? sourceUnitContaining(*m_currentContract) : sourceUnitContaining(*m_currentFunction);
 	solAssert(source, "");
 	if (!source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		return;
 
-	m_verificationTargets[_scope].push_back(CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
-}
-
-void CHC::addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId)
-{
-	solAssert(m_currentContract, "");
-
-	if (!m_currentFunction || m_currentFunction->isConstructor())
-		addVerificationTarget(_scope, _type, summary(*m_currentContract), smtutil::Expression(true), _errorId);
+	bool scopeIsFunction = m_currentFunction && !m_currentFunction->isConstructor();
+	auto errorId = newErrorId();
+	solAssert(m_verificationTargets.count(errorId) == 0, "Error ID is not unique!");
+	m_verificationTargets.emplace(errorId, CHCVerificationTarget{{_type, _errorCondition, smtutil::Expression(true)}, errorId, _errorNode});
+	if (scopeIsFunction)
+		m_functionTargetIds[m_currentFunction].push_back(errorId);
 	else
-	{
-		auto iface = smt::interfacePre(*m_interfaces.at(m_currentContract), *m_currentContract, m_context);
-		auto sum = summary(*m_currentFunction);
-		addVerificationTarget(_scope, _type, iface, sum, _errorId);
-	}
-}
-
-void CHC::addVerificationTarget(frontend::Expression const& _scope, VerificationTarget::Type _type, smtutil::Expression const& _target)
-{
+		m_functionTargetIds[m_currentContract].push_back(errorId);
 	auto previousError = errorFlag().currentValue();
 	errorFlag().increaseIndex();
-	addVerificationTarget(&_scope, _type, errorFlag().currentValue());
 
-	m_context.addAssertion(
-		errorFlag().currentValue() == previousError ||
-		(_target && errorFlag().currentValue() == newErrorId(_scope))
+	// create an error edge to the summary
+	connectBlocks(
+		m_currentBlock,
+		scopeIsFunction ? summary(*m_currentFunction) : summary(*m_currentContract),
+		currentPathConditions() && _errorCondition && errorFlag().currentValue() == errorId
 	);
-}
 
-void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId)
-{
-	addVerificationTarget(_scope, VerificationTarget::Type::Assert, _from, _constraints, _errorId);
+	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
 
 void CHC::checkVerificationTargets()
 {
-	for (auto const& [scope, targets]: m_verificationTargets)
+	// The verification conditions have been collected per function where they have been encountered (m_verificationTargets).
+	// Also, all possible contexts in which an external function can be called has been recorded (m_queryPlaceholders).
+	// Here we combine every context in which an external function can be called with all possible verification conditions
+	// in its call graph. Each such combination forms a unique verification target.
+	vector<CHCVerificationTarget> verificationTargets;
+	for (auto const& [function, placeholders]: m_queryPlaceholders)
 	{
-		for (size_t i = 0; i < targets.size(); ++i)
-		{
-			auto const& target = targets[i];
-
-			if (target.type == VerificationTarget::Type::Assert)
-				checkAssertTarget(scope, target);
-			else
+		auto functionTargets = transactionVerificationTargetsIds(function);
+		for (auto const& placeholder: placeholders)
+			for (unsigned id: functionTargets)
 			{
-				string satMsg;
-				string satMsgUnderflow;
-				string satMsgOverflow;
-				string unknownMsg;
-				ErrorId errorReporterId;
-				ErrorId underflowErrorId = 3944_error;
-				ErrorId overflowErrorId = 4984_error;
+				auto const& target = m_verificationTargets.at(id);
+				verificationTargets.push_back(CHCVerificationTarget{
+					{target.type, placeholder.fromPredicate, placeholder.constraints && placeholder.errorExpression == target.errorId},
+					target.errorId,
+					target.errorNode
+				});
+			}
+	}
 
-				if (target.type == VerificationTarget::Type::PopEmptyArray)
-				{
-					solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-					satMsg = "Empty array \"pop\" detected here.";
-					unknownMsg = "Empty array \"pop\" might happen here.";
-					errorReporterId = 2529_error;
-				}
-				else if (
-					target.type == VerificationTarget::Type::Underflow ||
-					target.type == VerificationTarget::Type::Overflow
-				)
-				{
-					auto const* expr = dynamic_cast<Expression const*>(scope);
-					solAssert(expr, "");
-					auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
-					if (!intType)
-						intType = TypeProvider::uint256();
+	set<unsigned> checkedErrorIds;
+	for (auto const& target: verificationTargets)
+	{
+		string errorType;
+		ErrorId errorReporterId;
 
-					satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
-					satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
-					if (target.type == VerificationTarget::Type::Underflow)
-					{
-						satMsg = satMsgUnderflow + " happens here.";
-						unknownMsg = satMsgUnderflow + " might happen here.";
-						errorReporterId = underflowErrorId;
-					}
-					else if (target.type == VerificationTarget::Type::Overflow)
-					{
-						satMsg = satMsgOverflow + " happens here.";
-						unknownMsg = satMsgOverflow + " might happen here.";
-						errorReporterId = overflowErrorId;
-					}
-				}
-				else if (target.type == VerificationTarget::Type::DivByZero)
-				{
-					satMsg = "Division by zero happens here.";
-					unknownMsg = "Division by zero might happen here.";
-					errorReporterId = 4281_error;
-				}
-				else
-					solAssert(false, "");
+		if (target.type == VerificationTarget::Type::PopEmptyArray)
+		{
+			solAssert(dynamic_cast<FunctionCall const*>(target.errorNode), "");
+			errorType = "Empty array \"pop\"";
+			errorReporterId = 2529_error;
+		}
+		else if (
+			target.type == VerificationTarget::Type::Underflow ||
+			target.type == VerificationTarget::Type::Overflow
+		)
+		{
+			auto const* expr = dynamic_cast<Expression const*>(target.errorNode);
+			solAssert(expr, "");
+			auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
+			if (!intType)
+				intType = TypeProvider::uint256();
 
-				auto it = m_errorIds.find(scope->id());
-				solAssert(it != m_errorIds.end(), "");
-				solAssert(i < it->second.size(), "");
-				unsigned errorId = it->second[i];
-
-				checkAndReportTarget(scope, target, errorId, errorReporterId, satMsg, unknownMsg);
+			if (target.type == VerificationTarget::Type::Underflow)
+			{
+				errorType = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
+				errorReporterId = 3944_error;
+			}
+			else if (target.type == VerificationTarget::Type::Overflow)
+			{
+				errorType = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
+				errorReporterId = 4984_error;
 			}
 		}
-	}
-}
+		else if (target.type == VerificationTarget::Type::DivByZero)
+		{
+			errorType = "Division by zero";
+			errorReporterId = 4281_error;
+		}
+		else if (target.type == VerificationTarget::Type::Assert)
+		{
+			errorType = "Assertion violation";
+			errorReporterId = 6328_error;
+		}
+		else
+			solAssert(false, "");
 
-void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& _target)
-{
-	solAssert(_target.type == VerificationTarget::Type::Assert, "");
-	auto assertions = transactionAssertions(_scope);
-	for (auto const* assertion: assertions)
-	{
-		auto it = m_errorIds.find(assertion->id());
-		solAssert(it != m_errorIds.end(), "");
-		solAssert(!it->second.empty(), "");
-		unsigned errorId = it->second[0];
-
-		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.", "Assertion violation might happen here.");
+		checkAndReportTarget(target, errorReporterId, errorType + " happens here.", errorType + " might happen here.");
+		checkedErrorIds.insert(target.errorId);
 	}
+
+	// There can be targets in internal functions that are not reachable from the external interface.
+	// These are safe by definition and are not even checked by the CHC engine, but this information
+	// must still be reported safe by the BMC engine.
+	set<unsigned> allErrorIds;
+	for (auto const& entry: m_functionTargetIds)
+		for (unsigned id: entry.second)
+			allErrorIds.insert(id);
+
+	set<unsigned> unreachableErrorIds;
+	set_difference(
+		allErrorIds.begin(),
+		allErrorIds.end(),
+		checkedErrorIds.begin(),
+		checkedErrorIds.end(),
+		inserter(unreachableErrorIds, unreachableErrorIds.begin())
+	);
+	for (auto id: unreachableErrorIds)
+		m_safeTargets[m_verificationTargets.at(id).errorNode].insert(m_verificationTargets.at(id).type);
 }
 
 void CHC::checkAndReportTarget(
-	ASTNode const* _scope,
 	CHCVerificationTarget const& _target,
-	unsigned _errorId,
 	ErrorId _errorReporterId,
 	string _satMsg,
 	string _unknownMsg
 )
 {
-	if (m_unsafeTargets.count(_scope) && m_unsafeTargets.at(_scope).count(_target.type))
+	if (m_unsafeTargets.count(_target.errorNode) && m_unsafeTargets.at(_target.errorNode).count(_target.type))
 		return;
 
 	createErrorBlock();
-	connectBlocks(_target.value, error(), _target.constraints && (_target.errorId == _errorId));
-	auto const& [result, model] = query(error(), _scope->location());
+	connectBlocks(_target.value, error(), _target.constraints);
+	auto const& location = _target.errorNode->location();
+	auto const& [result, model] = query(error(), location);
 	if (result == CheckResult::UNSATISFIABLE)
-		m_safeTargets[_scope].insert(_target.type);
+		m_safeTargets[_target.errorNode].insert(_target.type);
 	else if (result == CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
-		m_unsafeTargets[_scope].insert(_target.type);
+		m_unsafeTargets[_target.errorNode].insert(_target.type);
 		auto cex = generateCounterexample(model, error().name);
 		if (cex)
 			m_outerErrorReporter.warning(
 				_errorReporterId,
-				_scope->location(),
+				location,
 				"CHC: " + _satMsg,
 				SecondarySourceLocation().append("Counterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
 				_errorReporterId,
-				_scope->location(),
+				location,
 				"CHC: " + _satMsg
 			);
 	}
 	else if (!_unknownMsg.empty())
 		m_outerErrorReporter.warning(
 			_errorReporterId,
-			_scope->location(),
+			location,
 			"CHC: " + _unknownMsg
 		);
 }
@@ -1431,14 +1400,13 @@ string CHC::contractSuffix(ContractDefinition const& _contract)
 	return _contract.name() + "_" + to_string(_contract.id());
 }
 
-unsigned CHC::newErrorId(frontend::Expression const& _expr)
+unsigned CHC::newErrorId()
 {
 	unsigned errorId = m_context.newUniqueId();
 	// We need to make sure the error id is not zero,
 	// because error id zero actually means no error in the CHC encoding.
 	if (errorId == 0)
 		errorId = m_context.newUniqueId();
-	m_errorIds[_expr.id()].push_back(errorId);
 	return errorId;
 }
 
