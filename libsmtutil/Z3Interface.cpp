@@ -18,10 +18,14 @@
 
 #include <libsmtutil/Z3Interface.h>
 
+#include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
+
+#include <z3_api.h>
 
 using namespace std;
 using namespace solidity::smtutil;
+using namespace solidity::util;
 
 Z3Interface::Z3Interface():
 	m_solver(m_context)
@@ -243,6 +247,82 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 	smtAssert(false, "");
 }
 
+Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
+{
+	auto sort = fromZ3Sort(_expr.get_sort());
+	if (_expr.is_const() || _expr.is_var())
+		return Expression(_expr.to_string(), {}, sort);
+
+	smtAssert(_expr.is_app(), "");
+	vector<Expression> arguments;
+	for (unsigned i = 0; i < _expr.num_args(); ++i)
+		arguments.push_back(fromZ3Expr(_expr.arg(i)));
+
+	auto kind = _expr.decl().decl_kind();
+	if (_expr.is_ite())
+		return Expression::ite(arguments[0], arguments[1], arguments[2]);
+	else if (_expr.is_not())
+		return !arguments[0];
+	else if (_expr.is_and())
+		return arguments[0] && arguments[1];
+	else if (_expr.is_or())
+		return arguments[0] || arguments[1];
+	else if (_expr.is_implies())
+		return Expression::implies(arguments[0], arguments[1]);
+	else if (_expr.is_eq())
+		return arguments[0] == arguments[1];
+	else if (kind == Z3_OP_ULT || kind == Z3_OP_SLT)
+		return arguments[0] < arguments[1];
+	else if (kind == Z3_OP_ULEQ || kind == Z3_OP_SLEQ)
+		return arguments[0] <= arguments[1];
+	else if (kind == Z3_OP_GT || kind == Z3_OP_SGT)
+		return arguments[0] > arguments[1];
+	else if (kind == Z3_OP_UGEQ || kind == Z3_OP_SGEQ)
+		return arguments[0] >= arguments[1];
+	else if (kind == Z3_OP_ADD)
+		return arguments[0] + arguments[1];
+	else if (kind == Z3_OP_SUB)
+		return arguments[0] - arguments[1];
+	else if (kind == Z3_OP_MUL)
+		return arguments[0] * arguments[1];
+	else if (kind == Z3_OP_DIV)
+		return arguments[0] / arguments[1];
+	else if (kind == Z3_OP_MOD)
+		return arguments[0] % arguments[1];
+	else if (kind == Z3_OP_XOR)
+		return arguments[0] ^ arguments[1];
+	else if (kind == Z3_OP_BSHL)
+		return arguments[0] << arguments[1];
+	else if (kind == Z3_OP_BLSHR)
+		return arguments[0] >> arguments[1];
+	else if (kind == Z3_OP_BASHR)
+		return Expression::ashr(arguments[0], arguments[1]);
+	else if (kind == Z3_OP_INT2BV)
+		smtAssert(false, "");
+	else if (kind == Z3_OP_BV2INT)
+		smtAssert(false, "");
+	else if (kind == Z3_OP_SELECT)
+		return Expression::select(arguments[0], arguments[1]);
+	else if (kind == Z3_OP_STORE)
+		return Expression::store(arguments[0], arguments[1], arguments[2]);
+	else if (kind == Z3_OP_CONST_ARRAY)
+	{
+		auto sortSort = make_shared<SortSort>(fromZ3Sort(_expr.get_sort()));
+		return Expression::const_array(Expression(sortSort), arguments[0]);
+	}
+	else if (kind == Z3_OP_DT_CONSTRUCTOR)
+	{
+		auto sortSort = make_shared<SortSort>(fromZ3Sort(_expr.get_sort()));
+		return Expression::tuple_constructor(Expression(sortSort), arguments);
+	}
+	else if (kind == Z3_OP_DT_ACCESSOR)
+		smtAssert(false, "");
+	else if (kind == Z3_OP_UNINTERPRETED)
+		return Expression(_expr.decl().name().str(), arguments, fromZ3Sort(_expr.get_sort()));
+
+	smtAssert(false, "");
+}
+
 z3::sort Z3Interface::z3Sort(Sort const& _sort)
 {
 	switch (_sort.kind)
@@ -294,4 +374,36 @@ z3::sort_vector Z3Interface::z3Sort(vector<SortPointer> const& _sorts)
 	for (auto const& _sort: _sorts)
 		z3Sorts.push_back(z3Sort(*_sort));
 	return z3Sorts;
+}
+
+SortPointer Z3Interface::fromZ3Sort(z3::sort const& _sort)
+{
+	if (_sort.is_bool())
+		return SortProvider::boolSort;
+	if (_sort.is_int())
+		return SortProvider::sintSort;
+	if (_sort.is_bv())
+		return make_shared<BitVectorSort>(_sort.bv_size());
+	if (_sort.is_array())
+		return make_shared<ArraySort>(fromZ3Sort(_sort.array_domain()), fromZ3Sort(_sort.array_range()));
+	if (_sort.is_datatype())
+	{
+		auto name = _sort.name().str();
+		auto constructor = z3::func_decl(m_context, Z3_get_tuple_sort_mk_decl(m_context, _sort));
+		vector<string> memberNames;
+		vector<SortPointer> memberSorts;
+		for (unsigned i = 0; i < constructor.arity(); ++i)
+		{
+			auto accessor = z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, _sort, i));
+			memberNames.push_back(accessor.name().str());
+			memberSorts.push_back(fromZ3Sort(accessor.range()));
+		}
+		return make_shared<TupleSort>(name, memberNames, memberSorts);
+	}
+	smtAssert(false, "");
+}
+
+vector<SortPointer> Z3Interface::fromZ3Sort(z3::sort_vector const& _sorts)
+{
+	return applyMap(_sorts, [this](auto const& sort) { return fromZ3Sort(sort); });
 }

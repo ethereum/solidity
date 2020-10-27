@@ -41,6 +41,7 @@ public:
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 	z3::expr toZ3Expr(Expression const& _expr);
+	smtutil::Expression fromZ3Expr(z3::expr const& _expr);
 
 	std::map<std::string, z3::expr> constants() const { return m_constants; }
 	std::map<std::string, z3::func_decl> functions() const { return m_functions; }
@@ -56,6 +57,8 @@ private:
 
 	z3::sort z3Sort(Sort const& _sort);
 	z3::sort_vector z3Sort(std::vector<SortPointer> const& _sorts);
+	smtutil::SortPointer fromZ3Sort(z3::sort const& _sort);
+	std::vector<smtutil::SortPointer> fromZ3Sort(z3::sort_vector const& _sorts);
 
 	z3::context m_context;
 	z3::solver m_solver;

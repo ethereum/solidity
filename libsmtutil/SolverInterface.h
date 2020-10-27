@@ -60,6 +60,8 @@ class Expression
 public:
 	explicit Expression(bool _v): Expression(_v ? "true" : "false", Kind::Bool) {}
 	explicit Expression(std::shared_ptr<SortSort> _sort, std::string _name = ""): Expression(std::move(_name), {}, _sort) {}
+	explicit Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
+		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
 	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
 	Expression(s256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
@@ -233,14 +235,26 @@ public:
 
 	friend Expression operator!(Expression _a)
 	{
+		if (_a.sort->kind == Kind::BitVector)
+			return ~_a;
 		return Expression("not", std::move(_a), Kind::Bool);
 	}
 	friend Expression operator&&(Expression _a, Expression _b)
 	{
+		if (_a.sort->kind == Kind::BitVector)
+		{
+			smtAssert(_b.sort->kind == Kind::BitVector, "");
+			return _a & _b;
+		}
 		return Expression("and", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator||(Expression _a, Expression _b)
 	{
+		if (_a.sort->kind == Kind::BitVector)
+		{
+			smtAssert(_b.sort->kind == Kind::BitVector, "");
+			return _a | _b;
+		}
 		return Expression("or", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator==(Expression _a, Expression _b)
@@ -344,8 +358,6 @@ public:
 
 private:
 	/// Manual constructors, should only be used by SolverInterface and this class itself.
-	Expression(std::string _name, std::vector<Expression> _arguments, SortPointer _sort):
-		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(std::string _name, std::vector<Expression> _arguments, Kind _kind):
 		Expression(std::move(_name), std::move(_arguments), std::make_shared<Sort>(_kind)) {}
 
