@@ -301,9 +301,17 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		solAssert(_expr.name == "tuple_constructor", "");
 		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
 		solAssert(tupleSort.components.size() == 2, "");
+
+		auto length = stoul(_expr.arguments.at(1).name);
+		// Limit this counterexample size to 1k.
+		// Some OSs give you "unlimited" memory through swap and other virtual memory,
+		// so purely relying on bad_alloc being thrown is not a good idea.
+		// In that case, the array allocation might cause OOM and the program is killed.
+		if (length >= 1024)
+			return {};
 		try
 		{
-			vector<string> array(stoul(_expr.arguments.at(1).name));
+			vector<string> array(length);
 			if (!fillArray(_expr.arguments.at(0), array, arrayType))
 				return {};
 			return "[" + boost::algorithm::join(array, ", ") + "]";
