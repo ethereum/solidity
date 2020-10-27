@@ -298,9 +298,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "getExternalBalance")
 	{
-		// TODO this does not read the address, but is consistent with
-		// EVM interpreter implementation.
-		// If we take the address into account, this needs to use readAddress.
+		readAddress(arg[0]);
 		writeU128(arg[1], m_state.balance);
 		return 0;
 	}
@@ -316,8 +314,9 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "call")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		readU128(arg[2]);
+		accessMemory(arg[3], arg[4]);
 		logTrace(evmasm::Instruction::CALL, {});
 		return arg[0] & 1;
 	}
@@ -336,22 +335,23 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		return m_state.calldata.size();
 	else if (_fun == "callCode")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		readU128(arg[2]);
+		accessMemory(arg[3], arg[4]);
 		logTrace(evmasm::Instruction::CALLCODE, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callDelegate")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		accessMemory(arg[2], arg[3]);
 		logTrace(evmasm::Instruction::DELEGATECALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callStatic")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		accessMemory(arg[2], arg[3]);
 		logTrace(evmasm::Instruction::STATICCALL, {});
 		return arg[0] & 1;
 	}
@@ -393,8 +393,8 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "create")
 	{
-		// TODO access memory
-		// TODO use writeAddress to store resulting address
+		readU128(arg[0]);
+		accessMemory(arg[1], arg[2]);
 		logTrace(evmasm::Instruction::CREATE, {});
 		writeAddress(arg[3], h160(h256(0xcccccc + arg[1])));
 		return 1;
@@ -406,7 +406,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "externalCodeCopy")
 	{
-		// TODO use readAddress to read address.
+		readAddress(arg[0]);
 		if (accessMemory(arg[1], arg[3]))
 			// TODO this way extcodecopy and codecopy do the same thing.
 			copyZeroExtended(
@@ -429,9 +429,18 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "log")
 	{
+		accessMemory(arg[0], arg[1]);
 		uint64_t numberOfTopics = arg[2];
 		if (numberOfTopics > 4)
 			throw ExplicitlyTerminated();
+		if (numberOfTopics > 0)
+			readBytes32(arg[3]);
+		if (numberOfTopics > 1)
+			readBytes32(arg[4]);
+		if (numberOfTopics > 2)
+			readBytes32(arg[5]);
+		if (numberOfTopics > 3)
+			readBytes32(arg[6]);
 		logTrace(evmasm::logInstruction(numberOfTopics), {});
 		return 0;
 	}
@@ -473,7 +482,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "selfDestruct")
 	{
-		// TODO use readAddress to read address.
+		readAddress(arg[0]);
 		logTrace(evmasm::Instruction::SELFDESTRUCT, {});
 		throw ExplicitlyTerminated();
 	}
