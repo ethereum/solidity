@@ -396,7 +396,8 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		// TODO access memory
 		// TODO use writeAddress to store resulting address
 		logTrace(evmasm::Instruction::CREATE, {});
-		return 0xcccccc + arg[1];
+		writeAddress(arg[3], h160(h256(0xcccccc + arg[1])));
+		return 1;
 	}
 	else if (_fun == "getBlockDifficulty")
 	{
