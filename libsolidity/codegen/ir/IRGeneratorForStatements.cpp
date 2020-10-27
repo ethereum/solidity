@@ -838,10 +838,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		{
 			solAssert(!functionType->bound(), "");
 			if (auto contractType = dynamic_cast<ContractType const*>(expressionType->actualType()))
-				solUnimplementedAssert(
-					!contractType->contractDefinition().isLibrary() || functionType->kind() == FunctionType::Kind::Internal,
-					"Only internal function calls implemented for libraries"
-				);
+				if (contractType->contractDefinition().isLibrary())
+					solAssert(functionType->kind() == FunctionType::Kind::Internal || functionType->kind() == FunctionType::Kind::DelegateCall, "");
 		}
 	}
 	else
@@ -2146,9 +2144,10 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 	}
 	else if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 		handleVariableReference(*varDecl, _identifier);
-	else if (dynamic_cast<ContractDefinition const*>(declaration))
+	else if (auto const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
-		// no-op
+		if (contract->isLibrary())
+			define(IRVariable(_identifier).part("address")) << linkerSymbol(*contract) << "\n";
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{
@@ -2966,4 +2965,10 @@ bool IRGeneratorForStatements::visit(TryCatchClause const& _clause)
 void IRGeneratorForStatements::setLocation(ASTNode const& _node)
 {
 	m_currentLocation = _node.location();
+}
+
+string IRGeneratorForStatements::linkerSymbol(ContractDefinition const& _library) const
+{
+	solAssert(_library.isLibrary(), "");
+	return "linkersymbol(" + util::escapeAndQuoteString(_library.fullyQualifiedName()) + ")";
 }
