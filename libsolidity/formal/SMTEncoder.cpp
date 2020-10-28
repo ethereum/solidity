@@ -1627,7 +1627,8 @@ smtutil::Expression SMTEncoder::bitwiseOperation(
 			result = bvLeft << bvRight;
 			break;
 		case Token::SHR:
-			solAssert(false, "");
+			result = bvLeft >> bvRight;
+			break;
 		case Token::SAR:
 			result = isSigned ?
 				smtutil::Expression::ashr(bvLeft, bvRight) :
