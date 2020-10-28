@@ -580,14 +580,14 @@ LinkerObject const& Assembly::assemble() const
 	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = util::bytesRequired(bytesRequiredForCode);
-	uint8_t tagPush = (uint8_t)Instruction::PUSH1 - 1 + bytesPerTag;
+	uint8_t tagPush = (uint8_t)pushInstruction(bytesPerTag);
 
 	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + m_auxiliaryData.size();
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += sub->assemble().bytecode.size();
 
 	unsigned bytesPerDataRef = util::bytesRequired(bytesRequiredIncludingData);
-	uint8_t dataRefPush = (uint8_t)Instruction::PUSH1 - 1 + bytesPerDataRef;
+	uint8_t dataRefPush = (uint8_t)pushInstruction(bytesPerDataRef);
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
 	for (AssemblyItem const& i: m_items)
@@ -617,7 +617,7 @@ LinkerObject const& Assembly::assemble() const
 		case Push:
 		{
 			uint8_t b = max<unsigned>(1, util::bytesRequired(i.data()));
-			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
+			ret.bytecode.push_back((uint8_t)pushInstruction(b));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(i.data(), byr);
@@ -647,7 +647,7 @@ LinkerObject const& Assembly::assemble() const
 			auto s = subAssemblyById(static_cast<size_t>(i.data()))->assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			uint8_t b = max<unsigned>(1, util::bytesRequired(s));
-			ret.bytecode.push_back((uint8_t)Instruction::PUSH1 - 1 + b);
+			ret.bytecode.push_back((uint8_t)pushInstruction(b));
 			ret.bytecode.resize(ret.bytecode.size() + b);
 			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(s, byr);
@@ -677,7 +677,7 @@ LinkerObject const& Assembly::assemble() const
 				ret.bytecode.push_back(uint8_t(Instruction::DUP1));
 				// TODO: should we make use of the constant optimizer methods for pushing the offsets?
 				bytes offsetBytes = toCompactBigEndian(u256(offset));
-				ret.bytecode.push_back(uint8_t(Instruction::PUSH1) - 1 + offsetBytes.size());
+				ret.bytecode.push_back(uint8_t(pushInstruction(offsetBytes.size())));
 				ret.bytecode += offsetBytes;
 				ret.bytecode.push_back(uint8_t(Instruction::MSTORE));
 			}
