@@ -56,7 +56,7 @@ string TestFunctionCall::format(
 		string newline = formatToken(Token::Newline);
 		string failure = formatToken(Token::Failure);
 
-		if (m_call.isLibrary)
+		if (m_call.kind == FunctionCall::Kind::Library)
 		{
 			stream << _linePrefix << newline << ws << "library:" << ws << m_call.signature;
 			return;
