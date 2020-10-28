@@ -2220,7 +2220,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 							structMembers[i].type->stackItems().size()
 						));
 						t("dynamicallyEncodedMember", structMembers[i].type->isDynamicallyEncoded());
-						if (structMembers[i].type->isDynamicallySized())
+						if (structMembers[i].type->isDynamicallyEncoded())
 							t("accessCalldataTail", accessCalldataTailFunction(*structMembers[i].type));
 					}
 					t("isValueType", structMembers[i].type->isValueType());
