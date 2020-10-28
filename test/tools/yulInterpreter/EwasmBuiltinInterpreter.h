@@ -91,8 +91,7 @@ private:
 
 	/// Checks if the memory access is not too large for the interpreter and adjusts
 	/// msize accordingly.
-	/// @returns false if the amount of bytes read is lager than 0xffff
-	bool accessMemory(u256 const& _offset, u256 const& _size = 32);
+	void accessMemory(u256 const& _offset, u256 const& _size = 32);
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
 	bytes readMemory(uint64_t _offset, uint64_t _size = 32);
