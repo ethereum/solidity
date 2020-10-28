@@ -171,119 +171,16 @@ do { successParse((text), false, false, AssemblyStack::Language::StrictAssembly)
 BOOST_AUTO_TEST_SUITE(SolidityInlineAssembly)
 
 
-BOOST_AUTO_TEST_SUITE(Parsing)
-
-BOOST_AUTO_TEST_CASE(smoke_test)
-{
-	BOOST_CHECK(successParse("{ }"));
-}
+BOOST_AUTO_TEST_SUITE(Parsing) // {{{
 
 BOOST_AUTO_TEST_CASE(surplus_input)
 {
 	CHECK_PARSE_ERROR("{ } { }", ParserError, "Expected end of source but got '{'");
 }
 
-BOOST_AUTO_TEST_CASE(simple_instructions)
-{
-	BOOST_CHECK(successParse("{ let y := mul(0x10, mul(0x20, mload(0x40)))}"));
-}
+BOOST_AUTO_TEST_SUITE_END() // }}}
 
-BOOST_AUTO_TEST_CASE(selfdestruct)
-{
-	BOOST_CHECK(successParse("{ selfdestruct(0x02) }"));
-}
-
-BOOST_AUTO_TEST_CASE(keywords)
-{
-	BOOST_CHECK(successParse("{ return (byte(1, 2), 2) pop(address()) }"));
-}
-
-BOOST_AUTO_TEST_CASE(constants)
-{
-	BOOST_CHECK(successParse("{ pop(mul(7, 8)) }"));
-}
-
-BOOST_AUTO_TEST_CASE(blocks)
-{
-	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
-}
-
-BOOST_AUTO_TEST_CASE(number_literals)
-{
-	BOOST_CHECK(successParse("{ let x := 1 }"));
-	CHECK_PARSE_ERROR("{ let x := .1 }", ParserError, "Invalid number literal.");
-	CHECK_PARSE_ERROR("{ let x := 1e5 }", ParserError, "Invalid number literal.");
-	CHECK_PARSE_ERROR("{ let x := 67.235 }", ParserError, "Invalid number literal.");
-	CHECK_STRICT_ERROR("{ let x := 0x1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff }", TypeError, "Number literal too large (> 256 bits)");
-}
-
-BOOST_AUTO_TEST_CASE(opcode_for_functions)
-{
-	CHECK_PARSE_ERROR("{ function gas() { } }", ParserError, "Cannot use builtin");
-}
-
-BOOST_AUTO_TEST_CASE(opcode_for_function_args)
-{
-	CHECK_PARSE_ERROR("{ function f(gas) { } }", ParserError, "Cannot use builtin");
-	CHECK_PARSE_ERROR("{ function f() -> gas { } }", ParserError, "Cannot use builtin");
-}
-
-BOOST_AUTO_TEST_CASE(variable_access_cross_functions)
-{
-	CHECK_PARSE_ERROR("{ let x := 2 function g() { pop(x) } }", DeclarationError, "Identifier not found.");
-}
-
-BOOST_AUTO_TEST_CASE(invalid_tuple_assignment)
-{
-	CHECK_PARSE_ERROR("{ let x, y := 1 }", DeclarationError, "Variable count mismatch: 2 variables and 1 values");
-}
-
-BOOST_AUTO_TEST_CASE(instruction_too_few_arguments)
-{
-	CHECK_PARSE_ERROR("{ pop(mul()) }", TypeError, "Function expects 2 arguments but got 0.");
-	CHECK_PARSE_ERROR("{ pop(mul(1)) }", TypeError, "Function expects 2 arguments but got 1.");
-}
-
-BOOST_AUTO_TEST_CASE(instruction_too_many_arguments)
-{
-	CHECK_PARSE_ERROR("{ pop(mul(1, 2, 3)) }", TypeError, "Function expects 2 arguments but got 3");
-}
-
-BOOST_AUTO_TEST_CASE(recursion_depth)
-{
-	string input;
-	for (size_t i = 0; i < 20000; i++)
-		input += "{";
-	input += "let x := 0";
-	for (size_t i = 0; i < 20000; i++)
-		input += "}";
-
-	CHECK_PARSE_ERROR(input, ParserError, "recursion");
-}
-
-BOOST_AUTO_TEST_CASE(multiple_assignment)
-{
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} 123, x := f() }", ParserError, "Variable name must precede \",\" in multiple assignment.");
-	CHECK_PARSE_ERROR("{ let x function f() -> a, b {} x, 123 := f() }", ParserError, "Variable name must precede \":=\" in assignment.");
-
-	/// NOTE: Travis hiccups if not having a variable
-	char const* text = R"(
-	{
-		function f(a) -> r1, r2 {
-			r1 := a
-			r2 := 7
-		}
-		let x := 9
-		let y := 2
-		x, y := f(x)
-	}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(Printing)
+BOOST_AUTO_TEST_SUITE(Printing) // {{{
 
 BOOST_AUTO_TEST_CASE(print_smoke)
 {
@@ -370,8 +267,9 @@ BOOST_AUTO_TEST_CASE(function_calls)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+// }}}
 
-BOOST_AUTO_TEST_SUITE(Analysis)
+BOOST_AUTO_TEST_SUITE(Analysis) // {{{
 
 BOOST_AUTO_TEST_CASE(string_literals)
 {
@@ -477,7 +375,7 @@ BOOST_AUTO_TEST_CASE(jump_error)
 	CHECK_PARSE_WARNING("{ jumpi(44, 2) }", DeclarationError, "Function not found.");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // }}}
 
 BOOST_AUTO_TEST_SUITE_END()
 
