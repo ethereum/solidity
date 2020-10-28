@@ -22,28 +22,45 @@
 #include <libsolutil/Algorithms.h>
 #include <boost/range/algorithm/sort.hpp>
 
+#include <functional>
+
 using namespace std;
+using namespace std::placeholders;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
-bool ControlFlowAnalyzer::analyze(ASTNode const& _astRoot)
+
+bool ControlFlowAnalyzer::run()
 {
-	_astRoot.accept(*this);
+	for (auto& [pair, flow]: m_cfg.allFunctionFlows())
+		analyze(*pair.function, pair.contract, *flow);
+
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
-bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
+void ControlFlowAnalyzer::analyze(FunctionDefinition const& _function, ContractDefinition const* _contract, FunctionFlow const& _flow)
 {
-	if (_function.isImplemented())
-	{
-		auto const& functionFlow = m_cfg.functionFlow(_function);
-		checkUninitializedAccess(functionFlow.entry, functionFlow.exit, _function.body().statements().empty());
-		checkUnreachable(functionFlow.entry, functionFlow.exit, functionFlow.revert, functionFlow.transactionReturn);
-	}
-	return false;
+	if (!_function.isImplemented())
+		return;
+
+	optional<string> mostDerivedContractName;
+
+	// The name of the most derived contract only required if it differs from
+	// the functions contract
+	if (_contract && _contract != _function.annotation().contract)
+		mostDerivedContractName = _contract->name();
+
+	checkUninitializedAccess(
+		_flow.entry,
+		_flow.exit,
+		_function.body().statements().empty(),
+		mostDerivedContractName
+	);
+	checkUnreachable(_flow.entry, _flow.exit, _flow.revert, _flow.transactionReturn);
 }
 
-void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit, bool _emptyBody) const
+
+void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit, bool _emptyBody, optional<string> _contractName)
 {
 	struct NodeInfo
 	{
@@ -156,16 +173,27 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 					" without prior assignment, which would lead to undefined behaviour."
 				);
 			else if (!_emptyBody && varDecl.name().empty())
+			{
+				if (!m_unassignedReturnVarsAlreadyWarnedFor.emplace(&varDecl).second)
+					continue;
+
 				m_errorReporter.warning(
 					6321_error,
 					varDecl.location(),
-					"Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable."
+					"Unnamed return variable can remain unassigned" +
+					(
+						_contractName.has_value() ?
+						" when the function is called when \"" + _contractName.value() + "\" is the most derived contract." :
+						"."
+					) +
+					" Add an explicit return with value to all non-reverting code paths or name the variable."
 				);
+			}
 		}
 	}
 }
 
-void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert, CFGNode const* _transactionReturn) const
+void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const* _exit, CFGNode const* _revert, CFGNode const* _transactionReturn)
 {
 	// collect all nodes reachable from the entry point
 	std::set<CFGNode const*> reachable = util::BreadthFirstSearch<CFGNode const*>{{_entry}}.run(
@@ -193,6 +221,8 @@ void ControlFlowAnalyzer::checkUnreachable(CFGNode const* _entry, CFGNode const*
 		// Extend the location, as long as the next location overlaps (unreachable is sorted).
 		for (; it != unreachable.end() && it->start <= location.end; ++it)
 			location.end = std::max(location.end, it->end);
-		m_errorReporter.warning(5740_error, location, "Unreachable code.");
+
+		if (m_unreachableLocationsAlreadyWarnedFor.emplace(location).second)
+			m_errorReporter.warning(5740_error, location, "Unreachable code.");
 	}
 }

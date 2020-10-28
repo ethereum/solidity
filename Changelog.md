@@ -16,6 +16,7 @@ Compiler Features:
 
 Bugfixes:
  * AST: Do not output value of Yul literal if it is not a valid UTF-8 string.
+ * Control Flow Graph: Take internal calls to functions that always revert into account for reporting unused or unassigned variables.
  * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
  * Standard JSON: Properly allow the ``inliner`` setting under ``settings.optimizer.details``.
  * Type Checker: Fix internal compiler error related to having mapping types in constructor parameter for abstract contracts.
@@ -23,6 +24,7 @@ Bugfixes:
 
 AST Changes:
  * Add member `hexValue` for Yul string and hex literals.
+
 
 
 ### 0.8.4 (2021-04-21)

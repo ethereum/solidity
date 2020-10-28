@@ -287,6 +287,11 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 				m_currentNode = nextNode;
 				return false;
 			}
+			case FunctionType::Kind::Internal:
+			{
+				m_currentNode->functionCalls.emplace_back(&_functionCall);
+				break;
+			}
 			default:
 				break;
 		}
