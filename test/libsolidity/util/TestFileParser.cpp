@@ -85,6 +85,21 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						call.kind = FunctionCall::Kind::Library;
 						call.expectations.failure = false;
 					}
+					else if (accept(Token::Storage, true))
+					{
+						expect(Token::Colon);
+						call.expectations.failure = false;
+						call.expectations.result.push_back(Parameter());
+						// empty / non-empty is encoded as false / true
+						if (m_scanner.currentLiteral() == "empty")
+							call.expectations.result.back().rawBytes = bytes(1, uint8_t(false));
+						else if (m_scanner.currentLiteral() == "nonempty")
+							call.expectations.result.back().rawBytes = bytes(1, uint8_t(true));
+						else
+							throw TestParserError("Expected \"empty\" or \"nonempty\".");
+						call.kind = FunctionCall::Kind::Storage;
+						m_scanner.scanNextToken();
+					}
 					else
 					{
 						bool lowLevelCall = false;
@@ -484,6 +499,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "right") return TokenDesc{Token::Right, _literal};
 		if (_literal == "hex") return TokenDesc{Token::Hex, _literal};
 		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
+		if (_literal == "storage") return TokenDesc{Token::Storage, _literal};
 		return TokenDesc{Token::Identifier, _literal};
 	};
 

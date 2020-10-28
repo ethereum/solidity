@@ -176,7 +176,16 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 				constructed = true;
 			}
 
-			if (test.call().kind == FunctionCall::Kind::Constructor)
+			if (test.call().kind == FunctionCall::Kind::Storage)
+			{
+				test.setFailure(false);
+				bytes result(1, !storageEmpty(m_contractAddress));
+				test.setRawBytes(result);
+				soltestAssert(test.call().expectations.rawBytes().size() == 1, "");
+				if (test.call().expectations.rawBytes() != result)
+					success = false;
+			}
+			else if (test.call().kind == FunctionCall::Kind::Constructor)
 			{
 				if (m_transactionSuccessful == test.call().expectations.failure)
 					success = false;

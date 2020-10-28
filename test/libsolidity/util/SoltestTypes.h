@@ -58,6 +58,7 @@ namespace solidity::frontend::test
 	K(Library, "library", 0)       \
 	K(Right, "right", 0)           \
 	K(Failure, "FAILURE", 0)       \
+	K(Storage, "storage", 0) \
 
 namespace soltest
 {
@@ -284,7 +285,9 @@ struct FunctionCall
 		/// a low-level call with unstructured calldata will be issued.
 		LowLevel,
 		/// Marks a library deployment call.
-		Library
+		Library,
+		/// Check that the storage of the current contract is empty or non-empty.
+		Storage
 	};
 	Kind kind = Kind::Regular;
 	/// Marks this function call as "short-handed", meaning
