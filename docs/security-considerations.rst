@@ -448,19 +448,21 @@ The SMT encoding tries to be as precise as possible, mapping Solidity types
 and expressions to their closest `SMT-LIB <http://smtlib.cs.uiowa.edu/>`_
 representation, as shown in the table below.
 
-+-----------------------+--------------+-----------------------------+
-|Solidity type          |SMT sort      |Theories (quantifier-free)   |
-+=======================+==============+=============================+
-|Boolean                |Bool          |Bool                         |
-+-----------------------+--------------+-----------------------------+
-|intN, uintN, address,  |Integer       |LIA, NIA                     |
-|bytesN, enum           |              |                             |
-+-----------------------+--------------+-----------------------------+
-|array, mapping, bytes, |Array         |Arrays                       |
-|string                 |              |                             |
-+-----------------------+--------------+-----------------------------+
-|other types            |Integer       |LIA                          |
-+-----------------------+--------------+-----------------------------+
++-----------------------+--------------------------------+-----------------------------+
+|Solidity type          |SMT sort                        |Theories (quantifier-free)   |
++=======================+================================+=============================+
+|Boolean                |Bool                            |Bool                         |
++-----------------------+--------------------------------+-----------------------------+
+|intN, uintN, address,  |Integer                         |LIA, NIA                     |
+|bytesN, enum           |                                |                             |
++-----------------------+--------------------------------+-----------------------------+
+|array, mapping, bytes, |Tuple                           |Datatypes, Arrays, LIA       |
+|string                 |(Array elements, Integer length)|                             |
++-----------------------+--------------------------------+-----------------------------+
+|struct                 |Tuple                           |Datatypes                    |
++-----------------------+--------------------------------+-----------------------------+
+|other types            |Integer                         |LIA                          |
++-----------------------+--------------------------------+-----------------------------+
 
 Types that are not yet supported are abstracted by a single 256-bit unsigned
 integer, where their unsupported operations are ignored.
