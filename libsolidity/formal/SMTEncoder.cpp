@@ -1973,7 +1973,7 @@ void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _fu
 
 void SMTEncoder::createStateVariables(ContractDefinition const& _contract)
 {
-	for (auto var: _contract.stateVariablesIncludingInherited())
+	for (auto var: stateVariablesIncludingInheritedAndPrivate(_contract))
 		createVariable(*var);
 }
 
@@ -2257,7 +2257,7 @@ void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
 {
 	solAssert(_contract, "");
-	for (auto var: _contract->stateVariablesIncludingInherited())
+	for (auto var: stateVariablesIncludingInheritedAndPrivate(*_contract))
 		m_context.variable(*var)->resetIndex();
 	if (_function)
 	{

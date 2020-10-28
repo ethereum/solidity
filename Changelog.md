@@ -12,6 +12,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when assigning state variable via contract's name.
  * SMTChecker: Fix incorrect counterexamples reported by the CHC engine.
  * SMTChecker: Fix false negative in modifier applied multiple times.
+ * SMTChecker: Fix internal error in the BMC engine when inherited contract from a different source unit has private state variables.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
 
 
