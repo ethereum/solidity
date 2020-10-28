@@ -73,7 +73,7 @@ void SSAReverser::operator()(Block& _block)
 							VariableDeclaration{
 								std::move(varDecl->location),
 								std::move(varDecl->variables),
-								std::make_unique<Expression>(std::move(assignment->variableNames.front()))
+								std::make_unique<Expression>(assignment->variableNames.front())
 							}
 						);
 				}

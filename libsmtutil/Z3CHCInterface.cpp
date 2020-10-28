@@ -161,7 +161,7 @@ CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
 	proofStack.push(_proof.arg(0));
 
 	auto const& root = proofStack.top();
-	graph.nodes[root.id()] = {name(fact(root)), arguments(fact(root))};
+	graph.nodes.emplace(root.id(), m_z3Interface->fromZ3Expr(fact(root)));
 
 	set<unsigned> visited;
 	visited.insert(root.id());
@@ -186,7 +186,7 @@ CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
 
 				if (!graph.nodes.count(child.id()))
 				{
-					graph.nodes[child.id()] = {name(fact(child)), arguments(fact(child))};
+					graph.nodes.emplace(child.id(), m_z3Interface->fromZ3Expr(fact(child)));
 					graph.edges[child.id()] = {};
 				}
 

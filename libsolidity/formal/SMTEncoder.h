@@ -280,7 +280,11 @@ protected:
 	/// @returns variables that are touched in _node's subtree.
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
 
-	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
+	/// @returns the declaration referenced by _expr, if any,
+	/// and nullptr otherwise.
+	Declaration const* expressionToDeclaration(Expression const& _expr);
+
+	/// @returns the VariableDeclaration referenced by an Expression or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
 	/// Creates symbolic expressions for the returned values

@@ -356,11 +356,15 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	if (_call.functionName == "dataoffset")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
+		// TODO: support the case where name refers to the current object
+		yulAssert(m_subModulePosAndSize.count(name), "");
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).first));
 	}
 	else if (_call.functionName == "datasize")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
+		// TODO: support the case where name refers to the current object
+		yulAssert(m_subModulePosAndSize.count(name), "");
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).second));
 	}
 
