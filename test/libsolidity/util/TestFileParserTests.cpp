@@ -82,8 +82,8 @@ void testFunctionCall(
 		}
 	}
 
-	BOOST_REQUIRE_EQUAL(_call.isConstructor, _isConstructor);
-	BOOST_REQUIRE_EQUAL(_call.isLibrary, _isLibrary);
+	BOOST_REQUIRE_EQUAL(_call.kind == FunctionCall::Kind::Constructor, _isConstructor);
+	BOOST_REQUIRE_EQUAL(_call.kind == FunctionCall::Kind::Library, _isLibrary);
 }
 
 BOOST_AUTO_TEST_SUITE(TestFileParserTest)

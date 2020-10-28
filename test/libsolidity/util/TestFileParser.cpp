@@ -82,12 +82,16 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						expect(Token::Colon);
 						call.signature = m_scanner.currentLiteral();
 						expect(Token::Identifier);
-						call.isLibrary = true;
+						call.kind = FunctionCall::Kind::Library;
 						call.expectations.failure = false;
 					}
 					else
 					{
-						tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
+						bool lowLevelCall = false;
+						tie(call.signature, lowLevelCall) = parseFunctionSignature();
+						if (lowLevelCall)
+							call.kind = FunctionCall::Kind::LowLevel;
+
 						if (accept(Token::Comma, true))
 							call.value = parseFunctionCallValue();
 
@@ -124,8 +128,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						call.expectations.comment = parseComment();
 
 						if (call.signature == "constructor()")
-							call.isConstructor = true;
-
+							call.kind = FunctionCall::Kind::Constructor;
 					}
 
 					calls.emplace_back(std::move(call));
