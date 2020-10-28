@@ -128,6 +128,12 @@ private:
 	/// @returns a string representation of the SMT expression based on a Solidity type.
 	std::optional<std::string> expressionToString(smtutil::Expression const& _expr, TypePointer _type) const;
 
+	/// Recursively fills _array from _expr.
+	/// _expr should have the form `store(store(...(const_array(x_0), i_0, e_0), i_m, e_m), i_k, e_k)`.
+	/// @returns true if the construction worked,
+	/// and false if at least one element could not be built.
+	bool fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type) const;
+
 	/// The actual SMT expression.
 	smt::SymbolicFunctionVariable m_predicate;
 
