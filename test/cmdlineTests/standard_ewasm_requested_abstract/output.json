@@ -1,2 +1,1 @@
-{"errors":[{"component":"general","formattedMessage":"InternalCompilerError: 
-","message":"Internal compiler error (/project/solidity/libsolidity/interface/CompilerStack.cpp:1260):","severity":"error","type":"InternalCompilerError"}],"sources":{"A":{"id":0}}}
+{"contracts":{"A":{"C":{"ewasm":{"wasm":"","wast":""}}}},"sources":{"A":{"id":0}}}
