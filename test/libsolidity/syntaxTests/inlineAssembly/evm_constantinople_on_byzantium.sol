@@ -17,9 +17,9 @@ contract C {
 // ----
 // TypeError 6612: (103-106): The "shl" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
 // DeclarationError 8678: (96-116): Variable count does not match number of values (1 vs. 0)
-// TypeError 6612: (136-139): The "shr" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
+// TypeError 7458: (136-139): The "shr" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
 // DeclarationError 8678: (129-147): Variable count does not match number of values (1 vs. 0)
-// TypeError 6612: (167-170): The "sar" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
+// TypeError 2054: (167-170): The "sar" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
 // DeclarationError 8678: (160-178): Variable count does not match number of values (1 vs. 0)
 // TypeError 6166: (283-290): The "create2" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
 // DeclarationError 8678: (276-302): Variable count does not match number of values (1 vs. 0)
