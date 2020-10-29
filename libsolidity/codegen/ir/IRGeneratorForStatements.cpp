@@ -2566,10 +2566,10 @@ string IRGeneratorForStatements::binaryOperation(
 		"");
 		switch (_operator)
 		{
-			case Token::BitOr: fun = "or"; break;
-			case Token::BitXor: fun = "xor"; break;
-			case Token::BitAnd: fun = "and"; break;
-			default: break;
+		case Token::BitOr: fun = "or"; break;
+		case Token::BitXor: fun = "xor"; break;
+		case Token::BitAnd: fun = "and"; break;
+		default: break;
 		}
 	}
 	else if (TokenTraits::isArithmeticOp(_operator))
@@ -2578,23 +2578,23 @@ string IRGeneratorForStatements::binaryOperation(
 		solAssert(type, "");
 		switch (_operator)
 		{
-			case Token::Add:
-				fun = m_utils.overflowCheckedIntAddFunction(*type);
-				break;
-			case Token::Sub:
-				fun = m_utils.overflowCheckedIntSubFunction(*type);
-				break;
-			case Token::Mul:
-				fun = m_utils.overflowCheckedIntMulFunction(*type);
-				break;
-			case Token::Div:
-				fun = m_utils.overflowCheckedIntDivFunction(*type);
-				break;
-			case Token::Mod:
-				fun = m_utils.checkedIntModFunction(*type);
-				break;
-			default:
-				break;
+		case Token::Add:
+			fun = m_utils.overflowCheckedIntAddFunction(*type);
+			break;
+		case Token::Sub:
+			fun = m_utils.overflowCheckedIntSubFunction(*type);
+			break;
+		case Token::Mul:
+			fun = m_utils.overflowCheckedIntMulFunction(*type);
+			break;
+		case Token::Div:
+			fun = m_utils.overflowCheckedIntDivFunction(*type);
+			break;
+		case Token::Mod:
+			fun = m_utils.checkedIntModFunction(*type);
+			break;
+		default:
+			break;
 		}
 	}
 
