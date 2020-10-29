@@ -5,5 +5,7 @@ contract C {
     return s[0];
   }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(bytes): 0x20, 0x08, "abcdefgh" -> "a"

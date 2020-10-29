@@ -14,5 +14,7 @@ contract c {
             uint8(data[97]) == 97;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // test1() -> true

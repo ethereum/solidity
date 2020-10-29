@@ -1462,13 +1462,14 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 	});
 }
 
-string YulUtilFunctions::copyArrayToStorage(ArrayType const& _fromType, ArrayType const& _toType)
+string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
 {
 	solAssert(
 		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
 		""
 	);
-	solUnimplementedAssert(!_fromType.isByteArray(), "");
+	if (_fromType.isByteArray())
+		return copyByteArrayToStorageFunction(_fromType, _toType);
 	solUnimplementedAssert(!_fromType.dataStoredIn(DataLocation::Storage), "");
 
 	string functionName = "copy_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
@@ -1556,6 +1557,84 @@ string YulUtilFunctions::copyArrayToStorage(ArrayType const& _fromType, ArrayTyp
 		templ("multipleItemsPerSlot", _toType.storageStride() <= 16);
 		templ("storageStride", to_string(_toType.storageStride()));
 		templ("storageSize", _toType.baseType()->storageSize().str());
+
+		return templ.render();
+	});
+}
+
+
+string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
+{
+	solAssert(
+		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
+		""
+	);
+	solAssert(_fromType.isByteArray(), "");
+	solAssert(_toType.isByteArray(), "");
+	solUnimplementedAssert(!_fromType.dataStoredIn(DataLocation::Storage), "");
+
+	string functionName = "copy_byte_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
+	return m_functionCollector.createFunction(functionName, [&](){
+		Whiskers templ(R"(
+			function <functionName>(slot, src<?fromCalldata>, len</fromCalldata>) {
+				let newLen := <arrayLength>(src<?fromCalldata>, len</fromCalldata>)
+				// Make sure array length is sane
+				if gt(newLen, 0xffffffffffffffff) { <panic>() }
+
+				let oldLen := <byteArrayLength>(sload(slot))
+
+				<?fromMemory>
+					src := add(src, 0x20)
+				</fromMemory>
+
+				// This is not needed in all branches.
+				let dstDataArea
+				if or(gt(oldLen, 31), gt(newLen, 31)) {
+					dstDataArea := <dstDataLocation>(slot)
+				}
+
+				if gt(oldLen, 31) {
+					// potentially truncate data
+					let deleteStart := add(dstDataArea, div(add(newLen, 31), 32))
+					if lt(newLen, 32) { deleteStart := dstDataArea }
+					<clearStorageRange>(deleteStart, add(dstDataArea, div(add(oldLen, 31), 32)))
+				}
+				switch gt(newLen, 31)
+				case 1 {
+					let loopEnd := and(newLen, not(0x1f))
+					let dstPtr := dstDataArea
+					let i := 0
+					for { } lt(i, loopEnd) { i := add(i, 32) } {
+						sstore(dstPtr, <readFromCalldataOrMemory>(add(src, i)))
+						dstPtr := add(dstPtr, 1)
+					}
+					if lt(loopEnd, newLen) {
+						let lastValue := <readFromCalldataOrMemory>(add(src, i))
+						sstore(dstPtr, <maskBytes>(lastValue, and(newLen, 0x1f)))
+					}
+					sstore(slot, add(mul(newLen, 2), 1))
+				}
+				default {
+					let value := 0
+					if newLen {
+						value := <readFromCalldataOrMemory>(src)
+					}
+					sstore(slot, <byteArrayCombineShort>(value, newLen))
+				}
+			}
+		)");
+		templ("functionName", functionName);
+		bool fromCalldata = _fromType.dataStoredIn(DataLocation::CallData);
+		templ("fromMemory", _fromType.dataStoredIn(DataLocation::Memory));
+		templ("fromCalldata", fromCalldata);
+		templ("arrayLength", arrayLengthFunction(_fromType));
+		templ("panic", panicFunction());
+		templ("byteArrayLength", extractByteArrayLengthFunction());
+		templ("dstDataLocation", arrayDataAreaFunction(_toType));
+		templ("clearStorageRange", clearStorageRangeFunction(*_toType.baseType()));
+		templ("readFromCalldataOrMemory", readFromMemoryOrCalldata(*TypeProvider::uint256(), fromCalldata));
+		templ("maskBytes", maskBytesFunctionDynamic());
+		templ("byteArrayCombineShort", shortByteArrayEncodeUsedAreaSetLengthFunction());
 
 		return templ.render();
 	});
@@ -2154,7 +2233,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 				)");
 				templ("functionName", functionName);
 				templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
-				templ("copyArrayToStorage", copyArrayToStorage(
+				templ("copyArrayToStorage", copyArrayToStorageFunction(
 					dynamic_cast<ArrayType const&>(_fromType),
 					dynamic_cast<ArrayType const&>(_toType)
 				));
