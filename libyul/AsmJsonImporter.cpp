@@ -22,23 +22,22 @@
 
  */
 
-#include <libsolidity/ast/AsmJsonImporter.h>
-#include <libsolidity/ast/ASTJsonImporter.h>
-#include <libsolidity/ast/Types.h>
+#include <libyul/AsmJsonImporter.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmDataForward.h>
+
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
-#include <vector>
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <vector>
 
 using namespace std;
-using namespace solidity::yul;
+using namespace solidity::langutil;
 
-namespace solidity::frontend
+namespace solidity::yul
 {
 
 using SourceLocation = langutil::SourceLocation;
