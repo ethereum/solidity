@@ -2557,47 +2557,49 @@ string IRGeneratorForStatements::binaryOperation(
 		!TokenTraits::isShiftOp(_operator),
 		"Have to use specific shift operation function for shifts."
 	);
-	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+	string fun;
+	if (TokenTraits::isBitOp(_operator))
 	{
-		string fun;
-		// TODO: Implement all operations for signed and unsigned types.
+		solAssert(
+			_type.category() == Type::Category::Integer ||
+			_type.category() == Type::Category::FixedBytes,
+		"");
 		switch (_operator)
 		{
-			case Token::Add:
-				fun = m_utils.overflowCheckedIntAddFunction(*type);
-				break;
-			case Token::Sub:
-				fun = m_utils.overflowCheckedIntSubFunction(*type);
-				break;
-			case Token::Mul:
-				fun = m_utils.overflowCheckedIntMulFunction(*type);
-				break;
-			case Token::Div:
-				fun = m_utils.overflowCheckedIntDivFunction(*type);
-				break;
-			case Token::Mod:
-				fun = m_utils.checkedIntModFunction(*type);
-				break;
-			case Token::BitOr:
-				fun = "or";
-				break;
-			case Token::BitXor:
-				fun = "xor";
-				break;
-			case Token::BitAnd:
-				fun = "and";
-				break;
-			default:
-				break;
+		case Token::BitOr: fun = "or"; break;
+		case Token::BitXor: fun = "xor"; break;
+		case Token::BitAnd: fun = "and"; break;
+		default: break;
 		}
-
-		solUnimplementedAssert(!fun.empty(), "");
-		return fun + "(" + _left + ", " + _right + ")\n";
 	}
-	else
-		solUnimplementedAssert(false, "");
+	else if (TokenTraits::isArithmeticOp(_operator))
+	{
+		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
+		solAssert(type, "");
+		switch (_operator)
+		{
+		case Token::Add:
+			fun = m_utils.overflowCheckedIntAddFunction(*type);
+			break;
+		case Token::Sub:
+			fun = m_utils.overflowCheckedIntSubFunction(*type);
+			break;
+		case Token::Mul:
+			fun = m_utils.overflowCheckedIntMulFunction(*type);
+			break;
+		case Token::Div:
+			fun = m_utils.overflowCheckedIntDivFunction(*type);
+			break;
+		case Token::Mod:
+			fun = m_utils.checkedIntModFunction(*type);
+			break;
+		default:
+			break;
+		}
+	}
 
-	return {};
+	solUnimplementedAssert(!fun.empty(), "Type: " + _type.toString());
+	return fun + "(" + _left + ", " + _right + ")\n";
 }
 
 std::string IRGeneratorForStatements::shiftOperation(
