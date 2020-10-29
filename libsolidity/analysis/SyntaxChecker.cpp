@@ -124,7 +124,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 							m_errorReporter.syntaxError(
 								8273_error,
 								_pragma.location(),
-								"ABI coder V1 has already been selected through \"pragma abicoder v1\"."
+								"ABI coder v1 has already been selected through \"pragma abicoder v1\"."
 							);
 					}
 					else

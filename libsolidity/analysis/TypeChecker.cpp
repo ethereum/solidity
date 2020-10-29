@@ -400,8 +400,8 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 			)
 			{
 				string message =
-					"This type is only supported in ABIEncoderV2. "
-					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature.";
+					"This type is only supported in ABI coder v2. "
+					"Use \"pragma abicoder v2;\" to enable the feature.";
 				if (_function.isConstructor())
 					message +=
 						" Alternatively, make the contract abstract and supply the "
@@ -577,9 +577,9 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				m_errorReporter.typeError(
 					2763_error,
 					_variable.location(),
-					"The following types are only supported for getters in ABIEncoderV2: " +
+					"The following types are only supported for getters in ABI coder v2: " +
 					joinHumanReadable(unsupportedTypes) +
-					". Either remove \"public\" or use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+					". Either remove \"public\" or use \"pragma abicoder v2;\" to enable the feature."
 				);
 		}
 		if (!getter.interfaceFunctionType())
@@ -698,8 +698,8 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 			m_errorReporter.typeError(
 				3061_error,
 				var->location(),
-				"This type is only supported in ABIEncoderV2. "
-				"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+				"This type is only supported in ABI coder v2. "
+				"Use \"pragma abicoder v2;\" to enable the feature."
 			);
 	}
 	if (_eventDef.isAnonymous() && numIndexed > 4)
@@ -2205,8 +2205,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 					2443_error,
 					paramArgMap[i]->location(),
 					"The type of this parameter, " + parameterTypes[i]->toString(true) + ", "
-					"is only supported in ABIEncoderV2. "
-					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+					"is only supported in ABI coder v2. "
+					"Use \"pragma abicoder v2;\" to enable the feature."
 				);
 		}
 
@@ -2219,8 +2219,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 					2428_error,
 					_functionCall.location(),
 					"The type of return parameter " + toString(i + 1) + ", " + returnParameterTypes[i]->toString(true) + ", "
-					"is only supported in ABIEncoderV2. "
-					"Use \"pragma experimental ABIEncoderV2;\" to enable the feature."
+					"is only supported in ABI coder v2. "
+					"Use \"pragma abicoder v2;\" to enable the feature."
 				);
 		}
 	}

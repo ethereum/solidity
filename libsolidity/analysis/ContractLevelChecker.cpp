@@ -489,9 +489,9 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 			errors,
 			std::string("Contract \"") +
 			_contract.name() +
-			"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
+			"\" does not use ABI coder v2 but wants to inherit from a contract " +
 			"which uses types that require it. " +
-			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
+			"Use \"pragma abicoder v2;\" for the inheriting contract as well to enable the feature."
 		);
 
 }
