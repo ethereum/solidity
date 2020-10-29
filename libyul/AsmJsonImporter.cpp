@@ -23,8 +23,7 @@
  */
 
 #include <libyul/AsmJsonImporter.h>
-#include <libyul/AsmData.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 #include <liblangutil/Scanner.h>

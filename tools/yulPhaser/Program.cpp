@@ -27,6 +27,7 @@
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
+#include <libyul/AST.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/YulString.h>
 #include <libyul/backends/evm/EVMDialect.h>

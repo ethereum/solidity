@@ -22,6 +22,7 @@
 #include <libyul/ObjectParser.h>
 
 #include <libyul/AsmParser.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 #include <liblangutil/Token.h>

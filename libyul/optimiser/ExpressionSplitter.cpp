@@ -26,7 +26,7 @@
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/TypeInfo.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>

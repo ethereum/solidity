@@ -25,7 +25,7 @@
 
 #include <json/json.h>
 #include <liblangutil/SourceLocation.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 #include <utility>
 

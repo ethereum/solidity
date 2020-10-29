@@ -30,7 +30,7 @@
 
 #include <libyul/CompilabilityChecker.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;

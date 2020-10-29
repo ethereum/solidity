@@ -22,7 +22,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/BlockHasher.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 namespace solidity::yul
 {

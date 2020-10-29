@@ -22,7 +22,7 @@
 #include <libyul/optimiser/InlinableExpressionFunctionFinder.h>
 
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;

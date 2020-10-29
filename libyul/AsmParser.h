@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 
 #include <liblangutil/SourceLocation.h>

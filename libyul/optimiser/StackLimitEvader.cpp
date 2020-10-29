@@ -21,7 +21,7 @@
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>

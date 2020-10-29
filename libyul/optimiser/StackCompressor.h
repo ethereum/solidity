@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <libyul/Object.h>
+
 #include <memory>
 
 namespace solidity::yul
