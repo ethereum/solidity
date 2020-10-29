@@ -25,8 +25,8 @@
 #include <libyul/AsmJsonImporter.h>
 #include <libyul/AsmData.h>
 #include <libyul/AsmDataForward.h>
+#include <libyul/Exceptions.h>
 
-#include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 
 #include <boost/algorithm/string/split.hpp>
@@ -44,7 +44,7 @@ using SourceLocation = langutil::SourceLocation;
 
 SourceLocation const AsmJsonImporter::createSourceLocation(Json::Value const& _node)
 {
-	astAssert(member(_node, "src").isString(), "'src' must be a string");
+	yulAssert(member(_node, "src").isString(), "'src' must be a string");
 
 	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_sourceName);
 }
@@ -54,7 +54,7 @@ T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 {
 	T r;
 	r.location = createSourceLocation(_node);
-	astAssert(
+	yulAssert(
 		r.location.source && 0 <= r.location.start && r.location.start <= r.location.end,
 		"Invalid source location in Asm AST"
 	);
@@ -79,10 +79,10 @@ TypedName AsmJsonImporter::createTypedName(Json::Value const& _node)
 Statement AsmJsonImporter::createStatement(Json::Value const& _node)
 {
 	Json::Value jsonNodeType = member(_node, "nodeType");
-	astAssert(jsonNodeType.isString(), "Expected \"nodeType\" to be of type string!");
+	yulAssert(jsonNodeType.isString(), "Expected \"nodeType\" to be of type string!");
 	string nodeType = jsonNodeType.asString();
 
-	astAssert(nodeType.substr(0, 3) == "Yul", "Invalid nodeType prefix");
+	yulAssert(nodeType.substr(0, 3) == "Yul", "Invalid nodeType prefix");
 	nodeType = nodeType.substr(3);
 
 	if (nodeType == "ExpressionStatement")
@@ -108,16 +108,16 @@ Statement AsmJsonImporter::createStatement(Json::Value const& _node)
 	else if (nodeType == "Block")
 		return createBlock(_node);
 	else
-		astAssert(false, "Invalid nodeType as statement");
+		yulAssert(false, "Invalid nodeType as statement");
 }
 
 Expression AsmJsonImporter::createExpression(Json::Value const& _node)
 {
 	Json::Value jsonNodeType = member(_node, "nodeType");
-	astAssert(jsonNodeType.isString(), "Expected \"nodeType\" to be of type string!");
+	yulAssert(jsonNodeType.isString(), "Expected \"nodeType\" to be of type string!");
 	string nodeType = jsonNodeType.asString();
 
-	astAssert(nodeType.substr(0, 3) == "Yul", "Invalid nodeType prefix");
+	yulAssert(nodeType.substr(0, 3) == "Yul", "Invalid nodeType prefix");
 	nodeType = nodeType.substr(3);
 
 	if (nodeType == "FunctionCall")
@@ -127,7 +127,7 @@ Expression AsmJsonImporter::createExpression(Json::Value const& _node)
 	else if (nodeType == "Literal")
 		return createLiteral(_node);
 	else
-		astAssert(false, "Invalid nodeType as expression");
+		yulAssert(false, "Invalid nodeType as expression");
 }
 
 vector<Expression> AsmJsonImporter::createExpressionVector(Json::Value const& _array)
@@ -165,7 +165,7 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	{
 		langutil::Scanner scanner{langutil::CharStream(lit.value.str(), "")};
 		lit.kind = LiteralKind::Number;
-		astAssert(
+		yulAssert(
 			scanner.currentToken() == Token::Number,
 			"Expected number but got " + langutil::TokenTraits::friendlyName(scanner.currentToken()) + string(" while scanning ") + lit.value.str()
 		);
@@ -174,7 +174,7 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	{
 		langutil::Scanner scanner{langutil::CharStream(lit.value.str(), "")};
 		lit.kind = LiteralKind::Boolean;
-		astAssert(
+		yulAssert(
 			scanner.currentToken() == Token::TrueLiteral ||
 			scanner.currentToken() == Token::FalseLiteral,
 			"Expected true/false literal!"
@@ -183,13 +183,13 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	else if (kind == "string")
 	{
 		lit.kind = LiteralKind::String;
-		astAssert(
+		yulAssert(
 			lit.value.str().size() <= 32,
 			"String literal too long (" + to_string(lit.value.str().size()) + " > 32)"
 		);
 	}
 	else
-		solAssert(false, "unknown type of literal");
+		yulAssert(false, "unknown type of literal");
 
 	return lit;
 }
@@ -276,7 +276,7 @@ Case AsmJsonImporter::createCase(Json::Value const& _node)
 	auto caseStatement = createAsmNode<Case>(_node);
 	auto const& value = member(_node, "value");
 	if (value.isString())
-		astAssert(value.asString() == "default", "Expected default case");
+		yulAssert(value.asString() == "default", "Expected default case");
 	else
 		caseStatement.value = make_unique<Literal>(createLiteral(value));
 	caseStatement.body = createBlock(member(_node, "body"));
