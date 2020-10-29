@@ -82,12 +82,31 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						expect(Token::Colon);
 						call.signature = m_scanner.currentLiteral();
 						expect(Token::Identifier);
-						call.isLibrary = true;
+						call.kind = FunctionCall::Kind::Library;
 						call.expectations.failure = false;
+					}
+					else if (accept(Token::Storage, true))
+					{
+						expect(Token::Colon);
+						call.expectations.failure = false;
+						call.expectations.result.push_back(Parameter());
+						// empty / non-empty is encoded as false / true
+						if (m_scanner.currentLiteral() == "empty")
+							call.expectations.result.back().rawBytes = bytes(1, uint8_t(false));
+						else if (m_scanner.currentLiteral() == "nonempty")
+							call.expectations.result.back().rawBytes = bytes(1, uint8_t(true));
+						else
+							throw TestParserError("Expected \"empty\" or \"nonempty\".");
+						call.kind = FunctionCall::Kind::Storage;
+						m_scanner.scanNextToken();
 					}
 					else
 					{
-						tie(call.signature, call.useCallWithoutSignature) = parseFunctionSignature();
+						bool lowLevelCall = false;
+						tie(call.signature, lowLevelCall) = parseFunctionSignature();
+						if (lowLevelCall)
+							call.kind = FunctionCall::Kind::LowLevel;
+
 						if (accept(Token::Comma, true))
 							call.value = parseFunctionCallValue();
 
@@ -124,8 +143,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						call.expectations.comment = parseComment();
 
 						if (call.signature == "constructor()")
-							call.isConstructor = true;
-
+							call.kind = FunctionCall::Kind::Constructor;
 					}
 
 					calls.emplace_back(std::move(call));
@@ -481,6 +499,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "right") return TokenDesc{Token::Right, _literal};
 		if (_literal == "hex") return TokenDesc{Token::Hex, _literal};
 		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
+		if (_literal == "storage") return TokenDesc{Token::Storage, _literal};
 		return TokenDesc{Token::Identifier, _literal};
 	};
 

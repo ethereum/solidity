@@ -44,7 +44,8 @@ namespace solidity::frontend::test
  * // h(uint256), 1 ether: 42
  * // -> FAILURE                # If REVERT or other EVM failure was detected #
  * // ()                        # Call fallback function #
- * // (), 1 ether               # Call ether function #
+ * // (), 1 ether               # Call receive ether function #
+ * // EMPTY_STORAGE             # Check that storage is empty
  * ...
  */
 class TestFileParser
