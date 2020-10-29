@@ -2662,24 +2662,6 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (contract->abstract())
 			m_errorReporter.typeError(4614_error, _newExpression.location(), "Cannot instantiate an abstract contract.");
 
-		if (m_currentContract)
-		{
-			// TODO this is not properly detecting creation-cycles if they go through
-			// internal library functions or free functions. It will be caught at
-			// code generation time, but it would of course be better to catch it here.
-			m_currentContract->annotation().contractDependencies.insert(contract);
-			solAssert(
-				!contract->annotation().linearizedBaseContracts.empty(),
-				"Linearized base contracts not yet available."
-			);
-			if (contractDependenciesAreCyclic(*m_currentContract))
-				m_errorReporter.typeError(
-					4579_error,
-					_newExpression.location(),
-					"Circular reference for contract creation (cannot create instance of derived or same contract)."
-				);
-		}
-
 		_newExpression.annotation().type = FunctionType::newExpressionType(*contract);
 		_newExpression.annotation().isPure = false;
 	}
@@ -2953,21 +2935,6 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					_memberAccess.location(),
 					"\"runtimeCode\" is not available for contracts containing immutable variables."
 				);
-			if (m_currentContract)
-			{
-				// TODO in the same way as with ``new``,
-				// this is not properly detecting creation-cycles if they go through
-				// internal library functions or free functions. It will be caught at
-				// code generation time, but it would of course be better to catch it here.
-
-				m_currentContract->annotation().contractDependencies.insert(&accessedContractType.contractDefinition());
-				if (contractDependenciesAreCyclic(*m_currentContract))
-					m_errorReporter.typeError(
-						4224_error,
-						_memberAccess.location(),
-						"Circular reference for contract code access."
-					);
-			}
 		}
 		else if (magicType->kind() == MagicType::Kind::MetaType && memberName == "name")
 			annotation.isPure = true;
@@ -3453,22 +3420,6 @@ void TypeChecker::checkErrorAndEventParameters(CallableDeclaration const& _calla
 				"Use \"pragma abicoder v2;\" to enable the feature."
 			);
 	}
-}
-
-bool TypeChecker::contractDependenciesAreCyclic(
-	ContractDefinition const& _contract,
-	std::set<ContractDefinition const*> const& _seenContracts
-) const
-{
-	// Naive depth-first search that remembers nodes already seen.
-	if (_seenContracts.count(&_contract))
-		return true;
-	set<ContractDefinition const*> seen(_seenContracts);
-	seen.insert(&_contract);
-	for (auto const* c: _contract.annotation().contractDependencies)
-		if (contractDependenciesAreCyclic(*c, seen))
-			return true;
-	return false;
 }
 
 Declaration const& TypeChecker::dereference(Identifier const& _identifier) const

@@ -390,6 +390,9 @@ private:
 		mutable std::optional<std::string const> runtimeSourceMapping;
 	};
 
+	void createAndAssignCallGraphs();
+	void findAndReportCyclicContractDependencies();
+
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
 	/// @returns the newly loaded sources.
@@ -495,6 +498,7 @@ private:
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
+
 	langutil::ErrorList m_errorList;
 	langutil::ErrorReporter m_errorReporter;
 	bool m_metadataLiteralSources = false;

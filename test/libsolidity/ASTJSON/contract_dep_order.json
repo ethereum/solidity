@@ -63,10 +63,7 @@
           "src": "29:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        1
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 4,
@@ -100,11 +97,7 @@
           "src": "49:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        1,
-        4
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 7,
@@ -139,12 +132,7 @@
           "src": "69:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        1,
-        4,
-        7
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 10,
@@ -180,13 +168,7 @@
           "src": "89:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        1,
-        4,
-        7,
-        10
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 13,

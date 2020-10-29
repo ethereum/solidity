@@ -4,6 +4,7 @@ Language Features:
  * Possibility to use ``bytes.concat`` with variable number of ``bytes`` and ``bytesNN`` arguments which behaves as a restricted version of `abi.encodePacked` with a more descriptive name.
 
 Compiler Features:
+ * Analysis: Properly detect circular references to the bytecode of other contracts across all function calls.
  * Commandline Interface: Model checker option ``--model-checker-targets`` also accepts ``outOfBounds``.
  * Low-Level Inliner: Inline ordinary jumps to small blocks and jumps to small blocks that terminate.
  * SMTChecker: Report local variables in CHC counterexamples.
