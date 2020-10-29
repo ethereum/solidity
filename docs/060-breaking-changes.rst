@@ -132,7 +132,7 @@ Yul Optimizer
 
 Together with the legacy bytecode optimizer, the :doc:`Yul <yul>` optimizer is now enabled by default when you call the compiler
 with ``--optimize``. It can be disabled by calling the compiler with ``--no-optimize-yul``.
-This mostly affects code that uses ABIEncoderV2.
+This mostly affects code that uses ABI coder v2.
 
 C API Changes
 ~~~~~~~~~~~~~

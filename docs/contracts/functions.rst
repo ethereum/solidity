@@ -67,8 +67,8 @@ Function parameters can be used as any other local variable and they can also be
 
   An :ref:`external function<external-function-calls>` cannot accept a
   multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the new
-  ``ABIEncoderV2`` feature by adding ``pragma experimental ABIEncoderV2;`` to your source file.
+  parameter. This functionality is possible if you enable the ABI coder v2
+  by adding ``pragma abicoder v2;`` to your source file.
 
   An :ref:`internal function<external-function-calls>` can accept a
   multi-dimensional array without enabling the feature.
@@ -128,8 +128,8 @@ you must provide return values together with the return statement.
 .. note::
     You cannot return some types from non-internal functions, notably
     multi-dimensional dynamic arrays and structs. If you enable the
-    new ``ABIEncoderV2`` feature by adding ``pragma experimental
-    ABIEncoderV2;`` to your source file then more types are available, but
+    ABI coder v2 by adding ``pragma abicoder v2;``
+    to your source file then more types are available, but
     ``mapping`` types are still limited to inside a single contract and you
     cannot transfer them.
 
