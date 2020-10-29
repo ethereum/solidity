@@ -29,7 +29,7 @@
 
 #include <utility>
 
-namespace solidity::frontend
+namespace solidity::yul
 {
 
 /**
