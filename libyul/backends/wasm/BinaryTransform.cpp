@@ -315,6 +315,14 @@ bytes BinaryTransform::run(Module const& _module)
 		size_t const offset = ret.size() - length;
 		subModulePosAndSize[name] = {offset, length};
 	}
+	for (auto const& [name, data]: _module.customSections)
+	{
+		size_t const length = data.size();
+		ret += customSection(name, data);
+		// Skip all the previous sections and the size field of this current custom section.
+		size_t const offset = ret.size() - length;
+		subModulePosAndSize[name] = {offset, length};
+	}
 
 	BinaryTransform bt(
 		move(globalIDs),

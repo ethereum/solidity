@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <libsolutil/Common.h>
+
 #include <variant>
 #include <string>
 #include <vector>
@@ -108,6 +110,7 @@ struct Module
 	std::vector<FunctionImport> imports;
 	std::vector<FunctionDefinition> functions;
 	std::map<std::string, Module> subModules;
+	std::map<std::string, bytes> customSections;
 };
 
 }
