@@ -9,7 +9,7 @@ Yul
 Yul (previously also called JULIA or IULIA) is an intermediate language that can be
 compiled to bytecode for different backends.
 
-Support for EVM 1.0, EVM 1.5 and eWASM is planned, and it is designed to
+Support for EVM 1.0, EVM 1.5 and Ewasm is planned, and it is designed to
 be a usable common denominator of all three
 platforms. It can already be used in stand-alone mode and
 for "inline assembly" inside Solidity
@@ -1028,7 +1028,7 @@ An example Yul Object is shown below:
             // executing code is the constructor code)
             size := datasize("runtime")
             offset := allocate(size)
-            // This will turn into a memory->memory copy for eWASM and
+            // This will turn into a memory->memory copy for Ewasm and
             // a codecopy for EVM
             datacopy(offset, dataoffset("runtime"), size)
             return(offset, size)
