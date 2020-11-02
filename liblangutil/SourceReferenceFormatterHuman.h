@@ -58,6 +58,14 @@ public:
 		return errorOutput.str();
 	}
 
+	static std::string formatErrorInformation(Error const& _error)
+	{
+		return formatExceptionInformation(
+			_error,
+			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
+		);
+	}
+
 private:
 	util::AnsiColorized normalColored() const;
 	util::AnsiColorized frameColored() const;

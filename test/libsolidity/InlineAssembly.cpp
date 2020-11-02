@@ -30,7 +30,7 @@
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <libevmasm/Assembly.h>
 
@@ -81,7 +81,7 @@ std::optional<Error> parseAndReturnFirstError(
 		{
 			string errors;
 			for (auto const& err: stack.errors())
-				errors += SourceReferenceFormatter::formatErrorInformation(*err);
+				errors += SourceReferenceFormatterHuman::formatErrorInformation(*err);
 			BOOST_FAIL("Found more than one error:\n" + errors);
 		}
 		error = e;

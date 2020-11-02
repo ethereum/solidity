@@ -27,7 +27,7 @@
 #include <libyul/AssemblyStack.h>
 #include <libyul/Exceptions.h>
 #include <libyul/optimiser/Suite.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 #include <libevmasm/Instruction.h>
 #include <libsmtutil/Exceptions.h>
 #include <libsolutil/JSON.h>
@@ -117,7 +117,8 @@ Json::Value formatErrorWithException(
 )
 {
 	string message;
-	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
+	// TODO: consider enabling color
+	string formattedMessage = SourceReferenceFormatterHuman::formatExceptionInformation(_exception, _type);
 
 	if (string const* description = boost::get_error_info<util::errinfo_comment>(_exception))
 		message = ((_message.length() > 0) ? (_message + ":") : "") + *description;

@@ -32,9 +32,6 @@
 
 #include <libyul/AssemblyStack.h>
 
-#include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatter.h>
-
 namespace solidity::frontend::test
 {
 

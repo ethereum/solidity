@@ -23,7 +23,7 @@
 
 #include <test/Common.h>
 
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <libyul/optimiser/Disambiguator.h>
 #include <libyul/AsmParser.h>
@@ -55,7 +55,7 @@ Dialect const& defaultDialect(bool _yul)
 
 void yul::test::printErrors(ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(cout);
+	SourceReferenceFormatterHuman formatter(cout, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

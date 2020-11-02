@@ -31,7 +31,7 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/CommonData.h>
@@ -58,7 +58,7 @@ namespace
 void printErrors(ErrorList const& _errors)
 {
 	for (auto const& error: _errors)
-		SourceReferenceFormatter(cout).printErrorInformation(*error);
+		SourceReferenceFormatterHuman(cout, true, false).printErrorInformation(*error);
 }
 
 pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)

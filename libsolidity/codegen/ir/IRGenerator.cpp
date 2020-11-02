@@ -37,7 +37,7 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <boost/range/adaptor/map.hpp>
 
@@ -60,7 +60,7 @@ pair<string, string> IRGenerator::run(
 	{
 		string errorMessage;
 		for (auto const& error: asmStack.errors())
-			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(*error);
+			errorMessage += langutil::SourceReferenceFormatterHuman::formatErrorInformation(*error);
 		solAssert(false, ir + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
 	}
 	asmStack.optimize();

@@ -28,7 +28,7 @@
 #include <libyul/Exceptions.h>
 
 #include <liblangutil/EVMVersion.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
@@ -44,7 +44,7 @@ namespace
 {
 void printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream);
+	SourceReferenceFormatterHuman formatter(_stream, false, false);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(

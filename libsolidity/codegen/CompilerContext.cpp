@@ -45,7 +45,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -460,7 +460,7 @@ void CompilerContext::appendInlineAssembly(
 			_assembly + "\n"
 			"------------------ Errors: ----------------\n";
 		for (auto const& error: errorReporter.errors())
-			message += SourceReferenceFormatter::formatErrorInformation(*error);
+			message += SourceReferenceFormatterHuman::formatErrorInformation(*error);
 		message += "-------------------------------------------\n";
 
 		solAssert(false, message);

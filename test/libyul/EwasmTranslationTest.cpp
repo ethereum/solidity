@@ -31,7 +31,7 @@
 #include <libyul/Object.h>
 
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/SourceReferenceFormatter.h>
+#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <libsolutil/AnsiColorized.h>
 
@@ -116,7 +116,7 @@ string EwasmTranslationTest::interpret()
 
 void EwasmTranslationTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream);
+	SourceReferenceFormatterHuman formatter(_stream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);
