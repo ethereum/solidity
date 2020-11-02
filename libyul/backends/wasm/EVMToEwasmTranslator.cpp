@@ -1215,7 +1215,12 @@ function selfdestruct(a1, a2, a3, a4) {
 	// In EVM, addresses are padded to 32 bytes, so discard the first 12.
 	eth.selfDestruct(12:i32)
 }
-
+/*
+)"
+// Split long string to make it compilable on msvc
+// https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?view=vs-2019
+R"(
+*/
 function return(x1, x2, x3, x4, y1, y2, y3, y4) {
 	eth.finish(
 		to_internal_i32ptr(x1, x2, x3, x4),
