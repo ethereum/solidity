@@ -50,13 +50,15 @@ public:
 
 private:
 	/// Constructs a nonlinear counterexample graph from the refutation.
-	CHCSolverInterface::CexGraph cexGraph(z3::expr const& _proof);
+	CHCSolverInterface::CexGraph cexGraph(z3::expr const& _proof) const;
 	/// @returns the fact from a proof node.
-	z3::expr fact(z3::expr const& _node);
+	z3::expr fact(z3::expr const& _node) const;
 	/// @returns @a _predicate's name.
 	std::string name(z3::expr const& _predicate);
 	/// @returns the arguments of @a _predicate.
 	std::vector<std::string> arguments(z3::expr const& _predicate);
+
+	std::pair<CheckResult, std::optional<z3::expr>> queryWithStrategy(z3::expr);
 
 	// Used to handle variables.
 	std::unique_ptr<Z3Interface> m_z3Interface;

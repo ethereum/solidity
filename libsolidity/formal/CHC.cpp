@@ -1072,25 +1072,7 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 	switch (result)
 	{
 	case CheckResult::SATISFIABLE:
-	{
-#ifdef HAVE_Z3
-		// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
-		// We now disable those optimizations and check whether we can still solve the problem.
-		auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
-		solAssert(spacer, "");
-		spacer->setSpacerOptions(false);
-
-		CheckResult resultNoOpt;
-		CHCSolverInterface::CexGraph cexNoOpt;
-		tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
-
-		if (resultNoOpt == CheckResult::SATISFIABLE)
-			cex = move(cexNoOpt);
-
-		spacer->setSpacerOptions(true);
-#endif
 		break;
-	}
 	case CheckResult::UNSATISFIABLE:
 		break;
 	case CheckResult::UNKNOWN:

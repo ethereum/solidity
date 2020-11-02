@@ -70,51 +70,60 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 	}
 }
 
-pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
-{
-	CheckResult result;
-	CHCSolverInterface::CexGraph cex;
-	try
-	{
-		z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);
+pair<CheckResult, optional<z3::expr>> Z3CHCInterface::queryWithStrategy(z3::expr z3Expr) {
+	try {
 		switch (m_solver.query(z3Expr))
 		{
-		case z3::check_result::sat:
-		{
-			result = CheckResult::SATISFIABLE;
-			auto proof = m_solver.get_answer();
-			auto cex = cexGraph(proof);
-			return {result, cex};
+			case z3::check_result::sat:
+				return { CheckResult::SATISFIABLE, m_solver.get_answer() };
+			case z3::check_result::unsat:
+				return { CheckResult::UNSATISFIABLE, optional<z3::expr>{} };
+			case z3::check_result::unknown:
+				return { CheckResult::UNKNOWN, optional<z3::expr>{} };
 		}
-		case z3::check_result::unsat:
-		{
-			result = CheckResult::UNSATISFIABLE;
-			// TODO retrieve invariants.
-			break;
-		}
-		case z3::check_result::unknown:
-		{
-			result = CheckResult::UNKNOWN;
-			break;
-		}
-		}
-		// TODO retrieve model / invariants
 	}
-	catch (z3::exception const& _err)
-	{
+	catch (z3::exception const & _err) {
 		set<string> msgs{
 			/// Resource limit (rlimit) exhausted.
 			"max. resource limit exceeded",
 			/// User given timeout exhausted.
 			"canceled"
 		};
-		if (msgs.count(_err.msg()))
-			result = CheckResult::UNKNOWN;
-		else
-			result = CheckResult::ERROR;
-		cex = {};
+		auto res = _msgs.count(_err.msg()) ? CheckResult::UNKNOWN : CheckResult::ERROR;
+		return { res, optional<z3::expr>{} };
 	}
+}
 
+pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
+{
+	CHCSolverInterface::CexGraph cex;
+	z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);
+	auto [result, proof] = queryWithStrategy(z3Expr);
+	switch (result) {
+		case CheckResult::SATISFIABLE: {
+			// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
+			// We now disable those optimizations and check whether we can still solve the problem.
+			setSpacerOptions(false);
+			auto [resultNoOpt, proofNoOpt] = queryWithStrategy(z3Expr);
+			if (resultNoOpt == CheckResult::SATISFIABLE) {
+				cex = cexGraph(proofNoOpt.value());
+			}
+			setSpacerOptions(true);
+			return {result, cex};
+		}
+		case CheckResult::UNSATISFIABLE: {
+			// TODO retrieve invariants.
+			break;
+		}
+		case CheckResult::UNKNOWN:
+		case CheckResult::ERROR:
+		{
+			break;
+		}
+		default:
+			smtAssert(false, "");
+	}
+	// TODO retrieve model / invariants
 	return {result, cex};
 }
 
@@ -154,7 +163,7 @@ which generates linear counterexamples.
 It is modified here to accept nonlinear CHCs as well, generating a DAG
 instead of a path.
 */
-CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
+CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof) const
 {
 	/// The root fact of the refutation proof is `false`.
 	/// The node itself is not a hyper resolution, so we need to
@@ -209,7 +218,7 @@ CHCSolverInterface::CexGraph Z3CHCInterface::cexGraph(z3::expr const& _proof)
 	return graph;
 }
 
-z3::expr Z3CHCInterface::fact(z3::expr const& _node)
+z3::expr Z3CHCInterface::fact(z3::expr const& _node) const
 {
 	smtAssert(_node.is_app(), "");
 	if (_node.num_args() == 0)
