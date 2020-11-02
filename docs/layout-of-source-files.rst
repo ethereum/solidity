@@ -12,7 +12,7 @@ Source files can contain an arbitrary number of
 SPDX License Identifier
 =======================
 
-Trust in smart contract can be better established if their source code
+Trust in smart contracts can be better established if their source code
 is available. Since making source code available always touches on legal problems
 with regards to copyright, the Solidity compiler encourages the use
 of machine-readable `SPDX license identifiers <https://spdx.org>`_.
@@ -119,7 +119,7 @@ This component has to be enabled when the Solidity compiler is built
 and therefore it is not available in all Solidity binaries.
 The :ref:`build instructions<smt_solvers_build>` explain how to activate this option.
 It is activated for the Ubuntu PPA releases in most versions,
-but not for the Docker images, Windows binaries or the
+but not for the Docker images, Windows binaries, or the
 statically-built Linux binaries. It can be activated for solc-js via the
 `smtCallback <https://github.com/ethereum/solc-js#example-usage-with-smtsolver-callback>`_ if you have an SMT solver
 installed locally and run solc-js via node (not via the browser).
@@ -153,7 +153,7 @@ At a global level, you can use import statements of the following form:
   import "filename";
 
 This statement imports all global symbols from "filename" (and symbols imported there) into the
-current global scope (different than in ES6 but backwards-compatible for Solidity).
+current global scope (different than in ES6 but backward-compatible for Solidity).
 This form is not recommended for use, because it unpredictably pollutes the namespace.
 If you add new top-level items inside "filename", they automatically
 appear in all files that import like this from "filename". It is better to import specific
@@ -190,7 +190,7 @@ Paths
 In the above, ``filename`` is always treated as a path with ``/`` as directory separator,
 and ``.`` as the current and ``..`` as the parent directory.  When ``.`` or ``..`` is followed by a character except ``/``,
 it is not considered as the current or the parent directory.
-All path names are treated as absolute paths unless they start with the current ``.`` or the parent directory ``..``.
+All pathnames are treated as absolute paths unless they start with the current``.`` or the parent directory ``..``.
 
 To import a file ``filename`` from the same directory as the current file, use ``import "./filename" as symbolName;``.
 If you use ``import "filename" as symbolName;`` instead, a different file could be referenced
@@ -198,7 +198,7 @@ If you use ``import "filename" as symbolName;`` instead, a different file could 
 
 It depends on the compiler (see :ref:`import-compiler`) how to actually resolve the paths.
 In general, the directory hierarchy does not need to strictly map onto your local
-filesystem, and the path can also map to resources such as ipfs, http or git.
+filesystem, and the path can also map to resources such as IPFS, HTTP or Git.
 
 .. note::
     Always use relative imports like ``import "./filename.sol";`` and avoid
@@ -212,7 +212,7 @@ Use in Actual Compilers
 
 When invoking the compiler, you can specify how to discover the first element
 of a path, and also path prefix remappings. For
-example you can setup a remapping so that everything imported from the virtual
+example, you can setup a remapping so that everything imported from the virtual
 directory ``github.com/ethereum/dapp-bin/library`` would actually be read from
 your local directory ``/usr/local/dapp-bin/library``.
 If multiple remappings apply, the one with the longest key is tried first.
@@ -222,13 +222,13 @@ library of the same name.
 
 **solc**:
 
-For solc (the commandline compiler), you provide these path remappings as
+For solc (the command-line compiler), you provide these path remappings as
 ``context:prefix=target`` arguments, where both the ``context:`` and the
 ``=target`` parts are optional (``target`` defaults to ``prefix`` in this
 case). All remapping values that are regular files are compiled (including
 their dependencies).
 
-This mechanism is backwards-compatible (as long
+This mechanism is backward-compatible (as long
 as no filename contains ``=`` or ``:``) and thus not a breaking change. All
 files in or below the ``context`` directory that import a file that starts with
 ``prefix`` are redirected by replacing ``prefix`` by ``target``.
@@ -298,20 +298,20 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
 
 .. note::
   A single-line comment is terminated by any unicode line terminator
-  (LF, VF, FF, CR, NEL, LS or PS) in utf8 encoding. The terminator is still part of
+  (LF, VF, FF, CR, NEL, LS, or PS) in utf8 encoding. The terminator is still part of
   the source code after the comment, so if it is not an ascii symbol
   (these are NEL, LS and PS), it will lead to a parser error.
 
 Additionally, there is another type of comment called a natspec comment,
 which is detailed in the :ref:`style guide<natspec>`. They are written with a
-triple slash (``///``) or a double asterisk block(``/** ... */``) and
+triple-slash (``///``) or a double asterisk block(``/** ... */``) and
 they should be used directly above function declarations or statements.
 You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
 functions, annotate conditions for formal verification, and provide a
 **confirmation text** which is shown to users when they attempt to invoke a
 function.
 
-In the following example we document the title of the contract, the explanation
+In the following example, we document the title of the contract, the explanation
 for the two function parameters and two return variables.
 
 ::
