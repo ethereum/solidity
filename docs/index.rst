@@ -7,21 +7,21 @@ Solidity
     :align: center
 
 Solidity is an object-oriented, high-level language for implementing smart
-contracts. Smart contracts are programs which govern the behaviour of accounts
+contracts. Smart contracts are programs that govern the behaviour of accounts
 within the Ethereum state.
 
-Solidity was influenced by C++, Python and JavaScript and is designed to target
+Solidity was influenced by C++, Python, and JavaScript and is designed to target
 the Ethereum Virtual Machine (EVM).
 
-Solidity is statically typed, supports inheritance, libraries and complex
+Solidity is statically typed, supports inheritance, libraries, and complex
 user-defined types among other features.
 
-With Solidity you can create contracts for uses such as voting, crowdfunding, blind auctions,
+With Solidity, you can create contracts for uses such as voting, crowdfunding, blind auctions,
 and multi-signature wallets.
 
 When deploying contracts, you should use the latest released
-version of Solidity. This is because breaking changes as well as
-new features and bug fixes are introduced regularly. We currently use
+version of Solidity. This is because breaking changes, as well as
+new features and bug fixes, are introduced regularly. We currently use
 a 0.x version number `to indicate this fast pace of change <https://semver.org/#spec-item-4>`_.
 
 .. warning::
@@ -43,8 +43,8 @@ and details of the :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>
 
 .. hint::
   You can always try out code examples in your browser with the
-  `Remix IDE <https://remix.ethereum.org>`_. Remix is a web browser based IDE
-  that allows you to write Solidity smart contracts, then deploy and run the
+  `Remix IDE <https://remix.ethereum.org>`_. Remix is a web browser-based IDE
+  that allows you to write Solidity smart contracts, then deploy, and run the
   smart contracts. It can take a while to load, so please be patient.
 
 .. warning::
