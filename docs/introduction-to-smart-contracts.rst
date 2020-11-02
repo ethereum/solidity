@@ -63,11 +63,11 @@ of the blockchain. Later, you will see how you can impose access restrictions
 so that only you can alter the number.
 
 .. warning::
-    Be careful with using Unicode text, as similar looking (or even identical) characters can
+    Be careful with using Unicode text, as similar-looking (or even identical) characters can
     have different code points and as such are encoded as a different byte array.
 
 .. note::
-    All identifiers (contract names, function names and variable names) are restricted to
+    All identifiers (contract names, function names, and variable names) are restricted to
     the ASCII character set. It is possible to store UTF-8 encoded data in string variables.
 
 .. index:: ! subcurrency
@@ -133,7 +133,7 @@ to the following (ignore ``external`` and ``view`` for now)::
 
     function minter() external view returns (address) { return minter; }
 
-You could add a function like the above yourself, but you would have a function and state variable with the same name.
+You could add a function like the above yourself, but you would have a function and a state variable with the same name.
 You do not need to do this, the compiler figures it out for you.
 
 .. index:: mapping
@@ -166,7 +166,7 @@ an :ref:`"event" <events>`, which is emitted in the last line of the function
 ``send``. Ethereum clients such as web applications can
 listen for these events emitted on the blockchain without much
 cost. As soon as it is emitted, the listener receives the
-arguments ``from``, ``to`` and ``amount``, which makes it possible to track
+arguments ``from``, ``to``, and ``amount``, which makes it possible to track
 transactions.
 
 To listen for this event, you could use the following
@@ -196,7 +196,7 @@ always the address where the current (external) function call came from.
 The functions that make up the contract, and that users and contracts can call are ``mint`` and ``send``.
 
 The ``mint`` function sends an amount of newly created coins to another address.
-The :ref:`require <assert-and-require>` function call defines conditions that reverts all changes if not met.
+The :ref:`require <assert-and-require>` function call defines conditions that revert all changes if not met.
 In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``,
 and ``require(amount < 1e60);`` ensures a maximum amount of tokens. This ensures that there are no overflow errors in the future.
 
