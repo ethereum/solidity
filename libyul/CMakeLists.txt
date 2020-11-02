@@ -49,10 +49,12 @@ add_library(yul
 	Utilities.h
 	YulString.h
 	backends/evm/AbstractAssembly.h
-	backends/evm/AsmCodeGen.h
 	backends/evm/AsmCodeGen.cpp
+	backends/evm/AsmCodeGen.h
 	backends/evm/ConstantOptimiser.cpp
 	backends/evm/ConstantOptimiser.h
+	backends/evm/EthAssemblyAdapter.cpp
+	backends/evm/EthAssemblyAdapter.h
 	backends/evm/EVMAssembly.cpp
 	backends/evm/EVMAssembly.h
 	backends/evm/EVMCodeTransform.cpp
