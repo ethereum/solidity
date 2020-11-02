@@ -17,6 +17,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // test_store_ok() -> 1
 // x() -> 0

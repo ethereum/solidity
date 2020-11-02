@@ -2192,8 +2192,9 @@ string YulUtilFunctions::updateStorageValueFunction(
 			solAssert(_toType.storageBytes() > 0, "Invalid storage bytes size.");
 
 			return Whiskers(R"(
-				function <functionName>(slot, <offset>value) {
-					sstore(slot, <update>(sload(slot), <offset><prepare>(value)))
+				function <functionName>(slot, <offset><fromValues>) {
+					let <toValues> := <convert>(<fromValues>)
+					sstore(slot, <update>(sload(slot), <offset><prepare>(<toValues>)))
 				}
 
 			)")
@@ -2204,6 +2205,9 @@ string YulUtilFunctions::updateStorageValueFunction(
 					updateByteSliceFunctionDynamic(_toType.storageBytes())
 			)
 			("offset", _offset.has_value() ? "" : "offset, ")
+			("convert", conversionFunction(_fromType, _toType))
+			("fromValues", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()))
+			("toValues", suffixedVariableNameList("convertedValue_", 0, _toType.sizeOnStack()))
 			("prepare", prepareStoreFunction(_toType))
 			.render();
 		}
