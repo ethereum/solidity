@@ -2487,22 +2487,37 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 
 string YulUtilFunctions::prepareStoreFunction(Type const& _type)
 {
-	if (_type.category() == Type::Category::Function)
-		solUnimplementedAssert(dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::Internal, "");
-
 	string functionName = "prepare_store_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
-		Whiskers templ(R"(
-			function <functionName>(value) -> ret {
-				ret := <actualPrepare>
-			}
-		)");
-		templ("functionName", functionName);
-		if (_type.category() == Type::Category::FixedBytes)
-			templ("actualPrepare", shiftRightFunction(256 - 8 * _type.storageBytes()) + "(value)");
+		solAssert(_type.isValueType(), "");
+		auto const* funType = dynamic_cast<FunctionType const*>(&_type);
+		if (funType && funType->kind() == FunctionType::Kind::External)
+		{
+			Whiskers templ(R"(
+				function <functionName>(addr, selector) -> ret {
+					ret := <prepareBytes>(<combine>(addr, selector))
+				}
+			)");
+			templ("functionName", functionName);
+			templ("prepareBytes", prepareStoreFunction(*TypeProvider::fixedBytes(24)));
+			templ("combine", combineExternalFunctionIdFunction());
+			return templ.render();
+		}
 		else
-			templ("actualPrepare", "value");
-		return templ.render();
+		{
+			solAssert(_type.sizeOnStack() == 1, "");
+			Whiskers templ(R"(
+				function <functionName>(value) -> ret {
+					ret := <actualPrepare>
+				}
+			)");
+			templ("functionName", functionName);
+			if (_type.category() == Type::Category::FixedBytes)
+				templ("actualPrepare", shiftRightFunction(256 - 8 * _type.storageBytes()) + "(value)");
+			else
+				templ("actualPrepare", "value");
+			return templ.render();
+		}
 	});
 }
 
