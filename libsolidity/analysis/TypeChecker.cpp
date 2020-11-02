@@ -2425,14 +2425,24 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 		return false;
 	}
 
-	auto setCheckOption = [&](bool& _option, string const&& _name, bool _alreadySet = false)
+	if (
+		expressionFunctionType->valueSet() ||
+		expressionFunctionType->gasSet() ||
+		expressionFunctionType->saltSet()
+	)
+		m_errorReporter.typeError(
+			1645_error,
+			_functionCallOptions.location(),
+			"Function call options have already been set, you have to combine them into a single "
+			"{...}-option."
+		);
+
+	auto setCheckOption = [&](bool& _option, string const& _name)
 	{
-		if (_option || _alreadySet)
+		if (_option)
 			m_errorReporter.typeError(
 				9886_error,
 				_functionCallOptions.location(),
-				_alreadySet ?
-				"Option \"" + std::move(_name) + "\" has already been set." :
 				"Duplicate option \"" + std::move(_name) + "\"."
 			);
 
@@ -2446,7 +2456,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 		{
 			if (kind == FunctionType::Kind::Creation)
 			{
-				setCheckOption(setSalt, "salt", expressionFunctionType->saltSet());
+				setCheckOption(setSalt, "salt");
 				expectType(*_functionCallOptions.options()[i], *TypeProvider::fixedBytes(32));
 			}
 			else
@@ -2484,7 +2494,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 			{
 				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
 
-				setCheckOption(setValue, "value", expressionFunctionType->valueSet());
+				setCheckOption(setValue, "value");
 			}
 		}
 		else if (name == "gas")
@@ -2499,7 +2509,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 			{
 				expectType(*_functionCallOptions.options()[i], *TypeProvider::uint256());
 
-				setCheckOption(setGas, "gas", expressionFunctionType->gasSet());
+				setCheckOption(setGas, "gas");
 			}
 		}
 		else

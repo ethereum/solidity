@@ -5,8 +5,9 @@ contract C {
         v = this.f{value: 10}(2);
         x = this.f{gas: 1000}(2, 3);
         y = this.f{gas: 1000, value: 10}(2, 3);
-        z = this.f{gas: 1000}{value: 10}(2, 3);
+        z = this.f{value: 10, gas: 1000}(2, 3);
     }
+    function bal() external returns (uint) { return address(this).balance; }
     receive() external payable {}
 }
 // ====
@@ -14,3 +15,4 @@ contract C {
 // ----
 // (), 1 ether
 // call() -> 1, 2, 2, 2
+// bal() -> 1000000000000000000

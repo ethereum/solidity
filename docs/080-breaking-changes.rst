@@ -40,6 +40,8 @@ New Restrictions
 
   The previous behaviour was likely ambiguous.
 
+* Function call options can only be given once, i.e. ``c.f{gas: 10000}{value: 1}()`` is invalid and has to be changed to ``c.f{gas: 10000, value: 1}()``.
+
 * The global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4`` have been removed.
 
   These are low-level functions that were largely unused. Their behaviour can be accessed from inline assembly.
