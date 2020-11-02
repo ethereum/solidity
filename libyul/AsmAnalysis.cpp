@@ -635,19 +635,18 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		);
 	};
 
-	if ((
-		_instr == evmasm::Instruction::RETURNDATACOPY ||
-		_instr == evmasm::Instruction::RETURNDATASIZE
-	) && !m_evmVersion.supportsReturndata())
+	if (_instr == evmasm::Instruction::RETURNDATACOPY && !m_evmVersion.supportsReturndata())
 		errorForVM(7756_error, "only available for Byzantium-compatible");
+	else if (_instr == evmasm::Instruction::RETURNDATASIZE && !m_evmVersion.supportsReturndata())
+		errorForVM(4778_error, "only available for Byzantium-compatible");
 	else if (_instr == evmasm::Instruction::STATICCALL && !m_evmVersion.hasStaticCall())
 		errorForVM(1503_error, "only available for Byzantium-compatible");
-	else if ((
-		_instr == evmasm::Instruction::SHL ||
-		_instr == evmasm::Instruction::SHR ||
-		_instr == evmasm::Instruction::SAR
-	) && !m_evmVersion.hasBitwiseShifting())
+	else if (_instr == evmasm::Instruction::SHL && !m_evmVersion.hasBitwiseShifting())
 		errorForVM(6612_error, "only available for Constantinople-compatible");
+	else if (_instr == evmasm::Instruction::SHR && !m_evmVersion.hasBitwiseShifting())
+		errorForVM(7458_error, "only available for Constantinople-compatible");
+	else if (_instr == evmasm::Instruction::SAR && !m_evmVersion.hasBitwiseShifting())
+		errorForVM(2054_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::CREATE2 && !m_evmVersion.hasCreate2())
 		errorForVM(6166_error, "only available for Constantinople-compatible");
 	else if (_instr == evmasm::Instruction::EXTCODEHASH && !m_evmVersion.hasExtCodeHash())

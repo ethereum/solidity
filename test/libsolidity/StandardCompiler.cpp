@@ -1505,6 +1505,96 @@ BOOST_AUTO_TEST_CASE(stopAfter_ast_output)
 	BOOST_CHECK(result["sources"]["a.sol"]["ast"].isObject());
 }
 
+BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"BlockRewardAuRaBase.sol": {
+				"content": " contract Sacrifice { constructor() payable {} } abstract contract BlockRewardAuRaBase { function _transferNativeReward() internal { new Sacrifice(); } function _distributeTokenRewards() internal virtual; } "
+			},
+			"BlockRewardAuRaCoins.sol": {
+				"content": " import \"./BlockRewardAuRaBase.sol\"; contract BlockRewardAuRaCoins is BlockRewardAuRaBase { function transferReward() public { _transferNativeReward(); } function _distributeTokenRewards() internal override {} } "
+			}
+		},
+		"settings": {
+			"outputSelection": {
+				"BlockRewardAuRaCoins.sol": {
+					"BlockRewardAuRaCoins": ["ir", "evm.bytecode.sourceMap"]
+				}
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(util::jsonParseStrict(input, parsedInput));
+
+	solidity::frontend::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_REQUIRE(result["contracts"].isObject());
+	BOOST_REQUIRE(result["contracts"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"].isObject());
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"].isObject());
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"]["evm"].isObject());
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"]["ir"].isString());
+	BOOST_REQUIRE(result["contracts"]["BlockRewardAuRaCoins.sol"]["BlockRewardAuRaCoins"]["evm"]["bytecode"].isObject());
+	BOOST_REQUIRE(result["sources"].isObject());
+	BOOST_REQUIRE(result["sources"].size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract_yul)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"A.sol": {
+				"content": "contract A {} contract B {} contract C { constructor() { new B(); } } contract D {}"
+			}
+		},
+		"settings": {
+			"outputSelection": {
+				"A.sol": {
+					"C": ["ir"]
+				}
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(util::jsonParseStrict(input, parsedInput));
+
+	solidity::frontend::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	BOOST_REQUIRE(result["contracts"].isObject());
+	BOOST_REQUIRE(result["contracts"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["A.sol"].isObject());
+	BOOST_REQUIRE(result["contracts"]["A.sol"].size() == 1);
+	BOOST_REQUIRE(result["contracts"]["A.sol"]["C"].isObject());
+	BOOST_REQUIRE(result["contracts"]["A.sol"]["C"]["ir"].isString());
+
+	const string& irCode = result["contracts"]["A.sol"]["C"]["ir"].asString();
+
+	// Make sure C and B contracts are deployed
+	BOOST_REQUIRE(irCode.find("object \"C") != string::npos);
+	BOOST_REQUIRE(irCode.find("object \"B") != string::npos);
+
+	// Make sure A and D are NOT deployed as they were not requested and are not
+	// in any dependency
+	BOOST_REQUIRE(irCode.find("object \"A") == string::npos);
+	BOOST_REQUIRE(irCode.find("object \"D") == string::npos);
+
+
+	BOOST_REQUIRE(result["sources"].isObject());
+	BOOST_REQUIRE(result["sources"].size() == 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces

@@ -21,8 +21,8 @@ parameters:
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2593c15689dee5b5bdfff96a36c8c68a468cd3b147c41f75b820b8fabc257be9"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-4
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:842126b164b3542f05bff2611459e21edc7e3e2c81ca9d1f43396c8cf066f7ca"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-5
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:65901cd8b64b5959bc4c907df47bb7be3d3b00c9ae8948c75aad7d4c57875cf0"
   emscripten-docker-image:
     type: string
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c"
@@ -459,6 +459,19 @@ jobs:
       FORCE_RELEASE: ON
       MAKEFLAGS: -j 10
 
+  b_ubu_static:
+    <<: *build_ubuntu2004
+    environment:
+      MAKEFLAGS: -j 10
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DSOLC_LINK_STATIC=1 -DUSE_CVC4=OFF -DUSE_Z3=OFF
+    steps:
+      - checkout
+      - run: *run_build
+      - run:
+          name: strip binary
+          command: strip build/solc/solc
+      - store_artifacts: *artifacts_solc
+
   b_ubu18: &build_ubuntu1804
     docker:
       - image: << pipeline.parameters.ubuntu-1804-docker-image >>
@@ -481,7 +494,7 @@ jobs:
     steps:
       - checkout
       - run: *run_build
-      - persist_to_workspace: *artifacts_build_dir
+      - persist_to_workspace: *artifacts_executables
 
   t_ubu_codecov:
     <<: *test_ubuntu2004
@@ -574,12 +587,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+      # DO NOT EDIT between here and save_cache, but rather edit ./circleci/osx_install_dependencies.sh
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: Install build dependencies
           command: ./.circleci/osx_install_dependencies.sh
       - save_cache:
-          key: dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+          key: dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
           paths:
             - /usr/local/bin
             - /usr/local/sbin
@@ -590,7 +605,12 @@ jobs:
       - run: *run_build
       - store_artifacts: *artifacts_solc
       - store_artifacts: *artifacts_tools
-      - persist_to_workspace: *artifacts_build_dir
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/solc/solc
+            - build/test/soltest
+            - build/test/tools/solfuzzer
 
   t_osx_soltest:
     macos:
@@ -603,9 +623,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
-          at: build
+          at: .
       - run: *run_soltest
       - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
@@ -619,9 +639,9 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependencies-osx-{{ .Branch }}-{{ checksum ".circleci/config.yml" }}-{{ checksum ".circleci/osx_install_dependencies.sh" }}
+            - dependencies-osx-{{ checksum ".circleci/osx_install_dependencies.sh" }}
       - attach_workspace:
-          at: build
+          at: .
       - run: *run_cmdline_tests
       - store_artifacts: *artifacts_test_results
 
@@ -637,7 +657,7 @@ jobs:
       - run:
           name: Build
           command: |
-            scripts/travis-emscripten/build_emscripten.sh
+            scripts/ci/build_emscripten.sh
       - store_artifacts:
           path: emscripten_build/libsolc/soljson.js
           destination: soljson.js
@@ -902,14 +922,15 @@ jobs:
       - restore_cache:
           keys:
             - dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
+      # DO NOT EDIT between here and save_cache, but rather edit .\scripts\install_deps.ps1
+      # WARNING! If you do edit anything here instead, remember to invalidate the cache manually.
       - run:
           name: "Installing dependencies"
-          command: if ( -not (Test-Path .\deps\boost) ) { .\scripts\install_deps.ps1 }
+          command: .\scripts\install_deps.ps1
       - save_cache:
           key: dependencies-win-{{ checksum "scripts/install_deps.ps1" }}
           paths:
-            - .\deps\boost
-            - .\deps\cmake
+            - .\deps
       - run:
           name: "Building solidity"
           command: .circleci/build_win.ps1
@@ -917,7 +938,11 @@ jobs:
           name: "Run solc.exe to make sure build was successful."
           command: .\build\solc\Release\solc.exe --version
       - store_artifacts: *artifact_solc_windows
-      - persist_to_workspace: *artifacts_build_dir
+      - persist_to_workspace:
+          root: build
+          paths:
+            - .\solc\*\solc.exe
+            - .\test\*\soltest.exe
 
   b_win_release:
     <<: *b_win
@@ -938,10 +963,86 @@ jobs:
       - run:
           name: "Run soltest"
           command: .circleci/soltest.ps1
+      - store_test_results: *store_test_results
       - store_artifacts: *artifacts_test_results
 
   t_win_release:
     <<: *t_win
+
+  b_bytecode_ubu:
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-ubuntu.txt
+      - store_artifacts:
+          path: report.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bytecode-report-ubuntu.txt
+
+  b_bytecode_osx:
+    macos:
+      xcode: "11.0.0"
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-osx.txt
+      - store_artifacts:
+          path: report.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bytecode-report-osx.txt
+
+  b_bytecode_win:
+    executor:
+      name: win/default
+      shell: cmd.exe
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: python scripts\isolate_tests.py test\
+      - run: python scripts\bytecodecompare\prepare_report.py build\solc\Release\solc.exe
+      - run: cp report.txt bytecode-report-windows.txt
+      - store_artifacts:
+          path: report.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bytecode-report-windows.txt
+
+  b_bytecode_ems:
+    docker:
+      - image: circleci/node:10
+    environment:
+      SOLC_EMSCRIPTEN: "On"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: emscripten_build/libsolc
+      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-emscripten.txt
+      - store_artifacts:
+          path: report.txt
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bytecode-report-emscripten.txt
+
+  t_bytecode_compare:
+    docker:
+      - image: << pipeline.parameters.ubuntu-2004-docker-image >>
+    steps:
+      - attach_workspace:
+          at: .
+      - run: diff --report-identical-files --from-file bytecode-report-emscripten.txt bytecode-report-ubuntu.txt bytecode-report-osx.txt bytecode-report-windows.txt
 
 workflows:
   version: 2
@@ -973,6 +1074,9 @@ workflows:
       - b_archlinux: *workflow_trigger_on_tags
       - t_archlinux_soltest: *workflow_archlinux
 
+      # Static build
+      - b_ubu_static: *workflow_trigger_on_tags
+
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
       - b_ubu18: *workflow_trigger_on_tags
@@ -999,6 +1103,26 @@ workflows:
       - b_win_release: *workflow_trigger_on_tags
       - t_win: *workflow_win
       - t_win_release: *workflow_win_release
+
+      # Bytecode comparison:
+      - b_bytecode_ubu:
+          requires:
+            - b_ubu
+      - b_bytecode_win:
+          requires:
+            - b_win
+      - b_bytecode_osx:
+          requires:
+            - b_osx
+      - b_bytecode_ems:
+          requires:
+            - b_ems
+      - t_bytecode_compare:
+          requires:
+            - b_bytecode_ubu
+            - b_bytecode_win
+            - b_bytecode_osx
+            - b_bytecode_ems
 
   nightly:
 

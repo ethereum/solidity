@@ -521,7 +521,6 @@ An ``assert``-style exception is generated in the following situations:
 #. If you access an array or an array slice at a too large or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. If you access a fixed-length ``bytesN`` at a too large or negative index.
 #. If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
-#. If you shift by a negative amount.
 #. If you convert a value too big or negative into an enum type.
 #. If you call a zero-initialized variable of internal function type.
 #. If you call ``assert`` with an argument that evaluates to false.
@@ -616,7 +615,13 @@ The following example shows how to use an error string together with ``revert`` 
         }
     }
 
-The two syntax options are equivalent, it's developer preference which to use.
+If you provide the reason string directly, then the two syntax options are equivalent, it is the developer's preference which one to use.
+
+.. note::
+    The ``require`` function is evaluated just as any other function.
+    This means that all arguments are evaluated before the function itself is executed.
+    In particular, in ``require(condition, f())`` the function ``f`` is executed even if
+    ``condition`` is true.
 
 The provided string is :ref:`abi-encoded <ABI>` as if it were a call to a function ``Error(string)``.
 In the above example, ``revert("Not enough Ether provided.");`` returns the following hexadecimal as error return data:

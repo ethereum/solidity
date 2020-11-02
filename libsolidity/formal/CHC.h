@@ -183,6 +183,7 @@ private:
 
 	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
 	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId);
+	void addVerificationTarget(frontend::Expression const& _scope, VerificationTarget::Type _type, smtutil::Expression const& _target);
 	void addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
 
 	void checkVerificationTargets();
@@ -202,7 +203,7 @@ private:
 
 	/// @returns a set of pairs _var = _value separated by _separator.
 	template <typename T>
-	std::string formatVariableModel(std::vector<T> const& _variables, std::vector<std::string> const& _values, std::string const& _separator) const
+	std::string formatVariableModel(std::vector<T> const& _variables, std::vector<std::optional<std::string>> const& _values, std::string const& _separator) const
 	{
 		solAssert(_variables.size() == _values.size(), "");
 
@@ -210,8 +211,8 @@ private:
 		for (unsigned i = 0; i < _values.size(); ++i)
 		{
 			auto var = _variables.at(i);
-			if (var && var->type()->isValueType())
-				assignments.emplace_back(var->name() + " = " + _values.at(i));
+			if (var && _values.at(i))
+				assignments.emplace_back(var->name() + " = " + *_values.at(i));
 		}
 
 		return boost::algorithm::join(assignments, _separator);
@@ -235,6 +236,7 @@ private:
 	/// it into m_errorIds.
 	unsigned newErrorId(Expression const& _expr);
 
+	smt::SymbolicState& state();
 	smt::SymbolicIntVariable& errorFlag();
 	//@}
 
@@ -276,7 +278,9 @@ private:
 		smtutil::Expression errorId;
 	};
 
-	std::map<ASTNode const*, CHCVerificationTarget, IdCompare> m_verificationTargets;
+	/// Verification targets corresponding to ASTNodes. There can be multiple targets for a single ASTNode,
+	/// e.g., divByZero and Overflow for signed division.
+	std::map<ASTNode const*, std::vector<CHCVerificationTarget>, IdCompare> m_verificationTargets;
 
 	/// Targets proven safe.
 	std::map<ASTNode const*, std::set<VerificationTarget::Type>> m_safeTargets;
@@ -293,9 +297,8 @@ private:
 	std::map<ASTNode const*, std::set<Expression const*>, IdCompare> m_functionAssertions;
 
 	/// Maps ASTNode ids to error ids.
-	/// A multimap is used instead of map anticipating the UnderOverflow
-	/// target which has 2 error ids.
-	std::multimap<unsigned, unsigned> m_errorIds;
+	/// There can be multiple errorIds associated with a single ASTNode.
+	std::map<unsigned, std::vector<unsigned>> m_errorIds;
 
 	/// The current block.
 	smtutil::Expression m_currentBlock = smtutil::Expression(true);

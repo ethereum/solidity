@@ -36,6 +36,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 namespace solidity::langutil
 {
@@ -53,6 +54,11 @@ public:
 
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
+
+	/// @returns the key type in _type.
+	/// _type must allow IndexAccess, that is,
+	/// it must be either ArrayType or MappingType
+	static TypePointer keyType(TypePointer _type);
 
 	/// @returns the innermost element in a chain of 1-tuples if applicable,
 	/// otherwise _expr.
@@ -136,6 +142,7 @@ protected:
 	void initFunction(FunctionDefinition const& _function);
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
+	void visitCryptoFunction(FunctionCall const& _funCall);
 	void visitGasLeft(FunctionCall const& _funCall);
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
 	void visitObjectCreation(FunctionCall const& _funCall);
@@ -169,9 +176,19 @@ protected:
 	/// an empty array.
 	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
 
-	/// Division expression in the given type. Requires special treatment because
-	/// of rounding for signed division.
-	smtutil::Expression division(smtutil::Expression _left, smtutil::Expression _right, IntegerType const& _type);
+	void addArrayLiteralAssertions(
+		smt::SymbolicArrayVariable& _symArray,
+		std::vector<smtutil::Expression> const& _elementValues
+	);
+
+	/// @returns a pair of expressions representing _left / _right and _left mod _right, respectively.
+	/// Uses slack variables and additional constraints to express the results using only operations
+	/// more friendly to the SMT solver (multiplication, addition, subtraction and comparison).
+	std::pair<smtutil::Expression, smtutil::Expression>	divModWithSlacks(
+		smtutil::Expression _left,
+		smtutil::Expression _right,
+		IntegerType const& _type
+	);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.
@@ -263,7 +280,11 @@ protected:
 	/// @returns variables that are touched in _node's subtree.
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node);
 
-	/// @returns the VariableDeclaration referenced by an Identifier or nullptr.
+	/// @returns the declaration referenced by _expr, if any,
+	/// and nullptr otherwise.
+	Declaration const* expressionToDeclaration(Expression const& _expr);
+
+	/// @returns the VariableDeclaration referenced by an Expression or nullptr.
 	VariableDeclaration const* identifierToVariable(Expression const& _expr);
 
 	/// Creates symbolic expressions for the returned values

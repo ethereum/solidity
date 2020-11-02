@@ -29,6 +29,7 @@
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/UTF8.h>
 
@@ -3000,8 +3001,11 @@ TypePointers FunctionType::returnParameterTypesWithoutDynamicTypes() const
 		m_kind == Kind::BareStaticCall
 	)
 		for (auto& param: returnParameterTypes)
-			if (param->isDynamicallyEncoded() && !param->dataStoredIn(DataLocation::Storage))
+		{
+			solAssert(param->decodingType(), "");
+			if (param->decodingType()->isDynamicallyEncoded())
 				param = TypeProvider::inaccessibleDynamic();
+		}
 
 	return returnParameterTypes;
 }
@@ -3591,7 +3595,7 @@ string FunctionType::externalSignature() const
 
 u256 FunctionType::externalIdentifier() const
 {
-	return util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256(externalSignature())));
+	return util::selectorFromSignature32(externalSignature());
 }
 
 string FunctionType::externalIdentifierHex() const

@@ -5,7 +5,8 @@ Layout of a Solidity Source File
 Source files can contain an arbitrary number of
 :ref:`contract definitions<contract_structure>`, import_ directives,
 :ref:`pragma directives<pragma>` and
-:ref:`struct<structs>`, :ref:`enum<enums>` and :ref:`function<functions>` definitions.
+:ref:`struct<structs>`, :ref:`enum<enums>`, :ref:`function<functions>`
+and :ref:`constant variable<constants>` definitions.
 
 .. index:: ! license, spdx
 
@@ -109,6 +110,21 @@ non-experimental as of Solidity 0.6.0. You still have to explicitly
 activate it using ``pragma experimental ABIEncoderV2;`` - we kept
 the same pragma, even though it is not considered experimental
 anymore.
+
+The set of types supported by the new encoder is a strict superset of
+the ones supported by the old one. Contracts that use it can interact with ones
+that do not without limitations. The reverse is possible only as long as the
+non-``ABIEncoderV2`` contract does not try to make calls that would require
+decoding types only supported by the new encoder. The compiler can detect this
+and will issue an error. Simply enabling ``ABIEncoderV2`` for your contract is
+enough to make the error go away.
+
+.. note::
+  This pragma applies to all the code defined in the file where it is activated,
+  regardless of where that code ends up eventually. This means that a contract
+  without the ``ABIEncoderV2`` pragma can still contain code that uses the new encoder
+  by inheriting it from another contract. This is allowed if the new types are only
+  used internally and not in external function signatures.
 
 .. _smt_checker:
 

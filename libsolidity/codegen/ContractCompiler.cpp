@@ -953,8 +953,6 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 		);
 		solAssert(m_context.evmVersion().supportsReturndata(), "");
 
-		string errorHash = FixedHash<4>(util::keccak256("Error(string)")).hex();
-
 		// Try to decode the error message.
 		// If this fails, leaves 0 on the stack, otherwise the pointer to the data string.
 		m_context.callYulFunction(m_context.utilFunctions().tryDecodeErrorMessageFunction(), 0, 1);
@@ -1326,8 +1324,13 @@ void ContractCompiler::appendModifierOrFunctionCode()
 
 	if (codeBlock)
 	{
+		std::set<ExperimentalFeature> experimentalFeaturesOutside = m_context.experimentalFeaturesActive();
+		m_context.setExperimentalFeatures(codeBlock->sourceUnit().annotation().experimentalFeatures);
+
 		m_returnTags.emplace_back(m_context.newTag(), m_context.stackHeight());
 		codeBlock->accept(*this);
+
+		m_context.setExperimentalFeatures(experimentalFeaturesOutside);
 
 		solAssert(!m_returnTags.empty(), "");
 		m_context << m_returnTags.back().first;

@@ -33,6 +33,7 @@
 
 #include <libevmasm/GasMeter.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Whiskers.h>
 
@@ -169,7 +170,16 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			// pop offset
 			m_context << Instruction::POP;
 			utils().copyToStackTop(paramTypes.size() - i + 1, 1);
-			ArrayUtils(m_context).accessIndex(*arrayType);
+
+			ArrayUtils(m_context).retrieveLength(*arrayType, 1);
+			// Stack: ref [length] index length
+			// check out-of-bounds access
+			m_context << Instruction::DUP2 << Instruction::LT;
+			auto tag = m_context.appendConditionalJump();
+			m_context << u256(0) << Instruction::DUP1 << Instruction::REVERT;
+			m_context << tag;
+
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
 			returnType = arrayType->baseType();
 		}
 		else
@@ -1187,8 +1197,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					// hash the signature
 					if (auto const* stringType = dynamic_cast<StringLiteralType const*>(selectorType))
 					{
-						FixedHash<4> hash(keccak256(stringType->value()));
-						m_context << (u256(FixedHash<4>::Arith(hash)) << (256 - 32));
+						m_context << util::selectorFromSignature(stringType->value());
 						dataOnStack = TypeProvider::fixedBytes(4);
 					}
 					else
@@ -1753,18 +1762,29 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 	{
 		Type::Category category = _memberAccess.annotation().type->category();
 		solAssert(
+			dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration) ||
+			dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
 			category == Type::Category::TypeType ||
-			category == Type::Category::Module ||
-			category == Type::Category::Function,
+			category == Type::Category::Module,
 			""
 		);
-		if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type))
+		if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
 		{
-			auto const* funDef = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
-			solAssert(funDef && funDef->isFree(), "");
+			solAssert(variable->isConstant(), "");
+			appendVariable(*variable, static_cast<Expression const&>(_memberAccess));
+		}
+		else if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+			solAssert(function && function->isFree(), "");
 			solAssert(funType->kind() == FunctionType::Kind::Internal, "");
 			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
-			utils().pushCombinedFunctionEntryLabel(*funDef);
+			utils().pushCombinedFunctionEntryLabel(*function);
+		}
+		else if (auto const* contract = dynamic_cast<ContractDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			if (contract->isLibrary())
+				m_context.appendLibraryAddress(contract->fullyQualifiedName());
 		}
 		break;
 	}

@@ -5,7 +5,7 @@ ROOTDIR="$(dirname "$0")/../.."
 cd "${ROOTDIR}"
 
 # shellcheck disable=SC2166
-if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]; then echo -n >prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" >prerelease.txt; fi
+if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]; then echo -n >prerelease.txt; fi
 if [ -n "$CIRCLE_SHA1" ]
 then
   echo -n "$CIRCLE_SHA1" >commit_hash.txt

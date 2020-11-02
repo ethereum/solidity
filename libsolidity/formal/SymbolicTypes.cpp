@@ -18,6 +18,8 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsolidity/formal/EncodingContext.h>
+
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/CommonData.h>
@@ -536,21 +538,25 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 
 void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
 {
+	_context.addAssertion(symbolicUnknownConstraints(_expr, _type));
+}
+
+smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::TypePointer const& _type)
+{
 	solAssert(_type, "");
 	if (isEnum(*_type))
 	{
 		auto enumType = dynamic_cast<frontend::EnumType const*>(_type);
 		solAssert(enumType, "");
-		_context.addAssertion(_expr >= 0);
-		_context.addAssertion(_expr < enumType->numberOfMembers());
+		return _expr >= 0 && _expr < enumType->numberOfMembers();
 	}
 	else if (isInteger(*_type))
 	{
 		auto intType = dynamic_cast<frontend::IntegerType const*>(_type);
 		solAssert(intType, "");
-		_context.addAssertion(_expr >= minValue(*intType));
-		_context.addAssertion(_expr <= maxValue(*intType));
+		return _expr >= minValue(*intType) && _expr <= maxValue(*intType);
 	}
+	return smtutil::Expression(true);
 }
 
 optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)

@@ -17,9 +17,7 @@
 ./scripts/wasm-rebuild/docker-scripts/patch.sh
 ./scripts/wasm-rebuild/rebuild.sh
 ./scripts/build_emscripten.sh
-./scripts/travis-emscripten/build_emscripten.sh
-./scripts/travis-emscripten/install_deps.sh
-./scripts/travis-emscripten/publish_binary.sh
+./scripts/ci/build_emscripten.sh
 ./scripts/docker_build.sh
 ./scripts/docs_version_pragma_check.sh
 ./scripts/uniqueErrors.sh

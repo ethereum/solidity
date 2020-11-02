@@ -12,10 +12,6 @@ contract C {
 	}
 }
 // ----
-// Warning 1218: (83-108): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (141-166): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (76-114): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (170-184): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (263-278): CHC: Error trying to invoke SMT solver.
-// Warning 3046: (141-166): BMC: Division by zero happens here.
-// Warning 3046: (263-278): BMC: Division by zero happens here.
+// Warning 4281: (141-166): CHC: Division by zero happens here.
+// Warning 6328: (170-184): CHC: Assertion violation happens here.
+// Warning 4281: (263-278): CHC: Division by zero happens here.

@@ -7,7 +7,7 @@ options { tokenVocab=SolidityLexer; }
 
 /**
  * On top level, Solidity allows pragmas, import directives, and
- * definitions of contracts, interfaces, libraries, structs and enums.
+ * definitions of contracts, interfaces, libraries, structs, enums and constants.
  */
 sourceUnit: (
 	pragmaDirective
@@ -16,6 +16,7 @@ sourceUnit: (
 	| interfaceDefinition
 	| libraryDefinition
 	| functionDefinition
+	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
 )* EOF;
@@ -238,6 +239,17 @@ locals [boolean constantnessSet = false, boolean visibilitySet = false, boolean 
 	)*
 	name=identifier
 	(Assign initialValue=expression)?
+	Semicolon;
+
+/**
+ * The declaration of a constant variable.
+ */
+constantVariableDeclaration
+:
+	type=typeName
+	Constant
+	name=identifier
+	Assign initialValue=expression
 	Semicolon;
 
 /**

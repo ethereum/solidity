@@ -1,4 +1,6 @@
 pragma solidity ^99.99.0;
 this is surely invalid
 // ----
-// ParserError 7858: (26-30): Expected pragma, import directive or contract/interface/library/struct/enum/function definition.
+// ParserError 6635: (31-33): Expected identifier but got 'is'
+// ParserError 6635: (34-40): Expected ';' but got identifier
+// ParserError 6635: (49-49): Expected ';' but got end of source

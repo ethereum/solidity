@@ -13,3 +13,5 @@ contract Simple {
 	}
 }
 // ----
+// Warning 6328: (187-201): CHC: Assertion violation might happen here.
+// Warning 4661: (187-201): BMC: Assertion violation happens here.

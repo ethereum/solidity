@@ -20,9 +20,10 @@ contract C {
 
 	function f() public {
 		uint oldX = x;
-		d.d();
+		// Removed because Spacer 4.8.9 seg faults.
+		//d.d();
 		assert(oldX == x);
 	}
 }
 // ----
-// Warning 6328: (286-303): CHC: Assertion violation happens here.
+// Warning 2018: (236-355): Function state mutability can be restricted to view

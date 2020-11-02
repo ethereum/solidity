@@ -6,4 +6,4 @@ contract C {
 	}
 }
 // ----
-// Warning 3046: (117-120): BMC: Division by zero happens here.
+// Warning 4281: (117-120): CHC: Division by zero happens here.

@@ -321,8 +321,8 @@ Input Description
         //   evm.deployedBytecode.immutableReferences - Map from AST ids to bytecode ranges that reference immutables
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   ewasm.wast - eWASM S-expressions format (not supported at the moment)
-        //   ewasm.wasm - eWASM binary format (not supported at the moment)
+        //   ewasm.wast - Ewasm in WebAssembly S-expressions format
+        //   ewasm.wasm - Ewasm in WebAssembly binary format
         //
         // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
@@ -341,7 +341,12 @@ Input Description
           "def": {
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           }
-        }
+        },
+      },
+      "modelCheckerSettings":
+      {
+        // Choose which model checker engine to use: all (default), bmc, chc, none.
+        "engine": "chc"
       }
     }
 
@@ -481,7 +486,7 @@ Output Description
                 }
               }
             },
-            // eWASM related outputs
+            // Ewasm related outputs
             "ewasm": {
               // S-expressions format
               "wast": "",

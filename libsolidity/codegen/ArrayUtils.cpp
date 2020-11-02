@@ -126,6 +126,15 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			if (_targetType.isByteArray())
 			{
 				// stack: target_ref target_data_end source_length target_data_pos source_ref
+				_context << Instruction::DUP3;
+				evmasm::AssemblyItem nonEmptyByteArray = _context.appendConditionalJump();
+				// Empty source, just zero out the main slot.
+				_context << u256(0) << Instruction::DUP6 << Instruction::SSTORE;
+				_context.appendJumpTo(copyLoopEndWithoutByteOffset);
+
+				_context << nonEmptyByteArray;
+				// Non-empty source.
+				// stack: target_ref target_data_end source_length target_data_pos source_ref
 				_context << Instruction::DUP3 << u256(31) << Instruction::LT;
 				evmasm::AssemblyItem longByteArray = _context.appendConditionalJump();
 				// store the short byte array

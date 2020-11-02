@@ -37,13 +37,13 @@ bool ControlFlowAnalyzer::visit(FunctionDefinition const& _function)
 	if (_function.isImplemented())
 	{
 		auto const& functionFlow = m_cfg.functionFlow(_function);
-		checkUninitializedAccess(functionFlow.entry, functionFlow.exit);
+		checkUninitializedAccess(functionFlow.entry, functionFlow.exit, _function.body().statements().empty());
 		checkUnreachable(functionFlow.entry, functionFlow.exit, functionFlow.revert, functionFlow.transactionReturn);
 	}
 	return false;
 }
 
-void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit) const
+void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNode const* _exit, bool _emptyBody) const
 {
 	struct NodeInfo
 	{
@@ -95,14 +95,10 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				case VariableOccurrence::Kind::Return:
 					if (unassignedVariables.count(&variableOccurrence.declaration()))
 					{
-						if (
-							variableOccurrence.declaration().type()->dataStoredIn(DataLocation::Storage) ||
-							variableOccurrence.declaration().type()->dataStoredIn(DataLocation::CallData)
-						)
-							// Merely store the unassigned access. We do not generate an error right away, since this
-							// path might still always revert. It is only an error if this is propagated to the exit
-							// node of the function (i.e. there is a path with an uninitialized access).
-							nodeInfo.uninitializedVariableAccesses.insert(&variableOccurrence);
+						// Merely store the unassigned access. We do not generate an error right away, since this
+						// path might still always revert. It is only an error if this is propagated to the exit
+						// node of the function (i.e. there is a path with an uninitialized access).
+						nodeInfo.uninitializedVariableAccesses.insert(&variableOccurrence);
 					}
 					break;
 				case VariableOccurrence::Kind::Declaration:
@@ -140,18 +136,26 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 				ssl.append("The variable was declared here.", variableOccurrence->declaration().location());
 
 			bool isStorage = variableOccurrence->declaration().type()->dataStoredIn(DataLocation::Storage);
-			m_errorReporter.typeError(
-				3464_error,
-				variableOccurrence->occurrence() ?
-					*variableOccurrence->occurrence() :
+			bool isCalldata = variableOccurrence->declaration().type()->dataStoredIn(DataLocation::CallData);
+			if (isStorage || isCalldata)
+				m_errorReporter.typeError(
+					3464_error,
+					variableOccurrence->occurrence() ?
+						*variableOccurrence->occurrence() :
+						variableOccurrence->declaration().location(),
+					ssl,
+					"This variable is of " +
+					string(isStorage ? "storage" : "calldata") +
+					" pointer type and can be " +
+					(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" : "accessed") +
+					" without prior assignment, which would lead to undefined behaviour."
+				);
+			else if (!_emptyBody && variableOccurrence->declaration().name().empty())
+				m_errorReporter.warning(
+					6321_error,
 					variableOccurrence->declaration().location(),
-				ssl,
-				"This variable is of " +
-				string(isStorage ? "storage" : "calldata") +
-				" pointer type and can be " +
-				(variableOccurrence->kind() == VariableOccurrence::Kind::Return ? "returned" : "accessed") +
-				" without prior assignment, which would lead to undefined behaviour."
-			);
+					"Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable."
+				);
 		}
 	}
 }

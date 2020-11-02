@@ -43,6 +43,7 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Keccak256.h>
+#include <libsolutil/FunctionSelector.h>
 #include <libsolutil/Visitor.h>
 
 #include <boost/range/adaptor/transformed.hpp>
@@ -386,7 +387,11 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	writeToLValue(*m_currentLValue, value);
 
-	if (m_currentLValue->type.category() != Type::Category::Struct && *_assignment.annotation().type != *TypeProvider::emptyTuple())
+	if (
+		m_currentLValue->type.category() != Type::Category::Struct &&
+		m_currentLValue->type.category() != Type::Category::Array &&
+		*_assignment.annotation().type != *TypeProvider::emptyTuple()
+	)
 		define(_assignment, value);
 	m_currentLValue.reset();
 
@@ -695,17 +700,34 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 			solAssert(false, "Unknown comparison operator.");
 		define(_binOp) << expr << "\n";
 	}
-	else if (TokenTraits::isShiftOp(op) || op == Token::Exp)
+	else if (op == Token::Exp)
 	{
 		IRVariable left = convert(_binOp.leftExpression(), *commonType);
 		IRVariable right = convert(_binOp.rightExpression(), *type(_binOp.rightExpression()).mobileType());
-		if (op == Token::Exp)
+
+		if (auto rationalNumberType = dynamic_cast<RationalNumberType const*>(_binOp.leftExpression().annotation().type))
+		{
+			solAssert(rationalNumberType->integerType(), "Invalid literal as the base for exponentiation.");
+			solAssert(dynamic_cast<IntegerType const*>(commonType), "");
+
+			define(_binOp) << m_utils.overflowCheckedIntLiteralExpFunction(
+				*rationalNumberType,
+				dynamic_cast<IntegerType const&>(right.type()),
+				dynamic_cast<IntegerType const&>(*commonType)
+			) << "(" << right.name() << ")\n";
+		}
+		else
 			define(_binOp) << m_utils.overflowCheckedIntExpFunction(
 				dynamic_cast<IntegerType const&>(left.type()),
 				dynamic_cast<IntegerType const&>(right.type())
 			) << "(" << left.name() << ", " << right.name() << ")\n";
-		else
-			define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
+
+	}
+	else if (TokenTraits::isShiftOp(op))
+	{
+		IRVariable left = convert(_binOp.leftExpression(), *commonType);
+		IRVariable right = convert(_binOp.rightExpression(), *type(_binOp.rightExpression()).mobileType());
+		define(_binOp) << shiftOperation(_binOp.getOperator(), left, right) << "\n";
 	}
 	else
 	{
@@ -1020,10 +1042,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			// hash the signature
 			Type const& selectorType = type(*arguments.front());
 			if (auto const* stringType = dynamic_cast<StringLiteralType const*>(&selectorType))
-			{
-				FixedHash<4> hash(keccak256(stringType->value()));
-				selector = formatNumber(u256(FixedHash<4>::Arith(hash)) << (256 - 32));
-			}
+				selector = formatNumber(util::selectorFromSignature(stringType->value()));
 			else
 			{
 				// Used to reset the free memory pointer later.
@@ -1140,10 +1159,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				})");
 				templ("pos", m_context.newYulVariable());
 				templ("end", m_context.newYulVariable());
-				templ(
-					"hash",
-					(u256(util::FixedHash<4>::Arith(util::FixedHash<4>(util::keccak256("Error(string)")))) << (256 - 32)).str()
-				);
+				templ("hash", util::selectorFromSignature("Error(string)").str());
 				templ("allocateTemporary", m_utils.allocationTemporaryMemoryFunction());
 				templ(
 					"argumentVars",
@@ -1751,32 +1767,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
 
 		if (member == "length")
-		{
-			if (!type.isDynamicallySized())
-				define(_memberAccess) << type.length() << "\n";
-			else
-				switch (type.location())
-				{
-					case DataLocation::CallData:
-						define(_memberAccess, IRVariable(_memberAccess.expression()).part("length"));
-						break;
-					case DataLocation::Storage:
-					{
-						define(_memberAccess) <<
-							m_utils.arrayLengthFunction(type) <<
-							"(" <<
-							IRVariable(_memberAccess.expression()).commaSeparatedList() <<
-							")\n";
-						break;
-					}
-					case DataLocation::Memory:
-						define(_memberAccess) <<
-							"mload(" <<
-							IRVariable(_memberAccess.expression()).commaSeparatedList() <<
-							")\n";
-						break;
-				}
-		}
+			define(_memberAccess) <<
+				m_utils.arrayLengthFunction(type) <<
+				"(" <<
+				IRVariable(_memberAccess.expression()).commaSeparatedList() <<
+				")\n";
 		else if (member == "pop" || member == "push")
 		{
 			solAssert(type.location() == DataLocation::Storage, "");
@@ -1869,6 +1864,35 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			// without any specific code being generated,
 			// but it would still be better to have an exhaustive list.
 			solAssert(false, "");
+		break;
+	}
+	case Type::Category::Module:
+	{
+		Type::Category category = _memberAccess.annotation().type->category();
+		solAssert(
+			dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration) ||
+			dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
+			category == Type::Category::TypeType ||
+			category == Type::Category::Module,
+			""
+		);
+		if (auto variable = dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			solAssert(variable->isConstant(), "");
+			handleVariableReference(*variable, static_cast<Expression const&>(_memberAccess));
+		}
+		else if (auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
+			solAssert(function && function->isFree(), "");
+			solAssert(function->functionType(true), "");
+			solAssert(function->functionType(true)->kind() == FunctionType::Kind::Internal, "");
+			solAssert(funType->kind() == FunctionType::Kind::Internal, "");
+			solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
+
+			define(_memberAccess) << to_string(function->id()) << "\n";
+			m_context.internalFunctionAccessed(_memberAccess, *function);
+		}
 		break;
 	}
 	default:
@@ -2130,6 +2154,10 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 	{
 		// no-op
 	}
+	else if (dynamic_cast<ImportDirective const*>(declaration))
+	{
+		// no-op
+	}
 	else
 	{
 		solAssert(false, "Identifier type not expected in expression context.");
@@ -2162,7 +2190,7 @@ void IRGeneratorForStatements::handleVariableReference(
 )
 {
 	setLocation(_referencingExpression);
-	if (_variable.isStateVariable() && _variable.isConstant())
+	if ((_variable.isStateVariable() || _variable.isFileLevelVariable()) && _variable.isConstant())
 		define(_referencingExpression) << constantValueFunction(_variable) << "()\n";
 	else if (_variable.isStateVariable() && _variable.immutable())
 		setLValue(_referencingExpression, IRLValue{
@@ -2529,47 +2557,49 @@ string IRGeneratorForStatements::binaryOperation(
 		!TokenTraits::isShiftOp(_operator),
 		"Have to use specific shift operation function for shifts."
 	);
-	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+	string fun;
+	if (TokenTraits::isBitOp(_operator))
 	{
-		string fun;
-		// TODO: Implement all operations for signed and unsigned types.
+		solAssert(
+			_type.category() == Type::Category::Integer ||
+			_type.category() == Type::Category::FixedBytes,
+		"");
 		switch (_operator)
 		{
-			case Token::Add:
-				fun = m_utils.overflowCheckedIntAddFunction(*type);
-				break;
-			case Token::Sub:
-				fun = m_utils.overflowCheckedIntSubFunction(*type);
-				break;
-			case Token::Mul:
-				fun = m_utils.overflowCheckedIntMulFunction(*type);
-				break;
-			case Token::Div:
-				fun = m_utils.overflowCheckedIntDivFunction(*type);
-				break;
-			case Token::Mod:
-				fun = m_utils.checkedIntModFunction(*type);
-				break;
-			case Token::BitOr:
-				fun = "or";
-				break;
-			case Token::BitXor:
-				fun = "xor";
-				break;
-			case Token::BitAnd:
-				fun = "and";
-				break;
-			default:
-				break;
+		case Token::BitOr: fun = "or"; break;
+		case Token::BitXor: fun = "xor"; break;
+		case Token::BitAnd: fun = "and"; break;
+		default: break;
 		}
-
-		solUnimplementedAssert(!fun.empty(), "");
-		return fun + "(" + _left + ", " + _right + ")\n";
 	}
-	else
-		solUnimplementedAssert(false, "");
+	else if (TokenTraits::isArithmeticOp(_operator))
+	{
+		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
+		solAssert(type, "");
+		switch (_operator)
+		{
+		case Token::Add:
+			fun = m_utils.overflowCheckedIntAddFunction(*type);
+			break;
+		case Token::Sub:
+			fun = m_utils.overflowCheckedIntSubFunction(*type);
+			break;
+		case Token::Mul:
+			fun = m_utils.overflowCheckedIntMulFunction(*type);
+			break;
+		case Token::Div:
+			fun = m_utils.overflowCheckedIntDivFunction(*type);
+			break;
+		case Token::Mod:
+			fun = m_utils.checkedIntModFunction(*type);
+			break;
+		default:
+			break;
+		}
+	}
 
-	return {};
+	solUnimplementedAssert(!fun.empty(), "Type: " + _type.toString());
+	return fun + "(" + _left + ", " + _right + ")\n";
 }
 
 std::string IRGeneratorForStatements::shiftOperation(

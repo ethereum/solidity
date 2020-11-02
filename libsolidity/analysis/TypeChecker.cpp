@@ -276,9 +276,6 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	if (m_currentContract->isInterface() && !base->isInterface())
 		m_errorReporter.typeError(6536_error, _inheritance.location(), "Interfaces can only inherit from other interfaces.");
 
-	if (base->isLibrary())
-		m_errorReporter.typeError(2571_error, _inheritance.location(), "Libraries cannot be inherited from.");
-
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes;
 	if (!base->isInterface())
@@ -508,9 +505,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	TypePointer varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
-	if (auto contractType = dynamic_cast<ContractType const*>(varType))
-		if (contractType->contractDefinition().isLibrary())
-			m_errorReporter.typeError(1273_error, _variable.location(), "The type of a variable cannot be a library.");
 	if (_variable.value())
 	{
 		if (_variable.isStateVariable() && varType->containsNestedMapping())
@@ -599,8 +593,13 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
 		auto result = referenceType->validForLocation(referenceType->location());
-		if (result && (_variable.isConstructorParameter() || _variable.isPublicCallableParameter()))
-			result = referenceType->validForLocation(DataLocation::CallData);
+		if (result)
+		{
+			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
+			bool callDataCheckRequired = ((_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) && !isLibraryStorageParameter);
+			if (callDataCheckRequired)
+				result = referenceType->validForLocation(DataLocation::CallData);
+		}
 		if (!result)
 		{
 			solAssert(!result.message().empty(), "Expected detailed error message");
@@ -2916,8 +2915,9 @@ bool TypeChecker::visit(IndexAccess const& _access)
 	case Type::Category::TypeType:
 	{
 		TypeType const& typeType = dynamic_cast<TypeType const&>(*baseType);
-		if (dynamic_cast<ContractType const*>(typeType.actualType()))
-			m_errorReporter.typeError(2876_error, _access.location(), "Index access for contracts or libraries is not possible.");
+		if (auto const* contractType = dynamic_cast<ContractType const*>(typeType.actualType()))
+			if (contractType->contractDefinition().isLibrary())
+				m_errorReporter.typeError(2876_error, _access.location(), "Index access for library types and arrays of libraries are not possible.");
 		if (!index)
 			resultType = TypeProvider::typeType(TypeProvider::array(DataLocation::Memory, typeType.actualType()));
 		else

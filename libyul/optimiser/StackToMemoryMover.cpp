@@ -49,30 +49,44 @@ vector<Statement> generateMemoryStore(
 	}});
 	return result;
 }
+
+FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::SourceLocation const& _loc, YulString _mpos)
+{
+	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction(_dialect.defaultType);
+	yulAssert(memoryLoadFunction, "");
+	return FunctionCall{
+		_loc,
+		Identifier{_loc, memoryLoadFunction->name}, {
+			Literal{
+				_loc,
+				LiteralKind::Number,
+				_mpos,
+				{}
+			}
+		}
+	};
+}
 }
 
 void StackToMemoryMover::run(
 	OptimiserStepContext& _context,
 	u256 _reservedMemory,
-	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
+	map<YulString, uint64_t> const& _memorySlots,
 	uint64_t _numRequiredSlots,
 	Block& _block
 )
 {
-	StackToMemoryMover stackToMemoryMover(_context, _reservedMemory, _memorySlots, _numRequiredSlots);
+	VariableMemoryOffsetTracker memoryOffsetTracker(_reservedMemory, _memorySlots, _numRequiredSlots);
+	StackToMemoryMover stackToMemoryMover(_context, memoryOffsetTracker);
 	stackToMemoryMover(_block);
 }
 
 StackToMemoryMover::StackToMemoryMover(
 	OptimiserStepContext& _context,
-	u256 _reservedMemory,
-	map<YulString, map<YulString, uint64_t>> const& _memorySlots,
-	uint64_t _numRequiredSlots
+	VariableMemoryOffsetTracker const& _memoryOffsetTracker
 ):
 m_context(_context),
-m_reservedMemory(std::move(_reservedMemory)),
-m_memorySlots(_memorySlots),
-m_numRequiredSlots(_numRequiredSlots),
+m_memoryOffsetTracker(_memoryOffsetTracker),
 m_nameDispenser(_context.dispenser)
 {
 	auto const* evmDialect = dynamic_cast<EVMDialect const*>(&_context.dialect);
@@ -80,57 +94,50 @@ m_nameDispenser(_context.dispenser)
 		evmDialect && evmDialect->providesObjectAccess(),
 		"StackToMemoryMover can only be run on objects using the EVMDialect with object access."
 	);
-
-	if (m_memorySlots.count(YulString{}))
-		// If the global scope contains variables to be moved, start with those as if it were a function.
-		m_currentFunctionMemorySlots = &m_memorySlots.at(YulString{});
 }
 
 void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 {
-	if (m_memorySlots.count(_functionDefinition.name))
-	{
-		map<YulString, uint64_t> const* saved = m_currentFunctionMemorySlots;
-		m_currentFunctionMemorySlots = &m_memorySlots.at(_functionDefinition.name);
-		for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
-			if (m_currentFunctionMemorySlots->count(param.name))
-			{
-				// TODO: we cannot handle function parameters yet.
-				m_currentFunctionMemorySlots = saved;
-				return;
-			}
-		ASTModifier::operator()(_functionDefinition);
-		m_currentFunctionMemorySlots = saved;
-	}
+	for (TypedName const& param: _functionDefinition.parameters + _functionDefinition.returnVariables)
+		if (m_memoryOffsetTracker(param.name))
+		{
+			// TODO: we cannot handle function parameters yet.
+			return;
+		}
+	ASTModifier::operator()(_functionDefinition);
 }
 
 void StackToMemoryMover::operator()(Block& _block)
 {
 	using OptionalStatements = std::optional<vector<Statement>>;
-	if (!m_currentFunctionMemorySlots)
-	{
-		ASTModifier::operator()(_block);
-		return;
-	}
-	auto containsVariableNeedingEscalation = [&](auto const& _variables) {
-		return util::contains_if(_variables, [&](auto const& var) {
-			return m_currentFunctionMemorySlots->count(var.name);
-		});
-	};
 	auto rewriteAssignmentOrVariableDeclaration = [&](
-		langutil::SourceLocation const& _loc,
-		auto const& _variables,
-		std::unique_ptr<Expression> _value
-	) -> std::vector<Statement> {
+		auto& _stmt,
+		auto const& _variables
+	) -> OptionalStatements {
+		using StatementType = decay_t<decltype(_stmt)>;
+		if (_stmt.value)
+			visit(*_stmt.value);
+		bool leftHandSideNeedsMoving = util::contains_if(_variables, [&](auto const& var) {
+			return m_memoryOffsetTracker(var.name);
+		});
+		if (!leftHandSideNeedsMoving)
+			return {};
+
+		langutil::SourceLocation loc = _stmt.location;
+
 		if (_variables.size() == 1)
+		{
+			optional<YulString> offset = m_memoryOffsetTracker(_variables.front().name);
+			yulAssert(offset, "");
 			return generateMemoryStore(
 				m_context.dialect,
-				_loc,
-				memoryOffset(_variables.front().name),
-				_value ? *std::move(_value) : Literal{_loc, LiteralKind::Number, "0"_yulstring, {}}
+				loc,
+				*offset,
+				_stmt.value ? *std::move(_stmt.value) : Literal{loc, LiteralKind::Number, "0"_yulstring, {}}
 			);
+		}
 
-		VariableDeclaration tempDecl{_loc, {}, std::move(_value)};
+		VariableDeclaration tempDecl{loc, {}, std::move(_stmt.value)};
 		vector<Statement> memoryAssignments;
 		vector<Statement> variableAssignments;
 		for (auto& var: _variables)
@@ -138,22 +145,17 @@ void StackToMemoryMover::operator()(Block& _block)
 			YulString tempVarName = m_nameDispenser.newName(var.name);
 			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
 
-			if (m_currentFunctionMemorySlots->count(var.name))
+			if (optional<YulString> offset = m_memoryOffsetTracker(var.name))
 				memoryAssignments += generateMemoryStore(
 					m_context.dialect,
-					_loc,
-					memoryOffset(var.name),
-					Identifier{_loc, tempVarName}
+					loc,
+					*offset,
+					Identifier{loc, tempVarName}
 				);
-			else if constexpr (std::is_same_v<std::decay_t<decltype(var)>, Identifier>)
-				variableAssignments.emplace_back(Assignment{
-					_loc, { Identifier{var.location, var.name} },
-					make_unique<Expression>(Identifier{_loc, tempVarName})
-				});
 			else
-				variableAssignments.emplace_back(VariableDeclaration{
-					_loc, {std::move(var)},
-					make_unique<Expression>(Identifier{_loc, tempVarName})
+				variableAssignments.emplace_back(StatementType{
+					loc, {move(var)},
+					make_unique<Expression>(Identifier{loc, tempVarName})
 				});
 		}
 		std::vector<Statement> result;
@@ -162,74 +164,44 @@ void StackToMemoryMover::operator()(Block& _block)
 		result += std::move(memoryAssignments);
 		std::reverse(variableAssignments.begin(), variableAssignments.end());
 		result += std::move(variableAssignments);
-		return result;
+		return OptionalStatements{move(result)};
 	};
 
 	util::iterateReplacing(
 		_block.statements,
 		[&](Statement& _statement)
 		{
-			auto defaultVisit = [&]() { ASTModifier::visit(_statement); return OptionalStatements{}; };
 			return std::visit(util::GenericVisitor{
 				[&](Assignment& _assignment) -> OptionalStatements
 				{
-					if (!containsVariableNeedingEscalation(_assignment.variableNames))
-						return defaultVisit();
-					visit(*_assignment.value);
-					return {rewriteAssignmentOrVariableDeclaration(
-						_assignment.location,
-						_assignment.variableNames,
-						std::move(_assignment.value)
-					)};
+					return rewriteAssignmentOrVariableDeclaration(_assignment, _assignment.variableNames);
 				},
 				[&](VariableDeclaration& _varDecl) -> OptionalStatements
 				{
-					if (!containsVariableNeedingEscalation(_varDecl.variables))
-						return defaultVisit();
-					if (_varDecl.value)
-						visit(*_varDecl.value);
-					return {rewriteAssignmentOrVariableDeclaration(
-						_varDecl.location,
-						_varDecl.variables,
-						std::move(_varDecl.value)
-					)};
+					return rewriteAssignmentOrVariableDeclaration(_varDecl, _varDecl.variables);
 				},
-				[&](auto&) { return defaultVisit(); }
+				[&](auto& _stmt) -> OptionalStatements { (*this)(_stmt); return {}; }
 			}, _statement);
-		});
+		}
+	);
 }
 
 void StackToMemoryMover::visit(Expression& _expression)
 {
-	if (
-		Identifier* identifier = std::get_if<Identifier>(&_expression);
-		identifier && m_currentFunctionMemorySlots && m_currentFunctionMemorySlots->count(identifier->name)
-	)
+	ASTModifier::visit(_expression);
+	if (Identifier* identifier = std::get_if<Identifier>(&_expression))
+		if (optional<YulString> offset = m_memoryOffsetTracker(identifier->name))
+			_expression = generateMemoryLoad(m_context.dialect, identifier->location, *offset);
+}
+
+optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(YulString _variable) const
+{
+	if (m_memorySlots.count(_variable))
 	{
-		BuiltinFunction const* memoryLoadFunction = m_context.dialect.memoryLoadFunction(m_context.dialect.defaultType);
-		yulAssert(memoryLoadFunction, "");
-		langutil::SourceLocation loc = identifier->location;
-		_expression = FunctionCall{
-			loc,
-			Identifier{loc, memoryLoadFunction->name}, {
-				Literal{
-					loc,
-					LiteralKind::Number,
-					memoryOffset(identifier->name),
-					{}
-				}
-			}
-		};
+		uint64_t slot = m_memorySlots.at(_variable);
+		yulAssert(slot < m_numRequiredSlots, "");
+		return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
 	}
 	else
-		ASTModifier::visit(_expression);
+		return std::nullopt;
 }
-
-YulString StackToMemoryMover::memoryOffset(YulString _variable)
-{
-	yulAssert(m_currentFunctionMemorySlots, "");
-	uint64_t slot = m_currentFunctionMemorySlots->at(_variable);
-	yulAssert(slot < m_numRequiredSlots, "");
-	return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
-}
-

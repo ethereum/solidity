@@ -58,6 +58,7 @@ namespace solidity::frontend::test
 	K(Library, "library", 0)       \
 	K(Right, "right", 0)           \
 	K(Failure, "FAILURE", 0)       \
+	K(Storage, "storage", 0) \
 
 namespace soltest
 {
@@ -275,16 +276,23 @@ struct FunctionCall
 		MultiLine
 	};
 	DisplayMode displayMode = DisplayMode::SingleLine;
-	/// Marks this function call as the constructor.
-	bool isConstructor = false;
-	/// If this function call's signature has no name and no arguments,
-	/// a low-level call with unstructured calldata will be issued.
-	bool useCallWithoutSignature = false;
+
+	enum class Kind {
+		Regular,
+		/// Marks this function call as the constructor.
+		Constructor,
+		/// If this function call's signature has no name and no arguments,
+		/// a low-level call with unstructured calldata will be issued.
+		LowLevel,
+		/// Marks a library deployment call.
+		Library,
+		/// Check that the storage of the current contract is empty or non-empty.
+		Storage
+	};
+	Kind kind = Kind::Regular;
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
-	/// Marks a library deployment call.
-	bool isLibrary = false;
 };
 
 }

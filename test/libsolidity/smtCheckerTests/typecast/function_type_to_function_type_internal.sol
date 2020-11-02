@@ -11,6 +11,7 @@ contract C {
 	}
 }
 // ----
+// Warning 2519: (128-159): This declaration shadows an existing declaration.
 // Warning 6328: (207-227): CHC: Assertion violation happens here.
 // Warning 6328: (231-245): CHC: Assertion violation happens here.
 // Warning 5729: (214-218): Assertion checker does not yet implement this type of function call.

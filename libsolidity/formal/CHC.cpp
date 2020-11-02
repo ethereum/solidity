@@ -101,7 +101,7 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 	solAssert(m_currentContract, "");
 	m_constructorSummaryPredicate = createSymbolicBlock(
-		constructorSort(*m_currentContract),
+		constructorSort(*m_currentContract, state()),
 		"summary_constructor_" + contractSuffix(_contract),
 		PredicateType::ConstructorSummary,
 		&_contract
@@ -114,15 +114,16 @@ bool CHC::visit(ContractDefinition const& _contract)
 void CHC::endVisit(ContractDefinition const& _contract)
 {
 	auto implicitConstructorPredicate = createSymbolicBlock(
-		implicitConstructorSort(),
+		implicitConstructorSort(state()),
 		"implicit_constructor_" + contractSuffix(_contract),
 		PredicateType::ImplicitConstructor,
 		&_contract
 	);
-	auto implicitConstructor = (*implicitConstructorPredicate)({});
-	addRule(implicitConstructor, implicitConstructor.name);
-	m_currentBlock = implicitConstructor;
-	m_context.addAssertion(errorFlag().currentValue() == 0);
+	addRule(
+		(*implicitConstructorPredicate)({0, state().thisAddress(), state().crypto(), state().tx(), state().state()}),
+		implicitConstructorPredicate->functor().name
+	);
+	setCurrentBlock(*implicitConstructorPredicate);
 
 	if (auto constructor = _contract.constructor())
 		constructor->accept(*this);
@@ -178,6 +179,7 @@ bool CHC::visit(FunctionDefinition const& _function)
 		m_context.addAssertion(m_context.variable(*var)->valueAtIndex(0) == currentValue(*var));
 	for (auto const& var: _function.parameters())
 		m_context.addAssertion(m_context.variable(*var)->valueAtIndex(0) == currentValue(*var));
+	m_context.addAssertion(state().state(0) == state().state());
 
 	connectBlocks(functionPred, bodyPred);
 
@@ -215,7 +217,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 			string suffix = m_currentContract->name() + "_" + to_string(m_currentContract->id());
 			solAssert(m_currentContract, "");
 			auto constructorExit = createSymbolicBlock(
-				constructorSort(*m_currentContract),
+				constructorSort(*m_currentContract, state()),
 				"constructor_exit_" + suffix,
 				PredicateType::ConstructorSummary,
 				m_currentContract
@@ -234,11 +236,12 @@ void CHC::endVisit(FunctionDefinition const& _function)
 
 			setCurrentBlock(*m_interfaces.at(m_currentContract));
 
-			auto ifacePre = (*m_interfaces.at(m_currentContract))(initialStateVariables());
+			auto ifacePre = smt::interfacePre(*m_interfaces.at(m_currentContract), *m_currentContract, m_context);
 			if (_function.isPublic())
 			{
-				addAssertVerificationTarget(&_function, ifacePre, sum, assertionError);
-				connectBlocks(ifacePre, iface, sum && (assertionError == 0));
+				auto txConstraints = m_context.state().txConstraints(_function);
+				addAssertVerificationTarget(&_function, ifacePre, txConstraints && sum, assertionError);
+				connectBlocks(ifacePre, iface, txConstraints && sum && (assertionError == 0));
 			}
 		}
 		m_currentFunction = nullptr;
@@ -530,18 +533,9 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 
 void CHC::visitAddMulMod(FunctionCall const& _funCall)
 {
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	addVerificationTarget(
-		&_funCall,
-		VerificationTarget::Type::DivByZero,
-		errorFlag().currentValue()
-	);
-
 	solAssert(_funCall.arguments().at(2), "");
-	smtutil::Expression target = expr(*_funCall.arguments().at(2)) == 0 && errorFlag().currentValue() == newErrorId(_funCall);
-	m_context.addAssertion((errorFlag().currentValue() == previousError) || target);
+
+	addVerificationTarget(_funCall, VerificationTarget::Type::DivByZero, expr(*_funCall.arguments().at(2)) == 0);
 
 	SMTEncoder::visitAddMulMod(_funCall);
 }
@@ -598,15 +592,21 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	for (auto var: function->returnParameters())
 		m_context.variable(*var)->increaseIndex();
 
-	auto preCallState = currentStateVariables();
+	auto preCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
 	bool usesStaticCall = kind == FunctionType::Kind::BareStaticCall ||
 		function->stateMutability() == StateMutability::Pure ||
 		function->stateMutability() == StateMutability::View;
 	if (!usesStaticCall)
+	{
+		state().newState();
 		for (auto const* var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
+	}
 
-	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + currentStateVariables());
+	auto postCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
+	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + postCallState);
+	// TODO this could instead add the summary of the called function, where that summary
+	// basically has the nondet interface of this summary as a constraint.
 	m_context.addAssertion(nondet);
 
 	m_context.addAssertion(errorFlag().currentValue() == 0);
@@ -634,13 +634,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	addVerificationTarget(&_arrayPop, VerificationTarget::Type::PopEmptyArray, errorFlag().currentValue());
-
-	smtutil::Expression target = (symbArray->length() <= 0) && (errorFlag().currentValue() == newErrorId(_arrayPop));
-	m_context.addAssertion((errorFlag().currentValue() == previousError) || target);
+	addVerificationTarget(_arrayPop, VerificationTarget::Type::PopEmptyArray, symbArray->length() <= 0);
 }
 
 pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
@@ -651,6 +645,9 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	frontend::Expression const& _expression
 )
 {
+	if (_op == Token::Mod || _op == Token::Div)
+		addVerificationTarget(_expression, VerificationTarget::Type::DivByZero, _right == 0);
+
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
 
 	IntegerType const* intType = nullptr;
@@ -664,46 +661,19 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	if (_op == Token::Mod || (_op == Token::Div && !intType->isSigned()))
 		return values;
 
-	auto previousError = errorFlag().currentValue();
-	errorFlag().increaseIndex();
-
-	VerificationTarget::Type targetType;
-	unsigned errorId = newErrorId(_expression);
-
-	optional<smtutil::Expression> target;
 	if (_op == Token::Div)
-	{
-		targetType = VerificationTarget::Type::Overflow;
-		target = values.second > intType->maxValue() && errorFlag().currentValue() == errorId;
-	}
+		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	else if (intType->isSigned())
 	{
-		unsigned secondErrorId = newErrorId(_expression);
-		targetType = VerificationTarget::Type::UnderOverflow;
-		target = (values.second < intType->minValue() && errorFlag().currentValue() == errorId) ||
-			(values.second > intType->maxValue() && errorFlag().currentValue() == secondErrorId);
+		addVerificationTarget(_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
+		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	}
 	else if (_op == Token::Sub)
-	{
-		targetType = VerificationTarget::Type::Underflow;
-		target = values.second < intType->minValue() && errorFlag().currentValue() == errorId;
-	}
+		addVerificationTarget(_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
 	else if (_op == Token::Add || _op == Token::Mul)
-	{
-		targetType = VerificationTarget::Type::Overflow;
-		target = values.second > intType->maxValue() && errorFlag().currentValue() == errorId;
-	}
+		addVerificationTarget(_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
 	else
 		solAssert(false, "");
-
-	addVerificationTarget(
-		&_expression,
-		targetType,
-		errorFlag().currentValue()
-	);
-
-	m_context.addAssertion((errorFlag().currentValue() == previousError) || *target);
-
 	return values;
 }
 
@@ -775,6 +745,8 @@ void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition c
 		for (auto const& var: _function->localVariables())
 			m_context.variable(*var)->increaseIndex();
 	}
+
+	state().newState();
 }
 
 void CHC::setCurrentBlock(Predicate const& _block)
@@ -800,7 +772,7 @@ set<frontend::Expression const*, CHC::IdCompare> CHC::transactionAssertions(ASTN
 
 SortPointer CHC::sort(FunctionDefinition const& _function)
 {
-	return functionSort(_function, m_currentContract);
+	return functionSort(_function, m_currentContract, state());
 }
 
 SortPointer CHC::sort(ASTNode const* _node)
@@ -809,7 +781,7 @@ SortPointer CHC::sort(ASTNode const* _node)
 		return sort(*funDef);
 
 	solAssert(m_currentFunction, "");
-	return functionBodySort(*m_currentFunction, m_currentContract);
+	return functionBodySort(*m_currentFunction, m_currentContract, state());
 }
 
 Predicate const* CHC::createSymbolicBlock(SortPointer _sort, string const& _name, PredicateType _predType, ASTNode const* _node)
@@ -825,8 +797,8 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(node.get()))
 		{
 			string suffix = contract->name() + "_" + to_string(contract->id());
-			m_interfaces[contract] = createSymbolicBlock(interfaceSort(*contract), "interface_" + suffix, PredicateType::Interface, contract);
-			m_nondetInterfaces[contract] = createSymbolicBlock(nondetInterfaceSort(*contract), "nondet_interface_" + suffix, PredicateType::NondetInterface, contract);
+			m_interfaces[contract] = createSymbolicBlock(interfaceSort(*contract, state()), "interface_" + suffix, PredicateType::Interface, contract);
+			m_nondetInterfaces[contract] = createSymbolicBlock(nondetInterfaceSort(*contract, state()), "nondet_interface_" + suffix, PredicateType::NondetInterface, contract);
 
 			for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*contract))
 				if (!m_context.knownVariable(*var))
@@ -836,8 +808,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			/// 0 steps to be taken, used as base for the inductive
 			/// rule for each function.
 			auto const& iface = *m_nondetInterfaces.at(contract);
-			auto state0 = stateVariablesAtIndex(0, *contract);
-			addRule(iface(state0 + state0), "base_nondet");
+			addRule(smt::nondetInterface(iface, *contract, m_context, 0, 0), "base_nondet");
 
 			for (auto const* base: contract->annotation().linearizedBaseContracts)
 				for (auto const* function: base->definedFunctions())
@@ -861,12 +832,13 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						auto state1 = stateVariablesAtIndex(1, *contract);
 						auto state2 = stateVariablesAtIndex(2, *contract);
 
-						auto nondetPre = iface(state0 + state1);
-						auto nondetPost = iface(state0 + state2);
+						auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
+						auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-						vector<smtutil::Expression> args{errorFlag().currentValue()};
+						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state(1)};
 						args += state1 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
+							vector<smtutil::Expression>{state().state(2)} +
 							state2 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
 							applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
@@ -930,7 +902,7 @@ Predicate const* CHC::createBlock(ASTNode const* _node, PredicateType _predType,
 Predicate const* CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract)
 {
 	auto block = createSymbolicBlock(
-		functionSort(_function, &_contract),
+		functionSort(_function, &_contract, state()),
 		"summary_" + uniquePrefix() + "_" + predicateName(&_function, &_contract),
 		PredicateType::FunctionSummary,
 		&_function
@@ -1042,7 +1014,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		return smtutil::Expression(true);
 
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state()};
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	solAssert(funType.kind() == FunctionType::Kind::Internal, "");
@@ -1058,11 +1030,17 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	auto const* calledContract = contract->isLibrary() ? contract : m_currentContract;
 	solAssert(calledContract, "");
 
+	bool usesStaticCall = function->stateMutability() == StateMutability::Pure || function->stateMutability() == StateMutability::View;
+
 	args += currentStateVariables(*calledContract);
 	args += symbolicArguments(_funCall);
-	if (!calledContract->isLibrary())
+	if (!calledContract->isLibrary() && !usesStaticCall)
+	{
+		state().newState();
 		for (auto const& var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
+	}
+	args += vector<smtutil::Expression>{state().state()};
 	args += currentStateVariables(*calledContract);
 
 	for (auto var: function->parameters() + function->returnParameters())
@@ -1141,7 +1119,7 @@ void CHC::addVerificationTarget(
 	if (!source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
 		return;
 
-	m_verificationTargets.emplace(_scope, CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
+	m_verificationTargets[_scope].push_back(CHCVerificationTarget{{_type, _from, _constraints}, _errorId});
 }
 
 void CHC::addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId)
@@ -1152,10 +1130,22 @@ void CHC::addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type 
 		addVerificationTarget(_scope, _type, summary(*m_currentContract), smtutil::Expression(true), _errorId);
 	else
 	{
-		auto iface = (*m_interfaces.at(m_currentContract))(initialStateVariables());
+		auto iface = smt::interfacePre(*m_interfaces.at(m_currentContract), *m_currentContract, m_context);
 		auto sum = summary(*m_currentFunction);
 		addVerificationTarget(_scope, _type, iface, sum, _errorId);
 	}
+}
+
+void CHC::addVerificationTarget(frontend::Expression const& _scope, VerificationTarget::Type _type, smtutil::Expression const& _target)
+{
+	auto previousError = errorFlag().currentValue();
+	errorFlag().increaseIndex();
+	addVerificationTarget(&_scope, _type, errorFlag().currentValue());
+
+	m_context.addAssertion(
+		errorFlag().currentValue() == previousError ||
+		(_target && errorFlag().currentValue() == newErrorId(_scope))
+	);
 }
 
 void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId)
@@ -1165,76 +1155,72 @@ void CHC::addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression
 
 void CHC::checkVerificationTargets()
 {
-	for (auto const& [scope, target]: m_verificationTargets)
+	for (auto const& [scope, targets]: m_verificationTargets)
 	{
-		if (target.type == VerificationTarget::Type::Assert)
-			checkAssertTarget(scope, target);
-		else
+		for (size_t i = 0; i < targets.size(); ++i)
 		{
-			string satMsg;
-			string satMsgUnderflow;
-			string satMsgOverflow;
-			string unknownMsg;
-			ErrorId errorReporterId;
-			ErrorId underflowErrorId = 3944_error;
-			ErrorId overflowErrorId = 4984_error;
+			auto const& target = targets[i];
 
-			if (target.type == VerificationTarget::Type::PopEmptyArray)
-			{
-				solAssert(dynamic_cast<FunctionCall const*>(scope), "");
-				satMsg = "Empty array \"pop\" detected here.";
-				unknownMsg = "Empty array \"pop\" might happen here.";
-				errorReporterId = 2529_error;
-			}
-			else if (
-				target.type == VerificationTarget::Type::Underflow ||
-				target.type == VerificationTarget::Type::Overflow ||
-				target.type == VerificationTarget::Type::UnderOverflow
-			)
-			{
-				auto const* expr = dynamic_cast<Expression const*>(scope);
-				solAssert(expr, "");
-				auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
-				if (!intType)
-					intType = TypeProvider::uint256();
-
-				satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ") happens here.";
-				satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ") happens here.";
-				if (target.type == VerificationTarget::Type::Underflow)
-				{
-					satMsg = satMsgUnderflow;
-					errorReporterId = underflowErrorId;
-				}
-				else if (target.type == VerificationTarget::Type::Overflow)
-				{
-					satMsg = satMsgOverflow;
-					errorReporterId = overflowErrorId;
-				}
-			}
-			else if (target.type == VerificationTarget::Type::DivByZero)
-			{
-				satMsg = "Division by zero happens here.";
-				errorReporterId = 4281_error;
-			}
-			else
-				solAssert(false, "");
-
-			auto it = m_errorIds.find(scope->id());
-			solAssert(it != m_errorIds.end(), "");
-			unsigned errorId = it->second;
-
-			if (target.type != VerificationTarget::Type::UnderOverflow)
-				checkAndReportTarget(scope, target, errorId, errorReporterId, satMsg, unknownMsg);
+			if (target.type == VerificationTarget::Type::Assert)
+				checkAssertTarget(scope, target);
 			else
 			{
-				auto specificTarget = target;
-				specificTarget.type = VerificationTarget::Type::Underflow;
-				checkAndReportTarget(scope, specificTarget, errorId, underflowErrorId, satMsgUnderflow, unknownMsg);
+				string satMsg;
+				string satMsgUnderflow;
+				string satMsgOverflow;
+				string unknownMsg;
+				ErrorId errorReporterId;
+				ErrorId underflowErrorId = 3944_error;
+				ErrorId overflowErrorId = 4984_error;
 
-				++it;
+				if (target.type == VerificationTarget::Type::PopEmptyArray)
+				{
+					solAssert(dynamic_cast<FunctionCall const*>(scope), "");
+					satMsg = "Empty array \"pop\" detected here.";
+					unknownMsg = "Empty array \"pop\" might happen here.";
+					errorReporterId = 2529_error;
+				}
+				else if (
+					target.type == VerificationTarget::Type::Underflow ||
+					target.type == VerificationTarget::Type::Overflow
+				)
+				{
+					auto const* expr = dynamic_cast<Expression const*>(scope);
+					solAssert(expr, "");
+					auto const* intType = dynamic_cast<IntegerType const*>(expr->annotation().type);
+					if (!intType)
+						intType = TypeProvider::uint256();
+
+					satMsgUnderflow = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
+					satMsgOverflow = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
+					if (target.type == VerificationTarget::Type::Underflow)
+					{
+						satMsg = satMsgUnderflow + " happens here.";
+						unknownMsg = satMsgUnderflow + " might happen here.";
+						errorReporterId = underflowErrorId;
+					}
+					else if (target.type == VerificationTarget::Type::Overflow)
+					{
+						satMsg = satMsgOverflow + " happens here.";
+						unknownMsg = satMsgOverflow + " might happen here.";
+						errorReporterId = overflowErrorId;
+					}
+				}
+				else if (target.type == VerificationTarget::Type::DivByZero)
+				{
+					satMsg = "Division by zero happens here.";
+					unknownMsg = "Division by zero might happen here.";
+					errorReporterId = 4281_error;
+				}
+				else
+					solAssert(false, "");
+
+				auto it = m_errorIds.find(scope->id());
 				solAssert(it != m_errorIds.end(), "");
-				specificTarget.type = VerificationTarget::Type::Overflow;
-				checkAndReportTarget(scope, specificTarget, it->second, overflowErrorId, satMsgOverflow, unknownMsg);
+				solAssert(i < it->second.size(), "");
+				unsigned errorId = it->second[i];
+
+				checkAndReportTarget(scope, target, errorId, errorReporterId, satMsg, unknownMsg);
 			}
 		}
 	}
@@ -1248,9 +1234,10 @@ void CHC::checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& 
 	{
 		auto it = m_errorIds.find(assertion->id());
 		solAssert(it != m_errorIds.end(), "");
-		unsigned errorId = it->second;
+		solAssert(!it->second.empty(), "");
+		unsigned errorId = it->second[0];
 
-		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.");
+		checkAndReportTarget(assertion, _target, errorId, 6328_error, "Assertion violation happens here.", "Assertion violation might happen here.");
 	}
 }
 
@@ -1281,7 +1268,7 @@ void CHC::checkAndReportTarget(
 				_errorReporterId,
 				_scope->location(),
 				"CHC: " + _satMsg,
-				SecondarySourceLocation().append("\nCounterexample:\n" + *cex, SourceLocation{})
+				SecondarySourceLocation().append("Counterexample:\n" + *cex, SourceLocation{})
 			);
 		else
 			m_outerErrorReporter.warning(
@@ -1319,7 +1306,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 {
 	optional<unsigned> rootId;
 	for (auto const& [id, node]: _graph.nodes)
-		if (node.first == _root)
+		if (node.name == _root)
 		{
 			rootId = id;
 			break;
@@ -1343,18 +1330,18 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		if (edges.size() == 2)
 		{
 			interfaceId = edges.at(1);
-			if (!Predicate::predicate(_graph.nodes.at(summaryId).first)->isSummary())
+			if (!Predicate::predicate(_graph.nodes.at(summaryId).name)->isSummary())
 				swap(summaryId, *interfaceId);
-			auto interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).first);
+			auto interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).name);
 			solAssert(interfacePredicate && interfacePredicate->isInterface(), "");
 		}
 		/// The children are unordered, so we need to check which is the summary and
 		/// which is the interface.
 
-		Predicate const* summaryPredicate = Predicate::predicate(_graph.nodes.at(summaryId).first);
+		Predicate const* summaryPredicate = Predicate::predicate(_graph.nodes.at(summaryId).name);
 		solAssert(summaryPredicate && summaryPredicate->isSummary(), "");
 		/// At this point property 2 from the function description is verified for this node.
-		auto summaryArgs = _graph.nodes.at(summaryId).second;
+		vector<smtutil::Expression> summaryArgs = _graph.nodes.at(summaryId).arguments;
 
 		FunctionDefinition const* calledFun = summaryPredicate->programFunction();
 		ContractDefinition const* calledContract = summaryPredicate->programContract();
@@ -1385,9 +1372,13 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			}
 		}
 		else
+		{
+			auto modelMsg = formatVariableModel(*stateVars, stateValues, ", ");
 			/// We report the state after every tx in the trace except for the last, which is reported
 			/// first in the code above.
-			path.emplace_back("State: " + formatVariableModel(*stateVars, stateValues, ", "));
+			if (!modelMsg.empty())
+				path.emplace_back("State: " + modelMsg);
+		}
 
 		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
 		path.emplace_back(txCex);
@@ -1396,7 +1387,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		/// or stop.
 		if (interfaceId)
 		{
-			Predicate const* interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).first);
+			Predicate const* interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).name);
 			solAssert(interfacePredicate && interfacePredicate->isInterface(), "");
 			node = *interfaceId;
 		}
@@ -1412,7 +1403,14 @@ string CHC::cex2dot(CHCSolverInterface::CexGraph const& _cex)
 	string dot = "digraph {\n";
 
 	auto pred = [&](CHCSolverInterface::CexNode const& _node) {
-		return "\"" + _node.first + "(" + boost::algorithm::join(_node.second, ", ") + ")\"";
+		vector<string> args = applyMap(
+			_node.arguments,
+			[&](auto const& arg) {
+				solAssert(arg.arguments.empty(), "");
+				return arg.name;
+			}
+		);
+		return "\"" + _node.name + "(" + boost::algorithm::join(args, ", ") + ")\"";
 	};
 
 	for (auto const& [u, vs]: _cex.edges)
@@ -1440,11 +1438,16 @@ unsigned CHC::newErrorId(frontend::Expression const& _expr)
 	// because error id zero actually means no error in the CHC encoding.
 	if (errorId == 0)
 		errorId = m_context.newUniqueId();
-	m_errorIds.emplace(_expr.id(), errorId);
+	m_errorIds[_expr.id()].push_back(errorId);
 	return errorId;
+}
+
+SymbolicState& CHC::state()
+{
+	return m_context.state();
 }
 
 SymbolicIntVariable& CHC::errorFlag()
 {
-	return m_context.state().errorFlag();
+	return state().errorFlag();
 }

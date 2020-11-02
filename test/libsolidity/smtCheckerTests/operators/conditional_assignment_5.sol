@@ -13,9 +13,9 @@ contract C {
         d.d();
         return x;
     }
-    function f(bool b) public {
+    function f() public {
         x = 1;
-        uint y = b ? g() : 3;
+        uint y = g();
         assert(x == 2 || x == 1);
     }
     function h() public {
@@ -23,5 +23,5 @@ contract C {
     }
 }
 // ----
-// Warning 2072: (288-294): Unused local variable.
-// Warning 6328: (318-342): CHC: Assertion violation happens here.
+// Warning 2072: (282-288): Unused local variable.
+// Warning 6328: (304-328): CHC: Assertion violation happens here.

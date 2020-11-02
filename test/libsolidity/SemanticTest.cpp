@@ -154,12 +154,12 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 		{
 			if (constructed)
 			{
-				soltestAssert(!test.call().isLibrary, "Libraries have to be deployed before any other call.");
+				soltestAssert(test.call().kind != FunctionCall::Kind::Library, "Libraries have to be deployed before any other call.");
 				soltestAssert(
-					!test.call().isConstructor,
+					test.call().kind != FunctionCall::Kind::Constructor,
 					"Constructor has to be the first function call expect for library deployments.");
 			}
-			else if (test.call().isLibrary)
+			else if (test.call().kind == FunctionCall::Kind::Library)
 			{
 				soltestAssert(
 					deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
@@ -169,14 +169,23 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			}
 			else
 			{
-				if (test.call().isConstructor)
+				if (test.call().kind == FunctionCall::Kind::Constructor)
 					deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
 				else
 					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
 				constructed = true;
 			}
 
-			if (test.call().isConstructor)
+			if (test.call().kind == FunctionCall::Kind::Storage)
+			{
+				test.setFailure(false);
+				bytes result(1, !storageEmpty(m_contractAddress));
+				test.setRawBytes(result);
+				soltestAssert(test.call().expectations.rawBytes().size() == 1, "");
+				if (test.call().expectations.rawBytes() != result)
+					success = false;
+			}
+			else if (test.call().kind == FunctionCall::Kind::Constructor)
 			{
 				if (m_transactionSuccessful == test.call().expectations.failure)
 					success = false;
@@ -187,22 +196,27 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			else
 			{
 				bytes output;
-				if (test.call().useCallWithoutSignature)
+				if (test.call().kind == FunctionCall::Kind::LowLevel)
 					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 				else
 				{
 					soltestAssert(
-						m_allowNonExistingFunctions || m_compiler.methodIdentifiers(m_compiler.lastContractName())
-								   .isMember(test.call().signature),
-						"The function " + test.call().signature + " is not known to the compiler");
+						m_allowNonExistingFunctions ||
+						m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+						"The function " + test.call().signature + " is not known to the compiler"
+					);
 
 					output = callContractFunctionWithValueNoEncoding(
-						test.call().signature, test.call().value.value, test.call().arguments.rawBytes()
+						test.call().signature,
+						test.call().value.value,
+						test.call().arguments.rawBytes()
 					);
 				}
 
-				if ((m_transactionSuccessful == test.call().expectations.failure)
-					|| (output != test.call().expectations.rawBytes()))
+				if (
+					m_transactionSuccessful == test.call().expectations.failure ||
+					output != test.call().expectations.rawBytes()
+				)
 					success = false;
 
 				test.setFailure(!m_transactionSuccessful);

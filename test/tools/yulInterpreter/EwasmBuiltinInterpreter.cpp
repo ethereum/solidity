@@ -35,6 +35,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 
+using solidity::util::h160;
 using solidity::util::h256;
 
 namespace
@@ -114,8 +115,6 @@ uint64_t popcnt(uint64_t _v)
 
 }
 
-using u512 = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
-
 u256 EwasmBuiltinInterpreter::evalBuiltin(
 	YulString _functionName,
 	vector<Expression> const& _arguments,
@@ -143,14 +142,14 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(
 	else if (fun == "datacopy")
 	{
 		// This is identical to codecopy.
-		if (accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2)))
-			copyZeroExtended(
-				m_state.memory,
-				m_state.code,
-				static_cast<size_t>(_evaluatedArguments.at(0)),
-				static_cast<size_t>(_evaluatedArguments.at(1) & numeric_limits<size_t>::max()),
-				static_cast<size_t>(_evaluatedArguments.at(2))
-			);
+		accessMemory(_evaluatedArguments.at(0), _evaluatedArguments.at(2));
+		copyZeroExtended(
+			m_state.memory,
+			m_state.code,
+			static_cast<size_t>(_evaluatedArguments.at(0)),
+			static_cast<size_t>(_evaluatedArguments.at(1) & numeric_limits<size_t>::max()),
+			static_cast<size_t>(_evaluatedArguments.at(2))
+		);
 		return 0;
 	}
 	else if (fun == "i32.drop" || fun == "i64.drop" || fun == "nop")
@@ -297,9 +296,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "getExternalBalance")
 	{
-		// TODO this does not read the address, but is consistent with
-		// EVM interpreter implementation.
-		// If we take the address into account, this needs to use readAddress.
+		readAddress(arg[0]);
 		writeU128(arg[1], m_state.balance);
 		return 0;
 	}
@@ -309,14 +306,15 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 			return 1;
 		else
 		{
-			writeU256(arg[1], 0xaaaaaaaa + u256(arg[0] - m_state.blockNumber - 256));
+			writeBytes32(arg[1], h256(0xaaaaaaaa + u256(arg[0] - m_state.blockNumber - 256)));
 			return 0;
 		}
 	}
 	else if (_fun == "call")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		readU128(arg[2]);
+		accessMemory(arg[3], arg[4]);
 		logTrace(evmasm::Instruction::CALL, {});
 		return arg[0] & 1;
 	}
@@ -324,49 +322,49 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	{
 		if (arg[1] + arg[2] < arg[1] || arg[1] + arg[2] > m_state.calldata.size())
 			throw ExplicitlyTerminated();
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.calldata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
+		accessMemory(arg[0], arg[2]);
+		copyZeroExtended(
+			m_state.memory, m_state.calldata,
+			size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+		);
 		return {};
 	}
 	else if (_fun == "getCallDataSize")
 		return m_state.calldata.size();
 	else if (_fun == "callCode")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		readU128(arg[2]);
+		accessMemory(arg[3], arg[4]);
 		logTrace(evmasm::Instruction::CALLCODE, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callDelegate")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		accessMemory(arg[2], arg[3]);
 		logTrace(evmasm::Instruction::DELEGATECALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "callStatic")
 	{
-		// TODO read args from memory
-		// TODO use readAddress to read address.
+		readAddress(arg[1]);
+		accessMemory(arg[2], arg[3]);
 		logTrace(evmasm::Instruction::STATICCALL, {});
 		return arg[0] & 1;
 	}
 	else if (_fun == "storageStore")
 	{
-		m_state.storage[h256(readU256(arg[0]))] = readU256((arg[1]));
+		m_state.storage[readBytes32(arg[0])] = readBytes32(arg[1]);
 		return 0;
 	}
 	else if (_fun == "storageLoad")
 	{
-		writeU256(arg[1], m_state.storage[h256(readU256(arg[0]))]);
+		writeBytes32(arg[1], m_state.storage[readBytes32(arg[0])]);
 		return 0;
 	}
 	else if (_fun == "getCaller")
 	{
-		// TODO should this only write 20 bytes?
 		writeAddress(arg[0], m_state.caller);
 		return 0;
 	}
@@ -377,11 +375,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "codeCopy")
 	{
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
+		accessMemory(arg[0], arg[2]);
+		copyZeroExtended(
+			m_state.memory, m_state.code,
+			size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+		);
 		return 0;
 	}
 	else if (_fun == "getCodeSize")
@@ -393,10 +391,11 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "create")
 	{
-		// TODO access memory
-		// TODO use writeAddress to store resulting address
+		readU128(arg[0]);
+		accessMemory(arg[1], arg[2]);
 		logTrace(evmasm::Instruction::CREATE, {});
-		return 0xcccccc + arg[1];
+		writeAddress(arg[3], h160(h256(0xcccccc + arg[1])));
+		return 1;
 	}
 	else if (_fun == "getBlockDifficulty")
 	{
@@ -405,18 +404,18 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "externalCodeCopy")
 	{
-		// TODO use readAddress to read address.
-		if (accessMemory(arg[1], arg[3]))
-			// TODO this way extcodecopy and codecopy do the same thing.
-			copyZeroExtended(
-				m_state.memory, m_state.code,
-				size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
-			);
+		readAddress(arg[0]);
+		accessMemory(arg[1], arg[3]);
+		// TODO this way extcodecopy and codecopy do the same thing.
+		copyZeroExtended(
+			m_state.memory, m_state.code,
+			size_t(arg[1]), size_t(arg[2]), size_t(arg[3])
+		);
 		return 0;
 	}
 	else if (_fun == "getExternalCodeSize")
-		// Generate "random" code length. Make sure it fits the page size.
-		return u256(keccak256(h256(readAddress(arg[0])))) & 0xfff;
+		// Generate "random" code length.
+		return uint32_t(u256(keccak256(h256(readAddress(arg[0])))) & 0xfff);
 	else if (_fun == "getGasLeft")
 		return 0x99;
 	else if (_fun == "getBlockGasLimit")
@@ -428,9 +427,18 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	}
 	else if (_fun == "log")
 	{
+		accessMemory(arg[0], arg[1]);
 		uint64_t numberOfTopics = arg[2];
 		if (numberOfTopics > 4)
 			throw ExplicitlyTerminated();
+		if (numberOfTopics > 0)
+			readBytes32(arg[3]);
+		if (numberOfTopics > 1)
+			readBytes32(arg[4]);
+		if (numberOfTopics > 2)
+			readBytes32(arg[5]);
+		if (numberOfTopics > 3)
+			readBytes32(arg[6]);
 		logTrace(evmasm::logInstruction(numberOfTopics), {});
 		return 0;
 	}
@@ -444,16 +452,16 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	else if (_fun == "finish")
 	{
 		bytes data;
-		if (accessMemory(arg[0], arg[1]))
-			data = readMemory(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
+		data = readMemory(arg[0], arg[1]);
 		logTrace(evmasm::Instruction::RETURN, {}, data);
 		throw ExplicitlyTerminated();
 	}
 	else if (_fun == "revert")
 	{
 		bytes data;
-		if (accessMemory(arg[0], arg[1]))
-			data = readMemory(arg[0], arg[1]);
+		accessMemory(arg[0], arg[1]);
+		data = readMemory(arg[0], arg[1]);
 		logTrace(evmasm::Instruction::REVERT, {}, data);
 		throw ExplicitlyTerminated();
 	}
@@ -463,16 +471,16 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	{
 		if (arg[1] + arg[2] < arg[1] || arg[1] + arg[2] > m_state.returndata.size())
 			throw ExplicitlyTerminated();
-		if (accessMemory(arg[0], arg[2]))
-			copyZeroExtended(
-				m_state.memory, m_state.calldata,
-				size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
-			);
+		accessMemory(arg[0], arg[2]);
+		copyZeroExtended(
+			m_state.memory, m_state.calldata,
+			size_t(arg[0]), size_t(arg[1]), size_t(arg[2])
+		);
 		return {};
 	}
 	else if (_fun == "selfDestruct")
 	{
-		// TODO use readAddress to read address.
+		readAddress(arg[0]);
 		logTrace(evmasm::Instruction::SELFDESTRUCT, {});
 		throw ExplicitlyTerminated();
 	}
@@ -484,18 +492,15 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	return 0;
 }
 
-bool EwasmBuiltinInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
+void EwasmBuiltinInterpreter::accessMemory(u256 const& _offset, u256 const& _size)
 {
-	if (((_offset + _size) >= _offset) && ((_offset + _size + 0x1f) >= (_offset + _size)))
-	{
-		u256 newSize = (_offset + _size + 0x1f) & ~u256(0x1f);
-		m_state.msize = max(m_state.msize, newSize);
-		return _size <= 0xffff;
-	}
-	else
-		m_state.msize = u256(-1);
+	// Single WebAssembly page.
+	// TODO: Support expansion in this interpreter.
+	m_state.msize = 65536;
 
-	return false;
+	if (((_offset + _size) < _offset) || ((_offset + _size) > m_state.msize))
+		// Ewasm throws out of bounds exception as opposed to the EVM.
+		throw ExplicitlyTerminated();
 }
 
 bytes EwasmBuiltinInterpreter::readMemory(uint64_t _offset, uint64_t _size)
@@ -523,6 +528,12 @@ uint32_t EwasmBuiltinInterpreter::readMemoryHalfWord(uint64_t _offset)
 	return r;
 }
 
+void EwasmBuiltinInterpreter::writeMemory(uint64_t _offset, bytes const& _value)
+{
+	for (size_t i = 0; i < _value.size(); i++)
+		m_state.memory[_offset + i] = _value[i];
+}
+
 void EwasmBuiltinInterpreter::writeMemoryWord(uint64_t _offset, uint64_t _value)
 {
 	for (size_t i = 0; i < 8; i++)
@@ -545,7 +556,7 @@ void EwasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _c
 	accessMemory(_offset, _croppedTo);
 	for (size_t i = 0; i < _croppedTo; i++)
 	{
-		m_state.memory[_offset + _croppedTo - 1 - i] = uint8_t(_value & 0xff);
+		m_state.memory[_offset + i] = uint8_t(_value & 0xff);
 		_value >>= 8;
 	}
 }
@@ -553,9 +564,9 @@ void EwasmBuiltinInterpreter::writeU256(uint64_t _offset, u256 _value, size_t _c
 u256 EwasmBuiltinInterpreter::readU256(uint64_t _offset, size_t _croppedTo)
 {
 	accessMemory(_offset, _croppedTo);
-	u256 value;
+	u256 value{0};
 	for (size_t i = 0; i < _croppedTo; i++)
-		value = (value << 8) | m_state.memory[_offset + i];
+		value = (value << 8) | m_state.memory[_offset + _croppedTo - 1 - i];
 
 	return value;
 }

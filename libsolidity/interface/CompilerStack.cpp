@@ -87,6 +87,7 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
+	m_modelCheckerEngine{ModelCheckerEngine::All()},
 	m_enabledSMTSolvers{smtutil::SMTSolverChoice::All()},
 	m_errorReporter{m_errorList}
 {
@@ -136,6 +137,13 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	if (m_stackState >= ParsedAndImported)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set EVM version before parsing."));
 	m_evmVersion = _version;
+}
+
+void CompilerStack::setModelCheckerEngine(ModelCheckerEngine _engine)
+{
+	if (m_stackState >= ParsedAndImported)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set enabled model checking engines before parsing."));
+	m_modelCheckerEngine = _engine;
 }
 
 void CompilerStack::setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSMTSolvers)
@@ -207,6 +215,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_remappings.clear();
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
+		m_modelCheckerEngine = ModelCheckerEngine::All();
 		m_enabledSMTSolvers = smtutil::SMTSolverChoice::All();
 		m_generateIR = false;
 		m_generateEwasm = false;
@@ -343,6 +352,8 @@ bool CompilerStack::analyze()
 			if (source->ast && !resolver.performImports(*source->ast, sourceUnitsByName))
 				return false;
 
+		resolver.warnHomonymDeclarations();
+
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.resolveNamesAndTypes(*source->ast))
 				return false;
@@ -387,6 +398,8 @@ bool CompilerStack::analyze()
 			for (Source const* source: m_sourceOrder)
 				if (source->ast && !postTypeChecker.check(*source->ast))
 					noErrors = false;
+			if (!postTypeChecker.finalize())
+				noErrors = false;
 		}
 
 		// Check that immutable variables are never read in c'tors and assigned
@@ -439,7 +452,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_readFile, m_enabledSMTSolvers);
+			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_modelCheckerEngine, m_readFile, m_enabledSMTSolvers);
 			for (Source const* source: m_sourceOrder)
 				if (source->ast)
 					modelChecker.analyze(*source->ast);
@@ -512,6 +525,7 @@ bool CompilerStack::compile(State _stopAfter)
 
 	// Only compile contracts individually which have been requested.
 	map<ContractDefinition const*, shared_ptr<Compiler const>> otherCompilers;
+
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
@@ -1147,10 +1161,14 @@ void CompilerStack::compileContract(
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called compile with errors."));
 
-	if (_otherCompilers.count(&_contract) || !_contract.canBeDeployed())
+	if (_otherCompilers.count(&_contract))
 		return;
+
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(*dependency, _otherCompilers);
+
+	if (!_contract.canBeDeployed())
+		return;
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 
@@ -1214,21 +1232,20 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateIR with errors."));
 
-	if (!_contract.canBeDeployed())
-		return;
-
-	map<ContractDefinition const*, string const> otherYulSources;
-
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	if (!compiledContract.yulIR.empty())
 		return;
 
 	string dependenciesSource;
 	for (auto const* dependency: _contract.annotation().contractDependencies)
-	{
 		generateIR(*dependency);
-		otherYulSources.emplace(dependency, m_contracts.at(dependency->fullyQualifiedName()).yulIR);
-	}
+
+	if (!_contract.canBeDeployed())
+		return;
+
+	map<ContractDefinition const*, string_view const> otherYulSources;
+	for (auto const& pair: m_contracts)
+		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);

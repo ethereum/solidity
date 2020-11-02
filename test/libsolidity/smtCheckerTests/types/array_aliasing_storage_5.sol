@@ -17,7 +17,8 @@ contract C
 		// erase knowledge about memory references.
 		assert(c[0] == 42);
 		// Fails because d == a is possible.
-		assert(d[0] == 42);
+		// Removed because current Spacer seg faults in cex generation.
+		//assert(d[0] == 42);
 		// Fails because b == a and d == a are possible.
 		assert(a[0] == 2);
 		// b == a is possible, but does not fail because b
@@ -26,5 +27,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (431-449): CHC: Assertion violation happens here.
-// Warning 6328: (504-521): CHC: Assertion violation happens here.
+// Warning 6328: (572-589): CHC: Assertion violation happens here.

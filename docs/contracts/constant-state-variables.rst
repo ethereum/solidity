@@ -1,5 +1,7 @@
 .. index:: ! constant
 
+.. _constants:
+
 **************************************
 Constant and Immutable State Variables
 **************************************
@@ -8,6 +10,8 @@ State variables can be declared as ``constant`` or ``immutable``.
 In both cases, the variables cannot be modified after the contract has been constructed.
 For ``constant`` variables, the value has to be fixed at compile-time, while
 for ``immutable``, it can still be assigned at construction time.
+
+It is also possible to define ``constant`` variables at the file level.
 
 The compiler does not reserve a storage slot for these variables, and every occurrence is
 replaced by the respective value.
@@ -26,10 +30,11 @@ Not all types for constants and immutables are implemented at this time. The onl
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >0.7.2;
+
+    uint constant X = 32**22 + 8;
 
     contract C {
-        uint constant X = 32**22 + 8;
         string constant TEXT = "abc";
         bytes32 constant MY_HASH = keccak256("abc");
         uint immutable decimals;
