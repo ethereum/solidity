@@ -114,7 +114,7 @@ private:
 	void eraseKnowledge();
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
 	void setCurrentBlock(Predicate const& _block);
-	std::set<Expression const*, IdCompare> transactionAssertions(ASTNode const* _txRoot);
+	std::set<unsigned> transactionVerificationTargetsIds(ASTNode const* _txRoot);
 	//@}
 
 	/// Sort helpers.
@@ -181,19 +181,14 @@ private:
 	/// @returns <false, model> otherwise.
 	std::pair<smtutil::CheckResult, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
-	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
-	void addVerificationTarget(ASTNode const* _scope, VerificationTarget::Type _type, smtutil::Expression _errorId);
-	void addVerificationTarget(frontend::Expression const& _scope, VerificationTarget::Type _type, smtutil::Expression const& _target);
-	void addAssertVerificationTarget(ASTNode const* _scope, smtutil::Expression _from, smtutil::Expression _constraints, smtutil::Expression _errorId);
+	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTarget::Type _type, smtutil::Expression const& _errorCondition);
 
 	void checkVerificationTargets();
 	// Forward declaration. Definition is below.
 	struct CHCVerificationTarget;
 	void checkAssertTarget(ASTNode const* _scope, CHCVerificationTarget const& _target);
 	void checkAndReportTarget(
-		ASTNode const* _scope,
 		CHCVerificationTarget const& _target,
-		unsigned _errorId,
 		langutil::ErrorId _errorReporterId,
 		std::string _satMsg,
 		std::string _unknownMsg = ""
@@ -234,7 +229,7 @@ private:
 
 	/// @returns a new unique error id associated with _expr and stores
 	/// it into m_errorIds.
-	unsigned newErrorId(Expression const& _expr);
+	unsigned newErrorId();
 
 	smt::SymbolicState& state();
 	smt::SymbolicIntVariable& errorFlag();
@@ -275,12 +270,30 @@ private:
 	//@{
 	struct CHCVerificationTarget: VerificationTarget
 	{
-		smtutil::Expression errorId;
+		unsigned const errorId;
+		ASTNode const* const errorNode;
 	};
 
-	/// Verification targets corresponding to ASTNodes. There can be multiple targets for a single ASTNode,
-	/// e.g., divByZero and Overflow for signed division.
-	std::map<ASTNode const*, std::vector<CHCVerificationTarget>, IdCompare> m_verificationTargets;
+	/// Query placeholder stores information necessary to create the final query edge in the CHC system.
+	/// It is combined with the unique error id (and error type) to create a complete Verification Target.
+	struct CHCQueryPlaceholder
+	{
+		smtutil::Expression const constraints;
+		smtutil::Expression const errorExpression;
+		smtutil::Expression const fromPredicate;
+	};
+
+	/// Query placeholders for constructors, if the key has type ContractDefinition*,
+	/// or external functions, if the key has type FunctionDefinition*.
+	/// A placeholder is created for each possible context of a function (e.g. multiple contracts in contract inheritance hierarchy).
+	std::map<ASTNode const*, std::vector<CHCQueryPlaceholder>, IdCompare> m_queryPlaceholders;
+
+	/// Records verification conditions IDs per function encountered during an analysis of that function.
+	/// The key is the ASTNode of the function where the verification condition has been encountered,
+	/// or the ASTNode of the contract if the verification condition happens inside an implicit constructor.
+	std::map<ASTNode const*, std::vector<unsigned>, IdCompare> m_functionTargetIds;
+	/// Helper mapping unique IDs to actual verification targets.
+	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
 	/// Targets proven safe.
 	std::map<ASTNode const*, std::set<VerificationTarget::Type>> m_safeTargets;
@@ -293,12 +306,6 @@ private:
 	FunctionDefinition const* m_currentFunction = nullptr;
 
 	std::map<ASTNode const*, std::set<ASTNode const*, IdCompare>, IdCompare> m_callGraph;
-
-	std::map<ASTNode const*, std::set<Expression const*>, IdCompare> m_functionAssertions;
-
-	/// Maps ASTNode ids to error ids.
-	/// There can be multiple errorIds associated with a single ASTNode.
-	std::map<unsigned, std::vector<unsigned>> m_errorIds;
 
 	/// The current block.
 	smtutil::Expression m_currentBlock = smtutil::Expression(true);

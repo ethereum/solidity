@@ -8,3 +8,5 @@ contract C
 		return z;
 	}
 }
+// ----
+// Warning 4984: (116-121): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
