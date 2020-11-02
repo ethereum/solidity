@@ -17,6 +17,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // one() -> 3
 // two() -> FAILURE

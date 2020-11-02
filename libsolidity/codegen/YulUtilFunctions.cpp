@@ -2463,9 +2463,16 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 				return templ.render();
 			}
 
+		bool leftAligned = false;
+		if (
+			_type.category() != Type::Category::Function ||
+			dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::External
+		)
+			leftAligned = _type.leftAligned();
+
 		if (storageBytes == 32)
 			templ("cleaned", "value");
-		else if (_type.leftAligned())
+		else if (leftAligned)
 			templ("cleaned", shiftLeftFunction(256 - 8 * storageBytes) + "(value)");
 		else
 			templ("cleaned", "and(value, " + toCompactHexWithPrefix((u256(1) << (8 * storageBytes)) - 1) + ")");
@@ -2476,7 +2483,8 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _spl
 
 string YulUtilFunctions::prepareStoreFunction(Type const& _type)
 {
-	solUnimplementedAssert(_type.category() != Type::Category::Function, "");
+	if (_type.category() == Type::Category::Function)
+		solUnimplementedAssert(dynamic_cast<FunctionType const&>(_type).kind() == FunctionType::Kind::Internal, "");
 
 	string functionName = "prepare_store_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
@@ -2703,12 +2711,13 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			_to.identifier();
 		return m_functionCollector.createFunction(functionName, [&]() {
 			return Whiskers(R"(
-				function <functionName>(addr, functionId) -> outAddr, outFunctionId {
-					outAddr := addr
+				function <functionName>(<?external>addr, </external>functionId) -> <?external>outAddr, </external>outFunctionId {
+					<?external>outAddr := addr</external>
 					outFunctionId := functionId
 				}
 			)")
 			("functionName", functionName)
+			("external", fromType.kind() == FunctionType::Kind::External)
 			.render();
 		});
 	}
