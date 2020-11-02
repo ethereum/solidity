@@ -11,3 +11,4 @@ contract C
 }
 // ----
 // Warning 7737: (97-121): Assertion checker does not support inline assembly.
+// Warning 7737: (97-121): Assertion checker does not support inline assembly.

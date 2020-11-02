@@ -7,3 +7,4 @@ contract C {
 }
 // ----
 // Warning 7650: (108-118): Assertion checker does not yet support this expression.
+// Warning 7650: (108-118): Assertion checker does not yet support this expression.

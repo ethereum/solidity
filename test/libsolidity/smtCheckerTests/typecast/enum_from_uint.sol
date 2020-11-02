@@ -11,3 +11,4 @@ contract C
 }
 // ----
 // Warning 8364: (132-133): Assertion checker does not yet implement type type(enum C.D)
+// Warning 8364: (132-133): Assertion checker does not yet implement type type(enum C.D)

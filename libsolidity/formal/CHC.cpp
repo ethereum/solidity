@@ -79,6 +79,24 @@ void CHC::analyze(SourceUnit const& _source)
 		source->accept(*this);
 
 	checkVerificationTargets();
+
+	bool ranSolver = true;
+#ifndef HAVE_Z3
+	ranSolver = dynamic_cast<CHCSmtLib2Interface const*>(m_interface.get())->unhandledQueries().empty();
+#endif
+	if (!ranSolver && !m_noSolverWarning)
+	{
+		m_noSolverWarning = true;
+		m_outerErrorReporter.warning(
+			3996_error,
+			SourceLocation(),
+			"CHC analysis was not possible since no integrated z3 SMT solver was found."
+		);
+	}
+	else
+		m_outerErrorReporter.append(m_errorReporter.errors());
+
+	m_errorReporter.clear();
 }
 
 vector<string> CHC::unhandledQueries() const
@@ -1076,10 +1094,10 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 	case CheckResult::UNKNOWN:
 		break;
 	case CheckResult::CONFLICTING:
-		m_outerErrorReporter.warning(1988_error, _location, "CHC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(1988_error, _location, "CHC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;
 	case CheckResult::ERROR:
-		m_outerErrorReporter.warning(1218_error, _location, "CHC: Error trying to invoke SMT solver.");
+		m_errorReporter.warning(1218_error, _location, "CHC: Error trying to invoke SMT solver.");
 		break;
 	}
 	return {result, cex};
@@ -1233,21 +1251,21 @@ void CHC::checkAndReportTarget(
 		m_unsafeTargets[_target.errorNode].insert(_target.type);
 		auto cex = generateCounterexample(model, error().name);
 		if (cex)
-			m_outerErrorReporter.warning(
+			m_errorReporter.warning(
 				_errorReporterId,
 				location,
 				"CHC: " + _satMsg,
 				SecondarySourceLocation().append("Counterexample:\n" + *cex, SourceLocation{})
 			);
 		else
-			m_outerErrorReporter.warning(
+			m_errorReporter.warning(
 				_errorReporterId,
 				location,
 				"CHC: " + _satMsg
 			);
 	}
 	else if (!_unknownMsg.empty())
-		m_outerErrorReporter.warning(
+		m_errorReporter.warning(
 			_errorReporterId,
 			location,
 			"CHC: " + _unknownMsg
