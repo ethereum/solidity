@@ -34,10 +34,11 @@ BMC::BMC(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
-	smtutil::SMTSolverChoice _enabledSolvers
+	smtutil::SMTSolverChoice _enabledSolvers,
+	optional<unsigned> _timeout
 ):
 	SMTEncoder(_context),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers)),
+	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _timeout)),
 	m_outerErrorReporter(_errorReporter)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)

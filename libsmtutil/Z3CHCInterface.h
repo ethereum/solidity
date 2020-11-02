@@ -33,7 +33,7 @@ namespace solidity::smtutil
 class Z3CHCInterface: public CHCSolverInterface
 {
 public:
-	Z3CHCInterface();
+	Z3CHCInterface(std::optional<unsigned> _queryTimeout = {});
 
 	/// Forwards variable declaration to Z3Interface.
 	void declareVariable(std::string const& _name, SortPointer const& _sort) override;

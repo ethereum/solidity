@@ -420,7 +420,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"engine"};
+	static set<string> keys{"engine", "timeout"};
 	return checkKeys(_input, keys, "modelCheckerSettings");
 }
 
@@ -885,7 +885,14 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].asString());
 		if (!engine)
 			return formatFatalError("JSONError", "Invalid model checker engine requested.");
-		ret.modelCheckerEngine = *engine;
+		ret.modelCheckerSettings.engine = *engine;
+	}
+
+	if (modelCheckerSettings.isMember("timeout"))
+	{
+		if (!modelCheckerSettings["timeout"].isUInt())
+			return formatFatalError("JSONError", "modelCheckerSettings.timeout must be an unsigned integer.");
+		ret.modelCheckerSettings.timeout = modelCheckerSettings["timeout"].asUInt();
 	}
 
 	return { std::move(ret) };
@@ -908,7 +915,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
-	compilerStack.setModelCheckerEngine(_inputsAndSettings.modelCheckerEngine);
+	compilerStack.setModelCheckerSettings(_inputsAndSettings.modelCheckerSettings);
 
 	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));

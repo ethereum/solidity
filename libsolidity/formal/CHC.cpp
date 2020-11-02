@@ -49,18 +49,20 @@ CHC::CHC(
 	ErrorReporter& _errorReporter,
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
-	SMTSolverChoice _enabledSolvers
+	SMTSolverChoice _enabledSolvers,
+	optional<unsigned> _timeout
 ):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
-	m_enabledSolvers(_enabledSolvers)
+	m_enabledSolvers(_enabledSolvers),
+	m_queryTimeout(_timeout)
 {
 	bool usesZ3 = _enabledSolvers.z3;
 #ifndef HAVE_Z3
 	usesZ3 = false;
 #endif
 	if (!usesZ3)
-		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback);
+		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback, m_queryTimeout);
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -681,7 +683,7 @@ void CHC::resetSourceAnalysis()
 	if (usesZ3)
 	{
 		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
-		m_interface.reset(new Z3CHCInterface());
+		m_interface.reset(new Z3CHCInterface(m_queryTimeout));
 		auto z3Interface = dynamic_cast<Z3CHCInterface const*>(m_interface.get());
 		solAssert(z3Interface, "");
 		m_context.setSolver(z3Interface->z3Interface());

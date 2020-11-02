@@ -27,12 +27,17 @@ using namespace std;
 using namespace solidity::smtutil;
 using namespace solidity::util;
 
-Z3Interface::Z3Interface():
+Z3Interface::Z3Interface(std::optional<unsigned> _queryTimeout):
+	SolverInterface(_queryTimeout),
 	m_solver(m_context)
 {
 	// These need to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
-	z3::set_param("rlimit", resourceLimit);
+
+	if (m_queryTimeout)
+		m_context.set("timeout", int(*m_queryTimeout));
+	else
+		z3::set_param("rlimit", resourceLimit);
 }
 
 void Z3Interface::reset()
@@ -104,9 +109,19 @@ pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _
 				values.push_back(util::toString(m.eval(toZ3Expr(e))));
 		}
 	}
-	catch (z3::exception const&)
+	catch (z3::exception const& _err)
 	{
-		result = CheckResult::ERROR;
+		set<string> msgs{
+			/// Resource limit (rlimit) exhausted.
+			"max. resource limit exceeded",
+			/// User given timeout exhausted.
+			"canceled"
+		};
+
+		if (msgs.count(_err.msg()))
+			result = CheckResult::UNKNOWN;
+		else
+			result = CheckResult::ERROR;
 		values.clear();
 	}
 

@@ -33,6 +33,8 @@ namespace solidity::smtutil
 class CHCSolverInterface
 {
 public:
+	CHCSolverInterface(std::optional<unsigned> _queryTimeout = {}): m_queryTimeout(_queryTimeout) {}
+
 	virtual ~CHCSolverInterface() = default;
 
 	virtual void declareVariable(std::string const& _name, SortPointer const& _sort) = 0;
@@ -56,6 +58,9 @@ public:
 	virtual std::pair<CheckResult, CexGraph> query(
 		Expression const& _expr
 	) = 0;
+
+protected:
+	std::optional<unsigned> m_queryTimeout;
 };
 
 }

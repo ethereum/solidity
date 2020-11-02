@@ -42,7 +42,8 @@ public:
 	SMTPortfolio(
 		std::map<util::h256, std::string> _smtlib2Responses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},
-		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All()
+		SMTSolverChoice _enabledSolvers = SMTSolverChoice::All(),
+		std::optional<unsigned> _queryTimeout = {}
 	);
 
 	void reset() override;

@@ -27,7 +27,8 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::smtutil;
 
-CVC4Interface::CVC4Interface():
+CVC4Interface::CVC4Interface(optional<unsigned> _queryTimeout):
+	SolverInterface(_queryTimeout),
 	m_solver(&m_context)
 {
 	reset();
@@ -38,7 +39,10 @@ void CVC4Interface::reset()
 	m_variables.clear();
 	m_solver.reset();
 	m_solver.setOption("produce-models", true);
-	m_solver.setResourceLimit(resourceLimit);
+	if (m_queryTimeout)
+		m_solver.setTimeLimit(*m_queryTimeout);
+	else
+		m_solver.setResourceLimit(resourceLimit);
 }
 
 void CVC4Interface::push()

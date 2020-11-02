@@ -28,7 +28,7 @@ namespace solidity::smtutil
 class Z3Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	Z3Interface();
+	Z3Interface(std::optional<unsigned> _queryTimeout = {});
 
 	void reset() override;
 

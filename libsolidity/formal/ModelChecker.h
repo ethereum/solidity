@@ -71,6 +71,12 @@ struct ModelCheckerEngine
 	}
 };
 
+struct ModelCheckerSettings
+{
+	ModelCheckerEngine engine = ModelCheckerEngine::All();
+	std::optional<unsigned> timeout;
+};
+
 class ModelChecker
 {
 public:
@@ -79,7 +85,7 @@ public:
 	ModelChecker(
 		langutil::ErrorReporter& _errorReporter,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
-		ModelCheckerEngine _engine = ModelCheckerEngine::All(),
+		ModelCheckerSettings _settings = ModelCheckerSettings{},
 		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
 		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
 	);
@@ -95,7 +101,7 @@ public:
 	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
-	ModelCheckerEngine m_engine;
+	ModelCheckerSettings m_settings;
 
 	/// Stores the context of the encoding.
 	smt::EncodingContext m_context;
