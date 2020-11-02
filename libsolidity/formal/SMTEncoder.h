@@ -90,6 +90,7 @@ protected:
 	bool visit(WhileStatement const&) override { return false; }
 	bool visit(ForStatement const&) override { return false; }
 	void endVisit(VariableDeclarationStatement const& _node) override;
+	bool visit(Assignment const& _node) override;
 	void endVisit(Assignment const& _node) override;
 	void endVisit(TupleExpression const& _node) override;
 	bool visit(UnaryOperation const& _node) override;
@@ -282,10 +283,14 @@ protected:
 
 	/// @returns the declaration referenced by _expr, if any,
 	/// and nullptr otherwise.
-	Declaration const* expressionToDeclaration(Expression const& _expr);
+	Declaration const* expressionToDeclaration(Expression const& _expr) const;
 
 	/// @returns the VariableDeclaration referenced by an Expression or nullptr.
-	VariableDeclaration const* identifierToVariable(Expression const& _expr);
+	VariableDeclaration const* identifierToVariable(Expression const& _expr) const;
+
+	/// @returns the MemberAccess <expression>.push if _expr is an empty array push call,
+	/// otherwise nullptr.
+	MemberAccess const* isEmptyPush(Expression const& _expr) const;
 
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
