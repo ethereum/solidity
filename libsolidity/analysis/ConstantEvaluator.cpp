@@ -25,7 +25,10 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
+
 #include <liblangutil/ErrorReporter.h>
+
+#include <libsolutil/Common.h>
 
 using namespace std;
 using namespace solidity;
@@ -71,6 +74,11 @@ void ConstantEvaluator::endVisit(Literal const& _literal)
 	setType(_literal, TypeProvider::forLiteral(_literal));
 }
 
+bool ConstantEvaluator::evaluated(ASTNode const& _node) const noexcept
+{
+	return m_evaluations.count(&_node) != 0;
+}
+
 void ConstantEvaluator::endVisit(Identifier const& _identifier)
 {
 	VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration);
@@ -82,11 +90,12 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	ASTPointer<Expression> const& value = variableDeclaration->value();
 	if (!value)
 		return;
-	else if (!m_types->count(value.get()))
+	else if (!evaluated(*value))
 	{
 		if (m_depth > 32)
 			m_errorReporter.fatalTypeError(5210_error, _identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
-		ConstantEvaluator(m_errorReporter, m_depth + 1, m_types).evaluate(*value);
+
+		evaluate(*value);
 	}
 
 	setType(_identifier, type(*value));
@@ -101,16 +110,29 @@ void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
 void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
 {
 	if (_type && _type->category() == Type::Category::RationalNumber)
-		(*m_types)[&_node] = _type;
+		m_evaluations[&_node] = _type;
 }
 
 TypePointer ConstantEvaluator::type(ASTNode const& _node)
 {
-	return (*m_types)[&_node];
+	if (auto p = m_evaluations.find(&_node); p != m_evaluations.end())
+		return p->second;
+	return nullptr;
+}
+
+TypePointer ConstantEvaluator::evaluate(langutil::ErrorReporter& _errorReporter, Expression const& _expr)
+{
+	EvaluationMap evaluations;
+	ConstantEvaluator evaluator(_errorReporter, evaluations);
+	return evaluator.evaluate(_expr);
 }
 
 TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
 {
+	m_depth++;
+	ScopeGuard _([&]() { m_depth--; });
+
 	_expr.accept(*this);
+
 	return type(_expr);
 }

@@ -347,6 +347,8 @@ TypePointer TypeProvider::forLiteral(Literal const& _literal)
 	case Token::FalseLiteral:
 		return boolean();
 	case Token::Number:
+		// TODO: return IntegerType, smallest fitting type in number of bits.
+		//return integer(8, IntegerType::Modifier::Unsigned); // XXX
 		return rationalNumber(_literal);
 	case Token::StringLiteral:
 	case Token::UnicodeStringLiteral:

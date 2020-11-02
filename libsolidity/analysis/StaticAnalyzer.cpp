@@ -291,7 +291,7 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
 	)
 		if (auto rhs = dynamic_cast<RationalNumberType const*>(
-			ConstantEvaluator(m_errorReporter).evaluate(_operation.rightExpression())
+			ConstantEvaluator::evaluate(m_errorReporter, _operation.rightExpression())
 		))
 			if (rhs->isZero())
 				m_errorReporter.typeError(
@@ -314,7 +314,7 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 			solAssert(_functionCall.arguments().size() == 3, "");
 			if (*_functionCall.arguments()[2]->annotation().isPure)
 				if (auto lastArg = dynamic_cast<RationalNumberType const*>(
-					ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
+					ConstantEvaluator::evaluate(m_errorReporter, *(_functionCall.arguments())[2])
 				))
 					if (lastArg->isZero())
 						m_errorReporter.typeError(

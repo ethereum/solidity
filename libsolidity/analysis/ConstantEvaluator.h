@@ -43,16 +43,19 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	ConstantEvaluator(
-		langutil::ErrorReporter& _errorReporter,
-		size_t _newDepth = 0,
-		std::shared_ptr<std::map<ASTNode const*, TypePointer>> _types = std::make_shared<std::map<ASTNode const*, TypePointer>>()
-	):
-		m_errorReporter(_errorReporter),
-		m_depth(_newDepth),
-		m_types(std::move(_types))
+	using EvaluationMap = std::map<ASTNode const*, TypePointer>;
+
+	ConstantEvaluator(langutil::ErrorReporter& _errorReporter, EvaluationMap& _evaluations):
+		m_errorReporter{ _errorReporter },
+		m_evaluations{ _evaluations },
+		m_depth{ 0 }
 	{
 	}
+
+	static TypePointer evaluate(
+		langutil::ErrorReporter& _errorReporter,
+		Expression const& _expr
+	);
 
 	TypePointer evaluate(Expression const& _expr);
 
@@ -63,13 +66,16 @@ private:
 	void endVisit(Identifier const& _identifier) override;
 	void endVisit(TupleExpression const& _tuple) override;
 
-	void setType(ASTNode const& _node, TypePointer const& _type);
+	void setType(ASTNode const& _node, TypePointer const& _value);
+
 	TypePointer type(ASTNode const& _node);
 
+	bool evaluated(ASTNode const& _node) const noexcept;
+
 	langutil::ErrorReporter& m_errorReporter;
+	EvaluationMap& m_evaluations;
 	/// Current recursion depth.
 	size_t m_depth = 0;
-	std::shared_ptr<std::map<ASTNode const*, TypePointer>> m_types;
 };
 
 }

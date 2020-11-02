@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// TypeError 5210: (36-39): Cyclic constant definition (or maximum recursion depth exhausted).
+// TypeError 5210: (69-71): Cyclic constant definition (or maximum recursion depth exhausted).
