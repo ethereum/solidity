@@ -487,26 +487,28 @@ void TestFileParser::Scanner::scanNextToken()
 	// Make code coverage happy.
 	assert(formatToken(Token::NUM_TOKENS) == "");
 
-	auto detectKeyword = [](std::string const& _literal = "") -> TokenDesc {
-		if (_literal == "true") return TokenDesc{Token::Boolean, _literal};
-		if (_literal == "false") return TokenDesc{Token::Boolean, _literal};
-		if (_literal == "ether") return TokenDesc{Token::Ether, _literal};
-		if (_literal == "wei") return TokenDesc{Token::Wei, _literal};
-		if (_literal == "left") return TokenDesc{Token::Left, _literal};
-		if (_literal == "library") return TokenDesc{Token::Library, _literal};
-		if (_literal == "right") return TokenDesc{Token::Right, _literal};
-		if (_literal == "hex") return TokenDesc{Token::Hex, _literal};
-		if (_literal == "FAILURE") return TokenDesc{Token::Failure, _literal};
-		if (_literal == "storage") return TokenDesc{Token::Storage, _literal};
-		return TokenDesc{Token::Identifier, _literal};
+	auto detectKeyword = [](std::string const& _literal = "") -> std::pair<Token, std::string> {
+		if (_literal == "true") return {Token::Boolean, "true"};
+		if (_literal == "false") return {Token::Boolean, "false"};
+		if (_literal == "ether") return {Token::Ether, ""};
+		if (_literal == "wei") return {Token::Wei, ""};
+		if (_literal == "left") return {Token::Left, ""};
+		if (_literal == "library") return {Token::Library, ""};
+		if (_literal == "right") return {Token::Right, ""};
+		if (_literal == "hex") return {Token::Hex, ""};
+		if (_literal == "FAILURE") return {Token::Failure, ""};
+		if (_literal == "storage") return {Token::Storage, ""};
+		return {Token::Identifier, _literal};
 	};
 
-	auto selectToken = [this](Token _token, std::optional<std::string> _literal = std::nullopt) -> TokenDesc {
+	auto selectToken = [this](Token _token, std::string const& _literal = "") {
 		advance();
-		return make_pair(_token, _literal.has_value() ? *_literal : formatToken(_token));
+		m_currentToken = _token;
+		m_currentLiteral = _literal;
 	};
 
-	TokenDesc token = make_pair(Token::Unknown, "");
+	m_currentToken = Token::Unknown;
+	m_currentLiteral = "";
 	do
 	{
 		switch(current())
@@ -514,48 +516,48 @@ void TestFileParser::Scanner::scanNextToken()
 		case '/':
 			advance();
 			if (current() == '/')
-				token = selectToken(Token::Newline);
+				selectToken(Token::Newline);
 			else
-				token = selectToken(Token::Invalid);
+				selectToken(Token::Invalid);
 			break;
 		case '-':
 			if (peek() == '>')
 			{
 				advance();
-				token = selectToken(Token::Arrow);
+				selectToken(Token::Arrow);
 			}
 			else
-				token = selectToken(Token::Sub);
+				selectToken(Token::Sub);
 			break;
 		case ':':
-			token = selectToken(Token::Colon);
+			selectToken(Token::Colon);
 			break;
 		case '#':
-			token = selectToken(Token::Comment, scanComment());
+			selectToken(Token::Comment, scanComment());
 			break;
 		case ',':
-			token = selectToken(Token::Comma);
+			selectToken(Token::Comma);
 			break;
 		case '(':
-			token = selectToken(Token::LParen);
+			selectToken(Token::LParen);
 			break;
 		case ')':
-			token = selectToken(Token::RParen);
+			selectToken(Token::RParen);
 			break;
 		case '[':
-			token = selectToken(Token::LBrack);
+			selectToken(Token::LBrack);
 			break;
 		case ']':
-			token = selectToken(Token::RBrack);
+			selectToken(Token::RBrack);
 			break;
 		case '\"':
-			token = selectToken(Token::String, scanString());
+			selectToken(Token::String, scanString());
 			break;
 		default:
 			if (langutil::isIdentifierStart(current()))
 			{
-				TokenDesc detectedToken = detectKeyword(scanIdentifierOrKeyword());
-				token = selectToken(detectedToken.first, detectedToken.second);
+				std::tie(m_currentToken, m_currentLiteral) = detectKeyword(scanIdentifierOrKeyword());
+				advance();
 			}
 			else if (langutil::isDecimalDigit(current()))
 			{
@@ -563,22 +565,24 @@ void TestFileParser::Scanner::scanNextToken()
 				{
 					advance();
 					advance();
-					token = selectToken(Token::HexNumber, "0x" + scanHexNumber());
+					selectToken(Token::HexNumber, "0x" + scanHexNumber());
 				}
 				else
-					token = selectToken(Token::Number, scanDecimalNumber());
+					selectToken(Token::Number, scanDecimalNumber());
 			}
 			else if (langutil::isWhiteSpace(current()))
-				token = selectToken(Token::Whitespace);
+				selectToken(Token::Whitespace);
 			else if (isEndOfLine())
-				token = make_pair(Token::EOS, "EOS");
+			{
+				m_currentToken = Token::EOS;
+				m_currentLiteral = "";
+			}
 			else
 				throw TestParserError("Unexpected character: '" + string{current()} + "'");
 			break;
 		}
 	}
-	while (token.first == Token::Whitespace);
-	m_currentToken = token;
+	while (m_currentToken == Token::Whitespace);
 }
 
 string TestFileParser::Scanner::scanComment()

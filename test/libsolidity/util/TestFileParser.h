@@ -79,8 +79,8 @@ private:
 		/// Reads character stream and creates token.
 		void scanNextToken();
 
-		soltest::Token currentToken() { return m_currentToken.first; }
-		std::string currentLiteral() { return m_currentToken.second; }
+		soltest::Token currentToken() { return m_currentToken; }
+		std::string currentLiteral() { return m_currentLiteral; }
 
 		std::string scanComment();
 		std::string scanIdentifierOrKeyword();
@@ -90,8 +90,6 @@ private:
 		char scanHexPart();
 
 	private:
-		using TokenDesc = std::pair<soltest::Token, std::string>;
-
 		/// Advances current position in the input stream.
 		void advance(unsigned n = 1)
 		{
@@ -118,7 +116,8 @@ private:
 		std::string m_line;
 		std::string::const_iterator m_char;
 
-		TokenDesc m_currentToken;
+		std::string m_currentLiteral;
+		soltest::Token m_currentToken = soltest::Token::Unknown;
 	};
 
 	bool accept(soltest::Token _token, bool const _expect = false);
