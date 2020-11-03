@@ -120,8 +120,6 @@ private:
 		std::string m_line;
 		std::string::const_iterator m_char;
 
-		std::string m_currentLiteral;
-
 		TokenDesc m_currentToken;
 	};
 
