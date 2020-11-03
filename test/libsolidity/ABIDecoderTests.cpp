@@ -136,54 +136,6 @@ BOOST_AUTO_TEST_CASE(cleanup)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(fixed_arrays)
-{
-	string sourceCode = R"(
-		contract C {
-			function f(uint16[3] memory a, uint16[2][3] memory b, uint i, uint j, uint k)
-					public pure returns (uint, uint) {
-				return (a[i], b[j][k]);
-			}
-		}
-	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		bytes args = encodeArgs(
-			1, 2, 3,
-			11, 12,
-			21, 22,
-			31, 32,
-			1, 2, 1
-		);
-		ABI_CHECK(
-			callContractFunction("f(uint16[3],uint16[2][3],uint256,uint256,uint256)", args),
-			encodeArgs(u256(2), u256(32))
-		);
-	)
-}
-
-BOOST_AUTO_TEST_CASE(calldata_arrays_too_large)
-{
-	string sourceCode = R"(
-		contract C {
-			function f(uint a, uint[] calldata b, uint c) external pure returns (uint) {
-				return 7;
-			}
-		}
-	)";
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		bytes args = encodeArgs(
-			6, 0x60, 9,
-			(u256(1) << 255) + 2, 1, 2
-		);
-		ABI_CHECK(
-			callContractFunction("f(uint256,uint256[],uint256)", args),
-			encodeArgs()
-		);
-	)
-}
-
 BOOST_AUTO_TEST_CASE(decode_from_memory_simple)
 {
 	string sourceCode = R"(
