@@ -46,8 +46,6 @@ public:
 
 	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 
-	void setSpacerOptions(bool _preProcessing = true);
-
 private:
 	/// Constructs a nonlinear counterexample graph from the refutation.
 	CHCSolverInterface::CexGraph cexGraph(z3::expr const& _proof) const;
@@ -57,8 +55,6 @@ private:
 	std::string name(z3::expr const& _predicate);
 	/// @returns the arguments of @a _predicate.
 	std::vector<std::string> arguments(z3::expr const& _predicate);
-
-	std::pair<CheckResult, std::optional<z3::expr>> queryWithStrategy(z3::expr);
 
 	// Used to handle variables.
 	std::unique_ptr<Z3Interface> m_z3Interface;

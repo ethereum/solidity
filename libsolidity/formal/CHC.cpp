@@ -1066,9 +1066,7 @@ void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
 
 pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression const& _query, langutil::SourceLocation const& _location)
 {
-	CheckResult result;
-	CHCSolverInterface::CexGraph cex;
-	tie(result, cex) = m_interface->query(_query);
+	auto [result, cex] = m_interface->query(_query);
 	switch (result)
 	{
 	case CheckResult::SATISFIABLE:

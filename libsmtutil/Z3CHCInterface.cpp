@@ -27,6 +27,187 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::smtutil;
 
+namespace
+{
+class SpacerStrategy
+{
+public:
+	virtual pair<CheckResult, optional<z3::expr>> runQuery(z3::expr _expr) = 0;
+	virtual ~SpacerStrategy() = default;
+};
+
+class CustomizableSpacerStrategy : public SpacerStrategy
+{
+protected:
+	z3::fixedpoint& m_solver;
+	z3::params m_params;
+public:
+	explicit CustomizableSpacerStrategy(z3::fixedpoint& _solver): m_solver(_solver), m_params(_solver.ctx()) {}
+
+	virtual ~CustomizableSpacerStrategy() = default;
+
+	pair<CheckResult, optional<z3::expr>> runQuery(z3::expr expr) override
+	{
+		setParamsForSolver();
+		try
+		{
+			switch (m_solver.query(expr))
+			{
+				case z3::check_result::sat:
+					return { CheckResult::SATISFIABLE, m_solver.get_answer() };
+				case z3::check_result::unsat:
+					return { CheckResult::UNSATISFIABLE, {} };
+				case z3::check_result::unknown:
+					return { CheckResult::UNKNOWN, {} };
+			}
+		}
+		catch (z3::exception const & _err)
+		{
+			set<string> msgs{
+				/// Resource limit (rlimit) exhausted.
+				"max. resource limit exceeded",
+				/// User given timeout exhausted.
+				"canceled"
+			};
+			auto res = msgs.count(_err.msg()) ? CheckResult::UNKNOWN : CheckResult::ERROR;
+			return { res, {} };
+		}
+		smtAssert(false, "Unreachable!"); // GCC complains if this is missing.
+	}
+
+	virtual void setParamsForSolver()
+	{
+		m_solver.set(m_params);
+	}
+
+	template<typename T>
+	void setOptions(T const& optionMap)
+	{
+		for (auto const& entry: optionMap)
+			m_params.set(entry.first, entry.second);
+	}
+};
+
+class DefaultSpacerStrategy : public CustomizableSpacerStrategy
+{
+public:
+	explicit DefaultSpacerStrategy(z3::fixedpoint& _solver) : CustomizableSpacerStrategy(_solver)
+	{
+		// These needs to be set in the solver.
+		// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
+		auto options = map<char const*, bool>
+		{
+			// These are useful for solving problems with arrays and loops.
+			// Use quantified lemma generalizer.
+			{"fp.spacer.q3.use_qgen", true},
+			{"fp.spacer.mbqi", false},
+			// Ground pobs by using values from a model.
+			{"fp.spacer.ground_pobs", false},
+
+			{"fp.spacer.weak_abs", true},
+			// preprocessing enabled
+			{"fp.xform.slice", true},
+			{"fp.xform.inline_linear", true},
+			{"fp.xform.inline_eager", true}
+		};
+		setOptions(options);
+	}
+
+	virtual ~DefaultSpacerStrategy() = default;
+};
+
+class DefaultWithoutWeakAbstractionSpacerStrategy : public DefaultSpacerStrategy
+{
+public:
+	explicit DefaultWithoutWeakAbstractionSpacerStrategy(z3::fixedpoint& _solver) : DefaultSpacerStrategy(_solver)
+	{
+		m_params.set("fp.spacer.weak_abs", false);
+	}
+};
+
+//class InverseDefaultSpacerStrategy : public CustomizableSpacerStrategy
+//{
+//public:
+//	explicit InverseDefaultSpacerStrategy(z3::fixedpoint& _solver) : CustomizableSpacerStrategy(_solver)
+//	{
+//		// These needs to be set in the solver.
+//		// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
+//		setOptions(map<char const*, bool>{
+//			// These are useful for solving problems with arrays and loops.
+//			// Use quantified lemma generalizer.
+//			{"fp.spacer.q3.use_qgen", false},
+//			{"fp.spacer.mbqi", true},
+//			// Ground pobs by using values from a model.
+//			{"fp.spacer.ground_pobs", true},
+//			// preprocessing enabled
+//			{"fp.xform.slice", true},
+//			{"fp.xform.inline_linear", true},
+//			{"fp.xform.inline_eager", true}
+//		});
+//	}
+//};
+
+
+class SpacerStrategyPreprocessingDisabled : public SpacerStrategy
+{
+	unique_ptr<CustomizableSpacerStrategy> m_base;
+public:
+	explicit SpacerStrategyPreprocessingDisabled(unique_ptr<CustomizableSpacerStrategy> _base) : m_base(move(_base))
+	{
+		m_base->setOptions(map<char const*, bool>
+		{
+			{"fp.xform.slice", false},
+			{"fp.xform.inline_linear", false},
+			{"fp.xform.inline_eager", false}
+		});
+	}
+
+	pair<CheckResult, optional<z3::expr>> runQuery(z3::expr expr) override
+	{
+		return m_base->runQuery(expr);
+	}
+};
+
+class EnsureCorrectCounterExampleStrategy : public SpacerStrategy
+{
+	unique_ptr<CustomizableSpacerStrategy> m_base;
+public:
+	explicit EnsureCorrectCounterExampleStrategy(unique_ptr<CustomizableSpacerStrategy> _base) : m_base(move(_base)) {}
+
+	pair<CheckResult, optional<z3::expr>> runQuery(z3::expr _expr) override
+	{
+		auto [result, proof] = m_base->runQuery(_expr);
+		if (result == CheckResult::SATISFIABLE)
+		{
+			// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
+			// We now disable those optimizations and check whether we can still solve the problem.
+			auto [resultNoOpt, proofNoOpt] = SpacerStrategyPreprocessingDisabled(make_unique<CustomizableSpacerStrategy>(*m_base)).runQuery(_expr);
+			if (resultNoOpt == CheckResult::SATISFIABLE)
+				proof = proofNoOpt;
+		}
+		return {result, proof};
+	}
+};
+
+class ComposedSpacerStrategy : public SpacerStrategy
+{
+	unique_ptr<SpacerStrategy> m_main;
+	unique_ptr<SpacerStrategy> m_backup;
+
+public:
+	ComposedSpacerStrategy(unique_ptr<SpacerStrategy> _main, unique_ptr<SpacerStrategy> _backup)
+		: m_main(move(_main)), m_backup(move(_backup)) {}
+
+	pair<CheckResult, optional<z3::expr>> runQuery(z3::expr _expr) override
+	{
+		auto res = m_main->runQuery(_expr);
+		if (res.first == CheckResult::SATISFIABLE || res.first == CheckResult::UNSATISFIABLE)
+			return res;
+		return m_backup->runQuery(_expr);
+	}
+};
+}
+
 Z3CHCInterface::Z3CHCInterface(optional<unsigned> _queryTimeout):
 	CHCSolverInterface(_queryTimeout),
 	m_z3Interface(make_unique<Z3Interface>(m_queryTimeout)),
@@ -40,8 +221,6 @@ Z3CHCInterface::Z3CHCInterface(optional<unsigned> _queryTimeout):
 		m_context->set("timeout", int(*m_queryTimeout));
 	else
 		z3::set_param("rlimit", Z3Interface::resourceLimit);
-
-	setSpacerOptions();
 }
 
 void Z3CHCInterface::declareVariable(string const& _name, SortPointer const& _sort)
@@ -70,46 +249,21 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 	}
 }
 
-pair<CheckResult, optional<z3::expr>> Z3CHCInterface::queryWithStrategy(z3::expr z3Expr) {
-	try {
-		switch (m_solver.query(z3Expr))
-		{
-			case z3::check_result::sat:
-				return { CheckResult::SATISFIABLE, m_solver.get_answer() };
-			case z3::check_result::unsat:
-				return { CheckResult::UNSATISFIABLE, optional<z3::expr>{} };
-			case z3::check_result::unknown:
-				return { CheckResult::UNKNOWN, optional<z3::expr>{} };
-		}
-	}
-	catch (z3::exception const & _err) {
-		set<string> msgs{
-			/// Resource limit (rlimit) exhausted.
-			"max. resource limit exceeded",
-			/// User given timeout exhausted.
-			"canceled"
-		};
-		auto res = _msgs.count(_err.msg()) ? CheckResult::UNKNOWN : CheckResult::ERROR;
-		return { res, optional<z3::expr>{} };
-	}
-}
-
 pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CHCSolverInterface::CexGraph cex;
 	z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);
-	auto [result, proof] = queryWithStrategy(z3Expr);
+
+	auto strategy = make_unique<ComposedSpacerStrategy>(
+		make_unique<EnsureCorrectCounterExampleStrategy>(make_unique<DefaultSpacerStrategy>(m_solver)),
+		make_unique<EnsureCorrectCounterExampleStrategy>(make_unique<DefaultWithoutWeakAbstractionSpacerStrategy>(m_solver))
+	);
+	auto [result, proof] = strategy->runQuery(z3Expr);
 	switch (result) {
 		case CheckResult::SATISFIABLE: {
-			// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
-			// We now disable those optimizations and check whether we can still solve the problem.
-			setSpacerOptions(false);
-			auto [resultNoOpt, proofNoOpt] = queryWithStrategy(z3Expr);
-			if (resultNoOpt == CheckResult::SATISFIABLE) {
-				cex = cexGraph(proofNoOpt.value());
-			}
-			setSpacerOptions(true);
-			return {result, cex};
+			if (proof)
+				cex = cexGraph(proof.value());
+			break;
 		}
 		case CheckResult::UNSATISFIABLE: {
 			// TODO retrieve invariants.
@@ -125,29 +279,6 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 	}
 	// TODO retrieve model / invariants
 	return {result, cex};
-}
-
-void Z3CHCInterface::setSpacerOptions(bool _preProcessing)
-{
-	// Spacer options.
-	// These needs to be set in the solver.
-	// https://github.com/Z3Prover/z3/blob/master/src/muz/base/fp_params.pyg
-	z3::params p(*m_context);
-	// These are useful for solving problems with arrays and loops.
-	// Use quantified lemma generalizer.
-	p.set("fp.spacer.q3.use_qgen", true);
-	p.set("fp.spacer.mbqi", false);
-	// Ground pobs by using values from a model.
-	p.set("fp.spacer.ground_pobs", false);
-
-	// Spacer optimization should be
-	// - enabled for better solving (default)
-	// - disable for counterexample generation
-	p.set("fp.xform.slice", _preProcessing);
-	p.set("fp.xform.inline_linear", _preProcessing);
-	p.set("fp.xform.inline_eager", _preProcessing);
-
-	m_solver.set(p);
 }
 
 /**
