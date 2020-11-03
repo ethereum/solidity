@@ -17,4 +17,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 2443: (B:90-100): The type of this parameter, struct C.Item, is only supported in ABIEncoderV2. Use "pragma experimental ABIEncoderV2;" to enable the feature.
+// TypeError 2443: (B:90-100): The type of this parameter, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

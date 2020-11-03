@@ -332,12 +332,12 @@ smtutil::Expression SymbolicArrayVariable::valueAtIndex(unsigned _index) const
 	return m_pair.valueAtIndex(_index);
 }
 
-smtutil::Expression SymbolicArrayVariable::elements()
+smtutil::Expression SymbolicArrayVariable::elements() const
 {
 	return m_pair.component(0);
 }
 
-smtutil::Expression SymbolicArrayVariable::length()
+smtutil::Expression SymbolicArrayVariable::length() const
 {
 	return m_pair.component(1);
 }

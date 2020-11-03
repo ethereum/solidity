@@ -7,4 +7,4 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (76-83): CHC: Empty array "pop" detected here.
+// Warning 2529: (76-83): CHC: Empty array "pop" happens here.

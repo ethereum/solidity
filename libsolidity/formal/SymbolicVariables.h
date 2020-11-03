@@ -260,8 +260,8 @@ public:
 	smtutil::Expression resetIndex() override { SymbolicVariable::resetIndex(); return m_pair.resetIndex(); }
 	smtutil::Expression setIndex(unsigned _index) override { SymbolicVariable::setIndex(_index); return m_pair.setIndex(_index); }
 	smtutil::Expression increaseIndex() override { SymbolicVariable::increaseIndex(); return m_pair.increaseIndex(); }
-	smtutil::Expression elements();
-	smtutil::Expression length();
+	smtutil::Expression elements() const;
+	smtutil::Expression length() const;
 
 	smtutil::SortPointer tupleSort() { return m_pair.sort(); }
 

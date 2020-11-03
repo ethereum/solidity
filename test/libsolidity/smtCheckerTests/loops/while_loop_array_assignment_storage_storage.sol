@@ -14,12 +14,12 @@ contract LoopFor2 {
 			c[i] = b[i];
 			++i;
 		}
-		assert(b[0] == c[0]);
+		//assert(b[0] == c[0]); // Removed because of Spacer's nondeterminism
 		assert(a[0] == 900);
 		assert(b[0] == 900);
 	}
 }
 // ----
 // Warning 4984: (229-234): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6328: (290-309): CHC: Assertion violation happens here.
-// Warning 6328: (313-332): CHC: Assertion violation happens here.
+// Warning 6328: (338-357): CHC: Assertion violation happens here.
+// Warning 6328: (361-380): CHC: Assertion violation happens here.

@@ -348,12 +348,45 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 
 }
 
+bool SMTEncoder::visit(Assignment const& _assignment)
+{
+	auto const& left = _assignment.leftHandSide();
+	auto const& right = _assignment.rightHandSide();
+
+	if (auto const* memberAccess = isEmptyPush(left))
+	{
+		right.accept(*this);
+		left.accept(*this);
+
+		auto const& memberExpr = memberAccess->expression();
+		auto& symbArray = dynamic_cast<smt::SymbolicArrayVariable&>(*m_context.expression(memberExpr));
+		smtutil::Expression oldElements = symbArray.elements();
+		smtutil::Expression length = symbArray.length();
+		symbArray.increaseIndex();
+		m_context.addAssertion(symbArray.elements() == smtutil::Expression::store(
+			oldElements,
+			length - 1,
+			expr(right)
+		));
+		m_context.addAssertion(symbArray.length() == length);
+
+		arrayPushPopAssign(memberExpr, symbArray.currentValue());
+		defineExpr(_assignment, expr(left));
+		return false;
+	}
+
+	return true;
+}
+
 void SMTEncoder::endVisit(Assignment const& _assignment)
 {
 	createExpr(_assignment);
 
 	Token op = _assignment.assignmentOperator();
 	solAssert(TokenTraits::isAssignmentOp(op), "");
+
+	if (isEmptyPush(_assignment.leftHandSide()))
+		return;
 
 	if (!smt::isSupportedType(*_assignment.annotation().type))
 	{
@@ -465,14 +498,14 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 			assignment(*decl, newValue);
 		}
 		else if (
-			dynamic_cast<IndexAccess const*>(&_op.subExpression()) ||
-			dynamic_cast<MemberAccess const*>(&_op.subExpression())
+			dynamic_cast<IndexAccess const*>(subExpr) ||
+			dynamic_cast<MemberAccess const*>(subExpr)
 		)
 		{
 			auto innerValue = expr(*subExpr);
 			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			indexOrMemberAssignment(_op.subExpression(), newValue);
+			indexOrMemberAssignment(*subExpr, newValue);
 		}
 		else
 			m_errorReporter.warning(
@@ -502,11 +535,12 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 			symbVar->increaseIndex();
 			m_context.setZeroValue(*symbVar);
 			if (
-				dynamic_cast<IndexAccess const*>(&_op.subExpression()) ||
-				dynamic_cast<MemberAccess const*>(&_op.subExpression())
+				dynamic_cast<IndexAccess const*>(subExpr) ||
+				dynamic_cast<MemberAccess const*>(subExpr)
 			)
-				indexOrMemberAssignment(_op.subExpression(), symbVar->currentValue());
-			else
+				indexOrMemberAssignment(*subExpr, symbVar->currentValue());
+			// Empty push added a zero value anyway, so no need to delete extra.
+			else if (!isEmptyPush(*subExpr))
 				solAssert(false, "");
 		}
 		break;
@@ -1968,7 +2002,7 @@ void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _fu
 
 void SMTEncoder::createStateVariables(ContractDefinition const& _contract)
 {
-	for (auto var: _contract.stateVariablesIncludingInherited())
+	for (auto var: stateVariablesIncludingInheritedAndPrivate(_contract))
 		createVariable(*var);
 }
 
@@ -2252,7 +2286,7 @@ void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
 {
 	solAssert(_contract, "");
-	for (auto var: _contract->stateVariablesIncludingInherited())
+	for (auto var: stateVariablesIncludingInheritedAndPrivate(*_contract))
 		m_context.variable(*var)->resetIndex();
 	if (_function)
 	{
@@ -2309,7 +2343,7 @@ set<VariableDeclaration const*> SMTEncoder::touchedVariables(ASTNode const& _nod
 	return m_variableUsage.touchedVariables(_node, callStack);
 }
 
-Declaration const* SMTEncoder::expressionToDeclaration(Expression const& _expr)
+Declaration const* SMTEncoder::expressionToDeclaration(Expression const& _expr) const
 {
 	if (auto const* identifier = dynamic_cast<Identifier const*>(&_expr))
 		return identifier->annotation().referencedDeclaration;
@@ -2318,7 +2352,7 @@ Declaration const* SMTEncoder::expressionToDeclaration(Expression const& _expr)
 	return nullptr;
 }
 
-VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _expr)
+VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _expr) const
 {
 	// We do not use `expressionToDeclaration` here because we are not interested in
 	// struct.field, for example.
@@ -2328,6 +2362,20 @@ VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _e
 			solAssert(m_context.knownVariable(*varDecl), "");
 			return varDecl;
 		}
+	return nullptr;
+}
+
+MemberAccess const* SMTEncoder::isEmptyPush(Expression const& _expr) const
+{
+	if (
+		auto const* funCall = dynamic_cast<FunctionCall const*>(&_expr);
+		funCall && funCall->arguments().empty()
+	)
+	{
+		auto const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
+		if (funType.kind() == FunctionType::Kind::ArrayPush)
+			return &dynamic_cast<MemberAccess const&>(funCall->expression());
+	}
 	return nullptr;
 }
 

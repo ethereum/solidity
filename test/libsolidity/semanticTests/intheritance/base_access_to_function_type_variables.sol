@@ -14,6 +14,8 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // g() -> 2
 // h() -> FAILURE, hex"4e487b71", 0x51

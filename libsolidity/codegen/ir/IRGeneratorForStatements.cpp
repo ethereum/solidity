@@ -425,7 +425,7 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 				"(" <<
 				("add(" + mpos + ", " + to_string(i * arrayType.memoryStride()) + ")") <<
 				", " <<
-				converted.name() <<
+				converted.commaSeparatedList() <<
 				")\n";
 		}
 	}
@@ -2543,47 +2543,50 @@ string IRGeneratorForStatements::binaryOperation(
 		!TokenTraits::isShiftOp(_operator),
 		"Have to use specific shift operation function for shifts."
 	);
-	if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+	string fun;
+	if (TokenTraits::isBitOp(_operator))
 	{
-		string fun;
+		solAssert(
+			_type.category() == Type::Category::Integer ||
+			_type.category() == Type::Category::FixedBytes,
+		"");
+		switch (_operator)
+		{
+		case Token::BitOr: fun = "or"; break;
+		case Token::BitXor: fun = "xor"; break;
+		case Token::BitAnd: fun = "and"; break;
+		default: break;
+		}
+	}
+	else if (TokenTraits::isArithmeticOp(_operator))
+	{
+		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
+		solAssert(type, "");
 		bool checked = m_context.arithmetic() == Arithmetic::Checked;
 		switch (_operator)
 		{
-			case Token::Add:
-				fun = checked ? m_utils.overflowCheckedIntAddFunction(*type) : m_utils.wrappingIntAddFunction(*type);
-				break;
-			case Token::Sub:
-				fun = checked ? m_utils.overflowCheckedIntSubFunction(*type) : m_utils.wrappingIntSubFunction(*type);
-				break;
-			case Token::Mul:
-				fun = checked ? m_utils.overflowCheckedIntMulFunction(*type) : m_utils.wrappingIntMulFunction(*type);
-				break;
-			case Token::Div:
-				fun = checked ?  m_utils.overflowCheckedIntDivFunction(*type) : m_utils.wrappingIntDivFunction(*type);
-				break;
-			case Token::Mod:
-				fun = m_utils.intModFunction(*type);
-				break;
-			case Token::BitOr:
-				fun = "or";
-				break;
-			case Token::BitXor:
-				fun = "xor";
-				break;
-			case Token::BitAnd:
-				fun = "and";
-				break;
-			default:
-				break;
+		case Token::Add:
+			fun = checked ? m_utils.overflowCheckedIntAddFunction(*type) : m_utils.wrappingIntAddFunction(*type);
+			break;
+		case Token::Sub:
+			fun = checked ? m_utils.overflowCheckedIntSubFunction(*type) : m_utils.wrappingIntSubFunction(*type);
+			break;
+		case Token::Mul:
+			fun = checked ? m_utils.overflowCheckedIntMulFunction(*type) : m_utils.wrappingIntMulFunction(*type);
+			break;
+		case Token::Div:
+			fun = checked ? m_utils.overflowCheckedIntDivFunction(*type) : m_utils.wrappingIntDivFunction(*type);
+			break;
+		case Token::Mod:
+			fun = m_utils.intModFunction(*type);
+			break;
+		default:
+			break;
 		}
-
-		solUnimplementedAssert(!fun.empty(), "");
-		return fun + "(" + _left + ", " + _right + ")\n";
 	}
-	else
-		solUnimplementedAssert(false, "");
 
-	return {};
+	solUnimplementedAssert(!fun.empty(), "Type: " + _type.toString());
+	return fun + "(" + _left + ", " + _right + ")\n";
 }
 
 std::string IRGeneratorForStatements::shiftOperation(

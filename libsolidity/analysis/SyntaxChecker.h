@@ -39,6 +39,7 @@ namespace solidity::frontend
  *  - issues deprecation warnings for unary '+'
  *  - issues deprecation warning for throw
  *  - whether the msize instruction is used and the Yul optimizer is enabled at the same time.
+ *  - selection of the ABI coder through pragmas.
  */
 class SyntaxChecker: private ASTConstVisitor
 {

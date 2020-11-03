@@ -11,5 +11,7 @@ contract C {
         return x + 1;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(uint256): 7 -> 8

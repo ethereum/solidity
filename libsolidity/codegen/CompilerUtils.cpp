@@ -230,7 +230,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMemory)
 {
 	/// Stack: <source_offset> <length>
-	if (m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+	if (m_context.useABICoderV2())
 	{
 		// Use the new Yul-based decoding function
 		auto stackHeightBefore = m_context.stackHeight();
@@ -412,7 +412,7 @@ void CompilerUtils::encodeToMemory(
 )
 {
 	// stack: <v1> <v2> ... <vn> <mem>
-	bool const encoderV2 = m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2);
+	bool const encoderV2 = m_context.useABICoderV2();
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
 	for (TypePointer& t: targetTypes)

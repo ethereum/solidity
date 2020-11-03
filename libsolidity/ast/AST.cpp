@@ -84,16 +84,6 @@ TypePointer ImportDirective::type() const
 	return TypeProvider::module(*annotation().sourceUnit);
 }
 
-vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingInherited() const
-{
-	vector<VariableDeclaration const*> stateVars;
-	for (auto const& contract: annotation().linearizedBaseContracts)
-		for (auto var: contract->stateVariables())
-			if (*contract == *this || var->isVisibleInDerivedContracts())
-				stateVars.push_back(var);
-	return stateVars;
-}
-
 bool ContractDefinition::derivesFrom(ContractDefinition const& _base) const
 {
 	return util::contains(annotation().linearizedBaseContracts, &_base);

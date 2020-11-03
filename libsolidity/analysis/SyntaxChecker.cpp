@@ -73,6 +73,8 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		// when reporting the warning, print the source name only
 		m_errorReporter.warning(3420_error, {-1, -1, _sourceUnit.location().source}, errorString);
 	}
+	if (!m_sourceUnit->annotation().useABICoderV2.set())
+		m_sourceUnit->annotation().useABICoderV2 = false;
 	m_sourceUnit = nullptr;
 }
 
@@ -113,8 +115,44 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 				m_sourceUnit->annotation().experimentalFeatures.insert(feature);
 				if (!ExperimentalFeatureWithoutWarning.count(feature))
 					m_errorReporter.warning(2264_error, _pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
+
+				if (feature == ExperimentalFeature::ABIEncoderV2)
+				{
+					if (m_sourceUnit->annotation().useABICoderV2.set())
+					{
+						if (!*m_sourceUnit->annotation().useABICoderV2)
+							m_errorReporter.syntaxError(
+								8273_error,
+								_pragma.location(),
+								"ABI coder v1 has already been selected through \"pragma abicoder v1\"."
+							);
+					}
+					else
+						m_sourceUnit->annotation().useABICoderV2 = true;
+				}
 			}
 		}
+	}
+	else if (_pragma.literals()[0] == "abicoder")
+	{
+		solAssert(m_sourceUnit, "");
+		if (
+			_pragma.literals().size() != 2 ||
+			!set<string>{"v1", "v2"}.count(_pragma.literals()[1])
+		)
+			m_errorReporter.syntaxError(
+				2745_error,
+				_pragma.location(),
+				"Expected either \"pragma abicoder v1\" or \"pragma abicoder v2\"."
+			);
+		else if (m_sourceUnit->annotation().useABICoderV2.set())
+			m_errorReporter.syntaxError(
+				3845_error,
+				_pragma.location(),
+				"ABI coder has already been selected for this source unit."
+			);
+		else
+			m_sourceUnit->annotation().useABICoderV2 = (_pragma.literals()[1] == "v2");
 	}
 	else if (_pragma.literals()[0] == "solidity")
 	{
@@ -135,6 +173,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	}
 	else
 		m_errorReporter.syntaxError(4936_error, _pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
+
 	return true;
 }
 

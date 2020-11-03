@@ -1676,7 +1676,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				{
 					solAssert(memberType->calldataEncodedSize() > 0, "");
 					solAssert(memberType->storageBytes() <= 32, "");
-					if (memberType->storageBytes() < 32 && m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+					if (memberType->storageBytes() < 32 && m_context.useABICoderV2())
 					{
 						m_context << u256(32);
 						CompilerUtils(m_context).abiDecodeV2({memberType}, false);
@@ -2522,7 +2522,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		// memory pointer), but kept references to the return data for
 		// (statically-sized) arrays
 		bool needToUpdateFreeMemoryPtr = false;
-		if (dynamicReturnSize || m_context.experimentalFeatureActive(ExperimentalFeature::ABIEncoderV2))
+		if (dynamicReturnSize || m_context.useABICoderV2())
 			needToUpdateFreeMemoryPtr = true;
 		else
 			for (auto const& retType: returnTypes)

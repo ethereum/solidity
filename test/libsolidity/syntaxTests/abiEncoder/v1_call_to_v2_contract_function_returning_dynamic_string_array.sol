@@ -13,4 +13,4 @@ contract D {
     }
 }
 // ----
-// TypeError 2428: (B:65-76): The type of return parameter 1, string[], is only supported in ABIEncoderV2. Use "pragma experimental ABIEncoderV2;" to enable the feature.
+// TypeError 2428: (B:65-76): The type of return parameter 1, string[], is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

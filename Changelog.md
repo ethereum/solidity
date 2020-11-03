@@ -25,6 +25,9 @@ AST Changes:
 
 ### 0.7.5 (unreleased)
 
+Language Features:
+ * Ability to select the abi coder using ``pragma abicoder v1`` and ``pragma abicoder v2``.
+
 Compiler Features:
  * SMTChecker: Add division by zero checks in the CHC engine.
  * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
@@ -35,6 +38,10 @@ Bugfixes:
  * SMTChecker: Fix internal error on conversion from string literal to byte.
  * SMTChecker: Fix internal error when using tuples of rational literals inside the conditional operator.
  * SMTChecker: Fix internal error when assigning state variable via contract's name.
+ * SMTChecker: Fix incorrect counterexamples reported by the CHC engine.
+ * SMTChecker: Fix false negative in modifier applied multiple times.
+ * SMTChecker: Fix internal error in the BMC engine when inherited contract from a different source unit has private state variables.
+ * SMTChecker: Fix internal error when ``array.push()`` is used as the LHS of an assignment.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
 
 
