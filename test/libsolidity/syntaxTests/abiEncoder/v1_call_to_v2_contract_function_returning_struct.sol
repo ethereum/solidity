@@ -17,4 +17,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 2428: (B:70-83): The type of return parameter 1, struct C.Item, is only supported in ABIEncoderV2. Use "pragma experimental ABIEncoderV2;" to enable the feature.
+// TypeError 2428: (B:70-83): The type of return parameter 1, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

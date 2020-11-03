@@ -126,7 +126,7 @@ void ContractCompiler::initializeContext(
 	map<ContractDefinition const*, shared_ptr<Compiler const>> const& _otherCompilers
 )
 {
-	m_context.setExperimentalFeatures(_contract.sourceUnit().annotation().experimentalFeatures);
+	m_context.setUseABICoderV2(*_contract.sourceUnit().annotation().useABICoderV2);
 	m_context.setOtherCompilers(_otherCompilers);
 	m_context.setMostDerivedContract(_contract);
 	if (m_runtimeCompiler)
@@ -1324,13 +1324,13 @@ void ContractCompiler::appendModifierOrFunctionCode()
 
 	if (codeBlock)
 	{
-		std::set<ExperimentalFeature> experimentalFeaturesOutside = m_context.experimentalFeaturesActive();
-		m_context.setExperimentalFeatures(codeBlock->sourceUnit().annotation().experimentalFeatures);
+		bool coderV2Outside = m_context.useABICoderV2();
+		m_context.setUseABICoderV2(*codeBlock->sourceUnit().annotation().useABICoderV2);
 
 		m_returnTags.emplace_back(m_context.newTag(), m_context.stackHeight());
 		codeBlock->accept(*this);
 
-		m_context.setExperimentalFeatures(experimentalFeaturesOutside);
+		m_context.setUseABICoderV2(coderV2Outside);
 
 		solAssert(!m_returnTags.empty(), "");
 		m_context << m_returnTags.back().first;

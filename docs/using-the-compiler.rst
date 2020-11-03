@@ -231,7 +231,7 @@ Input Description
             "cse": false,
             // Optimize representation of literal numbers and strings in code.
             "constantOptimizer": false,
-            // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2
+            // The new Yul optimizer. Mostly operates on the code of ABI coder v2
             // and inline assembly.
             // It is activated together with the global optimizer setting
             // and can be deactivated here.

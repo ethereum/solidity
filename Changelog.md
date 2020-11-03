@@ -1,5 +1,8 @@
 ### 0.7.5 (unreleased)
 
+Language Features:
+ * Ability to select the abi coder using ``pragma abicoder v1`` and ``pragma abicoder v2``.
+
 Compiler Features:
  * SMTChecker: Add division by zero checks in the CHC engine.
  * SMTChecker: Support ``selector`` for expressions with value known at compile-time.

@@ -76,11 +76,8 @@ public:
 
 	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
 
-	/// Update currently enabled set of experimental features.
-	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
-	std::set<ExperimentalFeature> const& experimentalFeaturesActive() const { return m_experimentalFeatures; }
-	/// @returns true if the given feature is enabled.
-	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
+	void setUseABICoderV2(bool _value) { m_useABICoderV2 = _value; }
+	bool useABICoderV2() const { return m_useABICoderV2; }
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addImmutable(VariableDeclaration const& _declaration);
@@ -361,8 +358,7 @@ private:
 	/// Version of the EVM to compile against.
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings const m_revertStrings;
-	/// Activated experimental features.
-	std::set<ExperimentalFeature> m_experimentalFeatures;
+	bool m_useABICoderV2 = false;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> m_otherCompilers;
 	/// Storage offsets of state variables

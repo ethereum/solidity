@@ -589,8 +589,8 @@ As an example, the code
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.19 <0.8.0;
-    pragma experimental ABIEncoderV2;
+    pragma solidity >0.7.4;
+    pragma abicoder v2;
 
     contract Test {
         struct S { uint a; uint[] b; T[] c; }

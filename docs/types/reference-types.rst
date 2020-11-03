@@ -290,7 +290,7 @@ Array Members
 
 .. note::
     To use arrays of arrays in external (instead of public) functions, you need to
-    activate ABIEncoderV2.
+    activate ABI coder v2.
 
 .. note::
     In EVM versions before Byzantium, it was not possible to access
