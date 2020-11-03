@@ -5,6 +5,7 @@ Breaking Changes:
  * Code Generator: All arithmetic is checked by default. These checks can be disabled using ``unchecked { ... }``.
  * Code Generator: Cause a panic if a byte array in storage is accessed whose length is encoded incorrectly.
  * General: Remove global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
+ * General: Enable ABI coder v2 by default. Use ``pragma abicoder v1`` to use v1.
  * Type Checker: Function call options can only be given once.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.

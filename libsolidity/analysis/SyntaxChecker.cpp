@@ -74,7 +74,7 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		m_errorReporter.warning(3420_error, {-1, -1, _sourceUnit.location().source}, errorString);
 	}
 	if (!m_sourceUnit->annotation().useABICoderV2.set())
-		m_sourceUnit->annotation().useABICoderV2 = false;
+		m_sourceUnit->annotation().useABICoderV2 = true;
 	m_sourceUnit = nullptr;
 }
 

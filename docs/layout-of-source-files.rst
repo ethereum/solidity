@@ -94,13 +94,11 @@ ABI Coder Pragma
 By using ``pragma abicoder v1`` or ``pragma abicoder v2`` you can
 select between the two implementations of the ABI encoder and decoder.
 
+If you do not specify the pragma, ABI coder v2 will be used by default.
+
 The new ABI coder (v2) is able to encode and decode arbitrarily nested
-arrays and structs. It might produce less optimal code and has not
-received as much testing as the old encoder, but is considered
-non-experimental as of Solidity 0.6.0. You still have to explicitly
-activate it using ``pragma abicoder v2;``. Since it will be
-activated by default starting from Solidity 0.8.0, there is the option to select
-the old coder using ``pragma abicoder v1;``.
+arrays and structs, performs more checks but might also be slightly
+more expensive.
 
 The set of types supported by the new encoder is a strict superset of
 the ones supported by the old one. Contracts that use it can interact with ones
@@ -122,6 +120,7 @@ enough to make the error go away.
   Up to Solidity 0.7.4, it was possible to select the ABI coder v2
   by using ``pragma experimental ABIEncoderV2``, but it was not possible
   to explicitly select coder v1 because it was the default.
+  ABI coder v2 has been the default since Solidity 0.8.0.
 
 .. index:: ! pragma, experimental
 
