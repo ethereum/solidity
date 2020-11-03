@@ -947,21 +947,21 @@ function pop(x1, x2, x3, x4) {
 }
 
 
-function bswap16(x) -> y {
-	let hi := i64.and(i64.shl(x, 8), 0xff00)
-	let lo := i64.and(i64.shr_u(x, 8), 0xff)
-	y := i64.or(hi, lo)
+function bswap16(x:i32) -> y:i32 {
+	let hi:i32 := i32.and(i32.shl(x, 8:i32), 0xff00:i32)
+	let lo:i32 := i32.and(i32.shr_u(x, 8:i32), 0xff:i32)
+	y := i32.or(hi, lo)
 }
 
-function bswap32(x) -> y {
-	let hi := i64.shl(bswap16(x), 16)
-	let lo := bswap16(i64.shr_u(x, 16))
-	y := i64.or(hi, lo)
+function bswap32(x:i32) -> y:i32 {
+	let hi:i32 := i32.shl(bswap16(x), 16:i32)
+	let lo:i32 := bswap16(i32.shr_u(x, 16:i32))
+	y := i32.or(hi, lo)
 }
 
 function bswap64(x) -> y {
-	let hi := i64.shl(bswap32(x), 32)
-	let lo := bswap32(i64.shr_u(x, 32))
+	let hi := i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(x))), 32)
+	let lo := i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(x, 32))))
 	y := i64.or(hi, lo)
 }
 function save_temp_mem_32() -> t1, t2, t3, t4 {
@@ -1006,7 +1006,7 @@ function mload_internal(pos:i32) -> z1, z2, z3, z4 {
 	z4 := bswap64(i64.load(i32.add(pos, 24:i32)))
 }
 function mload_address(pos:i32) -> z2, z3, z4 {
-	z2 := i64.and(bswap64(i64.load(pos)), 0x00000000ffffffff)
+	z2 := i64.extend_i32_u(bswap32(i32.load(i32.add(pos, 4:i32))))
 	z3 := bswap64(i64.load(i32.add(pos, 8:i32)))
 	z4 := bswap64(i64.load(i32.add(pos, 16:i32)))
 }

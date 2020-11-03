@@ -19,19 +19,19 @@ object "object" {
             mstore_internal(32:i32, _1, _1, _1, 1)
             eth.storageStore(0:i32, 32:i32)
         }
-        function bswap16(x) -> y
+        function bswap16(x:i32) -> y:i32
         {
-            y := i64.or(i64.and(i64.shl(x, 8), 0xff00), i64.and(i64.shr_u(x, 8), 0xff))
+            y := i32.or(i32.and(i32.shl(x, 8:i32), 0xff00:i32), i32.and(i32.shr_u(x, 8:i32), 0xff:i32))
         }
-        function bswap32(x) -> y
+        function bswap32(x:i32) -> y:i32
         {
-            let hi := i64.shl(bswap16(x), 16)
-            y := i64.or(hi, bswap16(i64.shr_u(x, 16)))
+            let hi:i32 := i32.shl(bswap16(x), 16:i32)
+            y := i32.or(hi, bswap16(i32.shr_u(x, 16:i32)))
         }
         function bswap64(x) -> y
         {
-            let hi := i64.shl(bswap32(x), 32)
-            y := i64.or(hi, bswap32(i64.shr_u(x, 32)))
+            let hi := i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(x))), 32)
+            y := i64.or(hi, i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(x, 32)))))
         }
         function mstore_internal(pos:i32, y1, y2, y3, y4)
         {
@@ -45,7 +45,7 @@ object "object" {
 
 
 Binary representation:
-0061736d0100000001160460000060017e017e60057f7e7e7e7e0060027f7f0002190108657468657265756d0c73746f7261676553746f7265000303060500010101020503010001060100071102066d656d6f72790200046d61696e00010abc01052901017e0240420021004100200020002000200010054120200020002000420110054100412010000b0b1f01017e024020004208864280fe0383200042088842ff01838421010b20010b1e01027e02402000100242108621022002200042108810028421010b20010b1e01027e02402000100342208621022002200042208810038421010b20010b32000240200020011004370000200041086a20021004370000200041106a20031004370000200041186a200410043700000b0b
+0061736d01000000011b0560000060017e017e60017f017f60057f7e7e7e7e0060027f7f0002190108657468657265756d0c73746f7261676553746f7265000403060500020201030503010001060100071102066d656d6f72790200046d61696e00010ac001052901017e0240420021004100200020002000200010054120200020002000420110054100412010000b0b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100241107421022002200041107610027221010b20010b2201027e02402000a71003ad422086210220022000422088a71003ad8421010b20010b32000240200020011004370000200041086a20021004370000200041106a20031004370000200041186a200410043700000b0b
 
 Text representation:
 (module
@@ -64,24 +64,24 @@ Text representation:
 )
 
 (func $bswap16
-    (param $x i64)
-    (result i64)
-    (local $y i64)
+    (param $x i32)
+    (result i32)
+    (local $y i32)
     (block $label__1
-        (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+        (local.set $y (i32.or (i32.and (i32.shl (local.get $x) (i32.const 8)) (i32.const 65280)) (i32.and (i32.shr_u (local.get $x) (i32.const 8)) (i32.const 255))))
 
     )
     (local.get $y)
 )
 
 (func $bswap32
-    (param $x i64)
-    (result i64)
-    (local $y i64)
-    (local $hi i64)
+    (param $x i32)
+    (result i32)
+    (local $y i32)
+    (local $hi i32)
     (block $label__2
-        (local.set $hi (i64.shl (call $bswap16 (local.get $x)) (i64.const 16)))
-        (local.set $y (i64.or (local.get $hi) (call $bswap16 (i64.shr_u (local.get $x) (i64.const 16)))))
+        (local.set $hi (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)))
+        (local.set $y (i32.or (local.get $hi) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
 
     )
     (local.get $y)
@@ -93,8 +93,8 @@ Text representation:
     (local $y i64)
     (local $hi i64)
     (block $label__3
-        (local.set $hi (i64.shl (call $bswap32 (local.get $x)) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (call $bswap32 (i64.shr_u (local.get $x) (i64.const 32)))))
+        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (local.get $x)))) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (local.get $x) (i64.const 32)))))))
 
     )
     (local.get $y)

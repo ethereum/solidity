@@ -94,24 +94,24 @@
 )
 
 (func $bswap16
-    (param $x i64)
-    (result i64)
-    (local $y i64)
+    (param $x i32)
+    (result i32)
+    (local $y i32)
     (block $label__4
-        (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+        (local.set $y (i32.or (i32.and (i32.shl (local.get $x) (i32.const 8)) (i32.const 65280)) (i32.and (i32.shr_u (local.get $x) (i32.const 8)) (i32.const 255))))
 
     )
     (local.get $y)
 )
 
 (func $bswap32
-    (param $x i64)
-    (result i64)
-    (local $y i64)
-    (local $hi i64)
+    (param $x i32)
+    (result i32)
+    (local $y i32)
+    (local $hi i32)
     (block $label__5
-        (local.set $hi (i64.shl (call $bswap16 (local.get $x)) (i64.const 16)))
-        (local.set $y (i64.or (local.get $hi) (call $bswap16 (i64.shr_u (local.get $x) (i64.const 16)))))
+        (local.set $hi (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)))
+        (local.set $y (i32.or (local.get $hi) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
 
     )
     (local.get $y)
@@ -123,8 +123,8 @@
     (local $y i64)
     (local $hi i64)
     (block $label__6
-        (local.set $hi (i64.shl (call $bswap32 (local.get $x)) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (call $bswap32 (i64.shr_u (local.get $x) (i64.const 32)))))
+        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (local.get $x)))) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (local.get $x) (i64.const 32)))))))
 
     )
     (local.get $y)
