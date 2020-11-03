@@ -2059,58 +2059,47 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
 {
 	solAssert(_type.isValueType(), "");
-	return readFromStorageValueTypeDynamic(_type, _splitFunctionTypes);
+	return readFromStorageValueType(_type, {}, _splitFunctionTypes);
 }
 
-string YulUtilFunctions::readFromStorageValueType(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+string YulUtilFunctions::readFromStorageValueType(Type const& _type, optional<size_t> _offset, bool _splitFunctionTypes)
 {
 	solAssert(_type.isValueType(), "");
 
-	if (_type.category() == Type::Category::Function)
-		solUnimplementedAssert(!_splitFunctionTypes, "");
 	string functionName =
 			"read_from_storage_" +
-			string(_splitFunctionTypes ? "split_" : "") +
-			"offset_" +
-			to_string(_offset) +
+			string(_splitFunctionTypes ? "split_" : "") + (
+				_offset.has_value() ?
+				"offset_" + to_string(*_offset) :
+				"dynamic"
+			) +
 			"_" +
 			_type.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&] {
-		solAssert(_type.sizeOnStack() == 1, "");
-		return Whiskers(R"(
-			function <functionName>(slot) -> value {
-				value := <extract>(sload(slot))
+		Whiskers templ(R"(
+			function <functionName>(slot<?dynamic>, offset</dynamic>) -> <?split>addr, selector<!split>value</split> {
+				<?split>let</split> value := <extract>(sload(slot)<?dynamic>, offset</dynamic>)
+				<?split>
+					addr, selector := <splitFunction>(value)
+				</split>
 			}
-		)")
-				("functionName", functionName)
-				("extract", extractFromStorageValue(_type, _offset, false))
-				.render();
+		)");
+		templ("functionName", functionName);
+		templ("dynamic", !_offset.has_value());
+		if (_offset.has_value())
+			templ("extract", extractFromStorageValue(_type, *_offset));
+		else
+			templ("extract", extractFromStorageValueDynamic(_type));
+		auto const* funType = dynamic_cast<FunctionType const*>(&_type);
+		bool split = _splitFunctionTypes && funType && funType->kind() == FunctionType::Kind::External;
+		templ("split", split);
+		if (split)
+			templ("splitFunction", splitExternalFunctionIdFunction());
+		return templ.render();
 	});
 }
-string YulUtilFunctions::readFromStorageValueTypeDynamic(Type const& _type, bool _splitFunctionTypes)
-{
-	solAssert(_type.isValueType(), "");
-	if (_type.category() == Type::Category::Function)
-		solUnimplementedAssert(!_splitFunctionTypes, "");
 
-	string functionName =
-		"read_from_storage_value_type_dynamic" +
-		string(_splitFunctionTypes ? "split_" : "") +
-		"_" +
-		_type.identifier();
-	return m_functionCollector.createFunction(functionName, [&] {
-		solAssert(_type.sizeOnStack() == 1, "");
-		return Whiskers(R"(
-			function <functionName>(slot, offset) -> value {
-				value := <extract>(sload(slot), offset)
-			}
-		)")
-		("functionName", functionName)
-		("extract", extractFromStorageValueDynamic(_type, _splitFunctionTypes))
-		.render();
-	});
-}
 string YulUtilFunctions::readFromStorageReferenceType(Type const& _type)
 {
 	solUnimplementedAssert(_type.category() == Type::Category::Struct, "");
@@ -2343,9 +2332,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 
 string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
 {
-	string const functionName =
-		string("write_to_memory_") +
-		_type.identifier();
+	string const functionName = "write_to_memory_" + _type.identifier();
 
 	return m_functionCollector.createFunction(functionName, [&] {
 		solAssert(!dynamic_cast<StringLiteralType const*>(&_type), "");
@@ -2399,14 +2386,10 @@ string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
 	});
 }
 
-string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes)
+string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type)
 {
-	if (_type.category() == Type::Category::Function)
-		solUnimplementedAssert(!_splitFunctionTypes, "");
-
 	string functionName =
 		"extract_from_storage_value_dynamic" +
-		string(_splitFunctionTypes ? "split_" : "") +
 		_type.identifier();
 	return m_functionCollector.createFunction(functionName, [&] {
 		return Whiskers(R"(
@@ -2416,21 +2399,14 @@ string YulUtilFunctions::extractFromStorageValueDynamic(Type const& _type, bool 
 		)")
 		("functionName", functionName)
 		("shr", shiftRightFunctionDynamic())
-		("cleanupStorage", cleanupFromStorageFunction(_type, _splitFunctionTypes))
+		("cleanupStorage", cleanupFromStorageFunction(_type))
 		.render();
 	});
 }
 
-string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes)
+string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offset)
 {
-	solUnimplementedAssert(!_splitFunctionTypes, "");
-
-	string functionName =
-		"extract_from_storage_value_" +
-		string(_splitFunctionTypes ? "split_" : "") +
-		"offset_" +
-		to_string(_offset) +
-		_type.identifier();
+	string functionName = "extract_from_storage_value_offset_" + to_string(_offset) + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&] {
 		return Whiskers(R"(
 			function <functionName>(slot_value) -> value {
@@ -2439,18 +2415,16 @@ string YulUtilFunctions::extractFromStorageValue(Type const& _type, size_t _offs
 		)")
 		("functionName", functionName)
 		("shr", shiftRightFunction(_offset * 8))
-		("cleanupStorage", cleanupFromStorageFunction(_type, _splitFunctionTypes))
+		("cleanupStorage", cleanupFromStorageFunction(_type))
 		.render();
 	});
 }
 
-string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes)
+string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type)
 {
 	solAssert(_type.isValueType(), "");
-	if (_type.category() == Type::Category::Function)
-		solUnimplementedAssert(!_splitFunctionTypes, "");
 
-	string functionName = string("cleanup_from_storage_") + (_splitFunctionTypes ? "split_" : "") + _type.identifier();
+	string functionName = string("cleanup_from_storage_") + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&] {
 		Whiskers templ(R"(
 			function <functionName>(value) -> cleaned {
