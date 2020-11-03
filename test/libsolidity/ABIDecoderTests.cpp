@@ -73,28 +73,6 @@ BOOST_AUTO_TEST_CASE(value_types)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(enums)
-{
-	string sourceCode = R"(
-		contract C {
-			enum E { A, B }
-			function f(E e) public pure returns (uint x) {
-				assembly { x := e }
-			}
-		}
-	)";
-	bool newDecoder = solidity::test::CommonOptions::get().useABIEncoderV2;
-	BOTH_ENCODERS(
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("f(uint8)", 0), encodeArgs(u256(0)));
-		ABI_CHECK(callContractFunction("f(uint8)", 1), encodeArgs(u256(1)));
-		// The old decoder was not as strict about enums
-		ABI_CHECK(callContractFunction("f(uint8)", 2), (newDecoder ? encodeArgs() : encodeArgs(2)));
-		ABI_CHECK(callContractFunction("f(uint8)", u256(-1)), (newDecoder? encodeArgs() : encodeArgs(u256(0xff))));
-		newDecoder = true;
-	)
-}
-
 BOOST_AUTO_TEST_CASE(cleanup)
 {
 	string sourceCode = R"(
