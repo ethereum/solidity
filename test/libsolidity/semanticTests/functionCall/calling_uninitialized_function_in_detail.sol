@@ -16,5 +16,7 @@ contract C {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // t() -> FAILURE

@@ -35,5 +35,7 @@ contract InvalidTest {
       x++;
   }
 }
+// ====
+// compileViaYul: also
 // ----
 // run() -> FAILURE

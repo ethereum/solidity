@@ -425,7 +425,7 @@ bool IRGeneratorForStatements::visit(TupleExpression const& _tuple)
 				"(" <<
 				("add(" + mpos + ", " + to_string(i * arrayType.memoryStride()) + ")") <<
 				", " <<
-				converted.name() <<
+				converted.commaSeparatedList() <<
 				")\n";
 		}
 	}
