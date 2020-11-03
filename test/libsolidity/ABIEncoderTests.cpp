@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(both_encoders_macro)
 	string sourceCode;
 	int runs = 0;
 	BOTH_ENCODERS(runs++;)
-	BOOST_CHECK(sourceCode == NewEncoderPragma);
+	BOOST_CHECK(sourceCode == "pragma abicoder v2;\n");
 	BOOST_CHECK_EQUAL(runs, 2);
 }
 
@@ -166,17 +166,18 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		}
 	)";
 
-	if (!solidity::test::CommonOptions::get().useABIEncoderV2)
-	{
+	OLD_ENCODER(
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		// The old encoder does not clean array elements.
 		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000")));
-	}
+	)
 
-	compileAndRun(NewEncoderPragma + sourceCode);
-	callContractFunction("f()");
-	REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+	NEW_ENCODER(
+		compileAndRun(sourceCode);
+		callContractFunction("f()");
+		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(memory_array_two_dim)

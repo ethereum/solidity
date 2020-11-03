@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(both_encoders_macro)
 	string sourceCode;
 	int runs = 0;
 	BOTH_ENCODERS(runs++;)
-	BOOST_CHECK(sourceCode == NewEncoderPragma);
+	BOOST_CHECK(sourceCode == "pragma abicoder v2;\n");
 	BOOST_CHECK_EQUAL(runs, 2);
 }
 
