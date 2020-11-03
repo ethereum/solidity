@@ -92,8 +92,8 @@ When using this interface it is not necessary to mount any directories.
 
     docker run ethereum/solc:stable --standard-json < input.json > output.json
 
-Binary Packages
-===============
+Linux packages
+==============
 
 Binary packages of Solidity are available at
 `solidity/releases <https://github.com/ethereum/solidity/releases>`_.
@@ -143,6 +143,16 @@ Arch Linux also has packages, albeit limited to the latest development version:
 
     pacman -S solidity
 
+Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a solidity package.
+After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
+
+.. code-block:: bash
+
+    emerge dev-lang/solidity
+
+macOS packages
+==============
+
 We distribute the Solidity compiler through Homebrew
 as a build-from-source version. Pre-built bottles are
 currently not supported.
@@ -178,13 +188,6 @@ Install it using ``brew``:
     brew unlink solidity
     # eg. Install 0.4.8
     brew install solidity.rb
-
-Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a solidity package.
-After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
-
-.. code-block:: bash
-
-    emerge dev-lang/solidity
 
 .. _building-from-source:
 
