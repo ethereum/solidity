@@ -3553,37 +3553,44 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 		}
 
 		solAssert(_type.isValueType(), "");
-		if (auto const* funType = dynamic_cast<FunctionType const*>(&_type))
-			if (funType->kind() == FunctionType::Kind::External)
-				return Whiskers(R"(
-					function <functionName>(memPtr) -> addr, selector {
-						let combined := <load>(memPtr)
-						addr, selector := <splitFunction>(combined)
-					}
-				)")
-				("functionName", functionName)
-				("load", _fromCalldata ? "calldataload" : "mload")
-				("splitFunction", splitExternalFunctionIdFunction())
-				.render();
-
-
-		return Whiskers(R"(
-			function <functionName>(ptr) -> value {
+		Whiskers templ(R"(
+			function <functionName>(ptr) -> <returnVariables> {
 				<?fromCalldata>
-					value := calldataload(ptr)
+					let value := calldataload(ptr)
 					<validate>(value)
 				<!fromCalldata>
-					value := <cleanup>(mload(ptr))
+					let value := <cleanup>(mload(ptr))
 				</fromCalldata>
+
+				<returnVariables> :=
+				<?externalFunction>
+					<splitFunction>(value)
+				<!externalFunction>
+					value
+				</externalFunction>
 			}
-		)")
-		("functionName", functionName)
-		("fromCalldata", _fromCalldata)
-		("validate", validatorFunction(_type, true))
+		)");
+		templ("functionName", functionName);
+		templ("fromCalldata", _fromCalldata);
+		if (_fromCalldata)
+			templ("validate", validatorFunction(_type, true));
+		auto const* funType = dynamic_cast<FunctionType const*>(&_type);
+		if (funType && funType->kind() == FunctionType::Kind::External)
+		{
+			templ("externalFunction", true);
+			templ("splitFunction", splitExternalFunctionIdFunction());
+			templ("returnVariables", "addr, selector");
+		}
+		else
+		{
+			templ("externalFunction", false);
+			templ("returnVariables", "returnValue");
+		}
+
 		// Byte array elements generally need cleanup.
 		// Other types are cleaned as well to account for dirty memory e.g. due to inline assembly.
-		("cleanup", cleanupFunction(_type))
-		.render();
+		templ("cleanup", cleanupFunction(_type));
+		return templ.render();
 	});
 }
 
