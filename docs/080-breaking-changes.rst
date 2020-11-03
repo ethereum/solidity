@@ -35,8 +35,10 @@ the compiler notifying you about it.
 New Restrictions
 ================
 
-* Explicit conversions from negative literals and literals larger
-  than ``type(uint160).max`` to ``address`` are disallowed.
+* Explicit conversions from negative literals and literals larger than ``type(uint160).max`` to
+  ``address`` are disallowed. Similarly, explicit conversions between literals and an integer type
+  ``T`` are only allowed if the literal lies between ``type(T).min`` and ``type(T).max``. In
+  particular, replace usages of ``uint(-1)`` with ``type(uint).max``.
 
   The previous behaviour was likely ambiguous.
 

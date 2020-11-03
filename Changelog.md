@@ -9,7 +9,7 @@ Breaking Changes:
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
  * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.
  * Code Generator: Use ``revert`` with error signature ``Panic(uint256)`` and error codes instead of invalid opcode on failing assertions.
-
+ * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
 
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.

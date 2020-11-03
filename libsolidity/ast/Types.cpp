@@ -129,10 +129,13 @@ BoolResult fitsIntegerType(bigint const& _value, IntegerType const& _type)
 /// if _signed is true.
 bool fitsIntoBits(bigint const& _value, unsigned _bits, bool _signed)
 {
-	return fitsIntegerType(_value, *TypeProvider::integer(
-		_bits,
-		_signed ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
-	));
+	return fitsIntegerType(
+		_value,
+		*TypeProvider::integer(
+			_bits,
+			_signed ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
+		)
+	);
 }
 
 util::Result<TypePointers> transformParametersToExternal(TypePointers const& _parameters, bool _inLibrary)
@@ -968,9 +971,13 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	auto category = _convertTo.category();
 	if (category == Category::FixedBytes)
 		return false;
-	if (category == Category::Address)
+	else if (category == Category::Address)
+	{
 		if (isNegative() || isFractional() || integerType()->numBits() > 160)
 			return false;
+	}
+	else if (category == Category::Integer)
+		return false;
 
 	TypePointer mobType = mobileType();
 	return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
