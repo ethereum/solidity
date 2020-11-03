@@ -30,6 +30,8 @@ using namespace solidity::util;
 using namespace solidity::frontend::test;
 using namespace std;
 
+using Token = soltest::Token;
+
 string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
@@ -37,9 +39,6 @@ string TestFunctionCall::format(
 	bool const _highlight
 ) const
 {
-	using namespace soltest;
-	using Token = soltest::Token;
-
 	stringstream stream;
 
 	bool highlight = !matchesExpectation() && _highlight;
@@ -279,8 +278,6 @@ string TestFunctionCall::formatFailure(
 	bool _highlight
 ) const
 {
-	using Token = soltest::Token;
-
 	stringstream os;
 
 	os << formatToken(Token::Failure);

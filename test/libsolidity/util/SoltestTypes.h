@@ -16,7 +16,6 @@
 
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
-#include <libsolidity/ast/Types.h>
 
 namespace solidity::frontend::test
 {

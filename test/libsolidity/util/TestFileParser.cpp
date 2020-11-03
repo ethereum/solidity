@@ -34,11 +34,11 @@
 #include <stdexcept>
 
 using namespace solidity;
-using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
-using namespace soltest;
+
+using Token = soltest::Token;
 
 char TestFileParser::Scanner::peek() const noexcept
 {
@@ -158,7 +158,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 	return calls;
 }
 
-bool TestFileParser::accept(soltest::Token _token, bool const _expect)
+bool TestFileParser::accept(Token _token, bool const _expect)
 {
 	if (m_scanner.currentToken() != _token)
 		return false;
@@ -167,7 +167,7 @@ bool TestFileParser::accept(soltest::Token _token, bool const _expect)
 	return true;
 }
 
-bool TestFileParser::expect(soltest::Token _token, bool const _advance)
+bool TestFileParser::expect(Token _token, bool const _advance)
 {
 	if (m_scanner.currentToken() != _token || m_scanner.currentToken() == Token::Invalid)
 		throw TestParserError(
@@ -484,8 +484,6 @@ void TestFileParser::Scanner::readStream(istream& _stream)
 
 void TestFileParser::Scanner::scanNextToken()
 {
-	using namespace langutil;
-
 	// Make code coverage happy.
 	assert(formatToken(Token::NUM_TOKENS) == "");
 
@@ -554,12 +552,12 @@ void TestFileParser::Scanner::scanNextToken()
 			token = selectToken(Token::String, scanString());
 			break;
 		default:
-			if (isIdentifierStart(current()))
+			if (langutil::isIdentifierStart(current()))
 			{
 				TokenDesc detectedToken = detectKeyword(scanIdentifierOrKeyword());
 				token = selectToken(detectedToken.first, detectedToken.second);
 			}
-			else if (isDecimalDigit(current()))
+			else if (langutil::isDecimalDigit(current()))
 			{
 				if (current() == '0' && peek() == 'x')
 				{
@@ -570,7 +568,7 @@ void TestFileParser::Scanner::scanNextToken()
 				else
 					token = selectToken(Token::Number, scanDecimalNumber());
 			}
-			else if (isWhiteSpace(current()))
+			else if (langutil::isWhiteSpace(current()))
 				token = selectToken(Token::Whitespace);
 			else if (isEndOfLine())
 				token = make_pair(Token::EOS, "EOS");

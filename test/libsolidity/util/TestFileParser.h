@@ -15,7 +15,6 @@
 #pragma once
 
 #include <libsolutil/CommonData.h>
-#include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
 #include <test/libsolidity/util/SoltestTypes.h>
 
@@ -64,7 +63,6 @@ public:
 	std::vector<FunctionCall> parseFunctionCalls(std::size_t _lineOffset);
 
 private:
-	using Token = soltest::Token;
 	/**
 	 * Token scanner that is used internally to abstract away character traversal.
 	 */
@@ -92,7 +90,7 @@ private:
 		char scanHexPart();
 
 	private:
-		using TokenDesc = std::pair<Token, std::string>;
+		using TokenDesc = std::pair<soltest::Token, std::string>;
 
 		/// Advances current position in the input stream.
 		void advance(unsigned n = 1)
