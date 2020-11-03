@@ -22,3 +22,9 @@ contract test {
 // Warning 8364: (140-141): Assertion checker does not yet implement type type(struct test.s storage pointer)
 // Warning 8364: (140-144): Assertion checker does not yet implement type type(struct test.s memory[7] memory)
 // Warning 8364: (156-163): Assertion checker does not yet implement type type(uint256[7] memory)
+// Warning 8364: (125-126): Assertion checker does not yet implement type type(struct test.s storage pointer)
+// Warning 8364: (130-131): Assertion checker does not yet implement type type(struct test.s storage pointer)
+// Warning 4639: (130-136): Assertion checker does not yet implement this expression.
+// Warning 8364: (140-141): Assertion checker does not yet implement type type(struct test.s storage pointer)
+// Warning 8364: (140-144): Assertion checker does not yet implement type type(struct test.s memory[7] memory)
+// Warning 8364: (156-163): Assertion checker does not yet implement type type(uint256[7] memory)

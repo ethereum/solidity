@@ -16,4 +16,6 @@ contract C {
 // ----
 // Warning 8364: (137-138): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning 4639: (137-141): Assertion checker does not yet implement this expression.
+// Warning 8364: (137-138): Assertion checker does not yet implement type type(struct C.S storage pointer)
+// Warning 4639: (137-141): Assertion checker does not yet implement this expression.
 // Warning 4639: (137-141): Assertion checker does not yet implement this expression.
