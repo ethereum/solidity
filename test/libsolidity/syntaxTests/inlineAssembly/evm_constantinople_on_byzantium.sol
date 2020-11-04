@@ -11,6 +11,11 @@ contract C {
             ret := create2(0, 0, 0, 0)
         }
     }
+    function h() view external returns (bytes32 ret) {
+        assembly {
+            ret := extcodehash(address())
+        }
+    }
 }
 // ====
 // EVMVersion: =byzantium
@@ -23,3 +28,5 @@ contract C {
 // DeclarationError 8678: (160-178): Variable count does not match number of values (1 vs. 0)
 // TypeError 6166: (283-290): The "create2" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
 // DeclarationError 8678: (276-302): Variable count does not match number of values (1 vs. 0)
+// TypeError 7110: (412-423): The "extcodehash" instruction is only available for Constantinople-compatible VMs (you are currently compiling for "byzantium").
+// DeclarationError 8678: (405-434): Variable count does not match number of values (1 vs. 0)
