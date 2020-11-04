@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// ParserError 2314: (118-119): Expected '(' but got '}'
+// Warning 8261: (52-62): Variable is shadowed in inline assembly by an instruction of the same name

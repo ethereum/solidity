@@ -2,4 +2,4 @@
     let x := byte
 }
 // ----
-// ParserError 2314: (20-21): Expected '(' but got '}'
+// DeclarationError 8198: (15-19): Identifier not found.

@@ -2,4 +2,4 @@
 	function f(x) { f(add) }
 }
 // ----
-// ParserError 2314: (24-25): Expected '(' but got ')'
+// DeclarationError 8198: (21-24): Identifier not found.
