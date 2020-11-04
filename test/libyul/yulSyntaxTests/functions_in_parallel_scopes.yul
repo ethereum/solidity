@@ -1,0 +1,4 @@
+{
+    { function g() {} }
+    { function g() {} }
+}
