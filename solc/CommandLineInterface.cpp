@@ -84,9 +84,9 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-namespace po = boost::program_options;
-
 DEV_SIMPLE_EXCEPTION(FileError);
+
+namespace po = boost::program_options;
 
 namespace solidity::frontend
 {
@@ -1240,8 +1240,17 @@ bool CommandLineInterface::processInput()
 		if (jsonFile.empty())
 			input = readStandardInput();
 		else
-			// TODO: handle FileNotFound exception
-			input = readFileAsString(jsonFile);
+		{
+			try
+			{
+				input = readFileAsString(jsonFile);
+			}
+			catch (FileNotFound const&)
+			{
+				serr() << "File not found: " << jsonFile << endl;
+				return false;
+			}
+		}
 		StandardCompiler compiler(fileReader);
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
