@@ -71,6 +71,9 @@ public:
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
 
+	static std::vector<VariableDeclaration const*> localVariablesIncludingModifiers(FunctionDefinition const& _function);
+	static std::vector<VariableDeclaration const*> modifiersVariables(FunctionDefinition const& _function);
+
 	/// @returns the SourceUnit that contains _scopable.
 	static SourceUnit const* sourceUnitContaining(Scopable const& _scopable);
 
