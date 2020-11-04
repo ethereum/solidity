@@ -112,8 +112,10 @@ function test_solc_behaviour()
         sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
         sed -i.bak -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
-        # Remove explicit bytecode and references to bytecode offsets
-        sed -i.bak -E -e 's/\"object\":\"[a-f0-9]+\"/\"object\":\"bytecode removed\"/g' "$stdout_path"
+        # Remove medatata from bytecode bytecode and references to bytecode offsets
+        # 64697066735822 = hex encoding of 0x64 'i' 'p' 'f' 's' 0x58 0x22
+        # 64736f6c63     = hex encoding of 0x64 's' 'o' 'l' 'c'
+        sed -i.bak -E -e 's/(\"object\":\"[^"]*64697066735822)[0-9a-f]+(64736f6c63)[0-9a-f]+([^"]*\")/\1<IPFS HASH REMOVED>\2<COMPILER VERSION REMOVED>\3/g' "$stdout_path"
         sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"sourceMap removed\"/g' "$stdout_path"
         # Replace escaped newlines by actual newlines for readability
@@ -126,6 +128,7 @@ function test_solc_behaviour()
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         sed -i.bak -e 's/\(Unimplemented feature error: .* in \).*$/\1FILENAME REMOVED/' "$stderr_path"
         sed -i.bak -e 's/"version": "[^"]*"/"version": "VERSION REMOVED"/' "$stdout_path"
+        sed -i.bak -e 's/\(64697066735822\)[0-9a-f]\+\(64736f6c63\)[0-9a-f]\+/\1<IPFS HASH REMOVED>\2<COMPILER VERSION REMOVED>/g' "$stdout_path"
         # Remove trailing empty lines. Needs a line break to make OSX sed happy.
         sed -i.bak -e '1{/^$/d
 }' "$stderr_path"
