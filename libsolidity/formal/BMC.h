@@ -61,7 +61,8 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers
+		smtutil::SMTSolverChoice _enabledSolvers,
+		std::optional<unsigned> timeout
 	);
 
 	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTarget::Type>> _solvedTargets);

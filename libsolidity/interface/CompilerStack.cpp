@@ -87,7 +87,6 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
-	m_modelCheckerEngine{ModelCheckerEngine::All()},
 	m_enabledSMTSolvers{smtutil::SMTSolverChoice::All()},
 	m_errorReporter{m_errorList}
 {
@@ -139,11 +138,11 @@ void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 	m_evmVersion = _version;
 }
 
-void CompilerStack::setModelCheckerEngine(ModelCheckerEngine _engine)
+void CompilerStack::setModelCheckerSettings(ModelCheckerSettings _settings)
 {
 	if (m_stackState >= ParsedAndImported)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set enabled model checking engines before parsing."));
-	m_modelCheckerEngine = _engine;
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set model checking settings before parsing."));
+	m_modelCheckerSettings = _settings;
 }
 
 void CompilerStack::setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSMTSolvers)
@@ -215,7 +214,7 @@ void CompilerStack::reset(bool _keepSettings)
 		m_remappings.clear();
 		m_libraries.clear();
 		m_evmVersion = langutil::EVMVersion();
-		m_modelCheckerEngine = ModelCheckerEngine::All();
+		m_modelCheckerSettings = ModelCheckerSettings{};
 		m_enabledSMTSolvers = smtutil::SMTSolverChoice::All();
 		m_generateIR = false;
 		m_generateEwasm = false;
@@ -452,7 +451,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_modelCheckerEngine, m_readFile, m_enabledSMTSolvers);
+			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_modelCheckerSettings, m_readFile, m_enabledSMTSolvers);
 			for (Source const* source: m_sourceOrder)
 				if (source->ast)
 					modelChecker.analyze(*source->ast);

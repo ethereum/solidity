@@ -55,7 +55,8 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers
+		smtutil::SMTSolverChoice _enabledSolvers,
+		std::optional<unsigned> timeout
 	);
 
 	void analyze(SourceUnit const& _sources);
@@ -330,6 +331,9 @@ private:
 
 	/// SMT solvers that are chosen at runtime.
 	smtutil::SMTSolverChoice m_enabledSolvers;
+
+	/// SMT query timeout in seconds.
+	std::optional<unsigned> m_queryTimeout;
 };
 
 }

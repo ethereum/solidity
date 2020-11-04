@@ -40,7 +40,7 @@ namespace solidity::smtutil
 class CVC4Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	CVC4Interface();
+	CVC4Interface(std::optional<unsigned> _queryTimeout = {});
 
 	void reset() override;
 

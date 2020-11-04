@@ -147,6 +147,7 @@ static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerEngine = "model-checker-engine";
+static string const g_strModelCheckerTimeout = "model-checker-timeout";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
 static string const g_strNone = "none";
@@ -217,6 +218,7 @@ static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argModelCheckerEngine = g_strModelCheckerEngine;
+static string const g_argModelCheckerTimeout = g_strModelCheckerTimeout;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
 static string const g_argOpcodes = g_strOpcodes;
@@ -1002,6 +1004,13 @@ General Information)").c_str(),
 			po::value<string>()->value_name("all,bmc,chc,none")->default_value("all"),
 			"Select model checker engine."
 		)
+		(
+			g_strModelCheckerTimeout.c_str(),
+			po::value<unsigned>()->value_name("ms"),
+			"Set model checker timeout per query in milliseconds. "
+			"The default is a deterministic resource limit. "
+			"A timeout of 0 means no resource/time restrictions for any query."
+		)
 	;
 	desc.add(smtCheckerOptions);
 
@@ -1400,8 +1409,11 @@ bool CommandLineInterface::processInput()
 			serr() << "Invalid option for --" << g_argModelCheckerEngine << ": " << engineStr << endl;
 			return false;
 		}
-		m_modelCheckerEngine = *engine;
+		m_modelCheckerSettings.engine = *engine;
 	}
+
+	if (m_args.count(g_argModelCheckerTimeout))
+		m_modelCheckerSettings.timeout = m_args[g_argModelCheckerTimeout].as<unsigned>();
 
 	m_compiler = make_unique<CompilerStack>(fileReader);
 
@@ -1417,8 +1429,8 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argMetadataHash))
 			m_compiler->setMetadataHash(m_metadataHash);
-		if (m_args.count(g_argModelCheckerEngine))
-			m_compiler->setModelCheckerEngine(m_modelCheckerEngine);
+		if (m_args.count(g_argModelCheckerEngine) || m_args.count(g_argModelCheckerTimeout))
+			m_compiler->setModelCheckerSettings(m_modelCheckerSettings);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
 

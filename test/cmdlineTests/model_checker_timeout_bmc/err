@@ -1,0 +1,32 @@
+Warning: BMC: Assertion violation happens here.
+ --> model_checker_timeout_bmc/input.sol:6:3:
+  |
+6 | 		assert(x > 0);
+  | 		^^^^^^^^^^^^^
+Note: Counterexample:
+  x = 0
+
+Note: Callstack:
+Note:
+
+Warning: BMC: Assertion violation happens here.
+ --> model_checker_timeout_bmc/input.sol:7:3:
+  |
+7 | 		assert(x > 2);
+  | 		^^^^^^^^^^^^^
+Note: Counterexample:
+  x = 1
+
+Note: Callstack:
+Note:
+
+Warning: BMC: Assertion violation happens here.
+ --> model_checker_timeout_bmc/input.sol:8:3:
+  |
+8 | 		assert(x > 4);
+  | 		^^^^^^^^^^^^^
+Note: Counterexample:
+  x = 3
+
+Note: Callstack:
+Note:
