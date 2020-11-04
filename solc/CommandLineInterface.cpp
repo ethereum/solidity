@@ -84,8 +84,6 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 
-DEV_SIMPLE_EXCEPTION(FileError);
-
 namespace po = boost::program_options;
 
 namespace solidity::frontend
@@ -745,7 +743,11 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
+	{
+		serr() << "Could not write to file \"" << pathName << "\"." << endl;
+		m_error = true;
+		return;
+	}
 }
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
