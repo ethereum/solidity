@@ -21,8 +21,8 @@
 
 #pragma once
 
+#include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
-#include <liblangutil/SourceReferenceFormatter.h> // SourceReferenceFormatterBase
 
 #include <libsolutil/AnsiColorized.h>
 
@@ -32,17 +32,20 @@
 
 namespace solidity::langutil
 {
+struct SourceLocation;
 
-class SourceReferenceFormatterHuman: public SourceReferenceFormatter
+class SourceReferenceFormatterHuman
 {
 public:
 	SourceReferenceFormatterHuman(std::ostream& _stream, bool _colored, bool _withErrorIds):
-		SourceReferenceFormatter{_stream}, m_colored{_colored}, m_withErrorIds(_withErrorIds)
+		m_stream(_stream), m_colored(_colored), m_withErrorIds(_withErrorIds)
 	{}
 
-	void printSourceLocation(SourceReference const& _ref) override;
-	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg) override;
-	using SourceReferenceFormatter::printExceptionInformation;
+	/// Prints source location if it is given.
+	void printSourceLocation(SourceReference const& _ref);
+	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
+	void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
+	void printErrorInformation(Error const& _error);
 
 	static std::string formatExceptionInformation(
 		util::Exception const& _exception,
@@ -52,7 +55,6 @@ public:
 	)
 	{
 		std::ostringstream errorOutput;
-
 		SourceReferenceFormatterHuman formatter(errorOutput, _colored, _withErrorIds);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
@@ -76,6 +78,7 @@ private:
 	util::AnsiColorized diagColored() const;
 
 private:
+	std::ostream& m_stream;
 	bool m_colored;
 	bool m_withErrorIds;
 };

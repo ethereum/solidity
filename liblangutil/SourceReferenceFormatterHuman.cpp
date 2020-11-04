@@ -171,3 +171,13 @@ void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExt
 
 	m_stream << '\n';
 }
+
+void SourceReferenceFormatterHuman::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
+{
+	printExceptionInformation(SourceReferenceExtractor::extract(_exception, _category));
+}
+
+void SourceReferenceFormatterHuman::printErrorInformation(Error const& _error)
+{
+	printExceptionInformation(SourceReferenceExtractor::extract(_error));
+}
