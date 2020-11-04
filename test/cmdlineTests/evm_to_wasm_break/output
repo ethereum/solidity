@@ -1,5 +1,5 @@
 
-======= evm_to_wasm_break/input.sol (Ewasm) =======
+======= evm_to_wasm_break/input.yul (Ewasm) =======
 
 Pretty printed source:
 object "object" {
