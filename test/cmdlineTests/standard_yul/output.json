@@ -14,7 +14,7 @@
   sstore
     /* \"A\":0:42   */
   pop
-","bytecode":{"generatedSources":[],"linkReferences":{},"object":"6000516000600082015550","opcodes":"opcodes removed","sourceMap":"sourceMap removed"}},"ir":"object \"object\" {
+","bytecode":{"generatedSources":[],"linkReferences":{},"object":"6000516000600082015550","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"object\" {
     code {
         let x := mload(0)
         sstore(add(x, 0), 0)

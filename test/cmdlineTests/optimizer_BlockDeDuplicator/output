@@ -87,5 +87,5 @@ sub_0: assembly {
     tag_7:
       jump	// out
 
-    auxdata: AUXDATA REMOVED
+    auxdata: <AUXDATA REMOVED>
 }

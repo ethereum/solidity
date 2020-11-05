@@ -83,5 +83,5 @@ sub_0: assembly {
       dup1
       revert
 
-    auxdata: AUXDATA REMOVED
+    auxdata: <AUXDATA REMOVED>
 }
