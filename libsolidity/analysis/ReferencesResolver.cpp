@@ -215,22 +215,21 @@ void ReferencesResolver::operator()(yul::FunctionDefinition const& _function)
 
 void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 {
-	bool isSlot = boost::algorithm::ends_with(_identifier.name.str(), ".slot");
-	bool isOffset = boost::algorithm::ends_with(_identifier.name.str(), ".offset");
+	static set<string> suffixes{"slot", "offset", "length"};
+	string suffix;
+	for (string const& s: suffixes)
+		if (boost::algorithm::ends_with(_identifier.name.str(), "." + s))
+			suffix = s;
 
 	// Could also use `pathFromCurrentScope`, split by '.'
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name.str());
-	if (isSlot || isOffset)
+	if (!suffix.empty())
 	{
 		// special mode to access storage variables
 		if (!declarations.empty())
 			// the special identifier exists itself, we should not allow that.
 			return;
-		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - (
-			isSlot ?
-			string(".slot").size() :
-			string(".offset").size()
-		));
+		string realName = _identifier.name.str().substr(0, _identifier.name.str().size() - suffix.size() - 1);
 		solAssert(!realName.empty(), "Empty name.");
 		declarations = m_resolver.nameFromCurrentScope(realName);
 		if (!declarations.empty())
@@ -255,7 +254,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			m_errorReporter.declarationError(
 				9467_error,
 				_identifier.location,
-				"Identifier not found. Use ``.slot`` and ``.offset`` to access storage variables."
+				"Identifier not found. Use \".slot\" and \".offset\" to access storage variables."
 			);
 		return;
 	}
@@ -270,8 +269,7 @@ void ReferencesResolver::operator()(yul::Identifier const& _identifier)
 			return;
 		}
 
-	m_yulAnnotation->externalReferences[&_identifier].isSlot = isSlot;
-	m_yulAnnotation->externalReferences[&_identifier].isOffset = isOffset;
+	m_yulAnnotation->externalReferences[&_identifier].suffix = move(suffix);
 	m_yulAnnotation->externalReferences[&_identifier].declaration = declarations.front();
 }
 

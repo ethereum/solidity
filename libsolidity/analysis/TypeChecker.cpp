@@ -740,7 +740,6 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 		InlineAssemblyAnnotation::ExternalIdentifierInfo& identifierInfo = ref->second;
 		Declaration const* declaration = identifierInfo.declaration;
 		solAssert(!!declaration, "");
-		bool requiresStorage = identifierInfo.isSlot || identifierInfo.isOffset;
 		if (auto var = dynamic_cast<VariableDeclaration const*>(declaration))
 		{
 			solAssert(var->type(), "Expected variable type!");
@@ -763,7 +762,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					m_errorReporter.typeError(6252_error, _identifier.location, "Constant variables cannot be assigned to.");
 					return false;
 				}
-				else if (requiresStorage)
+				else if (!identifierInfo.suffix.empty())
 				{
 					m_errorReporter.typeError(6617_error, _identifier.location, "The suffixes .offset and .slot can only be used on non-constant storage variables.");
 					return false;
@@ -789,51 +788,80 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 
 			solAssert(!dynamic_cast<FixedPointType const*>(var->type()), "FixedPointType not implemented.");
 
-			if (requiresStorage)
+			if (!identifierInfo.suffix.empty())
 			{
-				if (!var->isStateVariable() && !var->type()->dataStoredIn(DataLocation::Storage))
+				string const& suffix = identifierInfo.suffix;
+				solAssert((set<string>{"offset", "slot", "length"}).count(suffix), "");
+				if (var->isStateVariable() || var->type()->dataStoredIn(DataLocation::Storage))
 				{
-					m_errorReporter.typeError(3622_error, _identifier.location, "The suffixes .offset and .slot can only be used on storage variables.");
-					return false;
+					if (suffix != "slot" && suffix != "offset")
+					{
+						m_errorReporter.typeError(4656_error, _identifier.location, "State variables only support \".slot\" and \".offset\".");
+						return false;
+					}
+					else if (_context == yul::IdentifierContext::LValue)
+					{
+						if (var->isStateVariable())
+						{
+							m_errorReporter.typeError(4713_error, _identifier.location, "State variables cannot be assigned to - you have to use \"sstore()\".");
+							return false;
+						}
+						else if (suffix != "slot")
+						{
+							m_errorReporter.typeError(9739_error, _identifier.location, "Only .slot can be assigned to.");
+							return false;
+						}
+					}
 				}
-				else if (_context == yul::IdentifierContext::LValue)
+				else if (
+					auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
+					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData)
+				)
 				{
-					if (var->isStateVariable())
+					if (suffix != "offset" && suffix != "length")
 					{
-						m_errorReporter.typeError(4713_error, _identifier.location, "State variables cannot be assigned to - you have to use \"sstore()\".");
+						m_errorReporter.typeError(1536_error, _identifier.location, "Calldata variables only support \".offset\" and \".length\".");
 						return false;
 					}
-					else if (identifierInfo.isOffset)
-					{
-						m_errorReporter.typeError(9739_error, _identifier.location, "Only .slot can be assigned to.");
-						return false;
-					}
-					else
-						solAssert(identifierInfo.isSlot, "");
+				}
+				else
+				{
+					m_errorReporter.typeError(3622_error, _identifier.location, "The suffix \"." + suffix + "\" is not supported by this variable or type.");
+					return false;
 				}
 			}
 			else if (!var->isConstant() && var->isStateVariable())
 			{
-				m_errorReporter.typeError(1408_error, _identifier.location, "Only local variables are supported. To access storage variables, use the .slot and .offset suffixes.");
+				m_errorReporter.typeError(
+					1408_error,
+					_identifier.location,
+					"Only local variables are supported. To access storage variables, use the \".slot\" and \".offset\" suffixes."
+				);
 				return false;
 			}
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				m_errorReporter.typeError(9068_error, _identifier.location, "You have to use the .slot or .offset suffix to access storage reference variables.");
+				m_errorReporter.typeError(9068_error, _identifier.location, "You have to use the \".slot\" or \".offset\" suffix to access storage reference variables.");
 				return false;
 			}
 			else if (var->type()->sizeOnStack() != 1)
 			{
-				if (var->type()->dataStoredIn(DataLocation::CallData))
-					m_errorReporter.typeError(2370_error, _identifier.location, "Call data elements cannot be accessed directly. Copy to a local variable first or use \"calldataload\" or \"calldatacopy\" with manually determined offsets and sizes.");
+				if (
+					auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
+					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData)
+				)
+					m_errorReporter.typeError(1397_error, _identifier.location, "Call data elements cannot be accessed directly. Use \".offset\" and \".length\" to access the calldata offset and length of this array and then use \"calldatacopy\".");
 				else
+				{
+					solAssert(!var->type()->dataStoredIn(DataLocation::CallData), "");
 					m_errorReporter.typeError(9857_error, _identifier.location, "Only types that use one stack slot are supported.");
+				}
 				return false;
 			}
 		}
-		else if (requiresStorage)
+		else if (!identifierInfo.suffix.empty())
 		{
-			m_errorReporter.typeError(7944_error, _identifier.location, "The suffixes .offset and .slot can only be used on storage variables.");
+			m_errorReporter.typeError(7944_error, _identifier.location, "The suffixes \".offset\", \".slot\" and \".length\" can only be used with variables.");
 			return false;
 		}
 		else if (_context == yul::IdentifierContext::LValue)

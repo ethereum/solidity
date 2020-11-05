@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError 3622: (117-123): The suffixes .offset and .slot can only be used on storage variables.
-// TypeError 3622: (141-149): The suffixes .offset and .slot can only be used on storage variables.
+// TypeError 3622: (117-123): The suffix ".slot" is not supported by this variable or type.
+// TypeError 3622: (141-149): The suffix ".offset" is not supported by this variable or type.

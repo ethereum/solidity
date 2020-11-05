@@ -68,43 +68,12 @@ struct CopyTranslate: public yul::ASTCopier
 
 	yul::Expression operator()(yul::Identifier const& _identifier) override
 	{
+		// The operator() function is only called in lvalue context. In rvalue context,
+		// only translate(yul::Identifier) is called.
 		if (m_references.count(&_identifier))
-		{
-			auto const& reference = m_references.at(&_identifier);
-			auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
-			solUnimplementedAssert(varDecl, "");
-
-			if (reference.isOffset || reference.isSlot)
-			{
-				solAssert(reference.isOffset != reference.isSlot, "");
-
-				string value;
-				if (varDecl->isStateVariable())
-					value =
-						reference.isSlot ?
-							m_context.storageLocationOfStateVariable(*varDecl).first.str() :
-							to_string(m_context.storageLocationOfStateVariable(*varDecl).second);
-				else
-				{
-					solAssert(varDecl->isLocalVariable(), "");
-					if (reference.isSlot)
-						value = IRVariable{*varDecl}.part("slot").name();
-					else if (varDecl->type()->isValueType())
-						value = IRVariable{*varDecl}.part("offset").name();
-					else
-					{
-						solAssert(!IRVariable{*varDecl}.hasPart("offset"), "");
-						value = "0";
-					}
-				}
-
-				if (isdigit(value.front()))
-					return yul::Literal{_identifier.location, yul::LiteralKind::Number, yul::YulString{value}, {}};
-				else
-					return yul::Identifier{_identifier.location, yul::YulString{value}};
-			}
-		}
-		return ASTCopier::operator()(_identifier);
+			return translateReference(_identifier);
+		else
+			return ASTCopier::operator()(_identifier);
 	}
 
 	yul::YulString translateIdentifier(yul::YulString _name) override
@@ -124,24 +93,73 @@ struct CopyTranslate: public yul::ASTCopier
 		if (!m_references.count(&_identifier))
 			return ASTCopier::translate(_identifier);
 
-		auto const& reference = m_references.at(&_identifier);
-		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
-		solUnimplementedAssert(varDecl, "");
-
-		solAssert(
-			reference.isOffset == false && reference.isSlot == false,
-			"Should not be called for offset/slot"
-		);
-		auto const& var = m_context.localVariable(*varDecl);
-		solAssert(var.type().sizeOnStack() == 1, "");
-
-		return yul::Identifier{
-			_identifier.location,
-			yul::YulString{var.commaSeparatedList()}
-		};
+		yul::Expression translated = translateReference(_identifier);
+		solAssert(holds_alternative<yul::Identifier>(translated), "");
+		return get<yul::Identifier>(std::move(translated));
 	}
 
 private:
+
+	/// Translates a reference to a local variable, potentially including
+	/// a suffix. Might return a literal, which causes this to be invalid in
+	/// lvalue-context.
+	yul::Expression translateReference(yul::Identifier const& _identifier)
+	{
+		auto const& reference = m_references.at(&_identifier);
+		auto const varDecl = dynamic_cast<VariableDeclaration const*>(reference.declaration);
+		solUnimplementedAssert(varDecl, "");
+		string const& suffix = reference.suffix;
+
+		if (suffix.empty())
+		{
+			auto const& var = m_context.localVariable(*varDecl);
+			solAssert(var.type().sizeOnStack() == 1, "");
+
+			return yul::Identifier{
+				_identifier.location,
+				yul::YulString{var.commaSeparatedList()}
+			};
+		}
+
+		string value;
+		if (varDecl->isStateVariable())
+		{
+			if (suffix == "slot")
+				value = m_context.storageLocationOfStateVariable(*varDecl).first.str();
+			else if (suffix == "offset")
+				value = to_string(m_context.storageLocationOfStateVariable(*varDecl).second);
+			else
+				solAssert(false, "");
+		}
+		else if (varDecl->type()->dataStoredIn(DataLocation::Storage))
+		{
+			solAssert(suffix == "slot" || suffix == "offset", "");
+			solAssert(varDecl->isLocalVariable(), "");
+			if (suffix == "slot")
+				value = IRVariable{*varDecl}.part("slot").name();
+			else if (varDecl->type()->isValueType())
+				value = IRVariable{*varDecl}.part("offset").name();
+			else
+			{
+				solAssert(!IRVariable{*varDecl}.hasPart("offset"), "");
+				value = "0";
+			}
+		}
+		else if (varDecl->type()->dataStoredIn(DataLocation::CallData))
+		{
+			solAssert(suffix == "offset" || suffix == "length", "");
+			value = IRVariable{*varDecl}.part(suffix).name();
+		}
+		else
+			solAssert(false, "");
+
+		if (isdigit(value.front()))
+			return yul::Literal{_identifier.location, yul::LiteralKind::Number, yul::YulString{value}, {}};
+		else
+			return yul::Identifier{_identifier.location, yul::YulString{value}};
+	}
+
+
 	yul::Dialect const& m_dialect;
 	IRGenerationContext& m_context;
 	ExternalRefsMap const& m_references;

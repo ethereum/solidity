@@ -168,6 +168,7 @@
                         "isOffset": true,
                         "isSlot": false,
                         "src": "106:8:1",
+                        "suffix": "offset",
                         "valueSize": 1
                       },
                       {
@@ -175,6 +176,7 @@
                         "isOffset": false,
                         "isSlot": true,
                         "src": "128:6:1",
+                        "suffix": "slot",
                         "valueSize": 1
                       }
                     ],
