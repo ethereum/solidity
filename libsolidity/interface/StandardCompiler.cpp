@@ -1180,8 +1180,6 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return formatFatalError("JSONError", "Yul mode does not support smtlib2responses.");
 	if (!_inputsAndSettings.remappings.empty())
 		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
-	if (!_inputsAndSettings.libraries.empty())
-		return formatFatalError("JSONError", "Field \"settings.libraries\" cannot be used for Yul.");
 	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
 		return formatFatalError("JSONError", "Field \"settings.debug.revertStrings\" cannot be used for Yul.");
 
@@ -1233,6 +1231,11 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 	MachineAssemblyObject object;
 	MachineAssemblyObject runtimeObject;
 	tie(object, runtimeObject) = stack.assembleAndGuessRuntime();
+
+	if (object.bytecode)
+		object.bytecode->link(_inputsAndSettings.libraries);
+	if (runtimeObject.bytecode)
+		runtimeObject.bytecode->link(_inputsAndSettings.libraries);
 
 	for (string const& objectKind: vector<string>{"bytecode", "deployedBytecode"})
 		if (isArtifactRequested(
