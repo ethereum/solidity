@@ -503,9 +503,9 @@ void TestFileParser::Scanner::scanNextToken()
 		return TokenDesc{Token::Identifier, _literal};
 	};
 
-	auto selectToken = [this](Token _token, std::string const& _literal = "") -> TokenDesc {
+	auto selectToken = [this](Token _token, std::optional<std::string> _literal = std::nullopt) -> TokenDesc {
 		advance();
-		return make_pair(_token, !_literal.empty() ? _literal : formatToken(_token));
+		return make_pair(_token, _literal.has_value() ? *_literal : formatToken(_token));
 	};
 
 	TokenDesc token = make_pair(Token::Unknown, "");
