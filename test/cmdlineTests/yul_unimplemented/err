@@ -1,4 +1,4 @@
-Error (1834): Unimplemented feature error: Copying from storage to storage is not yet implemented. in FILENAME REMOVED
+Error (1834): Unimplemented feature error: Copying from storage to storage is not yet implemented. in <FILENAME REMOVED>
  --> yul_unimplemented/input.sol:7:9:
   |
 7 |         a = b;

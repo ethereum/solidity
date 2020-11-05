@@ -112,8 +112,8 @@ function test_solc_behaviour()
         sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
         sed -i.bak -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
-        sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"opcodes removed\"/g' "$stdout_path"
-        sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"sourceMap removed\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"<OPCODES REMOVED>\"/g' "$stdout_path"
+        sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"<SOURCEMAP REMOVED>\"/g' "$stdout_path"
 
         # Remove bytecode (but not linker references).
         sed -i.bak -E -e 's/(\"object\":\")[0-9a-f]+([^"]*\")/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
@@ -126,10 +126,10 @@ function test_solc_behaviour()
     else
         sed -i.bak -e '/^Warning: This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
         sed -i.bak -e '/^Warning (3805): This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
-        sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1AUXDATA REMOVED/' "$stdout_path"
+        sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
-        sed -i.bak -e 's/\(Unimplemented feature error: .* in \).*$/\1FILENAME REMOVED/' "$stderr_path"
-        sed -i.bak -e 's/"version": "[^"]*"/"version": "VERSION REMOVED"/' "$stdout_path"
+        sed -i.bak -e 's/\(Unimplemented feature error: .* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
+        sed -i.bak -e 's/"version": "[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
 
         # Remove bytecode (but not linker references). Since non-JSON output is unstructured,
         # use metadata markers for detection to have some confidence that it's actually bytecode
