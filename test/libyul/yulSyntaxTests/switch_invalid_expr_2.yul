@@ -4,4 +4,4 @@
     default {}
 }
 // ----
-// DeclarationError 8198: (13-18): Identifier not found.
+// ParserError 7104: (23-27): Builtin function "mload" must be called.

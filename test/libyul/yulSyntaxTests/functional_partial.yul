@@ -2,4 +2,4 @@
     let x := byte
 }
 // ----
-// DeclarationError 8198: (15-19): Identifier not found.
+// ParserError 7104: (20-21): Builtin function "byte" must be called.

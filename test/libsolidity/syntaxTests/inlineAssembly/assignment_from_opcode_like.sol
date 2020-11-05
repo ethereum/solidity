@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning 8261: (52-62): Variable is shadowed in inline assembly by an instruction of the same name
+// ParserError 7104: (118-119): Builtin function "mload" must be called.
