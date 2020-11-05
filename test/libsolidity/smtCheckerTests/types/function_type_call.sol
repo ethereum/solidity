@@ -9,5 +9,5 @@ contract C {
 	}
 }
 // ----
-// Warning 5729: (121-125): Assertion checker does not yet implement this type of function call.
-// Warning 5729: (121-125): Assertion checker does not yet implement this type of function call.
+// Warning 5729: (121-125): BMC does not yet implement this type of function call.
+// Warning 5729: (121-125): BMC does not yet implement this type of function call.
