@@ -199,21 +199,8 @@ Statement Parser::parseStatement()
 		break;
 	}
 
-	if (holds_alternative<Identifier>(elementary))
-	{
-		Identifier identifier = std::get<Identifier>(move(elementary));
-		return ExpressionStatement{identifier.location, { move(identifier) }};
-	}
-	else if (holds_alternative<Literal>(elementary))
-	{
-		Literal literal = std::get<Literal>(move(elementary));
-		return ExpressionStatement{literal.location, { move(literal) }};
-	}
-	else
-	{
-		yulAssert(false, "Invalid elementary operation.");
-		return {};
-	}
+	yulAssert(false, "");
+	return {};
 }
 
 Case Parser::parseCase()
