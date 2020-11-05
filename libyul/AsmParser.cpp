@@ -256,9 +256,14 @@ Expression Parser::parseExpression()
 	{
 		if (currentToken() == Token::LParen)
 			return parseCall(std::move(operation));
-		else if (auto const& name = std::get<Identifier>(operation).name; m_dialect.builtin(name))
-			fatalParserError(7104_error, "Builtin function \"" + name.str() + "\" must be called.");
-		return std::get<Identifier>(operation);
+		auto identifier = std::get<Identifier>(operation);
+		if (m_dialect.builtin(identifier.name))
+			fatalParserError(
+				7104_error,
+				identifier.location,
+				"Builtin function \"" + identifier.name.str() + "\" must be called."
+			);
+		return identifier;
 	}
 	else
 	{
