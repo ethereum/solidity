@@ -4,12 +4,12 @@
 	{
 		"A":
 		{
-			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\npragma experimental SMTChecker;\ncontract C { function f(uint x) public pure { assert(x > 0); } }"
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\npragma experimental SMTChecker;\ncontract test {\nfunction f(uint x, uint y, uint k) public pure {\nrequire(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}"
 		}
 	},
 	"modelCheckerSettings":
 	{
 		"engine": "bmc",
-		"timeout": 1
+		"timeout": 1000
 	}
 }
