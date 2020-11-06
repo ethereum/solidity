@@ -1,17 +1,5 @@
 Warning: CHC: Assertion violation might happen here.
- --> model_checker_timeout_chc/input.sol:6:3:
-  |
-6 | 		assert(x > 0);
-  | 		^^^^^^^^^^^^^
-
-Warning: CHC: Assertion violation might happen here.
- --> model_checker_timeout_chc/input.sol:7:3:
-  |
-7 | 		assert(x > 2);
-  | 		^^^^^^^^^^^^^
-
-Warning: CHC: Assertion violation might happen here.
- --> model_checker_timeout_chc/input.sol:8:3:
-  |
-8 | 		assert(x > 4);
-  | 		^^^^^^^^^^^^^
+  --> model_checker_timeout_chc/input.sol:10:3:
+   |
+10 | 		assert(r % k == 0);
+   | 		^^^^^^^^^^^^^^^^^^

@@ -2,9 +2,11 @@
 pragma solidity >=0.0;
 pragma experimental SMTChecker;
 contract test {
-    function f(uint x) public pure {
-		assert(x > 0);
-		assert(x > 2);
-		assert(x > 4);
-    }
+	function f(uint x, uint y, uint k) public pure {
+		require(k > 0);
+		require(x % k == 0);
+		require(y % k == 0);
+		uint r = mulmod(x, y, k);
+		assert(r % k == 0);
+	}
 }
