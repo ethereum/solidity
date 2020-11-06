@@ -978,6 +978,9 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	}
 	else if (category == Category::Integer)
 		return false;
+	else if (auto enumType = dynamic_cast<EnumType const*>(&_convertTo))
+		if (isNegative() || isFractional() || m_value >= enumType->numberOfMembers())
+			return false;
 
 	TypePointer mobType = mobileType();
 	return (mobType && mobType->isExplicitlyConvertibleTo(_convertTo));
