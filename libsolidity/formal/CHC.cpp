@@ -71,7 +71,7 @@ void CHC::analyze(SourceUnit const& _source)
 
 	resetSourceAnalysis();
 
-	set<SourceUnit const*, IdCompare> sources;
+	set<SourceUnit const*, EncodingContext::IdCompare> sources;
 	sources.insert(&_source);
 	for (auto const& source: _source.referencedSourceUnits(true))
 		sources.insert(source);
