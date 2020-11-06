@@ -22,6 +22,8 @@
 
 #include <libsmtutil/SolverInterface.h>
 
+#include <libsolidity/formal/ModelChecker.h>
+
 #include <string>
 
 namespace solidity::frontend::test
@@ -39,6 +41,12 @@ public:
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
 protected:
+	/// This contains engine and timeout.
+	/// The engine can be set via option SMTEngine in the test.
+	/// The possible options are `all`, `chc`, `bmc`, `none`,
+	/// where the default is `all`.
+	ModelCheckerSettings m_modelCheckerSettings;
+
 	/// This is set via option SMTSolvers in the test.
 	/// The possible options are `all`, `z3`, `cvc4`, `none`,
 	/// where if none is given the default used option is `all`.
