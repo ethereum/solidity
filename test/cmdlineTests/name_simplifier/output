@@ -19,51 +19,48 @@ object "C_56" {
     object "C_56_deployed" {
         code {
             {
-                mstore(64, 128)
+                let _1 := 64
+                mstore(_1, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    if eq(0xf8eddcc6, shr(224, calldataload(_1)))
+                    let _2 := 0
+                    if eq(0xf8eddcc6, shr(224, calldataload(_2)))
                     {
-                        if callvalue() { revert(_1, _1) }
-                        let _2 := 32
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_1, _1) }
+                        if callvalue() { revert(_2, _2) }
+                        let _3 := 32
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_2, _2) }
                         let offset := calldataload(4)
-                        let _3 := 0xffffffffffffffff
-                        if gt(offset, _3) { revert(_1, _1) }
-                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
-                        let length := calldataload(add(4, offset))
-                        if gt(length, _3) { invalid() }
-                        let _4 := mul(length, _2)
-                        let dst := allocateMemory(add(_4, _2))
+                        let _4 := 0xffffffffffffffff
+                        if gt(offset, _4) { revert(_2, _2) }
+                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_2, _2) }
+                        let _5 := calldataload(add(4, offset))
+                        if gt(_5, _4) { invalid() }
+                        let _6 := mul(_5, _3)
+                        let dst := allocateMemory(add(_6, _3))
                         let dst_1 := dst
-                        mstore(dst, length)
-                        dst := add(dst, _2)
+                        mstore(dst, _5)
+                        dst := add(dst, _3)
                         let src := add(offset, 36)
-                        if gt(add(add(offset, _4), 36), calldatasize()) { revert(_1, _1) }
-                        let i := _1
-                        for { } lt(i, length) { i := add(i, 1) }
+                        if gt(add(add(offset, _6), 36), calldatasize()) { revert(_2, _2) }
+                        let i := _2
+                        for { } lt(i, _5) { i := add(i, 1) }
                         {
-                            mstore(dst, abi_decode_t_struct$_S(src, calldatasize()))
-                            dst := add(dst, _2)
-                            src := add(src, _2)
+                            if slt(sub(calldatasize(), src), _3) { revert(_2, _2) }
+                            let memPtr := mload(_1)
+                            let newFreePtr := add(memPtr, _3)
+                            if or(gt(newFreePtr, _4), lt(newFreePtr, memPtr)) { invalid() }
+                            mstore(_1, newFreePtr)
+                            mstore(memPtr, calldataload(src))
+                            mstore(dst, memPtr)
+                            dst := add(dst, _3)
+                            src := add(src, _3)
                         }
                         let ret, ret_1 := fun_sumArray_55(dst_1)
-                        let memPos := allocateMemory(_1)
+                        let memPos := allocateMemory(_2)
                         return(memPos, sub(abi_encode_uint256_t_string(memPos, ret, ret_1), memPos))
                     }
                 }
                 revert(0, 0)
-            }
-            function abi_decode_t_struct$_S(headStart, end) -> value
-            {
-                if slt(sub(end, headStart), 0x20) { revert(value, value) }
-                let memPtr := mload(64)
-                let newFreePtr := add(memPtr, 0x20)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
-                mstore(64, newFreePtr)
-                value := memPtr
-                mstore(memPtr, calldataload(headStart))
             }
             function abi_encode_uint256_t_string(headStart, value0, value1) -> tail
             {
