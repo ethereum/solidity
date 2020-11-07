@@ -240,6 +240,8 @@ printTask "Running general commandline tests..."
     cd "$REPO_ROOT"/test/cmdlineTests/
     for tdir in */
     do
+        printTask " - ${tdir}"
+
         if [ -e "${tdir}/input.json" ]
         then
             inputFile=""
@@ -268,7 +270,6 @@ printTask "Running general commandline tests..."
         exitCode=$(cat ${tdir}/exit 2>/dev/null || true)
         err="$(cat ${tdir}/err 2>/dev/null || true)"
         stderrExpectationFile="${tdir}/err"
-        printTask " - ${tdir}"
         test_solc_behaviour "$inputFile" \
                             "$args" \
                             "$stdin" \
