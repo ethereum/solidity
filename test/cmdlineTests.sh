@@ -242,6 +242,9 @@ printTask "Running general commandline tests..."
     do
         printTask " - ${tdir}"
 
+        # Strip trailing slash from $tdir. `find` on MacOS X won't strip it and will produce double slashes.
+        tdir=$(basename "${tdir}")
+
         if [ -e "${tdir}/input.json" ]
         then
             inputFile=""
@@ -250,17 +253,17 @@ printTask "Running general commandline tests..."
             stdoutExpectationFile="${tdir}/output.json"
             args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
         else
-            if [[ -e "${tdir}input.yul" && -e "${tdir}input.sol" ]]
+            if [[ -e "${tdir}/input.yul" && -e "${tdir}/input.sol" ]]
             then
                 printError "Ambiguous input. Found both input.sol and input.yul."
                 exit 1
             fi
 
-            if [ -e "${tdir}input.yul" ]
+            if [ -e "${tdir}/input.yul" ]
             then
-                inputFile="${tdir}input.yul"
+                inputFile="${tdir}/input.yul"
             else
-                inputFile="${tdir}input.sol"
+                inputFile="${tdir}/input.sol"
             fi
             stdin=""
             stdout="$(cat ${tdir}/output 2>/dev/null || true)"
