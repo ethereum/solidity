@@ -245,26 +245,32 @@ printTask "Running general commandline tests..."
         # Strip trailing slash from $tdir. `find` on MacOS X won't strip it and will produce double slashes.
         tdir=$(basename "${tdir}")
 
-        if [ -e "${tdir}/input.json" ]
+        inputFiles="$(find "${tdir}" -name 'input.*' -type f -exec printf "%s\n" "{}" \;)"
+        inputCount="$(echo "${inputFiles}" | wc -l)"
+        if (( ${inputCount} == 0 ))
         then
+            printError "No input files found."
+            exit 1
+        fi
+
+        if (( ${inputCount} > 1 ))
+        then
+            printError "Ambiguous input. Found input files in multiple formats:"
+            echo -e "${inputFiles}"
+            exit 1
+        fi
+
+        # Use printf to get rid of the trailing newline
+        inputFile=$(printf "%s" "${inputFiles}")
+
+        if [ "${inputFile}" = "${tdir}/input.json" ]
+        then
+            stdin="${inputFile}"
             inputFile=""
-            stdin="${tdir}/input.json"
             stdout="$(cat ${tdir}/output.json 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output.json"
             args="--standard-json "$(cat ${tdir}/args 2>/dev/null || true)
         else
-            if [[ -e "${tdir}/input.yul" && -e "${tdir}/input.sol" ]]
-            then
-                printError "Ambiguous input. Found both input.sol and input.yul."
-                exit 1
-            fi
-
-            if [ -e "${tdir}/input.yul" ]
-            then
-                inputFile="${tdir}/input.yul"
-            else
-                inputFile="${tdir}/input.sol"
-            fi
             stdin=""
             stdout="$(cat ${tdir}/output 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output"
