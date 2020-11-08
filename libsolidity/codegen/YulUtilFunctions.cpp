@@ -2971,7 +2971,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			break;
 		}
 		default:
-			solAssert(false, "");
+			solAssert(false, "Invalid conversion from " + _from.canonicalName() + " to " + _to.canonicalName());
 		}
 
 		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
