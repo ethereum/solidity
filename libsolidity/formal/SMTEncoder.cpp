@@ -1991,7 +1991,12 @@ void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _fu
 				m_arrayAssignmentHappened = true;
 		}
 
-	for (auto const& variable: _function.localVariables())
+	vector<VariableDeclaration const*> localVars;
+	if (auto const* fun = dynamic_cast<FunctionDefinition const*>(&_function))
+		localVars = localVariablesIncludingModifiers(*fun);
+	else
+		localVars = _function.localVariables();
+	for (auto const& variable: localVars)
 		if (createVariable(*variable))
 		{
 			m_context.newValue(*variable);
@@ -2031,7 +2036,7 @@ void SMTEncoder::initializeStateVariables(ContractDefinition const& _contract)
 
 void SMTEncoder::createLocalVariables(FunctionDefinition const& _function)
 {
-	for (auto const& variable: _function.localVariables())
+	for (auto const& variable: localVariablesIncludingModifiers(_function))
 		createVariable(*variable);
 
 	for (auto const& param: _function.parameters())
@@ -2044,7 +2049,7 @@ void SMTEncoder::createLocalVariables(FunctionDefinition const& _function)
 
 void SMTEncoder::initializeLocalVariables(FunctionDefinition const& _function)
 {
-	for (auto const& variable: _function.localVariables())
+	for (auto const& variable: localVariablesIncludingModifiers(_function))
 	{
 		solAssert(m_context.knownVariable(*variable), "");
 		m_context.setZeroValue(*variable);
@@ -2299,7 +2304,7 @@ void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefin
 	{
 		for (auto const& var: _function->parameters() + _function->returnParameters())
 			m_context.variable(*var)->resetIndex();
-		for (auto const& var: _function->localVariables())
+		for (auto const& var: localVariablesIncludingModifiers(*_function))
 			m_context.variable(*var)->resetIndex();
 	}
 	m_context.state().reset();
@@ -2432,6 +2437,38 @@ vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedA
 vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function)
 {
 	return stateVariablesIncludingInheritedAndPrivate(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+}
+
+vector<VariableDeclaration const*> SMTEncoder::localVariablesIncludingModifiers(FunctionDefinition const& _function)
+{
+	return _function.localVariables() + modifiersVariables(_function);
+}
+
+vector<VariableDeclaration const*> SMTEncoder::modifiersVariables(FunctionDefinition const& _function)
+{
+	struct BlockVars: ASTConstVisitor
+	{
+		BlockVars(Block const& _block) { _block.accept(*this); }
+		void endVisit(VariableDeclaration const& _var) { vars.push_back(&_var); }
+		vector<VariableDeclaration const*> vars;
+	};
+
+	vector<VariableDeclaration const*> vars;
+	set<ModifierDefinition const*> visited;
+	for (auto invok: _function.modifiers())
+	{
+		if (!invok)
+			continue;
+		auto decl = invok->name()->annotation().referencedDeclaration;
+		auto const* modifier = dynamic_cast<ModifierDefinition const*>(decl);
+		if (!modifier || visited.count(modifier))
+			continue;
+
+		visited.insert(modifier);
+		vars += applyMap(modifier->parameters(), [](auto _var) { return _var.get(); });
+		vars += BlockVars(modifier->body()).vars;
+	}
+	return vars;
 }
 
 SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)

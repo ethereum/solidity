@@ -90,7 +90,7 @@ SortPointer functionBodySort(FunctionDefinition const& _function, ContractDefini
 
 	auto smtSort = [](auto _var) { return smt::smtSortAbstractFunction(*_var->type()); };
 	return make_shared<FunctionSort>(
-		fSort->domain + applyMap(_function.localVariables(), smtSort),
+		fSort->domain + applyMap(SMTEncoder::localVariablesIncludingModifiers(_function), smtSort),
 		SortProvider::boolSort
 	);
 }
