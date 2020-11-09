@@ -131,9 +131,6 @@ bool SMTEncoder::visit(FunctionDefinition const& _function)
 {
 	m_modifierDepthStack.push_back(-1);
 
-	if (_function.isConstructor())
-		inlineConstructorHierarchy(dynamic_cast<ContractDefinition const&>(*_function.scope()));
-
 	initializeLocalVariables(_function);
 
 	_function.parameterList().accept(*this);
@@ -2561,6 +2558,37 @@ SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)
 		if (auto const* source = dynamic_cast<SourceUnit const*>(s->scope()))
 			return source;
 	solAssert(false, "");
+}
+
+map<ContractDefinition const*, vector<ASTPointer<frontend::Expression>>> SMTEncoder::baseArguments(ContractDefinition const& _contract)
+{
+	map<ContractDefinition const*, vector<ASTPointer<Expression>>> baseArgs;
+
+	for (auto contract: _contract.annotation().linearizedBaseContracts)
+	{
+		/// Collect base contracts and potential constructor arguments.
+		for (auto specifier: contract->baseContracts())
+		{
+			solAssert(specifier, "");
+			auto const& base = dynamic_cast<ContractDefinition const&>(*specifier->name().annotation().referencedDeclaration);
+			if (auto args = specifier->arguments())
+				baseArgs[&base] = *args;
+		}
+		/// Collect base constructor arguments given as constructor modifiers.
+		if (auto constructor = contract->constructor())
+			for (auto mod: constructor->modifiers())
+			{
+				auto decl = mod->name()->annotation().referencedDeclaration;
+				if (auto base = dynamic_cast<ContractDefinition const*>(decl))
+				{
+					solAssert(!baseArgs.count(base), "");
+					if (auto args = mod->arguments())
+						baseArgs[base] = *args;
+				}
+			}
+	}
+
+	return baseArgs;
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
