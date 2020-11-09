@@ -22,7 +22,7 @@ sub_0: assembly {
         /* \"A\":137:149   */
       revert
 }
-","bytecode":{"generatedSources":[],"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":"sourceMap removed"},"deployedBytecode":{"generatedSources":[],"linkReferences":{},"object":"bytecode removed","opcodes":"opcodes removed","sourceMap":"sourceMap removed"}},"ir":"object \"NamedObject\" {
+","bytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"},"deployedBytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"NamedObject\" {
     code {
         let x := dataoffset(\"DataName\")
         sstore(add(x, 0), 0)
