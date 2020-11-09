@@ -260,7 +260,7 @@ which only need to be created if there is a dispute.
             // This complicated expression just tells you how the address
             // can be pre-computed. It is just there for illustration.
             // You actually only need ``new D{salt: salt}(arg)``.
-            address predictedAddress = address(uint(keccak256(abi.encodePacked(
+            address predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
                 byte(0xff),
                 address(this),
                 salt,
@@ -268,7 +268,7 @@ which only need to be created if there is a dispute.
                     type(D).creationCode,
                     arg
                 ))
-            ))));
+            )))));
 
             D d = new D{salt: salt}(arg);
             require(address(d) == predictedAddress);

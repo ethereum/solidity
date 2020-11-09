@@ -61,7 +61,7 @@ contract ScalarEvent is Event {
             convertedWinningOutcome = OUTCOME_RANGE;
         // Map outcome to outcome range
         else
-            convertedWinningOutcome = uint24(OUTCOME_RANGE * (outcome - lowerBound) / (upperBound - lowerBound));
+            convertedWinningOutcome = uint24(uint(OUTCOME_RANGE * (outcome - lowerBound) / (upperBound - lowerBound)));
         uint factorShort = OUTCOME_RANGE - convertedWinningOutcome;
         uint factorLong = OUTCOME_RANGE - factorShort;
         uint shortOutcomeTokenCount = outcomeTokens[SHORT].balanceOf(msg.sender);

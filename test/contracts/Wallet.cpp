@@ -103,19 +103,19 @@ contract multiowned {
 	// as well as the selection of addresses capable of confirming them.
 	constructor(address[] memory _owners, uint _required) {
 		m_numOwners = _owners.length + 1;
-		m_owners[1] = uint(msg.sender);
-		m_ownerIndex[uint(msg.sender)] = 1;
+		m_owners[1] = uint160(msg.sender);
+		m_ownerIndex[uint160(msg.sender)] = 1;
 		for (uint i = 0; i < _owners.length; ++i)
 		{
-			m_owners[2 + i] = uint(_owners[i]);
-			m_ownerIndex[uint(_owners[i])] = 2 + i;
+			m_owners[2 + i] = uint160(_owners[i]);
+			m_ownerIndex[uint160(_owners[i])] = 2 + i;
 		}
 		m_required = _required;
 	}
 
 	// Revokes a prior confirmation of the given operation
 	function revoke(bytes32 _operation) external {
-		uint ownerIndex = m_ownerIndex[uint(msg.sender)];
+		uint ownerIndex = m_ownerIndex[uint160(msg.sender)];
 		// make sure they're an owner
 		if (ownerIndex == 0) return;
 		uint ownerIndexBit = 2**ownerIndex;
@@ -130,13 +130,13 @@ contract multiowned {
 	// Replaces an owner `_from` with another `_to`.
 	function changeOwner(address _from, address _to) onlymanyowners(keccak256(msg.data)) public virtual {
 		if (isOwner(_to)) return;
-		uint ownerIndex = m_ownerIndex[uint(_from)];
+		uint ownerIndex = m_ownerIndex[uint160(_from)];
 		if (ownerIndex == 0) return;
 
 		clearPending();
-		m_owners[ownerIndex] = uint(_to);
-		m_ownerIndex[uint(_from)] = 0;
-		m_ownerIndex[uint(_to)] = ownerIndex;
+		m_owners[ownerIndex] = uint160(_to);
+		m_ownerIndex[uint160(_from)] = 0;
+		m_ownerIndex[uint160(_to)] = ownerIndex;
 		emit OwnerChanged(_from, _to);
 	}
 
@@ -149,18 +149,18 @@ contract multiowned {
 		if (m_numOwners >= c_maxOwners)
 			return;
 		m_numOwners++;
-		m_owners[m_numOwners] = uint(_owner);
-		m_ownerIndex[uint(_owner)] = m_numOwners;
+		m_owners[m_numOwners] = uint160(_owner);
+		m_ownerIndex[uint160(_owner)] = m_numOwners;
 		emit OwnerAdded(_owner);
 	}
 
 	function removeOwner(address _owner) onlymanyowners(keccak256(msg.data)) external {
-		uint ownerIndex = m_ownerIndex[uint(_owner)];
+		uint ownerIndex = m_ownerIndex[uint160(_owner)];
 		if (ownerIndex == 0) return;
 		if (m_required > m_numOwners - 1) return;
 
 		m_owners[ownerIndex] = 0;
-		m_ownerIndex[uint(_owner)] = 0;
+		m_ownerIndex[uint160(_owner)] = 0;
 		clearPending();
 		reorganizeOwners(); //make sure m_numOwner is equal to the number of owners and always points to the optimal free slot
 		emit OwnerRemoved(_owner);
@@ -174,12 +174,12 @@ contract multiowned {
 	}
 
 	function isOwner(address _addr) public returns (bool) {
-		return m_ownerIndex[uint(_addr)] > 0;
+		return m_ownerIndex[uint160(_addr)] > 0;
 	}
 
 	function hasConfirmed(bytes32 _operation, address _owner) public view returns (bool) {
 		PendingState storage pending = m_pending[_operation];
-		uint ownerIndex = m_ownerIndex[uint(_owner)];
+		uint ownerIndex = m_ownerIndex[uint160(_owner)];
 
 		// make sure they're an owner
 		if (ownerIndex == 0) return false;
@@ -197,7 +197,7 @@ contract multiowned {
 
 	function confirmAndCheck(bytes32 _operation) internal returns (bool) {
 		// determine what index the present sender is:
-		uint ownerIndex = m_ownerIndex[uint(msg.sender)];
+		uint ownerIndex = m_ownerIndex[uint160(msg.sender)];
 		// make sure they're an owner
 		if (ownerIndex == 0) return false;
 

@@ -21,19 +21,19 @@ contract C {
 		assert(x == 255);
 
 		// signed <- unsigned
-		int8 y = int8(type(uint16).max);
+		int8 y = int8(uint8(type(uint16).max));
 		assert(y == -1);
-		y = int8(uint16(100));
+		y = int8(uint8(uint16(100)));
 		assert(y == 100);
-		y = int8(uint16(200));
+		y = int8(uint8(uint16(200)));
 		assert(y == -56);
 
 		// unsigned <- signed
 		uint8 v = uint8(type(uint16).max);
 		assert(v == 255);
-		v = uint8(int16(300));
+		v = uint8(int8(int16(300)));
 		assert(v == 44);
-		v = uint8(int16(200));
+		v = uint8(int8(int16(200)));
 		assert(v == 200);
 
 		// fixed bytes

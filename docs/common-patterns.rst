@@ -202,7 +202,7 @@ restrictions highly readable.
         {
             owner = _newOwner;
             // just some example condition
-            if (uint(owner) & 0 == 1)
+            if (uint160(owner) & 0 == 1)
                 // This did not refund for Solidity
                 // before version 0.4.0.
                 return;
