@@ -2,6 +2,7 @@
 
 Language Features:
  * Ability to select the abi coder using ``pragma abicoder v1`` and ``pragma abicoder v2``.
+ * Immutable variables with literal number values are considered pure.
 
 Compiler Features:
  * SMTChecker: Add division by zero checks in the CHC engine.

@@ -186,7 +186,13 @@ void ViewPureChecker::endVisit(Identifier const& _identifier)
 	bool writes = _identifier.annotation().willBeWrittenTo;
 	if (VariableDeclaration const* varDecl = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		if (varDecl->isStateVariable() && !varDecl->isConstant())
+		if (varDecl->immutable())
+		{
+			// Immutables that are assigned literals are pure.
+			if (!(varDecl->value() && varDecl->value()->annotation().type->category() == Type::Category::RationalNumber))
+				mutability = StateMutability::View;
+		}
+		else if (varDecl->isStateVariable() && !varDecl->isConstant())
 			mutability = writes ? StateMutability::NonPayable : StateMutability::View;
 	}
 	else if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
@@ -291,7 +297,7 @@ void ViewPureChecker::reportMutability(
 		m_currentFunction->stateMutability() == StateMutability::Pure ||
 		m_currentFunction->stateMutability() == StateMutability::NonPayable,
 		""
-				);
+	);
 }
 
 ViewPureChecker::MutabilityAndLocation const& ViewPureChecker::modifierMutability(
