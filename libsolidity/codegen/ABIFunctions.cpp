@@ -683,18 +683,16 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 				// <readableTypeNameFrom> -> <readableTypeNameTo>
 				function <functionName>(value, pos) -> ret {
 					let slotValue := sload(value)
+					let length := <byteArrayLengthFunction>(slotValue)
+					pos := <storeLength>(pos, length)
 					switch and(slotValue, 1)
 					case 0 {
 						// short byte array
-						let length := and(div(slotValue, 2), 0x7f)
-						pos := <storeLength>(pos, length)
 						mstore(pos, and(slotValue, not(0xff)))
 						ret := add(pos, <lengthPaddedShort>)
 					}
 					case 1 {
 						// long byte array
-						let length := div(slotValue, 2)
-						pos := <storeLength>(pos, length)
 						let dataPos := <arrayDataSlot>(value)
 						let i := 0
 						for { } lt(i, length) { i := add(i, 0x20) } {
@@ -708,6 +706,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 			templ("functionName", functionName);
 			templ("readableTypeNameFrom", _from.toString(true));
 			templ("readableTypeNameTo", _to.toString(true));
+			templ("byteArrayLengthFunction", m_utils.extractByteArrayLengthFunction());
 			templ("storeLength", arrayStoreLengthForEncodingFunction(_to, _options));
 			templ("lengthPaddedShort", _options.padded ? "0x20" : "length");
 			templ("lengthPaddedLong", _options.padded ? "i" : "length");
