@@ -1799,23 +1799,25 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
 {
 	IntegerType const* intType = &_type;
 	string suffix = "div_mod_" + to_string(m_context.newUniqueId());
-	smt::SymbolicIntVariable d(intType, intType, "d_" + suffix, m_context);
-	smt::SymbolicIntVariable r(intType, intType, "r_" + suffix, m_context);
+	smt::SymbolicIntVariable dSymb(intType, intType, "d_" + suffix, m_context);
+	smt::SymbolicIntVariable rSymb(intType, intType, "r_" + suffix, m_context);
+	auto d = dSymb.currentValue();
+	auto r = rSymb.currentValue();
 
 	// x / y = d and x % y = r iff d * y + r = x and
 	// either x >= 0 and 0 <= r < abs(y) (or just 0 <= r < y for unsigned)
 	// or     x < 0 and -abs(y) < r <= 0
-	m_context.addAssertion(((d.currentValue() * _right) + r.currentValue()) == _left);
+	m_context.addAssertion(((d * _right) + r) == _left);
 	if (_type.isSigned())
 		m_context.addAssertion(
-			(_left >= 0 && 0 <= r.currentValue() && (_right == 0 || r.currentValue() < smtutil::abs(_right))) ||
-			(_left < 0 && ((_right == 0 || 0 - smtutil::abs(_right) < r.currentValue()) && r.currentValue() <= 0))
+			(_left >= 0 && 0 <= r && (_right == 0 || r < smtutil::abs(_right))) ||
+			(_left < 0 && ((_right == 0 || 0 - smtutil::abs(_right) < r) && r <= 0))
 		);
 	else // unsigned version
-		m_context.addAssertion(0 <= r.currentValue() && (_right == 0 || r.currentValue() < _right));
+		m_context.addAssertion(0 <= r && (_right == 0 || r < _right));
 
-	auto divResult = smtutil::Expression::ite(_right == 0, 0, d.currentValue());
-	auto modResult = smtutil::Expression::ite(_right == 0, 0, r.currentValue());
+	auto divResult = smtutil::Expression::ite(_right == 0, 0, d);
+	auto modResult = smtutil::Expression::ite(_right == 0, 0, r);
 	return {divResult, modResult};
 }
 

@@ -802,7 +802,7 @@ string ABIFunctions::abiEncodingFunctionCompactStorageArray(
 					items[i]["inRange"] = "1";
 				else
 					items[i]["inRange"] = "0";
-				items[i]["extractFromSlot"] = m_utils.extractFromStorageValue(*_from.baseType(), i * storageBytes, false);
+				items[i]["extractFromSlot"] = m_utils.extractFromStorageValue(*_from.baseType(), i * storageBytes);
 			}
 			templ("items", items);
 			return templ.render();
@@ -888,7 +888,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 							members.back()["preprocess"] = "slotValue := sload(add(value, " + toCompactHexWithPrefix(storageSlotOffset) + "))";
 							previousSlotOffset = storageSlotOffset;
 						}
-						members.back()["retrieveValue"] = m_utils.extractFromStorageValue(*memberTypeFrom, intraSlotOffset, false) + "(slotValue)";
+						members.back()["retrieveValue"] = m_utils.extractFromStorageValue(*memberTypeFrom, intraSlotOffset) + "(slotValue)";
 					}
 					else
 					{

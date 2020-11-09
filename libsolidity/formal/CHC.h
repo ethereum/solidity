@@ -55,7 +55,8 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers
+		smtutil::SMTSolverChoice _enabledSolvers,
+		std::optional<unsigned> timeout
 	);
 
 	void analyze(SourceUnit const& _sources);
@@ -98,14 +99,6 @@ private:
 		Expression const& _expression
 	) override;
 	//@}
-
-	struct IdCompare
-	{
-		bool operator()(ASTNode const* lhs, ASTNode const* rhs) const
-		{
-			return lhs->id() < rhs->id();
-		}
-	};
 
 	/// Helpers.
 	//@{
@@ -286,12 +279,12 @@ private:
 	/// Query placeholders for constructors, if the key has type ContractDefinition*,
 	/// or external functions, if the key has type FunctionDefinition*.
 	/// A placeholder is created for each possible context of a function (e.g. multiple contracts in contract inheritance hierarchy).
-	std::map<ASTNode const*, std::vector<CHCQueryPlaceholder>, IdCompare> m_queryPlaceholders;
+	std::map<ASTNode const*, std::vector<CHCQueryPlaceholder>, smt::EncodingContext::IdCompare> m_queryPlaceholders;
 
 	/// Records verification conditions IDs per function encountered during an analysis of that function.
 	/// The key is the ASTNode of the function where the verification condition has been encountered,
 	/// or the ASTNode of the contract if the verification condition happens inside an implicit constructor.
-	std::map<ASTNode const*, std::vector<unsigned>, IdCompare> m_functionTargetIds;
+	std::map<ASTNode const*, std::vector<unsigned>, smt::EncodingContext::IdCompare> m_functionTargetIds;
 	/// Helper mapping unique IDs to actual verification targets.
 	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
@@ -305,7 +298,7 @@ private:
 	//@{
 	FunctionDefinition const* m_currentFunction = nullptr;
 
-	std::map<ASTNode const*, std::set<ASTNode const*, IdCompare>, IdCompare> m_callGraph;
+	std::map<ASTNode const*, std::set<ASTNode const*, smt::EncodingContext::IdCompare>, smt::EncodingContext::IdCompare> m_callGraph;
 
 	/// The current block.
 	smtutil::Expression m_currentBlock = smtutil::Expression(true);
@@ -330,6 +323,9 @@ private:
 
 	/// SMT solvers that are chosen at runtime.
 	smtutil::SMTSolverChoice m_enabledSolvers;
+
+	/// SMT query timeout in seconds.
+	std::optional<unsigned> m_queryTimeout;
 };
 
 }

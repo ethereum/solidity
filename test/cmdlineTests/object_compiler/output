@@ -1,5 +1,5 @@
 
-======= object_compiler/input.sol (EVM) =======
+======= object_compiler/input.yul (EVM) =======
 
 Pretty printed source:
 object "MyContract" {
@@ -26,42 +26,42 @@ Binary representation:
 33600055600b806012600039806000f350fe60005460005260206000f3
 
 Text representation:
-    /* "object_compiler/input.sol":128:136   */
+    /* "object_compiler/input.yul":128:136   */
   caller
-    /* "object_compiler/input.sol":125:126   */
+    /* "object_compiler/input.yul":125:126   */
   0x00
-    /* "object_compiler/input.sol":118:137   */
+    /* "object_compiler/input.yul":118:137   */
   sstore
   dataSize(sub_0)
-    /* "object_compiler/input.sol":240:259   */
+    /* "object_compiler/input.yul":240:259   */
   dup1
   dataOffset(sub_0)
-    /* "object_compiler/input.sol":125:126   */
+    /* "object_compiler/input.yul":125:126   */
   0x00
-    /* "object_compiler/input.sol":205:260   */
+    /* "object_compiler/input.yul":205:260   */
   codecopy
-    /* "object_compiler/input.sol":275:294   */
+    /* "object_compiler/input.yul":275:294   */
   dup1
-    /* "object_compiler/input.sol":125:126   */
+    /* "object_compiler/input.yul":125:126   */
   0x00
-    /* "object_compiler/input.sol":265:295   */
+    /* "object_compiler/input.yul":265:295   */
   return
   pop
 stop
 
 sub_0: assembly {
-        /* "object_compiler/input.sol":397:398   */
+        /* "object_compiler/input.yul":397:398   */
       0x00
-        /* "object_compiler/input.sol":391:399   */
+        /* "object_compiler/input.yul":391:399   */
       sload
-        /* "object_compiler/input.sol":397:398   */
+        /* "object_compiler/input.yul":397:398   */
       0x00
-        /* "object_compiler/input.sol":381:400   */
+        /* "object_compiler/input.yul":381:400   */
       mstore
-        /* "object_compiler/input.sol":417:421   */
+        /* "object_compiler/input.yul":417:421   */
       0x20
-        /* "object_compiler/input.sol":397:398   */
+        /* "object_compiler/input.yul":397:398   */
       0x00
-        /* "object_compiler/input.sol":407:422   */
+        /* "object_compiler/input.yul":407:422   */
       return
 }

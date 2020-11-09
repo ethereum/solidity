@@ -15,11 +15,16 @@ contract C {
 	}
 }
 // ----
-// Warning 5729: (195-200): Assertion checker does not yet implement this type of function call.
 // Warning 8115: (224-269): Assertion checker does not yet support the type of this variable.
 // Warning 8364: (284-286): Assertion checker does not yet implement type function (function (uint256))
 // Warning 1695: (287-288): Assertion checker does not yet support this global variable.
-// Warning 5729: (284-291): Assertion checker does not yet implement this type of function call.
 // Warning 6031: (327-329): Internal error: Expression undefined for SMT solver.
 // Warning 8364: (327-329): Assertion checker does not yet implement type function (function (uint256))
-// Warning 5729: (284-291): Assertion checker does not yet implement this type of function call.
+// Warning 5729: (195-200): BMC does not yet implement this type of function call.
+// Warning 8115: (224-269): Assertion checker does not yet support the type of this variable.
+// Warning 8364: (284-286): Assertion checker does not yet implement type function (function (uint256))
+// Warning 1695: (287-288): Assertion checker does not yet support this global variable.
+// Warning 5729: (284-291): BMC does not yet implement this type of function call.
+// Warning 6031: (327-329): Internal error: Expression undefined for SMT solver.
+// Warning 8364: (327-329): Assertion checker does not yet implement type function (function (uint256))
+// Warning 5729: (284-291): BMC does not yet implement this type of function call.

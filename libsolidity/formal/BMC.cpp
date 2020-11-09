@@ -34,10 +34,11 @@ BMC::BMC(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
-	smtutil::SMTSolverChoice _enabledSolvers
+	smtutil::SMTSolverChoice _enabledSolvers,
+	optional<unsigned> _timeout
 ):
 	SMTEncoder(_context),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers)),
+	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _timeout)),
 	m_outerErrorReporter(_errorReporter)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
@@ -491,7 +492,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 		m_errorReporter.warning(
 			5729_error,
 			_funCall.location(),
-			"Assertion checker does not yet implement this type of function call."
+			"BMC does not yet implement this type of function call."
 		);
 	else
 	{
@@ -909,9 +910,9 @@ void BMC::checkBooleanNotConstant(
 	m_interface->pop();
 
 	if (positiveResult == smtutil::CheckResult::ERROR || negatedResult == smtutil::CheckResult::ERROR)
-		m_errorReporter.warning(8592_error, _condition.location(), "Error trying to invoke SMT solver.");
+		m_errorReporter.warning(8592_error, _condition.location(), "BMC: Error trying to invoke SMT solver.");
 	else if (positiveResult == smtutil::CheckResult::CONFLICTING || negatedResult == smtutil::CheckResult::CONFLICTING)
-		m_errorReporter.warning(3356_error, _condition.location(), "At least two SMT solvers provided conflicting answers. Results might not be sound.");
+		m_errorReporter.warning(3356_error, _condition.location(), "BMC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 	else if (positiveResult == smtutil::CheckResult::SATISFIABLE && negatedResult == smtutil::CheckResult::SATISFIABLE)
 	{
 		// everything fine.
@@ -921,7 +922,7 @@ void BMC::checkBooleanNotConstant(
 		// can't do anything.
 	}
 	else if (positiveResult == smtutil::CheckResult::UNSATISFIABLE && negatedResult == smtutil::CheckResult::UNSATISFIABLE)
-		m_errorReporter.warning(2512_error, _condition.location(), "Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
+		m_errorReporter.warning(2512_error, _condition.location(), "BMC: Condition unreachable.", SMTEncoder::callStackMessage(_callStack));
 	else
 	{
 		string description;
@@ -956,7 +957,7 @@ BMC::checkSatisfiableAndGenerateModel(vector<smtutil::Expression> const& _expres
 	}
 	catch (smtutil::SolverError const& _e)
 	{
-		string description("Error querying SMT solver");
+		string description("BMC: Error querying SMT solver");
 		if (_e.comment())
 			description += ": " + *_e.comment();
 		m_errorReporter.warning(8140_error, description);

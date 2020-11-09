@@ -2761,7 +2761,8 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 		if (!funType->bound())
 			if (auto contractType = dynamic_cast<ContractType const*>(exprType))
-				requiredLookup = contractType->isSuper() ? VirtualLookup::Super : VirtualLookup::Virtual;
+				if (contractType->isSuper())
+					requiredLookup = VirtualLookup::Super;
 	}
 
 	annotation.requiredLookup = requiredLookup;

@@ -1,0 +1,5 @@
+Warning: CHC: Assertion violation might happen here.
+  --> model_checker_timeout_chc/input.sol:10:3:
+   |
+10 | 		assert(r % k == 0);
+   | 		^^^^^^^^^^^^^^^^^^

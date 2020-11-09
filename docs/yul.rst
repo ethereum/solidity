@@ -54,7 +54,7 @@ be omitted to help readability.
 To keep the language simple and flexible, Yul does not have
 any built-in operations, functions or types in its pure form.
 These are added together with their semantics when specifying a dialect of Yul,
-which allows to specialize Yul to the requirements of different
+which allows specializing Yul to the requirements of different
 target platforms and feature sets.
 
 Currently, there is only one specified dialect of Yul. This dialect uses
@@ -526,7 +526,7 @@ The ``leave`` statement can only be used inside a function.
 
 Functions cannot be defined anywhere inside for loop init blocks.
 
-Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
+Literals cannot be larger than their type. The largest type defined is 256-bit wide.
 
 During assignments and function calls, the types of the respective values have to match.
 There is no implicit type conversion. Type conversion in general can only be achieved

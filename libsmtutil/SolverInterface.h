@@ -374,6 +374,8 @@ DEV_SIMPLE_EXCEPTION(SolverError);
 class SolverInterface
 {
 public:
+	SolverInterface(std::optional<unsigned> _queryTimeout = {}): m_queryTimeout(_queryTimeout) {}
+
 	virtual ~SolverInterface() = default;
 	virtual void reset() = 0;
 
@@ -401,6 +403,9 @@ public:
 
 	/// @returns how many SMT solvers this interface has.
 	virtual unsigned solvers() { return 1; }
+
+protected:
+	std::optional<unsigned> m_queryTimeout;
 };
 
 }

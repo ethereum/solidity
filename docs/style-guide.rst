@@ -558,7 +558,7 @@ Yes::
         return x + 1;
     }
 
-    function increment(uint x) public pure onlyowner returns (uint) {
+    function increment(uint x) public pure onlyOwner returns (uint) {
         return x + 1;
     }
 
@@ -594,7 +594,7 @@ Yes::
         return balanceOf[from];
     }
 
-    function shutdown() public onlyowner {
+    function shutdown() public onlyOwner {
         selfdestruct(owner);
     }
 
@@ -604,7 +604,7 @@ No::
         return balanceOf[from];
     }
 
-    function shutdown() onlyowner public {
+    function shutdown() onlyOwner public {
         selfdestruct(owner);
     }
 
@@ -661,7 +661,7 @@ Yes::
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
         public
-        onlyowner
+        onlyOwner
         priced
         returns (address)
     {
@@ -674,7 +674,7 @@ Yes::
         address z,
     )
         public
-        onlyowner
+        onlyOwner
         priced
         returns (address)
     {
@@ -685,21 +685,21 @@ No::
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
                                           public
-                                          onlyowner
+                                          onlyOwner
                                           priced
                                           returns (address) {
         doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
-        public onlyowner priced returns (address)
+        public onlyOwner priced returns (address)
     {
         doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
         public
-        onlyowner
+        onlyOwner
         priced
         returns (address) {
         doSomething();

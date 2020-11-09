@@ -84,4 +84,5 @@ contract InternalCall {
 // Warning 2018: (1212-1274): Function state mutability can be restricted to pure
 // Warning 2018: (1280-1342): Function state mutability can be restricted to pure
 // Warning 4588: (771-814): Assertion checker does not yet implement this type of function call.
-// Warning 5729: (1403-1408): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (771-814): Assertion checker does not yet implement this type of function call.
+// Warning 5729: (1403-1408): BMC does not yet implement this type of function call.

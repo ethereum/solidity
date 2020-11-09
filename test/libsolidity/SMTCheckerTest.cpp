@@ -19,8 +19,6 @@
 #include <test/libsolidity/SMTCheckerTest.h>
 #include <test/Common.h>
 
-#include <libsolidity/formal/ModelChecker.h>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
@@ -47,7 +45,13 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (!available.cvc4)
 		m_enabledSolvers.cvc4 = false;
 
-	if (m_enabledSolvers.none())
+	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
+	if (engine)
+		m_modelCheckerSettings.engine = *engine;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT engine choice."));
+
+	if (m_enabledSolvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
 }
 
@@ -55,6 +59,7 @@ TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePr
 {
 	setupCompiler();
 	compiler().setSMTSolverChoice(m_enabledSolvers);
+	compiler().setModelCheckerSettings(m_modelCheckerSettings);
 	parseAndAnalyze();
 	filterObtainedErrors();
 

@@ -283,10 +283,10 @@ public:
 	/// @returns a function that extracts a value type from storage slot that has been
 	/// retrieved already.
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
-	std::string extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes);
+	///
+	/// For external function types, input and output is in "compressed"/"unsplit" form.
+	std::string extractFromStorageValue(Type const& _type, size_t _offset);
+	std::string extractFromStorageValueDynamic(Type const& _type);
 
 	/// Returns the name of a function will write the given value to
 	/// the specified slot and offset. If offset is not given, it is expected as
@@ -309,9 +309,8 @@ public:
 	/// higher order bytes or left-aligns (in case of bytesNN).
 	/// The storage cleanup expects the value to be right-aligned with potentially
 	/// dirty higher order bytes.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
+	/// For external functions, input and output is in "compressed"/"unsplit" form.
+	std::string cleanupFromStorageFunction(Type const& _type);
 
 	/// @returns the name of a function that prepares a value of the given type
 	/// for being stored in storage. This usually includes cleanup and right-alignment
@@ -459,8 +458,8 @@ private:
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
-	std::string readFromStorageValueType(Type const& _type, size_t _offset, bool _splitFunctionTypes);
-	std::string readFromStorageValueTypeDynamic(Type const& _type, bool _splitFunctionTypes);
+	/// @param _offset if provided, read from static offset, otherwise offset is a parameter of the Yul function.
+	std::string readFromStorageValueType(Type const& _type, std::optional<size_t> _offset, bool _splitFunctionTypes);
 
 	/// @returns a function that reads a reference type from storage to memory (performing a deep copy).
 	std::string readFromStorageReferenceType(Type const& _type);
