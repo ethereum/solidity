@@ -9,8 +9,11 @@ object "a" {
 // ----
 // Text:
 // (module
-//     ;; sub-module "sub" will be encoded as custom section in binary here, but is skipped in text mode.
-//     ;; custom-section "str" will be encoded as custom section in binary here, but is skipped in text mode.
+//     ;; custom section for sub-module
+//     ;; The Keccak-256 hash of the text representation of "sub": 78ac3419d75c8d6f42f663717b8e964eeb994d77ff175145133084422dbd23d7
+//     ;; (@custom "sub" "0061736d01000000010401600000020100030201000503010001060100071102066d656d6f72790200046d61696e00000a0801060002401a0b0b")
+//     ;; custom section for data
+//     ;; (@custom "str" "48656c6c6f2c20576f726c6421")
 //     (memory $memory (export "memory") 1)
 //
 // )
