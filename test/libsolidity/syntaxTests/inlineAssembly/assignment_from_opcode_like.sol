@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// ParserError 7104: (118-119): Builtin function "mload" must be called.
+// ParserError 7104: (104-109): Builtin function "mload" must be called.

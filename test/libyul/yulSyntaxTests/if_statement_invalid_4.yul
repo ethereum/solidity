@@ -2,4 +2,4 @@
     if calldatasize {}
 }
 // ----
-// ParserError 7104: (22-23): Builtin function "calldatasize" must be called.
+// ParserError 7104: (9-21): Builtin function "calldatasize" must be called.
