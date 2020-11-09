@@ -88,6 +88,7 @@ private:
 	void visitAddMulMod(FunctionCall const& _funCall) override;
 	void internalFunctionCall(FunctionCall const& _funCall);
 	void externalFunctionCall(FunctionCall const& _funCall);
+	void externalFunctionCallToTrustedCode(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
 	/// Creates underflow/overflow verification targets.

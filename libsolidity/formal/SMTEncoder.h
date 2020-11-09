@@ -295,6 +295,10 @@ protected:
 	/// otherwise nullptr.
 	MemberAccess const* isEmptyPush(Expression const& _expr) const;
 
+	/// @returns true if the given identifier is a contract which is known and trusted.
+	/// This means we don't have to abstract away effects of external function calls to this contract.
+	static bool isTrustedExternalCall(Expression const* _expr);
+
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
 	void createReturnedExpressions(FunctionCall const& _funCall);

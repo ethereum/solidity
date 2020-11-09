@@ -9,9 +9,7 @@ contract C
 	function g(uint y) public {
 		require(y < 1000);
 		this.f(y);
-		// Fails as false positive because CHC does not support `this`.
 		assert(x < 1000);
 	}
 }
 // ----
-// Warning 6328: (227-243): CHC: Assertion violation happens here.
