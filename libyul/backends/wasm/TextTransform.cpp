@@ -44,6 +44,11 @@ string TextTransform::run(wasm::Module const& _module)
 			"    ;; sub-module \"" +
 			sub.first +
 			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
+	for (auto const& data: _module.customSections)
+		ret +=
+			"    ;; custom-section \"" +
+			data.first +
+			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
 	for (wasm::FunctionImport const& imp: _module.imports)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;

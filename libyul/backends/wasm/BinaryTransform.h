@@ -112,6 +112,8 @@ private:
 	std::map<std::string, size_t> const m_globalIDs;
 	std::map<std::string, size_t> const m_functionIDs;
 	std::map<std::string, size_t> const m_functionTypes;
+	/// The map of submodules, where the pair refers to the [offset, length]. The offset is
+	/// an absolute offset within the resulting assembled bytecode.
 	std::map<std::string, std::pair<size_t, size_t>> const m_subModulePosAndSize;
 
 	std::map<std::string, size_t> m_locals;
