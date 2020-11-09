@@ -1,5 +1,8 @@
 ### 0.7.6 (unreleased)
 
+Compiler Features:
+ * SMTChecker: Support named arguments in function calls.
+
 
 ### 0.7.5 (2020-11-18)
 
