@@ -37,15 +37,15 @@ using namespace solidity::langutil;
 
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
-	auto sub = type(_operation.subExpression());
+	auto sub = evaluatedValue(_operation.subExpression());
 	if (sub)
-		setType(_operation, sub->unaryOperatorResult(_operation.getOperator()));
+		setValue(_operation, sub->unaryOperatorResult(_operation.getOperator()));
 }
 
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
-	auto left = type(_operation.leftExpression());
-	auto right = type(_operation.rightExpression());
+	auto left = evaluatedValue(_operation.leftExpression());
+	auto right = evaluatedValue(_operation.rightExpression());
 	if (left && right)
 	{
 		TypePointer commonType = left->binaryOperatorResult(_operation.getOperator(), right);
@@ -60,7 +60,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 				" and " +
 				right->toString()
 			);
-		setType(
+		setValue(
 			_operation,
 			TokenTraits::isCompareOp(_operation.getOperator()) ?
 			TypeProvider::boolean() :
@@ -71,7 +71,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
 {
-	setType(_literal, TypeProvider::forLiteral(_literal));
+	setValue(_literal, TypeProvider::forLiteral(_literal));
 }
 
 bool ConstantEvaluator::evaluated(ASTNode const& _node) const noexcept
@@ -98,25 +98,53 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 		evaluate(*value);
 	}
 
-	setType(_identifier, type(*value));
+	// Link LHS's identifier to the evaluation result of the RHS expression.
+	setResult(_identifier, result(*value));
 }
 
-void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
+void ConstantEvaluator::endVisit(TupleExpression const& _tuple) // TODO: do we actually ever need this code path here?
 {
 	if (!_tuple.isInlineArray() && _tuple.components().size() == 1)
-		setType(_tuple, type(*_tuple.components().front()));
+		setValue(_tuple, evaluatedValue(*_tuple.components().front()));
 }
 
-void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
+void ConstantEvaluator::setValue(ASTNode const& _node, TypePointer const& _value)
 {
-	if (_type && _type->category() == Type::Category::RationalNumber)
-		m_evaluations[&_node] = _type;
+	setResult(_node, TypedValue{_value, _value});
 }
 
-TypePointer ConstantEvaluator::type(ASTNode const& _node)
+void ConstantEvaluator::setResult(ASTNode const& _node, optional<ConstantEvaluator::TypedValue> _result)
+{
+	if (_result.has_value())
+	{
+		auto const sourceType = _result.value().sourceType;
+		auto const value = _result.value().evaluatedValue;
+		if (value && value->category() == Type::Category::RationalNumber)
+			m_evaluations[&_node] = {sourceType, value};
+	}
+}
+
+optional<ConstantEvaluator::TypedValue> ConstantEvaluator::result(ASTNode const& _node)
 {
 	if (auto p = m_evaluations.find(&_node); p != m_evaluations.end())
-		return p->second;
+		return {p->second};
+
+	return nullopt;
+}
+
+TypePointer ConstantEvaluator::sourceType(ASTNode const& _node)
+{
+	if (auto p = m_evaluations.find(&_node); p != m_evaluations.end())
+		return p->second.sourceType;
+
+	return nullptr;
+}
+
+TypePointer ConstantEvaluator::evaluatedValue(ASTNode const& _node)
+{
+	if (auto p = m_evaluations.find(&_node); p != m_evaluations.end())
+		return p->second.evaluatedValue;
+
 	return nullptr;
 }
 
@@ -134,5 +162,5 @@ TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
 
 	_expr.accept(*this);
 
-	return type(_expr);
+	return evaluatedValue(_expr);
 }

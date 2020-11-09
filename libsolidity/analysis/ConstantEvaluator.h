@@ -25,6 +25,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <optional>
 #include <utility>
 
 namespace solidity::langutil
@@ -43,7 +44,8 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	using EvaluationMap = std::map<ASTNode const*, TypePointer>;
+	struct TypedValue { TypePointer sourceType; TypePointer evaluatedValue; };
+	using EvaluationMap = std::map<ASTNode const*, TypedValue>;
 
 	ConstantEvaluator(langutil::ErrorReporter& _errorReporter, EvaluationMap& _evaluations):
 		m_errorReporter{ _errorReporter },
@@ -66,9 +68,13 @@ private:
 	void endVisit(Identifier const& _identifier) override;
 	void endVisit(TupleExpression const& _tuple) override;
 
-	void setType(ASTNode const& _node, TypePointer const& _value);
+	void setValue(ASTNode const& _node, TypePointer const& _value);
 
-	TypePointer type(ASTNode const& _node);
+	TypePointer sourceType(ASTNode const& _node);
+	TypePointer evaluatedValue(ASTNode const& _node);
+
+	std::optional<TypedValue> result(ASTNode const& _node);
+	void setResult(ASTNode const& _node, std::optional<TypedValue> _result);
 
 	bool evaluated(ASTNode const& _node) const noexcept;
 
