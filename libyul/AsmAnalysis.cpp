@@ -163,7 +163,7 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 void AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 {
 	auto watcher = m_errorReporter.errorWatcher();
-	vector<YulString> types = std::visit(*this, _statement.expression);
+	vector<YulString> types = (*this)(_statement.expression);
 	if (watcher.ok() && !types.empty())
 		m_errorReporter.typeError(
 			3083_error,

@@ -52,7 +52,7 @@ struct Identifier { langutil::SourceLocation location; YulString name; };
 struct Assignment { langutil::SourceLocation location; std::vector<Identifier> variableNames; std::unique_ptr<Expression> value; };
 struct FunctionCall { langutil::SourceLocation location; Identifier functionName; std::vector<Expression> arguments; };
 /// Statement that contains only a single expression
-struct ExpressionStatement { langutil::SourceLocation location; Expression expression; };
+struct ExpressionStatement { langutil::SourceLocation location; FunctionCall expression; };
 /// Block-scope variable declaration ("let x:u256 := mload(20:u256)"), non-hoisted
 struct VariableDeclaration { langutil::SourceLocation location; TypedNameList variables; std::unique_ptr<Expression> value; };
 /// Block that creates a scope (frees declared stack variables)

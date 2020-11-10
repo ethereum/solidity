@@ -34,7 +34,8 @@ using namespace solidity::util;
 
 Statement ASTCopier::operator()(ExpressionStatement const& _statement)
 {
-	return ExpressionStatement{ _statement.location, translate(_statement.expression) };
+	Expression expr = (*this)(_statement.expression);
+	return ExpressionStatement{ _statement.location, std::get<FunctionCall>(std::move(expr)) };
 }
 
 Statement ASTCopier::operator()(VariableDeclaration const& _varDecl)

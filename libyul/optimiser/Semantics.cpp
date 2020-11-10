@@ -194,10 +194,9 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
-	if (holds_alternative<FunctionCall>(_exprStmnt.expression))
-		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
-				if (builtin->instruction)
-					return evmasm::SemanticInformation::terminatesControlFlow(*builtin->instruction);
+	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (auto const* builtin = dialect->builtin(_exprStmnt.expression.functionName.name))
+			if (builtin->instruction)
+				return evmasm::SemanticInformation::terminatesControlFlow(*builtin->instruction);
 	return false;
 }

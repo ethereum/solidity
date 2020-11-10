@@ -67,7 +67,7 @@ string AsmPrinter::operator()(Identifier const& _identifier) const
 
 string AsmPrinter::operator()(ExpressionStatement const& _statement) const
 {
-	return std::visit(*this, _statement.expression);
+	return (*this)(_statement.expression);
 }
 
 string AsmPrinter::operator()(Assignment const& _assignment) const

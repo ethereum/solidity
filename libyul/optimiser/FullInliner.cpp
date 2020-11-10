@@ -233,24 +233,15 @@ void InlineModifier::operator()(Block& _block)
 
 std::optional<vector<Statement>> InlineModifier::tryInlineStatement(Statement& _statement)
 {
-	// Only inline for expression statements, assignments and variable declarations.
-	Expression* e = std::visit(util::GenericVisitor{
-		util::VisitorFallback<Expression*>{},
-		[](ExpressionStatement& _s) { return &_s.expression; },
-		[](Assignment& _s) { return _s.value.get(); },
-		[](VariableDeclaration& _s) { return _s.value.get(); }
+	// Only inline direct function cfor expression statements, assignments and variable declarations.
+	FunctionCall* funCall = std::visit(util::GenericVisitor{
+		util::VisitorFallback<FunctionCall*>{},
+		[](ExpressionStatement& _s) { return &_s.expression; }
 	}, _statement);
-	if (e)
-	{
-		// Only inline direct function calls.
-		FunctionCall* funCall = std::visit(util::GenericVisitor{
-			util::VisitorFallback<FunctionCall*>{},
-			[](FunctionCall& _e) { return &_e; }
-		}, *e);
-		if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
-			return performInline(_statement, *funCall);
-	}
-	return {};
+	if (funCall && m_driver.shallInline(*funCall, m_currentFunction))
+		return performInline(_statement, *funCall);
+	else
+		return {};
 }
 
 vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionCall& _funCall)

@@ -147,8 +147,8 @@ Statement Parser::parseStatement()
 	{
 	case Token::LParen:
 	{
-		Expression expr = parseCall(std::move(elementary));
-		return ExpressionStatement{locationOf(expr), expr};
+		FunctionCall expr = parseCall(std::move(elementary));
+		return ExpressionStatement{expr.location, std::move(expr)};
 	}
 	case Token::Comma:
 	case Token::AssemblyAssign:
@@ -198,21 +198,8 @@ Statement Parser::parseStatement()
 		break;
 	}
 
-	if (holds_alternative<Identifier>(elementary))
-	{
-		Identifier& identifier = std::get<Identifier>(elementary);
-		return ExpressionStatement{identifier.location, { move(identifier) }};
-	}
-	else if (holds_alternative<Literal>(elementary))
-	{
-		Expression expr = std::get<Literal>(elementary);
-		return ExpressionStatement{locationOf(expr), expr};
-	}
-	else
-	{
-		yulAssert(false, "Invalid elementary operation.");
-		return {};
-	}
+	yulAssert(false, "Invalid elementary operation.");
+	return {};
 }
 
 Case Parser::parseCase()
@@ -417,7 +404,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
+FunctionCall Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 

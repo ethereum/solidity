@@ -99,7 +99,7 @@ Json::Value AsmJsonConverter::operator()(FunctionCall const& _node) const
 Json::Value AsmJsonConverter::operator()(ExpressionStatement const& _node) const
 {
 	Json::Value ret = createAstNode(_node.location, "YulExpressionStatement");
-	ret["expression"] = std::visit(*this, _node.expression);
+	ret["expression"] = (*this)(_node.expression);
 	return ret;
 }
 

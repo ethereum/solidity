@@ -233,7 +233,7 @@ FunctionCall AsmJsonImporter::createFunctionCall(Json::Value const& _node)
 ExpressionStatement AsmJsonImporter::createExpressionStatement(Json::Value const& _node)
 {
 	auto statement = createAsmNode<ExpressionStatement>(_node);
-	statement.expression = createExpression(member(_node, "expression"));
+	statement.expression = createFunctionCall(member(_node, "expression"));
 	return statement;
 }
 

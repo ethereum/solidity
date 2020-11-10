@@ -107,7 +107,7 @@ void ASTModifier::operator()(FunctionCall& _funCall)
 
 void ASTModifier::operator()(ExpressionStatement& _statement)
 {
-	visit(_statement.expression);
+	(*this)(_statement.expression);
 }
 
 void ASTModifier::operator()(Assignment& _assignment)

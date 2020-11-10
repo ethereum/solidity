@@ -397,22 +397,19 @@ std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 		_store == evmasm::Instruction::SSTORE,
 		""
 	);
-	if (holds_alternative<FunctionCall>(_statement.expression))
-	{
-		FunctionCall const& funCall = std::get<FunctionCall>(_statement.expression);
-		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
-				if (builtin->instruction == _store)
-					if (
-						holds_alternative<Identifier>(funCall.arguments.at(0)) &&
-						holds_alternative<Identifier>(funCall.arguments.at(1))
-					)
-					{
-						YulString key = std::get<Identifier>(funCall.arguments.at(0)).name;
-						YulString value = std::get<Identifier>(funCall.arguments.at(1)).name;
-						return make_pair(key, value);
-					}
-	}
+	FunctionCall const& funCall = _statement.expression;
+	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (auto const* builtin = dialect->builtin(funCall.functionName.name))
+			if (builtin->instruction == _store)
+				if (
+					holds_alternative<Identifier>(funCall.arguments.at(0)) &&
+					holds_alternative<Identifier>(funCall.arguments.at(1))
+				)
+				{
+					YulString key = std::get<Identifier>(funCall.arguments.at(0)).name;
+					YulString value = std::get<Identifier>(funCall.arguments.at(1)).name;
+					return make_pair(key, value);
+				}
 	return {};
 }
 

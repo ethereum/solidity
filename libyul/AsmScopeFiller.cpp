@@ -47,7 +47,7 @@ ScopeFiller::ScopeFiller(AsmAnalysisInfo& _info, ErrorReporter& _errorReporter):
 
 bool ScopeFiller::operator()(ExpressionStatement const& _expr)
 {
-	return std::visit(*this, _expr.expression);
+	return (*this)(_expr.expression);
 }
 
 bool ScopeFiller::operator()(VariableDeclaration const& _varDecl)

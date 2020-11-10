@@ -87,7 +87,7 @@ protected:
 	ElementaryOperation parseElementaryOperation();
 	VariableDeclaration parseVariableDeclaration();
 	FunctionDefinition parseFunctionDefinition();
-	Expression parseCall(ElementaryOperation&& _initialOp);
+	FunctionCall parseCall(ElementaryOperation&& _initialOp);
 	TypedName parseTypedName();
 	YulString expectAsmIdentifier();
 

@@ -49,7 +49,7 @@ public:
 	void operator()(yul::Identifier const&) {}
 	void operator()(yul::ExpressionStatement const& _expr)
 	{
-		std::visit(*this, _expr.expression);
+		(*this)(_expr.expression);
 	}
 	void operator()(yul::Assignment const& _assignment)
 	{

@@ -254,7 +254,7 @@ void CodeTransform::operator()(Assignment const& _assignment)
 void CodeTransform::operator()(ExpressionStatement const& _statement)
 {
 	m_assembly.setSourceLocation(_statement.location);
-	std::visit(*this, _statement.expression);
+	(*this)(_statement.expression);
 }
 
 void CodeTransform::operator()(FunctionCall const& _call)
