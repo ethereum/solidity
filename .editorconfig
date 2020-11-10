@@ -14,7 +14,7 @@ indent_size = 4
 indent_style = space
 indent_size = 4
 
-[*.sol]
+[*.{sol,yul}]
 indent_style = space
 indent_size = 4
 
