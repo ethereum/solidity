@@ -261,12 +261,6 @@ printTask "Running general commandline tests..."
 
         inputFiles="$(find "${tdir}" -name 'input.*' -type f -exec printf "%s\n" "{}" \;)"
         inputCount="$(echo "${inputFiles}" | wc -l)"
-        if (( ${inputCount} == 0 ))
-        then
-            printError "No input files found."
-            exit 1
-        fi
-
         if (( ${inputCount} > 1 ))
         then
             printError "Ambiguous input. Found input files in multiple formats:"
@@ -276,6 +270,11 @@ printTask "Running general commandline tests..."
 
         # Use printf to get rid of the trailing newline
         inputFile=$(printf "%s" "${inputFiles}")
+
+        # If no files specified, assume input.sol as the default
+        if [ -z "${inputFile}" ]; then
+            inputFile="${tdir}/input.sol"
+        fi
 
         if [ "${inputFile}" = "${tdir}/input.json" ]
         then
