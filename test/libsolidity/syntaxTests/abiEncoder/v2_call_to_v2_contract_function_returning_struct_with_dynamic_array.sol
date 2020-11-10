@@ -15,7 +15,7 @@ import "A";
 
 contract Test {
     function foo() public view {
-        C(0x00).get();
+        C(address(0x00)).get();
     }
 }
 // ----

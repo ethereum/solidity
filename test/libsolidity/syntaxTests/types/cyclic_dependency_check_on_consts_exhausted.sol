@@ -256,7 +256,7 @@ contract Main {
     A constant JU = JV;
     A constant JV = JW;
     A constant JW = JX;
-    A constant JX = A(0x00);
+    A constant JX = A(address(0x00));
 }
 // ----
 // DeclarationError 7380: (6105-6123): Variable definition exhausting cyclic dependency validator.

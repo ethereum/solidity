@@ -71,5 +71,3 @@ contract C {
 	}
 }
 // ----
-// Warning 8364: (1468-1469): Assertion checker does not yet implement type type(enum E)
-// Warning 8364: (1468-1469): Assertion checker does not yet implement type type(enum E)

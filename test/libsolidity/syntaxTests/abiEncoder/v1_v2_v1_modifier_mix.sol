@@ -35,7 +35,7 @@ import "X";
 
 contract V2A {
     modifier modV2A() {
-        X(0x00).get();
+        X(address(0x00)).get();
         _;
     }
 }

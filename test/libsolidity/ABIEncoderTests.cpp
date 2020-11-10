@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(structs2)
 				s1[0].t[0].e = E.B;
 				s1[0].t[0].y = 0x12;
 				s2 = new S[](2);
-				s2[1].c = C(0x1234);
+				s2[1].c = C(address(0x1234));
 				s2[1].t = new T[](3);
 				s2[1].t[1].x = 0x21;
 				s2[1].t[1].e = E.C;
