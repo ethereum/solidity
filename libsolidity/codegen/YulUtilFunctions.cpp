@@ -203,8 +203,8 @@ string YulUtilFunctions::leftAlignFunction(Type const& _type)
 			break;
 		case Type::Category::Enum:
 		{
-			unsigned storageBytes = dynamic_cast<EnumType const&>(_type).storageBytes();
-			templ("body", "aligned := " + leftAlignFunction(IntegerType(8 * storageBytes)) + "(value)");
+			solAssert(dynamic_cast<EnumType const&>(_type).storageBytes() == 1, "");
+			templ("body", "aligned := " + leftAlignFunction(IntegerType(8)) + "(value)");
 			break;
 		}
 		case Type::Category::InaccessibleDynamic:

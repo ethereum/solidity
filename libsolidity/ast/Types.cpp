@@ -2629,7 +2629,8 @@ vector<Type const*> StructType::decomposition() const
 
 TypePointer EnumType::encodingType() const
 {
-	return TypeProvider::uint(8 * storageBytes());
+	solAssert(numberOfMembers() <= 256, "");
+	return TypeProvider::uint(8);
 }
 
 TypeResult EnumType::unaryOperatorResult(Token _operator) const
@@ -2652,11 +2653,8 @@ bool EnumType::operator==(Type const& _other) const
 
 unsigned EnumType::storageBytes() const
 {
-	size_t elements = numberOfMembers();
-	if (elements <= 1)
-		return 1;
-	else
-		return util::bytesRequired(elements - 1);
+	solAssert(numberOfMembers() <= 256, "");
+	return 1;
 }
 
 string EnumType::toString(bool) const
