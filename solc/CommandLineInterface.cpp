@@ -614,6 +614,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
+				// NOTE: we ignore the FileNotFound exception as we manually check above
 				m_sourceCodes[infile.generic_string()] = readFileAsString(infile.string());
 				path = boost::filesystem::canonical(infile).string();
 			}
@@ -642,6 +643,10 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	catch (fs::filesystem_error const&)
 	{
 		// Thrown e.g. if path is too long.
+	}
+	catch (FileNotFound const&)
+	{
+		// Should not happen if `fs::is_regular_file` is correct.
 	}
 
 	vector<string> libraries;
@@ -738,7 +743,11 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
+	{
+		serr() << "Could not write to file \"" << pathName << "\"." << endl;
+		m_error = true;
+		return;
+	}
 }
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
@@ -1146,6 +1155,7 @@ bool CommandLineInterface::processInput()
 			if (!boost::filesystem::is_regular_file(canonicalPath))
 				return ReadCallback::Result{false, "Not a valid file."};
 
+			// NOTE: we ignore the FileNotFound exception as we manually check above
 			auto contents = readFileAsString(canonicalPath.string());
 			m_sourceCodes[path.generic_string()] = contents;
 			return ReadCallback::Result{true, contents};
@@ -1232,7 +1242,17 @@ bool CommandLineInterface::processInput()
 		if (jsonFile.empty())
 			input = readStandardInput();
 		else
-			input = readFileAsString(jsonFile);
+		{
+			try
+			{
+				input = readFileAsString(jsonFile);
+			}
+			catch (FileNotFound const&)
+			{
+				serr() << "File not found: " << jsonFile << endl;
+				return false;
+			}
+		}
 		StandardCompiler compiler(fileReader);
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;

@@ -2808,8 +2808,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			.render();
 		});
 	}
-
-	if (_from.category() == Type::Category::ArraySlice)
+	else if (_from.category() == Type::Category::ArraySlice)
 	{
 		solAssert(_from.isDynamicallySized(), "");
 		solAssert(_from.dataStoredIn(DataLocation::CallData), "");
@@ -2839,6 +2838,14 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			("functionName", functionName)
 			.render();
 		});
+	}
+	else if (_from.category() == Type::Category::Array)
+	{
+		solAssert(_to.category() == Type::Category::Array, "");
+		return arrayConversionFunction(
+			dynamic_cast<ArrayType const&>(_from),
+			dynamic_cast<ArrayType const&>(_to)
+		);
 	}
 
 	if (_from.sizeOnStack() != 1 || _to.sizeOnStack() != 1)
@@ -2946,42 +2953,6 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		case Type::Category::FixedPoint:
 			solUnimplemented("Fixed point types not implemented.");
 			break;
-		case Type::Category::Array:
-		{
-			if (_from == _to)
-				body = "converted := value";
-			else
-			{
-				ArrayType const& from = dynamic_cast<decltype(from)>(_from);
-				ArrayType const& to = dynamic_cast<decltype(to)>(_to);
-
-				switch (to.location())
-				{
-				case DataLocation::Storage:
-					// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
-					solAssert(
-						(to.isPointer() || (from.isByteArray() && to.isByteArray())) &&
-						from.location() == DataLocation::Storage,
-						"Invalid conversion to storage type."
-					);
-					body = "converted := value";
-					break;
-				case DataLocation::Memory:
-					// Copy the array to a free position in memory, unless it is already in memory.
-					if (from.location() == DataLocation::Memory)
-						body = "converted := value";
-					else if (from.location() == DataLocation::CallData)
-						solUnimplemented("Conversion of calldata types not yet implemented.");
-					else
-						body = "converted := " + copyArrayFromStorageToMemoryFunction(from, to) + "(value)";
-					break;
-				case DataLocation::CallData:
-					solUnimplemented("Conversion of calldata types not yet implemented.");
-					break;
-				}
-			}
-			break;
-		}
 		case Type::Category::Struct:
 		{
 			solAssert(toCategory == Type::Category::Struct, "");
@@ -3070,6 +3041,71 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
 		templ("body", body);
+		return templ.render();
+	});
+}
+
+string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayType const& _to)
+{
+	solUnimplementedAssert(_to.location() != DataLocation::CallData, "Conversion of calldata types not yet implemented.");
+	// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
+	if (_to.location() == DataLocation::Storage)
+		solAssert(
+			(_to.isPointer() || (_from.isByteArray() && _to.isByteArray())) &&
+			_from.location() == DataLocation::Storage,
+			"Invalid conversion to storage type."
+		);
+	if (_to.location() == DataLocation::Memory && _from.location() == DataLocation::CallData)
+	{
+		solUnimplementedAssert(_from.isDynamicallySized(), "");
+		solUnimplementedAssert(!_from.baseType()->isDynamicallyEncoded(), "");
+		solUnimplementedAssert(_from.isByteArray() && _to.isByteArray() && _to.isDynamicallySized(), "");
+	}
+
+	string functionName =
+		"convert_array_" +
+		_from.identifier() +
+		"_to_" +
+		_to.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(value<?fromCalldataDynamic>, length</fromCalldataDynamic>) -> converted {
+				<body>
+			}
+		)");
+		templ("functionName", functionName);
+		templ("fromCalldataDynamic", _from.dataStoredIn(DataLocation::CallData) && _from.isDynamicallySized());
+
+		if (
+			_from == _to ||
+			(_from.dataStoredIn(DataLocation::Memory) && _to.dataStoredIn(DataLocation::Memory)) ||
+			_to.dataStoredIn(DataLocation::Storage)
+		)
+			templ("body", "converted := value");
+		else if (_to.dataStoredIn(DataLocation::Memory))
+			templ(
+				"body",
+				Whiskers(R"(
+					// Copy the array to a free position in memory
+					<?fromStorage>
+						converted := <arrayStorageToMem>(value)
+					</fromStorage>
+					<?fromCalldata>
+						converted := <allocateMemoryArray>(length)
+						<copyToMemory>(value, add(converted, 0x20), length)
+					</fromCalldata>
+				)")
+				("fromStorage", _from.dataStoredIn(DataLocation::Storage))
+				("fromCalldata", _from.dataStoredIn(DataLocation::CallData))
+				("allocateMemoryArray", _from.dataStoredIn(DataLocation::CallData) ? allocateMemoryArrayFunction(_to) : "")
+				("copyToMemory", _from.dataStoredIn(DataLocation::CallData) ? copyToMemoryFunction(true) : "")
+				("arrayStorageToMem", _from.dataStoredIn(DataLocation::Storage) ? copyArrayFromStorageToMemoryFunction(_from, _to) : "")
+				.render()
+			);
+		else
+			solAssert(false, "");
+
 		return templ.render();
 	});
 }
@@ -3562,29 +3598,6 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 			("converted", suffixedVariableNameList("converted", 0, destStackSize))
 			("conversions", conversions)
 			.render();
-		}
-
-		if (_from.category() == Type::Category::Array && _to.category() == Type::Category::Array)
-		{
-			auto const& fromArrayType = dynamic_cast<ArrayType const&>(_from);
-			auto const& toArrayType = dynamic_cast<ArrayType const&>(_to);
-
-			solAssert(!fromArrayType.baseType()->isDynamicallyEncoded(), "");
-			solUnimplementedAssert(fromArrayType.isByteArray() && toArrayType.isByteArray(), "");
-			solUnimplementedAssert(toArrayType.location() == DataLocation::Memory, "");
-			solUnimplementedAssert(fromArrayType.location() == DataLocation::CallData, "");
-			solUnimplementedAssert(toArrayType.isDynamicallySized(), "");
-
-			Whiskers templ(R"(
-				function <functionName>(offset, length) -> converted {
-					converted := <allocateMemoryArray>(length)
-					<copyToMemory>(offset, add(converted, 0x20), length)
-				}
-			)");
-			templ("functionName", functionName);
-			templ("allocateMemoryArray", allocateMemoryArrayFunction(toArrayType));
-			templ("copyToMemory", copyToMemoryFunction(fromArrayType.location() == DataLocation::CallData));
-			return templ.render();
 		}
 
 		solUnimplementedAssert(

@@ -20,6 +20,7 @@
  */
 
 #include <libsolutil/CommonIO.h>
+#include <libsolutil/Exceptions.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
 #include <libyul/AsmAnalysis.h>
@@ -243,8 +244,18 @@ Allowed options)",
 	}
 
 	string input;
+	try
+	{
+		input = readFileAsString(arguments["input-file"].as<string>());
+	}
+	catch (FileNotFound const& _exception)
+	{
+		cerr << "File not found:" << _exception.comment() << endl;
+		return 1;
+	}
+
 	if (arguments.count("input-file"))
-		YulOpti{}.runInteractive(readFileAsString(arguments["input-file"].as<string>()));
+		YulOpti{}.runInteractive(input);
 	else
 		cout << options;
 
