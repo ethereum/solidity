@@ -47,8 +47,7 @@ inline T readFile(std::string const& _file)
 	T ret;
 	size_t const c_elementSize = sizeof(typename T::value_type);
 	std::ifstream is(_file, std::ifstream::binary);
-	if (!is)
-		return ret;
+	assertThrow(is, FileNotFound, _file);
 
 	// get length of file:
 	is.seekg(0, is.end);

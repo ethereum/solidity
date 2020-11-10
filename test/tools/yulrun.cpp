@@ -35,6 +35,7 @@
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 
 #include <boost/program_options.hpp>
 
@@ -137,10 +138,19 @@ Allowed options)",
 	else
 	{
 		string input;
-
 		if (arguments.count("input-file"))
 			for (string path: arguments["input-file"].as<vector<string>>())
-				input += readFileAsString(path);
+			{
+				try
+				{
+					input += readFileAsString(path);
+				}
+				catch (FileNotFound const&)
+				{
+					cerr << "File not found: " << path << endl;
+					return 1;
+				}
+			}
 		else
 			input = readStandardInput();
 

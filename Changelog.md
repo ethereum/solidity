@@ -4,6 +4,8 @@ Language Features:
  * Ability to select the abi coder using ``pragma abicoder v1`` and ``pragma abicoder v2``.
 
 Compiler Features:
+ * Command Line Interface: Report error if file could not be read in ``--standard-json`` mode.
+ * Command Line interface: Report proper error for each output file which could not be written. Previously an exception was thrown, and execution aborted, on the first error.
  * SMTChecker: Add division by zero checks in the CHC engine.
  * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
  * Command Line Interface: New option ``--model-checker-timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
