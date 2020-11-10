@@ -1916,6 +1916,7 @@ bool CommandLineInterface::assemble(
 		try
 		{
 			object = stack.assemble(_targetMachine);
+			object.bytecode->link(m_libraries);
 		}
 		catch (Exception const& _exception)
 		{

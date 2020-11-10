@@ -8,6 +8,7 @@ Compiler Features:
  * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
  * Command Line Interface: New option ``--model-checker-timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
  * Standard JSON: New option ``modelCheckerSettings.timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
+ * Assembler: Perform linking in assembly mode when library addresses are provided.
 
 
 Bugfixes:
