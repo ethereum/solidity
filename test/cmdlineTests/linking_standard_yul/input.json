@@ -1,0 +1,20 @@
+{
+	"language": "Yul",
+	"sources": {
+		"A": {
+			"content": "object \"a\" { code { let addr := linkersymbol(\"contract/test.sol:L\") } }"
+		}
+	},
+	"settings": {
+		"libraries": {
+			"contract/test.sol": {
+				"L": "0x1234567890123456789012345678901234567890"
+			}
+		},
+		"outputSelection": {
+			"*": {
+				"*": ["evm.bytecode.object", "evm.bytecode.linkReferences"]
+			}
+		}
+	}
+}
