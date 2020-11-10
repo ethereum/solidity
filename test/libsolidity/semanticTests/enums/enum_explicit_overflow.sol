@@ -13,8 +13,8 @@ contract test {
         d = uint256(choice);
     }
 
-    function getChoiceFromNegativeLiteral() public returns (uint256 d) {
-        choice = ActionChoices(-1);
+    function getChoiceFromMax() public returns (uint256 d) {
+        choice = ActionChoices(type(uint).max);
         d = uint256(choice);
     }
 
@@ -25,8 +25,9 @@ contract test {
 // compileViaYul: also
 // EVMVersion: >=byzantium
 // ----
+// getChoiceExp(uint256): 2 -> 2
 // getChoiceExp(uint256): 3 -> FAILURE, hex"4e487b71", 33 # These should throw #
 // getChoiceFromSigned(int256): -1 -> FAILURE, hex"4e487b71", 33
-// getChoiceFromNegativeLiteral() -> FAILURE, hex"4e487b71", 33
+// getChoiceFromMax() -> FAILURE, hex"4e487b71", 33
 // getChoiceExp(uint256): 2 -> 2 # These should work #
 // getChoiceExp(uint256): 0 -> 0

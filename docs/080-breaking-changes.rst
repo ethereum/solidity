@@ -35,12 +35,16 @@ the compiler notifying you about it.
 New Restrictions
 ================
 
-* Explicit conversions from negative literals and literals larger than ``type(uint160).max`` to
-  ``address`` are disallowed. Similarly, explicit conversions between literals and an integer type
-  ``T`` are only allowed if the literal lies between ``type(T).min`` and ``type(T).max``. In
-  particular, replace usages of ``uint(-1)`` with ``type(uint).max``.
+* There are new restrictions related to explicit conversion of literals. The previous behaviour in
+  the following cases was likely ambiguous:
 
-  The previous behaviour was likely ambiguous.
+  1. Explicit conversions from negative literals and literals larger than ``type(uint160).max`` to
+     ``address`` are disallowed.
+  2. Explicit conversions between literals and an integer type ``T`` are only allowed if the literal
+     lies between ``type(T).min`` and ``type(T).max``. In particular, replace usages of ``uint(-1)``
+     with ``type(uint).max``.
+  3. Explicit conversions between literals and enums are only allowed if the literal can
+     represent a value in the enum.
 
 * Function call options can only be given once, i.e. ``c.f{gas: 10000}{value: 1}()`` is invalid and has to be changed to ``c.f{gas: 10000, value: 1}()``.
 
