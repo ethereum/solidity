@@ -3090,7 +3090,8 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayType const& _to)
 {
-	solUnimplementedAssert(_to.location() != DataLocation::CallData, "Conversion of calldata types not yet implemented.");
+	solAssert(_to.location() != DataLocation::CallData, "");
+
 	// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 	if (_to.location() == DataLocation::Storage)
 		solAssert(
@@ -3098,12 +3099,6 @@ string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayTy
 			_from.location() == DataLocation::Storage,
 			"Invalid conversion to storage type."
 		);
-	if (_to.location() == DataLocation::Memory && _from.location() == DataLocation::CallData)
-	{
-		solUnimplementedAssert(_from.isDynamicallySized(), "");
-		solUnimplementedAssert(!_from.baseType()->isDynamicallyEncoded(), "");
-		solUnimplementedAssert(_from.isByteArray() && _to.isByteArray() && _to.isDynamicallySized(), "");
-	}
 
 	string functionName =
 		"convert_array_" +
@@ -3131,19 +3126,31 @@ string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayTy
 				"body",
 				Whiskers(R"(
 					// Copy the array to a free position in memory
+					converted :=
 					<?fromStorage>
-						converted := <arrayStorageToMem>(value)
+						<arrayStorageToMem>(value)
 					</fromStorage>
 					<?fromCalldata>
-						converted := <allocateMemoryArray>(length)
-						<copyToMemory>(value, add(converted, 0x20), length)
+						<abiDecode>(value, <length>, calldatasize())
 					</fromCalldata>
 				)")
 				("fromStorage", _from.dataStoredIn(DataLocation::Storage))
 				("fromCalldata", _from.dataStoredIn(DataLocation::CallData))
-				("allocateMemoryArray", _from.dataStoredIn(DataLocation::CallData) ? allocateMemoryArrayFunction(_to) : "")
-				("copyToMemory", _from.dataStoredIn(DataLocation::CallData) ? copyToMemoryFunction(true) : "")
-				("arrayStorageToMem", _from.dataStoredIn(DataLocation::Storage) ? copyArrayFromStorageToMemoryFunction(_from, _to) : "")
+				("length", _from.isDynamicallySized() ? "length" : _from.length().str())
+				(
+					"abiDecode",
+					_from.dataStoredIn(DataLocation::CallData) ?
+					ABIFunctions(
+						m_evmVersion,
+						m_revertStrings,
+						m_functionCollector
+					).abiDecodingFunctionArrayAvailableLength(_to, false) :
+					""
+				)
+				(
+					"arrayStorageToMem",
+					_from.dataStoredIn(DataLocation::Storage) ? copyArrayFromStorageToMemoryFunction(_from, _to) : ""
+				)
 				.render()
 			);
 		else
