@@ -565,6 +565,7 @@ to and from all integer types but implicit conversion is not allowed.  The expli
 from integer checks at runtime that the value lies inside the range of the enum and causes a
 :ref:`Panic error<assert-and-require>` otherwise.
 Enums require at least one member, and its default value when declared is the first member.
+Enums cannot have more than 256 members.
 
 The data representation is the same as for enums in C: The options are represented by
 subsequent unsigned integer values starting from ``0``.
@@ -586,9 +587,7 @@ subsequent unsigned integer values starting from ``0``.
 
         // Since enum types are not part of the ABI, the signature of "getChoice"
         // will automatically be changed to "getChoice() returns (uint8)"
-        // for all matters external to Solidity. The integer type used is just
-        // large enough to hold all enum values, i.e. if you have more than 256 values,
-        // `uint16` will be used and so on.
+        // for all matters external to Solidity.
         function getChoice() public view returns (ActionChoices) {
             return choice;
         }

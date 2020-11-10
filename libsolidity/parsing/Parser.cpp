@@ -672,7 +672,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			fatalParserError(1612_error, "Expected identifier after ','");
 	}
 	if (members.empty())
-		parserError(3147_error, "enum with no members is not allowed.");
+		parserError(3147_error, "Enum with no members is not allowed.");
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);

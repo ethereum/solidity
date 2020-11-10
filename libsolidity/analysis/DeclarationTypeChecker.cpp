@@ -62,6 +62,18 @@ bool DeclarationTypeChecker::visit(ElementaryTypeName const& _typeName)
 	return true;
 }
 
+bool DeclarationTypeChecker::visit(EnumDefinition const& _enum)
+{
+	if (_enum.members().size() > 256)
+		m_errorReporter.declarationError(
+			1611_error,
+			_enum.location(),
+			"Enum with more than 256 members is not allowed."
+		);
+
+	return false;
+}
+
 bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
 {
 	if (_struct.annotation().recursive.has_value())
