@@ -36,11 +36,9 @@
 
 using namespace solidity;
 using namespace solidity::util;
-using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
-using namespace soltest;
 
 bytes BytesUtils::alignLeft(bytes _bytes)
 {

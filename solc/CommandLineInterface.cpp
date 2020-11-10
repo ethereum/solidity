@@ -1883,8 +1883,29 @@ bool CommandLineInterface::assemble(
 
 		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
-			stack.translate(yul::AssemblyStack::Language::Ewasm);
-			stack.optimize();
+			try
+			{
+				stack.translate(yul::AssemblyStack::Language::Ewasm);
+				stack.optimize();
+			}
+			catch (Exception const& _exception)
+			{
+				serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
+				return false;
+			}
+			catch (std::exception const& _e)
+			{
+				serr() <<
+					"Unknown exception during compilation" <<
+					(_e.what() ? ": " + string(_e.what()) : ".") <<
+					endl;
+				return false;
+			}
+			catch (...)
+			{
+				serr() << "Unknown exception in assembler." << endl;
+				return false;
+			}
 
 			sout() << endl << "==========================" << endl;
 			sout() << endl << "Translated source:" << endl;
@@ -1895,6 +1916,7 @@ bool CommandLineInterface::assemble(
 		try
 		{
 			object = stack.assemble(_targetMachine);
+			object.bytecode->link(m_libraries);
 		}
 		catch (Exception const& _exception)
 		{

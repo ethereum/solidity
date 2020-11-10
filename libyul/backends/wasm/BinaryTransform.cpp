@@ -305,13 +305,23 @@ bytes BinaryTransform::run(Module const& _module)
 	ret += exportSection(functionIDs);
 
 	map<string, pair<size_t, size_t>> subModulePosAndSize;
-	for (auto const& sub: _module.subModules)
+	for (auto const& [name, module]: _module.subModules)
 	{
 		// TODO should we prefix and / or shorten the name?
-		bytes data = BinaryTransform::run(sub.second);
-		size_t length = data.size();
-		ret += customSection(sub.first, move(data));
-		subModulePosAndSize[sub.first] = {ret.size() - length, length};
+		bytes data = BinaryTransform::run(module);
+		size_t const length = data.size();
+		ret += customSection(name, move(data));
+		// Skip all the previous sections and the size field of this current custom section.
+		size_t const offset = ret.size() - length;
+		subModulePosAndSize[name] = {offset, length};
+	}
+	for (auto const& [name, data]: _module.customSections)
+	{
+		size_t const length = data.size();
+		ret += customSection(name, data);
+		// Skip all the previous sections and the size field of this current custom section.
+		size_t const offset = ret.size() - length;
+		subModulePosAndSize[name] = {offset, length};
 	}
 
 	BinaryTransform bt(
@@ -663,9 +673,11 @@ bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> con
 
 bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
 {
-	bytes result = lebEncode(2);
+	bool hasMain = _functionIDs.count("main");
+	bytes result = lebEncode(hasMain ? 2 : 1);
 	result += encodeName("memory") + toBytes(Export::Memory) + lebEncode(0);
-	result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
+	if (hasMain)
+		result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
 	return makeSection(Section::EXPORT, move(result));
 }
 

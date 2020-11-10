@@ -34,6 +34,7 @@ Compiler Features:
  * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
  * Command Line Interface: New option ``--model-checker-timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
  * Standard JSON: New option ``modelCheckerSettings.timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
+ * Assembler: Perform linking in assembly mode when library addresses are provided.
 
 
 Bugfixes:
@@ -45,6 +46,7 @@ Bugfixes:
  * SMTChecker: Fix false negative in modifier applied multiple times.
  * SMTChecker: Fix internal error in the BMC engine when inherited contract from a different source unit has private state variables.
  * SMTChecker: Fix internal error when ``array.push()`` is used as the LHS of an assignment.
+ * SMTChecker: Fix CHC false positives when branches are used inside modifiers.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
 
 

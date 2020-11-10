@@ -50,5 +50,5 @@ sub_0: assembly {
         /* "dup_opt_peephole/input.sol":0:111  contract C {... */
       stop
 
-    auxdata: AUXDATA REMOVED
+    auxdata: <AUXDATA REMOVED>
 }

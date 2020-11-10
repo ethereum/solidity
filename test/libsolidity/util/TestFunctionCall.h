@@ -17,7 +17,6 @@
 #include <test/libsolidity/util/TestFileParser.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 
-#include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>

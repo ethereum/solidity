@@ -1,0 +1,22 @@
+
+======= linking_strict_assembly_unresolved_references/input.yul (EVM) =======
+
+Pretty printed source:
+object "a" {
+    code {
+        let addr1 := linkersymbol("contract/test.sol:L1")
+        let addr2 := linkersymbol("contract/test.sol:L2")
+    }
+}
+
+
+Binary representation:
+73123456789012345678901234567890123456789073__$fb58009a6b1ecea3b9d99bedd645df4ec3$__5050
+
+Text representation:
+  linkerSymbol("05b0326038374a21e0895480a58bda0768cdcc04c8d18f154362d1ca5223d245")
+    /* "linking_strict_assembly_unresolved_references/input.yul":32:81   */
+  linkerSymbol("fb58009a6b1ecea3b9d99bedd645df4ec308f17bc0087e5f39d078f77f809177")
+    /* "linking_strict_assembly_unresolved_references/input.yul":22:145   */
+  pop
+  pop
