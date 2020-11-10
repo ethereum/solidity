@@ -2,6 +2,7 @@
 
 Language Features:
  * Ability to select the abi coder using ``pragma abicoder v1`` and ``pragma abicoder v2``.
+ * Immutable variables with literal number values are considered pure.
 
 Compiler Features:
  * Command Line Interface: Report error if file could not be read in ``--standard-json`` mode.
