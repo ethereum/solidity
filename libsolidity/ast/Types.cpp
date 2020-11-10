@@ -2158,36 +2158,8 @@ string ContractType::canonicalName() const
 MemberList::MemberMap ContractType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap members;
-	if (m_super)
-	{
-		// add the most derived of all functions which are visible in derived contracts
-		auto bases = m_contract.annotation().linearizedBaseContracts;
-		solAssert(bases.size() >= 1, "linearizedBaseContracts should at least contain the most derived contract.");
-		// `sliced(1, ...)` ignores the most derived contract, which should not be searchable from `super`.
-		for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
-			for (FunctionDefinition const* function: base->definedFunctions())
-			{
-				if (!function->isVisibleInDerivedContracts() || !function->isImplemented())
-					continue;
-
-				auto functionType = TypeProvider::function(*function, FunctionType::Kind::Internal);
-				bool functionWithEqualArgumentsFound = false;
-				for (auto const& member: members)
-				{
-					if (member.name != function->name())
-						continue;
-					auto memberType = dynamic_cast<FunctionType const*>(member.type);
-					solAssert(!!memberType, "Override changes type.");
-					if (!memberType->hasEqualParameterTypes(*functionType))
-						continue;
-					functionWithEqualArgumentsFound = true;
-					break;
-				}
-				if (!functionWithEqualArgumentsFound)
-					members.emplace_back(function->name(), functionType, function);
-			}
-	}
-	else if (!m_contract.isLibrary())
+	solAssert(!m_super, "");
+	if (!m_contract.isLibrary())
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.emplace_back(
 				it.second->declaration().name(),
@@ -3838,7 +3810,11 @@ vector<tuple<string, TypePointer>> TypeType::makeStackItems() const
 {
 	if (auto contractType = dynamic_cast<ContractType const*>(m_actualType))
 		if (contractType->contractDefinition().isLibrary())
+		{
+			solAssert(!contractType->isSuper(), "");
 			return {make_tuple("address", TypeProvider::address())};
+		}
+
 	return {};
 }
 
@@ -3847,32 +3823,65 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 	MemberList::MemberMap members;
 	if (m_actualType->category() == Category::Contract)
 	{
-		auto const* contractScope = dynamic_cast<ContractDefinition const*>(_currentScope);
-		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
-		bool inDerivingScope = contractScope && contractScope->derivesFrom(contract);
-
-		for (auto const* declaration: contract.declarations())
+		auto contractType = dynamic_cast<ContractType const*>(m_actualType);
+		ContractDefinition const& contract = contractType->contractDefinition();
+		if (contractType->isSuper())
 		{
-			if (dynamic_cast<ModifierDefinition const*>(declaration))
-				continue;
-			if (declaration->name().empty())
-				continue;
+			// add the most derived of all functions which are visible in derived contracts
+			auto bases = contract.annotation().linearizedBaseContracts;
+			solAssert(bases.size() >= 1, "linearizedBaseContracts should at least contain the most derived contract.");
+			// `sliced(1, ...)` ignores the most derived contract, which should not be searchable from `super`.
+			for (ContractDefinition const* base: bases | boost::adaptors::sliced(1, bases.size()))
+				for (FunctionDefinition const* function: base->definedFunctions())
+				{
+					if (!function->isVisibleInDerivedContracts() || !function->isImplemented())
+						continue;
 
-			if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
+					auto functionType = TypeProvider::function(*function, FunctionType::Kind::Internal);
+					bool functionWithEqualArgumentsFound = false;
+					for (auto const& member: members)
+					{
+						if (member.name != function->name())
+							continue;
+						auto memberType = dynamic_cast<FunctionType const*>(member.type);
+						solAssert(!!memberType, "Override changes type.");
+						if (!memberType->hasEqualParameterTypes(*functionType))
+							continue;
+						functionWithEqualArgumentsFound = true;
+						break;
+					}
+					if (!functionWithEqualArgumentsFound)
+						members.emplace_back(function->name(), functionType, function);
+				}
+		}
+		else
+		{
+			auto const* contractScope = dynamic_cast<ContractDefinition const*>(_currentScope);
+			bool inDerivingScope = contractScope && contractScope->derivesFrom(contract);
+
+			for (auto const* declaration: contract.declarations())
 			{
-				if (
-					auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
-					functionDefinition && !functionDefinition->isImplemented()
+				if (dynamic_cast<ModifierDefinition const*>(declaration))
+					continue;
+				if (declaration->name().empty())
+					continue;
+
+				if (!contract.isLibrary() && inDerivingScope && declaration->isVisibleInDerivedContracts())
+				{
+					if (
+						auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
+						functionDefinition && !functionDefinition->isImplemented()
+					)
+						members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
+					else
+						members.emplace_back(declaration->name(), declaration->type(), declaration);
+				}
+				else if (
+					(contract.isLibrary() && declaration->isVisibleAsLibraryMember()) ||
+					declaration->isVisibleViaContractTypeAccess()
 				)
 					members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
-				else
-					members.emplace_back(declaration->name(), declaration->type(), declaration);
 			}
-			else if (
-				(contract.isLibrary() && declaration->isVisibleAsLibraryMember()) ||
-				declaration->isVisibleViaContractTypeAccess()
-			)
-				members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
 		}
 	}
 	else if (m_actualType->category() == Category::Enum)

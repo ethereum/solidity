@@ -140,7 +140,7 @@ MagicVariableDeclaration const* GlobalContext::currentSuper() const
 	{
 		Type const* type = TypeProvider::emptyTuple();
 		if (m_currentContract)
-			type = TypeProvider::contract(*m_currentContract, true);
+			type = TypeProvider::typeType(TypeProvider::contract(*m_currentContract, true));
 		m_superPointer[m_currentContract] =
 			make_shared<MagicVariableDeclaration>(magicVariableToID("super"), "super", type);
 	}
