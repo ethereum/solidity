@@ -217,7 +217,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		else if (n == "int2bv")
 		{
 			size_t size = std::stoul(_expr.arguments[1].name);
-			return z3::int2bv(size, arguments[0]);
+			return z3::int2bv(static_cast<unsigned>(size), arguments[0]);
 		}
 		else if (n == "bv2int")
 		{
@@ -240,7 +240,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 		else if (n == "tuple_get")
 		{
 			size_t index = stoul(_expr.arguments[1].name);
-			return z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), index))(arguments[0]);
+			return z3::func_decl(m_context, Z3_get_tuple_sort_field_decl(m_context, z3Sort(*_expr.arguments[0].sort), static_cast<unsigned>(index)))(arguments[0]);
 		}
 		else if (n == "tuple_constructor")
 		{
@@ -367,7 +367,7 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		z3::func_decl_vector projs(m_context);
 		z3::func_decl tupleConstructor = m_context.tuple_sort(
 			tupleSort.name.c_str(),
-			tupleSort.members.size(),
+			static_cast<unsigned>(tupleSort.members.size()),
 			cMembers.data(),
 			sorts.data(),
 			projs

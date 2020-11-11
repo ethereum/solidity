@@ -208,7 +208,9 @@ void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _va
 		solAssert(m_context.isLocalVariable(_varDecl), "Must be a local variable.");
 
 		auto const* type = _varDecl.type();
-		if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
+		if (dynamic_cast<MappingType const*>(type))
+			return;
+		else if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
 			if (refType->dataStoredIn(DataLocation::Storage) && refType->isPointer())
 				return;
 
@@ -1356,10 +1358,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
 			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
 			<?saltSet>
-				let <retVars> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
+				let <address> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
 			<!saltSet>
-				let <retVars> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
+				let <address> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
 			</saltSet>
+			<?isTryCall>
+				let <success> := iszero(iszero(<address>))
+			</isTryCall>
 			<releaseTemporaryMemory>()
 		)");
 		t("memPos", m_context.newYulVariable());
@@ -1376,7 +1381,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("saltSet", functionType->saltSet());
 		if (functionType->saltSet())
 			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
-		t("retVars", IRVariable(_functionCall).commaSeparatedList());
+		solAssert(IRVariable(_functionCall).stackSlots().size() == 1, "");
+		t("address", IRVariable(_functionCall).commaSeparatedList());
+		t("isTryCall", _functionCall.annotation().tryCall);
+		if (_functionCall.annotation().tryCall)
+			t("success", IRNames::trySuccessConditionVariable(_functionCall));
 		m_code << t.render();
 
 		break;
@@ -1993,28 +2002,27 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 			case DataLocation::CallData:
 			{
-				IRVariable var(m_context.newYulVariable(), *arrayType.baseType());
-				define(var) <<
-					m_utils.calldataArrayIndexAccessFunction(arrayType) <<
-					"(" <<
-					IRVariable(_indexAccess.baseExpression()).commaSeparatedList() <<
-					", " <<
-					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) <<
+				string const indexAccessFunctionCall =
+					m_utils.calldataArrayIndexAccessFunction(arrayType) +
+					"(" +
+					IRVariable(_indexAccess.baseExpression()).commaSeparatedList() +
+					", " +
+					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
 					")\n";
 				if (arrayType.isByteArray())
 					define(_indexAccess) <<
 						m_utils.cleanupFunction(*arrayType.baseType()) <<
 						"(calldataload(" <<
-						var.name() <<
+						indexAccessFunctionCall <<
 						"))\n";
 				else if (arrayType.baseType()->isValueType())
 					define(_indexAccess) <<
 						m_utils.readFromCalldata(*arrayType.baseType()) <<
 						"(" <<
-						var.commaSeparatedList() <<
+						indexAccessFunctionCall <<
 						")\n";
 				else
-					define(_indexAccess, var);
+					define(_indexAccess) << indexAccessFunctionCall;
 				break;
 			}
 		}

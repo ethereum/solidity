@@ -349,7 +349,7 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 			return false;
 		// Sometimes the solver assigns huge lengths that are not related,
 		// we should catch and ignore those.
-		unsigned index;
+		unsigned long index;
 		try
 		{
 			index = stoul(*indexStr);

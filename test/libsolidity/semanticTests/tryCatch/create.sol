@@ -26,6 +26,7 @@ contract C {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >=byzantium
 // ----
 // f() -> 0, 0, 96, 13, "test message."
