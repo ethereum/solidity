@@ -1367,10 +1367,13 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			datacopy(<memPos>, dataoffset("<object>"), datasize("<object>"))
 			<memEnd> := <abiEncode>(<memEnd><constructorParams>)
 			<?saltSet>
-				let <retVars> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
+				let <address> := create2(<value>, <memPos>, sub(<memEnd>, <memPos>), <salt>)
 			<!saltSet>
-				let <retVars> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
+				let <address> := create(<value>, <memPos>, sub(<memEnd>, <memPos>))
 			</saltSet>
+			<?isTryCall>
+				let <success> := iszero(iszero(<address>))
+			</isTryCall>
 			<releaseTemporaryMemory>()
 		)");
 		t("memPos", m_context.newYulVariable());
@@ -1387,7 +1390,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("saltSet", functionType->saltSet());
 		if (functionType->saltSet())
 			t("salt", IRVariable(_functionCall.expression()).part("salt").name());
-		t("retVars", IRVariable(_functionCall).commaSeparatedList());
+		solAssert(IRVariable(_functionCall).stackSlots().size() == 1, "");
+		t("address", IRVariable(_functionCall).commaSeparatedList());
+		t("isTryCall", _functionCall.annotation().tryCall);
+		if (_functionCall.annotation().tryCall)
+			t("success", IRNames::trySuccessConditionVariable(_functionCall));
 		m_code << t.render();
 
 		break;
