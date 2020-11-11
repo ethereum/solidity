@@ -208,7 +208,9 @@ void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _va
 		solAssert(m_context.isLocalVariable(_varDecl), "Must be a local variable.");
 
 		auto const* type = _varDecl.type();
-		if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
+		if (dynamic_cast<MappingType const*>(type))
+			return;
+		else if (auto const* refType = dynamic_cast<ReferenceType const*>(type))
 			if (refType->dataStoredIn(DataLocation::Storage) && refType->isPointer())
 				return;
 
