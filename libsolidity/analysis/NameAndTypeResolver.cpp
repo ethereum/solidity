@@ -509,6 +509,33 @@ bool DeclarationRegistrationHelper::registerDeclaration(
 	// We use "invisible" for both inactive variables in blocks and for members invisible in contracts.
 	// They cannot both be true at the same time.
 	solAssert(!(_inactive && !_declaration.isVisibleInContract()), "");
+
+	static set<string> illegalNames{"_", "super", "this"};
+
+	if (illegalNames.count(name))
+	{
+		auto isPublicFunctionOrEvent = [](Declaration const* _d) -> bool
+		{
+			if (auto functionDefinition = dynamic_cast<FunctionDefinition const*>(_d))
+			{
+				if (!functionDefinition->isFree() && functionDefinition->isPublic())
+					return true;
+			}
+			else if (dynamic_cast<EventDefinition const*>(_d))
+				return true;
+
+			return false;
+		};
+
+		// We allow an exception for public functions or events.
+		if (!isPublicFunctionOrEvent(&_declaration))
+			_errorReporter.declarationError(
+				3726_error,
+				*_errorLocation,
+				"The name \"" + name + "\" is reserved."
+			);
+	}
+
 	if (!_container.registerDeclaration(_declaration, _name, _errorLocation, !_declaration.isVisibleInContract() || _inactive, false))
 	{
 		SourceLocation firstDeclarationLocation;
