@@ -1998,28 +1998,27 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 			}
 			case DataLocation::CallData:
 			{
-				IRVariable var(m_context.newYulVariable(), *arrayType.baseType());
-				define(var) <<
-					m_utils.calldataArrayIndexAccessFunction(arrayType) <<
-					"(" <<
-					IRVariable(_indexAccess.baseExpression()).commaSeparatedList() <<
-					", " <<
-					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) <<
+				string const indexAccessFunctionCall =
+					m_utils.calldataArrayIndexAccessFunction(arrayType) +
+					"(" +
+					IRVariable(_indexAccess.baseExpression()).commaSeparatedList() +
+					", " +
+					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
 					")\n";
 				if (arrayType.isByteArray())
 					define(_indexAccess) <<
 						m_utils.cleanupFunction(*arrayType.baseType()) <<
 						"(calldataload(" <<
-						var.name() <<
+						indexAccessFunctionCall <<
 						"))\n";
 				else if (arrayType.baseType()->isValueType())
 					define(_indexAccess) <<
 						m_utils.readFromCalldata(*arrayType.baseType()) <<
 						"(" <<
-						var.commaSeparatedList() <<
+						indexAccessFunctionCall <<
 						")\n";
 				else
-					define(_indexAccess, var);
+					define(_indexAccess) << indexAccessFunctionCall;
 				break;
 			}
 		}
