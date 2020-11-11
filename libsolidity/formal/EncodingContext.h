@@ -142,7 +142,7 @@ public:
 	void pushSolver();
 	void popSolver();
 	void addAssertion(smtutil::Expression const& _e);
-	unsigned solverStackHeigh() { return m_assertions.size(); } const
+	size_t solverStackHeigh() { return m_assertions.size(); } const
 	smtutil::SolverInterface* solver()
 	{
 		solAssert(m_solver, "");

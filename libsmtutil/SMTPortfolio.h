@@ -58,7 +58,7 @@ public:
 	std::pair<CheckResult, std::vector<std::string>> check(std::vector<Expression> const& _expressionsToEvaluate) override;
 
 	std::vector<std::string> unhandledQueries() override;
-	unsigned solvers() override { return m_solvers.size(); }
+	size_t solvers() override { return m_solvers.size(); }
 private:
 	static bool solverAnswered(CheckResult result);
 
