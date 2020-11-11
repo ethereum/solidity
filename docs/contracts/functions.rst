@@ -275,7 +275,10 @@ A contract can have at most one ``receive`` function, declared using
 ``receive() external payable { ... }``
 (without the ``function`` keyword).
 This function cannot have arguments, cannot return anything and must have
-``external`` visibility and ``payable`` state mutability. It is executed on a
+``external`` visibility and ``payable`` state mutability.
+It can be virtual, can override and can have modifiers.
+
+The receive function is executed on a
 call to the contract with empty calldata. This is the function that is executed
 on plain Ether transfers (e.g. via ``.send()`` or ``.transfer()``). If no such
 function exists, but a payable :ref:`fallback function <fallback-function>`
@@ -339,14 +342,21 @@ Below you can see an example of a Sink contract that uses function ``receive``.
 Fallback Function
 =================
 
-A contract can have at most one ``fallback`` function, declared using ``fallback () external [payable]``
-(without the ``function`` keyword).
-This function cannot have arguments, cannot return anything and must have ``external`` visibility.
-It is executed on a call to the contract if none of the other
+A contract can have at most one ``fallback`` function, declared using either ``fallback () external [payable]``
+or ``fallback (bytes calldata _input) external [payable] returns (bytes memory _output)``
+(both without the ``function`` keyword).
+This function must have ``external`` visibility. A fallback function can be virtual, can override
+and can have modifiers.
+
+The fallback function is executed on a call to the contract if none of the other
 functions match the given function signature, or if no data was supplied at
 all and there is no :ref:`receive Ether function <receive-ether-function>`.
 The fallback function always receives data, but in order to also receive Ether
 it must be marked ``payable``.
+
+If the version with parameters is used, ``_input`` will contain the full data sent to the contract
+(equal to ``msg.data``) and can return data in ``_output``. The returned data will not be
+ABI-encoded. Instead it will be returned without modifications (not even padding).
 
 In the worst case, if a payable fallback function is also used in
 place of a receive function, it can only rely on 2300 gas being
@@ -364,12 +374,11 @@ operations as long as there is enough gas passed on to it.
     to distinguish Ether transfers from interface confusions.
 
 .. note::
-    Even though the fallback function cannot have arguments, one can still use ``msg.data`` to retrieve
-    any payload supplied with the call.
-    After having checked the first four bytes of ``msg.data``,
+    If you want to decode the input data, you can check the first four bytes
+    for the function selector and then
     you can use ``abi.decode`` together with the array slice syntax to
     decode ABI-encoded data:
-    ``(c, d) = abi.decode(msg.data[4:], (uint256, uint256));``
+    ``(c, d) = abi.decode(_input[4:], (uint256, uint256));``
     Note that this should only be used as a last resort and
     proper functions should be used instead.
 
