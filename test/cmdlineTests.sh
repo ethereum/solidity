@@ -256,11 +256,11 @@ printTask "Running general commandline tests..."
     do
         printTask " - ${tdir}"
 
-        # Strip trailing slash from $tdir. `find` on MacOS X won't strip it and will produce double slashes.
+        # Strip trailing slash from $tdir.
         tdir=$(basename "${tdir}")
 
-        inputFiles="$(find "${tdir}" -name 'input.*' -type f -exec printf "%s\n" "{}" \;)"
-        inputCount="$(echo "${inputFiles}" | wc -l)"
+        inputFiles="$(ls -1 ${tdir}/input.* 2> /dev/null || true)"
+        inputCount="$(echo ${inputFiles} | wc -w)"
         if (( ${inputCount} > 1 ))
         then
             printError "Ambiguous input. Found input files in multiple formats:"
