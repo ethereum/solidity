@@ -30,25 +30,48 @@
 
 #include <libsolutil/Common.h>
 
-using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 
+using std::optional;
+using std::nullopt;
+using std::string;
+
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
-	auto sub = evaluatedValue(_operation.subExpression());
-	if (sub)
-		setValue(_operation, sub->unaryOperatorResult(_operation.getOperator()));
+	if (auto const sub = result(_operation.subExpression()); sub.has_value())
+	{
+		auto const res = sub.value().type->unaryOperatorResult(_operation.getOperator());
+		if (auto const rationalType = dynamic_cast<RationalNumberType const*>(res.get()))
+		{
+			auto const subType = sub.value().type;
+			if (subType && subType->category() == Type::Category::Integer)
+			{
+				rational const frac = rationalType->value();
+				bigint const num = frac.numerator() / frac.denominator();
+				setValue(_operation, rational(num, 1));
+			}
+			else
+				setValue(_operation, rationalType->value());
+		}
+	}
 }
 
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
-	auto left = evaluatedValue(_operation.leftExpression());
-	auto right = evaluatedValue(_operation.rightExpression());
+	auto left = value(_operation.leftExpression());
+	auto right = value(_operation.rightExpression());
 	if (left && right)
 	{
-		TypePointer commonType = left->binaryOperatorResult(_operation.getOperator(), right);
+		TypePointer const commonType = TypeProvider::rationalNumber(*left)->binaryOperatorResult(
+			_operation.getOperator(),
+			TypeProvider::rationalNumber(*right)
+		);
+
+		auto const leftType = result(_operation.leftExpression()).value().type;
+		auto const rightType = result(_operation.rightExpression()).value().type;
+
 		if (!commonType)
 			m_errorReporter.fatalTypeError(
 				6020_error,
@@ -56,22 +79,37 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 				"Operator " +
 				string(TokenTraits::toString(_operation.getOperator())) +
 				" not compatible with types " +
-				left->toString() +
+				leftType->toString() +
 				" and " +
-				right->toString()
+				rightType->toString()
 			);
-		setValue(
-			_operation,
-			TokenTraits::isCompareOp(_operation.getOperator()) ?
-			TypeProvider::boolean() :
-			commonType
-		);
+
+		if (auto const rationalCommonType = dynamic_cast<RationalNumberType const*>(commonType))
+		{
+			if (leftType && leftType->category() == Type::Category::Integer &&
+				rightType && rightType->category() == Type::Category::Integer)
+			{
+				rational const frac = rationalCommonType->value();
+				bigint const num = frac.numerator() / frac.denominator();
+				setValue(_operation, rational(num, 1));
+			}
+			else
+				setValue(_operation, rationalCommonType->value());
+		}
+
+		// other types, such as BoolType are currently impossible to get, and in the old
+		// code, have been ignored, too.
+		// When we want to widen the constexpr support in Solidity, then we
+		// need to touch here, too.
 	}
 }
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
 {
-	setValue(_literal, TypeProvider::forLiteral(_literal));
+	auto const literalType = TypeProvider::forLiteral(_literal);
+
+	if (auto const p = dynamic_cast<RationalNumberType const*>(literalType))
+		setResult(_literal, TypedValue{literalType, p->value()});
 }
 
 bool ConstantEvaluator::evaluated(ASTNode const& _node) const noexcept
@@ -99,28 +137,24 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 	}
 
 	// Link LHS's identifier to the evaluation result of the RHS expression.
-	setResult(_identifier, result(*value));
+	if (auto const resultOpt = result(*value); resultOpt.has_value())
+		setResult(_identifier, TypedValue{variableDeclaration->annotation().type, resultOpt.value().value});
 }
 
 void ConstantEvaluator::endVisit(TupleExpression const& _tuple) // TODO: do we actually ever need this code path here?
 {
 	if (!_tuple.isInlineArray() && _tuple.components().size() == 1)
-		setValue(_tuple, evaluatedValue(*_tuple.components().front()));
-}
-
-void ConstantEvaluator::setValue(ASTNode const& _node, TypePointer const& _value)
-{
-	setResult(_node, TypedValue{_value, _value});
+		if (auto v = value(*_tuple.components().front()); v.has_value())
+			setValue(_tuple, v.value());
 }
 
 void ConstantEvaluator::setResult(ASTNode const& _node, optional<ConstantEvaluator::TypedValue> _result)
 {
 	if (_result.has_value())
 	{
-		auto const sourceType = _result.value().sourceType;
-		auto const value = _result.value().evaluatedValue;
-		if (value && value->category() == Type::Category::RationalNumber)
-			m_evaluations[&_node] = {sourceType, value};
+		auto const type = _result.value().type;
+		auto const value = _result.value().value;
+		m_evaluations[&_node] = {type, value};
 	}
 }
 
@@ -132,35 +166,35 @@ optional<ConstantEvaluator::TypedValue> ConstantEvaluator::result(ASTNode const&
 	return nullopt;
 }
 
-TypePointer ConstantEvaluator::sourceType(ASTNode const& _node)
+TypePointer ConstantEvaluator::type(ASTNode const& _node)
 {
 	if (auto p = m_evaluations.find(&_node); p != m_evaluations.end())
-		return p->second.sourceType;
+		return p->second.type;
 
 	return nullptr;
 }
 
-TypePointer ConstantEvaluator::evaluatedValue(ASTNode const& _node)
+optional<rational> ConstantEvaluator::value(ASTNode const& _node)
 {
 	if (auto p = m_evaluations.find(&_node); p != m_evaluations.end())
-		return p->second.evaluatedValue;
+		return p->second.value;
 
-	return nullptr;
+	return nullopt;
 }
 
-TypePointer ConstantEvaluator::evaluate(langutil::ErrorReporter& _errorReporter, Expression const& _expr)
+std::optional<rational> ConstantEvaluator::evaluate(langutil::ErrorReporter& _errorReporter, Expression const& _expr)
 {
 	EvaluationMap evaluations;
 	ConstantEvaluator evaluator(_errorReporter, evaluations);
 	return evaluator.evaluate(_expr);
 }
 
-TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
+std::optional<rational> ConstantEvaluator::evaluate(Expression const& _expr)
 {
 	m_depth++;
 	ScopeGuard _([&]() { m_depth--; });
 
 	_expr.accept(*this);
 
-	return evaluatedValue(_expr);
+	return value(_expr);
 }

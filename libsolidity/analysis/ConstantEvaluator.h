@@ -44,7 +44,7 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
-	struct TypedValue { TypePointer sourceType; TypePointer evaluatedValue; };
+	struct TypedValue { TypePointer type; rational value; };
 	using EvaluationMap = std::map<ASTNode const*, TypedValue>;
 
 	ConstantEvaluator(langutil::ErrorReporter& _errorReporter, EvaluationMap& _evaluations):
@@ -54,12 +54,12 @@ public:
 	{
 	}
 
-	static TypePointer evaluate(
+	static std::optional<rational> evaluate(
 		langutil::ErrorReporter& _errorReporter,
 		Expression const& _expr
 	);
 
-	TypePointer evaluate(Expression const& _expr);
+	std::optional<rational> evaluate(Expression const& _expr);
 
 private:
 	void endVisit(BinaryOperation const& _operation) override;
@@ -68,14 +68,21 @@ private:
 	void endVisit(Identifier const& _identifier) override;
 	void endVisit(TupleExpression const& _tuple) override;
 
-	void setValue(ASTNode const& _node, TypePointer const& _value);
+	TypePointer type(ASTNode const& _node);
+	std::optional<rational> value(ASTNode const& _node);
 
-	TypePointer sourceType(ASTNode const& _node);
-	TypePointer evaluatedValue(ASTNode const& _node);
-
+	/// @return typed evaluation result or std::nullopt if not evaluated yet.
 	std::optional<TypedValue> result(ASTNode const& _node);
+
+	/// Conditionally sets the evaluation result for the given ASTNode @p _node.
 	void setResult(ASTNode const& _node, std::optional<TypedValue> _result);
 
+	void setValue(ASTNode const& _node, rational const& _value)
+	{
+		setResult(_node, TypedValue{nullptr, _value});
+	}
+
+	/// @returns boolean indicating whether or not given ASTNode @p _node has been evaluated already or not.
 	bool evaluated(ASTNode const& _node) const noexcept;
 
 	langutil::ErrorReporter& m_errorReporter;

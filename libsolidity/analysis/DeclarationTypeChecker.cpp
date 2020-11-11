@@ -249,7 +249,8 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	{
 		TypePointer& lengthTypeGeneric = length->annotation().type;
 		if (!lengthTypeGeneric)
-			lengthTypeGeneric = ConstantEvaluator::evaluate(m_errorReporter, *length);
+			if (auto const p = ConstantEvaluator::evaluate(m_errorReporter, *length); p.has_value())
+				lengthTypeGeneric = TypeProvider::rationalNumber(*p);
 		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
 		u256 lengthValue = 0;
 		if (!lengthType || !lengthType->mobileType())
