@@ -76,7 +76,7 @@ public:
 	}
 
 	VariableDeclaration const& declaration() const { return m_declaration; }
-	Kind kind() const { return m_occurrenceKind; };
+	Kind kind() const { return m_occurrenceKind; }
 	std::optional<langutil::SourceLocation> const& occurrence() const { return m_occurrence; }
 private:
 	/// Declaration of the occurring variable.

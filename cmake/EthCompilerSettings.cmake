@@ -52,6 +52,13 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wimplicit-fallthrough)
 	add_compile_options(-Wsign-conversion)
 
+	# While this should work on CMake 3.3+, it fails on Ubuntu 18
+	if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16)
+		eth_add_cxx_compiler_flag_if_supported(
+			$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>
+		)
+	endif()
+
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")

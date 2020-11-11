@@ -84,7 +84,7 @@ public:
 			return Step::invalidInCurrentEnvironment();
 		else
 			return std::nullopt;
-	};
+	}
 };
 
 
