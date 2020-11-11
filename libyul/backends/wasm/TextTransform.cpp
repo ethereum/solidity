@@ -19,10 +19,13 @@
  * Component that transforms internal Wasm representation to text.
  */
 
+#include <libyul/backends/wasm/BinaryTransform.h>
 #include <libyul/backends/wasm/TextTransform.h>
 
 #include <libyul/Exceptions.h>
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 
@@ -39,16 +42,27 @@ using namespace solidity::util;
 string TextTransform::run(wasm::Module const& _module)
 {
 	string ret = "(module\n";
-	for (auto const& sub: _module.subModules)
+	for (auto const& [name, module]: _module.subModules)
 		ret +=
-			"    ;; sub-module \"" +
-			sub.first +
-			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
-	for (auto const& data: _module.customSections)
+			"    ;; custom section for sub-module\n"
+			"    ;; The Keccak-256 hash of the text representation of \"" +
+			name +
+			"\": " +
+			toHex(keccak256(run(module))) +
+			"\n"
+			"    ;; (@custom \"" +
+			name +
+			"\" \"" +
+			toHex(BinaryTransform::run(module)) +
+			"\")\n";
+	for (auto const& [name, data]: _module.customSections)
 		ret +=
-			"    ;; custom-section \"" +
-			data.first +
-			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
+			"    ;; custom section for data\n"
+			"    ;; (@custom \"" +
+			name +
+			"\" \"" +
+			toHex(data) +
+			"\")\n";
 	for (wasm::FunctionImport const& imp: _module.imports)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;

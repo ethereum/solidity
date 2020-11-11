@@ -55,6 +55,7 @@ private:
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
 	bool m_optimize = false;
+	bool m_wasm = false;
 };
 
 }
