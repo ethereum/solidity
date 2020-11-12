@@ -73,7 +73,9 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>>{
 		// arithmetic on constants
+		//// add(#A, #B) == add!(A, B)
 		{Builtins::ADD(A, B), [=]{ return A.d() + B.d(); }},
+		//// mul(#A, #B) == mul!(A, B)
 		{Builtins::MUL(A, B), [=]{ return A.d() * B.d(); }},
 		{Builtins::SUB(A, B), [=]{ return A.d() - B.d(); }},
 		{Builtins::DIV(A, B), [=]{ return B.d() == 0 ? 0 : divWorkaround(A.d(), B.d()); }},
@@ -91,6 +93,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		{Builtins::AND(A, B), [=]{ return A.d() & B.d(); }},
 		{Builtins::OR(A, B), [=]{ return A.d() | B.d(); }},
 		{Builtins::XOR(A, B), [=]{ return A.d() ^ B.d(); }},
+		//// byte(#A, #B) == 0 iff gte!(A, div!(wordsize!(), 8))
+		//// byte(#A, #B) == shr!(B, and!(mul!(8, sub!(sub!(div!(wordsize!(), 8), 1), A)), 0xff)) iff lt!(A, div!(wordsize!(), 8))
 		{Builtins::BYTE(A, B), [=]{
 			return
 				A.d() >= Pattern::WordSize / 8 ?
@@ -106,11 +110,15 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 			Word mask = (Word(1) << testBit) - 1;
 			return boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask;
 		}},
+		//// shl(#A, #B) == 0 iff gte!(A, wordsize!())
+		//// shl(#A, #B) == shl!(A, B)
 		{Builtins::SHL(A, B), [=]{
 			if (A.d() >= Pattern::WordSize)
 				return Word(0);
 			return shlWorkaround(B.d(), unsigned(A.d()));
 		}},
+		//// shr(#A, #B) == 0 iff gte!(A, wordsize!())
+		//// shr(#A, #B) == shr!(A, B)
 		{Builtins::SHR(A, B), [=]{
 			if (A.d() >= Pattern::WordSize)
 				return Word(0);
@@ -136,12 +144,15 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{Builtins::ADD(X, 0), [=]{ return X; }},
 		{Builtins::ADD(0, X), [=]{ return X; }},
 		{Builtins::SUB(X, 0), [=]{ return X; }},
+		//// sub(not!(0), X) == not!(0)
 		{Builtins::SUB(~Word(0), X), [=]() -> Pattern { return Builtins::NOT(X); }},
 		{Builtins::MUL(X, 0), [=]{ return Word(0); }},
 		{Builtins::MUL(0, X), [=]{ return Word(0); }},
 		{Builtins::MUL(X, 1), [=]{ return X; }},
 		{Builtins::MUL(1, X), [=]{ return X; }},
+		//// mul(X, not!(0)) == sub(0, X)
 		{Builtins::MUL(X, Word(-1)), [=]() -> Pattern { return Builtins::SUB(0, X); }},
+		//// mul(not!(0), X) == sub(0, X)
 		{Builtins::MUL(Word(-1), X), [=]() -> Pattern { return Builtins::SUB(0, X); }},
 		{Builtins::DIV(X, 0), [=]{ return Word(0); }},
 		{Builtins::DIV(0, X), [=]{ return Word(0); }},
@@ -149,7 +160,9 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{Builtins::SDIV(X, 0), [=]{ return Word(0); }},
 		{Builtins::SDIV(0, X), [=]{ return Word(0); }},
 		{Builtins::SDIV(X, 1), [=]{ return X; }},
+		//// and(X, not!(0)) == X
 		{Builtins::AND(X, ~Word(0)), [=]{ return X; }},
+		//// and(not!(0), X) == X
 		{Builtins::AND(~Word(0), X), [=]{ return X; }},
 		{Builtins::AND(X, 0), [=]{ return Word(0); }},
 		{Builtins::AND(0, X), [=]{ return Word(0); }},
@@ -161,19 +174,27 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart2(
 		{Builtins::XOR(0, X), [=]{ return X; }},
 		{Builtins::MOD(X, 0), [=]{ return Word(0); }},
 		{Builtins::MOD(0, X), [=]{ return Word(0); }},
+		//// eq(X, 0) == iszero(X)
 		{Builtins::EQ(X, 0), [=]() -> Pattern { return Builtins::ISZERO(X); },},
+		//// eq(0, X) == iszero(X)
 		{Builtins::EQ(0, X), [=]() -> Pattern { return Builtins::ISZERO(X); },},
 		{Builtins::SHL(0, X), [=]{ return X; }},
 		{Builtins::SHR(0, X), [=]{ return X; }},
 		{Builtins::SHL(X, 0), [=]{ return Word(0); }},
 		{Builtins::SHR(X, 0), [=]{ return Word(0); }},
+		//// gt(X, 0) == iszero(iszero(X))
 		{Builtins::GT(X, 0), [=]() -> Pattern { return Builtins::ISZERO(Builtins::ISZERO(X)); }},
+		//// lt(0, X) == iszero(iszero(X))
 		{Builtins::LT(0, X), [=]() -> Pattern { return Builtins::ISZERO(Builtins::ISZERO(X)); }},
+		//// gt(X, not!(0)) == 0
 		{Builtins::GT(X, ~Word(0)), [=]{ return Word(0); }},
+		//// lt(not!(0), X) == 0
 		{Builtins::LT(~Word(0), X), [=]{ return Word(0); }},
 		{Builtins::GT(0, X), [=]{ return Word(0); }},
 		{Builtins::LT(X, 0), [=]{ return Word(0); }},
+		//// and(byte(X, Y), 0xff) == byte(X, Y)
 		{Builtins::AND(Builtins::BYTE(X, Y), Word(0xff)), [=]() -> Pattern { return Builtins::BYTE(X, Y); }},
+		//// byte(sub!(div!(wordsize!(), 8), 1), X) == and(X, 0xff)
 		{Builtins::BYTE(Word(Pattern::WordSize / 8 - 1), X), [=]() -> Pattern { return Builtins::AND(X, Word(0xff)); }},
 	};
 }
@@ -217,7 +238,9 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>> {
 		// logical instruction combinations
+		//// not(not(X) == X
 		{Builtins::NOT(Builtins::NOT(X)), [=]{ return X; }},
+		//// xor(X, xor(X, Y)) == Y
 		{Builtins::XOR(X, Builtins::XOR(X, Y)), [=]{ return Y; }},
 		{Builtins::XOR(X, Builtins::XOR(Y, X)), [=]{ return Y; }},
 		{Builtins::XOR(Builtins::XOR(X, Y), X), [=]{ return Y; }},
@@ -233,6 +256,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4(
 		{Builtins::AND(X, Builtins::NOT(X)), [=]{ return Word(0); }},
 		{Builtins::AND(Builtins::NOT(X), X), [=]{ return Word(0); }},
 		{Builtins::OR(X, Builtins::NOT(X)), [=]{ return ~Word(0); }},
+		//// or(not(X), X) == not!(0)
 		{Builtins::OR(Builtins::NOT(X), X), [=]{ return ~Word(0); }},
 	};
 }
@@ -249,6 +273,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart4_5(
 	using Builtins = typename Pattern::Builtins;
 	return std::vector<SimplificationRule<Pattern>>{
 		// idempotent operations
+		//// and(and(X, Y), Y) == and(X, Y)
 		{Builtins::AND(Builtins::AND(X, Y), Y), [=]{ return Builtins::AND(X, Y); }},
 		{Builtins::AND(Y, Builtins::AND(X, Y)), [=]{ return Builtins::AND(X, Y); }},
 		{Builtins::AND(Builtins::AND(Y, X), Y), [=]{ return Builtins::AND(Y, X); }},
@@ -275,6 +300,12 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	std::vector<SimplificationRule<Pattern>> rules;
 
 	// Replace MOD X, <power-of-two> with AND X, <power-of-two> - 1
+	/// Unrolled the loop here (well, not entirely yet):
+	//// mod(X, 1) == and(X, 0)
+	//// mod(X, 2) == and(X, 1)
+	//// mod(X, 4) == and(X, 3)
+	/// This an attempt to describe it programatically at the expensive of introducing a K variable which is not a match.
+	//// mod(X, shl!(1, K)) == and(X, sub!(shl!(1, K), 1))) iff and!(gte!(K, 0), lte!(K, wordsize!()))
 	for (size_t i = 0; i < Pattern::WordSize; ++i)
 	{
 		Word value = Word(1) << i;
@@ -299,12 +330,17 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart5(
 	});
 
 	// Replace BYTE(A, X), A >= 32 with 0
+	//// byte(#A, shr(#B, X)) == 0 iff lt!(A, div!(B, 8))
 	rules.push_back({
 		Builtins::BYTE(A, X),
 		[=]() -> Pattern { return Word(0); },
 		[=]() { return A.d() >= Pattern::WordSize / 8; }
 	});
 
+	//// and(address(), sub!(shl!(1, 160), 1)) == address()
+	//// and(caller(), sub!(shl!(1, 160), 1)) == caller()
+	//// and(origin(), sub!(shl!(1, 160), 1)) == origin()
+	//// and(coinbase(), sub!(shl!(1, 160), 1)) == coinbase()
 	for (auto instr: {
 		Instruction::ADDRESS,
 		Instruction::CALLER,
@@ -340,6 +376,11 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
 
 	std::vector<SimplificationRule<Pattern>> rules;
 	// Double negation of opcodes with boolean result
+	//// iszero(iszero(eq(X, Y))) == eq(X, Y)
+	//// iszero(iszero(lt(X, Y))) == lt(X, Y)
+	//// iszero(iszero(slt(X, Y))) == slt(X, Y)
+	//// iszero(iszero(gt(X, Y))) == gt(X, Y)
+	//// iszero(iszero(sgt(X, Y))) == sgt(X, Y)
 	for (auto instr: {
 		Instruction::EQ,
 		Instruction::LT,
@@ -355,11 +396,13 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
 		});
 	}
 
+	//// iszero(iszero(iszero(X))) == iszero(X)
 	rules.push_back({
 		Builtins::ISZERO(Builtins::ISZERO(Builtins::ISZERO(X))),
 		[=]() -> Pattern { return Builtins::ISZERO(X); }
 	});
 
+	//// iszero(xor(X, Y)) == eq(X, Y)
 	rules.push_back({
 		Builtins::ISZERO(Builtins::XOR(X, Y)),
 		[=]() -> Pattern { return Builtins::EQ(X, Y); }
@@ -433,6 +476,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	// Combine two SHR by constant
 	rules.push_back({
 		// SHR(B, SHR(A, X)) -> SHR(min(A+B, 256), X)
+		//// shr(#B, shr(#A, X)) == and(X, 0) iff gte!(xadd!(A, B), wordsize!())
+		//// shr(#B, shr(#A, X)) == shr(xadd!(A, B), X) iff lt!(xadd!(A, B), wordsize!())
 		Builtins::SHR(B, Builtins::SHR(A, X)),
 		[=]() -> Pattern {
 			bigint sum = bigint(A.d()) + B.d();
@@ -504,6 +549,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 
 	rules.push_back({
 		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
+		//// mul(X, shl(Y, 1)) == shl(Y, X)
 		Builtins::MUL(X, Builtins::SHL(Y, Word(1))),
 		[=]() -> Pattern {
 			return Builtins::SHL(Y, X);
@@ -511,6 +557,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 	});
 	rules.push_back({
 		// MUL(SHL(X, 1), Y) -> SHL(X, Y)
+		//// mul(shl(X, 1), Y) == shl(X, Y)
 		Builtins::MUL(Builtins::SHL(X, Word(1)), Y),
 		[=]() -> Pattern {
 			return Builtins::SHL(X, Y);
@@ -552,12 +599,18 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		[=] { return B.d() % 8 == 0 && A.d() <= 32 && B.d() <= 256; }
 	});
 
+	//// byte(#A, shr(#B, X)) == 0 iff lt!(A, div!(B, 8))
 	rules.push_back({
 		Builtins::BYTE(A, Builtins::SHR(B, X)),
 		[=]() -> Pattern { return Word(0); },
 		[=] { return A.d() < B.d() / 8; }
 	});
 
+	//// byte(#A, shr(#B, X)) == byte(sub!(A, div!(B, 8)), X) iff and!(and!(and!(eq!(mod!(B, 8), 0), lt!(A, div!(wordsize!(), 8))), lte!(B, wordsize!())), gte!(A, div!(B, 8)))
+	/// If using infix operators:
+	//// byte(#A, shr(#B, X)) == byte(A - (B / 8), X) iff (B % 8 == 0) && (A < wordsize!() / 8) && (B <= wordsize!()) && (A >= B / 8)
+	/// If making the entire list dialect specific, we do not need wordsize:
+	//// byte(#A, shr(#B, X)) == byte(A - (B / 8), X) iff (B % 8 == 0) && (A < 256 / 8) && (B <= 256) && (A >= B / 8)
 	rules.push_back({
 		Builtins::BYTE(A, Builtins::SHR(B, X)),
 		[=]() -> Pattern { return Builtins::BYTE(A.d() - B.d() / 8, X); },
@@ -585,22 +638,27 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 	rules += std::vector<SimplificationRule<Pattern>>{
 		{
 			// X - A -> X + (-A)
+			//// sub(X, #A) == add(X, sub!(0, A))
 			Builtins::SUB(X, A),
 			[=]() -> Pattern { return Builtins::ADD(X, 0 - A.d()); }
 		}, {
 			// (X + A) - Y -> (X - Y) + A
+			//// sub(add(X, #A), Y) == add(sub(X, Y), A)
 			Builtins::SUB(Builtins::ADD(X, A), Y),
 			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A); }
 		}, {
 			// (A + X) - Y -> (X - Y) + A
+			//// sub(add(#A, X), Y) == add(sub(X, Y), A)
 			Builtins::SUB(Builtins::ADD(A, X), Y),
 			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), A); }
 		}, {
 			// X - (Y + A) -> (X - Y) + (-A)
+			//// sub(X, add(Y, #A)) == add(sub(X, Y), sub!(0, A))
 			Builtins::SUB(X, Builtins::ADD(Y, A)),
 			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); }
 		}, {
 			// X - (A + Y) -> (X - Y) + (-A)
+			//// sub(X, add(#A, Y)) == add(sub(X, Y), sub!(0, A))
 			Builtins::SUB(X, Builtins::ADD(A, Y)),
 			[=]() -> Pattern { return Builtins::ADD(Builtins::SUB(X, Y), 0 - A.d()); }
 		}
@@ -624,25 +682,32 @@ std::vector<SimplificationRule<Pattern>> evmRuleList(
 	using Word = typename Pattern::Word;
 	std::vector<SimplificationRule<Pattern>> rules;
 
+	//// [@evm hasSelfbalance]
+	//// balance(address()) == selfbalance()
 	if (_evmVersion.hasSelfBalance())
 		rules.push_back({
 			Builtins::BALANCE(Instruction::ADDRESS),
 			[]() -> Pattern { return Instruction::SELFBALANCE; }
 		});
 
+	//// exp(0, X) == iszero(X)
 	rules.emplace_back(
 		Builtins::EXP(0, X),
 		[=]() -> Pattern { return Builtins::ISZERO(X); }
 	);
+	//// exp(1, X) == 1
 	rules.emplace_back(
 		Builtins::EXP(1, X),
 		[=]() -> Pattern { return Word(1); }
 	);
+	//// [@evm hasBitwiseShifting]
+	//// exp(2, X) == shl(X, 1)
 	if (_evmVersion.hasBitwiseShifting())
 		rules.emplace_back(
 			Builtins::EXP(2, X),
 			[=]() -> Pattern { return Builtins::SHL(X, 1); }
 		);
+	//// exp(-1, X) == sub(iszero(and(X, 1)), and(X, 1))
 	rules.emplace_back(
 		Builtins::EXP(Word(-1), X),
 		[=]() -> Pattern
