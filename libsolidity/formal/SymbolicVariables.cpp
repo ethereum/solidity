@@ -360,7 +360,7 @@ SymbolicStructVariable::SymbolicStructVariable(
 	}
 }
 
-smtutil::Expression SymbolicStructVariable::member(string const& _member)
+smtutil::Expression SymbolicStructVariable::member(string const& _member) const
 {
 	return smtutil::Expression::tuple_get(currentValue(), m_memberIndices.at(_member));
 }
@@ -382,6 +382,21 @@ smtutil::Expression SymbolicStructVariable::assignMember(string const& _member, 
 		auto newMember = memberName == _member ? _memberValue : oldMembers.at(i);
 		m_context.addAssertion(member(memberName) == newMember);
 	}
+
+	return currentValue();
+}
+
+smtutil::Expression SymbolicStructVariable::assignAllMembers(vector<smtutil::Expression> const& _memberValues)
+{
+	auto structType = dynamic_cast<StructType const*>(m_type);
+	solAssert(structType, "");
+
+	auto const& structDef = structType->structDefinition();
+	auto const& structMembers = structDef.members();
+	solAssert(_memberValues.size() == structMembers.size(), "");
+	increaseIndex();
+	for (unsigned i = 0; i < _memberValues.size(); ++i)
+		m_context.addAssertion(_memberValues[i] == member(structMembers[i]->name()));
 
 	return currentValue();
 }

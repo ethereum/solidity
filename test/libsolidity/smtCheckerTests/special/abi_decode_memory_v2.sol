@@ -8,11 +8,11 @@ contract C {
 	}
 }
 // ----
-// Warning 8364: (221-222): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning 8364: (231-237): Assertion checker does not yet implement type type(uint256[] memory)
 // Warning 8364: (231-240): Assertion checker does not yet implement type type(uint256[] memory[2] memory)
+// Warning 8364: (221-222): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning 4588: (202-242): Assertion checker does not yet implement this type of function call.
-// Warning 8364: (221-222): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning 8364: (231-237): Assertion checker does not yet implement type type(uint256[] memory)
 // Warning 8364: (231-240): Assertion checker does not yet implement type type(uint256[] memory[2] memory)
+// Warning 8364: (221-222): Assertion checker does not yet implement type type(struct C.S storage pointer)
 // Warning 4588: (202-242): Assertion checker does not yet implement this type of function call.

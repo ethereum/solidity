@@ -2,7 +2,7 @@
 
 Compiler Features:
  * SMTChecker: Support named arguments in function calls.
-
+ * SMTChecker: Support struct constructor.
 
 ### 0.7.5 (2020-11-18)
 

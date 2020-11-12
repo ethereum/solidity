@@ -282,11 +282,15 @@ public:
 	);
 
 	/// @returns the symbolic expression representing _member.
-	smtutil::Expression member(std::string const& _member);
+	smtutil::Expression member(std::string const& _member) const;
 
 	/// @returns the symbolic expression representing this struct
 	/// with field _member updated.
 	smtutil::Expression assignMember(std::string const& _member, smtutil::Expression const& _memberValue);
+
+	/// @returns the symbolic expression representing this struct
+	/// with all fields updated with the given values.
+	smtutil::Expression assignAllMembers(std::vector<smtutil::Expression> const& _memberValues);
 
 private:
 	std::map<std::string, unsigned> m_memberIndices;
