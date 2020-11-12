@@ -449,6 +449,36 @@ string YulUtilFunctions::maskBytesFunctionDynamic()
 	});
 }
 
+string YulUtilFunctions::maskLowerOrderBytesFunction(size_t _bytes)
+{
+	string functionName = "mask_lower_order_bytes_" + to_string(_bytes);
+	solAssert(_bytes <= 32, "");
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(data) -> result {
+				result := and(data, <mask>)
+			})")
+			("functionName", functionName)
+			("mask", formatNumber((~u256(0)) >> (256 - 8 * _bytes)))
+			.render();
+	});
+}
+
+string YulUtilFunctions::maskLowerOrderBytesFunctionDynamic()
+{
+	string functionName = "mask_lower_order_bytes_dynamic";
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>(data, bytes) -> result {
+				let mask := not(<shl>(mul(8, bytes), not(0)))
+				result := and(data, mask)
+			})")
+			("functionName", functionName)
+			("shl", shiftLeftFunctionDynamic())
+			.render();
+	});
+}
+
 string YulUtilFunctions::roundUpFunction()
 {
 	string functionName = "round_up_to_mul_of_32";
@@ -1470,23 +1500,20 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 	);
 	if (_fromType.isByteArray())
 		return copyByteArrayToStorageFunction(_fromType, _toType);
-	solUnimplementedAssert(!_fromType.dataStoredIn(DataLocation::Storage), "");
+	if (_fromType.dataStoredIn(DataLocation::Storage) && _toType.baseType()->isValueType())
+		return copyValueArrayStorageToStorageFunction(_fromType, _toType);
 
 	string functionName = "copy_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
 	return m_functionCollector.createFunction(functionName, [&](){
 		Whiskers templ(R"(
 			function <functionName>(slot, value<?isFromDynamicCalldata>, len</isFromDynamicCalldata>) {
+				<?fromStorage> if eq(slot, value) { leave } </fromStorage>
 				let length := <arrayLength>(value<?isFromDynamicCalldata>, len</isFromDynamicCalldata>)
 				<?isToDynamic>
 					<resizeArray>(slot, length)
 				</isToDynamic>
 
-				let srcPtr :=
-				<?isFromMemoryDynamic>
-					add(value, 0x20)
-				<!isFromMemoryDynamic>
-					value
-				</isFromMemoryDynamic>
+				let srcPtr := <srcDataLocation>(value)
 
 				let elementSlot := <dstDataLocation>(slot)
 				let elementOffset := 0
@@ -1509,6 +1536,10 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 						let <elementValues> := <readFromCalldataOrMemory>(srcPtr)
 					</fromMemory>
 
+					<?fromStorage>
+						let <elementValues> := srcPtr
+					</fromStorage>
+
 					<updateStorageValue>(elementSlot<?isValueType>, elementOffset</isValueType>, <elementValues>)
 
 					srcPtr := add(srcPtr, <stride>)
@@ -1526,12 +1557,17 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 				}
 			}
 		)");
+		if (_fromType.dataStoredIn(DataLocation::Storage))
+			solAssert(!_fromType.isValueType(), "");
 		templ("functionName", functionName);
 		bool fromCalldata = _fromType.dataStoredIn(DataLocation::CallData);
 		templ("isFromDynamicCalldata", _fromType.isDynamicallySized() && fromCalldata);
-		templ("fromMemory", _fromType.dataStoredIn(DataLocation::Memory));
+		templ("fromStorage", _fromType.dataStoredIn(DataLocation::Storage));
+		bool fromMemory = _fromType.dataStoredIn(DataLocation::Memory);
+		templ("fromMemory", fromMemory);
 		templ("fromCalldata", fromCalldata);
 		templ("isToDynamic", _toType.isDynamicallySized());
+		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		templ("isFromMemoryDynamic", _fromType.isDynamicallySized() && _fromType.dataStoredIn(DataLocation::Memory));
 		if (fromCalldata)
 		{
@@ -1545,7 +1581,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 		templ("arrayLength",arrayLengthFunction(_fromType));
 		templ("isValueType", _fromType.baseType()->isValueType());
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
-		if (!fromCalldata || _fromType.baseType()->isValueType())
+		if (fromMemory || (fromCalldata && _fromType.baseType()->isValueType()))
 			templ("readFromCalldataOrMemory", readFromMemoryOrCalldata(*_fromType.baseType(), fromCalldata));
 		templ("elementValues", suffixedVariableNameList(
 			"elementValue_",
@@ -1642,6 +1678,65 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 		return templ.render();
 	});
 }
+
+
+string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType)
+{
+	solAssert(
+		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
+		""
+	);
+	solAssert(!_fromType.isByteArray(), "");
+	solAssert(_fromType.dataStoredIn(DataLocation::Storage) && _toType.baseType()->isValueType(), "");
+	solAssert(_toType.dataStoredIn(DataLocation::Storage), "");
+
+	string functionName = "copy_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
+	return m_functionCollector.createFunction(functionName, [&](){
+		Whiskers templ(R"(
+			function <functionName>(dst, src) {
+				if eq(dst, src) { leave }
+				let length := <arrayLength>(src)
+				// Make sure array length is sane
+				if gt(length, 0xffffffffffffffff) { <panic>() }
+				<?isToDynamic>
+					<resizeArray>(dst, length)
+				</isToDynamic>
+
+				let srcPtr := <srcDataLocation>(src)
+
+				let dstPtr := <dstDataLocation>(dst)
+
+				let fullSlots := div(length, <itemsPerSlot>)
+				let i := 0
+				for { } lt(i, fullSlots) { i := add(i, 1) } {
+					sstore(add(dstPtr, i), <maskFull>(sload(add(srcPtr, i))))
+				}
+				let spill := sub(length, mul(i, <itemsPerSlot>))
+				if gt(spill, 0) {
+					sstore(add(dstPtr, i), <maskBytes>(sload(add(srcPtr, i)), mul(spill, <bytesPerItem>)))
+				}
+			}
+		)");
+		if (_fromType.dataStoredIn(DataLocation::Storage))
+			solAssert(!_fromType.isValueType(), "");
+		templ("functionName", functionName);
+		templ("isToDynamic", _toType.isDynamicallySized());
+		if (_toType.isDynamicallySized())
+			templ("resizeArray", resizeDynamicArrayFunction(_toType));
+		templ("arrayLength",arrayLengthFunction(_fromType));
+		templ("panic", panicFunction());
+		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
+		templ("dstDataLocation", arrayDataAreaFunction(_toType));
+		unsigned itemsPerSlot = 32 / _toType.storageStride();
+		templ("itemsPerSlot", to_string(itemsPerSlot));
+		templ("bytesPerItem", to_string(_toType.storageStride()));
+		templ("maskFull", maskLowerOrderBytesFunction(itemsPerSlot * _toType.storageStride()));
+		templ("maskBytes", maskLowerOrderBytesFunctionDynamic());
+
+		return templ.render();
+	});
+}
+
 
 string YulUtilFunctions::arrayConvertLengthToSize(ArrayType const& _type)
 {
