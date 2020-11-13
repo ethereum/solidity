@@ -903,6 +903,70 @@ BOOST_AUTO_TEST_CASE(library_linking)
 	expectLinkReferences(contractResult, {{"library2.sol", {"L2"}}});
 }
 
+BOOST_AUTO_TEST_CASE(linking_yul_empty_link_reference)
+{
+	char const* input = R"(
+	{
+		"language": "Yul",
+		"settings": {
+			"libraries": {
+				"": {
+					"": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"evm.bytecode.linkReferences"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "object \"a\" { code { let addr := linkersymbol(\"\") } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "a");
+	expectLinkReferences(contractResult, {});
+}
+
+BOOST_AUTO_TEST_CASE(linking_yul_no_filename_in_link_reference)
+{
+	char const* input = R"(
+	{
+		"language": "Yul",
+		"settings": {
+			"libraries": {
+				"": {
+					"L": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"evm.bytecode.linkReferences"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "object \"a\" { code { let addr := linkersymbol(\"L\") } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "a");
+	expectLinkReferences(contractResult, {});
+}
+
 BOOST_AUTO_TEST_CASE(evm_version)
 {
 	auto inputForVersion = [](string const& _version)
