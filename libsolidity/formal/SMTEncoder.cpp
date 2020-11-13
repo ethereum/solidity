@@ -2391,6 +2391,19 @@ MemberAccess const* SMTEncoder::isEmptyPush(Expression const& _expr) const
 	return nullptr;
 }
 
+bool SMTEncoder::isTrustedExternalCall(Expression const* _expr) {
+	auto memberAccess = dynamic_cast<MemberAccess const*>(_expr);
+	if (!memberAccess)
+		return false;
+
+	auto identifier = dynamic_cast<Identifier const*>(&memberAccess->expression());
+	return identifier &&
+		identifier->name() == "this" &&
+		identifier->annotation().referencedDeclaration &&
+		dynamic_cast<MagicVariableDeclaration const*>(identifier->annotation().referencedDeclaration)
+	;
+}
+
 string SMTEncoder::extraComment()
 {
 	string extra;

@@ -96,20 +96,7 @@ bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall)
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	if (funType.kind() == FunctionType::Kind::External)
-	{
-		auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
-		if (!memberAccess)
-			return false;
-
-		auto identifier = dynamic_cast<Identifier const*>(&memberAccess->expression());
-		if (!(
-			identifier &&
-			identifier->name() == "this" &&
-			identifier->annotation().referencedDeclaration &&
-			dynamic_cast<MagicVariableDeclaration const*>(identifier->annotation().referencedDeclaration)
-		))
-			return false;
-	}
+		return isTrustedExternalCall(&_funCall.expression());
 	else if (funType.kind() != FunctionType::Kind::Internal)
 		return false;
 
