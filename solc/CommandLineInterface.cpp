@@ -1786,14 +1786,14 @@ bool CommandLineInterface::link()
 				return false;
 			}
 
-			string name(it, it + placeholderSize);
-			if (librariesReplacements.count(name))
+			string foundPlaceholder(it, it + placeholderSize);
+			if (librariesReplacements.count(foundPlaceholder))
 			{
-				string hexStr(toHex(librariesReplacements.at(name).asBytes()));
+				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
-				serr() << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
+				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << endl;
 			it += placeholderSize;
 		}
 		// Remove hints for resolved libraries.
