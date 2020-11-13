@@ -5,6 +5,9 @@ Language Features:
  * Immutable variables with literal number values are considered pure.
 
 Compiler Features:
+ * Command Line Interface: New option ``--experimental-via-ir`` allows switching compilation process to go through
+   the Yul intermediate representation. This is highly experimental and is used for development purposes.
+ * Standard JSON: New option ``settings.viaIR`` allows the same switch as ``--experimental-via-ir`` on the commandline.
  * Command Line Interface: Report error if file could not be read in ``--standard-json`` mode.
  * Command Line interface: Report proper error for each output file which could not be written. Previously an exception was thrown, and execution aborted, on the first error.
  * SMTChecker: Add division by zero checks in the CHC engine.

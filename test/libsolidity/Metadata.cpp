@@ -282,6 +282,38 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 	check(sourceCode, false);
 }
 
+BOOST_AUTO_TEST_CASE(metadata_viair)
+{
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract test {
+		}
+	)";
+
+	auto check = [](char const* _src, bool _viair)
+	{
+		CompilerStack compilerStack;
+		compilerStack.setSources({{"", std::string(_src)}});
+		compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+		compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
+		compilerStack.setViaIR(_viair);
+		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+		string metadata_str = compilerStack.metadata("test");
+		Json::Value metadata;
+		util::jsonParseStrict(metadata_str, metadata);
+		BOOST_CHECK(solidity::test::isValidMetadata(metadata_str));
+		BOOST_CHECK(metadata.isMember("settings"));
+		if (_viair)
+		{
+			BOOST_CHECK(metadata["settings"].isMember("viaIR"));
+			BOOST_CHECK(metadata["settings"]["viaIR"].asBool());
+		}
+	};
+
+	check(sourceCode, true);
+	check(sourceCode, false);
+}
+
 BOOST_AUTO_TEST_CASE(metadata_revert_strings)
 {
 	CompilerStack compilerStack;

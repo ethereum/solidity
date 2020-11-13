@@ -127,6 +127,7 @@ static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGeneratedSources = "generated-sources";
 static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
 static string const g_strGas = "gas";
@@ -211,6 +212,7 @@ static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
 static string const g_argIROptimized = g_strIROptimized;
 static string const g_argEwasm = g_strEwasm;
+static string const g_argExperimentalViaIR = g_strExperimentalViaIR;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -824,6 +826,10 @@ General Information)").c_str(),
 			po::value<string>()->value_name("version"),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
+		)
+		(
+			g_strExperimentalViaIR.c_str(),
+			"Turn on experimental compilation mode via the IR (EXPERIMENTAL)."
 		)
 		(
 			g_strRevertStrings.c_str(),
@@ -1456,6 +1462,8 @@ bool CommandLineInterface::processInput()
 
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		if (m_args.count(g_argExperimentalViaIR))
+			m_compiler->setViaIR(true);
 		m_compiler->setEVMVersion(m_evmVersion);
 		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested

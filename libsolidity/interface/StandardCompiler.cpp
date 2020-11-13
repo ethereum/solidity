@@ -414,7 +414,7 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter", "viaIR"};
 	return checkKeys(_input, keys, "settings");
 }
 
@@ -749,6 +749,13 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.parserErrorRecovery = settings["parserErrorRecovery"].asBool();
 	}
 
+	if (settings.isMember("viaIR"))
+	{
+		if (!settings["viaIR"].isBool())
+			return formatFatalError("JSONError", "\"settings.viaIR\" must be a Boolean.");
+		ret.viaIR = settings["viaIR"].asBool();
+	}
+
 	if (settings.isMember("evmVersion"))
 	{
 		if (!settings["evmVersion"].isString())
@@ -906,6 +913,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setSources(sourceList);
 	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
+	compilerStack.setViaIR(_inputsAndSettings.viaIR);
 	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
 	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
 	compilerStack.setRemappings(_inputsAndSettings.remappings);
