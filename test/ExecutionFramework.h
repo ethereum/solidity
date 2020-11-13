@@ -41,9 +41,6 @@
 namespace solidity::test
 {
 using rational = boost::rational<bigint>;
-/// An Ethereum address: 20 bytes.
-/// @NOTE This is not endian-specific; it's just a bunch of bytes.
-using Address = util::h160;
 
 // The ether and gwei denominations; here for ease of use where needed within code.
 static const u256 gwei = u256(1) << 9;
@@ -62,7 +59,7 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = {},
-		std::map<std::string, Address> const& _libraryAddresses = {}
+		std::map<std::string, util::h160> const& _libraryAddresses = {}
 	) = 0;
 
 	bytes const& compileAndRun(
@@ -70,7 +67,7 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = {},
-		std::map<std::string, Address> const& _libraryAddresses = {}
+		std::map<std::string, util::h160> const& _libraryAddresses = {}
 	)
 	{
 		compileAndRunWithoutCheck(
@@ -176,6 +173,7 @@ public:
 		return encode(u256((value.numerator() << fractionalBits) / value.denominator()));
 	}
 	static bytes encode(util::h256 const& _value) { return _value.asBytes(); }
+	static bytes encode(util::h160 const& _value) { return encode(util::h256(_value, util::h256::AlignRight)); }
 	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
 		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
@@ -258,21 +256,21 @@ protected:
 	void reset();
 
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
-	void sendEther(Address const& _to, u256 const& _value);
+	void sendEther(util::h160 const& _to, u256 const& _value);
 	size_t currentTimestamp();
 	size_t blockTimestamp(u256 _number);
 
 	/// @returns the (potentially newly created) _ith address.
-	Address account(size_t _i);
+	util::h160 account(size_t _i);
 
-	u256 balanceAt(Address const& _addr);
-	bool storageEmpty(Address const& _addr);
-	bool addressHasCode(Address const& _addr);
+	u256 balanceAt(util::h160 const& _addr);
+	bool storageEmpty(util::h160 const& _addr);
+	bool addressHasCode(util::h160 const& _addr);
 
 	size_t numLogs() const;
 	size_t numLogTopics(size_t _logIdx) const;
 	util::h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
-	Address logAddress(size_t _logIdx) const;
+	util::h160 logAddress(size_t _logIdx) const;
 	bytes logData(size_t _logIdx) const;
 
 	langutil::EVMVersion m_evmVersion;
@@ -285,8 +283,8 @@ protected:
 	std::vector<boost::filesystem::path> m_vmPaths;
 
 	bool m_transactionSuccessful = true;
-	Address m_sender = account(0);
-	Address m_contractAddress;
+	util::h160 m_sender = account(0);
+	util::h160 m_contractAddress;
 	u256 const m_gasPrice = 10 * gwei;
 	u256 const m_gas = 100000000;
 	bytes m_output;

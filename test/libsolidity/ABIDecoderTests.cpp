@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 		compileAndRun(sourceCode);
 		ABI_CHECK(callContractFunction(
 			"f(uint256,uint16,uint24,int24,bytes3,bool,address)",
-			1, 2, 3, 4, string("abc"), true, u160(m_contractAddress)
+			1, 2, 3, 4, string("abc"), true, m_contractAddress
 		), encodeArgs(u256(20)));
 	)
 }
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(complex_struct)
 			0x40,
 			0x100,
 			// S s1[0]
-			u256(u160(m_contractAddress)),
+			m_contractAddress,
 			0x40,
 			// T s1[0].t
 			1, // length
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(complex_struct)
 			0x21, 2, 0x22,
 			0, 0, 0
 		);
-		ABI_CHECK(callContractFunction(sig, args), encodeArgs(7, u256(u160(m_contractAddress)), 8, 2, 0x1234, 3, 2, 0x22));
+		ABI_CHECK(callContractFunction(sig, args), encodeArgs(7, m_contractAddress, 8, 2, 0x1234, 3, 2, 0x22));
 		// invalid enum value
 		args.data()[0x20 * 28] = 3;
 		ABI_CHECK(callContractFunction(sig, args), encodeArgs());
