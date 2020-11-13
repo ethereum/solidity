@@ -14,4 +14,6 @@ contract C {
     }
 }
 // ----
+// DeclarationError 3726: (67-73): The name "_" is reserved.
+// DeclarationError 3726: (154-160): The name "_" is reserved.
 // DeclarationError 7576: (230-231): Undeclared identifier.
