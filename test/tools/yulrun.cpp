@@ -104,7 +104,7 @@ void interpret(string const& _source)
 
 }
 
-int main(int argc, char** argv)
+int run(int _argc, char** _argv)
 {
 	po::options_description options(
 		R"(yulrun, the Yul interpreter.
@@ -123,7 +123,7 @@ Allowed options)",
 	po::variables_map arguments;
 	try
 	{
-		po::command_line_parser cmdLineParser(argc, argv);
+		po::command_line_parser cmdLineParser(_argc, _argv);
 		cmdLineParser.options(options).positional(filesPositions);
 		po::store(cmdLineParser.run(), arguments);
 	}
@@ -158,4 +158,27 @@ Allowed options)",
 	}
 
 	return 0;
+}
+
+int main(int argc, char** argv)
+{
+	try
+	{
+		return run(argc, argv);
+	}
+	catch (boost::exception const& exception)
+	{
+		cerr << "Uncaught exception: " << boost::diagnostic_information(exception) << endl;
+		return 1;
+	}
+	catch (std::exception const& exception)
+	{
+		cerr << "Uncaught exception" << (exception.what() ? ": " + string(exception.what()) : ".") << endl;
+		return 1;
+	}
+	catch (...)
+	{
+		cerr << "Uncaught exception. No message provided." << endl;
+		return 1;
+	}
 }
