@@ -468,6 +468,8 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 			);
 		return 0;
 	}
+	else if (fun == "linkersymbol")
+		assertThrow(false, YulException, "The bytecode is incomplete and contains unresolved link references.");
 	else
 		yulAssert(false, "Unknown builtin: " + fun);
 	return 0;
