@@ -53,22 +53,28 @@ static void setDefaultOrCLocale()
 
 int main(int argc, char** argv)
 {
-	setDefaultOrCLocale();
-	solidity::frontend::CommandLineInterface cli;
-	if (!cli.parseArguments(argc, argv))
-		return 1;
-	if (!cli.processInput())
-		return 1;
-	bool success = false;
 	try
 	{
-		success = cli.actOnInput();
-	}
-	catch (boost::exception const& _exception)
-	{
-		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception) << endl;
-		success = false;
-	}
+		setDefaultOrCLocale();
+		solidity::frontend::CommandLineInterface cli;
+		if (!cli.parseArguments(argc, argv) || !cli.processInput() || !cli.actOnInput())
+			return 1;
 
-	return success ? 0 : 1;
+		return 0;
+	}
+	catch (boost::exception const& exception)
+	{
+		cerr << "Uncaught exception: " << boost::diagnostic_information(exception) << endl;
+		return 1;
+	}
+	catch (std::exception const& exception)
+	{
+		cerr << "Uncaught exception" << (exception.what() ? ": " + string(exception.what()) : ".") << endl;
+		return 1;
+	}
+	catch (...)
+	{
+		cerr << "Uncaught exception. No message provided." << endl;
+		return 1;
+	}
 }
