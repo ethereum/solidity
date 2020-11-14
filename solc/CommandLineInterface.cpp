@@ -730,12 +730,15 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
-	// create directory if not existent
-	fs::path p(m_args.at(g_argOutputDir).as<string>());
-	// Do not try creating the directory if the first item is . or ..
-	if (p.filename() != "." && p.filename() != "..")
-		fs::create_directories(p);
-	string pathName = (p / _fileName).string();
+
+	fs::path outputDir(m_args.at(g_argOutputDir).as<string>());
+
+	// NOTE: create_directories() raises an exception if the path consists solely of '.' or '..'
+	// (or equivalent such as './././.'). Paths like 'a/b/.' and 'a/b/..' are fine though.
+	// The simplest workaround is to use an absolute path.
+	fs::create_directories(fs::absolute(outputDir));
+
+	string pathName = (outputDir / _fileName).string();
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
 		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --" << g_strOverwrite << " to force)." << endl;
