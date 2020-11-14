@@ -89,7 +89,7 @@ protected:
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
 	bool visit(PlaceholderStatement const& _node) override;
-	bool visit(IfStatement const& _node) override;
+	bool visit(IfStatement const&) override { return false; }
 	bool visit(WhileStatement const&) override { return false; }
 	bool visit(ForStatement const&) override { return false; }
 	void endVisit(VariableDeclarationStatement const& _node) override;
@@ -197,7 +197,7 @@ protected:
 
 	/// Handles the actual assertion of the new value to the encoding context.
 	/// Other assignment methods should use this one in the end.
-	void assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value);
+	virtual void assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.
@@ -219,9 +219,10 @@ protected:
 
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
-	/// @returns the variable indices after visiting the branch.
-	VariableIndices visitBranch(ASTNode const* _statement, smtutil::Expression const* _condition = nullptr);
-	VariableIndices visitBranch(ASTNode const* _statement, smtutil::Expression _condition);
+	/// @returns the variable indices after visiting the branch and the expression representing
+	/// the path condition at the end of the branch.
+	std::pair<VariableIndices, smtutil::Expression> visitBranch(ASTNode const* _statement, smtutil::Expression const* _condition = nullptr);
+	std::pair<VariableIndices, smtutil::Expression> visitBranch(ASTNode const* _statement, smtutil::Expression _condition);
 
 	using CallStackEntry = std::pair<CallableDeclaration const*, ASTNode const*>;
 
@@ -263,6 +264,8 @@ protected:
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smtutil::Expression _value);
 
+	/// Overwrites the current path condition
+	void setPathCondition(smtutil::Expression const& _e);
 	/// Adds a new path condition
 	void pushPathCondition(smtutil::Expression const& _e);
 	/// Remove the last path condition
