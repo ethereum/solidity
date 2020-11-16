@@ -25,6 +25,7 @@
 
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <map>
 #include <utility>
 
 namespace solidity::langutil
@@ -43,10 +44,12 @@ class TypeChecker;
 class ConstantEvaluator: private ASTConstVisitor
 {
 public:
+	struct TypedValue { TypePointer type; TypePointer value; };
+
 	ConstantEvaluator(
 		langutil::ErrorReporter& _errorReporter,
 		size_t _newDepth = 0,
-		std::shared_ptr<std::map<ASTNode const*, TypePointer>> _types = std::make_shared<std::map<ASTNode const*, TypePointer>>()
+		std::shared_ptr<std::map<ASTNode const*, TypedValue>> _types = std::make_shared<std::map<ASTNode const*, TypedValue>>()
 	):
 		m_errorReporter(_errorReporter),
 		m_depth(_newDepth),
@@ -63,13 +66,14 @@ private:
 	void endVisit(Identifier const& _identifier) override;
 	void endVisit(TupleExpression const& _tuple) override;
 
-	void setType(ASTNode const& _node, TypePointer const& _type);
-	TypePointer type(ASTNode const& _node);
+	void setType(ASTNode const& _node, TypedValue const& _type);
+	void setType(ASTNode const& _node, TypePointer _type) { setType(_node, {_type, _type}); };
+	TypedValue type(ASTNode const& _node);
 
 	langutil::ErrorReporter& m_errorReporter;
 	/// Current recursion depth.
 	size_t m_depth = 0;
-	std::shared_ptr<std::map<ASTNode const*, TypePointer>> m_types;
+	std::shared_ptr<std::map<ASTNode const*, TypedValue>> m_types;
 };
 
 }

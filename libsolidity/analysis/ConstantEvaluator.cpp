@@ -34,15 +34,16 @@ using namespace solidity::langutil;
 
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
-	auto sub = type(_operation.subExpression());
+	auto sub = type(_operation.subExpression()).value;
 	if (sub)
 		setType(_operation, sub->unaryOperatorResult(_operation.getOperator()));
 }
 
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
-	auto left = type(_operation.leftExpression());
-	auto right = type(_operation.rightExpression());
+	auto left = type(_operation.leftExpression()).value;
+	auto right = type(_operation.rightExpression()).value;
+
 	if (left && right)
 	{
 		TypePointer commonType = left->binaryOperatorResult(_operation.getOperator(), right);
@@ -57,6 +58,24 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 				" and " +
 				right->toString()
 			);
+
+		if (auto const rationalCommonType = dynamic_cast<RationalNumberType const*>(commonType))
+		{
+			auto const leftType = type(_operation.leftExpression()).type;
+			auto const rightType = type(_operation.rightExpression()).type;
+			auto const leftInteger = leftType && leftType->category() == Type::Category::Integer;
+			auto const rightInteger = rightType && rightType->category() == Type::Category::Integer;
+			if (leftInteger || rightInteger)
+			{
+				rational const frac = rationalCommonType->value();
+				bigint const num = frac.numerator() / frac.denominator();
+				auto const value = TypeProvider::rationalNumber(rational(num, 1));
+				auto const type = value->integerType();
+				setType(_operation, TypedValue{type, value});
+				return;
+			}
+		}
+
 		setType(
 			_operation,
 			TokenTraits::isCompareOp(_operation.getOperator()) ?
@@ -89,7 +108,7 @@ void ConstantEvaluator::endVisit(Identifier const& _identifier)
 		ConstantEvaluator(m_errorReporter, m_depth + 1, m_types).evaluate(*value);
 	}
 
-	setType(_identifier, type(*value));
+	setType(_identifier, TypedValue{variableDeclaration->annotation().type, type(*value).value});
 }
 
 void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
@@ -98,13 +117,13 @@ void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
 		setType(_tuple, type(*_tuple.components().front()));
 }
 
-void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
+void ConstantEvaluator::setType(ASTNode const& _node, TypedValue const& _type)
 {
-	if (_type && _type->category() == Type::Category::RationalNumber)
+	if (_type.value && _type.value->category() == Type::Category::RationalNumber)
 		(*m_types)[&_node] = _type;
 }
 
-TypePointer ConstantEvaluator::type(ASTNode const& _node)
+ConstantEvaluator::TypedValue ConstantEvaluator::type(ASTNode const& _node)
 {
 	return (*m_types)[&_node];
 }
@@ -112,5 +131,5 @@ TypePointer ConstantEvaluator::type(ASTNode const& _node)
 TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
 {
 	_expr.accept(*this);
-	return type(_expr);
+	return type(_expr).value;
 }
