@@ -664,9 +664,16 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 				serr() << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
 				return false;
 			}
+
 			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(colon));
-			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
 			boost::trim(libName);
+			if (m_libraries.count(libName))
+			{
+				serr() << "Address specified more than once for library \"" << libName << "\"." << endl;
+				return false;
+			}
+
+			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
 			boost::trim(addrString);
 			if (addrString.substr(0, 2) == "0x")
 				addrString = addrString.substr(2);

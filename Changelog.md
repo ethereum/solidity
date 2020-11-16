@@ -19,6 +19,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Command Line Interface: Reject duplicate libraries in ``--libraries`` option instead of arbitrarily choosing one.
  * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.
  * SMTChecker: Fix internal error on conversion from string literal to byte.
  * SMTChecker: Fix internal error when using tuples of rational literals inside the conditional operator.
