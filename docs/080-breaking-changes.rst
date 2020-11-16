@@ -32,6 +32,9 @@ the compiler notifying you about it.
   This will save gas on errors while it still allows static analysis tools to distinguish
   these situations from a revert on invalid input, like a failing ``require``.
 
+* If a byte array in storage is accessed whose length is encoded incorrectly, a panic is caused.
+  A contract cannot get into this situation unless inline assembly is used to modify the raw representation of storage byte arrays.
+
 New Restrictions
 ================
 

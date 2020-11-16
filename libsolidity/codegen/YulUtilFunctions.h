@@ -178,6 +178,12 @@ public:
 	/// signature: (array) -> length
 	std::string arrayLengthFunction(ArrayType const& _type);
 
+	/// @returns function name that extracts and returns byte array length from the value
+	/// stored at the slot.
+	/// Causes a Panic if the length encoding is wrong.
+	/// signature: (data) -> length
+	std::string extractByteArrayLengthFunction();
+
 	/// @returns the name of a function that resizes a storage array
 	/// signature: (array, newLen)
 	std::string resizeDynamicArrayFunction(ArrayType const& _type);
@@ -446,10 +452,6 @@ private:
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
-
-	/// @returns function name that extracts and returns byte array length
-	/// signature: (data) -> length
-	std::string extractByteArrayLengthFunction();
 
 	/// @returns the name of a function that reduces the size of a storage byte array by one element
 	/// signature: (byteArray)

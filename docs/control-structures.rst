@@ -598,6 +598,7 @@ The error code supplied with the error data indicates the kind of panic.
 #. 0x11: If an arithmetic operation results in underflow or overflow outside of an ``unchecked { ... }`` block.
 #. 0x12; If you divide or modulo by zero (e.g. ``5 / 0`` or ``23 % 0``).
 #. 0x21: If you convert a value that is too big or negative into an enum type.
+#. 0x22: If you access a storage byte array that is incorrectly encoded.
 #. 0x31: If you call ``.pop()`` on an empty array.
 #. 0x32: If you access an array, ``bytesN`` or an array slice at an out-of-bounds or negative index (i.e. ``x[i]`` where ``i >= x.length`` or ``i < 0``).
 #. 0x41: If you allocate too much memory or create an array that is too large.
