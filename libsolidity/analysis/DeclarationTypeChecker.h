@@ -59,6 +59,7 @@ private:
 	void endVisit(Mapping const& _mapping) override;
 	void endVisit(ArrayTypeName const& _typeName) override;
 	void endVisit(VariableDeclaration const& _variable) override;
+	bool visit(EnumDefinition const& _enum) override;
 	bool visit(StructDefinition const& _struct) override;
 	bool visit(UsingForDirective const& _usingForDirective) override;
 	bool visit(InheritanceSpecifier const& _inheritanceSpecifier) override;

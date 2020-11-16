@@ -8,6 +8,7 @@ Breaking Changes:
  * Type Checker: Function call options can only be given once.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
+ * Type System: Disallow enums with more than 256 members.
  * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.
  * Code Generator: Use ``revert`` with error signature ``Panic(uint256)`` and error codes instead of invalid opcode on failing assertions.
  * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
