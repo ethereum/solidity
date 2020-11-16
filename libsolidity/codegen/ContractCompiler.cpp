@@ -1301,11 +1301,16 @@ void ContractCompiler::appendModifierOrFunctionCode()
 			appendModifierOrFunctionCode();
 		else
 		{
-			solAssert(*modifierInvocation->name().annotation().requiredLookup == VirtualLookup::Virtual, "");
-
-			ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
+			ModifierDefinition const& referencedModifier = dynamic_cast<ModifierDefinition const&>(
 				*modifierInvocation->name().annotation().referencedDeclaration
-			).resolveVirtual(m_context.mostDerivedContract());
+			);
+			VirtualLookup lookup = *modifierInvocation->name().annotation().requiredLookup;
+			solAssert(lookup == VirtualLookup::Virtual || lookup == VirtualLookup::Static, "");
+			ModifierDefinition const& modifier =
+				lookup == VirtualLookup::Virtual ?
+				referencedModifier.resolveVirtual(m_context.mostDerivedContract()) :
+				referencedModifier;
+
 			CompilerContext::LocationSetter locationSetter(m_context, modifier);
 			std::vector<ASTPointer<Expression>> const& modifierArguments =
 				modifierInvocation->arguments() ? *modifierInvocation->arguments() : std::vector<ASTPointer<Expression>>();
