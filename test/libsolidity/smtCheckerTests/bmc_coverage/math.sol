@@ -22,4 +22,4 @@ contract C {
 // Warning 4144: (217-222): BMC: Underflow (resulting value less than 0) happens here.
 // Warning 2661: (293-298): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 3046: (369-374): BMC: Division by zero happens here.
-// Warning 6084: (68-73): BMC: Underflow (resulting value less than 0) happens here.
+// Warning 4144: (68-73): BMC: Underflow (resulting value less than 0) happens here.
