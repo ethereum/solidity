@@ -630,7 +630,19 @@ void TypeChecker::visitManually(
 	vector<ASTPointer<VariableDeclaration>> emptyParameterList;
 	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
 	if (auto modifierDecl = dynamic_cast<ModifierDefinition const*>(declaration))
+	{
 		parameters = &modifierDecl->parameters();
+		if (auto const* modifierContract = dynamic_cast<ContractDefinition const*>(modifierDecl->scope()))
+			if (m_currentContract)
+			{
+				if (!contains(m_currentContract->annotation().linearizedBaseContracts, modifierContract))
+					m_errorReporter.typeError(
+						9428_error,
+						_modifier.location(),
+						"Can only use modifiers defined in the current contract or in base contracts."
+					);
+			}
+	}
 	else
 		// check parameters for Base constructors
 		for (ContractDefinition const* base: _bases)
