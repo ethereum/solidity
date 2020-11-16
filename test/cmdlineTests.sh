@@ -118,7 +118,7 @@ function test_solc_behaviour()
         # Remove bytecode (but not linker references).
         sed -i.bak -E -e 's/(\"object\":\")[0-9a-f]+([^"]*\")/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
         sed -i.bak -E -e 's/(\"object\":\"[^"]+\$__)[0-9a-f]+(\")/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
-        sed -i.bak -E -e 's/(__\$[0-9a-f]{34}\$__)[0-9a-f]+(__\$[0-9a-f]{34}\$__)/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
+        sed -i.bak -E -e 's/([0-9a-f]{34}\$__)[0-9a-f]+(__\$[0-9a-f]{17})/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
 
         # Replace escaped newlines by actual newlines for readability
         sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
@@ -137,7 +137,7 @@ function test_solc_behaviour()
         # 64697066735822 = hex encoding of 0x64 'i' 'p' 'f' 's' 0x58 0x22
         # 64736f6c63     = hex encoding of 0x64 's' 'o' 'l' 'c'
         sed -i.bak -E -e 's/[0-9a-f]*64697066735822[0-9a-f]+64736f6c63[0-9a-f]+/<BYTECODE REMOVED>/g' "$stdout_path"
-        sed -i.bak -E -e 's/(__\$[0-9a-f]{34}\$__)[0-9a-f]+(__\$[0-9a-f]{34}\$__)/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
+        sed -i.bak -E -e 's/([0-9a-f]{17}\$__)[0-9a-f]+(__\$[0-9a-f]{17})/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
         sed -i.bak -E -e 's/[0-9a-f]+((__\$[0-9a-f]{34}\$__)*<BYTECODE REMOVED>)/<BYTECODE REMOVED>\1/g' "$stdout_path"
 
         # Remove trailing empty lines. Needs a line break to make OSX sed happy.
