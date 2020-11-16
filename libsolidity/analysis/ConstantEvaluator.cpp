@@ -32,6 +32,8 @@ using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
 
+using TypedRational = ConstantEvaluator::TypedRational;
+
 namespace
 {
 
@@ -227,85 +229,162 @@ optional<rational> ConstantEvaluator::evaluateUnaryOperator(Token _operator, rat
 	}
 }
 
+optional<TypedRational> convertType(rational const& _value, Type const& _type)
+{
+	if (_type.category() == Type::Category::RationalNumber)
+		return TypedRational{TypeProvider::rationalNumber(_value), _value};
+	else if (auto const* integerType = dynamic_cast<IntegerType const*>(&_type))
+	{
+		if (_value > integerType->maxValue() || _value < integerType->minValue())
+			return nullopt;
+		else
+			return TypedRational{&_type, _value.numerator() / _value.denominator()};
+	}
+	else
+		return nullopt;
+}
+
+optional<TypedRational> convertType(optional<TypedRational> const& _value, Type const& _type)
+{
+	return _value ? convertType(_value->value, _type) : nullopt;
+}
+
+optional<TypedRational> constantToTypedValue(Type const& _type)
+{
+	if (_type.category() == Type::Category::RationalNumber)
+		return TypedRational{&_type, dynamic_cast<RationalNumberType const&>(_type).value()};
+	else
+		return nullopt;
+}
+
+optional<TypedRational> ConstantEvaluator::evaluate(
+	langutil::ErrorReporter& _errorReporter,
+	Expression const& _expr
+)
+{
+	return ConstantEvaluator{_errorReporter}.evaluate(_expr);
+}
+
+
+optional<TypedRational> ConstantEvaluator::evaluate(ASTNode const& _node)
+{
+	if (!m_values.count(&_node))
+	{
+		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
+		{
+			solAssert(varDecl->isConstant(), "");
+			if (!varDecl->value())
+				m_values[&_node] = nullopt;
+			else
+			{
+				m_depth++;
+				if (m_depth > 32)
+					m_errorReporter.fatalTypeError(
+						5210_error,
+						varDecl->location(),
+						"Cyclic constant definition (or maximum recursion depth exhausted)."
+					);
+				m_values[&_node] = convertType(evaluate(*varDecl->value()), *varDecl->type());
+				m_depth--;
+			}
+		}
+		else if (auto const* expression = dynamic_cast<Expression const*>(&_node))
+		{
+			expression->accept(*this);
+			if (!m_values.count(&_node))
+				m_values[&_node] = nullopt;
+		}
+	}
+	return m_values.at(&_node);
+}
+
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
-	auto sub = type(_operation.subExpression());
-	if (sub)
-		setType(_operation, sub->unaryOperatorResult(_operation.getOperator()));
+	optional<TypedRational> value = evaluate(_operation.subExpression());
+	if (!value)
+		return;
+
+	TypePointer resultType = value->type->unaryOperatorResult(_operation.getOperator());
+	if (!resultType)
+		return;
+	value = convertType(value, *resultType);
+	if (!value)
+		return;
+
+	if (optional<rational> result = evaluateUnaryOperator(_operation.getOperator(), value->value))
+	{
+		optional<TypedRational> convertedValue = convertType(*result, *resultType);
+		if (!convertedValue)
+			m_errorReporter.fatalTypeError(
+				3667_error,
+				_operation.location(),
+				"Arithmetic error when computing constant value."
+			);
+		m_values[&_operation] = convertedValue;
+	}
 }
 
 void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
-	auto left = type(_operation.leftExpression());
-	auto right = type(_operation.rightExpression());
-	if (left && right)
+	optional<TypedRational> left = evaluate(_operation.leftExpression());
+	optional<TypedRational> right = evaluate(_operation.rightExpression());
+	if (!left || !right)
+		return;
+
+	// If this is implemented in the future: Comparison operators have a "binaryOperatorResult"
+	// that is non-bool, but the result has to be bool.
+	if (TokenTraits::isCompareOp(_operation.getOperator()))
+		return;
+
+	TypePointer resultType = left->type->binaryOperatorResult(_operation.getOperator(), right->type);
+	if (!resultType)
 	{
-		TypePointer commonType = left->binaryOperatorResult(_operation.getOperator(), right);
-		if (!commonType)
-			m_errorReporter.fatalTypeError(
-				6020_error,
-				_operation.location(),
-				"Operator " +
-				string(TokenTraits::toString(_operation.getOperator())) +
-				" not compatible with types " +
-				left->toString() +
-				" and " +
-				right->toString()
+		m_errorReporter.fatalTypeError(
+			6020_error,
+			_operation.location(),
+			"Operator " +
+			string(TokenTraits::toString(_operation.getOperator())) +
+			" not compatible with types " +
+			left->type->toString() +
+			" and " +
+			right->type->toString()
 			);
-		setType(
-			_operation,
-			TokenTraits::isCompareOp(_operation.getOperator()) ?
-			TypeProvider::boolean() :
-			commonType
-		);
+		return;
+	}
+
+	left = convertType(left, *resultType);
+	right = convertType(right, *resultType);
+	if (!left || !right)
+		return;
+
+	if (optional<rational> value = evaluateBinaryOperator(_operation.getOperator(), left->value, right->value))
+	{
+		optional<TypedRational> convertedValue = convertType(*value, *resultType);
+		if (!convertedValue)
+			m_errorReporter.fatalTypeError(
+				2643_error,
+				_operation.location(),
+				"Arithmetic error when computing constant value."
+			);
+		m_values[&_operation] = convertedValue;
 	}
 }
 
 void ConstantEvaluator::endVisit(Literal const& _literal)
 {
-	setType(_literal, TypeProvider::forLiteral(_literal));
+	if (Type const* literalType = TypeProvider::forLiteral(_literal))
+		m_values[&_literal] = constantToTypedValue(*literalType);
 }
 
 void ConstantEvaluator::endVisit(Identifier const& _identifier)
 {
 	VariableDeclaration const* variableDeclaration = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration);
-	if (!variableDeclaration)
-		return;
-	if (!variableDeclaration->isConstant())
-		return;
-
-	ASTPointer<Expression> const& value = variableDeclaration->value();
-	if (!value)
-		return;
-	else if (!m_types->count(value.get()))
-	{
-		if (m_depth > 32)
-			m_errorReporter.fatalTypeError(5210_error, _identifier.location(), "Cyclic constant definition (or maximum recursion depth exhausted).");
-		ConstantEvaluator(m_errorReporter, m_depth + 1, m_types).evaluate(*value);
-	}
-
-	setType(_identifier, type(*value));
+	if (variableDeclaration && variableDeclaration->isConstant())
+		m_values[&_identifier] = evaluate(*variableDeclaration);
 }
 
 void ConstantEvaluator::endVisit(TupleExpression const& _tuple)
 {
 	if (!_tuple.isInlineArray() && _tuple.components().size() == 1)
-		setType(_tuple, type(*_tuple.components().front()));
-}
-
-void ConstantEvaluator::setType(ASTNode const& _node, TypePointer const& _type)
-{
-	if (_type && _type->category() == Type::Category::RationalNumber)
-		(*m_types)[&_node] = _type;
-}
-
-TypePointer ConstantEvaluator::type(ASTNode const& _node)
-{
-	return (*m_types)[&_node];
-}
-
-TypePointer ConstantEvaluator::evaluate(Expression const& _expr)
-{
-	_expr.accept(*this);
-	return type(_expr);
+		m_values[&_tuple] = evaluate(*_tuple.components().front());
 }

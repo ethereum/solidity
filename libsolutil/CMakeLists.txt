@@ -2,8 +2,8 @@ set(sources
 	Algorithms.h
 	AnsiColorized.h
 	Assertions.h
-	Common.h
 	Common.cpp
+	Common.h
 	CommonData.cpp
 	CommonData.h
 	CommonIO.cpp
