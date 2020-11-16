@@ -128,7 +128,7 @@ function test_solc_behaviour()
         sed -i.bak -e '/^Warning (3805): This is a pre-release compiler version, please do not use it in production./d' "$stderr_path"
         sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
-        sed -i.bak -e 's/\(Unimplemented feature error: .* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
+        sed -i.bak -e 's/\(Unimplemented feature error.* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
         sed -i.bak -e 's/"version": "[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
 
         # Remove bytecode (but not linker references). Since non-JSON output is unstructured,
