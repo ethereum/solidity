@@ -32,6 +32,7 @@ Bugfixes:
  * SMTChecker: Fix CHC false positives when branches are used inside modifiers.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
  * NatSpec: Fix internal error when inheriting return parameter documentation but the parameter names differ between base and inherited.
+ * Standard JSON: Fix library addresses specified in ``libraries`` being used for linking even if the file names do not match.
 
 
 ### 0.7.4 (2020-10-19)

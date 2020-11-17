@@ -839,8 +839,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 			try
 			{
-				// @TODO use libraries only for the given source
-				ret.libraries[library] = util::h160(address);
+				ret.libraries[sourceName + ":" + library] = util::h160(address);
 			}
 			catch (util::BadHexCharacter const&)
 			{
