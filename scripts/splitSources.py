@@ -17,14 +17,6 @@ hasMultipleSources = False
 createdSources = []
 
 
-def uncaught_exception_hook(exc_type, exc_value, exc_traceback):
-    # The script `scripts/ASTImportTest.sh` will interpret return code 3
-    # as a critical error (because of the uncaught exception) and will
-    # terminate further execution.
-    print("Unhandled exception: %s", "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)), file=sys.stderr)
-    sys.exit(3)
-
-
 def extractSourceName(line):
     if line.find("/") > -1:
         filePath = line[13: line.rindex("/")]
@@ -57,7 +49,6 @@ def writeSourceToFile(lines):
 
 if __name__ == '__main__':
     filePath = sys.argv[1]
-    sys.excepthook = uncaught_exception_hook
 
     # decide if file has multiple sources
     with open(filePath, mode='rb', encoding='utf8', newline='') as f:
@@ -71,6 +62,5 @@ if __name__ == '__main__':
         for src in createdSources:
             srcString += src + ' '
         print(srcString)
-        sys.exit(0)
     else:
-        sys.exit(1)
+        print(filePath)

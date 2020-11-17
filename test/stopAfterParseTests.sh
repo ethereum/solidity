@@ -38,27 +38,12 @@ function testFile
 }
 
 while read -r file; do
-	set +e
-	OUTPUT=$($SPLITSOURCES "$file")
-	RETURN_CODE=$?
-	set -e
-	FAILED=0
+	# NOTE: The command returns the name of the input file if it's not a multi-source file
+	OUTPUT="$($SPLITSOURCES "$file")"
 
-	if [ $RETURN_CODE -eq 0 ]
-	then
-		# shellcheck disable=SC2086
-		testFile $OUTPUT
-		FAILED=$?
-		rm -r "${FILETMP:?}"/*
-	elif [ $RETURN_CODE -eq 1 ]
-	then
-		testFile "$file"
-		FAILED=$?
-	else
-		# NOTE: The split script is expected to print error details to stderr in this case.
-		echo "$SPLITSOURCES exited with code $RETURN_CODE while processing $file."
-		exit 3
-	fi
+	testFile "$OUTPUT"
+	FAILED=$?
+	rm -r "${FILETMP:?}"/* 2> /dev/null || true
 
 	if [ $FAILED -eq 1 ]
 	then

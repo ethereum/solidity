@@ -104,32 +104,14 @@ do
     FILETMP=$(mktemp -d)
     cd "$FILETMP"
 
-    set +e
+    # NOTE: The command returns the name of the input file if it's not a multi-source file
     OUTPUT=$("$SPLITSOURCES" "$solfile")
-    SPLITSOURCES_RC=$?
-    set -e
-    if [ ${SPLITSOURCES_RC} == 0 ]
-    then
-        # echo $OUTPUT
-        NSOURCES=$((NSOURCES - 1))
-        for i in $OUTPUT;
-        do
-            testImportExportEquivalence "$i" "$OUTPUT"
-            NSOURCES=$((NSOURCES + 1))
-        done
-    elif [ ${SPLITSOURCES_RC} == 1 ]
-    then
-        testImportExportEquivalence "$solfile"
-    else
-        # All other return codes will be treated as critical errors. The script will exit.
-        echo -e "\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
-
-        cd "$WORKINGDIR"
-        # Delete temporary files
-        rm -rf "$FILETMP"
-
-        exit 1
-    fi
+    NSOURCES=$((NSOURCES - 1))
+    while IFS="" read -r current_file_name
+    do
+        testImportExportEquivalence "$current_file_name" "$OUTPUT"
+        NSOURCES=$((NSOURCES + 1))
+    done <<< "$OUTPUT"
 
     cd "$WORKINGDIR"
     # Delete temporary files
