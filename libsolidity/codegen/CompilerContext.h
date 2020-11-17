@@ -287,21 +287,6 @@ public:
 	/// Should be avoided except when adding sub-assemblies.
 	std::shared_ptr<evmasm::Assembly> assemblyPtr() const { return m_asm; }
 
-	/// @arg _sourceCodes is the map of input files to source code strings
-	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
-	{
-		return m_asm->assemblyString(_sourceCodes);
-	}
-
-	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indicies = std::map<std::string, unsigned>()) const
-	{
-		return m_asm->assemblyJSON(_indicies);
-	}
-
-	evmasm::LinkerObject const& assembledObject() const;
-	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
-
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
 	 */
