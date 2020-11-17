@@ -100,6 +100,11 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
+If you want to access a modifier ``m`` defined in a contract ``C``, you can use ``C.m`` to
+reference it without virtual lookup. It is only possible to use modifiers defined in the current
+contract or its base contracts. Modifiers can also be defined in libraries but their use is
+limited to functions of the same library.
+
 Multiple modifiers are applied to a function by specifying them in a
 whitespace-separated list and are evaluated in the order presented.
 
