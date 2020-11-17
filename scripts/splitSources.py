@@ -7,7 +7,7 @@
 # Usage: scripts/splitSources.py pathToTestfile
 # as a result prints
 # -  string of created files separated by whitespaces
-# -  'false' if the file only had one source
+# -  nothing if the input file contains only one source
 
 import sys
 import os
