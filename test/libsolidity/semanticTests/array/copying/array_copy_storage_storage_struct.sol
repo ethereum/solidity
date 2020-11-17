@@ -15,6 +15,8 @@ contract c {
         data2 = data1;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // test() -> 4, 5
 // storage: empty
