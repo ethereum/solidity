@@ -21,6 +21,8 @@ contract c {
         delete inner;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // test() -> 1, 2, 3
 // storage: empty

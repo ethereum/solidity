@@ -1274,7 +1274,6 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
-	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
 
 	string functionName = "array_push_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
@@ -1540,7 +1539,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 						let <elementValues> := srcPtr
 					</fromStorage>
 
-					<updateStorageValue>(elementSlot<?isValueType>, elementOffset</isValueType>, <elementValues>)
+					<updateStorageValue>(elementSlot, elementOffset, <elementValues>)
 
 					srcPtr := add(srcPtr, <srcStride>)
 
@@ -2317,11 +2316,14 @@ string YulUtilFunctions::updateStorageValueFunction(
 			solAssert(_offset.value_or(0) == 0, "");
 
 			Whiskers templ(R"(
-				function <functionName>(slot, <value>) {
+				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
+					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
 					<copyArrayToStorage>(slot, <value>)
 				}
 			)");
 			templ("functionName", functionName);
+			templ("dynamicOffset", !_offset.has_value());
+			templ("panic", panicFunction());
 			templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
 			templ("copyArrayToStorage", copyArrayToStorageFunction(
 				dynamic_cast<ArrayType const&>(_fromType),
@@ -2340,7 +2342,8 @@ string YulUtilFunctions::updateStorageValueFunction(
 			solAssert(_offset.value_or(0) == 0, "");
 
 			Whiskers templ(R"(
-				function <functionName>(slot, value) {
+				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset>value) {
+					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
 					<?fromStorage> if eq(slot, value) { leave } </fromStorage>
 					<#member>
 					{
@@ -2349,8 +2352,10 @@ string YulUtilFunctions::updateStorageValueFunction(
 					</member>
 				}
 			)");
-			templ("fromStorage", fromStructType.dataStoredIn(DataLocation::Storage));
 			templ("functionName", functionName);
+			templ("dynamicOffset", !_offset.has_value());
+			templ("panic", panicFunction());
+			templ("fromStorage", fromStructType.dataStoredIn(DataLocation::Storage));
 
 			MemberList::MemberMap structMembers = fromStructType.nativeMembers(nullptr);
 			MemberList::MemberMap toStructMembers = toStructType.nativeMembers(nullptr);
@@ -2428,10 +2433,11 @@ string YulUtilFunctions::updateStorageValueFunction(
 						solAssert(srcOffset == 0, "");
 
 				}
+				t("memberStorageSlotOffset", to_string(offset));
 				t("updateStorageValue", updateStorageValueFunction(
 					memberType,
 					*toStructMembers[i].type,
-					memberType.isValueType() ? optional<unsigned>{offset} : std::nullopt
+					optional<unsigned>{offset}
 				));
 				memberParams[i]["updateMemberCall"] = t.render();
 			}
