@@ -1825,7 +1825,7 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 		if (_toType.isDynamicallySized())
 			templ("resizeArray", resizeDynamicArrayFunction(_toType));
 		templ("arrayLength",arrayLengthFunction(_fromType));
-		templ("panic", panicFunction());
+		templ("panic", panicFunction(PanicCode::ResourceError));
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
 		unsigned itemsPerSlot = 32 / _toType.storageStride();
@@ -2421,7 +2421,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 			)");
 			templ("functionName", functionName);
 			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction());
+			templ("panic", panicFunction(PanicCode::Generic));
 			templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
 			templ("copyArrayToStorage", copyArrayToStorageFunction(
 				dynamic_cast<ArrayType const&>(_fromType),
@@ -2452,7 +2452,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 			)");
 			templ("functionName", functionName);
 			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction());
+			templ("panic", panicFunction(PanicCode::Generic));
 			templ("fromStorage", fromStructType.dataStoredIn(DataLocation::Storage));
 
 			MemberList::MemberMap structMembers = fromStructType.nativeMembers(nullptr);

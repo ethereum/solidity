@@ -35,7 +35,7 @@ object "C_2" {
 
 ======= viair_subobjects/input.sol:D =======
 Binary:
-608060405234156100105760006000fd5b60d380610020600039806000f350fe6080604052600436101515610074576000803560e01c6326121ff0141561007257341561002a578081fd5b806003193601121561003a578081fd5b6028806080016080811067ffffffffffffffff8211171561005757fe5b50806100ab60803980608083f05050806100708261007e565bf35b505b60006000fd6100a9565b6000604051905081810181811067ffffffffffffffff8211171561009e57fe5b80604052505b919050565bfe60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+608060405234156100105760006000fd5b60f980610020600039806000f350fe608060405260043610151561007b576000803560e01c6326121ff0141561007957341561002a578081fd5b806003193601121561003a578081fd5b6028806080016080811067ffffffffffffffff8211171561005e5761005d6100b7565b5b50806100d160803980608083f050508061007782610085565bf35b505b60006000fd6100cf565b6000604051905081810181811067ffffffffffffffff821117156100ac576100ab6100b7565b5b80604052505b919050565b634e487b7160e01b600052604160045260246000fd5b565bfe60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
 Binary of the runtime part:
 
 Optimized IR:
@@ -46,17 +46,17 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "D_13" {
+object "D_15" {
     code {
         {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_13_deployed")
-            codecopy(0, dataoffset("D_13_deployed"), _1)
+            let _1 := datasize("D_15_deployed")
+            codecopy(0, dataoffset("D_15_deployed"), _1)
             return(0, _1)
         }
     }
-    object "D_13_deployed" {
+    object "D_15_deployed" {
         code {
             {
                 mstore(64, 128)
@@ -69,7 +69,7 @@ object "D_13" {
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
                         let _2 := datasize("C_2")
                         let _3 := add(128, _2)
-                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128)) { invalid() }
+                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128)) { panic_error_0x41() }
                         datacopy(128, dataoffset("C_2"), _2)
                         pop(create(_1, 128, _2))
                         return(allocateMemory(_1), _1)
@@ -81,8 +81,14 @@ object "D_13" {
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
+            }
+            function panic_error_0x41()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x41)
+                revert(0, 0x24)
             }
         }
         object "C_2" {
@@ -106,4 +112,3 @@ object "D_13" {
         }
     }
 }
-
