@@ -2330,10 +2330,6 @@ string YulUtilFunctions::updateStorageValueFunction(
 		{
 			solAssert(_toType.category() == Type::Category::Struct, "");
 
-			solUnimplementedAssert(
-				fromReferenceType->location() != DataLocation::Storage,
-				"Copying from storage to storage is not yet implemented."
-			);
 			auto const& fromStructType = dynamic_cast<StructType const&>(_fromType);
 			auto const& toStructType = dynamic_cast<StructType const&>(_toType);
 			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
@@ -2341,6 +2337,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 
 			Whiskers templ(R"(
 				function <functionName>(slot, value) {
+					<?fromStorage> if eq(slot, value) { leave } </fromStorage>
 					<#member>
 					{
 						<updateMemberCall>
@@ -2348,6 +2345,7 @@ string YulUtilFunctions::updateStorageValueFunction(
 					</member>
 				}
 			)");
+			templ("fromStorage", fromStructType.dataStoredIn(DataLocation::Storage));
 			templ("functionName", functionName);
 
 			MemberList::MemberMap structMembers = fromStructType.nativeMembers(nullptr);
@@ -2356,67 +2354,81 @@ string YulUtilFunctions::updateStorageValueFunction(
 			vector<map<string, string>> memberParams(structMembers.size());
 			for (size_t i = 0; i < structMembers.size(); ++i)
 			{
-				solAssert(structMembers[i].type->memoryHeadSize() == 32, "");
-				bool fromCalldata = fromStructType.location() == DataLocation::CallData;
+				Type const& memberType = *structMembers[i].type;
+				solAssert(memberType.memoryHeadSize() == 32, "");
 				auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(structMembers[i].name);
 
 				Whiskers t(R"(
 					let memberSlot := add(slot, <memberStorageSlotDiff>)
+					let memberSrcPtr := add(value, <memberOffset>)
 
 					<?fromCalldata>
-						<?dynamicallyEncodedMember>
-							let <memberCalldataOffset> := <accessCalldataTail>(value, add(value, <memberOffset>))
-						<!dynamicallyEncodedMember>
-							let <memberCalldataOffset> := add(value, <memberOffset>)
-						</dynamicallyEncodedMember>
+						let <memberValues> :=
+							<?dynamicallyEncodedMember>
+								<accessCalldataTail>(value, memberSrcPtr)
+							<!dynamicallyEncodedMember>
+								memberSrcPtr
+							</dynamicallyEncodedMember>
 
 						<?isValueType>
-							let <memberValues> := <loadFromMemoryOrCalldata>(<memberCalldataOffset>)
-							<updateMember>(memberSlot, <memberStorageOffset>, <memberValues>)
-						<!isValueType>
-							<updateMember>(memberSlot,  <memberCalldataOffset>)
+							<memberValues> := <read>(<memberValues>)
 						</isValueType>
-					<!fromCalldata>
-						let memberMemoryOffset := add(value, <memberOffset>)
-						let <memberValues> := <loadFromMemoryOrCalldata>(memberMemoryOffset)
-						<updateMember>(memberSlot, <?hasOffset><memberStorageOffset>,</hasOffset> <memberValues>)
 					</fromCalldata>
+
+					<?fromMemory>
+						let <memberValues> := <read>(memberSrcPtr)
+					</fromMemory>
+
+					<?fromStorage>
+						let <memberValues> :=
+							<?isValueType>
+								<read>(memberSrcPtr)
+							<!isValueType>
+								memberSrcPtr
+							</isValueType>
+					</fromStorage>
+
+					<updateStorageValue>(memberSlot, <memberValues>)
 				)");
+				bool fromCalldata = fromStructType.location() == DataLocation::CallData;
 				t("fromCalldata", fromCalldata);
+				bool fromMemory = fromStructType.location() == DataLocation::Memory;
+				t("fromMemory", fromMemory);
+				bool fromStorage = fromStructType.location() == DataLocation::Storage;
+				t("fromStorage", fromStorage);
+				t("isValueType", memberType.isValueType());
+				t("memberValues", suffixedVariableNameList("memberValue_", 0, memberType.stackItems().size()));
+
+				t("memberStorageSlotDiff", slotDiff.str());
 				if (fromCalldata)
 				{
-					t("memberCalldataOffset", suffixedVariableNameList(
-						"memberCalldataOffset_",
-						0,
-						structMembers[i].type->stackItems().size()
-					));
-					t("dynamicallyEncodedMember", structMembers[i].type->isDynamicallyEncoded());
-					if (structMembers[i].type->isDynamicallyEncoded())
-						t("accessCalldataTail", accessCalldataTailFunction(*structMembers[i].type));
+					t("memberOffset", to_string(fromStructType.calldataOffsetOfMember(structMembers[i].name)));
+					t("dynamicallyEncodedMember", memberType.isDynamicallyEncoded());
+					if (memberType.isDynamicallyEncoded())
+						t("accessCalldataTail", accessCalldataTailFunction(memberType));
+					if (memberType.isValueType())
+						t("read", readFromCalldata(memberType));
 				}
-				t("isValueType", structMembers[i].type->isValueType());
-				t("memberValues", suffixedVariableNameList(
-					"memberValue_",
-					0,
-					structMembers[i].type->stackItems().size()
+				else if (fromMemory)
+				{
+					t("memberOffset", fromStructType.memoryOffsetOfMember(structMembers[i].name).str());
+					t("read", readFromMemory(memberType));
+				}
+				else if (fromStorage)
+				{
+					auto [srcSlotOffset, srcOffset] = fromStructType.storageOffsetsOfMember(structMembers[i].name);
+					t("memberOffset", formatNumber(srcSlotOffset));
+					if (memberType.isValueType())
+						t("read", readFromStorageValueType(memberType, srcOffset, false));
+					else
+						solAssert(srcOffset == 0, "");
+
+				}
+				t("updateStorageValue", updateStorageValueFunction(
+					memberType,
+					*toStructMembers[i].type,
+					memberType.isValueType() ? optional<unsigned>{offset} : std::nullopt
 				));
-				t("hasOffset", structMembers[i].type->isValueType());
-				t(
-					"updateMember",
-					structMembers[i].type->isValueType() ?
-						updateStorageValueFunction(*structMembers[i].type, *toStructMembers[i].type) :
-						updateStorageValueFunction(*structMembers[i].type, *toStructMembers[i].type, offset)
-				);
-				t("memberStorageSlotDiff", slotDiff.str());
-				t("memberStorageOffset", to_string(offset));
-				t(
-					"memberOffset",
-					fromCalldata ?
-						to_string(fromStructType.calldataOffsetOfMember(structMembers[i].name)) :
-						fromStructType.memoryOffsetOfMember(structMembers[i].name).str()
-				);
-				if (!fromCalldata || structMembers[i].type->isValueType())
-					t("loadFromMemoryOrCalldata", readFromMemoryOrCalldata(*structMembers[i].type, fromCalldata));
 				memberParams[i]["updateMemberCall"] = t.render();
 			}
 			templ("member", memberParams);
