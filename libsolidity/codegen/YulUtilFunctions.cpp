@@ -1542,7 +1542,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 
 					<updateStorageValue>(elementSlot<?isValueType>, elementOffset</isValueType>, <elementValues>)
 
-					srcPtr := add(srcPtr, <stride>)
+					srcPtr := add(srcPtr, <srcStride>)
 
 					<?multipleItemsPerSlot>
 						elementOffset := add(elementOffset, <storageStride>)
@@ -1552,7 +1552,6 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 						}
 					<!multipleItemsPerSlot>
 						elementSlot := add(elementSlot, <storageSize>)
-						elementOffset := 0
 					</multipleItemsPerSlot>
 				}
 			}
@@ -1568,7 +1567,6 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 		templ("fromCalldata", fromCalldata);
 		templ("isToDynamic", _toType.isDynamicallySized());
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
-		templ("isFromMemoryDynamic", _fromType.isDynamicallySized() && _fromType.dataStoredIn(DataLocation::Memory));
 		if (fromCalldata)
 		{
 			templ("dynamicallySizedBase", _fromType.baseType()->isDynamicallySized());
@@ -1589,7 +1587,13 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 			_fromType.baseType()->stackItems().size()
 		));
 		templ("updateStorageValue", updateStorageValueFunction(*_fromType.baseType(), *_toType.baseType()));
-		templ("stride", to_string(fromCalldata ? _fromType.calldataStride() : _fromType.memoryStride()));
+		templ("srcStride",
+			fromCalldata ?
+			to_string(_fromType.calldataStride()) :
+				fromMemory ?
+				to_string(_fromType.memoryStride()) :
+				formatNumber(_fromType.baseType()->storageSize())
+		);
 		templ("multipleItemsPerSlot", _toType.storageStride() <= 16);
 		templ("storageStride", to_string(_toType.storageStride()));
 		templ("storageSize", _toType.baseType()->storageSize().str());
