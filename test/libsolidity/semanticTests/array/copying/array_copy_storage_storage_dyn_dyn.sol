@@ -12,6 +12,8 @@ contract c {
         len = data2.length; if (index < len) val = data2[index];
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // setData1(uint256,uint256,uint256): 10, 5, 4 ->
 // copyStorageStorage() ->
