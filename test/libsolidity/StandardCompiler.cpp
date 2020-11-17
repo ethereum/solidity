@@ -86,6 +86,48 @@ Json::Value getContractResult(Json::Value const& _compilerResult, string const& 
 	return _compilerResult["contracts"][_file][_name];
 }
 
+void checkLinkReferencesSchema(Json::Value const& _contractResult)
+{
+	BOOST_TEST_REQUIRE(_contractResult.isObject());
+	BOOST_TEST_REQUIRE(_contractResult["evm"]["bytecode"].isObject());
+
+	Json::Value const& linkReferenceResult = _contractResult["evm"]["bytecode"]["linkReferences"];
+	BOOST_TEST_REQUIRE(linkReferenceResult.isObject());
+
+	for (string const& fileName: linkReferenceResult.getMemberNames())
+	{
+		BOOST_TEST_REQUIRE(linkReferenceResult[fileName].isObject());
+		for (string const& libraryName: linkReferenceResult[fileName].getMemberNames())
+		{
+			BOOST_TEST_REQUIRE(linkReferenceResult[fileName][libraryName].isArray());
+			BOOST_TEST_REQUIRE(!linkReferenceResult[fileName][libraryName].empty());
+			for (int i = 0; i < static_cast<int>(linkReferenceResult.size()); ++i)
+			{
+				BOOST_TEST_REQUIRE(linkReferenceResult[fileName][libraryName][i].isObject());
+				BOOST_TEST_REQUIRE(linkReferenceResult[fileName][libraryName][i].size() == 2);
+				BOOST_TEST_REQUIRE(linkReferenceResult[fileName][libraryName][i]["length"].isUInt());
+				BOOST_TEST_REQUIRE(linkReferenceResult[fileName][libraryName][i]["start"].isUInt());
+			}
+		}
+	}
+}
+
+void expectLinkReferences(Json::Value const& _contractResult, map<string, set<string>> const& _expectedLinkReferences)
+{
+	checkLinkReferencesSchema(_contractResult);
+
+	Json::Value const& linkReferenceResult = _contractResult["evm"]["bytecode"]["linkReferences"];
+	BOOST_TEST(linkReferenceResult.size() == _expectedLinkReferences.size());
+
+	for (auto const& [fileName, libraries]: _expectedLinkReferences)
+	{
+		BOOST_TEST(linkReferenceResult.isMember(fileName));
+		BOOST_TEST(linkReferenceResult[fileName].size() == libraries.size());
+		for (string const& libraryName: libraries)
+			BOOST_TEST(linkReferenceResult[fileName].isMember(libraryName));
+	}
+}
+
 Json::Value compile(string _input)
 {
 	StandardCompiler compiler;
@@ -710,11 +752,7 @@ BOOST_AUTO_TEST_CASE(library_filename_with_colon)
 	BOOST_CHECK(containsAtMostWarnings(result));
 	Json::Value contract = getContractResult(result, "fileA", "A");
 	BOOST_CHECK(contract.isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"].isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"].isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"].isArray());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["git:library.sol"]["L"][0].isObject());
+	expectLinkReferences(contract, {{"git:library.sol", {"L"}}});
 }
 
 BOOST_AUTO_TEST_CASE(libraries_invalid_top_level)
@@ -860,15 +898,137 @@ BOOST_AUTO_TEST_CASE(library_linking)
 	}
 	)";
 	Json::Value result = compile(input);
-	BOOST_CHECK(containsAtMostWarnings(result));
-	Json::Value contract = getContractResult(result, "fileA", "A");
-	BOOST_CHECK(contract.isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"].isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"].isObject());
-	BOOST_CHECK(!contract["evm"]["bytecode"]["linkReferences"]["library.sol"].isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"].isObject());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"]["L2"].isArray());
-	BOOST_CHECK(contract["evm"]["bytecode"]["linkReferences"]["library2.sol"]["L2"][0].isObject());
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "A");
+	expectLinkReferences(contractResult, {{"library2.sol", {"L2"}}});
+}
+
+BOOST_AUTO_TEST_CASE(linking_yul)
+{
+	char const* input = R"(
+	{
+		"language": "Yul",
+		"settings": {
+			"libraries": {
+				"fileB": {
+					"L": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"evm.bytecode.linkReferences"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "object \"a\" { code { let addr := linkersymbol(\"fileB:L\") } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "a");
+	expectLinkReferences(contractResult, {});
+}
+
+BOOST_AUTO_TEST_CASE(linking_yul_empty_link_reference)
+{
+	char const* input = R"(
+	{
+		"language": "Yul",
+		"settings": {
+			"libraries": {
+				"": {
+					"": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"evm.bytecode.linkReferences"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "object \"a\" { code { let addr := linkersymbol(\"\") } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "a");
+	expectLinkReferences(contractResult, {{"", {""}}});
+}
+
+BOOST_AUTO_TEST_CASE(linking_yul_no_filename_in_link_reference)
+{
+	char const* input = R"(
+	{
+		"language": "Yul",
+		"settings": {
+			"libraries": {
+				"": {
+					"L": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"evm.bytecode.linkReferences"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "object \"a\" { code { let addr := linkersymbol(\"L\") } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "a");
+	expectLinkReferences(contractResult, {{"", {"L"}}});
+}
+
+BOOST_AUTO_TEST_CASE(linking_yul_same_library_name_different_files)
+{
+	char const* input = R"(
+	{
+		"language": "Yul",
+		"settings": {
+			"libraries": {
+				"fileB": {
+					"L": "0x4200000000000000000000000000000000000001"
+				}
+			},
+			"outputSelection": {
+				"fileA": {
+					"*": [
+						"evm.bytecode.linkReferences"
+					]
+				}
+			}
+		},
+		"sources": {
+			"fileA": {
+				"content": "object \"a\" { code { let addr := linkersymbol(\"fileC:L\") } }"
+			}
+		}
+	}
+	)";
+	Json::Value result = compile(input);
+	BOOST_TEST(containsAtMostWarnings(result));
+	Json::Value contractResult = getContractResult(result, "fileA", "a");
+	expectLinkReferences(contractResult, {{"fileC", {"L"}}});
 }
 
 BOOST_AUTO_TEST_CASE(evm_version)

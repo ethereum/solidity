@@ -127,6 +127,7 @@ static string const g_strEVM = "evm";
 static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGeneratedSources = "generated-sources";
 static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
 static string const g_strGas = "gas";
@@ -211,6 +212,7 @@ static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
 static string const g_argIROptimized = g_strIROptimized;
 static string const g_argEwasm = g_strEwasm;
+static string const g_argExperimentalViaIR = g_strExperimentalViaIR;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
@@ -662,9 +664,16 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 				serr() << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
 				return false;
 			}
+
 			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(colon));
-			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
 			boost::trim(libName);
+			if (m_libraries.count(libName))
+			{
+				serr() << "Address specified more than once for library \"" << libName << "\"." << endl;
+				return false;
+			}
+
+			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
 			boost::trim(addrString);
 			if (addrString.substr(0, 2) == "0x")
 				addrString = addrString.substr(2);
@@ -728,12 +737,15 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
-	// create directory if not existent
-	fs::path p(m_args.at(g_argOutputDir).as<string>());
-	// Do not try creating the directory if the first item is . or ..
-	if (p.filename() != "." && p.filename() != "..")
-		fs::create_directories(p);
-	string pathName = (p / _fileName).string();
+
+	fs::path outputDir(m_args.at(g_argOutputDir).as<string>());
+
+	// NOTE: create_directories() raises an exception if the path consists solely of '.' or '..'
+	// (or equivalent such as './././.'). Paths like 'a/b/.' and 'a/b/..' are fine though.
+	// The simplest workaround is to use an absolute path.
+	fs::create_directories(fs::absolute(outputDir));
+
+	string pathName = (outputDir / _fileName).string();
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
 		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --" << g_strOverwrite << " to force)." << endl;
@@ -824,6 +836,10 @@ General Information)").c_str(),
 			po::value<string>()->value_name("version"),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
+		)
+		(
+			g_strExperimentalViaIR.c_str(),
+			"Turn on experimental compilation mode via the IR (EXPERIMENTAL)."
 		)
 		(
 			g_strRevertStrings.c_str(),
@@ -1456,6 +1472,8 @@ bool CommandLineInterface::processInput()
 
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		if (m_args.count(g_argExperimentalViaIR))
+			m_compiler->setViaIR(true);
 		m_compiler->setEVMVersion(m_evmVersion);
 		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested

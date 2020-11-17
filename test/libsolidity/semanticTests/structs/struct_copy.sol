@@ -34,6 +34,8 @@ contract c {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // set(uint256): 7 -> true
 // retrieve(uint256): 7 -> 1, 3, 4, 2

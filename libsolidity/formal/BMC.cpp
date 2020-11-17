@@ -96,20 +96,7 @@ bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall)
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	if (funType.kind() == FunctionType::Kind::External)
-	{
-		auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
-		if (!memberAccess)
-			return false;
-
-		auto identifier = dynamic_cast<Identifier const*>(&memberAccess->expression());
-		if (!(
-			identifier &&
-			identifier->name() == "this" &&
-			identifier->annotation().referencedDeclaration &&
-			dynamic_cast<MagicVariableDeclaration const*>(identifier->annotation().referencedDeclaration)
-		))
-			return false;
-	}
+		return isTrustedExternalCall(&_funCall.expression());
 	else if (funType.kind() != FunctionType::Kind::Internal)
 		return false;
 
@@ -133,7 +120,10 @@ void BMC::endVisit(ContractDefinition const& _contract)
 		constructor->accept(*this);
 	else
 	{
+		/// Visiting implicit constructor - we need a dummy callstack frame
+		pushCallStack({nullptr, nullptr});
 		inlineConstructorHierarchy(_contract);
+		popCallStack();
 		/// Check targets created by state variable initialization.
 		smtutil::Expression constraints = m_context.assertions();
 		checkVerificationTargets(constraints);
@@ -844,32 +834,28 @@ void BMC::checkCondition(
 	{
 	case smtutil::CheckResult::SATISFIABLE:
 	{
+		solAssert(!_callStack.empty(), "");
 		std::ostringstream message;
 		message << "BMC: " << _description << " happens here.";
-		if (_callStack.size())
-		{
-			std::ostringstream modelMessage;
-			modelMessage << "Counterexample:\n";
-			solAssert(values.size() == expressionNames.size(), "");
-			map<string, string> sortedModel;
-			for (size_t i = 0; i < values.size(); ++i)
-				if (expressionsToEvaluate.at(i).name != values.at(i))
-					sortedModel[expressionNames.at(i)] = values.at(i);
+		std::ostringstream modelMessage;
+		modelMessage << "Counterexample:\n";
+		solAssert(values.size() == expressionNames.size(), "");
+		map<string, string> sortedModel;
+		for (size_t i = 0; i < values.size(); ++i)
+			if (expressionsToEvaluate.at(i).name != values.at(i))
+				sortedModel[expressionNames.at(i)] = values.at(i);
 
-			for (auto const& eval: sortedModel)
-				modelMessage << "  " << eval.first << " = " << eval.second << "\n";
+		for (auto const& eval: sortedModel)
+			modelMessage << "  " << eval.first << " = " << eval.second << "\n";
 
-			m_errorReporter.warning(
-				_errorHappens,
-				_location,
-				message.str(),
-				SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
-				.append(SMTEncoder::callStackMessage(_callStack))
-				.append(move(secondaryLocation))
-			);
-		}
-		else
-			m_errorReporter.warning(6084_error, _location, message.str(), secondaryLocation);
+		m_errorReporter.warning(
+			_errorHappens,
+			_location,
+			message.str(),
+			SecondarySourceLocation().append(modelMessage.str(), SourceLocation{})
+			.append(SMTEncoder::callStackMessage(_callStack))
+			.append(move(secondaryLocation))
+		);
 		break;
 	}
 	case smtutil::CheckResult::UNSATISFIABLE:

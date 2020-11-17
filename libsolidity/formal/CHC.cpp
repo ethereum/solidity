@@ -562,8 +562,6 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 			m_context.addAssertion(interface(*contract));
 	}
 
-	auto previousError = errorFlag().currentValue();
-
 	m_context.addAssertion(predicate(_funCall));
 
 	connectBlocks(
@@ -572,8 +570,6 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 		(errorFlag().currentValue() > 0)
 	);
 	m_context.addAssertion(errorFlag().currentValue() == 0);
-	errorFlag().increaseIndex();
-	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
 
 void CHC::externalFunctionCall(FunctionCall const& _funCall)
@@ -583,6 +579,11 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	/// so we just add the nondet_interface predicate.
 
 	solAssert(m_currentContract, "");
+	if (isTrustedExternalCall(&_funCall.expression()))
+	{
+		externalFunctionCallToTrustedCode(_funCall);
+		return;
+	}
 
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	auto kind = funType.kind();
@@ -612,6 +613,42 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	// basically has the nondet interface of this summary as a constraint.
 	m_context.addAssertion(nondet);
 
+	m_context.addAssertion(errorFlag().currentValue() == 0);
+}
+
+void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
+{
+	solAssert(m_currentContract, "");
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
+
+	auto const* function = functionCallToDefinition(_funCall);
+	if (!function)
+		return;
+
+	// External call creates a new transaction.
+	auto originalTx = state().tx();
+	auto txOrigin = state().txMember("tx.origin");
+	state().newTx();
+	// set the transaction sender as this contract
+	m_context.addAssertion(state().txMember("msg.sender") == state().thisAddress());
+	// set the origin to be the current transaction origin
+	m_context.addAssertion(state().txMember("tx.origin") == txOrigin);
+
+	smtutil::Expression pred = predicate(_funCall);
+
+	auto txConstraints = m_context.state().txConstraints(*function);
+	m_context.addAssertion(pred && txConstraints);
+	// restore the original transaction data
+	state().newTx();
+	m_context.addAssertion(originalTx == state().tx());
+
+	connectBlocks(
+		m_currentBlock,
+		(m_currentFunction && !m_currentFunction->isConstructor()) ? summary(*m_currentFunction) : summary(*m_currentContract),
+		(errorFlag().currentValue() > 0)
+	);
 	m_context.addAssertion(errorFlag().currentValue() == 0);
 }
 
@@ -1011,27 +1048,34 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 
 smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 {
-	/// Used only for internal calls.
+	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	solAssert(kind == FunctionType::Kind::Internal || kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
 
 	auto const* function = functionCallToDefinition(_funCall);
 	if (!function)
 		return smtutil::Expression(true);
 
+	auto contractAddressValue = [this](FunctionCall const& _f) {
+		FunctionType const& funType = dynamic_cast<FunctionType const&>(*_f.expression().annotation().type);
+		if (funType.kind() == FunctionType::Kind::Internal)
+			return state().thisAddress();
+		if (MemberAccess const* callBase = dynamic_cast<MemberAccess const*>(&_f.expression()))
+			return expr(callBase->expression());
+		solAssert(false, "Unreachable!");
+	};
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall), state().crypto(), state().tx(), state().state()};
 
-	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	solAssert(funType.kind() == FunctionType::Kind::Internal, "");
-
-	/// Internal calls can be made to the contract itself or a library.
 	auto const* contract = function->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
-	solAssert(contract->isLibrary() || find(hierarchy.begin(), hierarchy.end(), contract) != hierarchy.end(), "");
+	solAssert(kind != FunctionType::Kind::Internal || contract->isLibrary() || contains(hierarchy, contract), "");
 
 	/// If the call is to a library, we use that library as the called contract.
-	/// If it is not, we use the current contract even if it is a call to a contract
-	/// up in the inheritance hierarchy, since the interfaces/predicates are different.
-	auto const* calledContract = contract->isLibrary() ? contract : m_currentContract;
+	/// If the call is to a contract not in the inheritance hierarchy, we also use that as the called contract.
+	/// Otherwise, the call is to some contract in the inheritance hierarchy of the current contract.
+	/// In this case we use current contract as the called one since the interfaces/predicates are different.
+	auto const* calledContract = contains(hierarchy, contract) ?  m_currentContract : contract;
 	solAssert(calledContract, "");
 
 	bool usesStaticCall = function->stateMutability() == StateMutability::Pure || function->stateMutability() == StateMutability::View;

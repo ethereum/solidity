@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.0;
+library L { function f(uint) public {} }
 contract test {
-    bytes a;
-    bytes b;
+    using L for uint;
     function f() public {
-        a = b;
+        uint x;
+        x.f();
     }
 }

@@ -33,16 +33,21 @@ Language Features:
  * Immutable variables with literal number values are considered pure.
 
 Compiler Features:
+ * Command Line Interface: New option ``--experimental-via-ir`` allows switching compilation process to go through
+   the Yul intermediate representation. This is highly experimental and is used for development purposes.
+ * Standard JSON: New option ``settings.viaIR`` allows the same switch as ``--experimental-via-ir`` on the commandline.
  * Command Line Interface: Report error if file could not be read in ``--standard-json`` mode.
  * Command Line interface: Report proper error for each output file which could not be written. Previously an exception was thrown, and execution aborted, on the first error.
  * SMTChecker: Add division by zero checks in the CHC engine.
  * SMTChecker: Support ``selector`` for expressions with value known at compile-time.
+ * SMTChecker: More precise analysis of external calls using ``this``.
  * Command Line Interface: New option ``--model-checker-timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
  * Standard JSON: New option ``modelCheckerSettings.timeout`` sets a timeout in milliseconds for each individual query performed by the SMTChecker.
  * Assembler: Perform linking in assembly mode when library addresses are provided.
 
 
 Bugfixes:
+ * Command Line Interface: Reject duplicate libraries in ``--libraries`` option instead of arbitrarily choosing one.
  * SMTChecker: Fix lack of reporting potential violations when using only the CHC engine.
  * SMTChecker: Fix internal error on conversion from string literal to byte.
  * SMTChecker: Fix internal error when using tuples of rational literals inside the conditional operator.
@@ -51,8 +56,11 @@ Bugfixes:
  * SMTChecker: Fix false negative in modifier applied multiple times.
  * SMTChecker: Fix internal error in the BMC engine when inherited contract from a different source unit has private state variables.
  * SMTChecker: Fix internal error when ``array.push()`` is used as the LHS of an assignment.
+ * Command Line Interface: Fix write error when the directory passed to ``--output-dir`` ends with a slash.
  * SMTChecker: Fix CHC false positives when branches are used inside modifiers.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
+ * NatSpec: Fix internal error when inheriting return parameter documentation but the parameter names differ between base and inherited.
+ * Standard JSON: Fix library addresses specified in ``libraries`` being used for linking even if the file names do not match.
 
 
 ### 0.7.4 (2020-10-19)

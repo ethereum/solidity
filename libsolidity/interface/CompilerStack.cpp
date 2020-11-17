@@ -131,6 +131,13 @@ void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
 	m_remappings = _remappings;
 }
 
+void CompilerStack::setViaIR(bool _viaIR)
+{
+	if (m_stackState >= ParsedAndImported)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set viaIR before parsing."));
+	m_viaIR = _viaIR;
+}
+
 void CompilerStack::setEVMVersion(langutil::EVMVersion _version)
 {
 	if (m_stackState >= ParsedAndImported)
@@ -213,6 +220,7 @@ void CompilerStack::reset(bool _keepSettings)
 	{
 		m_remappings.clear();
 		m_libraries.clear();
+		m_viaIR = false;
 		m_evmVersion = langutil::EVMVersion();
 		m_modelCheckerSettings = ModelCheckerSettings{};
 		m_enabledSMTSolvers = smtutil::SMTSolverChoice::All();
@@ -532,10 +540,15 @@ bool CompilerStack::compile(State _stopAfter)
 				{
 					try
 					{
-						if (m_generateEvmBytecode)
-							compileContract(*contract, otherCompilers);
-						if (m_generateIR || m_generateEwasm)
+						if (m_viaIR || m_generateIR || m_generateEwasm)
 							generateIR(*contract);
+						if (m_generateEvmBytecode)
+						{
+							if (m_viaIR)
+								generateEVMFromIR(*contract);
+							else
+								compileContract(*contract, otherCompilers);
+						}
 						if (m_generateEwasm)
 							generateEwasm(*contract);
 					}
@@ -1250,11 +1263,44 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
 }
 
+void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
+{
+	solAssert(m_stackState >= AnalysisPerformed, "");
+	if (m_hasError)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateEVMFromIR with errors."));
+
+	if (!_contract.canBeDeployed())
+		return;
+
+	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+	solAssert(!compiledContract.yulIROptimized.empty(), "");
+	if (!compiledContract.object.bytecode.empty())
+		return;
+
+	// Re-parse the Yul IR in EVM dialect
+	yul::AssemblyStack stack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
+	stack.parseAndAnalyze("", compiledContract.yulIROptimized);
+	stack.optimize();
+
+	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
+
+	// TODO: support passing metadata
+	auto result = stack.assemble(yul::AssemblyStack::Machine::EVM);
+	compiledContract.object = std::move(*result.bytecode);
+	// TODO: support runtimeObject
+	// TODO: add EIP-170 size check for runtimeObject
+	// TODO: refactor assemblyItems, runtimeAssemblyItems, generatedSources,
+	//       assemblyString, assemblyJSON, and functionEntryPoints to work with this code path
+}
+
 void CompilerStack::generateEwasm(ContractDefinition const& _contract)
 {
 	solAssert(m_stackState >= AnalysisPerformed, "");
 	if (m_hasError)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Called generateEwasm with errors."));
+
+	if (!_contract.canBeDeployed())
+		return;
 
 	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
 	solAssert(!compiledContract.yulIROptimized.empty(), "");
@@ -1392,6 +1438,8 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 	static vector<string> hashes{"ipfs", "bzzr1", "none"};
 	meta["settings"]["metadata"]["bytecodeHash"] = hashes.at(unsigned(m_metadataHash));
 
+	if (m_viaIR)
+		meta["settings"]["viaIR"] = m_viaIR;
 	meta["settings"]["evmVersion"] = m_evmVersion.name();
 	meta["settings"]["compilationTarget"][_contract.contract->sourceUnitName()] =
 		*_contract.contract->annotation().canonicalName;
@@ -1514,7 +1562,7 @@ bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
 	else
 		solAssert(m_metadataHash == MetadataHash::None, "Invalid metadata hash");
 
-	if (experimentalMode)
+	if (experimentalMode || m_viaIR)
 		encoder.pushBool("experimental", true);
 	if (m_release)
 		encoder.pushBytes("solc", VersionCompactBytes);
