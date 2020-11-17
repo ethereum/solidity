@@ -61,6 +61,9 @@ add_library(yul
 	backends/wasm/WasmObjectCompiler.h
 	backends/wasm/WordSizeTransform.cpp
 	backends/wasm/WordSizeTransform.h
+	backends/wasm/polyfill/arithmetic.h
+	backends/wasm/polyfill/bitwise.h
+	backends/wasm/polyfill/logical.h
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
