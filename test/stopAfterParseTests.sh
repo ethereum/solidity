@@ -58,9 +58,8 @@ while read -r file; do
 	then
 		echo -n "<skipping utf8 error>"
 	else
-		echo "Received unexpected return code $RETURN_CODE while processing $file: "
-		echo "-----"
-		echo "$OUTPUT"
+		# NOTE: The split script is expected to print error details to stderr in this case.
+		echo "$SPLITSOURCES exited with code $RETURN_CODE while processing $file."
 		exit 3
 	fi
 

@@ -77,7 +77,4 @@ if __name__ == '__main__':
             sys.exit(1)
 
     except UnicodeDecodeError as ude:
-        print("UnicodeDecodeError in '" + filePath + "': " + str(ude), file=sys.stderr)
-        print("This is expected for some tests containing invalid utf8 sequences. "
-              "Exception will be ignored.", file=sys.stderr)
         sys.exit(2)

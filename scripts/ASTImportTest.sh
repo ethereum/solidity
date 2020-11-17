@@ -122,7 +122,7 @@ do
         testImportExportEquivalence "$solfile"
     elif [ ${SPLITSOURCES_RC} == 2 ]
     then
-        # The script will exit with return code 2, if an UnicodeDecodeError occurred.
+        # Return code 2 means an exit due to UnicodeDecodeError in the input file.
         # This is the case if e.g. some tests are using invalid utf-8 sequences. We will ignore
         # these errors, but print the actual output of the script.
         echo -e "\n${OUTPUT}\n"
@@ -130,7 +130,6 @@ do
     else
         # All other return codes will be treated as critical errors. The script will exit.
         echo -e "\nGot unexpected return code ${SPLITSOURCES_RC} from ${SPLITSOURCES}. Aborting."
-        echo -e "\n${OUTPUT}\n"
 
         cd "$WORKINGDIR"
         # Delete temporary files
