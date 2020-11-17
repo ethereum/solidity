@@ -2660,22 +2660,22 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 	std::visit(
 		util::GenericVisitor{
 			[&](IRLValue::Storage const& _storage) {
-				std::optional<unsigned> offset;
+				string offsetArgument;
+				optional<unsigned> offsetStatic;
 
-				if (std::holds_alternative<unsigned>(_storage.offset))
-					offset = std::get<unsigned>(_storage.offset);
+				std::visit(GenericVisitor{
+					[&](unsigned _offset) { offsetStatic = _offset; },
+					[&](string const& _offset) { offsetArgument = ", " + _offset; }
+				}, _storage.offset);
 
 				m_code <<
-					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, offset) <<
+					m_utils.updateStorageValueFunction(_value.type(), _lvalue.type, offsetStatic) <<
 					"(" <<
 					_storage.slot <<
-					(
-						std::holds_alternative<string>(_storage.offset) ?
-						(", " + std::get<string>(_storage.offset)) :
-						""
-					) <<
+					offsetArgument <<
 					_value.commaSeparatedListPrefixed() <<
 					")\n";
+
 			},
 			[&](IRLValue::Memory const& _memory) {
 				if (_lvalue.type.isValueType())

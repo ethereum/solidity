@@ -287,6 +287,7 @@ public:
 	/// Returns the name of a function will write the given value to
 	/// the specified slot and offset. If offset is not given, it is expected as
 	/// runtime parameter.
+	/// For reference types, offset is checked to be zero at runtime.
 	/// signature: (slot, [offset,] value)
 	std::string updateStorageValueFunction(
 		Type const& _fromType,
