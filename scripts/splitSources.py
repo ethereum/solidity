@@ -21,7 +21,7 @@ def uncaught_exception_hook(exc_type, exc_value, exc_traceback):
     # The script `scripts/ASTImportTest.sh` will interpret return code 3
     # as a critical error (because of the uncaught exception) and will
     # terminate further execution.
-    print("Unhandled exception: %s", "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+    print("Unhandled exception: %s", "".join(traceback.format_exception(exc_type, exc_value, exc_traceback)), file=sys.stderr)
     sys.exit(3)
 
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
     except UnicodeDecodeError as ude:
-        print("UnicodeDecodeError in '" + filePath + "': " + str(ude))
+        print("UnicodeDecodeError in '" + filePath + "': " + str(ude), file=sys.stderr)
         print("This is expected for some tests containing invalid utf8 sequences. "
-              "Exception will be ignored.")
+              "Exception will be ignored.", file=sys.stderr)
         sys.exit(2)
