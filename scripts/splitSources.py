@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     try:
         # decide if file has multiple sources
-        with open(filePath, mode='r', encoding='utf8', newline='') as f:
+        with open(filePath, mode='rb', encoding='utf8', newline='') as f:
             lines = f.read().splitlines()
         if len(lines) >= 1 and lines[0][:12] == "==== Source:":
             hasMultipleSources = True
