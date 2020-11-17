@@ -54,9 +54,6 @@ while read -r file; do
 	then
 		testFile "$file"
 		FAILED=$?
-	elif [ $RETURN_CODE -eq 2 ]
-	then
-		echo -n "<skipping utf8 error>"
 	else
 		# NOTE: The split script is expected to print error details to stderr in this case.
 		echo "$SPLITSOURCES exited with code $RETURN_CODE while processing $file."

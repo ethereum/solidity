@@ -59,22 +59,18 @@ if __name__ == '__main__':
     filePath = sys.argv[1]
     sys.excepthook = uncaught_exception_hook
 
-    try:
-        # decide if file has multiple sources
-        with open(filePath, mode='rb', encoding='utf8', newline='') as f:
-            lines = f.read().splitlines()
-        if len(lines) >= 1 and lines[0][:12] == "==== Source:":
-            hasMultipleSources = True
-            writeSourceToFile(lines)
+    # decide if file has multiple sources
+    with open(filePath, mode='rb', encoding='utf8', newline='') as f:
+        lines = f.read().splitlines()
+    if len(lines) >= 1 and lines[0][:12] == "==== Source:":
+        hasMultipleSources = True
+        writeSourceToFile(lines)
 
-        if hasMultipleSources:
-            srcString = ""
-            for src in createdSources:
-                srcString += src + ' '
-            print(srcString)
-            sys.exit(0)
-        else:
-            sys.exit(1)
-
-    except UnicodeDecodeError as ude:
-        sys.exit(2)
+    if hasMultipleSources:
+        srcString = ""
+        for src in createdSources:
+            srcString += src + ' '
+        print(srcString)
+        sys.exit(0)
+    else:
+        sys.exit(1)
