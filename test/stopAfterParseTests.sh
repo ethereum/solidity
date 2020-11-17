@@ -41,7 +41,9 @@ while read -r file; do
 	# NOTE: The command returns the name of the input file if it's not a multi-source file
 	OUTPUT="$($SPLITSOURCES "$file")"
 
+	set +e
 	testFile "$OUTPUT"
+	set -e
 	FAILED=$?
 	rm -r "${FILETMP:?}"/* 2> /dev/null || true
 
