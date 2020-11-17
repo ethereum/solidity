@@ -31,6 +31,7 @@ Bugfixes:
  * Command Line Interface: Fix write error when the directory passed to ``--output-dir`` ends with a slash.
  * SMTChecker: Fix CHC false positives when branches are used inside modifiers.
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
+ * NatSpec: Fix internal error when inheriting return parameter documentation but the parameter names differ between base and inherited.
 
 
 ### 0.7.4 (2020-10-19)
