@@ -89,6 +89,9 @@ enum class ScannerError
 	IllegalExponent,
 	IllegalNumberEnd,
 
+	DirectionalOverrideUnderflow,
+	DirectionalOverrideMismatch,
+
 	OctalNotAllowed,
 };
 
@@ -183,6 +186,7 @@ public:
 	///@}
 
 private:
+
 	inline Token setError(ScannerError _error) noexcept
 	{
 		m_tokens[NextNext].error = _error;
