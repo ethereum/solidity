@@ -899,7 +899,7 @@ public:
 			(annotation().contract && annotation().contract->isInterface());
 	}
 
-	FunctionDefinition const& resolveVirtual(
+	[[nodiscard]] FunctionDefinition const& resolveVirtual(
 		ContractDefinition const& _mostDerivedContract,
 		ContractDefinition const* _searchStart = nullptr
 	) const override;

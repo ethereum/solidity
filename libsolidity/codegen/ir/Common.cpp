@@ -35,6 +35,11 @@ YulArity YulArity::fromType(FunctionType const& _functionType)
 
 string IRNames::function(FunctionDefinition const& _function)
 {
+	if (_function.isConstructor())
+		return implicitConstructor(*_function.annotation().contract);
+
+	// @TODO previously, we had to distinguish creation context and runtime context,
+	// but since we do not work with jump positions anymore, this should not be a problem, right?
 	return "fun_" + _function.name() + "_" + to_string(_function.id());
 }
 

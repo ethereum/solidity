@@ -18,6 +18,8 @@ set(sources
 	analysis/DocStringAnalyser.h
 	analysis/DocStringTagParser.cpp
 	analysis/DocStringTagParser.h
+	analysis/FunctionCallGraph.cpp
+	analysis/FunctionCallGraph.h
 	analysis/ImmutableValidator.cpp
 	analysis/ImmutableValidator.h
 	analysis/GlobalContext.cpp

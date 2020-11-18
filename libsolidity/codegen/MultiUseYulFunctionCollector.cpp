@@ -32,14 +32,27 @@ using namespace solidity::frontend;
 string MultiUseYulFunctionCollector::requestedFunctions()
 {
 	string result;
-	for (auto const& f: m_requestedFunctions)
+	for (auto const& [name, code]: m_requestedFunctions)
 	{
-		solAssert(f.second != "<<STUB<<", "");
+		(void) name;
+		solAssert(code != "<<STUB<<", "");
 		// std::map guarantees ascending order when iterating through its keys.
-		result += f.second;
+		result += code;
 	}
 	m_requestedFunctions.clear();
 	return result;
+}
+
+set<string> MultiUseYulFunctionCollector::requestedFunctionsNames()
+{
+	set<string> names;
+	for (auto const& [name, code]: m_requestedFunctions)
+	{
+		(void) code;
+		names.emplace(name);
+	}
+
+	return names;
 }
 
 string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)

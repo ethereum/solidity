@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <libsolidity/analysis/FunctionCallGraph.h>
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
@@ -475,6 +476,7 @@ private:
 	bool m_generateIR = false;
 	bool m_generateEwasm = false;
 	std::map<std::string, util::h160> m_libraries;
+	std::map<ContractDefinition const*, std::shared_ptr<FunctionCallGraphBuilder::ContractCallGraph> const> m_contractCallGraphs;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
