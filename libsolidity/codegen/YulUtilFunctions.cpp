@@ -3072,6 +3072,12 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				solAssert(false, "Invalid conversion from " + _from.canonicalName() + " to " + _to.canonicalName());
 			break;
 		}
+		case Type::Category::Mapping:
+		{
+			solAssert(_from == _to, "");
+			body = "converted := value";
+			break;
+		}
 		default:
 			solAssert(false, "Invalid conversion from " + _from.canonicalName() + " to " + _to.canonicalName());
 		}
