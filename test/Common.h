@@ -34,17 +34,17 @@ namespace solidity::test
 static constexpr auto evmoneFilename = "evmone.dll";
 static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-windows-amd64.zip";
 static constexpr auto heraFilename = "hera.dll";
-static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/archive/v0.3.0.tar.gz";
+static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/archive/v0.3.2.tar.gz";
 #elif defined(__APPLE__)
 static constexpr auto evmoneFilename = "libevmone.dylib";
 static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-darwin-x86_64.tar.gz";
 static constexpr auto heraFilename = "libhera.dylib";
-static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.3.0/hera-0.3.0-darwin-x86_64.tar.gz";
+static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.3.2/hera-0.3.2-darwin-x86_64.tar.gz";
 #else
 static constexpr auto evmoneFilename = "libevmone.so";
 static constexpr auto evmoneDownloadLink = "https://github.com/ethereum/evmone/releases/download/v0.4.1/evmone-0.4.1-linux-x86_64.tar.gz";
 static constexpr auto heraFilename = "libhera.so";
-static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.3.0/hera-0.3.0-linux-x86_64.tar.gz";
+static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases/download/v0.3.2/hera-0.3.2-linux-x86_64.tar.gz";
 #endif
 
 struct ConfigException : public util::Exception {};
