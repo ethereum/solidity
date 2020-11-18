@@ -60,3 +60,10 @@ function pop(x1, x2, x3, x4) {
 function memoryguard(x:i64) -> y1, y2, y3, y4 {
 	y4 := x
 }
+
+function memset(ptr:i32, value:i32, length:i32) {
+	for { let i:i32 := 0:i32 } i32.lt_u(i, length) { i := i32.add(i, 1:i32) }
+	{
+		i32.store8(i32.add(ptr, i), value)
+	}
+}
