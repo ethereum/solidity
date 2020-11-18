@@ -29,7 +29,7 @@ number [to indicate this fast pace of change](https://semver.org/#spec-item-4).
 ## Build and Install
 
 Instructions about how to build and install the Solidity compiler can be
-found in the [Solidity documentation](https://solidity.readthedocs.io/en/latest/installing-solidity.html#building-from-source).
+found in the [Solidity documentation](https://docs.soliditylang.org/en/latest/installing-solidity.html#building-from-source).
 
 
 ## Example
@@ -49,20 +49,20 @@ contract HelloWorld {
 To get started with Solidity, you can use [Remix](https://remix.ethereum.org/), which is a
 browser-based IDE. Here are some example contracts:
 
-1. [Voting](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#voting)
-2. [Blind Auction](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#blind-auction)
-3. [Safe remote purchase](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#safe-remote-purchase)
-4. [Micropayment Channel](https://solidity.readthedocs.io/en/latest/solidity-by-example.html#micropayment-channel)
+1. [Voting](https://docs.soliditylang.org/en/latest/solidity-by-example.html#voting)
+2. [Blind Auction](https://docs.soliditylang.org/en/latest/solidity-by-example.html#blind-auction)
+3. [Safe remote purchase](https://docs.soliditylang.org/en/latest/solidity-by-example.html#safe-remote-purchase)
+4. [Micropayment Channel](https://docs.soliditylang.org/en/latest/solidity-by-example.html#micropayment-channel)
 
 ## Documentation
 
-The Solidity documentation is hosted at [Read the docs](https://solidity.readthedocs.io).
+The Solidity documentation is hosted at [Read the docs](https://docs.soliditylang.org).
 
 ## Development
 
 Solidity is still under development. Contributions are always welcome!
 Please follow the
-[Developers Guide](https://solidity.readthedocs.io/en/latest/contributing.html)
+[Developers Guide](https://docs.soliditylang.org/en/latest/contributing.html)
 if you want to help.
 
 You can find our current feature and bug priorities for forthcoming

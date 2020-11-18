@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Utilities to handle the Contract ABI (https://solidity.readthedocs.io/en/develop/abi-spec.html)
+ * Utilities to handle the Contract ABI (https://docs.soliditylang.org/en/develop/abi-spec.html)
  */
 
 #pragma once
