@@ -3255,7 +3255,7 @@ void TypeChecker::endVisit(Literal const& _literal)
 				_literal.location(),
 				msg +
 				" If this is not used as an address, please prepend '00'. " +
-				"For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals"
+				"For more information please see https://docs.soliditylang.org/en/develop/types.html#address-literals"
 			);
 	}
 

@@ -11,7 +11,7 @@
 #
 # The documentation for solidity is hosted at:
 #
-# http://solidity.readthedocs.io/
+# https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
