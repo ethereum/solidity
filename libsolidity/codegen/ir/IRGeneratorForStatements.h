@@ -186,6 +186,8 @@ private:
 
 	void setLocation(ASTNode const& _node);
 
+	std::string linkerSymbol(ContractDefinition const& _library) const;
+
 	std::ostringstream m_code;
 	IRGenerationContext& m_context;
 	YulUtilFunctions& m_utils;

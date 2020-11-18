@@ -6,7 +6,7 @@
 #
 # This is an "infrastucture-as-code" alternative to the manual build
 # instructions pages which we previously maintained at:
-# http://solidity.readthedocs.io/en/latest/installing-solidity.html
+# https://docs.soliditylang.org/en/latest/installing-solidity.html
 #
 # The aim of this script is to simplify things down to the following basic
 # flow for all supported operating systems:
@@ -23,7 +23,7 @@
 #
 # The documentation for solidity is hosted at:
 #
-# http://solidity.readthedocs.io/
+# https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -179,7 +179,7 @@ case $(uname -s) in
                         #wheezy
                         echo "Installing solidity dependencies on Debian Wheezy (7.x)."
                         echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
-                        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                        echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
                         echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
@@ -254,7 +254,7 @@ case $(uname -s) in
                 #openSUSE
                 echo "Installing solidity dependencies on openSUSE."
                 echo "ERROR - 'install_deps.sh' doesn't have openSUSE support yet."
-                echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
                 echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
@@ -311,7 +311,7 @@ case $(uname -s) in
                         #do not try anything for betsy.
                         echo "Linux Mint Betsy is not supported at the moment as it runs off of Debian."
                         echo "We only support Sylvia, Sonya, Serena, Sarah, Rosa, Rafaela, Rebecca, and Qiana."
-                        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                        echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
                         echo "If you would like to get your distro working, that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
                         exit 1
@@ -396,7 +396,7 @@ case $(uname -s) in
 
                 #other Linux
                 echo "ERROR - Unsupported or unidentified Linux distro."
-                echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
                 echo "If you would like to get your distro working, that would be fantastic."
                 echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
                 exit 1
@@ -413,7 +413,7 @@ case $(uname -s) in
     *)
         #other
         echo "ERROR - Unsupported or unidentified operating system."
-        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+        echo "See https://docs.soliditylang.org/en/latest/installing-solidity.html for manual instructions."
         echo "If you would like to get your operating system working, that would be fantastic."
         echo "Drop us a message at https://gitter.im/ethereum/solidity-dev."
         ;;

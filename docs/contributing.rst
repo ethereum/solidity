@@ -94,6 +94,9 @@ in the current directory, installed on the system level, or the ``deps`` folder
 in the project top level. The required file is called ``libevmone.so`` on Linux
 systems, ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS.
 
+On macOS some of the testing scripts expect GNU coreutils to be installed.
+This can be easiest accomplished using Homebrew: ``brew install coreutils``.
+
 Running the Tests
 -----------------
 

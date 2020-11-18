@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9068: (118-119): You have to use the .slot or .offset suffix to access storage reference variables.
+// TypeError 9068: (118-119): You have to use the ".slot" or ".offset" suffix to access storage reference variables.

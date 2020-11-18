@@ -135,6 +135,10 @@ inside that slot. To retrieve the slot pointed to by the variable ``x``, you
 use ``x.slot``, and to retrieve the byte-offset you use ``x.offset``.
 Using ``x`` itself will result in an error.
 
+For dynamic calldata arrays, you can access
+their calldata offset (in bytes) and length (number of elements) using ``x.offset`` and ``x.length``.
+Both expressions can also be assigned to.
+
 Local Solidity variables are available for assignments, for example:
 
 .. code::

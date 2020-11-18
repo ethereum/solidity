@@ -19,26 +19,26 @@ object "object" {
             mstore_internal(32:i32, _1, _1, _1, 1)
             eth.storageStore(0:i32, 32:i32)
         }
-        function endian_swap_16(x) -> y
+        function bswap16(x) -> y
         {
             y := i64.or(i64.and(i64.shl(x, 8), 0xff00), i64.and(i64.shr_u(x, 8), 0xff))
         }
-        function endian_swap_32(x) -> y
+        function bswap32(x) -> y
         {
-            let hi := i64.shl(endian_swap_16(x), 16)
-            y := i64.or(hi, endian_swap_16(i64.shr_u(x, 16)))
+            let hi := i64.shl(bswap16(x), 16)
+            y := i64.or(hi, bswap16(i64.shr_u(x, 16)))
         }
-        function endian_swap(x) -> y
+        function bswap64(x) -> y
         {
-            let hi := i64.shl(endian_swap_32(x), 32)
-            y := i64.or(hi, endian_swap_32(i64.shr_u(x, 32)))
+            let hi := i64.shl(bswap32(x), 32)
+            y := i64.or(hi, bswap32(i64.shr_u(x, 32)))
         }
         function mstore_internal(pos:i32, y1, y2, y3, y4)
         {
-            i64.store(pos, endian_swap(y1))
-            i64.store(i32.add(pos, 8:i32), endian_swap(y2))
-            i64.store(i32.add(pos, 16:i32), endian_swap(y3))
-            i64.store(i32.add(pos, 24:i32), endian_swap(y4))
+            i64.store(pos, bswap64(y1))
+            i64.store(i32.add(pos, 8:i32), bswap64(y2))
+            i64.store(i32.add(pos, 16:i32), bswap64(y3))
+            i64.store(i32.add(pos, 24:i32), bswap64(y4))
         }
     }
 }
@@ -63,7 +63,7 @@ Text representation:
     )
 )
 
-(func $endian_swap_16
+(func $bswap16
     (param $x i64)
     (result i64)
     (local $y i64)
@@ -74,27 +74,27 @@ Text representation:
     (local.get $y)
 )
 
-(func $endian_swap_32
+(func $bswap32
     (param $x i64)
     (result i64)
     (local $y i64)
     (local $hi i64)
     (block $label__2
-        (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
-        (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+        (local.set $hi (i64.shl (call $bswap16 (local.get $x)) (i64.const 16)))
+        (local.set $y (i64.or (local.get $hi) (call $bswap16 (i64.shr_u (local.get $x) (i64.const 16)))))
 
     )
     (local.get $y)
 )
 
-(func $endian_swap
+(func $bswap64
     (param $x i64)
     (result i64)
     (local $y i64)
     (local $hi i64)
     (block $label__3
-        (local.set $hi (i64.shl (call $endian_swap_32 (local.get $x)) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $x) (i64.const 32)))))
+        (local.set $hi (i64.shl (call $bswap32 (local.get $x)) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (call $bswap32 (i64.shr_u (local.get $x) (i64.const 32)))))
 
     )
     (local.get $y)
@@ -107,10 +107,10 @@ Text representation:
     (param $y3 i64)
     (param $y4 i64)
     (block $label__4
-        (i64.store (local.get $pos) (call $endian_swap (local.get $y1)))
-        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $endian_swap (local.get $y2)))
-        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $endian_swap (local.get $y3)))
-        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $endian_swap (local.get $y4)))
+        (i64.store (local.get $pos) (call $bswap64 (local.get $y1)))
+        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $bswap64 (local.get $y2)))
+        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $bswap64 (local.get $y3)))
+        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $bswap64 (local.get $y4)))
     )
 )
 
