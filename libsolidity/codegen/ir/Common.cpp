@@ -35,6 +35,9 @@ YulArity YulArity::fromType(FunctionType const& _functionType)
 
 string IRNames::function(FunctionDefinition const& _function)
 {
+	if (_function.isConstructor())
+		return implicitConstructor(*_function.annotation().contract);
+
 	return "fun_" + _function.name() + "_" + to_string(_function.id());
 }
 
