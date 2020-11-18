@@ -3059,6 +3059,19 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 			solUnimplementedAssert(false, "Tuple conversion not implemented.");
 			break;
 		}
+		case Type::Category::TypeType:
+		{
+			TypeType const& typeType = dynamic_cast<decltype(typeType)>(_from);
+			if (
+				auto const* contractType = dynamic_cast<ContractType const*>(typeType.actualType());
+				contractType->contractDefinition().isLibrary() &&
+				_to == *TypeProvider::address()
+			)
+				body = "converted := value";
+			else
+				solAssert(false, "Invalid conversion from " + _from.canonicalName() + " to " + _to.canonicalName());
+			break;
+		}
 		default:
 			solAssert(false, "Invalid conversion from " + _from.canonicalName() + " to " + _to.canonicalName());
 		}
