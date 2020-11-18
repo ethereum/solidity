@@ -161,10 +161,10 @@ function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 }
 
 function mload_internal(pos:i32) -> z1, z2, z3, z4 {
-	z1 := endian_swap(i64.load(pos))
-	z2 := endian_swap(i64.load(i32.add(pos, 8:i32)))
-	z3 := endian_swap(i64.load(i32.add(pos, 16:i32)))
-	z4 := endian_swap(i64.load(i32.add(pos, 24:i32)))
+	z1 := bswap64(i64.load(pos))
+	z2 := bswap64(i64.load(i32.add(pos, 8:i32)))
+	z3 := bswap64(i64.load(i32.add(pos, 16:i32)))
+	z4 := bswap64(i64.load(i32.add(pos, 24:i32)))
 }
 
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
@@ -172,10 +172,10 @@ function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 }
 
 function mstore_internal(pos:i32, y1, y2, y3, y4) {
-	i64.store(pos, endian_swap(y1))
-	i64.store(i32.add(pos, 8:i32), endian_swap(y2))
-	i64.store(i32.add(pos, 16:i32), endian_swap(y3))
-	i64.store(i32.add(pos, 24:i32), endian_swap(y4))
+	i64.store(pos, bswap64(y1))
+	i64.store(i32.add(pos, 8:i32), bswap64(y2))
+	i64.store(i32.add(pos, 16:i32), bswap64(y3))
+	i64.store(i32.add(pos, 24:i32), bswap64(y4))
 }
 
 function mstore_address(pos:i32, a1, a2, a3, a4) {

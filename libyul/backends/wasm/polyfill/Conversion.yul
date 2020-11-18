@@ -59,20 +59,20 @@ function u256_to_address(x1, x2, x3, x4) -> r1, r2, r3 {
 	r3 := x4
 }
 
-function endian_swap_16(x) -> y {
+function bswap16(x) -> y {
 	let hi := i64.and(i64.shl(x, 8), 0xff00)
 	let lo := i64.and(i64.shr_u(x, 8), 0xff)
 	y := i64.or(hi, lo)
 }
 
-function endian_swap_32(x) -> y {
-	let hi := i64.shl(endian_swap_16(x), 16)
-	let lo := endian_swap_16(i64.shr_u(x, 16))
+function bswap32(x) -> y {
+	let hi := i64.shl(bswap16(x), 16)
+	let lo := bswap16(i64.shr_u(x, 16))
 	y := i64.or(hi, lo)
 }
 
-function endian_swap(x) -> y {
-	let hi := i64.shl(endian_swap_32(x), 32)
-	let lo := endian_swap_32(i64.shr_u(x, 32))
+function bswap64(x) -> y {
+	let hi := i64.shl(bswap32(x), 32)
+	let lo := bswap32(i64.shr_u(x, 32))
 	y := i64.or(hi, lo)
 }

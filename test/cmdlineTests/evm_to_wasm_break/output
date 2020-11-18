@@ -106,29 +106,29 @@ object "object" {
             default { z := 1:i32 }
             z4 := i64.extend_i32_u(z)
         }
-        function endian_swap_16(x) -> y
+        function bswap16(x) -> y
         {
             y := i64.or(i64.and(i64.shl(x, 8), 0xff00), i64.and(i64.shr_u(x, 8), 0xff))
         }
-        function endian_swap_32(x) -> y
+        function bswap32(x) -> y
         {
-            let hi := i64.shl(endian_swap_16(x), 16)
-            y := i64.or(hi, endian_swap_16(i64.shr_u(x, 16)))
+            let hi := i64.shl(bswap16(x), 16)
+            y := i64.or(hi, bswap16(i64.shr_u(x, 16)))
         }
-        function endian_swap(x) -> y
+        function bswap64(x) -> y
         {
-            let hi := i64.shl(endian_swap_32(x), 32)
-            y := i64.or(hi, endian_swap_32(i64.shr_u(x, 32)))
+            let hi := i64.shl(bswap32(x), 32)
+            y := i64.or(hi, bswap32(i64.shr_u(x, 32)))
         }
         function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4
         {
             if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { unreachable() }
             if i64.ne(0, i64.shr_u(x4, 32)) { unreachable() }
             eth.callDataCopy(0:i32, i32.wrap_i64(x4), 32:i32)
-            let z1_1 := endian_swap(i64.load(0:i32))
-            let z2_1 := endian_swap(i64.load(i32.add(0:i32, 8:i32)))
-            let z3_1 := endian_swap(i64.load(i32.add(0:i32, 16:i32)))
-            let z4_1 := endian_swap(i64.load(i32.add(0:i32, 24:i32)))
+            let z1_1 := bswap64(i64.load(0:i32))
+            let z2_1 := bswap64(i64.load(i32.add(0:i32, 8:i32)))
+            let z3_1 := bswap64(i64.load(i32.add(0:i32, 16:i32)))
+            let z4_1 := bswap64(i64.load(i32.add(0:i32, 24:i32)))
             z1 := z1_1
             z2 := z2_1
             z3 := z3_1
@@ -136,10 +136,10 @@ object "object" {
         }
         function mstore_internal(pos:i32, y1, y2, y3, y4)
         {
-            i64.store(pos, endian_swap(y1))
-            i64.store(i32.add(pos, 8:i32), endian_swap(y2))
-            i64.store(i32.add(pos, 16:i32), endian_swap(y3))
-            i64.store(i32.add(pos, 24:i32), endian_swap(y4))
+            i64.store(pos, bswap64(y1))
+            i64.store(i32.add(pos, 8:i32), bswap64(y2))
+            i64.store(i32.add(pos, 16:i32), bswap64(y3))
+            i64.store(i32.add(pos, 24:i32), bswap64(y4))
         }
         function sstore(x1, x2, x3, x4, y1, y2, y3, y4)
         {
@@ -437,7 +437,7 @@ Text representation:
     (local.get $z4)
 )
 
-(func $endian_swap_16
+(func $bswap16
     (param $x i64)
     (result i64)
     (local $y i64)
@@ -448,27 +448,27 @@ Text representation:
     (local.get $y)
 )
 
-(func $endian_swap_32
+(func $bswap32
     (param $x i64)
     (result i64)
     (local $y i64)
     (local $hi i64)
     (block $label__16
-        (local.set $hi (i64.shl (call $endian_swap_16 (local.get $x)) (i64.const 16)))
-        (local.set $y (i64.or (local.get $hi) (call $endian_swap_16 (i64.shr_u (local.get $x) (i64.const 16)))))
+        (local.set $hi (i64.shl (call $bswap16 (local.get $x)) (i64.const 16)))
+        (local.set $y (i64.or (local.get $hi) (call $bswap16 (i64.shr_u (local.get $x) (i64.const 16)))))
 
     )
     (local.get $y)
 )
 
-(func $endian_swap
+(func $bswap64
     (param $x i64)
     (result i64)
     (local $y i64)
     (local $hi i64)
     (block $label__17
-        (local.set $hi (i64.shl (call $endian_swap_32 (local.get $x)) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (call $endian_swap_32 (i64.shr_u (local.get $x) (i64.const 32)))))
+        (local.set $hi (i64.shl (call $bswap32 (local.get $x)) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (call $bswap32 (i64.shr_u (local.get $x) (i64.const 32)))))
 
     )
     (local.get $y)
@@ -494,10 +494,10 @@ Text representation:
         (if (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32))) (then
             (unreachable)))
         (call $eth.callDataCopy (i32.const 0) (i32.wrap_i64 (local.get $x4)) (i32.const 32))
-        (local.set $z1_1 (call $endian_swap (i64.load (i32.const 0))))
-        (local.set $z2_1 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 8)))))
-        (local.set $z3_1 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 16)))))
-        (local.set $z4_1 (call $endian_swap (i64.load (i32.add (i32.const 0) (i32.const 24)))))
+        (local.set $z1_1 (call $bswap64 (i64.load (i32.const 0))))
+        (local.set $z2_1 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 8)))))
+        (local.set $z3_1 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 16)))))
+        (local.set $z4_1 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 24)))))
         (local.set $z1 (local.get $z1_1))
         (local.set $z2 (local.get $z2_1))
         (local.set $z3 (local.get $z3_1))
@@ -517,10 +517,10 @@ Text representation:
     (param $y3 i64)
     (param $y4 i64)
     (block $label__19
-        (i64.store (local.get $pos) (call $endian_swap (local.get $y1)))
-        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $endian_swap (local.get $y2)))
-        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $endian_swap (local.get $y3)))
-        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $endian_swap (local.get $y4)))
+        (i64.store (local.get $pos) (call $bswap64 (local.get $y1)))
+        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $bswap64 (local.get $y2)))
+        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $bswap64 (local.get $y3)))
+        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $bswap64 (local.get $y4)))
     )
 )
 
