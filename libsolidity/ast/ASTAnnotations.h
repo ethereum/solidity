@@ -198,8 +198,8 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	struct ExternalIdentifierInfo
 	{
 		Declaration const* declaration = nullptr;
-		bool isSlot = false; ///< Whether the storage slot of a variable is queried.
-		bool isOffset = false; ///< Whether the intra-slot offset of a storage variable is queried.
+		/// Suffix used, one of "slot", "offset", "length" or empty.
+		std::string suffix;
 		size_t valueSize = size_t(-1);
 	};
 

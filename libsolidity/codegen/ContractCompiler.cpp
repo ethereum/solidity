@@ -745,9 +745,9 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				else if (m_context.isStateVariable(decl))
 				{
 					auto const& location = m_context.storageLocationOfVariable(*decl);
-					if (ref->second.isSlot)
+					if (ref->second.suffix == "slot")
 						m_context << location.first;
-					else if (ref->second.isOffset)
+					else if (ref->second.suffix == "offset")
 						m_context << u256(location.second);
 					else
 						solAssert(false, "");
@@ -755,26 +755,44 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				else if (m_context.isLocalVariable(decl))
 				{
 					unsigned stackDiff = static_cast<unsigned>(_assembly.stackHeight()) - m_context.baseStackOffsetOfVariable(*variable);
-					if (ref->second.isSlot || ref->second.isOffset)
+					if (!ref->second.suffix.empty())
 					{
-						solAssert(variable->type()->dataStoredIn(DataLocation::Storage), "");
-						unsigned size = variable->type()->sizeOnStack();
-						if (size == 2)
+						string const& suffix = ref->second.suffix;
+						if (variable->type()->dataStoredIn(DataLocation::Storage))
 						{
-							// slot plus offset
-							if (ref->second.isOffset)
+							solAssert(suffix == "offset" || suffix == "slot", "");
+							unsigned size = variable->type()->sizeOnStack();
+							if (size == 2)
+							{
+								// slot plus offset
+								if (suffix == "offset")
+									stackDiff--;
+							}
+							else
+							{
+								solAssert(size == 1, "");
+								// only slot, offset is zero
+								if (suffix == "offset")
+								{
+									_assembly.appendConstant(u256(0));
+									return;
+								}
+							}
+						}
+						else if (variable->type()->dataStoredIn(DataLocation::CallData))
+						{
+							auto const* arrayType = dynamic_cast<ArrayType const*>(variable->type());
+							solAssert(
+								arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData),
+								""
+							);
+							solAssert(suffix == "offset" || suffix == "length", "");
+							solAssert(variable->type()->sizeOnStack() == 2, "");
+							if (suffix == "length")
 								stackDiff--;
 						}
 						else
-						{
-							solAssert(size == 1, "");
-							// only slot, offset is zero
-							if (ref->second.isOffset)
-							{
-								_assembly.appendConstant(u256(0));
-								return;
-							}
-						}
+							solAssert(false, "");
 					}
 					else
 						solAssert(variable->type()->sizeOnStack() == 1, "");
@@ -784,7 +802,6 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 							errinfo_sourceLocation(_inlineAssembly.location()) <<
 							errinfo_comment("Stack too deep, try removing local variables.")
 						);
-					solAssert(variable->type()->sizeOnStack() == 1, "");
 					_assembly.appendInstruction(dupInstruction(stackDiff));
 				}
 				else
@@ -792,7 +809,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			}
 			else if (auto contract = dynamic_cast<ContractDefinition const*>(decl))
 			{
-				solAssert(!ref->second.isOffset && !ref->second.isSlot, "");
+				solAssert(ref->second.suffix.empty(), "");
 				solAssert(contract->isLibrary(), "");
 				_assembly.appendLinkerSymbol(contract->fullyQualifiedName());
 			}
@@ -803,20 +820,39 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 		else
 		{
 			// lvalue context
-			solAssert(!ref->second.isOffset, "");
 			auto variable = dynamic_cast<VariableDeclaration const*>(decl);
-			solAssert(
-				!!variable && m_context.isLocalVariable(variable),
-				"Can only assign to stack variables in inline assembly."
-			);
-			solAssert(variable->type()->sizeOnStack() == 1, "");
 			unsigned stackDiff = static_cast<unsigned>(_assembly.stackHeight()) - m_context.baseStackOffsetOfVariable(*variable) - 1;
-			if (stackDiff > 16 || stackDiff < 1)
-				BOOST_THROW_EXCEPTION(
-					StackTooDeepError() <<
-					errinfo_sourceLocation(_inlineAssembly.location()) <<
-					errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
+			string const& suffix = ref->second.suffix;
+			if (variable->type()->dataStoredIn(DataLocation::Storage))
+			{
+				solAssert(
+					!!variable && m_context.isLocalVariable(variable),
+					"Can only assign to stack variables in inline assembly."
 				);
+				solAssert(variable->type()->sizeOnStack() == 1, "");
+				solAssert(suffix == "slot", "");
+				if (stackDiff > 16 || stackDiff < 1)
+					BOOST_THROW_EXCEPTION(
+						StackTooDeepError() <<
+						errinfo_sourceLocation(_inlineAssembly.location()) <<
+						errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
+					);
+			}
+			else if (variable->type()->dataStoredIn(DataLocation::CallData))
+			{
+				auto const* arrayType = dynamic_cast<ArrayType const*>(variable->type());
+				solAssert(
+					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData),
+					""
+				);
+				solAssert(suffix == "offset" || suffix == "length", "");
+				solAssert(variable->type()->sizeOnStack() == 2, "");
+				if (suffix == "length")
+					stackDiff--;
+			}
+			else
+				solAssert(suffix.empty(), "");
+
 			_assembly.appendInstruction(swapInstruction(stackDiff));
 			_assembly.appendInstruction(Instruction::POP);
 		}

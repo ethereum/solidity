@@ -2,6 +2,7 @@
 
 Language Features:
  * Ability to select the abi coder using ``pragma abicoder v1`` and ``pragma abicoder v2``.
+ * Inline Assembly: Use ``.offset`` and ``.length`` for calldata variables of dynamic array type to access their calldata offset and length (number of elements). Both of them can also be assigned to.
  * Immutable variables with literal number values are considered pure.
 
 Compiler Features:
@@ -33,6 +34,9 @@ Bugfixes:
  * Code generator: Fix missing creation dependency tracking for abstract contracts.
  * NatSpec: Fix internal error when inheriting return parameter documentation but the parameter names differ between base and inherited.
  * Standard JSON: Fix library addresses specified in ``libraries`` being used for linking even if the file names do not match.
+
+AST Changes:
+ * New member ``suffix`` for inline assembly identifiers. Currently supported values are ``"slot"``, ``"offset"`` and ``"length"`` to access the components of a Solidity variable.
 
 
 ### 0.7.4 (2020-10-19)
