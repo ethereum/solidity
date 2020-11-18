@@ -107,6 +107,10 @@ inline u256 exp256(u256 _base, u256 _exponent)
 	return result;
 }
 
+/// Checks whether _mantissa * (X ** _exp) fits into 4096 bits,
+/// where X is given indirectly via _log2OfBase = log2(X).
+bool fitsPrecisionBaseX(bigint const& _mantissa, double _log2OfBase, uint32_t _exp);
+
 inline std::ostream& operator<<(std::ostream& os, bytes const& _bytes)
 {
 	std::ostringstream ss;

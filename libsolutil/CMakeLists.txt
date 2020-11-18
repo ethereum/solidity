@@ -3,6 +3,7 @@ set(sources
 	AnsiColorized.h
 	Assertions.h
 	Common.h
+	Common.cpp
 	CommonData.cpp
 	CommonData.h
 	CommonIO.cpp

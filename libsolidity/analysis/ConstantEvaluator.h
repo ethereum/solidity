@@ -56,6 +56,14 @@ public:
 
 	TypePointer evaluate(Expression const& _expr);
 
+	/// Performs arbitrary-precision evaluation of a binary operator. Returns nullopt on cases like
+	/// division by zero or e.g. bit operators applied to fractional values.
+	static std::optional<rational> evaluateBinaryOperator(Token _operator, rational const& _left, rational const&  _right);
+
+	/// Performs arbitrary-precision evaluation of a unary operator. Returns nullopt on cases like
+	/// bit operators applied to fractional values.
+	static std::optional<rational> evaluateUnaryOperator(Token _operator, rational const& _input);
+
 private:
 	void endVisit(BinaryOperation const& _operation) override;
 	void endVisit(UnaryOperation const& _operation) override;
