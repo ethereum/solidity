@@ -30,6 +30,7 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/ReturnInfo.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/ast/ASTUtils.h>
 
 #include <libevmasm/GasMeter.h>
 
@@ -110,7 +111,7 @@ private:
 		solUnimplementedAssert(varDecl, "");
 		string const& suffix = reference.suffix;
 
-		if (suffix.empty())
+		if (suffix.empty() && !varDecl->isStateVariable())
 		{
 			auto const& var = m_context.localVariable(*varDecl);
 			solAssert(var.type().sizeOnStack() == 1, "");
@@ -122,7 +123,48 @@ private:
 		}
 
 		string value;
-		if (varDecl->isStateVariable())
+		if (varDecl->isConstant())
+		{
+			VariableDeclaration const* variable = rootConstVariableDeclaration(*varDecl);
+			solAssert(variable, "");
+
+			if (variable->value()->annotation().type->category() == Type::Category::RationalNumber)
+			{
+				u256 intValue = dynamic_cast<RationalNumberType const&>(*variable->value()->annotation().type).literalValue(nullptr);
+				if (auto const* bytesType = dynamic_cast<FixedBytesType const*>(variable->type()))
+					intValue <<= 256 - 8 * bytesType->numBytes();
+				else
+					solAssert(variable->type()->category() == Type::Category::Integer, "");
+				value = intValue.str();
+			}
+			else if (auto const* literal = dynamic_cast<Literal const*>(variable->value().get()))
+			{
+				TypePointer type = literal->annotation().type;
+
+				switch (type->category())
+				{
+				case Type::Category::Bool:
+				case Type::Category::Address:
+					solAssert(type->category() == variable->annotation().type->category(), "");
+					value = toCompactHexWithPrefix(type->literalValue(literal));
+					break;
+				case Type::Category::StringLiteral:
+				{
+					auto const& stringLiteral = dynamic_cast<StringLiteralType const&>(*type);
+					solAssert(variable->type()->category() == Type::Category::FixedBytes, "");
+					unsigned const numBytes = dynamic_cast<FixedBytesType const&>(*variable->type()).numBytes();
+					solAssert(stringLiteral.value().size() <= numBytes, "");
+					value = formatNumber(u256(h256(stringLiteral.value(), h256::AlignLeft)));
+					break;
+				}
+				default:
+					solAssert(false, "");
+				}
+			}
+			else
+				solAssert(false, "Invalid constant in inline assembly.");
+		}
+		else if (varDecl->isStateVariable())
 		{
 			if (suffix == "slot")
 				value = m_context.storageLocationOfStateVariable(*varDecl).first.str();
