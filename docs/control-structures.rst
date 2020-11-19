@@ -562,7 +562,7 @@ of an exception instead of "bubbling up".
     if the account called is non-existent, as part of the design
     of the EVM. Account existence must be checked prior to calling if needed.
 
-Exceptions can be caught with the ``try``/``catch`` statement.
+Exceptions in external calls can be caught with the ``try``/``catch`` statement.
 
 Exceptions can contain data that is passed back to the caller.
 This data consists of a 4-byte selector and subsequent :ref:`ABI-encoded<abi>` data.
@@ -611,9 +611,20 @@ that cannot be detected until execution time.
 This includes conditions on inputs
 or return values from calls to external contracts.
 
-A ``Error(string)`` exception is generated in the following situations:
+A ``Error(string)`` exception (or an exception without data) is generated
+in the following situations:
 
 #. Calling ``require`` with an argument that evaluates to ``false``.
+#. If you perform an external function call targeting a contract that contains no code.
+#. If your contract receives Ether via a public function without
+   ``payable`` modifier (including the constructor and the fallback function).
+#. If your contract receives Ether via a public getter function.
+
+For the following cases, the error data from the external call
+(if provided) is forwarded. This mean that it can either cause
+an `Error` or a `Panic` (or whatever else was given):
+
+#. If a ``.transfer()`` fails.
 #. If you call a function via a message call but it does not finish
    properly (i.e., it runs out of gas, has no matching function, or
    throws an exception itself), except when a low level operation
@@ -622,11 +633,6 @@ A ``Error(string)`` exception is generated in the following situations:
    indicate failures by returning ``false``.
 #. If you create a contract using the ``new`` keyword but the contract
    creation :ref:`does not finish properly<creating-contracts>`.
-#. If you perform an external function call targeting a contract that contains no code.
-#. If your contract receives Ether via a public function without
-   ``payable`` modifier (including the constructor and the fallback function).
-#. If your contract receives Ether via a public getter function.
-#. If a ``.transfer()`` fails.
 
 You can optionally provide a message string for ``require``, but not for ``assert``.
 
