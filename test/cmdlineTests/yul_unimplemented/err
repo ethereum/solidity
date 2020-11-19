@@ -1,5 +1,5 @@
 Error (1834): Unimplemented feature error in <FILENAME REMOVED>
- --> yul_unimplemented/input.sol:8:9:
+ --> yul_unimplemented/input.sol:5:16:
   |
-8 |         x.f();
-  |         ^^^^^
+5 |         return type(test).name;
+  |                ^^^^^^^^^^^^^^^
