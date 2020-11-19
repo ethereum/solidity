@@ -65,6 +65,7 @@ int registerTests(
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
 	bool _enforceViaYul,
+	bool _enforceCompileToEwasm,
 	vector<string> const& _labels,
 	TestCase::TestCaseCreator _testCaseCreator
 )
@@ -76,8 +77,9 @@ int registerTests(
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().vmPaths,
 		_enforceViaYul,
+		_enforceCompileToEwasm,
 		solidity::test::CommonOptions::get().enforceGasTest,
-		solidity::test::CommonOptions::get().enforceGasTestMinValue
+		solidity::test::CommonOptions::get().enforceGasTestMinValue,
 	};
 	if (fs::is_directory(fullpath))
 	{
@@ -91,6 +93,7 @@ int registerTests(
 					*sub_suite,
 					_basepath, _path / entry.path().filename(),
 					_enforceViaYul,
+					_enforceCompileToEwasm,
 					_labels,
 					_testCaseCreator
 				);
@@ -195,6 +198,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			options.testPath / ts.path,
 			ts.subpath,
 			options.enforceViaYul,
+			options.enforceCompileToEwasm,
 			ts.labels,
 			ts.testCaseCreator
 		) > 0, std::string("no ") + ts.title + " tests found");

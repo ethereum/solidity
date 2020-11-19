@@ -103,6 +103,7 @@ CommonOptions::CommonOptions(std::string _caption):
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
+		("enforce-compile-to-ewasm", po::bool_switch(&enforceCompileToEwasm), "Enforce compiling all tests to Ewasm to see if additional tests can be activated.")
 		("enforce-gas-cost", po::bool_switch(&enforceGasTest), "Enforce checking gas cost in semantic tests.")
 		("enforce-gas-cost-min-value", po::value(&enforceGasTestMinValue), "Threshold value to enforce adding gas checks to a test.")
 		("abiencoderv1", po::bool_switch(&useABIEncoderV1), "enables abi encoder v1")

@@ -46,6 +46,7 @@ public:
 			_options.evmVersion,
 			_options.vmPaths,
 			_options.enforceCompileViaYul,
+			_options.enforceCompileToEwasm,
 			_options.enforceGasCost,
 			_options.enforceGasCostMinValue
 		);
@@ -56,6 +57,7 @@ public:
 		langutil::EVMVersion _evmVersion,
 		std::vector<boost::filesystem::path> const& _vmPaths,
 		bool _enforceViaYul = false,
+		bool _enforceCompileToEwasm = false,
 		bool _enforceGasCost = false,
 		u256 _enforceGasCostMinValue = 100000
 	);
@@ -76,19 +78,21 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
-	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm);
+	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	void initializeBuiltins();
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
-	bool m_runWithYul = false;
-	bool m_runWithEwasm = false;
-	bool m_runWithoutYul = true;
+	bool m_testCaseWantsYulRun = false;
+	bool m_testCaseWantsEwasmRun = false;
+	bool m_testCaseWantsLegacyRun = true;
 	bool m_enforceViaYul = false;
+	bool m_enforceCompileToEwasm = false;
 	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
-	bool m_compileViaYulCanBeSet = false;
+	bool m_canEnableYulRun = false;
+	bool m_canEnableEwasmRun = false;
 	std::map<std::string, Builtin> m_builtins{};
 
 	bool m_gasCostFailure = false;
