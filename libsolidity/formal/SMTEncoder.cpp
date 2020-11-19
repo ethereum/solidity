@@ -1078,10 +1078,10 @@ void SMTEncoder::endVisit(Return const& _return)
 			solAssert(types.size() == returnParams.size(), "");
 
 			for (unsigned i = 0; i < returnParams.size(); ++i)
-				m_context.addAssertion(symbTuple->component(i, types.at(i), returnParams.at(i)->type()) == m_context.newValue(*returnParams.at(i)));
+				assignment(*returnParams.at(i), symbTuple->component(i, types.at(i), returnParams.at(i)->type()));
 		}
 		else if (returnParams.size() == 1)
-			m_context.addAssertion(expr(*_return.expression(), returnParams.front()->type()) == m_context.newValue(*returnParams.front()));
+			assignment(*returnParams.front(), expr(*_return.expression(), returnParams.front()->type()));
 	}
 }
 
@@ -1297,8 +1297,7 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 				if (var->hasReferenceOrMappingType())
 					resetReferences(*var);
 
-				m_context.addAssertion(m_context.newValue(*var) == _rightHandSide);
-				m_context.expression(_expr)->increaseIndex();
+				assignment(*var, _rightHandSide);
 				defineExpr(_expr, currentValue(*var));
 				return;
 			}
@@ -1323,7 +1322,6 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 				smtutil::Expression(make_shared<smtutil::SortSort>(smt::smtSort(*baseType)), baseType->toString(true)),
 				{smtutil::Expression::store(symbArray->elements(), indexExpr, toStore), symbArray->length()}
 			);
-			m_context.expression(*indexAccess)->increaseIndex();
 			defineExpr(*indexAccess, smtutil::Expression::select(
 				symbArray->elements(),
 				indexExpr
@@ -1364,8 +1362,7 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 			if (varDecl->hasReferenceOrMappingType())
 				resetReferences(*varDecl);
 
-			m_context.addAssertion(m_context.newValue(*varDecl) == toStore);
-			m_context.expression(*id)->increaseIndex();
+			assignment(*varDecl, toStore);
 			defineExpr(*id, currentValue(*varDecl));
 			break;
 		}
@@ -1378,8 +1375,7 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 			)
 				resetReferences(type);
 
-			m_context.expression(*lastExpr)->increaseIndex();
-			m_context.addAssertion(expr(*lastExpr) == toStore);
+			assignment(*m_context.expression(*lastExpr), toStore);
 			break;
 		}
 	}
@@ -1958,7 +1954,12 @@ void SMTEncoder::assignment(VariableDeclaration const& _variable, smtutil::Expre
 	TypePointer type = _variable.type();
 	if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
-	m_context.addAssertion(m_context.newValue(_variable) == _value);
+	assignment(*m_context.variable(_variable), _value);
+}
+
+void SMTEncoder::assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value)
+{
+	m_context.addAssertion(_symVar.increaseIndex() == _value);
 }
 
 SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smtutil::Expression _condition)
