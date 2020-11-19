@@ -341,9 +341,11 @@ Command-Line Build
 **Be sure to install External Dependencies (see above) before build.**
 
 Solidity project uses CMake to configure the build.
-You might want to install ccache to speed up repeated builds.
+You might want to install `ccache`_ to speed up repeated builds.
 CMake will pick it up automatically.
 Building Solidity is quite similar on Linux, macOS and other Unices:
+
+.. _ccache: https://ccache.dev/
 
 .. code-block:: bash
 
