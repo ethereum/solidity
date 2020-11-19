@@ -241,6 +241,10 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 			return;
 
 		_varDecl.value()->accept(*this);
+
+		Type const* rightIntermediateType = _varDecl.value()->annotation().type->closestTemporaryType(_varDecl.type());
+		solAssert(rightIntermediateType, "");
+		IRVariable value = convert(*_varDecl.value(), *rightIntermediateType);
 		writeToLValue(
 			_varDecl.immutable() ?
 			IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
@@ -248,7 +252,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 				util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
 				m_context.storageLocationOfStateVariable(_varDecl).second
 			}},
-			*_varDecl.value()
+			value
 		);
 	}
 	catch (langutil::UnimplementedFeatureError const& _error)
