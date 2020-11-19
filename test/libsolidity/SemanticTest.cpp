@@ -88,7 +88,7 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 		m_runWithEwasm = false;
 
 	m_runWithABIEncoderV1Only = m_reader.boolSetting("ABIEncoderV1Only", false);
-	if (m_runWithABIEncoderV1Only && solidity::test::CommonOptions::get().useABIEncoderV2)
+	if (m_runWithABIEncoderV1Only && !solidity::test::CommonOptions::get().useABIEncoderV1)
 		m_shouldRun = false;
 
 	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));

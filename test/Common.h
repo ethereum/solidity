@@ -57,7 +57,7 @@ struct CommonOptions: boost::noncopyable
 	bool optimize = false;
 	bool enforceViaYul = false;
 	bool disableSMT = false;
-	bool useABIEncoderV2 = false;
+	bool useABIEncoderV1 = false;
 	bool showMessages = false;
 	bool showMetadata = false;
 

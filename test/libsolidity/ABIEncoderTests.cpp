@@ -48,17 +48,6 @@ namespace solidity::frontend::test
 
 BOOST_FIXTURE_TEST_SUITE(ABIEncoderTest, SolidityExecutionFramework)
 
-BOOST_AUTO_TEST_CASE(both_encoders_macro)
-{
-	// This tests that the "both encoders macro" at least runs twice and
-	// modifies the source.
-	string sourceCode;
-	int runs = 0;
-	BOTH_ENCODERS(runs++;)
-	BOOST_CHECK(sourceCode == NewEncoderPragma);
-	BOOST_CHECK_EQUAL(runs, 2);
-}
-
 BOOST_AUTO_TEST_CASE(value_types)
 {
 	string sourceCode = R"(
@@ -166,7 +155,7 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		}
 	)";
 
-	if (!solidity::test::CommonOptions::get().useABIEncoderV2)
+	if (solidity::test::CommonOptions::get().useABIEncoderV1)
 	{
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
@@ -174,9 +163,11 @@ BOOST_AUTO_TEST_CASE(memory_array_one_dim)
 		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256("0xfffffffe"), u256("0xffffffff"), u256("0x100000000")));
 	}
 
-	compileAndRun(NewEncoderPragma + sourceCode);
-	callContractFunction("f()");
-	REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+	NEW_ENCODER(
+		compileAndRun(sourceCode);
+		callContractFunction("f()");
+		REQUIRE_LOG_DATA(encodeArgs(10, 0x60, 11, 3, u256(-2), u256(-1), u256(0)));
+	)
 }
 
 BOOST_AUTO_TEST_CASE(memory_array_two_dim)

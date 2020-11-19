@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	if (evmVersion <= EVMVersion::byzantium())
 		CHECK_DEPLOY_GAS(133045, 129731, evmVersion);
 	// This is only correct on >=Constantinople.
-	else if (CommonOptions::get().useABIEncoderV2)
+	else if (!CommonOptions::get().useABIEncoderV1)
 	{
 		if (CommonOptions::get().optimize)
 		{
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		if (evmVersion == EVMVersion::byzantium())
 			CHECK_GAS(21545, 21526, 20);
 		// This is only correct on >=Constantinople.
-		else if (CommonOptions::get().useABIEncoderV2)
+		else if (!CommonOptions::get().useABIEncoderV1)
 		{
 			if (CommonOptions::get().optimize)
 			{
