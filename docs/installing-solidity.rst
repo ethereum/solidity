@@ -92,7 +92,7 @@ When using this interface it is not necessary to mount any directories.
 
     docker run ethereum/solc:stable --standard-json < input.json > output.json
 
-Linux packages
+Linux Packages
 ==============
 
 Binary packages of Solidity are available at
@@ -143,14 +143,14 @@ Arch Linux also has packages, albeit limited to the latest development version:
 
     pacman -S solidity
 
-Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a solidity package.
+Gentoo Linux has an `Ethereum overlay <https://overlays.gentoo.org/#ethereum>`_ that contains a Solidity package.
 After the overlay is setup, ``solc`` can be installed in x86_64 architectures by:
 
 .. code-block:: bash
 
     emerge dev-lang/solidity
 
-macOS packages
+macOS Packages
 ==============
 
 We distribute the Solidity compiler through Homebrew
@@ -378,7 +378,7 @@ If you already have one IDE and only need the compiler and libraries,
 you could install Visual Studio 2019 Build Tools.
 
 Visual Studio 2019 provides both IDE and necessary compiler and libraries.
-So if you have not got an IDE and prefer to develop solidity, Visual Studio 2019
+So if you have not got an IDE and prefer to develop Solidity, Visual Studio 2019
 may be a choice for you to get everything setup easily.
 
 Here is the list of components that should be installed
@@ -490,7 +490,7 @@ Alternatively, you can build for Windows on the command-line, like so:
 
     cmake --build . --config Release
 
-CMake options
+CMake Options
 =============
 
 If you are interested what CMake options are available run ``cmake .. -LH``.
@@ -518,7 +518,7 @@ Inside the build folder you can disable them, since they are enabled by default:
     # disables both Z3 and CVC4
     cmake .. -DUSE_CVC4=OFF -DUSE_Z3=OFF
 
-The version string in detail
+The Version String in Detail
 ============================
 
 The Solidity version string contains four parts:
@@ -537,7 +537,7 @@ A release example: ``0.4.8+commit.60cc1668.Emscripten.clang``.
 
 A pre-release example: ``0.4.9-nightly.2017.1.17+commit.6ecb4aa3.Emscripten.clang``
 
-Important information about versioning
+Important Information About Versioning
 ======================================
 
 After a release is made, the patch version level is bumped, because we assume that only
