@@ -74,7 +74,6 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 
 	m_astFilename = _filename.substr(0, _filename.size() - 4) + ".json";
 	m_astParseOnlyFilename = _filename.substr(0, _filename.size() - 4) + "_parseOnly.json";
-	m_legacyAstFilename = _filename.substr(0, _filename.size() - 4) + "_legacy.json";
 
 	ifstream file(_filename);
 	if (!file)
@@ -123,14 +122,6 @@ ASTJSONTest::ASTJSONTest(string const& _filename)
 	}
 
 	file.close();
-	file.open(m_legacyAstFilename);
-	if (file)
-	{
-		string line;
-		while (getline(file, line))
-			m_expectationLegacy += line + "\n";
-	}
-	file.close();
 }
 
 TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
@@ -161,7 +152,6 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		m_resultParseOnly,
 		sourceIndices,
 		c,
-		false,
 		"parseOnly",
 		_stream,
 		_linePrefix,
@@ -174,7 +164,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 	if (!c.parse())
 	{
 		// Empty Expectations means we expect failure
-		if (m_expectation.empty() && m_expectationLegacy.empty())
+		if (m_expectation.empty())
 			return resultsMatch ? TestResult::Success : TestResult::Failure;
 
 		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
@@ -190,20 +180,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		m_result,
 		sourceIndices,
 		c,
-		false,
 		"",
-		_stream,
-		_linePrefix,
-		_formatted
-	) && resultsMatch;
-
-	resultsMatch = runTest(
-		m_expectationLegacy,
-		m_resultLegacy,
-		sourceIndices,
-		c,
-		true,
-		"legacy",
 		_stream,
 		_linePrefix,
 		_formatted
@@ -217,7 +194,6 @@ bool ASTJSONTest::runTest(
 	string& _result,
 	map<string, unsigned> const& _sourceIndices,
 	CompilerStack& _compiler,
-	bool _legacy,
 	string const& _variation,
 	ostream& _stream,
 	string const& _linePrefix,
@@ -230,7 +206,7 @@ bool ASTJSONTest::runTest(
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		ostringstream result;
-		ASTJsonConverter(_legacy, _compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first));
+		ASTJsonConverter(_compiler.state(), _sourceIndices).print(result, _compiler.ast(m_sources[i].first));
 		_result += result.str();
 		if (i != m_sources.size() - 1)
 			_result += ",";
@@ -293,7 +269,6 @@ void ASTJSONTest::printSource(ostream& _stream, string const& _linePrefix, bool 
 void ASTJSONTest::printUpdatedExpectations(std::ostream&, std::string const&) const
 {
 	updateExpectation(m_astFilename, m_result, "");
-	updateExpectation(m_legacyAstFilename, m_resultLegacy, "legacy ");
 	updateExpectation(m_astParseOnlyFilename, m_resultParseOnly, "parseOnly ");
 }
 

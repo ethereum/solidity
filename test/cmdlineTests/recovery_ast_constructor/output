@@ -1,239 +1,181 @@
-JSON AST:
+JSON AST (compact format):
 
 
 ======= recovery_ast_constructor/input.sol =======
 {
-  "attributes":
+  "absolutePath": "recovery_ast_constructor/input.sol",
+  "exportedSymbols":
   {
-    "absolutePath": "recovery_ast_constructor/input.sol",
-    "exportedSymbols":
-    {
-      "Error1":
-      [
-        18
-      ]
-    },
-    "license": "GPL-3.0"
+    "Error1":
+    [
+      18
+    ]
   },
-  "children":
+  "id": 19,
+  "license": "GPL-3.0",
+  "nodeType": "SourceUnit",
+  "nodes":
   [
     {
-      "attributes":
-      {
-        "literals":
-        [
-          "solidity",
-          ">=",
-          "0.0",
-          ".0"
-        ]
-      },
       "id": 1,
-      "name": "PragmaDirective",
+      "literals":
+      [
+        "solidity",
+        ">=",
+        "0.0",
+        ".0"
+      ],
+      "nodeType": "PragmaDirective",
       "src": "36:24:0"
     },
     {
-      "attributes":
-      {
-        "abstract": false,
-        "baseContracts":
-        [
-          null
-        ],
-        "contractDependencies":
-        [
-          null
-        ],
-        "contractKind": "contract",
-        "fullyImplemented": true,
-        "linearizedBaseContracts":
-        [
-          18
-        ],
-        "name": "Error1",
-        "scope": 19
-      },
-      "children":
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 18,
+      "linearizedBaseContracts":
+      [
+        18
+      ],
+      "name": "Error1",
+      "nodeType": "ContractDefinition",
+      "nodes":
       [
         {
-          "attributes":
+          "body":
           {
-            "implemented": true,
-            "isConstructor": true,
-            "kind": "constructor",
-            "modifiers":
+            "id": 8,
+            "nodeType": "Block",
+            "src": "96:49:0",
+            "statements":
             [
               null
-            ],
-            "name": "",
-            "scope": 18,
-            "stateMutability": "nonpayable",
-            "virtual": false,
-            "visibility": "public"
+            ]
           },
-          "children":
-          [
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 2,
-              "name": "ParameterList",
-              "src": "93:2:0"
-            },
-            {
-              "attributes":
-              {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 3,
-              "name": "ParameterList",
-              "src": "96:0:0"
-            },
-            {
-              "attributes":
-              {
-                "statements":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 8,
-              "name": "Block",
-              "src": "96:49:0"
-            }
-          ],
           "id": 9,
-          "name": "FunctionDefinition",
-          "src": "82:63:0"
+          "implemented": true,
+          "kind": "constructor",
+          "modifiers": [],
+          "name": "",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 2,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "93:2:0"
+          },
+          "returnParameters":
+          {
+            "id": 3,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "96:0:0"
+          },
+          "scope": 18,
+          "src": "82:63:0",
+          "stateMutability": "nonpayable",
+          "virtual": false,
+          "visibility": "public"
         },
         {
-          "attributes":
+          "body":
           {
-            "functionSelector": "af11c34c",
-            "implemented": true,
-            "isConstructor": false,
-            "kind": "function",
-            "modifiers":
+            "id": 16,
+            "nodeType": "Block",
+            "src": "440:19:0",
+            "statements":
             [
-              null
-            ],
-            "name": "five",
-            "scope": 18,
-            "stateMutability": "view",
-            "virtual": false,
-            "visibility": "public"
-          },
-          "children":
-          [
-            {
-              "attributes":
               {
-                "parameters":
-                [
-                  null
-                ]
-              },
-              "children": [],
-              "id": 10,
-              "name": "ParameterList",
-              "src": "411:2:0"
-            },
-            {
-              "children":
-              [
+                "expression":
                 {
-                  "attributes":
+                  "hexValue": "35",
+                  "id": 14,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": true,
+                  "kind": "number",
+                  "lValueRequested": false,
+                  "nodeType": "Literal",
+                  "src": "453:1:0",
+                  "typeDescriptions":
                   {
-                    "constant": false,
-                    "mutability": "mutable",
-                    "name": "",
-                    "scope": 17,
-                    "stateVariable": false,
-                    "storageLocation": "default",
-                    "type": "uint256",
-                    "visibility": "internal"
+                    "typeIdentifier": "t_rational_5_by_1",
+                    "typeString": "int_const 5"
                   },
-                  "children":
-                  [
-                    {
-                      "attributes":
-                      {
-                        "name": "uint",
-                        "type": "uint256"
-                      },
-                      "id": 11,
-                      "name": "ElementaryTypeName",
-                      "src": "434:4:0"
-                    }
-                  ],
-                  "id": 12,
-                  "name": "VariableDeclaration",
-                  "src": "434:4:0"
-                }
-              ],
-              "id": 13,
-              "name": "ParameterList",
-              "src": "433:6:0"
-            },
-            {
-              "children":
-              [
-                {
-                  "attributes":
-                  {
-                    "functionReturnParameters": 13
-                  },
-                  "children":
-                  [
-                    {
-                      "attributes":
-                      {
-                        "hexvalue": "35",
-                        "isConstant": false,
-                        "isLValue": false,
-                        "isPure": true,
-                        "lValueRequested": false,
-                        "token": "number",
-                        "type": "int_const 5",
-                        "value": "5"
-                      },
-                      "id": 14,
-                      "name": "Literal",
-                      "src": "453:1:0"
-                    }
-                  ],
-                  "id": 15,
-                  "name": "Return",
-                  "src": "446:8:0"
-                }
-              ],
-              "id": 16,
-              "name": "Block",
-              "src": "440:19:0"
-            }
-          ],
+                  "value": "5"
+                },
+                "functionReturnParameters": 13,
+                "id": 15,
+                "nodeType": "Return",
+                "src": "446:8:0"
+              }
+            ]
+          },
+          "functionSelector": "af11c34c",
           "id": 17,
-          "name": "FunctionDefinition",
-          "src": "398:61:0"
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "five",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 10,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "411:2:0"
+          },
+          "returnParameters":
+          {
+            "id": 13,
+            "nodeType": "ParameterList",
+            "parameters":
+            [
+              {
+                "constant": false,
+                "id": 12,
+                "mutability": "mutable",
+                "name": "",
+                "nodeType": "VariableDeclaration",
+                "scope": 17,
+                "src": "434:4:0",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName":
+                {
+                  "id": 11,
+                  "name": "uint",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "434:4:0",
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "src": "433:6:0"
+          },
+          "scope": 18,
+          "src": "398:61:0",
+          "stateMutability": "view",
+          "virtual": false,
+          "visibility": "public"
         }
       ],
-      "id": 18,
-      "name": "ContractDefinition",
+      "scope": 19,
       "src": "62:399:0"
     }
   ],
-  "id": 19,
-  "name": "SourceUnit",
   "src": "36:426:0"
 }
