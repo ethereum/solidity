@@ -55,7 +55,7 @@ function callvalue() -> z1, z2, z3, z4 {
 }
 
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
-	eth.callDataCopy(0:i32, u256_to_i32(x1, x2, x3, x4), 32:i32)
+	calldatacopy(0, 0, 0, 0, x1, x2, x3, x4, 0, 0, 0, 32)
 	z1, z2, z3, z4 := mload_internal(0:i32)
 }
 
@@ -64,11 +64,31 @@ function calldatasize() -> z1, z2, z3, z4 {
 }
 
 function calldatacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
-	eth.callDataCopy(
-		to_internal_i32ptr(x1, x2, x3, x4),
-		u256_to_i32(y1, y2, y3, y4),
-		u256_to_i32(z1, z2, z3, z4)
-	)
+	let cds:i32 := eth.getCallDataSize()
+	let destination:i32 := u256_to_i32(x1, x2, x3, x4)
+	let offset:i32 := u256_to_i32(y1, y2, y3, y4)
+	let requested_size:i32 := u256_to_i32(z1, z2, z3, z4)
+	// overflow?
+	if i32.gt_u(offset, i32.sub(0xffffffff:i32, requested_size)) {
+		eth.revert(0:i32, 0:i32)
+	}
+
+	let available_size:i32 := i32.sub(cds, offset)
+	if i32.gt_u(offset, cds) {
+		available_size := 0:i32
+	}
+
+	if i32.gt_u(available_size, 0:i32) {
+		eth.callDataCopy(
+			destination,
+			offset,
+			available_size
+		)
+	}
+
+	if i32.gt_u(requested_size, available_size) {
+		memset(i32.add(destination, available_size), 0:i32, i32.sub(requested_size, available_size))
+	}
 }
 
 // Needed?
