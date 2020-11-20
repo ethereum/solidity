@@ -194,6 +194,10 @@ protected:
 		IntegerType const& _type
 	);
 
+	/// Handles the actual assertion of the new value to the encoding context.
+	/// Other assignment methods should use this one in the end.
+	void assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value);
+
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.
 	void assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value);
