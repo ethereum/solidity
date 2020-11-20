@@ -67,7 +67,7 @@ private:
 	void outputCompilationResults();
 
 	void handleCombinedJSON();
-	void handleAst(std::string const& _argStr);
+	void handleAst();
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
 	void handleIR(std::string const& _contract);

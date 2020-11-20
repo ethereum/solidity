@@ -1679,11 +1679,10 @@ void CommandLineInterface::handleCombinedJSON()
 
 	if (requests.count(g_strAst))
 	{
-		bool legacyFormat = !requests.count(g_strCompactJSON);
 		output[g_strSources] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices());
+			ASTJsonConverter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
 			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
@@ -1698,45 +1697,34 @@ void CommandLineInterface::handleCombinedJSON()
 		sout() << json << endl;
 }
 
-void CommandLineInterface::handleAst(string const& _argStr)
+void CommandLineInterface::handleAst()
 {
-	string title;
+	if (!m_args.count(g_argAstCompactJson))
+		return;
 
-	if (_argStr == g_argAstJson)
-		title = "JSON AST:";
-	else if (_argStr == g_argAstCompactJson)
-		title = "JSON AST (compact format):";
-	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal argStr for AST"));
+	vector<ASTNode const*> asts;
+	for (auto const& sourceCode: m_sourceCodes)
+		asts.push_back(&m_compiler->ast(sourceCode.first));
 
-	// do we need AST output?
-	if (m_args.count(_argStr))
+	if (m_args.count(g_argOutputDir))
 	{
-		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
-			asts.push_back(&m_compiler->ast(sourceCode.first));
-
-		bool legacyFormat = !m_args.count(g_argAstCompactJson);
-		if (m_args.count(g_argOutputDir))
 		{
-			for (auto const& sourceCode: m_sourceCodes)
-			{
-				stringstream data;
-				string postfix = "";
-				ASTJsonConverter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
-				postfix += "_json";
-				boost::filesystem::path path(sourceCode.first);
-				createFile(path.filename().string() + postfix + ".ast", data.str());
-			}
+			stringstream data;
+			string postfix = "";
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+			postfix += "_json";
+			boost::filesystem::path path(sourceCode.first);
+			createFile(path.filename().string() + postfix + ".ast", data.str());
 		}
-		else
+	}
+	else
+	{
+		sout() << "JSON AST (compact format):" << endl << endl;
+		for (auto const& sourceCode: m_sourceCodes)
 		{
-			sout() << title << endl << endl;
-			for (auto const& sourceCode: m_sourceCodes)
-			{
-				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-				ASTJsonConverter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
-			}
+			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 		}
 	}
 }
@@ -2002,8 +1990,7 @@ void CommandLineInterface::outputCompilationResults()
 	handleCombinedJSON();
 
 	// do we need AST output?
-	handleAst(g_argAstJson);
-	handleAst(g_argAstCompactJson);
+	handleAst();
 
 	if (
 		!m_compiler->compilationSuccessful() &&

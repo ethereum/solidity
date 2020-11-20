@@ -327,7 +327,6 @@ Input Description
         //
         // File level (needs empty string as contract name):
         //   ast - AST of all source files
-        //   legacyAST - legacy AST of all source files
         //
         // Contract level (needs the contract name or "*"):
         //   abi - ABI
@@ -430,8 +429,6 @@ Output Description
           "id": 1,
           // The AST object
           "ast": {},
-          // The legacy AST object
-          "legacyAST": {}
         }
       },
       // This contains the contract-level outputs.

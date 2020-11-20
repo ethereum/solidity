@@ -68,7 +68,6 @@ private:
 	std::string m_expectationParseOnly;
 	std::string m_astFilename;
 	std::string m_astParseOnlyFilename;
-	std::string m_legacyAstFilename;
 	std::string m_result;
 	std::string m_resultLegacy;
 	std::string m_resultParseOnly;
