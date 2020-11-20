@@ -2530,8 +2530,8 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 	auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
 	solAssert(funType, "");
 
+	vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
 	auto const& functionParams = function->parameters();
-	auto const& arguments = _funCall.arguments();
 	unsigned firstParam = 0;
 	if (funType->bound())
 	{
