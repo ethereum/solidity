@@ -28,18 +28,14 @@
 set -e
 
 REPO_ROOT="$(dirname "$0")"/../..
+cd "$REPO_ROOT"
+REPO_ROOT=$(pwd) # make it absolute
 
-if test -z "$1"; then
-	BUILD_DIR="build"
-else
-	BUILD_DIR="$1"
-fi
+BUILD_DIR="${1:-${REPO_ROOT}/build}"
 
 echo "Compiling all test contracts into bytecode..."
 TMPDIR=$(mktemp -d)
 (
-    cd "$REPO_ROOT"
-    REPO_ROOT=$(pwd) # make it absolute
     cd "$TMPDIR"
 
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
@@ -110,10 +106,10 @@ EOF
         ./solc *.sol > report.txt
         echo "Finished running the compiler."
     else
-        $REPO_ROOT/scripts/bytecodecompare/prepare_report.py $REPO_ROOT/$BUILD_DIR/solc/solc
+        "$REPO_ROOT/scripts/bytecodecompare/prepare_report.py" "$BUILD_DIR/solc/solc"
     fi
 
-    cp report.txt $REPO_ROOT
+    cp report.txt "$REPO_ROOT"
 )
 rm -rf "$TMPDIR"
 echo "Storebytecode finished."
