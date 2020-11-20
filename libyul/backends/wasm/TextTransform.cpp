@@ -101,6 +101,8 @@ string TextTransform::operator()(wasm::Literal const& _literal)
 
 string TextTransform::operator()(wasm::StringLiteral const& _literal)
 {
+	// StringLiteral is a special AST element used for certain builtins.
+	// The output of this will not be valid WebAssembly.
 	string quoted = boost::replace_all_copy(_literal.value, "\\", "\\\\");
 	boost::replace_all(quoted, "\"", "\\\"");
 	return "\"" + quoted + "\"";
