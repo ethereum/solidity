@@ -14,5 +14,6 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // foo() -> 0x2324
