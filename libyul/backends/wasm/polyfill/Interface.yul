@@ -19,14 +19,15 @@
 // NOTE: This file is used to generate `ewasmPolyfills/Interface.h`.
 
 function address() -> z1, z2, z3, z4 {
-	eth.getAddress(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getAddress(12:i32)
+	z1, z2, z3, z4 := mload_address(0:i32)
 }
 
 function balance(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	mstore_address(0:i32, x1, x2, x3, x4)
-	eth.getExternalBalance(12:i32, 48:i32)
-	z1, z2, z3, z4 := mload_internal(32:i32)
+	eth.getExternalBalance(12:i32, 32:i32)
+	z3 := i64.load(40:i32)
+	z4 := i64.load(32:i32)
 }
 
 function selfbalance() -> z1, z2, z3, z4 {
@@ -40,13 +41,13 @@ function chainid() -> z1, z2, z3, z4 {
 }
 
 function origin() -> z1, z2, z3, z4 {
-	eth.getTxOrigin(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getTxOrigin(12:i32)
+	z1, z2, z3, z4 := mload_address(0:i32)
 }
 
 function caller() -> z1, z2, z3, z4 {
-	eth.getCaller(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getCaller(12:i32)
+	z1, z2, z3, z4 := mload_address(0:i32)
 }
 
 function callvalue() -> z1, z2, z3, z4 {
@@ -155,8 +156,8 @@ function blockhash(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 }
 
 function coinbase() -> z1, z2, z3, z4 {
-	eth.getBlockCoinbase(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	eth.getBlockCoinbase(12:i32)
+	z1, z2, z3, z4 := mload_address(0:i32)
 }
 
 function timestamp() -> z1, z2, z3, z4 {
@@ -180,32 +181,8 @@ function mload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
 	z1, z2, z3, z4 := mload_internal(to_internal_i32ptr(x1, x2, x3, x4))
 }
 
-function mload_internal(pos:i32) -> z1, z2, z3, z4 {
-	z1 := bswap64(i64.load(pos))
-	z2 := bswap64(i64.load(i32.add(pos, 8:i32)))
-	z3 := bswap64(i64.load(i32.add(pos, 16:i32)))
-	z4 := bswap64(i64.load(i32.add(pos, 24:i32)))
-}
-
 function mstore(x1, x2, x3, x4, y1, y2, y3, y4) {
 	mstore_internal(to_internal_i32ptr(x1, x2, x3, x4), y1, y2, y3, y4)
-}
-
-function mstore_internal(pos:i32, y1, y2, y3, y4) {
-	i64.store(pos, bswap64(y1))
-	i64.store(i32.add(pos, 8:i32), bswap64(y2))
-	i64.store(i32.add(pos, 16:i32), bswap64(y3))
-	i64.store(i32.add(pos, 24:i32), bswap64(y4))
-}
-
-function mstore_address(pos:i32, a1, a2, a3, a4) {
-	a1, a2, a3 := u256_to_address(a1, a2, a3, a4)
-	mstore_internal(pos, 0, a1, a2, a3)
-}
-
-function mstore8(x1, x2, x3, x4, y1, y2, y3, y4) {
-	let v := u256_to_byte(y1, y2, y3, y4)
-	i64.store8(to_internal_i32ptr(x1, x2, x3, x4), v)
 }
 
 // Needed?
