@@ -8,5 +8,6 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(uint256[2][]): 0x20, 2, 1, 2, 3, 4 -> 0x44, 2, 0x84

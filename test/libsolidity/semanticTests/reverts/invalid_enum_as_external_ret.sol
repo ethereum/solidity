@@ -26,6 +26,7 @@ contract C {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // test_return() -> FAILURE # both should throw #
 // test_inline_assignment() -> FAILURE

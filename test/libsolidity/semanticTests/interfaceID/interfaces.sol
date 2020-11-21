@@ -53,15 +53,13 @@ contract Test {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // hello() -> left(0x19ff1d21)
 // world() -> left(0xdf419679)
-//
 // ERC165_interfaceId() -> left(0x01ffc9a7)
-//
-// hello_world()              -> left(0xc6be8b58)
-// hello_world_interfaceId()  -> left(0xc6be8b58)
+// hello_world() -> left(0xc6be8b58)
+// hello_world_interfaceId() -> left(0xc6be8b58)
 // ghello_world_interfaceId() -> left(0xc6be8b58)
-//
 // other() -> left(0x85295877)
 // hello_world_derived_interfaceId() -> left(0x85295877)

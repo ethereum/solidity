@@ -10,5 +10,6 @@ contract test is base {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // answer() -> 1

@@ -1,7 +1,8 @@
 contract C {
 }
 // ====
-// allowNonExistingFunctions: true
 // compileViaYul: true
+// compileToEwasm: also
+// allowNonExistingFunctions: true
 // ----
 // f() -> FAILURE

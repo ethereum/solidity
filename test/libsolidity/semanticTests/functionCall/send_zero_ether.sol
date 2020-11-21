@@ -16,6 +16,7 @@ contract Main {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // constructor(), 20 wei ->
 // s() -> true

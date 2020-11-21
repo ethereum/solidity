@@ -11,6 +11,7 @@ contract c {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // test() ->
 // storage: empty

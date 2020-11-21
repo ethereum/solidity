@@ -23,6 +23,7 @@ contract test {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // getChoiceExp(uint256): 3 -> FAILURE # These should throw #
 // getChoiceFromSigned(int256): -1 -> FAILURE

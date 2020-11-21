@@ -14,6 +14,7 @@ contract collatz {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // run(uint256): 0 -> 0
 // run(uint256): 1 -> 1

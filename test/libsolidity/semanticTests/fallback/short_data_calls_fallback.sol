@@ -6,6 +6,7 @@ contract A {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // (): hex"d88e0b"
 // x() -> 2

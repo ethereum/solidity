@@ -10,5 +10,6 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(bytes): 0x20, 0x04, "dead" -> true

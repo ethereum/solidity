@@ -50,6 +50,7 @@ contract C {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f1() -> true
 // f2() -> true

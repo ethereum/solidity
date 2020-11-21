@@ -8,5 +8,6 @@ contract TransferTest {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() ->

@@ -13,6 +13,7 @@ contract C {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(uint256,bytes,uint256): 7, 0x60, 8, 2, 0 -> 8, 0x14
 // f(uint256,bytes,uint256): 0, 0, 0 -> 8, 0x14
