@@ -4,6 +4,7 @@ contract A {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // x() -> 0
 // ()

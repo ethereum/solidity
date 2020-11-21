@@ -9,5 +9,6 @@ contract Test {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> FAILURE

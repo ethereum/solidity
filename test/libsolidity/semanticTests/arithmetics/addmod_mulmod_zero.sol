@@ -20,6 +20,7 @@ contract C {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(uint256): 0 -> FAILURE
 // g(uint256): 0 -> FAILURE

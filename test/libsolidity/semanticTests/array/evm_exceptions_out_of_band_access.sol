@@ -14,6 +14,7 @@ contract A {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // test() -> false
 // testIt() -> FAILURE

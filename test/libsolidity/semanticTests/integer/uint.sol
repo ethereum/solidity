@@ -233,6 +233,7 @@ contract test {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // uintMinA() -> true
 // uintMinB() -> true

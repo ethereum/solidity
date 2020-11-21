@@ -5,5 +5,6 @@ contract Test {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // bytesToBytes(bytes4): "abcd" -> "abcd"

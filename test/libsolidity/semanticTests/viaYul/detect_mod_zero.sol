@@ -8,6 +8,7 @@ contract C {
 }
 // ====
 // compileViaYul: true
+// compileToEwasm: also
 // ----
 // f(uint256,uint256): 10, 3 -> 1
 // f(uint256,uint256): 10, 2 -> 0

@@ -28,6 +28,7 @@ contract test {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f0() -> 2, true
 // f1() -> 1

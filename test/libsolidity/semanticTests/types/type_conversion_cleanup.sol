@@ -3,5 +3,6 @@ contract Test {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // test() -> 0x0000000000000000000000003344556677889900112233445566778899001122
