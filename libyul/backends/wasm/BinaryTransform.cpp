@@ -345,8 +345,9 @@ bytes BinaryTransform::operator()(Literal const& _literal)
 
 bytes BinaryTransform::operator()(StringLiteral const&)
 {
-	// TODO is this used?
-	yulAssert(false, "String literals not yet implemented");
+	// StringLiteral is a special AST element used for certain builtins.
+	// It is not mapped to actual WebAssembly, and should be processed in visit(BuiltinCall).
+	yulAssert(false, "");
 }
 
 bytes BinaryTransform::operator()(LocalVariable const& _variable)
