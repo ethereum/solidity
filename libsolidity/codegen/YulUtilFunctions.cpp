@@ -2992,14 +2992,16 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 				solUnimplementedAssert(fromStructType.location() != DataLocation::Memory, "");
 
 				if (fromStructType.location() == DataLocation::CallData)
-				{
-					solUnimplementedAssert(!fromStructType.isDynamicallyEncoded(), "");
 					body = Whiskers(R"(
 						converted := <abiDecode>(value, calldatasize())
-					)")("abiDecode", ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).tupleDecoder(
-						{&toStructType}
-					)).render();
-				}
+					)")
+					(
+						"abiDecode",
+						ABIFunctions(m_evmVersion, m_revertStrings, m_functionCollector).abiDecodingFunctionStruct(
+							toStructType,
+							false
+						)
+					).render();
 				else
 				{
 					solAssert(fromStructType.location() == DataLocation::Storage, "");
