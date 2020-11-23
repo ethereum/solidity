@@ -12,3 +12,4 @@ errorstring
 hist
 otion
 keypair
+ether
