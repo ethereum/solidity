@@ -5,10 +5,8 @@ contract C {
         uint256[] a;
     }
 
-    S[] s;
-
     function f(S[] calldata c) external returns (uint256, uint256) {
-        s = c;
+        S[] memory s = c;
         assert(s.length == c.length);
         for (uint i = 0; i < s.length; i++) {
             assert(s[i].a.length == c[i].a.length);
