@@ -42,6 +42,7 @@ string ABIFunctions::tupleEncoder(
 	bool _reversed
 )
 {
+	solAssert(_givenTypes.size() == _targetTypes.size(), "");
 	EncodingOptions options;
 	options.encodeAsLibraryTypes = _encodeAsLibraryTypes;
 	options.encodeFunctionFromStack = true;

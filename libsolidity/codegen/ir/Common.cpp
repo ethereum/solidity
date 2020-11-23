@@ -28,7 +28,7 @@ using namespace solidity::frontend;
 YulArity YulArity::fromType(FunctionType const& _functionType)
 {
 	return YulArity{
-		TupleType(_functionType.parameterTypes()).sizeOnStack(),
+		TupleType(_functionType.parameterTypesIncludingSelf()).sizeOnStack(),
 		TupleType(_functionType.returnParameterTypes()).sizeOnStack()
 	};
 }

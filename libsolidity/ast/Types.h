@@ -1244,6 +1244,7 @@ public:
 	static FunctionTypePointer newExpressionType(ContractDefinition const& _contract);
 
 	TypePointers parameterTypes() const;
+	TypePointers const& parameterTypesIncludingSelf() const;
 	std::vector<std::string> parameterNames() const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	/// @returns the list of return parameter types. All dynamically-sized types (this excludes
