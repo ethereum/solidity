@@ -1,5 +1,5 @@
 ==== Source: A ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     struct Item {
@@ -9,7 +9,7 @@ contract C {
     function get(Item memory _item) external {}
 }
 ==== Source: B ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 import "A";
 

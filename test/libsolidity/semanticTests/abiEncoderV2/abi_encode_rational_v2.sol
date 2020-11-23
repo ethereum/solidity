@@ -1,5 +1,5 @@
 // Tests that rational numbers (even negative ones) are encoded properly.
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 
 contract C {

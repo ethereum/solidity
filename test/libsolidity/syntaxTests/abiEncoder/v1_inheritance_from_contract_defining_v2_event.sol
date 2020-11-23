@@ -1,5 +1,5 @@
 ==== Source: A ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 struct Item {
     uint x;

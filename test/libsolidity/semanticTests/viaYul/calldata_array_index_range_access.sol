@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     function f(uint256[] calldata x, uint256 s, uint256 e) external returns (uint256) {
         return uint256[](x[s:e]).length;
