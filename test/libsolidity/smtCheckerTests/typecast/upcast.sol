@@ -67,5 +67,3 @@ contract C {
 	}
 }
 // ----
-// Warning 8364: (1144-1145): Assertion checker does not yet implement type type(contract D)
-// Warning 8364: (1144-1145): Assertion checker does not yet implement type type(contract D)

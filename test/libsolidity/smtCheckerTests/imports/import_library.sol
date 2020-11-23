@@ -15,6 +15,4 @@ library L {
 	}
 }
 // ----
-// Warning 8364: (c:104-105): Assertion checker does not yet implement type type(library L)
 // Warning 6328: (c:113-126): CHC: Assertion violation happens here.
-// Warning 8364: (c:104-105): Assertion checker does not yet implement type type(library L)
