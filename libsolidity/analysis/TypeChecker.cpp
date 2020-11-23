@@ -1831,15 +1831,21 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 		);
 	if (_function.visibility() != Visibility::External)
 		m_errorReporter.typeError(1159_error, _function.location(), "Fallback function must be defined as \"external\".");
-	if (!_function.returnParameters().empty())
+
+	if (!_function.returnParameters().empty() || !_function.parameters().empty())
 	{
-		if (_function.returnParameters().size() > 1 || *type(*_function.returnParameters().front()) != *TypeProvider::bytesMemory())
-			m_errorReporter.typeError(5570_error, _function.returnParameterList()->location(), "Fallback function can only have a single \"bytes memory\" return value.");
-		else
-			m_errorReporter.typeError(6151_error, _function.returnParameterList()->location(), "Return values for fallback functions are not yet implemented.");
+		if (
+			_function.returnParameters().size() != 1 ||
+			*type(*_function.returnParameters().front()) != *TypeProvider::bytesMemory() ||
+			_function.parameters().size() != 1 ||
+			*type(*_function.parameters().front()) != *TypeProvider::bytesCalldata()
+		)
+			m_errorReporter.typeError(
+				5570_error,
+				_function.returnParameterList()->location(),
+				"Fallback function either has to have the signature \"fallback()\" or \"fallback(bytes calldata) returns (bytes memory)\"."
+			);
 	}
-	if (!_function.parameters().empty())
-		m_errorReporter.typeError(3978_error, _function.parameterList().location(), "Fallback function cannot take parameters.");
 }
 
 void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
