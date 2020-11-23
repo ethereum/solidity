@@ -622,11 +622,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	createExpr(_funCall);
 	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
-		m_errorReporter.warning(
-			4639_error,
-			_funCall.location(),
-			"Assertion checker does not yet implement this expression."
-		);
+		visitStructConstructorCall(_funCall);
 		return;
 	}
 
@@ -861,6 +857,12 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineExpr(_identifier, m_context.state().thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
+	// Ignore struct type identifiers in struct constructor calls
+	else if (
+		auto typetype = dynamic_cast<TypeType const*>(_identifier.annotation().type);
+		typetype && typetype->actualType()->category() == Type::Category::Struct
+	)
+		return;
 	// Ignore the builtin abi, it is handled in FunctionCall.
 	// TODO: ignore MagicType in general (abi, block, msg, tx, type)
 	else if (auto magicType = dynamic_cast<MagicType const*>(_identifier.annotation().type); magicType && magicType->kind() == MagicType::Kind::ABI)
@@ -1016,6 +1018,13 @@ void SMTEncoder::visitFunctionIdentifier(Identifier const& _identifier)
 		defineGlobalVariable(fType.identifier(), _identifier);
 		m_context.createExpression(_identifier, m_context.globalSymbol(fType.identifier()));
 	}
+}
+
+void SMTEncoder::visitStructConstructorCall(FunctionCall const& _funCall)
+{
+	solAssert(*_funCall.annotation().kind == FunctionCallKind::StructConstructorCall, "");
+	auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
+	structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
 }
 
 void SMTEncoder::endVisit(Literal const& _literal)

@@ -9,13 +9,10 @@ contract C {
 	function f(uint a) public pure {
 		uint x;
 		S memory y;
-		if (a > 100)
+		if (a > 100) {
 			(x, y) = g();
+			assert(y.x == 3);
+		 }
 	}
 }
 // ----
-// Warning 8364: (137-138): Assertion checker does not yet implement type type(struct C.S storage pointer)
-// Warning 4639: (137-141): Assertion checker does not yet implement this expression.
-// Warning 8364: (137-138): Assertion checker does not yet implement type type(struct C.S storage pointer)
-// Warning 4639: (137-141): Assertion checker does not yet implement this expression.
-// Warning 4639: (137-141): Assertion checker does not yet implement this expression.

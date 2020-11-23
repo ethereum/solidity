@@ -151,6 +151,7 @@ protected:
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
 	void visitObjectCreation(FunctionCall const& _funCall);
 	void visitTypeConversion(FunctionCall const& _funCall);
+	void visitStructConstructorCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 
 	/// Encodes a modifier or function body according to the modifier
