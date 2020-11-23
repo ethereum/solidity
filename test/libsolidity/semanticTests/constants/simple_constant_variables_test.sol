@@ -8,5 +8,6 @@ contract Foo {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // getX() -> 56

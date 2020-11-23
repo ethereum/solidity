@@ -19,6 +19,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> true
 // z() -> 7

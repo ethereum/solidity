@@ -5,6 +5,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(bool): true -> true
 // f(bool): false -> false

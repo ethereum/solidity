@@ -13,7 +13,8 @@ contract test {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
-// fixedBytesHex() -> "\xaa\xbb\0\xff"
-// fixedBytes() -> "abc\0\xff__"
-// pipeThrough(bytes2, bool): "\0\x02", true -> "\0\x2", true
+// fixedBytesHex() -> "\xaa\xbb\x00\xff"
+// fixedBytes() -> "abc\x00\xff__"
+// pipeThrough(bytes2,bool): "\x00\x02", true -> "\x00\x02", true

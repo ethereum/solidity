@@ -332,6 +332,9 @@ jobs:
       - run:
           name: checking shell scripts
           command: ./scripts/chk_shellscripts/chk_shellscripts.sh
+      - run:
+          name: Check for broken symlinks
+          command: ./scripts/check_symlinks.sh
 
   chk_errorcodes:
     docker:

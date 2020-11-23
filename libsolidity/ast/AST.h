@@ -515,7 +515,7 @@ public:
 	std::map<util::FixedHash<4>, FunctionTypePointer> interfaceFunctions(bool _includeInheritedFunctions = true) const;
 	std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList(bool _includeInheritedFunctions = true) const;
 	/// @returns the EIP-165 compatible interface identifier. This will exclude inherited functions.
-	uint64_t interfaceId() const;
+	uint32_t interfaceId() const;
 
 	/// @returns a list of all declarations in this contract
 	std::vector<Declaration const*> declarations() const { return filteredNodes<Declaration>(m_subNodes); }
@@ -1936,7 +1936,13 @@ public:
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& expression() const { return *m_expression; }
+	/// @returns the given arguments in the order they were written.
 	std::vector<ASTPointer<Expression const>> arguments() const { return {m_arguments.begin(), m_arguments.end()}; }
+	/// @returns the given arguments sorted by how the called function takes them.
+	std::vector<ASTPointer<Expression const>> sortedArguments() const;
+	/// @returns the list of given argument names if this is a named call,
+	/// in the order they were written.
+	/// If this is not a named call, this is empty.
 	std::vector<ASTPointer<ASTString>> const& names() const { return m_names; }
 
 	FunctionCallAnnotation& annotation() const override;

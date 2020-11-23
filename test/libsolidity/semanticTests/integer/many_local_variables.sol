@@ -7,5 +7,6 @@ contract test {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // run(uint256,uint256,uint256): 0x1000, 0x10000, 0x100000 -> 0x121121

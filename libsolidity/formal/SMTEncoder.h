@@ -151,6 +151,7 @@ protected:
 	virtual void visitAddMulMod(FunctionCall const& _funCall);
 	void visitObjectCreation(FunctionCall const& _funCall);
 	void visitTypeConversion(FunctionCall const& _funCall);
+	void visitStructConstructorCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 
 	/// Encodes a modifier or function body according to the modifier
@@ -193,6 +194,10 @@ protected:
 		smtutil::Expression _right,
 		IntegerType const& _type
 	);
+
+	/// Handles the actual assertion of the new value to the encoding context.
+	/// Other assignment methods should use this one in the end.
+	void assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value);
 
 	void assignment(VariableDeclaration const& _variable, Expression const& _value);
 	/// Handles assignments to variables of different types.

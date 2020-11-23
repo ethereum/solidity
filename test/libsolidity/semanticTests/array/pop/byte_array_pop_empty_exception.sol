@@ -11,5 +11,6 @@ contract c {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // test() -> FAILURE, hex"4e487b71", 0x31

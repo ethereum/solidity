@@ -241,6 +241,10 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 			return;
 
 		_varDecl.value()->accept(*this);
+
+		Type const* rightIntermediateType = _varDecl.value()->annotation().type->closestTemporaryType(_varDecl.type());
+		solAssert(rightIntermediateType, "");
+		IRVariable value = convert(*_varDecl.value(), *rightIntermediateType);
 		writeToLValue(
 			_varDecl.immutable() ?
 			IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
@@ -248,7 +252,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 				util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
 				m_context.storageLocationOfStateVariable(_varDecl).second
 			}},
-			*_varDecl.value()
+			value
 		);
 	}
 	catch (langutil::UnimplementedFeatureError const& _error)
@@ -826,7 +830,6 @@ bool IRGeneratorForStatements::visit(FunctionCall const& _functionCall)
 	if (
 		functionType &&
 		functionType->kind() == FunctionType::Kind::Internal &&
-		!functionType->bound() &&
 		IRHelpers::referencedFunctionDeclaration(_functionCall.expression())
 	)
 		m_context.internalFunctionCalledDirectly(_functionCall.expression());
@@ -861,26 +864,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
 
 	TypePointers parameterTypes = functionType->parameterTypes();
-	vector<ASTPointer<Expression const>> const& callArguments = _functionCall.arguments();
-	vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.names();
-	if (!functionType->takesArbitraryParameters())
-		solAssert(callArguments.size() == parameterTypes.size(), "");
 
-	vector<ASTPointer<Expression const>> arguments;
-	if (callArgumentNames.empty())
-		// normal arguments
-		arguments = callArguments;
-	else
-		// named arguments
-		for (auto const& parameterName: functionType->parameterNames())
-		{
-			auto const it = std::find_if(callArgumentNames.cbegin(), callArgumentNames.cend(), [&](ASTPointer<ASTString> const& _argName) {
-				return *_argName == parameterName;
-			});
-
-			solAssert(it != callArgumentNames.cend(), "");
-			arguments.push_back(callArguments[static_cast<size_t>(std::distance(callArgumentNames.begin(), it))]);
-		}
+	vector<ASTPointer<Expression const>> const& arguments = _functionCall.sortedArguments();
 
 	if (functionCallKind == FunctionCallKind::StructConstructorCall)
 	{
@@ -921,8 +906,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 					solAssert(functionType->kind() == FunctionType::Kind::Internal || functionType->kind() == FunctionType::Kind::DelegateCall, "");
 		}
 	}
-	else
-		solAssert(!functionType->bound(), "");
 
 	switch (functionType->kind())
 	{
@@ -957,19 +940,17 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				}
 
 			solAssert(functionDef && functionDef->isImplemented(), "");
+			solAssert(
+				functionDef->parameters().size() == arguments.size() + (functionType->bound() ? 1 : 0),
+				""
+			);
 		}
 
 		solAssert(!functionType->takesArbitraryParameters(), "");
 
 		vector<string> args;
 		if (functionType->bound())
-		{
-			solAssert(memberAccess && functionDef, "");
-			solAssert(functionDef->parameters().size() == arguments.size() + 1, "");
-			args += convert(memberAccess->expression(), *functionDef->parameters()[0]->type()).stackSlots();
-		}
-		else
-			solAssert(!functionDef || functionDef->parameters().size() == arguments.size(), "");
+			args += IRVariable(_functionCall.expression()).part("self").stackSlots();
 
 		for (size_t i = 0; i < arguments.size(); ++i)
 			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
@@ -1585,6 +1566,23 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			Type::Category::Array,
 			Type::Category::FixedBytes,
 		}).count(objectCategory) > 0, "");
+
+		define(IRVariable(_memberAccess).part("self"), _memberAccess.expression());
+		auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(memberFunctionType->declaration());
+		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
+		if (memberFunctionType->kind() == FunctionType::Kind::Internal)
+		{
+			define(IRVariable(_memberAccess).part("functionIdentifier")) << to_string(functionDefinition.id()) << "\n";
+			m_context.internalFunctionAccessed(_memberAccess, functionDefinition);
+		}
+		else
+		{
+			solAssert(memberFunctionType->kind() == FunctionType::Kind::DelegateCall, "");
+			auto contract = dynamic_cast<ContractDefinition const*>(functionDefinition.scope());
+			solAssert(contract && contract->isLibrary(), "");
+			define(IRVariable(_memberAccess).part("address")) << linkerSymbol(*contract) << "\n";
+			define(IRVariable(_memberAccess).part("functionSelector")) << memberFunctionType->externalIdentifier();
+		}
 		return;
 	}
 
@@ -2294,15 +2292,21 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 		"Can only be used for regular external calls."
 	);
 
-	solUnimplementedAssert(!funType.bound(), "");
-
 	bool const isDelegateCall = funKind == FunctionType::Kind::DelegateCall;
 	bool const useStaticCall = funType.stateMutability() <= StateMutability::View && m_context.evmVersion().hasStaticCall();
 
 	ReturnInfo const returnInfo{m_context.evmVersion(), funType};
 
+	TypePointers parameterTypes = funType.parameterTypes();
 	TypePointers argumentTypes;
 	vector<string> argumentStrings;
+	if (funType.bound())
+	{
+		parameterTypes.insert(parameterTypes.begin(), funType.selfType());
+		argumentTypes.emplace_back(funType.selfType());
+		argumentStrings += IRVariable(_functionCall.expression()).part("self").stackSlots();
+	}
+
 	for (auto const& arg: _arguments)
 	{
 		argumentTypes.emplace_back(&type(*arg));
@@ -2381,7 +2385,7 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	bool encodeForLibraryCall = funKind == FunctionType::Kind::DelegateCall;
 
 	solAssert(funType.padArguments(), "");
-	templ("encodeArgs", m_context.abiFunctions().tupleEncoder(argumentTypes, funType.parameterTypes(), encodeForLibraryCall));
+	templ("encodeArgs", m_context.abiFunctions().tupleEncoder(argumentTypes, parameterTypes, encodeForLibraryCall));
 	templ("argumentString", joinHumanReadablePrefixed(argumentStrings));
 
 	solAssert(!isDelegateCall || !funType.valueSet(), "Value set for delegatecall");

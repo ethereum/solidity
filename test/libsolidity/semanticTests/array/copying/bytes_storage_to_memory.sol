@@ -5,5 +5,8 @@ contract C {
     return data[0];
   }
 }
+// ====
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> "a"

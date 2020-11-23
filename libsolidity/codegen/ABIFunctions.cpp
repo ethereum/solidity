@@ -42,6 +42,7 @@ string ABIFunctions::tupleEncoder(
 	bool _reversed
 )
 {
+	solAssert(_givenTypes.size() == _targetTypes.size(), "");
 	EncodingOptions options;
 	options.encodeAsLibraryTypes = _encodeAsLibraryTypes;
 	options.encodeFunctionFromStack = true;
@@ -1078,8 +1079,6 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 			solAssert(!_fromMemory, "");
 			return abiDecodingFunctionCalldataArray(*arrayType);
 		}
-		else if (arrayType->isByteArray())
-			return abiDecodingFunctionByteArray(*arrayType, _fromMemory);
 		else
 			return abiDecodingFunctionArray(*arrayType, _fromMemory);
 	}
@@ -1132,36 +1131,21 @@ string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromM
 string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _fromMemory)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
-	solAssert(!_type.isByteArray(), "");
 
 	string functionName =
 		"abi_decode_" +
 		_type.identifier() +
 		(_fromMemory ? "_fromMemory" : "");
 
-	solAssert(!_type.dataStoredIn(DataLocation::Storage), "");
-
 	return createFunction(functionName, [&]() {
 		string load = _fromMemory ? "mload" : "calldataload";
-		bool dynamicBase = _type.baseType()->isDynamicallyEncoded();
 		Whiskers templ(
 			R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> array {
 					if iszero(slt(add(offset, 0x1f), end)) { <revertString> }
 					let length := <retrieveLength>
-					array := <allocate>(<allocationSize>(length))
-					let dst := array
-					<storeLength> // might update offset and dst
-					let src := offset
-					<staticBoundsCheck>
-					for { let i := 0 } lt(i, length) { i := add(i, 1) }
-					{
-						let elementPos := <retrieveElementPos>
-						mstore(dst, <decodingFun>(elementPos, end))
-						dst := add(dst, 0x20)
-						src := add(src, <stride>)
-					}
+					array := <abiDecodeAvailableLen>(<offset>, length, end)
 				}
 			)"
 		);
@@ -1169,18 +1153,56 @@ string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _from
 		templ("revertString", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
 		templ("functionName", functionName);
 		templ("readableTypeName", _type.toString(true));
-		templ("retrieveLength", !_type.isDynamicallySized() ? toCompactHexWithPrefix(_type.length()) : load + "(offset)");
+		templ("retrieveLength", _type.isDynamicallySized() ? (load + "(offset)") : toCompactHexWithPrefix(_type.length()));
+		templ("offset", _type.isDynamicallySized() ? "add(offset, 0x20)" : "offset");
+		templ("abiDecodeAvailableLen", abiDecodingFunctionArrayAvailableLength(_type, _fromMemory));
+		return templ.render();
+	});
+}
+
+string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _type, bool _fromMemory)
+{
+	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
+	if (_type.isByteArray())
+		return abiDecodingFunctionByteArrayAvailableLength(_type, _fromMemory);
+
+	string functionName =
+		"abi_decode_available_length_" +
+		_type.identifier() +
+		(_fromMemory ? "_fromMemory" : "");
+
+	return createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			// <readableTypeName>
+			function <functionName>(offset, length, end) -> array {
+				array := <allocate>(<allocationSize>(length))
+				let dst := array
+				<storeLength>
+				let src := offset
+				<staticBoundsCheck>
+				for { let i := 0 } lt(i, length) { i := add(i, 1) }
+				{
+					let elementPos := <retrieveElementPos>
+					mstore(dst, <decodingFun>(elementPos, end))
+					dst := add(dst, 0x20)
+					src := add(src, <stride>)
+				}
+			}
+		)");
+		templ("functionName", functionName);
+		templ("readableTypeName", _type.toString(true));
 		templ("allocate", m_utils.allocationFunction());
 		templ("allocationSize", m_utils.arrayAllocationSizeFunction(_type));
 		string calldataStride = toCompactHexWithPrefix(_type.calldataStride());
 		templ("stride", calldataStride);
 		if (_type.isDynamicallySized())
-			templ("storeLength", "mstore(array, length) offset := add(offset, 0x20) dst := add(dst, 0x20)");
+			templ("storeLength", "mstore(array, length) dst := add(array, 0x20)");
 		else
 			templ("storeLength", "");
-		if (dynamicBase)
+		if (_type.baseType()->isDynamicallyEncoded())
 		{
 			templ("staticBoundsCheck", "");
+			string load = _fromMemory ? "mload" : "calldataload";
 			templ("retrieveElementPos", "add(offset, " + load + "(src))");
 		}
 		else
@@ -1244,36 +1266,28 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionByteArray(ArrayType const& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionByteArrayAvailableLength(ArrayType const& _type, bool _fromMemory)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
 	solAssert(_type.isByteArray(), "");
 
 	string functionName =
-		"abi_decode_" +
+		"abi_decode_available_length_" +
 		_type.identifier() +
 		(_fromMemory ? "_fromMemory" : "");
 
 	return createFunction(functionName, [&]() {
-		Whiskers templ(
-			R"(
-				function <functionName>(offset, end) -> array {
-					if iszero(slt(add(offset, 0x1f), end)) { <revertStringOffset> }
-					let length := <load>(offset)
-					array := <allocate>(<allocationSize>(length))
-					mstore(array, length)
-					let src := add(offset, 0x20)
-					let dst := add(array, 0x20)
-					if gt(add(src, length), end) { <revertStringLength> }
-					<copyToMemFun>(src, dst, length)
-				}
-			)"
-		);
-		// TODO add test
-		templ("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid byte array offset"));
+		Whiskers templ(R"(
+			function <functionName>(src, length, end) -> array {
+				array := <allocate>(<allocationSize>(length))
+				mstore(array, length)
+				let dst := add(array, 0x20)
+				if gt(add(src, length), end) { <revertStringLength> }
+				<copyToMemFun>(src, dst, length)
+			}
+		)");
 		templ("revertStringLength", revertReasonIfDebug("ABI decoding: invalid byte array length"));
 		templ("functionName", functionName);
-		templ("load", _fromMemory ? "mload" : "calldataload");
 		templ("allocate", m_utils.allocationFunction());
 		templ("allocationSize", m_utils.arrayAllocationSizeFunction(_type));
 		templ("copyToMemFun", m_utils.copyToMemoryFunction(!_fromMemory));

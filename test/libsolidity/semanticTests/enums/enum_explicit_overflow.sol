@@ -23,6 +23,7 @@ contract test {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // EVMVersion: >=byzantium
 // ----
 // getChoiceExp(uint256): 2 -> 2

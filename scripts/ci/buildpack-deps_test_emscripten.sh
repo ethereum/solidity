@@ -1,1 +1,1 @@
-../../scripts/travis-emscripten/build_emscripten.sh
+build_emscripten.sh

@@ -12,5 +12,6 @@ contract C is V
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // b() -> 42

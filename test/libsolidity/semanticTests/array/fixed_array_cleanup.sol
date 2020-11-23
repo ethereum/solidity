@@ -9,6 +9,7 @@ contract c {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // storage: empty
 // fill() ->

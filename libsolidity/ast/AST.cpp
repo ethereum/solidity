@@ -198,11 +198,11 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 	});
 }
 
-uint64_t ContractDefinition::interfaceId() const
+uint32_t ContractDefinition::interfaceId() const
 {
-	uint64_t result{0};
+	uint32_t result{0};
 	for (auto const& function: interfaceFunctionList(false))
-		result ^= util::fromBigEndian<uint64_t>(function.first.ref());
+		result ^= util::fromBigEndian<uint32_t>(function.first.ref());
 	return result;
 }
 
@@ -750,6 +750,44 @@ BinaryOperationAnnotation& BinaryOperation::annotation() const
 FunctionCallAnnotation& FunctionCall::annotation() const
 {
 	return initAnnotation<FunctionCallAnnotation>();
+}
+
+vector<ASTPointer<Expression const>> FunctionCall::sortedArguments() const
+{
+	// normal arguments
+	if (m_names.empty())
+		return arguments();
+
+	// named arguments
+	FunctionTypePointer functionType;
+	if (*annotation().kind == FunctionCallKind::StructConstructorCall)
+	{
+		auto const& type = dynamic_cast<TypeType const&>(*m_expression->annotation().type);
+		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
+		functionType = structType.constructorType();
+	}
+	else
+		functionType = dynamic_cast<FunctionType const*>(m_expression->annotation().type);
+
+	vector<ASTPointer<Expression const>> sorted;
+	for (auto const& parameterName: functionType->parameterNames())
+	{
+		bool found = false;
+		for (size_t j = 0; j < m_names.size() && !found; j++)
+			if ((found = (parameterName == *m_names.at(j))))
+				// we found the actual parameter position
+				sorted.push_back(m_arguments.at(j));
+		solAssert(found, "");
+	}
+
+	if (!functionType->takesArbitraryParameters())
+	{
+		solAssert(m_arguments.size() == functionType->parameterTypes().size(), "");
+		solAssert(m_arguments.size() == m_names.size(), "");
+		solAssert(m_arguments.size() == sorted.size(), "");
+	}
+
+	return sorted;
 }
 
 IdentifierAnnotation& Identifier::annotation() const

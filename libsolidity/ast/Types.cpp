@@ -3002,6 +3002,11 @@ TypePointers FunctionType::parameterTypes() const
 	return TypePointers(m_parameterTypes.cbegin() + 1, m_parameterTypes.cend());
 }
 
+TypePointers const& FunctionType::parameterTypesIncludingSelf() const
+{
+	return m_parameterTypes;
+}
+
 string FunctionType::richIdentifier() const
 {
 	string id = "t_function_";
@@ -3247,8 +3252,7 @@ vector<tuple<string, TypePointer>> FunctionType::makeStackItems() const
 	if (m_saltSet)
 		slots.emplace_back("salt", TypeProvider::fixedBytes(32));
 	if (bound())
-		for (auto const& [boundName, boundType]: m_parameterTypes.front()->stackItems())
-			slots.emplace_back("self_" + boundName, boundType);
+		slots.emplace_back("self", m_parameterTypes.front());
 	return slots;
 }
 

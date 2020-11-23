@@ -37,5 +37,6 @@ contract InvalidTest {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // run() -> FAILURE, hex"4e487b71", 0x51

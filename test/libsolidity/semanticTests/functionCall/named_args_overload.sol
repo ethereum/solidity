@@ -20,15 +20,19 @@ contract C {
             return f({b: 1, a: 2});
         if (num == 3)
             return f({c: 1, a: 2, b: 3});
+        if (num == 4)
+            return f({b: 5, c: 1, a: 2});
 
         return 500;
     }
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // call(uint256): 0 -> 0
 // call(uint256): 1 -> 1
 // call(uint256): 2 -> 3
 // call(uint256): 3 -> 6
-// call(uint256): 4 -> 500
+// call(uint256): 4 -> 8
+// call(uint256): 5 -> 500

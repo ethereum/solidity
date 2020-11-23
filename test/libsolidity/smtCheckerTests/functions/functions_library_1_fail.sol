@@ -17,6 +17,4 @@ contract C
 	}
 }
 // ----
-// Warning 8364: (228-229): Assertion checker does not yet implement type type(library L)
 // Warning 6328: (245-261): CHC: Assertion violation happens here.
-// Warning 8364: (228-229): Assertion checker does not yet implement type type(library L)

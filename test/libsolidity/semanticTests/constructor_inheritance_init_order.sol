@@ -12,6 +12,7 @@ contract B is A {
 }
 // ====
 // compileViaYul: true
+// compileToEwasm: also
 // ----
 // constructor() ->
 // y() -> 42
