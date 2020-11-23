@@ -857,11 +857,8 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineExpr(_identifier, m_context.state().thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
-	// Ignore struct type identifiers in struct constructor calls
-	else if (
-		auto typetype = dynamic_cast<TypeType const*>(_identifier.annotation().type);
-		typetype && typetype->actualType()->category() == Type::Category::Struct
-	)
+	// Ignore type identifiers
+	else if (dynamic_cast<TypeType const*>(_identifier.annotation().type))
 		return;
 	// Ignore the builtin abi, it is handled in FunctionCall.
 	// TODO: ignore MagicType in general (abi, block, msg, tx, type)
