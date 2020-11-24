@@ -2303,11 +2303,19 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		functionType = dynamic_cast<FunctionType const*>(expressionType);
 		funcCallAnno.kind = FunctionCallKind::FunctionCall;
 
+		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+		{
+			if (dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration))
+				_functionCall.expression().annotation().calledDirectly = true;
+		}
+		else if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+			if (dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration))
+				_functionCall.expression().annotation().calledDirectly = true;
+
 		// Purity for function calls also depends upon the callee and its FunctionType
 		funcCallAnno.isPure =
 			argumentsArePure &&
 			*_functionCall.expression().annotation().isPure &&
-			functionType &&
 			functionType->isPure();
 
 		if (
