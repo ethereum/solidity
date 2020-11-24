@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
 	function f(uint a, uint16[][] memory b, uint[2][][3] memory c, uint d)

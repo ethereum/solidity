@@ -30,7 +30,7 @@ contract V1B {
     }
 }
 ==== Source: V2A ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 import "X";
 
 contract V2A {
@@ -40,7 +40,7 @@ contract V2A {
     }
 }
 ==== Source: X ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 struct Data {
     bool flag;

@@ -1,5 +1,5 @@
 ==== Source: A ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 library L {
     struct Item {
@@ -8,7 +8,7 @@ library L {
     event E(Item _value);
 }
 ==== Source: B ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 import "A";
 

@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     struct S { mapping(uint => uint) a; }
     struct T { S s; }

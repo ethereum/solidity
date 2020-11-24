@@ -1983,7 +1983,7 @@ BOOST_AUTO_TEST_CASE(event_really_really_lots_of_data_from_storage)
 BOOST_AUTO_TEST_CASE(event_struct_memory_v2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			struct S { uint a; }
 			event E(S);
@@ -2005,7 +2005,7 @@ BOOST_AUTO_TEST_CASE(event_struct_memory_v2)
 BOOST_AUTO_TEST_CASE(event_struct_storage_v2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			struct S { uint a; }
 			event E(S);
@@ -2053,7 +2053,7 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_memory)
 BOOST_AUTO_TEST_CASE(event_dynamic_array_memory_v2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			event E(uint[]);
 			function createEvent(uint x) public {
@@ -2078,7 +2078,7 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_memory_v2)
 BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_memory_v2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			event E(uint[][]);
 			function createEvent(uint x) public {
@@ -2136,7 +2136,7 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage)
 BOOST_AUTO_TEST_CASE(event_dynamic_array_storage_v2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			event E(uint[]);
 			uint[] arr;
@@ -2167,7 +2167,7 @@ BOOST_AUTO_TEST_CASE(event_dynamic_array_storage_v2)
 BOOST_AUTO_TEST_CASE(event_dynamic_nested_array_storage_v2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			event E(uint[][]);
 			uint[][] arr;
@@ -2332,7 +2332,7 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 
 	for (auto v2: {false, true})
 	{
-		string source = (v2 ? "pragma experimental ABIEncoderV2;\n" : "") + string(sourceCode);
+		string source = "pragma abicoder " + string(v2 ? "v2" : "v1") + ";\n" + string(sourceCode);
 
 		compileAndRun(source, 0, "Receiver");
 		u160 const c_receiverAddress = m_contractAddress;
@@ -2660,7 +2660,7 @@ BOOST_AUTO_TEST_CASE(storing_invalid_boolean)
 BOOST_AUTO_TEST_CASE(struct_referencing)
 {
 	static char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		interface I {
 			struct S { uint a; }
 		}
@@ -2803,7 +2803,7 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_abi)
 	// NOTE: This does not really test copying from storage to ABI directly,
 	// because it will always copy to memory first.
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract c {
 			uint8[] x;
 			uint16[] y;
@@ -3191,7 +3191,7 @@ BOOST_AUTO_TEST_CASE(memory_types_initialisation)
 BOOST_AUTO_TEST_CASE(calldata_struct_short)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			struct S { uint256 a; uint256 b; }
 			function f(S calldata) external pure returns (uint256) {
@@ -3214,7 +3214,7 @@ BOOST_AUTO_TEST_CASE(calldata_struct_short)
 BOOST_AUTO_TEST_CASE(calldata_struct_function_type)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			struct S { function (uint) external returns (uint) fn; }
 			function f(S calldata s) external returns (uint256) {
@@ -3263,7 +3263,7 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_three_dimensional)
 		arrayType += outerDynamicallySized ? "[]" : "[2]";
 
 		string sourceCode = R"(
-			pragma experimental ABIEncoderV2;
+			pragma abicoder v2;
 			contract C {
 				function test()" + arrayType + R"( calldata a) external returns (uint256) {
 					return a.length;
@@ -3865,7 +3865,7 @@ BOOST_AUTO_TEST_CASE(using_library_mappings_external)
 		)";
 	for (auto v2: {false, true})
 	{
-		string prefix = v2 ? "pragma experimental ABIEncoderV2;\n" : "";
+		string prefix = "pragma abicoder " + string(v2 ? "v2" : "v1") + ";\n";
 		compileAndRun(prefix + libSourceCode, 0, "Lib");
 		compileAndRun(prefix + sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
 		ABI_CHECK(callContractFunction("f()"), encodeArgs(u256(2), u256(0), u256(84), u256(46), u256(0), u256(198)));
@@ -5137,7 +5137,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked)
 	)";
 	for (auto v2: {false, true})
 	{
-		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		string prefix = "pragma abicoder " + string(v2 ? "v2" : "v1") + ";\n";
+		compileAndRun(prefix + sourceCode, 0, "C");
 		ABI_CHECK(callContractFunction("f0()"), encodeArgs(0x20, 0));
 		ABI_CHECK(callContractFunction("f1()"), encodeArgs(0x20, 2, "\x01\x02"));
 		ABI_CHECK(callContractFunction("f2()"), encodeArgs(0x20, 5, "\x01" "abc" "\x02"));
@@ -5211,7 +5212,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_storage)
 	)";
 	for (auto v2: {false, true})
 	{
-		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		string prefix = "pragma abicoder " + string(v2 ? "v2" : "v1") + ";\n";
+		compileAndRun(prefix + sourceCode, 0, "C");
 		bytes payload = encodeArgs(0xfffff1, 0, 0xfffff2, 0, 0, 0xfffff3, 0, 0, 0xfffff4);
 		bytes encoded = encodeArgs(0x20, 0x122, "\x01" + asString(payload) + "\x02");
 		ABI_CHECK(callContractFunction("sf()"), encoded);
@@ -5281,7 +5283,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_from_memory)
 	)";
 	for (auto v2: {false, true})
 	{
-		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		string prefix = "pragma abicoder " + string(v2 ? "v2" : "v1") + ";\n";
+		compileAndRun(prefix + sourceCode, 0, "C");
 		bytes payload = encodeArgs(0xfffff1, 0, 0xfffff2, 0, 0, 0xfffff3, 0, 0, 0xfffff4);
 		bytes encoded = encodeArgs(0x20, 0x122, "\x01" + asString(payload) + "\x02");
 		ABI_CHECK(callContractFunction("sf()"), encoded);
@@ -5324,7 +5327,8 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_functionPtr)
 	)";
 	for (auto v2: {false, true})
 	{
-		compileAndRun(string(v2 ? "pragma experimental ABIEncoderV2;\n" : "") + sourceCode, 0, "C");
+		string prefix = "pragma abicoder " + string(v2 ? "v2" : "v1") + ";\n";
+		compileAndRun(prefix + sourceCode, 0, "C");
 		string directEncoding = asString(fromHex("08" "1112131400000000000011121314000000000087" "26121ff0" "02"));
 		ABI_CHECK(callContractFunction("testDirect()"), encodeArgs(0x20, directEncoding.size(), directEncoding));
 		string arrayEncoding = asString(fromHex("08" "1112131400000000000011121314000000000087" "26121ff0" "0000000000000000" "02"));
@@ -5336,7 +5340,7 @@ BOOST_AUTO_TEST_CASE(abi_encodePacked_functionPtr)
 BOOST_AUTO_TEST_CASE(abi_encodePackedV2_structs)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			struct S {
 				uint8 a;
@@ -5378,7 +5382,7 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_structs)
 BOOST_AUTO_TEST_CASE(abi_encodePackedV2_nestedArray)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			struct S {
 				uint8 a;
@@ -5407,7 +5411,7 @@ BOOST_AUTO_TEST_CASE(abi_encodePackedV2_nestedArray)
 BOOST_AUTO_TEST_CASE(abi_encodePackedV2_arrayOfStrings)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			string[] x;
 			event E(string[] indexed);
@@ -5441,7 +5445,7 @@ BOOST_AUTO_TEST_CASE(event_signature_in_library)
 	// This tests a bug that was present where the "internal signature"
 	// for structs was also used for events.
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		library L {
 			struct S {
 				uint8 a;
@@ -5498,7 +5502,7 @@ BOOST_AUTO_TEST_CASE(abi_encode_with_selector)
 BOOST_AUTO_TEST_CASE(abi_encode_with_selectorv2)
 {
 	char const* sourceCode = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			function f0() public pure returns (bytes memory) {
 				return abi.encodeWithSelector(0x12345678);
@@ -5588,7 +5592,7 @@ BOOST_AUTO_TEST_CASE(abi_encode_with_signature)
 BOOST_AUTO_TEST_CASE(abi_encode_with_signaturev2)
 {
 	char const* sourceCode = R"T(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract C {
 			function f0() public pure returns (bytes memory) {
 				return abi.encodeWithSignature("f(uint256)");

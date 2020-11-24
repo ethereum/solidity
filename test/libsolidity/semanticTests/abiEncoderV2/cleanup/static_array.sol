@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     function gggggggg(uint8[2] calldata s) external pure returns (bytes memory) {

@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
   function f(bytes calldata x) public returns (C[] memory) {
     return abi.decode(x, (C[]));

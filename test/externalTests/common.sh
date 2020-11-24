@@ -180,14 +180,14 @@ function force_solc_settings
 
 function force_abi_v2
 {
-    # Add "pragma experimental ABIEncoderV2" to all files.
-    printLog "Forcibly enabling ABIEncoderV2..."
+    # Add "pragma abi coder v2" to all files.
+    printLog "Forcibly enabling abi coder v2..."
     find contracts test -name '*.sol' -type f -print0 | \
     while IFS= read -r -d '' file
     do
         # Only add the pragma if it is not already there.
-        if grep -q -v 'pragma experimental ABIEncoderV2' "$file"; then
-            sed -i -e '1 i pragma experimental ABIEncoderV2;' "$file"
+        if grep -q -v 'pragma abicoder v2' "$file"; then
+            sed -i -e '1 i pragma abicoder v2;' "$file"
         fi
     done
 }
@@ -257,7 +257,7 @@ function truffle_run_test
     do
         clean
         force_solc_settings "$CONFIG" "$optimize" "istanbul"
-        # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
+        # Force abi coder v2 in the last step. Has to be the last because code is modified.
         if [ "$FORCE_ABIv2" = true ]; then
             [[ "$optimize" =~ yul ]] && force_abi_v2
         fi

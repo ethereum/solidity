@@ -4,7 +4,7 @@ struct S { uint[2] mS; }
 import "a" as A;
 struct T { A.S[2] mT; }
 ==== Source: c ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 import "b" as B;
 contract C {
     function f(B.T memory y, B.A.S memory z) public pure returns (uint, uint) {

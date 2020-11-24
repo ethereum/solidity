@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
 	function enc_packed_bytes(bytes calldata data, uint256 start, uint256 end) external returns (bytes memory) {
 		return abi.encodePacked(data[start:end]);
