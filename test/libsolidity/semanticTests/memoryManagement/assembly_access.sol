@@ -5,6 +5,8 @@ contract C {
         assembly {
             y := x
         }
+        // The value of an uninitialized dynamic array is not zero but rather
+        // an address of a location in memory that has the value of zero.
         assert(y != 0);
     }
 }
