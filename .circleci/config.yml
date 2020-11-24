@@ -916,6 +916,45 @@ jobs:
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
+  t_ems_compile_ext_ens:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External Ens compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/ens.sh /tmp/workspace/soljson.js || test/externalTests/ens.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_ens:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External Ens tests
+          command: |
+            test/externalTests/ens.sh /tmp/workspace/soljson.js || test/externalTests/ens.sh /tmp/workspace/soljson.js
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
+
   b_win: &b_win
     executor:
       name: win/default
@@ -1100,6 +1139,7 @@ workflows:
       - t_ems_compile_ext_colony: *workflow_emscripten
       - t_ems_compile_ext_gnosis: *workflow_emscripten
       - t_ems_compile_ext_zeppelin: *workflow_emscripten
+      - t_ems_compile_ext_ens: *workflow_emscripten
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
