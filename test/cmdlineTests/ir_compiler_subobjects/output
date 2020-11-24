@@ -59,7 +59,11 @@ object "D_13" {
                         let _3 := add(128, _2)
                         if or(gt(_3, 0xffffffffffffffff), lt(_3, 128)) { invalid() }
                         datacopy(128, dataoffset("C_2"), _2)
-                        pop(create(_1, 128, _2))
+                        if iszero(create(_1, 128, _2))
+                        {
+                            returndatacopy(_1, _1, returndatasize())
+                            revert(_1, returndatasize())
+                        }
                         return(allocateMemory(_1), _1)
                     }
                 }

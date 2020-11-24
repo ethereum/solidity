@@ -1412,6 +1412,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			</saltSet>
 			<?isTryCall>
 				let <success> := iszero(iszero(<address>))
+			<!isTryCall>
+				if iszero(<address>) { <forwardingRevert>() }
 			</isTryCall>
 			<releaseTemporaryMemory>()
 		)");
@@ -1434,6 +1436,8 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		t("isTryCall", _functionCall.annotation().tryCall);
 		if (_functionCall.annotation().tryCall)
 			t("success", IRNames::trySuccessConditionVariable(_functionCall));
+		else
+			t("forwardingRevert", m_utils.forwardingRevertFunction());
 		m_code << t.render();
 
 		break;
