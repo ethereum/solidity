@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-#------------------------------------------------------------------------------
-# Bash script to run external Solidity tests.
-#
-# Argument: Path to soljson.js to test.
-#
-# Requires npm, networking access and git to download the tests.
-#
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
 #
@@ -23,29 +16,29 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2016 solidity contributors.
+# (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
-
-set -e
-
-if [ ! -f "$1" ]
-then
-  echo "Usage: $0 <path to soljson.js>"
-  exit 1
-fi
-
-SOLJSON="$1"
-REPO_ROOT="$(dirname "$0")"
-
+# shellcheck disable=SC1091
 source scripts/common.sh
+# shellcheck disable=SC1091
 source test/externalTests/common.sh
 
-printTask "Running external tests..."
+verify_input "$1"
+export SOLJSON="$1"
 
-$REPO_ROOT/externalTests/zeppelin.sh "$SOLJSON"
-$REPO_ROOT/externalTests/gnosis.sh "$SOLJSON"
-$REPO_ROOT/externalTests/colony.sh "$SOLJSON"
-$REPO_ROOT/externalTests/ens.sh "$SOLJSON"
+function install_fn { npm install; }
+function compile_fn { npx truffle compile; }
+function test_fn { npm run test; }
 
-# Disabled temporarily as it needs to be updated to latest Truffle first.
-#test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050
+function ens_test
+{
+    export OPTIMIZER_LEVEL=1
+    export CONFIG="truffle-config.js"
+
+    truffle_setup https://github.com/solidity-external-tests/ens.git upgrade-0.8.0
+    run_install install_fn
+
+    truffle_run_test compile_fn test_fn
+}
+
+external_test Ens ens_test
