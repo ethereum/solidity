@@ -8,6 +8,8 @@ Compiler Features:
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
 
+Bugfixes:
+ * SMTChecker: Fix internal compiler error when doing bitwise compound assignment with string literals.
 
 ### 0.7.5 (2020-11-18)
 
