@@ -6,7 +6,7 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // create(uint256): 0 -> 0
 // create(uint256): 7 -> 7

@@ -10,7 +10,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // test_boundary_check(uint256, uint256): 10, 11 -> FAILURE
 // test_boundary_check(uint256, uint256): 10, 9 -> 0

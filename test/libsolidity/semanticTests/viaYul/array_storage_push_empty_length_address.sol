@@ -10,7 +10,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // EVMVersion: >=petersburg
 // ----
 // set_get_length(uint256): 0 -> 0

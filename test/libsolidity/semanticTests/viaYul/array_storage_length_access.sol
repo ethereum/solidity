@@ -7,7 +7,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // set_get_length(uint256): 0 -> 0
 // set_get_length(uint256): 1 -> 1
