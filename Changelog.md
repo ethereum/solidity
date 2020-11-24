@@ -1,6 +1,7 @@
 ### 0.7.6 (unreleased)
 
 Language Features:
+ * Code generator: Support copying dynamically encoded structs from calldata to memory.
  * The fallback function can now also have a single ``calldata`` argument (equaling ``msg.data``) and return ``bytes memory`` (which will not be ABI-encoded but returned as-is).
 
 Compiler Features:
