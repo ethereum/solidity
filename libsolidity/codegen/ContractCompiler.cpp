@@ -612,7 +612,7 @@ bool ContractCompiler::visit(FunctionDefinition const& _function)
 	}
 
 	for (ASTPointer<VariableDeclaration> const& variable: _function.returnParameters())
-		appendStackVariableInitialisation(*variable);
+		appendStackVariableInitialisation(*variable, /* _provideDefaultValue = */ true);
 
 	if (_function.isConstructor())
 		if (auto c = dynamic_cast<ContractDefinition const&>(*_function.scope()).nextConstructor(
@@ -1230,7 +1230,7 @@ bool ContractCompiler::visit(VariableDeclarationStatement const& _variableDeclar
 	// and freed in the end of their scope.
 	for (auto decl: _variableDeclarationStatement.declarations())
 		if (decl)
-			appendStackVariableInitialisation(*decl);
+			appendStackVariableInitialisation(*decl, !_variableDeclarationStatement.initialValue());
 
 	StackHeightChecker checker(m_context);
 	if (Expression const* expression = _variableDeclarationStatement.initialValue())
@@ -1376,11 +1376,20 @@ void ContractCompiler::appendModifierOrFunctionCode()
 	m_context.setModifierDepth(m_modifierDepth);
 }
 
-void ContractCompiler::appendStackVariableInitialisation(VariableDeclaration const& _variable)
+void ContractCompiler::appendStackVariableInitialisation(
+	VariableDeclaration const& _variable,
+	bool _provideDefaultValue
+)
 {
 	CompilerContext::LocationSetter location(m_context, _variable);
 	m_context.addVariable(_variable);
-	CompilerUtils(m_context).pushZeroValue(*_variable.annotation().type);
+	if (!_provideDefaultValue && _variable.type()->dataStoredIn(DataLocation::Memory))
+	{
+		solAssert(_variable.type()->sizeOnStack() == 1, "");
+		m_context << u256(0);
+	}
+	else
+		CompilerUtils(m_context).pushZeroValue(*_variable.annotation().type);
 }
 
 void ContractCompiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)

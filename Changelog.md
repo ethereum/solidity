@@ -4,8 +4,10 @@ Language Features:
  * The fallback function can now also have a single ``calldata`` argument (equaling ``msg.data``) and return ``bytes memory`` (which will not be ABI-encoded but returned as-is).
 
 Compiler Features:
+ * Code Generator: Avoid memory allocation for default value if it is not used.
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
+
 
 ### 0.7.5 (2020-11-18)
 
