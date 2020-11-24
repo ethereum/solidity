@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 BOOST_AUTO_TEST_CASE(external_struct_signatures)
 {
 	char const* text = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Simple { uint i; }
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(external_struct_signatures)
 BOOST_AUTO_TEST_CASE(external_struct_signatures_in_libraries)
 {
 	char const* text = R"(
-		pragma experimental ABIEncoderV2;
+		pragma abicoder v2;
 		library Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			struct Simple { uint i; }

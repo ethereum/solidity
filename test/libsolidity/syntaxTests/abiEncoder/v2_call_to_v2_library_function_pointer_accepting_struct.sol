@@ -1,5 +1,5 @@
 ==== Source: A ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 library L {
     struct Item {
@@ -9,7 +9,7 @@ library L {
     function get(Item memory _item) external {}
 }
 ==== Source: B ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 import "A";
 

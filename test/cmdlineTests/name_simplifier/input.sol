@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.0;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 
 // The point of this test is to check that the
 // AST IDs are removed from the optimized IR

@@ -1,6 +1,6 @@
 // Tests that this will not end up using a "bytes0" type
 // (which would assert)
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 
 contract C {

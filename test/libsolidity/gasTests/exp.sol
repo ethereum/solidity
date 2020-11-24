@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
 	function exp_neg_one(uint exponent) public returns(int) {

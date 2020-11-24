@@ -1119,7 +1119,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 			}
 			else
 				// NOTE: supporting name, creationCode, runtimeCode would be easy enough, but the bytes/string they return are not
-				//       at all useable in the SMT checker currently
+				//       at all usable in the SMT checker currently
 				m_errorReporter.warning(
 					7507_error,
 					_memberAccess.location(),

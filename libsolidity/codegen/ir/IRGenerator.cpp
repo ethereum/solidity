@@ -652,8 +652,16 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 	{
 		string fallbackCode;
 		if (!fallback->isPayable())
-			fallbackCode += callValueCheck();
-		fallbackCode += m_context.enqueueFunctionForCodeGeneration(*fallback) + "() stop()";
+			fallbackCode += callValueCheck() + "\n";
+		if (fallback->parameters().empty())
+			fallbackCode += m_context.enqueueFunctionForCodeGeneration(*fallback) + "() stop()";
+		else
+		{
+			solAssert(fallback->parameters().size() == 1 && fallback->returnParameters().size() == 1, "");
+			fallbackCode += "let retval := " + m_context.enqueueFunctionForCodeGeneration(*fallback) + "(0, calldatasize())\n";
+			fallbackCode += "return(add(retval, 0x20), mload(retval))\n";
+
+		}
 
 		t("fallback", fallbackCode);
 	}

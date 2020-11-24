@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     function f(function() external returns (uint)[] calldata s) external returns (uint, uint, uint) {

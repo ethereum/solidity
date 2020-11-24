@@ -130,7 +130,10 @@ private:
 	/// body itself if the last modifier was reached.
 	void appendModifierOrFunctionCode();
 
-	void appendStackVariableInitialisation(VariableDeclaration const& _variable);
+	/// Creates a stack slot for the given variable and assigns a default value.
+	/// If the default value is complex (needs memory allocation) and @a _provideDefaultValue
+	/// is false, this might be skipped.
+	void appendStackVariableInitialisation(VariableDeclaration const& _variable, bool _provideDefaultValue);
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	/// Frees the variables of a certain scope (to be used when leaving).

@@ -1,5 +1,5 @@
 ==== Source: A ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 struct Data {
     bool flag;
@@ -18,7 +18,7 @@ contract B {
     }
 }
 ==== Source: C ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 import "B";
 

@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 library L {
     function f(mapping(uint => uint)[2] memory a) external pure returns (mapping(uint => uint)[2] memory) {}
 }

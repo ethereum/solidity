@@ -394,6 +394,10 @@ bool OverrideProxy::OverrideComparator::operator<(OverrideComparator const& _oth
 	if (functionKind != _other.functionKind)
 		return *functionKind < *_other.functionKind;
 
+	// Parameters do not matter for non-regular functions.
+	if (functionKind != Token::Function)
+		return false;
+
 	if (!parameterTypes || !_other.parameterTypes)
 		return false;
 
@@ -574,16 +578,19 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 		FunctionType const* functionType = _overriding.functionType();
 		FunctionType const* superType = _super.functionType();
 
-		solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
+		if (_overriding.functionKind() != Token::Fallback)
+		{
+			solAssert(functionType->hasEqualParameterTypes(*superType), "Override doesn't have equal parameters!");
 
-		if (!functionType->hasEqualReturnTypes(*superType))
-			overrideError(
-				_overriding,
-				_super,
-				4822_error,
-				"Overriding " + _overriding.astNodeName() + " return types differ.",
-				"Overridden " + _overriding.astNodeName() + " is here:"
-			);
+			if (!functionType->hasEqualReturnTypes(*superType))
+				overrideError(
+					_overriding,
+					_super,
+					4822_error,
+					"Overriding " + _overriding.astNodeName() + " return types differ.",
+					"Overridden " + _overriding.astNodeName() + " is here:"
+				);
+		}
 
 		// Stricter mutability is always okay except when super is Payable
 		if (
