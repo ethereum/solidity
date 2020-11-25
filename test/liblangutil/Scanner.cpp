@@ -131,10 +131,29 @@ BOOST_AUTO_TEST_CASE(string_escapes)
 
 BOOST_AUTO_TEST_CASE(string_escapes_all)
 {
-	Scanner scanner(CharStream("  { \"a\\x61\\b\\f\\n\\r\\t\\v\"", ""));
+	Scanner scanner(CharStream("  { \"a\\x61\\n\\r\\t\"", ""));
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
-	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\b\f\n\r\t\v");
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "aa\n\r\t");
+}
+
+BOOST_AUTO_TEST_CASE(string_escapes_legal_before_080)
+{
+	Scanner scanner(CharStream("  { \"a\\b", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalEscapeSequence);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
+	scanner.reset(CharStream("  { \"a\\f", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalEscapeSequence);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
+	scanner.reset(CharStream("  { \"a\\v", ""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+	BOOST_CHECK_EQUAL(scanner.currentError(), ScannerError::IllegalEscapeSequence);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), "");
 }
 
 BOOST_AUTO_TEST_CASE(string_escapes_with_zero)

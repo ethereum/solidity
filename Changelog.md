@@ -20,6 +20,7 @@ Breaking Changes:
  * Type System: Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of public functions and events.
  * Type System: Disallow ``type(super)``.
  * Command Line Interface: JSON fields `abi`, `devdoc`, `userdoc` and `storage-layout` are now sub-objects rather than strings.
+ * Scanner: Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences.
 
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
