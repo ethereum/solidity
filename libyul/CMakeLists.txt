@@ -30,10 +30,6 @@ add_library(yul
 	AsmParser.h
 	AsmPrinter.cpp
 	AsmPrinter.h
-	AsmScope.cpp
-	AsmScope.h
-	AsmScopeFiller.cpp
-	AsmScopeFiller.h
 	AssemblyStack.h
 	AssemblyStack.cpp
 	CompilabilityChecker.cpp
@@ -45,6 +41,10 @@ add_library(yul
 	Object.h
 	ObjectParser.cpp
 	ObjectParser.h
+	Scope.cpp
+	Scope.h
+	ScopeFiller.cpp
+	ScopeFiller.h
 	Utilities.cpp
 	Utilities.h
 	YulString.h

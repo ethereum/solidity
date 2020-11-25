@@ -24,9 +24,9 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <libyul/Dialect.h>
-#include <libyul/AsmScope.h>
 #include <libyul/ASTForward.h>
+#include <libyul/Dialect.h>
+#include <libyul/Scope.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMDialect.h>
