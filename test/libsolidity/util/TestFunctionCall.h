@@ -150,7 +150,7 @@ private:
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting
 	/// in the interactive update routine.
-	Json::Value m_contractABI;
+	Json::Value m_contractABI = Json::Value{};
 	/// Flags that the test failed because the called function is not known to exist on the contract.
 	bool m_calledNonExistingFunction = false;
 };
