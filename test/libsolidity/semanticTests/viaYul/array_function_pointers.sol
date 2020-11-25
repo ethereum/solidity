@@ -22,7 +22,6 @@ contract C {
 }
 // ====
 // compileViaYul: also
-// compileToEwasm: also
 // ----
 // f(uint256,uint256): 1823621, 12323 -> FAILURE
 // f2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE
