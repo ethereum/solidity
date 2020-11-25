@@ -112,7 +112,7 @@ them.
 |:ref:`enum<enums>`             |smallest ``uint`` type that is large enough to hold all values               |
 |                               |                                                                             |
 |                               |For example, an ``enum`` of 256 values or less is mapped to ``uint8`` and    |
-|                               |an ``enum`` of 256 values is mapped to ``uint16``.                           |
+|                               |an ``enum`` of more than 256 values is mapped to ``uint16``.                 |
 +-------------------------------+-----------------------------------------------------------------------------+
 |:ref:`struct<structs>`         |``tuple``                                                                    |
 +-------------------------------+-----------------------------------------------------------------------------+
