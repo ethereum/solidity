@@ -433,7 +433,7 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		{
 			solAssert(type(_assignment) == leftIntermediate.type(), "");
 			solAssert(type(_assignment) == type(_assignment.leftHandSide()), "");
-			define(_assignment) << shiftOperation(binaryOperator, leftIntermediate, value);
+			define(_assignment) << shiftOperation(binaryOperator, leftIntermediate, value) << "\n";
 
 			writeToLValue(*m_currentLValue, IRVariable(_assignment));
 			m_currentLValue.reset();
@@ -991,7 +991,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 						m_utils.packedHashFunction({arg.annotation().type}, {referenceType}) <<
 						"(" <<
 						IRVariable(arg).commaSeparatedList() <<
-						")";
+						")\n";
 				else if (auto functionType = dynamic_cast<FunctionType const*>(paramTypes[i]))
 				{
 					solAssert(
@@ -1594,7 +1594,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			auto contract = dynamic_cast<ContractDefinition const*>(functionDefinition.scope());
 			solAssert(contract && contract->isLibrary(), "");
 			define(IRVariable(_memberAccess).part("address")) << linkerSymbol(*contract) << "\n";
-			define(IRVariable(_memberAccess).part("functionSelector")) << memberFunctionType->externalIdentifier();
+			define(IRVariable(_memberAccess).part("functionSelector")) << memberFunctionType->externalIdentifier() << "\n";
 		}
 		return;
 	}
@@ -1809,15 +1809,13 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					baseRef <<
 					", " <<
 					offset <<
-					")" <<
-					std::endl;
+					")\n";
 			else
 				define(_memberAccess) <<
 					m_utils.readFromCalldata(*_memberAccess.annotation().type) <<
 					"(" <<
 					offset <<
-					")" <<
-					std::endl;
+					")\n";
 			break;
 		}
 		default:
@@ -2073,7 +2071,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 					IRVariable(_indexAccess.baseExpression()).commaSeparatedList() +
 					", " +
 					expressionAsType(*_indexAccess.indexExpression(), *TypeProvider::uint256()) +
-					")\n";
+					")";
 				if (arrayType.isByteArray())
 					define(_indexAccess) <<
 						m_utils.cleanupFunction(*arrayType.baseType()) <<
@@ -2087,7 +2085,7 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 						indexAccessFunctionCall <<
 						")\n";
 				else
-					define(_indexAccess) << indexAccessFunctionCall;
+					define(_indexAccess) << indexAccessFunctionCall << "\n";
 				break;
 			}
 		}
