@@ -18,7 +18,7 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // test(uint256,uint256): 0,0 -> FAILURE
 // test(uint256,uint256): 1,0 -> 1

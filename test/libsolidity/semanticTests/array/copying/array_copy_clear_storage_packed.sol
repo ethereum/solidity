@@ -39,7 +39,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // f() -> 0
 // g() -> 0
