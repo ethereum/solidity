@@ -24,8 +24,10 @@ Breaking Changes:
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
 
+Bugfixes:
+ * Type Checker: Perform proper integer arithmetic when using constants in array length expressions.
 
- AST Changes:
+AST Changes:
  * New AST Node ``IdentifierPath`` replacing in many places the ``UserDefinedTypeName``
 
 
