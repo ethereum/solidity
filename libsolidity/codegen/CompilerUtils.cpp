@@ -941,8 +941,8 @@ void CompilerUtils::convertType(
 	case Type::Category::Array:
 	{
 		solAssert(targetTypeCategory == stackTypeCategory, "");
-		ArrayType const& typeOnStack = dynamic_cast<ArrayType const&>(_typeOnStack);
-		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_targetType);
+		auto const& typeOnStack = dynamic_cast<ArrayType const&>(_typeOnStack);
+		auto const& targetType = dynamic_cast<ArrayType const&>(_targetType);
 		switch (targetType.location())
 		{
 		case DataLocation::Storage:
