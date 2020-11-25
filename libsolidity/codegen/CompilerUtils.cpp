@@ -958,65 +958,77 @@ void CompilerUtils::convertType(
 			// Copy the array to a free position in memory, unless it is already in memory.
 			if (typeOnStack.location() != DataLocation::Memory)
 			{
-				// stack: <source ref> (variably sized)
-				unsigned stackSize = typeOnStack.sizeOnStack();
-				ArrayUtils(m_context).retrieveLength(typeOnStack);
+				if (
+					typeOnStack.dataStoredIn(DataLocation::CallData) &&
+					typeOnStack.baseType()->isDynamicallyEncoded()
+				)
+				{
+					solAssert(m_context.useABICoderV2(), "");
+					// stack: offset length(optional in case of dynamically sized array)
+					solAssert(typeOnStack.sizeOnStack() == (typeOnStack.isDynamicallySized() ? 2 : 1), "");
+					if (typeOnStack.isDynamicallySized())
+						m_context << Instruction::SWAP1;
 
-				// allocate memory
-				// stack: <source ref> (variably sized) <length>
-				m_context << Instruction::DUP1;
-				ArrayUtils(m_context).convertLengthToSize(targetType, true);
-				// stack: <source ref> (variably sized) <length> <size>
-				if (targetType.isDynamicallySized())
-					m_context << u256(0x20) << Instruction::ADD;
-				allocateMemory();
-				// stack: <source ref> (variably sized) <length> <mem start>
-				m_context << Instruction::DUP1;
-				moveIntoStack(2 + stackSize);
-				if (targetType.isDynamicallySized())
-				{
-					m_context << Instruction::DUP2;
-					storeInMemoryDynamic(*TypeProvider::uint256());
-				}
-				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
-				if (targetType.baseType()->isValueType())
-				{
-					copyToStackTop(2 + stackSize, stackSize);
-					ArrayUtils(m_context).copyArrayToMemory(typeOnStack);
+					m_context.callYulFunction(
+						m_context.utilFunctions().conversionFunction(typeOnStack, targetType),
+						typeOnStack.isDynamicallySized() ? 2 : 1,
+						1
+					);
 				}
 				else
 				{
-					if (auto baseType = dynamic_cast<ArrayType const*>(typeOnStack.baseType()))
-						solUnimplementedAssert(
-							typeOnStack.location() != DataLocation::CallData ||
-							!typeOnStack.isDynamicallyEncoded() ||
-							!baseType->isDynamicallySized(),
-							"Copying nested dynamic calldata arrays to memory is not implemented in the old code generator."
-						);
+					// stack: <source ref> (variably sized)
+					unsigned stackSize = typeOnStack.sizeOnStack();
+					ArrayUtils(m_context).retrieveLength(typeOnStack);
 
-					m_context << u256(0) << Instruction::SWAP1;
-					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
-					auto repeat = m_context.newTag();
-					m_context << repeat;
-					m_context << Instruction::DUP3 << Instruction::DUP3;
-					m_context << Instruction::LT << Instruction::ISZERO;
-					auto loopEnd = m_context.appendConditionalJump();
-					copyToStackTop(3 + stackSize, stackSize);
-					copyToStackTop(2 + stackSize, 1);
-					ArrayUtils(m_context).accessIndex(typeOnStack, false);
-					if (typeOnStack.location() == DataLocation::Storage)
-						StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
-					convertType(*typeOnStack.baseType(), *targetType.baseType(), _cleanupNeeded);
-					storeInMemoryDynamic(*targetType.baseType(), true);
-					m_context << Instruction::SWAP1 << u256(1) << Instruction::ADD;
-					m_context << Instruction::SWAP1;
-					m_context.appendJumpTo(repeat);
-					m_context << loopEnd;
-					m_context << Instruction::POP;
+					// allocate memory
+					// stack: <source ref> (variably sized) <length>
+					m_context << Instruction::DUP1;
+					ArrayUtils(m_context).convertLengthToSize(targetType, true);
+					// stack: <source ref> (variably sized) <length> <size>
+					if (targetType.isDynamicallySized())
+						m_context << u256(0x20) << Instruction::ADD;
+					allocateMemory();
+					// stack: <source ref> (variably sized) <length> <mem start>
+					m_context << Instruction::DUP1;
+					moveIntoStack(2 + stackSize);
+					if (targetType.isDynamicallySized())
+					{
+						m_context << Instruction::DUP2;
+						storeInMemoryDynamic(*TypeProvider::uint256());
+					}
+					// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
+					if (targetType.baseType()->isValueType())
+					{
+						copyToStackTop(2 + stackSize, stackSize);
+						ArrayUtils(m_context).copyArrayToMemory(typeOnStack);
+					}
+					else
+					{
+						m_context << u256(0) << Instruction::SWAP1;
+						// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
+						auto repeat = m_context.newTag();
+						m_context << repeat;
+						m_context << Instruction::DUP3 << Instruction::DUP3;
+						m_context << Instruction::LT << Instruction::ISZERO;
+						auto loopEnd = m_context.appendConditionalJump();
+						copyToStackTop(3 + stackSize, stackSize);
+						copyToStackTop(2 + stackSize, 1);
+						ArrayUtils(m_context).accessIndex(typeOnStack, false);
+						if (typeOnStack.location() == DataLocation::Storage)
+							StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
+						convertType(*typeOnStack.baseType(), *targetType.baseType(), _cleanupNeeded);
+						storeInMemoryDynamic(*targetType.baseType(), true);
+						m_context << Instruction::SWAP1 << u256(1) << Instruction::ADD;
+						m_context << Instruction::SWAP1;
+						m_context.appendJumpTo(repeat);
+						m_context << loopEnd;
+						m_context << Instruction::POP;
+					}
+					// stack: <mem start> <source ref> (variably sized) <length> <mem data pos updated>
+					popStackSlots(2 + stackSize);
+					// Stack: <mem start>
 				}
-				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos updated>
-				popStackSlots(2 + stackSize);
-				// Stack: <mem start>
 			}
 			break;
 		}
