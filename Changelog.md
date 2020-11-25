@@ -4,7 +4,9 @@ Breaking Changes:
  * Assembler: The artificial ASSIGNIMMUTABLE opcode and the corresponding builtin in the "EVM with object access" dialect of Yul take the base offset of the code to modify as additional argument.
  * Code Generator: All arithmetic is checked by default. These checks can be disabled using ``unchecked { ... }``.
  * Code Generator: Cause a panic if a byte array in storage is accessed whose length is encoded incorrectly.
+ * Command Line Interface: Remove the legacy ``--ast-json`` option. Only the ``--ast-compact-json`` option is supported now.
  * General: Remove global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
+ * Standard JSON: Remove the ``legacyAST`` option.
  * Type Checker: Function call options can only be given once.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.

@@ -9,7 +9,7 @@
 		"outputSelection": {
 			"fileA": {
 				"A": "it's a contract, but not an array!",
-				"": [ "legacyAST" ]
+				"": [ "ast" ]
 			}
 		}
 	}
