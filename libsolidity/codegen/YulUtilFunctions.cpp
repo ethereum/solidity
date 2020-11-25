@@ -77,9 +77,9 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 		{
 			return Whiskers(R"(
 				function <functionName>(src, dst, length) {
-					calldatacopy(dst, src, length)
+					m_calldatacopy(dst, src, length)
 					// clear end
-					mstore(add(dst, length), 0)
+					m_mstore(dst, length, 0)
 				}
 			)")
 			("functionName", functionName)
@@ -92,12 +92,12 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 					let i := 0
 					for { } lt(i, length) { i := add(i, 32) }
 					{
-						mstore(add(dst, i), mload(add(src, i)))
+						m_mstore(dst, i, m_mload(src, i))
 					}
 					if gt(i, length)
 					{
 						// clear end
-						mstore(add(dst, length), 0)
+						m_mstore(dst, length, 0)
 					}
 				}
 			)")
@@ -138,15 +138,14 @@ string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _mess
 		return Whiskers(R"(
 			function <functionName>(condition <messageVars>) {
 				if iszero(condition) {
-					let fmp := mload(<freeMemPointer>)
-					mstore(fmp, <errorHash>)
-					let end := <abiEncodeFunc>(add(fmp, <hashHeaderSize>) <messageVars>)
-					revert(fmp, sub(end, fmp))
+					let obj := m_allocateUnbounded()
+					m_mstore(obj, <errorHash>)
+					let end := <abiEncodeFunc>(m_slice(obj, <hashHeaderSize>) <messageVars>)
+					m_revert(obj, sub(end, fmp))
 				}
 			}
 		)")
 		("functionName", functionName)
-		("freeMemPointer", to_string(CompilerUtils::freeMemoryPointer))
 		("errorHash", formatNumber(errorHash))
 		("abiEncodeFunc", encodeFunc)
 		("hashHeaderSize", to_string(hashHeaderSize))
@@ -957,6 +956,8 @@ string YulUtilFunctions::extractByteArrayLengthFunction()
 		return w.render();
 	});
 }
+
+// TODO continue here
 
 string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 {

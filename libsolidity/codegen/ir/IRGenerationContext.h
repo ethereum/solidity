@@ -69,11 +69,7 @@ public:
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
 		OptimiserSettings _optimiserSettings
-	):
-		m_evmVersion(_evmVersion),
-		m_revertStrings(_revertStrings),
-		m_optimiserSettings(std::move(_optimiserSettings))
-	{}
+	);
 
 	MultiUseYulFunctionCollector& functionCollector() { return m_functions; }
 

@@ -24,6 +24,7 @@
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <libsolidity/codegen/ABIFunctions.h>
 #include <libsolidity/codegen/CompilerUtils.h>
+#include <libsolidity/codegen/ir/WellKnownUtilFunctions.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
@@ -36,6 +37,18 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
+
+IRGenerationContext::IRGenerationContext(
+	langutil::EVMVersion _evmVersion,
+	RevertStrings _revertStrings,
+	OptimiserSettings _optimiserSettings
+):
+	m_evmVersion(_evmVersion),
+	m_revertStrings(_revertStrings),
+	m_optimiserSettings(std::move(_optimiserSettings))
+{
+	WellKnownUtilFunctions(m_evmVersion, m_revertStrings, m_functions);
+}
 
 string IRGenerationContext::enqueueFunctionForCodeGeneration(FunctionDefinition const& _function)
 {

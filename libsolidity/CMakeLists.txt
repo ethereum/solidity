@@ -92,6 +92,8 @@ set(sources
 	codegen/ir/IRLValue.h
 	codegen/ir/IRVariable.cpp
 	codegen/ir/IRVariable.h
+	codegen/ir/WellKnownUtilFunctions.cpp
+	codegen/ir/WellKnownUtilFunctions.h
 	formal/ArraySlicePredicate.cpp
 	formal/ArraySlicePredicate.h
 	formal/BMC.cpp

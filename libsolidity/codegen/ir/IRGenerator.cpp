@@ -725,10 +725,10 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 		m_context.functionGenerationQueueEmpty(),
 		"Reset function generation queue while it still had functions."
 	);
-	solAssert(
-		m_context.functionCollector().requestedFunctions().empty(),
-		"Reset context while it still had functions."
-	);
+//	solAssert(
+//		m_context.functionCollector().requestedFunctions().empty(),
+//		"Reset context while it still had functions."
+//	);
 	solAssert(
 		m_context.internalDispatchClean(),
 		"Reset internal dispatch map without consuming it."
