@@ -276,6 +276,10 @@ TestCase::TestResult SemanticTest::runTest(
 		}
 	}
 
+	std::stringstream _out;
+	printUpdatedExpectations(_out, "");
+	cout << _out.str() << "\n";
+
 	if (!m_runWithYul && _compileViaYul)
 	{
 		m_compileViaYulCanBeSet = success;
