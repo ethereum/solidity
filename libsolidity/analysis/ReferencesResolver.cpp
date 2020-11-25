@@ -380,4 +380,11 @@ void ReferencesResolver::validateYulIdentifierName(yul::YulString _name, SourceL
 			_location,
 			"User-defined identifiers in inline assembly cannot contain '.'."
 		);
+
+	if (set<string>{"this", "super", "_"}.count(_name.str()))
+		m_errorReporter.declarationError(
+			4113_error,
+			_location,
+			"The identifier name \"" + _name.str() + "\" is reserved."
+		);
 }

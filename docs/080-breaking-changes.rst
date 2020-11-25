@@ -58,3 +58,6 @@ New Restrictions
 * ``enum`` definitions cannot contain more than 256 members.
 
   This will make it safe to assume that the underlying type in the ABI is always ``uint8``.
+
+* Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of
+  public functions and events.
