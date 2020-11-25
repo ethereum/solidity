@@ -20,16 +20,19 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/noncopyable.hpp>
 #include <functional>
 #include <string>
 
 namespace solidity::frontend
 {
 
-class ReadCallback: boost::noncopyable
+class ReadCallback
 {
 public:
+	/// Noncopyable.
+	ReadCallback(ReadCallback const&) = delete;
+	ReadCallback& operator=(ReadCallback const&) = delete;
+
 	/// File reading or generic query result.
 	struct Result
 	{

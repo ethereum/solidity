@@ -45,7 +45,6 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/LazyInit.h>
 
-#include <boost/noncopyable.hpp>
 #include <json/json.h>
 
 #include <functional>
@@ -88,9 +87,13 @@ class DeclarationContainer;
  * If error recovery is active, it is possible to progress through the stages even when
  * there are errors. In any case, producing code is only possible without errors.
  */
-class CompilerStack: boost::noncopyable
+class CompilerStack
 {
 public:
+	/// Noncopyable.
+	CompilerStack(CompilerStack const&) = delete;
+	CompilerStack& operator=(CompilerStack const&) = delete;
+
 	enum State {
 		Empty,
 		SourcesSet,

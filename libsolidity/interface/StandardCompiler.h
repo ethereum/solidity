@@ -36,9 +36,13 @@ namespace solidity::frontend
  * Standard JSON compiler interface, which expects a JSON input and returns a JSON output.
  * See docs/using-the-compiler#compiler-input-and-output-json-description.
  */
-class StandardCompiler: boost::noncopyable
+class StandardCompiler
 {
 public:
+	/// Noncopyable.
+	StandardCompiler(StandardCompiler const&) = delete;
+	StandardCompiler& operator=(StandardCompiler const&) = delete;
+
 	/// Creates a new StandardCompiler.
 	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.

@@ -29,8 +29,6 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <functional>
 #include <vector>
 
@@ -47,9 +45,13 @@ class Pattern;
 /**
  * Container for all simplification rules.
  */
-class Rules: public boost::noncopyable
+class Rules
 {
 public:
+	/// Noncopyable.
+	Rules(Rules const&) = delete;
+	Rules& operator=(Rules const&) = delete;
+
 	using Expression = ExpressionClasses::Expression;
 
 	Rules();

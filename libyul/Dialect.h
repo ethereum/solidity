@@ -25,8 +25,6 @@
 #include <libyul/SideEffects.h>
 #include <libyul/ControlFlowSideEffects.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <vector>
 #include <set>
 #include <optional>
@@ -57,8 +55,12 @@ struct BuiltinFunction
 	}
 };
 
-struct Dialect: boost::noncopyable
+struct Dialect
 {
+	/// Noncopiable.
+	Dialect(Dialect const&) = delete;
+	Dialect& operator=(Dialect const&) = delete;
+
 	/// Default type, can be omitted.
 	YulString defaultType;
 	/// Type used for the literals "true" and "false".

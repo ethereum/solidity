@@ -31,8 +31,6 @@
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceLocation.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <functional>
 #include <optional>
 #include <vector>
@@ -46,9 +44,13 @@ class Pattern;
 /**
  * Container for all simplification rules.
  */
-class SimplificationRules: public boost::noncopyable
+class SimplificationRules
 {
 public:
+	/// Noncopiable.
+	SimplificationRules(SimplificationRules const&) = delete;
+	SimplificationRules& operator=(SimplificationRules const&) = delete;
+
 	using Rule = evmasm::SimplificationRule<Pattern>;
 
 	explicit SimplificationRules(std::optional<langutil::EVMVersion> _evmVersion = std::nullopt);

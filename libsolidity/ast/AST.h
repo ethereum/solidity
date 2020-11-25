@@ -34,7 +34,6 @@
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/LazyInit.h>
 
-#include <boost/noncopyable.hpp>
 #include <json/json.h>
 
 #include <memory>
@@ -62,9 +61,13 @@ class ASTConstVisitor;
  * It is possible to traverse all direct and indirect children of an AST node by calling
  * accept, providing an ASTVisitor.
  */
-class ASTNode: private boost::noncopyable
+class ASTNode
 {
 public:
+	/// Noncopyable.
+	ASTNode(ASTNode const&) = delete;
+	ASTNode& operator=(ASTNode const&) = delete;
+
 	using CompareByID = frontend::ASTCompareByID<ASTNode>;
 	using SourceLocation = langutil::SourceLocation;
 
