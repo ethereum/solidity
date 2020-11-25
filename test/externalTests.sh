@@ -36,16 +36,29 @@ fi
 
 SOLJSON="$1"
 REPO_ROOT="$(dirname "$0")"
+TEST_DIR=""$REPO_ROOT"/test/externalTests"
+TMP_LOG_DIR=$(mktemp -d)
 
 source scripts/common.sh
 source test/externalTests/common.sh
 
 printTask "Running external tests..."
+# Unset so that all tests are forced to complete
+unset -e
+for test in zeppelin gnosis colony ens;
+do
+  $TEST_DIR/$test.sh "$SOLJSON" &> $TMP_LOG_DIR/$test.log &
+done
 
-$REPO_ROOT/externalTests/zeppelin.sh "$SOLJSON"
-$REPO_ROOT/externalTests/gnosis.sh "$SOLJSON"
-$REPO_ROOT/externalTests/colony.sh "$SOLJSON"
-$REPO_ROOT/externalTests/ens.sh "$SOLJSON"
+printTask "Waiting for external tests to complete..."
+wait
+
+set -e
+printTask "Logging test results..."
+rm -f $TEST_DIR/externalTests.log
+cat $TMP_LOG_DIR/*.log >> $TEST_DIR/externalTests.log
+# Remove temp log dir
+rm -rf $TMP_LOG_DIR
 
 # Disabled temporarily as it needs to be updated to latest Truffle first.
 #test_truffle Gnosis https://github.com/axic/pm-contracts.git solidity-050

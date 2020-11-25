@@ -830,7 +830,7 @@ jobs:
             export COMPILE_ONLY=1
             test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
 
-  t_ems_test_ext_gnosis:
+  t_ems_test_external:
     docker:
       - image: circleci/node:10
     environment:
@@ -840,9 +840,11 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: External GnosisSafe tests
+          name: External tests
           command: |
-            test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
+            test/externalTests.sh /tmp/workspace/soljson.js
+      - store_artifacts:
+          path: test/externalTests/externalTests.log
       - run: *gitter_notify_failure
       - run: *gitter_notify_success
 
@@ -861,7 +863,7 @@ jobs:
             export COMPILE_ONLY=1
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
 
-  t_ems_test_ext_zeppelin:
+  t_ems_compile_ext_zeppelin:
     docker:
       - image: circleci/node:10
     environment:
@@ -871,11 +873,10 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: External Zeppelin tests
+          name: External Zeppelin compilation
           command: |
+            export COMPILE_ONLY=1
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
 
   t_ems_compile_ext_colony:
     docker:
@@ -896,26 +897,6 @@ jobs:
             export COMPILE_ONLY=1
             test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
 
-  t_ems_test_ext_colony:
-    docker:
-      - image: circleci/node:10
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: Install test dependencies
-          command: |
-            sudo apt-get -qy install lsof
-      - run:
-          name: External ColonyNetworks tests
-          command: |
-            test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
-
   t_ems_compile_ext_ens:
     docker:
       - image: circleci/node:10
@@ -934,26 +915,6 @@ jobs:
           command: |
             export COMPILE_ONLY=1
             test/externalTests/ens.sh /tmp/workspace/soljson.js || test/externalTests/ens.sh /tmp/workspace/soljson.js
-
-  t_ems_test_ext_ens:
-    docker:
-      - image: circleci/node:10
-    environment:
-      TERM: xterm
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: Install test dependencies
-          command: |
-            sudo apt-get -qy install lsof
-      - run:
-          name: External Ens tests
-          command: |
-            test/externalTests/ens.sh /tmp/workspace/soljson.js || test/externalTests/ens.sh /tmp/workspace/soljson.js
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
 
   b_win: &b_win
     executor:
@@ -1176,7 +1137,7 @@ workflows:
             branches:
               only:
                 - develop
-                - develop_060
+                - breaking
 
     jobs:
       # OSSFUZZ builds and (regression) tests
@@ -1193,3 +1154,6 @@ workflows:
       - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
       - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
+
+      # External tests e.g., zeppelin, colony etc.
+      - t_ems_test_external: *workflow_emscripten
