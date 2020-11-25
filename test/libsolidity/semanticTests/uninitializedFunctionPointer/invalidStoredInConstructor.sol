@@ -19,5 +19,7 @@ contract Test {
     new C();
   }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> FAILURE

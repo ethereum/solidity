@@ -130,6 +130,8 @@ object \"D_13\" {
 
                 let expr_9_address := create(0, _1, sub(_2, _1))
 
+                if iszero(expr_9_address) { revert_forward_1() }
+
                 releaseTemporaryMemory()
                 let vloc_c_6_address := expr_9_address
 
@@ -140,6 +142,11 @@ object \"D_13\" {
             }
 
             function releaseTemporaryMemory() {
+            }
+
+            function revert_forward_1() {
+                returndatacopy(0, 0, returndatasize())
+                revert(0, returndatasize())
             }
 
             function shift_right_224_unsigned(value) -> newValue {
