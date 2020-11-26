@@ -364,6 +364,9 @@ void OptimiserSuite::runSequenceUntilStable(
 	size_t maxRounds
 )
 {
+	if (_steps.empty())
+		return;
+
 	size_t codeSize = 0;
 	for (size_t rounds = 0; rounds < maxRounds; ++rounds)
 	{
