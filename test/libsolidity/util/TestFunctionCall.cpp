@@ -74,6 +74,10 @@ string TestFunctionCall::format(
 
 			return;
 		}
+		else if (m_call.kind == FunctionCall::Kind::Balance)
+		{
+			
+		}
 
 		/// Formats the function signature. This is the same independent from the display-mode.
 		stream << _linePrefix << newline << ws << m_call.signature;

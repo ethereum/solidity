@@ -100,6 +100,21 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						call.kind = FunctionCall::Kind::Storage;
 						m_scanner.scanNextToken();
 					}
+					else if (accept(Token::Balance, true))
+					{
+						// Address is specified
+						if (accept(Token::HexNumber, true))
+						{
+						}
+//						expect(Token::Colon);
+						expect(Token::Arrow);
+						call.expectations.failure = false;
+						call.expectations.result.push_back(Parameter());
+						// expectation encoded as value
+						call.value = parseFunctionCallValue();
+						call.kind = FunctionCall::Kind::Balance;
+						m_scanner.scanNextToken();
+					}
 					else
 					{
 						bool lowLevelCall = false;
@@ -498,6 +513,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "hex") return {Token::Hex, ""};
 		if (_literal == "FAILURE") return {Token::Failure, ""};
 		if (_literal == "storage") return {Token::Storage, ""};
+		if (_literal == "balance") return {Token::Balance, ""};
 		return {Token::Identifier, _literal};
 	};
 

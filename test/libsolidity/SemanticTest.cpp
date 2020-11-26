@@ -234,7 +234,7 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			return TestResult::Failure;
 		}
 
-		if (!success && (m_runWithYul || !_compileViaYul))
+		if (!success) // && (m_runWithYul || !_compileViaYul))
 		{
 			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
 			for (auto const& test: m_tests)

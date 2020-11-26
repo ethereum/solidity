@@ -23,7 +23,7 @@ namespace solidity::frontend::test
 /**
  * All soltest tokens.
  */
-#define SOLT_TOKEN_LIST(T, K)      \
+#define SOLT_TOKEN_LIST(T, K)          \
 	T(Unknown, "unknown", 0)       \
 	T(Invalid, "invalid", 0)       \
 	T(EOS, "EOS", 0)               \
@@ -57,7 +57,8 @@ namespace solidity::frontend::test
 	K(Library, "library", 0)       \
 	K(Right, "right", 0)           \
 	K(Failure, "FAILURE", 0)       \
-	K(Storage, "storage", 0) \
+	K(Storage, "storage", 0)       \
+	K(Balance, "balance", 0)
 
 namespace soltest
 {
@@ -286,7 +287,9 @@ struct FunctionCall
 		/// Marks a library deployment call.
 		Library,
 		/// Check that the storage of the current contract is empty or non-empty.
-		Storage
+		Storage,
+		/// Check balance of current contract.
+		Balance
 	};
 	Kind kind = Kind::Regular;
 	/// Marks this function call as "short-handed", meaning
