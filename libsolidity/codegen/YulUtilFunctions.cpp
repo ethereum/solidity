@@ -1000,10 +1000,9 @@ string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 	});
 }
 
-std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
+std::string YulUtilFunctions::resizeArrayFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
-	solAssert(_type.isDynamicallySized(), "");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "...");
 
 	if (_type.isByteArray())
@@ -1019,8 +1018,10 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 
 				let oldLen := <fetchLength>(array)
 
-				// Store new length
-				sstore(array, newLen)
+				<?isDynamic>
+					// Store new length
+					sstore(array, newLen)
+				</isDynamic>
 
 				// Size was reduced, clear end of array
 				if lt(newLen, oldLen) {
@@ -1041,6 +1042,7 @@ std::string YulUtilFunctions::resizeDynamicArrayFunction(ArrayType const& _type)
 			("functionName", functionName)
 			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
+			("isDynamic", _type.isDynamicallySized())
 			("convertToSize", arrayConvertLengthToSize(_type))
 			("dataPosition", arrayDataAreaFunction(_type))
 			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
@@ -1425,7 +1427,7 @@ string YulUtilFunctions::clearStorageArrayFunction(ArrayType const& _type)
 		)")
 		("functionName", functionName)
 		("dynamic", _type.isDynamicallySized())
-		("resizeArray", _type.isDynamicallySized() ? resizeDynamicArrayFunction(_type) : "")
+		("resizeArray", _type.isDynamicallySized() ? resizeArrayFunction(_type) : "")
 		(
 			"clearRange",
 			clearStorageRangeFunction(
@@ -1497,6 +1499,9 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 		*_fromType.copyForLocation(_toType.location(), _toType.isPointer()) == dynamic_cast<ReferenceType const&>(_toType),
 		""
 	);
+	if (!_toType.isDynamicallySized())
+		solAssert(!_fromType.isDynamicallySized() && _fromType.length() <= _toType.length(), "");
+
 	if (_fromType.isByteArray())
 		return copyByteArrayToStorageFunction(_fromType, _toType);
 	if (_fromType.dataStoredIn(DataLocation::Storage) && _toType.baseType()->isValueType())
@@ -1508,9 +1513,8 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 			function <functionName>(slot, value<?isFromDynamicCalldata>, len</isFromDynamicCalldata>) {
 				<?fromStorage> if eq(slot, value) { leave } </fromStorage>
 				let length := <arrayLength>(value<?isFromDynamicCalldata>, len</isFromDynamicCalldata>)
-				<?isToDynamic>
-					<resizeArray>(slot, length)
-				</isToDynamic>
+
+				<resizeArray>(slot, length)
 
 				let srcPtr := <srcDataLocation>(value)
 
@@ -1564,7 +1568,6 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 		bool fromMemory = _fromType.dataStoredIn(DataLocation::Memory);
 		templ("fromMemory", fromMemory);
 		templ("fromCalldata", fromCalldata);
-		templ("isToDynamic", _toType.isDynamicallySized());
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		if (fromCalldata)
 		{
@@ -1573,8 +1576,7 @@ string YulUtilFunctions::copyArrayToStorageFunction(ArrayType const& _fromType, 
 			if (_fromType.baseType()->isDynamicallyEncoded())
 				templ("accessCalldataTail", accessCalldataTailFunction(*_fromType.baseType()));
 		}
-		if (_toType.isDynamicallySized())
-			templ("resizeArray", resizeDynamicArrayFunction(_toType));
+		templ("resizeArray", resizeArrayFunction(_toType));
 		templ("arrayLength",arrayLengthFunction(_fromType));
 		templ("isValueType", _fromType.baseType()->isValueType());
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
@@ -1693,6 +1695,8 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 	solAssert(_fromType.dataStoredIn(DataLocation::Storage) && _toType.baseType()->isValueType(), "");
 	solAssert(_toType.dataStoredIn(DataLocation::Storage), "");
 
+	solUnimplementedAssert(_fromType.storageStride() == _toType.storageStride(), "");
+
 	string functionName = "copy_array_to_storage_from_" + _fromType.identifier() + "_to_" + _toType.identifier();
 	return m_functionCollector.createFunction(functionName, [&](){
 		Whiskers templ(R"(
@@ -1701,9 +1705,7 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 				let length := <arrayLength>(src)
 				// Make sure array length is sane
 				if gt(length, 0xffffffffffffffff) { <panic>() }
-				<?isToDynamic>
-					<resizeArray>(dst, length)
-				</isToDynamic>
+				<resizeArray>(dst, length)
 
 				let srcPtr := <srcDataLocation>(src)
 
@@ -1723,9 +1725,7 @@ string YulUtilFunctions::copyValueArrayStorageToStorageFunction(ArrayType const&
 		if (_fromType.dataStoredIn(DataLocation::Storage))
 			solAssert(!_fromType.isValueType(), "");
 		templ("functionName", functionName);
-		templ("isToDynamic", _toType.isDynamicallySized());
-		if (_toType.isDynamicallySized())
-			templ("resizeArray", resizeDynamicArrayFunction(_toType));
+		templ("resizeArray", resizeArrayFunction(_toType));
 		templ("arrayLength",arrayLengthFunction(_fromType));
 		templ("panic", panicFunction());
 		templ("srcDataLocation", arrayDataAreaFunction(_fromType));
