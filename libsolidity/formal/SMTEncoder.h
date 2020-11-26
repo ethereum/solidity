@@ -153,6 +153,9 @@ protected:
 	void visitTypeConversion(FunctionCall const& _funCall);
 	void visitStructConstructorCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
+	void visitPublicGetter(FunctionCall const& _funCall);
+
+	bool isPublicGetter(Expression const& _expr);
 
 	/// Encodes a modifier or function body according to the modifier
 	/// visit depth.

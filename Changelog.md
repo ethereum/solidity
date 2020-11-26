@@ -10,6 +10,7 @@ Compiler Features:
  * Code Generator: Avoid memory allocation for default value if it is not used.
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
+ * SMTChecker: Support getters.
 
 Bugfixes:
  * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
