@@ -284,17 +284,15 @@
 //             let _5 := 0x40
 //             calldatacopy(0xe0, add(_3, 164), _5)
 //             calldatacopy(0x20, add(_3, 100), _5)
-//             let _6 := 0x120
-//             mstore(_6, sub(_2, c))
-//             let _7 := 0x60
-//             mstore(_7, k)
+//             mstore(0x120, sub(_2, c))
+//             mstore(0x60, k)
 //             mstore(0xc0, a)
-//             let result := call(gas(), 7, 0, 0xe0, _7, 0x1a0, _5)
-//             let result_1 := and(result, call(gas(), 7, 0, 0x20, _7, _6, _5))
-//             let _8 := 0x160
-//             let result_2 := and(result_1, call(gas(), 7, 0, 0x80, _7, _8, _5))
-//             let result_3 := and(result_2, call(gas(), 6, 0, _6, 0x80, _8, _5))
-//             result := and(result_3, call(gas(), 6, 0, _8, 0x80, b, _5))
+//             let result := call(gas(), 7, 0, 0xe0, 0x60, 0x1a0, _5)
+//             let result_1 := and(result, call(gas(), 7, 0, 0x20, 0x60, 0x120, _5))
+//             let _6 := 0x160
+//             let result_2 := and(result_1, call(gas(), 7, 0, 0x80, 0x60, _6, _5))
+//             let result_3 := and(result_2, call(gas(), 6, 0, 0x120, 0x80, _6, _5))
+//             result := and(result_3, call(gas(), 6, 0, _6, 0x80, b, _5))
 //             if eq(i, m)
 //             {
 //                 mstore(0x260, mload(0x20))
@@ -304,8 +302,8 @@
 //             }
 //             if gt(i, m)
 //             {
-//                 mstore(_7, c)
-//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, _7, 0x220, _5))
+//                 mstore(0x60, c)
+//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, 0x220, _5))
 //                 let result_5 := and(result_4, call(gas(), 6, 0, 0x220, 0x80, 0x260, _5))
 //                 result := and(result_5, call(gas(), 6, 0, 0x1a0, 0x80, 0x1e0, _5))
 //             }
@@ -316,7 +314,7 @@
 //             }
 //             b := add(b, _5)
 //         }
-//         if lt(m, n) { validatePairing(100) }
+//         if lt(m, n) { validatePairing() }
 //         if iszero(eq(mod(keccak256(0x2a0, add(b, not(671))), _2), challenge))
 //         {
 //             mstore(0, 404)
@@ -325,40 +323,41 @@
 //         mstore(0, 0x01)
 //         return(0, 0x20)
 //     }
-//     function validatePairing(t2)
+//     function validatePairing()
 //     {
-//         let t2_x := calldataload(t2)
-//         let _1 := 0x20
-//         let t2_x_1 := calldataload(add(t2, _1))
-//         let t2_y := calldataload(add(t2, 0x40))
-//         let t2_y_1 := calldataload(add(t2, 0x60))
-//         let _2 := 0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
-//         let _3 := 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
-//         let _4 := 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
-//         let _5 := 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
-//         if or(or(or(or(or(or(or(iszero(t2_x), iszero(t2_x_1)), iszero(t2_y)), iszero(t2_y_1)), eq(t2_x, _5)), eq(t2_x_1, _4)), eq(t2_y, _3)), eq(t2_y_1, _2))
+//         let t2_x := calldataload(0x64)
+//         let t2_x_1 := calldataload(132)
+//         let t2_y := calldataload(164)
+//         let t2_y_1 := calldataload(196)
+//         let _1 := 0x90689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b
+//         let _2 := 0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa
+//         let _3 := 0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2
+//         let _4 := 0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed
+//         if or(or(or(or(or(or(or(iszero(t2_x), iszero(t2_x_1)), iszero(t2_y)), iszero(t2_y_1)), eq(t2_x, _4)), eq(t2_x_1, _3)), eq(t2_y, _2)), eq(t2_y_1, _1))
 //         {
 //             mstore(0x00, 400)
-//             revert(0x00, _1)
+//             revert(0x00, 0x20)
 //         }
-//         mstore(_1, mload(0x1e0))
+//         let _5 := mload(0x1e0)
+//         let _6 := 0x20
+//         mstore(_6, _5)
 //         mstore(0x40, mload(0x200))
-//         mstore(0x80, _5)
-//         mstore(0x60, _4)
-//         mstore(0xc0, _3)
-//         mstore(0xa0, _2)
+//         mstore(0x80, _4)
+//         mstore(0x60, _3)
+//         mstore(0xc0, _2)
+//         mstore(0xa0, _1)
 //         mstore(0xe0, mload(0x260))
 //         mstore(0x100, mload(0x280))
 //         mstore(0x140, t2_x)
 //         mstore(0x120, t2_x_1)
-//         let _6 := 0x180
-//         mstore(_6, t2_y)
+//         let _7 := 0x180
+//         mstore(_7, t2_y)
 //         mstore(0x160, t2_y_1)
-//         let success := call(gas(), 8, 0, _1, _6, _1, _1)
-//         if or(iszero(success), iszero(mload(_1)))
+//         let success := call(gas(), 8, 0, _6, _7, _6, _6)
+//         if or(iszero(success), iszero(mload(_6)))
 //         {
 //             mstore(0, 400)
-//             revert(0, _1)
+//             revert(0, _6)
 //         }
 //     }
 //     function validateCommitment(note, k, a)

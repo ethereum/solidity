@@ -1,7 +1,7 @@
-{"contracts":{"A":{"C":{"ewasm":{"wasm":"0061736d01000000013f0960000060017e017e60047e7e7e7e017f60087e7e7e7e7e7e7e7e00600c7e7e7e7e7e7e7e7e7e7e7e7e0060017f0060017f017f60027f7f0060037f7f7f0002510408657468657265756d08636f6465436f7079000808657468657265756d06726576657274000708657468657265756d0c67657443616c6c56616c7565000508657468657265756d0666696e6973680007030a090002020606010403030503010001060100071102066d656d6f72790200046d61696e00040086030c435f335f6465706c6f7965640061736d0100000001160460000060047e7e7e7e017f60017f017f60027f7f0002130108657468657265756d067265766572740003030504000102020503010001060100071102066d656d6f72790200046d61696e00010a9f0204b30104017e027f037e037f02404200210020002000200042c00010022101200141c0006a210220022001490440000b2000a71004ad422086210320032000422088a71004ad84210420022004370000200241086a2004370000200241106a2004370000428001a71004ad4220862105200241186a2005428001422088a71004ad84370000200020002000200010022106200020002000200010022107200741c0006a210820082007490440000b2008200610000b0b2901017f024042002000200184200284520440000b42002003422088520440000b2003a721040b20040b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100341107421022002200041107610037221010b20010b0af00309dc0103017e027f057e02404200210020002000200042c00010052101200141c0006a210220022001490440000b20001009210320022003370000200241086a2003370000200241106a2003370000200241186a428001100937000041001002410029000010092104410041086a29000010092105410041106a2900001009210620042005842006410041186a290000100984845045044020002000200020002000200020002000100c0b42f9022107200020002000200020002000200042d3012000200020002007100a20002000200020002000200020002007100b0b0b2901017f024042002000200184200284520440000b42002003422088520440000b2003a721040b20040b2601027f0240200020012002200310052105200541c0006a210420042005490440000b0b20040b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100741107421022002200041107610077221010b20010b2201027e02402000a71008ad422086210220022000422088a71008ad8421010b20010b25000240200020012002200310062004200520062007100520082009200a200b100510000b0b1b000240200020012002200310062004200520062007100510030b0b1b000240200020012002200310062004200520062007100510010b0b","wast":"(module
+{"contracts":{"A":{"C":{"ewasm":{"wasm":"0061736d0100000001330b6000006000017e6000017f60017e0060017e017e60017e017f60027e7e0060017f0060017f017f60027f7f0060037f7f7f0002510408657468657265756d08636f6465436f7079000a08657468657265756d06726576657274000908657468657265756d0c67657443616c6c56616c7565000708657468657265756d0666696e6973680009030d0c0002050208080101040603000503010001060100071102066d656d6f72790200046d61696e00040092030c435f335f6465706c6f7965640061736d010000000112046000006000017f60017f017f60027f7f0002130108657468657265756d06726576657274000303060500010102020503010001060100071102066d656d6f72790200046d61696e00010aae02059d0103017e027f037e02404200210020002000200084200084520440000b200042c000422088520440000b42c000a72101200141c0006a210220022001490440000b2000a71005ad422086210320032000422088a71005ad84210420022004370000200241086a2004370000200241106a2004370000428001a71005ad4220862105200241186a2005428001422088a71005ad843700001003100210000b0b2f02017f017e02404200210120012001200184200184520440000b20012001422088520440000b2001a721000b20000b1e01027f024010022101200141c0006a210020002001490440000b0b20000b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100441107421022002200041107610047221010b20010b0aca040c960102027f057e024010052100200041c0006a210120012000490440000b100a210220012002370000200141086a2002370000200141106a2002370000200141186a100b370000410010024100290000100c2103410041086a290000100c2104410041106a290000100c210520032004842005410041186a290000100c848450450440100f0b428503210642ca012006100d2006100e0b0b2b01017f024042004200420084420084520440000b420042c000422088520440000b42c000a721000b20000b2901017f024042004200420084420084520440000b42002000422088520440000b2000a721010b20010b2f02017f017e02404200210120012001200184200184520440000b20012001422088520440000b2001a721000b20000b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100841107421022002200041107610087221010b20010b2201027e02404200a71009ad422086210120014200422088a71009ad8421000b20000b2401027e0240428001a71009ad42208621012001428001422088a71009ad8421000b20000b2201027e02402000a71009ad422086210220022000422088a71009ad8421010b20010b3001047f024020011006210220001006210310072104200441c0006a210520052004490440000b20052003200210000b0b2801037f024020001006210110072102200241c0006a210320032002490440000b2003200110030b0b2601037f02401007210010072101200141c0006a210220022001490440000b2002200010010b0b","wast":"(module
     ;; custom section for sub-module
-    ;; The Keccak-256 hash of the text representation of \"C_3_deployed\": 380167268971b84f9fd4e61f1659da4fd304bd6e30ec2dd33d412f3c8203ced7
-    ;; (@custom \"C_3_deployed\" \"0061736d0100000001160460000060047e7e7e7e017f60017f017f60027f7f0002130108657468657265756d067265766572740003030504000102020503010001060100071102066d656d6f72790200046d61696e00010a9f0204b30104017e027f037e037f02404200210020002000200042c00010022101200141c0006a210220022001490440000b2000a71004ad422086210320032000422088a71004ad84210420022004370000200241086a2004370000200241106a2004370000428001a71004ad4220862105200241186a2005428001422088a71004ad84370000200020002000200010022106200020002000200010022107200741c0006a210820082007490440000b2008200610000b0b2901017f024042002000200184200284520440000b42002003422088520440000b2003a721040b20040b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100341107421022002200041107610037221010b20010b\")
+    ;; The Keccak-256 hash of the text representation of \"C_3_deployed\": 1c21519afc0397d3ba45d99eb2354c3d74191cd82bffab348d52efabddb63f6a
+    ;; (@custom \"C_3_deployed\" \"0061736d010000000112046000006000017f60017f017f60027f7f0002130108657468657265756d06726576657274000303060500010102020503010001060100071102066d656d6f72790200046d61696e00010aae02059d0103017e027f037e02404200210020002000200084200084520440000b200042c000422088520440000b42c000a72101200141c0006a210220022001490440000b2000a71005ad422086210320032000422088a71005ad84210420022004370000200241086a2004370000200241106a2004370000428001a71005ad4220862105200241186a2005428001422088a71005ad843700001003100210000b0b2f02017f017e02404200210120012001200184200184520440000b20012001422088520440000b2001a721000b20000b1e01027f024010022101200141c0006a210020002001490440000b0b20000b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100441107421022002200041107610047221010b20010b\")
     (import \"ethereum\" \"codeCopy\" (func $eth.codeCopy (param i32 i32 i32)))
     (import \"ethereum\" \"revert\" (func $eth.revert (param i32 i32)))
     (import \"ethereum\" \"getCallValue\" (func $eth.getCallValue (param i32)))
@@ -10,46 +10,55 @@
     (export \"main\" (func $main))
 
 (func $main
-    (local $_1 i64)
     (local $p i32)
     (local $r i32)
-    (local $_2 i64)
+    (local $_1 i64)
     (local $z1 i64)
     (local $z2 i64)
     (local $z3 i64)
-    (local $_3 i64)
+    (local $_2 i64)
     (block $label_
-        (local.set $_1 (i64.const 0))
-        (local.set $p (call $u256_to_i32 (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 64)))
+        (local.set $p (call $u256_to_i32_685))
         (local.set $r (i32.add (local.get $p) (i32.const 64)))
         (if (i32.lt_u (local.get $r) (local.get $p)) (then
             (unreachable)))
-        (local.set $_2 (call $bswap64 (local.get $_1)))
-        (i64.store (local.get $r) (local.get $_2))
-        (i64.store (i32.add (local.get $r) (i32.const 8)) (local.get $_2))
-        (i64.store (i32.add (local.get $r) (i32.const 16)) (local.get $_2))
-        (i64.store (i32.add (local.get $r) (i32.const 24)) (call $bswap64 (i64.const 128)))
+        (local.set $_1 (call $bswap64_388))
+        (i64.store (local.get $r) (local.get $_1))
+        (i64.store (i32.add (local.get $r) (i32.const 8)) (local.get $_1))
+        (i64.store (i32.add (local.get $r) (i32.const 16)) (local.get $_1))
+        (i64.store (i32.add (local.get $r) (i32.const 24)) (call $bswap64_389))
         (call $eth.getCallValue (i32.const 0))
         (local.set $z1 (call $bswap64 (i64.load (i32.const 0))))
         (local.set $z2 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 8)))))
         (local.set $z3 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 16)))))
         (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $z1) (local.get $z2)) (i64.or (local.get $z3) (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 24)))))))) (then
-            (call $revert (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))))
-        (local.set $_3 (datasize \"C_3_deployed\"))
-        (call $codecopy (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (dataoffset \"C_3_deployed\") (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
-        (call $return (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_3))
+            (call $revert)))
+        (local.set $_2 (datasize \"C_3_deployed\"))
+        (call $codecopy (dataoffset \"C_3_deployed\") (local.get $_2))
+        (call $return (local.get $_2))
     )
 )
 
-(func $u256_to_i32
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
+(func $u256_to_i32_685
     (result i32)
     (local $v i32)
     (block $label__1
-        (if (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
+        (if (i64.ne (i64.const 0) (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.const 0))) (then
+            (unreachable)))
+        (if (i64.ne (i64.const 0) (i64.shr_u (i64.const 64) (i64.const 32))) (then
+            (unreachable)))
+        (local.set $v (i32.wrap_i64 (i64.const 64)))
+
+    )
+    (local.get $v)
+)
+
+(func $u256_to_i32_687
+    (param $x4 i64)
+    (result i32)
+    (local $v i32)
+    (block $label__2
+        (if (i64.ne (i64.const 0) (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.const 0))) (then
             (unreachable)))
         (if (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32))) (then
             (unreachable)))
@@ -59,29 +68,27 @@
     (local.get $v)
 )
 
-(func $to_internal_i32ptr
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
+(func $u256_to_i32
     (result i32)
-    (local $r i32)
-    (local $p i32)
-    (block $label__2
-        (local.set $p (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)))
-        (local.set $r (i32.add (local.get $p) (i32.const 64)))
-        (if (i32.lt_u (local.get $r) (local.get $p)) (then
+    (local $v i32)
+    (local $_1 i64)
+    (block $label__3
+        (local.set $_1 (i64.const 0))
+        (if (i64.ne (local.get $_1) (i64.or (i64.or (local.get $_1) (local.get $_1)) (local.get $_1))) (then
             (unreachable)))
+        (if (i64.ne (local.get $_1) (i64.shr_u (local.get $_1) (i64.const 32))) (then
+            (unreachable)))
+        (local.set $v (i32.wrap_i64 (local.get $_1)))
 
     )
-    (local.get $r)
+    (local.get $v)
 )
 
 (func $bswap16
     (param $x i32)
     (result i32)
     (local $y i32)
-    (block $label__3
+    (block $label__4
         (local.set $y (i32.or (i32.and (i32.shl (local.get $x) (i32.const 8)) (i32.const 65280)) (i32.and (i32.shr_u (local.get $x) (i32.const 8)) (i32.const 255))))
 
     )
@@ -93,9 +100,33 @@
     (result i32)
     (local $y i32)
     (local $hi i32)
-    (block $label__4
+    (block $label__5
         (local.set $hi (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)))
         (local.set $y (i32.or (local.get $hi) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
+
+    )
+    (local.get $y)
+)
+
+(func $bswap64_388
+    (result i64)
+    (local $y i64)
+    (local $hi i64)
+    (block $label__6
+        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 0)))) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 0) (i64.const 32)))))))
+
+    )
+    (local.get $y)
+)
+
+(func $bswap64_389
+    (result i64)
+    (local $y i64)
+    (local $hi i64)
+    (block $label__7
+        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 128)))) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 128) (i64.const 32)))))))
 
     )
     (local.get $y)
@@ -106,7 +137,7 @@
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (block $label__5
+    (block $label__8
         (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (local.get $x)))) (i64.const 32)))
         (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (local.get $x) (i64.const 32)))))))
 
@@ -115,48 +146,49 @@
 )
 
 (func $codecopy
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
-    (param $y1 i64)
-    (param $y2 i64)
-    (param $y3 i64)
     (param $y4 i64)
-    (param $z1 i64)
-    (param $z2 i64)
-    (param $z3 i64)
     (param $z4 i64)
-    (block $label__6
-        (call $eth.codeCopy (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)) (call $u256_to_i32 (local.get $z1) (local.get $z2) (local.get $z3) (local.get $z4)))
+    (local $_1 i32)
+    (local $_2 i32)
+    (local $p i32)
+    (local $r i32)
+    (block $label__9
+        (local.set $_1 (call $u256_to_i32_687 (local.get $z4)))
+        (local.set $_2 (call $u256_to_i32_687 (local.get $y4)))
+        (local.set $p (call $u256_to_i32))
+        (local.set $r (i32.add (local.get $p) (i32.const 64)))
+        (if (i32.lt_u (local.get $r) (local.get $p)) (then
+            (unreachable)))
+        (call $eth.codeCopy (local.get $r) (local.get $_2) (local.get $_1))
     )
 )
 
 (func $return
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
-    (param $y1 i64)
-    (param $y2 i64)
-    (param $y3 i64)
     (param $y4 i64)
-    (block $label__7
-        (call $eth.finish (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
+    (local $_1 i32)
+    (local $p i32)
+    (local $r i32)
+    (block $label__10
+        (local.set $_1 (call $u256_to_i32_687 (local.get $y4)))
+        (local.set $p (call $u256_to_i32))
+        (local.set $r (i32.add (local.get $p) (i32.const 64)))
+        (if (i32.lt_u (local.get $r) (local.get $p)) (then
+            (unreachable)))
+        (call $eth.finish (local.get $r) (local.get $_1))
     )
 )
 
 (func $revert
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
-    (param $x4 i64)
-    (param $y1 i64)
-    (param $y2 i64)
-    (param $y3 i64)
-    (param $y4 i64)
-    (block $label__8
-        (call $eth.revert (call $to_internal_i32ptr (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)) (call $u256_to_i32 (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4)))
+    (local $_1 i32)
+    (local $p i32)
+    (local $r i32)
+    (block $label__11
+        (local.set $_1 (call $u256_to_i32))
+        (local.set $p (call $u256_to_i32))
+        (local.set $r (i32.add (local.get $p) (i32.const 64)))
+        (if (i32.lt_u (local.get $r) (local.get $p)) (then
+            (unreachable)))
+        (call $eth.revert (local.get $r) (local.get $_1))
     )
 )
 
