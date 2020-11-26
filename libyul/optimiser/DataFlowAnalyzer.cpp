@@ -82,7 +82,7 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 	assertThrow(_assignment.value, OptimizerException, "");
 	clearKnowledgeIfInvalidated(*_assignment.value);
 	visit(*_assignment.value);
-	handleAssignment(names, _assignment.value.get());
+	handleAssignment(names, _assignment.value.get(), false);
 }
 
 void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
@@ -98,7 +98,7 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 		visit(*_varDecl.value);
 	}
 
-	handleAssignment(names, _varDecl.value.get());
+	handleAssignment(names, _varDecl.value.get(), true);
 }
 
 void DataFlowAnalyzer::operator()(If& _if)
@@ -161,7 +161,7 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	for (auto const& var: _fun.returnVariables)
 	{
 		m_variableScopes.back().variables.emplace(var.name);
-		handleAssignment({var.name}, nullptr);
+		handleAssignment({var.name}, nullptr, true);
 	}
 	ASTModifier::operator()(_fun);
 
@@ -220,9 +220,10 @@ void DataFlowAnalyzer::operator()(Block& _block)
 	assertThrow(numScopes == m_variableScopes.size(), OptimizerException, "");
 }
 
-void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value)
+void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value, bool _isDeclaration)
 {
-	clearValues(_variables);
+	if (!_isDeclaration)
+		clearValues(_variables);
 
 	MovableChecker movableChecker{m_dialect, &m_functionSideEffects};
 	if (_value)
@@ -244,14 +245,17 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 	for (auto const& name: _variables)
 	{
 		m_references.set(name, referencedVariables);
-		// assignment to slot denoted by "name"
-		m_storage.eraseKey(name);
-		// assignment to slot contents denoted by "name"
-		m_storage.eraseValue(name);
-		// assignment to slot denoted by "name"
-		m_memory.eraseKey(name);
-		// assignment to slot contents denoted by "name"
-		m_memory.eraseValue(name);
+		if (!_isDeclaration)
+		{
+			// assignment to slot denoted by "name"
+			m_storage.eraseKey(name);
+			// assignment to slot contents denoted by "name"
+			m_storage.eraseValue(name);
+			// assignment to slot denoted by "name"
+			m_memory.eraseKey(name);
+			// assignment to slot contents denoted by "name"
+			m_memory.eraseValue(name);
+		}
 	}
 
 	if (_value && _variables.size() == 1)
