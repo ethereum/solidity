@@ -19,6 +19,8 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/AsmData.h>
 #include <libyul/Dialect.h>
+#include <libyul/YulString.h>
+#include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
 
 #include <libsolutil/CommonData.h>
@@ -28,19 +30,13 @@
 using namespace solidity::yul;
 using namespace std;
 
-NameSimplifier::NameSimplifier(
-	OptimiserStepContext& _context,
-	Block const& _ast
-):
-	m_context(_context),
-	m_usedNames(_context.reservedIdentifiers)
+NameSimplifier::NameSimplifier(OptimiserStepContext& _context, Block const& _ast):
+	m_context(_context)
 {
-	for (YulString name: m_usedNames)
+	for (YulString name: _context.reservedIdentifiers)
 		m_translations[name] = name;
 
-	set<YulString> allNames = NameCollector(_ast).names();
-	m_usedNames += allNames;
-	for (YulString name: allNames)
+	for (YulString const& name: NameCollector(_ast).names())
 		findSimplification(name);
 }
 
@@ -77,7 +73,7 @@ void NameSimplifier::operator()(FunctionCall& _funCall)
 	ASTModifier::operator()(_funCall);
 }
 
-void NameSimplifier::findSimplification(YulString _name)
+void NameSimplifier::findSimplification(YulString const& _name)
 {
 	if (m_translations.count(_name))
 		return;
@@ -98,19 +94,19 @@ void NameSimplifier::findSimplification(YulString _name)
 		{regex("index_access_t_array"), "index_access"},
 		{regex("[0-9]*_$"), ""}
 	};
+
 	for (auto const& [pattern, substitute]: replacements)
 	{
 		string candidate = regex_replace(name, pattern, substitute);
-		if (
-			!isRestrictedIdentifier(m_context.dialect, YulString(candidate)) &&
-			!m_usedNames.count(YulString(candidate))
-		)
+		if (!m_context.dispenser.illegalName(YulString(candidate)))
 			name = candidate;
 	}
+
 	if (name != _name.str())
 	{
-		m_usedNames.insert(YulString(name));
-		m_translations[_name] = YulString(name);
+		YulString newName{name};
+		m_context.dispenser.markUsed(newName);
+		m_translations[_name] = move(newName);
 	}
 }
 
