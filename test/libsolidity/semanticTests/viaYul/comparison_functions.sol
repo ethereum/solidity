@@ -1,9 +1,11 @@
 contract C {
+	// If these two functions are identical, the optimiser
+	// on the old codegen path can deduplicate them, and breaking the test.
 	function internal1() internal pure returns (bool) {
 		return true;
 	}
 	function internal2() internal pure returns (bool) {
-		return true;
+		return false;
 	}
 
 	function equal() public pure returns (bool same, bool diff, bool inv) {
@@ -23,7 +25,7 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // compileToEwasm: also
 // ----
 // equal() -> true, false, false

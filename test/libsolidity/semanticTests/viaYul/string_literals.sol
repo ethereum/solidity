@@ -19,7 +19,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // compileToEwasm: also
 // ----
 // short_dyn() -> 0x20, 3, "abc"

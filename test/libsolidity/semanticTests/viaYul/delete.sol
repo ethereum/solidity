@@ -19,7 +19,7 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // compileToEwasm: also
 // ----
 // call_deleted_internal_func() -> FAILURE, hex"4e487b71", 0x51

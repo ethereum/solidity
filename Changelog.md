@@ -31,6 +31,7 @@ AST Changes:
 ### 0.7.6 (unreleased)
 
 Language Features:
+ * Code generator: Support copying dynamically encoded structs from calldata to memory.
  * The fallback function can now also have a single ``calldata`` argument (equaling ``msg.data``) and return ``bytes memory`` (which will not be ABI-encoded but returned as-is).
 
 Compiler Features:
@@ -38,6 +39,8 @@ Compiler Features:
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
 
+Bugfixes:
+ * SMTChecker: Fix internal compiler error when doing bitwise compound assignment with string literals.
 
 ### 0.7.5 (2020-11-18)
 

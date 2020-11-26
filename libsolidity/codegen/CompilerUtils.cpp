@@ -1106,11 +1106,22 @@ void CompilerUtils::convertType(
 			}
 			case DataLocation::CallData:
 			{
-				solUnimplementedAssert(!typeOnStack.isDynamicallyEncoded(), "");
-				m_context << Instruction::DUP1;
-				m_context << Instruction::CALLDATASIZE;
-				m_context << Instruction::SUB;
-				abiDecode({&targetType}, false);
+				if (typeOnStack.isDynamicallyEncoded())
+				{
+					solAssert(m_context.useABICoderV2(), "");
+					m_context.callYulFunction(
+						m_context.utilFunctions().conversionFunction(typeOnStack, targetType),
+						1,
+						1
+					);
+				}
+				else
+				{
+					m_context << Instruction::DUP1;
+					m_context << Instruction::CALLDATASIZE;
+					m_context << Instruction::SUB;
+					abiDecode({&targetType}, false);
+				}
 				break;
 			}
 			case DataLocation::Memory:

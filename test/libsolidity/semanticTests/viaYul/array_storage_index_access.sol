@@ -14,7 +14,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // test_indices(uint256): 1 ->
 // test_indices(uint256): 129 ->
