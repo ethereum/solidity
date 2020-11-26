@@ -1810,6 +1810,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					", " <<
 					offset <<
 					")\n";
+			else if (
+				dynamic_cast<ArrayType const*>(_memberAccess.annotation().type) ||
+				dynamic_cast<StructType const*>(_memberAccess.annotation().type)
+			)
+				define(_memberAccess) << offset << "\n";
 			else
 				define(_memberAccess) <<
 					m_utils.readFromCalldata(*_memberAccess.annotation().type) <<
