@@ -1632,7 +1632,7 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
 		if (requests.count(g_strAbi))
-			contractData[g_strAbi] = jsonCompactPrint(m_compiler->contractABI(contractName));
+			contractData[g_strAbi] = m_compiler->contractABI(contractName);
 		if (requests.count("metadata"))
 			contractData["metadata"] = m_compiler->metadata(contractName);
 		if (requests.count(g_strBinary) && m_compiler->compilationSuccessful())
@@ -1644,7 +1644,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (requests.count(g_strStorageLayout) && m_compiler->compilationSuccessful())
-			contractData[g_strStorageLayout] = jsonCompactPrint(m_compiler->storageLayout(contractName));
+			contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
 		if (requests.count(g_strGeneratedSources) && m_compiler->compilationSuccessful())
 			contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
 		if (requests.count(g_strGeneratedSourcesRuntime) && m_compiler->compilationSuccessful())
@@ -1662,9 +1662,9 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = jsonCompactPrint(m_compiler->natspecDev(contractName));
+			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = jsonCompactPrint(m_compiler->natspecUser(contractName));
+			contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
 	}
 
 	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
