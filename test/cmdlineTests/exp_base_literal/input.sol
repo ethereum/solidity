@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity > 0.7.1;
+pragma abicoder v2;
 
 contract C {
 	function f(uint a, uint b, uint c, uint d) public pure returns (uint, int, uint, uint) {

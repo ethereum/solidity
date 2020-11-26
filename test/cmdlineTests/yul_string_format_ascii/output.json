@@ -6,23 +6,23 @@
  *******************************************************/
 
 
-object \"C_10\" {
+object \"C_11\" {
     code {
         mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
-        constructor_C_10()
+        constructor_C_11()
 
-        codecopy(0, dataoffset(\"C_10_deployed\"), datasize(\"C_10_deployed\"))
+        codecopy(0, dataoffset(\"C_11_deployed\"), datasize(\"C_11_deployed\"))
 
-        return(0, datasize(\"C_10_deployed\"))
+        return(0, datasize(\"C_11_deployed\"))
 
-        function constructor_C_10() {
+        function constructor_C_11() {
 
         }
 
     }
-    object \"C_10_deployed\" {
+    object \"C_11_deployed\" {
         code {
             mstore(64, 128)
 
@@ -36,7 +36,7 @@ object \"C_10\" {
                     // f()
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
-                    let ret_0 :=  fun_f_9()
+                    let ret_0 :=  fun_f_10()
                     let memPos := allocateMemory(0)
                     let memEnd := abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack(memPos , ret_0)
                     return(memPos, sub(memEnd, memPos))
@@ -107,11 +107,11 @@ object \"C_10\" {
                 }
             }
 
-            function fun_f_9() -> vloc__4_mpos {
+            function fun_f_10() -> vloc__5_mpos {
                 let zero_value_for_type_t_string_memory_ptr_1_mpos := zero_value_for_split_t_string_memory_ptr()
-                vloc__4_mpos := zero_value_for_type_t_string_memory_ptr_1_mpos
+                vloc__5_mpos := zero_value_for_type_t_string_memory_ptr_1_mpos
 
-                vloc__4_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
+                vloc__5_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
                 leave
 
             }

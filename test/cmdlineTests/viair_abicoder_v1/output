@@ -1,4 +1,5 @@
-{"contracts":{"A":{"C":{"ir":"/*******************************************************
+IR:
+/*******************************************************
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
@@ -6,23 +7,23 @@
  *******************************************************/
 
 
-object \"C_11\" {
+object "test_11" {
     code {
         mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
-        constructor_C_11()
+        constructor_test_11()
 
-        codecopy(0, dataoffset(\"C_11_deployed\"), datasize(\"C_11_deployed\"))
+        codecopy(0, dataoffset("test_11_deployed"), datasize("test_11_deployed"))
 
-        return(0, datasize(\"C_11_deployed\"))
+        return(0, datasize("test_11_deployed"))
 
-        function constructor_C_11() {
+        function constructor_test_11() {
 
         }
 
     }
-    object \"C_11_deployed\" {
+    object "test_11_deployed" {
         code {
             mstore(64, 128)
 
@@ -38,7 +39,7 @@ object \"C_11\" {
                     abi_decode_tuple_(4, calldatasize())
                     let ret_0 :=  fun_f_10()
                     let memPos := allocateMemory(0)
-                    let memEnd := abi_encode_tuple_t_bytes4__to_t_bytes4__fromStack(memPos , ret_0)
+                    let memEnd := abi_encode_tuple_t_bool__to_t_bool__fromStack(memPos , ret_0)
                     return(memPos, sub(memEnd, memPos))
                 }
 
@@ -52,14 +53,14 @@ object \"C_11\" {
 
             }
 
-            function abi_encode_t_bytes4_to_t_bytes4_fromStack(value, pos) {
-                mstore(pos, cleanup_t_bytes4(value))
+            function abi_encode_t_bool_to_t_bool_fromStack(value, pos) {
+                mstore(pos, cleanup_t_bool(value))
             }
 
-            function abi_encode_tuple_t_bytes4__to_t_bytes4__fromStack(headStart , value0) -> tail {
+            function abi_encode_tuple_t_bool__to_t_bool__fromStack(headStart , value0) -> tail {
                 tail := add(headStart, 32)
 
-                abi_encode_t_bytes4_to_t_bytes4_fromStack(value0,  add(headStart, 0))
+                abi_encode_t_bool_to_t_bool_fromStack(value0,  add(headStart, 0))
 
             }
 
@@ -71,37 +72,22 @@ object \"C_11\" {
                 mstore(64, newFreePtr)
             }
 
-            function cleanup_t_bytes4(value) -> cleaned {
-                cleaned := and(value, 0xffffffff00000000000000000000000000000000000000000000000000000000)
-            }
-
-            function cleanup_t_rational_2864434397_by_1(value) -> cleaned {
-                cleaned := value
-            }
-
-            function convert_t_rational_2864434397_by_1_to_t_bytes4(value) -> converted {
-                converted := shift_left_224(cleanup_t_rational_2864434397_by_1(value))
+            function cleanup_t_bool(value) -> cleaned {
+                cleaned := iszero(iszero(value))
             }
 
             function fun_f_10() -> vloc__5 {
-                let zero_value_for_type_t_bytes4_1 := zero_value_for_split_t_bytes4()
-                vloc__5 := zero_value_for_type_t_bytes4_1
+                let zero_value_for_type_t_bool_1 := zero_value_for_split_t_bool()
+                vloc__5 := zero_value_for_type_t_bool_1
 
-                let expr_7 := 0xaabbccdd
-                vloc__5 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_7)
+                let expr_7 := 0x01
+                vloc__5 := expr_7
                 leave
 
             }
 
             function panic_error() {
                 invalid()
-            }
-
-            function shift_left_224(value) -> newValue {
-                newValue :=
-
-                shl(224, value)
-
             }
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -111,7 +97,7 @@ object \"C_11\" {
 
             }
 
-            function zero_value_for_split_t_bytes4() -> ret {
+            function zero_value_for_split_t_bool() -> ret {
                 ret := 0
             }
 
@@ -120,5 +106,3 @@ object \"C_11\" {
     }
 
 }
-
-"}}},"sources":{"A":{"id":0}}}
