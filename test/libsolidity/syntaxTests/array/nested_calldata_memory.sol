@@ -10,4 +10,3 @@ contract Test {
 }
 
 // ----
-// UnimplementedFeatureError: Copying nested dynamic calldata arrays to memory is not implemented in the old code generator.
