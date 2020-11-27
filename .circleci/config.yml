@@ -884,7 +884,7 @@ jobs:
 
   t_ems_compile_ext_colony:
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:12
     environment:
       TERM: xterm
     steps:
@@ -903,7 +903,7 @@ jobs:
 
   t_ems_test_ext_colony:
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:12
     environment:
       TERM: xterm
     steps:

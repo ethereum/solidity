@@ -109,13 +109,6 @@ function replace_version_pragmas
     find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
-function replace_libsolc_call
-{
-    # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
-    printLog "Replacing libsolc compile call in Truffle..."
-    sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
-}
-
 function find_truffle_config
 {
     local config_file="truffle.js"
