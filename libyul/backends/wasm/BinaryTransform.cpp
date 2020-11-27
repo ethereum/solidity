@@ -156,6 +156,8 @@ Opcode constOpcodeFor(ValueType _type)
 }
 
 static map<string, uint8_t> const builtins = {
+	{"i32.select", 0x1b},
+	{"i64.select", 0x1b},
 	{"i32.load", 0x28},
 	{"i64.load", 0x29},
 	{"i32.load8_s", 0x2c},

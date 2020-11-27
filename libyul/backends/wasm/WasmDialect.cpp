@@ -120,6 +120,10 @@ WasmDialect::WasmDialect()
 	addFunction("i32.drop", {i32}, {});
 	addFunction("i64.drop", {i64}, {});
 
+	// Select is also overloaded.
+	addFunction("i32.select", {i32, i32, i32}, {i32});
+	addFunction("i64.select", {i64, i64, i32}, {i64});
+
 	addFunction("nop", {}, {});
 	addFunction("unreachable", {}, {}, false);
 	m_functions["unreachable"_yulstring].sideEffects.storage = SideEffects::None;
