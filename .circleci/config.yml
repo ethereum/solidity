@@ -846,8 +846,9 @@ jobs:
           name: External GnosisSafe tests
           command: |
             test/externalTests/gnosis.sh /tmp/workspace/soljson.js || test/externalTests/gnosis.sh /tmp/workspace/soljson.js
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
+      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
+      #- run: *gitter_notify_failure
+      #- run: *gitter_notify_success
 
   t_ems_compile_ext_zeppelin:
     docker:
@@ -877,8 +878,9 @@ jobs:
           name: External Zeppelin tests
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js || test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
+      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
+      #- run: *gitter_notify_failure
+      #- run: *gitter_notify_success
 
   t_ems_compile_ext_colony:
     docker:
@@ -916,8 +918,9 @@ jobs:
           name: External ColonyNetworks tests
           command: |
             test/externalTests/colony.sh /tmp/workspace/soljson.js || test/externalTests/colony.sh /tmp/workspace/soljson.js
-      - run: *gitter_notify_failure
-      - run: *gitter_notify_success
+      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
+      #- run: *gitter_notify_failure
+      #- run: *gitter_notify_success
 
   t_ems_compile_ext_ens:
     docker:
