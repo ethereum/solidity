@@ -9,22 +9,23 @@ version: 2.1
 parameters:
   ubuntu-1804-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-3
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:19f613d2ac47fedff654dacef984d8a64726c4d67ae8f2667a85ee7d97ac4c1c"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-4
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:79ccaf5a294a3c4f480b2cd69c6d845540c12435e64d732e8536f8f99ad35f03"
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-3
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:aeedbe7390a7383815f0cf0f8a1b8bf84dc5e334a3b0043ebcdf8b1bdbe80a81"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-4
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:aca1372dcc5edadd3db13ff1aa6807727d79e08082a48eb7cc05444c1b516ace"
   ubuntu-2004-clang-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-3
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:2593c15689dee5b5bdfff96a36c8c68a468cd3b147c41f75b820b8fabc257be9"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-4
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:0954edfb48a7efa6922b4d6adf536a2fc483ca34ad62f95ec54c33a616a66974"
   ubuntu-1604-clang-ossfuzz-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-5
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:65901cd8b64b5959bc4c907df47bb7be3d3b00c9ae8948c75aad7d4c57875cf0"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1604.clang.ossfuzz-6
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:990ed3aaac3fcb87ca9b63a021a91ed89dfd165b341aa7b5c6457cdbe132dfb3"
   emscripten-docker-image:
     type: string
+    # solbuildpackpusher/solidity-buildpack-deps:emscripten-2
     default: "solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c"
 
 orbs:
