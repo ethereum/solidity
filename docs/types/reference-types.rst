@@ -550,3 +550,8 @@ members of the local variable actually write to the state.
 Of course, you can also directly access the members of the struct without
 assigning it to a local variable, as in
 ``campaigns[campaignID].amount = 0``.
+
+.. note::
+    Until Solidity 0.7.0, memory-structs containing members of storage-only types (e.g. mappings)
+    were allowed and assignments like ``campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0)``
+    in the example above would work and just silently skip those members.
