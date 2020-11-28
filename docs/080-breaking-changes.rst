@@ -61,3 +61,8 @@ New Restrictions
 
 * Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of
   public functions and events.
+
+Interface Changes
+=================
+
+* Changed output of ``--combined-json``. JSON fields ``abi``, ``devdoc``, ``userdoc`` and ``storage-layout`` are sub-objects now. Before 0.8.0 they used to be serialised as strings.

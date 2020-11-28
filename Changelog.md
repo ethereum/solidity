@@ -16,6 +16,7 @@ Breaking Changes:
  * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
  * Type System: Explicit conversions from literals to enums are only allowed if the value fits in the enum.
  * Type System: Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of public functions and events.
+ * Command Line Interface: JSON fields `abi`, `devdoc`, `userdoc` and `storage-layout` are now sub-objects rather than strings.
 
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
