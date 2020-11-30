@@ -51,11 +51,7 @@ function eq(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4 {
 
 // returns 0 if a == b, -1 if a < b and 1 if a > b
 function cmp(a, b) -> r:i32 {
-	switch i64.lt_u(a, b)
-	case 1:i32 { r := 0xffffffff:i32 }
-	default {
-		r := i64.ne(a, b)
-	}
+	r := i32.select(0xffffffff:i32, i64.ne(a, b), i64.lt_u(a, b))
 }
 
 function lt_320x320_64(x1, x2, x3, x4, x5, y1, y2, y3, y4, y5) -> z:i32 {

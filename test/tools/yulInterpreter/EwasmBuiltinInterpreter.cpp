@@ -154,6 +154,20 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(
 	}
 	else if (fun == "i32.drop" || fun == "i64.drop" || fun == "nop")
 		return {};
+	else if (fun == "i32.select")
+	{
+		if ((arg.at(2) & 0xffffffff) == 0)
+			return arg.at(1);
+		else
+			return arg.at(0);
+	}
+	else if (fun == "i64.select")
+	{
+		if ((arg.at(2) & 0xffffffffffffffff) == 0)
+			return arg.at(1);
+		else
+			return arg.at(0);
+	}
 	else if (fun == "i32.wrap_i64")
 		return arg.at(0) & uint32_t(-1);
 	else if (fun == "i64.extend_i32_u")
