@@ -10,7 +10,6 @@ contract test {
     }
 }
 // ====
-// ABIEncoderV1Only: true
 // EVMVersion: >=byzantium
 // ----
 // table(uint8): 0 -> 0

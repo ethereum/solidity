@@ -4,8 +4,6 @@ contract C {
         return a >> b;
     }
 }
-// ====
-// ABIEncoderV1Only: true
 // ----
 // f(int32,uint32): 0xffffff99, 0x00 -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff99
 // f(int32,uint32): 0xffffff99, 0x01 -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffcc

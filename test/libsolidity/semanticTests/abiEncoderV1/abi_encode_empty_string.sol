@@ -21,7 +21,6 @@ contract C {
 }
 
 // ====
-// ABIEncoderV1Only: true
 // compileViaYul: false
 // ----
 // f1() -> 0x20, 0x40, 0x20, 0

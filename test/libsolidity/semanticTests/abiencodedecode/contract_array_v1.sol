@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
   function f(bytes calldata x) public returns (C[] memory) {
     return abi.decode(x, (C[]));

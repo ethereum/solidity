@@ -16,8 +16,6 @@ contract C {
         return a >> b;
     }
 }
-// ====
-// ABIEncoderV1Only: true
 // ----
 // f(int8,uint8): 0x00, 0x03 -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
 // f(int8,uint8): 0x00, 0x04 -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
