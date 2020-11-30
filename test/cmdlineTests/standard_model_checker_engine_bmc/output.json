@@ -1,4 +1,4 @@
-{"auxiliaryInputRequested":{"smtlib2queries":{"0x8b2c3058077c75f8fff85d2d387198b91b4e591448624f4bef0ab6c7b87d5ec1":"(set-option :produce-models true)
+{"auxiliaryInputRequested":{"smtlib2queries":{"0x238aade411d63d50406236089e28f3770d51f95888222fdb838f930911e0f763":"(set-option :produce-models true)
 (set-logic ALL)
 (declare-fun |error_0| () Int)
 (declare-fun |this_0| () Int)
@@ -15,7 +15,7 @@
 (declare-fun |expr_9_0| () Int)
 (declare-fun |expr_10_1| () Bool)
 
-(assert (and (and true (and (= expr_10_1 (> expr_8_0 expr_9_0)) (and (= expr_9_0 0) (and (= expr_8_0 x_4_0) (and (and (>= x_4_0 0) (<= x_4_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) true))))) (not expr_10_1)))
+(assert (and (and (and true true) (and (= expr_10_1 (> expr_8_0 expr_9_0)) (and (= expr_9_0 0) (and (= expr_8_0 x_4_0) (and (and (>= x_4_0 0) (<= x_4_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) true))))) (not expr_10_1)))
 (declare-const |EVALEXPR_0| Int)
 (assert (= |EVALEXPR_0| x_4_0))
 (check-sat)
