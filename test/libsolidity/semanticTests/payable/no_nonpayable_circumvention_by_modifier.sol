@@ -13,6 +13,8 @@ contract C {
         return address(this).balance;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f(), 27 wei -> FAILURE
 // balance() -> 0

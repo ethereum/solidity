@@ -581,6 +581,12 @@ bool IRGeneratorForStatements::visit(IfStatement const& _ifStatement)
 	return false;
 }
 
+void IRGeneratorForStatements::endVisit(PlaceholderStatement const&)
+{
+	solAssert(m_placeholderCallback, "");
+	m_code << m_placeholderCallback();
+}
+
 bool IRGeneratorForStatements::visit(ForStatement const& _forStatement)
 {
 	setLocation(_forStatement);

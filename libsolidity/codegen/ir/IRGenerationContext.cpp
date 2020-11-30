@@ -80,6 +80,11 @@ IRVariable const& IRGenerationContext::localVariable(VariableDeclaration const& 
 	return m_localVariables.at(&_varDecl);
 }
 
+void IRGenerationContext::resetLocalVariables()
+{
+	m_localVariables.clear();
+}
+
 void IRGenerationContext::registerImmutableVariable(VariableDeclaration const& _variable)
 {
 	solAssert(_variable.immutable(), "Attempted to register a non-immutable variable as immutable.");

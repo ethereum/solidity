@@ -49,6 +49,8 @@ struct IRNames
 {
 	static std::string function(FunctionDefinition const& _function);
 	static std::string function(VariableDeclaration const& _varDecl);
+	static std::string modifierInvocation(ModifierInvocation const& _modifierInvocation);
+	static std::string functionWithModifierInner(FunctionDefinition const& _function);
 	static std::string creationObject(ContractDefinition const& _contract);
 	static std::string runtimeObject(ContractDefinition const& _contract);
 	static std::string internalDispatch(YulArity const& _arity);

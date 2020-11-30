@@ -73,6 +73,12 @@ private:
 	InternalDispatchMap generateInternalDispatchFunctions();
 	/// Generates code for and returns the name of the function.
 	std::string generateFunction(FunctionDefinition const& _function);
+	std::string generateModifier(
+		ModifierInvocation const& _modifierInvocation,
+		FunctionDefinition const& _function,
+		std::string const& _nextFunction
+	);
+	std::string generateFunctionWithModifierInner(FunctionDefinition const& _function);
 	/// Generates a getter for the given declaration and returns its name
 	std::string generateGetter(VariableDeclaration const& _varDecl);
 

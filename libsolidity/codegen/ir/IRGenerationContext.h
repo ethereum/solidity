@@ -97,6 +97,7 @@ public:
 	IRVariable const& addLocalVariable(VariableDeclaration const& _varDecl);
 	bool isLocalVariable(VariableDeclaration const& _varDecl) const { return m_localVariables.count(&_varDecl); }
 	IRVariable const& localVariable(VariableDeclaration const& _varDecl);
+	void resetLocalVariables();
 
 	/// Registers an immutable variable of the contract.
 	/// Should only be called at construction time.
