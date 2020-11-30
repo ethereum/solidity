@@ -107,7 +107,7 @@ public:
 
 protected:
 	/// Registers the assignment.
-	void handleAssignment(std::set<YulString> const& _names, Expression* _value);
+	void handleAssignment(std::set<YulString> const& _names, Expression* _value, bool _isDeclaration);
 
 	/// Creates a new inner scope.
 	void pushScope(bool _functionScope);
