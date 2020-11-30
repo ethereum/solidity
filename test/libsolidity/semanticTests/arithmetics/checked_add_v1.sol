@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
     // Input is still not checked - this needs ABIEncoderV2!
     function f(uint16 a, uint16 b) public returns (uint16) {
@@ -5,7 +6,7 @@ contract C {
     }
 }
 // ====
-// ABIEncoderV1Only: true
+// compileViaYul: false
 // ----
 // f(uint16,uint16): 65534, 0 -> 0xfffe
 // f(uint16,uint16): 65536, 0 -> 0x00
