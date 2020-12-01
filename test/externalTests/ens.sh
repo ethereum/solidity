@@ -18,9 +18,7 @@
 #
 # (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
-# shellcheck disable=SC1091
 source scripts/common.sh
-# shellcheck disable=SC1091
 source test/externalTests/common.sh
 
 verify_input "$1"
