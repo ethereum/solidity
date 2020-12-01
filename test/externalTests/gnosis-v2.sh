@@ -35,8 +35,8 @@ function gnosis_safe_test
 
     truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git v2_070
 
-    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_070_new|g' package.json
-    sed -i -E 's|"@gnosis.pm/util-contracts": "[^"]+"|"@gnosis.pm/util-contracts": "github:solidity-external-tests/util-contracts#solc-7"|g' package.json
+    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_070|g' package.json
+    sed -i -E 's|"@gnosis.pm/util-contracts": "[^"]+"|"@gnosis.pm/util-contracts": "github:solidity-external-tests/util-contracts#solc-7_070"|g' package.json
 
     # Remove the lock file (if it exists) to prevent it from overriding our changes in package.json
     rm -f package-lock.json
