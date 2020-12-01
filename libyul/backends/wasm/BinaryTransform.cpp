@@ -107,33 +107,24 @@ bytes toBytes(Export _export)
 	return toBytes(uint8_t(_export));
 }
 
+// NOTE: This is a subset of WebAssembly opcodes.
+//       Those available as a builtin are listed further down.
 enum class Opcode: uint8_t
 {
-	Unreachable = 0x00,
-	Nop = 0x01,
 	Block = 0x02,
 	Loop = 0x03,
 	If = 0x04,
 	Else = 0x05,
-	Try = 0x06,
-	Catch = 0x07,
-	Throw = 0x08,
-	Rethrow = 0x09,
-	BrOnExn = 0x0a,
 	End = 0x0b,
 	Br = 0x0c,
 	BrIf = 0x0d,
-	BrTable = 0x0e,
+	BrTable = 0x0e, // Not used yet.
 	Return = 0x0f,
 	Call = 0x10,
-	CallIndirect = 0x11,
-	ReturnCall = 0x12,
-	ReturnCallIndirect = 0x13,
-	Drop = 0x1a,
-	Select = 0x1b,
+	CallIndirect = 0x11, // Not used yet.
 	LocalGet = 0x20,
 	LocalSet = 0x21,
-	LocalTee = 0x22,
+	LocalTee = 0x22, // Not used yet.
 	GlobalGet = 0x23,
 	GlobalSet = 0x24,
 	I32Const = 0x41,
@@ -156,6 +147,10 @@ Opcode constOpcodeFor(ValueType _type)
 }
 
 static map<string, uint8_t> const builtins = {
+	{"unreachable", 0x00},
+	{"nop", 0x01},
+	{"i32.drop", 0x1a},
+	{"i64.drop", 0x1a},
 	{"i32.select", 0x1b},
 	{"i64.select", 0x1b},
 	{"i32.load", 0x28},
@@ -381,30 +376,21 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).second));
 	}
 
+	yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
+	// NOTE: the dialect ensures we have the right amount of arguments
 	bytes args = visit(_call.arguments);
+	bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
+	if (
+		_call.functionName.find(".load") != string::npos ||
+		_call.functionName.find(".store") != string::npos
+	)
+		// Alignment hint and offset. Interpreters ignore the alignment. JITs/AOTs can take it
+		// into account to generate more efficient code but if the hint is invalid it could
+		// actually be more expensive. It's best to hint at 1-byte alignment if we don't plan
+		// to control the memory layout accordingly.
+		ret += bytes{{0, 0}}; // 2^0 == 1-byte alignment
 
-	if (_call.functionName == "unreachable")
-		return toBytes(Opcode::Unreachable);
-	else if (_call.functionName == "nop")
-		return toBytes(Opcode::Nop);
-	else if (_call.functionName == "i32.drop" || _call.functionName == "i64.drop")
-		return toBytes(Opcode::Drop);
-	else
-	{
-		yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
-		bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
-		if (
-			_call.functionName.find(".load") != string::npos ||
-			_call.functionName.find(".store") != string::npos
-		)
-			// Alignment hint and offset. Interpreters ignore the alignment. JITs/AOTs can take it
-			// into account to generate more efficient code but if the hint is invalid it could
-			// actually be more expensive. It's best to hint at 1-byte alignment if we don't plan
-			// to control the memory layout accordingly.
-			ret += bytes{{0, 0}}; // 2^0 == 1-byte alignment
-
-		return ret;
-	}
+	return ret;
 }
 
 bytes BinaryTransform::operator()(FunctionCall const& _call)

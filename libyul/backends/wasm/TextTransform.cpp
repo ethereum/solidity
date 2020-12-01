@@ -122,8 +122,11 @@ string TextTransform::operator()(wasm::BuiltinCall const& _builtinCall)
 {
 	string args = joinTransformed(_builtinCall.arguments);
 	string funcName = _builtinCall.functionName;
+	// These are prefixed in the dialect, but are actually overloaded instructions in WebAssembly.
 	if (funcName == "i32.drop" || funcName == "i64.drop")
 		funcName = "drop";
+	else if (funcName == "i32.select" || funcName == "i64.select")
+		funcName = "select";
 	return "(" + funcName + (args.empty() ? "" : " " + args) + ")";
 }
 
