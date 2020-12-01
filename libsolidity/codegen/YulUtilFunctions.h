@@ -171,8 +171,9 @@ public:
 	std::string arrayLengthFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that resizes a storage array
+	/// for statically sized arrays, it will just clean-up elements of array starting from newLen until the end
 	/// signature: (array, newLen)
-	std::string resizeDynamicArrayFunction(ArrayType const& _type);
+	std::string resizeArrayFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that reduces the size of a storage array by one element
 	/// signature: (array)
