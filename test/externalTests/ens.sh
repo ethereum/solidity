@@ -35,7 +35,7 @@ function ens_test
     export OPTIMIZER_LEVEL=1
     export CONFIG="truffle-config.js"
 
-    truffle_setup https://github.com/solidity-external-tests/ens.git upgrade-0.8.0
+    truffle_setup https://github.com/solidity-external-tests/ens.git master
     run_install install_fn
 
     truffle_run_test compile_fn test_fn
