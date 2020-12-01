@@ -712,10 +712,16 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 		else
 			solUnimplementedAssert(false, "Unary operator not yet implemented");
 	}
+	else if (resultType.category() == Type::Category::FixedBytes)
+	{
+		solAssert(op == Token::BitNot, "Only bitwise negation is allowed for FixedBytes");
+		solAssert(resultType == type(_unaryOperation.subExpression()), "Result type doesn't match!");
+		appendSimpleUnaryOperation(_unaryOperation, _unaryOperation.subExpression());
+	}
 	else if (resultType.category() == Type::Category::Bool)
 	{
 		solAssert(
-			_unaryOperation.getOperator() != Token::BitNot,
+			op != Token::BitNot,
 			"Bitwise Negation can't be done on bool!"
 		);
 
@@ -1794,6 +1800,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					", " <<
 					offset <<
 					")\n";
+			else if (
+				dynamic_cast<ArrayType const*>(_memberAccess.annotation().type) ||
+				dynamic_cast<StructType const*>(_memberAccess.annotation().type)
+			)
+				define(_memberAccess) << offset << "\n";
 			else
 				define(_memberAccess) <<
 					m_utils.readFromCalldata(*_memberAccess.annotation().type) <<

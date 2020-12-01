@@ -90,6 +90,7 @@ private:
 	bool visit(ForStatement const& _node) override;
 	void endVisit(UnaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
+	void endVisit(Return const& _node) override;
 	//@}
 
 	/// Visitor helpers.
@@ -97,6 +98,7 @@ private:
 	void visitAssert(FunctionCall const& _funCall);
 	void visitRequire(FunctionCall const& _funCall);
 	void visitAddMulMod(FunctionCall const& _funCall) override;
+	void assignment(smt::SymbolicVariable& _symVar, smtutil::Expression const& _value) override;
 	/// Visits the FunctionDefinition of the called function
 	/// if available and inlines the return value.
 	void inlineFunctionCall(FunctionCall const& _funCall);

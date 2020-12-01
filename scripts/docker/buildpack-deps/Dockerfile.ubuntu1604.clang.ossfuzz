@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang as base
-LABEL version="5"
+LABEL version="6"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -104,7 +104,7 @@ RUN set -ex; \
 # HERA
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.3.0" --recurse-submodules https://github.com/ewasm/hera.git; \
+	git clone --branch="v0.3.2" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
 	cd hera; \
 	mkdir build; \
 	cd build; \

@@ -4384,30 +4384,6 @@ BOOST_AUTO_TEST_CASE(non_payable_throw)
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
 }
 
-BOOST_AUTO_TEST_CASE(no_nonpayable_circumvention_by_modifier)
-{
-	char const* sourceCode = R"(
-		contract C {
-			modifier tryCircumvent {
-				if (false) _; // avoid the function, we should still not accept ether
-			}
-			function f() tryCircumvent public returns (uint) {
-				return msgvalue();
-			}
-			function msgvalue() internal returns (uint) {
-				return msg.value;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunctionWithValue("f()", 27), encodeArgs());
-		BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 0);
-	)
-}
-
 BOOST_AUTO_TEST_CASE(mem_resize_is_not_paid_at_call)
 {
 	// This tests that memory resize for return values is not paid during the call, which would

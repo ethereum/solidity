@@ -155,8 +155,10 @@ void SMTEncoder::visitFunctionOrModifier()
 
 	if (m_modifierDepthStack.back() == static_cast<int>(function.modifiers().size()))
 	{
+		pushPathCondition(currentPathConditions());
 		if (function.isImplemented())
 			function.body().accept(*this);
+		popPathCondition();
 	}
 	else
 	{
@@ -193,6 +195,7 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 	initializeFunctionCallParameters(*_definition, args);
 
 	pushCallStack({_definition, _invocation});
+	pushPathCondition(currentPathConditions());
 	if (auto modifier = dynamic_cast<ModifierDefinition const*>(_definition))
 	{
 		if (modifier->isImplemented())
@@ -205,6 +208,7 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 			function->accept(*this);
 		// Functions are popped from the callstack in endVisit(FunctionDefinition)
 	}
+	popPathCondition();
 }
 
 void SMTEncoder::inlineConstructorHierarchy(ContractDefinition const& _contract)
@@ -285,26 +289,6 @@ bool SMTEncoder::visit(TryCatchClause const& _clause)
 		_clause.location(),
 		"Assertion checker does not support try/catch clauses."
 	);
-	return false;
-}
-
-bool SMTEncoder::visit(IfStatement const& _node)
-{
-	_node.condition().accept(*this);
-
-	auto indicesEndTrue = visitBranch(&_node.trueStatement(), expr(_node.condition()));
-	auto touchedVars = touchedVariables(_node.trueStatement());
-	decltype(indicesEndTrue) indicesEndFalse;
-	if (_node.falseStatement())
-	{
-		indicesEndFalse = visitBranch(_node.falseStatement(), !expr(_node.condition()));
-		touchedVars += touchedVariables(*_node.falseStatement());
-	}
-	else
-		indicesEndFalse = copyVariableIndices();
-
-	mergeVariables(touchedVars, expr(_node.condition()), indicesEndTrue, indicesEndFalse);
-
 	return false;
 }
 
@@ -598,10 +582,10 @@ bool SMTEncoder::visit(Conditional const& _op)
 {
 	_op.condition().accept(*this);
 
-	auto indicesEndTrue = visitBranch(&_op.trueExpression(), expr(_op.condition()));
+	auto indicesEndTrue = visitBranch(&_op.trueExpression(), expr(_op.condition())).first;
 	auto touchedVars = touchedVariables(_op.trueExpression());
 
-	auto indicesEndFalse = visitBranch(&_op.falseExpression(), !expr(_op.condition()));
+	auto indicesEndFalse = visitBranch(&_op.falseExpression(), !expr(_op.condition())).first;
 	touchedVars += touchedVariables(_op.falseExpression());
 
 	mergeVariables(touchedVars, expr(_op.condition()), indicesEndTrue, indicesEndFalse);
@@ -1749,13 +1733,13 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 		_op.leftExpression().accept(*this);
 		if (_op.getOperator() == Token::And)
 		{
-			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), expr(_op.leftExpression()));
+			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), expr(_op.leftExpression())).first;
 			mergeVariables(touchedVariables(_op.rightExpression()), !expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 			defineExpr(_op, expr(_op.leftExpression()) && expr(_op.rightExpression()));
 		}
 		else
 		{
-			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), !expr(_op.leftExpression()));
+			auto indicesAfterSecond = visitBranch(&_op.rightExpression(), !expr(_op.leftExpression())).first;
 			mergeVariables(touchedVariables(_op.rightExpression()), expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 			defineExpr(_op, expr(_op.leftExpression()) || expr(_op.rightExpression()));
 		}
@@ -1969,22 +1953,29 @@ void SMTEncoder::assignment(smt::SymbolicVariable& _symVar, smtutil::Expression 
 	m_context.addAssertion(_symVar.increaseIndex() == _value);
 }
 
-SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smtutil::Expression _condition)
+pair<SMTEncoder::VariableIndices, smtutil::Expression> SMTEncoder::visitBranch(
+	ASTNode const* _statement,
+	smtutil::Expression _condition
+)
 {
 	return visitBranch(_statement, &_condition);
 }
 
-SMTEncoder::VariableIndices SMTEncoder::visitBranch(ASTNode const* _statement, smtutil::Expression const* _condition)
+pair<SMTEncoder::VariableIndices, smtutil::Expression> SMTEncoder::visitBranch(
+	ASTNode const* _statement,
+	smtutil::Expression const* _condition
+)
 {
 	auto indicesBeforeBranch = copyVariableIndices();
 	if (_condition)
 		pushPathCondition(*_condition);
 	_statement->accept(*this);
+	auto pathConditionOnExit = currentPathConditions();
 	if (_condition)
 		popPathCondition();
 	auto indicesAfterBranch = copyVariableIndices();
 	resetVariableIndices(indicesBeforeBranch);
-	return indicesAfterBranch;
+	return {indicesAfterBranch, pathConditionOnExit};
 }
 
 void SMTEncoder::initializeFunctionCallParameters(CallableDeclaration const& _function, vector<smtutil::Expression> const& _callArgs)
@@ -2238,6 +2229,14 @@ void SMTEncoder::popPathCondition()
 void SMTEncoder::pushPathCondition(smtutil::Expression const& _e)
 {
 	m_pathConditions.push_back(currentPathConditions() && _e);
+}
+
+void SMTEncoder::setPathCondition(smtutil::Expression const& _e)
+{
+	if (m_pathConditions.empty())
+		m_pathConditions.push_back(_e);
+	else
+		m_pathConditions.back() = _e;
 }
 
 smtutil::Expression SMTEncoder::currentPathConditions()

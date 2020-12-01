@@ -1,22 +1,21 @@
 contract C {
     uint256 public x;
-    modifier run() {
+    modifier m() {
         for (uint256 i = 0; i < 10; i++) {
             _;
-            break;
+            ++x;
+            return;
         }
     }
 
-    function f() public run {
-        uint256 k = x;
-        uint256 t = k + 1;
-        x = t;
+    function f() public m m m returns (uint) {
+        for (uint256 i = 0; i < 10; i++) {
+            ++x;
+            return 42;
+        }
     }
 }
-// ====
-// compileViaYul: also
-// compileToEwasm: also
 // ----
 // x() -> 0
-// f() ->
-// x() -> 1
+// f() -> 42
+// x() -> 4

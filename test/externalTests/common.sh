@@ -104,7 +104,7 @@ function replace_version_pragmas
     # Replace fixed-version pragmas (part of Consensys best practice).
     # Include all directories to also cover node dependencies.
     printLog "Replacing fixed-version pragmas..."
-    find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
+    find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
 function replace_libsolc_call
