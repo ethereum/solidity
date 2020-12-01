@@ -226,16 +226,13 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 {
 	vector<ASTPointer<Expression const>> arguments = _functionCall.arguments();
 	if (arguments.size() != 1)
-	{
-		m_errorReporter.typeError(
+		m_errorReporter.fatalTypeError(
 			8885_error,
 			_functionCall.location(),
 			"This function takes one argument, but " +
 			toString(arguments.size()) +
 			" were provided."
 		);
-		return {};
-	}
 	TypePointer firstArgType = type(*arguments.front());
 
 	bool wrongType = false;
@@ -243,26 +240,22 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 	{
 		TypeType const* typeTypePtr = dynamic_cast<TypeType const*>(firstArgType);
 		Type::Category typeCategory = typeTypePtr->actualType()->category();
-		if (
-			typeCategory != Type::Category::Contract &&
-			typeCategory != Type::Category::Integer
-		)
+		if (auto const* contractType = dynamic_cast<ContractType const*>(typeTypePtr->actualType()))
+			wrongType = contractType->isSuper();
+		else if (typeCategory != Type::Category::Integer)
 			wrongType = true;
 	}
 	else
 		wrongType = true;
 
 	if (wrongType)
-	{
-		m_errorReporter.typeError(
+		m_errorReporter.fatalTypeError(
 			4259_error,
 			arguments.front()->location(),
 			"Invalid type for argument in the function call. "
 			"A contract type or an integer type is required, but " +
 			type(*arguments.front())->toString(true) + " provided."
 		);
-		return {};
-	}
 
 	return {TypeProvider::meta(dynamic_cast<TypeType const&>(*firstArgType).actualType())};
 }
@@ -2886,6 +2879,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		{
 			annotation.isPure = true;
 			ContractType const& accessedContractType = dynamic_cast<ContractType const&>(*magicType->typeArgument());
+			solAssert(!accessedContractType.isSuper(), "");
 			if (
 				memberName == "runtimeCode" &&
 				!accessedContractType.immutableVariables().empty()
@@ -2895,13 +2889,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 					_memberAccess.location(),
 					"\"runtimeCode\" is not available for contracts containing immutable variables."
 				);
-			if (accessedContractType.isSuper())
-				m_errorReporter.typeError(
-					3625_error,
-					_memberAccess.location(),
-					"\"creationCode\" and \"runtimeCode\" are not available for the \"super\" contract."
-				);
-			else if (m_currentContract)
+			if (m_currentContract)
 			{
 				// TODO in the same way as with ``new``,
 				// this is not properly detecting creation-cycles if they go through
