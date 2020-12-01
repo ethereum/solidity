@@ -80,7 +80,7 @@ function download_project
     printLog "Cloning $branch of $repo..."
     git clone --depth 1 "$repo" -b "$branch" "$dir/ext"
     cd ext
-    echo "Current commit hash: `git rev-parse HEAD`"
+    echo "Current commit hash: $(git rev-parse HEAD)"
 }
 
 function force_truffle_version

@@ -46,7 +46,7 @@ safe_kill()
     while kill -0 "$PID" 2>/dev/null && [[ $n -le 4 ]]; do
         echo "Waiting ($n) ..."
         sleep 1
-        n=$[n + 1]
+        n=$((n + 1))
     done
 
     # process still alive? then hard-kill
