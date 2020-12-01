@@ -137,38 +137,20 @@ void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _intern
 
 InternalDispatchMap IRGenerationContext::consumeInternalDispatchMap()
 {
-	m_directInternalFunctionCalls.clear();
-
 	InternalDispatchMap internalDispatch = move(m_internalDispatchMap);
 	m_internalDispatchMap.clear();
 	return internalDispatch;
 }
 
-void IRGenerationContext::internalFunctionCalledDirectly(Expression const& _expression)
+void IRGenerationContext::addToInternalDispatch(FunctionDefinition const& _function)
 {
-	solAssert(m_directInternalFunctionCalls.count(&_expression) == 0, "");
+	FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
+	solAssert(functionType, "");
 
-	m_directInternalFunctionCalls.insert(&_expression);
+	m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);
+	enqueueFunctionForCodeGeneration(_function);
 }
 
-void IRGenerationContext::internalFunctionAccessed(Expression const& _expression, FunctionDefinition const& _function)
-{
-	solAssert(
-		IRHelpers::referencedFunctionDeclaration(_expression) &&
-		_function.resolveVirtual(mostDerivedContract()) ==
-		IRHelpers::referencedFunctionDeclaration(_expression)->resolveVirtual(mostDerivedContract()),
-		"Function definition does not match the expression"
-	);
-
-	if (m_directInternalFunctionCalls.count(&_expression) == 0)
-	{
-		FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
-		solAssert(functionType, "");
-
-		m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);
-		enqueueFunctionForCodeGeneration(_function);
-	}
-}
 
 void IRGenerationContext::internalFunctionCalledThroughDispatch(YulArity const& _arity)
 {
