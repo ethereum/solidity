@@ -86,13 +86,17 @@ void Rematerialiser::visit(Expression& _e)
 			)
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
-				for (auto const& ref: m_references.forward[name])
-					assertThrow(inScope(ref), OptimizerException, "");
-				// update reference counts
-				m_referenceCounts[name]--;
-				for (auto const& ref: ReferencesCounter::countReferences(*value.value))
-					m_referenceCounts[ref.first] += ref.second;
-				_e = (ASTCopier{}).translate(*value.value);
+				bool allInScope = true;
+				for (auto const& ref: m_references[name])
+					allInScope = allInScope && inScope(ref);
+				if (allInScope)
+				{
+					// update reference counts
+					m_referenceCounts[name]--;
+					for (auto const& ref: ReferencesCounter::countReferences(*value.value))
+						m_referenceCounts[ref.first] += ref.second;
+					_e = (ASTCopier{}).translate(*value.value);
+				}
 			}
 		}
 	}

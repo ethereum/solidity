@@ -65,15 +65,12 @@ void LoadResolver::tryResolve(
 		return;
 
 	YulString key = std::get<Identifier>(_arguments.at(0)).name;
-	if (
-		_location == StoreLoadLocation::Storage &&
-		m_storage.values.count(key)
-	)
-		_e = Identifier{locationOf(_e), m_storage.values[key]};
-	else if (
-		m_optimizeMLoad &&
-		_location == StoreLoadLocation::Memory &&
-		m_memory.values.count(key)
-	)
-		_e = Identifier{locationOf(_e), m_memory.values[key]};
+	if (_location == StoreLoadLocation::Storage)
+	{
+		if (auto value = m_storage.fetch(key))
+			_e = Identifier{locationOf(_e), *value};
+	}
+	else if (m_optimizeMLoad && _location == StoreLoadLocation::Memory)
+		if (auto value = m_memory.fetch(key))
+			_e = Identifier{locationOf(_e), *value};
 }

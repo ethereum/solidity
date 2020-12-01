@@ -62,26 +62,26 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		set<YulString> keysToErase;
-		for (auto const& item: m_storage.values)
+		auto it = m_storage.values.begin();
+		while (it != m_storage.values.end())
 			if (!(
-				m_knowledgeBase.knownToBeDifferent(vars->first, item.first) ||
-				m_knowledgeBase.knownToBeEqual(vars->second, item.second)
+				m_knowledgeBase.knownToBeDifferent(vars->first, it->first) ||
+				m_knowledgeBase.knownToBeEqual(vars->second, it->second)
 			))
-				keysToErase.insert(item.first);
-		for (YulString const& key: keysToErase)
-			m_storage.eraseKey(key);
+				it = m_storage.values.erase(it);
+			else
+				++it;
 		m_storage.set(vars->first, vars->second);
 	}
 	else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		set<YulString> keysToErase;
-		for (auto const& item: m_memory.values)
-			if (!m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, item.first))
-				keysToErase.insert(item.first);
-		for (YulString const& key: keysToErase)
-			m_memory.eraseKey(key);
+		auto it = m_memory.values.begin();
+		while (it != m_memory.values.end())
+			if (!m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, it->first))
+				it = m_memory.values.erase(it);
+			else
+				++it;
 		m_memory.set(vars->first, vars->second);
 	}
 	else
@@ -163,7 +163,7 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	// but this could be difficult if it is subclassed.
 	map<YulString, AssignedValue> value;
 	size_t loopDepth{0};
-	InvertibleRelation<YulString> references;
+	unordered_map<YulString, set<YulString>> references;
 	InvertibleMap<YulString, YulString> storage;
 	InvertibleMap<YulString, YulString> memory;
 	swap(m_value, value);
@@ -261,7 +261,7 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 	auto const& referencedVariables = movableChecker.referencedVariables();
 	for (auto const& name: _variables)
 	{
-		m_references.set(name, referencedVariables);
+		m_references[name] = referencedVariables;
 		if (!_isDeclaration)
 		{
 			// assignment to slot denoted by "name"
@@ -298,7 +298,6 @@ void DataFlowAnalyzer::pushScope(bool _functionScope)
 
 void DataFlowAnalyzer::popScope()
 {
-	clearValues(std::move(m_variableScopes.back().variables));
 	m_variableScopes.pop_back();
 }
 
@@ -320,28 +319,28 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	// First clear storage knowledge, because we do not have to clear
 	// storage knowledge of variables whose expression has changed,
 	// since the value is still unchanged.
-	for (auto const& name: _variables)
-	{
-		// clear slot denoted by "name"
-		m_storage.eraseKey(name);
-		// clear slot contents denoted by "name"
-		m_storage.eraseValue(name);
-		// assignment to slot denoted by "name"
-		m_memory.eraseKey(name);
-		// assignment to slot contents denoted by "name"
-		m_memory.eraseValue(name);
-	}
+	auto clear = [&](auto&& values) {
+		auto it = values.begin();
+		while (it != values.end())
+			if (_variables.count(it->first) || _variables.count(it->second))
+				it = values.erase(it);
+			else
+				++it;
+	};
+	clear(m_storage.values);
+	clear(m_memory.values);
 
 	// Also clear variables that reference variables to be cleared.
 	for (auto const& name: _variables)
-		for (auto const& ref: m_references.backward[name])
-			_variables.emplace(ref);
+		for (auto const& [ref, names]: m_references)
+			if (names.count(name))
+				_variables.emplace(ref);
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
 		m_value.erase(name);
 	for (auto const& name: _variables)
-		m_references.eraseKey(name);
+		m_references.erase(name);
 }
 
 void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value)
@@ -385,15 +384,15 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 	// This also works for memory because _older is an "older version"
 	// of m_memory and thus any overlapping write would have cleared the keys
 	// that are not known to be different inside m_memory already.
-	set<YulString> keysToErase;
-	for (auto const& item: _this.values)
+	auto it = _this.values.begin();
+	while (it != _this.values.end())
 	{
-		auto it = _older.values.find(item.first);
-		if (it == _older.values.end() || it->second != item.second)
-			keysToErase.insert(item.first);
+		auto oldit = _older.values.find(it->first);
+		if (oldit != _older.values.end() && it->second == oldit->second)
+			++it;
+		else
+			it = _this.values.erase(it);
 	}
-	for (auto const& key: keysToErase)
-		_this.eraseKey(key);
 }
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const

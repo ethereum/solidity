@@ -163,9 +163,8 @@ protected:
 
 	/// Current values of variables, always movable.
 	std::map<YulString, AssignedValue> m_value;
-	/// m_references.forward[a].contains(b) <=> the current expression assigned to a references b
-	/// m_references.backward[b].contains(a) <=> the current expression assigned to a references b
-	InvertibleRelation<YulString> m_references;
+	/// m_references[a].contains(b) <=> the current expression assigned to a references b
+	std::unordered_map<YulString, std::set<YulString>> m_references;
 
 	InvertibleMap<YulString, YulString> m_storage;
 	InvertibleMap<YulString, YulString> m_memory;
