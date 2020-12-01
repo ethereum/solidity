@@ -412,13 +412,13 @@ Text representation:
         (local.set $z (i32.const 0))
         (local.set $_1 (i32.const 4294967295))
         (block
-            (local.set $condition (i32.select (local.get $_1) (i64.ne (local.get $x1) (local.get $y1)) (i64.lt_u (local.get $x1) (local.get $y1))))
+            (local.set $condition (select (local.get $_1) (i64.ne (local.get $x1) (local.get $y1)) (i64.lt_u (local.get $x1) (local.get $y1))))
             (if (i32.eq (local.get $condition) (i32.const 0)) (then
                 (block
-                    (local.set $condition_11 (i32.select (local.get $_1) (i64.ne (local.get $x2) (local.get $y2)) (i64.lt_u (local.get $x2) (local.get $y2))))
+                    (local.set $condition_11 (select (local.get $_1) (i64.ne (local.get $x2) (local.get $y2)) (i64.lt_u (local.get $x2) (local.get $y2))))
                     (if (i32.eq (local.get $condition_11) (i32.const 0)) (then
                         (block
-                            (local.set $condition_12 (i32.select (local.get $_1) (i64.ne (local.get $x3) (local.get $y3)) (i64.lt_u (local.get $x3) (local.get $y3))))
+                            (local.set $condition_12 (select (local.get $_1) (i64.ne (local.get $x3) (local.get $y3)) (i64.lt_u (local.get $x3) (local.get $y3))))
                             (if (i32.eq (local.get $condition_12) (i32.const 0)) (then
                                 (local.set $z (i64.lt_u (local.get $x4) (local.get $y4)))
                             )(else
