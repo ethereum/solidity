@@ -85,9 +85,9 @@ function download_project
 
 function force_truffle_version
 {
-    local repo="$1"
+    local version="$1"
 
-    sed -i 's/"truffle":\s*".*"/"truffle": "^5.0.42"/g' package.json
+    sed -i 's/"truffle":\s*".*"/"truffle": "'"$version"'"/g' package.json
 }
 
 function truffle_setup
