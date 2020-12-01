@@ -15,4 +15,4 @@ contract C {
 // compileViaYul: also
 // ----
 // f(bytes[2]): 0x20, 0x40, 0x40, 2, "ab" ->
-// f(bytes[2]): 0x20, 0x40, 0x40, 1, "a" -> FAILURE
+// f(bytes[2]): 0x20, 0x40, 0x40, 1, "a" -> FAILURE, hex"4e487b71", 0x01
