@@ -31,7 +31,6 @@ function test_fn { yarn run test:contracts; }
 function colony_test
 {
     OPTIMIZER_LEVEL=3
-    FORCE_ABIv2=false
     CONFIG="truffle.js"
 
     truffle_setup https://github.com/solidity-external-tests/colonyNetwork.git develop_070
@@ -42,7 +41,7 @@ function colony_test
     git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_060 dappsys
     cd ..
 
-    truffle_run_test compile_fn test_fn
+    truffle_run_test compile_fn test_fn "NO-FORCE-ABI-V2"
 }
 
 external_test ColonyNetworks colony_test

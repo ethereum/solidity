@@ -36,7 +36,7 @@ function zeppelin_test
     truffle_setup https://github.com/solidity-external-tests/openzeppelin-contracts.git upgrade-0.7.0
     run_install install_fn
 
-    truffle_run_test compile_fn test_fn
+    truffle_run_test compile_fn test_fn "NO-FORCE-ABI-V2"
 }
 
 external_test Zeppelin zeppelin_test

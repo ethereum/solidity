@@ -234,6 +234,9 @@ function truffle_run_test
 {
     local compile_fn="$1"
     local test_fn="$2"
+    local force_abi_v2_flag="$3"
+
+    test "$force_abi_v2_flag" = "FORCE-ABI-V2" || test "$force_abi_v2_flag" = "NO-FORCE-ABI-V2"
 
     replace_version_pragmas
     force_solc "$CONFIG" "$DIR" "$SOLJSON"
@@ -258,7 +261,7 @@ function truffle_run_test
         clean
         force_solc_settings "$CONFIG" "$optimize" "istanbul"
         # Force abi coder v2 in the last step. Has to be the last because code is modified.
-        if [ "$FORCE_ABIv2" = true ]; then
+        if [ "$force_abi_v2_flag" = "FORCE-ABI-V2" ]; then
             [[ "$optimize" =~ yul ]] && force_abi_v2
         fi
 
