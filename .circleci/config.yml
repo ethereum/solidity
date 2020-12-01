@@ -850,6 +850,38 @@ jobs:
       #- run: *gitter_notify_failure
       #- run: *gitter_notify_success
 
+  t_ems_compile_ext_gnosis_v2:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External GnosisSafe v2 compilation
+          command: |
+            export COMPILE_ONLY=1
+            test/externalTests/gnosis-v2.sh /tmp/workspace/soljson.js
+
+  t_ems_test_ext_gnosis_v2:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: External GnosisSafe v2 tests
+          command: |
+            test/externalTests/gnosis-v2.sh /tmp/workspace/soljson.js
+      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
+      #- run: *gitter_notify_failure
+      #- run: *gitter_notify_success
+
   t_ems_compile_ext_zeppelin:
     docker:
       - image: circleci/node:10
@@ -1124,10 +1156,12 @@ workflows:
       - t_ems_solcjs: *workflow_emscripten
       - t_ems_compile_ext_colony: *workflow_emscripten
       - t_ems_compile_ext_gnosis: *workflow_emscripten
+      - t_ems_compile_ext_gnosis_v2: *workflow_emscripten
       - t_ems_compile_ext_zeppelin: *workflow_emscripten
       - t_ems_compile_ext_ens: *workflow_emscripten
       - t_ems_test_ext_colony: *workflow_emscripten
       - t_ems_test_ext_gnosis: *workflow_emscripten
+      - t_ems_test_ext_gnosis_v2: *workflow_emscripten
       - t_ems_test_ext_zeppelin: *workflow_emscripten
 
       # Windows build and tests
