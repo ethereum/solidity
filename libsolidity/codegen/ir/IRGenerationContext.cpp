@@ -128,7 +128,7 @@ void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _intern
 {
 	solAssert(internalDispatchClean(), "");
 
-	for (set<FunctionDefinition const*> const& functions: _internalDispatch | boost::adaptors::map_values)
+	for (DispatchSet const& functions: _internalDispatch | boost::adaptors::map_values)
 		for (auto function: functions)
 			enqueueFunctionForCodeGeneration(*function);
 
@@ -147,7 +147,13 @@ void IRGenerationContext::addToInternalDispatch(FunctionDefinition const& _funct
 	FunctionType const* functionType = TypeProvider::function(_function, FunctionType::Kind::Internal);
 	solAssert(functionType, "");
 
-	m_internalDispatchMap[YulArity::fromType(*functionType)].insert(&_function);
+	YulArity arity = YulArity::fromType(*functionType);
+
+	if (m_internalDispatchMap.count(arity) != 0 && m_internalDispatchMap[arity].count(&_function) != 0)
+		// Note that m_internalDispatchMap[arity] is a set with a custom comparator, which looks at function IDs not definitions
+		solAssert(*m_internalDispatchMap[arity].find(&_function) == &_function, "Different definitions with the same function ID");
+
+	m_internalDispatchMap[arity].insert(&_function);
 	enqueueFunctionForCodeGeneration(_function);
 }
 
