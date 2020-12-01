@@ -2351,7 +2351,16 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			funcCallAnno.kind = FunctionCallKind::StructConstructorCall;
 		}
 		else
+		{
+			if (auto const* contractType = dynamic_cast<ContractType const*>(actualType))
+				if (contractType->isSuper())
+					m_errorReporter.fatalTypeError(
+						1744_error,
+						_functionCall.location(),
+						"Cannot convert to the super type."
+					);
 			funcCallAnno.kind = FunctionCallKind::TypeConversion;
+		}
 
 		funcCallAnno.isPure = argumentsArePure;
 
