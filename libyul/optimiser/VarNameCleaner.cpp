@@ -18,7 +18,7 @@
 
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 
 #include <algorithm>

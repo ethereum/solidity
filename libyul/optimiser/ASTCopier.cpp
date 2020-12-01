@@ -23,7 +23,7 @@
 
 #include <libyul/Exceptions.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/Common.h>
 

@@ -23,12 +23,13 @@
 
 #include <libevmasm/SimplificationRule.h>
 
-#include <libyul/AsmDataForward.h>
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
+#include <libyul/YulString.h>
 
 #include <libsolutil/CommonData.h>
 
 #include <liblangutil/EVMVersion.h>
+#include <liblangutil/SourceLocation.h>
 
 #include <boost/noncopyable.hpp>
 

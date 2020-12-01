@@ -35,7 +35,7 @@
 #include <libevmasm/GasMeter.h>
 
 #include <libyul/AsmPrinter.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/ASTCopier.h>
 

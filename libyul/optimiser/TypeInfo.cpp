@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/NameCollector.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 
 #include <libsolutil/Visitor.h>

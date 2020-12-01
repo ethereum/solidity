@@ -28,6 +28,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AssemblyStack.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AST.h>
 #include <libyul/Object.h>
 
 #include <liblangutil/ErrorReporter.h>

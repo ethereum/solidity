@@ -22,7 +22,7 @@
  */
 
 #include <libyul/AsmPrinter.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Dialect.h>
 

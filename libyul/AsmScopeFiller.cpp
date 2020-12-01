@@ -21,7 +21,7 @@
 
 #include <libyul/AsmScopeFiller.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/AsmScope.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Exceptions.h>

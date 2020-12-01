@@ -25,7 +25,7 @@
 #include <libyul/YulString.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
 
 #include <liblangutil/SourceLocation.h>
 

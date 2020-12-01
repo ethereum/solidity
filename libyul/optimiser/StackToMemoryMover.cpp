@@ -18,7 +18,7 @@
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>

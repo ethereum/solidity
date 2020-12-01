@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/optimiser/VarDeclInitializer.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>

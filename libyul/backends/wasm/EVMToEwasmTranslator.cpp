@@ -35,6 +35,7 @@
 #include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AST.h>
 #include <libyul/Object.h>
 
 #include <liblangutil/ErrorReporter.h>

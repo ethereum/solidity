@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libyul/Dialect.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Object.h>
 
 #include <map>

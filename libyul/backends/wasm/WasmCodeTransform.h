@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libyul/backends/wasm/WasmAST.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/TypeInfo.h>

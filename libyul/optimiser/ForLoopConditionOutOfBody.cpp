@@ -18,8 +18,9 @@
 
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
+
 #include <libsolutil/CommonData.h>
 
 using namespace std;

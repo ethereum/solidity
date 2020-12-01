@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/backends/wasm/WordSizeTransform.h>
 #include <libyul/Utilities.h>
 #include <libyul/Dialect.h>

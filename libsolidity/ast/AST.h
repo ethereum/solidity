@@ -45,7 +45,7 @@
 
 namespace solidity::yul
 {
-// Forward-declaration to <yul/AsmData.h>
+// Forward-declaration to <yul/AST.h>
 struct Block;
 struct Dialect;
 }

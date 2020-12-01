@@ -15,10 +15,13 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
+
 #include <libyul/optimiser/BlockFlattener.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
+
 #include <libsolutil/Visitor.h>
 #include <libsolutil/CommonData.h>
+
 #include <functional>
 
 using namespace std;

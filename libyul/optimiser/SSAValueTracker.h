@@ -23,7 +23,7 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h> // Needed for m_zero below.
 
 #include <map>
 #include <set>

@@ -24,7 +24,7 @@
 #include <libyul/Dialect.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <map>

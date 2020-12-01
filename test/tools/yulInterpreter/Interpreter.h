@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <libsolutil/FixedHash.h>

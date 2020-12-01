@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/backends/evm/EVMMetrics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>

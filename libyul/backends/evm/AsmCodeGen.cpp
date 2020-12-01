@@ -21,8 +21,8 @@
 
 #include <libyul/backends/evm/AsmCodeGen.h>
 
-#include <libyul/AsmData.h>
 #include <libyul/AsmAnalysisInfo.h>
+#include <libyul/AST.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>

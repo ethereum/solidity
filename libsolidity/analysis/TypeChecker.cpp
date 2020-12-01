@@ -28,7 +28,7 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/ErrorReporter.h>
 

@@ -30,6 +30,7 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 

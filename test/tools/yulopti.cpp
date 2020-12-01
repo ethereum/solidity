@@ -26,7 +26,7 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libsolidity/parsing/Parser.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/Object.h>

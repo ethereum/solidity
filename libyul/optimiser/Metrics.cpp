@@ -20,7 +20,7 @@
 
 #include <libyul/optimiser/Metrics.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
 #include <libyul/backends/evm/EVMDialect.h>
