@@ -135,6 +135,9 @@ function force_solc_truffle_modules
             rm -rf solc
             git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
             cp "$1" solc/soljson.js
+
+            cd solc
+            npm install
         fi
     )
     done
