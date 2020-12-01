@@ -104,12 +104,13 @@ public:
 	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
 	void storeInMemory(unsigned _offset);
+
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For reference types, only copies the data pointer. Fails for
-	/// non-memory-references.
+	/// non-memory-references. For string literals no value is available on the stack.
 	/// @param _padToWords if true, adds zeros to pad to multiple of 32 bytes. Array elements
+	///                    are always padded (except for byte arrays), regardless of this parameter.
 	/// @param _cleanup if true, adds code to cleanup the value before storing it.
-	/// are always padded (except for byte arrays), regardless of this parameter.
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWords = true, bool _cleanup = true);
