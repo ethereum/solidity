@@ -30,7 +30,7 @@ function test_fn { npm test; }
 
 function gnosis_safe_test
 {
-    OPTIMIZER_LEVEL=1
+    OPTIMIZER_LEVEL=2
     CONFIG="truffle-config.js"
 
     truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git development_070_new
