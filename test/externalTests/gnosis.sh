@@ -33,17 +33,17 @@ function gnosis_safe_test
     OPTIMIZER_LEVEL=1
     CONFIG="truffle.js"
 
-    truffle_setup https://github.com/solidity-external-tests/safe-contracts.git development_070
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git development_070
 
     force_truffle_version ^5.0.42
     sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_070|g' package.json
     rm -f package-lock.json
     rm -rf node_modules/
 
-    run_install install_fn
+    run_install "$SOLJSON" install_fn
     replace_libsolc_call
 
-    truffle_run_test compile_fn test_fn "NO-FORCE-ABI-V2"
+    truffle_run_test "$SOLJSON" compile_fn test_fn "NO-FORCE-ABI-V2"
 }
 
 external_test Gnosis-Safe gnosis_safe_test

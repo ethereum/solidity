@@ -33,15 +33,15 @@ function colony_test
     OPTIMIZER_LEVEL=3
     CONFIG="truffle.js"
 
-    truffle_setup https://github.com/solidity-external-tests/colonyNetwork.git develop_070
-    run_install install_fn
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/colonyNetwork.git develop_070
+    run_install "$SOLJSON" install_fn
 
     cd lib
     rm -Rf dappsys
     git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_060 dappsys
     cd ..
 
-    truffle_run_test compile_fn test_fn "NO-FORCE-ABI-V2"
+    truffle_run_test "$SOLJSON" compile_fn test_fn "NO-FORCE-ABI-V2"
 }
 
 external_test ColonyNetworks colony_test
