@@ -45,7 +45,7 @@
 
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsmtutil/Exceptions.h>
 
@@ -1447,7 +1447,7 @@ bool CommandLineInterface::processInput()
 
 	m_compiler = make_unique<CompilerStack>(fileReader);
 
-	SourceReferenceFormatterHuman formatter(serr(false), m_coloredOutput, m_withErrorIds);
+	SourceReferenceFormatter formatter(serr(false), m_coloredOutput, m_withErrorIds);
 
 	try
 	{
@@ -1872,7 +1872,7 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		SourceReferenceFormatterHuman formatter(serr(false), m_coloredOutput, m_withErrorIds);
+		SourceReferenceFormatter formatter(serr(false), m_coloredOutput, m_withErrorIds);
 
 		for (auto const& error: stack.errors())
 		{

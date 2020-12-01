@@ -20,7 +20,7 @@
 
 #include <liblangutil/CharStream.h>
 #include <liblangutil/ErrorReporter.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -59,7 +59,7 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 ostream& std::operator<<(ostream& _outputStream, ErrorList const& _errors)
 {
-	SourceReferenceFormatterHuman formatter(_outputStream, true, false);
+	SourceReferenceFormatter formatter(_outputStream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

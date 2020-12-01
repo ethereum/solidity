@@ -19,7 +19,7 @@
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/UTF8.h>
@@ -46,42 +46,42 @@ std::string replaceNonTabs(std::string_view _utf8Input, char _filler)
 
 }
 
-AnsiColorized SourceReferenceFormatterHuman::normalColored() const
+AnsiColorized SourceReferenceFormatter::normalColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {WHITE});
 }
 
-AnsiColorized SourceReferenceFormatterHuman::frameColored() const
+AnsiColorized SourceReferenceFormatter::frameColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, BLUE});
 }
 
-AnsiColorized SourceReferenceFormatterHuman::errorColored() const
+AnsiColorized SourceReferenceFormatter::errorColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, RED});
 }
 
-AnsiColorized SourceReferenceFormatterHuman::messageColored() const
+AnsiColorized SourceReferenceFormatter::messageColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, WHITE});
 }
 
-AnsiColorized SourceReferenceFormatterHuman::secondaryColored() const
+AnsiColorized SourceReferenceFormatter::secondaryColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, CYAN});
 }
 
-AnsiColorized SourceReferenceFormatterHuman::highlightColored() const
+AnsiColorized SourceReferenceFormatter::highlightColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {YELLOW});
 }
 
-AnsiColorized SourceReferenceFormatterHuman::diagColored() const
+AnsiColorized SourceReferenceFormatter::diagColored() const
 {
 	return AnsiColorized(m_stream, m_colored, {BOLD, YELLOW});
 }
 
-void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _ref)
+void SourceReferenceFormatter::printSourceLocation(SourceReference const& _ref)
 {
 	if (_ref.sourceName.empty())
 		return; // Nothing we can print here
@@ -152,7 +152,7 @@ void SourceReferenceFormatterHuman::printSourceLocation(SourceReference const& _
 	}
 }
 
-void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
+void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtractor::Message const& _msg)
 {
 	// exception header line
 	errorColored() << _msg.category;
@@ -172,12 +172,12 @@ void SourceReferenceFormatterHuman::printExceptionInformation(SourceReferenceExt
 	m_stream << '\n';
 }
 
-void SourceReferenceFormatterHuman::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
+void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
 {
 	printExceptionInformation(SourceReferenceExtractor::extract(_exception, _category));
 }
 
-void SourceReferenceFormatterHuman::printErrorInformation(Error const& _error)
+void SourceReferenceFormatter::printErrorInformation(Error const& _error)
 {
 	printExceptionInformation(SourceReferenceExtractor::extract(_error));
 }

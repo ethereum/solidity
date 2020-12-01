@@ -19,8 +19,8 @@ set(sources
 	SourceLocation.cpp
 	SourceReferenceExtractor.cpp
 	SourceReferenceExtractor.h
-	SourceReferenceFormatterHuman.cpp
-	SourceReferenceFormatterHuman.h
+	SourceReferenceFormatter.cpp
+	SourceReferenceFormatter.h
 	Token.cpp
 	Token.h
 	UndefMacros.h

@@ -24,7 +24,7 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -96,7 +96,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 
 void ObjectCompilerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatterHuman formatter(_stream, true, false);
+	SourceReferenceFormatter formatter(_stream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

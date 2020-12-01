@@ -18,7 +18,7 @@
 #include <tools/solidityUpgrade/SourceUpgrade.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolidity/ast/AST.h>
 
@@ -397,7 +397,7 @@ void SourceUpgrade::applyChange(
 
 void SourceUpgrade::printErrors() const
 {
-	auto formatter = make_unique<langutil::SourceReferenceFormatterHuman>(cout, true, false);
+	auto formatter = make_unique<langutil::SourceReferenceFormatter>(cout, true, false);
 
 	for (auto const& error: m_compiler->errors())
 		if (error->type() != langutil::Error::Type::Warning)

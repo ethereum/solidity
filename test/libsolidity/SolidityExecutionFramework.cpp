@@ -26,7 +26,7 @@
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace solidity;
 using namespace solidity::test;
@@ -62,7 +62,7 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			for (auto const& error: m_compiler.errors())
 				if (error->type() == langutil::Error::Type::CodeGenerationError)
 					BOOST_THROW_EXCEPTION(*error);
-		langutil::SourceReferenceFormatterHuman formatter(std::cerr, true, false);
+		langutil::SourceReferenceFormatter formatter(std::cerr, true, false);
 
 		for (auto const& error: m_compiler.errors())
 			formatter.printErrorInformation(*error);

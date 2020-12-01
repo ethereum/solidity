@@ -34,10 +34,10 @@ namespace solidity::langutil
 {
 struct SourceLocation;
 
-class SourceReferenceFormatterHuman
+class SourceReferenceFormatter
 {
 public:
-	SourceReferenceFormatterHuman(std::ostream& _stream, bool _colored, bool _withErrorIds):
+	SourceReferenceFormatter(std::ostream& _stream, bool _colored, bool _withErrorIds):
 		m_stream(_stream), m_colored(_colored), m_withErrorIds(_withErrorIds)
 	{}
 
@@ -55,7 +55,7 @@ public:
 	)
 	{
 		std::ostringstream errorOutput;
-		SourceReferenceFormatterHuman formatter(errorOutput, _colored, _withErrorIds);
+		SourceReferenceFormatter formatter(errorOutput, _colored, _withErrorIds);
 		formatter.printExceptionInformation(_exception, _name);
 		return errorOutput.str();
 	}

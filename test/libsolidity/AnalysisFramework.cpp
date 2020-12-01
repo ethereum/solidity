@@ -24,7 +24,7 @@
 #include <test/Common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolidity/ast/AST.h>
 
@@ -149,7 +149,7 @@ string AnalysisFramework::formatErrors() const
 
 string AnalysisFramework::formatError(Error const& _error) const
 {
-	return SourceReferenceFormatterHuman::formatErrorInformation(_error);
+	return SourceReferenceFormatter::formatErrorInformation(_error);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)

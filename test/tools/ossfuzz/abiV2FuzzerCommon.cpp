@@ -1,7 +1,7 @@
 #include <test/tools/ossfuzz/abiV2FuzzerCommon.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace solidity::test::abiv2fuzzer;
 
@@ -24,7 +24,7 @@ solidity::bytes SolidityCompilationFramework::compileContract(
 	m_compiler.setOptimiserSettings(_optimization);
 	if (!m_compiler.compile())
 	{
-		langutil::SourceReferenceFormatterHuman formatter(std::cerr, false, false);
+		langutil::SourceReferenceFormatter formatter(std::cerr, false, false);
 
 		for (auto const& error: m_compiler.errors())
 			formatter.printExceptionInformation(

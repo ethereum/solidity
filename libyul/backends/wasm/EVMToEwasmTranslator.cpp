@@ -39,7 +39,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 // The following headers are generated from the
 // yul files placed in libyul/backends/wasm/polyfill.
@@ -97,7 +97,7 @@ Object EVMToEwasmTranslator::run(Object const& _object)
 		message += ret.toString(&WasmDialect::instance());
 		message += "----------------------------------\n";
 		for (auto const& err: errors)
-			message += langutil::SourceReferenceFormatterHuman::formatErrorInformation(*err);
+			message += langutil::SourceReferenceFormatter::formatErrorInformation(*err);
 		yulAssert(false, message);
 	}
 
@@ -131,7 +131,7 @@ void EVMToEwasmTranslator::parsePolyfill()
 	{
 		string message;
 		for (auto const& err: errors)
-			message += langutil::SourceReferenceFormatterHuman::formatErrorInformation(*err);
+			message += langutil::SourceReferenceFormatter::formatErrorInformation(*err);
 		yulAssert(false, message);
 	}
 
