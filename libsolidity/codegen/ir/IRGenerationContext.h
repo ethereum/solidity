@@ -44,7 +44,20 @@ namespace solidity::frontend
 class YulUtilFunctions;
 class ABIFunctions;
 
-using InternalDispatchMap = std::map<YulArity, std::set<FunctionDefinition const*>>;
+struct AscendingFunctionIDCompare
+{
+	bool operator()(FunctionDefinition const* _f1, FunctionDefinition const* _f2) const
+	{
+		// NULLs always first.
+		if (_f1 != nullptr && _f2 != nullptr)
+			return _f1->id() < _f2->id();
+		else
+			return _f1 == nullptr;
+	}
+};
+
+using DispatchSet = std::set<FunctionDefinition const*, AscendingFunctionIDCompare>;
+using InternalDispatchMap = std::map<YulArity, DispatchSet>;
 
 /**
  * Class that contains contextual information during IR generation.
@@ -164,7 +177,7 @@ private:
 	/// The order and duplicates are irrelevant here (hence std::set rather than std::queue) as
 	/// long as the order of Yul functions in the generated code is deterministic and the same on
 	/// all platforms - which is a property guaranteed by MultiUseYulFunctionCollector.
-	std::set<FunctionDefinition const*> m_functionGenerationQueue;
+	DispatchSet m_functionGenerationQueue;
 
 	/// Collection of functions that need to be callable via internal dispatch.
 	/// Note that having a key with an empty set of functions is a valid situation. It means that
