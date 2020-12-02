@@ -24,29 +24,29 @@ contract Large {
 }
 // ----
 // creation:
-//   codeDepositCost: 961600
-//   executionCost: 1001
-//   totalCost: 962601
+//   codeDepositCost: 913400
+//   executionCost: 948
+//   totalCost: 914348
 // external:
-//   a(): 1051
-//   b(uint256): 2046
-//   f0(uint256): 427
-//   f1(uint256): 41352
-//   f2(uint256): 21293
-//   f3(uint256): 21381
-//   f4(uint256): 21359
-//   f5(uint256): 21337
-//   f6(uint256): 21360
-//   f7(uint256): 21272
-//   f8(uint256): 21272
-//   f9(uint256): 21294
-//   g0(uint256): 313
-//   g1(uint256): 41307
-//   g2(uint256): 21270
-//   g3(uint256): 21358
-//   g4(uint256): 21336
-//   g5(uint256): 21292
-//   g6(uint256): 21315
-//   g7(uint256): 21314
-//   g8(uint256): 21292
-//   g9(uint256): 21249
+//   a(): 1175
+//   b(uint256): infinite
+//   f0(uint256): infinite
+//   f1(uint256): infinite
+//   f2(uint256): infinite
+//   f3(uint256): infinite
+//   f4(uint256): infinite
+//   f5(uint256): infinite
+//   f6(uint256): infinite
+//   f7(uint256): infinite
+//   f8(uint256): infinite
+//   f9(uint256): infinite
+//   g0(uint256): infinite
+//   g1(uint256): infinite
+//   g2(uint256): infinite
+//   g3(uint256): infinite
+//   g4(uint256): infinite
+//   g5(uint256): infinite
+//   g6(uint256): infinite
+//   g7(uint256): infinite
+//   g8(uint256): infinite
+//   g9(uint256): infinite
