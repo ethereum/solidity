@@ -973,6 +973,27 @@ jobs:
             export COMPILE_ONLY=1
             test/externalTests/ens.sh /tmp/workspace/soljson.js
 
+  t_ems_test_ext_ens:
+    docker:
+      - image: circleci/node:10
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install test dependencies
+          command: |
+            sudo apt-get -qy install lsof
+      - run:
+          name: External Ens compilation
+          command: |
+            test/externalTests/ens.sh /tmp/workspace/soljson.js
+      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
+      #- run: *gitter_notify_failure
+      #- run: *gitter_notify_success
+
   b_win: &b_win
     executor:
       name: win/default
@@ -1163,6 +1184,7 @@ workflows:
       - t_ems_test_ext_gnosis: *workflow_emscripten
       - t_ems_test_ext_gnosis_v2: *workflow_emscripten
       - t_ems_test_ext_zeppelin: *workflow_emscripten
+      - t_ems_test_ext_ens: *workflow_emscripten
 
       # Windows build and tests
       - b_win: *workflow_trigger_on_tags
