@@ -43,7 +43,7 @@ struct OptimiserSettings
 
 			"Tpeul"                    // Run functional expression inliner
 			"xarulrul"                 // Prune a bit more in SSA
-			"xarrcL"                   // Turn into SSA again and simplify
+			"xarrcSL"                   // Turn into SSA again and simplify
 			"gvif"                     // Run full inliner
 			"CTUcarrLsTFOtfDncarrIulc" // SSA plus simplify
 		"]"

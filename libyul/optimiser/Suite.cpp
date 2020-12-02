@@ -56,6 +56,7 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/RedundantStoreEliminator.h>
 #include <libyul/optimiser/VarNameCleaner.h>
 #include <libyul/optimiser/LoadResolver.h>
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
@@ -200,6 +201,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			LoadResolver,
 			LoopInvariantCodeMotion,
 			RedundantAssignEliminator,
+			RedundantStoreEliminator,
 			ReasoningBasedSimplifier,
 			Rematerialiser,
 			SSAReverser,
@@ -241,6 +243,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{LoopInvariantCodeMotion::name,       'M'},
 		{ReasoningBasedSimplifier::name,      'R'},
 		{RedundantAssignEliminator::name,     'r'},
+		{RedundantStoreEliminator::name,      'S'},
 		{Rematerialiser::name,                'm'},
 		{SSAReverser::name,                   'V'},
 		{SSATransform::name,                  'a'},
