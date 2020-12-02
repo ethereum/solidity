@@ -634,8 +634,11 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::GasLeft:
 		visitGasLeft(_funCall);
 		break;
-	case FunctionType::Kind::Internal:
 	case FunctionType::Kind::External:
+		if (isPublicGetter(_funCall.expression()))
+			visitPublicGetter(_funCall);
+		break;
+	case FunctionType::Kind::Internal:
 	case FunctionType::Kind::DelegateCall:
 	case FunctionType::Kind::BareCall:
 	case FunctionType::Kind::BareCallCode:
@@ -865,6 +868,98 @@ void SMTEncoder::endVisit(ElementaryTypeNameExpression const& _typeName)
 	);
 	solAssert(!result.first && result.second, "");
 	m_context.createExpression(_typeName, result.second);
+}
+
+namespace // helpers for SMTEncoder::visitPublicGetter
+{
+
+bool isReturnedFromStructGetter(TypePointer _type)
+{
+	// So far it seems that only Mappings and ordinary Arrays are not returned.
+	auto category = _type->category();
+	if (category == Type::Category::Mapping)
+		return false;
+	if (category == Type::Category::Array)
+		return dynamic_cast<ArrayType const&>(*_type).isByteArray();
+	// default
+	return true;
+}
+
+vector<string> structGetterReturnedMembers(StructType const& _structType)
+{
+	vector<string> returnedMembers;
+	for (auto const& member: _structType.nativeMembers(nullptr))
+		if (isReturnedFromStructGetter(member.type))
+			returnedMembers.push_back(member.name);
+	return returnedMembers;
+}
+
+}
+
+void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
+{
+	MemberAccess const& access = dynamic_cast<MemberAccess const&>(_funCall.expression());
+	auto var = dynamic_cast<VariableDeclaration const*>(access.annotation().referencedDeclaration);
+	solAssert(var, "");
+	solAssert(m_context.knownExpression(_funCall), "");
+	auto paramExpectedTypes = FunctionType(*var).parameterTypes();
+	auto actualArguments = _funCall.arguments();
+	solAssert(actualArguments.size() == paramExpectedTypes.size(), "");
+	vector<smtutil::Expression> symbArguments;
+	for (unsigned i = 0; i < paramExpectedTypes.size(); ++i)
+		symbArguments.push_back(expr(*actualArguments[i], paramExpectedTypes[i]));
+
+	TypePointer type = var->type();
+	if (
+		type->isValueType() ||
+		(type->category() == Type::Category::Array && dynamic_cast<ArrayType const&>(*type).isByteArray())
+	)
+	{
+		solAssert(symbArguments.empty(), "");
+		defineExpr(_funCall, currentValue(*var));
+		return;
+	}
+	switch (type->category())
+	{
+		case Type::Category::Array:
+		case Type::Category::Mapping:
+		{
+			// For nested arrays/mappings, each argument in the call is an index to the next layer.
+			// We mirror this with `select` after unpacking the SMT-LIB array expression.
+			smtutil::Expression exprVal = currentValue(*var);
+			for (auto const& arg: symbArguments)
+			{
+				exprVal = smtutil::Expression::select(
+					smtutil::Expression::tuple_get(exprVal, 0),
+					arg
+				);
+			}
+			defineExpr(_funCall, exprVal);
+			break;
+		}
+		case Type::Category::Struct:
+		{
+			auto returnedMembers = structGetterReturnedMembers(dynamic_cast<StructType const&>(*type));
+			solAssert(!returnedMembers.empty(), "");
+			auto structVar = dynamic_pointer_cast<smt::SymbolicStructVariable>(m_context.variable(*var));
+			solAssert(structVar, "");
+			auto returnedValues = applyMap(returnedMembers, [&](string const& memberName) { return structVar->member(memberName); });
+			if (returnedValues.size() == 1)
+				defineExpr(_funCall, returnedValues.front());
+			else
+			{
+				auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
+				solAssert(symbTuple, "");
+				symbTuple->increaseIndex(); // Increasing the index explicitly since we cannot use defineExpr in this case.
+				auto const& symbComponents = symbTuple->components();
+				solAssert(symbComponents.size() == returnedValues.size(), "");
+				for (unsigned i = 0; i < symbComponents.size(); ++i)
+					m_context.addAssertion(symbTuple->component(i) == returnedValues.at(i));
+			}
+			break;
+		}
+		default: {} // Unsupported cases, do nothing and the getter will be abstracted.
+	}
 }
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
@@ -2401,6 +2496,15 @@ MemberAccess const* SMTEncoder::isEmptyPush(Expression const& _expr) const
 			return &dynamic_cast<MemberAccess const&>(funCall->expression());
 	}
 	return nullptr;
+}
+
+bool SMTEncoder::isPublicGetter(Expression const& _expr) {
+	if (!isTrustedExternalCall(&_expr))
+		return false;
+	auto varDecl = dynamic_cast<VariableDeclaration const*>(
+		dynamic_cast<MemberAccess const&>(_expr).annotation().referencedDeclaration
+	);
+	return varDecl != nullptr;
 }
 
 bool SMTEncoder::isTrustedExternalCall(Expression const* _expr) {
