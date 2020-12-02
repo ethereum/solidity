@@ -24,7 +24,7 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libevmasm/Instruction.h>
 

@@ -16,29 +16,27 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Information generated during analyzer part of inline assembly.
+ * Implements generators for synthesizing mostly syntactically valid
+ * Solidity test programs.
  */
 
 #pragma once
 
-#include <libyul/ASTForward.h>
+#include <random>
 
-#include <map>
-#include <memory>
-#include <vector>
-
-namespace solidity::yul
+namespace solidity::test::fuzzer
 {
+using RandomEngine = std::mt19937_64;
 
-struct Scope;
-
-struct AsmAnalysisInfo
+class SolidityGenerator
 {
-	using StackHeightInfo = std::map<void const*, int>;
-	using Scopes = std::map<Block const*, std::shared_ptr<Scope>>;
-	Scopes scopes;
-	/// Virtual blocks which will be used for scopes for function arguments and return values.
-	std::map<FunctionDefinition const*, std::shared_ptr<Block const>> virtualBlocks;
+public:
+	SolidityGenerator(uint64_t _seed): m_rand(_seed)
+	{}
+	/// @returns a pseudo randomly generated test program
+	std::string generateTestProgram();
+private:
+	/// Random number generator
+	RandomEngine const m_rand;
 };
-
 }

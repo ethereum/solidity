@@ -21,7 +21,7 @@
 #include <libyul/optimiser/SyntacticalEquality.h>
 
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>

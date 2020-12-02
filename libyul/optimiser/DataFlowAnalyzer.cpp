@@ -24,8 +24,8 @@
 
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/CommonData.h>
@@ -38,7 +38,6 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
-
 
 void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 {

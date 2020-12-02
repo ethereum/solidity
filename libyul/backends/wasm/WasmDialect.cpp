@@ -21,7 +21,7 @@
 
 #include <libyul/backends/wasm/WasmDialect.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 using namespace std;

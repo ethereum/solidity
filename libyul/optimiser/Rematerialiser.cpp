@@ -24,7 +24,7 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;

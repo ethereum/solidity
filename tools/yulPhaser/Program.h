@@ -19,7 +19,7 @@
 #pragma once
 
 #include <libyul/optimiser/NameDispenser.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/Exceptions.h>
 

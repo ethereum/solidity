@@ -36,6 +36,10 @@ function ens_test
     export CONFIG="truffle-config.js"
 
     truffle_setup https://github.com/solidity-external-tests/ens.git upgrade-0.8.0
+
+    # Use latest Truffle. Older versions crash on the output from 0.8.0.
+    force_truffle_version ^5.1.55
+
     run_install install_fn
 
     truffle_run_test compile_fn test_fn

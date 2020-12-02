@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 

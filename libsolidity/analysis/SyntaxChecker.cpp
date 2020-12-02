@@ -23,7 +23,7 @@
 #include <libsolidity/interface/Version.h>
 
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>

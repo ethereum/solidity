@@ -22,7 +22,7 @@
 
 #include <libyul/optimiser/FunctionGrouper.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <boost/range/algorithm_ext/erase.hpp>
 

@@ -22,7 +22,7 @@
 #include <libyul/optimiser/DeadCodeEliminator.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libevmasm/SemanticInformation.h>
 #include <libevmasm/AssemblyItem.h>

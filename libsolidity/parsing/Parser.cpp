@@ -25,6 +25,7 @@
 
 #include <libsolidity/interface/Version.h>
 #include <libyul/AsmParser.h>
+#include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>

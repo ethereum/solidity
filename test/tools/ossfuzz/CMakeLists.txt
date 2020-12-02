@@ -1,12 +1,14 @@
 add_custom_target(ossfuzz)
 add_dependencies(ossfuzz
         solc_opt_ossfuzz
+        solc_opt_mutator_ossfuzz
         solc_noopt_ossfuzz
+        solc_noopt_mutator_ossfuzz
         const_opt_ossfuzz
         strictasm_diff_ossfuzz
         strictasm_opt_ossfuzz
         strictasm_assembly_ossfuzz
-        )
+)
 
 
 if (OSSFUZZ)
@@ -31,6 +33,16 @@ if (OSSFUZZ)
     target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm)
     set_target_properties(solc_opt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
+    add_executable(solc_opt_mutator_ossfuzz
+            solc_opt_ossfuzz.cpp
+            ../fuzzer_common.cpp
+            ../../TestCaseReader.cpp
+            SolidityGenerator.cpp
+            SolidityCustomMutatorInterface.cpp
+    )
+    target_link_libraries(solc_opt_mutator_ossfuzz PRIVATE libsolc evmasm)
+    set_target_properties(solc_opt_mutator_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+
     add_executable(solc_noopt_ossfuzz
             solc_noopt_ossfuzz.cpp
             ../fuzzer_common.cpp
@@ -38,6 +50,16 @@ if (OSSFUZZ)
     )
     target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
     set_target_properties(solc_noopt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+
+    add_executable(solc_noopt_mutator_ossfuzz
+            solc_noopt_ossfuzz.cpp
+            ../fuzzer_common.cpp
+            ../../TestCaseReader.cpp
+            SolidityGenerator.cpp
+            SolidityCustomMutatorInterface.cpp
+    )
+    target_link_libraries(solc_noopt_mutator_ossfuzz PRIVATE libsolc evmasm)
+    set_target_properties(solc_noopt_mutator_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(const_opt_ossfuzz const_opt_ossfuzz.cpp ../fuzzer_common.cpp)
     target_link_libraries(const_opt_ossfuzz PRIVATE libsolc evmasm)
@@ -82,14 +104,14 @@ if (OSSFUZZ)
             protoToYul.cpp
             yulProto.pb.cc
             protomutators/YulProtoMutator.cpp
-)
+    )
     target_include_directories(yul_proto_diff_custom_mutate_ossfuzz PRIVATE /usr/include/libprotobuf-mutator)
     target_link_libraries(yul_proto_diff_custom_mutate_ossfuzz PRIVATE yul
             yulInterpreter
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a
-)
+    )
     set_target_properties(yul_proto_diff_custom_mutate_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
     target_compile_options(yul_proto_diff_custom_mutate_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion)
 
@@ -139,11 +161,23 @@ else()
             )
     target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm)
 
+    add_library(solc_opt_mutator_ossfuzz
+            solc_opt_ossfuzz.cpp
+            ../fuzzer_common.cpp
+            )
+    target_link_libraries(solc_opt_mutator_ossfuzz PRIVATE libsolc evmasm)
+
     add_library(solc_noopt_ossfuzz
             solc_noopt_ossfuzz.cpp
             ../fuzzer_common.cpp
             )
     target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
+
+    add_library(solc_noopt_mutator_ossfuzz
+            solc_noopt_ossfuzz.cpp
+            ../fuzzer_common.cpp
+            )
+    target_link_libraries(solc_noopt_mutator_ossfuzz PRIVATE libsolc evmasm)
 
     add_library(const_opt_ossfuzz
             const_opt_ossfuzz.cpp

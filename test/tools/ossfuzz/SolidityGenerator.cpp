@@ -15,30 +15,21 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 // SPDX-License-Identifier: GPL-3.0
-/**
- * Information generated during analyzer part of inline assembly.
- */
 
-#pragma once
+#include <test/tools/ossfuzz/SolidityGenerator.h>
 
-#include <libyul/ASTForward.h>
+#include <libsolutil/Whiskers.h>
 
-#include <map>
-#include <memory>
-#include <vector>
+using namespace solidity::test::fuzzer;
+using namespace solidity::util;
+using namespace std;
 
-namespace solidity::yul
+string SolidityGenerator::generateTestProgram()
 {
-
-struct Scope;
-
-struct AsmAnalysisInfo
-{
-	using StackHeightInfo = std::map<void const*, int>;
-	using Scopes = std::map<Block const*, std::shared_ptr<Scope>>;
-	Scopes scopes;
-	/// Virtual blocks which will be used for scopes for function arguments and return values.
-	std::map<FunctionDefinition const*, std::shared_ptr<Block const>> virtualBlocks;
-};
-
+	// TODO: Add generators for grammar elements of
+	// Solidity antlr4 grammar. Currently, the generated
+	// test program consists of a version pragma only.
+	return Whiskers(R"(pragma <directive>;)")
+		("directive", "solidity >= 0.0.0")
+		.render();
 }

@@ -531,10 +531,15 @@ void CompilerUtils::encodeToMemory(
 			if (_givenTypes[i]->category() == Type::Category::StringLiteral)
 			{
 				auto const& strType = dynamic_cast<StringLiteralType const&>(*_givenTypes[i]);
-				m_context << u256(strType.value().size());
+				auto const size = strType.value().size();
+				m_context << u256(size);
 				storeInMemoryDynamic(*TypeProvider::uint256(), true);
 				// stack: ... <end_of_mem'>
-				storeInMemoryDynamic(strType, _padToWordBoundaries);
+
+				// Do not output empty padding for zero-length strings.
+				// TODO: handle this in storeInMemoryDynamic
+				if (size != 0)
+					storeInMemoryDynamic(strType, _padToWordBoundaries);
 			}
 			else
 			{

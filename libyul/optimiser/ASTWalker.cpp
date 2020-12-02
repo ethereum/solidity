@@ -21,7 +21,7 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 

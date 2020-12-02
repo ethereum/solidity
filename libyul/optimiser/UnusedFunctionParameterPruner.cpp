@@ -27,7 +27,7 @@
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/YulString.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 

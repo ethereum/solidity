@@ -19,7 +19,7 @@
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/NameDispenser.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 

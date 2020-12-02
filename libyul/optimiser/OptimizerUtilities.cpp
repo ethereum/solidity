@@ -22,7 +22,7 @@
 #include <libyul/optimiser/OptimizerUtilities.h>
 
 #include <libyul/Dialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/Token.h>
 #include <libsolutil/CommonData.h>

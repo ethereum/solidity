@@ -38,7 +38,7 @@ struct Object;
  *
  * Builtin functions are a subset of the wasm instructions.
  *
- * There is a builtin function `i32.drop` that takes an i32, while `drop` takes i64.
+ * There is a builtin function `i32.drop` that takes an i32, while `i64.drop` takes i64.
  *
  */
 struct WasmDialect: public Dialect

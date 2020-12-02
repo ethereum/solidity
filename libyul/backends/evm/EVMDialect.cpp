@@ -22,7 +22,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AsmParser.h>

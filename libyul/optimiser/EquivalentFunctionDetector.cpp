@@ -22,7 +22,7 @@
 #include <libyul/optimiser/EquivalentFunctionDetector.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/optimiser/Metrics.h>
 
 using namespace std;

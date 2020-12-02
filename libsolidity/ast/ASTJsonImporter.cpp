@@ -25,6 +25,7 @@
 
 #include <libyul/AsmJsonImporter.h>
 #include <libyul/AsmParser.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 

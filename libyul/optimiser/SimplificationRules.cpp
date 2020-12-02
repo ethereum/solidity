@@ -26,7 +26,7 @@
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
 #include <libevmasm/RuleList.h>

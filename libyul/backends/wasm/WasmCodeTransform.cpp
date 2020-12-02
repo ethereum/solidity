@@ -25,7 +25,7 @@
 
 #include <libyul/optimiser/NameCollector.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>
 #include <libyul/Exceptions.h>

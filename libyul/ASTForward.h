@@ -16,29 +16,39 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Information generated during analyzer part of inline assembly.
+ * @author Christian <c@ethdev.com>
+ * @date 2016
+ * Forward declaration of classes for inline assembly / Yul AST
  */
 
 #pragma once
 
-#include <libyul/ASTForward.h>
-
-#include <map>
-#include <memory>
-#include <vector>
+#include <variant>
 
 namespace solidity::yul
 {
 
-struct Scope;
+enum class LiteralKind;
+struct Literal;
+struct Label;
+struct Identifier;
+struct Assignment;
+struct VariableDeclaration;
+struct FunctionDefinition;
+struct FunctionCall;
+struct If;
+struct Switch;
+struct Case;
+struct ForLoop;
+struct Break;
+struct Continue;
+struct Leave;
+struct ExpressionStatement;
+struct Block;
 
-struct AsmAnalysisInfo
-{
-	using StackHeightInfo = std::map<void const*, int>;
-	using Scopes = std::map<Block const*, std::shared_ptr<Scope>>;
-	Scopes scopes;
-	/// Virtual blocks which will be used for scopes for function arguments and return values.
-	std::map<FunctionDefinition const*, std::shared_ptr<Block const>> virtualBlocks;
-};
+struct TypedName;
+
+using Expression = std::variant<FunctionCall, Identifier, Literal>;
+using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
 
 }

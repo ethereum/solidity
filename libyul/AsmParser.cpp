@@ -22,6 +22,7 @@
  */
 
 #include <libyul/AsmParser.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>

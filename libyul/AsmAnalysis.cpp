@@ -21,7 +21,7 @@
 
 #include <libyul/AsmAnalysis.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/AsmScopeFiller.h>
 #include <libyul/AsmScope.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -667,4 +667,9 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		return false;
 
 	return true;
+}
+
+bool AsmAnalyzer::validateInstructions(FunctionCall const& _functionCall)
+{
+	return validateInstructions(_functionCall.functionName.name.str(), _functionCall.functionName.location);
 }

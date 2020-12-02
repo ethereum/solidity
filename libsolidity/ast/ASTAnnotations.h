@@ -262,6 +262,15 @@ struct ExpressionAnnotation: ASTAnnotation
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resolution
 	std::optional<FuncCallArguments> arguments;
+
+	/// True if the expression consists solely of the name of the function and the function is called immediately
+	/// instead of being stored or processed. The name may be qualified with the name of a contract, library
+	/// module, etc., that clarifies the scope. For example: `m.L.f()`, where `m` is a module, `L` is a library
+	/// and `f` is a function is a direct call. This means that the function to be called is known at compilation
+	/// time and it's not necessary to rely on any runtime dispatch mechanism to resolve it.
+	/// Note that even the simplest expressions, like `(f)()`, result in an indirect call even if they consist of
+	/// values known at compilation time.
+	bool calledDirectly = false;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation

@@ -16,38 +16,31 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * @author Christian <c@ethdev.com>
- * @date 2016
- * Forward declaration of classes for inline assembly / Yul AST
+ * Implements libFuzzer's custom mutator interface.
  */
 
 #pragma once
 
-#include <variant>
+#include <test/tools/ossfuzz/SolidityGenerator.h>
 
-namespace solidity::yul
+#include <memory>
+
+namespace solidity::test::fuzzer
 {
+struct SolidityCustomMutatorInterface
+{
+	SolidityCustomMutatorInterface(uint8_t* _data, size_t _size, size_t _maxSize, unsigned _seed);
+	/// Generates Solidity test program, copies it into buffer
+	/// provided by libFuzzer and @returns size of the test program.
+	size_t generate();
 
-struct Literal;
-struct Label;
-struct Identifier;
-struct Assignment;
-struct VariableDeclaration;
-struct FunctionDefinition;
-struct FunctionCall;
-struct If;
-struct Switch;
-struct Case;
-struct ForLoop;
-struct Break;
-struct Continue;
-struct Leave;
-struct ExpressionStatement;
-struct Block;
-
-struct TypedName;
-
-using Expression = std::variant<FunctionCall, Identifier, Literal>;
-using Statement = std::variant<ExpressionStatement, Assignment, VariableDeclaration, FunctionDefinition, If, Switch, ForLoop, Break, Continue, Leave, Block>;
-
+	/// Raw pointer to libFuzzer provided input
+	uint8_t* data;
+	/// Size of libFuzzer provided input
+	size_t size;
+	/// Maximum length of mutant specified by libFuzzer
+	size_t maxMutantSize;
+	/// Solidity generator handle
+	std::shared_ptr<SolidityGenerator> generator;
+};
 }

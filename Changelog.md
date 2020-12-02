@@ -44,6 +44,7 @@ Compiler Features:
  * SMTChecker: Support struct constructor.
 
 Bugfixes:
+ * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
  * SMTChecker: Fix internal compiler error when doing bitwise compound assignment with string literals.
 
 ### 0.7.5 (2020-11-18)

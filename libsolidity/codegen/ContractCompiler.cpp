@@ -31,7 +31,7 @@
 
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AsmAnalysis.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/backends/evm/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMMetrics.h>
 #include <libyul/backends/evm/EVMDialect.h>

@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libsolutil/CommonData.h>
