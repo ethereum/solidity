@@ -11,6 +11,8 @@ contract C {
 		assert(a[0][a[0].length - 1] == 8);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 3944: (217-232): CHC: Underflow (resulting value less than 0) happens here.
 // Warning 6328: (205-239): CHC: Assertion violation happens here.

@@ -1,9 +1,5 @@
 Warning: CHC: Assertion violation happens here.
- --> model_checker_engine_all/input.sol:6:3:
-  |
-6 | 		assert(x > 0);
-  | 		^^^^^^^^^^^^^
-Note: Counterexample:
+Counterexample:
 
 x = 0
 
@@ -11,3 +7,7 @@ x = 0
 Transaction trace:
 constructor()
 f(0)
+ --> model_checker_engine_all/input.sol:6:3:
+  |
+6 | 		assert(x > 0);
+  | 		^^^^^^^^^^^^^

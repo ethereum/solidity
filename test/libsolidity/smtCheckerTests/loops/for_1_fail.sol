@@ -15,5 +15,5 @@ contract C
 // SMTSolvers: z3
 // ----
 // Warning 4984: (176-181): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6328: (189-203): CHC: Assertion violation happens here.
+// Warning 6328: (189-203): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 14\n\n\nTransaction trace:\nconstructor()\nf(4)
 // Warning 2661: (176-181): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

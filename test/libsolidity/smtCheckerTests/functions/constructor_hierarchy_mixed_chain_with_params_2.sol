@@ -23,4 +23,4 @@ contract B is C {
 contract A is B {
 }
 // ----
-// Warning 6328: (266-280): CHC: Assertion violation happens here.
+// Warning 6328: (266-280): CHC: Assertion violation happens here.\nCounterexample:\na = 3\n\n\n\nTransaction trace:\nconstructor()

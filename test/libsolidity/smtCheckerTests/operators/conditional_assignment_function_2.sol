@@ -12,8 +12,10 @@ contract C {
     function h(uint a) public pure {
         uint c = a < 5 ? g(a) : f(a);
         assert(c >= 25);
-        assert(c < 20);
+        assert(c < 20); // should fail
     }
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (378-392): CHC: Assertion violation happens here.

@@ -11,6 +11,8 @@ contract C {
 		assert(x == 10);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 4984: (109-116): CHC: Overflow (resulting value larger than 65535) happens here.
 // Warning 6328: (193-208): CHC: Assertion violation happens here.

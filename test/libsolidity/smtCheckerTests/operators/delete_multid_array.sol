@@ -38,5 +38,7 @@ contract C {
 		b[x][y] = z;
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (685-705): CHC: Assertion violation happens here.

@@ -4,4 +4,4 @@ contract C {
 	function f() public { (((((a))))).pop();}
 }
 // ----
-// Warning 2529: (78-95): CHC: Empty array "pop" happens here.
+// Warning 2529: (78-95): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\n\n\nTransaction trace:\nconstructor()\nState: a = []\nf()

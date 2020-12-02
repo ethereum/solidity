@@ -26,8 +26,8 @@ contract C {
 // ----
 // Warning 6031: (261-267): Internal error: Expression undefined for SMT solver.
 // Warning 7650: (284-296): Assertion checker does not yet support this expression.
-// Warning 6328: (470-495): CHC: Assertion violation happens here.
-// Warning 6328: (540-565): CHC: Assertion violation happens here.
+// Warning 6328: (470-495): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\ncheck()
+// Warning 6328: (540-565): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\ncheck()
 // Warning 6031: (261-267): Internal error: Expression undefined for SMT solver.
 // Warning 7650: (284-296): Assertion checker does not yet support this expression.
 // Warning 7650: (284-296): Assertion checker does not yet support this expression.

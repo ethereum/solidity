@@ -27,5 +27,7 @@ contract C {
 		assert(sig_1 == sig_2);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (431-453): CHC: Assertion violation happens here.

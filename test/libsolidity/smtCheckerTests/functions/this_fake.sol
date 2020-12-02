@@ -21,4 +21,4 @@ contract C
 }
 // ----
 // Warning 2319: (160-166): This declaration shadows a builtin symbol.
-// Warning 6328: (268-282): CHC: Assertion violation happens here.
+// Warning 6328: (268-282): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, c = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0, c = 0\ng()
