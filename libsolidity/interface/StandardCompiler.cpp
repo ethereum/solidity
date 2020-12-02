@@ -117,6 +117,7 @@ Json::Value formatErrorWithException(
 )
 {
 	string message;
+	// TODO: consider enabling color
 	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
 
 	if (string const* description = boost::get_error_info<util::errinfo_comment>(_exception))

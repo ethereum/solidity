@@ -20,7 +20,7 @@
 #include <test/libsolidity/ASTJSONTest.h>
 #include <test/Common.h>
 #include <libsolutil/AnsiColorized.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <boost/algorithm/string.hpp>
@@ -141,7 +141,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 	if (!c.compile(CompilerStack::State::Parsed))
 	{
-		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
+		SourceReferenceFormatter formatter(_stream, _formatted, false);
 		for (auto const& error: c.errors())
 			formatter.printErrorInformation(*error);
 		return TestResult::FatalError;
@@ -167,7 +167,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		if (m_expectation.empty())
 			return resultsMatch ? TestResult::Success : TestResult::Failure;
 
-		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
+		SourceReferenceFormatter formatter(_stream, _formatted, false);
 		for (auto const& error: c.errors())
 			formatter.printErrorInformation(*error);
 		return TestResult::FatalError;

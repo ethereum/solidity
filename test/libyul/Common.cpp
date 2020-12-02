@@ -55,7 +55,7 @@ Dialect const& defaultDialect(bool _yul)
 
 void yul::test::printErrors(ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(cout);
+	SourceReferenceFormatter formatter(cout, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

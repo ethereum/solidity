@@ -58,7 +58,7 @@ namespace
 void printErrors(ErrorList const& _errors)
 {
 	for (auto const& error: _errors)
-		SourceReferenceFormatter(cout).printErrorInformation(*error);
+		SourceReferenceFormatter(cout, true, false).printErrorInformation(*error);
 }
 
 pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)

@@ -510,8 +510,8 @@ BOOST_AUTO_TEST_CASE(compilation_error)
 		{
 			BOOST_CHECK_EQUAL(
 				util::jsonCompactPrint(error),
-				"{\"component\":\"general\",\"errorCode\":\"2314\",\"formattedMessage\":\"fileA:1:23: ParserError: Expected identifier but got '}'\\n"
-				"contract A { function }\\n                      ^\\n\",\"message\":\"Expected identifier but got '}'\","
+				"{\"component\":\"general\",\"errorCode\":\"2314\",\"formattedMessage\":\"ParserError: Expected identifier but got '}'\\n"
+				" --> fileA:1:23:\\n  |\\n1 | contract A { function }\\n  |                       ^\\n\\n\",\"message\":\"Expected identifier but got '}'\","
 				"\"severity\":\"error\",\"sourceLocation\":{\"end\":23,\"file\":\"fileA\",\"start\":22},\"type\":\"ParserError\"}"
 			);
 		}

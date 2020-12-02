@@ -240,11 +240,17 @@
 
 (assert (and (and (and true true) (and (= expr_30_1 (= expr_28_1 expr_29_0)) (and (= expr_29_0 0) (and (= expr_28_1 (ite (= expr_27_0 0) 0 r_div_mod_16_0)) (and (and (<= 0 r_div_mod_16_0) (or (= expr_27_0 0) (< r_div_mod_16_0 expr_27_0))) (and (= (+ (* d_div_mod_16_0 expr_27_0) r_div_mod_16_0) expr_26_0) (and (= expr_27_0 k_8_0) (and (= expr_26_0 y_6_0) (and (implies (and true true) expr_22_1) (and (= expr_22_1 (= expr_20_1 expr_21_0)) (and (= expr_21_0 0) (and (= expr_20_1 (ite (= expr_19_0 0) 0 r_div_mod_15_0)) (and (and (<= 0 r_div_mod_15_0) (or (= expr_19_0 0) (< r_div_mod_15_0 expr_19_0))) (and (= (+ (* d_div_mod_15_0 expr_19_0) r_div_mod_15_0) expr_18_0) (and (= expr_19_0 k_8_0) (and (= expr_18_0 x_4_0) (and (implies (and true true) expr_14_1) (and (= expr_14_1 (> expr_12_0 expr_13_0)) (and (= expr_13_0 0) (and (= expr_12_0 k_8_0) (and (and (>= k_8_0 0) (<= k_8_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (>= y_6_0 0) (<= y_6_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (>= x_4_0 0) (<= x_4_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (= r_34_0 0) true)))))))))))))))))))))))) (not expr_30_1)))
 (check-sat)
-"}},"errors":[{"component":"general","errorCode":"6328","formattedMessage":"A:6:85: Warning: CHC: Assertion violation might happen here.
-require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
-                                                                                    ^----------------^
-","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":258,"file":"A","start":240},"type":"Warning"},{"component":"general","errorCode":"7812","formattedMessage":"A:6:85: Warning: BMC: Assertion violation might happen here.
-require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
-                                                                                    ^----------------^
+"}},"errors":[{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation might happen here.
+ --> A:6:85:
+  |
+6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
+  |                                                                                     ^^^^^^^^^^^^^^^^^^
+
+","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":258,"file":"A","start":240},"type":"Warning"},{"component":"general","errorCode":"7812","formattedMessage":"Warning: BMC: Assertion violation might happen here.
+ --> A:6:85:
+  |
+6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
+  |                                                                                     ^^^^^^^^^^^^^^^^^^
+Note:
 
 ","message":"BMC: Assertion violation might happen here.","secondarySourceLocations":[{"message":""}],"severity":"warning","sourceLocation":{"end":258,"file":"A","start":240},"type":"Warning"}],"sources":{"A":{"id":0}}}

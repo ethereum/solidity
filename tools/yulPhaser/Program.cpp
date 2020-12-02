@@ -59,7 +59,7 @@ ostream& operator<<(ostream& _stream, Program const& _program);
 
 ostream& std::operator<<(ostream& _outputStream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_outputStream);
+	SourceReferenceFormatter formatter(_outputStream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

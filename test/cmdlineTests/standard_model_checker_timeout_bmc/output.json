@@ -496,8 +496,11 @@
 (assert (= |EVALEXPR_4| expr_43_0))
 (check-sat)
 (get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| |EVALEXPR_3| |EVALEXPR_4| ))
-"}},"errors":[{"component":"general","errorCode":"7812","formattedMessage":"A:6:85: Warning: BMC: Assertion violation might happen here.
-require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
-                                                                                    ^----------------^
+"}},"errors":[{"component":"general","errorCode":"7812","formattedMessage":"Warning: BMC: Assertion violation might happen here.
+ --> A:6:85:
+  |
+6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
+  |                                                                                     ^^^^^^^^^^^^^^^^^^
+Note:
 
 ","message":"BMC: Assertion violation might happen here.","secondarySourceLocations":[{"message":""}],"severity":"warning","sourceLocation":{"end":258,"file":"A","start":240},"type":"Warning"}],"sources":{"A":{"id":0}}}

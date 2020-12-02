@@ -104,7 +104,7 @@ string YulInterpreterTest::interpret()
 
 void YulInterpreterTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream);
+	SourceReferenceFormatter formatter(_stream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

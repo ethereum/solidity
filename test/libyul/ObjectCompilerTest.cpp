@@ -96,7 +96,7 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 
 void ObjectCompilerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream);
+	SourceReferenceFormatter formatter(_stream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

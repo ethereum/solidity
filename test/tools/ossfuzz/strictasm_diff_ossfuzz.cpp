@@ -26,7 +26,6 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
-#include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/CommonData.h>

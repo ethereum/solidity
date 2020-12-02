@@ -1,5 +1,8 @@
 #include <test/tools/ossfuzz/abiV2FuzzerCommon.h>
 
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
+
 using namespace solidity::test::abiv2fuzzer;
 
 SolidityCompilationFramework::SolidityCompilationFramework(langutil::EVMVersion _evmVersion)
@@ -21,7 +24,7 @@ solidity::bytes SolidityCompilationFramework::compileContract(
 	m_compiler.setOptimiserSettings(_optimization);
 	if (!m_compiler.compile())
 	{
-		langutil::SourceReferenceFormatter formatter(std::cerr);
+		langutil::SourceReferenceFormatter formatter(std::cerr, false, false);
 
 		for (auto const& error: m_compiler.errors())
 			formatter.printExceptionInformation(

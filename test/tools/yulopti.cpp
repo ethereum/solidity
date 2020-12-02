@@ -64,7 +64,7 @@ class YulOpti
 public:
 	void printErrors()
 	{
-		SourceReferenceFormatter formatter(cerr);
+		SourceReferenceFormatter formatter(cerr, true, false);
 
 		for (auto const& error: m_errors)
 			formatter.printErrorInformation(*error);

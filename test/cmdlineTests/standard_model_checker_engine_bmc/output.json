@@ -20,13 +20,16 @@
 (assert (= |EVALEXPR_0| x_4_0))
 (check-sat)
 (get-value (|EVALEXPR_0| ))
-"}},"errors":[{"component":"general","errorCode":"4661","formattedMessage":"A:4:47: Warning: BMC: Assertion violation happens here.
-contract C { function f(uint x) public pure { assert(x > 0); } }
-                                              ^-----------^
-Counterexample:
+"}},"errors":[{"component":"general","errorCode":"4661","formattedMessage":"Warning: BMC: Assertion violation happens here.
+ --> A:4:47:
+  |
+4 | contract C { function f(uint x) public pure { assert(x > 0); } }
+  |                                               ^^^^^^^^^^^^^
+Note: Counterexample:
   x = 0
 
-Callstack:
+Note: Callstack:
+Note:
 
 ","message":"BMC: Assertion violation happens here.","secondarySourceLocations":[{"message":"Counterexample:
   x = 0

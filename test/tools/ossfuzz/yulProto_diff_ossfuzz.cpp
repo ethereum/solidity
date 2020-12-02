@@ -44,7 +44,7 @@ namespace
 {
 void printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream);
+	SourceReferenceFormatter formatter(_stream, false, false);
 
 	for (auto const& error: _errors)
 		formatter.printExceptionInformation(

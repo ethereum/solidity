@@ -2,7 +2,7 @@
  "language": "Solidity",
  "sources": {
   "a.sol": {
-   "content": "// SPDX-License-Identifier: GPL-3.0\npragma abicoder v2; contract A { function f(uint[] memory) public view returns (uint256) { } }"
+   "content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\npragma abicoder v2; contract A { function f(uint[] memory) public view returns (uint256) { } }"
   }
  },
  "settings": {
