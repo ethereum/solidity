@@ -14,4 +14,4 @@ abstract contract Test is ERC165 {
     }
 }
 // ----
-// TypeError 9582: (587-610): Member "interfaceID" not found or not visible after argument-dependent lookup in type(contract super Test).
+// TypeError 4259: (592-597): Invalid type for argument in the function call. A contract type or an integer type is required, but type(contract super Test) provided.

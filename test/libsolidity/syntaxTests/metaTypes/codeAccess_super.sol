@@ -10,5 +10,4 @@ contract SuperTest is Other {
 	}
 }
 // ----
-// TypeError 3625: (172-196): "creationCode" and "runtimeCode" are not available for the "super" contract.
-// TypeError 3625: (272-295): "creationCode" and "runtimeCode" are not available for the "super" contract.
+// TypeError 4259: (177-182): Invalid type for argument in the function call. A contract type or an integer type is required, but type(contract super SuperTest) provided.

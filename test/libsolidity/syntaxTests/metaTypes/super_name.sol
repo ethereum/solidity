@@ -49,6 +49,5 @@ contract D is B, C {
         return true;
     }
 }
-
 // ----
-// f() -> true
+// TypeError 4259: (440-445): Invalid type for argument in the function call. A contract type or an integer type is required, but type(contract super B) provided.
