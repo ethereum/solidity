@@ -220,8 +220,6 @@ optional<rational> ConstantEvaluator::evaluateUnaryOperator(Token _operator, rat
 			return nullopt;
 		else
 			return ~_input.numerator();
-	case Token::Add:
-		return +_input;
 	case Token::Sub:
 		return -_input;
 	default:
