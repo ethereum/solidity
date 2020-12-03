@@ -2,4 +2,4 @@
     if mload {}
 }
 // ----
-// ParserError 2314: (15-16): Expected '(' but got '{'
+// ParserError 7104: (9-14): Builtin function "mload" must be called.

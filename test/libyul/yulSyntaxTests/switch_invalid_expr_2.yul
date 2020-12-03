@@ -4,4 +4,4 @@
     default {}
 }
 // ----
-// ParserError 2314: (23-27): Expected '(' but got reserved keyword 'case'
+// ParserError 7104: (13-18): Builtin function "mload" must be called.

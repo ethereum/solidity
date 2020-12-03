@@ -1,6 +1,5 @@
 {
-	// Test for the unreachable 6272_error
 	add := 1
 }
 // ----
-// ParserError 2314: (47-49): Expected '(' but got ':='
+// ParserError 6272: (7-9): Cannot assign to builtin function "add".

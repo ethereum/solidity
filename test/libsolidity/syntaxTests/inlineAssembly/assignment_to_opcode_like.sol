@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// ParserError 2314: (101-103): Expected '(' but got ':='
+// ParserError 6272: (101-103): Cannot assign to builtin function "mload".

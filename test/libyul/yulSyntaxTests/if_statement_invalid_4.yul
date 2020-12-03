@@ -2,4 +2,4 @@
     if calldatasize {}
 }
 // ----
-// ParserError 2314: (22-23): Expected '(' but got '{'
+// ParserError 7104: (9-21): Builtin function "calldatasize" must be called.

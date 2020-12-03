@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// ParserError 2314: (118-119): Expected '(' but got '}'
+// ParserError 7104: (104-109): Builtin function "mload" must be called.
