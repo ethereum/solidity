@@ -21,11 +21,22 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 
-#include <z3_api.h>
+#ifdef HAVE_Z3_DLOPEN
+#include <libsmtutil/Z3Loader.h>
+#endif
 
 using namespace std;
 using namespace solidity::smtutil;
 using namespace solidity::util;
+
+bool Z3Interface::available()
+{
+#ifdef HAVE_Z3_DLOPEN
+	return Z3Loader::get().available();
+#else
+	return true;
+#endif
+}
 
 Z3Interface::Z3Interface(std::optional<unsigned> _queryTimeout):
 	SolverInterface(_queryTimeout),

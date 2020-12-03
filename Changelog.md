@@ -7,6 +7,7 @@ Language Features:
  * Wasm backend: Add ``i32.select`` and ``i64.select`` instructions.
 
 Compiler Features:
+ * Build System: Optionally support dynamic loading of Z3 and use that mechanism for Linux release builds.
  * Code Generator: Avoid memory allocation for default value if it is not used.
  * SMTChecker: Report struct values in counterexamples from CHC engine.
  * SMTChecker: Support early returns in the CHC engine.
