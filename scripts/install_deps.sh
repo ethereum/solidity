@@ -264,7 +264,7 @@ case $(uname -s) in
 #
 #------------------------------------------------------------------------------
 
-            Ubuntu|LinuxMint)
+            Ubuntu|LinuxMint|Pop)
                 #LinuxMint is a distro on top of Ubuntu.
                 #Ubuntu
                 install_z3=""

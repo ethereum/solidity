@@ -27,6 +27,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -138,18 +139,18 @@ Statement Parser::parseStatement()
 	default:
 		break;
 	}
+
 	// Options left:
-	// Simple instruction (might turn into functional),
-	// literal,
-	// identifier (might turn into label or functional assignment)
-	ElementaryOperation elementary(parseElementaryOperation());
+	// Expression/FunctionCall
+	// Assignment
+	variant<Literal, Identifier> elementary(parseLiteralOrIdentifier());
 
 	switch (currentToken())
 	{
 	case Token::LParen:
 	{
 		Expression expr = parseCall(std::move(elementary));
-		return ExpressionStatement{locationOf(expr), expr};
+		return ExpressionStatement{locationOf(expr), move(expr)};
 	}
 	case Token::Comma:
 	case Token::AssemblyAssign:
@@ -184,7 +185,7 @@ Statement Parser::parseStatement()
 
 			expectToken(Token::Comma);
 
-			elementary = parseElementaryOperation();
+			elementary = parseLiteralOrIdentifier();
 		}
 
 		expectToken(Token::AssemblyAssign);
@@ -192,28 +193,15 @@ Statement Parser::parseStatement()
 		assignment.value = make_unique<Expression>(parseExpression());
 		assignment.location.end = locationOf(*assignment.value).end;
 
-		return Statement{std::move(assignment)};
+		return Statement{move(assignment)};
 	}
 	default:
 		fatalParserError(6913_error, "Call or assignment expected.");
 		break;
 	}
 
-	if (holds_alternative<Identifier>(elementary))
-	{
-		Identifier& identifier = std::get<Identifier>(elementary);
-		return ExpressionStatement{identifier.location, { move(identifier) }};
-	}
-	else if (holds_alternative<Literal>(elementary))
-	{
-		Expression expr = std::get<Literal>(elementary);
-		return ExpressionStatement{locationOf(expr), expr};
-	}
-	else
-	{
-		yulAssert(false, "Invalid elementary operation.");
-		return {};
-	}
+	yulAssert(false, "");
+	return {};
 }
 
 Case Parser::parseCase()
@@ -225,7 +213,7 @@ Case Parser::parseCase()
 	else if (currentToken() == Token::Case)
 	{
 		advance();
-		ElementaryOperation literal = parseElementaryOperation();
+		variant<Literal, Identifier> literal = parseLiteralOrIdentifier();
 		if (!holds_alternative<Literal>(literal))
 			fatalParserError(4805_error, "Literal expected.");
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
@@ -264,38 +252,37 @@ Expression Parser::parseExpression()
 {
 	RecursionGuard recursionGuard(*this);
 
-	ElementaryOperation operation = parseElementaryOperation();
-	if (holds_alternative<FunctionCall>(operation) || currentToken() == Token::LParen)
-		return parseCall(std::move(operation));
-	else if (holds_alternative<Identifier>(operation))
-		return std::get<Identifier>(operation);
-	else
-	{
-		yulAssert(holds_alternative<Literal>(operation), "");
-		return std::get<Literal>(operation);
-	}
+	variant<Literal, Identifier> operation = parseLiteralOrIdentifier();
+	return visit(GenericVisitor{
+		[&](Identifier& _identifier) -> Expression
+		{
+			if (currentToken() == Token::LParen)
+				return parseCall(std::move(operation));
+			if (m_dialect.builtin(_identifier.name))
+				fatalParserError(
+					7104_error,
+					_identifier.location,
+					"Builtin function \"" + _identifier.name.str() + "\" must be called."
+				);
+			return move(_identifier);
+		},
+		[&](Literal& _literal) -> Expression
+		{
+			return move(_literal);
+		}
+	}, operation);
 }
 
-Parser::ElementaryOperation Parser::parseElementaryOperation()
+variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 {
 	RecursionGuard recursionGuard(*this);
-	ElementaryOperation ret;
 	switch (currentToken())
 	{
 	case Token::Identifier:
 	{
-		YulString literal{currentLiteral()};
-		if (m_dialect.builtin(literal))
-		{
-			Identifier identifier{currentLocation(), literal};
-			advance();
-			expectToken(Token::LParen, false);
-			return FunctionCall{identifier.location, identifier, {}};
-		}
-		else
-			ret = Identifier{currentLocation(), literal};
+		Identifier identifier{currentLocation(), YulString{currentLiteral()}};
 		advance();
-		break;
+		return identifier;
 	}
 	case Token::StringLiteral:
 	case Token::Number:
@@ -335,8 +322,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 			literal.type = expectAsmIdentifier();
 		}
 
-		ret = std::move(literal);
-		break;
+		return literal;
 	}
 	case Token::HexStringLiteral:
 		fatalParserError(3772_error, "Hex literals are not valid in this context.");
@@ -344,7 +330,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
-	return ret;
+	return {};
 }
 
 VariableDeclaration Parser::parseVariableDeclaration()
@@ -418,20 +404,16 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
+FunctionCall Parser::parseCall(variant<Literal, Identifier>&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
-	FunctionCall ret;
-	if (holds_alternative<Identifier>(_initialOp))
-	{
-		ret.functionName = std::move(std::get<Identifier>(_initialOp));
-		ret.location = ret.functionName.location;
-	}
-	else if (holds_alternative<FunctionCall>(_initialOp))
-		ret = std::move(std::get<FunctionCall>(_initialOp));
-	else
+	if (!holds_alternative<Identifier>(_initialOp))
 		fatalParserError(9980_error, "Function name expected.");
+
+	FunctionCall ret;
+	ret.functionName = std::move(std::get<Identifier>(_initialOp));
+	ret.location = ret.functionName.location;
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)

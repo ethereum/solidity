@@ -44,10 +44,13 @@ Compiler Features:
  * Code Generator: Avoid memory allocation for default value if it is not used.
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
+ * SMTChecker: Support getters.
 
 Bugfixes:
  * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
  * SMTChecker: Fix internal compiler error when doing bitwise compound assignment with string literals.
+ * Yul Optimizer: Fix a bug in NameSimplifier where a new name created by NameSimplifier could also be created by NameDispenser.
+ * Yul Optimizer: Removed NameSimplifier from optimization steps available to users.
 
 ### 0.7.5 (2020-11-18)
 

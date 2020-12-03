@@ -2,4 +2,4 @@
 	function f(x) { f(add) }
 }
 // ----
-// ParserError 2314: (24-25): Expected '(' but got ')'
+// ParserError 7104: (21-24): Builtin function "add" must be called.
