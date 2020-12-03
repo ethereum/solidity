@@ -9,6 +9,6 @@ contract C {
     }
 }
 // ====
-// compileViaYul: false
+// compileViaYul: true
 // ----
-// f() -> 10
+// f() -> 1
