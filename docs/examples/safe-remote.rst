@@ -74,7 +74,7 @@ you can use state machine-like constructs inside a contract.
         // Division will truncate if it is an odd number.
         // Check via multiplication that it wasn't an odd number.
         constructor() payable {
-            seller = msg.sender;
+            seller = payable(msg.sender);
             value = msg.value / 2;
             require((2 * value) == msg.value, "Value has to be even.");
         }
@@ -107,7 +107,7 @@ you can use state machine-like constructs inside a contract.
             payable
         {
             emit PurchaseConfirmed();
-            buyer = msg.sender;
+            buyer = payable(msg.sender);
             state = State.Locked;
         }
 

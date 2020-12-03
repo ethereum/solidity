@@ -53,7 +53,7 @@ you receive the funds of the person who is now the richest.
             // Remember to zero the pending refund before
             // sending to prevent re-entrancy attacks
             pendingWithdrawals[msg.sender] = 0;
-            msg.sender.transfer(amount);
+            payable(msg.sender).transfer(amount);
         }
     }
 
@@ -69,7 +69,7 @@ This is as opposed to the more intuitive sending pattern:
         uint public mostSent;
 
         constructor() payable {
-            richest = msg.sender;
+            richest = payable(msg.sender);
             mostSent = msg.value;
         }
 
@@ -77,7 +77,7 @@ This is as opposed to the more intuitive sending pattern:
             require(msg.value > mostSent, "Not enough money sent.");
             // This line can cause problems (explained below).
             richest.transfer(msg.value);
-            richest = msg.sender;
+            richest = payable(msg.sender);
             mostSent = msg.value;
         }
     }
@@ -124,7 +124,7 @@ restrictions highly readable.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.9.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -192,7 +192,7 @@ restrictions highly readable.
             );
             _;
             if (msg.value > _amount)
-                msg.sender.transfer(msg.value - _amount);
+                payable(msg.sender).transfer(msg.value - _amount);
         }
 
         function forceOwnerChange(address _newOwner)

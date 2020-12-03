@@ -188,25 +188,22 @@ Type conversions:
 Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable``
 must be explicit via ``payable(<address>)``.
 
-:ref:`Address literals<address_literals>` can be implicitly converted to ``address payable``.
-
 Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
 caveat:
 The result of a conversion of the form ``address(x)``
 has the type ``address payable``, if ``x`` is of integer or fixed bytes type,
-a literal or a contract with a receive or payable fallback function.
+or a contract with a receive or payable fallback function.
 If ``x`` is a contract without a receive or payable fallback function,
 then ``address(x)`` will be of type ``address``.
+Similarly, if ``x`` is a literal, then ``address(x)`` will also be of type ``address``.
 In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
 
 Only expressions of type ``address`` can be converted to type ``address payable`` via ``payable(<address>)``.
 
 .. note::
-    It might very well be that you do not need to care about the distinction between ``address``
-    and ``address payable`` and just use ``address`` everywhere. For example,
-    if you are using the :ref:`withdrawal pattern<withdrawal_pattern>`, you can (and should) store the
-    address itself as ``address``, because you invoke the ``transfer`` function on
-    ``msg.sender``, which is an ``address payable``.
+    If you need a variable of type ``address`` and plan to send Ether to it, then
+    declare its type as ``address payable`` to make this requirement visible. Also,
+    try to make this distinction or conversion as early as possible.
 
 Operators:
 
@@ -410,7 +407,7 @@ Address Literals
 ----------------
 
 Hexadecimal literals that pass the address checksum test, for example
-``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address payable`` type.
+``0xdCad3a6d3569DF655070DEd06cb7A1b2Ccd1D3AF`` are of ``address`` type.
 Hexadecimal literals that are between 39 and 41 digits
 long and do not pass the checksum test produce
 an error. You can prepend (for integer types) or append (for bytesNN types) zeros to remove the error.

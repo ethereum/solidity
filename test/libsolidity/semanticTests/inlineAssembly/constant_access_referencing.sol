@@ -10,8 +10,8 @@ contract C {
     bytes3 constant cccc = ccc;
     bool constant d = true;
     bool constant dd = d;
-    address payable constant e = 0x1212121212121212121212121212121212121212;
-    address payable constant ee = e;
+    address constant e = 0x1212121212121212121212121212121212121212;
+    address constant ee = e;
     function f() public pure returns (uint w, bytes2 x, bytes3 y, bool z, address t) {
         assembly {
             w := aaa

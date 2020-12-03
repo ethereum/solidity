@@ -59,7 +59,7 @@ complete contract):
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.9.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     // THIS CONTRACT CONTAINS A BUG - DO NOT USE
     contract Fund {
@@ -67,7 +67,7 @@ complete contract):
         mapping(address => uint) shares;
         /// Withdraw your share.
         function withdraw() public {
-            if (msg.sender.send(shares[msg.sender]))
+            if (payable(msg.sender).send(shares[msg.sender]))
                 shares[msg.sender] = 0;
         }
     }
@@ -103,7 +103,7 @@ outlined further below:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.11 <0.9.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract Fund {
         /// @dev Mapping of ether shares of the contract.
@@ -112,7 +112,7 @@ outlined further below:
         function withdraw() public {
             uint share = shares[msg.sender];
             shares[msg.sender] = 0;
-            msg.sender.transfer(share);
+            payable(msg.sender).transfer(share);
         }
     }
 
@@ -230,7 +230,7 @@ Now someone tricks you into sending Ether to the address of this attack wallet:
         address payable owner;
 
         constructor() {
-            owner = msg.sender;
+            owner = payable(msg.sender);
         }
 
         receive() external payable {

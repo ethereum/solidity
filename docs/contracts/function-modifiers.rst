@@ -21,7 +21,7 @@ if they are marked ``virtual``. For details, please see
     pragma solidity >0.7.0 <0.9.0;
 
     contract owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
 
         // This contract only defines a modifier but does not use

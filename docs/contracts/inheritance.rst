@@ -43,7 +43,7 @@ Details are given in the following example.
 
 
     contract Owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
     }
 
@@ -130,7 +130,7 @@ seen in the following example::
     pragma solidity >=0.7.0 <0.9.0;
 
     contract owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
     }
 
@@ -160,7 +160,7 @@ explicitly in the final override, but this function will bypass
     pragma solidity >=0.7.0 <0.9.0;
 
     contract owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
     }
 
