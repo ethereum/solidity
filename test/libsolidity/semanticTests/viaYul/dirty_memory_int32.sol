@@ -4,7 +4,7 @@ contract C {
         assembly {
             mstore(m, 0xdeadbeef15dead)
         }
-        int32 x = int32(m[0]);
+        int32 x = int32(uint32(m[0]));
         uint r;
         assembly {
             r := x

@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 	char const* sourceCode = R"(
 	contract HexEncoding {
 		function hexEncodeTest(address addr) public returns (bytes32 ret) {
-			uint x = uint(addr) / 2**32;
+			uint x = uint(uint160(addr)) / 2**32;
 
 			// Nibble interleave
 			x = x & 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(constant_optimization_early_exit)
 			assembly {
 				mstore(0, x)
 			}
-			x = uint(addr) * 2**96;
+			x = uint160(addr) * 2**96;
 
 			// Nibble interleave
 			x = x & 0x00000000000000000000000000000000ffffffffffffffffffffffffffffffff;

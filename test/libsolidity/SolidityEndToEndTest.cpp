@@ -673,9 +673,9 @@ BOOST_AUTO_TEST_CASE(sign_extension)
 		contract test {
 			function run() public returns(uint256 y) {
 				unchecked {
-					int64 x = -int32(0xff);
+					int64 x = -int32(int64(0xff));
 					if (x >= 0xff) return 0;
-					return 0 - uint256(x);
+					return 0 - uint256(int256(x));
 				}
 			}
 		}
@@ -5683,7 +5683,7 @@ BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
 				return 0x0000000000001234123412431234123412412342112341234124312341234124;
 			}
 			function g(address a) internal pure returns (uint) {
-				unchecked { return uint(a) * 0x0000000000001234123412431234123412412342112341234124312341234124; }
+				unchecked { return uint(uint160(a)) * 0x0000000000001234123412431234123412412342112341234124312341234124; }
 			}
 			function h(uint a) internal pure returns (uint) {
 				unchecked { return a * 0x0000000000001234123412431234123412412342112341234124312341234124; }

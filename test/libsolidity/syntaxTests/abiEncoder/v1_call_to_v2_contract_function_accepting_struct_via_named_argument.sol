@@ -13,8 +13,8 @@ import "A";
 
 contract Test {
     function foo() public view {
-        C(0x00).set({_item: C.Item(50), _z: false, _y: "abc", _x: 30});
+        C(address(0x00)).set({_item: C.Item(50), _z: false, _y: "abc", _x: 30});
     }
 }
 // ----
-// TypeError 2443: (B:90-100): The type of this parameter, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.
+// TypeError 2443: (B:99-109): The type of this parameter, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

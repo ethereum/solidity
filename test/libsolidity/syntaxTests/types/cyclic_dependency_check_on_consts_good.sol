@@ -131,5 +131,5 @@ contract Main {
     A constant EZ = FA;
     A constant FA = FB;
     A constant FB = FC;
-    A constant FC = A(0x00);
+    A constant FC = A(address(0x00));
 }

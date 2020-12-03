@@ -49,6 +49,28 @@ New Restrictions
   3. Explicit conversions between literals and enums are only allowed if the literal can
      represent a value in the enum.
 
+* There are new restrictions on explicit type conversions. The conversion is only allowed when there
+  is at most one change in sign, width or type-category (``int``, ``address``, ``bytesNN``, etc.)
+
+  Let us use the notation ``T(S)`` to denote the explicit conversion ``T(x)``, where, ``T`` and
+  ``S`` are types, and ``x`` is any arbitrary variable of type ``S``. An example of such a
+  disallowed conversion would be ``uint16(int8)`` since it changes both width (8 bits to 16 bits)
+  and sign (signed integer to unsigned integer). In order to do the conversion, one has to go
+  through an intermediate type. In the previous example, this would be ``uint16(uint8(int8))`` or
+  ``uint16(int16(int8))``. Note that the two ways to convert will produce different results e.g.,
+  for ``-1``. The following are some examples of conversions that are disallowed by this rule.
+
+  - ``address(uint)`` and ``uint(address)``: converting both type-category and width. Replace this by
+    ``address(uint160(uint))`` and ``uint(uint160(address))`` respectively.
+  - ``int80(bytes10)`` and ``bytes10(int80)``: converting both type-category and sign. Replace this by
+    ``int80(uint80(bytes10))`` and ``bytes10(uint80(int80)`` respectively.
+  - ``Contract(uint)``: converting both type-category and width. Replace this by
+    ``Contract(address(uint160(uint)))``.
+
+  These conversions were disallowed to avoid ambiguity. For example, in the expression ``uint16 x =
+  uint16(int8(-1))``, the value of ``x`` would depend on whether the sign or the width conversion
+  was applied first.
+
 * Function call options can only be given once, i.e. ``c.f{gas: 10000}{value: 1}()`` is invalid and has to be changed to ``c.f{gas: 10000, value: 1}()``.
 
 * The global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4`` have been removed.

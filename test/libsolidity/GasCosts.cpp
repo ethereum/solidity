@@ -162,10 +162,10 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck)
 				a = b;
 			}
 			function f1(address b) public pure returns (uint c) {
-				return uint(b) + 2;
+				return uint160(b) + 2;
 			}
 			function f2(address b) public pure returns (uint) {
-				return uint(b) + 8;
+				return uint160(b) + 8;
 			}
 			function f3(address, uint c) pure public returns (uint) {
 				return c - 5;
@@ -178,10 +178,10 @@ BOOST_AUTO_TEST_CASE(single_callvaluecheck)
 				a = b;
 			}
 			function f1(address b) public pure returns (uint c) {
-				return uint(b) + 2;
+				return uint160(b) + 2;
 			}
 			function f2(address b) public pure returns (uint) {
-				return uint(b) + 8;
+				return uint160(b) + 8;
 			}
 			function f3(address, uint c) payable public returns (uint) {
 				return c - 5;

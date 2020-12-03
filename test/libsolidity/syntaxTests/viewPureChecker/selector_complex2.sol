@@ -3,7 +3,7 @@ contract C {
         return this;
     }
     function g() pure public returns (bytes4) {
-        C x = C(0x123);
+        C x = C(address(0x123));
         return x.f.selector;
     }
 }

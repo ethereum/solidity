@@ -784,7 +784,7 @@ Another example that uses external function types::
 
 
     contract OracleUser {
-        Oracle constant private ORACLE_CONST = Oracle(0x1234567); // known contract
+        Oracle constant private ORACLE_CONST = Oracle(address(0x00000000219ab540356cBB839Cbe05303d7705Fa)); // known contract
         uint private exchangeRate;
 
         function buySomething() public {

@@ -11,7 +11,7 @@ contract A {
 
 contract B {
     modifier validate() virtual {
-        A(0x00).get();
+        A(address(0x00)).get();
         _;
     }
 }
