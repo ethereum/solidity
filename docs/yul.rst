@@ -896,12 +896,11 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 
 .. note::
   The ``call*`` instructions use the ``out`` and ``outsize`` parameters to define an area in memory where
-  the return data is placed. This area is written to depending on how many bytes the called contract returns.
+  the return or failure data is placed. This area is written to depending on how many bytes the called contract returns.
   If it returns more data, only the first ``outsize`` bytes are written. You can access the rest of the data
   using the ``returndatacopy`` opcode. If it returns less data, then the remaining bytes are not touched at all.
   You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
-  The remaining bytes will retain their values as of before the call. If the call fails (it returns ``0``),
-  nothing is written to that area, but you can still retrieve the failure data using ``returndatacopy``.
+  The remaining bytes will retain their values as of before the call.
 
 
 In some internal dialects, there are additional functions:
