@@ -46,21 +46,18 @@ void LoadResolver::visit(Expression& _e)
 {
 	DataFlowAnalyzer::visit(_e);
 
-	if (!dynamic_cast<EVMDialect const*>(&m_dialect))
-		return;
-
-	if (holds_alternative<FunctionCall>(_e))
-	{
-		FunctionCall const& funCall = std::get<FunctionCall>(_e);
-		if (auto const* builtin = dynamic_cast<EVMDialect const&>(m_dialect).builtin(funCall.functionName.name))
-			if (builtin->instruction)
-				tryResolve(_e, *builtin->instruction, funCall.arguments);
-	}
+	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_e))
+		for (auto location: { StoreLoadLocation::Memory, StoreLoadLocation::Storage })
+			if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(location)])
+			{
+				tryResolve(_e, location, funCall->arguments);
+				break;
+			}
 }
 
 void LoadResolver::tryResolve(
 	Expression& _e,
-	evmasm::Instruction _instruction,
+	StoreLoadLocation _location,
 	vector<Expression> const& _arguments
 )
 {
@@ -69,13 +66,13 @@ void LoadResolver::tryResolve(
 
 	YulString key = std::get<Identifier>(_arguments.at(0)).name;
 	if (
-		_instruction == evmasm::Instruction::SLOAD &&
+		_location == StoreLoadLocation::Storage &&
 		m_storage.values.count(key)
 	)
 		_e = Identifier{locationOf(_e), m_storage.values[key]};
 	else if (
 		m_optimizeMLoad &&
-		_instruction == evmasm::Instruction::MLOAD &&
+		_location == StoreLoadLocation::Memory &&
 		m_memory.values.count(key)
 	)
 		_e = Identifier{locationOf(_e), m_memory.values[key]};

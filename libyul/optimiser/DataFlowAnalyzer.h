@@ -29,9 +29,6 @@
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
 
-// TODO avoid
-#include <libevmasm/Instruction.h>
-
 #include <libsolutil/InvertibleMap.h>
 
 #include <map>
@@ -89,11 +86,7 @@ public:
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> _functionSideEffects = {}
-	):
-		m_dialect(_dialect),
-		m_functionSideEffects(std::move(_functionSideEffects)),
-		m_knowledgeBase(_dialect, m_value)
-	{}
+	);
 
 	using ASTModifier::operator();
 	void operator()(ExpressionStatement& _statement) override;
@@ -143,17 +136,23 @@ protected:
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
 
+	enum class StoreLoadLocation {
+		Memory = 0,
+		Storage = 1,
+		Last = Storage
+	};
+
 	/// Checks if the statement is sstore(a, b) / mstore(a, b)
 	/// where a and b are variables and returns these variables in that case.
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
-		evmasm::Instruction _store,
+		StoreLoadLocation _location,
 		ExpressionStatement const& _statement
 	) const;
 
 	/// Checks if the expression is sload(a) / mload(a)
 	/// where a is a variable and returns the variable in that case.
 	std::optional<YulString> isSimpleLoad(
-		evmasm::Instruction _load,
+		StoreLoadLocation _location,
 		Expression const& _expression
 	) const;
 
@@ -172,6 +171,9 @@ protected:
 	InvertibleMap<YulString, YulString> m_memory;
 
 	KnowledgeBase m_knowledgeBase;
+
+	YulString m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
+	YulString m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Last) + 1];
 
 	/// Current nesting depth of loops.
 	size_t m_loopDepth{0};
