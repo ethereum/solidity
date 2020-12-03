@@ -1,2 +1,2 @@
-{"contracts":{"a.sol":{"A1":{"evm":{"bytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}}}}},"errors":[{"component":"general","errorCode":"3420","formattedMessage":"a.sol: Warning: Source file does not specify required compiler version!
+{"contracts":{"a.sol":{"A1":{"evm":{"bytecode":{"object":"<BYTECODE REMOVED>"}}}}},"errors":[{"component":"general","errorCode":"3420","formattedMessage":"a.sol: Warning: Source file does not specify required compiler version!
 ","message":"Source file does not specify required compiler version!","severity":"warning","sourceLocation":{"end":-1,"file":"a.sol","start":-1},"type":"Warning"}],"sources":{"a.sol":{"id":0},"b.sol":{"id":1}}}

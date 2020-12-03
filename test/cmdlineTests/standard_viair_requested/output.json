@@ -1,4 +1,4 @@
-{"contracts":{"A":{"C":{"evm":{"bytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":""},"deployedBytecode":{"generatedSources":[],"immutableReferences":{},"linkReferences":{},"object":"","opcodes":"","sourceMap":""}},"ir":"/*******************************************************
+{"contracts":{"A":{"C":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":""}},"ir":"/*******************************************************
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
@@ -49,7 +49,7 @@ object \"C_2\" {
 
 }
 
-"},"D":{"evm":{"bytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":""},"deployedBytecode":{"generatedSources":[],"immutableReferences":{},"linkReferences":{},"object":"","opcodes":"","sourceMap":""}},"ir":"/*******************************************************
+"},"D":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":""}},"ir":"/*******************************************************
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
