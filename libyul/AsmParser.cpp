@@ -27,6 +27,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -142,7 +143,7 @@ Statement Parser::parseStatement()
 	// Options left:
 	// Expression/FunctionCall
 	// Assignment
-	ElementaryOperation elementary(parseLiteralOrIdentifier());
+	variant<Literal, Identifier> elementary(parseLiteralOrIdentifier());
 
 	switch (currentToken())
 	{
@@ -212,7 +213,7 @@ Case Parser::parseCase()
 	else if (currentToken() == Token::Case)
 	{
 		advance();
-		ElementaryOperation literal = parseLiteralOrIdentifier();
+		variant<Literal, Identifier> literal = parseLiteralOrIdentifier();
 		if (!holds_alternative<Literal>(literal))
 			fatalParserError(4805_error, "Literal expected.");
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
@@ -251,38 +252,37 @@ Expression Parser::parseExpression()
 {
 	RecursionGuard recursionGuard(*this);
 
-	ElementaryOperation operation = parseLiteralOrIdentifier();
-	if (holds_alternative<Identifier>(operation))
-	{
-		if (currentToken() == Token::LParen)
-			return parseCall(std::move(operation));
-		auto identifier = std::get<Identifier>(operation);
-		if (m_dialect.builtin(identifier.name))
-			fatalParserError(
-				7104_error,
-				identifier.location,
-				"Builtin function \"" + identifier.name.str() + "\" must be called."
-			);
-		return identifier;
-	}
-	else
-	{
-		yulAssert(holds_alternative<Literal>(operation), "");
-		return std::get<Literal>(operation);
-	}
+	variant<Literal, Identifier> operation = parseLiteralOrIdentifier();
+	return visit(GenericVisitor{
+		[&](Identifier& _identifier) -> Expression
+		{
+			if (currentToken() == Token::LParen)
+				return parseCall(std::move(operation));
+			if (m_dialect.builtin(_identifier.name))
+				fatalParserError(
+					7104_error,
+					_identifier.location,
+					"Builtin function \"" + _identifier.name.str() + "\" must be called."
+				);
+			return move(_identifier);
+		},
+		[&](Literal& _literal) -> Expression
+		{
+			return move(_literal);
+		}
+	}, operation);
 }
 
-Parser::ElementaryOperation Parser::parseLiteralOrIdentifier()
+variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 {
 	RecursionGuard recursionGuard(*this);
-	ElementaryOperation ret;
 	switch (currentToken())
 	{
 	case Token::Identifier:
 	{
-		ret = Identifier{currentLocation(), YulString{currentLiteral()}};
+		Identifier identifier{currentLocation(), YulString{currentLiteral()}};
 		advance();
-		break;
+		return identifier;
 	}
 	case Token::StringLiteral:
 	case Token::Number:
@@ -322,8 +322,7 @@ Parser::ElementaryOperation Parser::parseLiteralOrIdentifier()
 			literal.type = expectAsmIdentifier();
 		}
 
-		ret = std::move(literal);
-		break;
+		return literal;
 	}
 	case Token::HexStringLiteral:
 		fatalParserError(3772_error, "Hex literals are not valid in this context.");
@@ -331,7 +330,7 @@ Parser::ElementaryOperation Parser::parseLiteralOrIdentifier()
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
-	return ret;
+	return {};
 }
 
 VariableDeclaration Parser::parseVariableDeclaration()
@@ -405,7 +404,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	return funDef;
 }
 
-FunctionCall Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
+FunctionCall Parser::parseCall(variant<Literal, Identifier>&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
