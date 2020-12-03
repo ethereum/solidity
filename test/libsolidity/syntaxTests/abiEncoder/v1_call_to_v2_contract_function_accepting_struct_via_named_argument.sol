@@ -9,6 +9,7 @@ contract C {
     function set(uint _x, string memory _y, Item memory _item, bool _z) external view {}
 }
 ==== Source: B ====
+pragma abicoder v1;
 import "A";
 
 contract Test {
@@ -17,4 +18,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 2443: (B:99-109): The type of this parameter, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.
+// TypeError 2443: (B:119-129): The type of this parameter, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

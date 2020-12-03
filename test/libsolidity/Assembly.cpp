@@ -158,6 +158,7 @@ BOOST_AUTO_TEST_SUITE(Assembly)
 BOOST_AUTO_TEST_CASE(location_test)
 {
 	auto sourceCode = make_shared<CharStream>(R"(
+	pragma abicoder v1;
 	contract test {
 		function f() public returns (uint256 a) {
 			return 16;
@@ -191,6 +192,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 BOOST_AUTO_TEST_CASE(jump_type)
 {
 	auto sourceCode = make_shared<CharStream>(R"(
+	pragma abicoder v1;
 	contract C {
 		function f(uint a) public pure returns (uint t) {
 			assembly {

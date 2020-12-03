@@ -16,6 +16,7 @@ contract B {
     }
 }
 ==== Source: B ====
+pragma abicoder v1;
 import "A";
 
 contract C is B {
