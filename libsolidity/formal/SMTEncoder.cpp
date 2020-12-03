@@ -959,16 +959,21 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	solAssert(_funCall.arguments().size() == 1, "");
 
 	auto argument = _funCall.arguments().front();
-	auto const& argType = argument->annotation().type;
+	auto const argType = argument->annotation().type;
+	auto const funCallType = _funCall.annotation().type;
 
-	unsigned argSize = argument->annotation().type->storageBytes();
-	unsigned castSize = _funCall.annotation().type->storageBytes();
+	auto symbArg = expr(*argument, funCallType);
 
-	auto const& funCallType = _funCall.annotation().type;
+	if (smt::isStringLiteral(*argType) && smt::isFixedBytes(*funCallType))
+	{
+		defineExpr(_funCall, symbArg);
+		return;
+	}
 
 	// TODO Simplify this whole thing for 0.8.0 where weird casts are disallowed.
 
-	auto symbArg = expr(*argument, funCallType);
+	unsigned argSize = argType->storageBytes();
+	unsigned castSize = funCallType->storageBytes();
 	bool castIsSigned = smt::isNumber(*funCallType) && smt::isSigned(funCallType);
 	bool argIsSigned = smt::isNumber(*argType) && smt::isSigned(argType);
 	optional<smtutil::Expression> symbMin;
@@ -1112,7 +1117,7 @@ void SMTEncoder::endVisit(Literal const& _literal)
 
 		addArrayLiteralAssertions(
 			*symbArray,
-			applyMap(_literal.value(), [&](auto const& c) { return smtutil::Expression{size_t(c)}; })
+			applyMap(_literal.value(), [](unsigned char c) { return smtutil::Expression{size_t(c)}; })
 		);
 	}
 	else
