@@ -25,6 +25,7 @@
 #include <libsmtutil/CHCSolverInterface.h>
 #include <libsmtutil/Z3Interface.h>
 
+#include <tuple>
 #include <vector>
 
 namespace solidity::smtutil
@@ -64,6 +65,8 @@ private:
 	z3::context* m_context;
 	// Horn solver.
 	z3::fixedpoint m_solver;
+
+	std::tuple<unsigned, unsigned, unsigned, unsigned> m_version = std::tuple(0, 0, 0, 0);
 };
 
 }
