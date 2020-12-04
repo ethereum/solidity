@@ -36,7 +36,7 @@ using namespace solidity::frontend;
 using namespace solidity::smtutil;
 
 CHCSmtLib2Interface::CHCSmtLib2Interface(
-	map<h256, string> _queryResponses,
+	map<h256, string> const& _queryResponses,
 	ReadCallback::Callback _smtCallback,
 	optional<unsigned> _queryTimeout
 ):
