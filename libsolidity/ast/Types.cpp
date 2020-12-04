@@ -26,6 +26,8 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 
+#include <libsolidity/analysis/ConstantEvaluator.h>
+
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
@@ -56,61 +58,11 @@ using namespace solidity::frontend;
 namespace
 {
 
-/// Check whether (_base ** _exp) fits into 4096 bits.
-bool fitsPrecisionExp(bigint const& _base, bigint const& _exp)
-{
-	if (_base == 0)
-		return true;
-
-	solAssert(_base > 0, "");
-
-	size_t const bitsMax = 4096;
-
-	unsigned mostSignificantBaseBit = boost::multiprecision::msb(_base);
-	if (mostSignificantBaseBit == 0) // _base == 1
-		return true;
-	if (mostSignificantBaseBit > bitsMax) // _base >= 2 ^ 4096
-		return false;
-
-	bigint bitsNeeded = _exp * (mostSignificantBaseBit + 1);
-
-	return bitsNeeded <= bitsMax;
-}
-
-/// Checks whether _mantissa * (X ** _exp) fits into 4096 bits,
-/// where X is given indirectly via _log2OfBase = log2(X).
-bool fitsPrecisionBaseX(
-	bigint const& _mantissa,
-	double _log2OfBase,
-	uint32_t _exp
-)
-{
-	if (_mantissa == 0)
-		return true;
-
-	solAssert(_mantissa > 0, "");
-
-	size_t const bitsMax = 4096;
-
-	unsigned mostSignificantMantissaBit = boost::multiprecision::msb(_mantissa);
-	if (mostSignificantMantissaBit > bitsMax) // _mantissa >= 2 ^ 4096
-		return false;
-
-	bigint bitsNeeded = mostSignificantMantissaBit + bigint(floor(double(_exp) * _log2OfBase)) + 1;
-	return bitsNeeded <= bitsMax;
-}
-
 /// Checks whether _mantissa * (10 ** _expBase10) fits into 4096 bits.
 bool fitsPrecisionBase10(bigint const& _mantissa, uint32_t _expBase10)
 {
 	double const log2Of10AwayFromZero = 3.3219280948873624;
 	return fitsPrecisionBaseX(_mantissa, log2Of10AwayFromZero, _expBase10);
-}
-
-/// Checks whether _mantissa * (2 ** _expBase10) fits into 4096 bits.
-bool fitsPrecisionBase2(bigint const& _mantissa, uint32_t _expBase2)
-{
-	return fitsPrecisionBaseX(_mantissa, 1.0, _expBase2);
 }
 
 /// Checks whether _value fits into IntegerType _type.
@@ -1000,26 +952,10 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 
 TypeResult RationalNumberType::unaryOperatorResult(Token _operator) const
 {
-	rational value;
-	switch (_operator)
-	{
-	case Token::BitNot:
-		if (isFractional())
-			return nullptr;
-		value = ~m_value.numerator();
-		break;
-	case Token::Add:
-		value = +(m_value);
-		break;
-	case Token::Sub:
-		value = -(m_value);
-		break;
-	case Token::After:
-		return this;
-	default:
+	if (optional<rational> value = ConstantEvaluator::evaluateUnaryOperator(_operator, m_value))
+		return TypeResult{TypeProvider::rationalNumber(*value)};
+	else
 		return nullptr;
-	}
-	return TypeResult{TypeProvider::rationalNumber(value)};
 }
 
 TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const* _other) const
@@ -1074,165 +1010,16 @@ TypeResult RationalNumberType::binaryOperatorResult(Token _operator, Type const*
 			return nullptr;
 		return thisMobile->binaryOperatorResult(_operator, otherMobile);
 	}
-	else
+	else if (optional<rational> value = ConstantEvaluator::evaluateBinaryOperator(_operator, m_value, other.m_value))
 	{
-		rational value;
-		bool fractional = isFractional() || other.isFractional();
-		switch (_operator)
-		{
-		//bit operations will only be enabled for integers and fixed types that resemble integers
-		case Token::BitOr:
-			if (fractional)
-				return nullptr;
-			value = m_value.numerator() | other.m_value.numerator();
-			break;
-		case Token::BitXor:
-			if (fractional)
-				return nullptr;
-			value = m_value.numerator() ^ other.m_value.numerator();
-			break;
-		case Token::BitAnd:
-			if (fractional)
-				return nullptr;
-			value = m_value.numerator() & other.m_value.numerator();
-			break;
-		case Token::Add:
-			value = m_value + other.m_value;
-			break;
-		case Token::Sub:
-			value = m_value - other.m_value;
-			break;
-		case Token::Mul:
-			value = m_value * other.m_value;
-			break;
-		case Token::Div:
-			if (other.m_value == rational(0))
-				return nullptr;
-			else
-				value = m_value / other.m_value;
-			break;
-		case Token::Mod:
-			if (other.m_value == rational(0))
-				return nullptr;
-			else if (fractional)
-			{
-				rational tempValue = m_value / other.m_value;
-				value = m_value - (tempValue.numerator() / tempValue.denominator()) * other.m_value;
-			}
-			else
-				value = m_value.numerator() % other.m_value.numerator();
-			break;
-		case Token::Exp:
-		{
-			if (other.isFractional())
-				return nullptr;
-			solAssert(other.m_value.denominator() == 1, "");
-			bigint const& exp = other.m_value.numerator();
-
-			// x ** 0 = 1
-			// for 0, 1 and -1 the size of the exponent doesn't have to be restricted
-			if (exp == 0)
-				value = 1;
-			else if (m_value.numerator() == 0 || m_value == 1)
-				value = m_value;
-			else if (m_value == -1)
-			{
-				bigint isOdd = abs(exp) & bigint(1);
-				value = 1 - 2 * isOdd.convert_to<int>();
-			}
-			else
-			{
-				if (abs(exp) > numeric_limits<uint32_t>::max())
-					return nullptr; // This will need too much memory to represent.
-
-				uint32_t absExp = bigint(abs(exp)).convert_to<uint32_t>();
-
-				if (!fitsPrecisionExp(abs(m_value.numerator()), absExp) || !fitsPrecisionExp(abs(m_value.denominator()), absExp))
-					return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
-
-				static auto const optimizedPow = [](bigint const& _base, uint32_t _exponent) -> bigint {
-					if (_base == 1)
-						return 1;
-					else if (_base == -1)
-						return 1 - 2 * static_cast<int>(_exponent & 1);
-					else
-						return boost::multiprecision::pow(_base, _exponent);
-				};
-
-				bigint numerator = optimizedPow(m_value.numerator(), absExp);
-				bigint denominator = optimizedPow(m_value.denominator(), absExp);
-
-				if (exp >= 0)
-					value = makeRational(numerator, denominator);
-				else
-					// invert
-					value = makeRational(denominator, numerator);
-			}
-			break;
-		}
-		case Token::SHL:
-		{
-			if (fractional)
-				return nullptr;
-			else if (other.m_value < 0)
-				return nullptr;
-			else if (other.m_value > numeric_limits<uint32_t>::max())
-				return nullptr;
-			if (m_value.numerator() == 0)
-				value = 0;
-			else
-			{
-				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-				if (!fitsPrecisionBase2(abs(m_value.numerator()), exponent))
-					return nullptr;
-				value = m_value.numerator() * boost::multiprecision::pow(bigint(2), exponent);
-			}
-			break;
-		}
-		// NOTE: we're using >> (SAR) to denote right shifting. The type of the LValue
-		//       determines the resulting type and the type of shift (SAR or SHR).
-		case Token::SAR:
-		{
-			if (fractional)
-				return nullptr;
-			else if (other.m_value < 0)
-				return nullptr;
-			else if (other.m_value > numeric_limits<uint32_t>::max())
-				return nullptr;
-			if (m_value.numerator() == 0)
-				value = 0;
-			else
-			{
-				uint32_t exponent = other.m_value.numerator().convert_to<uint32_t>();
-				if (exponent > boost::multiprecision::msb(boost::multiprecision::abs(m_value.numerator())))
-					value = m_value.numerator() < 0 ? -1 : 0;
-				else
-				{
-					if (m_value.numerator() < 0)
-						// Add 1 to the negative value before dividing to get a result that is strictly too large,
-						// then subtract 1 afterwards to round towards negative infinity.
-						// This is the same algorithm as used in ExpressionCompiler::appendShiftOperatorCode(...).
-						// To see this note that for negative x, xor(x,all_ones) = (-x-1) and
-						// therefore xor(div(xor(x,all_ones), exp(2, shift_amount)), all_ones) is
-						// -(-x - 1) / 2^shift_amount - 1, which is the same as
-						// (x + 1) / 2^shift_amount - 1.
-						value = rational((m_value.numerator() + 1) / boost::multiprecision::pow(bigint(2), exponent) - bigint(1), 1);
-					else
-						value = rational(m_value.numerator() / boost::multiprecision::pow(bigint(2), exponent), 1);
-				}
-			}
-			break;
-		}
-		default:
-			return nullptr;
-		}
-
 		// verify that numerator and denominator fit into 4096 bit after every operation
-		if (value.numerator() != 0 && max(boost::multiprecision::msb(abs(value.numerator())), boost::multiprecision::msb(abs(value.denominator()))) > 4096)
+		if (value->numerator() != 0 && max(boost::multiprecision::msb(abs(value->numerator())), boost::multiprecision::msb(abs(value->denominator()))) > 4096)
 			return TypeResult::err("Precision of rational constants is limited to 4096 bits.");
 
-		return TypeResult{TypeProvider::rationalNumber(value)};
+		return TypeResult{TypeProvider::rationalNumber(*value)};
 	}
+	else
+		return nullptr;
 }
 
 string RationalNumberType::richIdentifier() const

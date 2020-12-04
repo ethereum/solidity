@@ -35,6 +35,10 @@ the compiler notifying you about it.
 * If a byte array in storage is accessed whose length is encoded incorrectly, a panic is caused.
   A contract cannot get into this situation unless inline assembly is used to modify the raw representation of storage byte arrays.
 
+* If constants are used in array length expressions, previous versions of Solidity would use arbitrary precision
+  in all branches of the evaluation tree. Now, if constant variables are used as intermediate expressions,
+  their values will be properly rounded in the same way as when they are used in run-time expressions.
+
 New Restrictions
 ================
 

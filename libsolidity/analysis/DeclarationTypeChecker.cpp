@@ -265,26 +265,30 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	solAssert(baseType->storageBytes() != 0, "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
-		TypePointer& lengthTypeGeneric = length->annotation().type;
-		if (!lengthTypeGeneric)
-			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
-		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
-		u256 lengthValue = 0;
-		if (!lengthType || !lengthType->mobileType())
+		optional<rational> lengthValue;
+		if (length->annotation().type && length->annotation().type->category() == Type::Category::RationalNumber)
+			lengthValue = dynamic_cast<RationalNumberType const&>(*length->annotation().type).value();
+		else if (optional<ConstantEvaluator::TypedRational> value = ConstantEvaluator::evaluate(m_errorReporter, *length))
+			lengthValue = value->value;
+
+		if (!lengthValue || lengthValue > TypeProvider::uint256()->max())
 			m_errorReporter.typeError(
 				5462_error,
 				length->location(),
 				"Invalid array length, expected integer literal or constant expression."
 			);
-		else if (lengthType->isZero())
+		else if (*lengthValue == 0)
 			m_errorReporter.typeError(1406_error, length->location(), "Array with zero length specified.");
-		else if (lengthType->isFractional())
+		else if (lengthValue->denominator() != 1)
 			m_errorReporter.typeError(3208_error, length->location(), "Array with fractional length specified.");
-		else if (lengthType->isNegative())
+		else if (*lengthValue < 0)
 			m_errorReporter.typeError(3658_error, length->location(), "Array with negative length specified.");
-		else
-			lengthValue = lengthType->literalValue(nullptr);
-		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthValue);
+
+		_typeName.annotation().type = TypeProvider::array(
+			DataLocation::Storage,
+			baseType,
+			lengthValue ? u256(lengthValue->numerator()) : u256(0)
+		);
 	}
 	else
 		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType);

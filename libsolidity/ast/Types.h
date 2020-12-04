@@ -568,6 +568,11 @@ public:
 	u256 literalValue(Literal const* _literal) const override;
 	TypePointer mobileType() const override;
 
+	/// @returns the underlying raw literal value.
+	///
+	/// @see literalValue(Literal const*))
+	rational const& value() const noexcept { return m_value; }
+
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	IntegerType const* integerType() const;
 	/// @returns the smallest fixed type that can hold the value or incurs the least precision loss,
