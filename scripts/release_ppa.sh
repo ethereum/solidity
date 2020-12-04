@@ -57,7 +57,7 @@ packagename=solc
 
 static_build_distribution=focal
 
-DISTRIBUTIONS="bionic focal groovy"
+DISTRIBUTIONS="focal groovy"
 
 if is_release
 then
