@@ -410,7 +410,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		readU128(arg[0]);
 		accessMemory(arg[1], arg[2]);
 		logTrace(evmasm::Instruction::CREATE, {});
-		writeAddress(arg[3], h160(h256(0xcccccc + arg[1])));
+		writeAddress(arg[3], h160(0xcccccc + arg[1]));
 		return 1;
 	}
 	else if (_fun == "getBlockDifficulty")

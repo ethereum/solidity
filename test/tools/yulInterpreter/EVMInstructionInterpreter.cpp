@@ -35,6 +35,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 
+using solidity::util::h160;
 using solidity::util::h256;
 using solidity::util::keccak256;
 
@@ -181,18 +182,18 @@ u256 EVMInstructionInterpreter::eval(
 		return u256(keccak256(readMemory(offset, size)));
 	}
 	case Instruction::ADDRESS:
-		return m_state.address;
+		return h256(m_state.address, h256::AlignRight);
 	case Instruction::BALANCE:
-		if (arg[0] == m_state.address)
+		if (arg[0] == h256(m_state.address, h256::AlignRight))
 			return m_state.selfbalance;
 		else
 			return m_state.balance;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:
-		return m_state.origin;
+		return h256(m_state.origin, h256::AlignRight);
 	case Instruction::CALLER:
-		return m_state.caller;
+		return h256(m_state.caller, h256::AlignRight);
 	case Instruction::CALLVALUE:
 		return m_state.callvalue;
 	case Instruction::CALLDATALOAD:
@@ -248,7 +249,7 @@ u256 EVMInstructionInterpreter::eval(
 		else
 			return 0xaaaaaaaa + (arg[0] - m_state.blockNumber - 256);
 	case Instruction::COINBASE:
-		return m_state.coinbase;
+		return h256(m_state.coinbase, h256::AlignRight);
 	case Instruction::TIMESTAMP:
 		return m_state.timestamp;
 	case Instruction::NUMBER:
@@ -304,11 +305,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CREATE:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
-		return u160(0xcccccc + arg[1]);
+		return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CREATE2:
 		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
-		return u160(0xdddddd + arg[1]);
+		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata
