@@ -141,12 +141,12 @@ optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 
 bool Predicate::isSummary() const
 {
-	return functor().name.rfind("summary", 0) == 0;
+	return m_type == PredicateType::ConstructorSummary || m_type == PredicateType::FunctionSummary;
 }
 
 bool Predicate::isInterface() const
 {
-	return functor().name.rfind("interface", 0) == 0;
+	return m_type == PredicateType::Interface;
 }
 
 string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) const
@@ -190,7 +190,7 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expression> const& _args) const
 {
 	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
-	/// The signature of an implicit constructor summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, postBlockchainState, postStateVars).
+	/// The signature of the summary predicate of a contract without constructor is: summary(error, this, cryptoFunctions, txData, preBlockchainState, postBlockchainState, preStateVars, postStateVars).
 	/// Here we are interested in postStateVars.
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");
@@ -204,7 +204,7 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 	}
 	else if (programContract())
 	{
-		stateFirst = _args.begin() + 6;
+		stateFirst = _args.begin() + 6 + static_cast<int>(stateVars->size());
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else

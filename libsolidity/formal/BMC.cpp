@@ -149,6 +149,9 @@ bool BMC::visit(FunctionDefinition const& _function)
 		resetStateVariables();
 	}
 
+	if (_function.isConstructor())
+		inlineConstructorHierarchy(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+
 	/// Already visits the children.
 	SMTEncoder::visit(_function);
 

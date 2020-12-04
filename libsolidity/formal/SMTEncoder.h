@@ -77,6 +77,9 @@ public:
 	/// @returns the SourceUnit that contains _scopable.
 	static SourceUnit const* sourceUnitContaining(Scopable const& _scopable);
 
+	/// @returns the arguments for each base constructor call in the hierarchy of @a _contract.
+	std::map<ContractDefinition const*, std::vector<ASTPointer<frontend::Expression>>> baseArguments(ContractDefinition const& _contract);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined

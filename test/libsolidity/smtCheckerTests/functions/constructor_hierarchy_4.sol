@@ -18,6 +18,6 @@ contract A is B {
 	}
 }
 // ----
+// Warning 4984: (230-235): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4984: (207-212): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4984: (198-203): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4984: (230-235): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
