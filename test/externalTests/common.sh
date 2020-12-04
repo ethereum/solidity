@@ -40,9 +40,10 @@ function verify_version_input
 
 function setup
 {
-    local branch="$1"
+    local soljson="$1"
+    local branch="$2"
 
-    setup_solcjs "$DIR" "$SOLJSON" "$branch" "solc"
+    setup_solcjs "$DIR" "$soljson" "$branch" "solc"
     cd solc
 }
 
@@ -80,7 +81,7 @@ function download_project
     printLog "Cloning $branch of $repo..."
     git clone --depth 1 "$repo" -b "$branch" "$dir/ext"
     cd ext
-    echo "Current commit hash: `git rev-parse HEAD`"
+    echo "Current commit hash: $(git rev-parse HEAD)"
 }
 
 function force_truffle_version
@@ -92,10 +93,11 @@ function force_truffle_version
 
 function truffle_setup
 {
-    local repo="$1"
-    local branch="$2"
+    local soljson="$1"
+    local repo="$2"
+    local branch="$3"
 
-    setup_solcjs "$DIR" "$SOLJSON" "master" "solc"
+    setup_solcjs "$DIR" "$soljson" "master" "solc"
     download_project "$repo" "$branch" "$DIR"
 }
 
@@ -207,11 +209,12 @@ function clean
 
 function run_install
 {
-    local init_fn="$1"
+    local soljson="$1"
+    local init_fn="$2"
     printLog "Running install function..."
 
     replace_version_pragmas
-    force_solc "$CONFIG" "$DIR" "$SOLJSON"
+    force_solc "$CONFIG" "$DIR" "$soljson"
 
     $init_fn
 }
@@ -232,11 +235,15 @@ function run_test
 
 function truffle_run_test
 {
-    local compile_fn="$1"
-    local test_fn="$2"
+    local soljson="$1"
+    local compile_fn="$2"
+    local test_fn="$3"
+    local force_abi_v2_flag="$4"
+
+    test "$force_abi_v2_flag" = "FORCE-ABI-V2" || test "$force_abi_v2_flag" = "NO-FORCE-ABI-V2"
 
     replace_version_pragmas
-    force_solc "$CONFIG" "$DIR" "$SOLJSON"
+    force_solc "$CONFIG" "$DIR" "$soljson"
 
     printLog "Checking optimizer level..."
     if [ -z "$OPTIMIZER_LEVEL" ]; then
@@ -258,7 +265,7 @@ function truffle_run_test
         clean
         force_solc_settings "$CONFIG" "$optimize" "istanbul"
         # Force abi coder v2 in the last step. Has to be the last because code is modified.
-        if [ "$FORCE_ABIv2" = true ]; then
+        if [ "$force_abi_v2_flag" = "FORCE-ABI-V2" ]; then
             [[ "$optimize" =~ yul ]] && force_abi_v2
         fi
 
