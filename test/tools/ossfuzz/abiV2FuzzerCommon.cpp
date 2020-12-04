@@ -37,3 +37,46 @@ solidity::bytes SolidityCompilationFramework::compileContract(
 	);
 	return obj.bytecode;
 }
+
+bool AbiV2Utility::isOutputExpected(
+	uint8_t const* _result,
+	size_t _length,
+	std::vector<uint8_t> const& _expectedOutput
+)
+{
+	if (_length != _expectedOutput.size())
+		return false;
+
+	return (memcmp(_result, _expectedOutput.data(), _length) == 0);
+}
+
+evmc_message AbiV2Utility::initializeMessage(bytes const& _input)
+{
+	// Zero initialize all message fields
+	evmc_message msg = {};
+	// Gas available (value of type int64_t) is set to its maximum
+	// value.
+	msg.gas = std::numeric_limits<int64_t>::max();
+	msg.input_data = _input.data();
+	msg.input_size = _input.size();
+	return msg;
+}
+
+evmc::result AbiV2Utility::executeContract(
+	EVMHost& _hostContext,
+	bytes const& _functionHash,
+	evmc_address _deployedAddress
+)
+{
+	evmc_message message = initializeMessage(_functionHash);
+	message.destination = _deployedAddress;
+	message.kind = EVMC_CALL;
+	return _hostContext.call(message);
+}
+
+evmc::result AbiV2Utility::deployContract(EVMHost& _hostContext, bytes const& _code)
+{
+	evmc_message message = initializeMessage(_code);
+	message.kind = EVMC_CREATE;
+	return _hostContext.call(message);
+}
