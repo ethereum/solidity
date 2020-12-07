@@ -146,19 +146,20 @@ EOF
 function force_solc_settings
 {
     local config_file="$1"
-    local settings="$2"
-    local evmVersion="$3"
+    local level="$2"
+    local evm_version="$3"
 
     printLog "Forcing solc settings..."
     echo "-------------------------------------"
     echo "Config file: $config_file"
-    echo "Optimizer settings: $settings"
-    echo "EVM version: $evmVersion"
+    echo "Optimization level: $level"
+    echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
+    echo "EVM version: $evm_version"
     echo "-------------------------------------"
 
     # Forcing the settings should always work by just overwriting the solc object. Forcing them by using a
     # dedicated settings objects should only be the fallback.
-    echo "module.exports['compilers']['solc']['settings'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
+    echo "module.exports['compilers']['solc']['settings'] = $(solc_settings "$level" istanbul);" >> "$config_file"
 }
 
 function verify_compiler_version
@@ -200,6 +201,27 @@ function run_test
     $test_fn
 }
 
+function solc_settings {
+    local level="$1"
+    local evm_version="$2"
+
+    echo "{optimizer: $(optimizer_settings_for_level "$level"), evmVersion: \"$evm_version\"}"
+}
+
+function optimizer_settings_for_level {
+    local level="$1"
+
+    case "$level" in
+        1) echo "{enabled: false}" ;;
+        2) echo "{enabled: true}" ;;
+        3) echo "{enabled: true, details: {yul: true}}" ;;
+        *)
+            printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
+            exit 1
+            ;;
+    esac
+}
+
 function truffle_run_test
 {
     local soljson="$1"
@@ -209,25 +231,10 @@ function truffle_run_test
     replace_version_pragmas
     force_solc "$CONFIG" "$DIR" "$soljson"
 
-    printLog "Checking optimizer level..."
-    if [ -z "$OPTIMIZER_LEVEL" ]; then
-        printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
-        exit 1
-    fi
-    if [[ "$OPTIMIZER_LEVEL" == 1 ]]; then
-        declare -a optimizer_settings=("{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }")
-    fi
-    if [[ "$OPTIMIZER_LEVEL" == 2 ]]; then
-        declare -a optimizer_settings=("{ enabled: true }" "{ enabled: true, details: { yul: true } }")
-    fi
-    if [[ "$OPTIMIZER_LEVEL" == 3 ]]; then
-        declare -a optimizer_settings=("{ enabled: true, details: { yul: true } }")
-    fi
-
-    for optimize in "${optimizer_settings[@]}"
+    for level in $(seq "$OPTIMIZER_LEVEL" 3)
     do
         clean
-        force_solc_settings "$CONFIG" "$optimize" "istanbul"
+        force_solc_settings "$CONFIG" "$level" istanbul
 
         printLog "Running compile function..."
         $compile_fn
