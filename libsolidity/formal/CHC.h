@@ -126,6 +126,11 @@ private:
 	/// in a given _source.
 	void defineInterfacesAndSummaries(SourceUnit const& _source);
 
+	/// Creates a CHC system that, for a given contract,
+	/// - initializes its state variables (as 0 or given value, if any).
+	/// - "calls" the explicit constructor function of the contract, if any.
+	void defineContractInitializer(ContractDefinition const& _contract);
+
 	/// Interface predicate over current variables.
 	smtutil::Expression interface();
 	smtutil::Expression interface(ContractDefinition const& _contract);
@@ -139,11 +144,17 @@ private:
 	/// The contract is needed here because of inheritance.
 	Predicate const* createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract);
 
+	/// @returns a block related to @a _contract's constructor.
+	Predicate const* createConstructorBlock(ContractDefinition const& _contract, std::string const& _prefix);
+
 	/// Creates a new error block to be used by an assertion.
 	/// Also registers the predicate.
 	void createErrorBlock();
 
 	void connectBlocks(smtutil::Expression const& _from, smtutil::Expression const& _to, smtutil::Expression const& _constraints = smtutil::Expression(true));
+
+	/// @returns The initial constraints that set up the beginning of a function.
+	smtutil::Expression initialConstraints(ContractDefinition const& _contract, FunctionDefinition const* _function = nullptr);
 
 	/// @returns the symbolic values of the state variables at the beginning
 	/// of the current transaction.
@@ -160,6 +171,8 @@ private:
 	smtutil::Expression predicate(Predicate const& _block);
 	/// @returns the summary predicate for the called function.
 	smtutil::Expression predicate(FunctionCall const& _funCall);
+	/// @returns a predicate that defines a contract initializer.
+	smtutil::Expression initializer(ContractDefinition const& _contract);
 	/// @returns a predicate that defines a constructor summary.
 	smtutil::Expression summary(ContractDefinition const& _contract);
 	/// @returns a predicate that defines a function summary.
@@ -231,10 +244,6 @@ private:
 
 	/// Predicates.
 	//@{
-	/// Constructor summary predicate, exists after the constructor
-	/// (implicit or explicit) and before the interface.
-	Predicate const* m_constructorSummaryPredicate = nullptr;
-
 	/// Artificial Interface predicate.
 	/// Single entry block for all functions.
 	std::map<ContractDefinition const*, Predicate const*> m_interfaces;
@@ -244,6 +253,9 @@ private:
 	/// which means that the analyzed contract can potentially be called
 	/// nondeterministically.
 	std::map<ContractDefinition const*, Predicate const*> m_nondetInterfaces;
+
+	std::map<ContractDefinition const*, Predicate const*> m_constructorSummaries;
+	std::map<ContractDefinition const*, Predicate const*> m_contractInitializers;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
@@ -311,9 +323,16 @@ private:
 	bool m_unknownFunctionCallSeen = false;
 
 	/// Block where a loop break should go to.
-	Predicate const* m_breakDest;
+	Predicate const* m_breakDest = nullptr;
 	/// Block where a loop continue should go to.
-	Predicate const* m_continueDest;
+	Predicate const* m_continueDest = nullptr;
+
+	/// Block where an error condition should go to.
+	/// This can be:
+	/// 1) Constructor initializer summary, if error happens while evaluating initial values of state variables.
+	/// 2) Constructor summary, if error happens while evaluating base constructor arguments.
+	/// 3) Function summary, if error happens inside a function.
+	Predicate const* m_errorDest = nullptr;
 	//@}
 
 	/// CHC solver.

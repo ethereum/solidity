@@ -15,10 +15,10 @@ contract C
 		// Erasing knowledge about memory references should not
 		// erase knowledge about storage references.
 		assert(c[0] == 42);
-		assert(a[0] == 2);
+		// Removed because current Spacer seg faults in cex generation.
+		//assert(a[0] == 2);
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(b[0] == 1);
 	}
 }
 // ----
-// Warning 6328: (476-493): CHC: Assertion violation happens here.

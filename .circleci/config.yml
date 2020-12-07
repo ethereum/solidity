@@ -1046,7 +1046,7 @@ jobs:
 
   b_bytecode_ems:
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:14
     environment:
       SOLC_EMSCRIPTEN: "On"
     steps:

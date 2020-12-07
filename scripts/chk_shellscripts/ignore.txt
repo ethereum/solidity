@@ -1,12 +1,5 @@
 ./test/docsCodeStyle.sh
 ./test/cmdlineTests.sh
-./test/externalTests.sh
-./test/externalTests/common.sh
-./test/externalTests/gnosis.sh
-./test/externalTests/zeppelin.sh
-./test/externalTests/colony.sh
-./test/externalTests/solc-js/solc-js.sh
-./scripts/common.sh
 ./scripts/isoltest.sh
 ./scripts/get_version.sh
 ./scripts/soltest.sh

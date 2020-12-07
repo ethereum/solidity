@@ -51,6 +51,8 @@ Compiler Features:
 Bugfixes:
  * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
  * SMTChecker: Fix internal compiler error when doing bitwise compound assignment with string literals.
+ * SMTChecker: Fix internal error when trying to generate counterexamples with old z3.
+ * SMTChecker: Fix segmentation fault that could occur on certain SMT-enabled sources when no SMT solver was available.
  * Yul Optimizer: Fix a bug in NameSimplifier where a new name created by NameSimplifier could also be created by NameDispenser.
  * Yul Optimizer: Removed NameSimplifier from optimization steps available to users.
 

@@ -33,3 +33,39 @@ Consequently, if the padding space within a struct is used to store data (e.g. i
     }
 
 We have the same behavior for implicit delete, for example when array of structs is shortened.
+
+ * The order of contract initialization has changed in case of inheritance.
+
+The order used to be:
+ - All state variables are zero-initialized at the beginning.
+ - Evaluate base constructor arguments from most derived to most base contract.
+ - Initialize all state variables in the whole inheritance hierarchy from most base to most derived.
+ - Run the constructor, if present, for all contracts in the linearized hierarchy from most base to most derived.
+
+New order:
+ - All state variables are zero-initialized at the beginning.
+ - Evaluate base constructor arguments from most derived to most base contract.
+ - For every contract in order from most base to most derived in the linearized hierarchy execute:
+     1. If present at declaration, initial values are assigned to state variables.
+     2. Constructor, if present.
+
+This causes differences in some contracts, for example:
+::
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.7.0;
+
+    contract A {
+        uint x;
+        constructor() {
+            x = 42;
+        }
+        function f() public view returns(uint256) {
+            return x;
+        }
+    }
+    contract B is A {
+        uint public y = f();
+    }
+
+Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
+With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.

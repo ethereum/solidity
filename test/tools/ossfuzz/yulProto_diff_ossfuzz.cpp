@@ -99,7 +99,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	if (
 		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached
+		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached
 	)
 		return;
 
@@ -109,10 +110,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
-
 	if (
 		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached
+		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
+		termReason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached
 	)
 		return;
 

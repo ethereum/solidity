@@ -34,7 +34,6 @@ enum class PredicateType
 {
 	Interface,
 	NondetInterface,
-	ImplicitConstructor,
 	ConstructorSummary,
 	FunctionEntry,
 	FunctionSummary,

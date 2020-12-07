@@ -18,9 +18,7 @@
 #
 # (c) 2019 solidity contributors.
 #------------------------------------------------------------------------------
-# shellcheck disable=SC1091
 source scripts/common.sh
-# shellcheck disable=SC1091
 source test/externalTests/common.sh
 
 verify_input "$1"
@@ -35,14 +33,14 @@ function ens_test
     export OPTIMIZER_LEVEL=1
     export CONFIG="truffle-config.js"
 
-    truffle_setup https://github.com/solidity-external-tests/ens.git upgrade-0.8.0
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/ens.git upgrade-0.8.0
 
     # Use latest Truffle. Older versions crash on the output from 0.8.0.
     force_truffle_version ^5.1.55
 
-    run_install install_fn
+    run_install "$SOLJSON" install_fn
 
-    truffle_run_test compile_fn test_fn
+    truffle_run_test "$SOLJSON" compile_fn test_fn "NO-FORCE-ABI-V2"
 }
 
 external_test Ens ens_test

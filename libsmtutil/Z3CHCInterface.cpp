@@ -33,6 +33,13 @@ Z3CHCInterface::Z3CHCInterface(optional<unsigned> _queryTimeout):
 	m_context(m_z3Interface->context()),
 	m_solver(*m_context)
 {
+	Z3_get_version(
+		&get<0>(m_version),
+		&get<1>(m_version),
+		&get<2>(m_version),
+		&get<3>(m_version)
+	);
+
 	// These need to be set globally.
 	z3::set_param("rewriter.pull_cheap_ite", true);
 
@@ -73,7 +80,6 @@ void Z3CHCInterface::addRule(Expression const& _expr, string const& _name)
 pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression const& _expr)
 {
 	CheckResult result;
-	CHCSolverInterface::CexGraph cex;
 	try
 	{
 		z3::expr z3Expr = m_z3Interface->toZ3Expr(_expr);
@@ -82,9 +88,14 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 		case z3::check_result::sat:
 		{
 			result = CheckResult::SATISFIABLE;
-			auto proof = m_solver.get_answer();
-			auto cex = cexGraph(proof);
-			return {result, cex};
+			// z3 version 4.8.8 modified Spacer to also return
+			// proofs containing nonlinear clauses.
+			if (m_version >= tuple(4, 8, 8, 0))
+			{
+				auto proof = m_solver.get_answer();
+				return {result, cexGraph(proof)};
+			}
+			break;
 		}
 		case z3::check_result::unsat:
 		{
@@ -112,10 +123,9 @@ pair<CheckResult, CHCSolverInterface::CexGraph> Z3CHCInterface::query(Expression
 			result = CheckResult::UNKNOWN;
 		else
 			result = CheckResult::ERROR;
-		cex = {};
 	}
 
-	return {result, cex};
+	return {result, {}};
 }
 
 void Z3CHCInterface::setSpacerOptions(bool _preProcessing)
