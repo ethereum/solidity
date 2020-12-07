@@ -285,7 +285,8 @@ bool NameAndTypeResolver::resolveNamesAndTypesInternal(ASTNode& _node, bool _res
 		solAssert(_resolveInsideCode, "");
 
 		m_globalContext.setCurrentContract(*contract);
-		updateDeclaration(*m_globalContext.currentSuper());
+		if (!contract->isLibrary())
+			updateDeclaration(*m_globalContext.currentSuper());
 		updateDeclaration(*m_globalContext.currentThis());
 
 		for (ASTPointer<InheritanceSpecifier> const& baseContract: contract->baseContracts())
