@@ -71,7 +71,7 @@ struct CommonOptions: boost::noncopyable
 	static void setSingleton(std::unique_ptr<CommonOptions const>&& _instance);
 
 	CommonOptions(std::string caption = "");
-	virtual ~CommonOptions() {};
+	virtual ~CommonOptions() {}
 
 protected:
 	boost::program_options::options_description options;

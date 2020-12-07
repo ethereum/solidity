@@ -121,7 +121,7 @@ public:
 
 	CacheStats gatherStats() const;
 
-	std::map<std::string, CacheEntry> const& entries() const { return m_entries; };
+	std::map<std::string, CacheEntry> const& entries() const { return m_entries; }
 	Program const& program() const { return m_program; }
 	size_t currentRound() const { return m_currentRound; }
 
