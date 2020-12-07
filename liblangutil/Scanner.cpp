@@ -728,12 +728,6 @@ bool Scanner::scanEscape()
 	case '"':  // fall through
 	case '\\':
 		break;
-	case 'b':
-		c = '\b';
-		break;
-	case 'f':
-		c = '\f';
-		break;
 	case 'n':
 		c = '\n';
 		break;
@@ -742,9 +736,6 @@ bool Scanner::scanEscape()
 		break;
 	case 't':
 		c = '\t';
-		break;
-	case 'v':
-		c = '\v';
 		break;
 	case 'u':
 	{

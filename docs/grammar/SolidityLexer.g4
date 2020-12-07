@@ -184,7 +184,7 @@ fragment DoubleQuotedPrintable: [\u0020-\u0021\u0023-\u005B\u005D-\u007E];
   */
 fragment EscapeSequence:
 	'\\' (
-		['"\\bfnrtv\n\r]
+		['"\\nrt\n\r]
 		| 'u' HexCharacter HexCharacter HexCharacter HexCharacter
 		| 'x' HexCharacter HexCharacter
 	);
