@@ -40,6 +40,7 @@ then
     # The first step takes much longer than the other steps.
     if (( $CIRCLE_NODE_INDEX == 0 ))
     then
+	exit 1
         RUN_STEPS="1"
     else
         export CIRCLE_NODE_INDEX=$(($CIRCLE_NODE_INDEX - 1))
