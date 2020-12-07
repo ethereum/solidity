@@ -40,7 +40,7 @@ function ens_test
 
     run_install "$SOLJSON" install_fn
 
-    truffle_run_test "$SOLJSON" compile_fn test_fn "NO-FORCE-ABI-V2"
+    truffle_run_test "$SOLJSON" compile_fn test_fn
 }
 
 external_test Ens ens_test

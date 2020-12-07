@@ -43,7 +43,7 @@ function gnosis_safe_test
     run_install "$SOLJSON" install_fn
     replace_libsolc_call
 
-    truffle_run_test "$SOLJSON" compile_fn test_fn "NO-FORCE-ABI-V2"
+    truffle_run_test "$SOLJSON" compile_fn test_fn
 }
 
 external_test Gnosis-Safe gnosis_safe_test

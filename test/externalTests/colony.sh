@@ -41,7 +41,7 @@ function colony_test
     git clone https://github.com/solidity-external-tests/dappsys-monolithic.git -b master_060 dappsys
     cd ..
 
-    truffle_run_test "$SOLJSON" compile_fn test_fn "NO-FORCE-ABI-V2"
+    truffle_run_test "$SOLJSON" compile_fn test_fn
 }
 
 external_test ColonyNetworks colony_test
