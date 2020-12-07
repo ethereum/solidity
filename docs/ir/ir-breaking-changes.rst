@@ -46,7 +46,7 @@ New order:
  - All state variables are zero-initialized at the beginning.
  - Evaluate base constructor arguments from most derived to most base contract.
  - For every contract in order from most base to most derived in the linearized hierarchy execute:
-     1. State variables are assigned value their initial values, if present at declaration.
+     1. If present at declaration, initial values are assigned to state variables.
      2. Constructor, if present.
 
 This causes differences in some contracts, for example:
