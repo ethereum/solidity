@@ -2573,7 +2573,7 @@ map<ContractDefinition const*, vector<ASTPointer<frontend::Expression>>> SMTEnco
 		if (auto constructor = contract->constructor())
 			for (auto mod: constructor->modifiers())
 			{
-				auto decl = mod->name()->annotation().referencedDeclaration;
+				auto decl = mod->name().annotation().referencedDeclaration;
 				if (auto base = dynamic_cast<ContractDefinition const*>(decl))
 				{
 					solAssert(!baseArgs.count(base), "");
