@@ -139,7 +139,7 @@ function force_solc
 
     printLog "Forcing solc version..."
     cat >> "$config_file" <<EOF
-module.exports['compilers'] = {solc: {version: "$dir/solc"} };
+module.exports['compilers'] = {solc: {version: "$dir/solc", settings: $(solc_settings "$OPTIMIZER_LEVEL" istanbul)}};
 EOF
 }
 
