@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with solidity.  If not, see <http://www.gnu.org/licenses/>
 #
-# (c) 2019 solidity contributors.
+# (c) 2020 solidity contributors.
 #------------------------------------------------------------------------------
 source scripts/common.sh
 source test/externalTests/common.sh
@@ -24,19 +24,26 @@ source test/externalTests/common.sh
 verify_input "$1"
 SOLJSON="$1"
 
-function install_fn { npm install; }
+function install_fn { npm install --package-lock; }
 function compile_fn { npx truffle compile; }
-function test_fn { npm run test; }
+function test_fn { npm test; }
 
-function zeppelin_test
+function gnosis_safe_test
 {
     OPTIMIZER_LEVEL=1
     CONFIG="truffle-config.js"
 
-    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/openzeppelin-contracts.git master_070
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git v2_070
+
+    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_070_new|g' package.json
+    sed -i -E 's|"@gnosis.pm/util-contracts": "[^"]+"|"@gnosis.pm/util-contracts": "github:solidity-external-tests/util-contracts#solc-7"|g' package.json
+
+    # Remove the lock file (if it exists) to prevent it from overriding our changes in package.json
+    rm -f package-lock.json
+
     run_install "$SOLJSON" install_fn
 
     truffle_run_test "$SOLJSON" compile_fn test_fn
 }
 
-external_test Zeppelin zeppelin_test
+external_test Gnosis-Safe gnosis_safe_test
