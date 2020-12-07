@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(value_types)
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
 		REQUIRE_LOG_DATA(encodeArgs(
-			10, u256(65534), u256(0x121212), u256(-1), string("\x1b\xab\xab"), true, u160(u256(-5))
+			10, u256(65534), u256(0x121212), u256(-1), string("\x1b\xab\xab"), true, h160("fffffffffffffffffffffffffffffffffffffffb")
 		));
 	)
 }
@@ -273,7 +273,11 @@ BOOST_AUTO_TEST_CASE(storage_array)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(u160(-1), u160(-2), u160(-3)));
+		REQUIRE_LOG_DATA(encodeArgs(
+			h160("ffffffffffffffffffffffffffffffffffffffff"),
+			h160("fffffffffffffffffffffffffffffffffffffffe"),
+			h160("fffffffffffffffffffffffffffffffffffffffd")
+		));
 	)
 }
 
@@ -294,7 +298,13 @@ BOOST_AUTO_TEST_CASE(storage_array_dyn)
 	BOTH_ENCODERS(
 		compileAndRun(sourceCode);
 		callContractFunction("f()");
-		REQUIRE_LOG_DATA(encodeArgs(0x20, 3, u160(1), u160(2), u160(3)));
+		REQUIRE_LOG_DATA(encodeArgs(
+			0x20,
+			3,
+			h160("0000000000000000000000000000000000000001"),
+			h160("0000000000000000000000000000000000000002"),
+			h160("0000000000000000000000000000000000000003")
+		));
 	)
 }
 
@@ -488,7 +498,7 @@ BOOST_AUTO_TEST_CASE(structs2)
 			0x40,
 			0x100,
 			// S s1[0]
-			u256(u160(m_contractAddress)),
+			m_contractAddress,
 			0x40,
 			// T s1[0].t
 			1, // length

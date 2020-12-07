@@ -219,23 +219,18 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 				valueReturnParams.emplace_back("value" + to_string(stackPos));
 				stackPos++;
 			}
-			bool dynamic = decodingTypes[i]->isDynamicallyEncoded();
-			Whiskers elementTempl(
-				dynamic ?
-				R"(
+			Whiskers elementTempl(R"(
 				{
-					let offset := <load>(add(headStart, <pos>))
-					if gt(offset, 0xffffffffffffffff) { <revertString> }
+					<?dynamic>
+						let offset := <load>(add(headStart, <pos>))
+						if gt(offset, 0xffffffffffffffff) { <revertString> }
+					<!dynamic>
+						let offset := <pos>
+					</dynamic>
 					<values> := <abiDecode>(add(headStart, offset), dataEnd)
 				}
-				)" :
-				R"(
-				{
-					let offset := <pos>
-					<values> := <abiDecode>(add(headStart, offset), dataEnd)
-				}
-				)"
-			);
+			)");
+			elementTempl("dynamic", decodingTypes[i]->isDynamicallyEncoded());
 			// TODO add test
 			elementTempl("revertString", revertReasonIfDebug("ABI decoding: invalid tuple offset"));
 			elementTempl("load", _fromMemory ? "mload" : "calldataload");
@@ -1356,19 +1351,16 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 			solAssert(!member.type->containsNestedMapping(), "");
 			auto decodingType = member.type->decodingType();
 			solAssert(decodingType, "");
-			bool dynamic = decodingType->isDynamicallyEncoded();
-			Whiskers memberTempl(
-				dynamic ?
-				R"(
+			Whiskers memberTempl(R"(
+				<?dynamic>
 					let offset := <load>(add(headStart, <pos>))
 					if gt(offset, 0xffffffffffffffff) { <revertString> }
-					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
-				)" :
-				R"(
+				<!dynamic>
 					let offset := <pos>
-					mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
-				)"
-			);
+				</dynamic>
+				mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
+			)");
+			memberTempl("dynamic", decodingType->isDynamicallyEncoded());
 			// TODO add test
 			memberTempl("revertString", revertReasonIfDebug("ABI decoding: invalid struct offset"));
 			memberTempl("load", _fromMemory ? "mload" : "calldataload");

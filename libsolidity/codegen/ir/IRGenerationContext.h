@@ -135,7 +135,7 @@ public:
 	/// @returns a new copy of the utility function generator (but using the same function set).
 	YulUtilFunctions utils();
 
-	langutil::EVMVersion evmVersion() const { return m_evmVersion; };
+	langutil::EVMVersion evmVersion() const { return m_evmVersion; }
 
 	void setArithmetic(Arithmetic _value) { m_arithmetic = _value; }
 	Arithmetic arithmetic() const { return m_arithmetic; }

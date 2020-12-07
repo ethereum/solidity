@@ -109,13 +109,6 @@ function replace_version_pragmas
     find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
-function replace_libsolc_call
-{
-    # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
-    printLog "Replacing libsolc compile call in Truffle..."
-    sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
-}
-
 function find_truffle_config
 {
     local config_file="truffle.js"
@@ -142,6 +135,9 @@ function force_solc_truffle_modules
             rm -rf solc
             git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
             cp "$1" solc/soljson.js
+
+            cd solc
+            npm install
         fi
     )
     done
@@ -178,20 +174,6 @@ function force_solc_settings
     # dedicated settings objects should only be the fallback.
     echo "module.exports['solc'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
     echo "module.exports['compilers']['solc']['settings'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
-}
-
-function force_abi_v2
-{
-    # Add "pragma abi coder v2" to all files.
-    printLog "Forcibly enabling abi coder v2..."
-    find contracts test -name '*.sol' -type f -print0 | \
-    while IFS= read -r -d '' file
-    do
-        # Only add the pragma if it is not already there.
-        if grep -q -v 'pragma abicoder v2' "$file"; then
-            sed -i -e '1 i pragma abicoder v2;' "$file"
-        fi
-    done
 }
 
 function verify_compiler_version
@@ -238,9 +220,6 @@ function truffle_run_test
     local soljson="$1"
     local compile_fn="$2"
     local test_fn="$3"
-    local force_abi_v2_flag="$4"
-
-    test "$force_abi_v2_flag" = "FORCE-ABI-V2" || test "$force_abi_v2_flag" = "NO-FORCE-ABI-V2"
 
     replace_version_pragmas
     force_solc "$CONFIG" "$DIR" "$soljson"
@@ -264,10 +243,6 @@ function truffle_run_test
     do
         clean
         force_solc_settings "$CONFIG" "$optimize" "istanbul"
-        # Force abi coder v2 in the last step. Has to be the last because code is modified.
-        if [ "$force_abi_v2_flag" = "FORCE-ABI-V2" ]; then
-            [[ "$optimize" =~ yul ]] && force_abi_v2
-        fi
 
         printLog "Running compile function..."
         $compile_fn

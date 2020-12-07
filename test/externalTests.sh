@@ -44,6 +44,7 @@ printTask "Running external tests..."
 
 "$REPO_ROOT/externalTests/zeppelin.sh" "$SOLJSON"
 "$REPO_ROOT/externalTests/gnosis.sh" "$SOLJSON"
+"$REPO_ROOT/externalTests/gnosis-v2.sh" "$SOLJSON"
 "$REPO_ROOT/externalTests/colony.sh" "$SOLJSON"
 "$REPO_ROOT/externalTests/ens.sh" "$SOLJSON"
 
