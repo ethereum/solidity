@@ -52,12 +52,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wimplicit-fallthrough)
 	add_compile_options(-Wsign-conversion)
 
-	# While this should work on CMake 3.3+, it fails on Ubuntu 18
-	if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16)
-		eth_add_cxx_compiler_flag_if_supported(
-			$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>
-		)
-	endif()
+	eth_add_cxx_compiler_flag_if_supported(
+		$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>
+	)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
@@ -68,11 +65,11 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
-		# Check that we've got GCC 5.0 or newer.
+		# Check that we've got GCC 8.0 or newer.
 		execute_process(
 			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-		if (NOT (GCC_VERSION VERSION_GREATER 5.0 OR GCC_VERSION VERSION_EQUAL 5.0))
-			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 5.0 or greater.")
+		if (NOT (GCC_VERSION VERSION_GREATER 8.0 OR GCC_VERSION VERSION_EQUAL 8.0))
+			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 8.0 or greater.")
 		endif ()
 
 		# Use fancy colors in the compiler diagnostics
