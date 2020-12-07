@@ -566,11 +566,13 @@ optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePoin
 		// but they can also be compared/assigned to fixed bytes, in which
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
-			if (_to->category() == frontend::Type::Category::FixedBytes)
+			if (auto fixedBytesType = dynamic_cast<FixedBytesType const*>(_to))
 			{
 				if (strType->value().empty())
 					return smtutil::Expression(size_t(0));
-				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+				auto bytesVec = util::asBytes(strType->value());
+				bytesVec.resize(fixedBytesType->numBytes(), 0);
+				return smtutil::Expression(u256(toHex(bytesVec, util::HexPrefix::Add)));
 			}
 
 	return std::nullopt;
