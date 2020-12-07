@@ -25,8 +25,8 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -39,9 +39,27 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
 
+DataFlowAnalyzer::DataFlowAnalyzer(
+	Dialect const& _dialect,
+	map<YulString, SideEffects> _functionSideEffects
+):
+m_dialect(_dialect),
+m_functionSideEffects(std::move(_functionSideEffects)),
+m_knowledgeBase(_dialect, m_value)
+{
+	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
+		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
+	if (auto const* builtin = _dialect.memoryLoadFunction(YulString{}))
+		m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
+	if (auto const* builtin = _dialect.storageStoreFunction(YulString{}))
+		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+	if (auto const* builtin = _dialect.storageLoadFunction(YulString{}))
+		m_loadFunctionName[static_cast<unsigned>(StoreLoadLocation::Storage)] = builtin->name;
+}
+
 void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 {
-	if (auto vars = isSimpleStore(evmasm::Instruction::SSTORE, _statement))
+	if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -55,7 +73,7 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 			m_storage.eraseKey(key);
 		m_storage.set(vars->first, vars->second);
 	}
-	else if (auto vars = isSimpleStore(evmasm::Instruction::MSTORE, _statement))
+	else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
 	{
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
@@ -265,9 +283,9 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 			// This might erase additional knowledge about the slot.
 			// On the other hand, if we knew the value in the slot
 			// already, then the sload() / mload() would have been replaced by a variable anyway.
-			if (auto key = isSimpleLoad(evmasm::Instruction::MLOAD, *_value))
+			if (auto key = isSimpleLoad(StoreLoadLocation::Memory, *_value))
 				m_memory.set(*key, variable);
-			else if (auto key = isSimpleLoad(evmasm::Instruction::SLOAD, *_value))
+			else if (auto key = isSimpleLoad(StoreLoadLocation::Storage, *_value))
 				m_storage.set(*key, variable);
 		}
 	}
@@ -391,53 +409,27 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 }
 
 std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
-	evmasm::Instruction _store,
+	StoreLoadLocation _location,
 	ExpressionStatement const& _statement
 ) const
 {
-	yulAssert(
-		_store == evmasm::Instruction::MSTORE ||
-		_store == evmasm::Instruction::SSTORE,
-		""
-	);
-	if (holds_alternative<FunctionCall>(_statement.expression))
-	{
-		FunctionCall const& funCall = std::get<FunctionCall>(_statement.expression);
-		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
-				if (builtin->instruction == _store)
-					if (
-						holds_alternative<Identifier>(funCall.arguments.at(0)) &&
-						holds_alternative<Identifier>(funCall.arguments.at(1))
-					)
-					{
-						YulString key = std::get<Identifier>(funCall.arguments.at(0)).name;
-						YulString value = std::get<Identifier>(funCall.arguments.at(1)).name;
-						return make_pair(key, value);
-					}
-	}
+	if (FunctionCall const* funCall = get_if<FunctionCall>(&_statement.expression))
+		if (funCall->functionName.name == m_storeFunctionName[static_cast<unsigned>(_location)])
+			if (Identifier const* key = std::get_if<Identifier>(&funCall->arguments.front()))
+				if (Identifier const* value = std::get_if<Identifier>(&funCall->arguments.back()))
+					return make_pair(key->name, value->name);
 	return {};
 }
 
 std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
-	evmasm::Instruction _load,
+	StoreLoadLocation _location,
 	Expression const& _expression
 ) const
 {
-	yulAssert(
-		_load == evmasm::Instruction::MLOAD ||
-		_load == evmasm::Instruction::SLOAD,
-		""
-	);
-	if (holds_alternative<FunctionCall>(_expression))
-	{
-		FunctionCall const& funCall = std::get<FunctionCall>(_expression);
-		if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(funCall.functionName.name))
-				if (builtin->instruction == _load)
-					if (holds_alternative<Identifier>(funCall.arguments.at(0)))
-						return std::get<Identifier>(funCall.arguments.at(0)).name;
-	}
+	if (FunctionCall const* funCall = get_if<FunctionCall>(&_expression))
+		if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(_location)])
+			if (Identifier const* key = std::get_if<Identifier>(&funCall->arguments.front()))
+				return key->name;
 	return {};
 }
 
