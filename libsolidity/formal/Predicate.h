@@ -35,7 +35,6 @@ enum class PredicateType
 	Interface,
 	NondetInterface,
 	ConstructorSummary,
-	FunctionEntry,
 	FunctionSummary,
 	FunctionBlock,
 	Error,

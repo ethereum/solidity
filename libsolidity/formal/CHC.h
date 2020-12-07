@@ -83,6 +83,10 @@ private:
 	void endVisit(Break const& _node) override;
 	void endVisit(Continue const& _node) override;
 	void endVisit(IndexRangeAccess const& _node) override;
+	void endVisit(Return const& _node) override;
+
+	void pushInlineFrame(CallableDeclaration const& _callable) override;
+	void popInlineFrame(CallableDeclaration const& _callable) override;
 
 	void visitAssert(FunctionCall const& _funCall);
 	void visitAddMulMod(FunctionCall const& _funCall) override;
@@ -333,6 +337,12 @@ private:
 	/// 2) Constructor summary, if error happens while evaluating base constructor arguments.
 	/// 3) Function summary, if error happens inside a function.
 	Predicate const* m_errorDest = nullptr;
+
+	/// Represents the stack of destinations where a `return` should go.
+	/// This is different from `m_errorDest` above:
+	/// - Constructor initializers and constructor summaries will never be `return` targets because they are artificial.
+	/// - Modifiers also have their own `return` target blocks, whereas they do not have their own error destination.
+	std::vector<Predicate const*> m_returnDests;
 	//@}
 
 	/// CHC solver.

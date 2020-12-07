@@ -152,10 +152,12 @@ void SMTEncoder::visitFunctionOrModifier()
 
 	if (m_modifierDepthStack.back() == static_cast<int>(function.modifiers().size()))
 	{
-		pushPathCondition(currentPathConditions());
 		if (function.isImplemented())
+		{
+			pushInlineFrame(function);
 			function.body().accept(*this);
-		popPathCondition();
+			popInlineFrame(function);
+		}
 	}
 	else
 	{
@@ -192,7 +194,7 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 	initializeFunctionCallParameters(*_definition, args);
 
 	pushCallStack({_definition, _invocation});
-	pushPathCondition(currentPathConditions());
+	pushInlineFrame(*_definition);
 	if (auto modifier = dynamic_cast<ModifierDefinition const*>(_definition))
 	{
 		if (modifier->isImplemented())
@@ -205,7 +207,7 @@ void SMTEncoder::inlineModifierInvocation(ModifierInvocation const* _invocation,
 			function->accept(*this);
 		// Functions are popped from the callstack in endVisit(FunctionDefinition)
 	}
-	popPathCondition();
+	popInlineFrame(*_definition);
 }
 
 void SMTEncoder::inlineConstructorHierarchy(ContractDefinition const& _contract)
@@ -287,6 +289,16 @@ bool SMTEncoder::visit(TryCatchClause const& _clause)
 		"Assertion checker does not support try/catch clauses."
 	);
 	return false;
+}
+
+void SMTEncoder::pushInlineFrame(CallableDeclaration const&)
+{
+	pushPathCondition(currentPathConditions());
+}
+
+void SMTEncoder::popInlineFrame(CallableDeclaration const&)
+{
+	popPathCondition();
 }
 
 void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)

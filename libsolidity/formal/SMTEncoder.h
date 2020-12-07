@@ -118,6 +118,9 @@ protected:
 	void endVisit(Continue const&) override {}
 	bool visit(TryCatchClause const& _node) override;
 
+	virtual void pushInlineFrame(CallableDeclaration const&);
+	virtual void popInlineFrame(CallableDeclaration const&);
+
 	/// Do not visit subtree if node is a RationalNumber.
 	/// Symbolic _expr is the rational literal.
 	bool shortcutRationalNumber(Expression const& _expr);
