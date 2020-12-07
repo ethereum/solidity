@@ -57,22 +57,30 @@ object "C_80" {
                 if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }
 
                 {
+
                     let offset := 0
+
                     value0 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
                 }
 
                 {
+
                     let offset := 32
+
                     value1 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
                 }
 
                 {
+
                     let offset := 64
+
                     value2 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
                 }
 
                 {
+
                     let offset := 96
+
                     value3 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
                 }
 
