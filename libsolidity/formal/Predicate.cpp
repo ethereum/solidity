@@ -161,9 +161,9 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 	auto const* fun = programFunction();
 	solAssert(fun, "");
 
-	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars.
-	auto first = _args.begin() + 5 + static_cast<int>(stateVars->size());
+	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size());
 	auto last = first + static_cast<int>(fun->parameters().size());
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 	solAssert(last >= _args.begin() && last <= _args.end(), "");
@@ -189,8 +189,8 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 
 vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expression> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
-	/// The signature of the summary predicate of a contract without constructor is: summary(error, this, cryptoFunctions, txData, preBlockchainState, postBlockchainState, preStateVars, postStateVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of the summary predicate of a contract without constructor is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, postBlockchainState, preStateVars, postStateVars).
 	/// Here we are interested in postStateVars.
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");
@@ -199,12 +199,12 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 	vector<smtutil::Expression>::const_iterator stateLast;
 	if (auto const* function = programFunction())
 	{
-		stateFirst = _args.begin() + 5 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
+		stateFirst = _args.begin() + 6 + static_cast<int>(stateVars->size()) + static_cast<int>(function->parameters().size()) + 1;
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else if (programContract())
 	{
-		stateFirst = _args.begin() + 6 + static_cast<int>(stateVars->size());
+		stateFirst = _args.begin() + 7 + static_cast<int>(stateVars->size());
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
 	else
@@ -221,7 +221,7 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 
 vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expression> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in postInputVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -231,7 +231,7 @@ vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expre
 
 	auto const& inParams = function->parameters();
 
-	auto first = _args.begin() + 5 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
+	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) + 1;
 	auto last = first + static_cast<int>(inParams.size());
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
@@ -245,7 +245,7 @@ vector<optional<string>> Predicate::summaryPostInputValues(vector<smtutil::Expre
 
 vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expression> const& _args) const
 {
-	/// The signature of a function summary predicate is: summary(error, this, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
+	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in outputVars.
 	auto const* function = programFunction();
 	solAssert(function, "");
@@ -255,7 +255,7 @@ vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expr
 
 	auto const& inParams = function->parameters();
 
-	auto first = _args.begin() + 5 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
+	auto first = _args.begin() + 6 + static_cast<int>(stateVars->size()) * 2 + static_cast<int>(inParams.size()) * 2 + 1;
 
 	solAssert(first >= _args.begin() && first <= _args.end(), "");
 
@@ -311,6 +311,11 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		{
 			return {};
 		}
+		catch(invalid_argument const&)
+		{
+			return {};
+		}
+
 		// Limit this counterexample size to 1k.
 		// Some OSs give you "unlimited" memory through swap and other virtual memory,
 		// so purely relying on bad_alloc being thrown is not a good idea.
@@ -379,6 +384,10 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 			index = stoul(*indexStr);
 		}
 		catch (out_of_range const&)
+		{
+			return true;
+		}
+		catch (invalid_argument const&)
 		{
 			return true;
 		}

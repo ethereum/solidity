@@ -916,7 +916,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
 						auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().crypto(), state().tx(), state().state(1)};
+						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
 						args += state1 +
 							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 							vector<smtutil::Expression>{state().state(2)} +
@@ -1160,7 +1160,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		solAssert(false, "Unreachable!");
 	};
 	errorFlag().increaseIndex();
-	vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall), state().crypto(), state().tx(), state().state()};
+	vector<smtutil::Expression> args{errorFlag().currentValue(), contractAddressValue(_funCall), state().abi(), state().crypto(), state().tx(), state().state()};
 
 	auto const* contract = function->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;

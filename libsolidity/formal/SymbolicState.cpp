@@ -20,6 +20,7 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 #include <libsolidity/formal/EncodingContext.h>
+#include <libsolidity/formal/SMTEncoder.h>
 
 using namespace std;
 using namespace solidity;
@@ -77,6 +78,10 @@ void SymbolicState::reset()
 	m_state.reset();
 	m_tx.reset();
 	m_crypto.reset();
+	/// We don't reset m_abi's pointer nor clear m_abiMembers on purpose,
+	/// since it only helps to keep the already generated types.
+	solAssert(m_abi, "");
+	m_abi->reset();
 }
 
 smtutil::Expression SymbolicState::balances() const
@@ -149,6 +154,14 @@ smtutil::Expression SymbolicState::txConstraints(FunctionDefinition const& _func
 	return conj;
 }
 
+void SymbolicState::prepareForSourceUnit(SourceUnit const& _source)
+{
+	set<FunctionCall const*> abiCalls = SMTEncoder::collectABICalls(&_source);
+	for (auto const& source: _source.referencedSourceUnits(true))
+		abiCalls += SMTEncoder::collectABICalls(source);
+	buildABIFunctions(abiCalls);
+}
+
 /// Private helpers.
 
 void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression _value)
@@ -159,4 +172,127 @@ void SymbolicState::addBalance(smtutil::Expression _address, smtutil::Expression
 		balance(_address) + move(_value)
 	);
 	m_state.assignMember("balances", newBalances);
+}
+
+void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFunctions)
+{
+	map<string, SortPointer> functions;
+
+	for (auto const* funCall: _abiFunctions)
+	{
+		auto t = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
+
+		auto const& args = funCall->sortedArguments();
+		auto const& paramTypes = t->parameterTypes();
+		auto const& returnTypes = t->returnParameterTypes();
+
+
+		auto argTypes = [](auto const& _args) {
+			return applyMap(_args, [](auto arg) { return arg->annotation().type; });
+		};
+
+		/// Since each abi.* function may have a different number of input/output parameters,
+		/// we generically compute those types.
+		vector<TypePointer> inTypes;
+		vector<TypePointer> outTypes;
+		if (t->kind() == FunctionType::Kind::ABIDecode)
+		{
+			/// abi.decode : (bytes, tuple_of_types(return_types)) -> (return_types)
+			inTypes.emplace_back(TypeProvider::bytesMemory());
+			auto const* tupleType = dynamic_cast<TupleType const*>(args.at(1)->annotation().type);
+			solAssert(tupleType, "");
+			for (auto t: tupleType->components())
+			{
+				auto typeType = dynamic_cast<TypeType const*>(t);
+				solAssert(typeType, "");
+				outTypes.emplace_back(typeType->actualType());
+			}
+		}
+		else
+		{
+			outTypes = returnTypes;
+			if (
+				t->kind() == FunctionType::Kind::ABIEncodeWithSelector ||
+				t->kind() == FunctionType::Kind::ABIEncodeWithSignature
+			)
+			{
+				/// abi.encodeWithSelector : (bytes4, one_or_more_types) -> bytes
+				/// abi.encodeWithSignature : (string, one_or_more_types) -> bytes
+				inTypes.emplace_back(paramTypes.front());
+				inTypes += argTypes(vector<ASTPointer<Expression const>>(args.begin() + 1, args.end()));
+			}
+			else
+			{
+				/// abi.encode/abi.encodePacked : one_or_more_types -> bytes
+				solAssert(
+					t->kind() == FunctionType::Kind::ABIEncode ||
+					t->kind() == FunctionType::Kind::ABIEncodePacked,
+					""
+				);
+				inTypes = argTypes(args);
+			}
+		}
+
+		/// Rational numbers and string literals add the concrete values to the type name,
+		/// so we replace them by uint256 and bytes since those are the same as their SMT types.
+		/// TODO we could also replace all types by their ABI type.
+		auto replaceTypes = [](auto& _types) {
+			for (auto& t: _types)
+				if (t->category() == frontend::Type::Category::RationalNumber)
+					t = TypeProvider::uint256();
+				else if (t->category() == frontend::Type::Category::StringLiteral)
+					t = TypeProvider::bytesMemory();
+		};
+		replaceTypes(inTypes);
+		replaceTypes(outTypes);
+
+		auto name = t->richIdentifier();
+		for (auto paramType: inTypes + outTypes)
+			name += "_" + paramType->richIdentifier();
+
+		m_abiMembers[funCall] = {name, inTypes, outTypes};
+
+		if (functions.count(name))
+			continue;
+
+		/// If there is only one input or output parameter, we use that type directly.
+		/// Otherwise we create a tuple wrapping the necessary input or output types.
+		auto typesToSort = [](auto const& _types, string const& _name) -> shared_ptr<Sort> {
+			if (_types.size() == 1)
+				return smtSort(*_types.front());
+
+			vector<string> inNames;
+			vector<SortPointer> sorts;
+			for (unsigned i = 0; i < _types.size(); ++i)
+			{
+				inNames.emplace_back(_name + "_input_" + to_string(i));
+				sorts.emplace_back(smtSort(*_types.at(i)));
+			}
+			return make_shared<smtutil::TupleSort>(
+				_name + "_input",
+				inNames,
+				sorts
+			);
+		};
+
+		auto functionSort = make_shared<smtutil::ArraySort>(
+			typesToSort(inTypes, name),
+			typesToSort(outTypes, name)
+		);
+
+		functions[name] = functionSort;
+	}
+
+	m_abi = make_unique<BlockchainVariable>("abi", move(functions), m_context);
+}
+
+smtutil::Expression SymbolicState::abiFunction(frontend::FunctionCall const* _funCall)
+{
+	solAssert(m_abi, "");
+	return m_abi->member(get<0>(m_abiMembers.at(_funCall)));
+}
+
+SymbolicState::SymbolicABIFunction const& SymbolicState::abiFunctionTypes(FunctionCall const* _funCall) const
+{
+	return m_abiMembers.at(_funCall);
 }
