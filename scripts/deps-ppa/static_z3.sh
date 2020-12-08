@@ -27,7 +27,7 @@ email=builds@ethereum.org
 packagename=libz3-static-dev
 version=4.8.9
 
-DISTRIBUTIONS="bionic focal groovy"
+DISTRIBUTIONS="focal groovy"
 
 for distribution in $DISTRIBUTIONS
 do
