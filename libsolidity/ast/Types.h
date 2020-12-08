@@ -294,6 +294,7 @@ public:
 		return *m_stackItems;
 	}
 	/// Total number of stack slots occupied by this type. This is the sum of ``sizeOnStack`` of all ``stackItems()``.
+	// TODO: consider changing the return type to be size_t
 	unsigned sizeOnStack() const
 	{
 		if (!m_stackSize)
@@ -306,7 +307,7 @@ public:
 					++sizeOnStack;
 			m_stackSize = sizeOnStack;
 		}
-		return *m_stackSize;
+		return static_cast<unsigned>(*m_stackSize);
 	}
 	/// If it is possible to initialize such a value in memory by just writing zeros
 	/// of the size memoryHeadSize().

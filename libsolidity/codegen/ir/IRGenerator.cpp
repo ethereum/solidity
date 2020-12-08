@@ -437,17 +437,32 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 	ContractDefinition const& _contract
 )
 {
+	struct InheritanceOrder
+	{
+		bool operator()(ContractDefinition const* _c1, ContractDefinition const* _c2) const
+		{
+			solAssert(contains(linearizedBaseContracts, _c1) && contains(linearizedBaseContracts, _c2), "");
+			auto it1 = find(linearizedBaseContracts.begin(), linearizedBaseContracts.end(), _c1);
+			auto it2 = find(linearizedBaseContracts.begin(), linearizedBaseContracts.end(), _c2);
+			return it1 < it2;
+		}
+		vector<ContractDefinition const*> const& linearizedBaseContracts;
+	} inheritanceOrder{_contract.annotation().linearizedBaseContracts};
+
 	map<ContractDefinition const*, vector<string>> constructorParams;
-	vector<pair<ContractDefinition const*, std::vector<ASTPointer<Expression>>const *>> baseConstructorArguments;
+
+	map<ContractDefinition const*, std::vector<ASTPointer<Expression>>const *, InheritanceOrder>
+		baseConstructorArguments(inheritanceOrder);
+																											;
 
 	for (ASTPointer<InheritanceSpecifier> const& base: _contract.baseContracts())
 		if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(
 				base->name().annotation().referencedDeclaration
 		)->constructor(); baseConstructor && base->arguments())
-			baseConstructorArguments.emplace_back(
+			solAssert(baseConstructorArguments.emplace(
 				dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
 				base->arguments()
-			);
+			).second, "");
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
 		for (ASTPointer<ModifierInvocation> const& modifier: constructor->modifiers())
@@ -458,10 +473,10 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 					FunctionDefinition const* baseConstructor = baseContract->constructor();
 					baseConstructor && modifier->arguments()
 				)
-					baseConstructorArguments.emplace_back(
+					solAssert(baseConstructorArguments.emplace(
 						dynamic_cast<ContractDefinition const*>(baseConstructor->scope()),
 						modifier->arguments()
-					);
+					).second, "");
 
 	IRGeneratorForStatements generator{m_context, m_utils};
 	for (auto&& [baseContract, arguments]: baseConstructorArguments)

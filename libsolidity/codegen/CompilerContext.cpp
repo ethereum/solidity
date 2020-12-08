@@ -249,7 +249,7 @@ void CompilerContext::removeVariablesAboveStackHeight(unsigned _stackHeight)
 
 unsigned CompilerContext::numberOfLocalVariables() const
 {
-	return m_localVariables.size();
+	return static_cast<unsigned>(m_localVariables.size());
 }
 
 shared_ptr<evmasm::Assembly> CompilerContext::compiledContract(ContractDefinition const& _contract) const
@@ -430,10 +430,10 @@ void CompilerContext::appendInlineAssembly(
 				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
 		if (_context == yul::IdentifierContext::RValue)
-			_assembly.appendInstruction(dupInstruction(stackDiff));
+			_assembly.appendInstruction(dupInstruction(static_cast<unsigned>(stackDiff)));
 		else
 		{
-			_assembly.appendInstruction(swapInstruction(stackDiff));
+			_assembly.appendInstruction(swapInstruction(static_cast<unsigned>(stackDiff)));
 			_assembly.appendInstruction(Instruction::POP);
 		}
 	};

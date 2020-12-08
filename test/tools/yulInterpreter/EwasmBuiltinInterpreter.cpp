@@ -135,7 +135,9 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(
 			return u256(util::keccak256(arg)) & 0xfff;
 		else if (fun == "dataoffset")
 		{
-			arg[31] += 2;
+			// Force different value than for datasize
+			arg[31]++;
+			arg[31]++;
 			return u256(util::keccak256(arg)) & 0xfff;
 		}
 	}
@@ -198,7 +200,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(
 	else if (fun == "i32.store")
 	{
 		accessMemory(arg[0], 4);
-		writeMemoryHalfWord(arg[0], arg[1]);
+		writeMemoryHalfWord(arg[0], static_cast<uint32_t>(arg[1]));
 		return 0;
 	}
 	else if (fun == "i32.load")
@@ -453,7 +455,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 			readBytes32(arg[5]);
 		if (numberOfTopics > 3)
 			readBytes32(arg[6]);
-		logTrace(evmasm::logInstruction(numberOfTopics), {});
+		logTrace(evmasm::logInstruction(static_cast<unsigned>(numberOfTopics)), {});
 		return 0;
 	}
 	else if (_fun == "getBlockNumber")
@@ -538,7 +540,7 @@ uint32_t EwasmBuiltinInterpreter::readMemoryHalfWord(uint64_t _offset)
 {
 	uint32_t r = 0;
 	for (size_t i = 0; i < 4; i++)
-		r |= uint64_t(m_state.memory[_offset + i]) << (i * 8);
+		r |= uint32_t(m_state.memory[_offset + i]) << (i * 8);
 	return r;
 }
 

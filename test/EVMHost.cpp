@@ -300,7 +300,7 @@ h160 EVMHost::convertFromEVMC(evmc::address const& _addr)
 evmc::address EVMHost::convertToEVMC(h160 const& _addr)
 {
 	evmc::address a;
-	for (size_t i = 0; i < 20; ++i)
+	for (unsigned i = 0; i < 20; ++i)
 		a.bytes[i] = _addr[i];
 	return a;
 }
@@ -313,7 +313,7 @@ h256 EVMHost::convertFromEVMC(evmc::bytes32 const& _data)
 evmc::bytes32 EVMHost::convertToEVMC(h256 const& _data)
 {
 	evmc::bytes32 d;
-	for (size_t i = 0; i < 32; ++i)
+	for (unsigned i = 0; i < 32; ++i)
 		d.bytes[i] = _data[i];
 	return d;
 }

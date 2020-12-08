@@ -1489,7 +1489,7 @@ public:
 
 	bytes serialise() const
 	{
-		unsigned size = m_data.size() + 1;
+		size_t size = m_data.size() + 1;
 		solAssert(size <= 0xffff, "Metadata too large.");
 		solAssert(m_entryCount <= 0x1f, "Too many map entries.");
 
@@ -1505,7 +1505,7 @@ public:
 private:
 	void pushTextString(string const& key)
 	{
-		unsigned length = key.size();
+		size_t length = key.size();
 		if (length < 24)
 		{
 			m_data += bytes{static_cast<unsigned char>(0x60 + length)};
@@ -1521,7 +1521,7 @@ private:
 	}
 	void pushByteString(bytes const& key)
 	{
-		unsigned length = key.size();
+		size_t length = key.size();
 		if (length < 24)
 		{
 			m_data += bytes{static_cast<unsigned char>(0x40 + length)};

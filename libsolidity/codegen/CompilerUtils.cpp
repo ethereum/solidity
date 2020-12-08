@@ -928,7 +928,7 @@ void CompilerUtils::convertType(
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(_targetType);
 			solAssert(arrayType.isByteArray(), "");
-			unsigned storageSize = 32 + ((data.size() + 31) / 32) * 32;
+			size_t storageSize = 32 + ((data.size() + 31) / 32) * 32;
 			allocateMemory(storageSize);
 			// stack: mempos
 			m_context << Instruction::DUP1 << u256(data.size());

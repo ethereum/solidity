@@ -302,7 +302,15 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
 		solAssert(tupleSort.components.size() == 2, "");
 
-		auto length = stoul(_expr.arguments.at(1).name);
+		unsigned long length;
+		try
+		{
+			length = stoul(_expr.arguments.at(1).name);
+		}
+		catch(out_of_range const&)
+		{
+			return {};
+		}
 		// Limit this counterexample size to 1k.
 		// Some OSs give you "unlimited" memory through swap and other virtual memory,
 		// so purely relying on bad_alloc being thrown is not a good idea.
@@ -320,6 +328,22 @@ optional<string> Predicate::expressionToString(smtutil::Expression const& _expr,
 		{
 			// Solver gave a concrete array but length is too large.
 		}
+	}
+	if (smt::isNonRecursiveStruct(*_type))
+	{
+		auto const& structType = dynamic_cast<StructType const&>(*_type);
+		solAssert(_expr.name == "tuple_constructor", "");
+		auto const& tupleSort = dynamic_cast<TupleSort const&>(*_expr.sort);
+		auto members = structType.structDefinition().members();
+		solAssert(tupleSort.components.size() == members.size(), "");
+		solAssert(_expr.arguments.size() == members.size(), "");
+		vector<string> elements;
+		for (unsigned i = 0; i < members.size(); ++i)
+		{
+			optional<string> elementStr = expressionToString(_expr.arguments.at(i), members[i]->type());
+			elements.push_back(members[i]->name() + (elementStr.has_value() ?  ": " + elementStr.value() : ""));
+		}
+		return "{" + boost::algorithm::join(elements, ", ") + "}";
 	}
 
 	return {};
@@ -364,6 +388,13 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 		if (index < _array.size())
 			_array.at(index) = *elemStr;
 		return true;
+	}
+
+	// Special base case, not supported yet.
+	if (_expr.name.rfind("(_ as-array") == 0)
+	{
+		// Z3 expression representing reinterpretation of a different term as an array
+		return false;
 	}
 
 	solAssert(false, "");

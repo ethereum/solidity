@@ -57,7 +57,7 @@ inline T readFile(std::string const& _file)
 	is.seekg(0, is.beg);
 
 	ret.resize((static_cast<size_t>(length) + c_elementSize - 1) / c_elementSize);
-	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), length);
+	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), static_cast<streamsize>(length));
 	return ret;
 }
 

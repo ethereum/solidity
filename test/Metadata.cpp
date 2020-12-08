@@ -34,7 +34,7 @@ namespace solidity::test
 
 bytes onlyMetadata(bytes const& _bytecode)
 {
-	unsigned size = _bytecode.size();
+	size_t size = _bytecode.size();
 	if (size < 5)
 		return bytes{};
 	size_t metadataSize = (static_cast<size_t>(_bytecode[size - 2]) << 8ul) + static_cast<size_t>(_bytecode[size - 1]);
@@ -49,10 +49,10 @@ bytes onlyMetadata(bytes const& _bytecode)
 
 bytes bytecodeSansMetadata(bytes const& _bytecode)
 {
-	unsigned metadataSize = onlyMetadata(_bytecode).size();
+	size_t metadataSize = onlyMetadata(_bytecode).size();
 	if (metadataSize == 0)
 		return bytes{};
-	return bytes(_bytecode.begin(), _bytecode.end() - metadataSize - 2);
+	return bytes(_bytecode.begin(), _bytecode.end() - static_cast<ptrdiff_t>(metadataSize) - 2);
 }
 
 string bytecodeSansMetadata(string const& _bytecode)

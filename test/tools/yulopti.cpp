@@ -112,7 +112,7 @@ public:
 		auto printPair = [&](auto const& optionAndDescription)
 		{
 			cout << optionAndDescription.first << ": ";
-			cout << setw(longestDescriptionLength) << setiosflags(ios::left);
+			cout << setw(static_cast<int>(longestDescriptionLength)) << setiosflags(ios::left);
 			cout << optionAndDescription.second << " ";
 
 			++index;
@@ -165,8 +165,9 @@ public:
 			printUsageBanner(abbreviationMap, extraOptions, 4);
 			cout << "? ";
 			cout.flush();
-			int option = readStandardInputChar();
-			cout << ' ' << char(option) << endl;
+			// TODO: handle EOF properly.
+			char option = static_cast<char>(readStandardInputChar());
+			cout << ' ' << option << endl;
 
 			OptimiserStepContext context{m_dialect, *m_nameDispenser, reservedIdentifiers};
 

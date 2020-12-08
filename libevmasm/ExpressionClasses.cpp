@@ -86,7 +86,7 @@ ExpressionClasses::Id ExpressionClasses::find(
 		exp.id = id;
 	else
 	{
-		exp.id = m_representatives.size();
+		exp.id = static_cast<Id>(m_representatives.size());
 		m_representatives.push_back(exp);
 	}
 	m_expressions.insert(exp);
@@ -117,7 +117,7 @@ void ExpressionClasses::forceEqual(
 ExpressionClasses::Id ExpressionClasses::newClass(SourceLocation const& _location)
 {
 	Expression exp;
-	exp.id = m_representatives.size();
+	exp.id = static_cast<Id>(m_representatives.size());
 	exp.item = storeItem(AssemblyItem(UndefinedItem, (u256(1) << 255) + exp.id, _location));
 	m_representatives.push_back(exp);
 	m_expressions.insert(exp);

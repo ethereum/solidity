@@ -38,7 +38,7 @@ struct YulRandomNumGenerator
 
 	unsigned operator()()
 	{
-		return m_random();
+		return static_cast<unsigned>(m_random());
 	}
 
 	RandomEngine m_random;

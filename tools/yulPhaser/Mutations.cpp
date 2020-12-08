@@ -171,7 +171,7 @@ function<Crossover> phaser::fixedPointCrossover(double _crossoverPoint)
 	return [=](Chromosome const& _chromosome1, Chromosome const& _chromosome2)
 	{
 		size_t minLength = min(_chromosome1.length(), _chromosome2.length());
-		size_t concretePoint = static_cast<size_t>(round(minLength * _crossoverPoint));
+		size_t concretePoint = static_cast<size_t>(round(double(minLength) * _crossoverPoint));
 
 		return get<0>(fixedPointSwap(_chromosome1, _chromosome2, concretePoint));
 	};

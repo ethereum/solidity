@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(makeRandom_should_use_every_possible_step_with_the_same_pro
 	for (auto& step: chromosome.optimisationSteps())
 		samples.push_back(stepIndices.at(step));
 
-	const double expectedValue = (stepIndices.size() - 1) / 2.0;
-	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+	const double expectedValue = double(stepIndices.size() - 1) / 2.0;
+	const double variance = double(stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
 	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(randomOptimisationStep_should_return_each_step_with_same_pr
 	for (size_t i = 0; i <= stepIndices.size() * samplesPerStep; ++i)
 		samples.push_back(stepIndices.at(Chromosome::randomOptimisationStep()));
 
-	const double expectedValue = (stepIndices.size() - 1) / 2.0;
-	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+	const double expectedValue = double(stepIndices.size() - 1) / 2.0;
+	const double variance = double(stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
 	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);

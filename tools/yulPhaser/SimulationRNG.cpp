@@ -62,5 +62,5 @@ uint32_t SimulationRNG::generateSeed()
 	// This is not a secure way to seed the generator but it's good enough for simulation purposes.
 	// The only thing that matters for us is that the sequence is different on each run and that
 	// it fits the expected distribution. It does not have to be 100% unpredictable.
-	return time(nullptr);
+	return static_cast<uint32_t>(time(nullptr));
 }
