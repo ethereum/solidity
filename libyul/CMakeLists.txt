@@ -179,6 +179,7 @@ add_library(yul
 	optimiser/UnusedFunctionParameterPruner.cpp
 	optimiser/UnusedFunctionParameterPruner.h
 	optimiser/UnusedFunctionsCommon.h
+	optimiser/UnusedFunctionsCommon.cpp
 	optimiser/UnusedPruner.cpp
 	optimiser/UnusedPruner.h
 	optimiser/VarDeclInitializer.cpp
