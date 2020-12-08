@@ -79,19 +79,19 @@ void ControlFlowGraph::splitBlocks()
 		if (item.type() == Tag)
 		{
 			if (id)
-				m_blocks[id].end = index;
+				m_blocks[id].end = static_cast<unsigned>(index);
 			id = BlockId::invalid();
 		}
 		if (!id)
 		{
 			id = item.type() == Tag ? BlockId(item.data()) : generateNewId();
-			m_blocks[id].begin = index;
+			m_blocks[id].begin = static_cast<unsigned>(index);
 		}
 		if (item.type() == PushTag)
 			m_blocks[id].pushedTags.emplace_back(item.data());
 		if (SemanticInformation::altersControlFlow(item))
 		{
-			m_blocks[id].end = index + 1;
+			m_blocks[id].end = static_cast<unsigned>(index + 1);
 			if (item == Instruction::JUMP)
 				m_blocks[id].endType = BasicBlock::EndType::JUMP;
 			else if (item == Instruction::JUMPI)
@@ -103,7 +103,7 @@ void ControlFlowGraph::splitBlocks()
 	}
 	if (id)
 	{
-		m_blocks[id].end = m_items.size();
+		m_blocks[id].end = static_cast<unsigned>(m_items.size());
 		if (m_blocks[id].endType == BasicBlock::EndType::HANDOVER)
 			m_blocks[id].endType = BasicBlock::EndType::STOP;
 	}

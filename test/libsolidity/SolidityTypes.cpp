@@ -262,13 +262,6 @@ BOOST_AUTO_TEST_CASE(helper_bool_result)
 	r5.merge(r6, logical_and<bool>());
 	BOOST_REQUIRE_EQUAL(r5.get(), true);
 	BOOST_REQUIRE_EQUAL(r5.message(), "");
-
-	BoolResult r7{true};
-	// Attention: this will implicitly convert to bool.
-	BoolResult r8("true"); // We cannot use {} initializer here because this does not allow narrowing conversion (at least MSVC breaks)
-	r7.merge(r8, logical_and<bool>());
-	BOOST_REQUIRE_EQUAL(r7.get(), true);
-	BOOST_REQUIRE_EQUAL(r7.message(), "");
 }
 
 BOOST_AUTO_TEST_CASE(helper_string_result)

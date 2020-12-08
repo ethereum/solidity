@@ -131,7 +131,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 				// stack: <keys..> <slot position>
 
 				// copy key[i] to top.
-				utils().copyToStackTop(paramTypes.size() - i + 1, 1);
+				utils().copyToStackTop(static_cast<unsigned>(paramTypes.size() - i + 1), 1);
 
 				m_context.appendInlineAssembly(R"({
 					let key_len := mload(key_ptr)
@@ -155,7 +155,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 				utils().storeInMemory(32);
 
 				// move key to memory.
-				utils().copyToStackTop(paramTypes.size() - i, 1);
+				utils().copyToStackTop(static_cast<unsigned>(paramTypes.size() - i), 1);
 				utils().storeInMemory(0);
 				m_context << u256(64) << u256(0);
 				m_context << Instruction::KECCAK256;
@@ -169,7 +169,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		{
 			// pop offset
 			m_context << Instruction::POP;
-			utils().copyToStackTop(paramTypes.size() - i + 1, 1);
+			utils().copyToStackTop(static_cast<unsigned>(paramTypes.size() - i + 1), 1);
 
 			ArrayUtils(m_context).retrieveLength(*arrayType, 1);
 			// Stack: ref [length] index length
@@ -190,9 +190,9 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		m_context << Instruction::SWAP2 << Instruction::POP << Instruction::SWAP1;
 	else if (paramTypes.size() >= 2)
 	{
-		m_context << swapInstruction(paramTypes.size());
+		m_context << swapInstruction(static_cast<unsigned>(paramTypes.size()));
 		m_context << Instruction::POP;
-		m_context << swapInstruction(paramTypes.size());
+		m_context << swapInstruction(static_cast<unsigned>(paramTypes.size()));
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
 	unsigned retSizeOnStack = 0;
@@ -841,7 +841,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			unsigned numIndexed = 0;
 			TypePointers paramTypes = function.parameterTypes();
 			// All indexed arguments go to the stack
-			for (unsigned arg = arguments.size(); arg > 0; --arg)
+			for (size_t arg = arguments.size(); arg > 0; --arg)
 				if (event.parameters()[arg - 1]->isIndexed())
 				{
 					++numIndexed;
@@ -1293,7 +1293,7 @@ bool ExpressionCompiler::visit(FunctionCallOptions const& _functionCallOptions)
 		solAssert(!contains(presentOptions, newOption), "");
 		ptrdiff_t insertPos = presentOptions.end() - lower_bound(presentOptions.begin(), presentOptions.end(), newOption);
 
-		utils().moveIntoStack(static_cast<size_t>(insertPos), 1);
+		utils().moveIntoStack(static_cast<unsigned>(insertPos), 1);
 		presentOptions.insert(presentOptions.end() - insertPos, newOption);
 	}
 

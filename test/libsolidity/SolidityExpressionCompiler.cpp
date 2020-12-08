@@ -148,7 +148,7 @@ bytes compileFirstExpression(
 			for (vector<string> const& variable: _localVariables)
 				context.addVariable(
 					dynamic_cast<VariableDeclaration const&>(resolveDeclaration(*sourceUnit, variable, resolver)),
-					parametersSize--
+					static_cast<unsigned>(parametersSize--)
 				);
 
 			ExpressionCompiler(

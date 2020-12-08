@@ -51,6 +51,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wno-unknown-pragmas)
 	add_compile_options(-Wimplicit-fallthrough)
 	add_compile_options(-Wsign-conversion)
+	add_compile_options(-Wconversion)
 
 	eth_add_cxx_compiler_flag_if_supported(
 		$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>

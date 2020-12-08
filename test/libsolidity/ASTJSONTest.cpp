@@ -142,7 +142,7 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 	for (size_t i = 0; i < m_sources.size(); i++)
 	{
 		sources[m_sources[i].first] = m_sources[i].second;
-		sourceIndices[m_sources[i].first] = i + 1;
+		sourceIndices[m_sources[i].first] = static_cast<unsigned>(i + 1);
 	}
 	c.setSources(sources);
 	c.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());

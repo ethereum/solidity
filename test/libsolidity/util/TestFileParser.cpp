@@ -682,11 +682,12 @@ string TestFileParser::Scanner::scanString()
 	return str;
 }
 
+// TODO: use fromHex() from CommonData
 char TestFileParser::Scanner::scanHexPart()
 {
 	advance(); // skip 'x'
 
-	char value{};
+	int value{};
 	if (isdigit(current()))
 		value = current() - '0';
 	else if (tolower(current()) >= 'a' && tolower(current()) <= 'f')
@@ -696,7 +697,7 @@ char TestFileParser::Scanner::scanHexPart()
 
 	advance();
 	if (current() == '"')
-		return value;
+		return static_cast<char>(value);
 
 	value <<= 4;
 	if (isdigit(current()))
@@ -706,5 +707,5 @@ char TestFileParser::Scanner::scanHexPart()
 
 	advance();
 
-	return value;
+	return static_cast<char>(value);
 }

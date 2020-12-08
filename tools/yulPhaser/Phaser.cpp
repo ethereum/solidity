@@ -141,7 +141,7 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 	{
 		case Algorithm::Random:
 		{
-			double elitePoolSize = 1.0 / _populationSize;
+			double elitePoolSize = 1.0 / double(_populationSize);
 
 			if (_options.randomElitePoolSize.has_value())
 				elitePoolSize = _options.randomElitePoolSize.value();
@@ -154,7 +154,7 @@ unique_ptr<GeneticAlgorithm> GeneticAlgorithmFactory::build(
 		}
 		case Algorithm::GEWEP:
 		{
-			double percentGenesToRandomise = 1.0 / _options.maxChromosomeLength;
+			double percentGenesToRandomise = 1.0 / double(_options.maxChromosomeLength);
 			double percentGenesToAddOrDelete = percentGenesToRandomise;
 
 			if (_options.gewepGenesToRandomise.has_value())
@@ -421,8 +421,8 @@ void Phaser::main(int _argc, char** _argv)
 
 Phaser::CommandLineDescription Phaser::buildCommandLineDescription()
 {
-	size_t const lineLength = po::options_description::m_default_line_length;
-	size_t const minDescriptionLength = lineLength - 23;
+	unsigned const lineLength = po::options_description::m_default_line_length;
+	unsigned const minDescriptionLength = lineLength - 23;
 
 	po::options_description keywordDescription(
 		"yul-phaser, a tool for finding the best sequence of Yul optimisation phases.\n"
