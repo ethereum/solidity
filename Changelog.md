@@ -12,6 +12,7 @@ Compiler Features:
  * SMTChecker: Support struct constructor.
  * SMTChecker: Support getters.
  * SMTChecker: Support early returns in the CHC engine.
+ * SMTChecker: Report struct values in counterexamples from CHC engine.
  * Standard-Json: Properly filter the requested output artifacts.
 
 Bugfixes:
