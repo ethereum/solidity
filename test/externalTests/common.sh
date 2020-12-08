@@ -139,7 +139,7 @@ function force_solc
 
     printLog "Forcing solc version..."
     cat >> "$config_file" <<EOF
-module.exports['compilers'] = {solc: {version: "$dir/solc", settings: $(solc_settings "$OPTIMIZER_LEVEL" istanbul)}};
+module.exports['compilers'] = $(truffle_compiler_settings "${dir}/solc" "$level" "$evm_version");
 EOF
 }
 
@@ -159,7 +159,7 @@ function force_solc_settings
 
     # Forcing the settings should always work by just overwriting the solc object. Forcing them by using a
     # dedicated settings objects should only be the fallback.
-    echo "module.exports['compilers']['solc']['settings'] = $(solc_settings "$level" istanbul);" >> "$config_file"
+    echo "module.exports['compilers'] = $(truffle_compiler_settings "${DIR}/solc" "$level" "$evm_version");" >> "$config_file"
 }
 
 function verify_compiler_version
@@ -220,6 +220,22 @@ function optimizer_settings_for_level {
             exit 1
             ;;
     esac
+}
+
+function truffle_compiler_settings {
+    local solc_path="$1"
+    local level="$2"
+    local evm_version="$3"
+
+    echo "{"
+    echo "    solc: {"
+    echo "        version: \"${solc_path}\","
+    echo "        settings: {"
+    echo "            optimizer: $(optimizer_settings_for_level "$level"),"
+    echo "            evmVersion: \"${evm_version}\""
+    echo "        }"
+    echo "    }"
+    echo "}"
 }
 
 function truffle_run_test
