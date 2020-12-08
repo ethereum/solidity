@@ -93,7 +93,7 @@ string IRNames::constantValueFunction(VariableDeclaration const& _constant)
 
 string IRNames::localVariable(VariableDeclaration const& _declaration)
 {
-	return "vloc_" + _declaration.name() + '_' + std::to_string(_declaration.id());
+	return "var_" + _declaration.name() + '_' + std::to_string(_declaration.id());
 }
 
 string IRNames::localVariable(Expression const& _expression)
@@ -117,7 +117,7 @@ string IRNames::tupleComponent(size_t _i)
 
 string IRNames::zeroValue(Type const& _type, string const& _variableName)
 {
-	return "zero_value_for_type_" + _type.identifier() + _variableName;
+	return "zero_" + _type.identifier() + _variableName;
 }
 
 FunctionDefinition const* IRHelpers::referencedFunctionDeclaration(Expression const& _expression)
