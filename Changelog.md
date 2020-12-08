@@ -12,6 +12,7 @@ Compiler Features:
  * SMTChecker: Support struct constructor.
  * SMTChecker: Support getters.
  * SMTChecker: Support early returns in the CHC engine.
+ * Standard-Json: Properly filter the requested output artifacts.
 
 Bugfixes:
  * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
