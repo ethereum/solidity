@@ -158,7 +158,6 @@ function force_solc_settings
 
     # Forcing the settings should always work by just overwriting the solc object. Forcing them by using a
     # dedicated settings objects should only be the fallback.
-    echo "module.exports['solc'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
     echo "module.exports['compilers']['solc']['settings'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
 }
 
