@@ -109,20 +109,6 @@ function replace_version_pragmas
     find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
-function find_truffle_config
-{
-    local config_file="truffle.js"
-    local alt_config_file="truffle-config.js"
-
-    if [ ! -f "$config_file" ] && [ ! -f "$alt_config_file" ]; then
-        printError "No matching Truffle config found."
-    fi
-    if [ ! -f "$config_file" ]; then
-        config_file=alt_config_file
-    fi
-    echo "$config_file"
-}
-
 function force_solc_truffle_modules
 {
     # Replace solc package by v0.5.0 and then overwrite with current version.
