@@ -19,6 +19,7 @@ Breaking Changes:
  * Type System: Explicit conversions between two types are disallowed if it changes more than one of sign, width or kind at the same time.
  * Type System: Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of public functions and events.
  * Type System: Disallow ``type(super)``.
+ * Type System: Disallow ``msg.data`` in ``receive()`` function.
  * Command Line Interface: JSON fields `abi`, `devdoc`, `userdoc` and `storage-layout` are now sub-objects rather than strings.
  * Scanner: Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences.
 
