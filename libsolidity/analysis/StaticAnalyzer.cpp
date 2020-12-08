@@ -224,6 +224,17 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
 				);
 		}
+		else if (
+			m_currentFunction &&
+			m_currentFunction->isReceive() &&
+			type->kind() == MagicType::Kind::Message &&
+			_memberAccess.memberName() == "data"
+		)
+			m_errorReporter.typeError(
+				7139_error,
+				_memberAccess.location(),
+				R"("msg.data" cannot be used inside of "receive" function.)"
+			);
 	}
 
 	if (_memberAccess.memberName() == "callcode")
