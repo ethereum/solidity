@@ -1975,12 +1975,6 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 
 	auto decl = identifierToVariable(_assignment.leftHandSide());
 
-	TypePointer commonType = Type::commonType(
-		_assignment.leftHandSide().annotation().type,
-		_assignment.rightHandSide().annotation().type
-	);
-	solAssert(commonType == _assignment.annotation().type, "");
-
 	if (compoundToBitwise.count(op))
 		return bitwiseOperation(
 			compoundToBitwise.at(op),
