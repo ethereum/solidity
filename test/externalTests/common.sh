@@ -109,8 +109,10 @@ function replace_version_pragmas
     find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
-function force_solc_truffle_modules
+function force_truffle_solc_modules
 {
+    local soljson="$1"
+
     # Replace solc package by v0.5.0 and then overwrite with current version.
     printLog "Forcing solc version for all Truffle modules..."
     for d in node_modules node_modules/truffle/node_modules
@@ -120,7 +122,7 @@ function force_solc_truffle_modules
             cd $d
             rm -rf solc
             git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
-            cp "$1" solc/soljson.js
+            cp "$soljson" solc/soljson.js
 
             cd solc
             npm install
@@ -129,29 +131,17 @@ function force_solc_truffle_modules
     done
 }
 
-function force_solc
+function force_truffle_compiler_settings
 {
     local config_file="$1"
-    local dir="$2"
-    local soljson="$3"
+    local solc_path="$2"
+    local level="$3"
+    local evm_version="$4"
 
-    force_solc_truffle_modules "$soljson"
-
-    printLog "Forcing solc version..."
-    cat >> "$config_file" <<EOF
-module.exports['compilers'] = $(truffle_compiler_settings "${dir}/solc" "$level" "$evm_version");
-EOF
-}
-
-function force_solc_settings
-{
-    local config_file="$1"
-    local level="$2"
-    local evm_version="$3"
-
-    printLog "Forcing solc settings..."
+    printLog "Forcing Truffle compiler settings..."
     echo "-------------------------------------"
     echo "Config file: $config_file"
+    echo "Compiler path: $solc_path"
     echo "Optimization level: $level"
     echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
     echo "EVM version: $evm_version"
@@ -159,7 +149,7 @@ function force_solc_settings
 
     # Forcing the settings should always work by just overwriting the solc object. Forcing them by using a
     # dedicated settings objects should only be the fallback.
-    echo "module.exports['compilers'] = $(truffle_compiler_settings "${DIR}/solc" "$level" "$evm_version");" >> "$config_file"
+    echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$level" "$evm_version");" >> "$config_file"
 }
 
 function verify_compiler_version
@@ -182,7 +172,8 @@ function run_install
     printLog "Running install function..."
 
     replace_version_pragmas
-    force_solc "$CONFIG" "$DIR" "$soljson"
+    force_truffle_solc_modules "$soljson"
+    force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$OPTIMIZER_LEVEL" istanbul
 
     $init_fn
 }
@@ -199,13 +190,6 @@ function run_test
 
     printLog "Running test function..."
     $test_fn
-}
-
-function solc_settings {
-    local level="$1"
-    local evm_version="$2"
-
-    echo "{optimizer: $(optimizer_settings_for_level "$level"), evmVersion: \"$evm_version\"}"
 }
 
 function optimizer_settings_for_level {
@@ -245,12 +229,12 @@ function truffle_run_test
     local test_fn="$3"
 
     replace_version_pragmas
-    force_solc "$CONFIG" "$DIR" "$soljson"
+    force_truffle_solc_modules "$soljson"
 
     for level in $(seq "$OPTIMIZER_LEVEL" 3)
     do
         clean
-        force_solc_settings "$CONFIG" "$level" istanbul
+        force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$level" istanbul
 
         printLog "Running compile function..."
         $compile_fn
