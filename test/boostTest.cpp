@@ -148,6 +148,10 @@ void initializeOptions()
 }
 }
 
+// TODO: Prototype -- why isn't this declared in the boost headers?
+// TODO: replace this with a (global) fixture.
+test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] );
+
 test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();

@@ -34,6 +34,8 @@ using namespace std;
 namespace solidity::frontend
 {
 
+namespace
+{
 /// Magic variables get negative ids for easy differentiation
 int magicVariableToID(std::string const& _name)
 {
@@ -111,6 +113,8 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 			StateMutability::Pure
 		)),
 	};
+}
+
 }
 
 GlobalContext::GlobalContext(): m_magicVariables{constructMagicVariables()}

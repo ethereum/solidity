@@ -35,6 +35,9 @@ namespace po = boost::program_options;
 namespace solidity::test
 {
 
+namespace
+{
+
 auto const description = R"(isoltest, tool for interactively managing test contracts.
 Usage: isoltest [Options]
 Interactively validates test contracts.
@@ -49,6 +52,8 @@ std::string editorPath()
 		return "/usr/bin/editor";
 
 	return std::string{};
+}
+
 }
 
 IsolTestOptions::IsolTestOptions(std::string* _editor):
