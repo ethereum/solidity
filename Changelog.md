@@ -49,12 +49,15 @@ Compiler Features:
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
  * SMTChecker: Support getters.
+ * SMTChecker: Support early returns in the CHC engine.
+ * Standard-Json: Properly filter the requested output artifacts.
 
 Bugfixes:
  * Code generator: Do not pad empty string literals with a single 32-byte zero field in the ABI coder v1.
  * SMTChecker: Fix internal compiler error when doing bitwise compound assignment with string literals.
  * SMTChecker: Fix internal error when trying to generate counterexamples with old z3.
  * SMTChecker: Fix segmentation fault that could occur on certain SMT-enabled sources when no SMT solver was available.
+ * SMTChecker: Fix cast string literals to byte arrays.
  * Type Checker: ``super`` is not available in libraries.
  * Yul Optimizer: Fix a bug in NameSimplifier where a new name created by NameSimplifier could also be created by NameDispenser.
  * Yul Optimizer: Removed NameSimplifier from optimization steps available to users.

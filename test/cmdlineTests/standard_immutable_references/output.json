@@ -1,1 +1,1 @@
-{"contracts":{"a.sol":{"A":{"evm":{"deployedBytecode":{"generatedSources":[],"immutableReferences":{"6":[{"length":32,"start":77}]},"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"59:100:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;101:56;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;135:7;153:1;146:8;;101:56;:::o"}}}}},"sources":{"a.sol":{"id":0}}}
+{"contracts":{"a.sol":{"A":{"evm":{"deployedBytecode":{"immutableReferences":{"6":[{"length":32,"start":77}]}}}}}},"sources":{"a.sol":{"id":0}}}

@@ -7,10 +7,6 @@
 #     - ems: Emscripten
 version: 2.1
 parameters:
-  ubuntu-1804-docker-image:
-    type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu1804-4
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:79ccaf5a294a3c4f480b2cd69c6d845540c12435e64d732e8536f8f99ad35f03"
   ubuntu-2004-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-4
@@ -477,19 +473,6 @@ jobs:
           name: strip binary
           command: strip build/solc/solc
       - store_artifacts: *artifacts_solc
-
-  b_ubu18: &build_ubuntu1804
-    docker:
-      - image: << pipeline.parameters.ubuntu-1804-docker-image >>
-    environment:
-      CMAKE_OPTIONS: -DCMAKE_CXX_FLAGS=-O2
-      CMAKE_BUILD_TYPE: RelWithDebugInfo
-      MAKEFLAGS: -j 3
-    steps:
-      - checkout
-      - run: *run_build
-      - store_artifacts: *artifacts_solc
-      - persist_to_workspace: *artifacts_executables
 
   b_ubu_codecov:
     <<: *build_ubuntu2004
@@ -1164,7 +1147,6 @@ workflows:
 
       # Ubuntu build and tests
       - b_ubu: *workflow_trigger_on_tags
-      - b_ubu18: *workflow_trigger_on_tags
       - t_ubu_cli: *workflow_ubuntu2004
       - t_ubu_soltest: *workflow_ubuntu2004
       - t_ubu_soltest_enforce_yul: *workflow_ubuntu2004
