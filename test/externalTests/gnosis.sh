@@ -33,9 +33,9 @@ function gnosis_safe_test
     OPTIMIZER_LEVEL=2
     CONFIG="truffle-config.js"
 
-    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git development_080_new
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/safe-contracts.git development_080
 
-    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080_new|g' package.json
+    sed -i 's|github:gnosis/mock-contract#sol_0_5_0|github:solidity-external-tests/mock-contract#master_080|g' package.json
 
     # Remove the lock file (if it exists) to prevent it from overriding our changes in package.json
     rm -f package-lock.json
