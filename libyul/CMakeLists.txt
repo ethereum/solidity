@@ -1,4 +1,22 @@
+# This will re-generate the polyfill headers, if any file within libyul/backends/wasm/polyfill/ was modified.
+set_directory_properties(PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DIR}/libyul/backends/wasm/polyfill/)
+
+set(POLYFILLS Arithmetic Bitwise Comparison Conversion Interface Keccak Logical Memory)
+set(GENERATED_POLYFILL_HEADERS)
+foreach(polyfill IN LISTS POLYFILLS)
+	set(POLYFILL_FILE ${CMAKE_SOURCE_DIR}/libyul/backends/wasm/polyfill/${polyfill}.yul)
+	file(READ ${POLYFILL_FILE} EWASM_POLYFILL_CONTENT HEX)
+	string(REGEX MATCHALL ".." EWASM_POLYFILL_CONTENT "${EWASM_POLYFILL_CONTENT}")
+	string(REGEX REPLACE ";" ",\n\t0x" EWASM_POLYFILL_CONTENT "${EWASM_POLYFILL_CONTENT}")
+	set(EWASM_POLYFILL_CONTENT "0x${EWASM_POLYFILL_CONTENT}")
+	set(EWASM_POLYFILL_NAME ${polyfill})
+	configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/ewasm_polyfill.in" ${CMAKE_BINARY_DIR}/include/ewasmPolyfills/${polyfill}.h @ONLY)
+	list(APPEND GENERATED_POLYFILL_HEADERS ${CMAKE_BINARY_DIR}/include/ewasmPolyfills/${polyfill}.h)
+endforeach()
+
 add_library(yul
+	${GENERATED_POLYFILL_HEADERS}
+
 	AsmAnalysis.cpp
 	AsmAnalysis.h
 	AsmAnalysisInfo.h
@@ -61,14 +79,6 @@ add_library(yul
 	backends/wasm/WasmObjectCompiler.h
 	backends/wasm/WordSizeTransform.cpp
 	backends/wasm/WordSizeTransform.h
-	backends/wasm/polyfill/Arithmetic.yul
-	backends/wasm/polyfill/Bitwise.yul
-	backends/wasm/polyfill/Comparison.yul
-	backends/wasm/polyfill/Conversion.yul
-	backends/wasm/polyfill/Interface.yul
-	backends/wasm/polyfill/Keccak.yul
-	backends/wasm/polyfill/Logical.yul
-	backends/wasm/polyfill/Memory.yul
 	optimiser/ASTCopier.cpp
 	optimiser/ASTCopier.h
 	optimiser/ASTWalker.cpp
@@ -186,16 +196,5 @@ add_library(yul
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
 )
-
-set(POLYFILLS Arithmetic Bitwise Comparison Conversion Interface Keccak Logical Memory)
-foreach(polyfill IN LISTS POLYFILLS)
-	set(POLYFILL_FILE ${CMAKE_SOURCE_DIR}/libyul/backends/wasm/polyfill/${polyfill}.yul)
-	file(READ ${POLYFILL_FILE} EWASM_POLYFILL_CONTENT HEX)
-	string(REGEX MATCHALL ".." EWASM_POLYFILL_CONTENT "${EWASM_POLYFILL_CONTENT}")
-	string(REGEX REPLACE ";" ",\n\t0x" EWASM_POLYFILL_CONTENT "${EWASM_POLYFILL_CONTENT}")
-	set(EWASM_POLYFILL_CONTENT "0x${EWASM_POLYFILL_CONTENT}")
-	set(EWASM_POLYFILL_NAME ${polyfill})
-	configure_file("${CMAKE_SOURCE_DIR}/cmake/templates/ewasm_polyfill.in" ${CMAKE_BINARY_DIR}/include/ewasmPolyfills/${polyfill}.h @ONLY)
-endforeach()
 
 target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil)
