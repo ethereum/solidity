@@ -2454,7 +2454,7 @@ string YulUtilFunctions::writeToMemoryFunction(Type const& _type)
 
 	return m_functionCollector.createFunction(functionName, [&] {
 		solAssert(!dynamic_cast<StringLiteralType const*>(&_type), "");
-		if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
+		if (auto const* ref = dynamic_cast<ReferenceType const*>(&_type))
 		{
 			solAssert(
 				ref->location() == DataLocation::Memory,
@@ -2552,7 +2552,7 @@ string YulUtilFunctions::cleanupFromStorageFunction(Type const& _type)
 		templ("functionName", functionName);
 
 		unsigned storageBytes = _type.storageBytes();
-		if (IntegerType const* type = dynamic_cast<IntegerType const*>(&_type))
+		if (auto const* type = dynamic_cast<IntegerType const*>(&_type))
 			if (type->isSigned() && storageBytes != 32)
 			{
 				templ("cleaned", "signextend(" + to_string(storageBytes - 1) + ", value)");
@@ -2806,8 +2806,8 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 	if (_from.category() == Type::Category::Function)
 	{
 		solAssert(_to.category() == Type::Category::Function, "");
-		FunctionType const& fromType = dynamic_cast<FunctionType const&>(_from);
-		FunctionType const& targetType = dynamic_cast<FunctionType const&>(_to);
+		auto const& fromType = dynamic_cast<FunctionType const&>(_from);
+		auto const& targetType = dynamic_cast<FunctionType const&>(_to);
 		solAssert(
 			fromType.isImplicitlyConvertibleTo(targetType) &&
 			fromType.sizeOnStack() == targetType.sizeOnStack() &&
@@ -2838,8 +2838,8 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		solAssert(_from.dataStoredIn(DataLocation::CallData), "");
 		solAssert(_to.category() == Type::Category::Array, "");
 
-		ArraySliceType const& fromType = dynamic_cast<ArraySliceType const&>(_from);
-		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_to);
+		auto const& fromType = dynamic_cast<ArraySliceType const&>(_from);
+		auto const& targetType = dynamic_cast<ArrayType const&>(_to);
 
 		solAssert(!fromType.arrayType().baseType()->isDynamicallyEncoded(), "");
 		solAssert(
@@ -2902,7 +2902,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		case Type::Category::RationalNumber:
 		case Type::Category::Contract:
 		{
-			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&_from))
+			if (auto const* rational = dynamic_cast<RationalNumberType const*>(&_from))
 				solUnimplementedAssert(!rational->isFractional(), "Not yet implemented - FixedPointType.");
 			if (toCategory == Type::Category::FixedBytes)
 			{
@@ -2910,7 +2910,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					fromCategory == Type::Category::Integer || fromCategory == Type::Category::RationalNumber,
 					"Invalid conversion to FixedBytesType requested."
 				);
-				FixedBytesType const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
+				auto const& toBytesType = dynamic_cast<FixedBytesType const&>(_to);
 				body =
 					Whiskers("converted := <shiftLeft>(<clean>(value))")
 						("shiftLeft", shiftLeftFunction(256 - toBytesType.numBytes() * 8))
@@ -3018,7 +3018,7 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		}
 		case Type::Category::FixedBytes:
 		{
-			FixedBytesType const& from = dynamic_cast<FixedBytesType const&>(_from);
+			auto const& from = dynamic_cast<FixedBytesType const&>(_from);
 			if (toCategory == Type::Category::Integer)
 				body =
 					Whiskers("converted := <convert>(<shift>(value))")
