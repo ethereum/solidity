@@ -4,7 +4,7 @@
 	{
 		"A":
 		{
-			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; abstract contract C { }"
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0; pragma abicoder v2; abstract contract C { }"
 		}
 	},
 	"settings":

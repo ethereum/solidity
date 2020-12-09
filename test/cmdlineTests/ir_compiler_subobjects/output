@@ -6,17 +6,17 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "C_2" {
+object "C_3" {
     code {
         {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_2_deployed")
-            codecopy(0, dataoffset("C_2_deployed"), _1)
+            let _1 := datasize("C_3_deployed")
+            codecopy(0, dataoffset("C_3_deployed"), _1)
             return(0, _1)
         }
     }
-    object "C_2_deployed" {
+    object "C_3_deployed" {
         code {
             {
                 mstore(64, 128)
@@ -34,17 +34,17 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "D_13" {
+object "D_14" {
     code {
         {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_13_deployed")
-            codecopy(0, dataoffset("D_13_deployed"), _1)
+            let _1 := datasize("D_14_deployed")
+            codecopy(0, dataoffset("D_14_deployed"), _1)
             return(0, _1)
         }
     }
-    object "D_13_deployed" {
+    object "D_14_deployed" {
         code {
             {
                 mstore(64, 128)
@@ -55,10 +55,10 @@ object "D_13" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        let _2 := datasize("C_2")
+                        let _2 := datasize("C_3")
                         let _3 := add(128, _2)
                         if or(gt(_3, 0xffffffffffffffff), lt(_3, 128)) { invalid() }
-                        datacopy(128, dataoffset("C_2"), _2)
+                        datacopy(128, dataoffset("C_3"), _2)
                         if iszero(create(_1, 128, _2))
                         {
                             returndatacopy(_1, _1, returndatasize())
@@ -77,17 +77,17 @@ object "D_13" {
                 mstore(64, newFreePtr)
             }
         }
-        object "C_2" {
+        object "C_3" {
             code {
                 {
                     mstore(64, 128)
                     if callvalue() { revert(0, 0) }
-                    let _1 := datasize("C_2_deployed")
-                    codecopy(0, dataoffset("C_2_deployed"), _1)
+                    let _1 := datasize("C_3_deployed")
+                    codecopy(0, dataoffset("C_3_deployed"), _1)
                     return(0, _1)
                 }
             }
-            object "C_2_deployed" {
+            object "C_3_deployed" {
                 code {
                     {
                         mstore(64, 128)

@@ -6,17 +6,17 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "C_6" {
+object "C_7" {
     code {
         {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_6_deployed")
-            codecopy(0, dataoffset("C_6_deployed"), _1)
+            let _1 := datasize("C_7_deployed")
+            codecopy(0, dataoffset("C_7_deployed"), _1)
             return(0, _1)
         }
     }
-    object "C_6_deployed" {
+    object "C_7_deployed" {
         code {
             {
                 mstore(64, 128)
@@ -34,17 +34,17 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "D_9" {
+object "D_10" {
     code {
         {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_9_deployed")
-            codecopy(0, dataoffset("D_9_deployed"), _1)
+            let _1 := datasize("D_10_deployed")
+            codecopy(0, dataoffset("D_10_deployed"), _1)
             return(0, _1)
         }
     }
-    object "D_9_deployed" {
+    object "D_10_deployed" {
         code {
             {
                 mstore(64, 128)
