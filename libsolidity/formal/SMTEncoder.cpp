@@ -40,6 +40,38 @@ SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
 {
 }
 
+bool SMTEncoder::analyze(SourceUnit const& _source)
+{
+	set<SourceUnit const*, smt::EncodingContext::IdCompare> sources;
+	sources.insert(&_source);
+	for (auto const& source: _source.referencedSourceUnits(true))
+		sources.insert(source);
+
+	bool analysis = true;
+	for (auto source: sources)
+		for (auto node: source->nodes())
+			if (auto function = dynamic_pointer_cast<FunctionDefinition>(node))
+			{
+				m_errorReporter.warning(
+					6660_error,
+					function->location(),
+					"Model checker analysis was not possible because file level functions are not supported."
+				);
+				analysis = false;
+			}
+			else if (auto var = dynamic_pointer_cast<VariableDeclaration>(node))
+			{
+				m_errorReporter.warning(
+					8195_error,
+					var->location(),
+					"Model checker analysis was not possible because file level constants are not supported."
+				);
+				analysis = false;
+			}
+
+	return analysis;
+}
+
 bool SMTEncoder::visit(ContractDefinition const& _contract)
 {
 	solAssert(m_currentContract, "");

@@ -58,13 +58,18 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
-	m_solvedTargets = move(_solvedTargets);
-	m_context.setSolver(m_interface.get());
-	m_context.clear();
-	m_context.setAssertionAccumulation(true);
-	m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
+	/// This is currently used to abort analysis of SourceUnits
+	/// containing file level functions or constants.
+	if (SMTEncoder::analyze(_source))
+	{
+		m_solvedTargets = move(_solvedTargets);
+		m_context.setSolver(m_interface.get());
+		m_context.clear();
+		m_context.setAssertionAccumulation(true);
+		m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
 
-	_source.accept(*this);
+		_source.accept(*this);
+	}
 
 	solAssert(m_interface->solvers() > 0, "");
 	// If this check is true, Z3 and CVC4 are not available
