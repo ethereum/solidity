@@ -409,7 +409,7 @@ std::optional<Json::Value> checkKeys(Json::Value const& _input, set<string> cons
 
 std::optional<Json::Value> checkRootKeys(Json::Value const& _input)
 {
-	static set<string> keys{"auxiliaryInput", "language", "modelCheckerSettings", "settings", "sources"};
+	static set<string> keys{"auxiliaryInput", "language", "settings", "sources"};
 	return checkKeys(_input, keys, "root");
 }
 
@@ -427,14 +427,14 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter", "viaIR"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "modelChecker", "optimizer", "outputSelection", "remappings", "stopAfter", "viaIR"};
 	return checkKeys(_input, keys, "settings");
 }
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
 	static set<string> keys{"engine", "timeout"};
-	return checkKeys(_input, keys, "modelCheckerSettings");
+	return checkKeys(_input, keys, "modelChecker");
 }
 
 std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
@@ -892,7 +892,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			"Requested output selection conflicts with \"settings.stopAfter\"."
 		);
 
-	Json::Value const& modelCheckerSettings = _input.get("modelCheckerSettings", Json::Value());
+	Json::Value const& modelCheckerSettings = settings.get("modelChecker", Json::Value());
 
 	if (auto result = checkModelCheckerSettingsKeys(modelCheckerSettings))
 		return *result;
@@ -900,7 +900,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	if (modelCheckerSettings.isMember("engine"))
 	{
 		if (!modelCheckerSettings["engine"].isString())
-			return formatFatalError("JSONError", "modelCheckerSettings.engine must be a string.");
+			return formatFatalError("JSONError", "settings.modelChecker.engine must be a string.");
 		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].asString());
 		if (!engine)
 			return formatFatalError("JSONError", "Invalid model checker engine requested.");
@@ -910,7 +910,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	if (modelCheckerSettings.isMember("timeout"))
 	{
 		if (!modelCheckerSettings["timeout"].isUInt())
-			return formatFatalError("JSONError", "modelCheckerSettings.timeout must be an unsigned integer.");
+			return formatFatalError("JSONError", "settings.modelChecker.timeout must be an unsigned integer.");
 		ret.modelCheckerSettings.timeout = modelCheckerSettings["timeout"].asUInt();
 	}
 
