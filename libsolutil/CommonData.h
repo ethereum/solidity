@@ -163,6 +163,22 @@ auto applyMap(Container const& _c, Callable&& _op, OutputContainer _oc = OutputC
 	return _oc;
 }
 
+/// Filter a vector.
+/// Returns a copy of the vector after only taking indices `i` such that `_mask[i]` is true.
+template<typename T>
+std::vector<T> filter(std::vector<T> const& _vec, std::vector<bool> const& _mask)
+{
+	assert(_vec.size() == _mask.size());
+
+	std::vector<T> ret;
+
+	for (size_t i = 0; i < _mask.size(); ++i)
+		if (_mask[i])
+			ret.push_back(_vec[i]);
+
+	return ret;
+}
+
 /// Functional fold.
 /// Given a container @param _c, an initial value @param _acc,
 /// and a binary operator @param _binaryOp(T, U), accumulate

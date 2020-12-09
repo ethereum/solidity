@@ -25,20 +25,6 @@
 namespace solidity::yul::unusedFunctionsCommon
 {
 
-template<typename T>
-std::vector<T> filter(std::vector<T> const& _vec, std::vector<bool> const& _mask)
-{
-	yulAssert(_vec.size() == _mask.size(), "");
-
-	std::vector<T> ret;
-
-	for (size_t i = 0; i < _mask.size(); ++i)
-		if (_mask[i])
-			ret.push_back(_vec[i]);
-
-	return ret;
-}
-
 /// Returns true if applying UnusedFunctionParameterPruner is not helpful or redundant because the
 /// inliner will be able to handle it anyway.
 inline bool tooSimpleToBePruned(FunctionDefinition const& _f)
