@@ -18,6 +18,8 @@ contract X is A
 }
 
 
+// ====
+// compileViaYul: also
 // ----
 // test(uint256): 0 -> 0, 64, 0
 // test(uint256): 42 -> 0, 64, 0

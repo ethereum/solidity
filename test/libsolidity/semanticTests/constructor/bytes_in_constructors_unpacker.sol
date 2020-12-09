@@ -6,6 +6,8 @@ contract Test {
         m_s = s;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // constructor(): 7, 0x40, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz" ->
 // m_x() -> 7

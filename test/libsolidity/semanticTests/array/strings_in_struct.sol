@@ -28,6 +28,8 @@ contract buggystruct {
         return bug.last;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // getFirst() -> 0x0a
 // getSecond() -> 0x14

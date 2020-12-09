@@ -18,6 +18,8 @@ contract X is A
 }
 
 
+// ====
+// compileViaYul: also
 // ----
 // test() -> 0, 64, 0
 // set() ->
