@@ -86,6 +86,7 @@ defaults:
       root: build
       paths:
         - test/tools/ossfuzz/abiv2_proto_ossfuzz
+        - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
         - test/tools/ossfuzz/const_opt_ossfuzz
         - test/tools/ossfuzz/solc_noopt_mutator_ossfuzz
         - test/tools/ossfuzz/solc_noopt_ossfuzz
