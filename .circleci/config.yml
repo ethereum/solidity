@@ -802,31 +802,13 @@ jobs:
             npm --version
             test/externalTests/solc-js/solc-js.sh /tmp/workspace/soljson.js $(cat /tmp/workspace/version.txt)
 
-  t_ems_compile_ext:
+  t_ems_ext:
     parameters:
       project:
         type: string
-      nodejs_version:
+      compile_only:
         type: integer
-        default: 14
-    docker:
-      - image: circleci/node:<<parameters.nodejs_version>>
-    environment:
-      TERM: xterm
-      COMPILE_ONLY: 1
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: External <<parameters.project>> compilation
-          command: |
-            test/externalTests/<<parameters.project>>.sh /tmp/workspace/soljson.js
-
-  t_ems_test_ext:
-    parameters:
-      project:
-        type: string
+        default: 0
       nodejs_version:
         type: integer
         default: 14
@@ -837,7 +819,7 @@ jobs:
       - image: circleci/node:<<parameters.nodejs_version>>
     environment:
       TERM: xterm
-      COMPILE_ONLY: 0
+      COMPILE_ONLY: <<parameters.compile_only>>
     steps:
       - checkout
       - attach_workspace:
@@ -1038,48 +1020,53 @@ workflows:
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
 
-      - t_ems_compile_ext:
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_colony
           project: colony
-      - t_ems_compile_ext:
+          compile_only: 1
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_gnosis
           project: gnosis
-      - t_ems_compile_ext:
+          compile_only: 1
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_gnosis_v2
           project: gnosis-v2
-      - t_ems_compile_ext:
+          compile_only: 1
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_zeppelin
           project: zeppelin
-      - t_ems_compile_ext:
+          compile_only: 1
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_compile_ext_ens
           project: ens
+          compile_only: 1
           # NOTE: One of the dependencies (fsevents) fails to build its native extension on node.js 12+.
           nodejs_version: 10
 
       # FIXME: Gnosis tests are pretty flaky right now. They often fail on CircleCI due to random ProviderError
       # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
-      #- t_ems_test_ext:
+      #- t_ems_ext:
       #    <<: *workflow_emscripten
       #    name: t_ems_test_ext_gnosis
       #    project: gnosis
       #    # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
       #    nodejs_version: 12
-      - t_ems_test_ext:
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_gnosis_v2
           project: gnosis-v2
           # NOTE: Tests do not start on node.js 14 ("ganache-cli exited early with code 1").
           nodejs_version: 12
-      - t_ems_test_ext:
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_zeppelin
           project: zeppelin
-      - t_ems_test_ext:
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_ens
           project: ens
@@ -1141,7 +1128,7 @@ workflows:
 
       # Emscripten build and tests that take more than 15 minutes to execute
       - b_ems: *workflow_trigger_on_tags
-      - t_ems_test_ext:
+      - t_ems_ext:
           <<: *workflow_emscripten
           name: t_ems_test_ext_colony
           project: colony
