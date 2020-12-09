@@ -86,6 +86,7 @@ defaults:
       root: build
       paths:
         - test/tools/ossfuzz/abiv2_proto_ossfuzz
+        - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
         - test/tools/ossfuzz/const_opt_ossfuzz
         - test/tools/ossfuzz/solc_noopt_mutator_ossfuzz
         - test/tools/ossfuzz/solc_noopt_ossfuzz
@@ -830,9 +831,6 @@ jobs:
           name: External GnosisSafe tests
           command: |
             test/externalTests/gnosis.sh /tmp/workspace/soljson.js
-      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
-      #- run: *gitter_notify_failure
-      #- run: *gitter_notify_success
 
   t_ems_compile_ext_gnosis_v2:
     docker:
@@ -863,9 +861,6 @@ jobs:
           name: External GnosisSafe v2 tests
           command: |
             test/externalTests/gnosis-v2.sh /tmp/workspace/soljson.js
-      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
-      #- run: *gitter_notify_failure
-      #- run: *gitter_notify_success
 
   t_ems_compile_ext_zeppelin:
     docker:
@@ -895,9 +890,6 @@ jobs:
           name: External Zeppelin tests
           command: |
             test/externalTests/zeppelin.sh /tmp/workspace/soljson.js
-      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
-      #- run: *gitter_notify_failure
-      #- run: *gitter_notify_success
 
   t_ems_compile_ext_colony:
     docker:
@@ -935,9 +927,8 @@ jobs:
           name: External ColonyNetworks tests
           command: |
             test/externalTests/colony.sh /tmp/workspace/soljson.js
-      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
-      #- run: *gitter_notify_failure
-      #- run: *gitter_notify_success
+      - run: *gitter_notify_failure
+      - run: *gitter_notify_success
 
   t_ems_compile_ext_ens:
     docker:
@@ -977,9 +968,6 @@ jobs:
           name: External Ens compilation
           command: |
             test/externalTests/ens.sh /tmp/workspace/soljson.js
-      # TODO: Re-enable notifications once this is running nightly rather than as a PR check
-      #- run: *gitter_notify_failure
-      #- run: *gitter_notify_success
 
   b_win: &b_win
     executor:
@@ -1158,7 +1146,7 @@ workflows:
       - t_ubu_release_cli: *workflow_ubuntu2004_release
       - t_ubu_release_soltest: *workflow_ubuntu2004_release
 
-      # Emscripten build and selected tests
+      # Emscripten build and tests that take 15 minutes or less
       - b_ems: *workflow_trigger_on_tags
       - t_ems_solcjs: *workflow_emscripten
       - t_ems_compile_ext_colony: *workflow_emscripten
@@ -1166,7 +1154,6 @@ workflows:
       - t_ems_compile_ext_gnosis_v2: *workflow_emscripten
       - t_ems_compile_ext_zeppelin: *workflow_emscripten
       - t_ems_compile_ext_ens: *workflow_emscripten
-      - t_ems_test_ext_colony: *workflow_emscripten
       # FIXME: Gnosis tests are pretty flaky right now. They often fail on CircleCI due to random ProviderError
       # and there are also other less frequent problems. See https://github.com/gnosis/safe-contracts/issues/216.
       #- t_ems_test_ext_gnosis: *workflow_emscripten
@@ -1226,3 +1213,7 @@ workflows:
       - t_ubu_asan_constantinople: *workflow_ubuntu2004_asan
       - t_ubu_asan_constantinople_clang: *workflow_ubuntu2004_asan_clang
       - t_ubu_asan_cli: *workflow_ubuntu2004_asan
+
+      # Emscripten build and tests that take more than 15 minutes to execute
+      - b_ems: *workflow_trigger_on_tags
+      - t_ems_test_ext_colony: *workflow_emscripten

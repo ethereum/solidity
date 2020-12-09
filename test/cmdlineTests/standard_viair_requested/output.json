@@ -6,23 +6,23 @@
  *******************************************************/
 
 
-object \"C_2\" {
+object \"C_3\" {
     code {
         mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
-        constructor_C_2()
+        constructor_C_3()
 
-        codecopy(0, dataoffset(\"C_2_deployed\"), datasize(\"C_2_deployed\"))
+        codecopy(0, dataoffset(\"C_3_deployed\"), datasize(\"C_3_deployed\"))
 
-        return(0, datasize(\"C_2_deployed\"))
+        return(0, datasize(\"C_3_deployed\"))
 
-        function constructor_C_2() {
+        function constructor_C_3() {
 
         }
 
     }
-    object \"C_2_deployed\" {
+    object \"C_3_deployed\" {
         code {
             mstore(64, 128)
 
@@ -57,23 +57,23 @@ object \"C_2\" {
  *******************************************************/
 
 
-object \"D_12\" {
+object \"D_16\" {
     code {
         mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
-        constructor_D_12()
+        constructor_D_16()
 
-        codecopy(0, dataoffset(\"D_12_deployed\"), datasize(\"D_12_deployed\"))
+        codecopy(0, dataoffset(\"D_16_deployed\"), datasize(\"D_16_deployed\"))
 
-        return(0, datasize(\"D_12_deployed\"))
+        return(0, datasize(\"D_16_deployed\"))
 
-        function constructor_D_12() {
+        function constructor_D_16() {
 
         }
 
     }
-    object \"D_12_deployed\" {
+    object \"D_16_deployed\" {
         code {
             mstore(64, 128)
 
@@ -87,7 +87,7 @@ object \"D_12\" {
                     // f()
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
-                    fun_f_11()
+                    fun_f_15()
                     let memPos := allocateMemory(0)
                     let memEnd := abi_encode_tuple__to__fromStack(memPos  )
                     return(memPos, sub(memEnd, memPos))
@@ -120,19 +120,20 @@ object \"D_12\" {
                 memPtr := mload(64)
             }
 
-            function fun_f_11() {
+            function fun_f_15() {
 
                 let _1 := allocateTemporaryMemory()
-                let _2 := add(_1, datasize(\"C_2\"))
+                let _2 := add(_1, datasize(\"C_3\"))
                 if or(gt(_2, 0xffffffffffffffff), lt(_2, _1)) { panic_error_0x41() }
-                datacopy(_1, dataoffset(\"C_2\"), datasize(\"C_2\"))
+                datacopy(_1, dataoffset(\"C_3\"), datasize(\"C_3\"))
                 _2 := abi_encode_tuple__to__fromStack(_2)
 
-                let expr_8_address := create(0, _1, sub(_2, _1))
+                let expr_12_address := create(0, _1, sub(_2, _1))
 
-                if iszero(expr_8_address) { revert_forward_1() }
+                if iszero(expr_12_address) { revert_forward_1() }
 
                 releaseTemporaryMemory()
+                let vloc_c_8_address := expr_12_address
 
             }
 
@@ -165,23 +166,23 @@ object \"D_12\" {
         *                !USE AT YOUR OWN RISK!               *
         *******************************************************/
 
-        object \"C_2\" {
+        object \"C_3\" {
             code {
                 mstore(64, 128)
                 if callvalue() { revert(0, 0) }
 
-                constructor_C_2()
+                constructor_C_3()
 
-                codecopy(0, dataoffset(\"C_2_deployed\"), datasize(\"C_2_deployed\"))
+                codecopy(0, dataoffset(\"C_3_deployed\"), datasize(\"C_3_deployed\"))
 
-                return(0, datasize(\"C_2_deployed\"))
+                return(0, datasize(\"C_3_deployed\"))
 
-                function constructor_C_2() {
+                function constructor_C_3() {
 
                 }
 
             }
-            object \"C_2_deployed\" {
+            object \"C_3_deployed\" {
                 code {
                     mstore(64, 128)
 
@@ -212,4 +213,10 @@ object \"D_12\" {
 
 }
 
-"}}},"sources":{"A":{"id":0}}}
+"}}},"errors":[{"component":"general","errorCode":"2072","formattedMessage":"Warning: Unused local variable.
+ --> A:2:93:
+  |
+2 | pragma solidity >=0.0; pragma abicoder v2; contract C {} contract D { function f() public { C c = new C(); } }
+  |                                                                                             ^^^
+
+","message":"Unused local variable.","severity":"warning","sourceLocation":{"end":131,"file":"A","start":128},"type":"Warning"}],"sources":{"A":{"id":0}}}

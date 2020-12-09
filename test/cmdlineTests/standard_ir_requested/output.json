@@ -6,23 +6,23 @@
  *******************************************************/
 
 
-object \"C_6\" {
+object \"C_7\" {
     code {
         mstore(64, 128)
         if callvalue() { revert(0, 0) }
 
-        constructor_C_6()
+        constructor_C_7()
 
-        codecopy(0, dataoffset(\"C_6_deployed\"), datasize(\"C_6_deployed\"))
+        codecopy(0, dataoffset(\"C_7_deployed\"), datasize(\"C_7_deployed\"))
 
-        return(0, datasize(\"C_6_deployed\"))
+        return(0, datasize(\"C_7_deployed\"))
 
-        function constructor_C_6() {
+        function constructor_C_7() {
 
         }
 
     }
-    object \"C_6_deployed\" {
+    object \"C_7_deployed\" {
         code {
             mstore(64, 128)
 
@@ -36,7 +36,7 @@ object \"C_6\" {
                     // f()
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
-                    fun_f_5()
+                    fun_f_6()
                     let memPos := allocateMemory(0)
                     let memEnd := abi_encode_tuple__to__fromStack(memPos  )
                     return(memPos, sub(memEnd, memPos))
@@ -65,7 +65,7 @@ object \"C_6\" {
                 mstore(64, newFreePtr)
             }
 
-            function fun_f_5() {
+            function fun_f_6() {
 
             }
 
