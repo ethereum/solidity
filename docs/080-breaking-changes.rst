@@ -19,6 +19,17 @@ the compiler notifying you about it.
   Checks for overflow are very common, so we made them the default to increase readability of code,
   even if it comes at a slight increase of gas costs.
 
+* ABI coder v2 is activated by default.
+
+  You can choose to use the old behaviour using ``pragma abicoder v1;``.
+  The pragma ``pragma experimental ABIEncoderV2;`` is still valid, but it is deprecated and has no effect.
+  If you want to be explicit, please use ``pragma abicoder v2;`` instead.
+
+  Note that ABI coder v2 supports more types than v1 and performs more sanity checks on the inputs.
+  ABI coder v2 makes some function calls more expensive and it can also make contract calls
+  revert that did not revert with ABI coder v1 when they contain data that does not conform to the
+  parameter types.
+
 * Exponentiation is right associative, i.e., the expression ``a**b**c`` is parsed as ``a**(b**c)``.
   Before 0.8.0, it was parsed as ``(a**b)**c``.
 

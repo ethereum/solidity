@@ -37,17 +37,6 @@ namespace solidity::frontend::test
 
 BOOST_FIXTURE_TEST_SUITE(ABIDecoderTest, SolidityExecutionFramework)
 
-BOOST_AUTO_TEST_CASE(both_encoders_macro)
-{
-	// This tests that the "both decoders macro" at least runs twice and
-	// modifies the source.
-	string sourceCode;
-	int runs = 0;
-	BOTH_ENCODERS(runs++;)
-	BOOST_CHECK(sourceCode == NewEncoderPragma);
-	BOOST_CHECK_EQUAL(runs, 2);
-}
-
 BOOST_AUTO_TEST_CASE(value_types)
 {
 	string sourceCode = R"(
@@ -334,7 +323,7 @@ BOOST_AUTO_TEST_CASE(validation_function_type)
 			function i(function () external[] calldata a) external pure returns (uint r) { a[0]; r = 4; }
 		}
 	)";
-	bool newDecoder = solidity::test::CommonOptions::get().useABIEncoderV2;
+	bool newDecoder = false;
 	string validFun{"01234567890123456789abcd"};
 	string invalidFun{"01234567890123456789abcdX"};
 	BOTH_ENCODERS(

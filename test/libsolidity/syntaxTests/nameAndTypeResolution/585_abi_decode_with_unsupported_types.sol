@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
 	struct s { uint a; uint b; }
     function f() pure public {
@@ -5,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 9611: (98-99): Decoding type struct C.s memory not supported.
+// TypeError 9611: (118-119): Decoding type struct C.s memory not supported.

@@ -5,6 +5,7 @@ contract C {
     function f() external view returns (string[] memory) {}
 }
 ==== Source: B ====
+pragma abicoder v1;
 import "A";
 
 contract D {
@@ -13,4 +14,4 @@ contract D {
     }
 }
 // ----
-// TypeError 2428: (B:65-85): The type of return parameter 1, string[], is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.
+// TypeError 2428: (B:85-105): The type of return parameter 1, string[], is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

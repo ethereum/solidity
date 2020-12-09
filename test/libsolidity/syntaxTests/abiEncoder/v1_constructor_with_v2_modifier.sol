@@ -21,10 +21,12 @@ contract B {
 }
 
 ==== Source: B ====
+pragma abicoder v1;
 import "A";
 
 contract C is B {}
 ==== Source: C ====
+pragma abicoder v1;
 import "B";
 
 contract D is C {

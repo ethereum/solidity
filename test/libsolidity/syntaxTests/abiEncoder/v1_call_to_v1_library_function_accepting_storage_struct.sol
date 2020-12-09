@@ -9,6 +9,7 @@ library L {
     function set(Item storage _item) external view {}
 }
 ==== Source: B ====
+pragma abicoder v1;
 import "A";
 
 contract Test {

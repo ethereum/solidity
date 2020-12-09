@@ -9,6 +9,7 @@ contract C {
     function get() external view returns(Item memory) {}
 }
 ==== Source: B ====
+pragma abicoder v1;
 import "A";
 
 contract Test {
@@ -17,4 +18,4 @@ contract Test {
     }
 }
 // ----
-// TypeError 2428: (B:70-92): The type of return parameter 1, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.
+// TypeError 2428: (B:90-112): The type of return parameter 1, struct C.Item, is only supported in ABI coder v2. Use "pragma abicoder v2;" to enable the feature.

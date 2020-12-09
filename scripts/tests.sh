@@ -90,19 +90,19 @@ for optimize in "" "--optimize"
 do
     for vm in $EVM_VERSIONS
     do
-        FORCE_ABIV2_RUNS="no"
+        FORCE_ABIV1_RUNS="no"
         if [[ "$vm" == "istanbul" ]]
         then
-            FORCE_ABIV2_RUNS="no yes" # run both in istanbul
+            FORCE_ABIV1_RUNS="no yes" # run both in istanbul
         fi
-        for abiv2 in $FORCE_ABIV2_RUNS
+        for abiv1 in $FORCE_ABIV1_RUNS
         do
-            force_abiv2_flag=""
-            if [[ "$abiv2" == "yes" ]]
+            force_abiv1_flag=""
+            if [[ "$abiv1" == "yes" ]]
             then
-                force_abiv2_flag="--abiencoderv2"
+                force_abiv1_flag="--abiencoderv1"
             fi
-            printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv2_flag..."
+            printTask "--> Running tests using "$optimize" --evm-version "$vm" $force_abiv1_flag..."
 
             log=""
             if [ -n "$log_directory" ]
@@ -119,7 +119,7 @@ do
             [ "${vm}" = "byzantium" ] && [ "${optimize}" = "" ] && EWASM_ARGS="--ewasm"
 
             set +e
-            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress $log -- ${EWASM_ARGS} --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv2_flag
+            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress $log -- ${EWASM_ARGS} --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv1_flag
 
             if test "0" -ne "$?"; then
                 exit 1

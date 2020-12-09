@@ -62,9 +62,9 @@ public:
 		// costs for transaction
 		gas += gasForTransaction(m_compiler.object(m_compiler.lastContractName()).bytecode, true);
 
-		// Skip the tests when we force ABIEncoderV2.
+		// Skip the tests when we use ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
-		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
+		if (solidity::test::CommonOptions::get().useABIEncoderV1)
 		{
 			BOOST_REQUIRE(!gas.isInfinite);
 			BOOST_CHECK_LE(m_gasUsed, gas.value);
@@ -91,9 +91,9 @@ public:
 			*m_compiler.runtimeAssemblyItems(m_compiler.lastContractName()),
 			_sig
 		);
-		// Skip the tests when we force ABIEncoderV2.
+		// Skip the tests when we use ABIEncoderV2.
 		// TODO: We should enable this again once the yul optimizer is activated.
-		if (!solidity::test::CommonOptions::get().useABIEncoderV2)
+		if (solidity::test::CommonOptions::get().useABIEncoderV1)
 		{
 			BOOST_REQUIRE(!gas.isInfinite);
 			BOOST_CHECK_LE(m_gasUsed, gas.value);

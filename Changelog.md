@@ -8,6 +8,7 @@ Breaking Changes:
  * Command Line Interface: JSON fields `abi`, `devdoc`, `userdoc` and `storage-layout` are now sub-objects rather than strings.
  * Command Line Interface: Remove the ``--old-reporter`` option.
  * Command Line Interface: Remove the legacy ``--ast-json`` option. Only the ``--ast-compact-json`` option is supported now.
+ * General: Enable ABI coder v2 by default.
  * General: Remove global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
  * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.
  * Scanner: Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences.

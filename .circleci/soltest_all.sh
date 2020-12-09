@@ -58,11 +58,11 @@ echo "Running steps $RUN_STEPS..."
 STEP=1
 
 # Run SMTChecker tests separately, as the heaviest expected run.
-[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 BOOST_TEST_ARGS="-t smtCheckerTests/*" "${REPODIR}/.circleci/soltest.sh"
+[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t smtCheckerTests/*" "${REPODIR}/.circleci/soltest.sh"
 STEP=$(($STEP + 1))
 
 # Run without SMTChecker tests.
-[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V2=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
+[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
 STEP=$(($STEP + 1))
 
 for OPTIMIZE in ${OPTIMIZE_VALUES[@]}

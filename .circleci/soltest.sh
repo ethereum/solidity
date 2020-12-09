@@ -11,7 +11,7 @@
 #
 #     EVM=version_string      Specifies EVM version to compile for (such as homestead, etc)
 #     OPTIMIZE=1              Enables backend optimizer
-#     ABI_ENCODER_V2=1        Enables ABI encoder version 2
+#     ABI_ENCODER_V1=1        Forcibly enables ABI coder version 1
 #     SOLTEST_FLAGS=<flags>   Appends <flags> to default SOLTEST_ARGS
 #
 # ------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ ulimit -s 16384
 get_logfile_basename() {
     local filename="${EVM}"
     test "${OPTIMIZE}" = "1" && filename="${filename}_opt"
-    test "${ABI_ENCODER_V2}" = "1" && filename="${filename}_abiv2"
+    test "${ABI_ENCODER_V1}" = "1" && filename="${filename}_abiv1"
 
     echo -ne "${filename}"
 }
@@ -57,7 +57,7 @@ get_logfile_basename() {
 BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml ${BOOST_TEST_ARGS}"
 SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS"
 test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
-test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2"
+test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv1"
 
 echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}"
 
