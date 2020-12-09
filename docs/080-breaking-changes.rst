@@ -53,7 +53,9 @@ the compiler notifying you about it.
 New Restrictions
 ================
 
-* There are new restrictions related to explicit conversion of literals. The previous behaviour in
+This section lists changes that might cause existing contracts to not compile anymore.
+
+* There are new restrictions related to explicit conversions of literals. The previous behaviour in
   the following cases was likely ambiguous:
 
   1. Explicit conversions from negative literals and literals larger than ``type(uint160).max`` to
@@ -65,7 +67,8 @@ New Restrictions
      represent a value in the enum.
 
 * There are new restrictions on explicit type conversions. The conversion is only allowed when there
-  is at most one change in sign, width or type-category (``int``, ``address``, ``bytesNN``, etc.)
+  is at most one change in sign, width or type-category (``int``, ``address``, ``bytesNN``, etc.).
+  To perform multiple changes, use multiple conversions.
 
   Let us use the notation ``T(S)`` to denote the explicit conversion ``T(x)``, where, ``T`` and
   ``S`` are types, and ``x`` is any arbitrary variable of type ``S``. An example of such a
@@ -97,7 +100,8 @@ New Restrictions
   This will make it safe to assume that the underlying type in the ABI is always ``uint8``.
 
 * Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of
-  public functions and events.
+  public functions and events. The exception is to make it possible to declare interfaces of contracts
+  implemented in languages other than Solidity that do permit such function names.
 
 * Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences in code.
   They can still be inserted via hexadecimal escapes, e.g. ``\x08``, ``\x0c``, and ``\x0b``, respectively.
@@ -107,4 +111,10 @@ New Restrictions
 Interface Changes
 =================
 
-* Changed output of ``--combined-json``. JSON fields ``abi``, ``devdoc``, ``userdoc`` and ``storage-layout`` are sub-objects now. Before 0.8.0 they used to be serialised as strings.
+* The output of ``--combined-json`` has changed: JSON fields ``abi``, ``devdoc``, ``userdoc`` and
+  ``storage-layout`` are sub-objects now. Before 0.8.0 they used to be serialised as strings.
+
+* The "legacy AST" has been removed (``--ast-json`` on the commandline interface and ``legacyAST`` for standard JSON).
+  Use the "compact AST" (``--ast-compact--json`` resp. ``AST``) as replacement.
+
+* The old error reporter (``--old-reporter``) has been removed.
