@@ -52,6 +52,9 @@ class SMTEncoder: public ASTConstVisitor
 public:
 	SMTEncoder(smt::EncodingContext& _context);
 
+	/// @returns true if engine should proceed with analysis.
+	bool analyze(SourceUnit const& _sources);
+
 	/// @returns the leftmost identifier in a multi-d IndexAccess.
 	static Expression const* leftmostBase(IndexAccess const& _indexAccess);
 
