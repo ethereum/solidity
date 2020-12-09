@@ -19,85 +19,42 @@
 
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/NameDispenser.h>
+
 #include <libyul/AST.h>
-#include <libyul/Dialect.h>
-#include <libyul/Exceptions.h>
-
-#include <liblangutil/SourceLocation.h>
-
-#include <libsolutil/CommonData.h>
-
-#include <variant>
 
 namespace solidity::yul::unusedFunctionsCommon
 {
 
-template<typename T>
-std::vector<T> filter(std::vector<T> const& _vec, std::vector<bool> const& _mask)
-{
-	yulAssert(_vec.size() == _mask.size(), "");
-
-	std::vector<T> ret;
-
-	for (size_t i = 0; i < _mask.size(); ++i)
-		if (_mask[i])
-			ret.push_back(_vec[i]);
-
-	return ret;
-}
-
 /// Returns true if applying UnusedFunctionParameterPruner is not helpful or redundant because the
 /// inliner will be able to handle it anyway.
-bool tooSimpleToBePruned(FunctionDefinition const& _f)
+inline bool tooSimpleToBePruned(FunctionDefinition const& _f)
 {
 	return _f.body.statements.size() <= 1 && CodeSize::codeSize(_f.body) <= 1;
 }
 
+/// Given a function definition `_original`, this function returns a 'linking' function that calls
+/// `_originalFunctionName` (with reduced parameters and return values).
+///
+/// The parameter `_usedParametersAndReturnVariables` is a pair of boolean-vectors. Its `.first`
+/// corresponds to function parameters and its `.second` corresponds to function return-variables. A
+/// false value at index `i` means that the corresponding function parameter / return-variable at
+/// index `i` is unused.
+///
+/// Example:
+///
+/// Let `_original` be the function `function f_1() -> y { }`. (In practice, this function usually cannot
+/// be inlined and has parameters / return-variables that are unused.)
+/// Let `_usedParametersAndReturnVariables` be `({}, {false})`
+/// Let `_originalFunctionName` be `f`.
+/// Let `_linkingFunctionName` be `f_1`.
+///
+/// Then the returned linking function would be `function f_1() -> y_1 { f() }`
 FunctionDefinition createLinkingFunction(
 	FunctionDefinition const& _original,
 	std::pair<std::vector<bool>, std::vector<bool>> const& _usedParametersAndReturns,
 	YulString const& _originalFunctionName,
 	YulString const& _linkingFunctionName,
 	NameDispenser& _nameDispenser
-)
-{
-	auto generateTypedName = [&](TypedName t)
-	{
-		return TypedName{
-			t.location,
-			_nameDispenser.newName(t.name),
-			t.type
-		};
-	};
-
-	langutil::SourceLocation loc = _original.location;
-
-	FunctionDefinition linkingFunction{
-		loc,
-		_linkingFunctionName,
-		util::applyMap(_original.parameters, generateTypedName),
-		util::applyMap(_original.returnVariables, generateTypedName),
-		{loc, {}} // body
-	};
-
-	FunctionCall call{loc, Identifier{loc, _originalFunctionName}, {}};
-	for (auto const& p: filter(linkingFunction.parameters, _usedParametersAndReturns.first))
-		call.arguments.emplace_back(Identifier{loc, p.name});
-
-	Assignment assignment{loc, {}, nullptr};
-
-	for (auto const& r: filter(linkingFunction.returnVariables, _usedParametersAndReturns.second))
-		assignment.variableNames.emplace_back(Identifier{loc, r.name});
-
-	if (assignment.variableNames.empty())
-		linkingFunction.body.statements.emplace_back(ExpressionStatement{loc, std::move(call)});
-	else
-	{
-		assignment.value = std::make_unique<Expression>(std::move(call));
-		linkingFunction.body.statements.emplace_back(std::move(assignment));
-	}
-
-	return linkingFunction;
-}
+);
 
 }
