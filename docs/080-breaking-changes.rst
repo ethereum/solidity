@@ -91,6 +91,8 @@ New Restrictions
 * Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences in code.
   They can still be inserted via hexadecimal escapes, e.g. ``\x08``, ``\x0c``, and ``\x0b``, respectively.
 
+* The ``chainid`` builtin in inline assembly is now considered ``view`` instead of ``pure``.
+
 Interface Changes
 =================
 
