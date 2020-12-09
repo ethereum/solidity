@@ -271,7 +271,8 @@ optional<TypedRational> ConstantEvaluator::evaluate(ASTNode const& _node)
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
 		{
 			solAssert(varDecl->isConstant(), "");
-			if (!varDecl->value())
+			// In some circumstances, we do not yet have a type for the variable.
+			if (!varDecl->value() || !varDecl->type())
 				m_values[&_node] = nullopt;
 			else
 			{
