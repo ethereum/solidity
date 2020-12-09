@@ -4,37 +4,34 @@ Breaking Changes:
  * Assembler: The artificial ASSIGNIMMUTABLE opcode and the corresponding builtin in the "EVM with object access" dialect of Yul take the base offset of the code to modify as additional argument.
  * Code Generator: All arithmetic is checked by default. These checks can be disabled using ``unchecked { ... }``.
  * Code Generator: Cause a panic if a byte array in storage is accessed whose length is encoded incorrectly.
+ * Code Generator: Use ``revert`` with error signature ``Panic(uint256)`` and error codes instead of invalid opcode on failing assertions.
+ * Command Line Interface: JSON fields `abi`, `devdoc`, `userdoc` and `storage-layout` are now sub-objects rather than strings.
  * Command Line Interface: Remove the ``--old-reporter`` option.
  * Command Line Interface: Remove the legacy ``--ast-json`` option. Only the ``--ast-compact-json`` option is supported now.
  * General: Remove global functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
+ * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.
+ * Scanner: Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences.
  * Standard JSON: Remove the ``legacyAST`` option.
  * Type Checker: Function call options can only be given once.
- * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
- * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
- * Type System: Disallow enums with more than 256 members.
- * Parser: Exponentiation is right associative. ``a**b**c`` is parsed as ``a**(b**c)``.
- * Code Generator: Use ``revert`` with error signature ``Panic(uint256)`` and error codes instead of invalid opcode on failing assertions.
- * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
- * Type System: Explicit conversions from literals to enums are only allowed if the value fits in the enum.
- * Type System: Explicit conversions between two types are disallowed if it changes more than one of sign, width or kind at the same time.
  * Type System: Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of public functions and events.
- * Type System: Disallow ``type(super)``.
  * Type System: Disallow ``msg.data`` in ``receive()`` function.
- * Command Line Interface: JSON fields `abi`, `devdoc`, `userdoc` and `storage-layout` are now sub-objects rather than strings.
- * Scanner: Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences.
+ * Type System: Disallow ``type(super)``.
+ * Type System: Disallow enums with more than 256 members.
+ * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
+ * Type System: Explicit conversions between two types are disallowed if it changes more than one of sign, width or kind at the same time.
+ * Type System: Explicit conversions from literals to enums are only allowed if the value fits in the enum.
+ * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
+ * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
 
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
 
 Bugfixes:
- * Type Checker: Perform proper integer arithmetic when using constants in array length expressions.
+ * Type Checker: Perform proper truncating integer arithmetic when using constants in array length expressions.
 
 AST Changes:
- * New AST Node ``IdentifierPath`` replacing in many places the ``UserDefinedTypeName``
-
-
-AST Changes:
- * New node type: unchecked block - used for ``unchecked { ... }``.
+ * New AST Node ``IdentifierPath`` replacing in many places the ``UserDefinedTypeName``.
+ * New AST Node ``UncheckedBlock`` used for ``unchecked { ... }``.
 
 ### 0.7.6 (unreleased)
 
