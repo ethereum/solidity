@@ -369,16 +369,16 @@ Input Description
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           }
         },
-      },
-      "modelCheckerSettings":
-      {
-        // Choose which model checker engine to use: all (default), bmc, chc, none.
-        "engine": "chc",
-        // Timeout for each SMT query in milliseconds.
-        // If this option is not given, the SMTChecker will use a deterministic
-        // resource limit by default.
-        // A given timeout of 0 means no resource/time restrictions for any query.
-        "timeout": 20000
+        "modelChecker":
+        {
+          // Choose which model checker engine to use: all (default), bmc, chc, none.
+          "engine": "chc",
+          // Timeout for each SMT query in milliseconds.
+          // If this option is not given, the SMTChecker will use a deterministic
+          // resource limit by default.
+          // A given timeout of 0 means no resource/time restrictions for any query.
+          "timeout": 20000
+        }
       }
     }
 

@@ -13,6 +13,7 @@ Compiler Features:
  * SMTChecker: Support getters.
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
+ * Standard-Json: Move the recently introduced ``modelCheckerSettings`` key to ``settings.modelChecker``.
  * Standard-Json: Properly filter the requested output artifacts.
 
 Bugfixes:

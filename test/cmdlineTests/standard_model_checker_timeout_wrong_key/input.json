@@ -7,9 +7,12 @@
 			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\npragma experimental SMTChecker;\ncontract C { function f(uint x) public pure { assert(x > 0); } }"
 		}
 	},
-	"modelCheckerSettings":
+	"settings":
 	{
-		"engine": "chc",
-		"atimeout": 1
+		"modelChecker":
+		{
+			"engine": "chc",
+			"atimeout": 1
+		}
 	}
 }
