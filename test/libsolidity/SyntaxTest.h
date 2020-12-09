@@ -52,7 +52,7 @@ public:
 protected:
 	void setupCompiler();
 	void parseAndAnalyze() override;
-	void filterObtainedErrors();
+	virtual void filterObtainedErrors();
 
 	bool m_optimiseYul = true;
 	bool m_parserErrorRecovery = false;

@@ -31,4 +31,4 @@ contract C {
 }
 // ----
 // Warning 6321: (429-442): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6328: (448-465): CHC: Assertion violation happens here.
+// Warning 6328: (448-465): CHC: Assertion violation happens here.\nCounterexample:\nx = true\n\n\n\nTransaction trace:\nconstructor()\nState: x = false\ni()

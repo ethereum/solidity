@@ -18,6 +18,8 @@ contract A is B {
 		assert(a == x + 1);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 4984: (244-249): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 6328: (232-250): CHC: Assertion violation happens here.

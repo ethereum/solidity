@@ -36,9 +36,9 @@ contract C is B {
 	}
 }
 // ----
-// Warning 6328: (121-135): CHC: Assertion violation happens here.
-// Warning 6328: (170-184): CHC: Assertion violation happens here.
-// Warning 6328: (296-310): CHC: Assertion violation happens here.
-// Warning 6328: (345-359): CHC: Assertion violation happens here.
-// Warning 6328: (468-482): CHC: Assertion violation happens here.
-// Warning 6328: (517-531): CHC: Assertion violation happens here.
+// Warning 6328: (121-135): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\nf()
+// Warning 6328: (170-184): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\ng()
+// Warning 6328: (296-310): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\n\n\nTransaction trace:\nconstructor()\nState: y = 0, x = 0\nf()
+// Warning 6328: (345-359): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\n\n\nTransaction trace:\nconstructor()\nState: y = 0, x = 0\nh()
+// Warning 6328: (468-482): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, y = 0, x = 0\n\n\n\nTransaction trace:\nconstructor()\nState: z = 0, y = 0, x = 0\nf()
+// Warning 6328: (517-531): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, y = 0, x = 0\n\n\n\nTransaction trace:\nconstructor()\nState: z = 0, y = 0, x = 0\ni()

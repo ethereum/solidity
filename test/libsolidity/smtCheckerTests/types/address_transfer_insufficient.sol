@@ -11,6 +11,6 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (213-237): CHC: Assertion violation happens here.
+// Warning 6328: (213-237): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7719\nb = 7719\n\n\nTransaction trace:\nconstructor()\nf(7719, 7719)
 // Warning 1236: (134-149): BMC: Insufficient funds happens here.
 // Warning 1236: (153-169): BMC: Insufficient funds happens here.

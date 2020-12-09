@@ -12,5 +12,7 @@ contract C {
 		assert(h()[2] == 3);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (191-210): CHC: Assertion violation happens here.

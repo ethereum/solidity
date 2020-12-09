@@ -21,4 +21,4 @@ contract C
 // SMTSolvers: z3
 // ----
 // Warning 5740: (169-176): Unreachable code.
-// Warning 6328: (227-242): CHC: Assertion violation happens here.
+// Warning 6328: (227-242): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 10\nb = false\n\n\nTransaction trace:\nconstructor()\nf(10, false)

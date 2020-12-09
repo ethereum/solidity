@@ -17,8 +17,8 @@ contract C {
 // Warning 4588: (105-142): Assertion checker does not yet implement this type of function call.
 // Warning 8364: (210-211): Assertion checker does not yet implement type type(contract C)
 // Warning 4588: (176-213): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (293-309): CHC: Assertion violation happens here.
-// Warning 6328: (313-329): CHC: Assertion violation happens here.
+// Warning 6328: (293-309): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 6328: (313-329): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
 // Warning 8364: (139-140): Assertion checker does not yet implement type type(contract C)
 // Warning 4588: (105-142): Assertion checker does not yet implement this type of function call.
 // Warning 8364: (210-211): Assertion checker does not yet implement type type(contract C)

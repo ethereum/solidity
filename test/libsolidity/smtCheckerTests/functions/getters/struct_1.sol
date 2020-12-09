@@ -26,4 +26,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (370-387): CHC: Assertion violation happens here.
+// Warning 6328: (370-387): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 0, t: {t: 0}, b: false, a: []}\n\n\n\nTransaction trace:\nconstructor()\nState: s = {x: 0, t: {t: 0}, b: false, a: []}\nf()

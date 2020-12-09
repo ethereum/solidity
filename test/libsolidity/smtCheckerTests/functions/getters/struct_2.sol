@@ -16,4 +16,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (207-221): CHC: Assertion violation happens here.
+// Warning 6328: (207-221): CHC: Assertion violation happens here.\nCounterexample:\ns = {a: [0, 0], u: 0}\n\n\n\nTransaction trace:\nconstructor()\nState: s = {a: [0, 0], u: 0}\nf()

@@ -22,6 +22,8 @@ contract C
 		assert(b[0] == 1);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (524-542): CHC: Assertion violation happens here.
 // Warning 6328: (585-602): CHC: Assertion violation happens here.

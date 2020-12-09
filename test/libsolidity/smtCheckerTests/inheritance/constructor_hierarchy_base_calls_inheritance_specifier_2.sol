@@ -33,6 +33,6 @@ contract C is Z(5) {
 	}
 }
 // ----
-// Warning 4984: (143-149): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (143-149): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\nx = 9\nb = 115792089237316195423570985008687907853269984665640564039457584007913129639927\n\n\nTransaction trace:\nconstructor(115792089237316195423570985008687907853269984665640564039457584007913129639927)
 // Warning 4984: (333-340): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6328: (409-423): CHC: Assertion violation happens here.
+// Warning 6328: (409-423): CHC: Assertion violation happens here.\nCounterexample:\nx = 15\n\n\n\nTransaction trace:\nconstructor()

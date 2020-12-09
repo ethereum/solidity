@@ -20,5 +20,7 @@ contract C
 		else f(b2, c);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (338-355): CHC: Assertion violation happens here.

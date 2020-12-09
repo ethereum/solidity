@@ -15,4 +15,4 @@ library L {
 	}
 }
 // ----
-// Warning 6328: (c:113-126): CHC: Assertion violation happens here.
+// Warning 6328: (c:113-126): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\n\nTransaction trace:\nconstructor()\ng(0)

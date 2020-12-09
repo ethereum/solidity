@@ -40,6 +40,8 @@ public:
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 
+	void filterObtainedErrors() override;
+
 protected:
 	/// This contains engine and timeout.
 	/// The engine can be set via option SMTEngine in the test.
@@ -51,6 +53,8 @@ protected:
 	/// The possible options are `all`, `z3`, `cvc4`, `none`,
 	/// where if none is given the default used option is `all`.
 	smtutil::SMTSolverChoice m_enabledSolvers;
+
+	bool m_ignoreCex = false;
 };
 
 }
