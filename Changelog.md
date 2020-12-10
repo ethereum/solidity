@@ -1,5 +1,7 @@
 ### 0.8.1 (unreleased)
 
+Compiler Features:
+ * SMTChecker: Support ABI functions as uninterpreted functions.
 
 
 ### 0.8.0 (2020-12-16)
