@@ -1339,19 +1339,27 @@ string YulUtilFunctions::storageArrayPushZeroFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
-	solUnimplementedAssert(!_type.isByteArray(), "Byte Arrays not yet implemented!");
 	solUnimplementedAssert(_type.baseType()->storageBytes() <= 32, "Base type is not yet implemented.");
 
 	string functionName = "array_push_zero_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(array) -> slot, offset {
-				let oldLen := <fetchLength>(array)
-				if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
-				sstore(array, add(oldLen, 1))
+				<?isBytes>
+					let data := sload(array)
+					let oldLen := <extractLength>(data)
+					<increaseBytesSize>(array, data, oldLen, add(oldLen, 1))
+				<!isBytes>
+					let oldLen := <fetchLength>(array)
+					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
+					sstore(array, add(oldLen, 1))
+				</isBytes>
 				slot, offset := <indexAccess>(array, oldLen)
 			})")
 			("functionName", functionName)
+			("isBytes", _type.isByteArray())
+			("increaseBytesSize", _type.isByteArray() ? increaseByteArraySizeFunction(_type) : "")
+			("extractLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
 			("panic", panicFunction())
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))

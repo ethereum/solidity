@@ -18,6 +18,8 @@ contract C {
 		return array[index];
 	}
 }
+// ====
+// compileViaYul: also
 // ----
 // l() -> 0
 // g(uint256): 70 ->
