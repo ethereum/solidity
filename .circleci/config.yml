@@ -347,7 +347,7 @@ jobs:
 
   chk_pylint:
     docker:
-      - image: buildpack-deps:eoan
+      - image: buildpack-deps:focal
     steps:
       - checkout
       - run:
@@ -363,7 +363,7 @@ jobs:
 
   chk_antlr_grammar:
     docker:
-      - image: buildpack-deps:eoan
+      - image: buildpack-deps:focal
     steps:
       - checkout
       - run:
