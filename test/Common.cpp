@@ -30,6 +30,9 @@ namespace po = boost::program_options;
 namespace solidity::test
 {
 
+namespace
+{
+
 /// If non-empty returns the value of the env. variable ETH_TEST_PATH, otherwise
 /// it tries to find a path that contains the directories "libsolidity/syntaxTests"
 /// and returns it if found.
@@ -82,6 +85,8 @@ std::string envOrDefaultPath(std::string const& env_name, std::string const& lib
 			return p.string();
 	}
 	return {};
+}
+
 }
 
 CommonOptions::CommonOptions(std::string _caption):

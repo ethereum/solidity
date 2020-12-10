@@ -126,6 +126,8 @@ int precedence(Token tok)
 }
 #undef T
 
+namespace
+{
 int parseSize(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
@@ -137,6 +139,7 @@ int parseSize(string::const_iterator _begin, string::const_iterator _end)
 	{
 		return -1;
 	}
+}
 }
 
 static Token keywordByName(string const& _name)
