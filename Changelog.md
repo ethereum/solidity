@@ -22,6 +22,7 @@ Breaking Changes:
  * Type System: Explicit conversions between two types are disallowed if it changes more than one of sign, width or kind at the same time.
  * Type System: Explicit conversions from literals to enums are only allowed if the value fits in the enum.
  * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
+ * Type System: Introduce ``block.chainid`` for retrieving the current chain id.
  * Type System: Support ``address(...).codehash`` to retrieve the codehash of an account.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * View Pure Checker: Mark ``chainid`` as view.
