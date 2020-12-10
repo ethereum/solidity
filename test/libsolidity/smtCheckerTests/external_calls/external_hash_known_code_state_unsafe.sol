@@ -37,6 +37,8 @@ contract C {
 		assert(owner == address(0) || y != z);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (435-461): CHC: Assertion violation happens here.\nCounterexample:\nowner = 1, y = 0, z = 0, s = 0\n\n\n\nTransaction trace:\nconstructor()\nState: owner = 0, y = 0, z = 0, s = 0\nf()
-// Warning 6328: (594-631): CHC: Assertion violation happens here.\nCounterexample:\nowner = 1, y = 0, z = 0, s = 0\n\n\n\nTransaction trace:\nconstructor()\nState: owner = 1, y = 0, z = 0, s = 0\ninv()
+// Warning 6328: (435-461): CHC: Assertion violation happens here.
+// Warning 6328: (594-631): CHC: Assertion violation happens here.
