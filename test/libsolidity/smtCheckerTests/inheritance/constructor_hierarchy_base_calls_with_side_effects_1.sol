@@ -29,6 +29,8 @@ contract C is Z, B {
 		assert(x == k); // should fail
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 4984: (138-145): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 6328: (384-398): CHC: Assertion violation happens here.

@@ -195,7 +195,10 @@ pair<string, string> ProtoConverter::varDecl(
 		typeStr,
 		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
 	);
-
+	appendToIsabelleTypeString(
+		tVisitor.isabelleTypeString(),
+		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
+	);
 	// Update dyn param only if necessary
 	if (tVisitor.isLastDynParamRightPadded())
 		m_isLastDynParamRightPadded = true;
@@ -350,6 +353,14 @@ void ProtoConverter::appendTypedParamsPublic(
 		("type", qualifiedTypeString)
 		("varName", _varName)
 		.render();
+}
+
+void ProtoConverter::appendToIsabelleTypeString(
+	std::string const& _typeString,
+	Delimiter _delimiter
+)
+{
+	m_isabelleTypeString << delimiterToString(_delimiter) << _typeString;
 }
 
 std::string ProtoConverter::typedParametersAsString(CalleeType _calleeType)
@@ -628,6 +639,15 @@ pragma experimental ABIEncoderV2;)";
 		.render();
 }
 
+string ProtoConverter::isabelleTypeString() const
+{
+	string typeString = m_isabelleTypeString.str();
+	if (!typeString.empty())
+		return "(" + typeString + ")";
+	else
+		return typeString;
+}
+
 string ProtoConverter::contractToString(Contract const& _input)
 {
 	visit(_input);
@@ -635,27 +655,44 @@ string ProtoConverter::contractToString(Contract const& _input)
 }
 
 /// Type visitor
+void TypeVisitor::StructTupleString::addTypeStringToTuple(string& _typeString)
+{
+	index++;
+	if (index > 1)
+		stream << ",";
+	stream << _typeString;
+}
+
+void TypeVisitor::StructTupleString::addArrayBracketToType(string& _arrayBracket)
+{
+	stream << _arrayBracket;
+}
+
 string TypeVisitor::visit(BoolType const&)
 {
 	m_baseType = "bool";
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
 string TypeVisitor::visit(IntegerType const& _type)
 {
 	m_baseType = getIntTypeAsString(_type);
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
 string TypeVisitor::visit(FixedByteType const& _type)
 {
 	m_baseType = getFixedByteTypeAsString(_type);
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
 string TypeVisitor::visit(AddressType const& _type)
 {
 	m_baseType = getAddressTypeAsString(_type);
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
@@ -666,12 +703,13 @@ string TypeVisitor::visit(ArrayType const& _type)
 
 	string baseType = visit(_type.t());
 	solAssert(!baseType.empty(), "");
-	string arrayBraces = _type.is_static() ?
+	string arrayBracket = _type.is_static() ?
 	                     string("[") +
 	                     to_string(getStaticArrayLengthFromFuzz(_type.length())) +
 	                     string("]") :
 	                     string("[]");
-	m_baseType += arrayBraces;
+	m_baseType += arrayBracket;
+	m_structTupleString.addArrayBracketToType(arrayBracket);
 
 	// If we don't know yet if the array will be dynamically encoded,
 	// check again. If we already know that it will be, there's no
@@ -679,13 +717,14 @@ string TypeVisitor::visit(ArrayType const& _type)
 	if (!m_isLastDynParamRightPadded)
 		m_isLastDynParamRightPadded = DynParamVisitor().visit(_type);
 
-	return baseType + arrayBraces;
+	return baseType + arrayBracket;
 }
 
 string TypeVisitor::visit(DynamicByteArrayType const& _type)
 {
 	m_isLastDynParamRightPadded = true;
 	m_baseType = bytesArrayTypeAsString(_type);
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
@@ -708,7 +747,8 @@ void TypeVisitor::structDefinition(StructType const& _type)
 		to_string(m_structCounter) +
 		" {"
 	);
-
+	// Start tuple of types with parenthesis
+	m_structTupleString.start();
 	// Increase indentation for struct fields
 	m_indentation++;
 	for (auto const& t: _type.t())
@@ -731,9 +771,13 @@ void TypeVisitor::structDefinition(StructType const& _type)
 				("member", "m" + to_string(m_structFieldCounter++))
 				.render()
 		);
+		string isabelleTypeStr = tVisitor.isabelleTypeString();
+		m_structTupleString.addTypeStringToTuple(isabelleTypeStr);
 	}
 	m_indentation--;
 	structDef += lineString("}");
+	// End tuple of types with parenthesis
+	m_structTupleString.end();
 	m_structCounter++;
 	m_structDef << structDef;
 	m_indentation = wasIndentation;

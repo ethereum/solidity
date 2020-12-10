@@ -27,6 +27,8 @@ contract C {
 		assert(c != 0xffffffff);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (303-329): CHC: Assertion violation happens here.
 // Warning 6328: (333-350): CHC: Assertion violation happens here.

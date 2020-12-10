@@ -19,4 +19,4 @@ contract A is B {
 }
 // ----
 // Warning 5667: (194-200): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (224-238): CHC: Assertion violation happens here.
+// Warning 6328: (224-238): CHC: Assertion violation happens here.\nCounterexample:\na = 2\nx = 0\n\n\nTransaction trace:\nconstructor(0)

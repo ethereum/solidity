@@ -19,10 +19,8 @@ for optimize in [False, True]:
                 'optimizer': {
                     'enabled': optimize
                 },
-                'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}}
-            },
-            'modelCheckerSettings': {
-                "engine": 'none'
+                'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}},
+                'modelChecker': { "engine": 'none' }
             }
         }
         args = [SOLC_BIN, '--standard-json']

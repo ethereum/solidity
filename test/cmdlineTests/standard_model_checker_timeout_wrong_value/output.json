@@ -1,1 +1,1 @@
-{"errors":[{"component":"general","formattedMessage":"modelCheckerSettings.timeout must be an unsigned integer.","message":"modelCheckerSettings.timeout must be an unsigned integer.","severity":"error","type":"JSONError"}]}
+{"errors":[{"component":"general","formattedMessage":"settings.modelChecker.timeout must be an unsigned integer.","message":"settings.modelChecker.timeout must be an unsigned integer.","severity":"error","type":"JSONError"}]}

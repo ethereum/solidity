@@ -69,18 +69,23 @@ void CHC::analyze(SourceUnit const& _source)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
-	resetSourceAnalysis();
+	/// This is currently used to abort analysis of SourceUnits
+	/// containing file level functions or constants.
+	if (SMTEncoder::analyze(_source))
+	{
+		resetSourceAnalysis();
 
-	set<SourceUnit const*, EncodingContext::IdCompare> sources;
-	sources.insert(&_source);
-	for (auto const& source: _source.referencedSourceUnits(true))
-		sources.insert(source);
-	for (auto const* source: sources)
-		defineInterfacesAndSummaries(*source);
-	for (auto const* source: sources)
-		source->accept(*this);
+		set<SourceUnit const*, EncodingContext::IdCompare> sources;
+		sources.insert(&_source);
+		for (auto const& source: _source.referencedSourceUnits(true))
+			sources.insert(source);
+		for (auto const* source: sources)
+			defineInterfacesAndSummaries(*source);
+		for (auto const* source: sources)
+			source->accept(*this);
 
-	checkVerificationTargets();
+		checkVerificationTargets();
+	}
 
 	bool ranSolver = true;
 #ifndef HAVE_Z3
@@ -1382,8 +1387,7 @@ void CHC::checkAndReportTarget(
 			m_errorReporter.warning(
 				_errorReporterId,
 				location,
-				"CHC: " + _satMsg,
-				SecondarySourceLocation().append("Counterexample:\n" + *cex, SourceLocation{})
+				"CHC: " + _satMsg + "\nCounterexample:\n" + *cex
 			);
 		else
 			m_errorReporter.warning(

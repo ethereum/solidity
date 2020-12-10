@@ -127,10 +127,13 @@ void DocStringTagParser::handleCallable(
 )
 {
 	static set<string> const validEventTags = set<string>{"dev", "notice", "return", "param"};
+	static set<string> const validModifierTags = set<string>{"dev", "notice", "param", "inheritdoc"};
 	static set<string> const validTags = set<string>{"dev", "notice", "return", "param", "inheritdoc"};
 
 	if (dynamic_cast<EventDefinition const*>(&_callable))
 		parseDocStrings(_node, _annotation, validEventTags, "events");
+	else if (dynamic_cast<ModifierDefinition const*>(&_callable))
+		parseDocStrings(_node, _annotation, validModifierTags, "modifiers");
 	else
 		parseDocStrings(_node, _annotation, validTags, "functions");
 

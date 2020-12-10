@@ -52,10 +52,10 @@ contract C {
 // Warning 8364: (258-260): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (271-275): Assertion checker does not yet support this expression.
 // Warning 8364: (271-273): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4984: (200-208): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6328: (185-209): CHC: Assertion violation happens here.
-// Warning 6328: (213-247): CHC: Assertion violation happens here.
-// Warning 6328: (264-281): CHC: Assertion violation happens here.
+// Warning 4984: (200-208): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 6328: (185-209): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 6328: (213-247): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 6328: (264-281): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
 // Warning 8115: (81-85): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (88-92): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (119-123): Assertion checker does not yet support this expression.

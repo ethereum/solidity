@@ -66,10 +66,8 @@ for (var optimize of [false, true])
                 sources: inputs,
                 settings: {
                     optimizer: { enabled: optimize },
-                    outputSelection: { '*': { '*': ['evm.bytecode.object', 'metadata'] } }
-                },
-                "modelCheckerSettings": {
-                    "engine": "none"
+                    outputSelection: { '*': { '*': ['evm.bytecode.object', 'metadata'] } },
+                    "modelChecker": { "engine": "none" }
                 }
             }
             var result = JSON.parse(compiler.compile(JSON.stringify(input)))

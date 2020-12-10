@@ -21,6 +21,6 @@ contract B is A {
 	}
 }
 // ----
-// Warning 6328: (120-134): CHC: Assertion violation happens here.
-// Warning 6328: (169-183): CHC: Assertion violation happens here.
-// Warning 6328: (288-302): CHC: Assertion violation happens here.
+// Warning 6328: (120-134): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\nreceive()
+// Warning 6328: (169-183): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\ng()
+// Warning 6328: (288-302): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\n\n\nTransaction trace:\nconstructor()\nState: y = 0, x = 0\nfallback()

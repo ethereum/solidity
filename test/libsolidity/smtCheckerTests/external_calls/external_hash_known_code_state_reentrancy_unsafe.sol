@@ -33,6 +33,8 @@ contract C {
 		return y;
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (381-395): CHC: Assertion violation happens here.
 // Warning 6328: (399-425): CHC: Assertion violation happens here.

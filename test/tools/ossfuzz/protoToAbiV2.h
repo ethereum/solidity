@@ -152,6 +152,7 @@ public:
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string contractToString(Contract const& _input);
+	std::string isabelleTypeString() const;
 private:
 	enum class Delimiter
 	{
@@ -287,6 +288,13 @@ private:
 		Delimiter _delimiter
 	);
 
+	/// Append type name to type string meant to be
+	/// passed to Isabelle coder API.
+	void appendToIsabelleTypeString(
+		std::string const& _typeString,
+		Delimiter _delimiter
+	);
+
 	/// Returns a Solidity variable declaration statement
 	/// @param _type: string containing Solidity type of the
 	/// variable to be declared.
@@ -369,6 +377,8 @@ private:
 	/// Contains typed parameter list to be passed to callee functions
 	std::ostringstream m_typedParamsExternal;
 	std::ostringstream m_typedParamsPublic;
+	/// Contains type string to be passed to Isabelle API
+	std::ostringstream m_isabelleTypeString;
 	/// Contains type stream to be used in returndata coder function
 	/// signature
 	std::ostringstream m_types;
@@ -630,7 +640,31 @@ public:
 		else
 			return false;
 	}
+	std::string isabelleTypeString()
+	{
+		return m_structTupleString.stream.str();
+	}
 private:
+	struct StructTupleString
+	{
+		StructTupleString() = default;
+		unsigned index = 0;
+		std::ostringstream stream;
+		void start()
+		{
+			stream << "(";
+		}
+		void end()
+		{
+			stream << ")";
+		}
+		std::string operator()()
+		{
+			return stream.str();
+		}
+		void addTypeStringToTuple(std::string& _typeString);
+		void addArrayBracketToType(std::string& _arrayBracket);
+	};
 	void structDefinition(StructType const&);
 
 	std::string indentation()
@@ -641,9 +675,11 @@ private:
 	{
 		return indentation() + _line + "\n";
 	}
-
 	std::string m_baseType;
 	std::ostringstream m_structDef;
+	/// Utility type for conveniently composing a tuple
+	/// string for struct types.
+	StructTupleString m_structTupleString;
 	unsigned m_indentation;
 	unsigned m_structCounter;
 	unsigned m_structStartCounter;

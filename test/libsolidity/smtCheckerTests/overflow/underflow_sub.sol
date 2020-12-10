@@ -12,5 +12,5 @@ contract C
 	}
 }
 // ----
-// Warning 3944: (117-122): CHC: Underflow (resulting value less than 0) happens here.
-// Warning 3944: (150-157): CHC: Underflow (resulting value less than 0) happens here.
+// Warning 3944: (117-122): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\n\nx = 0\n = 0\n\nTransaction trace:\nconstructor()\nf(0)
+// Warning 3944: (150-157): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\n\nx = 0\n = 0\n\nTransaction trace:\nconstructor()\nf(0)

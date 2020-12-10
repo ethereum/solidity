@@ -13,6 +13,8 @@ contract C {
 		assert(s1.a.length == 0);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (184-204): CHC: Assertion violation happens here.
 // Warning 6328: (208-242): CHC: Assertion violation happens here.

@@ -25,5 +25,7 @@ contract C
 		f(severalMaps[x]);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (777-797): CHC: Assertion violation happens here.

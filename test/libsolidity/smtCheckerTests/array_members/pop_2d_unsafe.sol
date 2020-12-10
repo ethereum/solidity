@@ -9,4 +9,4 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (111-121): CHC: Empty array "pop" happens here.
+// Warning 2529: (111-121): CHC: Empty array "pop" happens here.\nCounterexample:\na = [[0]]\n\n\n\nTransaction trace:\nconstructor()\nState: a = []\nf()
