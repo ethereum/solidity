@@ -164,11 +164,11 @@ void CHC::endVisit(ContractDefinition const& _contract)
 		if (base != &_contract)
 		{
 			m_callGraph[&_contract].insert(base);
-			vector<ASTPointer<Expression>> const& args = baseArgs.count(base) ? baseArgs.at(base) : decltype(args){};
 
 			auto baseConstructor = base->constructor();
-			if (baseConstructor && !args.empty())
+			if (baseConstructor && baseArgs.count(base))
 			{
+				vector<ASTPointer<Expression>> const& args = baseArgs.at(base);
 				auto const& params = baseConstructor->parameters();
 				solAssert(params.size() == args.size(), "");
 				for (unsigned i = 0; i < params.size(); ++i)
