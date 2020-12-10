@@ -26,6 +26,7 @@ Breaking Changes:
  * Type System: Support ``address(...).codehash`` to retrieve the codehash of an account.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * View Pure Checker: Mark ``chainid`` as view.
+ * Yul: Disallow the use of reserved identifiers, such as EVM instructions, even if they are not available in the given dialect / EVM version.
 
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
