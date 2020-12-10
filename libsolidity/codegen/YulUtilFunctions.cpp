@@ -2203,6 +2203,11 @@ string YulUtilFunctions::readFromStorageValueType(Type const& _type, optional<si
 
 string YulUtilFunctions::readFromStorageReferenceType(Type const& _type)
 {
+	if (auto const* arrayType = dynamic_cast<ArrayType const*>(&_type))
+		return copyArrayFromStorageToMemoryFunction(
+			dynamic_cast<ArrayType const&>(*arrayType->copyForLocation(DataLocation::Storage, false)),
+			*arrayType
+		);
 	solUnimplementedAssert(_type.category() == Type::Category::Struct, "");
 
 	string functionName = "read_from_storage_reference_type_" + _type.identifier();
