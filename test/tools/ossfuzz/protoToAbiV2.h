@@ -792,9 +792,6 @@ private:
 		return m_counter++;
 	}
 
-	static std::string intValueAsString(unsigned _width, unsigned _counter);
-	static std::string uintValueAsString(unsigned _width, unsigned _counter);
-	static std::string integerValueAsString(bool _sign, unsigned _width, unsigned _counter);
 	static std::string addressValueAsString(unsigned _counter);
 	static std::string fixedByteValueAsString(unsigned _width, unsigned _counter);
 

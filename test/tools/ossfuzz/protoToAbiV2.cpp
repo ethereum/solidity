@@ -1,9 +1,97 @@
 #include <test/tools/ossfuzz/protoToAbiV2.h>
 
+#include <boost/preprocessor.hpp>
+
+/// Convenience macros
+/// Returns a valid Solidity integer width w such that 8 <= w <= 256.
+#define INTWIDTH(z, n, _ununsed) BOOST_PP_MUL(BOOST_PP_ADD(n, 1), 8)
+/// Using declaration that aliases long boost multiprecision types with
+/// s(u)<width> where <width> is a valid Solidity integer width and "s"
+/// stands for "signed" and "u" for "unsigned".
+#define USINGDECL(z, n, sign) \
+	using BOOST_PP_CAT(BOOST_PP_IF(sign, s, u), INTWIDTH(z, n,)) =             \
+	boost::multiprecision::number<                                             \
+		boost::multiprecision::cpp_int_backend<                                \
+			INTWIDTH(z, n,),                                                   \
+			INTWIDTH(z, n,),                                                   \
+			BOOST_PP_IF(                                                       \
+				sign,                                                          \
+				boost::multiprecision::signed_magnitude,                       \
+				boost::multiprecision::unsigned_magnitude                      \
+			),                                                                 \
+			boost::multiprecision::unchecked,                                  \
+			void                                                               \
+		>                                                                      \
+	>;
+/// Instantiate the using declarations for signed and unsigned integer types.
+BOOST_PP_REPEAT(32, USINGDECL, 1)
+BOOST_PP_REPEAT(32, USINGDECL, 0)
+/// Case implementation that returns an integer value of the specified type.
+/// For signed integers, we divide by two because the range for boost multiprecision
+/// types is double that of Solidity integer types. Example, 8-bit signed boost
+/// number range is [-255, 255] but Solidity `int8` range is [-128, 127]
+#define CASEIMPL(z, n, sign)                                                   \
+	case INTWIDTH(z, n,):                                                      \
+		stream << BOOST_PP_IF(                                                 \
+			sign,                                                              \
+			integerValue<                                                      \
+				BOOST_PP_CAT(                                                  \
+					BOOST_PP_IF(sign, s, u),                                   \
+					INTWIDTH(z, n,)                                            \
+                )>(_counter) / 2,                                              \
+			integerValue<                                                      \
+				BOOST_PP_CAT(                                                  \
+					BOOST_PP_IF(sign, s, u),                                   \
+					INTWIDTH(z, n,)                                            \
+                )>(_counter)                                                   \
+        );                                                                     \
+		break;
+/// Switch implementation that instantiates case statements for (un)signed
+/// Solidity integer types.
+#define SWITCHIMPL(sign)                                                       \
+	ostringstream stream;                                                      \
+	switch (_intWidth)                                                         \
+	{                                                                          \
+	BOOST_PP_REPEAT(32, CASEIMPL, sign)	                                       \
+	}	                                                                       \
+	return stream.str();
+
 using namespace std;
-using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::test::abiv2fuzzer;
+
+namespace
+{
+template <typename V>
+static V integerValue(unsigned _counter)
+{
+	V value = V(
+		u256(solidity::util::keccak256(solidity::util::h256(_counter))) % u256(boost::math::tools::max_value<V>())
+	);
+	if (value % 2 == 0)
+		return value * (-1);
+	else
+		return value;
+}
+
+static string signedIntegerValue(unsigned _counter, unsigned _intWidth)
+{
+	SWITCHIMPL(1)
+}
+
+static string unsignedIntegerValue(unsigned _counter, unsigned _intWidth)
+{
+	SWITCHIMPL(0)
+}
+
+static string integerValue(unsigned _counter, unsigned _intWidth, bool _signed)
+{
+	if (_signed)
+		return signedIntegerValue(_counter, _intWidth);
+	else
+		return unsignedIntegerValue(_counter, _intWidth);
+}
+}
 
 string ProtoConverter::getVarDecl(
 	string const& _type,
@@ -1013,11 +1101,7 @@ string ValueGetterVisitor::visit(BoolType const&)
 
 string ValueGetterVisitor::visit(IntegerType const& _type)
 {
-	return integerValueAsString(
-		_type.is_signed(),
-		getIntWidth(_type),
-		counter()
-	);
+	return integerValue(counter(), getIntWidth(_type), _type.is_signed());
 }
 
 string ValueGetterVisitor::visit(FixedByteType const& _type)
@@ -1039,48 +1123,6 @@ string ValueGetterVisitor::visit(DynamicByteArrayType const& _type)
 		counter(),
 		getDataTypeOfDynBytesType(_type) == DataType::BYTES
 	);
-}
-
-std::string ValueGetterVisitor::integerValueAsString(bool _sign, unsigned _width, unsigned _counter)
-{
-	if (_sign)
-		return intValueAsString(_width, _counter);
-	else
-		return uintValueAsString(_width, _counter);
-}
-
-/* Input(s)
- *   - Unsigned integer to be hashed
- *   - Width of desired uint value
- * Processing
- *   - Take hash of first parameter and mask it with the max unsigned value for given bit width
- * Output
- *   - string representation of uint value
- */
-std::string ValueGetterVisitor::uintValueAsString(unsigned _width, unsigned _counter)
-{
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Unsigned integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, _width/4);
-}
-
-/* Input(s)
- *   - counter to be hashed to derive a value for Integer type
- *   - Width of desired int value
- * Processing
- *   - Take hash of first parameter and mask it with the max signed value for given bit width
- * Output
- *   - string representation of int value
- */
-std::string ValueGetterVisitor::intValueAsString(unsigned _width, unsigned _counter)
-{
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Signed integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, ((_width/4) - 1));
 }
 
 std::string ValueGetterVisitor::croppedString(
@@ -1153,9 +1195,10 @@ std::string ValueGetterVisitor::fixedByteValueAsString(unsigned _width, unsigned
 
 std::string ValueGetterVisitor::addressValueAsString(unsigned _counter)
 {
-	return Whiskers(R"(address(<value>))")
-		("value", uintValueAsString(160, _counter))
-		.render();
+	// TODO: Isabelle encoder expects address literal to be exactly
+	// 20 bytes and a hex string.
+	// Example: 0x0102030405060708090a0102030405060708090a
+	return "address(" + maskUnsignedIntToHex(_counter, 40) + ")";
 }
 
 std::string ValueGetterVisitor::variableLengthValueAsString(
