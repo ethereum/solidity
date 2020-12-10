@@ -2,12 +2,12 @@
 This directory contains scripts for compiling some of the popular open-source projects using the
 current version of the compiler and running their test suites.
 
-Since projects often don't use the latest compiler, we keep a fork of each of these projects
+Since projects often do not use the latest compiler, we keep a fork of each of these projects
 at https://github.com/solidity-external-tests/. If changes are needed to make a project work with the
-latest version of the compiler, they're maintained as a branch on top if the upstream master branch.
+latest version of the compiler, they are maintained as a branch on top of the upstream master branch.
 This is especially important for testing our `breaking` branch because we can not realistically expect
 external projects to be instantly compatible with a compiler version that has not been released yet.
-It also isolates us from upstream changes to some degree - their changes won't affect our test suite
+It also isolates us from upstream changes to some degree - their changes will not affect our test suite
 until we explicitly pull them.
 
 ### Recommended workflow
@@ -22,7 +22,7 @@ until we explicitly pull them.
     `develop` and `breaking`. E.g. if the latest Solidity version is 0.7.5 and the main branch of the
     external project is called `master`, create `master_070` and `master_080`. This is where we will
     be adding our own commits. The one corresponding to the newer Solidity version should always be
-    on top on the older one. E.g. if a change is needed to keep the project
+    rebased on top of the older one. E.g. if a change is needed to keep the project
     compilable using Solidity 0.7.x, add it in `master_070` and rebase `master_080` on top of it.
     If it is only needed for the compiler from its `breaking` branch, add it only in `master_080`.
     - The fewer commits in these branches, the better. Ideally, any changes needed to make the compiler
@@ -47,7 +47,7 @@ until we explicitly pull them.
 3. Create new branches corresponding to the two versioned ones but suffixed with `_new`. E.g.
     `master_070_new` and `master_080_new`. Then rebase them so that they are on top of the updated
     main branch. This may require tweaking some of the commits to apply our fixes in new places.
-4. Create PRs on `deveop` and `breaking` in Solidity repo which modify the script to use the new
+4. Create PRs on `develop` and `breaking` in Solidity repo which modify the script to use the new
     branches instead of `master_070`/`master_080`. Tweak the new branches until external tests
     in CI pass in the PRs.
 5. Discard the PRs and move the original branches to the place where the `_new` ones are and remove
@@ -56,7 +56,7 @@ until we explicitly pull them.
 #### Changes needed after a breaking release of the compiler
 When a breaking version of the compiler gets released and becomes the most recent release, the scripts
 and the branches in the forks need to be updated:
-- In each fork create a branch corresponding to the new brekaing version. E.g. if the current
+- In each fork create a branch corresponding to the new breaking version. E.g. if the current
     branches are `master_070` and `master_080` the new one should be called `master_090`.
 - Leave the oldest (i.e. `master_070`) branch as is. We will not be updating it any more but there is no
     need to remove it.
