@@ -924,38 +924,49 @@ void AssignCheckVisitor::ValueStream::appendValue(string& _value)
 pair<string, string> AssignCheckVisitor::visit(BoolType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	m_valueStream.appendValue(value);
+	if (!m_forcedVisit)
+		m_valueStream.appendValue(value);
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(IntegerType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	m_valueStream.appendValue(value);
+	if (!m_forcedVisit)
+		m_valueStream.appendValue(value);
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(FixedByteType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
-	m_valueStream.appendValue(isabelleValue);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(AddressType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	string isabelleValue = ValueGetterVisitor{}.isabelleAddressValueAsString(value);
-	m_valueStream.appendValue(isabelleValue);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleAddressValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(DynamicByteArrayType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
-	m_valueStream.appendValue(isabelleValue);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	DataType dataType = _type.type() == DynamicByteArrayType::BYTES ? DataType::BYTES :	DataType::STRING;
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, dataType);
 }
@@ -1020,7 +1031,8 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 	pair<string, string> assignCheckBuffer;
 	string wasVarName = m_varName;
 	string wasParamName = m_paramName;
-	m_valueStream.startArray();
+	if (!m_forcedVisit)
+		m_valueStream.startArray();
 	for (unsigned i = 0; i < length; i++)
 	{
 		m_varName = wasVarName + "[" + to_string(i) + "]";
@@ -1031,13 +1043,18 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 		if (i < length - 1)
 			m_structCounter = wasStructCounter;
 	}
-	m_valueStream.endArray();
-
 	// Since struct visitor won't be called for zero-length
 	// arrays, struct counter will not get incremented. Therefore,
 	// we need to manually force a recursive struct visit.
 	if (length == 0 && TypeVisitor().arrayOfStruct(_type))
+	{
+		bool previousState = m_forcedVisit;
+		m_forcedVisit = true;
 		visit(_type.t());
+		m_forcedVisit = previousState;
+	}
+	if (!m_forcedVisit)
+		m_valueStream.endArray();
 
 	m_varName = wasVarName;
 	m_paramName = wasParamName;
@@ -1063,7 +1080,8 @@ pair<string, string> AssignCheckVisitor::visit(StructType const& _type)
 	string wasVarName = m_varName;
 	string wasParamName = m_paramName;
 
-	m_valueStream.startStruct();
+	if (!m_forcedVisit)
+		m_valueStream.startStruct();
 	for (auto const& t: _type.t())
 	{
 		m_varName = wasVarName + ".m" + to_string(i);
@@ -1077,7 +1095,8 @@ pair<string, string> AssignCheckVisitor::visit(StructType const& _type)
 		assignCheckBuffer.second += assign.second;
 		i++;
 	}
-	m_valueStream.endStruct();
+	if (!m_forcedVisit)
+		m_valueStream.endStruct();
 	m_varName = wasVarName;
 	m_paramName = wasParamName;
 	return assignCheckBuffer;
