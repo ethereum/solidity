@@ -32,10 +32,8 @@ message FixedByteType {
     required uint32 width = 1;
 }
 
-// address, address payable
-message AddressType {
-    required bool payable = 1;
-}
+// address
+message AddressType {}
 
 message ValueType {
     oneof value_type_oneof {

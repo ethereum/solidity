@@ -153,6 +153,7 @@ public:
 	ProtoConverter(ProtoConverter&&) = delete;
 	std::string contractToString(Contract const& _input);
 	std::string isabelleTypeString() const;
+	std::string isabelleValueString() const;
 private:
 	enum class Delimiter
 	{
@@ -295,6 +296,13 @@ private:
 		Delimiter _delimiter
 	);
 
+	/// Append @a _valueString to value string meant to be
+	/// passed to Isabelle coder API.
+	void appendToIsabelleValueString(
+		std::string const& _valueString,
+		Delimiter _delimiter
+	);
+
 	/// Returns a Solidity variable declaration statement
 	/// @param _type: string containing Solidity type of the
 	/// variable to be declared.
@@ -367,7 +375,7 @@ private:
 	}
 
 	/// Convert delimter to a comma or null string.
-	static std::string delimiterToString(Delimiter _delimiter);
+	static std::string delimiterToString(Delimiter _delimiter, bool _space = true);
 
 	/// Contains the test program
 	std::ostringstream m_output;
@@ -379,6 +387,9 @@ private:
 	std::ostringstream m_typedParamsPublic;
 	/// Contains type string to be passed to Isabelle API
 	std::ostringstream m_isabelleTypeString;
+	/// Contains values to be encoded in the format accepted
+	/// by the Isabelle API.
+	std::ostringstream m_isabelleValueString;
 	/// Contains type stream to be used in returndata coder function
 	/// signature
 	std::ostringstream m_types;
@@ -476,19 +487,6 @@ public:
 		return "bytes" + std::to_string(getFixedByteWidth(_x));
 	}
 
-	static std::string getAddressTypeAsString(AddressType const& _x)
-	{
-		return (_x.payable() ? "address payable" : "address");
-	}
-
-	static DataType getDataTypeOfDynBytesType(DynamicByteArrayType const& _x)
-	{
-		if (_x.type() == DynamicByteArrayType::STRING)
-			return DataType::STRING;
-		else
-			return DataType::BYTES;
-	}
-
 	// Convert _counter to string and return its keccak256 hash
 	static u256 hashUnsignedInt(unsigned _counter)
 	{
@@ -531,7 +529,13 @@ public:
 		// this linear equation to make the number derived from
 		// _counter approach a uniform distribution over
 		// [0, s_maxDynArrayLength]
-		return (_counter + 879) * 32 % (s_maxDynArrayLength + 1);
+		auto v = (_counter + 879) * 32 % (s_maxDynArrayLength + 1);
+		/// Always return an even number because Isabelle string
+		/// values are formatted as hex literals
+		if (v % 2 == 1)
+			return v + 1;
+		else
+			return v;
 	}
 
 	static std::string bytesArrayTypeAsString(DynamicByteArrayType const& _x)
@@ -658,10 +662,6 @@ private:
 		{
 			stream << ")";
 		}
-		std::string operator()()
-		{
-			return stream.str();
-		}
 		void addTypeStringToTuple(std::string& _typeString);
 		void addArrayBracketToType(std::string& _arrayBracket);
 	};
@@ -735,7 +735,35 @@ public:
 	{
 		return m_structCounter - m_structStart;
 	}
+
+	std::string isabelleValueString()
+	{
+		return m_valueStream.stream.str();
+	}
 private:
+	struct ValueStream
+	{
+		ValueStream() = default;
+		unsigned index = 0;
+		std::ostringstream stream;
+		void startStruct()
+		{
+			stream << "(";
+		}
+		void endStruct()
+		{
+			stream << ")";
+		}
+		void startArray()
+		{
+			stream << "[";
+		}
+		void endArray()
+		{
+			stream << "]";
+		}
+		void appendValue(std::string& _value);
+	};
 	std::string indentation()
 	{
 		return std::string(m_indentation * 1, '\t');
@@ -764,6 +792,7 @@ private:
 	bool m_stateVar;
 	unsigned m_structCounter;
 	unsigned m_structStart;
+	ValueStream m_valueStream;
 };
 
 /// Returns a valid value (as a string) for a given type.
@@ -786,6 +815,8 @@ public:
 		solAssert(false, "ABIv2 proto fuzzer: Cannot call valuegettervisitor on complex type");
 	}
 	using AbiV2ProtoVisitor<std::string>::visit;
+	static std::string isabelleAddressValueAsString(std::string& _solAddressString);
+	static std::string isabelleBytesValueAsString(std::string& _solFixedBytesString);
 private:
 	unsigned counter()
 	{

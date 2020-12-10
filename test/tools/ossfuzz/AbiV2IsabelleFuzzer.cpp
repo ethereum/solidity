@@ -28,10 +28,28 @@ using namespace std;
 
 static constexpr size_t abiCoderHeapSize = 1024 * 512;
 
-DEFINE_PROTO_FUZZER(Contract const&)
+DEFINE_PROTO_FUZZER(Contract const& _contract)
 {
+	ProtoConverter converter;
+	string contractSource = converter.contractToString(_contract);
+
+	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
+	{
+		// With libFuzzer binary run this to generate the solidity source file x.sol from a proto input:
+		// PROTO_FUZZER_DUMP_PATH=x.sol ./a.out proto-input
+		ofstream of(dump_path);
+		of << contractSource;
+	}
+
+	string typeString = converter.isabelleTypeString();
+	string valueString = converter.isabelleValueString();
+	std::cout << typeString << std::endl;
+	std::cout << valueString << std::endl;
 	abicoder::ABICoder coder(abiCoderHeapSize);
-	auto [encodeStatus, encodedData] = coder.encode("bool", "true");
-	solAssert(encodeStatus, "Isabelle abicoder fuzzer: Encoding failed");
+	if (!typeString.empty())
+	{
+		auto [encodeStatus, encodedData] = coder.encode(typeString, valueString);
+		solAssert(encodeStatus, "Isabelle abicoder fuzzer: Encoding failed");
+	}
 	return;
 }
