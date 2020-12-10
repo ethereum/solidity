@@ -30,6 +30,8 @@ class Z3Interface: public SolverInterface, public boost::noncopyable
 public:
 	Z3Interface(std::optional<unsigned> _queryTimeout = {});
 
+	static bool available();
+
 	void reset() override;
 
 	void push() override;

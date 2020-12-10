@@ -17,6 +17,9 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/formal/ModelChecker.h>
+#ifdef HAVE_Z3
+#include <libsmtutil/Z3Interface.h>
+#endif
 
 using namespace std;
 using namespace solidity;
@@ -63,7 +66,7 @@ solidity::smtutil::SMTSolverChoice ModelChecker::availableSolvers()
 {
 	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::None();
 #ifdef HAVE_Z3
-	available.z3 = true;
+	available.z3 = solidity::smtutil::Z3Interface::available();
 #endif
 #ifdef HAVE_CVC4
 	available.cvc4 = true;
