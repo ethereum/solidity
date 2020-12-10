@@ -814,28 +814,6 @@ BOOST_AUTO_TEST_CASE(constructor)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(blockchain)
-{
-	char const* sourceCode = R"(
-		contract test {
-			constructor() payable {}
-			function someInfo() public payable returns (uint256 value, address coinbase, uint256 blockNumber) {
-				value = msg.value;
-				coinbase = block.coinbase;
-				blockNumber = block.number;
-			}
-		}
-	)";
-	m_evmcHost->tx_context.block_coinbase = EVMHost::convertToEVMC(h160("0x1212121212121212121212121212121212121212"));
-	m_evmcHost->newBlock();
-	m_evmcHost->newBlock();
-	m_evmcHost->newBlock();
-	m_evmcHost->newBlock();
-	m_evmcHost->newBlock();
-	compileAndRun(sourceCode, 27);
-	ABI_CHECK(callContractFunctionWithValue("someInfo()", 28), encodeArgs(28, u256("0x1212121212121212121212121212121212121212"), 7));
-}
-
 BOOST_AUTO_TEST_CASE(send_ether)
 {
 	char const* sourceCode = R"(
@@ -895,25 +873,6 @@ BOOST_AUTO_TEST_CASE(transfer_ether)
 		BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
 		ABI_CHECK(callContractFunction("b(address,uint256)", nonPayableRecipient, 10), encodeArgs());
 		ABI_CHECK(callContractFunction("b(address,uint256)", oogRecipient, 10), encodeArgs());
-	)
-}
-
-BOOST_AUTO_TEST_CASE(uncalled_blockhash)
-{
-	char const* code = R"(
-		contract C {
-			function f() public view returns (bytes32)
-			{
-				return (blockhash)(block.number - 1);
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-		compileAndRun(code, 0, "C");
-		bytes result = callContractFunction("f()");
-		BOOST_REQUIRE_EQUAL(result.size(), 32);
-		BOOST_CHECK(result[0] != 0 || result[1] != 0 || result[2] != 0);
 	)
 }
 
@@ -1505,41 +1464,6 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 	compileAndRun(sourceCode, 20);
 	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 20 - 5);
 	BOOST_REQUIRE(callContractFunction("getBalance()") == encodeArgs(u256(20 - 5), u256(5)));
-}
-
-BOOST_AUTO_TEST_CASE(gaslimit)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (uint) {
-				return block.gaslimit;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		auto result = callContractFunction("f()");
-		ABI_CHECK(result, encodeArgs(gasLimit()));
-	)
-}
-
-BOOST_AUTO_TEST_CASE(gasprice)
-{
-	char const* sourceCode = R"(
-		contract C {
-			function f() public returns (uint) {
-				return tx.gasprice;
-			}
-		}
-	)";
-	ALSO_VIA_YUL(
-		DISABLE_EWASM_TESTRUN()
-
-		compileAndRun(sourceCode);
-		ABI_CHECK(callContractFunction("f()"), encodeArgs(gasPrice()));
-	)
 }
 
 BOOST_AUTO_TEST_CASE(blockhash)
