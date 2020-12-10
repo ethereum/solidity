@@ -23,6 +23,10 @@
 
 #include <libsmtutil/SMTPortfolio.h>
 
+#ifdef HAVE_Z3_DLOPEN
+#include <z3_version.h>
+#endif
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -83,7 +87,10 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 			m_outerErrorReporter.warning(
 				8084_error,
 				SourceLocation(),
-				"BMC analysis was not possible since no integrated SMT solver (Z3 or CVC4) was found."
+				"BMC analysis was not possible since no SMT solver (Z3 or CVC4) was found."
+#ifdef HAVE_Z3_DLOPEN
+				" Install libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " to enable Z3."
+#endif
 			);
 		}
 	}

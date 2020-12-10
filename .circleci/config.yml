@@ -466,7 +466,7 @@ jobs:
     <<: *build_ubuntu2004
     environment:
       MAKEFLAGS: -j 10
-      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DSOLC_LINK_STATIC=1 -DUSE_CVC4=OFF -DUSE_Z3=OFF
+      CMAKE_OPTIONS: -DCMAKE_BUILD_TYPE=Release -DUSE_Z3_DLOPEN=ON -DUSE_CVC4=OFF -DSOLC_STATIC_STDLIBS=ON
     steps:
       - checkout
       - run: *run_build
