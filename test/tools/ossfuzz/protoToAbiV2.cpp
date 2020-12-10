@@ -1125,48 +1125,6 @@ string ValueGetterVisitor::visit(DynamicByteArrayType const& _type)
 	);
 }
 
-std::string ValueGetterVisitor::integerValueAsString(bool _sign, unsigned _width, unsigned _counter)
-{
-	if (_sign)
-		return intValueAsString(_width, _counter);
-	else
-		return uintValueAsString(_width, _counter);
-}
-
-/* Input(s)
- *   - Unsigned integer to be hashed
- *   - Width of desired uint value
- * Processing
- *   - Take hash of first parameter and mask it with the max unsigned value for given bit width
- * Output
- *   - string representation of uint value
- */
-std::string ValueGetterVisitor::uintValueAsString(unsigned _width, unsigned _counter)
-{
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Unsigned integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, _width/4);
-}
-
-/* Input(s)
- *   - counter to be hashed to derive a value for Integer type
- *   - Width of desired int value
- * Processing
- *   - Take hash of first parameter and mask it with the max signed value for given bit width
- * Output
- *   - string representation of int value
- */
-std::string ValueGetterVisitor::intValueAsString(unsigned _width, unsigned _counter)
-{
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Signed integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, ((_width/4) - 1));
-}
-
 std::string ValueGetterVisitor::croppedString(
 	unsigned _numBytes,
 	unsigned _counter,
@@ -1240,9 +1198,7 @@ std::string ValueGetterVisitor::addressValueAsString(unsigned _counter)
 	// TODO: Isabelle encoder expects address literal to be exactly
 	// 20 bytes and a hex string.
 	// Example: 0x0102030405060708090a0102030405060708090a
-	return Whiskers(R"(address(<value>))")
-		("value", uintValueAsString(160, _counter))
-		.render();
+	return "address(" + maskUnsignedIntToHex(_counter, 40) + ")";
 }
 
 std::string ValueGetterVisitor::variableLengthValueAsString(
