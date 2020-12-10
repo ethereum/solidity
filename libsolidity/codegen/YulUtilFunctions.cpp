@@ -1425,15 +1425,23 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 	});
 }
 
-string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
+string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type, Type const* _fromType)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
+	if (!_fromType)
+		_fromType = _type.baseType();
+	else if (_fromType->isValueType())
+		solUnimplementedAssert(*_fromType == *_type.baseType(), "");
 
-	string functionName = "array_push_" + _type.identifier();
+	string functionName =
+		string{"array_push_from_"} +
+		_fromType->identifier() +
+		"_to_" +
+		_type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
-			function <functionName>(array, value) {
+			function <functionName>(array <values>) {
 				<?isByteArray>
 					let data := sload(array)
 					let oldLen := <extractByteArrayLength>(data)
@@ -1441,7 +1449,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 
 					switch gt(oldLen, 31)
 					case 0 {
-						value := byte(0, value)
+						let value := byte(0 <values>)
 						switch oldLen
 						case 31 {
 							// Here we have special case when array switches from short array to long array
@@ -1464,23 +1472,24 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 					default {
 						sstore(array, add(data, 2))
 						let slot, offset := <indexAccess>(array, oldLen)
-						<storeValue>(slot, offset, value)
+						<storeValue>(slot, offset <values>)
 					}
 				<!isByteArray>
 					let oldLen := sload(array)
 					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 					sstore(array, add(oldLen, 1))
 					let slot, offset := <indexAccess>(array, oldLen)
-					<storeValue>(slot, offset, value)
+					<storeValue>(slot, offset <values>)
 				</isByteArray>
 			})")
 			("functionName", functionName)
+			("values", _fromType->sizeOnStack() == 0 ? "" : ", " + suffixedVariableNameList("value", 0, _fromType->sizeOnStack()))
 			("panic", panicFunction(PanicCode::ResourceError))
 			("extractByteArrayLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
 			("dataAreaFunction", arrayDataAreaFunction(_type))
 			("isByteArray", _type.isByteArray())
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
+			("storeValue", updateStorageValueFunction(*_fromType, *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
 			("shl", shiftLeftFunctionDynamic())
 			("shr", shiftRightFunction(248))
@@ -2572,49 +2581,32 @@ string YulUtilFunctions::updateStorageValueFunction(
 			fromReferenceType->location(),
 			fromReferenceType->isPointer()
 		).get() == *fromReferenceType, "");
+
 		solAssert(toReferenceType->category() == fromReferenceType->category(), "");
+		solAssert(_offset.value_or(0) == 0, "");
 
-		if (_toType.category() == Type::Category::Array)
-		{
-			solAssert(_offset.value_or(0) == 0, "");
-
-			Whiskers templ(R"(
-				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
-					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-					<copyArrayToStorage>(slot, <value>)
-				}
-			)");
-			templ("functionName", functionName);
-			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction(PanicCode::Generic));
-			templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
-			templ("copyArrayToStorage", copyArrayToStorageFunction(
+		Whiskers templ(R"(
+			function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
+				<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+				<copyToStorage>(slot, <value>)
+			}
+		)");
+		templ("functionName", functionName);
+		templ("dynamicOffset", !_offset.has_value());
+		templ("panic", panicFunction(PanicCode::Generic));
+		templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
+		if (_fromType.category() == Type::Category::Array)
+			templ("copyToStorage", copyArrayToStorageFunction(
 				dynamic_cast<ArrayType const&>(_fromType),
 				dynamic_cast<ArrayType const&>(_toType)
 			));
-
-			return templ.render();
-		}
 		else
-		{
-			solAssert(_toType.category() == Type::Category::Struct, "");
+			templ("copyToStorage", copyStructToStorageFunction(
+				dynamic_cast<StructType const&>(_fromType),
+				dynamic_cast<StructType const&>(_toType)
+			));
 
-			auto const& fromStructType = dynamic_cast<StructType const&>(_fromType);
-			auto const& toStructType = dynamic_cast<StructType const&>(_toType);
-			solAssert(_offset.value_or(0) == 0, "");
-
-			Whiskers templ(R"(
-				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset>value) {
-					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-					<copyStructToStorage>(slot, value)
-				}
-			)");
-			templ("functionName", functionName);
-			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction(util::PanicCode::Generic));
-			templ("copyStructToStorage", copyStructToStorageFunction(fromStructType, toStructType));
-			return templ.render();
-		}
+		return templ.render();
 	});
 }
 
@@ -3276,16 +3268,16 @@ string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, St
 	return m_functionCollector.createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 			function <functionName>(slot, value) {
-				<?fromStorage> if eq(slot, value) { leave } </fromStorage>
+				<?fromStorage> if iszero(eq(slot, value)) { </fromStorage>
 				<#member>
 				{
 					<updateMemberCall>
 				}
 				</member>
+				<?fromStorage> } </fromStorage>
 			}
 		)");
 		templ("functionName", functionName);
-		templ("panic", panicFunction());
 		templ("fromStorage", _from.dataStoredIn(DataLocation::Storage));
 
 		MemberList::MemberMap structMembers = _from.nativeMembers(nullptr);
