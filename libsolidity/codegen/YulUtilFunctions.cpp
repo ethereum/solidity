@@ -1633,8 +1633,9 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 
 				let oldLen := <byteArrayLength>(sload(slot))
 
+				let srcOffset := 0
 				<?fromMemory>
-					src := add(src, 0x20)
+					srcOffset := 0x20
 				</fromMemory>
 
 				// This is not needed in all branches.
@@ -1652,14 +1653,16 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 				switch gt(newLen, 31)
 				case 1 {
 					let loopEnd := and(newLen, not(0x1f))
+					<?fromStorage> src := <srcDataLocation>(src) </fromStorage>
 					let dstPtr := dstDataArea
 					let i := 0
-					for { } lt(i, loopEnd) { i := add(i, 32) } {
-						sstore(dstPtr, <read>(add(src, i)))
+					for { } lt(i, loopEnd) { i := add(i, 0x20) } {
+						sstore(dstPtr, <read>(add(src, srcOffset)))
 						dstPtr := add(dstPtr, 1)
+						srcOffset := add(srcOffset, <srcIncrement>)
 					}
 					if lt(loopEnd, newLen) {
-						let lastValue := <read>(add(src, i))
+						let lastValue := <read>(add(src, srcOffset))
 						sstore(dstPtr, <maskBytes>(lastValue, and(newLen, 0x1f)))
 					}
 					sstore(slot, add(mul(newLen, 2), 1))
@@ -1667,7 +1670,7 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 				default {
 					let value := 0
 					if newLen {
-						value := <read>(src)
+						value := <read>(add(src, srcOffset))
 					}
 					sstore(slot, <byteArrayCombineShort>(value, newLen))
 				}
@@ -1683,7 +1686,10 @@ string YulUtilFunctions::copyByteArrayToStorageFunction(ArrayType const& _fromTy
 		templ("panic", panicFunction());
 		templ("byteArrayLength", extractByteArrayLengthFunction());
 		templ("dstDataLocation", arrayDataAreaFunction(_toType));
+		if (fromStorage)
+			templ("srcDataLocation", arrayDataAreaFunction(_fromType));
 		templ("clearStorageRange", clearStorageRangeFunction(*_toType.baseType()));
+		templ("srcIncrement", to_string(fromStorage ? 1 : 0x20));
 		templ("read", fromStorage ? "sload" : fromCalldata ? "calldataload" : "mload");
 		templ("maskBytes", maskBytesFunctionDynamic());
 		templ("byteArrayCombineShort", shortByteArrayEncodeUsedAreaSetLengthFunction());
