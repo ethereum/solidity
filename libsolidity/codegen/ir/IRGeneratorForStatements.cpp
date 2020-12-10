@@ -1622,6 +1622,12 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				"balance(" <<
 				expressionAsType(_memberAccess.expression(), *TypeProvider::address()) <<
 				")\n";
+		else if (member == "code")
+			define(_memberAccess) <<
+				m_utils.externalCodeFunction() <<
+				"(" <<
+				expressionAsType(_memberAccess.expression(), *TypeProvider::address()) <<
+				")\n";
 		else if (member == "codehash")
 			define(_memberAccess) <<
 				"extcodehash(" <<

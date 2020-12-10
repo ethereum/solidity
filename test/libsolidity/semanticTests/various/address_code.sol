@@ -12,8 +12,6 @@ contract C {
     function g() public view returns (uint) { return address(0).code.length; }
     function h() public view returns (uint) { return address(1).code.length; }
 }
-// ====
-// compileViaYul: false
 // ----
 // constructor() ->
 // initCode() -> 0x20, 0
