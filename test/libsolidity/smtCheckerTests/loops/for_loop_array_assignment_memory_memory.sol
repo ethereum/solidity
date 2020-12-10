@@ -11,14 +11,15 @@ contract LoopFor2 {
 		}
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(b[0] == c[0]);
-		assert(a[0] == 900);
-		assert(b[0] == 900);
+		// Removed because current Spacer seg faults in cex generation.
+		//assert(a[0] == 900);
+		// Removed because current Spacer seg faults in cex generation.
+		//assert(b[0] == 900);
 	}
 }
 // ====
 // SMTIgnoreCex: yes
 // ----
+// Warning 2072: (156-171): Unused local variable.
 // Warning 4984: (252-257): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 4984: (232-238): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6328: (373-392): CHC: Assertion violation happens here.
-// Warning 6328: (396-415): CHC: Assertion violation happens here.
