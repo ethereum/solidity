@@ -356,27 +356,12 @@ void BMC::endVisit(UnaryOperation const& _op)
 	)
 		return;
 
-	switch (_op.getOperator())
-	{
-	case Token::Inc: // ++ (pre- or postfix)
-	case Token::Dec: // -- (pre- or postfix)
+	if (_op.getOperator() == Token::Sub && smt::isInteger(*_op.annotation().type))
 		addVerificationTarget(
 			VerificationTarget::Type::UnderOverflow,
 			expr(_op),
 			&_op
 		);
-		break;
-	case Token::Sub: // -
-		if (_op.annotation().type->category() == Type::Category::Integer)
-			addVerificationTarget(
-				VerificationTarget::Type::UnderOverflow,
-				expr(_op),
-				&_op
-			);
-		break;
-	default:
-		break;
-	}
 }
 
 void BMC::endVisit(FunctionCall const& _funCall)
