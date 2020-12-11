@@ -60,8 +60,12 @@ do
 	esac
 	shift
 done
-if [ "$USE_DEBUGGER" -ne "0" ]; then
-	DEBUG_PREFIX=${DEBUGGER}
-fi
 
-exec ${DEBUG_PREFIX} "${SOLIDITY_BUILD_DIR}/test/soltest" "${BOOST_OPTIONS[@]}" -- --testpath "${REPO_ROOT}/test" "${SOLTEST_OPTIONS[@]}"
+SOLTEST_COMMAND=("${SOLIDITY_BUILD_DIR}/test/soltest" "${BOOST_OPTIONS[@]}" -- --testpath "${REPO_ROOT}/test" "${SOLTEST_OPTIONS[@]}")
+
+if [ "$USE_DEBUGGER" -ne "0" ]; then
+	# shellcheck disable=SC2086
+	exec ${DEBUGGER} "${SOLTEST_COMMAND[@]}"
+else
+	exec "${SOLTEST_COMMAND[@]}"
+fi
