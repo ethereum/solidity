@@ -3484,6 +3484,7 @@ string YulUtilFunctions::forwardingRevertFunction()
 
 std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 {
+	solAssert(_type.category() == Type::Category::Integer, "");
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 
 	string const functionName = "decrement_" + _type.identifier();
@@ -3506,6 +3507,7 @@ std::string YulUtilFunctions::decrementCheckedFunction(Type const& _type)
 
 std::string YulUtilFunctions::decrementWrappingFunction(Type const& _type)
 {
+	solAssert(_type.category() == Type::Category::Integer, "");
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 
 	string const functionName = "decrement_wrapping_" + _type.identifier();
@@ -3524,6 +3526,7 @@ std::string YulUtilFunctions::decrementWrappingFunction(Type const& _type)
 
 std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 {
+	solAssert(_type.category() == Type::Category::Integer, "");
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 
 	string const functionName = "increment_" + _type.identifier();
@@ -3546,6 +3549,7 @@ std::string YulUtilFunctions::incrementCheckedFunction(Type const& _type)
 
 std::string YulUtilFunctions::incrementWrappingFunction(Type const& _type)
 {
+	solAssert(_type.category() == Type::Category::Integer, "");
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 
 	string const functionName = "increment_wrapping_" + _type.identifier();
@@ -3564,6 +3568,7 @@ std::string YulUtilFunctions::incrementWrappingFunction(Type const& _type)
 
 string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 {
+	solAssert(_type.category() == Type::Category::Integer, "");
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	solAssert(type.isSigned(), "Expected signed type!");
 
@@ -3586,6 +3591,7 @@ string YulUtilFunctions::negateNumberCheckedFunction(Type const& _type)
 
 string YulUtilFunctions::negateNumberWrappingFunction(Type const& _type)
 {
+	solAssert(_type.category() == Type::Category::Integer, "");
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	solAssert(type.isSigned(), "Expected signed type!");
 

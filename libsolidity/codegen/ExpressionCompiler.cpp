@@ -453,6 +453,10 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		// unary add, so basically no-op
 		break;
 	case Token::Sub: // -
+		solUnimplementedAssert(
+			type.category() != Type::Category::FixedPoint,
+			"Not yet implemented - FixedPointType."
+		);
 		if (m_context.arithmetic() == Arithmetic::Checked)
 			m_context.callYulFunction(m_context.utilFunctions().negateNumberCheckedFunction(type), 1, 1);
 		else
