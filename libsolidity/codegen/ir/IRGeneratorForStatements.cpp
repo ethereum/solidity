@@ -1737,7 +1737,9 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}
 		else if (member == "name")
 		{
-			solUnimplementedAssert(false, "");
+			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
+			define(IRVariable(_memberAccess)) << m_utils.copyToMemoryLiteralFunction(contract.name()) << "()\n";
 		}
 		else if (member == "interfaceId")
 		{

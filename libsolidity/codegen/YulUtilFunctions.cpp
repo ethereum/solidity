@@ -107,6 +107,38 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 	});
 }
 
+string YulUtilFunctions::copyToMemoryLiteralFunction(string const& _literal)
+{
+	solAssert(!_literal.empty(), "");
+	string functionName = "copy_literal_to_memory_" + h256(_literal, h256::AlignLeft).hex();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		size_t words = (_literal.length() + 31) / 32;
+		vector<map<string, string>> wordParams(words);
+		for (size_t i = 0; i < words; ++i)
+		{
+			wordParams[i]["offset"] = to_string(i * 32);
+			wordParams[i]["wordValue"] = formatAsStringOrNumber(_literal.substr(32 * i, 32));
+		}
+
+		return Whiskers(R"(
+			function <functionName>() -> memPtr {
+				memPtr := <allocationFunction>(add(<size>, 32))
+				mstore(memPtr, <size>)
+				let dataPos := add(memPtr, 32)
+				<#word>
+					mstore(add(dataPos, <offset>), <wordValue>)
+				</word>
+			}
+			)")
+			("functionName", functionName)
+			("allocationFunction", allocationFunction())
+			("size", to_string(_literal.size()))
+			("word", wordParams)
+			.render();
+	});
+}
+
 string YulUtilFunctions::requireOrAssertFunction(bool _assert, Type const* _messageType)
 {
 	string functionName =

@@ -22,7 +22,8 @@ contract Test is C {
         return type(I).name;
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // c() -> 0x20, 1, "C"
 // a() -> 0x20, 1, "A"
