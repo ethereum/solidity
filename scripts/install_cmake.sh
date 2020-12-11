@@ -4,7 +4,7 @@
 # (the cmake executable will be in ~/.local/bin).
 # This is mostly suitable for CIs, not end users.
 
-set -e
+set -eu
 
 VERSION_MAJOR=3
 VERSION_MINOR=15

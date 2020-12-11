@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -eu
 
 REPO_ROOT="$(dirname "$0")"/../..
 REPO_ROOT=$(realpath "${REPO_ROOT}")
