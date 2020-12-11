@@ -444,7 +444,7 @@ SOLTMPDIR=$(mktemp -d)
     set -e
 
     # This should fail
-    if [[ !("$output" =~ "No input files given") || ($result == 0) ]]
+    if [[ ! ("$output" =~ "No input files given") || ($result == 0) ]]
     then
         printError "Incorrect response to empty input arg list: $output"
         exit 1
