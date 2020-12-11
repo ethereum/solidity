@@ -117,7 +117,7 @@ function findMinimalVersion()
         fi
     done
 
-    if [ -z version ]
+    if [ -z "$version" ]
     then
         printError "No release $sign$pragmaVersion was listed in available releases!"
     fi
