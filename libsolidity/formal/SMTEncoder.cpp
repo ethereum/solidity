@@ -2547,10 +2547,10 @@ FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall cons
 	FunctionDefinition const* funDef = nullptr;
 	Expression const* calledExpr = &_funCall.expression();
 
-	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
+	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(calledExpr))
 	{
 		solAssert(fun->components().size() == 1, "");
-		calledExpr = fun->components().front().get();
+		calledExpr = innermostTuple(*calledExpr);
 	}
 
 	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
@@ -2689,6 +2689,7 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 	unsigned firstParam = 0;
 	if (funType->bound())
 	{
+		calledExpr = innermostTuple(*calledExpr);
 		auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 		solAssert(boundFunction, "");
 		args.push_back(expr(boundFunction->expression(), functionParams.front()->type()));
