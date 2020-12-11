@@ -190,6 +190,7 @@ echo "Extract bytecode comparison scripts from v0.6.1..."
 cd /root/project
 git checkout v0.6.1 --quiet
 cp scripts/bytecodecompare/storebytecode.sh /tmp
+# shellcheck disable=SC2016
 sed -i -e 's/rm -rf "\$TMPDIR"/cp "\$TMPDIR"\/report.txt \/tmp\/report.txt ; rm -rf "\$TMPDIR"/' /tmp/storebytecode.sh
 sed -i -e 's/REPO_ROOT=.*/REPO_ROOT=\/src/' /tmp/storebytecode.sh
 export SOLC_EMSCRIPTEN="On"

@@ -126,6 +126,7 @@ function test_solc_behaviour()
     local stdout_path; stdout_path=$(mktemp)
     local stderr_path; stderr_path=$(mktemp)
 
+    # shellcheck disable=SC2064
     trap "rm -f $stdout_path $stderr_path" EXIT
 
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
@@ -146,10 +147,13 @@ function test_solc_behaviour()
 
         # Remove bytecode (but not linker references).
         sed -i.bak -E -e 's/(\"object\":\")[0-9a-f]+([^"]*\")/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
+        # shellcheck disable=SC2016
         sed -i.bak -E -e 's/(\"object\":\"[^"]+\$__)[0-9a-f]+(\")/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
+        # shellcheck disable=SC2016
         sed -i.bak -E -e 's/([0-9a-f]{34}\$__)[0-9a-f]+(__\$[0-9a-f]{17})/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
 
         # Replace escaped newlines by actual newlines for readability
+        # shellcheck disable=SC1003
         sed -i.bak -E -e 's/\\n/\'$'\n/g' "$stdout_path"
         rm "$stdout_path.bak"
     else
@@ -166,7 +170,9 @@ function test_solc_behaviour()
         # 64697066735822 = hex encoding of 0x64 'i' 'p' 'f' 's' 0x58 0x22
         # 64736f6c63     = hex encoding of 0x64 's' 'o' 'l' 'c'
         sed -i.bak -E -e 's/[0-9a-f]*64697066735822[0-9a-f]+64736f6c63[0-9a-f]+/<BYTECODE REMOVED>/g' "$stdout_path"
+        # shellcheck disable=SC2016
         sed -i.bak -E -e 's/([0-9a-f]{17}\$__)[0-9a-f]+(__\$[0-9a-f]{17})/\1<BYTECODE REMOVED>\2/g' "$stdout_path"
+        # shellcheck disable=SC2016
         sed -i.bak -E -e 's/[0-9a-f]+((__\$[0-9a-f]{34}\$__)*<BYTECODE REMOVED>)/<BYTECODE REMOVED>\1/g' "$stdout_path"
 
         # Remove trailing empty lines. Needs a line break to make OSX sed happy.

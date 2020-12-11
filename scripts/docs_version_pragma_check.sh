@@ -40,7 +40,9 @@ function versionGreater()
 {
     v1=$1
     v2=$2
+    # shellcheck disable=SC2206
     ver1=( ${v1//./ } )
+    # shellcheck disable=SC2206
     ver2=( ${v2//./ } )
 
     if (( "${ver1[0]}" > "${ver2[0]}" ))

@@ -48,6 +48,7 @@ TMPDIR=$(mktemp -d)
         cp "$REPO_ROOT/emscripten_build/libsolc/soljson.js" solc-js/
         cp "$REPO_ROOT/scripts/bytecodecompare/prepare_report.js" .
         echo "Running the compiler..."
+        # shellcheck disable=SC2035
         ./prepare_report.js *.sol > report.txt
         echo "Finished running the compiler."
     else
