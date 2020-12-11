@@ -29,6 +29,7 @@
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/cxx20.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
@@ -62,27 +63,21 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		auto it = m_storage.values.begin();
-		while (it != m_storage.values.end())
-			if (!(
-				m_knowledgeBase.knownToBeDifferent(vars->first, it->first) ||
-				m_knowledgeBase.knownToBeEqual(vars->second, it->second)
-			))
-				it = m_storage.values.erase(it);
-			else
-				++it;
-		m_storage.set(vars->first, vars->second);
+		cxx20::erase_if(m_storage, [&](auto const& entry) {
+			return !(
+				m_knowledgeBase.knownToBeDifferent(vars->first, entry.first) ||
+				m_knowledgeBase.knownToBeEqual(vars->second, entry.second)
+			);
+		});
+		m_storage[vars->first] = vars->second;
 	}
 	else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		auto it = m_memory.values.begin();
-		while (it != m_memory.values.end())
-			if (!m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, it->first))
-				it = m_memory.values.erase(it);
-			else
-				++it;
-		m_memory.set(vars->first, vars->second);
+		cxx20::erase_if(m_memory, [&](auto const& entry) {
+			return !m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, entry.first);
+		});
+		m_memory[vars->first] = vars->second;
 	}
 	else
 	{
@@ -121,8 +116,8 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 void DataFlowAnalyzer::operator()(If& _if)
 {
 	clearKnowledgeIfInvalidated(*_if.condition);
-	InvertibleMap<YulString, YulString> storage = m_storage;
-	InvertibleMap<YulString, YulString> memory = m_memory;
+	unordered_map<YulString, YulString> storage = m_storage;
+	unordered_map<YulString, YulString> memory = m_memory;
 
 	ASTModifier::operator()(_if);
 
@@ -140,8 +135,8 @@ void DataFlowAnalyzer::operator()(Switch& _switch)
 	set<YulString> assignedVariables;
 	for (auto& _case: _switch.cases)
 	{
-		InvertibleMap<YulString, YulString> storage = m_storage;
-		InvertibleMap<YulString, YulString> memory = m_memory;
+		unordered_map<YulString, YulString> storage = m_storage;
+		unordered_map<YulString, YulString> memory = m_memory;
 		(*this)(_case.body);
 		joinKnowledge(storage, memory);
 
@@ -164,8 +159,8 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	map<YulString, AssignedValue> value;
 	size_t loopDepth{0};
 	unordered_map<YulString, set<YulString>> references;
-	InvertibleMap<YulString, YulString> storage;
-	InvertibleMap<YulString, YulString> memory;
+	unordered_map<YulString, YulString> storage;
+	unordered_map<YulString, YulString> memory;
 	swap(m_value, value);
 	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
@@ -265,13 +260,13 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 		if (!_isDeclaration)
 		{
 			// assignment to slot denoted by "name"
-			m_storage.eraseKey(name);
+			m_storage.erase(name);
 			// assignment to slot contents denoted by "name"
-			m_storage.eraseValue(name);
+			cxx20::erase_if(m_storage, [&](auto const& entry) { return entry.second == name; });
 			// assignment to slot denoted by "name"
-			m_memory.eraseKey(name);
+			m_memory.erase(name);
 			// assignment to slot contents denoted by "name"
-			m_memory.eraseValue(name);
+			cxx20::erase_if(m_memory, [&](auto const& entry) { return entry.second == name; });
 		}
 	}
 
@@ -284,9 +279,9 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 			// On the other hand, if we knew the value in the slot
 			// already, then the sload() / mload() would have been replaced by a variable anyway.
 			if (auto key = isSimpleLoad(StoreLoadLocation::Memory, *_value))
-				m_memory.set(*key, variable);
+				m_memory[*key] = variable;
 			else if (auto key = isSimpleLoad(StoreLoadLocation::Storage, *_value))
-				m_storage.set(*key, variable);
+				m_storage[*key] = variable;
 		}
 	}
 }
@@ -319,16 +314,11 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	// First clear storage knowledge, because we do not have to clear
 	// storage knowledge of variables whose expression has changed,
 	// since the value is still unchanged.
-	auto clear = [&](auto&& values) {
-		auto it = values.begin();
-		while (it != values.end())
-			if (_variables.count(it->first) || _variables.count(it->second))
-				it = values.erase(it);
-			else
-				++it;
+	auto eraseCondition = [&](auto const& entry) {
+		return _variables.count(entry.first) || _variables.count(entry.second);
 	};
-	clear(m_storage.values);
-	clear(m_memory.values);
+	cxx20::erase_if(m_storage, eraseCondition);
+	cxx20::erase_if(m_memory, eraseCondition);
 
 	// Also clear variables that reference variables to be cleared.
 	for (auto const& name: _variables)
@@ -338,9 +328,10 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 
 	// Clear the value and update the reference relation.
 	for (auto const& name: _variables)
+	{
 		m_value.erase(name);
-	for (auto const& name: _variables)
 		m_references.erase(name);
+	}
 }
 
 void DataFlowAnalyzer::assignValue(YulString _variable, Expression const* _value)
@@ -367,8 +358,8 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 }
 
 void DataFlowAnalyzer::joinKnowledge(
-	InvertibleMap<YulString, YulString> const& _olderStorage,
-	InvertibleMap<YulString, YulString> const& _olderMemory
+	unordered_map<YulString, YulString> const& _olderStorage,
+	unordered_map<YulString, YulString> const& _olderMemory
 )
 {
 	joinKnowledgeHelper(m_storage, _olderStorage);
@@ -376,23 +367,18 @@ void DataFlowAnalyzer::joinKnowledge(
 }
 
 void DataFlowAnalyzer::joinKnowledgeHelper(
-	InvertibleMap<YulString, YulString>& _this,
-	InvertibleMap<YulString, YulString> const& _older
+	std::unordered_map<YulString, YulString>& _this,
+	std::unordered_map<YulString, YulString> const& _older
 )
 {
 	// We clear if the key does not exist in the older map or if the value is different.
 	// This also works for memory because _older is an "older version"
 	// of m_memory and thus any overlapping write would have cleared the keys
 	// that are not known to be different inside m_memory already.
-	auto it = _this.values.begin();
-	while (it != _this.values.end())
-	{
-		auto oldit = _older.values.find(it->first);
-		if (oldit != _older.values.end() && it->second == oldit->second)
-			++it;
-		else
-			it = _this.values.erase(it);
-	}
+	cxx20::erase_if(_this, [&](auto const& entry){
+		YulString const* value = valueOrNullptr(_older, entry.first);
+		return !value || *value != entry.second;
+	});
 }
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const
