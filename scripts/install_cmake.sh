@@ -27,7 +27,6 @@ if test -f $BIN/cmake && ($BIN/cmake --version | grep -q "$VERSION"); then
 else
     FILE=cmake-$VERSION-$OS-x86_64.tar.gz
     URL=https://cmake.org/files/v$VERSION_MAJOR.$VERSION_MINOR/$FILE
-    ERROR=0
     TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
     echo "Downloading CMake ($URL)..."
     wget "$URL" -O "$TMPFILE" -nv

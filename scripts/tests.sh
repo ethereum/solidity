@@ -109,9 +109,9 @@ do
             then
                 if [ -n "$optimize" ]
                 then
-                    log=--logger=JUNIT,error,$log_directory/opt_$vm.xml $testargs
+                    log=--logger=JUNIT,error,$log_directory/opt_$vm.xml
                 else
-                    log=--logger=JUNIT,error,$log_directory/noopt_$vm.xml $testargs_no_opt
+                    log=--logger=JUNIT,error,$log_directory/noopt_$vm.xml
                 fi
             fi
 

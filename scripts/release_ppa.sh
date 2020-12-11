@@ -113,7 +113,6 @@ wget -O ./solc/deps/downloads/jsoncpp-1.9.3.tar.gz https://github.com/open-sourc
 cd solc
 version=$($(dirname "$0")/get_version.sh)
 commithash=$(git rev-parse --short=8 HEAD)
-committimestamp=$(git show --format=%ci HEAD | head -n 1)
 commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
 echo "$commithash" > commit_hash.txt

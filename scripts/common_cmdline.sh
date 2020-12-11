@@ -49,7 +49,6 @@ function compileFull()
     fi
 
     local files="$*"
-    local output
 
     local stderr_path=$(mktemp)
 
