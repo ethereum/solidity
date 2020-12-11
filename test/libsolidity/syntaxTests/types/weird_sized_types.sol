@@ -40,4 +40,3 @@ contract C {
     uint uint300 = 0;
 }
 // ----
-// ParserError 2314: (22-29): Expected identifier but got 'bytes1'
