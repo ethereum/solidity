@@ -48,6 +48,7 @@ public:
 
 	/// The size of the container.
 	enum { size = N };
+	static_assert(N != 0);
 
 	/// Method to convert from a string.
 	enum ConstructFromStringType { FromHex, FromBinary };
@@ -59,7 +60,13 @@ public:
 	explicit FixedHash() { m_data.fill(0); }
 
 	/// Construct from another hash, filling with zeroes or cropping as necessary.
-	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill(0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
+	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft)
+	{
+		m_data.fill(0);
+		unsigned c = std::min(M, N);
+		for (unsigned i = 0; i < c; ++i)
+			m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i];
+	}
 
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
@@ -104,8 +111,10 @@ public:
 		}
 	}
 
-	/// Explicitly construct, copying from a  string.
-	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht) {}
+	/// Explicitly construct, copying from a string.
+	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent):
+		FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : solidity::util::asBytes(_s), _ht)
+	{}
 
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
@@ -114,7 +123,16 @@ public:
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
 	/// Required to sort objects of this type or use them as map keys.
-	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
+	bool operator<(FixedHash const& _c) const {
+		for (unsigned i = 0; i < N; ++i)
+		{
+			if (m_data[i] < _c.m_data[i])
+				return true;
+			else if (m_data[i] > _c.m_data[i])
+				return false;
+		}
+		return false;
+	}
 
 	/// @returns a particular byte from the hash.
 	uint8_t& operator[](unsigned _i) { return m_data[_i]; }
