@@ -34,7 +34,7 @@ IFS=" " read -r -a SMT_FLAGS <<< "$SMT_FLAGS"
 
 source "${REPO_ROOT}/scripts/common.sh"
 
-WORKDIR=`mktemp -d`
+WORKDIR=$(mktemp -d)
 CMDLINE_PID=
 
 cleanup() {
