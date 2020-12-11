@@ -59,8 +59,8 @@ then
 	echo -n "$CIRCLE_SHA1" >commit_hash.txt
 fi
 
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
 emcmake cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DBoost_USE_STATIC_LIBS=1 \
@@ -75,8 +75,8 @@ sed -i -e 's/addFunction(func,sig){/addFunction(func,sig){sig=sig||"viiiii";/' l
 
 cd ..
 mkdir -p upload
-cp $BUILD_DIR/libsolc/soljson.js upload/
-cp $BUILD_DIR/libsolc/soljson.js ./
+cp "$BUILD_DIR/libsolc/soljson.js" upload/
+cp "$BUILD_DIR/libsolc/soljson.js" ./
 
 OUTPUT_SIZE=`ls -la soljson.js`
 

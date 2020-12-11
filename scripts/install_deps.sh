@@ -51,7 +51,7 @@ uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires 'uname' to id
 
 # See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
 detect_linux_distro() {
-    if [ $(command -v lsb_release) ]; then
+    if [ "$(command -v lsb_release)" ]; then
         DISTRO=$(lsb_release -is)
     elif [ -f /etc/os-release ]; then
         # extract 'foo' from NAME=foo, only on the line with NAME=foo
@@ -61,7 +61,7 @@ detect_linux_distro() {
     else
         DISTRO=''
     fi
-    echo $DISTRO
+    echo "$DISTRO"
 }
 
 case $(uname -s) in
@@ -321,7 +321,7 @@ case $(uname -s) in
                         ;;
                     *)
                         #other Ubuntu
-                        echo "ERROR - Unknown or unsupported Ubuntu version (" $(lsb_release -cs) ")"
+                        echo "ERROR - Unknown or unsupported Ubuntu version ($(lsb_release -cs))"
                         echo "ERROR - This might not work, but we are trying anyway."
                         echo "Please drop us a message at https://gitter.im/ethereum/solidity-dev."
                         echo "We only support Trusty, Utopic, Vivid, Wily, Xenial, Yakkety, Zesty, Artful and Bionic."

@@ -36,7 +36,7 @@ if [ -d jsoncpp ]; then
     set -e
     cd jsoncpp
     # Checkout the latest commit at the time of our release.
-    git checkout $(git rev-list -1 --before=$COMMIT_DATE master)
+    git checkout "$(git rev-list -1 --before="$COMMIT_DATE" master)"
   )
 fi
 

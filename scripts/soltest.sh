@@ -64,4 +64,4 @@ if [ "$USE_DEBUGGER" -ne "0" ]; then
 	DEBUG_PREFIX=${DEBUGGER}
 fi
 
-exec "${DEBUG_PREFIX}" "${SOLIDITY_BUILD_DIR}/test/soltest" ${BOOST_OPTIONS} -- --testpath "${REPO_ROOT}/test" ${SOLTEST_OPTIONS}
+exec ${DEBUG_PREFIX} "${SOLIDITY_BUILD_DIR}/test/soltest" ${BOOST_OPTIONS} -- --testpath "${REPO_ROOT}/test" ${SOLTEST_OPTIONS}

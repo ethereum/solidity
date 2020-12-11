@@ -27,7 +27,7 @@ set -e
 
 ## GLOBAL VARIABLES
 
-REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 source "${REPO_ROOT}/scripts/common.sh"
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
@@ -41,13 +41,13 @@ function versionGreater()
     ver1=( ${v1//./ } )
     ver2=( ${v2//./ } )
 
-    if (( ${ver1[0]} > ${ver2[0]} ))
+    if (( "${ver1[0]}" > "${ver2[0]}" ))
     then
         return 0
-    elif (( ${ver1[0]} == ${ver2[0]} )) && (( ${ver1[1]} > ${ver2[1]} ))
+    elif (( "${ver1[0]}" == "${ver2[0]}" )) && (( "${ver1[1]}" > "${ver2[1]}" ))
     then
         return 0
-    elif (( ${ver1[0]} == ${ver2[0]} )) && (( ${ver1[1]} == ${ver2[1]} )) && (( ${ver1[2]} > ${ver2[2]} ))
+    elif (( "${ver1[0]}" == "${ver2[0]}" )) && (( "${ver1[1]}" == "${ver2[1]}" )) && (( "${ver1[2]}" > "${ver2[2]}" ))
     then
         return 0
     fi
@@ -75,7 +75,7 @@ function getAllAvailableVersions()
     do
         if versionGreater "$listed" "0.4.10"
         then
-            allVersions+=( $listed )
+            allVersions+=( "$listed" )
         fi
     done
 }
@@ -157,7 +157,7 @@ SOLTMPDIR=$(mktemp -d)
         # ignore warnings in this case
         opts="$opts -o"
 
-        findMinimalVersion $f
+        findMinimalVersion "$f"
         if [[ "$version" == "" ]]
         then
             continue
@@ -175,9 +175,9 @@ SOLTMPDIR=$(mktemp -d)
         if [[ ! -f "$solc_bin" ]]
         then
             echo "Downloading release from github..."
-            if wget -q https://github.com/ethereum/solidity/releases/download/v$version/solc-static-linux >/dev/null
+            if wget -q "https://github.com/ethereum/solidity/releases/download/v$version/solc-static-linux" >/dev/null
             then
-                mv solc-static-linux $solc_bin
+                mv solc-static-linux "$solc_bin"
             else
                 printError "No release $version was found on github!"
                 continue
