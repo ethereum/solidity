@@ -18,8 +18,8 @@
 # (c) 2016-2019 solidity contributors.
 # ------------------------------------------------------------------------------
 
-FULLARGS="--optimize --ignore-missing --combined-json abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
-OLDARGS="--optimize --combined-json abi,asm,ast,bin,bin-runtime,devdoc,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc"
+FULLARGS=(--optimize --ignore-missing --combined-json "abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
+OLDARGS=(--optimize --combined-json "abi,asm,ast,bin,bin-runtime,devdoc,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
 function compileFull()
 {
     local expected_exit_code=0
@@ -37,23 +37,23 @@ function compileFull()
         expect_output=2
         shift;
     fi
-    local args=$FULLARGS
+    local args=("${FULLARGS[@]}")
     if [[ $1 = '-v' ]]; then
         if (echo "$2" | grep -Po '(?<=0.4.)\d+' >/dev/null); then
             patch=$(echo "$2" | grep -Po '(?<=0.4.)\d+')
             if (( patch < 22 )); then
-                args=$OLDARGS
+                args=("${OLDARGS[@]}")
             fi
         fi
         shift 2
     fi
 
-    local files="$*"
+    local files=("$@")
 
     local stderr_path=$(mktemp)
 
     set +e
-    "$SOLC" ${args} ${files} >/dev/null 2>"$stderr_path"
+    "$SOLC" "${args[@]}" "${files[@]}" >/dev/null 2>"$stderr_path"
     local exit_code=$?
     local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\|' < "$stderr_path")
     set -e
@@ -70,7 +70,7 @@ function compileFull()
         printError "Was failure: $exit_code"
         echo "$errors"
         printError "While calling:"
-        echo "\"$SOLC\" $args $files"
+        echo "\"$SOLC\" ${args[*]} ${files[*]}"
         printError "Inside directory:"
         pwd
         false

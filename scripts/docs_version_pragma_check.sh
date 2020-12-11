@@ -145,17 +145,17 @@ SOLTMPDIR=$(mktemp -d)
         fi
         echo "$f"
 
-        opts=''
+        opts=()
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)
         if ( ! grep -E "This will not compile after" "$f" >/dev/null && \
             grep -E "This will not compile|import \"" "$f" >/dev/null )
         then
-            opts="-e"
+            opts=(-e)
         fi
 
         # ignore warnings in this case
-        opts="$opts -o"
+        opts+=(-o)
 
         findMinimalVersion "$f"
         if [[ "$version" == "" ]]
@@ -168,7 +168,7 @@ SOLTMPDIR=$(mktemp -d)
             continue
         fi
 
-        opts="$opts -v $version"
+        opts+=(-v "$version")
 
         solc_bin="solc-$version"
         echo "$solc_bin"
@@ -188,7 +188,7 @@ SOLTMPDIR=$(mktemp -d)
         chmod a+x solc
 
         SOLC="$SOLTMPDIR/solc"
-        compileFull $opts "$SOLTMPDIR/$f"
+        compileFull "${opts[@]}" "$SOLTMPDIR/$f"
     done
 )
 rm -rf "$SOLTMPDIR"

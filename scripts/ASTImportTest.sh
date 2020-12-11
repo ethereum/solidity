@@ -37,10 +37,13 @@ fi
 # $1 name of the file to be exported and imported
 # $2 any files needed to do so that might be in parent directories
 function testImportExportEquivalence {
-    if $SOLC "$1" $2 > /dev/null 2>&1
+    local nth_input_file="$1"
+    IFS=" " read -r -a all_input_files <<< "$2"
+
+    if $SOLC "$nth_input_file" "${all_input_files[@]}" > /dev/null 2>&1
     then
         # save exported json as expected result (silently)
-        $SOLC --combined-json ast,compact-format --pretty-json "$1" $2 > expected.json 2> /dev/null
+        $SOLC --combined-json ast,compact-format --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
         # import it, and export it again as obtained result (silently)
         $SOLC --import-ast --combined-json ast,compact-format --pretty-json expected.json > obtained.json 2> /dev/null
         if [ $? -ne 0 ]

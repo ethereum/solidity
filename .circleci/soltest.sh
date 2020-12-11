@@ -38,6 +38,9 @@ OPTIMIZE=${OPTIMIZE:-"0"}
 EVM=${EVM:-"invalid"}
 REPODIR="$(realpath "$(dirname "$0")/..")"
 
+IFS=" " read -r -a BOOST_TEST_ARGS <<< "$BOOST_TEST_ARGS"
+IFS=" " read -r -a SOLTEST_FLAGS <<< "$SOLTEST_FLAGS"
+
 source "${REPODIR}/scripts/common.sh"
 # Test result output directory (CircleCI is reading test results from here)
 mkdir -p test_results
@@ -53,11 +56,12 @@ get_logfile_basename() {
     echo -ne "${filename}"
 }
 
-BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml ${BOOST_TEST_ARGS}"
-SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS"
-test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
-test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv1"
+BOOST_TEST_ARGS=("--color_output=no" "--show_progress=yes" "--logger=JUNIT,error,test_results/`get_logfile_basename`.xml" "${BOOST_TEST_ARGS[@]}")
+SOLTEST_ARGS=("--evm-version=$EVM" "${SOLTEST_FLAGS[@]}")
 
-echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}"
+test "${OPTIMIZE}" = "1" && SOLTEST_ARGS+=(--optimize)
+test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS+=(--abiencoderv1)
 
-"${REPODIR}/build/test/soltest" ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}
+echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS[*]} -- ${SOLTEST_ARGS[*]}"
+
+"${REPODIR}/build/test/soltest" "${BOOST_TEST_ARGS[@]}" -- "${SOLTEST_ARGS[@]}"
