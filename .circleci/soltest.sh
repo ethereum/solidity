@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #------------------------------------------------------------------------------
 # Bash script to execute the Solidity tests by CircleCI.
 #

@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 BASE_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
 mkdir -p build
