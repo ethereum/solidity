@@ -281,7 +281,7 @@ void ASTJSONTest::printSource(ostream& _stream, string const& _linePrefix, bool 
 	for (auto const& source: m_sources)
 	{
 		if (m_sources.size() > 1 || source.first != "a")
-			_stream << _linePrefix << sourceDelimiter << source.first << endl << endl;
+			_stream << _linePrefix << sourceDelimiter << source.first << " ====" << endl << endl;
 		stringstream stream(source.second);
 		string line;
 		while (getline(stream, line))
