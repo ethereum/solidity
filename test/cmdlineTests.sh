@@ -91,7 +91,7 @@ function ask_expectation_update
 
             while true
             do
-                read -N 1 -p "(e)dit/(u)pdate expectations/(s)kip/(q)uit? "
+                read -r -N 1 -p "(e)dit/(u)pdate expectations/(s)kip/(q)uit? "
                 echo
                 case $REPLY in
                     e*) "$editor" "$expectationFile"; break;;
