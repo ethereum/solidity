@@ -282,7 +282,7 @@ printTask "Running general commandline tests..."
 
         inputFiles="$(ls -1 "${tdir}/input."* 2> /dev/null || true)"
         inputCount="$(echo "${inputFiles}" | wc -w)"
-        if (( ${inputCount} > 1 ))
+        if (( inputCount > 1 ))
         then
             printError "Ambiguous input. Found input files in multiple formats:"
             echo -e "${inputFiles}"
