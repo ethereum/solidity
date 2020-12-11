@@ -293,6 +293,11 @@ void DataFlowAnalyzer::pushScope(bool _functionScope)
 
 void DataFlowAnalyzer::popScope()
 {
+	for (auto const& name: m_variableScopes.back().variables)
+	{
+		m_value.erase(name);
+		m_references.erase(name);
+	}
 	m_variableScopes.pop_back();
 }
 
