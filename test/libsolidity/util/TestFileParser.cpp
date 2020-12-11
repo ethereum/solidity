@@ -103,11 +103,11 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 					else if (accept(Token::Balance, true))
 					{
 						// Address is specified
-						if (accept(Token::HexNumber, true))
-						{
-						}
-//						expect(Token::Colon);
-						expect(Token::Arrow);
+//						if (accept(Token::HexNumber, true))
+//						{
+//						}
+						expect(Token::Colon);
+//						expect(Token::Arrow);
 						call.expectations.failure = false;
 						call.expectations.result.push_back(Parameter());
 						// expectation encoded as value
