@@ -748,6 +748,9 @@ private:
 		std::ostringstream stream;
 		void startStruct()
 		{
+			if (index >= 1)
+				stream << ",";
+			index = 0;
 			stream << "(";
 		}
 		void endStruct()
@@ -756,11 +759,15 @@ private:
 		}
 		void startArray()
 		{
+			if (index >= 1)
+				stream << ",";
+			index = 0;
 			stream << "[";
 		}
 		void endArray()
 		{
 			stream << "]";
+			index++;
 		}
 		void appendValue(std::string& _value);
 	};
@@ -793,6 +800,7 @@ private:
 	unsigned m_structCounter;
 	unsigned m_structStart;
 	ValueStream m_valueStream;
+	bool m_forcedVisit = false;
 };
 
 /// Returns a valid value (as a string) for a given type.
