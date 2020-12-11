@@ -185,6 +185,9 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 				if (test.call().expectations.rawBytes() != result)
 					success = false;
 			}
+			else if (test.call().kind == FunctionCall::Kind::Balance)
+			{
+			}
 			else if (test.call().kind == FunctionCall::Kind::Constructor)
 			{
 				if (m_transactionSuccessful == test.call().expectations.failure)
