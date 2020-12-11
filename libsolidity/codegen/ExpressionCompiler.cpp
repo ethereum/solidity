@@ -1508,6 +1508,39 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			);
 			m_context << Instruction::BALANCE;
 		}
+		else if (member == "code")
+		{
+			// Stack: <address>
+			utils().convertType(
+				*_memberAccess.expression().annotation().type,
+				*TypeProvider::address(),
+				true
+			);
+
+			m_context << Instruction::DUP1 << Instruction::EXTCODESIZE;
+			// Stack post: <address> <size>
+
+			m_context << Instruction::DUP1;
+			// Account for the size field of `bytes memory`
+			m_context << u256(32) << Instruction::ADD;
+			utils().allocateMemory();
+			// Stack post: <address> <size> <mem_offset>
+
+			// Store size at mem_offset
+			m_context << Instruction::DUP2 << Instruction::DUP2 << Instruction::MSTORE;
+
+			m_context << u256(0) << Instruction::SWAP1 << Instruction::DUP1;
+			// Stack post: <address> <size> 0 <mem_offset> <mem_offset>
+
+			m_context << u256(32) << Instruction::ADD << Instruction::SWAP1;
+			// Stack post: <address> <size> 0 <mem_offset_adjusted> <mem_offset>
+
+			m_context << Instruction::SWAP4;
+			// Stack post: <mem_offset> <size> 0 <mem_offset_adjusted> <address>
+
+			m_context << Instruction::EXTCODECOPY;
+			// Stack post: <mem_offset>
+		}
 		else if (member == "codehash")
 		{
 			utils().convertType(

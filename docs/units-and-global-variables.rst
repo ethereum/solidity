@@ -222,6 +222,9 @@ Members of Address Types
 ``<address>.balance`` (``uint256``)
     balance of the :ref:`address` in Wei
 
+``<address>.code`` (``bytes memory``)
+    code at the :ref:`address` (can be empty)
+
 ``<address>.codehash`` (``bytes32``)
     the codehash of the :ref:`address`
 

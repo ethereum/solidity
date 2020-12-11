@@ -460,6 +460,11 @@ public:
 		std::string const& _creationObjectName
 	);
 
+	/// @returns the name of a function that copies code from a given address to a newly
+	/// allocated byte array in memory.
+	/// Signature: (address) -> mpos
+	std::string externalCodeFunction();
+
 private:
 	/// Special case of conversion functions - handles all array conversions.
 	std::string arrayConversionFunction(ArrayType const& _from, ArrayType const& _to);

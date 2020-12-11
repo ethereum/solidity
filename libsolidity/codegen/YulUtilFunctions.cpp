@@ -4055,3 +4055,21 @@ string YulUtilFunctions::copyConstructorArgumentsToMemoryFunction(
 		.render();
 	});
 }
+
+string YulUtilFunctions::externalCodeFunction()
+{
+	string functionName = "external_code_at";
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>(addr) -> mpos {
+				let length := extcodesize(addr)
+				mpos := <allocateArray>(length)
+				extcodecopy(addr, add(mpos, 0x20), 0, length)
+			}
+		)")
+		("functionName", functionName)
+		("allocateArray", allocateMemoryArrayFunction(*TypeProvider::bytesMemory()))
+		.render();
+	});
+}
