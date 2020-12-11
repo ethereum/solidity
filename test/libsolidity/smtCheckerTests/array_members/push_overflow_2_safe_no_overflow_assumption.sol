@@ -11,3 +11,5 @@ contract C {
 		assert(x[0] == 42);
 	}
 }
+// ----
+// Warning 4984: (174-177): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.

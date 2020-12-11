@@ -14,6 +14,7 @@ Compiler Features:
  * SMTChecker: Support getters.
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
+ * SMTChecker: Create underflow and overflow verification targets for increment/decrement in the CHC engine.
  * Standard-Json: Move the recently introduced ``modelCheckerSettings`` key to ``settings.modelChecker``.
  * Standard-Json: Properly filter the requested output artifacts.
 

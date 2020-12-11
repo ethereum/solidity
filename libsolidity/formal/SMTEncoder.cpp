@@ -512,7 +512,13 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 			auto decl = identifierToVariable(*identifier);
 			solAssert(decl, "");
 			auto innerValue = currentValue(*decl);
-			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
+			auto newValue = arithmeticOperation(
+				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
+				innerValue,
+				smtutil::Expression(size_t(1)),
+				_op.annotation().type,
+				_op
+			).first;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			assignment(*decl, newValue);
 		}
@@ -522,7 +528,13 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 		)
 		{
 			auto innerValue = expr(*subExpr);
-			auto newValue = _op.getOperator() == Token::Inc ? innerValue + 1 : innerValue - 1;
+			auto newValue = arithmeticOperation(
+				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
+				innerValue,
+				smtutil::Expression(size_t(1)),
+				_op.annotation().type,
+				_op
+			).first;
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			indexOrMemberAssignment(*subExpr, newValue);
 		}
