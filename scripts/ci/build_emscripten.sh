@@ -62,10 +62,10 @@ fi
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 emcmake cmake \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DBoost_USE_STATIC_LIBS=1 \
-  -DBoost_USE_STATIC_RUNTIME=1 \
-  -DTESTS=0 \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DBoost_USE_STATIC_LIBS=1 \
+	-DBoost_USE_STATIC_RUNTIME=1 \
+	-DTESTS=0 \
   ..
 make soljson
 # Patch soljson.js for backwards compatibility.
