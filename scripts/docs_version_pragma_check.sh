@@ -188,8 +188,7 @@ SOLTMPDIR=$(mktemp -d)
         ln -sf "$solc_bin" "solc"
         chmod a+x solc
 
-        SOLC="$SOLTMPDIR/solc"
-        compileFull "${opts[@]}" "$SOLTMPDIR/$f"
+        SOLC="$SOLTMPDIR/solc" compileFull "${opts[@]}" "$SOLTMPDIR/$f"
     done
 )
 rm -rf "$SOLTMPDIR"
