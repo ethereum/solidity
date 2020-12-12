@@ -93,6 +93,6 @@ for (var optimize of [false, true])
 }
 EOF
     chmod +x solc
-    ./solc *.sol > /tmp/report.txt
+    ./solc -- *.sol > /tmp/report.txt
 )
 rm -rf "$TMPDIR"

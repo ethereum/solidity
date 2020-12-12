@@ -333,7 +333,7 @@ printTask "Compiling various other contracts and libraries..."
     do
         echo " - $dir"
         cd "$dir"
-        compileFull -w *.sol */*.sol
+        compileFull -w ./*.sol ./*/*.sol
         cd ..
     done
 )
@@ -499,8 +499,8 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
 
-    echo *.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
-    echo *.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
+    echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
+    echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
 )
 rm -rf "$SOLTMPDIR"
 
