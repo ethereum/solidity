@@ -25,7 +25,7 @@ FAILED=0
 UNCOMPILABLE=0
 TESTED=0
 
-if [ "$(ls | wc -l)" -ne 0 ]; then
+if [[ "$(find . -maxdepth 0 -type d -empty)" == "" ]]; then
     echo "Test directory not empty. Skipping!"
     exit 1
 fi
@@ -86,7 +86,8 @@ WORKINGDIR=$PWD
 # boost_filesystem_bug specifically tests a local fix for a boost::filesystem
 # bug. Since the test involves a malformed path, there is no point in running
 # AST tests on it. See https://github.com/boostorg/filesystem/issues/176
-for solfile in $(find "$SYNTAXTESTS_DIR" "$ASTJSONTESTS_DIR" -name *.sol -and -not -name "boost_filesystem_bug.sol")
+# shellcheck disable=SC2044
+for solfile in $(find "$SYNTAXTESTS_DIR" "$ASTJSONTESTS_DIR" -name "*.sol" -and -not -name "boost_filesystem_bug.sol")
 do
     echo -n "."
     # create a temporary sub-directory
