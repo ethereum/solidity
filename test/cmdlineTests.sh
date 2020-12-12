@@ -436,15 +436,18 @@ SOLTMPDIR=$(mktemp -d)
     # The contract should be compiled
     if [[ "$result" != 0 ]]
     then
+        printError "Failed to compile a simple contract from standard input"
         exit 1
     fi
 
     # This should not fail
     set +e
-    output=$(echo '' | "$SOLC" --ast - 2>/dev/null)
+    output=$(echo '' | "$SOLC" --ast-json - 2>/dev/null)
+    result=$?
     set -e
-    if [[ $? != 0 ]]
+    if [[ $result != 0 ]]
     then
+        printError "Incorrect response to --ast-json option with empty stdin"
         exit 1
     fi
 )
