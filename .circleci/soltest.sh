@@ -41,6 +41,7 @@ REPODIR="$(realpath "$(dirname "$0")/..")"
 IFS=" " read -r -a BOOST_TEST_ARGS <<< "$BOOST_TEST_ARGS"
 IFS=" " read -r -a SOLTEST_FLAGS <<< "$SOLTEST_FLAGS"
 
+# shellcheck source=scripts/common.sh
 source "${REPODIR}/scripts/common.sh"
 # Test result output directory (CircleCI is reading test results from here)
 mkdir -p test_results

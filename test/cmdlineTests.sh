@@ -32,7 +32,9 @@ set -e
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
+# shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
+# shellcheck source=scripts/common_cmdline.sh
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
 (( $# <= 1 )) || { printError "Too many arguments"; exit 1; }
