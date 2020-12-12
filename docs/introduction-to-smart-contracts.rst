@@ -83,7 +83,7 @@ registering with a username and password, all you need is an Ethereum keypair.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.5.99 <0.8.0;
+    pragma solidity >=0.7.0 <0.8.0;
 
     contract Coin {
         // The keyword "public" makes variables
