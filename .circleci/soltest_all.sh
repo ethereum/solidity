@@ -44,14 +44,11 @@ then
     else
         export CIRCLE_NODE_INDEX=$((CIRCLE_NODE_INDEX - 1))
         export CIRCLE_NODE_TOTAL=$((CIRCLE_NODE_TOTAL - 1))
-        RUN_STEPS=$(seq 2 "$STEPS" | circleci tests split)
+        RUN_STEPS=$(seq 2 "$STEPS" | circleci tests split | xargs)
     fi
 else
-    RUN_STEPS=$(seq "$STEPS")
+    RUN_STEPS=$(seq "$STEPS" | xargs)
 fi
-
-# turn newlines into spaces
-RUN_STEPS=$(echo $RUN_STEPS)
 
 echo "Running steps $RUN_STEPS..."
 

@@ -61,9 +61,9 @@ function testImportExportEquivalence {
             then
                 echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
                 echo "Expected:"
-                echo "$(cat ./expected.json)"
+                cat ./expected.json
                 echo "Obtained:"
-                echo "$(cat ./obtained.json)"
+                cat ./obtained.json
             else
                 # Use user supplied diff view binary
                 $DIFFVIEW expected.json obtained.json
