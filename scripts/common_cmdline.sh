@@ -71,7 +71,7 @@ function compileFull()
         printError "Was failure: $exit_code"
         echo "$errors"
         printError "While calling:"
-        echo "\"$SOLC\" $ARGS $files"
+        echo "\"$SOLC\" $args $files"
         printError "Inside directory:"
         pwd
         false
