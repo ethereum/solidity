@@ -206,7 +206,7 @@ function test_solc_assembly_output()
     local expected_object="object \"object\" { code "${expected}" }"
 
     output=$(echo "${input}" | "$SOLC" - ${solc_args} 2>/dev/null)
-    empty=$(echo $output | sed -ne '/'"${expected_object}"'/p')
+    empty=$(echo "$output" | tr '\n' ' ' | tr -s ' ' | sed -ne "/${expected_object}/p")
     if [ -z "$empty" ]
     then
         printError "Incorrect assembly output. Expected: "
