@@ -65,7 +65,7 @@ function getAllAvailableVersions()
 {
     allVersions=()
     local allListedVersions=( $(
-        wget -q -O- https://ethereum.github.io/solc-bin/bin/list.txt |
+        wget -q -O- https://binaries.soliditylang.org/bin/list.txt |
         grep -Po '(?<=soljson-v)\d+.\d+.\d+(?=\+commit)' |
         sort -V
     ) )
