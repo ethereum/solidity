@@ -27,7 +27,7 @@ TESTED=0
 
 if [ "$(ls | wc -l)" -ne 0 ]; then
     echo "Test directory not empty. Skipping!"
-    exit -1
+    exit 1
 fi
 
 # function tests whether exporting and importing again leaves the JSON ast unchanged
