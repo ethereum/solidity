@@ -159,7 +159,7 @@ Local Solidity variables are available for assignments, for example:
 
 .. warning::
     If you access variables of a type that spans less than 256 bits
-    (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
+    (for example ``uint64``, ``address``, or ``bytes16``),
     you cannot make any assumptions about bits not part of the
     encoding of the type. Especially, do not assume them to be zero.
     To be safe, always clear the data properly before you use it

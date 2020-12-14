@@ -212,7 +212,6 @@ namespace solidity::langutil
 	K(Int, "int", 0)                                                   \
 	K(UInt, "uint", 0)                                                 \
 	K(Bytes, "bytes", 0)                                               \
-	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
@@ -242,6 +241,7 @@ namespace solidity::langutil
 	K(Alias, "alias", 0)                                               \
 	K(Apply, "apply", 0)                                               \
 	K(Auto, "auto", 0)                                                 \
+	K(Byte, "byte", 0)                                                 \
 	K(Case, "case", 0)                                                 \
 	K(CopyOf, "copyof", 0)                                             \
 	K(Default, "default", 0)                                           \
