@@ -709,6 +709,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		break;
 	}
 	case FunctionType::Kind::ArrayPush:
+	case FunctionType::Kind::ByteArrayPush:
 		arrayPush(_funCall);
 		break;
 	case FunctionType::Kind::ArrayPop:
@@ -1572,6 +1573,8 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(expr))
 	{
 		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
+		// Push cannot occur on an expression that is itself a ByteArrayPush, i.e., bytes.push().push() is not possible.
+		solAssert(funType.kind() != FunctionType::Kind::ByteArrayPush, "");
 		if (funType.kind() == FunctionType::Kind::ArrayPush)
 		{
 			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
@@ -2499,7 +2502,7 @@ MemberAccess const* SMTEncoder::isEmptyPush(Expression const& _expr) const
 	)
 	{
 		auto const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
-		if (funType.kind() == FunctionType::Kind::ArrayPush)
+		if (funType.kind() == FunctionType::Kind::ArrayPush || funType.kind() == FunctionType::Kind::ByteArrayPush)
 			return &dynamic_cast<MemberAccess const&>(funCall->expression());
 	}
 	return nullptr;
