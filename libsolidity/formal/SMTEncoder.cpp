@@ -507,18 +507,21 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 		solAssert(smt::isInteger(*type) || smt::isFixedPoint(*type), "");
 		solAssert(subExpr->annotation().willBeWrittenTo, "");
+		auto computeNewValue = [&](auto currentValue) {
+			return arithmeticOperation(
+				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
+				currentValue,
+				smtutil::Expression(size_t(1)),
+				_op.annotation().type,
+				_op
+			).first;
+		};
 		if (auto identifier = dynamic_cast<Identifier const*>(subExpr))
 		{
 			auto decl = identifierToVariable(*identifier);
 			solAssert(decl, "");
 			auto innerValue = currentValue(*decl);
-			auto newValue = arithmeticOperation(
-				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
-				innerValue,
-				smtutil::Expression(size_t(1)),
-				_op.annotation().type,
-				_op
-			).first;
+			auto newValue = computeNewValue(innerValue);
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			assignment(*decl, newValue);
 		}
@@ -528,15 +531,16 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 		)
 		{
 			auto innerValue = expr(*subExpr);
-			auto newValue = arithmeticOperation(
-				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
-				innerValue,
-				smtutil::Expression(size_t(1)),
-				_op.annotation().type,
-				_op
-			).first;
+			auto newValue = computeNewValue(innerValue);
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			indexOrMemberAssignment(*subExpr, newValue);
+		}
+		else if (isEmptyPush(*subExpr))
+		{
+			auto innerValue = expr(*subExpr);
+			auto newValue = computeNewValue(innerValue);
+			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
+			arrayPushPopAssign(*subExpr, newValue);
 		}
 		else
 			solAssert(false, "");
