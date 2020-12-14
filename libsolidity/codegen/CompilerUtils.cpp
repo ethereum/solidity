@@ -1050,18 +1050,18 @@ void CompilerUtils::convertType(
 	}
 	case Type::Category::ArraySlice:
 	{
-		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
 		solAssert(_targetType.category() == Type::Category::Array, "");
+		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
 		auto const& targetArrayType = dynamic_cast<ArrayType const&>(_targetType);
-		solAssert(targetArrayType == *typeOnStack.arrayType().copyForLocation(targetArrayType.location(), false), "");
-		if (!_targetType.dataStoredIn(DataLocation::CallData))
-			return convertType(typeOnStack.arrayType(), _targetType);
-		solUnimplementedAssert(
-			typeOnStack.arrayType().location() == DataLocation::CallData &&
+		solAssert(typeOnStack.arrayType().isImplicitlyConvertibleTo(targetArrayType), "");
+		solAssert(
+			typeOnStack.arrayType().dataStoredIn(DataLocation::CallData) &&
 			typeOnStack.arrayType().isDynamicallySized() &&
 			!typeOnStack.arrayType().baseType()->isDynamicallyEncoded(),
 			""
 		);
+		if (!_targetType.dataStoredIn(DataLocation::CallData))
+			return convertType(typeOnStack.arrayType(), _targetType);
 		break;
 	}
 	case Type::Category::Struct:
