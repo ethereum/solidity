@@ -67,6 +67,7 @@ Bugfixes:
  * SMTChecker: Fix internal error when trying to generate counterexamples with old z3.
  * SMTChecker: Fix segmentation fault that could occur on certain SMT-enabled sources when no SMT solver was available.
  * Type Checker: ``super`` is not available in libraries.
+ * Type Checker: Disallow leading zeroes in sized-types (e.g. ``bytes000032``), but allow them to be treated as identifiers.
  * Yul Optimizer: Fix a bug in NameSimplifier where a new name created by NameSimplifier could also be created by NameDispenser.
  * Yul Optimizer: Removed NameSimplifier from optimization steps available to users.
 

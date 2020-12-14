@@ -41,7 +41,6 @@
 // along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <liblangutil/Token.h>
-#include <boost/range/iterator_range.hpp>
 #include <map>
 
 using namespace std;
@@ -116,22 +115,6 @@ std::string friendlyName(Token tok)
 }
 
 
-namespace
-{
-int parseSize(string::const_iterator _begin, string::const_iterator _end)
-{
-	try
-	{
-		int m = boost::lexical_cast<int>(boost::make_iterator_range(_begin, _end));
-		return m;
-	}
-	catch(boost::bad_lexical_cast const&)
-	{
-		return -1;
-	}
-}
-}
-
 static Token keywordByName(string const& _name)
 {
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
@@ -152,6 +135,32 @@ bool isYulKeyword(string const& _literal)
 
 tuple<Token, unsigned int, unsigned int> fromIdentifierOrKeyword(string const& _literal)
 {
+	// Used for `bytesM`, `uintM`, `intM`, `fixedMxN`, `ufixedMxN`.
+	// M/N must be shortest representation. M can never be 0. N can be zero.
+	auto parseSize = [](string::const_iterator _begin, string::const_iterator _end) -> int
+	{
+		// No number.
+		if (distance(_begin, _end) == 0)
+			return -1;
+
+		// Disallow leading zero.
+		if (distance(_begin, _end) > 1 && *_begin == '0')
+			return -1;
+
+		int ret = 0;
+		for (auto it = _begin; it != _end; it++)
+		{
+			if (*it < '0' || *it > '9')
+				return -1;
+			//  Overflow check. The largest acceptable value is 256 in the callers.
+			if (ret >= 256)
+				return -1;
+			ret *= 10;
+			ret += *it - '0';
+		}
+		return ret;
+	};
+
 	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
 	if (positionM != _literal.end())
 	{
