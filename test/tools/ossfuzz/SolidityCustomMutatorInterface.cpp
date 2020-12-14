@@ -24,10 +24,9 @@
 using namespace std;
 using namespace solidity::test::fuzzer;
 
-namespace
-{
-/// Forward declare libFuzzer's default mutator definition
+// Prototype as we can't use the FuzzerInterface.h header.
 extern "C" size_t LLVMFuzzerMutate(uint8_t* _data, size_t _size, size_t _maxSize);
+extern "C" size_t LLVMFuzzerCustomMutator(uint8_t* _data, size_t size, size_t _maxSize, unsigned int seed);
 
 /// Define Solidity's custom mutator by implementing libFuzzer's
 /// custom mutator external interface.
@@ -41,7 +40,6 @@ extern "C" size_t LLVMFuzzerCustomMutator(
 	if (_maxSize <= _size || _size == 0)
 		return LLVMFuzzerMutate(_data, _size, _maxSize);
 	return SolidityCustomMutatorInterface{_data, _size, _maxSize, _seed}.generate();
-}
 }
 
 SolidityCustomMutatorInterface::SolidityCustomMutatorInterface(

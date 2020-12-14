@@ -34,6 +34,9 @@ namespace solidity::util::test
 
 BOOST_AUTO_TEST_SUITE(SwarmHash, *boost::unit_test::label("nooptions"))
 
+namespace
+{
+
 string bzzr0HashHex(string const& _input)
 {
 	return toHex(bzzr0Hash(_input).asBytes());
@@ -50,6 +53,8 @@ bytes sequence(size_t _length)
 	for (size_t i = 0; i < _length; i++)
 		data.push_back(uint8_t((i % 255) & 0xff));
 	return data;
+}
+
 }
 
 BOOST_AUTO_TEST_CASE(test_zeros)

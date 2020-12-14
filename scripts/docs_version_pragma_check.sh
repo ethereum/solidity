@@ -65,7 +65,7 @@ function getAllAvailableVersions()
 {
     allVersions=()
     local allListedVersions=( $(
-        wget -q -O- https://ethereum.github.io/solc-bin/bin/list.txt |
+        wget -q -O- https://binaries.soliditylang.org/bin/list.txt |
         grep -Po '(?<=soljson-v)\d+.\d+.\d+(?=\+commit)' |
         sort -V
     ) )
@@ -108,7 +108,7 @@ function findMinimalVersion()
     do
         if versionGreater "$ver" "$pragmaVersion"
         then
-            minVersion="$ver"
+            version="$ver"
             break
         elif ([ $greater == false ]) && versionEqual "$ver" "$pragmaVersion"
         then
@@ -117,9 +117,10 @@ function findMinimalVersion()
         fi
     done
 
-    if [ -z version ]
+    if [ -z "$version" ]
     then
         printError "No release $sign$pragmaVersion was listed in available releases!"
+        exit 1
     fi
 }
 

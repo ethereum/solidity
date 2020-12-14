@@ -2901,6 +2901,13 @@ BoolResult FunctionType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 	FunctionType const& convertTo = dynamic_cast<FunctionType const&>(_convertTo);
 
+	// These two checks are duplicated in equalExcludingStateMutability, but are added here for error reporting.
+	if (convertTo.bound() != bound())
+		return BoolResult::err("Bound functions can not be converted to non-bound functions.");
+
+	if (convertTo.kind() != kind())
+		return BoolResult::err("Special functions can not be converted to function types.");
+
 	if (!equalExcludingStateMutability(convertTo))
 		return false;
 

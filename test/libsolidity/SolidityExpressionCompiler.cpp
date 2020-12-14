@@ -35,6 +35,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
+#include <libevmasm/LinkerObject.h>
 #include <test/Common.h>
 
 #include <boost/test/unit_test.hpp>
@@ -161,7 +162,10 @@ bytes compileFirstExpression(
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
 					resolveDeclaration(*sourceUnit, function, resolver)
 				));
-			bytes instructions = context.assembledObject().bytecode;
+			BOOST_REQUIRE(context.assemblyPtr());
+			LinkerObject const& object = context.assemblyPtr()->assemble();
+			BOOST_REQUIRE(object.immutableReferences.empty());
+			bytes instructions = object.bytecode;
 			// debug
 			// cout << evmasm::disassemble(instructions) << endl;
 			return instructions;

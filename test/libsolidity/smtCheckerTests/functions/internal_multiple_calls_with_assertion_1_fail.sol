@@ -24,7 +24,3 @@ contract C{
 // Warning 6328: (138-152): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\n\n\nTransaction trace:\nconstructor(0)\nState: x = 1\nf()
 // Warning 6328: (184-198): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\n\n\nTransaction trace:\nconstructor(0)\nState: x = 1\nf()
 // Warning 6328: (82-96): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\ny = 0\n\n\nTransaction trace:\nconstructor(0)
-// Warning 2661: (156-159): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (163-166): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (234-237): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (234-237): BMC: Underflow (resulting value less than 0) happens here.

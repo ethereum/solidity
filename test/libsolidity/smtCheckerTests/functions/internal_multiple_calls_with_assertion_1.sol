@@ -21,7 +21,3 @@ contract C{
 }
 // ----
 // Warning 5667: (70-76): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 2661: (156-159): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (163-166): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (234-237): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (234-237): BMC: Underflow (resulting value less than 0) happens here.

@@ -358,6 +358,8 @@ private:
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
+		std::shared_ptr<evmasm::Assembly> evmAssembly;
+		std::shared_ptr<evmasm::Assembly> evmRuntimeAssembly;
 		evmasm::LinkerObject object; ///< Deployment object (includes the runtime sub-object).
 		evmasm::LinkerObject runtimeObject; ///< Runtime object.
 		std::string yulIR; ///< Experimental Yul IR code.

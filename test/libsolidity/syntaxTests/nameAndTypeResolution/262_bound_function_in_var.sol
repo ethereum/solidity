@@ -9,5 +9,5 @@ contract C {
     }
 }
 // ----
-// TypeError 9574: (218-271): Type function (struct D.s storage pointer,uint256) returns (uint256) is not implicitly convertible to expected type function (struct D.s storage pointer,uint256) returns (uint256).
+// TypeError 9574: (218-271): Type function (struct D.s storage pointer,uint256) returns (uint256) is not implicitly convertible to expected type function (struct D.s storage pointer,uint256) returns (uint256). Bound functions can not be converted to non-bound functions.
 // TypeError 6160: (298-302): Wrong argument count for function call: 1 arguments given but expected 2.

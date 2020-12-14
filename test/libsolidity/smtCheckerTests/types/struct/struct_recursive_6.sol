@@ -52,6 +52,10 @@ contract C {
 // Warning 8364: (258-260): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (271-275): Assertion checker does not yet support this expression.
 // Warning 8364: (271-273): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 4984: (132-138): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 4984: (142-148): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 3944: (165-171): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 3944: (175-181): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
 // Warning 4984: (200-208): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
 // Warning 6328: (185-209): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
 // Warning 6328: (213-247): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
@@ -87,11 +91,3 @@ contract C {
 // Warning 8364: (258-260): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (271-275): Assertion checker does not yet support this expression.
 // Warning 8364: (271-273): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 4144: (132-138): BMC: Underflow (resulting value less than 0) happens here.
-// Warning 2661: (132-138): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (142-148): BMC: Underflow (resulting value less than 0) happens here.
-// Warning 2661: (142-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (165-171): BMC: Underflow (resulting value less than 0) happens here.
-// Warning 2661: (165-171): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (175-181): BMC: Underflow (resulting value less than 0) happens here.
-// Warning 2661: (175-181): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

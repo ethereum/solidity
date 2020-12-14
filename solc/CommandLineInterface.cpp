@@ -91,6 +91,9 @@ namespace solidity::frontend
 
 bool g_hasOutput = false;
 
+namespace
+{
+
 std::ostream& sout()
 {
 	g_hasOutput = true;
@@ -102,6 +105,8 @@ std::ostream& serr(bool _used = true)
 	if (_used)
 		g_hasOutput = true;
 	return cerr;
+}
+
 }
 
 #define cout
@@ -326,6 +331,9 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return false;
 }
 
+namespace
+{
+
 bool checkMutuallyExclusive(boost::program_options::variables_map const& args, std::string const& _optionA, std::string const& _optionB)
 {
 	if (args.count(_optionA) && args.count(_optionB))
@@ -335,6 +343,8 @@ bool checkMutuallyExclusive(boost::program_options::variables_map const& args, s
 	}
 
 	return true;
+}
+
 }
 
 void CommandLineInterface::handleBinary(string const& _contract)

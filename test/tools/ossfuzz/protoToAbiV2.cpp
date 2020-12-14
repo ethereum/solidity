@@ -1,6 +1,7 @@
 #include <test/tools/ossfuzz/protoToAbiV2.h>
 
 #include <boost/preprocessor.hpp>
+#include <regex>
 
 /// Convenience macros
 /// Returns a valid Solidity integer width w such that 8 <= w <= 256.
@@ -315,6 +316,10 @@ pair<string, string> ProtoConverter::assignChecker(
 	m_counter += acVisitor.counted();
 
 	m_checks << assignCheckStrPair.second;
+	appendToIsabelleValueString(
+		acVisitor.isabelleValueString(),
+		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
+	);
 
 	// State variables cannot be assigned in contract-scope
 	// Therefore, we buffer their assignments and
@@ -333,12 +338,12 @@ std::string ProtoConverter::equalityChecksAsString()
 	return m_checks.str();
 }
 
-std::string ProtoConverter::delimiterToString(Delimiter _delimiter)
+std::string ProtoConverter::delimiterToString(Delimiter _delimiter, bool _space)
 {
 	switch (_delimiter)
 	{
 	case Delimiter::ADD:
-		return ", ";
+		return _space ? ", " : ",";
 	case Delimiter::SKIP:
 		return "";
 	}
@@ -448,7 +453,15 @@ void ProtoConverter::appendToIsabelleTypeString(
 	Delimiter _delimiter
 )
 {
-	m_isabelleTypeString << delimiterToString(_delimiter) << _typeString;
+	m_isabelleTypeString << delimiterToString(_delimiter, false) << _typeString;
+}
+
+void ProtoConverter::appendToIsabelleValueString(
+	std::string const& _valueString,
+	Delimiter _delimiter
+)
+{
+	m_isabelleValueString << delimiterToString(_delimiter, false) << _valueString;
 }
 
 std::string ProtoConverter::typedParametersAsString(CalleeType _calleeType)
@@ -736,6 +749,15 @@ string ProtoConverter::isabelleTypeString() const
 		return typeString;
 }
 
+string ProtoConverter::isabelleValueString() const
+{
+	string valueString = m_isabelleValueString.str();
+	if (!valueString.empty())
+		return "(" + valueString + ")";
+	else
+		return valueString;
+}
+
 string ProtoConverter::contractToString(Contract const& _input)
 {
 	visit(_input);
@@ -777,9 +799,9 @@ string TypeVisitor::visit(FixedByteType const& _type)
 	return m_baseType;
 }
 
-string TypeVisitor::visit(AddressType const& _type)
+string TypeVisitor::visit(AddressType const&)
 {
-	m_baseType = getAddressTypeAsString(_type);
+	m_baseType = "address";
 	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
@@ -890,33 +912,61 @@ string TypeVisitor::visit(StructType const& _type)
 }
 
 /// AssignCheckVisitor implementation
+void AssignCheckVisitor::ValueStream::appendValue(string& _value)
+{
+	solAssert(!_value.empty(), "Abiv2 fuzzer: Empty value");
+	index++;
+	if (index > 1)
+		stream << ",";
+	stream << _value;
+}
+
 pair<string, string> AssignCheckVisitor::visit(BoolType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+		m_valueStream.appendValue(value);
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(IntegerType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+		m_valueStream.appendValue(value);
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(FixedByteType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(AddressType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleAddressValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(DynamicByteArrayType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	DataType dataType = _type.type() == DynamicByteArrayType::BYTES ? DataType::BYTES :	DataType::STRING;
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, dataType);
 }
@@ -981,6 +1031,8 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 	pair<string, string> assignCheckBuffer;
 	string wasVarName = m_varName;
 	string wasParamName = m_paramName;
+	if (!m_forcedVisit)
+		m_valueStream.startArray();
 	for (unsigned i = 0; i < length; i++)
 	{
 		m_varName = wasVarName + "[" + to_string(i) + "]";
@@ -991,12 +1043,18 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 		if (i < length - 1)
 			m_structCounter = wasStructCounter;
 	}
-
 	// Since struct visitor won't be called for zero-length
 	// arrays, struct counter will not get incremented. Therefore,
 	// we need to manually force a recursive struct visit.
 	if (length == 0 && TypeVisitor().arrayOfStruct(_type))
+	{
+		bool previousState = m_forcedVisit;
+		m_forcedVisit = true;
 		visit(_type.t());
+		m_forcedVisit = previousState;
+	}
+	if (!m_forcedVisit)
+		m_valueStream.endArray();
 
 	m_varName = wasVarName;
 	m_paramName = wasParamName;
@@ -1022,6 +1080,8 @@ pair<string, string> AssignCheckVisitor::visit(StructType const& _type)
 	string wasVarName = m_varName;
 	string wasParamName = m_paramName;
 
+	if (!m_forcedVisit)
+		m_valueStream.startStruct();
 	for (auto const& t: _type.t())
 	{
 		m_varName = wasVarName + ".m" + to_string(i);
@@ -1035,6 +1095,8 @@ pair<string, string> AssignCheckVisitor::visit(StructType const& _type)
 		assignCheckBuffer.second += assign.second;
 		i++;
 	}
+	if (!m_forcedVisit)
+		m_valueStream.endStruct();
 	m_varName = wasVarName;
 	m_paramName = wasParamName;
 	return assignCheckBuffer;
@@ -1117,11 +1179,11 @@ string ValueGetterVisitor::visit(AddressType const&)
 	return addressValueAsString(counter());
 }
 
-string ValueGetterVisitor::visit(DynamicByteArrayType const& _type)
+string ValueGetterVisitor::visit(DynamicByteArrayType const&)
 {
 	return bytesArrayValueAsString(
 		counter(),
-		getDataTypeOfDynBytesType(_type) == DataType::BYTES
+		true
 	);
 }
 
@@ -1195,10 +1257,29 @@ std::string ValueGetterVisitor::fixedByteValueAsString(unsigned _width, unsigned
 
 std::string ValueGetterVisitor::addressValueAsString(unsigned _counter)
 {
-	// TODO: Isabelle encoder expects address literal to be exactly
+	return "address(" + maskUnsignedIntToHex(_counter, 40) + ")";
+}
+
+std::string ValueGetterVisitor::isabelleAddressValueAsString(std::string& _solAddressString)
+{
+	// Isabelle encoder expects address literal to be exactly
 	// 20 bytes and a hex string.
 	// Example: 0x0102030405060708090a0102030405060708090a
-	return "address(" + maskUnsignedIntToHex(_counter, 40) + ")";
+	std::regex const addressPattern("address\\((.*)\\)");
+	std::smatch match;
+	solAssert(std::regex_match(_solAddressString, match, addressPattern), "Abiv2 fuzzer: Invalid address string");
+	std::string addressHex = match[1].str();
+	addressHex.erase(2, 24);
+	return addressHex;
+}
+
+std::string ValueGetterVisitor::isabelleBytesValueAsString(std::string& _solBytesString)
+{
+	std::regex const bytesPattern("hex\"(.*)\"");
+	std::smatch match;
+	solAssert(std::regex_match(_solBytesString, match, bytesPattern), "Abiv2 fuzzer: Invalid bytes string");
+	std::string bytesHex = match[1].str();
+	return "0x" + bytesHex;
 }
 
 std::string ValueGetterVisitor::variableLengthValueAsString(
