@@ -69,7 +69,7 @@ static V integerValue(unsigned _counter)
 	V value = V(
 		u256(solidity::util::keccak256(solidity::util::h256(_counter))) % u256(boost::math::tools::max_value<V>())
 	);
-	if (value % 2 == 0)
+	if (boost::multiprecision::is_signed_number<V>::value && value % 2 == 0)
 		return value * (-1);
 	else
 		return value;
