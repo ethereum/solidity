@@ -33,3 +33,5 @@ contract C {
 // g(int8,int8): 0, 0 -> FAILURE, hex"4e487b71", 0x12
 // g(int8,int8): 0, 1 -> 0
 // g(int8,int8): 0, -1 -> 0
+// g(int8,int8): -128, -128 -> 0
+// g(int8,int8): -128, 127 -> -1
