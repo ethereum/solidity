@@ -119,8 +119,13 @@ function findMinimalVersion()
 
     if [ -z "$version" ]
     then
-        printError "No release $sign$pragmaVersion was listed in available releases!"
-        exit 1
+        if [[ "$greater" = true && "$pragmaVersion" =~ 99 ]]
+        then
+            printError "Skipping version check for pragma: $pragmaVersion"
+        else
+            printError "No release $sign$pragmaVersion was listed in available releases!"
+            exit 1
+        fi
     fi
 }
 
