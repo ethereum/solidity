@@ -18,7 +18,7 @@ contract C {
         assembly {
             y := x
         }
-        address payable z = address(y);
+        address payable z = payable(y);
         assembly {
             r := z
         }

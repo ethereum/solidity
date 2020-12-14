@@ -724,11 +724,11 @@ contract DAO is DAOInterface, Token, TokenCreation {
         reward = address(DAOrewardAccount).balance < reward ? address(DAOrewardAccount).balance : reward;
 
         if(_toMembers) {
-            if (!DAOrewardAccount.payOut(address(dao.rewardAccount()), reward))
+            if (!DAOrewardAccount.payOut(payable(dao.rewardAccount()), reward))
                 revert();
             }
         else {
-            if (!DAOrewardAccount.payOut(address(dao), reward))
+            if (!DAOrewardAccount.payOut(payable(dao), reward))
                 revert();
         }
         DAOpaidOut[msg.sender] += reward;
