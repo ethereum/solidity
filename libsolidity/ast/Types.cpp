@@ -940,7 +940,7 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	if (category == Category::FixedBytes)
 		return false;
 	else if (category == Category::Address)
-		return !(isNegative() || isFractional() || integerType()->numBits() > 160);
+		return !(isNegative() || isFractional() || !integerType() || integerType()->numBits() > 160);
 	else if (category == Category::Integer)
 		return false;
 	else if (auto enumType = dynamic_cast<EnumType const*>(&_convertTo))
