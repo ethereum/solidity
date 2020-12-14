@@ -2604,8 +2604,11 @@ vector<VariableDeclaration const*> SMTEncoder::modifiersVariables(FunctionDefini
 			continue;
 
 		visited.insert(modifier);
-		vars += applyMap(modifier->parameters(), [](auto _var) { return _var.get(); });
-		vars += BlockVars(modifier->body()).vars;
+		if (modifier->isImplemented())
+		{
+			vars += applyMap(modifier->parameters(), [](auto _var) { return _var.get(); });
+			vars += BlockVars(modifier->body()).vars;
+		}
 	}
 	return vars;
 }
