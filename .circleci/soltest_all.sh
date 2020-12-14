@@ -80,6 +80,6 @@ done
 
 if (($STEP != $STEPS + 1))
 then
-    echo "Step counter not properly adjusted!" >2
+    echo "Step counter not properly adjusted!" >&2
     exit 1
 fi

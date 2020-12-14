@@ -98,7 +98,7 @@ do
         NSOURCES=$((NSOURCES - 1))
         for i in $OUTPUT;
         do
-            testImportExportEquivalence $i $OUTPUT
+            testImportExportEquivalence "$i" "$OUTPUT"
             NSOURCES=$((NSOURCES + 1))
         done
     elif [ ${SPLITSOURCES_RC} == 1 ]
