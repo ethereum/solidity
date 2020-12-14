@@ -187,6 +187,13 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			}
 			else if (test.call().kind == FunctionCall::Kind::Balance)
 			{
+				test.setFailure(false);
+				u256 balance = balanceAt(m_contractAddress);
+				if (balance != test.call().value.value)
+					success = false;
+//				if (balanceAt(m_contractAddress) != test.call()va.lue)
+//					success = false;
+//				test.call().value = balnac
 			}
 			else if (test.call().kind == FunctionCall::Kind::Constructor)
 			{

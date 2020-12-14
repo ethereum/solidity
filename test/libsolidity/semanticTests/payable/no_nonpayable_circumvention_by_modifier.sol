@@ -11,4 +11,4 @@ contract C {
 }
 // ----
 // f(), 27 wei -> FAILURE
-// balance: 0 wei
+// balance: 15 wei
