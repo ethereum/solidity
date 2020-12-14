@@ -30,7 +30,7 @@ Not all types for constants and immutables are implemented at this time. The onl
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.2;
+    pragma solidity >=0.7.4;
 
     uint constant X = 32**22 + 8;
 
