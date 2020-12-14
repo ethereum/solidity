@@ -154,6 +154,10 @@ public:
 	std::string contractToString(Contract const& _input);
 	std::string isabelleTypeString() const;
 	std::string isabelleValueString() const;
+	bool coderFunction() const
+	{
+		return m_test == Contract_Test::Contract_Test_CALLDATA_CODER;
+	}
 private:
 	enum class Delimiter
 	{
@@ -448,7 +452,6 @@ public:
 	enum class DataType
 	{
 		BYTES,
-		STRING,
 		VALUE,
 		ARRAY
 	};
@@ -536,17 +539,6 @@ public:
 			return v + 1;
 		else
 			return v;
-	}
-
-	static std::string bytesArrayTypeAsString(DynamicByteArrayType const& _x)
-	{
-		switch (_x.type())
-		{
-		case DynamicByteArrayType::BYTES:
-			return "bytes";
-		case DynamicByteArrayType::STRING:
-			return "string";
-		}
 	}
 protected:
 T visitValueType(ValueType const& _type)

@@ -830,10 +830,10 @@ string TypeVisitor::visit(ArrayType const& _type)
 	return baseType + arrayBracket;
 }
 
-string TypeVisitor::visit(DynamicByteArrayType const& _type)
+string TypeVisitor::visit(DynamicByteArrayType const&)
 {
 	m_isLastDynParamRightPadded = true;
-	m_baseType = bytesArrayTypeAsString(_type);
+	m_baseType = "bytes";
 	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
@@ -967,7 +967,7 @@ pair<string, string> AssignCheckVisitor::visit(DynamicByteArrayType const& _type
 		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
 		m_valueStream.appendValue(isabelleValue);
 	}
-	DataType dataType = _type.type() == DynamicByteArrayType::BYTES ? DataType::BYTES :	DataType::STRING;
+	DataType dataType = DataType::BYTES;
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, dataType);
 }
 
@@ -1127,12 +1127,6 @@ string AssignCheckVisitor::checkString(string const& _ref, string const& _value,
 	string checkPred;
 	switch (_type)
 	{
-	case DataType::STRING:
-		checkPred = Whiskers(R"(!bytesCompare(bytes(<varName>), <value>))")
-			("varName", _ref)
-			("value", _value)
-			.render();
-		break;
 	case DataType::BYTES:
 		checkPred = Whiskers(R"(!bytesCompare(<varName>, <value>))")
 			("varName", _ref)
@@ -1288,10 +1282,6 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 	bool _isHexLiteral
 )
 {
-	// TODO: Move this to caller
-//	solAssert(_numBytes >= 0 && _numBytes <= s_maxDynArrayLength,
-//	          "Proto ABIv2 fuzzer: Invalid hex length"
-//	);
 	if (_numBytes == 0)
 		return Whiskers(R"(<?isHex>hex</isHex>"")")
 			("isHex", _isHexLiteral)
