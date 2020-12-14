@@ -33,7 +33,7 @@ Event: 'event';
 External: 'external';
 Fallback: 'fallback';
 False: 'false';
-Fixed: 'fixed' | ('fixed' [0-9]+ 'x' [0-9]+);
+Fixed: 'fixed' | ('fixed' [1-9][0-9]* 'x' [1-9][0-9]*);
 From: 'from';
 /**
  * Bytes types of fixed length.
@@ -86,7 +86,7 @@ Struct: 'struct';
 True: 'true';
 Try: 'try';
 Type: 'type';
-Ufixed: 'ufixed' | ('ufixed' [0-9]+ 'x' [0-9]+);
+Ufixed: 'ufixed' | ('ufixed' [1-9][0-9]+ 'x' [1-9][0-9]+);
 /**
  * Sized unsigned integer types.
  * uint is an alias of uint256.
