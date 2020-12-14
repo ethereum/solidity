@@ -1,5 +1,5 @@
 contract C {
-    function f() public returns (address payable) {
+    function f() public returns (address) {
         return msg.sender;
     }
 }

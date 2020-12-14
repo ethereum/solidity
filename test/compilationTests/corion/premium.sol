@@ -19,7 +19,7 @@ contract ptokenDB is tokenDB {}
  */
 contract premium is module, safeMath {
     function replaceModule(address payable addr) external override returns (bool success) {
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         require( db.replaceOwner(addr) );
         super._replaceModule(addr);
         return true;

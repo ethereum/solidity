@@ -1328,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 		}
 		contract test {
 			helper h;
-			constructor() payable { h = new helper(); address(h).send(5); }
+			constructor() payable { h = new helper(); payable(h).send(5); }
 			function getBalance() public returns (uint256 myBalance, uint256 helperBalance) {
 				myBalance = address(this).balance;
 				helperBalance = address(h).balance;
@@ -4640,7 +4640,7 @@ BOOST_AUTO_TEST_CASE(bubble_up_error_messages_through_transfer)
 				revert("message");
 			}
 			function f() public {
-				address(this).transfer(0);
+				payable(this).transfer(0);
 			}
 		}
 		contract C {

@@ -1,8 +1,8 @@
 contract C {
     function f() public {
-        address(this).transfer(1);
-        require(address(this).send(2));
-        selfdestruct(address(this));
+        payable(this).transfer(1);
+        require(payable(this).send(2));
+        selfdestruct(payable(this));
         (bool success,) = address(this).delegatecall("");
         require(success);
 		(success,) = address(this).call("");

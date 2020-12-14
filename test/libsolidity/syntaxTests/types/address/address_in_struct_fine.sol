@@ -13,7 +13,7 @@ contract B {
     }
     S s;
     function f() public {
-        s.a = address(this);
+        s.a = payable(this);
     }
     receive() external payable {
     }

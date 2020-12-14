@@ -1,3 +1,3 @@
 contract C {
-    address payable constant a = address(0);
+    address payable constant a = payable(0);
 }

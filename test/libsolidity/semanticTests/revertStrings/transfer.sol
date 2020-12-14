@@ -8,13 +8,13 @@ contract C {
 	A a = new A();
 	receive() external payable {}
 	function f() public {
-		address(a).transfer(1 wei);
+		payable(a).transfer(1 wei);
 	}
 	function h() public {
-		address(a).transfer(100 ether);
+		payable(a).transfer(100 ether);
 	}
 	function g() public view returns (uint) {
-		return address(this).balance;
+		return payable(this).balance;
 	}
 }
 // ====

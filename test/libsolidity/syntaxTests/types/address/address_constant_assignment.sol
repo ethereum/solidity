@@ -1,9 +1,9 @@
 contract C {
     address constant a = address(0);
-    address payable constant b = address(0);
+    address payable constant b = payable(0);
     function f() public {
         a = address(0);
-        b = address(0);
+        b = payable(0);
     }
 }
 // ----

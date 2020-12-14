@@ -3838,7 +3838,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 		});
 	case Kind::Message:
 		return MemberList::MemberMap({
-			{"sender", TypeProvider::payableAddress()},
+			{"sender", TypeProvider::address()},
 			{"gas", TypeProvider::uint256()},
 			{"value", TypeProvider::uint256()},
 			{"data", TypeProvider::array(DataLocation::CallData)},
@@ -3846,7 +3846,7 @@ MemberList::MemberMap MagicType::nativeMembers(ASTNode const*) const
 		});
 	case Kind::Transaction:
 		return MemberList::MemberMap({
-			{"origin", TypeProvider::payableAddress()},
+			{"origin", TypeProvider::address()},
 			{"gasprice", TypeProvider::uint256()}
 		});
 	case Kind::ABI:

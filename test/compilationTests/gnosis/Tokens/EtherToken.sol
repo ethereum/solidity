@@ -41,7 +41,7 @@ contract EtherToken is StandardToken {
         // Balance covers value
         balances[msg.sender] = balances[msg.sender].sub(value);
         totalTokens = totalTokens.sub(value);
-        msg.sender.transfer(value);
+        payable(msg.sender).transfer(value);
         emit Withdrawal(msg.sender, value);
     }
 }

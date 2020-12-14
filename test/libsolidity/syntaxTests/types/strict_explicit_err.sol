@@ -41,7 +41,7 @@ contract C
 // TypeError 9640: (183-213): Explicit type conversion not allowed from "uint16" to "int8".
 // TypeError 9640: (270-277): Explicit type conversion not allowed from "uint16" to "int8".
 // TypeError 9640: (300-329): Explicit type conversion not allowed from "uint256" to "address".
-// TypeError 9640: (349-365): Explicit type conversion not allowed from "address payable" to "uint256".
+// TypeError 9640: (349-365): Explicit type conversion not allowed from "address" to "uint256".
 // TypeError 9640: (421-431): Explicit type conversion not allowed from "uint256" to "address".
 // TypeError 9640: (452-471): Explicit type conversion not allowed from "bytes10" to "int80".
 // TypeError 9640: (493-511): Explicit type conversion not allowed from "int80" to "bytes10".

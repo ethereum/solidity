@@ -27,6 +27,8 @@ Breaking Changes:
  * Type System: Support ``address(...).codehash`` to retrieve the codehash of an account.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * View Pure Checker: Mark ``chainid`` as view.
+ * Type System: Explicit conversion to ``address`` type always returns a non-payable ``address`` type. In particular, ``address(u)``, ``address(b)``, ``address(c)`` and ``address(this)`` have the type ``address`` instead of ``address payable`` (Here ``u``, ``b``, and ``c`` are arbitrary variables of type ``uint160``, ``bytes20`` and contract type respectively.)
+ * Type System: The global variables ``tx.origin`` and ``msg.sender`` have type ``address`` instead of ``address payable``.
  * Yul: Disallow the use of reserved identifiers, such as EVM instructions, even if they are not available in the given dialect / EVM version.
 
 Language Features:

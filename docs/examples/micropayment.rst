@@ -159,13 +159,13 @@ The full contract
 
             require(recoverSigner(message, signature) == owner);
 
-            msg.sender.transfer(amount);
+            payable(msg.sender).transfer(amount);
         }
 
         /// destroy the contract and reclaim the leftover funds.
         function shutdown() public {
             require(msg.sender == owner);
-            selfdestruct(msg.sender);
+            selfdestruct(payable(msg.sender));
         }
 
         /// signature methods.
@@ -347,7 +347,7 @@ The full contract
         constructor (address payable _recipient, uint256 duration)
             payable
         {
-            sender = msg.sender;
+            sender = payable(msg.sender);
             recipient = _recipient;
             expiration = block.timestamp + duration;
         }
