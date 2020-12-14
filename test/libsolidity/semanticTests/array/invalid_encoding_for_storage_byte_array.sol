@@ -12,7 +12,7 @@ contract C {
     function abiEncode() public view returns (bytes memory) { return x; }
     function abiEncodePacked() public view returns (bytes memory) { return abi.encodePacked(x); }
     function copyToMemory() public view returns (bytes memory m) { m = x; }
-    function indexAccess() public view returns (byte) { return x[0]; }
+    function indexAccess() public view returns (bytes1) { return x[0]; }
     function assignTo() public { x = "def"; }
     function assignToLong() public { x = "1234567890123456789012345678901234567"; }
     function copyToStorage() public { y = x; }

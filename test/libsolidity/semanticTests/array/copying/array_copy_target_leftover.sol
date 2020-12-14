@@ -1,5 +1,5 @@
 contract c {
-    byte[10] data1;
+    bytes1[10] data1;
     bytes2[32] data2;
     function test() public returns (uint check, uint res1, uint res2) {
         uint i;
@@ -7,7 +7,7 @@ contract c {
             data2[i] = 0xffff;
         check = uint(uint16(data2[31])) * 0x10000 | uint(uint16(data2[14]));
         for (i = 0; i < data1.length; ++i)
-            data1[i] = byte(uint8(1 + i));
+            data1[i] = bytes1(uint8(1 + i));
         data2 = data1;
         for (i = 0; i < 16; ++i)
             res1 |= uint(uint16(data2[i])) * 0x10000**i;

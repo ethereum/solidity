@@ -257,7 +257,7 @@ library RLP {
  /// RLPItem is a list.
  /// @param self The RLPItem.
  /// @return data The decoded string.
- function toByte(RLPItem memory self) internal view returns (byte data) {
+ function toByte(RLPItem memory self) internal view returns (bytes1 data) {
      if(!isData(self))
          revert();
      (uint rStartPos, uint len) = _decode(self);
@@ -267,7 +267,7 @@ library RLP {
      assembly {
          temp := byte(0, mload(rStartPos))
      }
-     return byte(temp);
+     return bytes1(temp);
  }
 
  /// @dev Decode an RLPItem into an int. This will not work if the

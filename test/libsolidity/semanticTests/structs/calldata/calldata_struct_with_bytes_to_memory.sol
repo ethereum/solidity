@@ -10,7 +10,7 @@ contract C {
     function f(S calldata c)
         external
         pure
-        returns (uint256, byte, byte, uint256)
+        returns (uint256, bytes1, bytes1, uint256)
     {
         S memory m = c;
         return (m.a, m.b[0], m.b[1], m.c);

@@ -4,7 +4,7 @@ contract c {
     function f(uint len) public returns (bytes memory) {
         bytes memory x = new bytes(len);
         for (uint i = 0; i < len; i++)
-            x[i] = byte(uint8(i));
+            x[i] = bytes1(uint8(i));
         a = x;
         for (uint i = 0; i < len; i++)
             assert(a[i] == x[i]);

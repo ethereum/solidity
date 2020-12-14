@@ -14,7 +14,7 @@ contract C {
     function f(S1 calldata s1)
         external
         pure
-        returns (uint256 a, uint64 b0, byte b1, uint256 c)
+        returns (uint256 a, uint64 b0, bytes1 b1, uint256 c)
     {
         a = s1.a;
         b0 = s1.s.a;

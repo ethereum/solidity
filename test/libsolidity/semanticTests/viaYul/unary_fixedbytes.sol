@@ -32,9 +32,6 @@ contract C {
 	function r_b1() public pure returns (bytes1) {
 		return ~bytes1(hex"55");
 	}
-	function r_b() public pure returns (byte) {
-		return ~byte(hex"55");
-	}
 
 	function a_b32() public pure returns (bytes32) {
 		bytes32 r = ~bytes32(hex"ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00");
@@ -56,12 +53,8 @@ contract C {
 		bytes4 r =  ~bytes4(hex"ff00ff00");
 		return r;
 	}
-	function a_b1() public pure returns (byte) {
+	function a_b1() public pure returns (bytes1) {
 		bytes1 r =  ~bytes1(hex"55");
-		return r;
-	}
-	function a_b() public pure returns (byte) {
-		byte r =  ~byte(hex"55");
 		return r;
 	}
 }
@@ -77,11 +70,9 @@ contract C {
 // r_b8() -> 0xff00ff00ff00ff000000000000000000000000000000000000000000000000
 // r_b4() -> 0xff00ff00000000000000000000000000000000000000000000000000000000
 // r_b1() -> 0xaa00000000000000000000000000000000000000000000000000000000000000
-// r_b() -> 0xaa00000000000000000000000000000000000000000000000000000000000000
 // a_b32() -> 0xff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff
 // a_b25() -> 0xff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff0000000000000000
 // a_b16() -> 0xff00ff00ff00ff00ff00ff00ff00ff00000000000000000000000000000000
 // a_b8() -> 0xff00ff00ff00ff000000000000000000000000000000000000000000000000
 // a_b4() -> 0xff00ff00000000000000000000000000000000000000000000000000000000
 // a_b1() -> 0xaa00000000000000000000000000000000000000000000000000000000000000
-// a_b() -> 0xaa00000000000000000000000000000000000000000000000000000000000000
