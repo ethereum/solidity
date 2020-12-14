@@ -227,6 +227,9 @@ optional<rational> ConstantEvaluator::evaluateUnaryOperator(Token _operator, rat
 	}
 }
 
+namespace
+{
+
 optional<TypedRational> convertType(rational const& _value, Type const& _type)
 {
 	if (_type.category() == Type::Category::RationalNumber)
@@ -253,6 +256,8 @@ optional<TypedRational> constantToTypedValue(Type const& _type)
 		return TypedRational{&_type, dynamic_cast<RationalNumberType const&>(_type).value()};
 	else
 		return nullopt;
+}
+
 }
 
 optional<TypedRational> ConstantEvaluator::evaluate(
