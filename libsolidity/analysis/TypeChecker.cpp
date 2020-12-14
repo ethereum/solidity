@@ -1764,17 +1764,6 @@ TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 					result.message()
 				);
 		}
-		if (auto addressType = dynamic_cast<AddressType const*>(resultType))
-			if (addressType->stateMutability() != StateMutability::Payable)
-			{
-				bool payable = false;
-				if (
-					argType->category() != Type::Category::Address &&
-					argType->category() != Type::Category::RationalNumber
-				)
-					payable = argType->isExplicitlyConvertibleTo(*TypeProvider::payableAddress());
-				resultType = payable ? TypeProvider::payableAddress() : TypeProvider::address();
-			}
 	}
 	return resultType;
 }

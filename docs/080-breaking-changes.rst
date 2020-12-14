@@ -119,6 +119,22 @@ This section lists changes that might cause existing contracts to not compile an
   This change was done since the compiler cannot determine whether or not these addresses
   are payable or not, so it now requires an explicit conversion to make this requirement visible.
 
+* Explicit conversion into ``address`` type always returns a non-payable ``address`` type. In
+  particular, the following explicit conversions have the type ``address`` instead of ``address
+  payable``:
+
+  - ``address(u)`` where ``u`` is an arbitrary variable of type ``uint160``. One can convert ``u``
+    into the type ``address payable`` by using an explicit conversion, i.e., ``payable(u)``.
+  - ``address(b)`` where ``b`` is an arbitrary variable of type ``bytes20``. One can convert ``b``
+    into the type ``address payable`` by using an explicit conversion, i.e., ``payable(bytes20)``.
+  - ``address(c)`` where ``c`` is an arbitrary contract. Previously, the return type of this
+    conversion depended on whether the contract can receive Ether (either by having a receive
+    function or a payable fallback function). The conversion ``payable(c)`` has the type ``address
+    payable`` and is only allowed when the contract ``c`` can receive Ether. In general, one can
+    always convert ``c`` into the type ``address payable`` by using the following explicit
+    conversion: ``payable(address(c))``. Note that ``address(this)`` falls under the same category
+    as ``address(c)`` and the same rules apply for it.
+
 * The ``chainid`` builtin in inline assembly is now considered ``view`` instead of ``pure``.
 
 Interface Changes
