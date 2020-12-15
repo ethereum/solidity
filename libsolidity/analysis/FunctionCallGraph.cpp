@@ -52,8 +52,8 @@ shared_ptr<FunctionCallGraphBuilder::ContractCallGraph> FunctionCallGraphBuilder
 	m_graph = make_shared<ContractCallGraph>(_contract);
 
 	// Create graph for constructor, state vars, etc
-	m_currentNode = SpecialNode::CreationRoot;
-	m_currentDispatch = SpecialNode::CreationDispatch;
+	m_currentNode = SpecialNode::EntryCreation;
+	m_currentDispatch = SpecialNode::InternalCreationDispatch;
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 		visitConstructor(*contract);
 
@@ -67,24 +67,19 @@ shared_ptr<FunctionCallGraphBuilder::ContractCallGraph> FunctionCallGraphBuilder
 		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(&functionType->declaration()))
 			if (!m_graph->edges.count(funcDef))
 				visitCallable(funcDef);
+
+		// Add all external functions to the RuntimeDispatch
+		add(SpecialNode::Entry, &functionType->declaration());
 	}
 
-	// Add all CreationDispatch calls to the RuntimeDispatch as well
-	for (auto node: m_graph->edges[SpecialNode::CreationDispatch])
-		add(SpecialNode::InternalDispatch, node);
-
-	// Add all external functions to the RuntimeDispatch
-	for (auto& [hash, functionType]: _contract.interfaceFunctionList())
-	{
-		(void)hash;
-		add(SpecialNode::ExternalDispatch, &functionType->declaration());
-	}
+	// Add all InternalCreationDispatch calls to the RuntimeDispatch as well
+	add(SpecialNode::InternalDispatch, SpecialNode::InternalCreationDispatch);
 
 	if (_contract.fallbackFunction())
-		add(SpecialNode::ExternalDispatch, _contract.fallbackFunction());
+		add(SpecialNode::Entry, _contract.fallbackFunction());
 
 	if (_contract.receiveFunction())
-		add(SpecialNode::ExternalDispatch, _contract.receiveFunction());
+		add(SpecialNode::Entry, _contract.receiveFunction());
 
 	m_contract = nullptr;
 	solAssert(!m_currentNode.has_value(), "Current node not properly reset.");
@@ -129,37 +124,31 @@ void FunctionCallGraphBuilder::endVisit(MemberAccess const& _memberAccess)
 
 	// Super functions
 	if (*_memberAccess.annotation().requiredLookup == VirtualLookup::Super)
+	{
 		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type))
 		{
 			solAssert(type->isSuper(), "");
 			functionDef = &functionDef->resolveVirtual(*m_contract, type->contractDefinition().superContract(*m_contract));
 		}
+	}
+	else
+		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 
 	processFunction(*functionDef, _memberAccess.annotation());
 	return;
 }
 
-void FunctionCallGraphBuilder::endVisit(FunctionCall const& _functionCall)
-{
-	auto* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
-
-	if (
-		functionType &&
-		functionType->kind() == FunctionType::Kind::Internal &&
-		!functionType->hasDeclaration()
-	)
-		add(m_currentDispatch, &_functionCall);
-}
-
-void FunctionCallGraphBuilder::visitCallable(CallableDeclaration const* _callable)
+void FunctionCallGraphBuilder::visitCallable(CallableDeclaration const* _callable, bool _directCall)
 {
 	solAssert(!m_graph->edges.count(_callable), "");
 
-	auto previousNode = m_currentNode;
+	std::optional<Node> previousNode = m_currentNode;
 	m_currentNode = _callable;
 
-	if (previousNode.has_value())
+	if (previousNode.has_value() && _directCall)
 		add(*previousNode, _callable);
+	if (!_directCall)
+		add(*m_currentNode, m_currentDispatch);
 
 	_callable->accept(*this);
 
@@ -181,18 +170,9 @@ void FunctionCallGraphBuilder::visitConstructor(ContractDefinition const& _contr
 	}
 }
 
-bool FunctionCallGraphBuilder::add(Node _caller, ASTNode const* _callee)
+bool FunctionCallGraphBuilder::add(Node _caller, Node _callee)
 {
-	solAssert(_callee != nullptr, "");
-	auto result = m_graph->edges.find(_caller);
-
-	if (result == m_graph->edges.end())
-	{
-		m_graph->edges.emplace(_caller, std::set<ASTNode const*, ASTNode::CompareByID>{_callee});
-		return true;
-	}
-
-	return result->second.emplace(_callee).second;
+	return m_graph->edges[_caller].insert(_callee).second;
 }
 
 void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _callable, ExpressionAnnotation const& _annotation)
@@ -203,5 +183,5 @@ void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _calla
 	// Create edge to creation dispatch
 	if (!_annotation.calledDirectly)
 		add(m_currentDispatch, &_callable);
-	visitCallable(&_callable);
+	visitCallable(&_callable, _annotation.calledDirectly);
 }

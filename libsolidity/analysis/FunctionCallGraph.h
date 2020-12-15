@@ -32,10 +32,10 @@ namespace solidity::frontend
  * functions and modifiers
  *
  * Includes the following special nodes:
- *  - CreationRoot: All calls made at contract creation originate from this node
- *  - CreationDispatch: Represents the internal dispatch function at creation time
- *  - ExternalDispatch: Represents the runtime dispatch for all external functions
+ *  - EntryCreation: All calls made at contract creation originate from this node. Constructors are modelled to be all called by this node instead of calling each other due to implicit constructors that don't exist at this stage.
+ *  - InternalCreationDispatch: Represents the internal dispatch function at creation time
  *  - InternalDispatch: Represents the runtime dispatch for internal function pointers and complex expressions
+ *  - Entry: Represents the runtime dispatch for all external functions
  *
  *  Nodes are a variant of either the enum SpecialNode or an ASTNode pointer.
  *  ASTNodes are usually inherited from CallableDeclarations
@@ -50,7 +50,7 @@ namespace solidity::frontend
 class FunctionCallGraphBuilder: private ASTConstVisitor
 {
 public:
-	enum class SpecialNode { CreationRoot, CreationDispatch, InternalDispatch, ExternalDispatch };
+	enum class SpecialNode { EntryCreation, InternalCreationDispatch, InternalDispatch, Entry };
 
 	using Node = std::variant<ASTNode const*, SpecialNode>;
 
@@ -69,7 +69,7 @@ public:
 		/// Contract for which this is the graph
 		ContractDefinition const& contract;
 
-		std::map<Node, std::set<ASTNode const*, ASTNode::CompareByID>, CompareByID> edges;
+		std::map<Node, std::set<Node, CompareByID>, CompareByID> edges;
 
 		/// Set of contracts created
 		std::set<ContractDefinition const*, ASTNode::CompareByID> createdContracts;
@@ -81,18 +81,17 @@ private:
 	bool visit(Identifier const& _identifier) override;
 	bool visit(NewExpression const& _newExpression) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
-	void endVisit(FunctionCall const& _functionCall) override;
 
-	void visitCallable(CallableDeclaration const* _callable);
+	void visitCallable(CallableDeclaration const* _callable, bool _directCall = true);
 	void visitConstructor(ContractDefinition const& _contract);
 
-	bool add(Node _caller, ASTNode const* _callee);
+	bool add(Node _caller, Node _callee);
 	void processFunction(CallableDeclaration const& _callable, ExpressionAnnotation const& _annotation);
 
 	ContractDefinition const* m_contract = nullptr;
 	std::optional<Node> m_currentNode;
 	std::shared_ptr<ContractCallGraph> m_graph = nullptr;
-	Node m_currentDispatch = SpecialNode::CreationDispatch;
+	Node m_currentDispatch = SpecialNode::InternalCreationDispatch;
 };
 
 }

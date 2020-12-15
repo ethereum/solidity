@@ -36,12 +36,14 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Algorithms.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <boost/range/adaptor/map.hpp>
 
 #include <sstream>
+#include <variant>
 
 using namespace std;
 using namespace solidity;
@@ -51,41 +53,37 @@ using namespace solidity::frontend;
 namespace
 {
 
-void verifyCallGraph(set<ASTNode const*, ASTNode::CompareByID> const& _nodes, set<string>& _functionList)
+void verifyCallGraph(set<ASTNode const*, ASTNode::CompareByID> const& _nodes, set<ASTNode const*>& _functionList)
 {
 	for (auto const& node: _nodes)
 		if (auto const* functionDef = dynamic_cast<FunctionDefinition const*>(node))
-			solAssert(_functionList.erase(IRNames::function(*functionDef)) == 1, "Function not found in generated code");
+			solAssert(functionDef->isConstructor() || _functionList.erase(functionDef) == 1, "Function not found in generated code");
 
 	static string const funPrefix = "fun_";
 
-	for (string const& name: _functionList)
-		solAssert(name.substr(0, funPrefix.size()) != funPrefix, "Functions found in code gen that were not in the call graph");
+	for (ASTNode const* node: _functionList)
+		if (auto functionDefinition = dynamic_cast<FunctionDefinition const*>(node))
+			solAssert(functionDefinition->isConstructor(), "Functions found in code gen that were not in the call graph");
 }
 
 
-void collectCalls(FunctionCallGraphBuilder::ContractCallGraph const& _graph, ASTNode const* _root, set<ASTNode const*, ASTNode::CompareByID>& _functions)
+void collectCalls(FunctionCallGraphBuilder::ContractCallGraph const& _graph, FunctionCallGraphBuilder::Node _root, set<ASTNode const*, ASTNode::CompareByID>& _functions)
 {
-	if (_functions.count(_root) > 0)
-		return;
+	using Node = FunctionCallGraphBuilder::Node;
 
-	set<ASTNode const*, ASTNode::CompareByID> toVisit{_root};
+	set<Node const*> functions = BreadthFirstSearch<Node const*>{{&_root}}.run([&](Node const* _node, auto&& _addChild) {
+		auto callees = _graph.edges.find(*_node);
 
-	_functions.emplace(_root);
-
-	while (!toVisit.empty())
-	{
-		ASTNode const* function = *toVisit.begin();
-		toVisit.erase(toVisit.begin());
-
-		auto callees = _graph.edges.find(function);
 		if (callees == _graph.edges.end())
-			continue;
+			return;
 
-		for (auto& callee: callees->second)
-			if (_functions.emplace(callee).second)
-				toVisit.emplace(callee);
-	}
+		for (Node const& _child: callees->second)
+			_addChild(&_child);
+	}).visited;
+
+	for (Node const* node: functions)
+		if (auto* astNode = get_if<ASTNode const*>(node))
+			_functions.emplace(*astNode);
 }
 
 }
@@ -122,22 +120,13 @@ void IRGenerator::verifyCallGraph(FunctionCallGraphBuilder::ContractCallGraph co
 {
 	set<ASTNode const*, ASTNode::CompareByID> functions;
 
-	auto collectFromNode = [&](FunctionCallGraphBuilder::SpecialNode _node)
-	{
-		auto callees = _graph.edges.find(_node);
-
-		if (callees != _graph.edges.end())
-			for (auto callee: callees->second)
-				collectCalls(_graph, callee, functions);
-	};
-
-	collectFromNode(FunctionCallGraphBuilder::SpecialNode::CreationRoot);
-	collectFromNode(FunctionCallGraphBuilder::SpecialNode::CreationDispatch);
+	collectCalls(_graph, FunctionCallGraphBuilder::SpecialNode::EntryCreation, functions);
+	collectCalls(_graph, FunctionCallGraphBuilder::SpecialNode::InternalCreationDispatch, functions);
 	::verifyCallGraph(functions, m_creationFunctionList);
 
 	functions.clear();
-	collectFromNode(FunctionCallGraphBuilder::SpecialNode::ExternalDispatch);
-	collectFromNode(FunctionCallGraphBuilder::SpecialNode::InternalDispatch);
+	collectCalls(_graph, FunctionCallGraphBuilder::SpecialNode::Entry, functions);
+	collectCalls(_graph, FunctionCallGraphBuilder::SpecialNode::InternalDispatch, functions);
 	::verifyCallGraph(functions, m_deployedFunctionList);
 }
 
@@ -207,10 +196,9 @@ string IRGenerator::generate(
 
 	t("deploy", deployCode(_contract));
 	generateImplicitConstructors(_contract);
-	generateQueuedFunctions();
+	m_creationFunctionList = generateQueuedFunctions();
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
 
-	m_creationFunctionList = m_context.functionCollector().requestedFunctionsNames();
 	t("functions", m_context.functionCollector().requestedFunctions());
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
@@ -229,9 +217,8 @@ string IRGenerator::generate(
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
-	generateQueuedFunctions();
+	m_deployedFunctionList = generateQueuedFunctions();
 	generateInternalDispatchFunctions();
-	m_deployedFunctionList = m_context.functionCollector().requestedFunctionsNames();
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
 	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
 
@@ -249,11 +236,20 @@ string IRGenerator::generate(Block const& _block)
 	return generator.code();
 }
 
-void IRGenerator::generateQueuedFunctions()
+set<ASTNode const*> IRGenerator::generateQueuedFunctions()
 {
+	set<ASTNode const*> functions;
+
 	while (!m_context.functionGenerationQueueEmpty())
+	{
+		FunctionDefinition const& functionDefinition = *m_context.dequeueFunctionForCodeGeneration();
+
+		functions.emplace(&functionDefinition);
 		// NOTE: generateFunction() may modify function generation queue
-		generateFunction(*m_context.dequeueFunctionForCodeGeneration());
+		generateFunction(functionDefinition);
+	}
+
+	return functions;
 }
 
 InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()

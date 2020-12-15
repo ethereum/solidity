@@ -49,9 +49,6 @@ public:
 	/// empty return value.
 	std::string requestedFunctions();
 
-	/// Helper function to get the names of all requested functions
-	std::set<std::string> requestedFunctionsNames();
-
 	/// @returns true IFF a function with the specified name has already been collected.
 	bool contains(std::string const& _name) const { return m_requestedFunctions.count(_name) > 0; }
 private:

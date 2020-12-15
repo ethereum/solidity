@@ -68,7 +68,8 @@ private:
 
 	/// Generates code for all the functions from the function generation queue.
 	/// The resulting code is stored in the function collector in IRGenerationContext.
-	void generateQueuedFunctions();
+	/// @returns A set of ast nodes of the generated functions.
+	std::set<ASTNode const*> generateQueuedFunctions();
 	/// Generates  all the internal dispatch functions necessary to handle any function that could
 	/// possibly be called via a pointer.
 	/// @return The content of the dispatch for reuse in runtime code. Reuse is necessary because
@@ -118,8 +119,8 @@ private:
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;
 
-	std::set<std::string> m_creationFunctionList;
-	std::set<std::string> m_deployedFunctionList;
+	std::set<ASTNode const*> m_creationFunctionList;
+	std::set<ASTNode const*> m_deployedFunctionList;
 
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;

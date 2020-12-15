@@ -43,18 +43,6 @@ string MultiUseYulFunctionCollector::requestedFunctions()
 	return result;
 }
 
-set<string> MultiUseYulFunctionCollector::requestedFunctionsNames()
-{
-	set<string> names;
-	for (auto const& [name, code]: m_requestedFunctions)
-	{
-		(void) code;
-		names.emplace(name);
-	}
-
-	return names;
-}
-
 string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)
 {
 	if (!m_requestedFunctions.count(_name))
