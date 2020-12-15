@@ -399,13 +399,13 @@ BoolResult AddressType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	else if (auto const* contractType = dynamic_cast<ContractType const*>(&_convertTo))
 		return (m_stateMutability >= StateMutability::Payable) || !contractType->isPayable();
-	else if (auto integerType = dynamic_cast<IntegerType const*>(&_convertTo))
-		return (!integerType->isSigned() && integerType->numBits() == 160);
-	else if (
-		(_convertTo.category() == Category::FixedBytes) &&
-		(160 == dynamic_cast<FixedBytesType const&>(_convertTo).numBytes() * 8)
-	)
-		return true;
+	else if (m_stateMutability == StateMutability::NonPayable)
+	{
+		if (auto integerType = dynamic_cast<IntegerType const*>(&_convertTo))
+			return (!integerType->isSigned() && integerType->numBits() == 160);
+		else if (auto fixedBytesType = dynamic_cast<FixedBytesType const*>(&_convertTo))
+			return (fixedBytesType->numBytes() == 20);
+	}
 
 	return false;
 }
@@ -530,8 +530,11 @@ BoolResult IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	else if (auto integerType = dynamic_cast<IntegerType const*>(&_convertTo))
 		return (numBits() == integerType->numBits()) || (isSigned() == integerType->isSigned());
-	else if (_convertTo.category() == Category::Address)
-		return (!isSigned() && numBits() == 160);
+	else if (auto addressType = dynamic_cast<AddressType const*>(&_convertTo))
+		return
+			(addressType->stateMutability() != StateMutability::Payable) &&
+			!isSigned() &&
+			(numBits() == 160);
 	else if (auto fixedBytesType = dynamic_cast<FixedBytesType const*>(&_convertTo))
 		return (!isSigned() && (numBits() == fixedBytesType->numBytes() * 8));
 	else if (dynamic_cast<EnumType const*>(&_convertTo))
@@ -939,8 +942,13 @@ BoolResult RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo)
 	auto category = _convertTo.category();
 	if (category == Category::FixedBytes)
 		return false;
-	else if (category == Category::Address)
-		return !(isNegative() || isFractional() || !integerType() || integerType()->numBits() > 160);
+	else if (auto addressType = dynamic_cast<AddressType const*>(&_convertTo))
+		return	(m_value == 0) ||
+			((addressType->stateMutability() != StateMutability::Payable) &&
+			!isNegative() &&
+			!isFractional() &&
+			integerType() &&
+			(integerType()->numBits() <= 160));
 	else if (category == Category::Integer)
 		return false;
 	else if (auto enumType = dynamic_cast<EnumType const*>(&_convertTo))
@@ -1250,8 +1258,10 @@ BoolResult FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) con
 		return true;
 	else if (auto integerType = dynamic_cast<IntegerType const*>(&_convertTo))
 		return (!integerType->isSigned() && integerType->numBits() == numBytes() * 8);
-	else if (_convertTo.category() == Category::Address && numBytes() == 20)
-		return true;
+	else if (auto addressType = dynamic_cast<AddressType const*>(&_convertTo))
+		return
+			(addressType->stateMutability() != StateMutability::Payable) &&
+			(numBytes() == 20);
 	else if (auto fixedPointType = dynamic_cast<FixedPointType const*>(&_convertTo))
 		return fixedPointType->numBits() == numBytes() * 8;
 

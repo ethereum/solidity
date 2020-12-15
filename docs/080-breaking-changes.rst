@@ -89,6 +89,10 @@ This section lists changes that might cause existing contracts to not compile an
 
   - ``address(uint)`` and ``uint(address)``: converting both type-category and width. Replace this by
     ``address(uint160(uint))`` and ``uint(uint160(address))`` respectively.
+  - ``payable(uint160)``, ``payable(bytes20)`` and ``payable(integer-literal)``: converting both
+    type-category and state-mutability. Replace this by ``payable(address(uint160))``,
+    ``payable(address(bytes20))`` and ``payable(address(integer-literal))`` respectively. Note that
+    ``payable(0)`` is valid and is an exception to the rule.
   - ``int80(bytes10)`` and ``bytes10(int80)``: converting both type-category and sign. Replace this by
     ``int80(uint80(bytes10))`` and ``bytes10(uint80(int80)`` respectively.
   - ``Contract(uint)``: converting both type-category and width. Replace this by
@@ -126,9 +130,11 @@ This section lists changes that might cause existing contracts to not compile an
   payable``:
 
   - ``address(u)`` where ``u`` is an arbitrary variable of type ``uint160``. One can convert ``u``
-    into the type ``address payable`` by using an explicit conversion, i.e., ``payable(u)``.
+    into the type ``address payable`` by using two explicit conversions, i.e.,
+    ``payable(address(u))``.
   - ``address(b)`` where ``b`` is an arbitrary variable of type ``bytes20``. One can convert ``b``
-    into the type ``address payable`` by using an explicit conversion, i.e., ``payable(bytes20)``.
+    into the type ``address payable`` by using two explicit conversions, i.e.,
+    ``payable(address(b))``.
   - ``address(c)`` where ``c`` is an arbitrary contract. Previously, the return type of this
     conversion depended on whether the contract can receive Ether (either by having a receive
     function or a payable fallback function). The conversion ``payable(c)`` has the type ``address
