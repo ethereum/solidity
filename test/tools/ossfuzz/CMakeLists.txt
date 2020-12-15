@@ -151,7 +151,7 @@ if (OSSFUZZ)
             protobuf-mutator.a
             protobuf.a
             abicoder
-            gmp
+            gmp.a
     )
     set_target_properties(abiv2_isabelle_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
     target_compile_options(abiv2_isabelle_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion -Wno-suggest-destructor-override -Wno-inconsistent-missing-destructor-override)
