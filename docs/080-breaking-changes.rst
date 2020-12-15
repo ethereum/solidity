@@ -129,13 +129,13 @@ This section lists changes that might cause existing contracts to not compile an
   particular, the following explicit conversions have the type ``address`` instead of ``address
   payable``:
 
-  - ``address(u)`` where ``u`` is an arbitrary variable of type ``uint160``. One can convert ``u``
+  - ``address(u)`` where ``u`` is a variable of type ``uint160``. One can convert ``u``
     into the type ``address payable`` by using two explicit conversions, i.e.,
     ``payable(address(u))``.
-  - ``address(b)`` where ``b`` is an arbitrary variable of type ``bytes20``. One can convert ``b``
+  - ``address(b)`` where ``b`` is a variable of type ``bytes20``. One can convert ``b``
     into the type ``address payable`` by using two explicit conversions, i.e.,
     ``payable(address(b))``.
-  - ``address(c)`` where ``c`` is an arbitrary contract. Previously, the return type of this
+  - ``address(c)`` where ``c`` is a contract. Previously, the return type of this
     conversion depended on whether the contract can receive Ether (either by having a receive
     function or a payable fallback function). The conversion ``payable(c)`` has the type ``address
     payable`` and is only allowed when the contract ``c`` can receive Ether. In general, one can
