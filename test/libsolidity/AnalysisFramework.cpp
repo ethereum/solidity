@@ -51,9 +51,11 @@ AnalysisFramework::parseAnalyseAndReturnError(
 )
 {
 	compiler().reset();
+	// Do not insert license if it is already present.
+	bool insertLicense = _insertLicenseAndVersionPragma && _source.find("// SPDX-License-Identifier:") == string::npos;
 	compiler().setSources({{"",
-		_insertLicenseAndVersionPragma ?
-		"pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n" + _source :
+		string{_insertLicenseAndVersionPragma ? "pragma solidity >=0.0;\n" : ""} +
+		string{insertLicense ? "// SPDX-License-Identifier: GPL-3.0\n" : ""} +
 		_source
 	}});
 	compiler().setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
