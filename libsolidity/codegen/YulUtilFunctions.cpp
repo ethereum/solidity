@@ -2848,18 +2848,20 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 	}
 	else if (_from.category() == Type::Category::ArraySlice)
 	{
-		solAssert(_from.isDynamicallySized(), "");
-		solAssert(_from.dataStoredIn(DataLocation::CallData), "");
 		solAssert(_to.category() == Type::Category::Array, "");
+		auto const& fromType = dynamic_cast<ArraySliceType const&>(_from);
+		auto const& targetType = dynamic_cast<ArrayType const&>(_to);
 
-		ArraySliceType const& fromType = dynamic_cast<ArraySliceType const&>(_from);
-		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_to);
-
-		solAssert(!fromType.arrayType().baseType()->isDynamicallyEncoded(), "");
+		solAssert(fromType.arrayType().isImplicitlyConvertibleTo(targetType), "");
 		solAssert(
-			*fromType.arrayType().baseType() == *targetType.baseType(),
-			"Converting arrays of different type is not possible"
+			fromType.arrayType().dataStoredIn(DataLocation::CallData) &&
+			fromType.arrayType().isDynamicallySized() &&
+			!fromType.arrayType().baseType()->isDynamicallyEncoded(),
+			""
 		);
+
+		if (!targetType.dataStoredIn(DataLocation::CallData))
+			return arrayConversionFunction(fromType.arrayType(), targetType);
 
 		string const functionName =
 			"convert_" +
