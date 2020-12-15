@@ -26,8 +26,8 @@ a 0.x version number `to indicate this fast pace of change <https://semver.org/#
 
 .. warning::
 
-  Solidity recently released the 0.7.x version that introduced a lot of breaking
-  changes. Make sure you read :doc:`the full list <070-breaking-changes>`.
+  Solidity recently released the 0.8.x version that introduced a lot of breaking
+  changes. Make sure you read :doc:`the full list <080-breaking-changes>`.
 
 Ideas for improving Solidity or this documentation are always welcome,
 read our :doc:`contributors guide <contributing>` for more details.
