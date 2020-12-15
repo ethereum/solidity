@@ -188,17 +188,14 @@ Type conversions:
 Implicit conversions from ``address payable`` to ``address`` are allowed, whereas conversions from ``address`` to ``address payable``
 must be explicit via ``payable(<address>)``.
 
-Explicit conversions to and from ``address`` are allowed for integers, integer literals, ``bytes20`` and contract types with the following
-caveat:
-The result of a conversion of the form ``address(x)``
-has the type ``address payable``, if ``x`` is of integer or fixed bytes type,
-or a contract with a receive or payable fallback function.
-If ``x`` is a contract without a receive or payable fallback function,
-then ``address(x)`` will be of type ``address``.
-Similarly, if ``x`` is a literal, then ``address(x)`` will also be of type ``address``.
-In external function signatures ``address`` is used for both the ``address`` and the ``address payable`` type.
+Explicit conversions to and from ``address`` are allowed for ``uint160``, integer literals,
+``bytes20`` and contract types.
 
-Only expressions of type ``address`` can be converted to type ``address payable`` via ``payable(<address>)``.
+Only expressions of type ``address`` and contract-type can be converted to the type ``address
+payable`` via the explicit conversion ``payable(...)``. For contract-type, this conversion is only
+allowed if the contract can receive Ether, i.e., the contract either has a :ref:`receive
+<receive-ether-function>` or a payable fallback function. Note that ``payable(0)`` is valid and is
+an exception to this rule.
 
 .. note::
     If you need a variable of type ``address`` and plan to send Ether to it, then
