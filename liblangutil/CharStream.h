@@ -98,6 +98,20 @@ public:
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
 	///@}
 
+	/// Tests whether or not given octet sequence is present at the current position in stream.
+	/// @returns true if the sequence could be found, false otherwise.
+	bool prefixMatch(std::string_view _sequence)
+	{
+		if (isPastEndOfInput(_sequence.size()))
+			return false;
+
+		for (size_t i = 0; i < _sequence.size(); ++i)
+			if (_sequence[i] != get(i))
+				return false;
+
+		return true;
+	}
+
 private:
 	std::string m_source;
 	std::string m_name;

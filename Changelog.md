@@ -6,6 +6,7 @@ Language Features:
  * Code generator: Support conversion from calldata slices to memory and storage arrays.
  * The fallback function can now also have a single ``calldata`` argument (equaling ``msg.data``) and return ``bytes memory`` (which will not be ABI-encoded but returned as-is).
  * Wasm backend: Add ``i32.select`` and ``i64.select`` instructions.
+ * Scanner: Generate a parser error when comments or unicode strings contain an unbalanced or underflowing set of unicode direction override markers (LRO, RLO, LRE, RLE, PDF).
 
 Compiler Features:
  * Build System: Optionally support dynamic loading of Z3 and use that mechanism for Linux release builds.
