@@ -507,18 +507,21 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 		solAssert(smt::isInteger(*type) || smt::isFixedPoint(*type), "");
 		solAssert(subExpr->annotation().willBeWrittenTo, "");
+		auto computeNewValue = [&](auto currentValue) {
+			return arithmeticOperation(
+				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
+				currentValue,
+				smtutil::Expression(size_t(1)),
+				_op.annotation().type,
+				_op
+			).first;
+		};
 		if (auto identifier = dynamic_cast<Identifier const*>(subExpr))
 		{
 			auto decl = identifierToVariable(*identifier);
 			solAssert(decl, "");
 			auto innerValue = currentValue(*decl);
-			auto newValue = arithmeticOperation(
-				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
-				innerValue,
-				smtutil::Expression(size_t(1)),
-				_op.annotation().type,
-				_op
-			).first;
+			auto newValue = computeNewValue(innerValue);
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			assignment(*decl, newValue);
 		}
@@ -528,15 +531,16 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 		)
 		{
 			auto innerValue = expr(*subExpr);
-			auto newValue = arithmeticOperation(
-				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
-				innerValue,
-				smtutil::Expression(size_t(1)),
-				_op.annotation().type,
-				_op
-			).first;
+			auto newValue = computeNewValue(innerValue);
 			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
 			indexOrMemberAssignment(*subExpr, newValue);
+		}
+		else if (isEmptyPush(*subExpr))
+		{
+			auto innerValue = expr(*subExpr);
+			auto newValue = computeNewValue(innerValue);
+			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
+			arrayPushPopAssign(*subExpr, newValue);
 		}
 		else
 			solAssert(false, "");
@@ -709,6 +713,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		break;
 	}
 	case FunctionType::Kind::ArrayPush:
+	case FunctionType::Kind::ByteArrayPush:
 		arrayPush(_funCall);
 		break;
 	case FunctionType::Kind::ArrayPop:
@@ -1134,8 +1139,12 @@ void SMTEncoder::visitFunctionIdentifier(Identifier const& _identifier)
 void SMTEncoder::visitStructConstructorCall(FunctionCall const& _funCall)
 {
 	solAssert(*_funCall.annotation().kind == FunctionCallKind::StructConstructorCall, "");
-	auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
-	structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
+	if (smt::isNonRecursiveStruct(*_funCall.annotation().type))
+	{
+		auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
+		structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
+	}
+
 }
 
 void SMTEncoder::endVisit(Literal const& _literal)
@@ -1567,6 +1576,8 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(expr))
 	{
 		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
+		// Push cannot occur on an expression that is itself a ByteArrayPush, i.e., bytes.push().push() is not possible.
+		solAssert(funType.kind() != FunctionType::Kind::ByteArrayPush, "");
 		if (funType.kind() == FunctionType::Kind::ArrayPush)
 		{
 			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
@@ -2494,7 +2505,7 @@ MemberAccess const* SMTEncoder::isEmptyPush(Expression const& _expr) const
 	)
 	{
 		auto const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
-		if (funType.kind() == FunctionType::Kind::ArrayPush)
+		if (funType.kind() == FunctionType::Kind::ArrayPush || funType.kind() == FunctionType::Kind::ByteArrayPush)
 			return &dynamic_cast<MemberAccess const&>(funCall->expression());
 	}
 	return nullptr;
@@ -2542,10 +2553,10 @@ FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall cons
 	FunctionDefinition const* funDef = nullptr;
 	Expression const* calledExpr = &_funCall.expression();
 
-	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(&_funCall.expression()))
+	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(calledExpr))
 	{
 		solAssert(fun->components().size() == 1, "");
-		calledExpr = fun->components().front().get();
+		calledExpr = innermostTuple(*calledExpr);
 	}
 
 	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
@@ -2596,8 +2607,11 @@ vector<VariableDeclaration const*> SMTEncoder::modifiersVariables(FunctionDefini
 			continue;
 
 		visited.insert(modifier);
-		vars += applyMap(modifier->parameters(), [](auto _var) { return _var.get(); });
-		vars += BlockVars(modifier->body()).vars;
+		if (modifier->isImplemented())
+		{
+			vars += applyMap(modifier->parameters(), [](auto _var) { return _var.get(); });
+			vars += BlockVars(modifier->body()).vars;
+		}
 	}
 	return vars;
 }
@@ -2684,6 +2698,7 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 	unsigned firstParam = 0;
 	if (funType->bound())
 	{
+		calledExpr = innermostTuple(*calledExpr);
 		auto const& boundFunction = dynamic_cast<MemberAccess const*>(calledExpr);
 		solAssert(boundFunction, "");
 		args.push_back(expr(boundFunction->expression(), functionParams.front()->type()));

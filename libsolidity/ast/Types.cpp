@@ -1895,9 +1895,13 @@ std::unique_ptr<ReferenceType> ArrayType::copyForLocation(DataLocation _location
 
 BoolResult ArraySliceType::isImplicitlyConvertibleTo(Type const& _other) const
 {
-	if (m_arrayType.location() == DataLocation::CallData && m_arrayType.isDynamicallySized() && m_arrayType == _other)
-		return true;
-	return (*this) == _other;
+	return
+		(*this) == _other ||
+		(
+			m_arrayType.dataStoredIn(DataLocation::CallData) &&
+			m_arrayType.isDynamicallySized() &&
+			m_arrayType.isImplicitlyConvertibleTo(_other)
+		);
 }
 
 string ArraySliceType::richIdentifier() const
