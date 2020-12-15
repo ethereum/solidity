@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang as base
-LABEL version="6"
+LABEL version="7"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -32,7 +32,7 @@ RUN apt-get update; \
 		software-properties-common \
 		ninja-build git wget \
 		libbz2-dev zlib1g-dev git curl uuid-dev \
-		pkg-config openjdk-8-jdk liblzma-dev unzip mlton; \
+		pkg-config openjdk-8-jdk liblzma-dev unzip mlton m4; \
     apt-get install -qy python-pip python-sphinx;
 
 # Install cmake 3.14 (minimum requirement is cmake 3.10)
@@ -113,6 +113,25 @@ RUN set -ex; \
 	ninja install/strip; \
 	rm -rf /usr/src/hera
 
+# gmp
+RUN set -ex; \
+    # Replace system installed libgmp static library
+    # with sanitized version. Do not perform apt
+    # remove because it removes mlton as well that
+    # we need for building libabicoder
+    rm -f /usr/lib/x86_64-linux-gnu/libgmp.*; \
+    rm -f /usr/include/x86_64-linux-gnu/gmp.h; \
+    cd /usr/src; \
+    wget -q 'https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz' -O gmp.tar.xz; \
+    test "$(sha256sum gmp.tar.xz)" = "fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2  gmp.tar.xz"; \
+    tar -xf gmp.tar.xz; \
+    cd gmp-6.2.1; \
+    ./configure --prefix=/usr --enable-static=yes; \
+    make -j; \
+    make install; \
+    rm -rf /usr/src/gmp-6.2.1; \
+    rm -f /usr/src/gmp.tar.xz
+
 # libabicoder
 RUN set -ex; \
     cd /usr/src; \
@@ -128,4 +147,3 @@ FROM base
 COPY --from=libraries /usr/lib /usr/lib
 COPY --from=libraries /usr/bin /usr/bin
 COPY --from=libraries /usr/include /usr/include
-
