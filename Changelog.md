@@ -3,6 +3,9 @@
 Compiler Features:
  * SMTChecker: Support ABI functions as uninterpreted functions.
 
+Bugfixes:
+ * SMTChecker: Fix false negatives in overriding modifiers.
+
 
 ### 0.8.0 (2020-12-16)
 
