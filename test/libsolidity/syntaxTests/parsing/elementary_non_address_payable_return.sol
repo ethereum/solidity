@@ -5,7 +5,7 @@ contract C {
     function d() public pure returns (int256 payable) {}
     function e() public pure returns (uint payable) {}
     function f() public pure returns (uint256 payable) {}
-    function g() public pure returns (byte payable) {}
+    function g() public pure returns (bytes1 payable) {}
     function h() public pure returns (bytes payable) {}
     function i() public pure returns (bytes32 payable) {}
     function j() public pure returns (fixed payable) {}
@@ -20,10 +20,10 @@ contract C {
 // ParserError 9106: (224-231): State mutability can only be specified for address types.
 // ParserError 9106: (279-286): State mutability can only be specified for address types.
 // ParserError 9106: (337-344): State mutability can only be specified for address types.
-// ParserError 9106: (392-399): State mutability can only be specified for address types.
-// ParserError 9106: (448-455): State mutability can only be specified for address types.
-// ParserError 9106: (506-513): State mutability can only be specified for address types.
-// ParserError 9106: (562-569): State mutability can only be specified for address types.
-// ParserError 9106: (623-630): State mutability can only be specified for address types.
-// ParserError 9106: (680-687): State mutability can only be specified for address types.
-// ParserError 9106: (742-749): State mutability can only be specified for address types.
+// ParserError 9106: (394-401): State mutability can only be specified for address types.
+// ParserError 9106: (450-457): State mutability can only be specified for address types.
+// ParserError 9106: (508-515): State mutability can only be specified for address types.
+// ParserError 9106: (564-571): State mutability can only be specified for address types.
+// ParserError 9106: (625-632): State mutability can only be specified for address types.
+// ParserError 9106: (682-689): State mutability can only be specified for address types.
+// ParserError 9106: (744-751): State mutability can only be specified for address types.

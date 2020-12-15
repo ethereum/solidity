@@ -15,6 +15,7 @@ Breaking Changes:
  * Standard JSON: Remove the ``legacyAST`` option.
  * Type Checker: Function call options can only be given once.
  * Type System: Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of public functions and events.
+ * Type System: Disallow the ``byte`` type. It was an alias to ``bytes1``.
  * Type System: Disallow ``msg.data`` in ``receive()`` function.
  * Type System: Disallow ``type(super)``.
  * Type System: Disallow enums with more than 256 members.

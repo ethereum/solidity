@@ -10,7 +10,7 @@ contract C {
         assert(y[0] == "d"); // fails
 
         y[0] ^= "f";
-        assert(y[0] == (byte("d") | byte("e")) ^ byte("f"));
+        assert(y[0] == (bytes1("d") | bytes1("e")) ^ bytes1("f"));
     }
 }
 // ----

@@ -5,7 +5,7 @@ contract C {
     function d(int256 payable) public pure {}
     function e(uint payable) public pure {}
     function f(uint256 payable) public pure {}
-    function g(byte payable) public pure {}
+    function g(bytes1 payable) public pure {}
     function h(bytes payable) public pure {}
     function i(bytes32 payable) public pure {}
     function j(fixed payable) public pure {}
@@ -20,10 +20,10 @@ contract C {
 // ParserError 9106: (168-175): State mutability can only be specified for address types.
 // ParserError 9106: (212-219): State mutability can only be specified for address types.
 // ParserError 9106: (259-266): State mutability can only be specified for address types.
-// ParserError 9106: (303-310): State mutability can only be specified for address types.
-// ParserError 9106: (348-355): State mutability can only be specified for address types.
-// ParserError 9106: (395-402): State mutability can only be specified for address types.
-// ParserError 9106: (440-447): State mutability can only be specified for address types.
-// ParserError 9106: (490-497): State mutability can only be specified for address types.
-// ParserError 9106: (536-543): State mutability can only be specified for address types.
-// ParserError 9106: (587-594): State mutability can only be specified for address types.
+// ParserError 9106: (305-312): State mutability can only be specified for address types.
+// ParserError 9106: (350-357): State mutability can only be specified for address types.
+// ParserError 9106: (397-404): State mutability can only be specified for address types.
+// ParserError 9106: (442-449): State mutability can only be specified for address types.
+// ParserError 9106: (492-499): State mutability can only be specified for address types.
+// ParserError 9106: (538-545): State mutability can only be specified for address types.
+// ParserError 9106: (589-596): State mutability can only be specified for address types.

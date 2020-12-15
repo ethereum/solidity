@@ -491,6 +491,7 @@ BOOST_AUTO_TEST_CASE(keyword_is_reserved)
 		"alias",
 		"apply",
 		"auto",
+		"byte",
 		"case",
 		"copyof",
 		"default",

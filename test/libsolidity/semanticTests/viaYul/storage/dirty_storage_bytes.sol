@@ -4,7 +4,7 @@ contract C {
         assembly {
             sstore(b.slot, or("deadbeef", 0x08))
         }
-        byte s = b[3];
+        bytes1 s = b[3];
         uint r;
         assembly {
             r := s

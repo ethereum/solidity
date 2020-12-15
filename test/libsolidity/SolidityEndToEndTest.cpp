@@ -2037,7 +2037,7 @@ BOOST_AUTO_TEST_CASE(event_indexed_string)
 				for (uint i = 0; i < 90; i++)
 					bytes(x).push(0);
 				for (uint8 i = 0; i < 90; i++)
-					bytes(x)[i] = byte(i);
+					bytes(x)[i] = bytes1(i);
 				y[0] = 4;
 				y[1] = 5;
 				y[2] = 6;
@@ -3421,9 +3421,9 @@ BOOST_AUTO_TEST_CASE(library_call)
 BOOST_AUTO_TEST_CASE(library_function_external)
 {
 	char const* sourceCode = R"(
-		library Lib { function m(bytes calldata b) external pure returns (byte) { return b[2]; } }
+		library Lib { function m(bytes calldata b) external pure returns (bytes1) { return b[2]; } }
 		contract Test {
-			function f(bytes memory b) public pure returns (byte) {
+			function f(bytes memory b) public pure returns (bytes1) {
 				return Lib.m(b);
 			}
 		}
@@ -3786,7 +3786,7 @@ BOOST_AUTO_TEST_CASE(short_strings)
 				if (data1[0] != "1") return 10;
 				if (data1[4] != "4") return 11;
 				for (uint i = 0; i < data1.length; i ++)
-					data1[i] = byte(uint8(i * 3));
+					data1[i] = bytes1(uint8(i * 3));
 				if (uint8(data1[4]) != 4 * 3) return 12;
 				if (uint8(data1[67]) != 67 * 3) return 13;
 				// change length: long -> short

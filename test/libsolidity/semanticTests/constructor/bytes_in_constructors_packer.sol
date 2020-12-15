@@ -5,7 +5,7 @@ contract Base {
         m_x = x;
         m_s = s;
     }
-    function part(uint i) public returns (byte) {
+    function part(uint i) public returns (bytes1) {
         return m_s[i];
     }
 }
@@ -16,7 +16,7 @@ contract Main is Base {
     }
 }
 contract Creator {
-    function f(uint x, bytes memory s) public returns (uint r, byte ch) {
+    function f(uint x, bytes memory s) public returns (uint r, bytes1 ch) {
         Main c = new Main(s, x);
         r = c.m_x();
         ch = c.part(x);

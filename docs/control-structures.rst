@@ -261,7 +261,7 @@ which only need to be created if there is a dispute.
             // can be pre-computed. It is just there for illustration.
             // You actually only need ``new D{salt: salt}(arg)``.
             address predictedAddress = address(uint160(uint(keccak256(abi.encodePacked(
-                byte(0xff),
+                bytes1(0xff),
                 address(this),
                 salt,
                 keccak256(abi.encodePacked(

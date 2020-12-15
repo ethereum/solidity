@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(byte_access)
 	char const* sourceCode = R"(
 		contract C
 		{
-			function f(bytes32 x) public returns (byte r)
+			function f(bytes32 x) public returns (bytes1 r)
 			{
 				assembly { r := and(byte(x, 31), 0xff) }
 			}

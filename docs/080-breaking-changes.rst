@@ -50,6 +50,8 @@ the compiler notifying you about it.
   in all branches of the evaluation tree. Now, if constant variables are used as intermediate expressions,
   their values will be properly rounded in the same way as when they are used in run-time expressions.
 
+* The type ``byte`` has been removed. It was an alias of ``bytes1``.
+
 New Restrictions
 ================
 

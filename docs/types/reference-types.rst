@@ -391,7 +391,7 @@ Array Members
             // Create a dynamic byte array:
             bytes memory b = new bytes(200);
             for (uint i = 0; i < b.length; i++)
-                b[i] = byte(uint8(i));
+                b[i] = bytes1(uint8(i));
             return b;
         }
     }

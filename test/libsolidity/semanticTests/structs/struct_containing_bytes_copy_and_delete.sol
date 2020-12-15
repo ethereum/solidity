@@ -16,7 +16,7 @@ contract c {
         delete data1;
         return true;
     }
-    function test(uint256 i) public returns (byte) {
+    function test(uint256 i) public returns (bytes1) {
         return data1.data[i];
     }
 }
