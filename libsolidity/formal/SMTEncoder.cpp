@@ -1144,8 +1144,12 @@ void SMTEncoder::visitFunctionIdentifier(Identifier const& _identifier)
 void SMTEncoder::visitStructConstructorCall(FunctionCall const& _funCall)
 {
 	solAssert(*_funCall.annotation().kind == FunctionCallKind::StructConstructorCall, "");
-	auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
-	structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
+	if (smt::isNonRecursiveStruct(*_funCall.annotation().type))
+	{
+		auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
+		structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
+	}
+
 }
 
 void SMTEncoder::endVisit(Literal const& _literal)
