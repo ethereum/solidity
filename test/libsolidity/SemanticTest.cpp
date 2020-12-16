@@ -95,17 +95,15 @@ SemanticTest::SemanticTest(
 	if (m_testCaseWantsEwasmRun && !m_supportsEwasm)
 		m_testCaseWantsEwasmRun = false;
 
-	m_runWithABIEncoderV1Only = m_reader.boolSetting("ABIEncoderV1Only", false);
-	if (m_runWithABIEncoderV1Only && !solidity::test::CommonOptions::get().useABIEncoderV1)
-		m_shouldRun = false;
-
-	// Sanity check
-	if (m_runWithABIEncoderV1Only && (compileViaYul == "true" || compileViaYul == "also"))
-		BOOST_THROW_EXCEPTION(runtime_error(
-			"ABIEncoderV1Only can not be used with compileViaYul=" + compileViaYul +
-			", set it to false or omit the flag. The compileViaYul setting ignores the abicoder pragma"
-			" and runs everything with ABICoder V2."
-		));
+	if (!solidity::test::CommonOptions::get().useABIEncoderV1)
+	{
+		for (auto const& [filename,source]: m_reader.sources().sources)
+			if (source.find("pragma abicoder v1;") != string::npos)
+			{
+				m_shouldRun = false;
+				break;
+			}
+	}
 
 	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
 	soltestAssert(revertStrings, "Invalid revertStrings setting.");
@@ -417,8 +415,6 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 		io_test.call().kind == FunctionCall::Kind::Builtin
 	)
 		return true;
-
-	solAssert(!m_runWithABIEncoderV1Only, "");
 
 	io_test.setGasCost(setting, m_gasUsed);
 	return

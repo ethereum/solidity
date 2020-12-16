@@ -90,7 +90,6 @@ private:
 	bool m_testCaseWantsLegacyRun = true;
 	bool m_enforceViaYul = false;
 	bool m_enforceCompileToEwasm = false;
-	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
 	bool m_canEnableYulRun = false;
 	bool m_canEnableEwasmRun = false;
