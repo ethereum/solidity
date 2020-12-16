@@ -1,4 +1,4 @@
 pragma abicoder v1;
-pragma experimental ABIEncoderV2;
+pragma abicoder v2;
 // ----
-// SyntaxError 8273: (20-53): ABI coder v1 has already been selected through "pragma abicoder v1".
+// SyntaxError 3845: (20-39): ABI coder has already been selected for this source unit.

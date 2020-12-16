@@ -1,5 +1,5 @@
 pragma experimental SMTChecker;
-pragma experimental "ABIEncoderV2";
+pragma abicoder v2;
 
 contract C {
 	function f(bytes memory data) public pure {
@@ -9,5 +9,5 @@ contract C {
 	}
 }
 // ----
-// Warning 2072: (139-146): Unused local variable.
-// Warning 2072: (194-201): Unused local variable.
+// Warning 2072: (123-130): Unused local variable.
+// Warning 2072: (178-185): Unused local variable.
