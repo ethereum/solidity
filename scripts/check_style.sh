@@ -6,7 +6,10 @@
 REPO_ROOT="$(dirname "$0")"/..
 cd $REPO_ROOT
 
-WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" | grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE")
+WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
+  grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE" |
+  grep -v -E "test/libsolidity/syntaxTests/comments/unicode_direction_override_1.sol"
+)
 
 if [[ "$WHITESPACE" != "" ]]
 then
