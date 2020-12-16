@@ -327,6 +327,9 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	case Token::HexStringLiteral:
 		fatalParserError(3772_error, "Hex literals are not valid in this context.");
 		break;
+	case Token::Illegal:
+		fatalParserError(1465_error, "Illegal token: " + to_string(m_scanner->currentError()));
+		break;
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}

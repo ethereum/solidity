@@ -3,4 +3,4 @@
     let s := unicode"underflow ‬";
 }
 // ----
-// ParserError 1856: (35-47): Literal or identifier expected.
+// ParserError 1465: (35-47): Illegal token: Invalid character in string.

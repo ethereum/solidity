@@ -3,4 +3,4 @@
     // underflow ‬
 }
 // ----
-// ParserError 1856: (19-32): Literal or identifier expected.
+// ParserError 1465: (19-32): Illegal token: Unicode direction override underflow in comment or string literal.
