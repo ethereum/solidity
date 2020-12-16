@@ -1,7 +1,6 @@
-### 0.8.0 (unreleased)
+### 0.8.0 (2020-12-16)
 
 Breaking Changes:
- * Assembler: The artificial ASSIGNIMMUTABLE opcode and the corresponding builtin in the "EVM with object access" dialect of Yul take the base offset of the code to modify as additional argument.
  * Code Generator: All arithmetic is checked by default. These checks can be disabled using ``unchecked { ... }``.
  * Code Generator: Cause a panic if a byte array in storage is accessed whose length is encoded incorrectly.
  * Code Generator: Use ``revert`` with error signature ``Panic(uint256)`` and error codes instead of invalid opcode on failing assertions.
@@ -15,22 +14,23 @@ Breaking Changes:
  * Standard JSON: Remove the ``legacyAST`` option.
  * Type Checker: Function call options can only be given once.
  * Type System: Declarations with the name ``this``, ``super`` and ``_`` are disallowed, with the exception of public functions and events.
- * Type System: Disallow the ``byte`` type. It was an alias to ``bytes1``.
  * Type System: Disallow ``msg.data`` in ``receive()`` function.
  * Type System: Disallow ``type(super)``.
  * Type System: Disallow enums with more than 256 members.
  * Type System: Disallow explicit conversions from negative literals and literals larger than ``type(uint160).max`` to ``address`` type.
- * Type System: Introduce ``address(...).code`` to retrieve the code as ``bytes memory``. The size can be obtained via ``address(...).code.length``, but it will currently always include copying the code.
+ * Type System: Disallow the ``byte`` type. It was an alias to ``bytes1``.
+ * Type System: Explicit conversion to ``address`` type always returns a non-payable ``address`` type. In particular, ``address(u)``, ``address(b)``, ``address(c)`` and ``address(this)`` have the type ``address`` instead of ``address payable`` (Here ``u``, ``b``, and ``c`` are arbitrary variables of type ``uint160``, ``bytes20`` and contract type respectively.)
  * Type System: Explicit conversions between two types are disallowed if it changes more than one of sign, width or kind at the same time.
  * Type System: Explicit conversions from literals to enums are only allowed if the value fits in the enum.
  * Type System: Explicit conversions from literals to integer type is as strict as implicit conversions.
+ * Type System: Introduce ``address(...).code`` to retrieve the code as ``bytes memory``. The size can be obtained via ``address(...).code.length``, but it will currently always include copying the code.
  * Type System: Introduce ``block.chainid`` for retrieving the current chain id.
  * Type System: Support ``address(...).codehash`` to retrieve the codehash of an account.
+ * Type System: The global variables ``tx.origin`` and ``msg.sender`` have type ``address`` instead of ``address payable``.
  * Type System: Unary negation can only be used on signed integers, not on unsigned integers.
  * View Pure Checker: Mark ``chainid`` as view.
- * Type System: Explicit conversion to ``address`` type always returns a non-payable ``address`` type. In particular, ``address(u)``, ``address(b)``, ``address(c)`` and ``address(this)`` have the type ``address`` instead of ``address payable`` (Here ``u``, ``b``, and ``c`` are arbitrary variables of type ``uint160``, ``bytes20`` and contract type respectively.)
- * Type System: The global variables ``tx.origin`` and ``msg.sender`` have type ``address`` instead of ``address payable``.
  * Yul: Disallow the use of reserved identifiers, such as EVM instructions, even if they are not available in the given dialect / EVM version.
+ * Yul: The ``assignimmutable`` builtin in the "EVM with objects" dialect takes the base offset of the code to modify as an additional argument.
 
 Language Features:
  * Super constructors can now be called using the member notation e.g. ``M.C(123)``.
