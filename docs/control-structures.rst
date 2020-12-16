@@ -496,7 +496,7 @@ To obtain the previous behaviour, an ``unchecked`` block can be used:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.99;
+    pragma solidity ^0.8.0;
     contract C {
         function f(uint a, uint b) pure public returns (uint) {
             // This addition will wrap on underflow.
