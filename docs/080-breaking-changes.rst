@@ -118,6 +118,7 @@ This section lists changes that might cause existing contracts to not compile an
 
 * Remove support for the ``\b``, ``\f``, and ``\v`` escape sequences in code.
   They can still be inserted via hexadecimal escapes, e.g. ``\x08``, ``\x0c``, and ``\x0b``, respectively.
+
 * The global variables ``tx.origin`` and ``msg.sender`` have the type ``address`` instead of
   ``address payable``. One can convert them into ``address payable`` by using an explicit
   conversion, i.e., ``payable(tx.origin)`` or ``payable(msg.sender)``.
@@ -155,3 +156,18 @@ Interface Changes
   Use the "compact AST" (``--ast-compact--json`` resp. ``AST``) as replacement.
 
 * The old error reporter (``--old-reporter``) has been removed.
+
+
+How to update your code
+=======================
+
+- If you rely on wrapping arithmetic, surround each operation with ``unchecked { ... }``.
+- Optional: If you use SafeMath or a similar library, change ``x.add(y)`` to ``x + y``, ``x.mul(y)`` to ``x * y`` etc.
+- Add ``pragma abicoder v1;`` if you want to stay with the old ABI coder.
+- Optionally remove ``pragma experimental ABIEncoderV2`` or ``pragma abicoder v2`` since it is redundant.
+- Change ``byte`` to ``bytes1``.
+- Add intermediate explicit type conversions if required.
+- Combine ``c.f{gas: 10000}{value: 1}()`` to ``c.f{gas: 10000, value: 1}()``.
+- Change ``msg.sender.transfer(x)`` to ``payable(msg.sender).transfer(x)`` or use a stored variable of ``address payable`` type.
+- Change ``x**y**z`` to ``(x**y)**z``.
+- Use inline assembly as a replacement for ``log0``, ..., ``log4``.
