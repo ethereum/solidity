@@ -732,10 +732,14 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	frontend::Expression const& _expression
 )
 {
+	// Unchecked does not disable div by 0 checks.
 	if (_op == Token::Mod || _op == Token::Div)
 		verificationTargetEncountered(&_expression, VerificationTarget::Type::DivByZero, _right == 0);
 
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
+
+	if (!m_checked)
+		return values;
 
 	IntegerType const* intType = nullptr;
 	if (auto const* type = dynamic_cast<IntegerType const*>(_commonType))

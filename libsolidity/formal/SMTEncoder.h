@@ -103,6 +103,8 @@ protected:
 	bool visit(ModifierDefinition const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
+	bool visit(Block const& _node) override;
+	void endVisit(Block const& _node) override;
 	bool visit(PlaceholderStatement const& _node) override;
 	bool visit(IfStatement const&) override { return false; }
 	bool visit(WhileStatement const&) override { return false; }
@@ -358,6 +360,11 @@ protected:
 	/// Used to retrieve models.
 	std::set<Expression const*> m_uninterpretedTerms;
 	std::vector<smtutil::Expression> m_pathConditions;
+
+	/// Whether the currently visited block uses checked
+	/// or unchecked arithmetic.
+	bool m_checked = true;
+
 	/// Local SMTEncoder ErrorReporter.
 	/// This is necessary to show the "No SMT solver available"
 	/// warning before the others in case it's needed.

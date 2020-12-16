@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Parser: Report meaningful error if parsing a version pragma failed.
  * SMTChecker: Support ABI functions as uninterpreted functions.
+ * SMTChecker: Use checked arithmetic by default and support ``unchecked`` blocks.
 
 Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.

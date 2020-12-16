@@ -21,5 +21,3 @@ contract LoopFor2 {
 // SMTIgnoreCex: yes
 // ----
 // Warning 2072: (156-171): Unused local variable.
-// Warning 4984: (252-257): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 4984: (232-238): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.

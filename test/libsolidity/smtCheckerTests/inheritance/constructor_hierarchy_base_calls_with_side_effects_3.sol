@@ -33,5 +33,4 @@ contract C is Z, B {
 // SMTIgnoreCex: yes
 // ----
 // Warning 4984: (138-145): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4984: (366-371): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 6328: (394-408): CHC: Assertion violation happens here.

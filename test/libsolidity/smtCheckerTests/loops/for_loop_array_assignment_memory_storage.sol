@@ -20,5 +20,3 @@ contract LoopFor2 {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning 4984: (245-250): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 4984: (225-231): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
