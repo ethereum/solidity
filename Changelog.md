@@ -42,7 +42,7 @@ AST Changes:
  * New AST Node ``IdentifierPath`` replacing in many places the ``UserDefinedTypeName``.
  * New AST Node ``UncheckedBlock`` used for ``unchecked { ... }``.
 
-### 0.7.6 (unreleased)
+### 0.7.6 (2020-12-16)
 
 Language Features:
  * Code generator: Support conversion from calldata slices to memory and storage arrays.
@@ -55,6 +55,7 @@ Language Features:
 Compiler Features:
  * Build System: Optionally support dynamic loading of Z3 and use that mechanism for Linux release builds.
  * Code Generator: Avoid memory allocation for default value if it is not used.
+ * SMTChecker: Apply constant evaluation on binary arithmetic expressions.
  * SMTChecker: Create underflow and overflow verification targets for increment/decrement in the CHC engine.
  * SMTChecker: Report struct values in counterexamples from CHC engine.
  * SMTChecker: Support early returns in the CHC engine.
