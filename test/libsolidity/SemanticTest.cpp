@@ -88,9 +88,15 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	if (m_runWithEwasm && !m_supportsEwasm)
 		m_runWithEwasm = false;
 
-	m_runWithABIEncoderV1Only = m_reader.boolSetting("ABIEncoderV1Only", false);
-	if (m_runWithABIEncoderV1Only && !solidity::test::CommonOptions::get().useABIEncoderV1)
-		m_shouldRun = false;
+	if (!solidity::test::CommonOptions::get().useABIEncoderV1)
+	{
+		for (auto const& [filename,source]: m_reader.sources().sources)
+			if (source.find("pragma abicoder v1;") != string::npos)
+			{
+				m_shouldRun = false;
+				break;
+			}
+	}
 
 	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
 	soltestAssert(revertStrings, "Invalid revertStrings setting.");
