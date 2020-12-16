@@ -1,4 +1,4 @@
-### 0.7.6 (unreleased)
+### 0.7.6 (2020-12-16)
 
 Language Features:
  * Code generator: Support conversion from calldata slices to memory and storage arrays.
