@@ -83,6 +83,10 @@ public:
 	/// @returns the arguments for each base constructor call in the hierarchy of @a _contract.
 	std::map<ContractDefinition const*, std::vector<ASTPointer<frontend::Expression>>> baseArguments(ContractDefinition const& _contract);
 
+	/// @returns a valid RationalNumberType pointer if _expr has type
+	/// RationalNumberType or can be const evaluated, and nullptr otherwise.
+	static TypePointer isConstant(Expression const& _expr);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined

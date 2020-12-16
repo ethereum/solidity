@@ -22,6 +22,8 @@
 #include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsolidity/analysis/ConstantEvaluator.h>
+
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
 
@@ -600,7 +602,8 @@ bool SMTEncoder::visit(BinaryOperation const& _op)
 
 void SMTEncoder::endVisit(BinaryOperation const& _op)
 {
-	if (_op.annotation().type->category() == Type::Category::RationalNumber)
+	/// If _op is const evaluated the RationalNumber shortcut was taken.
+	if (isConstant(_op))
 		return;
 	if (TokenTraits::isBooleanOp(_op.getOperator()))
 		return;
@@ -1628,17 +1631,17 @@ void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _ex
 
 bool SMTEncoder::shortcutRationalNumber(Expression const& _expr)
 {
-	if (_expr.annotation().type->category() == Type::Category::RationalNumber)
-	{
-		auto rationalType = dynamic_cast<RationalNumberType const*>(_expr.annotation().type);
-		solAssert(rationalType, "");
-		if (rationalType->isNegative())
-			defineExpr(_expr, smtutil::Expression(u2s(rationalType->literalValue(nullptr))));
-		else
-			defineExpr(_expr, smtutil::Expression(rationalType->literalValue(nullptr)));
-		return true;
-	}
-	return false;
+	auto type = isConstant(_expr);
+	if (!type)
+		return false;
+
+	solAssert(type->category() == Type::Category::RationalNumber, "");
+	auto const& rationalType = dynamic_cast<RationalNumberType const&>(*type);
+	if (rationalType.isNegative())
+		defineExpr(_expr, smtutil::Expression(u2s(rationalType.literalValue(nullptr))));
+	else
+		defineExpr(_expr, smtutil::Expression(rationalType.literalValue(nullptr)));
+	return true;
 }
 
 void SMTEncoder::arithmeticOperation(BinaryOperation const& _op)
@@ -2658,6 +2661,22 @@ map<ContractDefinition const*, vector<ASTPointer<frontend::Expression>>> SMTEnco
 	}
 
 	return baseArgs;
+}
+
+TypePointer SMTEncoder::isConstant(Expression const& _expr)
+{
+	if (
+		auto type = _expr.annotation().type;
+		type->category() == Type::Category::RationalNumber
+	)
+		return type;
+
+	// _expr may not be constant evaluable.
+	// In that case we ignore any warnings emitted by the constant evaluator,
+	// as it will return nullptr in case of failure.
+	ErrorList l;
+	ErrorReporter e(l);
+	return ConstantEvaluator(e).evaluate(_expr);
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
