@@ -1626,16 +1626,14 @@ void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _ex
 
 bool SMTEncoder::shortcutRationalNumber(Expression const& _expr)
 {
-	auto type = isConstant(_expr);
-	if (!type)
+	RationalNumberType const* rationalType = isConstant(_expr);
+	if (!rationalType)
 		return false;
 
-	solAssert(type->category() == Type::Category::RationalNumber, "");
-	auto const& rationalType = dynamic_cast<RationalNumberType const&>(*type);
-	if (rationalType.isNegative())
-		defineExpr(_expr, smtutil::Expression(u2s(rationalType.literalValue(nullptr))));
+	if (rationalType->isNegative())
+		defineExpr(_expr, smtutil::Expression(u2s(rationalType->literalValue(nullptr))));
 	else
-		defineExpr(_expr, smtutil::Expression(rationalType.literalValue(nullptr)));
+		defineExpr(_expr, smtutil::Expression(rationalType->literalValue(nullptr)));
 	return true;
 }
 
@@ -2658,12 +2656,9 @@ map<ContractDefinition const*, vector<ASTPointer<frontend::Expression>>> SMTEnco
 	return baseArgs;
 }
 
-TypePointer SMTEncoder::isConstant(Expression const& _expr)
+RationalNumberType const* SMTEncoder::isConstant(Expression const& _expr)
 {
-	if (
-		auto type = _expr.annotation().type;
-		type->category() == Type::Category::RationalNumber
-	)
+	if (auto type = dynamic_cast<RationalNumberType const*>(_expr.annotation().type))
 		return type;
 
 	// _expr may not be constant evaluable.
@@ -2671,7 +2666,10 @@ TypePointer SMTEncoder::isConstant(Expression const& _expr)
 	// as it will return nullptr in case of failure.
 	ErrorList l;
 	ErrorReporter e(l);
-	return ConstantEvaluator(e).evaluate(_expr);
+	if (auto t = ConstantEvaluator::evaluate(e, _expr))
+		return TypeProvider::rationalNumber(t->value);
+
+	return nullptr;
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)

@@ -85,7 +85,7 @@ public:
 
 	/// @returns a valid RationalNumberType pointer if _expr has type
 	/// RationalNumberType or can be const evaluated, and nullptr otherwise.
-	static TypePointer isConstant(Expression const& _expr);
+	static RationalNumberType const* isConstant(Expression const& _expr);
 
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
