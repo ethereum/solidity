@@ -1,22 +1,22 @@
 ### 0.7.6 (unreleased)
 
 Language Features:
+ * Code generator: Support conversion from calldata slices to memory and storage arrays.
  * Code generator: Support copying dynamically encoded structs from calldata to memory.
  * Code generator: Support copying of nested arrays from calldata to memory.
- * Code generator: Support conversion from calldata slices to memory and storage arrays.
+ * Scanner: Generate a parser error when comments or unicode strings contain an unbalanced or underflowing set of unicode direction override markers (LRO, RLO, LRE, RLE, PDF).
  * The fallback function can now also have a single ``calldata`` argument (equaling ``msg.data``) and return ``bytes memory`` (which will not be ABI-encoded but returned as-is).
  * Wasm backend: Add ``i32.select`` and ``i64.select`` instructions.
- * Scanner: Generate a parser error when comments or unicode strings contain an unbalanced or underflowing set of unicode direction override markers (LRO, RLO, LRE, RLE, PDF).
 
 Compiler Features:
  * Build System: Optionally support dynamic loading of Z3 and use that mechanism for Linux release builds.
  * Code Generator: Avoid memory allocation for default value if it is not used.
+ * SMTChecker: Create underflow and overflow verification targets for increment/decrement in the CHC engine.
  * SMTChecker: Report struct values in counterexamples from CHC engine.
  * SMTChecker: Support early returns in the CHC engine.
  * SMTChecker: Support getters.
  * SMTChecker: Support named arguments in function calls.
  * SMTChecker: Support struct constructor.
- * SMTChecker: Create underflow and overflow verification targets for increment/decrement in the CHC engine.
  * Standard-Json: Move the recently introduced ``modelCheckerSettings`` key to ``settings.modelChecker``.
  * Standard-Json: Properly filter the requested output artifacts.
 
