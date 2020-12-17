@@ -4,6 +4,9 @@ contract LoopFor2 {
 	uint[] b;
 	uint[] c;
 
+	// Disabled because of Spancer nondeterminism in the overflow queries
+	// which can't be disabled separately.
+	/*
 	function testUnboundedForLoop(uint n) public {
 		b[0] = 900;
 		uint[] storage a = b;
@@ -17,9 +20,8 @@ contract LoopFor2 {
 		assert(a[0] == 900);
 		assert(b[0] == 900);
 	}
+	*/
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 4984: (237-242): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 4984: (217-223): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 6328: (341-360): CHC: Assertion violation happens here.\nCounterexample:\nb = [], c = []\nn = 1\n\n\nTransaction trace:\nconstructor()\nState: b = [], c = []\ntestUnboundedForLoop(1)
-// Warning 6328: (364-383): CHC: Assertion violation happens here.\nCounterexample:\nb = [], c = []\nn = 1\n\n\nTransaction trace:\nconstructor()\nState: b = [], c = []\ntestUnboundedForLoop(1)

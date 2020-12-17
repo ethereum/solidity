@@ -30,4 +30,4 @@ contract C
 }
 // ----
 // Warning 6328: (329-344): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 10\nb = false\nc = true\n\n\nTransaction trace:\nconstructor()\nf(0, 9, false, true)
-// Warning 6328: (380-395): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 15\ny = 20\nb = false\nc = false\n\n\nTransaction trace:\nconstructor()\nf(0, 0, false, false)
+// Warning 6328: (380-395): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 15\ny = 0\nb = true\nc = false\n\n\nTransaction trace:\nconstructor()\nf(9, 0, true, false)

@@ -20,4 +20,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (436-453): CHC: Assertion violation happens here.\nCounterexample:\narray2d = []\nx = 0\ny = 0\nc = [38, 8, 8, 8, 8, 8, 8, 8, 8]\n\n\nTransaction trace:\nconstructor()\nState: array2d = []\ng(0, 0, [38, 8, 8, 8, 8, 8, 8, 8, 8])
+// Warning 6328: (436-453): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 0\n\n\nTransaction trace:\nconstructor()\nState: array2d = []\ng(0, 0, c)

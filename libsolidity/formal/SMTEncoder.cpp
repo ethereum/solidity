@@ -71,7 +71,12 @@ bool SMTEncoder::analyze(SourceUnit const& _source)
 				analysis = false;
 			}
 
-	return analysis;
+	if (!analysis)
+		return false;
+
+	m_context.state().prepareForSourceUnit(_source);
+
+	return true;
 }
 
 bool SMTEncoder::visit(ContractDefinition const& _contract)
@@ -680,13 +685,15 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		if (isPublicGetter(_funCall.expression()))
 			visitPublicGetter(_funCall);
 		break;
+	case FunctionType::Kind::ABIDecode:
+	case FunctionType::Kind::ABIEncode:
+	case FunctionType::Kind::ABIEncodePacked:
+	case FunctionType::Kind::ABIEncodeWithSelector:
+	case FunctionType::Kind::ABIEncodeWithSignature:
+		visitABIFunction(_funCall);
+		break;
 	case FunctionType::Kind::Internal:
-	case FunctionType::Kind::DelegateCall:
-	case FunctionType::Kind::BareCall:
-	case FunctionType::Kind::BareCallCode:
-	case FunctionType::Kind::BareDelegateCall:
 	case FunctionType::Kind::BareStaticCall:
-	case FunctionType::Kind::Creation:
 		break;
 	case FunctionType::Kind::KECCAK256:
 	case FunctionType::Kind::ECRecover:
@@ -728,6 +735,11 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 	case FunctionType::Kind::ObjectCreation:
 		visitObjectCreation(_funCall);
 		return;
+	case FunctionType::Kind::DelegateCall:
+	case FunctionType::Kind::BareCall:
+	case FunctionType::Kind::BareCallCode:
+	case FunctionType::Kind::BareDelegateCall:
+	case FunctionType::Kind::Creation:
 	default:
 		m_errorReporter.warning(
 			4588_error,
@@ -784,6 +796,50 @@ void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 	solAssert(args.size() >= 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
 	addPathImpliedExpression(expr(*args.front()));
+}
+
+void SMTEncoder::visitABIFunction(FunctionCall const& _funCall)
+{
+	auto symbFunction = m_context.state().abiFunction(&_funCall);
+	auto const& [name, inTypes, outTypes] = m_context.state().abiFunctionTypes(&_funCall);
+
+	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
+	auto kind = funType.kind();
+	auto const& args = _funCall.sortedArguments();
+	auto argsActualLength = kind == FunctionType::Kind::ABIDecode ? 1 : args.size();
+
+	vector<smtutil::Expression> symbArgs;
+	solAssert(inTypes.size() == argsActualLength, "");
+	for (unsigned i = 0; i < argsActualLength; ++i)
+		if (args.at(i))
+			symbArgs.emplace_back(expr(*args.at(i), inTypes.at(i)));
+
+	optional<smtutil::Expression> arg;
+	if (inTypes.size() == 1)
+		arg = expr(*args.at(0));
+	else
+	{
+		auto inputSort = dynamic_cast<smtutil::ArraySort&>(*symbFunction.sort).domain;
+		arg = smtutil::Expression::tuple_constructor(
+			smtutil::Expression(make_shared<smtutil::SortSort>(inputSort), ""),
+			symbArgs
+		);
+	}
+
+	auto out = smtutil::Expression::select(symbFunction, *arg);
+	if (outTypes.size() == 1)
+		defineExpr(_funCall, out);
+	else
+	{
+		auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
+		solAssert(symbTuple, "");
+		solAssert(symbTuple->components().size() == outTypes.size(), "");
+		solAssert(out.sort->kind == smtutil::Kind::Tuple, "");
+
+		symbTuple->increaseIndex();
+		for (unsigned i = 0; i < symbTuple->components().size(); ++i)
+			m_context.addAssertion(symbTuple->component(i) == smtutil::Expression::tuple_get(out, i));
+	}
 }
 
 void SMTEncoder::visitCryptoFunction(FunctionCall const& _funCall)
@@ -2670,6 +2726,33 @@ RationalNumberType const* SMTEncoder::isConstant(Expression const& _expr)
 		return TypeProvider::rationalNumber(t->value);
 
 	return nullptr;
+}
+
+set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
+{
+	struct ABIFunctions: public ASTConstVisitor
+	{
+		ABIFunctions(ASTNode const* _node) { _node->accept(*this); }
+		void endVisit(FunctionCall const& _funCall)
+		{
+			if (*_funCall.annotation().kind == FunctionCallKind::FunctionCall)
+				switch (dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type).kind())
+				{
+				case FunctionType::Kind::ABIEncode:
+				case FunctionType::Kind::ABIEncodePacked:
+				case FunctionType::Kind::ABIEncodeWithSelector:
+				case FunctionType::Kind::ABIEncodeWithSignature:
+				case FunctionType::Kind::ABIDecode:
+					abiCalls.insert(&_funCall);
+					break;
+				default: {}
+				}
+		}
+
+		set<FunctionCall const*> abiCalls;
+	};
+
+	return ABIFunctions(_node).abiCalls;
 }
 
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)

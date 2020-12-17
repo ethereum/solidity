@@ -11,5 +11,7 @@ contract C
 		assert(array[p] < 90);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (191-212): CHC: Assertion violation happens here.\nCounterexample:\narray = []\nx = 90\np = 0\n\n\nTransaction trace:\nconstructor()\nState: array = []\nf(90, 0)
+// Warning 6328: (191-212): CHC: Assertion violation happens here.

@@ -556,6 +556,10 @@ smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, fronte
 		solAssert(intType, "");
 		return _expr >= minValue(*intType) && _expr <= maxValue(*intType);
 	}
+	else if (isArray(*_type) || isMapping(*_type))
+		/// Length cannot be negative.
+		return smtutil::Expression::tuple_get(_expr, 1) >= 0;
+
 	return smtutil::Expression(true);
 }
 
