@@ -75,7 +75,7 @@ if [ $distribution = STATIC ]
 then
     pparepo=ethereum-static
     SMTDEPENDENCY=""
-    CMAKE_OPTIONS="-DSOLC_LINK_STATIC=On"
+    CMAKE_OPTIONS="-DSOLC_LINK_STATIC=On -DCMAKE_EXE_LINKER_FLAGS=-static"
 else
     if is_release
     then
