@@ -715,8 +715,11 @@ LinkerObject const& Assembly::assemble() const
 
 	if (!immutableReferencesBySub.empty())
 		throw
-			langutil::Error(1284_error, langutil::Error::Type::CodeGenerationError) <<
-			util::errinfo_comment("Some immutables were read from but never assigned, possibly because of optimization.");
+			langutil::Error(
+				1284_error,
+				langutil::Error::Type::CodeGenerationError,
+				"Some immutables were read from but never assigned, possibly because of optimization."
+			);
 
 	if (!m_subs.empty() || !m_data.empty() || !m_auxiliaryData.empty())
 		// Append an INVALID here to help tests find miscompilation.
