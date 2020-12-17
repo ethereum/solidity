@@ -35,6 +35,19 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
+bool KnowledgeBase::knownToBeZero(YulString _a)
+{
+	if (!m_variableValues.count(_a) || !m_variableValues.at(_a).value)
+		return false;
+
+	Expression const& expr = *m_variableValues.at(_a).value;
+	if (!holds_alternative<Literal>(expr))
+		return false;
+
+	u256 val = valueOfLiteral(std::get<Literal>(expr));
+	return val == 0;
+}
+
 bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 {
 	// Try to use the simplification rules together with the
@@ -63,6 +76,21 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 		u256 val = valueOfLiteral(std::get<Literal>(expr1));
 		return val >= 32 && val <= u256(0) - 32;
 	}
+
+	return false;
+}
+
+bool KnowledgeBase::knownToBeNonOverlapping(YulString _address, YulString _start, YulString _length)
+{
+	cout << "Overlap check: " << _address.str() << " in " << _start.str() << " - " << _length.str() << endl;
+	if (knownToBeZero(_length))
+		return true;
+
+	(void)_address;
+	(void)_start;
+	// TODO extend this by trying to simplify:
+	// _address + 31 < _start (what about overflow?)
+	// _start - _address is a number larger than 31 (what about overflow?)
 
 	return false;
 }

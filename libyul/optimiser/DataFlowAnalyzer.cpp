@@ -28,6 +28,8 @@
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libsolutil/CommonData.h>
 
 #include <boost/range/adaptor/reversed.hpp>
@@ -43,9 +45,9 @@ DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
 	map<YulString, SideEffects> _functionSideEffects
 ):
-m_dialect(_dialect),
-m_functionSideEffects(std::move(_functionSideEffects)),
-m_knowledgeBase(_dialect, m_value)
+	m_dialect(_dialect),
+	m_functionSideEffects(std::move(_functionSideEffects)),
+	m_knowledgeBase(_dialect, m_value)
 {
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
 		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
@@ -86,7 +88,8 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	}
 	else
 	{
-		clearKnowledgeIfInvalidated(_statement.expression);
+		// TODO is it correct to visit after?
+		clearKnowledgeIfInvalidated(_statement.expression, true);
 		ASTModifier::operator()(_statement);
 	}
 }
@@ -97,7 +100,9 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 	for (auto const& var: _assignment.variableNames)
 		names.emplace(var.name);
 	assertThrow(_assignment.value, OptimizerException, "");
-	clearKnowledgeIfInvalidated(*_assignment.value);
+
+	clearKnowledgeIfInvalidated(*_assignment.value, true);
+
 	visit(*_assignment.value);
 	handleAssignment(names, _assignment.value.get(), false);
 }
@@ -111,7 +116,7 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 
 	if (_varDecl.value)
 	{
-		clearKnowledgeIfInvalidated(*_varDecl.value);
+		clearKnowledgeIfInvalidated(*_varDecl.value, true);
 		visit(*_varDecl.value);
 	}
 
@@ -120,7 +125,7 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 
 void DataFlowAnalyzer::operator()(If& _if)
 {
-	clearKnowledgeIfInvalidated(*_if.condition);
+	clearKnowledgeIfInvalidated(*_if.condition, true);
 	InvertibleMap<YulString, YulString> storage = m_storage;
 	InvertibleMap<YulString, YulString> memory = m_memory;
 
@@ -135,7 +140,7 @@ void DataFlowAnalyzer::operator()(If& _if)
 
 void DataFlowAnalyzer::operator()(Switch& _switch)
 {
-	clearKnowledgeIfInvalidated(*_switch.expression);
+	clearKnowledgeIfInvalidated(*_switch.expression, true);
 	visit(*_switch.expression);
 	set<YulString> assignedVariables;
 	for (auto& _case: _switch.cases)
@@ -358,9 +363,25 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 		m_memory.clear();
 }
 
-void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
+void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr, bool _currentlyVisiting)
 {
 	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
+
+	if (_currentlyVisiting)
+		if (auto startLength = isMemoryAreaStore(_expr))
+		{
+			set<YulString> keysToErase;
+			for (auto const& item: m_memory.values)
+				if (!m_knowledgeBase.knownToBeNonOverlapping(item.first, startLength->first, startLength->second))
+					keysToErase.insert(item.first);
+			for (YulString const& key: keysToErase)
+				m_memory.eraseKey(key);
+
+			if (sideEffects.invalidatesStorage())
+				m_storage.clear();
+			return;
+		}
+
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
 	if (sideEffects.invalidatesMemory())
@@ -408,7 +429,7 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	return false;
 }
 
-std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
+optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 	StoreLoadLocation _location,
 	ExpressionStatement const& _statement
 ) const
@@ -419,6 +440,44 @@ std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 				if (Identifier const* value = std::get_if<Identifier>(&funCall->arguments.back()))
 					return make_pair(key->name, value->name);
 	return {};
+}
+
+optional<pair<YulString, YulString>> DataFlowAnalyzer::isMemoryAreaStore(
+	Expression const& _expression
+) const
+{
+	FunctionCall const* funCall = get_if<FunctionCall>(&_expression);
+	EVMDialect const* evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect);
+	if (!evmDialect || !funCall)
+		return {};
+
+	// TODO ensure that all arguments are side-effect free.
+
+	array<size_t, 2> startLength = {};
+	YulString name = funCall->functionName.name;
+	if (
+		name == "calldatacopy"_yulstring ||
+		name == "codecopy"_yulstring ||
+		name == "reurndatacopy"_yulstring
+	)
+		startLength = {0, 2};
+	else if (name == "extcodecopy"_yulstring)
+		startLength = {1, 3};
+	else if (name == "call"_yulstring || name == "callcode"_yulstring)
+		startLength = {5, 6};
+	else if (name == "delegatecall"_yulstring || name == "staticcall"_yulstring)
+		startLength = {4, 5};
+	else
+		return {};
+
+	cout << "fun: " << name.str() << endl;
+
+	Identifier const* start = std::get_if<Identifier>(&funCall->arguments.at(startLength[0]));
+	Identifier const* length = std::get_if<Identifier>(&funCall->arguments.at(startLength[1]));
+	if (start && length)
+		return {{start->name, length->name}};
+	else
+		return {};
 }
 
 std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(

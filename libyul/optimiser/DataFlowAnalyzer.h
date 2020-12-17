@@ -118,7 +118,7 @@ protected:
 	void clearKnowledgeIfInvalidated(Block const& _block);
 
 	/// Clears knowledge about storage or memory if they may be modified inside the expression.
-	void clearKnowledgeIfInvalidated(Expression const& _expression);
+	void clearKnowledgeIfInvalidated(Expression const& _expression, bool _currentlyVisiting = false);
 
 	/// Joins knowledge about storage and memory with an older point in the control-flow.
 	/// This only works if the current state is a direct successor of the older point,
@@ -147,6 +147,14 @@ protected:
 	std::optional<std::pair<YulString, YulString>> isSimpleStore(
 		StoreLoadLocation _location,
 		ExpressionStatement const& _statement
+	) const;
+
+	/// Checks if the expression writes to an area in memory like
+	/// `call` or `calldatacopy`.
+	/// If yes, returns (start, length).
+	/// If the arguments have any side-effects, returns nullopt.
+	std::optional<std::pair<YulString, YulString>> isMemoryAreaStore(
+		Expression const& _expression
 	) const;
 
 	/// Checks if the expression is sload(a) / mload(a)

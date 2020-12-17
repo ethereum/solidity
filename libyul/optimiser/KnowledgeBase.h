@@ -45,8 +45,11 @@ public:
 		m_variableValues(_variableValues)
 	{}
 
+	bool knownToBeZero(YulString _a);
 	bool knownToBeDifferent(YulString _a, YulString _b);
 	bool knownToBeDifferentByAtLeast32(YulString _a, YulString _b);
+	/// @returns true if _length is zero or _address + 32 <= _start or _address > _start + _length
+	bool knownToBeNonOverlapping(YulString _address, YulString _start, YulString _length);
 	bool knownToBeEqual(YulString _a, YulString _b) const { return _a == _b; }
 
 private:
