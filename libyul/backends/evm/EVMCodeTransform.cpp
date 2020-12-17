@@ -483,8 +483,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 		if (stackLayout.size() > 17)
 		{
-			StackTooDeepError error(_function.name, YulString{}, static_cast<int>(stackLayout.size()) - 17);
-			error << errinfo_comment(
+			StackTooDeepError error(
+				_function.name,
+				YulString{},
+				static_cast<int>(stackLayout.size()) - 17,
 				"The function " +
 				_function.name.str() +
 				" has " +
@@ -716,8 +718,9 @@ size_t CodeTransform::variableHeightDiff(Scope::Variable const& _var, YulString 
 	size_t limit = _forSwap ? 17 : 16;
 	if (heightDiff > limit)
 	{
-		m_stackErrors.emplace_back(_varName, heightDiff - limit);
-		m_stackErrors.back() << errinfo_comment(
+		m_stackErrors.emplace_back(
+			_varName,
+			heightDiff - limit,
 			"Variable " +
 			_varName.str() +
 			" is " +
