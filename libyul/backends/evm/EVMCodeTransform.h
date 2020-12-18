@@ -26,7 +26,7 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/ASTForward.h>
-#include <libyul/AsmScope.h>
+#include <libyul/Scope.h>
 
 #include <optional>
 #include <stack>

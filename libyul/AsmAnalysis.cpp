@@ -22,12 +22,12 @@
 #include <libyul/AsmAnalysis.h>
 
 #include <libyul/AST.h>
-#include <libyul/AsmScopeFiller.h>
-#include <libyul/AsmScope.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Utilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
+#include <libyul/Scope.h>
+#include <libyul/ScopeFiller.h>
 
 #include <liblangutil/ErrorReporter.h>
 

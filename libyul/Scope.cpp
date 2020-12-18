@@ -19,7 +19,7 @@
  * Scopes for identifiers.
  */
 
-#include <libyul/AsmScope.h>
+#include <libyul/Scope.h>
 
 using namespace std;
 using namespace solidity;
