@@ -37,7 +37,7 @@ namespace solidity::frontend::smt
  *
  * 2. Nondet interface
  * The nondeterminism behavior of a contract. Signature:
- * nondet_interface(blockchainState, stateVariables, blockchainState', stateVariables').
+ * nondet_interface(error, this, abiFunctions, cryptoFunctions, blockchainState, stateVariables, blockchainState', stateVariables').
  *
  * 3. Constructor entry/summary
  * The summary of a contract's deployment procedure.

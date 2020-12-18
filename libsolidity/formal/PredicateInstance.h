@@ -34,7 +34,7 @@ smtutil::Expression interfacePre(Predicate const& _pred, ContractDefinition cons
 
 smtutil::Expression interface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context);
 
-smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context, unsigned _preIdx, unsigned _postIdx);
+smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context, smtutil::Expression const& _error, unsigned _preIdx, unsigned _postIdx);
 
 smtutil::Expression constructor(Predicate const& _pred, EncodingContext& _context);
 smtutil::Expression constructorCall(Predicate const& _pred, EncodingContext& _context);

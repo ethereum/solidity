@@ -36,14 +36,23 @@ smtutil::Expression interfacePre(Predicate const& _pred, ContractDefinition cons
 
 smtutil::Expression interface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context)
 {
-	auto& state = _context.state();
+	auto const& state = _context.state();
 	vector<smtutil::Expression> stateExprs{state.thisAddress(0), state.abi(0), state.crypto(0), state.state()};
 	return _pred(stateExprs + currentStateVariables(_contract, _context));
 }
 
-smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context, unsigned _preIdx, unsigned _postIdx)
+smtutil::Expression nondetInterface(
+	Predicate const& _pred,
+	ContractDefinition const& _contract,
+	EncodingContext& _context,
+	smtutil::Expression const& _error,
+	unsigned _preIdx,
+	unsigned _postIdx)
 {
+	auto const& state = _context.state();
+	vector<smtutil::Expression> stateExprs{_error, state.thisAddress(), state.abi(), state.crypto()};
 	return _pred(
+		stateExprs +
 		vector<smtutil::Expression>{_context.state().state(_preIdx)} +
 		stateVariablesAtIndex(_preIdx, _contract, _context) +
 		vector<smtutil::Expression>{_context.state().state(_postIdx)} +

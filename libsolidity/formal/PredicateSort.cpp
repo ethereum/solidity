@@ -41,7 +41,11 @@ SortPointer nondetInterfaceSort(ContractDefinition const& _contract, SymbolicSta
 	auto varSorts = stateSorts(_contract);
 	vector<SortPointer> stateSort{_state.stateSort()};
 	return make_shared<FunctionSort>(
-		stateSort + varSorts + stateSort + varSorts,
+		vector<SortPointer>{_state.errorFlagSort(), _state.thisAddressSort(), _state.abiSort(), _state.cryptoSort()} +
+			stateSort +
+			varSorts +
+			stateSort +
+			varSorts,
 		SortProvider::boolSort
 	);
 }

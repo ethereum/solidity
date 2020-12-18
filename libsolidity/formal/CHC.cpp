@@ -642,10 +642,20 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	}
 
 	auto postCallState = vector<smtutil::Expression>{state().state()} + currentStateVariables();
-	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(preCallState + postCallState);
+	auto error = errorFlag().increaseIndex();
+	vector<smtutil::Expression> stateExprs{error, state().thisAddress(), state().abi(), state().crypto()};
+	auto nondet = (*m_nondetInterfaces.at(m_currentContract))(stateExprs + preCallState + postCallState);
 	// TODO this could instead add the summary of the called function, where that summary
 	// basically has the nondet interface of this summary as a constraint.
 	m_context.addAssertion(nondet);
+	solAssert(m_errorDest, "");
+	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0);
+	// To capture the possibility of a reentrant call, we record in the call graph that the  current function
+	// can call any of the external methods of the current contract.
+	solAssert(m_currentContract && m_currentFunction, "");
+	for (auto const* definedFunction: contractFunctions(*m_currentContract))
+		if (!definedFunction->isConstructor() && definedFunction->isPublic())
+			m_callGraph[m_currentFunction].insert(definedFunction);
 
 	m_context.addAssertion(errorFlag().currentValue() == 0);
 }
@@ -889,7 +899,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			/// 0 steps to be taken, used as base for the inductive
 			/// rule for each function.
 			auto const& iface = *m_nondetInterfaces.at(contract);
-			addRule(smt::nondetInterface(iface, *contract, m_context, 0, 0), "base_nondet");
+			addRule(smt::nondetInterface(iface, *contract, m_context, smtutil::Expression(size_t(0)), 0, 0), "base_nondet");
 
 			for (auto const* function: contractFunctions(*contract))
 			{
@@ -907,8 +917,8 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					auto state1 = stateVariablesAtIndex(1, *contract);
 					auto state2 = stateVariablesAtIndex(2, *contract);
 
-					auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
-					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
+					auto nondetPre = smt::nondetInterface(iface, *contract, m_context, smtutil::Expression(size_t(0)), 0, 1);
+					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, errorFlag().currentValue(), 0, 2);
 
 					vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
 					args += state1 +
