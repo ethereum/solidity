@@ -359,6 +359,79 @@ BOOST_AUTO_TEST_CASE(metadata_revert_strings)
 	BOOST_CHECK_EQUAL(metadata["settings"]["debug"]["revertStrings"], "strip");
 }
 
+BOOST_AUTO_TEST_CASE(metadata_license_missing)
+{
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_gpl3)
+{
+	// Can't use a raw string here due to the stylechecker.
+	char const* sourceCode =
+		"// NOTE: we also add trailing whitespace after the license, to see it is trimmed.\n"
+		"// SPDX-License-Identifier: GPL-3.0    \n"
+		"pragma solidity >=0.0;\n"
+		"contract C {\n"
+		"}\n";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_whitespace_before_spdx)
+{
+	char const* sourceCode = R"(
+		//     SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_whitespace_after_colon)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier:    GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_gpl3_or_apache2)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier: GPL-3.0 OR Apache-2.0
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0 OR Apache-2.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_ignored_unicode)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier: ⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_ignored_stray_unicode)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier: GPL-3.0 ⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
