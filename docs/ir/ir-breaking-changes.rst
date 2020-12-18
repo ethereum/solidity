@@ -34,6 +34,27 @@ Consequently, if the padding space within a struct is used to store data (e.g. i
 
 We have the same behavior for implicit delete, for example when array of structs is shortened.
 
+ * Function modifiers are implemented in a slightly different way regarding function parameters.
+   This especially has an effect if the placeholder ``_;`` is evaluated multiple times in a modifier.
+   In the old code generator, each function parameter has a fixed slot on the stack. If the function
+   is run multiple times because ``_;`` is used multiple times or used in a loop, then a change to the
+   function parameter's value is visible in the next execution of the function.
+   The new code generator implements modifiers using actual functions and passes function parameters on.
+   This means that multiple executions of a function will get the same values for the parameters.
+
+::
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.7.0;
+    contract C {
+        function f(uint a) public pure mod() returns (uint r) {
+            r = a++;
+        }
+        modifier mod() { _; _; }
+    }
+
+If you execute ``f(0)`` in the old code generator, it will return ``2``, while
+it will return ``1`` when using the new code generator.
+
  * The order of contract initialization has changed in case of inheritance.
 
 The order used to be:

@@ -45,5 +45,7 @@ contract C is A {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // getData() -> 0x4300

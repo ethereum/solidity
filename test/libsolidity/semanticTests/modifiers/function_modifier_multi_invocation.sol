@@ -8,7 +8,8 @@ contract C {
         r += 1;
     }
 }
-
+// ====
+// compileViaYul: false
 // ----
 // f(bool): false -> 1
 // f(bool): true -> 2

@@ -32,16 +32,30 @@ YulArity YulArity::fromType(FunctionType const& _functionType)
 		TupleType(_functionType.returnParameterTypes()).sizeOnStack()
 	};
 }
+
 string IRNames::function(FunctionDefinition const& _function)
 {
-	// @TODO previously, we had to distinguish creation context and runtime context,
-	// but since we do not work with jump positions anymore, this should not be a problem, right?
 	return "fun_" + _function.name() + "_" + to_string(_function.id());
 }
 
 string IRNames::function(VariableDeclaration const& _varDecl)
 {
 	return "getter_fun_" + _varDecl.name() + "_" + to_string(_varDecl.id());
+}
+
+string IRNames::modifierInvocation(ModifierInvocation const& _modifierInvocation)
+{
+	// This uses the ID of the modifier invocation because it has to be unique
+	// for each invocation.
+	solAssert(!_modifierInvocation.name().path().empty(), "");
+	string const& modifierName = _modifierInvocation.name().path().back();
+	solAssert(!modifierName.empty(), "");
+	return "modifier_" + modifierName + "_" + to_string(_modifierInvocation.id());
+}
+
+string IRNames::functionWithModifierInner(FunctionDefinition const& _function)
+{
+	return "fun_" + _function.name() + "_" + to_string(_function.id()) + "_inner";
 }
 
 string IRNames::creationObject(ContractDefinition const& _contract)

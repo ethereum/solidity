@@ -249,10 +249,10 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 {
 	string functionName = IRNames::function(_function);
 	return m_context.functionCollector().createFunction(functionName, [&]() {
-		solUnimplementedAssert(_function.modifiers().empty(), "Modifiers not implemented yet.");
+		m_context.resetLocalVariables();
 		Whiskers t(R"(
 			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
-				<initReturnVariables>
+				<retInit>
 				<body>
 			}
 		)");
@@ -268,8 +268,137 @@ string IRGenerator::generateFunction(FunctionDefinition const& _function)
 			retParams += m_context.addLocalVariable(*varDecl).stackSlots();
 			retInit += generateInitialAssignment(*varDecl);
 		}
+
 		t("retParams", joinHumanReadable(retParams));
-		t("initReturnVariables", retInit);
+		t("retInit", retInit);
+
+		if (_function.modifiers().empty())
+			t("body", generate(_function.body()));
+		else
+		{
+			for (size_t i = 0; i < _function.modifiers().size(); ++i)
+			{
+				ModifierInvocation const& modifier = *_function.modifiers().at(i);
+				string next =
+					i + 1 < _function.modifiers().size() ?
+					IRNames::modifierInvocation(*_function.modifiers().at(i + 1)) :
+					IRNames::functionWithModifierInner(_function);
+				generateModifier(modifier, _function, next);
+			}
+			t("body",
+				(retParams.empty() ? string{} : joinHumanReadable(retParams) + " := ") +
+				IRNames::modifierInvocation(*_function.modifiers().at(0)) +
+				"(" +
+				joinHumanReadable(retParams + params) +
+				")"
+			);
+			// Now generate the actual inner function.
+			generateFunctionWithModifierInner(_function);
+		}
+		return t.render();
+	});
+}
+
+string IRGenerator::generateModifier(
+	ModifierInvocation const& _modifierInvocation,
+	FunctionDefinition const& _function,
+	string const& _nextFunction
+)
+{
+	string functionName = IRNames::modifierInvocation(_modifierInvocation);
+	return m_context.functionCollector().createFunction(functionName, [&]() {
+		m_context.resetLocalVariables();
+		Whiskers t(R"(
+			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
+				<assignRetParams>
+				<evalArgs>
+				<body>
+			}
+		)");
+		t("functionName", functionName);
+		vector<string> retParamsIn;
+		for (auto const& varDecl: _function.returnParameters())
+			retParamsIn += IRVariable(*varDecl).stackSlots();
+		vector<string> params = retParamsIn;
+		for (auto const& varDecl: _function.parameters())
+			params += m_context.addLocalVariable(*varDecl).stackSlots();
+		t("params", joinHumanReadable(params));
+		vector<string> retParams;
+		string assignRetParams;
+		for (size_t i = 0; i < retParamsIn.size(); ++i)
+		{
+			retParams.emplace_back(m_context.newYulVariable());
+			assignRetParams += retParams.back() + " := " + retParamsIn[i] + "\n";
+		}
+		t("retParams", joinHumanReadable(retParams));
+		t("assignRetParams", assignRetParams);
+
+		solAssert(*_modifierInvocation.name().annotation().requiredLookup == VirtualLookup::Virtual, "");
+
+		ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
+			*_modifierInvocation.name().annotation().referencedDeclaration
+		).resolveVirtual(m_context.mostDerivedContract());
+
+		solAssert(
+			modifier.parameters().empty() ==
+			(!_modifierInvocation.arguments() || _modifierInvocation.arguments()->empty()),
+			""
+		);
+		IRGeneratorForStatements expressionEvaluator(m_context, m_utils);
+		if (_modifierInvocation.arguments())
+			for (size_t i = 0; i < _modifierInvocation.arguments()->size(); i++)
+			{
+				IRVariable argument = expressionEvaluator.evaluateExpression(
+					*_modifierInvocation.arguments()->at(i),
+					*modifier.parameters()[i]->annotation().type
+				);
+				expressionEvaluator.define(
+					m_context.addLocalVariable(*modifier.parameters()[i]),
+					argument
+				);
+			}
+
+		t("evalArgs", expressionEvaluator.code());
+		IRGeneratorForStatements generator(m_context, m_utils, [&]() {
+			string ret = joinHumanReadable(retParams);
+			return
+				(ret.empty() ? "" : ret + " := ") +
+				_nextFunction + "(" + joinHumanReadable(params) + ")\n";
+		});
+		generator.generate(modifier.body());
+		t("body", generator.code());
+		return t.render();
+	});
+}
+
+string IRGenerator::generateFunctionWithModifierInner(FunctionDefinition const& _function)
+{
+	string functionName = IRNames::functionWithModifierInner(_function);
+	return m_context.functionCollector().createFunction(functionName, [&]() {
+		m_context.resetLocalVariables();
+		Whiskers t(R"(
+			function <functionName>(<params>)<?+retParams> -> <retParams></+retParams> {
+				<assignRetParams>
+				<body>
+			}
+		)");
+		t("functionName", functionName);
+		vector<string> retParams;
+		vector<string> retParamsIn;
+		for (auto const& varDecl: _function.returnParameters())
+			retParams += m_context.addLocalVariable(*varDecl).stackSlots();
+		string assignRetParams;
+		for (size_t i = 0; i < retParams.size(); ++i)
+		{
+			retParamsIn.emplace_back(m_context.newYulVariable());
+			assignRetParams += retParams.back() + " := " + retParamsIn[i] + "\n";
+		}
+		vector<string> params = retParamsIn;
+		for (auto const& varDecl: _function.parameters())
+			params += m_context.addLocalVariable(*varDecl).stackSlots();
+		t("params", joinHumanReadable(params));
+		t("retParams", joinHumanReadable(retParams));
+		t("assignRetParams", assignRetParams);
 		t("body", generate(_function.body()));
 		return t.render();
 	});
@@ -526,6 +655,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 		ContractDefinition const* contract = _contract.annotation().linearizedBaseContracts[i];
 		baseConstructorParams.erase(contract);
 
+		m_context.resetLocalVariables();
 		m_context.functionCollector().createFunction(IRNames::implicitConstructor(*contract), [&]() {
 			Whiskers t(R"(
 				function <functionName>(<params><comma><baseParams>) {
@@ -537,16 +667,8 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			)");
 			vector<string> params;
 			if (contract->constructor())
-			{
-				for (auto const& modifierInvocation: contract->constructor()->modifiers())
-					// This can be ContractDefinition too for super arguments. That is supported.
-					solUnimplementedAssert(
-						!dynamic_cast<ModifierDefinition const*>(modifierInvocation->name().annotation().referencedDeclaration),
-						"Modifiers not implemented yet."
-					);
 				for (ASTPointer<VariableDeclaration> const& varDecl: contract->constructor()->parameters())
 					params += m_context.addLocalVariable(*varDecl).stackSlots();
-			}
 			t("params", joinHumanReadable(params));
 			vector<string> baseParams = listAllParams(baseConstructorParams);
 			t("baseParams", joinHumanReadable(baseParams));
@@ -565,7 +687,37 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			else
 				t("hasNextConstructor", false);
 			t("initStateVariables", initStateVariables(*contract));
-			t("userDefinedConstructorBody", contract->constructor() ? generate(contract->constructor()->body()) : "");
+			string body;
+			if (FunctionDefinition const* constructor = contract->constructor())
+			{
+				vector<ModifierInvocation*> realModifiers;
+				for (auto const& modifierInvocation: constructor->modifiers())
+					// Filter out the base constructor calls
+					if (dynamic_cast<ModifierDefinition const*>(modifierInvocation->name().annotation().referencedDeclaration))
+						realModifiers.emplace_back(modifierInvocation.get());
+				if (realModifiers.empty())
+					body = generate(constructor->body());
+				else
+				{
+					for (size_t i = 0; i < realModifiers.size(); ++i)
+					{
+						ModifierInvocation const& modifier = *realModifiers.at(i);
+						string next =
+							i + 1 < realModifiers.size() ?
+							IRNames::modifierInvocation(*realModifiers.at(i + 1)) :
+							IRNames::functionWithModifierInner(*constructor);
+						generateModifier(modifier, *constructor, next);
+					}
+					body =
+						IRNames::modifierInvocation(*constructor->modifiers().at(0)) +
+						"(" +
+						joinHumanReadable(params) +
+						")";
+					// Now generate the actual inner function.
+					generateFunctionWithModifierInner(*constructor);
+				}
+			}
+			t("userDefinedConstructorBody", move(body));
 
 			return t.render();
 		});
