@@ -77,11 +77,11 @@ Block and Transaction Properties
 - ``block.timestamp`` (``uint``): current block timestamp as seconds since unix epoch
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes calldata``): complete calldata
-- ``msg.sender`` (``address payable``): sender of the message (current call)
+- ``msg.sender`` (``address``): sender of the message (current call)
 - ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
 - ``msg.value`` (``uint``): number of wei sent with the message
 - ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address payable``): sender of the transaction (full call chain)
+- ``tx.origin`` (``address``): sender of the transaction (full call chain)
 
 .. note::
     The values of all members of ``msg``, including ``msg.sender`` and
