@@ -160,8 +160,10 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		SemVerMatchExpressionParser parser(tokens, literals);
 		auto matchExpression = parser.parse();
+		// An unparsable version pragma is an unrecoverable fatal error in the parser.
+		solAssert(matchExpression.has_value(), "");
 		static SemVerVersion const currentVersion{string(VersionString)};
-		if (!matchExpression.matches(currentVersion))
+		if (!matchExpression->matches(currentVersion))
 			m_errorReporter.syntaxError(
 				3997_error,
 				_pragma.location(),

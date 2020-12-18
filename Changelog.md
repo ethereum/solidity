@@ -1,11 +1,11 @@
 ### 0.8.1 (unreleased)
 
 Compiler Features:
+ * Parser: Report meaningful error if parsing a version pragma failed.
  * SMTChecker: Support ABI functions as uninterpreted functions.
 
 Bugfixes:
  * SMTChecker: Fix false negatives in overriding modifiers.
-
 
 ### 0.8.0 (2020-12-16)
 

@@ -140,9 +140,16 @@ void Parser::parsePragmaVersion(SourceLocation const& _location, vector<Token> c
 {
 	SemVerMatchExpressionParser parser(_tokens, _literals);
 	auto matchExpression = parser.parse();
+	if (!matchExpression.has_value())
+		m_errorReporter.fatalParserError(
+			1684_error,
+			_location,
+			"Found version pragma, but failed to parse it. "
+			"Please ensure there is a trailing semicolon."
+		);
 	static SemVerVersion const currentVersion{string(VersionString)};
 	// FIXME: only match for major version incompatibility
-	if (!matchExpression.matches(currentVersion))
+	if (!matchExpression->matches(currentVersion))
 		// If m_parserErrorRecovery is true, the same message will appear from SyntaxChecker::visit(),
 		// so we don't need to report anything here.
 		if (!m_parserErrorRecovery)
