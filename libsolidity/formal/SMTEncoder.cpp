@@ -932,7 +932,26 @@ void SMTEncoder::visitObjectCreation(FunctionCall const& _funCall)
 void SMTEncoder::endVisit(Identifier const& _identifier)
 {
 	if (auto decl = identifierToVariable(_identifier))
-		defineExpr(_identifier, currentValue(*decl));
+	{
+		if (decl->isConstant())
+		{
+			if (RationalNumberType const* rationalType = isConstant(_identifier))
+			{
+				if (rationalType->isNegative())
+					defineExpr(_identifier, smtutil::Expression(u2s(rationalType->literalValue(nullptr))));
+				else
+					defineExpr(_identifier, smtutil::Expression(rationalType->literalValue(nullptr)));
+			}
+			else
+			{
+				solAssert(decl->value(), "");
+				decl->value()->accept(*this);
+				defineExpr(_identifier, expr(*decl->value()));
+			}
+		}
+		else
+			defineExpr(_identifier, currentValue(*decl));
+	}
 	else if (_identifier.annotation().type->category() == Type::Category::Function)
 		visitFunctionIdentifier(_identifier);
 	else if (_identifier.name() == "now")
