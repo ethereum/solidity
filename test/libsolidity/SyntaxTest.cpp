@@ -51,13 +51,23 @@ TestCase::TestResult SyntaxTest::run(ostream& _stream, string const& _linePrefix
 	return conclude(_stream, _linePrefix, _formatted);
 }
 
+string SyntaxTest::addPreamble(string const& _sourceCode)
+{
+	// Silence compiler version warning
+	string preamble = "pragma solidity >=0.0;\n";
+	// NOTE: this check is intentionally loose to match weird cases.
+	// We can manually adjust a test case where this causes problem.
+	if (_sourceCode.find("SPDX-License-Identifier:") == string::npos)
+		preamble += "// SPDX-License-Identifier: GPL-3.0\n";
+	return preamble + _sourceCode;
+}
+
 void SyntaxTest::setupCompiler()
 {
-	string const preamble = "pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n";
 	compiler().reset();
 	auto sourcesWithPragma = m_sources;
 	for (auto& source: sourcesWithPragma)
-		source.second = preamble + source.second;
+		source.second = addPreamble(source.second);
 	compiler().setSources(sourcesWithPragma);
 	compiler().setEVMVersion(m_evmVersion);
 	compiler().setParserErrorRecovery(m_parserErrorRecovery);
