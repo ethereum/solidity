@@ -24,6 +24,7 @@
 #pragma once
 
 #include <liblangutil/Token.h>
+#include <libsolutil/Assertions.h>
 
 #include <string>
 #include <optional>
@@ -84,9 +85,11 @@ struct SemVerMatchExpression
 class SemVerMatchExpressionParser
 {
 public:
-	SemVerMatchExpressionParser(std::vector<Token>  _tokens, std::vector<std::string>  _literals):
+	SemVerMatchExpressionParser(std::vector<Token> _tokens, std::vector<std::string> _literals):
 		m_tokens(std::move(_tokens)), m_literals(std::move(_literals))
-	{}
+	{
+		solAssert(m_tokens.size() == m_literals.size(), "");
+	}
 
 	/// Returns an expression if it was parseable, or nothing otherwise.
 	std::optional<SemVerMatchExpression> parse();

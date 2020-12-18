@@ -151,6 +151,9 @@ optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
 {
 	reset();
 
+	if (m_tokens.empty())
+		return nullopt;
+
 	try
 	{
 		while (true)
