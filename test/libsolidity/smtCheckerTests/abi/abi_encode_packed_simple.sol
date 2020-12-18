@@ -16,8 +16,9 @@ contract C {
 		assert(b1.length != b5.length); // should fail
 		assert(b1.length == b5.length); // should fail
 
-		bytes memory b6 = abi.encode(x, z, a);
-		assert(b1.length == b6.length); // should fail
+		// Commented out because of nondeterminism in Spacer in Z3 4.8.9
+		//bytes memory b6 = abi.encode(x, z, a);
+		//assert(b1.length == b6.length); // should fail
 	}
 }
 // ----
@@ -28,7 +29,6 @@ contract C {
 // Warning 6328: (560-590): CHC: Assertion violation might happen here.
 // Warning 1218: (609-639): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (609-639): CHC: Assertion violation might happen here.
-// Warning 6328: (700-730): CHC: Assertion violation happens here.
 // Warning 4661: (451-481): BMC: Assertion violation happens here.
 // Warning 4661: (560-590): BMC: Assertion violation happens here.
 // Warning 4661: (609-639): BMC: Assertion violation happens here.

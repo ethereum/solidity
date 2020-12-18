@@ -13,5 +13,7 @@ contract C {
         assert(y[0] == (bytes1("d") | bytes1("e")) ^ bytes1("f"));
     }
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (189-208): CHC: Assertion violation happens here.

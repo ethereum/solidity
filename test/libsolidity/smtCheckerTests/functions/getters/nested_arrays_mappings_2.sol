@@ -18,5 +18,7 @@ contract C {
 		assert(y == 1); // should fail
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (307-321): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\nf()
+// Warning 6328: (307-321): CHC: Assertion violation happens here.
