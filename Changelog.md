@@ -6,6 +6,7 @@ Language Features:
 
 
 Compiler Features:
+ * Parser: Extend parsing rule for ``SPDX-License-Identifier``.
  * SMTChecker: Function definitions can be annotated with the custom Natspec tag ``custom:smtchecker abstract-function-nondet`` to be abstracted by a nondeterministic value when called.
  * Standard JSON / combined JSON: New artifact "functionDebugData" that contains bytecode offsets of entry points of functions and potentially more information in the future.
  * Yul Optimizer: Evaluate ``keccak256(a, c)``, when the value at memory location ``a`` is known at compile time and ``c`` is a constant ``<= 32``.
@@ -46,7 +47,6 @@ Compiler Features:
  * Standard JSON: New model checker option ``settings.modelChecker.contracts`` allows users to select which contracts should be analyzed as the most derived.
  * Yul EVM Code Transform: Stack Optimization: Reuse slots of unused function arguments and defer allocating stack slots for return variables until after expression statements and assignments that do not reference them.
  * Yul Optimizer: Added a new step FunctionSpecializer, that specializes a function with its literal arguments.
-
 
 Bugfixes:
  * Antlr Grammar: Fix parsing of import paths involving properly distinguishing between empty and non-empty string literals in general.
@@ -99,7 +99,6 @@ Compiler Features:
  * NatSpec: Provide source locations for parsing errors.
  * Optimizer: Simple inlining when jumping to small blocks that jump again after a few side-effect free opcodes.
  * NatSpec: Allow and export all tags that start with ``@custom:``.
-
 
 Bugfixes:
  * AST: Added ``referencedDeclaration`` for enum members.

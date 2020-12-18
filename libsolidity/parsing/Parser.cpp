@@ -2052,7 +2052,10 @@ bool Parser::variableDeclarationStart()
 optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)
 {
 	// We circumvent the scanner here, because it skips non-docstring comments.
-	static regex const licenseRegex("SPDX-License-Identifier:\\s*([a-zA-Z0-9 ()+.-]+)");
+	// This matches the entire line starting with the SPDX-License-Identifier.
+	static regex const licenseLineRegex("SPDX-License-Identifier:\\s*([^\n])\\s*(\\*/)?");
+	// This is the actual allowed format for the license tag.
+	static regex const licenseRegex("^([a-zA-Z0-9 ()+.-]*)$");
 
 	// Search inside all parts of the source not covered by parsed nodes.
 	// This will leave e.g. "global comments".
@@ -2070,12 +2073,26 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 	vector<string> matches;
 	for (auto const& [start, end]: sequencesToSearch)
 	{
-		smatch match;
-		if (regex_search(start, end, match, licenseRegex))
+		smatch lineMatch;
+		if (regex_search(start, end, lineMatch, licenseLineRegex))
 		{
-			string license{boost::trim_copy(string(match[1]))};
-			if (!license.empty())
-				matches.emplace_back(std::move(license));
+			string license{boost::trim_copy(string(lineMatch[1]))};
+			smatch licenseMatch;
+			if (regex_search(license, licenseMatch, licenseRegex))
+			{
+				license = string(licenseMatch[1]);
+				if (!license.empty())
+					matches.emplace_back(std::move(license));
+			}
+			else
+			{
+				parserError(
+					5406_error,
+					{-1, -1, m_scanner->charStream()},
+					"SPDX license identifier is ill-formatted. "
+					"Please see https://spdx.org for more information."
+				);
+			}
 		}
 	}
 
