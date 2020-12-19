@@ -902,7 +902,9 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-ubuntu.txt
+      - run:
+          no_output_timeout: 60m
+          command: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-ubuntu.txt
       - store_artifacts:
           path: report.txt
       - persist_to_workspace:
@@ -919,7 +921,9 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-osx.txt
+      - run:
+          no_output_timeout: 60m
+          command: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-osx.txt
       - store_artifacts:
           path: report.txt
       - persist_to_workspace:
@@ -936,7 +940,9 @@ jobs:
       - attach_workspace:
           at: build
       - run: python scripts\isolate_tests.py test\
-      - run: python scripts\bytecodecompare\prepare_report.py build\solc\Release\solc.exe
+      - run:
+          no_output_timeout: 60m
+          command: python scripts\bytecodecompare\prepare_report.py build\solc\Release\solc.exe
       - run: cp report.txt bytecode-report-windows.txt
       - store_artifacts:
           path: report.txt
@@ -954,7 +960,9 @@ jobs:
       - checkout
       - attach_workspace:
           at: emscripten_build/libsolc
-      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-emscripten.txt
+      - run:
+          no_output_timeout: 60m
+          command: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-emscripten.txt
       - store_artifacts:
           path: report.txt
       - persist_to_workspace:
