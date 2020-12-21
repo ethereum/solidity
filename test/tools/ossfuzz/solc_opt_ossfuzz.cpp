@@ -43,7 +43,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		{
 			return 0;
 		}
-		FuzzerUtil::testCompiler(sourceCode, /*optimize=*/true, /*rand=*/static_cast<unsigned>(_size));
+		FuzzerUtil::testCompiler(
+			sourceCode,
+			/*optimize=*/true,
+			/*rand=*/static_cast<unsigned>(_size),
+			/*forceSMT=*/true
+		);
 	}
 	return 0;
 }
