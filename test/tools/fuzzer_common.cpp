@@ -72,7 +72,16 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
-void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned _rand)
+void FuzzerUtil::forceSMT(StringMap& _input)
+{
+	// Add SMT checker pragma if not already present in source
+	static const char* smtPragma = "pragma experimental SMTChecker;";
+	for (auto &sourceUnit: _input)
+		if (sourceUnit.second.find(smtPragma) == string::npos)
+			sourceUnit.second += smtPragma;
+}
+
+void FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand, bool _forceSMT)
 {
 	frontend::CompilerStack compiler;
 	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
@@ -81,6 +90,11 @@ void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned 
 		optimiserSettings = frontend::OptimiserSettings::standard();
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
+	if (_forceSMT)
+	{
+		forceSMT(_input);
+		compiler.setModelCheckerSettings({frontend::ModelCheckerEngine::All(), /*timeout=*/1});
+	}
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
