@@ -66,10 +66,19 @@ def load_source(path: Union[Path, str]) -> str:
 def parse_standard_json_output(source_file_name: Path, standard_json_output: str) -> FileReport:
     decoded_json_output = json.loads(standard_json_output.strip())
 
+    # JSON interface still returns contract metadata in case of an internal compiler error while
+    # CLI interface does not. To make reports comparable we must force this case to be detected as
+    # an error in both cases.
+    internal_compiler_error = any(
+        error['type'] in ['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError']
+        for error in decoded_json_output.get('errors', {})
+    )
+
     if (
         'contracts' not in decoded_json_output or
         len(decoded_json_output['contracts']) == 0 or
-        all(len(file_results) == 0 for file_name, file_results in decoded_json_output['contracts'].items())
+        all(len(file_results) == 0 for file_name, file_results in decoded_json_output['contracts'].items()) or
+        internal_compiler_error
     ):
         return FileReport(file_name=source_file_name, contract_reports=None)
 

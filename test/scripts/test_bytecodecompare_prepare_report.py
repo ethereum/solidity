@@ -32,6 +32,15 @@ LIBRARY_INHERITED2_SOL_CLI_OUTPUT = load_fixture('library_inherited2_sol_cli_out
 UNKNOWN_PRAGMA_SOL_JSON_OUTPUT = load_fixture('unknown_pragma_sol_json_output.json')
 UNKNOWN_PRAGMA_SOL_CLI_OUTPUT = load_fixture('unknown_pragma_sol_cli_output.txt')
 
+UNIMPLEMENTED_FEATURE_JSON_OUTPUT = load_fixture('unimplemented_feature_json_output.json')
+UNIMPLEMENTED_FEATURE_CLI_OUTPUT = load_fixture('unimplemented_feature_cli_output.txt')
+
+STACK_TOO_DEEP_JSON_OUTPUT = load_fixture('stack_too_deep_json_output.json')
+STACK_TOO_DEEP_CLI_OUTPUT = load_fixture('stack_too_deep_cli_output.txt')
+
+CODE_GENERATION_ERROR_JSON_OUTPUT = load_fixture('code_generation_error_json_output.json')
+CODE_GENERATION_ERROR_CLI_OUTPUT = load_fixture('code_generation_error_cli_output.txt')
+
 
 class PrepareReportTestBase(unittest.TestCase):
     def setUp(self):
@@ -294,6 +303,21 @@ class TestParseStandardJSONOutput(PrepareReportTestBase):
 
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
+    def test_parse_standard_json_output_should_report_error_on_unimplemented_feature_error(self):
+        expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
+
+        self.assertEqual(parse_standard_json_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_JSON_OUTPUT), expected_report)
+
+    def test_parse_standard_json_output_should_report_error_on_stack_too_deep_error(self):
+        expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
+
+        self.assertEqual(parse_standard_json_output(Path('file.sol'), STACK_TOO_DEEP_JSON_OUTPUT), expected_report)
+
+    def test_parse_standard_json_output_should_report_error_on_code_generation_error(self):
+        expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
+
+        self.assertEqual(parse_standard_json_output(Path('file.sol'), CODE_GENERATION_ERROR_JSON_OUTPUT), expected_report)
+
 
 class TestParseCLIOutput(PrepareReportTestBase):
     def test_parse_cli_output(self):
@@ -378,3 +402,18 @@ class TestParseCLIOutput(PrepareReportTestBase):
         )
 
         self.assertEqual(parse_cli_output(Path('syntaxTests/scoping/library_inherited2.sol'), compiler_output), expected_report)
+
+    def test_parse_cli_output_should_report_error_on_unimplemented_feature_error(self):
+        expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
+
+        self.assertEqual(parse_cli_output(Path('file.sol'), UNIMPLEMENTED_FEATURE_CLI_OUTPUT), expected_report)
+
+    def test_parse_cli_output_should_report_error_on_stack_too_deep_error(self):
+        expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
+
+        self.assertEqual(parse_cli_output(Path('file.sol'), STACK_TOO_DEEP_CLI_OUTPUT), expected_report)
+
+    def test_parse_cli_output_should_report_error_on_code_generation_error(self):
+        expected_report = FileReport(file_name=Path('file.sol'), contract_reports=None)
+
+        self.assertEqual(parse_cli_output(Path('file.sol'), CODE_GENERATION_ERROR_CLI_OUTPUT), expected_report)
