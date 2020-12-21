@@ -1108,7 +1108,7 @@ std::string YulUtilFunctions::resizeArrayFunction(ArrayType const& _type)
 
 	string functionName = "resize_array_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
-		return Whiskers(R"(
+		Whiskers templ(R"(
 			function <functionName>(array, newLen) {
 				if gt(newLen, <maxArrayLength>) {
 					<panic>()
@@ -1121,35 +1121,42 @@ std::string YulUtilFunctions::resizeArrayFunction(ArrayType const& _type)
 					sstore(array, newLen)
 				</isDynamic>
 
-				// Size was reduced, clear end of array
-				if lt(newLen, oldLen) {
-					let oldSlotCount := <convertToSize>(oldLen)
-					let newSlotCount := <convertToSize>(newLen)
-					let arrayDataStart := <dataPosition>(array)
-					let deleteStart := add(arrayDataStart, newSlotCount)
-					let deleteEnd := add(arrayDataStart, oldSlotCount)
-					<?packed>
-						// if we are dealing with packed array and offset is greater than zero
-						// we have  to partially clear last slot that is still used, so decreasing start by one
-						let offset := mul(mod(newLen, <itemsPerSlot>), <storageBytes>)
-						if gt(offset, 0) { <partialClearStorageSlot>(sub(deleteStart, 1), offset) }
-					</packed>
-					<clearStorageRange>(deleteStart, deleteEnd)
-				}
-			})")
-			("functionName", functionName)
-			("panic", panicFunction(PanicCode::ResourceError))
-			("fetchLength", arrayLengthFunction(_type))
-			("isDynamic", _type.isDynamicallySized())
-			("convertToSize", arrayConvertLengthToSize(_type))
-			("dataPosition", arrayDataAreaFunction(_type))
-			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
-			("maxArrayLength", (u256(1) << 64).str())
-			("packed", _type.baseType()->storageBytes() <= 16)
-			("itemsPerSlot", to_string(32 / _type.baseType()->storageBytes()))
-			("storageBytes", to_string(_type.baseType()->storageBytes()))
-			("partialClearStorageSlot", partialClearStorageSlotFunction())
-			.render();
+				<?needsClearing>
+					// Size was reduced, clear end of array
+					if lt(newLen, oldLen) {
+						let oldSlotCount := <convertToSize>(oldLen)
+						let newSlotCount := <convertToSize>(newLen)
+						let arrayDataStart := <dataPosition>(array)
+						let deleteStart := add(arrayDataStart, newSlotCount)
+						let deleteEnd := add(arrayDataStart, oldSlotCount)
+						<?packed>
+							// if we are dealing with packed array and offset is greater than zero
+							// we have  to partially clear last slot that is still used, so decreasing start by one
+							let offset := mul(mod(newLen, <itemsPerSlot>), <storageBytes>)
+							if gt(offset, 0) { <partialClearStorageSlot>(sub(deleteStart, 1), offset) }
+						</packed>
+						<clearStorageRange>(deleteStart, deleteEnd)
+					}
+				</needsClearing>
+			})");
+			templ("functionName", functionName);
+			templ("maxArrayLength", (u256(1) << 64).str());
+			templ("panic", panicFunction(util::PanicCode::ResourceError));
+			templ("fetchLength", arrayLengthFunction(_type));
+			templ("isDynamic", _type.isDynamicallySized());
+			bool isMappingBase = _type.baseType()->category() == Type::Category::Mapping;
+			templ("needsClearing", !isMappingBase);
+			if (!isMappingBase)
+			{
+				templ("convertToSize", arrayConvertLengthToSize(_type));
+				templ("dataPosition", arrayDataAreaFunction(_type));
+				templ("clearStorageRange", clearStorageRangeFunction(*_type.baseType()));
+				templ("packed", _type.baseType()->storageBytes() <= 16);
+				templ("itemsPerSlot", to_string(32 / _type.baseType()->storageBytes()));
+				templ("storageBytes", to_string(_type.baseType()->storageBytes()));
+				templ("partialClearStorageSlot", partialClearStorageSlotFunction());
+			}
+			return templ.render();
 	});
 }
 
@@ -1313,14 +1320,17 @@ string YulUtilFunctions::storageArrayPopFunction(ArrayType const& _type)
 				if iszero(oldLen) { <panic>() }
 				let newLen := sub(oldLen, 1)
 				let slot, offset := <indexAccess>(array, newLen)
-				<setToZero>(slot, offset)
+				<?+setToZero><setToZero>(slot, offset)</+setToZero>
 				sstore(array, newLen)
 			})")
 			("functionName", functionName)
 			("panic", panicFunction(PanicCode::EmptyArrayPop))
 			("fetchLength", arrayLengthFunction(_type))
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("setToZero", storageSetToZeroFunction(*_type.baseType()))
+			(
+				"setToZero",
+				_type.baseType()->category() != Type::Category::Mapping ? storageSetToZeroFunction(*_type.baseType()) : ""
+			)
 			.render();
 	});
 }
@@ -1527,7 +1537,7 @@ string YulUtilFunctions::clearStorageArrayFunction(ArrayType const& _type)
 				<?dynamic>
 					<resizeArray>(slot, 0)
 				<!dynamic>
-					<clearRange>(slot, add(slot, <lenToSize>(<len>)))
+					<?+clearRange><clearRange>(slot, add(slot, <lenToSize>(<len>)))</+clearRange>
 				</dynamic>
 			}
 		)")
@@ -1536,11 +1546,9 @@ string YulUtilFunctions::clearStorageArrayFunction(ArrayType const& _type)
 		("resizeArray", _type.isDynamicallySized() ? resizeArrayFunction(_type) : "")
 		(
 			"clearRange",
-			clearStorageRangeFunction(
-				(_type.baseType()->storageBytes() < 32) ?
-				*TypeProvider::uint256() :
-				*_type.baseType()
-			)
+			_type.baseType()->category() != Type::Category::Mapping ?
+			clearStorageRangeFunction((_type.baseType()->storageBytes() < 32) ? *TypeProvider::uint256() : *_type.baseType()) :
+			""
 		)
 		("lenToSize", arrayConvertLengthToSize(_type))
 		("len", _type.length().str())
@@ -1560,6 +1568,9 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 
 		set<u256> slotsCleared;
 		for (auto const& member: structMembers)
+		{
+			if (member.type->category() == Type::Category::Mapping)
+				continue;
 			if (member.type->storageBytes() < 32)
 			{
 				auto const& slotDiff = _type.storageOffsetsOfMember(member.name).first;
@@ -1583,6 +1594,7 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 					.render()
 				);
 			}
+		}
 
 		return Whiskers(R"(
 			function <functionName>(slot) {
@@ -1592,7 +1604,6 @@ string YulUtilFunctions::clearStorageStructFunction(StructType const& _type)
 			}
 		)")
 		("functionName", functionName)
-		("allocStruct", allocateMemoryStructFunction(_type))
 		("storageSize", _type.storageSize().str())
 		("member", memberSetValues)
 		.render();
