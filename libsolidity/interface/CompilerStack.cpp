@@ -56,6 +56,7 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
 #include <libyul/YulString.h>
@@ -1375,30 +1376,11 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
 	// TODO: support passing metadata
-	// TODO: use stack.assemble here!
-	yul::MachineAssemblyObject init;
-	yul::MachineAssemblyObject runtime;
-	std::tie(init, runtime) = stack.assembleWithDeployed(IRNames::deployedObject(_contract));
-	compiledContract.object = std::move(*init.bytecode);
-	compiledContract.runtimeObject = std::move(*runtime.bytecode);
-	// TODO: refactor assemblyItems, runtimeAssemblyItems, generatedSources,
-	//       assemblyString, assemblyJSON, and functionEntryPoints to work with this code path
 
-	// Throw a warning if EIP-170 limits are exceeded:
-	//   If contract creation returns data with length greater than 0x6000 (214 + 213) bytes,
-	//   contract creation fails with an out of gas error.
-	if (
-		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
-		compiledContract.runtimeObject.bytecode.size() > 0x6000
-	)
-		m_errorReporter.warning(
-			9609_error,
-			_contract.location(),
-			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
-			"This contract may not be deployable on mainnet. "
-			"Consider enabling the optimizer (with a low \"runs\" value!), "
-			"turning off revert strings, or using libraries."
-		);
+	string deployedName = IRNames::deployedObject(_contract);
+	solAssert(!deployedName.empty(), "");
+	tie(compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly) = stack.assembleEVMWithDeployed(deployedName);
+	assemble(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
 }
 
 void CompilerStack::generateEwasm(ContractDefinition const& _contract)
