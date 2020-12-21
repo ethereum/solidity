@@ -97,6 +97,18 @@ function truffle_setup
     local repo="$2"
     local branch="$3"
 
+    # only execute this, if script is executed in circleci.
+    if [[ "${CIRCLECI}" ]]
+    then
+      # truffle need to have a vyper executable in ${PATH},
+      # so we just add a fake vyper executable to /usr/bin.
+      if ! command -v vyper &> /dev/null
+      then
+        sudo touch /usr/bin/vyper
+        sudo chmod +x /usr/bin/vyper
+      fi
+    fi
+
     setup_solcjs "$DIR" "$soljson" "master" "solc"
     download_project "$repo" "$branch" "$DIR"
 }
