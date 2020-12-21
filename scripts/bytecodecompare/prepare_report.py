@@ -13,9 +13,9 @@ from tempfile import TemporaryDirectory
 from typing import List, Optional, Tuple, Union
 
 
-CONTRACT_SEPARATOR_PATTERN = re.compile(r'^======= (?P<file_name>.+):(?P<contract_name>[^:]+) =======$', re.MULTILINE)
-BYTECODE_REGEX = re.compile(r'^Binary:\n(?P<bytecode>.*)$', re.MULTILINE)
-METADATA_REGEX = re.compile(r'^Metadata:\n(?P<metadata>\{.*\})$', re.MULTILINE)
+CONTRACT_SEPARATOR_PATTERN = re.compile(r'^ *======= +(?:(?P<file_name>.+) *:)? *(?P<contract_name>[^:]+) +======= *$', re.MULTILINE)
+BYTECODE_REGEX = re.compile(r'^ *Binary: *\n(?P<bytecode>.*[0-9a-f$_]+.*)$', re.MULTILINE)
+METADATA_REGEX = re.compile(r'^ *Metadata: *\n *(?P<metadata>\{.*\}) *$', re.MULTILINE)
 
 
 class CompilerInterface(Enum):
@@ -32,7 +32,7 @@ class SMTUse(Enum):
 @dataclass(frozen=True)
 class ContractReport:
     contract_name: str
-    file_name: Path
+    file_name: Optional[Path]
     bytecode: Optional[str]
     metadata: Optional[str]
 
@@ -72,6 +72,11 @@ def load_source(path: Union[Path, str], smt_use: SMTUse) -> str:
     return file_content
 
 
+def clean_string(value: Optional[str]) -> Optional[str]:
+    value = value.strip() if value is not None else None
+    return value if value != '' else None
+
+
 def parse_standard_json_output(source_file_name: Path, standard_json_output: str) -> FileReport:
     decoded_json_output = json.loads(standard_json_output.strip())
 
@@ -98,8 +103,8 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
             file_report.contract_reports.append(ContractReport(
                 contract_name=contract_name,
                 file_name=Path(file_name),
-                bytecode=contract_results.get('evm', {}).get('bytecode', {}).get('object'),
-                metadata=contract_results.get('metadata'),
+                bytecode=clean_string(contract_results.get('evm', {}).get('bytecode', {}).get('object')),
+                metadata=clean_string(contract_results.get('metadata')),
             ))
 
     return file_report
@@ -122,10 +127,10 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
 
         assert file_report.contract_reports is not None
         file_report.contract_reports.append(ContractReport(
-            contract_name=contract_name,
-            file_name=Path(file_name),
-            bytecode=bytecode_match['bytecode'] if bytecode_match is not None else None,
-            metadata=metadata_match['metadata'] if metadata_match is not None else None,
+            contract_name=contract_name.strip(),
+            file_name=Path(file_name.strip()) if file_name is not None else None,
+            bytecode=clean_string(bytecode_match['bytecode'] if bytecode_match is not None else None),
+            metadata=clean_string(metadata_match['metadata'] if metadata_match is not None else None),
         ))
 
     return file_report
