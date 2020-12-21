@@ -15,6 +15,13 @@ function loadSource(sourceFileName, stripSMTPragmas)
     return source
 }
 
+function cleanString(string)
+{
+    if (string !== undefined)
+        string = string.trim()
+    return (string !== '' ? string : undefined)
+}
+
 
 let stripSMTPragmas = false
 let firstFileArgumentIndex = 2
@@ -77,10 +84,15 @@ for (const optimize of [false, true])
                         let bytecode = '<NO BYTECODE>'
                         let metadata = '<NO METADATA>'
 
-                        if ('evm' in contractResults && 'bytecode' in contractResults['evm'] && 'object' in contractResults['evm']['bytecode'])
-                            bytecode = contractResults.evm.bytecode.object
+                        if (
+                            'evm' in contractResults &&
+                            'bytecode' in contractResults['evm'] &&
+                            'object' in contractResults['evm']['bytecode'] &&
+                            cleanString(contractResults.evm.bytecode.object) !== undefined
+                        )
+                            bytecode = cleanString(contractResults.evm.bytecode.object)
 
-                        if ('metadata' in contractResults)
+                        if ('metadata' in contractResults && cleanString(contractResults.metadata) !== undefined)
                             metadata = contractResults.metadata
 
                         console.log(filename + ':' + contractName + ' ' + bytecode)
