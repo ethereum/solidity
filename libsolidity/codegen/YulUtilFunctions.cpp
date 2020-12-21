@@ -2601,111 +2601,18 @@ string YulUtilFunctions::updateStorageValueFunction(
 
 			auto const& fromStructType = dynamic_cast<StructType const&>(_fromType);
 			auto const& toStructType = dynamic_cast<StructType const&>(_toType);
-			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
 			solAssert(_offset.value_or(0) == 0, "");
 
 			Whiskers templ(R"(
 				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset>value) {
 					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-					<?fromStorage> if eq(slot, value) { leave } </fromStorage>
-					<#member>
-					{
-						<updateMemberCall>
-					}
-					</member>
+					<copyStructToStorage>(slot, value)
 				}
 			)");
 			templ("functionName", functionName);
 			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction(PanicCode::Generic));
-			templ("fromStorage", fromStructType.dataStoredIn(DataLocation::Storage));
-
-			MemberList::MemberMap structMembers = fromStructType.nativeMembers(nullptr);
-			MemberList::MemberMap toStructMembers = toStructType.nativeMembers(nullptr);
-
-			vector<map<string, string>> memberParams(structMembers.size());
-			for (size_t i = 0; i < structMembers.size(); ++i)
-			{
-				Type const& memberType = *structMembers[i].type;
-				solAssert(memberType.memoryHeadSize() == 32, "");
-				auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(structMembers[i].name);
-
-				Whiskers t(R"(
-					let memberSlot := add(slot, <memberStorageSlotDiff>)
-					let memberSrcPtr := add(value, <memberOffset>)
-
-					<?fromCalldata>
-						let <memberValues> :=
-							<?dynamicallyEncodedMember>
-								<accessCalldataTail>(value, memberSrcPtr)
-							<!dynamicallyEncodedMember>
-								memberSrcPtr
-							</dynamicallyEncodedMember>
-
-						<?isValueType>
-							<memberValues> := <read>(<memberValues>)
-						</isValueType>
-					</fromCalldata>
-
-					<?fromMemory>
-						let <memberValues> := <read>(memberSrcPtr)
-					</fromMemory>
-
-					<?fromStorage>
-						let <memberValues> :=
-							<?isValueType>
-								<read>(memberSrcPtr)
-							<!isValueType>
-								memberSrcPtr
-							</isValueType>
-					</fromStorage>
-
-					<updateStorageValue>(memberSlot, <memberValues>)
-				)");
-				bool fromCalldata = fromStructType.location() == DataLocation::CallData;
-				t("fromCalldata", fromCalldata);
-				bool fromMemory = fromStructType.location() == DataLocation::Memory;
-				t("fromMemory", fromMemory);
-				bool fromStorage = fromStructType.location() == DataLocation::Storage;
-				t("fromStorage", fromStorage);
-				t("isValueType", memberType.isValueType());
-				t("memberValues", suffixedVariableNameList("memberValue_", 0, memberType.stackItems().size()));
-
-				t("memberStorageSlotDiff", slotDiff.str());
-				if (fromCalldata)
-				{
-					t("memberOffset", to_string(fromStructType.calldataOffsetOfMember(structMembers[i].name)));
-					t("dynamicallyEncodedMember", memberType.isDynamicallyEncoded());
-					if (memberType.isDynamicallyEncoded())
-						t("accessCalldataTail", accessCalldataTailFunction(memberType));
-					if (memberType.isValueType())
-						t("read", readFromCalldata(memberType));
-				}
-				else if (fromMemory)
-				{
-					t("memberOffset", fromStructType.memoryOffsetOfMember(structMembers[i].name).str());
-					t("read", readFromMemory(memberType));
-				}
-				else if (fromStorage)
-				{
-					auto [srcSlotOffset, srcOffset] = fromStructType.storageOffsetsOfMember(structMembers[i].name);
-					t("memberOffset", formatNumber(srcSlotOffset));
-					if (memberType.isValueType())
-						t("read", readFromStorageValueType(memberType, srcOffset, false));
-					else
-						solAssert(srcOffset == 0, "");
-
-				}
-				t("memberStorageSlotOffset", to_string(offset));
-				t("updateStorageValue", updateStorageValueFunction(
-					memberType,
-					*toStructMembers[i].type,
-					optional<unsigned>{offset}
-				));
-				memberParams[i]["updateMemberCall"] = t.render();
-			}
-			templ("member", memberParams);
-
+			templ("panic", panicFunction(util::PanicCode::Generic));
+			templ("copyStructToStorage", copyStructToStorageFunction(fromStructType, toStructType));
 			return templ.render();
 		}
 	});
@@ -3351,6 +3258,122 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
 		templ("body", body);
+		return templ.render();
+	});
+}
+
+string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, StructType const& _to)
+{
+	solAssert(_to.dataStoredIn(DataLocation::Storage), "");
+	solAssert(_from.structDefinition() == _to.structDefinition(), "");
+
+	string functionName =
+		"copy_struct_to_storage_from_" +
+		_from.identifier() +
+		"_to_" +
+		_to.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(slot, value) {
+				<?fromStorage> if eq(slot, value) { leave } </fromStorage>
+				<#member>
+				{
+					<updateMemberCall>
+				}
+				</member>
+			}
+		)");
+		templ("functionName", functionName);
+		templ("panic", panicFunction());
+		templ("fromStorage", _from.dataStoredIn(DataLocation::Storage));
+
+		MemberList::MemberMap structMembers = _from.nativeMembers(nullptr);
+		MemberList::MemberMap toStructMembers = _to.nativeMembers(nullptr);
+
+		vector<map<string, string>> memberParams(structMembers.size());
+		for (size_t i = 0; i < structMembers.size(); ++i)
+		{
+			Type const& memberType = *structMembers[i].type;
+			solAssert(memberType.memoryHeadSize() == 32, "");
+			auto const&[slotDiff, offset] = _to.storageOffsetsOfMember(structMembers[i].name);
+
+			Whiskers t(R"(
+				let memberSlot := add(slot, <memberStorageSlotDiff>)
+				let memberSrcPtr := add(value, <memberOffset>)
+
+				<?fromCalldata>
+					let <memberValues> :=
+						<?dynamicallyEncodedMember>
+							<accessCalldataTail>(value, memberSrcPtr)
+						<!dynamicallyEncodedMember>
+							memberSrcPtr
+						</dynamicallyEncodedMember>
+
+					<?isValueType>
+						<memberValues> := <read>(<memberValues>)
+					</isValueType>
+				</fromCalldata>
+
+				<?fromMemory>
+					let <memberValues> := <read>(memberSrcPtr)
+				</fromMemory>
+
+				<?fromStorage>
+					let <memberValues> :=
+						<?isValueType>
+							<read>(memberSrcPtr)
+						<!isValueType>
+							memberSrcPtr
+						</isValueType>
+				</fromStorage>
+
+				<updateStorageValue>(memberSlot, <memberValues>)
+			)");
+			bool fromCalldata = _from.location() == DataLocation::CallData;
+			t("fromCalldata", fromCalldata);
+			bool fromMemory = _from.location() == DataLocation::Memory;
+			t("fromMemory", fromMemory);
+			bool fromStorage = _from.location() == DataLocation::Storage;
+			t("fromStorage", fromStorage);
+			t("isValueType", memberType.isValueType());
+			t("memberValues", suffixedVariableNameList("memberValue_", 0, memberType.stackItems().size()));
+
+			t("memberStorageSlotDiff", slotDiff.str());
+			if (fromCalldata)
+			{
+				t("memberOffset", to_string(_from.calldataOffsetOfMember(structMembers[i].name)));
+				t("dynamicallyEncodedMember", memberType.isDynamicallyEncoded());
+				if (memberType.isDynamicallyEncoded())
+					t("accessCalldataTail", accessCalldataTailFunction(memberType));
+				if (memberType.isValueType())
+					t("read", readFromCalldata(memberType));
+			}
+			else if (fromMemory)
+			{
+				t("memberOffset", _from.memoryOffsetOfMember(structMembers[i].name).str());
+				t("read", readFromMemory(memberType));
+			}
+			else if (fromStorage)
+			{
+				auto[srcSlotOffset, srcOffset] = _from.storageOffsetsOfMember(structMembers[i].name);
+				t("memberOffset", formatNumber(srcSlotOffset));
+				if (memberType.isValueType())
+					t("read", readFromStorageValueType(memberType, srcOffset, false));
+				else
+					solAssert(srcOffset == 0, "");
+
+			}
+			t("memberStorageSlotOffset", to_string(offset));
+			t("updateStorageValue", updateStorageValueFunction(
+				memberType,
+				*toStructMembers[i].type,
+				optional<unsigned>{offset}
+			));
+			memberParams[i]["updateMemberCall"] = t.render();
+		}
+		templ("member", memberParams);
+
 		return templ.render();
 	});
 }

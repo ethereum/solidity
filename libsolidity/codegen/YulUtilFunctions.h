@@ -483,6 +483,10 @@ public:
 	std::string externalCodeFunction();
 
 private:
+	/// @returns function that copies struct to storage
+	/// signature: (slot, value) ->
+	std::string copyStructToStorageFunction(StructType const& _from, StructType const& _to);
+
 	/// Special case of conversion functions - handles all array conversions.
 	std::string arrayConversionFunction(ArrayType const& _from, ArrayType const& _to);
 
