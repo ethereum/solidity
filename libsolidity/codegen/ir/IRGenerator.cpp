@@ -511,11 +511,12 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 			{
 				if (returnTypes[i]->category() == Type::Category::Mapping)
 					continue;
-				if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]))
-					if (!arrayType->isByteArray())
-						continue;
+				if (
+					auto const* arrayType = dynamic_cast<ArrayType const*>(returnTypes[i]);
+					arrayType && !arrayType->isByteArray()
+				)
+					continue;
 
-				// TODO conversion from storage byte arrays is not yet implemented.
 				pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
 				vector<string> retVars = IRVariable("ret_" + to_string(returnVariables.size()), *returnTypes[i]).stackSlots();
 				returnVariables += retVars;
@@ -531,9 +532,11 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		else
 		{
 			solAssert(returnTypes.size() == 1, "");
+			auto const* arrayType = dynamic_cast<ArrayType const*>(returnTypes.front());
+			if (arrayType)
+				solAssert(arrayType->isByteArray(), "");
 			vector<string> retVars = IRVariable("ret", *returnTypes.front()).stackSlots();
 			returnVariables += retVars;
-			// TODO conversion from storage byte arrays is not yet implemented.
 			code += Whiskers(R"(
 				<ret> := <readStorage>(slot, offset)
 			)")

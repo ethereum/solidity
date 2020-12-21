@@ -2271,8 +2271,25 @@ string YulUtilFunctions::readFromStorage(Type const& _type, size_t _offset, bool
 
 string YulUtilFunctions::readFromStorageDynamic(Type const& _type, bool _splitFunctionTypes)
 {
-	solAssert(_type.isValueType(), "");
-	return readFromStorageValueType(_type, {}, _splitFunctionTypes);
+	if (_type.isValueType())
+		return readFromStorageValueType(_type, {}, _splitFunctionTypes);
+	string functionName =
+		"read_from_storage__dynamic_" +
+		string(_splitFunctionTypes ? "split_" : "") +
+		_type.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&] {
+		return Whiskers(R"(
+			function <functionName>(slot, offset) -> value {
+				if gt(offset, 0) { <panic>() }
+				value := <readFromStorage>(slot)
+			}
+		)")
+		("functionName", functionName)
+		("panic", panicFunction(util::PanicCode::Generic))
+		("readFromStorage", readFromStorageReferenceType(_type))
+		.render();
+	});
 }
 
 string YulUtilFunctions::readFromStorageValueType(Type const& _type, optional<size_t> _offset, bool _splitFunctionTypes)
@@ -2315,7 +2332,15 @@ string YulUtilFunctions::readFromStorageValueType(Type const& _type, optional<si
 
 string YulUtilFunctions::readFromStorageReferenceType(Type const& _type)
 {
-	solUnimplementedAssert(_type.category() == Type::Category::Struct, "");
+	if (auto const* arrayType = dynamic_cast<ArrayType const*>(&_type))
+	{
+		solAssert(arrayType->dataStoredIn(DataLocation::Memory), "");
+		return copyArrayFromStorageToMemoryFunction(
+			dynamic_cast<ArrayType const&>(*arrayType->copyForLocation(DataLocation::Storage, false)),
+			*arrayType
+		);
+	}
+	solAssert(_type.category() == Type::Category::Struct, "");
 
 	string functionName = "read_from_storage_reference_type_" + _type.identifier();
 
@@ -2326,24 +2351,19 @@ string YulUtilFunctions::readFromStorageReferenceType(Type const& _type)
 	for (size_t i = 0; i < structMembers.size(); ++i)
 	{
 		auto const& [memberSlotDiff, memberStorageOffset] = structType.storageOffsetsOfMember(structMembers[i].name);
+		solAssert(structMembers[i].type->isValueType() || memberStorageOffset == 0, "");
 
 		memberSetValues[i]["setMember"] = Whiskers(R"(
 			{
-				let <memberValues> := <readFromStorage>(add(slot, <memberSlotDiff>)<?hasOffset>, <memberStorageOffset></hasOffset>)
+				let <memberValues> := <readFromStorage>(add(slot, <memberSlotDiff>))
 				<writeToMemory>(add(value, <memberMemoryOffset>), <memberValues>)
 			}
 		)")
 		("memberValues", suffixedVariableNameList("memberValue_", 0, structMembers[i].type->stackItems().size()))
 		("memberMemoryOffset", structType.memoryOffsetOfMember(structMembers[i].name).str())
 		("memberSlotDiff",  memberSlotDiff.str())
-		("memberStorageOffset", to_string(memberStorageOffset))
-		("readFromStorage",
-			structMembers[i].type->isValueType() ?
-				readFromStorageDynamic(*structMembers[i].type, true) :
-				readFromStorage(*structMembers[i].type, memberStorageOffset, true)
-		)
+		("readFromStorage", readFromStorage(*structMembers[i].type, memberStorageOffset, true))
 		("writeToMemory", writeToMemoryFunction(*structMembers[i].type))
-		("hasOffset", structMembers[i].type->isValueType())
 		.render();
 	}
 

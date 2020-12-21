@@ -23,6 +23,8 @@ contract C {
     function arrayPushEmpty() public { x.push(); }
     function del() public { delete x; }
 }
+// ====
+// compileViaYul: also
 // ----
 // x() -> 0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000
 // abiEncode() -> 0x20, 3, 0x6162630000000000000000000000000000000000000000000000000000000000

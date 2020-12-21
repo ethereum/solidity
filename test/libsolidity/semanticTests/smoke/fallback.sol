@@ -8,6 +8,8 @@ contract A {
         externalData = msg.data;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // data() -> 0
 // ()
