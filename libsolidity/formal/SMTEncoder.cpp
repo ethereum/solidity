@@ -207,12 +207,8 @@ void SMTEncoder::visitFunctionOrModifier()
 		auto refDecl = modifierInvocation->name().annotation().referencedDeclaration;
 		if (dynamic_cast<ContractDefinition const*>(refDecl))
 			visitFunctionOrModifier();
-		else if (auto modifierDef = dynamic_cast<ModifierDefinition const*>(refDecl))
-		{
-			solAssert(*modifierInvocation->name().annotation().requiredLookup == VirtualLookup::Virtual, "");
-			ModifierDefinition const& modifier = modifierDef->resolveVirtual(*m_currentContract);
-			inlineModifierInvocation(modifierInvocation.get(), &modifier);
-		}
+		else if (auto modifier = resolveModifierInvocation(*modifierInvocation, m_currentContract))
+			inlineModifierInvocation(modifierInvocation.get(), modifier);
 		else
 			solAssert(false, "");
 	}
@@ -2681,21 +2677,32 @@ vector<VariableDeclaration const*> SMTEncoder::modifiersVariables(FunctionDefini
 	{
 		if (!invok)
 			continue;
-		auto decl = invok->name().annotation().referencedDeclaration;
-		auto const* modifier = dynamic_cast<ModifierDefinition const*>(decl);
+		auto const* modifier = resolveModifierInvocation(*invok, _contract);
 		if (!modifier || visited.count(modifier))
 			continue;
 
 		visited.insert(modifier);
-		solAssert(_contract, "No contract context provided for modifier analysis!");
-		auto const& actualModifier = modifier->resolveVirtual(*_contract);
-		if (actualModifier.isImplemented())
+		if (modifier->isImplemented())
 		{
-			vars += applyMap(actualModifier.parameters(), [](auto _var) { return _var.get(); });
-			vars += BlockVars(actualModifier.body()).vars;
+			vars += applyMap(modifier->parameters(), [](auto _var) { return _var.get(); });
+			vars += BlockVars(modifier->body()).vars;
 		}
 	}
 	return vars;
+}
+
+ModifierDefinition const* SMTEncoder::resolveModifierInvocation(ModifierInvocation const& _invocation, ContractDefinition const* _contract)
+{
+	auto const* modifier = dynamic_cast<ModifierDefinition const*>(_invocation.name().annotation().referencedDeclaration);
+	if (modifier)
+	{
+		VirtualLookup lookup = *_invocation.name().annotation().requiredLookup;
+		solAssert(lookup == VirtualLookup::Virtual || lookup == VirtualLookup::Static, "");
+		solAssert(_contract || lookup == VirtualLookup::Static, "No contract context provided for modifier lookup resolution!");
+		if (lookup == VirtualLookup::Virtual)
+			modifier = &modifier->resolveVirtual(*_contract);
+	}
+	return modifier;
 }
 
 SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)

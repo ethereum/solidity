@@ -77,6 +77,9 @@ public:
 	static std::vector<VariableDeclaration const*> localVariablesIncludingModifiers(FunctionDefinition const& _function, ContractDefinition const* _contract);
 	static std::vector<VariableDeclaration const*> modifiersVariables(FunctionDefinition const& _function, ContractDefinition const* _contract);
 
+	/// @returns the ModifierDefinition of a ModifierInvocation if possible, or nullptr.
+	static ModifierDefinition const* resolveModifierInvocation(ModifierInvocation const& _invocation, ContractDefinition const* _contract);
+
 	/// @returns the SourceUnit that contains _scopable.
 	static SourceUnit const* sourceUnitContaining(Scopable const& _scopable);
 
