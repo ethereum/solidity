@@ -107,10 +107,28 @@ string YulUtilFunctions::copyToMemoryFunction(bool _fromCalldata)
 	});
 }
 
-string YulUtilFunctions::copyToMemoryLiteralFunction(string const& _literal)
+string YulUtilFunctions::copyLiteralToMemoryFunction(string const& _literal)
 {
-	solAssert(!_literal.empty(), "");
-	string functionName = "copy_literal_to_memory_" + h256(_literal, h256::AlignLeft).hex();
+	string functionName = "copy_literal_to_memory_" + util::toHex(util::keccak256(_literal).asBytes());
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return Whiskers(R"(
+			function <functionName>() -> memPtr {
+				memPtr := <arrayAllocationFunction>(<size>)
+				<storeLiteralInMem>(add(memPtr, 32))
+			}
+			)")
+			("functionName", functionName)
+			("arrayAllocationFunction", allocateMemoryArrayFunction(*TypeProvider::array(DataLocation::Memory, true)))
+			("size", to_string(_literal.size()))
+			("storeLiteralInMem", storeLiteralInMemoryFunction(_literal))
+			.render();
+	});
+}
+
+string YulUtilFunctions::storeLiteralInMemoryFunction(string const& _literal)
+{
+	string functionName = "store_literal_in_memory_" + util::toHex(util::keccak256(_literal).asBytes());
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		size_t words = (_literal.length() + 31) / 32;
@@ -122,18 +140,13 @@ string YulUtilFunctions::copyToMemoryLiteralFunction(string const& _literal)
 		}
 
 		return Whiskers(R"(
-			function <functionName>() -> memPtr {
-				memPtr := <allocationFunction>(add(<size>, 32))
-				mstore(memPtr, <size>)
-				let dataPos := add(memPtr, 32)
+			function <functionName>(memPtr) {
 				<#word>
-					mstore(add(dataPos, <offset>), <wordValue>)
+					mstore(add(memPtr, <offset>), <wordValue>)
 				</word>
 			}
 			)")
 			("functionName", functionName)
-			("allocationFunction", allocationFunction())
-			("size", to_string(_literal.size()))
 			("word", wordParams)
 			.render();
 	});
@@ -3933,31 +3946,14 @@ string YulUtilFunctions::conversionFunctionSpecial(Type const& _from, Type const
 		}
 		else if (_to.category() == Type::Category::Array)
 		{
-			auto const& arrayType = dynamic_cast<ArrayType const&>(_to);
-			solAssert(arrayType.isByteArray(), "");
-			size_t words = (data.size() + 31) / 32;
-			size_t storageSize = 32 + words * 32;
-
+			solAssert(dynamic_cast<ArrayType const&>(_to).isByteArray(), "");
 			Whiskers templ(R"(
 				function <functionName>() -> converted {
-					converted := <allocate>(<storageSize>)
-					mstore(converted, <size>)
-					<#word>
-						mstore(add(converted, <offset>), <wordValue>)
-					</word>
+					converted := <copyLiteralToMemory>()
 				}
 			)");
 			templ("functionName", functionName);
-			templ("allocate", allocationFunction());
-			templ("storageSize", to_string(storageSize));
-			templ("size", to_string(data.size()));
-			vector<map<string, string>> wordParams(words);
-			for (size_t i = 0; i < words; ++i)
-			{
-				wordParams[i]["offset"] = to_string(32 + i * 32);
-				wordParams[i]["wordValue"] = formatAsStringOrNumber(data.substr(32 * i, 32));
-			}
-			templ("word", wordParams);
+			templ("copyLiteralToMemory", copyLiteralToMemoryFunction(data));
 			return templ.render();
 		}
 		else

@@ -72,10 +72,14 @@ public:
 	/// Pads with zeros and might write more than exactly length.
 	std::string copyToMemoryFunction(bool _fromCalldata);
 
-	/// @returns a function name that copies string literal to memory
-	/// and returns pointer to memory array containing it
+	/// @returns the name of a function that copies a string literal to memory
+	/// and returns a pointer to the memory area containing the string literal.
 	/// signature: () -> memPtr
-	std::string copyToMemoryLiteralFunction(std::string const& _literal);
+	std::string copyLiteralToMemoryFunction(std::string const& _literal);
+
+	/// @returns the name of a function that stores a string literal at a specific location in memory
+	/// signature: (memPtr) ->
+	std::string storeLiteralInMemoryFunction(std::string const& _literal);
 
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
