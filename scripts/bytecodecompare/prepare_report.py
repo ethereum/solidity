@@ -35,12 +35,12 @@ for optimize in [False, True]:
             len(result['contracts']) == 0 or
             all(len(file_results) == 0 for file_name, file_results in result['contracts'].items())
         ):
-            REPORT_FILE.write(f + ": ERROR\n")
+            REPORT_FILE.write(f + ": <ERROR>\n")
         else:
             for filename in sorted(result['contracts'].keys()):
                 for contractName in sorted(result['contracts'][filename].keys()):
-                    bytecode = result['contracts'][filename][contractName].get('evm', {}).get('bytecode', {}).get('object', 'NO BYTECODE')
-                    metadata = result['contracts'][filename][contractName].get('metadata', 'NO METADATA')
+                    bytecode = result['contracts'][filename][contractName].get('evm', {}).get('bytecode', {}).get('object', '<NO BYTECODE>')
+                    metadata = result['contracts'][filename][contractName].get('metadata', '<NO METADATA>')
 
                     REPORT_FILE.write(filename + ':' + contractName + ' ' + bytecode + '\n')
                     REPORT_FILE.write(filename + ':' + contractName + ' ' + metadata + '\n')
