@@ -100,10 +100,6 @@ public:
 private:
 	/// Handles all catch cases of a try statement, except the success-case.
 	void handleCatch(TryStatement const& _tryStatement);
-	void handleCatchStructuredAndFallback(
-		TryCatchClause const& _structured,
-		TryCatchClause const* _fallback
-	);
 	void handleCatchFallback(TryCatchClause const& _fallback);
 
 	/// Generates code to rethrow an exception.

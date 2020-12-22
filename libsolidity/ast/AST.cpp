@@ -841,7 +841,15 @@ TryCatchClause const* TryStatement::successClause() const
 	return m_clauses[0].get();
 }
 
-TryCatchClause const* TryStatement::structuredClause() const
+TryCatchClause const* TryStatement::panicClause() const
+{
+	for (size_t i = 1; i < m_clauses.size(); ++i)
+		if (m_clauses[i]->errorName() == "Panic")
+			return m_clauses[i].get();
+	return nullptr;
+}
+
+TryCatchClause const* TryStatement::errorClause() const
 {
 	for (size_t i = 1; i < m_clauses.size(); ++i)
 		if (m_clauses[i]->errorName() == "Error")

@@ -3985,18 +3985,35 @@ string YulUtilFunctions::panicFunction(util::PanicCode _code)
 	});
 }
 
+string YulUtilFunctions::returnDataSelectorFunction()
+{
+	string const functionName = "return_data_selector";
+	solAssert(m_evmVersion.supportsReturndata(), "");
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>() -> sig {
+				if gt(returndatasize(), 3) {
+					returndatacopy(0, 0, 4)
+					sig := <shr224>(mload(0))
+				}
+			}
+		)")
+		("functionName", functionName)
+		("shr224", shiftRightFunction(224))
+		.render();
+	});
+}
+
 string YulUtilFunctions::tryDecodeErrorMessageFunction()
 {
 	string const functionName = "try_decode_error_message";
+	solAssert(m_evmVersion.supportsReturndata(), "");
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return util::Whiskers(R"(
 			function <functionName>() -> ret {
 				if lt(returndatasize(), 0x44) { leave }
-
-				returndatacopy(0, 0, 4)
-				let sig := <shr224>(mload(0))
-				if iszero(eq(sig, 0x<ErrorSignature>)) { leave }
 
 				let data := mload(<freeMemoryPointer>)
 				returndatacopy(data, 4, sub(returndatasize(), 4))
@@ -4014,17 +4031,35 @@ string YulUtilFunctions::tryDecodeErrorMessageFunction()
 				if gt(length, 0xffffffffffffffff) { leave }
 
 				let end := add(add(msg, 0x20), length)
-				if gt(end, add(data, returndatasize())) { leave }
+				if gt(end, add(data, sub(returndatasize(), 4))) { leave }
 
 				mstore(<freeMemoryPointer>, add(add(msg, 0x20), <roundUp>(length)))
 				ret := msg
 			}
 		)")
 		("functionName", functionName)
-		("shr224", shiftRightFunction(224))
-		("ErrorSignature", FixedHash<4>(util::keccak256("Error(string)")).hex())
 		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
 		("roundUp", roundUpFunction())
+		.render();
+	});
+}
+
+string YulUtilFunctions::tryDecodePanicDataFunction()
+{
+	string const functionName = "try_decode_panic_data";
+	solAssert(m_evmVersion.supportsReturndata(), "");
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>() -> success, data {
+				if gt(returndatasize(), 0x23) {
+					returndatacopy(0, 4, 0x20)
+					success := 1
+					data := mload(0)
+				}
+			}
+		)")
+		("functionName", functionName)
 		.render();
 	});
 }

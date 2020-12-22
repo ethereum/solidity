@@ -997,6 +997,7 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 		}
 	}
 
+	TryCatchClause const* panicClause = nullptr;
 	TryCatchClause const* errorClause = nullptr;
 	TryCatchClause const* lowLevelClause = nullptr;
 	for (size_t i = 1; i < _tryStatement.clauses().size(); ++i)
@@ -1029,7 +1030,7 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 					);
 			}
 		}
-		else if (clause.errorName() == "Error")
+		else if (clause.errorName() == "Error" || clause.errorName() == "Panic")
 		{
 			if (!m_evmVersion.supportsReturndata())
 				m_errorReporter.typeError(
@@ -1040,26 +1041,46 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 					"). You need at least a Byzantium-compatible EVM or use `catch { ... }`."
 				);
 
-			if (errorClause)
-				m_errorReporter.typeError(
-					1036_error,
-					clause.location(),
-					SecondarySourceLocation{}.append("The first clause is here:", errorClause->location()),
-					"This try statement already has an \"Error\" catch clause."
-				);
-			errorClause = &clause;
-			if (
-				!clause.parameters() ||
-				clause.parameters()->parameters().size() != 1 ||
-				*clause.parameters()->parameters().front()->type() != *TypeProvider::stringMemory()
-			)
-				m_errorReporter.typeError(2943_error, clause.location(), "Expected `catch Error(string memory ...) { ... }`.");
+			if (clause.errorName() == "Error")
+			{
+				if (errorClause)
+					m_errorReporter.typeError(
+						1036_error,
+						clause.location(),
+						SecondarySourceLocation{}.append("The first clause is here:", errorClause->location()),
+						"This try statement already has an \"Error\" catch clause."
+					);
+				errorClause = &clause;
+				if (
+					!clause.parameters() ||
+					clause.parameters()->parameters().size() != 1 ||
+					*clause.parameters()->parameters().front()->type() != *TypeProvider::stringMemory()
+				)
+					m_errorReporter.typeError(2943_error, clause.location(), "Expected `catch Error(string memory ...) { ... }`.");
+			}
+			else
+			{
+				if (panicClause)
+					m_errorReporter.typeError(
+						6732_error,
+						clause.location(),
+						SecondarySourceLocation{}.append("The first clause is here:", panicClause->location()),
+						"This try statement already has a \"Panic\" catch clause."
+					);
+				panicClause = &clause;
+				if (
+					!clause.parameters() ||
+					clause.parameters()->parameters().size() != 1 ||
+					*clause.parameters()->parameters().front()->type() != *TypeProvider::uint256()
+				)
+					m_errorReporter.typeError(1271_error, clause.location(), "Expected `catch Panic(uint ...) { ... }`.");
+			}
 		}
 		else
 			m_errorReporter.typeError(
 				3542_error,
 				clause.location(),
-				"Invalid catch clause name. Expected either `catch (...)` or `catch Error(...)`."
+				"Invalid catch clause name. Expected either `catch (...)`, `catch Error(...)`, or `catch Panic(...)`."
 			);
 	}
 }
