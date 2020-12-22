@@ -23,24 +23,27 @@ for (const optimize of [false, true])
             }
 
             const result = JSON.parse(compiler.compile(JSON.stringify(input)))
+
             if (
                 !('contracts' in result) ||
                 Object.keys(result['contracts']).length === 0 ||
-                !result['contracts'][filename] ||
-                Object.keys(result['contracts'][filename]).length === 0
+                Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0)
             )
                 // NOTE: do not exit here because this may be run on source which cannot be compiled
                 console.log(filename + ': ERROR')
             else
-                for (const contractName in result['contracts'][filename])
-                {
-                    const contractData = result['contracts'][filename][contractName];
-                    if (contractData.evm !== undefined && contractData.evm.bytecode !== undefined)
-                        console.log(filename + ':' + contractName + ' ' + contractData.evm.bytecode.object)
-                    else
-                        console.log(filename + ':' + contractName + ' NO BYTECODE')
-                    console.log(filename + ':' + contractName + ' ' + contractData.metadata)
-                }
+                for (const contractFile in result['contracts'])
+                    for (const contractName in result['contracts'][contractFile])
+                    {
+                        const contractResults = result['contracts'][contractFile][contractName]
+
+                        let bytecode = 'NO BYTECODE'
+                        if ('evm' in contractResults && 'bytecode' in contractResults['evm'] && 'object' in contractResults['evm']['bytecode'])
+                            bytecode = contractResults.evm.bytecode.object
+
+                        console.log(filename + ':' + contractName + ' ' + bytecode)
+                        console.log(filename + ':' + contractName + ' ' + contractResults['metadata'])
+                    }
         }
     }
 }
