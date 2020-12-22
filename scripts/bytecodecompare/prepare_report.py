@@ -62,6 +62,26 @@ class FileReport:
 
         return report
 
+    def format_summary(self, verbose: bool) -> str:
+        error = (self.contract_reports is None)
+        contract_reports = self.contract_reports if self.contract_reports is not None else []
+        no_bytecode = any(bytecode is None for bytecode in contract_reports)
+        no_metadata = any(metadata is None for metadata in contract_reports)
+
+        if verbose:
+            flags = ('E' if error else ' ') + ('B' if no_bytecode else ' ') + ('M' if no_metadata else ' ')
+            contract_count = '?' if self.contract_reports is None else str(len(self.contract_reports))
+            return f"{contract_count} {flags} {self.file_name}"
+        else:
+            if error:
+                return 'E'
+            if no_bytecode:
+                return 'B'
+            if no_metadata:
+                return 'M'
+
+            return '.'
+
 
 def load_source(path: Union[Path, str], smt_use: SMTUse) -> str:
     # NOTE: newline='' disables newline conversion.
@@ -278,6 +298,7 @@ def generate_report(
     smt_use: SMTUse,
     force_no_optimize_yul: bool,
     report_file_path: Path,
+    verbose: bool,
 ):
     metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
 
@@ -296,6 +317,7 @@ def generate_report(
                             metadata_option_supported,
                             Path(tmp_dir),
                         )
+                        print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
                         report_file.write(report.format_report())
                     except subprocess.CalledProcessError as exception:
                         print(
@@ -345,6 +367,7 @@ def commandline_parser() -> ArgumentParser:
         help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1."
     )
     parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
+    parser.add_argument('--verbose', dest='verbose', default=False, action='store_true', help="More verbose output.")
     return parser;
 
 
@@ -357,4 +380,5 @@ if __name__ == "__main__":
         SMTUse(options.smt_use),
         options.force_no_optimize_yul,
         Path(options.report_file),
+        options.verbose,
     )
