@@ -122,6 +122,7 @@ class TestPrepareReport(unittest.TestCase):
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
+            force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE
         )
@@ -134,11 +135,25 @@ class TestPrepareReport(unittest.TestCase):
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
+            force_no_optimize_yul=False,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE
         )
 
         self.assertEqual(command_line, ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--optimize', '--model-checker-engine', 'none'])
+        self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
+
+    def test_prepare_compiler_input_should_handle_force_no_optimize_yul_flag(self):
+        (command_line, compiler_input) = prepare_compiler_input(
+            Path('solc'),
+            SMT_SMOKE_TEST_SOL_PATH,
+            optimize=False,
+            force_no_optimize_yul=True,
+            interface=CompilerInterface.CLI,
+            smt_use=SMTUse.DISABLE
+        )
+
+        self.assertEqual(command_line, ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--no-optimize-yul', '--model-checker-engine', 'none'])
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
     def test_parse_standard_json_output(self):

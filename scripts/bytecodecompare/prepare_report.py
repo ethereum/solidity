@@ -134,7 +134,7 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
     return file_report
 
 
-def prepare_compiler_input(compiler_path: Path, source_file_name: Path, optimize: bool, interface: CompilerInterface, smt_use: SMTUse) -> Tuple[List[str], str]:
+def prepare_compiler_input(compiler_path: Path, source_file_name: Path, optimize: bool, force_no_optimize_yul: bool, interface: CompilerInterface, smt_use: SMTUse) -> Tuple[List[str], str]:
     if interface == CompilerInterface.STANDARD_JSON:
         json_input: dict = {
             'language': 'Solidity',
@@ -158,6 +158,8 @@ def prepare_compiler_input(compiler_path: Path, source_file_name: Path, optimize
         compiler_options = [str(source_file_name), '--bin', '--metadata']
         if optimize:
             compiler_options.append('--optimize')
+        elif force_no_optimize_yul:
+            compiler_options.append('--no-optimize-yul')
         if smt_use == SMTUse.DISABLE:
             compiler_options += ['--model-checker-engine', 'none']
 
@@ -167,9 +169,9 @@ def prepare_compiler_input(compiler_path: Path, source_file_name: Path, optimize
     return (command_line, compiler_input)
 
 
-def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, interface: CompilerInterface, smt_use: SMTUse, tmp_dir: Path) -> FileReport:
+def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, force_no_optimize_yul: bool, interface: CompilerInterface, smt_use: SMTUse, tmp_dir: Path) -> FileReport:
     if interface == CompilerInterface.STANDARD_JSON:
-        (command_line, compiler_input) = prepare_compiler_input(compiler_path, Path(source_file_name).name, optimize, interface, smt_use)
+        (command_line, compiler_input) = prepare_compiler_input(compiler_path, Path(source_file_name).name, optimize, force_no_optimize_yul, interface, smt_use)
 
         process = subprocess.run(
             command_line,
@@ -183,7 +185,7 @@ def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, in
         assert interface == CompilerInterface.CLI
         assert tmp_dir is not None
 
-        (command_line, compiler_input) = prepare_compiler_input(compiler_path.absolute(), source_file_name.name, optimize, interface, smt_use)
+        (command_line, compiler_input) = prepare_compiler_input(compiler_path.absolute(), source_file_name.name, optimize, force_no_optimize_yul, interface, smt_use)
 
         # Create a copy that we can use directly with the CLI interface
         modified_source_path = tmp_dir / source_file_name.name
@@ -200,13 +202,13 @@ def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, in
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse):
+def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool):
     with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                 for source_file_name in sorted(source_file_names):
                     try:
-                        report = run_compiler(Path(compiler_path), Path(source_file_name), optimize, interface, smt_use, Path(tmp_dir))
+                        report = run_compiler(Path(compiler_path), Path(source_file_name), optimize, force_no_optimize_yul, interface, smt_use, Path(tmp_dir))
                         report_file.write(report.format_report())
                     except subprocess.CalledProcessError as exception:
                         print(f"\n\nInterrupted by an exception while processing file '{source_file_name}' with optimize={optimize}\n", file=sys.stderr)
@@ -228,6 +230,7 @@ def commandline_parser() -> ArgumentParser:
     parser.add_argument(dest='compiler_path', help="Solidity compiler executable")
     parser.add_argument('--interface', dest='interface', default=CompilerInterface.STANDARD_JSON.value, choices=[c.value for c in CompilerInterface], help="Compiler interface to use.")
     parser.add_argument('--smt-use', dest='smt_use', default=SMTUse.DISABLE.value, choices=[s.value for s in SMTUse], help="What to do about contracts that use the experimental SMT checker.")
+    parser.add_argument('--force-no-optimize-yul', dest='force_no_optimize_yul', default=False, action='store_true', help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1.")
     return parser;
 
 
@@ -238,4 +241,5 @@ if __name__ == "__main__":
         Path(options.compiler_path),
         CompilerInterface(options.interface),
         SMTUse(options.smt_use),
+        options.force_no_optimize_yul,
     )
