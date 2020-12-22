@@ -7,7 +7,7 @@ from textwrap import dedent
 
 from unittest_helpers import LIBSOLIDITY_TEST_DIR, load_fixture, load_libsolidity_test_case
 
-from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SMTUse
+from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SMTUse, Statistics
 from bytecodecompare.prepare_report import load_source, parse_cli_output, parse_standard_json_output, prepare_compiler_input
 
 
@@ -86,6 +86,58 @@ class TestPrepareReport_FileReport(unittest.TestCase):
         report = FileReport(file_name=Path('file.sol'), contract_reports=[])
 
         self.assertEqual(report.format_report(), '')
+
+class TestPrepareReport_Statistics(unittest.TestCase):
+    def test_initialization(self):
+        self.assertEqual(Statistics(), Statistics(0, 0, 0, 0, 0))
+
+    def test_aggregate_bytecode_and_metadata_present(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[ContractReport('C', 'c.sol', 'B', 'M')]))
+        self.assertEqual(statistics, Statistics(1, 1, 0, 0, 0))
+
+    def test_aggregate_bytecode_missing(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[ContractReport('C', 'c.sol', None, 'M')]))
+        self.assertEqual(statistics, Statistics(1, 1, 0, 1, 0))
+
+    def test_aggregate_metadata_missing(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[ContractReport('C', 'c.sol', 'B', None)]))
+        self.assertEqual(statistics, Statistics(1, 1, 0, 0, 1))
+
+    def test_aggregate_no_contract_reports(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[]))
+        self.assertEqual(statistics, Statistics(1, 0, 0, 0, 0))
+
+    def test_aggregate_missing_contract_report_list(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=None))
+        self.assertEqual(statistics, Statistics(1, 0, 1, 0, 0))
+
+    def test_aggregate_multiple_contract_reports(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[
+            ContractReport('C', 'c.sol', 'B', 'M'),
+            ContractReport('C', 'c.sol', None, 'M'),
+            ContractReport('C', 'c.sol', 'B', None),
+            ContractReport('C', 'c.sol', None, None),
+        ]))
+        self.assertEqual(statistics, Statistics(1, 4, 0, 2, 2))
+
+    def test_str(self):
+        statistics = Statistics()
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=[
+            ContractReport('C', 'c.sol', 'B', 'M'),
+            ContractReport('C', 'c.sol', None, 'M'),
+            ContractReport('C', 'c.sol', 'B', None),
+            ContractReport('C', 'c.sol', None, None),
+        ]))
+        statistics.aggregate(FileReport(file_name=Path('F'), contract_reports=None))
+
+        self.assertEqual(statistics, Statistics(2, 4, 1, 2, 2))
+        self.assertEqual(str(statistics), "test cases: 2, contracts: 4+, errors: 1, missing bytecode: 2, missing metadata: 2")
 
 
 class TestPrepareReport(unittest.TestCase):
