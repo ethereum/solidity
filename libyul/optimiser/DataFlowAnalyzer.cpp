@@ -32,20 +32,37 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <memory>
 #include <variant>
+
+#include <libevmasm/Instruction.h>
+
+#include <libsmtutil/SMTPortfolio.h>
+#include <libsmtutil/Z3Interface.h>
+#include <libsmtutil/Helpers.h>
+#include <libyul/Utilities.h>
+#include <libsolutil/Visitor.h>
+
+#include <libsolutil/CommonData.h>
+
+#include <libyul/backends/evm/EVMDialect.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::yul;
+using namespace solidity::smtutil;
 
 DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
-	map<YulString, SideEffects> _functionSideEffects
+	map<YulString, SideEffects> _functionSideEffects,
+	set<YulString> _ssaVariables
 ):
-m_dialect(_dialect),
-m_functionSideEffects(std::move(_functionSideEffects)),
-m_knowledgeBase(_dialect, m_value)
+	m_dialect(_dialect),
+	m_functionSideEffects(std::move(_functionSideEffects)),
+	m_knowledgeBase(_dialect, m_value),
+	m_ssaVariables(std::move(_ssaVariables)),
+	m_solver(make_unique<smtutil::SMTPortfolio>())
 {
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
 		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
@@ -108,6 +125,24 @@ void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
 	m_variableScopes.back().variables += names;
+
+	// experimental part
+	if (_varDecl.variables.size() == 1 && _varDecl.value)
+	{
+		YulString varName = _varDecl.variables.front().name;
+		if (m_ssaVariables.count(varName))
+		{
+			bool const inserted = m_variables.insert({varName, m_solver->newVariable("yul_" + varName.str(), defaultSort())}).second;
+			yulAssert(inserted, "");
+			m_solver->addAssertion(m_variables.at(varName) == encodeExpression(*_varDecl.value));
+		}
+		else					// TODO can we skip this part?
+		{
+			bool const inserted = m_variables.insert({varName, m_solver->newVariable("yul_" + varName.str(), defaultSort())}).second;
+			yulAssert(inserted, "");
+			m_solver->addAssertion(m_variables.at(varName) == newRestrictedVariable());
+		}
+	}
 
 	if (_varDecl.value)
 	{
@@ -354,6 +389,7 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Block const& _block)
 	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
+	// TODO, this the part where we don't clear.
 	if (sideEffects.invalidatesMemory())
 		m_memory.clear();
 }
@@ -363,8 +399,17 @@ void DataFlowAnalyzer::clearKnowledgeIfInvalidated(Expression const& _expr)
 	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
 	if (sideEffects.invalidatesStorage())
 		m_storage.clear();
+
 	if (sideEffects.invalidatesMemory())
-		m_memory.clear();
+	{
+		set<YulString> keysToErase;
+		for ([[maybe_unused]] auto const& [key, value]: m_memory.values)
+			if (invalidatesMemoryLocation(key, _expr))
+				keysToErase.insert(key);
+
+		for (auto const& key: keysToErase)
+			m_memory.eraseKey(key);
+	}
 }
 
 void DataFlowAnalyzer::joinKnowledge(
@@ -433,3 +478,213 @@ std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
 	return {};
 }
 
+
+smtutil::Expression DataFlowAnalyzer::encodeExpression(yul::Expression const& _expression)
+{
+	return std::visit(GenericVisitor{
+		[&](FunctionCall const& _functionCall)
+		{
+			if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+				if (auto const* builtin = dialect->builtin(_functionCall.functionName.name))
+					if (builtin->instruction)
+						return encodeEVMBuiltin(*builtin->instruction, _functionCall.arguments);
+			return newRestrictedVariable();
+		},
+		[&](Identifier const& _identifier)
+		{
+			if (
+				m_ssaVariables.count(_identifier.name) &&
+				m_variables.count(_identifier.name)
+			)
+				return m_variables.at(_identifier.name);
+			else
+				return newRestrictedVariable();
+
+		},
+		[&](Literal const& _literal)
+		{
+			return literalValue(_literal);
+		}
+	}, _expression);
+}
+
+smtutil::Expression DataFlowAnalyzer::encodeEVMBuiltin(
+	evmasm::Instruction _instruction,
+	vector<yul::Expression> const& _arguments
+)
+{
+	vector<smtutil::Expression> arguments = applyMap(
+		_arguments,
+		[this](yul::Expression const& _expr) { return encodeExpression(_expr); }
+	);
+	switch (_instruction)
+	{
+	// TODO can wrapping be avoided?
+	case evmasm::Instruction::ADD:
+		return wrap(arguments.at(0) + arguments.at(1));
+	// TODO only allow multiplication if one of the argument is constant
+	case evmasm::Instruction::MUL:
+		return wrap(arguments.at(0) * arguments.at(1));
+	case evmasm::Instruction::SUB:
+		return wrap(arguments.at(0) - arguments.at(1));
+	// TODO only allow division if the second argument is a non-zero constant
+	case evmasm::Instruction::DIV:
+		return smtutil::Expression::ite(
+			arguments.at(1) == constantValue(0),
+			constantValue(0),
+			arguments.at(0) / arguments.at(1)
+		);
+	default:
+		break;
+	}
+	return newRestrictedVariable();
+}
+
+smtutil::Expression DataFlowAnalyzer::newVariable()
+{
+	return m_solver->newVariable(uniqueName(), defaultSort());
+}
+
+smtutil::Expression DataFlowAnalyzer::newRestrictedVariable()
+{
+	smtutil::Expression var = newVariable();
+	m_solver->addAssertion(0 <= var && var < smtutil::Expression(bigint(1) << 256));
+	return var;
+}
+
+string DataFlowAnalyzer::uniqueName()
+{
+	return "expr_" + to_string(m_varCounter++);
+}
+
+shared_ptr<Sort> DataFlowAnalyzer::defaultSort() const
+{
+	return SortProvider::intSort();
+}
+
+
+smtutil::Expression DataFlowAnalyzer::constantValue(size_t _value) const
+{
+	return _value;
+}
+
+smtutil::Expression DataFlowAnalyzer::literalValue(Literal const& _literal) const
+{
+	return smtutil::Expression(valueOfLiteral(_literal));
+}
+
+
+smtutil::Expression DataFlowAnalyzer::wrap(smtutil::Expression _value)
+{
+	smtutil::Expression rest = newRestrictedVariable();
+	smtutil::Expression multiplier = newVariable();
+	m_solver->addAssertion(_value == multiplier * smtutil::Expression(bigint(1) << 256) + rest);
+	return rest;
+}
+
+bool DataFlowAnalyzer::invalidatesMemoryLocation(YulString const& _name, Expression const& _expression)
+{
+	if (!holds_alternative<FunctionCall>(_expression))
+		return true;
+	// TODO hacky fix (?)
+	if (!m_variables.count(_name))
+		return true;
+
+	FunctionCall const& functionCall = get<FunctionCall>(_expression);
+
+	auto addMemoryConstraints = [&](
+		evmasm::Instruction _instruction,
+		smtutil::Expression _memoryLocation,
+		vector<yul::Expression> const& _arguments
+	)
+	{
+		vector<smtutil::Expression> arguments = applyMap(
+			_arguments,
+			[this](yul::Expression const& _expr) { return encodeExpression(_expr); }
+		);
+
+		switch (_instruction)
+		{
+
+		case evmasm::Instruction::CALLDATACOPY:
+		case evmasm::Instruction::CODECOPY:
+		case evmasm::Instruction::RETURNDATACOPY:
+			yulAssert(arguments.size() == 3, "");
+			m_solver->addAssertion(arguments.at(0) <= _memoryLocation);
+			m_solver->addAssertion(_memoryLocation < arguments.at(0) + arguments.at(2));
+			break;
+
+		case evmasm::Instruction::EXTCODECOPY:
+			yulAssert(arguments.size() == 4, "");
+			m_solver->addAssertion(arguments.at(1) <= _memoryLocation);
+			m_solver->addAssertion(_memoryLocation < arguments.at(1) + arguments.at(3));
+			break;
+
+		// TODO Should mstore and mstore8 be dealt with separately?
+		case evmasm::Instruction::MSTORE:
+			yulAssert(arguments.size() == 2, "");
+			m_solver->addAssertion(arguments.at(0) <= _memoryLocation);
+			m_solver->addAssertion(_memoryLocation < arguments.at(0) + constantValue(32));
+			break;
+
+		case evmasm::Instruction::MSTORE8:
+			yulAssert(arguments.size() == 2, "");
+			m_solver->addAssertion(arguments.at(0) <= _memoryLocation);
+			m_solver->addAssertion(_memoryLocation < arguments.at(0) + constantValue(1));
+			break;
+
+		case evmasm::Instruction::CALL:
+		case evmasm::Instruction::CALLCODE:
+			yulAssert(arguments.size() == 7, "");
+			m_solver->addAssertion(arguments.at(5) <= _memoryLocation);
+			m_solver->addAssertion(_memoryLocation < arguments.at(5) + arguments.at(6));
+			break;
+
+		case evmasm::Instruction::STATICCALL:
+		case evmasm::Instruction::DELEGATECALL:
+			yulAssert(arguments.size() == 6, "");
+			m_solver->addAssertion(arguments.at(4) <= _memoryLocation);
+			m_solver->addAssertion(_memoryLocation < arguments.at(4) + arguments.at(5));
+			break;
+
+		default:
+			;
+		}
+	};
+
+	if (auto dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+		if (auto builtin = dialect->builtin(functionCall.functionName.name))
+			if (builtin->instruction)
+			{
+				// TODO at this point, the constraints should be satisfiable.
+				// ADD an assert about it?
+				m_solver->push();
+				addMemoryConstraints(
+					*builtin->instruction,
+					m_variables.at(_name),
+					functionCall.arguments
+				);
+
+				CheckResult result1 = m_solver->check({}).first;
+				m_solver->pop();
+
+				m_solver->push();
+				addMemoryConstraints(
+					*builtin->instruction,
+					m_variables.at(_name) + constantValue(31),
+					functionCall.arguments
+				);
+
+				CheckResult result2 = m_solver->check({}).first;
+				m_solver->pop();
+
+				if (
+					(result1 == CheckResult::UNSATISFIABLE) &&
+					(result2 == CheckResult::UNSATISFIABLE)
+				)
+						return false;
+
+			}
+
+	return true;
+}

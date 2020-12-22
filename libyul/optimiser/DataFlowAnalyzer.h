@@ -31,8 +31,14 @@
 
 #include <libsolutil/InvertibleMap.h>
 
+#include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <map>
+#include <memory>
 #include <set>
+
+#include <libsmtutil/SolverInterface.h>
 
 namespace solidity::yul
 {
@@ -85,7 +91,8 @@ public:
 	///            The parameter is mostly used to determine movability of expressions.
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects = {}
+		std::map<YulString, SideEffects> _functionSideEffects = {},
+		std::set<YulString> _ssaVars = {}
 	);
 
 	using ASTModifier::operator();
@@ -189,6 +196,37 @@ protected:
 	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
+
+	// Experimental memory resolver
+
+	smtutil::Expression encodeExpression(
+		Expression const& _expression
+	);
+
+	virtual smtutil::Expression encodeEVMBuiltin(
+		evmasm::Instruction _instruction,
+		std::vector<Expression> const& _arguments
+	);
+
+
+	smtutil::Expression newVariable();
+	virtual smtutil::Expression newRestrictedVariable();
+	std::string uniqueName();
+
+
+	virtual std::shared_ptr<smtutil::Sort> defaultSort() const;
+	virtual smtutil::Expression wrap(smtutil::Expression _value);
+
+	virtual smtutil::Expression constantValue(size_t _value) const;
+	virtual smtutil::Expression literalValue(Literal const& _literal) const;
+
+	bool invalidatesMemoryLocation(YulString const& _name, Expression const& _expression);
+
+	std::set<YulString> const m_ssaVariables;
+	std::unique_ptr<smtutil::SolverInterface> m_solver;
+	std::map<YulString, smtutil::Expression> m_variables;
+
+	size_t m_varCounter = 0;
 };
 
 }
