@@ -59,6 +59,26 @@ class FileReport:
 
         return report
 
+    def format_summary(self, verbose: bool) -> str:
+        error = (self.contract_reports is None)
+        contract_reports = self.contract_reports if self.contract_reports is not None else []
+        no_bytecode = any(bytecode is None for bytecode in contract_reports)
+        no_metadata = any(metadata is None for metadata in contract_reports)
+
+        if verbose:
+            flags = ('E' if error else ' ') + ('B' if no_bytecode else ' ') + ('M' if no_metadata else ' ')
+            contract_count = '?' if self.contract_reports is None else str(len(self.contract_reports))
+            return f"{contract_count} {flags} {self.file_name}"
+        else:
+            if error:
+                return 'E'
+            if no_bytecode:
+                return 'B'
+            if no_metadata:
+                return 'M'
+
+            return '.'
+
 
 def load_source(path: Union[Path, str], smt_use: SMTUse) -> str:
     with open(path, mode='r', encoding='utf8') as source_file:
@@ -202,13 +222,14 @@ def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, fo
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool, report_file_path: Path):
+def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool, report_file_path: Path, verbose: bool):
     with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                 for source_file_name in sorted(source_file_names):
                     try:
                         report = run_compiler(Path(compiler_path), Path(source_file_name), optimize, force_no_optimize_yul, interface, smt_use, Path(tmp_dir))
+                        print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
                         report_file.write(report.format_report())
                     except subprocess.CalledProcessError as exception:
                         print(f"\n\nInterrupted by an exception while processing file '{source_file_name}' with optimize={optimize}\n", file=sys.stderr)
@@ -232,6 +253,7 @@ def commandline_parser() -> ArgumentParser:
     parser.add_argument('--smt-use', dest='smt_use', default=SMTUse.DISABLE.value, choices=[s.value for s in SMTUse], help="What to do about contracts that use the experimental SMT checker.")
     parser.add_argument('--force-no-optimize-yul', dest='force_no_optimize_yul', default=False, action='store_true', help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1.")
     parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
+    parser.add_argument('--verbose', dest='verbose', default=False, action='store_true', help="More verbose ouptut.")
     return parser;
 
 
@@ -244,4 +266,5 @@ if __name__ == "__main__":
         SMTUse(options.smt_use),
         options.force_no_optimize_yul,
         Path(options.report_file),
+        options.verbose,
     )
