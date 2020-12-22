@@ -202,8 +202,8 @@ def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, fo
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool):
-    with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
+def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool, report_file_path: Path):
+    with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                 for source_file_name in sorted(source_file_names):
@@ -231,6 +231,7 @@ def commandline_parser() -> ArgumentParser:
     parser.add_argument('--interface', dest='interface', default=CompilerInterface.STANDARD_JSON.value, choices=[c.value for c in CompilerInterface], help="Compiler interface to use.")
     parser.add_argument('--smt-use', dest='smt_use', default=SMTUse.DISABLE.value, choices=[s.value for s in SMTUse], help="What to do about contracts that use the experimental SMT checker.")
     parser.add_argument('--force-no-optimize-yul', dest='force_no_optimize_yul', default=False, action='store_true', help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1.")
+    parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
     return parser;
 
 
@@ -242,4 +243,5 @@ if __name__ == "__main__":
         CompilerInterface(options.interface),
         SMTUse(options.smt_use),
         options.force_no_optimize_yul,
+        Path(options.report_file),
     )
