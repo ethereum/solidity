@@ -25,7 +25,7 @@
 //     let _5 := 0
 //     sstore(_5, _4)
 //     pop(call(_5, _5, _5, _5, _5, _5, _5))
-//     sstore(_5, mload(_2))
+//     sstore(_5, _1)
 //     let _17 := 10
 //     mstore(_2, _17)
 //     mstore8(calldataload(_5), 4)

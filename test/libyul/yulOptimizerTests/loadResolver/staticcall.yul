@@ -19,10 +19,9 @@
 //     let b := 1
 //     sstore(a, b)
 //     let _1 := 7
-//     let _2 := 900
-//     mstore(_2, _1)
+//     mstore(900, _1)
 //     let _3 := 200
 //     pop(staticcall(10000, 10, a, _3, a, _3))
-//     sstore(1, mload(_2))
+//     sstore(1, _1)
 //     mstore(a, b)
 // }
