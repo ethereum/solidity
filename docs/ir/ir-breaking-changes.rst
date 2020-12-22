@@ -90,3 +90,27 @@ This causes differences in some contracts, for example:
 
 Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
 With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
+
+ * Copying `bytes` arrays from memory to storage is implemented in a different way. The old code generator always copies full words, while the new one cuts the byte array after its end. The old behaviour can lead to dirty data being copied after the end of the array (but still in the same storage slot).
+This causes differences in some contracts, for example:
+::
+     // SPDX-License-Identifier: GPL-3.0
+     pragma solidity >0.8.0;
+
+     contract C {
+         bytes x;
+         function f() public returns (uint r) {
+             bytes memory m = "tmp";
+             assembly {
+                 mstore(m, 8)
+                 mstore(add(m, 32), "deadbeef15dead")
+             }
+             x = m;
+             assembly {
+                 r := sload(x.slot)
+             }
+         }
+     }
+
+Previously `f()` would return `0x6465616462656566313564656164000000000000000000000000000000000010` (it has correct length, and correct first 8 elements, but than it contains dirty data which was set via assembly).
+Now it is returning `0x6465616462656566000000000000000000000000000000000000000000000010` (it has correct length, and correct elements, but doesn't contain dirty data).
