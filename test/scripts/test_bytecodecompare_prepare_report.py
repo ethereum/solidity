@@ -9,7 +9,7 @@ from unittest_helpers import FIXTURE_DIR, LIBSOLIDITY_TEST_DIR, load_fixture, lo
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
-from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport
+from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SMTUse
 from bytecodecompare.prepare_report import load_source, parse_cli_output, parse_standard_json_output, prepare_compiler_input
 # pragma pylint: enable=import-error
 
@@ -98,48 +98,58 @@ class TestFileReport(PrepareReportTestBase):
 
 
 class TestLoadSource(PrepareReportTestBase):
-    def test_load_source(self):
-        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH), SMT_SMOKE_TEST_SOL_CODE)
-
-    def test_load_source_preserves_lf_newlines(self):
-        expected_output = (
-            "pragma experimental SMTChecker;\n"
+    def test_load_source_should_strip_smt_pragmas_if_requested(self):
+        expected_file_content = (
             "\n"
             "contract C {\n"
             "}\n"
         )
 
-        self.assertEqual(load_source(SMT_CONTRACT_WITH_LF_NEWLINES_SOL_PATH), expected_output)
+        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_file_content)
+
+    def test_load_source_should_not_strip_smt_pragmas_if_not_requested(self):
+        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.DISABLE), SMT_SMOKE_TEST_SOL_CODE)
+        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.PRESERVE), SMT_SMOKE_TEST_SOL_CODE)
+
+    def test_load_source_preserves_lf_newlines(self):
+        expected_output = (
+            "\n"
+            "\n"
+            "contract C {\n"
+            "}\n"
+        )
+
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_LF_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
     def test_load_source_preserves_crlf_newlines(self):
         expected_output = (
-            "pragma experimental SMTChecker;\r\n"
+            "\r\n"
             "\r\n"
             "contract C {\r\n"
             "}\r\n"
         )
 
-        self.assertEqual(load_source(SMT_CONTRACT_WITH_CRLF_NEWLINES_SOL_PATH), expected_output)
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_CRLF_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
     def test_load_source_preserves_cr_newlines(self):
         expected_output = (
-            "pragma experimental SMTChecker;\r"
+            "\r"
             "\r"
             "contract C {\r"
             "}\r"
         )
 
-        self.assertEqual(load_source(SMT_CONTRACT_WITH_CR_NEWLINES_SOL_PATH), expected_output)
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_CR_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
     def test_load_source_preserves_mixed_newlines(self):
         expected_output = (
-            "pragma experimental SMTChecker;\n"
+            "\n"
             "\n"
             "contract C {\r"
             "}\r\n"
         )
 
-        self.assertEqual(load_source(SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH), expected_output)
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_output)
 
 
 class TestPrepareCompilerInput(PrepareReportTestBase):
@@ -161,6 +171,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
             interface=CompilerInterface.STANDARD_JSON,
+            smt_use=SMTUse.DISABLE,
         )
 
         self.assertEqual(command_line, ['solc', '--standard-json'])
@@ -172,11 +183,12 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
             interface=CompilerInterface.CLI,
+            smt_use=SMTUse.DISABLE,
         )
 
         self.assertEqual(
             command_line,
-            ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--model-checker-engine', 'none', '--optimize']
+            ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--optimize', '--model-checker-engine', 'none']
         )
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
@@ -204,6 +216,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             optimize=True,
             interface=CompilerInterface.STANDARD_JSON,
+            smt_use=SMTUse.DISABLE,
         )
 
         self.assertEqual(command_line, ['solc', '--standard-json'])
@@ -215,6 +228,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             optimize=True,
             interface=CompilerInterface.CLI,
+            smt_use=SMTUse.DISABLE,
         )
 
         self.assertEqual(compiler_input, SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_CODE)
