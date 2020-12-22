@@ -20,6 +20,7 @@
  * Common Subexpression Eliminator.
  */
 
+
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 
 #include <libyul/optimiser/NameCollector.h>
@@ -38,7 +39,7 @@
 #include <libevmasm/Instruction.h>
 
 #include <libsmtutil/SMTPortfolio.h>
-#include <libsmtutil/Z3Interface.h>
+#include <libsmtutil/SolverInterface.h>
 #include <libsmtutil/Helpers.h>
 #include <libyul/Utilities.h>
 #include <libsolutil/Visitor.h>
@@ -95,7 +96,10 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 		ASTModifier::operator()(_statement);
 		set<YulString> keysToErase;
 		for (auto const& item: m_memory.values)
-			if (!m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, item.first))
+			if (!(
+				m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, item.first) ||
+				!invalidatesMemoryLocation(item.first, _statement.expression))
+			)
 				keysToErase.insert(item.first);
 		for (YulString const& key: keysToErase)
 			m_memory.eraseKey(key);
@@ -534,6 +538,15 @@ smtutil::Expression DataFlowAnalyzer::encodeEVMBuiltin(
 			constantValue(0),
 			arguments.at(0) / arguments.at(1)
 		);
+
+	// Restrictions from EIP-1985
+	case evmasm::Instruction::CALLDATASIZE:
+	case evmasm::Instruction::CODESIZE:
+	case evmasm::Instruction::EXTCODESIZE:
+	case evmasm::Instruction::MSIZE:
+	case evmasm::Instruction::RETURNDATASIZE:
+		return newRestrictedVariable(bigint(1) << 32);
+		break;
 	default:
 		break;
 	}
@@ -545,10 +558,10 @@ smtutil::Expression DataFlowAnalyzer::newVariable()
 	return m_solver->newVariable(uniqueName(), defaultSort());
 }
 
-smtutil::Expression DataFlowAnalyzer::newRestrictedVariable()
+smtutil::Expression DataFlowAnalyzer::newRestrictedVariable(bigint _maxValue)
 {
 	smtutil::Expression var = newVariable();
-	m_solver->addAssertion(0 <= var && var < smtutil::Expression(bigint(1) << 256));
+	m_solver->addAssertion(0 <= var && var < smtutil::Expression(_maxValue));
 	return var;
 }
 

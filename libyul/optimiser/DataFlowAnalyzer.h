@@ -210,7 +210,7 @@ protected:
 
 
 	smtutil::Expression newVariable();
-	virtual smtutil::Expression newRestrictedVariable();
+	virtual smtutil::Expression newRestrictedVariable(bigint _maxValue = (bigint(1) << 256));
 	std::string uniqueName();
 
 
