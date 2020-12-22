@@ -40,7 +40,7 @@ for optimize in [False, True]:
             for filename in sorted(result['contracts'].keys()):
                 for contractName in sorted(result['contracts'][filename].keys()):
                     bytecode = result['contracts'][filename][contractName].get('evm', {}).get('bytecode', {}).get('object', 'NO BYTECODE')
-                    metadata = result['contracts'][filename][contractName]['metadata']
+                    metadata = result['contracts'][filename][contractName].get('metadata', 'NO METADATA')
 
                     REPORT_FILE.write(filename + ':' + contractName + ' ' + bytecode + '\n')
                     REPORT_FILE.write(filename + ':' + contractName + ' ' + metadata + '\n')

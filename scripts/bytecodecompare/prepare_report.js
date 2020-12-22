@@ -38,11 +38,16 @@ for (const optimize of [false, true])
                         const contractResults = result['contracts'][contractFile][contractName]
 
                         let bytecode = 'NO BYTECODE'
+                        let metadata = 'NO METADATA'
+
                         if ('evm' in contractResults && 'bytecode' in contractResults['evm'] && 'object' in contractResults['evm']['bytecode'])
                             bytecode = contractResults.evm.bytecode.object
 
+                        if ('metadata' in contractResults)
+                            metadata = contractResults.metadata
+
                         console.log(filename + ':' + contractName + ' ' + bytecode)
-                        console.log(filename + ':' + contractName + ' ' + contractResults['metadata'])
+                        console.log(filename + ':' + contractName + ' ' + metadata)
                     }
         }
     }
