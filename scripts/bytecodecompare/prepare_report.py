@@ -237,6 +237,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
     smt_use: SMTUse,
     metadata_option_supported: bool,
     tmp_dir: Path,
+    exit_on_error: bool,
 ) -> FileReport:
 
     if interface == CompilerInterface.STANDARD_JSON:
@@ -255,7 +256,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
             input=compiler_input,
             encoding='utf8',
             capture_output=True,
-            check=False,
+            check=exit_on_error,
         )
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
@@ -285,13 +286,13 @@ def run_compiler(  # pylint: disable=too-many-arguments
             cwd=tmp_dir,
             encoding='utf8',
             capture_output=True,
-            check=False,
+            check=exit_on_error,
         )
 
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(
+def generate_report(  # pylint: disable=too-many-arguments
     source_file_names: List[str],
     compiler_path: Path,
     interface: CompilerInterface,
@@ -299,6 +300,7 @@ def generate_report(
     force_no_optimize_yul: bool,
     report_file_path: Path,
     verbose: bool,
+    exit_on_error: bool,
 ):
     metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
 
@@ -316,6 +318,7 @@ def generate_report(
                             smt_use,
                             metadata_option_supported,
                             Path(tmp_dir),
+                            exit_on_error,
                         )
                         print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
                         report_file.write(report.format_report())
@@ -368,6 +371,13 @@ def commandline_parser() -> ArgumentParser:
     )
     parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
     parser.add_argument('--verbose', dest='verbose', default=False, action='store_true', help="More verbose output.")
+    parser.add_argument(
+        '--exit-on-error',
+        dest='exit_on_error',
+        default=False,
+        action='store_true',
+        help="Immediately exit and print compiler output if the compiler exits with an error.",
+    )
     return parser;
 
 
@@ -381,4 +391,5 @@ if __name__ == "__main__":
         options.force_no_optimize_yul,
         Path(options.report_file),
         options.verbose,
+        options.exit_on_error,
     )
