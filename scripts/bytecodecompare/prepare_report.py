@@ -189,7 +189,7 @@ def prepare_compiler_input(compiler_path: Path, source_file_name: Path, optimize
     return (command_line, compiler_input)
 
 
-def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, force_no_optimize_yul: bool, interface: CompilerInterface, smt_use: SMTUse, tmp_dir: Path) -> FileReport:
+def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, force_no_optimize_yul: bool, interface: CompilerInterface, smt_use: SMTUse, tmp_dir: Path, exit_on_error: bool) -> FileReport:
     if interface == CompilerInterface.STANDARD_JSON:
         (command_line, compiler_input) = prepare_compiler_input(compiler_path, Path(source_file_name).name, optimize, force_no_optimize_yul, interface, smt_use)
 
@@ -198,6 +198,7 @@ def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, fo
             input=compiler_input,
             encoding='utf8',
             capture_output=True,
+            check=exit_on_error,
         )
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
@@ -217,18 +218,19 @@ def run_compiler(compiler_path: Path, source_file_name: Path, optimize: bool, fo
             cwd=tmp_dir,
             encoding='utf8',
             capture_output=True,
+            check=exit_on_error,
         )
 
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool, report_file_path: Path, verbose: bool):
+def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse, force_no_optimize_yul: bool, report_file_path: Path, verbose: bool, exit_on_error: bool):
     with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                 for source_file_name in sorted(source_file_names):
                     try:
-                        report = run_compiler(Path(compiler_path), Path(source_file_name), optimize, force_no_optimize_yul, interface, smt_use, Path(tmp_dir))
+                        report = run_compiler(Path(compiler_path), Path(source_file_name), optimize, force_no_optimize_yul, interface, smt_use, Path(tmp_dir), exit_on_error)
                         print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
                         report_file.write(report.format_report())
                     except subprocess.CalledProcessError as exception:
@@ -254,6 +256,7 @@ def commandline_parser() -> ArgumentParser:
     parser.add_argument('--force-no-optimize-yul', dest='force_no_optimize_yul', default=False, action='store_true', help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1.")
     parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
     parser.add_argument('--verbose', dest='verbose', default=False, action='store_true', help="More verbose ouptut.")
+    parser.add_argument('--exit-on-error', dest='exit_on_error', default=False, action='store_true', help="Immediately exit and print compiler output if the compiler exits with an error.")
     return parser;
 
 
@@ -267,4 +270,5 @@ if __name__ == "__main__":
         options.force_no_optimize_yul,
         Path(options.report_file),
         options.verbose,
+        options.exit_on_error,
     )
