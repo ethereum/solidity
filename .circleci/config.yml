@@ -925,13 +925,19 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-ubuntu.txt
+      - run: mkdir test-cases/
+      - run: cd test-cases && ../scripts/isolate_tests.py ../test/
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json && mv -v report.txt ../bytecode-report-ubuntu-json.txt
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli && mv -v report.txt ../bytecode-report-ubuntu-cli.txt
       - store_artifacts:
-          path: report.txt
+          path: bytecode-report-ubuntu-json.txt
+      - store_artifacts:
+          path: bytecode-report-ubuntu-cli.txt
       - persist_to_workspace:
           root: .
           paths:
-            - bytecode-report-ubuntu.txt
+            - bytecode-report-ubuntu-json.txt
+            - bytecode-report-ubuntu-cli.txt
 
   b_bytecode_osx:
     macos:
@@ -942,13 +948,19 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-osx.txt
+      - run: mkdir test-cases/
+      - run: cd test-cases && ../scripts/isolate_tests.py ../test/
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json && mv -v report.txt ../bytecode-report-osx-json.txt
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli && mv -v report.txt ../bytecode-report-osx-cli.txt
       - store_artifacts:
-          path: report.txt
+          path: bytecode-report-osx-json.txt
+      - store_artifacts:
+          path: bytecode-report-osx-cli.txt
       - persist_to_workspace:
           root: .
           paths:
-            - bytecode-report-osx.txt
+            - bytecode-report-osx-json.txt
+            - bytecode-report-osx-cli.txt
 
   b_bytecode_win:
     executor:
@@ -961,15 +973,19 @@ jobs:
       - checkout
       - attach_workspace:
           at: build
-      - run: python scripts\isolate_tests.py test\
-      - run: python scripts\bytecodecompare\prepare_report.py build\solc\Release\solc.exe
-      - run: cp report.txt bytecode-report-windows.txt
+      - run: mkdir test-cases\
+      - run: cd test-cases\ && python ..\scripts\isolate_tests.py ..\test\
+      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface standard-json && move report.txt ..\bytecode-report-windows-json.txt
+      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface cli && move report.txt ..\bytecode-report-windows-cli.txt
       - store_artifacts:
-          path: report.txt
+          path: bytecode-report-windows-json.txt
+      - store_artifacts:
+          path: bytecode-report-windows-cli.txt
       - persist_to_workspace:
           root: .
           paths:
-            - bytecode-report-windows.txt
+            - bytecode-report-windows-json.txt
+            - bytecode-report-windows-cli.txt
 
   b_bytecode_ems:
     docker:
@@ -980,9 +996,9 @@ jobs:
       - checkout
       - attach_workspace:
           at: emscripten_build/libsolc
-      - run: scripts/bytecodecompare/storebytecode.sh && cp -v report.txt bytecode-report-emscripten.txt
+      - run: scripts/bytecodecompare/storebytecode.sh && mv -v report.txt bytecode-report-emscripten.txt
       - store_artifacts:
-          path: report.txt
+          path: bytecode-report-emscripten.txt
       - persist_to_workspace:
           root: .
           paths:
@@ -994,7 +1010,15 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: diff --report-identical-files --from-file bytecode-report-emscripten.txt bytecode-report-ubuntu.txt bytecode-report-osx.txt bytecode-report-windows.txt
+      - run: |
+          diff --report-identical-files --from-file \
+            bytecode-report-emscripten.txt \
+            bytecode-report-ubuntu-json.txt \
+            bytecode-report-ubuntu-cli.txt \
+            bytecode-report-osx-json.txt \
+            bytecode-report-osx-cli.txt \
+            bytecode-report-windows-json.txt \
+            bytecode-report-windows-cli.txt
 
 workflows:
   version: 2
