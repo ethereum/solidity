@@ -13,7 +13,10 @@ from tempfile import TemporaryDirectory
 from typing import List, Optional, Tuple, Union
 
 
-CONTRACT_SEPARATOR_PATTERN = re.compile(r'^ *======= +(?:(?P<file_name>.+) *:)? *(?P<contract_name>[^:]+) +======= *$', re.MULTILINE)
+CONTRACT_SEPARATOR_PATTERN = re.compile(
+    r'^ *======= +(?:(?P<file_name>.+) *:)? *(?P<contract_name>[^:]+) +======= *$',
+    re.MULTILINE
+)
 BYTECODE_REGEX = re.compile(r'^ *Binary: *\n(?P<bytecode>.*[0-9a-f$_]+.*)$', re.MULTILINE)
 METADATA_REGEX = re.compile(r'^ *Metadata: *\n *(?P<metadata>\{.*\}) *$', re.MULTILINE)
 
@@ -136,13 +139,15 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
     return file_report
 
 
-def prepare_compiler_input(
+def prepare_compiler_input(  # pylint: disable=too-many-arguments
     compiler_path: Path,
     source_file_name: Path,
     optimize: bool,
+    force_no_optimize_yul: bool,
     interface: CompilerInterface,
     smt_use: SMTUse,
 ) -> Tuple[List[str], str]:
+
     if interface == CompilerInterface.STANDARD_JSON:
         json_input: dict = {
             'language': 'Solidity',
@@ -166,6 +171,8 @@ def prepare_compiler_input(
         compiler_options = [str(source_file_name), '--bin', '--metadata']
         if optimize:
             compiler_options.append('--optimize')
+        elif force_no_optimize_yul:
+            compiler_options.append('--no-optimize-yul')
         if smt_use == SMTUse.DISABLE:
             compiler_options += ['--model-checker-engine', 'none']
 
@@ -175,10 +182,11 @@ def prepare_compiler_input(
     return (command_line, compiler_input)
 
 
-def run_compiler(
+def run_compiler(  # pylint: disable=too-many-arguments
     compiler_path: Path,
     source_file_name: Path,
     optimize: bool,
+    force_no_optimize_yul: bool,
     interface: CompilerInterface,
     smt_use: SMTUse,
     tmp_dir: Path,
@@ -189,6 +197,7 @@ def run_compiler(
             compiler_path,
             Path(source_file_name.name),
             optimize,
+            force_no_optimize_yul,
             interface,
             smt_use,
         )
@@ -210,6 +219,7 @@ def run_compiler(
             compiler_path.absolute(),
             Path(source_file_name.name),
             optimize,
+            force_no_optimize_yul,
             interface,
             smt_use,
         )
@@ -232,7 +242,13 @@ def run_compiler(
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface, smt_use: SMTUse):
+def generate_report(
+    source_file_names: List[str],
+    compiler_path: Path,
+    interface: CompilerInterface,
+    smt_use: SMTUse,
+    force_no_optimize_yul: bool
+):
     with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
@@ -242,6 +258,7 @@ def generate_report(source_file_names: List[str], compiler_path: Path, interface
                             compiler_path,
                             Path(source_file_name),
                             optimize,
+                            force_no_optimize_yul,
                             interface,
                             smt_use,
                             Path(tmp_dir),
@@ -287,6 +304,13 @@ def commandline_parser() -> ArgumentParser:
         choices=[s.value for s in SMTUse],
         help="What to do about contracts that use the experimental SMT checker."
     )
+    parser.add_argument(
+        '--force-no-optimize-yul',
+        dest='force_no_optimize_yul',
+        default=False,
+        action='store_true',
+        help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1."
+    )
     return parser;
 
 
@@ -297,4 +321,5 @@ if __name__ == "__main__":
         Path(options.compiler_path),
         CompilerInterface(options.interface),
         SMTUse(options.smt_use),
+        options.force_no_optimize_yul,
     )

@@ -173,6 +173,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
+            force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE,
         )
@@ -185,6 +186,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
+            force_no_optimize_yul=False,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
         )
@@ -218,6 +220,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             Path('solc'),
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             optimize=True,
+            force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE,
         )
@@ -230,11 +233,28 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             Path('solc'),
             SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             optimize=True,
+            force_no_optimize_yul=True,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
         )
 
         self.assertEqual(compiler_input, SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_CODE)
+
+    def test_prepare_compiler_input_for_cli_should_handle_force_no_optimize_yul_flag(self):
+        (command_line, compiler_input) = prepare_compiler_input(
+            Path('solc'),
+            SMT_SMOKE_TEST_SOL_PATH,
+            optimize=False,
+            force_no_optimize_yul=True,
+            interface=CompilerInterface.CLI,
+            smt_use=SMTUse.DISABLE,
+        )
+
+        self.assertEqual(
+            command_line,
+            ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--no-optimize-yul', '--model-checker-engine', 'none'],
+        )
+        self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
 
 class TestParseStandardJSONOutput(PrepareReportTestBase):
@@ -506,7 +526,9 @@ class TestParseCLIOutput(PrepareReportTestBase):
 
         expected_report = FileReport(
             file_name=Path('contract.sol'),
-            contract_reports=[ContractReport(contract_name='C', file_name=Path('contract.sol'), bytecode='60806040523480156', metadata='{  }')]
+            contract_reports=[
+                ContractReport(contract_name='C', file_name=Path('contract.sol'), bytecode='60806040523480156', metadata='{  }')
+            ]
         )
 
         self.assertEqual(parse_cli_output(Path('contract.sol'), compiler_output), expected_report)
