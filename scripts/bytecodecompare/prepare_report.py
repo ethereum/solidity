@@ -276,11 +276,12 @@ def generate_report(
     compiler_path: Path,
     interface: CompilerInterface,
     smt_use: SMTUse,
-    force_no_optimize_yul: bool
+    force_no_optimize_yul: bool,
+    report_file_path: Path,
 ):
     metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
 
-    with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
+    with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                 for source_file_name in sorted(source_file_names):
@@ -343,6 +344,7 @@ def commandline_parser() -> ArgumentParser:
         action='store_true',
         help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1."
     )
+    parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
     return parser;
 
 
@@ -354,4 +356,5 @@ if __name__ == "__main__":
         CompilerInterface(options.interface),
         SMTUse(options.smt_use),
         options.force_no_optimize_yul,
+        Path(options.report_file),
     )
