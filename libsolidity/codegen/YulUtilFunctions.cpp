@@ -4031,7 +4031,7 @@ string YulUtilFunctions::tryDecodeErrorMessageFunction()
 				if gt(length, 0xffffffffffffffff) { leave }
 
 				let end := add(add(msg, 0x20), length)
-				if gt(end, add(data, returndatasize())) { leave }
+				if gt(end, add(data, sub(returndatasize(), 4))) { leave }
 
 				mstore(<freeMemoryPointer>, add(add(msg, 0x20), <roundUp>(length)))
 				ret := msg
