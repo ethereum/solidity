@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		if (CommonOptions::get().useABIEncoderV1)
 			CHECK_DEPLOY_GAS(133045, 129731, evmVersion);
 		else
-			CHECK_DEPLOY_GAS(152657, 135201, evmVersion);
+			CHECK_DEPLOY_GAS(155553, 135201, evmVersion);
 	}
 	// This is only correct on >=Constantinople.
 	else if (!CommonOptions::get().useABIEncoderV1)
@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(string_storage)
 		else
 		{
 			if (evmVersion < EVMVersion::istanbul())
-				CHECK_DEPLOY_GAS(146671, 123969, evmVersion);
+				CHECK_DEPLOY_GAS(149567, 123969, evmVersion);
 			else
-				CHECK_DEPLOY_GAS(131591, 110969, evmVersion);
+				CHECK_DEPLOY_GAS(134123, 110969, evmVersion);
 		}
 	}
 	else if (evmVersion < EVMVersion::istanbul())
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(string_storage)
 	{
 		callContractFunction("f()");
 		if (evmVersion == EVMVersion::byzantium())
-			CHECK_GAS(21712, 21555, 20);
+			CHECK_GAS(21741, 21555, 20);
 		// This is only correct on >=Constantinople.
 		else if (!CommonOptions::get().useABIEncoderV1)
 		{
@@ -145,9 +145,9 @@ BOOST_AUTO_TEST_CASE(string_storage)
 			else
 			{
 				if (evmVersion < EVMVersion::istanbul())
-					CHECK_GAS(21707, 21559, 20);
+					CHECK_GAS(21736, 21559, 20);
 				else
-					CHECK_GAS(21499, 21351, 20);
+					CHECK_GAS(21528, 21351, 20);
 			}
 		}
 		else if (evmVersion < EVMVersion::istanbul())
