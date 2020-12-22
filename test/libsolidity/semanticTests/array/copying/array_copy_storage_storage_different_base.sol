@@ -15,5 +15,7 @@ contract c {
         y = data2[4];
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // test() -> 5, 4
