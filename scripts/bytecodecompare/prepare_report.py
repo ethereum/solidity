@@ -83,6 +83,33 @@ class FileReport:
             return '.'
 
 
+@dataclass
+class Statistics:
+    file_count: int = 0
+    contract_count: int = 0
+    error_count: int = 0
+    missing_bytecode_count: int = 0
+    missing_metadata_count: int = 0
+
+    def aggregate(self, report: FileReport):
+        contract_reports = report.contract_reports if report.contract_reports is not None else []
+
+        self.file_count += 1
+        self.contract_count += len(contract_reports)
+        self.error_count += (1 if report.contract_reports is None else 0)
+        self.missing_bytecode_count += sum(1 for c in contract_reports if c.bytecode is None)
+        self.missing_metadata_count += sum(1 for c in contract_reports if c.metadata is None)
+
+    def __str__(self) -> str:
+        return "test cases: {}, contracts: {}, errors: {}, missing bytecode: {}, missing metadata: {}".format(
+            self.file_count,
+            str(self.contract_count) + ('+' if self.error_count > 0 else ''),
+            self.error_count,
+            self.missing_bytecode_count,
+            self.missing_metadata_count,
+        )
+
+
 def load_source(path: Union[Path, str], smt_use: SMTUse) -> str:
     # NOTE: newline='' disables newline conversion.
     # We want the file exactly as is because changing even a single byte in the source affects metadata.
@@ -292,7 +319,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(  # pylint: disable=too-many-arguments
+def generate_report(  # pylint: disable=too-many-arguments,too-many-locals
     source_file_names: List[str],
     compiler_path: Path,
     interface: CompilerInterface,
@@ -302,42 +329,49 @@ def generate_report(  # pylint: disable=too-many-arguments
     verbose: bool,
     exit_on_error: bool,
 ):
+    statistics = Statistics()
     metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
 
-    with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
-        for optimize in [False, True]:
-            with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
-                for source_file_name in sorted(source_file_names):
-                    try:
-                        report = run_compiler(
-                            compiler_path,
-                            Path(source_file_name),
-                            optimize,
-                            force_no_optimize_yul,
-                            interface,
-                            smt_use,
-                            metadata_option_supported,
-                            Path(tmp_dir),
-                            exit_on_error,
-                        )
-                        print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
-                        report_file.write(report.format_report())
-                    except subprocess.CalledProcessError as exception:
-                        print(
-                            f"\n\nInterrupted by an exception while processing file "
-                            f"'{source_file_name}' with optimize={optimize}\n\n"
-                            f"COMPILER STDOUT:\n{exception.stdout}\n"
-                            f"COMPILER STDERR:\n{exception.stderr}\n",
-                            file=sys.stderr
-                        )
-                        raise
-                    except:
-                        print(
-                            f"\n\nInterrupted by an exception while processing file "
-                            f"'{source_file_name}' with optimize={optimize}\n",
-                            file=sys.stderr
-                        )
-                        raise
+    try:
+        with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
+            for optimize in [False, True]:
+                with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
+                    for source_file_name in sorted(source_file_names):
+                        try:
+                            report = run_compiler(
+                                compiler_path,
+                                Path(source_file_name),
+                                optimize,
+                                force_no_optimize_yul,
+                                interface,
+                                smt_use,
+                                metadata_option_supported,
+                                Path(tmp_dir),
+                                exit_on_error,
+                            )
+
+                            statistics.aggregate(report)
+                            print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
+
+                            report_file.write(report.format_report())
+                        except subprocess.CalledProcessError as exception:
+                            print(
+                                f"\n\nInterrupted by an exception while processing file "
+                                f"'{source_file_name}' with optimize={optimize}\n\n"
+                                f"COMPILER STDOUT:\n{exception.stdout}\n"
+                                f"COMPILER STDERR:\n{exception.stderr}\n",
+                                file=sys.stderr
+                            )
+                            raise
+                        except:
+                            print(
+                                f"\n\nInterrupted by an exception while processing file "
+                                f"'{source_file_name}' with optimize={optimize}\n",
+                                file=sys.stderr
+                            )
+                            raise
+    finally:
+        print('\n', statistics, '\n', sep='')
 
 
 def commandline_parser() -> ArgumentParser:
