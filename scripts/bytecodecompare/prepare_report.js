@@ -4,23 +4,45 @@ const fs = require('fs')
 
 const compiler = require('./solc-js/wrapper.js')(require('./solc-js/soljson.js'))
 
+
+function loadSource(sourceFileName, stripSMTPragmas)
+{
+    source = fs.readFileSync(sourceFileName).toString()
+
+    if (stripSMTPragmas)
+        return source.replace('pragma experimental SMTChecker;', '');
+
+    return source
+}
+
+
+let stripSMTPragmas = false
+let firstFileArgumentIndex = 2
+
+if (process.argv.length >= 3 && process.argv[2] === '--strip-smt-pragmas')
+{
+    stripSMTPragmas = true
+    firstFileArgumentIndex = 3
+}
+
 for (const optimize of [false, true])
 {
-    for (const filename of process.argv.slice(2))
+    for (const filename of process.argv.slice(firstFileArgumentIndex))
     {
         if (filename !== undefined)
         {
-            const input = {
+            let input = {
                 language: 'Solidity',
                 sources: {
-                    [filename]: {content: fs.readFileSync(filename).toString()}
+                    [filename]: {content: loadSource(filename, stripSMTPragmas)}
                 },
                 settings: {
                     optimizer: {enabled: optimize},
-                    outputSelection: {'*': {'*': ['evm.bytecode.object', 'metadata']}},
-                    "modelChecker": {"engine": "none"}
+                    outputSelection: {'*': {'*': ['evm.bytecode.object', 'metadata']}}
                 }
             }
+            if (!stripSMTPragmas)
+                input['settings']['modelChecker'] = {engine: 'none'}
 
             const result = JSON.parse(compiler.compile(JSON.stringify(input)))
 

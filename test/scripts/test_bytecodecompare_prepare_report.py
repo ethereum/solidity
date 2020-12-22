@@ -7,7 +7,7 @@ from textwrap import dedent
 
 from unittest_helpers import LIBSOLIDITY_TEST_DIR, load_fixture, load_libsolidity_test_case
 
-from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport
+from bytecodecompare.prepare_report import CompilerInterface, FileReport, ContractReport, SMTUse
 from bytecodecompare.prepare_report import load_source, parse_cli_output, parse_standard_json_output, prepare_compiler_input
 
 
@@ -80,8 +80,18 @@ class TestPrepareReport(unittest.TestCase):
     def setUp(self):
         self.maxDiff = 10000
 
-    def test_load_source(self):
-        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH), SMT_SMOKE_TEST_SOL_CODE)
+    def test_load_source_should_strip_smt_pragmas_if_requested(self):
+        expected_file_content = dedent("""\
+
+            contract C {
+            }
+        """)
+
+        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.STRIP_PRAGMAS), expected_file_content)
+
+    def test_load_source_should_not_strip_smt_pragmas_if_not_requested(self):
+        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.DISABLE), SMT_SMOKE_TEST_SOL_CODE)
+        self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH, SMTUse.PRESERVE), SMT_SMOKE_TEST_SOL_CODE)
 
     def test_prepare_compiler_input_should_work_with_standard_json_interface(self):
         expected_compiler_input = {
@@ -101,6 +111,7 @@ class TestPrepareReport(unittest.TestCase):
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
             interface=CompilerInterface.STANDARD_JSON,
+            smt_use=SMTUse.DISABLE
         )
 
         self.assertEqual(command_line, ['solc', '--standard-json'])
@@ -112,9 +123,10 @@ class TestPrepareReport(unittest.TestCase):
             SMT_SMOKE_TEST_SOL_PATH,
             optimize=True,
             interface=CompilerInterface.CLI,
+            smt_use=SMTUse.DISABLE
         )
 
-        self.assertEqual(command_line, ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--model-checker-engine', 'none', '--optimize'])
+        self.assertEqual(command_line, ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--optimize', '--model-checker-engine', 'none'])
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
     def test_parse_standard_json_output(self):
