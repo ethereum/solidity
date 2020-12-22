@@ -80,6 +80,11 @@ string IRNames::implicitConstructor(ContractDefinition const& _contract)
 	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
 }
 
+string IRNames::libraryAddressImmutable()
+{
+	return "library_deploy_address";
+}
+
 string IRNames::constantValueFunction(VariableDeclaration const& _constant)
 {
 	solAssert(_constant.isConstant(), "");
