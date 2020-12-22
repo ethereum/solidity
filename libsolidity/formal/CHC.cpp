@@ -891,41 +891,35 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			auto const& iface = *m_nondetInterfaces.at(contract);
 			addRule(smt::nondetInterface(iface, *contract, m_context, 0, 0), "base_nondet");
 
-			for (auto const* base: contract->annotation().linearizedBaseContracts)
-				for (auto const* function: base->definedFunctions())
+			for (auto const* function: contractFunctions(*contract))
+			{
+				for (auto var: function->parameters())
+					createVariable(*var);
+				for (auto var: function->returnParameters())
+					createVariable(*var);
+				for (auto const* var: localVariablesIncludingModifiers(*function, contract))
+					createVariable(*var);
+
+				m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
+
+				if (!function->isConstructor() && function->isPublic())
 				{
-					for (auto var: function->parameters())
-						createVariable(*var);
-					for (auto var: function->returnParameters())
-						createVariable(*var);
-					for (auto const* var: localVariablesIncludingModifiers(*function, contract))
-						createVariable(*var);
+					auto state1 = stateVariablesAtIndex(1, *contract);
+					auto state2 = stateVariablesAtIndex(2, *contract);
 
-					m_summaries[contract].emplace(function, createSummaryBlock(*function, *contract));
+					auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
+					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-					if (
-						!function->isConstructor() &&
-						function->isPublic() &&
-						!base->isLibrary() &&
-						!base->isInterface()
-					)
-					{
-						auto state1 = stateVariablesAtIndex(1, *contract);
-						auto state2 = stateVariablesAtIndex(2, *contract);
+					vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
+					args += state1 +
+						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
+						vector<smtutil::Expression>{state().state(2)} +
+						state2 +
+						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
+						applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
 
-						auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
-						auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
-
-						vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
-						args += state1 +
-							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
-							vector<smtutil::Expression>{state().state(2)} +
-							state2 +
-							applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
-							applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
-
-						connectBlocks(nondetPre, nondetPost, (*m_summaries.at(contract).at(function))(args));
-					}
+					connectBlocks(nondetPre, nondetPost, (*m_summaries.at(contract).at(function))(args));
+				}
 			}
 		}
 }

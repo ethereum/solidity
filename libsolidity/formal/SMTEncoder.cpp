@@ -90,7 +90,6 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 		)
 			node->accept(*this);
 
-	vector<FunctionDefinition const*> resolvedFunctions = _contract.definedFunctions();
 	for (auto const& base: _contract.annotation().linearizedBaseContracts)
 	{
 		// Look for all the constructor invocations bottom up.
@@ -104,35 +103,13 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 					m_baseConstructorCalls[baseContract] = invocation.get();
 				}
 			}
-
-		// Check for function overrides.
-		for (auto const& baseFunction: base->definedFunctions())
-		{
-			if (baseFunction->isConstructor())
-				continue;
-			bool overridden = false;
-			for (auto const& function: resolvedFunctions)
-				if (
-					function->name() == baseFunction->name() &&
-					function->kind() == baseFunction->kind() &&
-					FunctionType(*function).asExternallyCallableFunction(false)->
-						hasEqualParameterTypes(*FunctionType(*baseFunction).asExternallyCallableFunction(false))
-				)
-				{
-					overridden = true;
-					break;
-				}
-			if (!overridden)
-				resolvedFunctions.push_back(baseFunction);
-		}
 	}
-
 	// Functions are visited first since they might be used
 	// for state variable initialization which is part of
 	// the constructor.
 	// Constructors are visited as part of the constructor
 	// hierarchy inlining.
-	for (auto const& function: resolvedFunctions)
+	for (auto const* function: contractFunctions(_contract))
 		if (!function->isConstructor())
 			function->accept(*this);
 
@@ -2703,6 +2680,40 @@ ModifierDefinition const* SMTEncoder::resolveModifierInvocation(ModifierInvocati
 			modifier = &modifier->resolveVirtual(*_contract);
 	}
 	return modifier;
+}
+
+vector<FunctionDefinition const*> const& SMTEncoder::contractFunctions(ContractDefinition const& _contract)
+{
+	if (!m_contractFunctions.count(&_contract))
+	{
+		vector<FunctionDefinition const *> resolvedFunctions = _contract.definedFunctions();
+		for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		{
+			if (base == &_contract)
+				continue;
+			for (auto const* baseFunction: base->definedFunctions())
+			{
+				if (baseFunction->isConstructor()) // We don't want to include constructors of parent contracts
+					continue;
+				bool overridden = false;
+				for (auto const* function: resolvedFunctions)
+					if (
+						function->name() == baseFunction->name() &&
+						function->kind() == baseFunction->kind() &&
+						FunctionType(*function).asExternallyCallableFunction(false)->
+							hasEqualParameterTypes(*FunctionType(*baseFunction).asExternallyCallableFunction(false))
+						)
+					{
+						overridden = true;
+						break;
+					}
+				if (!overridden)
+					resolvedFunctions.push_back(baseFunction);
+			}
+		}
+		m_contractFunctions.emplace(&_contract, move(resolvedFunctions));
+	}
+	return m_contractFunctions.at(&_contract);
 }
 
 SourceUnit const* SMTEncoder::sourceUnitContaining(Scopable const& _scopable)

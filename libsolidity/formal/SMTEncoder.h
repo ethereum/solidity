@@ -372,6 +372,12 @@ protected:
 	/// Returns true if _funDef was already visited.
 	bool visitedFunction(FunctionDefinition const* _funDef);
 
+	/// @returns FunctionDefinitions of the given contract (including its constructor and inherited methods),
+	/// taking into account overriding of the virtual functions.
+	std::vector<FunctionDefinition const*> const& contractFunctions(ContractDefinition const& _contract);
+	/// Cache for the method contractFunctions.
+	std::map<ContractDefinition const*, std::vector<FunctionDefinition const*>> m_contractFunctions;
+
 	/// Depth of visit to modifiers.
 	/// When m_modifierDepth == #modifiers the function can be visited
 	/// when placeholder is visited.
