@@ -73,7 +73,7 @@ public:
 	std::vector<std::string> unhandledQueries() { return m_interface->unhandledQueries(); }
 
 	/// @returns true if _funCall should be inlined, otherwise false.
-	static bool shouldInlineFunctionCall(FunctionCall const& _funCall);
+	static bool shouldInlineFunctionCall(FunctionCall const& _funCall, ContractDefinition const* _contract);
 
 private:
 	/// AST visitors.

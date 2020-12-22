@@ -69,7 +69,7 @@ public:
 
 	/// @returns the FunctionDefinition of a FunctionCall
 	/// if possible or nullptr.
-	static FunctionDefinition const* functionCallToDefinition(FunctionCall const& _funCall);
+	static std::pair<FunctionDefinition const*, ContractDefinition const*> functionCallToDefinition(FunctionCall const& _funCall, ContractDefinition const* _contract = nullptr);
 
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
@@ -331,12 +331,12 @@ protected:
 
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
-	void createReturnedExpressions(FunctionCall const& _funCall);
+	void createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contract);
 
 	/// @returns the symbolic arguments for a function call,
 	/// taking into account bound functions and
 	/// type conversion.
-	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall);
+	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contract);
 
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
