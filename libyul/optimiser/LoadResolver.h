@@ -24,6 +24,7 @@
 
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/SSAValueTracker.h>
 
 namespace solidity::yul
 {
@@ -46,10 +47,11 @@ public:
 private:
 	LoadResolver(
 		Dialect const& _dialect,
+		Block const& _ast,
 		std::map<YulString, SideEffects> _functionSideEffects,
 		bool _optimizeMLoad
 	):
-		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
+		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects), SSAValueTracker::ssaVariables(_ast)),
 		m_optimizeMLoad(_optimizeMLoad)
 	{}
 

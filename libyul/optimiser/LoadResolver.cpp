@@ -37,6 +37,7 @@ void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 	bool containsMSize = MSizeFinder::containsMSize(_context.dialect, _ast);
 	LoadResolver{
 		_context.dialect,
+		_ast,
 		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
 		!containsMSize
 	}(_ast);
