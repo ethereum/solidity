@@ -10,5 +10,7 @@ contract test {
         return r;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 4
