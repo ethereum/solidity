@@ -19,7 +19,7 @@
  * @author Lefteris <lefteris@ethdev.com>
  * @date 2014
  * Takes the parsed AST and produces the Natspec documentation:
- * https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
+ * https://docs.soliditylang.org/en/develop/natspec-format.html
  *
  * Can generally deal with JSON files
  */
