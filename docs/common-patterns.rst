@@ -248,7 +248,7 @@ the modifier ``atStage`` ensures that the function can
 only be called at a certain stage.
 
 Automatic timed transitions
-are handled by the modifier ``timeTransitions``, which
+are handled by the modifier ``timedTransitions``, which
 should be used for all functions.
 
 .. note::
