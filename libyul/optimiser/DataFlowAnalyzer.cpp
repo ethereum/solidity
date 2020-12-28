@@ -30,7 +30,6 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <variant>
 
@@ -104,16 +103,14 @@ void DataFlowAnalyzer::operator()(Assignment& _assignment)
 
 void DataFlowAnalyzer::operator()(VariableDeclaration& _varDecl)
 {
+	if (_varDecl.value)
+		clearKnowledgeIfInvalidated(*_varDecl.value);
+
+	Scoper::operator()(_varDecl);
+
 	set<YulString> names;
 	for (auto const& var: _varDecl.variables)
 		names.emplace(var.name);
-	m_variableScopes.back().variables += names;
-
-	if (_varDecl.value)
-	{
-		clearKnowledgeIfInvalidated(*_varDecl.value);
-		visit(*_varDecl.value);
-	}
 
 	handleAssignment(names, _varDecl.value.get(), true);
 }
@@ -171,22 +168,15 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	swap(m_references, references);
 	swap(m_storage, storage);
 	swap(m_memory, memory);
-	pushScope(true);
 
-	for (auto const& parameter: _fun.parameters)
-		m_variableScopes.back().variables.emplace(parameter.name);
 	for (auto const& var: _fun.returnVariables)
-	{
-		m_variableScopes.back().variables.emplace(var.name);
 		handleAssignment({var.name}, nullptr, true);
-	}
-	ASTModifier::operator()(_fun);
+
+	Scoper::operator()(_fun);
 
 	// Note that the contents of return variables, storage and memory at this point
 	// might be incorrect due to the fact that the DataFlowAnalyzer ignores the ``leave``
 	// statement.
-
-	popScope();
 	swap(m_value, value);
 	swap(m_loopDepth, loopDepth);
 	swap(m_references, references);
@@ -228,14 +218,6 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	--m_loopDepth;
 }
 
-void DataFlowAnalyzer::operator()(Block& _block)
-{
-	size_t numScopes = m_variableScopes.size();
-	pushScope(false);
-	ASTModifier::operator()(_block);
-	popScope();
-	assertThrow(numScopes == m_variableScopes.size(), OptimizerException, "");
-}
 
 void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expression* _value, bool _isDeclaration)
 {
@@ -289,11 +271,6 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 				m_storage.set(*key, variable);
 		}
 	}
-}
-
-void DataFlowAnalyzer::pushScope(bool _functionScope)
-{
-	m_variableScopes.emplace_back(_functionScope);
 }
 
 void DataFlowAnalyzer::popScope()
@@ -396,18 +373,6 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 		_this.eraseKey(key);
 }
 
-bool DataFlowAnalyzer::inScope(YulString _variableName) const
-{
-	for (auto const& scope: m_variableScopes | boost::adaptors::reversed)
-	{
-		if (scope.variables.count(_variableName))
-			return true;
-		if (scope.isFunction)
-			return false;
-	}
-	return false;
-}
-
 std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 	StoreLoadLocation _location,
 	ExpressionStatement const& _statement
@@ -432,4 +397,3 @@ std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
 				return key->name;
 	return {};
 }
-

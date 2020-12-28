@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <libyul/optimiser/Scoper.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/KnowledgeBase.h>
 #include <libyul/YulString.h>
@@ -76,7 +77,7 @@ struct AssignedValue
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
  */
-class DataFlowAnalyzer: public ASTModifier
+class DataFlowAnalyzer: public Scoper
 {
 public:
 	/// @param _functionSideEffects
@@ -96,17 +97,13 @@ public:
 	void operator()(Switch& _switch) override;
 	void operator()(FunctionDefinition&) override;
 	void operator()(ForLoop&) override;
-	void operator()(Block& _block) override;
 
 protected:
 	/// Registers the assignment.
 	void handleAssignment(std::set<YulString> const& _names, Expression* _value, bool _isDeclaration);
 
-	/// Creates a new inner scope.
-	void pushScope(bool _functionScope);
-
 	/// Removes the innermost scope and clears all variables in it.
-	void popScope();
+	void popScope() override;
 
 	/// Clears information about the values assigned to the given variables,
 	/// for example at points where control flow is merged.
@@ -132,9 +129,6 @@ protected:
 		InvertibleMap<YulString, YulString>& _thisData,
 		InvertibleMap<YulString, YulString> const& _olderData
 	);
-
-	/// Returns true iff the variable is in scope.
-	bool inScope(YulString _variableName) const;
 
 	enum class StoreLoadLocation {
 		Memory = 0,
@@ -178,17 +172,9 @@ protected:
 	/// Current nesting depth of loops.
 	size_t m_loopDepth{0};
 
-	struct Scope
-	{
-		explicit Scope(bool _isFunction): isFunction(_isFunction) {}
-		std::set<YulString> variables;
-		bool isFunction;
-	};
 	/// Special expression whose address will be used in m_value.
 	/// YulString does not need to be reset because DataFlowAnalyzer is short-lived.
 	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
-	/// List of scopes.
-	std::vector<Scope> m_variableScopes;
 };
 
 }
