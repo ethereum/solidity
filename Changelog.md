@@ -10,6 +10,7 @@ Compiler Features:
 Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.
  * SMTChecker: Fix false negatives in overriding modifiers.
+ * SMTChecker: Fix false negatives when analyzing external function calls.
 
 ### 0.8.0 (2020-12-16)
 
