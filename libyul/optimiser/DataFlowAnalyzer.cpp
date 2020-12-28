@@ -30,7 +30,6 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <variant>
 
 using namespace std;
