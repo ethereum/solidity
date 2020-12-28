@@ -899,7 +899,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			/// 0 steps to be taken, used as base for the inductive
 			/// rule for each function.
 			auto const& iface = *m_nondetInterfaces.at(contract);
-			addRule(smt::nondetInterface(iface, *contract, m_context, smtutil::Expression(size_t(0)), 0, 0), "base_nondet");
+			addRule(smtutil::Expression::implies(errorFlag().currentValue() == 0, smt::nondetInterface(iface, *contract, m_context, 0, 0)), "base_nondet");
 
 			for (auto const* function: contractFunctions(*contract))
 			{
@@ -917,10 +917,12 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 					auto state1 = stateVariablesAtIndex(1, *contract);
 					auto state2 = stateVariablesAtIndex(2, *contract);
 
-					auto nondetPre = smt::nondetInterface(iface, *contract, m_context, smtutil::Expression(size_t(0)), 0, 1);
-					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, errorFlag().currentValue(), 0, 2);
+					auto errorPre = errorFlag().currentValue();
+					auto nondetPre = smt::nondetInterface(iface, *contract, m_context, 0, 1);
+					auto errorPost = errorFlag().increaseIndex();
+					auto nondetPost = smt::nondetInterface(iface, *contract, m_context, 0, 2);
 
-					vector<smtutil::Expression> args{errorFlag().currentValue(), state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
+					vector<smtutil::Expression> args{errorPost, state().thisAddress(), state().abi(), state().crypto(), state().tx(), state().state(1)};
 					args += state1 +
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 0); }) +
 						vector<smtutil::Expression>{state().state(2)} +
@@ -928,7 +930,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 						applyMap(function->parameters(), [this](auto _var) { return valueAtIndex(*_var, 1); }) +
 						applyMap(function->returnParameters(), [this](auto _var) { return valueAtIndex(*_var, 1); });
 
-					connectBlocks(nondetPre, nondetPost, (*m_summaries.at(contract).at(function))(args));
+					connectBlocks(nondetPre, nondetPost, errorPre == 0 && (*m_summaries.at(contract).at(function))(args));
 				}
 			}
 		}

@@ -88,6 +88,7 @@ public:
 	/// Error flag.
 	//@{
 	SymbolicIntVariable& errorFlag() { return m_error; }
+	SymbolicIntVariable const& errorFlag() const { return m_error; }
 	smtutil::SortPointer const& errorFlagSort() const { return m_error.sort(); }
 	//@}
 

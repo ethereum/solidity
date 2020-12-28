@@ -45,12 +45,11 @@ smtutil::Expression nondetInterface(
 	Predicate const& _pred,
 	ContractDefinition const& _contract,
 	EncodingContext& _context,
-	smtutil::Expression const& _error,
 	unsigned _preIdx,
 	unsigned _postIdx)
 {
 	auto const& state = _context.state();
-	vector<smtutil::Expression> stateExprs{_error, state.thisAddress(), state.abi(), state.crypto()};
+	vector<smtutil::Expression> stateExprs{state.errorFlag().currentValue(), state.thisAddress(), state.abi(), state.crypto()};
 	return _pred(
 		stateExprs +
 		vector<smtutil::Expression>{_context.state().state(_preIdx)} +
