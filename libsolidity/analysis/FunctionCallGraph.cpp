@@ -98,7 +98,7 @@ bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 		// For events kind() == Event, so we have an extra check here
 		if (funType && funType->kind() == FunctionType::Kind::Internal)
 		{
-			processFunction(callable->resolveVirtual(*m_contract), _identifier.annotation());
+			processFunction(callable->resolveVirtual(*m_contract), _identifier.annotation().calledDirectly);
 
 			solAssert(m_currentNode.has_value(), "");
 		}
@@ -125,17 +125,35 @@ void FunctionCallGraphBuilder::endVisit(MemberAccess const& _memberAccess)
 	// Super functions
 	if (*_memberAccess.annotation().requiredLookup == VirtualLookup::Super)
 	{
-		if (ContractType const* type = dynamic_cast<ContractType const*>(_memberAccess.expression().annotation().type))
-		{
-			solAssert(type->isSuper(), "");
-			functionDef = &functionDef->resolveVirtual(*m_contract, type->contractDefinition().superContract(*m_contract));
-		}
+		if (auto const* typeType = dynamic_cast<TypeType const*>(_memberAccess.expression().annotation().type))
+			if (auto const contractType = dynamic_cast<ContractType const*>(typeType->actualType()))
+			{
+				solAssert(contractType->isSuper(), "");
+				functionDef =
+					&functionDef->resolveVirtual(
+						*m_contract,
+						contractType->contractDefinition().superContract(*m_contract)
+					);
+			}
 	}
 	else
 		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 
-	processFunction(*functionDef, _memberAccess.annotation());
+	processFunction(*functionDef, _memberAccess.annotation().calledDirectly);
 	return;
+}
+
+void FunctionCallGraphBuilder::endVisit(ModifierInvocation const& _modifierInvocation)
+{
+	if (auto const* modifier = dynamic_cast<ModifierDefinition const*>(_modifierInvocation.name().annotation().referencedDeclaration))
+	{
+		if (*_modifierInvocation.name().annotation().requiredLookup == VirtualLookup::Virtual)
+			modifier = &modifier->resolveVirtual(*m_contract);
+		else
+			solAssert(*_modifierInvocation.name().annotation().requiredLookup == VirtualLookup::Static, "");
+
+		processFunction(*modifier);
+	}
 }
 
 void FunctionCallGraphBuilder::visitCallable(CallableDeclaration const* _callable, bool _directCall)
@@ -175,13 +193,13 @@ bool FunctionCallGraphBuilder::add(Node _caller, Node _callee)
 	return m_graph->edges[_caller].insert(_callee).second;
 }
 
-void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _callable, ExpressionAnnotation const& _annotation)
+void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _callable, bool _calledDirectly)
 {
 	if (m_graph->edges.count(&_callable))
 		return;
 
 	// Create edge to creation dispatch
-	if (!_annotation.calledDirectly)
+	if (!_calledDirectly)
 		add(m_currentDispatch, &_callable);
-	visitCallable(&_callable, _annotation.calledDirectly);
+	visitCallable(&_callable, _calledDirectly);
 }
