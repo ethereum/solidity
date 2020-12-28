@@ -137,6 +137,8 @@ set(libyul_sources
     libyul/YulInterpreterTest.h
     libyul/YulOptimizerTest.cpp
     libyul/YulOptimizerTest.h
+    libyul/YulOptimizerTestCommon.cpp
+    libyul/YulOptimizerTestCommon.h
 )
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
