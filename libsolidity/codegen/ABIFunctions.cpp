@@ -1231,9 +1231,10 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 		"abi_decode_" +
 		_type.identifier();
 	return createFunction(functionName, [&]() {
-		string templ;
+		Whiskers w;
 		if (_type.isDynamicallySized())
-			templ = R"(
+		{
+			w = Whiskers(R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos, length {
 					if iszero(slt(add(offset, 0x1f), end)) { <revertStringOffset> }
@@ -1242,25 +1243,27 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 					arrayPos := add(offset, 0x20)
 					if gt(add(arrayPos, mul(length, <stride>)), end) { <revertStringPos> }
 				}
-			)";
+			)");
+			w("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
+			w("revertStringLength", revertReasonIfDebug("ABI decoding: invalid calldata array length"));
+		}
 		else
-			templ = R"(
+		{
+			w = Whiskers(R"(
 				// <readableTypeName>
 				function <functionName>(offset, end) -> arrayPos {
 					arrayPos := offset
 					if gt(add(arrayPos, mul(<length>, <stride>)), end) { <revertStringPos> }
 				}
-			)";
-		Whiskers w{templ};
-		// TODO add test
-		w("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
-		w("revertStringLength", revertReasonIfDebug("ABI decoding: invalid calldata array length"));
+			)");
+			w("length", toCompactHexWithPrefix(_type.length()));
+		}
 		w("revertStringPos", revertReasonIfDebug("ABI decoding: invalid calldata array stride"));
 		w("functionName", functionName);
 		w("readableTypeName", _type.toString(true));
 		w("stride", toCompactHexWithPrefix(_type.calldataStride()));
-		if (!_type.isDynamicallySized())
-			w("length", toCompactHexWithPrefix(_type.length()));
+
+		// TODO add test
 		return w.render();
 	});
 }

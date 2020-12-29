@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(parameter_collision)
 	vector<map<string, string>> list(1);
 	list[0]["a"] = "x";
 	Whiskers m(templ);
-	m("a", "X")("b", list);
+	BOOST_CHECK_THROW(m("a", "X")("b", list), WhiskersError);
 	BOOST_CHECK_THROW(m.render(), WhiskersError);
 }
 
