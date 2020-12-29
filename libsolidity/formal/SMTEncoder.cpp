@@ -744,6 +744,7 @@ void SMTEncoder::initContract(ContractDefinition const& _contract)
 	m_context.pushSolver();
 	createStateVariables(_contract);
 	clearIndices(m_currentContract, nullptr);
+	m_variableUsage.setCurrentContract(_contract);
 }
 
 void SMTEncoder::initFunction(FunctionDefinition const& _function)
@@ -2598,26 +2599,43 @@ string SMTEncoder::extraComment()
 	return extra;
 }
 
-FunctionDefinition const* SMTEncoder::functionCallToDefinition(FunctionCall const& _funCall)
+pair<FunctionDefinition const*, ContractDefinition const*> SMTEncoder::functionCallToDefinition(FunctionCall const& _funCall, ContractDefinition const* _contract)
 {
 	if (*_funCall.annotation().kind != FunctionCallKind::FunctionCall)
-		return nullptr;
+		return {};
 
-	FunctionDefinition const* funDef = nullptr;
 	Expression const* calledExpr = &_funCall.expression();
-
 	if (TupleExpression const* fun = dynamic_cast<TupleExpression const*>(calledExpr))
 	{
 		solAssert(fun->components().size() == 1, "");
 		calledExpr = innermostTuple(*calledExpr);
 	}
 
-	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
-		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
-	else if (MemberAccess const* fun = dynamic_cast<MemberAccess const*>(calledExpr))
-		funDef = dynamic_cast<FunctionDefinition const*>(fun->annotation().referencedDeclaration);
+	auto resolveVirtual = [&](auto const* _ref) -> pair<FunctionDefinition const*, ContractDefinition const*> {
+		VirtualLookup lookup = *_ref->annotation().requiredLookup;
+		solAssert(_contract || lookup == VirtualLookup::Static, "No contract context provided for function lookup resolution!");
+		auto funDef = dynamic_cast<FunctionDefinition const*>(_ref->annotation().referencedDeclaration);
+		if (!funDef)
+			return {funDef, _contract};
+		auto contextContract = _contract;
+		if (lookup == VirtualLookup::Virtual)
+			funDef = &funDef->resolveVirtual(*_contract);
+		else if (lookup == VirtualLookup::Super)
+		{
+			auto super = _contract->superContract(*_contract);
+			solAssert(super, "Super contract not available.");
+			funDef = &funDef->resolveVirtual(*_contract, super);
+			contextContract = super;
+		}
+		return {funDef, contextContract};
+	};
 
-	return funDef;
+	if (Identifier const* fun = dynamic_cast<Identifier const*>(calledExpr))
+		return resolveVirtual(fun);
+	else if (MemberAccess const* fun = dynamic_cast<MemberAccess const*>(calledExpr))
+		return resolveVirtual(fun);
+
+	return {};
 }
 
 vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract)
@@ -2798,9 +2816,9 @@ set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
 	return ABIFunctions(_node).abiCalls;
 }
 
-void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
+void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contract)
 {
-	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
+	auto [funDef, contextContract] = functionCallToDefinition(_funCall, _contract);
 	if (!funDef)
 		return;
 
@@ -2826,18 +2844,18 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall)
 		defineExpr(_funCall, currentValue(*returnParams.front()));
 }
 
-vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall)
+vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contract)
 {
-	auto const* function = functionCallToDefinition(_funCall);
-	solAssert(function, "");
+	auto [funDef, contextContract] = functionCallToDefinition(_funCall, _contract);
+	solAssert(funDef, "");
 
 	vector<smtutil::Expression> args;
 	Expression const* calledExpr = &_funCall.expression();
-	auto const& funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
+	auto funType = dynamic_cast<FunctionType const*>(calledExpr->annotation().type);
 	solAssert(funType, "");
 
 	vector<ASTPointer<Expression const>> arguments = _funCall.sortedArguments();
-	auto const& functionParams = function->parameters();
+	auto functionParams = funDef->parameters();
 	unsigned firstParam = 0;
 	if (funType->bound())
 	{

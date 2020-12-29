@@ -100,9 +100,9 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 	m_errorReporter.clear();
 }
 
-bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall)
+bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall, ContractDefinition const* _contract)
 {
-	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
+	auto [funDef, contextContract] = functionCallToDefinition(_funCall, _contract);
 	if (!funDef || !funDef->isImplemented())
 		return false;
 
@@ -473,8 +473,8 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 
 void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 {
-	solAssert(shouldInlineFunctionCall(_funCall), "");
-	FunctionDefinition const* funDef = functionCallToDefinition(_funCall);
+	solAssert(shouldInlineFunctionCall(_funCall, m_currentContract), "");
+	auto [funDef, contextContract] = functionCallToDefinition(_funCall, m_currentContract);
 	solAssert(funDef, "");
 
 	if (visitedFunction(funDef))
@@ -488,7 +488,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 	}
 	else
 	{
-		initializeFunctionCallParameters(*funDef, symbolicArguments(_funCall));
+		initializeFunctionCallParameters(*funDef, symbolicArguments(_funCall, m_currentContract));
 
 		// The reason why we need to pushCallStack here instead of visit(FunctionDefinition)
 		// is that there we don't have `_funCall`.
@@ -498,13 +498,13 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 		popPathCondition();
 	}
 
-	createReturnedExpressions(_funCall);
+	createReturnedExpressions(_funCall, m_currentContract);
 }
 
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 {
 	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	if (shouldInlineFunctionCall(_funCall))
+	if (shouldInlineFunctionCall(_funCall, m_currentContract))
 		inlineFunctionCall(_funCall);
 	else if (isPublicGetter(_funCall.expression()))
 	{
