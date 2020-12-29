@@ -11,6 +11,8 @@ Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.
  * SMTChecker: Fix false negatives in overriding modifiers and functions.
  * SMTChecker: Fix false negatives when analyzing external function calls.
+ * SMTChecker: Fix missing type constraints for block variables.
+ * SMTChecker: Fix internal error on ``block.chainid``.
 
 ### 0.8.0 (2020-12-16)
 

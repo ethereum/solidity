@@ -14,6 +14,6 @@ contract C {
 // Warning 2072: (184-188): Unused local variable.
 // Warning 8364: (155-156): Assertion checker does not yet implement type type(contract C)
 // Warning 8364: (225-226): Assertion checker does not yet implement type type(contract C)
-// Warning 6328: (252-268): CHC: Assertion violation happens here.\nCounterexample:\n\ndata = [17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 20, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17]\n\n\nTransaction trace:\nconstructor()\nf([17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 20, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17])
+// Warning 6328: (252-268): CHC: Assertion violation happens here.\nCounterexample:\n\ndata = [13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 16, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13]\n\n\nTransaction trace:\nconstructor()\nf([13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 16, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13])
 // Warning 8364: (155-156): Assertion checker does not yet implement type type(contract C)
 // Warning 8364: (225-226): Assertion checker does not yet implement type type(contract C)
