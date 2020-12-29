@@ -385,6 +385,8 @@ z3::sort Z3Interface::z3Sort(Sort const& _sort)
 		);
 		return tupleConstructor.range();
 	}
+	case Kind::Real:
+		return m_context.real_sort();
 
 	default:
 		break;

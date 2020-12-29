@@ -244,6 +244,8 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 
 		return tupleName;
 	}
+	case Kind::Real:
+		return "Real";
 	default:
 		smtAssert(false, "Invalid SMT sort");
 	}

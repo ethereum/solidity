@@ -36,7 +36,8 @@ enum class Kind
 	Function,
 	Array,
 	Sort,
-	Tuple
+	Tuple,
+	Real
 };
 
 struct Sort
@@ -63,6 +64,17 @@ struct IntSort: public Sort
 	}
 
 	bool isSigned;
+};
+
+struct RealSort: public Sort
+{
+	RealSort():	Sort(Kind::Real)
+	{}
+
+	bool operator==(RealSort const& _other) const
+	{
+		return Sort::operator==(_other);
+	}
 };
 
 struct BitVectorSort: public Sort
@@ -196,6 +208,7 @@ struct SortProvider
 	static std::shared_ptr<IntSort> const sintSort;
 	static std::shared_ptr<IntSort> intSort(bool _signed = false);
 	static std::shared_ptr<BitVectorSort> const bitVectorSort;
+	static std::shared_ptr<RealSort> const realSort;
 };
 
 }

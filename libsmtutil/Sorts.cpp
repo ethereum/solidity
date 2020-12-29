@@ -18,6 +18,7 @@
 
 
 #include <libsmtutil/Sorts.h>
+#include <memory>
 
 using namespace std;
 
@@ -36,5 +37,6 @@ shared_ptr<IntSort> SortProvider::intSort(bool _signed)
 }
 
 shared_ptr<BitVectorSort> const SortProvider::bitVectorSort{make_shared<BitVectorSort>(256)};
+shared_ptr<RealSort> const SortProvider::realSort{make_shared<RealSort>()};
 
 }
