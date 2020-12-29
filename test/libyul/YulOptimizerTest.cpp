@@ -23,23 +23,15 @@
 #include <test/libyul/Common.h>
 #include <test/Common.h>
 
-#include <libyul/optimiser/Disambiguator.h>
-#include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/Object.h>
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
-#include <libyul/optimiser/Semantics.h>
-#include <libyul/optimiser/StackCompressor.h>
 #include <libyul/AsmPrinter.h>
-#include <libyul/AsmAnalysis.h>
+
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/AnsiColorized.h>
 
-#include <libsolidity/interface/OptimiserSettings.h>
-
-#include <boost/algorithm/string.hpp>
-
 #include <fstream>
-#include <variant>
 
 using namespace solidity;
 using namespace solidity::util;

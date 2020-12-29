@@ -20,17 +20,8 @@
 
 #include <test/TestCase.h>
 
-#include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/optimiser/NameDispenser.h>
-
-#include <libyul/YulString.h>
-
-#include <set>
-#include <memory>
-
 namespace solidity::langutil
 {
-class Scanner;
 class Error;
 using ErrorList = std::vector<std::shared_ptr<Error const>>;
 }
