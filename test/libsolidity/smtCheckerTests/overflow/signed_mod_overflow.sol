@@ -6,4 +6,4 @@ contract C  {
 	}
 }
 // ----
-// Warning 4281: (110-115): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\n = 0\n\nTransaction trace:\nconstructor()\nf(0, 0)
+// Warning 4281: (110-115): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)

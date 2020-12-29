@@ -43,4 +43,4 @@ contract Homer is ERC165, Simpson {
 
 
 // ----
-// Warning 6328: (1373-1428): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nconstructor()\ncheck()
+// Warning 6328: (1373-1428): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nHomer.constructor()\nHomer.check()

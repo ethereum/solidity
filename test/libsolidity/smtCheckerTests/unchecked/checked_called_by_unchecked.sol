@@ -10,4 +10,4 @@ contract C {
     }
 }
 // ----
-// Warning 4984: (129-134): CHC: Overflow (resulting value larger than 65535) happens here.\nCounterexample:\n\na = 1\nb = 65535\n = 0\n\nTransaction trace:\nconstructor()\nadd(1, 65535)
+// Warning 4984: (129-134): CHC: Overflow (resulting value larger than 65535) happens here.\nCounterexample:\n\na = 1\nb = 65535\n = 0\n\nTransaction trace:\nC.constructor()\nC.add(1, 65535)

@@ -29,4 +29,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (299-313): CHC: Assertion violation happens here.\nCounterexample:\nowner = 0, y = 0, s = 0\n\n\n\nTransaction trace:\nconstructor()\nState: owner = 0, y = 0, s = 0\nf()
+// Warning 6328: (299-313): CHC: Assertion violation happens here.\nCounterexample:\nowner = 0, y = 0, s = 0\n\n\n\nTransaction trace:\nC.constructor()\nState: owner = 0, y = 0, s = 0\nC.f()

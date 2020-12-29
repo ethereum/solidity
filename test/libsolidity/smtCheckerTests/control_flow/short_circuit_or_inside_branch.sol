@@ -24,4 +24,4 @@ contract c {
 	}
 }
 // ----
-// Warning 6328: (360-370): CHC: Assertion violation happens here.\nCounterexample:\nx = 102\na = false\n = false\n\nTransaction trace:\nconstructor()\nState: x = 0\ng(false)
+// Warning 6328: (360-370): CHC: Assertion violation happens here.\nCounterexample:\nx = 102\na = false\n = false\n\nTransaction trace:\nc.constructor()\nState: x = 0\nc.g(false)

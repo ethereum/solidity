@@ -27,5 +27,5 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (323-338): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 15\nb = false\nc = false\n\n\nTransaction trace:\nconstructor()\nf(0, 0, false, false)
-// Warning 6328: (362-377): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 15\ny = 0\nb = true\nc = false\n\n\nTransaction trace:\nconstructor()\nf(0, 0, true, false)
+// Warning 6328: (323-338): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 15\nb = false\nc = false\n\n\nTransaction trace:\nC.constructor()\nC.f(0, 0, false, false)
+// Warning 6328: (362-377): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 15\ny = 0\nb = true\nc = false\n\n\nTransaction trace:\nC.constructor()\nC.f(0, 0, true, false)

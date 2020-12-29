@@ -29,7 +29,7 @@ contract C {
 // Warning 6328: (305-321): CHC: Assertion violation might happen here.
 // Warning 1218: (448-464): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (448-464): CHC: Assertion violation might happen here.
-// Warning 6328: (673-689): CHC: Assertion violation happens here.\nCounterexample:\n\nh0 = 21238\nv0 = 173\nr0 = 30612\ns0 = 32285\nh1 = 7719\nv1 = 21\nr1 = 10450\ns1 = 8855\n\n\nTransaction trace:\nconstructor()\ne(21238, 173, 30612, 32285, 7719, 21, 10450, 8855)
+// Warning 6328: (673-689): CHC: Assertion violation happens here.\nCounterexample:\n\nh0 = 21238\nv0 = 173\nr0 = 30612\ns0 = 32285\nh1 = 7719\nv1 = 21\nr1 = 10450\ns1 = 8855\n\n\nTransaction trace:\nC.constructor()\nC.e(21238, 173, 30612, 32285, 7719, 21, 10450, 8855)
 // Warning 4661: (168-184): BMC: Assertion violation happens here.
 // Warning 4661: (305-321): BMC: Assertion violation happens here.
 // Warning 4661: (448-464): BMC: Assertion violation happens here.
