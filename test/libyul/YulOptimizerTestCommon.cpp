@@ -66,8 +66,6 @@
 
 #include <libsolidity/interface/OptimiserSettings.h>
 
-#include <variant>
-
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;

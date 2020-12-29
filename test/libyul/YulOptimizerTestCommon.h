@@ -26,13 +26,6 @@
 #include <set>
 #include <memory>
 
-namespace solidity::langutil
-{
-	class Scanner;
-	class Error;
-	using ErrorList = std::vector<std::shared_ptr<Error const>>;
-}
-
 namespace solidity::yul
 {
 	struct AsmAnalysisInfo;
