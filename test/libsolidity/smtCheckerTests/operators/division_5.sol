@@ -1,7 +1,7 @@
 pragma experimental SMTChecker;
 contract C {
-	function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-		uint256 c;
+	function mul(uint8 a, uint8 b) internal pure returns (uint8) {
+		uint8 c;
 		if (a != 0) {
 			c = a * b;
 			require(c / a == b);
@@ -10,3 +10,4 @@ contract C {
 	}
 }
 // ----
+// Warning 6838: (161-171): BMC: Condition is always true.

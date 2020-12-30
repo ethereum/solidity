@@ -20,4 +20,3 @@ contract LoopFor2 {
 	}
 }
 // ----
-// Warning 4984: (311-317): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.

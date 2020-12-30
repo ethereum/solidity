@@ -137,8 +137,7 @@ void BMC::endVisit(ContractDefinition const& _contract)
 		inlineConstructorHierarchy(_contract);
 		popCallStack();
 		/// Check targets created by state variable initialization.
-		smtutil::Expression constraints = m_context.assertions();
-		checkVerificationTargets(constraints);
+		checkVerificationTargets();
 		m_verificationTargets.clear();
 	}
 
@@ -175,8 +174,7 @@ void BMC::endVisit(FunctionDefinition const& _function)
 {
 	if (isRootFunction())
 	{
-		smtutil::Expression constraints = m_context.assertions();
-		checkVerificationTargets(constraints);
+		checkVerificationTargets();
 		m_verificationTargets.clear();
 		m_pathConditions.clear();
 	}
@@ -534,6 +532,7 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 	Expression const& _expression
 )
 {
+	// Unchecked does not disable div by 0 checks.
 	if (_op == Token::Div || _op == Token::Mod)
 		addVerificationTarget(
 			VerificationTarget::Type::DivByZero,
@@ -542,6 +541,9 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 		);
 
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
+
+	if (!m_checked)
+		return values;
 
 	auto const* intType = dynamic_cast<IntegerType const*>(_commonType);
 	if (!intType)
@@ -625,13 +627,13 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 
 /// Verification targets.
 
-void BMC::checkVerificationTargets(smtutil::Expression const& _constraints)
+void BMC::checkVerificationTargets()
 {
 	for (auto& target: m_verificationTargets)
-		checkVerificationTarget(target, _constraints);
+		checkVerificationTarget(target);
 }
 
-void BMC::checkVerificationTarget(BMCVerificationTarget& _target, smtutil::Expression const& _constraints)
+void BMC::checkVerificationTarget(BMCVerificationTarget& _target)
 {
 	switch (_target.type)
 	{
@@ -639,14 +641,14 @@ void BMC::checkVerificationTarget(BMCVerificationTarget& _target, smtutil::Expre
 			checkConstantCondition(_target);
 			break;
 		case VerificationTarget::Type::Underflow:
-			checkUnderflow(_target, _constraints);
+			checkUnderflow(_target);
 			break;
 		case VerificationTarget::Type::Overflow:
-			checkOverflow(_target, _constraints);
+			checkOverflow(_target);
 			break;
 		case VerificationTarget::Type::UnderOverflow:
-			checkUnderflow(_target, _constraints);
-			checkOverflow(_target, _constraints);
+			checkUnderflow(_target);
+			checkOverflow(_target);
 			break;
 		case VerificationTarget::Type::DivByZero:
 			checkDivByZero(_target);
@@ -672,7 +674,7 @@ void BMC::checkConstantCondition(BMCVerificationTarget& _target)
 	);
 }
 
-void BMC::checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression const& _constraints)
+void BMC::checkUnderflow(BMCVerificationTarget& _target)
 {
 	solAssert(
 		_target.type == VerificationTarget::Type::Underflow ||
@@ -693,7 +695,7 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression con
 		intType = TypeProvider::uint256();
 
 	checkCondition(
-		_target.constraints && _constraints && _target.value < smt::minValue(*intType),
+		_target.constraints && _target.value < smt::minValue(*intType),
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
@@ -705,7 +707,7 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target, smtutil::Expression con
 	);
 }
 
-void BMC::checkOverflow(BMCVerificationTarget& _target, smtutil::Expression const& _constraints)
+void BMC::checkOverflow(BMCVerificationTarget& _target)
 {
 	solAssert(
 		_target.type == VerificationTarget::Type::Overflow ||
@@ -726,7 +728,7 @@ void BMC::checkOverflow(BMCVerificationTarget& _target, smtutil::Expression cons
 		intType = TypeProvider::uint256();
 
 	checkCondition(
-		_target.constraints && _constraints && _target.value > smt::maxValue(*intType),
+		_target.constraints && _target.value > smt::maxValue(*intType),
 		_target.callStack,
 		_target.modelExpressions,
 		_target.expression->location(),
