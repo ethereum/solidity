@@ -196,8 +196,12 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	connectBlocks(m_currentBlock, summary(_contract));
 
 	setCurrentBlock(*m_constructorSummaries.at(&_contract));
-	m_queryPlaceholders[&_contract].push_back({smtutil::Expression(true), errorFlag().currentValue(), m_currentBlock});
-	connectBlocks(m_currentBlock, interface(), errorFlag().currentValue() == 0);
+	auto constructor = _contract.constructor();
+	auto txConstraints = state().txTypeConstraints();
+	if (!constructor || !constructor->isPayable())
+		txConstraints = txConstraints && state().txNonPayableConstraint();
+	m_queryPlaceholders[&_contract].push_back({txConstraints, errorFlag().currentValue(), m_currentBlock});
+	connectBlocks(m_currentBlock, interface(), txConstraints && errorFlag().currentValue() == 0);
 
 	SMTEncoder::endVisit(_contract);
 }
@@ -262,7 +266,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 	{
 		auto sum = summary(_function);
 		auto ifacePre = smt::interfacePre(*m_interfaces.at(m_currentContract), *m_currentContract, m_context);
-		auto txConstraints = m_context.state().txConstraints(_function);
+		auto txConstraints = state().txTypeConstraints() && state().txFunctionConstraints(_function);
 		m_queryPlaceholders[&_function].push_back({txConstraints && sum, errorFlag().currentValue(), ifacePre});
 		connectBlocks(ifacePre, interface(), txConstraints && sum && errorFlag().currentValue() == 0);
 	}
@@ -738,7 +742,7 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 
 	smtutil::Expression pred = predicate(_funCall);
 
-	auto txConstraints = m_context.state().txConstraints(*function);
+	auto txConstraints = state().txTypeConstraints() && state().txFunctionConstraints(*function);
 	m_context.addAssertion(pred && txConstraints);
 	// restore the original transaction data
 	state().newTx();

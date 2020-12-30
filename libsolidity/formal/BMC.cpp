@@ -162,7 +162,7 @@ bool BMC::visit(FunctionDefinition const& _function)
 	{
 		reset();
 		initFunction(_function);
-		m_context.addAssertion(m_context.state().txConstraints(_function));
+		m_context.addAssertion(m_context.state().txTypeConstraints() && m_context.state().txFunctionConstraints(_function));
 		resetStateVariables();
 	}
 

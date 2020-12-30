@@ -126,7 +126,9 @@ public:
 	smtutil::SortPointer const& txSort() const { return m_tx.sort(); }
 	void newTx() { m_tx.newVar(); }
 	smtutil::Expression txMember(std::string const& _member) const;
-	smtutil::Expression txConstraints(FunctionDefinition const& _function) const;
+	smtutil::Expression txFunctionConstraints(FunctionDefinition const& _function) const;
+	smtutil::Expression txTypeConstraints() const;
+	smtutil::Expression txNonPayableConstraint() const;
 	smtutil::Expression blockhash(smtutil::Expression _blockNumber) const;
 	//@}
 
