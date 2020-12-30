@@ -75,6 +75,26 @@ object \"C_11\" {
                 mstore(64, newFreePtr)
             }
 
+            function allocate_memory_array_t_string_memory_ptr(length) -> memPtr {
+                let allocSize := array_allocation_size_t_string_memory_ptr(length)
+                memPtr := allocateMemory(allocSize)
+
+                mstore(memPtr, length)
+
+            }
+
+            function array_allocation_size_t_string_memory_ptr(length) -> size {
+                // Make sure we can allocate memory without overflow
+                if gt(length, 0xffffffffffffffff) { panic_error_0x41() }
+
+                // round up
+                size := and(add(length, 0x1f), not(0x1f))
+
+                // add length slot
+                size := add(size, 0x20)
+
+            }
+
             function array_length_t_string_memory_ptr(value) -> length {
 
                 length := mload(value)
@@ -87,11 +107,12 @@ object \"C_11\" {
             }
 
             function convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr() -> converted {
-                converted := allocateMemory(64)
-                mstore(converted, 6)
+                converted := copy_literal_to_memory_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21()
+            }
 
-                mstore(add(converted, 32), \"abcabc\")
-
+            function copy_literal_to_memory_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21() -> memPtr {
+                memPtr := allocate_memory_array_t_string_memory_ptr(6)
+                store_literal_in_memory_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21(add(memPtr, 32))
             }
 
             function copy_memory_to_memory(src, dst, length) {
@@ -130,6 +151,12 @@ object \"C_11\" {
                 newValue :=
 
                 shr(224, value)
+
+            }
+
+            function store_literal_in_memory_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21(memPtr) {
+
+                mstore(add(memPtr, 0), \"abcabc\")
 
             }
 

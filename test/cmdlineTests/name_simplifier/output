@@ -87,18 +87,18 @@ object "C_59" {
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
-            function convert_t_stringliteral_6490_to_t_string() -> converted
+            function copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927() -> memPtr
             {
-                let memPtr := mload(64)
-                let newFreePtr := add(memPtr, 160)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                let memPtr_1 := mload(64)
+                let newFreePtr := add(memPtr_1, 160)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr_1)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
-                converted := memPtr
-                mstore(memPtr, 100)
-                mstore(add(memPtr, 32), "longstringlongstringlongstringlo")
-                mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
-                mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
-                mstore(add(memPtr, 128), "ring")
+                mstore(memPtr_1, 100)
+                memPtr := memPtr_1
+                mstore(add(memPtr_1, 0x20), "longstringlongstringlongstringlo")
+                mstore(add(memPtr_1, 64), "ngstringlongstringlongstringlong")
+                mstore(add(memPtr_1, 96), "stringlongstringlongstringlongst")
+                mstore(add(memPtr_1, 128), "ring")
             }
             function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
             {
@@ -120,7 +120,7 @@ object "C_59" {
                 sstore(slot, or(and(_5, not(mask)), and(shl(shiftBits, _4), mask)))
                 let _6, _7 := storage_array_index_access$_t_struct$_S_storage(0x02, vloc)
                 vloc := extract_from_storage_value_dynamict_uint256(sload(_6), _7)
-                vloc__27_mpos := convert_t_stringliteral_6490_to_t_string()
+                vloc__27_mpos := copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927()
             }
             function panic_error_0x32()
             {

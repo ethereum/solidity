@@ -976,30 +976,20 @@ string ABIFunctions::abiEncodingFunctionStringLiteral(
 			Whiskers templ(R"(
 				function <functionName>(pos) -> end {
 					pos := <storeLength>(pos, <length>)
-					<#word>
-						mstore(add(pos, <offset>), <wordValue>)
-					</word>
+					<storeLiteralInMemory>(pos)
 					end := add(pos, <overallSize>)
 				}
 			)");
 			templ("functionName", functionName);
 
 			// TODO this can make use of CODECOPY for large strings once we have that in Yul
-			size_t words = (value.size() + 31) / 32;
 			templ("length", to_string(value.size()));
 			templ("storeLength", arrayStoreLengthForEncodingFunction(dynamic_cast<ArrayType const&>(_to), _options));
 			if (_options.padded)
-				templ("overallSize", to_string(words * 32));
+				templ("overallSize", to_string(((value.size() + 31) / 32) * 32));
 			else
 				templ("overallSize", to_string(value.size()));
-
-			vector<map<string, string>> wordParams(words);
-			for (size_t i = 0; i < words; ++i)
-			{
-				wordParams[i]["offset"] = to_string(i * 32);
-				wordParams[i]["wordValue"] = formatAsStringOrNumber(value.substr(32 * i, 32));
-			}
-			templ("word", wordParams);
+			templ("storeLiteralInMemory", m_utils.storeLiteralInMemoryFunction(value));
 			return templ.render();
 		}
 		else

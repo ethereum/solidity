@@ -1,5 +1,0 @@
-Error (1834): Unimplemented feature error in <FILENAME REMOVED>
- --> yul_unimplemented/input.sol:6:16:
-  |
-6 |         return type(test).name;
-  |                ^^^^^^^^^^^^^^^
