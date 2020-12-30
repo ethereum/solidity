@@ -23,5 +23,7 @@ contract C {
 		//assert(b1.length == b5.length); // fails for now
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (311-341): CHC: Assertion violation happens here.

@@ -22,10 +22,11 @@ contract C {
 		// should hold but the engine cannot infer that data[5:10] is fully equals data[x:y] because each index is assigned separately
 		//assert(b1.length == b5.length); // fails for now
 
-		bytes memory b6 = abi.encode(data[5:10]);
-		assert(b4.length == b6.length); // should fail
+		// Disabled because of Spacer nondeterminism
+		//bytes memory b6 = abi.encode(data[5:10]);
+		//assert(b4.length == b6.length); // should fail
 	}
 }
 // ----
+// Warning 2072: (675-690): Unused local variable.
 // Warning 6328: (330-360): CHC: Assertion violation happens here.
-// Warning 6328: (1182-1212): CHC: Assertion violation happens here.

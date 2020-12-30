@@ -14,5 +14,7 @@ contract C
 		assert(b > 4);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (240-253): CHC: Assertion violation happens here.\nCounterexample:\narray = []\nx = 0\n\n\nTransaction trace:\nconstructor()\nState: array = []\nf(0)
+// Warning 6328: (240-253): CHC: Assertion violation happens here.

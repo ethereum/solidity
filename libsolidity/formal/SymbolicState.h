@@ -65,6 +65,7 @@ private:
  *   - TODO: potentially storage of contracts
  * - block and transaction properties, represented as a tuple of:
  *   - blockhash
+ *   - block chainid
  *   - block coinbase
  *   - block difficulty
  *   - block gaslimit
@@ -189,6 +190,7 @@ private:
 		"tx",
 		{
 			{"blockhash", std::make_shared<smtutil::ArraySort>(smtutil::SortProvider::uintSort, smtutil::SortProvider::uintSort)},
+			{"block.chainid", smtutil::SortProvider::uintSort},
 			{"block.coinbase", smt::smtSort(*TypeProvider::address())},
 			{"block.difficulty", smtutil::SortProvider::uintSort},
 			{"block.gaslimit", smtutil::SortProvider::uintSort},
