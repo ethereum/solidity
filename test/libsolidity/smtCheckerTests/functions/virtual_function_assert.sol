@@ -18,4 +18,4 @@ contract C is A {
     }
 }
 // ----
-// Warning 6328: (259-273): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nconstructor()\nState: x = 0\nproxy()
+// Warning 6328: (259-273): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nC.constructor()\nState: x = 0\nA.proxy()

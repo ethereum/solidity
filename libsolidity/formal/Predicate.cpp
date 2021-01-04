@@ -151,8 +151,8 @@ bool Predicate::isInterface() const
 
 string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) const
 {
-	if (programContract())
-		return "constructor()";
+	if (auto contract = programContract())
+		return contract->name() + ".constructor()";
 
 	solAssert(isSummary(), "");
 
@@ -183,7 +183,8 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 		fun->isFallback() ? "fallback" :
 		fun->isReceive() ? "receive" :
 		fun->name();
-	return fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
+	solAssert(fun->annotation().contract, "");
+	return fun->annotation().contract->name() + "." + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")";
 
 }
 

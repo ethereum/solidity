@@ -26,8 +26,8 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (181-198): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 0, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nconstructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nf()
-// Warning 6328: (216-235): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nconstructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nf()
-// Warning 6328: (254-274): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nconstructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nf()
-// Warning 6328: (296-319): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nconstructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nf()
-// Warning 6328: (344-370): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nconstructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nf()
+// Warning 6328: (181-198): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 0, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nC.f()
+// Warning 6328: (216-235): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nC.f()
+// Warning 6328: (254-274): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nC.f()
+// Warning 6328: (296-319): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nC.f()
+// Warning 6328: (344-370): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\n\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nC.f()

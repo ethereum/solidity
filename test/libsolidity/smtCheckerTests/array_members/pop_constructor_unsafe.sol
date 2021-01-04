@@ -7,4 +7,4 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (76-83): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\n\n\nTransaction trace:\nconstructor()
+// Warning 2529: (76-83): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\n\n\nTransaction trace:\nC.constructor()

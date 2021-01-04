@@ -5,4 +5,4 @@ contract C {
 	uint x = 2 / z;
 }
 // ----
-// Warning 4281: (69-74): CHC: Division by zero happens here.\nCounterexample:\nz = 0, x = 0\n\nTransaction trace:\nconstructor()
+// Warning 4281: (69-74): CHC: Division by zero happens here.\nCounterexample:\nz = 0, x = 0\n\nTransaction trace:\nC.constructor()

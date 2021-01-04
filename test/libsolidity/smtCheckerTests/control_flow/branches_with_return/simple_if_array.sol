@@ -25,4 +25,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (205-222): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\n\n\n\nTransaction trace:\nconstructor()\nState: a = [0, 0]\ncheck()
+// Warning 6328: (205-222): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\n\n\n\nTransaction trace:\nC.constructor()\nState: a = [0, 0]\nC.check()
