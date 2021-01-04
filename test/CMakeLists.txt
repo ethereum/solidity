@@ -31,6 +31,7 @@ set(contracts_sources
 detect_stray_source_files("${contracts_sources}" "contracts/")
 
 set(libsolutil_sources
+    libsolutil/BooleanLP.cpp
     libsolutil/Checksum.cpp
     libsolutil/CommonData.cpp
     libsolutil/CommonIO.cpp
