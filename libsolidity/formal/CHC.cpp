@@ -541,6 +541,74 @@ void CHC::endVisit(Return const& _return)
 	m_currentBlock = predicate(*returnGhost);
 }
 
+bool CHC::visit(TryStatement const& _tryStatement)
+{
+	FunctionCall const* externalCall = dynamic_cast<FunctionCall const*>(&_tryStatement.externalCall());
+	solAssert(externalCall && externalCall->annotation().tryCall, "");
+	solAssert(m_currentFunction, "");
+
+	auto tryHeaderBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_header_");
+	auto tryAfterCallSuccessBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_after_call_success_");
+	auto tryAfterCallFailBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_after_call_fail_");
+	auto afterTryBlock = createBlock(&m_currentFunction->body(), PredicateType::FunctionBlock);
+
+	connectBlocks(m_currentBlock, predicate(*tryHeaderBlock));
+	setCurrentBlock(*tryHeaderBlock);
+	// fine-grained control over how the external call is visited
+	// cannot use "_tryStatement.externalCall().accept(*this);" since we need to insert the "connectBlocks"
+	// visit(*externalCall); currently there is nothing to do here, so it's commented out
+	externalCall->expression().accept(*this);
+	ASTNode::listAccept(externalCall->arguments(), *this);
+	connectBlocks(m_currentBlock, predicate(*tryAfterCallFailBlock));
+	endVisit(*externalCall);
+
+	if (_tryStatement.successClause()->parameters())
+	{
+		auto const& params = _tryStatement.successClause()->parameters()->parameters();
+		if (params.size() > 1)
+		{
+			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*externalCall));
+			solAssert(symbTuple, "");
+			auto const& symbComponents = symbTuple->components();
+			solAssert(symbComponents.size() == params.size(), "");
+			for (unsigned i = 0; i < symbComponents.size(); ++i)
+			{
+				auto param = params.at(i);
+				solAssert(param, "");
+				solAssert(m_context.knownVariable(*param), "");
+				assignment(*param, symbTuple->component(i));
+			}
+		}
+		else if (params.size() == 1)
+			assignment(*params.front(), expr(*externalCall));
+	}
+
+	connectBlocks(m_currentBlock, predicate(*tryAfterCallSuccessBlock));
+
+	auto const& clauses = _tryStatement.clauses();
+	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
+	auto clauseBlocks = applyMap(clauses, [this](ASTPointer<TryCatchClause> clause) {
+		return createBlock(clause.get(), PredicateType::FunctionBlock, "try_clause_" + std::to_string(clause->id()));
+	});
+
+	setCurrentBlock(*tryAfterCallSuccessBlock);
+	connectBlocks(m_currentBlock, predicate(*clauseBlocks[0]));
+
+	setCurrentBlock(*tryAfterCallFailBlock);
+	for (size_t i = 1; i < clauseBlocks.size(); ++i)
+		connectBlocks(m_currentBlock, predicate(*clauseBlocks[i]));
+
+	for (size_t i = 0; i < clauses.size(); ++i)
+	{
+		setCurrentBlock(*clauseBlocks[i]);
+		clauses[i]->accept(*this);
+		connectBlocks(m_currentBlock, predicate(*afterTryBlock));
+	}
+	setCurrentBlock(*afterTryBlock);
+
+	return false;
+}
+
 void CHC::pushInlineFrame(CallableDeclaration const& _callable)
 {
 	m_returnDests.push_back(createBlock(&_callable, PredicateType::FunctionBlock, "return_"));

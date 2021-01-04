@@ -312,20 +312,6 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 	return false;
 }
 
-bool SMTEncoder::visit(TryCatchClause const& _clause)
-{
-	if (auto params = _clause.parameters())
-		for (auto const& var: params->parameters())
-			createVariable(*var);
-
-	m_errorReporter.warning(
-		7645_error,
-		_clause.location(),
-		"Assertion checker does not support try/catch clauses."
-	);
-	return false;
-}
-
 void SMTEncoder::pushInlineFrame(CallableDeclaration const&)
 {
 	pushPathCondition(currentPathConditions());
@@ -2688,7 +2674,29 @@ vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedA
 
 vector<VariableDeclaration const*> SMTEncoder::localVariablesIncludingModifiers(FunctionDefinition const& _function, ContractDefinition const* _contract)
 {
-	return _function.localVariables() + modifiersVariables(_function, _contract);
+	return _function.localVariables() + tryCatchVariables(_function) + modifiersVariables(_function, _contract);
+}
+
+vector<VariableDeclaration const*> SMTEncoder::tryCatchVariables(FunctionDefinition const& _function)
+{
+	struct TryCatchVarsVisitor : public ASTConstVisitor
+	{
+		bool visit(TryCatchClause const& _catchClause) override
+		{
+			if (_catchClause.parameters())
+			{
+				auto const& params = _catchClause.parameters()->parameters();
+				for (auto param: params)
+					vars.push_back(param.get());
+			}
+
+			return false;
+		}
+
+		vector<VariableDeclaration const*> vars;
+	} tryCatchVarsVisitor;
+	_function.accept(tryCatchVarsVisitor);
+	return tryCatchVarsVisitor.vars;
 }
 
 vector<VariableDeclaration const*> SMTEncoder::modifiersVariables(FunctionDefinition const& _function, ContractDefinition const* _contract)
