@@ -23,9 +23,12 @@ set(sources
 	Keccak256.h
 	LazyInit.h
 	LEB128.h
+	LP.cpp
+	LP.h
 	Numeric.cpp
 	Numeric.h
 	picosha2.h
+	LinearExpression.h
 	Result.h
 	SetOnce.h
 	StringUtils.cpp
