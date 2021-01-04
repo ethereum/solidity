@@ -2,6 +2,8 @@ set(sources
 	Algorithms.h
 	AnsiColorized.h
 	Assertions.h
+	BooleanLP.cpp
+	BooleanLP.h
 	Common.h
 	CommonData.cpp
 	CommonData.h
