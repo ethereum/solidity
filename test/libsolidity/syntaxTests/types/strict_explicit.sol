@@ -37,6 +37,10 @@ contract C
 
         B n = B(address(uint160(uint(int(100)))));
         n;
+
+        uint8 o = 1;
+        int16 p = int16(o);
     }
 }
 // ----
+// TypeError 9640: (801-809): Explicit type conversion not allowed from "uint8" to "int16".

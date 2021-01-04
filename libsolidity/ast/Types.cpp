@@ -508,12 +508,13 @@ BoolResult IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.category() == category())
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (convertTo.m_bits < m_bits)
+		// disallowing unsigned to signed conversion of different bits
+		if (isSigned() != convertTo.isSigned())
 			return false;
-		else if (isSigned())
-			return convertTo.isSigned();
+		else if (convertTo.m_bits < m_bits)
+			return false;
 		else
-			return !convertTo.isSigned() || convertTo.m_bits > m_bits;
+			return true;
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
