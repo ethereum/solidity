@@ -523,21 +523,18 @@ smtutil::Expression DataFlowAnalyzer::encodeEVMBuiltin(
 	);
 	switch (_instruction)
 	{
-	// TODO can wrapping be avoided?
 	case evmasm::Instruction::ADD:
-		return wrap(arguments.at(0) + arguments.at(1));
-	// TODO only allow multiplication if one of the argument is constant
-	case evmasm::Instruction::MUL:
-		return wrap(arguments.at(0) * arguments.at(1));
-	case evmasm::Instruction::SUB:
-		return wrap(arguments.at(0) - arguments.at(1));
-	// TODO only allow division if the second argument is a non-zero constant
-	case evmasm::Instruction::DIV:
-		return smtutil::Expression::ite(
-			arguments.at(1) == constantValue(0),
-			constantValue(0),
-			arguments.at(0) / arguments.at(1)
-		);
+	{
+		// Avoiding wrapping
+		m_solver->push();
+		m_solver->addAssertion(arguments.at(0) + arguments.at(1) >= (bigint(1) << 256));
+		CheckResult result = m_solver->check({}).first;
+		m_solver->pop();
+		if (result == CheckResult::UNSATISFIABLE)
+			return arguments.at(0) + arguments.at(1);
+		else
+			return newRestrictedVariable();
+	}
 
 	// Restrictions from EIP-1985
 	case evmasm::Instruction::CALLDATASIZE:
@@ -572,7 +569,7 @@ string DataFlowAnalyzer::uniqueName()
 
 shared_ptr<Sort> DataFlowAnalyzer::defaultSort() const
 {
-	return SortProvider::intSort();
+	return SortProvider::realSort;
 }
 
 
