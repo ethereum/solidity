@@ -47,16 +47,17 @@ namespace solidity::yul
  *
  * Prerequisite: Disambiguator, SSATransform.
  */
-class ReasoningBasedSimplifier: public ASTModifier, SMTSolver
+class ReasoningBasedSimplifier: public ASTModifier
 {
 public:
 	static constexpr char const* name{"ReasoningBasedSimplifier"};
 	static void run(OptimiserStepContext& _context, Block& _ast);
-	static std::optional<std::string> invalidInCurrentEnvironment();
 
 	using ASTModifier::operator();
 	void operator()(VariableDeclaration& _varDecl) override;
 	void operator()(If& _if) override;
+	void operator()(ForLoop& _for) override;
+	void operator()(FunctionDefinition& _function) override;
 
 private:
 	explicit ReasoningBasedSimplifier(
@@ -64,12 +65,36 @@ private:
 		std::set<YulString> const& _ssaVariables
 	);
 
-	smtutil::Expression encodeEVMBuiltin(
+	smtutil::Expression encodeExpression(
+		Expression const& _expression
+	);
+
+	void handleDeclaration(
+		YulString _varName,
 		evmasm::Instruction _instruction,
 		std::vector<Expression> const& _arguments
-	) override;
+	);
 
+	smtutil::Expression newRestrictedVariable(std::string const& _name = {}, bool _boolean = false);
+	std::string uniqueName();
+
+	bool makesInfeasible(smtutil::Expression _constraint);
+	bool feasible();
+	bool infeasible();
+
+	YulString localVariableFromExpression(std::string const& _expressionName);
+
+	bool isBoolean(Expression const& _expression) const;
+
+	std::shared_ptr<smtutil::Sort> defaultSort() const;
+	smtutil::Expression literalValue(Literal const& _literal) const;
 	Dialect const& m_dialect;
+	std::set<YulString> const& m_ssaVariables;
+	std::unique_ptr<smtutil::SolverInterface> m_solver;
+	std::map<YulString, smtutil::Expression> m_variables;
+	std::set<std::string> m_booleanVariables;
+
+	size_t m_varCounter = 0;
 };
 
 }

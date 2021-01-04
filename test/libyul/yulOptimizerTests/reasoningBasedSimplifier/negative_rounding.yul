@@ -11,6 +11,6 @@
 // {
 //     let x := sub(0, 7)
 //     let y := 2
-//     if 1 { }
-//     if 0 { }
+//     if iszero(add(sdiv(x, y), 3)) { }
+//     if iszero(add(sdiv(x, y), 4)) { }
 // }

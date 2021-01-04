@@ -45,7 +45,7 @@ struct OptimiserSettings
 		"dhfoDgvulfnTUtnIf"            // None of these can make stack problems worse
 		"["
 			"xa[r]EscLM"               // Turn into SSA and simplify
-			"cCTUtTOntnfDIul"          // Perform structural simplification
+			"RcCTUtTOntnfDIul"          // Perform structural simplification
 			"Lcul"                     // Simplify again
 			"Vcul [j]"                 // Reverse SSA
 

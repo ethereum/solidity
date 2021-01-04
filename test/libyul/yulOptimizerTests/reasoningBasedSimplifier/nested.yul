@@ -14,8 +14,7 @@
 //
 // {
 //     let x := calldataload(2)
-//     let t := lt(x, 20)
-//     if t
+//     if lt(x, 20)
 //     {
 //         if 1 { }
 //         if 1 { }

@@ -25,7 +25,10 @@
 //     let t := calldataload(32)
 //     if sgt(sub(y, 1), y)
 //     {
-//         if 1 { sstore(0, 7) }
-//         if iszero(eq(y, t)) { if 1 { sstore(1, 7) } }
+//         if eq(sdiv(y, sub(0, 1)), y) { sstore(0, 7) }
+//         if iszero(eq(y, t))
+//         {
+//             if eq(sdiv(t, sub(0, 1)), sub(0, t)) { sstore(1, 7) }
+//         }
 //     }
 // }

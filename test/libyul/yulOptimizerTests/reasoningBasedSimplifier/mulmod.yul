@@ -25,7 +25,13 @@
 //     let y := calldataload(32)
 //     let z := calldataload(64)
 //     let result := mulmod(x, y, z)
-//     if 0 { }
-//     if and(and(lt(x, 1000), lt(y, 1000)), lt(z, 1000)) { if 1 { sstore(0, 9) } }
-//     if and(and(gt(x, sub(0, 5)), eq(y, 2)), eq(z, 3)) { if 0 { } }
+//     if gt(result, z) { sstore(0, 1) }
+//     if and(and(lt(x, 1000), lt(y, 1000)), lt(z, 1000))
+//     {
+//         if eq(result, mod(mul(x, y), z)) { sstore(0, 9) }
+//     }
+//     if and(and(gt(x, sub(0, 5)), eq(y, 2)), eq(z, 3))
+//     {
+//         if eq(result, mod(mul(x, y), z)) { sstore(0, 5) }
+//     }
 // }

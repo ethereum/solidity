@@ -6,8 +6,4 @@
 // ----
 // step: reasoningBasedSimplifier
 //
-// {
-//     let x := 7
-//     let y := 8
-//     if 1 { }
-// }
+// { if 1 { } }

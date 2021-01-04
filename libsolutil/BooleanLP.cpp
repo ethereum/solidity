@@ -247,9 +247,9 @@ void BooleanLPSolver::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> BooleanLPSolver::check(vector<Expression> const& _expressionsToEvaluate)
 {
-//	cout << "Solving boolean constraint system" << endl;
-//	cout << toString() << endl;
-//	cout << "--------------" << endl;
+	cout << "Solving boolean constraint system" << endl;
+	cout << toString() << endl;
+	cout << "--------------" << endl;
 
 	if (m_state.back().infeasible)
 		return make_pair(CheckResult::UNSATISFIABLE, vector<string>{});

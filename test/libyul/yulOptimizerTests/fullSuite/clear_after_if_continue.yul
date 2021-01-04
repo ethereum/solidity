@@ -16,16 +16,10 @@
 //         for { }
 //         iszero(_1)
 //         {
-//             if y
-//             {
-//                 let _2 := 0
-//                 revert(_2, _2)
-//             }
+//             let _2 := 0
+//             revert(_2, _2)
 //         }
-//         {
-//             if y { continue }
-//             sstore(1, 0)
-//         }
+//         { continue }
 //         if y { revert(0, 0) }
 //     }
 // }
