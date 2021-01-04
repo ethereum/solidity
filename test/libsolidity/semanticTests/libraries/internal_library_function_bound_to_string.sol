@@ -14,6 +14,5 @@ contract C {
 }
 // ====
 // compileViaYul: also
-// compileToEwasm: also
 // ----
 // secondChar() -> 98
