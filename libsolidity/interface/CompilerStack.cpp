@@ -402,12 +402,11 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			FunctionCallGraphBuilder builder;
 			for (Source const* source: m_sourceOrder)
 				if (source->ast)
 					for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 						if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-							m_contractCallGraphs.emplace(contract, builder.create(*contract));
+							m_contractCallGraphs.emplace(contract, FunctionCallGraphBuilder::create(*contract));
 		}
 
 		if (noErrors)

@@ -75,7 +75,7 @@ public:
 		std::set<ContractDefinition const*, ASTNode::CompareByID> createdContracts;
 	};
 
-	std::shared_ptr<ContractCallGraph> create(ContractDefinition const& _contract);
+	static std::unique_ptr<ContractCallGraph> create(ContractDefinition const& _contract);
 
 private:
 	bool visit(Identifier const& _identifier) override;
@@ -91,7 +91,7 @@ private:
 
 	ContractDefinition const* m_contract = nullptr;
 	std::optional<Node> m_currentNode;
-	std::shared_ptr<ContractCallGraph> m_graph = nullptr;
+	std::unique_ptr<ContractCallGraph> m_graph = nullptr;
 	Node m_currentDispatch = SpecialNode::InternalCreationDispatch;
 };
 
