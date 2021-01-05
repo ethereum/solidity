@@ -49,4 +49,16 @@ erase_if(std::unordered_map<Key,T,Hash,KeyEqual,Alloc>& c, Pred pred)
 	return old_size - c.size();
 }
 
+namespace ranges
+{
+template<typename R, typename Pred>
+inline constexpr bool all_of(R&& r, Pred pred)
+{
+	for (auto it = std::begin(r), end = std::end(r); it != end; ++it)
+		if (!std::invoke(pred, *it))
+			return false;
+	return true;
+}
+}
+
 }

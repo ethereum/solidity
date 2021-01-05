@@ -26,6 +26,8 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 
+#include <libsolutil/cxx20.h>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
@@ -86,10 +88,7 @@ void Rematerialiser::visit(Expression& _e)
 			)
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
-				bool allInScope = true;
-				for (auto const& ref: m_references[name])
-					allInScope = allInScope && inScope(ref);
-				if (allInScope)
+				if (cxx20::ranges::all_of(m_references[name], [&](auto const& ref) { return inScope(ref); }))
 				{
 					// update reference counts
 					m_referenceCounts[name]--;
