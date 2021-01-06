@@ -68,9 +68,11 @@ void LoadResolver::tryResolve(
 	if (_location == StoreLoadLocation::Storage)
 	{
 		if (auto value = util::valueOrNullptr(m_storage, key))
-			_e = Identifier{locationOf(_e), *value};
+			if (inScope(*value))
+				_e = Identifier{locationOf(_e), *value};
 	}
 	else if (m_optimizeMLoad && _location == StoreLoadLocation::Memory)
 		if (auto value = util::valueOrNullptr(m_memory, key))
-			_e = Identifier{locationOf(_e), *value};
+			if (inScope(*value))
+				_e = Identifier{locationOf(_e), *value};
 }
