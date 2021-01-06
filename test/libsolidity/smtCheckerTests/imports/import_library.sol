@@ -15,4 +15,4 @@ library L {
 	}
 }
 // ----
-// Warning 6328: (c:113-126): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
+// Warning 6328: (c:113-126): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)\n  L.f() -- internal call

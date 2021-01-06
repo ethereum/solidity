@@ -37,6 +37,8 @@ enum class PredicateType
 	ConstructorSummary,
 	FunctionSummary,
 	FunctionBlock,
+	InternalCall,
+	ExternalCall,
 	Error,
 	Custom
 };
@@ -97,6 +99,15 @@ public:
 
 	/// @returns true if this predicate represents a summary.
 	bool isSummary() const;
+
+	/// @returns true if this predicate represents a function summary.
+	bool isFunctionSummary() const;
+
+	/// @returns true if this predicate represents an internal function call.
+	bool isInternalCall() const;
+
+	/// @returns true if this predicate represents an external function call.
+	bool isExternalCall() const;
 
 	/// @returns true if this predicate represents a constructor summary.
 	bool isConstructorSummary() const;

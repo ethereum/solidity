@@ -3,7 +3,6 @@ Counterexample:
 
 x = 0
 
-
 Transaction trace:
 C.constructor()
 C.f(0)
@@ -16,7 +15,6 @@ C.f(0)
 Counterexample:
 
 x = 0
-
 
 Transaction trace:
 C.constructor()

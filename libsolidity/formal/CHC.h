@@ -147,7 +147,13 @@ private:
 	Predicate const* createBlock(ASTNode const* _node, PredicateType _predType, std::string const& _prefix = "");
 	/// Creates a call block for the given function _function from contract _contract.
 	/// The contract is needed here because of inheritance.
-	Predicate const* createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract);
+	/// There are different types of summaries, where the most common is FunctionSummary,
+	/// but other summaries are also used for internal and external function calls.
+	Predicate const* createSummaryBlock(
+		FunctionDefinition const& _function,
+		ContractDefinition const& _contract,
+		PredicateType _type = PredicateType::FunctionSummary
+	);
 
 	/// @returns a block related to @a _contract's constructor.
 	Predicate const* createConstructorBlock(ContractDefinition const& _contract, std::string const& _prefix);

@@ -16,4 +16,4 @@ contract C
 }
 
 // ----
-// Warning 6328: (229-242): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6328: (229-242): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()\n  C.h(0) -- internal call\n    C.k(0) -- internal call

@@ -14,4 +14,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (89-114): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\n\nTransaction trace:\nC.constructor()\nC.test(0)
+// Warning 6328: (89-114): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\n\nTransaction trace:\nC.constructor()\nC.test(0)\n  C.simple_if(0) -- internal call

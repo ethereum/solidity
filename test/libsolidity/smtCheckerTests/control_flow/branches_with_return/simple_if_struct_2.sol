@@ -22,4 +22,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (156-172): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 0}\n\nTransaction trace:\nC.constructor()\nState: s = {x: 0}\nC.check()
+// Warning 6328: (156-172): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 0}\n\nTransaction trace:\nC.constructor()\nState: s = {x: 0}\nC.check()\n  C.conditional_increment() -- internal call
