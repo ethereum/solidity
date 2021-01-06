@@ -476,7 +476,7 @@ private:
 	bool m_generateIR = false;
 	bool m_generateEwasm = false;
 	std::map<std::string, util::h160> m_libraries;
-	std::map<ContractDefinition const*, std::shared_ptr<FunctionCallGraphBuilder::ContractCallGraph> const> m_contractCallGraphs;
+	std::map<ContractDefinition const*, std::unique_ptr<FunctionCallGraphBuilder::ContractCallGraph> const> m_contractCallGraphs;
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;

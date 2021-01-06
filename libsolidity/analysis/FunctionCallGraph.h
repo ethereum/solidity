@@ -78,19 +78,20 @@ public:
 	static std::unique_ptr<ContractCallGraph> create(ContractDefinition const& _contract);
 
 private:
+	FunctionCallGraphBuilder(ContractDefinition const& _contract);
+
 	bool visit(Identifier const& _identifier) override;
 	bool visit(NewExpression const& _newExpression) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
 	void endVisit(ModifierInvocation const& _modifierInvocation) override;
 
 	void visitCallable(CallableDeclaration const* _callable, bool _directCall = true);
-	void visitConstructor(ContractDefinition const& _contract);
 
 	bool add(Node _caller, Node _callee);
 	void processFunction(CallableDeclaration const& _callable, bool _calledDirectly = true);
 
 	ContractDefinition const* m_contract = nullptr;
-	std::optional<Node> m_currentNode;
+	std::optional<Node> m_currentNode = SpecialNode::EntryCreation;
 	std::unique_ptr<ContractCallGraph> m_graph = nullptr;
 	Node m_currentDispatch = SpecialNode::InternalCreationDispatch;
 };

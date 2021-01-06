@@ -406,7 +406,7 @@ bool CompilerStack::analyze()
 				if (source->ast)
 					for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 						if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-							m_contractCallGraphs.emplace(contract, FunctionCallGraphBuilder::create(*contract));
+							m_contractCallGraphs.emplace(std::piecewise_construct, std::forward_as_tuple(contract), std::forward_as_tuple(FunctionCallGraphBuilder::create(*contract)));
 		}
 
 		if (noErrors)
