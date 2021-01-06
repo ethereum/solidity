@@ -41,8 +41,7 @@ public:
 	explicit YulOptimizerTester(
 		std::shared_ptr<Object> _obj,
 		Dialect const& _dialect,
-		std::string const& _optimizerStep,
-		bool _fuzzerMode
+		std::string const& _optimizerStep
 	);
 	/// Runs chosen optimiser step returning pointer
 	/// to yul AST Block post optimisation.
@@ -64,7 +63,6 @@ private:
 	std::shared_ptr<Object> m_object;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
-	bool m_fuzzerMode;
 };
 
 }

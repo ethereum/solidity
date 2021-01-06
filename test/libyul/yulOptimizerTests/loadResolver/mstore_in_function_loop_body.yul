@@ -15,6 +15,11 @@
 // step: loadResolver
 //
 // {
+//     let _1 := 1337
+//     let _2 := 0
+//     mstore(_2, _1)
+//     funcWithLoop(42)
+//     sstore(_2, mload(_2))
 //     function userNot(x) -> y
 //     { y := iszero(x) }
 //     function funcWithLoop(x_1)
@@ -22,14 +27,9 @@
 //         for { }
 //         userNot(x_1)
 //         {
-//             let _1 := 0
-//             mstore(_1, _1)
+//             let _7 := 0
+//             mstore(_7, _7)
 //         }
 //         { }
 //     }
-//     let _3 := 1337
-//     let _4 := 0
-//     mstore(_4, _3)
-//     funcWithLoop(42)
-//     sstore(_4, mload(_4))
 // }
