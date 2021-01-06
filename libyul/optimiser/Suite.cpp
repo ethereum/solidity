@@ -37,6 +37,8 @@
 #include <libyul/optimiser/ExpressionJoiner.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/FullSSAReverse.h>
+#include <libyul/optimiser/FullSSATransform.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
@@ -190,6 +192,8 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			ForLoopConditionOutOfBody,
 			ForLoopInitRewriter,
 			FullInliner,
+			FullSSAReverse,
+			FullSSATransform,
 			FunctionGrouper,
 			FunctionHoister,
 			LiteralRematerialiser,
@@ -229,6 +233,8 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{ForLoopConditionOutOfBody::name,     'O'},
 		{ForLoopInitRewriter::name,           'o'},
 		{FullInliner::name,                   'i'},
+		{FullSSAReverse::name,                'Z'},
+		{FullSSATransform::name,              'z'},
 		{FunctionGrouper::name,               'g'},
 		{FunctionHoister::name,               'h'},
 		{LiteralRematerialiser::name,         'T'},

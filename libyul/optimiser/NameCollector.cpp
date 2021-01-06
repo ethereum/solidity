@@ -44,6 +44,18 @@ void NameCollector::operator ()(FunctionDefinition const& _funDef)
 	ASTWalker::operator ()(_funDef);
 }
 
+void NameCollector::operator()(FunctionCall const& _funCall)
+{
+	if (_funCall.functionName.name == "phi_store"_yulstring || _funCall.functionName.name == "phi_load"_yulstring)
+	{
+		yulAssert(!_funCall.arguments.empty(), "");
+		auto const* literal = std::get_if<Literal>(&_funCall.arguments.front());
+		yulAssert(literal && literal->kind == LiteralKind::String, "");
+		m_names.emplace(literal->value);
+	}
+	ASTWalker::operator ()(_funCall);
+}
+
 void ReferencesCounter::operator()(Identifier const& _identifier)
 {
 	++m_references[_identifier.name];

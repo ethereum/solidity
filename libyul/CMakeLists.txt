@@ -125,6 +125,10 @@ add_library(yul
 	optimiser/ForLoopInitRewriter.h
 	optimiser/FullInliner.cpp
 	optimiser/FullInliner.h
+	optimiser/FullSSAReverse.cpp
+	optimiser/FullSSAReverse.h
+	optimiser/FullSSATransform.cpp
+	optimiser/FullSSATransform.h
 	optimiser/FunctionCallFinder.cpp
 	optimiser/FunctionCallFinder.h
 	optimiser/FunctionGrouper.cpp

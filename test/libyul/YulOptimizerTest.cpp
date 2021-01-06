@@ -40,6 +40,8 @@
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/ExpressionInliner.h>
 #include <libyul/optimiser/FullInliner.h>
+#include <libyul/optimiser/FullSSAReverse.h>
+#include <libyul/optimiser/FullSSATransform.h>
 #include <libyul/optimiser/ForLoopConditionIntoBody.h>
 #include <libyul/optimiser/ForLoopConditionOutOfBody.h>
 #include <libyul/optimiser/ForLoopInitRewriter.h>
@@ -167,6 +169,38 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	{
 		disambiguate();
 		ForLoopInitRewriter::run(*m_context, *m_object->code);
+	}
+	else if (m_optimizerStep == "fullSSATransform")
+	{
+		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_object->code);
+		ForLoopConditionIntoBody::run(*m_context, *m_object->code);
+		FullSSATransform::run(*m_context, *m_object->code);
+	}
+	else if (m_optimizerStep == "fullSSAReverse")
+	{
+		disambiguate();
+		FullSSAReverse::run(*m_context, *m_object->code);
+		ForLoopConditionOutOfBody::run(*m_context, *m_object->code);
+	}
+	else if (m_optimizerStep == "fullSSAandBack")
+	{
+		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_object->code);
+		ForLoopConditionIntoBody::run(*m_context, *m_object->code);
+		FullSSATransform::run(*m_context, *m_object->code);
+
+		UnusedPruner::run(*m_context, *m_object->code);
+
+		FullSSAReverse::run(*m_context, *m_object->code);
+
+		RedundantAssignEliminator::run(*m_context, *m_object->code);
+		CommonSubexpressionEliminator::run(*m_context, *m_object->code);
+		Rematerialiser::run(*m_context, *m_object->code);
+		UnusedPruner::run(*m_context, *m_object->code);
+		RedundantAssignEliminator::run(*m_context, *m_object->code);
+
+		ForLoopConditionOutOfBody::run(*m_context, *m_object->code);
 	}
 	else if (m_optimizerStep == "commonSubexpressionEliminator")
 	{

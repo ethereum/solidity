@@ -150,6 +150,38 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 			builtins.emplace(createEVMFunction(name, opcode));
 	}
 
+	builtins.emplace(createFunction(
+		"phi_store",
+		2,
+		0,
+		SideEffects{false, false, false, false, true, SideEffects::None, SideEffects::None, SideEffects::None},
+		{LiteralKind::String, nullopt},
+		[](
+			FunctionCall const&,
+			AbstractAssembly&,
+			BuiltinContext&,
+			std::function<void(Expression const&)>
+		) {
+			yulAssert(false, "leftover phi_store");
+		}
+	));
+
+	builtins.emplace(createFunction(
+		"phi_load",
+		1,
+		1,
+		SideEffects{},
+		{LiteralKind::String},
+		[](
+			FunctionCall const&,
+			AbstractAssembly&,
+			BuiltinContext&,
+			std::function<void(Expression const&)>
+		) {
+			yulAssert(false, "leftover phi_load");
+		}
+	));
+
 	if (_objectAccess)
 	{
 		builtins.emplace(createFunction("linkersymbol", 1, 1, SideEffects{}, {LiteralKind::String}, [](

@@ -43,6 +43,7 @@ public:
 	using ASTWalker::operator ();
 	void operator()(VariableDeclaration const& _varDecl) override;
 	void operator()(FunctionDefinition const& _funDef) override;
+	void operator()(FunctionCall const& _funCall) override;
 
 	std::set<YulString> names() const { return m_names; }
 private:

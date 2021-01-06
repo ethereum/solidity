@@ -308,7 +308,19 @@ void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEli
 void AssignmentRemover::operator()(Block& _block)
 {
 	boost::range::remove_erase_if(_block.statements, [&](Statement const& _statement) -> bool {
-		return holds_alternative<Assignment>(_statement) && m_toRemove.count(&std::get<Assignment>(_statement));
+		if (auto const* assignment = std::get_if<Assignment>(&_statement))
+		{
+			if (m_toRemove.count(assignment))
+				return true;
+			// TODO: hack to generally get rid of assignments like a := a
+			if (assignment->variableNames.size() == 1)
+			{
+				if (auto const* identifier = std::get_if<Identifier>(assignment->value.get()))
+					if (identifier->name == assignment->variableNames.front().name)
+						return true;
+			}
+		}
+		return false;
 	});
 
 	ASTModifier::operator()(_block);
