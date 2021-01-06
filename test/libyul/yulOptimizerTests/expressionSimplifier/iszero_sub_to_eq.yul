@@ -2,7 +2,7 @@
     let a := calldataload(0)
     let b := calldataload(0x20)
     let x := sub(a, b)
-    if gt(x, 0) {
+    if iszero(x) {
         sstore(0, 1)
     }
 }
@@ -12,5 +12,5 @@
 // {
 //     let _1 := 0
 //     let a := calldataload(_1)
-//     if iszero(eq(a, calldataload(0x20))) { sstore(_1, 1) }
+//     if eq(a, calldataload(0x20)) { sstore(_1, 1) }
 // }
