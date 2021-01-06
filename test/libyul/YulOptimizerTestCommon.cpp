@@ -74,11 +74,10 @@ using namespace solidity::yul::test;
 using namespace solidity::frontend;
 using namespace std;
 
-YulOptimizerTester::YulOptimizerTester(
+YulOptimizerTestCommon::YulOptimizerTestCommon(
 	shared_ptr<Object> _obj,
 	Dialect const& _dialect,
-	string const& _optimizerStep,
-	bool _fuzzerMode
+	string const& _optimizerStep
 )
 {
 	m_object = _obj;
@@ -86,10 +85,9 @@ YulOptimizerTester::YulOptimizerTester(
 	m_analysisInfo = m_object->analysisInfo;
 	m_dialect = &_dialect;
 	m_optimizerStep = _optimizerStep;
-	m_fuzzerMode = _fuzzerMode;
 }
 
-bool YulOptimizerTester::runStep()
+bool YulOptimizerTestCommon::runStep()
 {
 	yulAssert(m_dialect, "Dialect not set.");
 
@@ -120,8 +118,7 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "varNameCleaner")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-			FunctionHoister::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		FunctionGrouper::run(*m_context, *m_ast);
 		VarNameCleaner::run(*m_context, *m_ast);
 	}
@@ -138,11 +135,8 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "commonSubexpressionEliminator")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-		{
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-		}
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "conditionalUnsimplifier")
@@ -202,21 +196,15 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "rematerialiser")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-		{
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-		}
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		Rematerialiser::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "expressionSimplifier")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-		{
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-		}
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		ExpressionSplitter::run(*m_context, *m_ast);
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 		ExpressionSimplifier::run(*m_context, *m_ast);
@@ -231,8 +219,7 @@ bool YulOptimizerTester::runStep()
 		disambiguate();
 		ExpressionSplitter::run(*m_context, *m_ast);
 		ForLoopInitRewriter::run(*m_context, *m_ast);
-		if (m_fuzzerMode)
-			FunctionHoister::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 		ExpressionSimplifier::run(*m_context, *m_ast);
 		UnusedPruner::run(*m_context, *m_ast);
@@ -244,8 +231,7 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "unusedFunctionParameterPruner")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-			ForLoopInitRewriter::run(*m_context, *m_ast);
+		ForLoopInitRewriter::run(*m_context, *m_ast);
 		FunctionHoister::run(*m_context, *m_object->code);
 		LiteralRematerialiser::run(*m_context, *m_object->code);
 		UnusedFunctionParameterPruner::run(*m_context, *m_object->code);
@@ -282,8 +268,7 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "ssaPlusCleanup")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-			ForLoopInitRewriter::run(*m_context, *m_ast);
+		ForLoopInitRewriter::run(*m_context, *m_ast);
 		SSATransform::run(*m_context, *m_ast);
 		RedundantAssignEliminator::run(*m_context, *m_ast);
 	}
@@ -291,8 +276,7 @@ bool YulOptimizerTester::runStep()
 	{
 		disambiguate();
 		ForLoopInitRewriter::run(*m_context, *m_ast);
-		if (m_fuzzerMode)
-			FunctionHoister::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		ExpressionSplitter::run(*m_context, *m_ast);
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 		ExpressionSimplifier::run(*m_context, *m_ast);
@@ -307,23 +291,20 @@ bool YulOptimizerTester::runStep()
 	{
 		disambiguate();
 		ForLoopInitRewriter::run(*m_context, *m_ast);
-		if (m_fuzzerMode)
-			FunctionHoister::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		LoopInvariantCodeMotion::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "controlFlowSimplifier")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-			ForLoopInitRewriter::run(*m_context, *m_ast);
+		ForLoopInitRewriter::run(*m_context, *m_ast);
 		ControlFlowSimplifier::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "structuralSimplifier")
 	{
 		disambiguate();
 		ForLoopInitRewriter::run(*m_context, *m_ast);
-		if (m_fuzzerMode)
-			FunctionHoister::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		LiteralRematerialiser::run(*m_context, *m_ast);
 		StructuralSimplifier::run(*m_context, *m_ast);
 	}
@@ -335,11 +316,8 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "equivalentFunctionCombiner")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-		{
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-		}
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		EquivalentFunctionCombiner::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "ssaReverser")
@@ -350,26 +328,21 @@ bool YulOptimizerTester::runStep()
 	else if (m_optimizerStep == "ssaAndBack")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-			ForLoopInitRewriter::run(*m_context, *m_ast);
+		ForLoopInitRewriter::run(*m_context, *m_ast);
 		// apply SSA
 		SSATransform::run(*m_context, *m_ast);
 		RedundantAssignEliminator::run(*m_context, *m_ast);
 		// reverse SSA
 		SSAReverser::run(*m_context, *m_ast);
-		if (m_fuzzerMode)
-			FunctionHoister::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		CommonSubexpressionEliminator::run(*m_context, *m_ast);
 		UnusedPruner::run(*m_context, *m_ast);
 	}
 	else if (m_optimizerStep == "stackCompressor")
 	{
 		disambiguate();
-		if (m_fuzzerMode)
-		{
-			ForLoopInitRewriter::run(*m_context, *m_ast);
-			FunctionHoister::run(*m_context, *m_ast);
-		}
+		ForLoopInitRewriter::run(*m_context, *m_ast);
+		FunctionHoister::run(*m_context, *m_ast);
 		FunctionGrouper::run(*m_context, *m_ast);
 		size_t maxIterations = 16;
 		StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
@@ -438,23 +411,19 @@ bool YulOptimizerTester::runStep()
 	return true;
 }
 
-shared_ptr<Block> YulOptimizerTester::run()
+shared_ptr<Block> YulOptimizerTestCommon::run()
 {
-	bool success = runStep();
-	if (!success)
-		return nullptr;
-	else
-		return m_ast;
+	return runStep() ? m_ast : nullptr;
 }
 
-void YulOptimizerTester::disambiguate()
+void YulOptimizerTestCommon::disambiguate()
 {
 	*m_object->code = std::get<Block>(Disambiguator(*m_dialect, *m_analysisInfo)(*m_object->code));
 	m_analysisInfo.reset();
 	updateContext();
 }
 
-void YulOptimizerTester::updateContext()
+void YulOptimizerTestCommon::updateContext()
 {
 	m_nameDispenser = make_unique<NameDispenser>(*m_dialect, *m_object->code, m_reservedIdentifiers);
 	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{

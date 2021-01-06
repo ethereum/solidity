@@ -8,9 +8,9 @@
 // step: expressionSimplifier
 //
 // {
+//     sstore(0, sub(f1(), f2()))
 //     function f1() -> a
 //     { }
 //     function f2() -> b
 //     { }
-//     sstore(0, sub(f1(), f2()))
 // }
