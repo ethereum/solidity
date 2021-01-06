@@ -22,5 +22,5 @@ contract C {
 }
 // ----
 // Warning 4984: (87-90): CHC: Overflow (resulting value larger than 255) might happen here.
-// Warning 3944: (127-130): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.dec_pre()
+// Warning 3944: (127-130): CHC: Underflow (resulting value less than 0) happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.dec_pre()
 // Warning 2661: (87-90): BMC: Overflow (resulting value larger than 255) happens here.

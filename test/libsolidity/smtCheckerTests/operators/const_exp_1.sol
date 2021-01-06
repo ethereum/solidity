@@ -12,4 +12,4 @@ contract C {
 }
 // ----
 // Warning 2018: (98-206): Function state mutability can be restricted to pure
-// Warning 6328: (172-187): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 1024\n\n\n\nTransaction trace:\nC.constructor()\nState: x = 2, y = 1024\nC.f()
+// Warning 6328: (172-187): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 1024\n\nTransaction trace:\nC.constructor()\nState: x = 2, y = 1024\nC.f()

@@ -1529,10 +1529,12 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			{
 				auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
 				auto const& inParams = calledFun->parameters();
-				localState += formatVariableModel(inParams, inValues, "\n") + "\n";
+				if (auto inStr = formatVariableModel(inParams, inValues, "\n"); !inStr.empty())
+					localState += inStr + "\n";
 				auto outValues = summaryPredicate->summaryPostOutputValues(summaryArgs);
 				auto const& outParams = calledFun->returnParameters();
-				localState += formatVariableModel(outParams, outValues, "\n") + "\n";
+				if (auto outStr = formatVariableModel(outParams, outValues, "\n"); !outStr.empty())
+					localState += outStr + "\n";
 			}
 		}
 		else

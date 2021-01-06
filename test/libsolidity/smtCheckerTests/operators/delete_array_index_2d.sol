@@ -17,4 +17,4 @@ contract C
 // ====
 // SMTSolvers: z3
 // ----
-// Warning 6328: (191-211): CHC: Assertion violation happens here.\nCounterexample:\na = []\nb = false\n\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f(false)
+// Warning 6328: (191-211): CHC: Assertion violation happens here.\nCounterexample:\na = []\nb = false\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f(false)

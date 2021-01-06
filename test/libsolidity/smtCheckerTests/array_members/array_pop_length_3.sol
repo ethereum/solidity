@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// Warning 2529: (82-89): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\n\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()
-// Warning 2529: (93-100): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\n\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()
+// Warning 2529: (82-89): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()
+// Warning 2529: (93-100): CHC: Empty array "pop" happens here.\nCounterexample:\na = []\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.f()

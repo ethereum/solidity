@@ -16,7 +16,7 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (222-248): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
-// Warning 6328: (252-278): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
-// Warning 6328: (282-305): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
-// Warning 6328: (309-335): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (222-248): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (252-278): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (282-305): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (309-335): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()

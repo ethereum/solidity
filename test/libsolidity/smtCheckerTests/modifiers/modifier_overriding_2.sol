@@ -24,4 +24,4 @@ contract C is B {
 }
 // ----
 // Warning 5740: (95-144): Unreachable code.
-// Warning 6328: (99-108): CHC: Assertion violation happens here.\nCounterexample:\ns = false\n\n\n\nTransaction trace:\nB.constructor()\nState: s = false\nA.f()
+// Warning 6328: (99-108): CHC: Assertion violation happens here.\nCounterexample:\ns = false\n\nTransaction trace:\nB.constructor()\nState: s = false\nA.f()

@@ -20,4 +20,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (436-453): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 0\n\n\nTransaction trace:\nC.constructor()\nState: array2d = []\nC.g(0, 0, c)
+// Warning 6328: (436-453): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nState: array2d = []\nC.g(0, 0, c)

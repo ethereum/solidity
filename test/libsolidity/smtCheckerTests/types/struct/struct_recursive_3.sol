@@ -116,11 +116,11 @@ contract C {
 // Warning 8364: (493-500): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (493-505): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 4375: (493-507): Assertion checker does not support recursive structs.
-// Warning 6328: (124-144): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (148-182): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (186-216): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (220-264): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (268-308): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (124-144): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (148-182): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (186-216): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (220-264): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (268-308): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 8115: (81-85): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (88-92): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (131-135): Assertion checker does not yet support this expression.

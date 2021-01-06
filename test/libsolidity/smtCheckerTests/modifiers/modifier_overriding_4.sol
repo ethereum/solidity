@@ -36,7 +36,7 @@ contract D is B,C {
 	}
 }
 // ----
-// Warning 6328: (104-118): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\n\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.f()
-// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\n\n\nTransaction trace:\nB.constructor()\nState: x = 0\nA.f()
-// Warning 6328: (170-184): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\n\n\nTransaction trace:\nC.constructor()\nState: x = 0\nA.f()
-// Warning 6328: (203-217): CHC: Assertion violation happens here.\nCounterexample:\nx = 3\n\n\n\nTransaction trace:\nD.constructor()\nState: x = 0\nA.f()
+// Warning 6328: (104-118): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.f()
+// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nB.constructor()\nState: x = 0\nA.f()
+// Warning 6328: (170-184): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0\nA.f()
+// Warning 6328: (203-217): CHC: Assertion violation happens here.\nCounterexample:\nx = 3\n\nTransaction trace:\nD.constructor()\nState: x = 0\nA.f()

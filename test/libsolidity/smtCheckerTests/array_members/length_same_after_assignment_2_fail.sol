@@ -14,6 +14,6 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (198-224): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
-// Warning 6328: (228-254): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
-// Warning 6328: (258-281): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\n\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (198-224): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (228-254): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()
+// Warning 6328: (258-281): CHC: Assertion violation happens here.\nCounterexample:\narr = [], arr2 = []\n\nTransaction trace:\nC.constructor()\nState: arr = [], arr2 = []\nC.f()

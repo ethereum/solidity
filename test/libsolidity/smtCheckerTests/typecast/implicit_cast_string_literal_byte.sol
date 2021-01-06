@@ -13,4 +13,4 @@ contract C {
 	function g(bytes1 b) internal pure {}
 }
 // ----
-// Warning 6328: (186-207): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (186-207): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
