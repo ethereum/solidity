@@ -40,7 +40,7 @@ docs/utils/*.pyc
 /deps/downloads/
 deps/install
 deps/cache
-cmake-build-debug/
+cmake-build-*/
 
 # vim stuff
 [._]*.sw[a-p]
