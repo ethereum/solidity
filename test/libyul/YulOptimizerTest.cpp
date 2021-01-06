@@ -47,6 +47,7 @@
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/MainFunction.h>
 #include <libyul/optimiser/StackLimitEvader.h>
+#include <libyul/optimiser/MemoryLoadResolver.h>
 #include <libyul/optimiser/NameDisplacer.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
@@ -432,6 +433,20 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 		FakeUnreachableGenerator fakeUnreachableGenerator;
 		fakeUnreachableGenerator(*obj.code);
 		StackLimitEvader::run(*m_context, obj, fakeUnreachableGenerator.fakeUnreachables);
+	}
+	else if (m_optimizerStep == "memoryLoadResolver")
+	{
+		disambiguate();
+		ForLoopInitRewriter::run(*m_context, *m_object->code);
+		ExpressionSplitter::run(*m_context, *m_object->code);
+		SSATransform::run(*m_context, *m_object->code);
+
+		MemoryLoadResolver::run(*m_context, *m_object->code);
+
+		// Cleanup
+		UnusedPruner::run(*m_context, *m_object->code);
+		ExpressionJoiner::run(*m_context, *m_object->code);
+		ExpressionJoiner::run(*m_context, *m_object->code);
 	}
 	else
 	{
