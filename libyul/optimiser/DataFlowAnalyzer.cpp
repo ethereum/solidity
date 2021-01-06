@@ -64,10 +64,9 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	{
 		ASTModifier::operator()(_statement);
 		cxx20::erase_if(m_storage, [&](auto const& entry) {
-			return !(
-				m_knowledgeBase.knownToBeDifferent(vars->first, entry.first) ||
-				m_knowledgeBase.knownToBeEqual(vars->second, entry.second)
-			);
+			return
+				!m_knowledgeBase.knownToBeDifferent(vars->first, entry.first) &&
+				!m_knowledgeBase.knownToBeEqual(vars->second, entry.second);
 		});
 		m_storage[vars->first] = vars->second;
 	}
