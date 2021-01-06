@@ -4,6 +4,7 @@ Language Features:
  * Possibility to use ``catch Panic(uint code)`` to catch a panic failure from an external call.
 
 Compiler Features:
+ * Optimizer: Add rule to replace ``iszero(sub(x,y))`` by ``eq(x,y)``.
  * Parser: Report meaningful error if parsing a version pragma failed.
  * SMTChecker: Support ABI functions as uninterpreted functions.
  * SMTChecker: Use checked arithmetic by default and support ``unchecked`` blocks.
