@@ -144,6 +144,11 @@ bool Predicate::isSummary() const
 	return m_type == PredicateType::ConstructorSummary || m_type == PredicateType::FunctionSummary;
 }
 
+bool Predicate::isConstructorSummary() const
+{
+	return m_type == PredicateType::ConstructorSummary;
+}
+
 bool Predicate::isInterface() const
 {
 	return m_type == PredicateType::Interface;

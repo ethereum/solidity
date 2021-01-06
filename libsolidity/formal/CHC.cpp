@@ -1436,9 +1436,13 @@ The counterexample DAG has the following properties:
 	that is, it represents the state of the contract before the function described above was called.
 3) Interface nodes also have property 2.
 
-The following algorithm starts collecting function summaries at the root node and repeats
-for each interface node seen.
-Each function summary collected represents a transaction, and the final order is reversed.
+We run a BFS on the DAG from the root node collecting the reachable function summaries from the given node.
+When a function summary is seen, the search continues with that summary as the new root for its subgraph.
+The result of the search is a callgraph containing:
+- Functions calls needed to reach the root node, that is, transaction entry points.
+- Functions called by other functions (internal calls or external calls/internal transactions).
+The BFS visit order and the shape of the DAG described in the previous paragraph guarantee that the order of
+the function summaries in the callgraph of the error node is the reverse transaction trace.
 
 The first function summary seen contains the values for the state, input and output variables at the
 error point.
@@ -1458,51 +1462,28 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 	vector<string> path;
 	string localState;
 
-	unsigned node = *rootId;
-	/// The first summary node seen in this loop represents the last transaction.
-	bool lastTxSeen = false;
-	while (_graph.edges.at(node).size() >= 1)
+	auto callGraph = summaryCalls(_graph, *rootId);
+
+	bool first = true;
+	for (auto summaryId: callGraph.at(*rootId))
 	{
-		auto const& edges = _graph.edges.at(node);
-		solAssert(edges.size() <= 2, "");
+		CHCSolverInterface::CexNode const& summaryNode = _graph.nodes.at(summaryId);
+		Predicate const* summaryPredicate = Predicate::predicate(summaryNode.name);
+		auto const& summaryArgs = summaryNode.arguments;
 
-		unsigned summaryId = edges.at(0);
-		optional<unsigned> interfaceId;
-		if (edges.size() == 2)
-		{
-			interfaceId = edges.at(1);
-			if (!Predicate::predicate(_graph.nodes.at(summaryId).name)->isSummary())
-				swap(summaryId, *interfaceId);
-			auto interfacePredicate = Predicate::predicate(_graph.nodes.at(*interfaceId).name);
-			solAssert(interfacePredicate && interfacePredicate->isInterface(), "");
-		}
-		/// The children are unordered, so we need to check which is the summary and
-		/// which is the interface.
-
-		Predicate const* summaryPredicate = Predicate::predicate(_graph.nodes.at(summaryId).name);
-		solAssert(summaryPredicate && summaryPredicate->isSummary(), "");
-		/// At this point property 2 from the function description is verified for this node.
-		vector<smtutil::Expression> summaryArgs = _graph.nodes.at(summaryId).arguments;
-
-		FunctionDefinition const* calledFun = summaryPredicate->programFunction();
-		ContractDefinition const* calledContract = summaryPredicate->programContract();
-
-		solAssert((calledFun && !calledContract) || (!calledFun && calledContract), "");
 		auto stateVars = summaryPredicate->stateVariables();
 		solAssert(stateVars.has_value(), "");
 		auto stateValues = summaryPredicate->summaryStateValues(summaryArgs);
 		solAssert(stateValues.size() == stateVars->size(), "");
 
-		/// This summary node is the end of a tx.
-		/// If it is the first summary node seen in this loop, it is the summary
-		/// of the public/external function that was called when the error was reached,
-		/// but not necessarily the summary of the function that contains the error.
-		if (!lastTxSeen)
+		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
+
+		if (first)
 		{
-			lastTxSeen = true;
+			first = false;
 			/// Generate counterexample message local to the failed target.
 			localState = formatVariableModel(*stateVars, stateValues, ", ") + "\n";
-			if (calledFun)
+			if (auto calledFun = summaryPredicate->programFunction())
 			{
 				auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
 				auto const& inParams = calledFun->parameters();
@@ -1521,18 +1502,28 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 				path.emplace_back("State: " + modelMsg);
 		}
 
-		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
 		path.emplace_back(txCex);
-
-		/// Stop when we reach the summary of the analyzed constructor.
-		if (summaryPredicate->type() == PredicateType::ConstructorSummary)
-			break;
-
-		/// Recurse on the next interface node which represents the previous transaction.
-		node = *interfaceId;
 	}
 
 	return localState + "\nTransaction trace:\n" + boost::algorithm::join(boost::adaptors::reverse(path), "\n");
+}
+
+map<unsigned, vector<unsigned>> CHC::summaryCalls(CHCSolverInterface::CexGraph const& _graph, unsigned _root)
+{
+	map<unsigned, vector<unsigned>> calls;
+
+	solidity::util::BreadthFirstSearch<pair<unsigned, unsigned>>{{{_root, _root}}}.run([&](auto info, auto&& _addChild) {
+		auto [node, root] = info;
+		if (Predicate::predicate(_graph.nodes.at(node).name)->isSummary())
+		{
+			calls[root].push_back(node);
+			root = node;
+		}
+		for (auto v: _graph.edges.at(node))
+			_addChild({v, root});
+	});
+
+	return calls;
 }
 
 string CHC::cex2dot(CHCSolverInterface::CexGraph const& _cex)
@@ -1542,10 +1533,7 @@ string CHC::cex2dot(CHCSolverInterface::CexGraph const& _cex)
 	auto pred = [&](CHCSolverInterface::CexNode const& _node) {
 		vector<string> args = applyMap(
 			_node.arguments,
-			[&](auto const& arg) {
-				solAssert(arg.arguments.empty(), "");
-				return arg.name;
-			}
+			[&](auto const& arg) { return arg.name; }
 		);
 		return "\"" + _node.name + "(" + boost::algorithm::join(args, ", ") + ")\"";
 	};
