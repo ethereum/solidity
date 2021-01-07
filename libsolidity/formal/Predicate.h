@@ -98,6 +98,9 @@ public:
 	/// @returns true if this predicate represents a summary.
 	bool isSummary() const;
 
+	/// @returns true if this predicate represents a constructor summary.
+	bool isConstructorSummary() const;
+
 	/// @returns true if this predicate represents an interface.
 	bool isInterface() const;
 

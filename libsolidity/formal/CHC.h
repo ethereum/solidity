@@ -207,6 +207,14 @@ private:
 
 	std::optional<std::string> generateCounterexample(smtutil::CHCSolverInterface::CexGraph const& _graph, std::string const& _root);
 
+	/// @returns a call graph for function summaries in the counterexample graph.
+	/// The returned map also contains a key _root, whose value are the
+	/// summaries called by _root.
+	std::map<unsigned, std::vector<unsigned>> summaryCalls(
+		smtutil::CHCSolverInterface::CexGraph const& _graph,
+		unsigned _root
+	);
+
 	/// @returns a set of pairs _var = _value separated by _separator.
 	template <typename T>
 	std::string formatVariableModel(std::vector<T> const& _variables, std::vector<std::optional<std::string>> const& _values, std::string const& _separator) const
