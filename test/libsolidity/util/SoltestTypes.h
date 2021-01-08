@@ -294,9 +294,8 @@ struct FunctionCall
 		LowLevel,
 		/// Marks a library deployment call.
 		Library,
-		/// Check that the storage of the current contract is empty or non-empty.
-		Storage,
 		/// Call to a builtin.
+		/// Builtins get registered in `SemanticTest::initializeBuiltins()`.
 		Builtin
 	};
 	Kind kind = Kind::Regular;

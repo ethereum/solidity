@@ -21,4 +21,4 @@ contract c {
 // setData1(uint256,uint256,uint256): 0, 0, 0 ->
 // copyStorageStorage() ->
 // getData2(uint256): 0 -> 0, 0
-// storage: empty
+// storageEmpty -> 1

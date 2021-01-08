@@ -958,28 +958,6 @@ BOOST_AUTO_TEST_CASE(library)
 	);
 }
 
-BOOST_AUTO_TEST_CASE(empty_storage)
-{
-	char const* source = R"(
-		// storage: empty
-	)";
-	auto const calls = parse(source);
-	BOOST_REQUIRE_EQUAL(calls.size(), 1);
-	BOOST_CHECK(calls.at(0).kind == FunctionCall::Kind::Storage);
-	BOOST_CHECK(calls.at(0).expectations.result.front().rawBytes == bytes(1, 0));
-}
-
-BOOST_AUTO_TEST_CASE(nonempty_storage)
-{
-	char const* source = R"(
-		// storage: nonempty
-	)";
-	auto const calls = parse(source);
-	BOOST_REQUIRE_EQUAL(calls.size(), 1);
-	BOOST_CHECK(calls.at(0).kind == FunctionCall::Kind::Storage);
-	BOOST_CHECK(calls.at(0).expectations.result.front().rawBytes == bytes(1, 1));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }
