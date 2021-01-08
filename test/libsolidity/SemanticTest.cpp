@@ -13,6 +13,7 @@
 */
 
 #include <test/libsolidity/SemanticTest.h>
+#include <test/libsolidity/util/BytesUtils.h>
 #include <libsolutil/Whiskers.h>
 #include <libyul/Exceptions.h>
 #include <test/Common.h>
@@ -46,6 +47,17 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	m_lineOffset(m_reader.lineNumber()),
 	m_enforceViaYul(enforceViaYul)
 {
+	using namespace std::placeholders;
+	m_builtins
+		= {{"logs",
+			{
+				{"numLogs()", std::bind(&SemanticTest::numLogs, this, _1)},
+				{"numLogTopics(uint256)", std::bind(&SemanticTest::numLogTopics, this, _1)},
+				{"logTopic(uint256,uint256)", std::bind(&SemanticTest::logTopic, this, _1)},
+				{"logAddress(uint256)", std::bind(&SemanticTest::logAddress, this, _1)},
+				{"logData(uint256)", std::bind(&SemanticTest::logData, this, _1)},
+			}}};
+
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
 	{
@@ -198,6 +210,15 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 				bytes output;
 				if (test.call().kind == FunctionCall::Kind::LowLevel)
 					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
+				else if (test.call().kind == FunctionCall::Kind::Builtin)
+				{
+					std::vector<string> builtinPath;
+					boost::split(builtinPath, test.call().signature, boost::is_any_of("."));
+					assert(builtinPath.size() == 2);
+					auto builtin = m_builtins[builtinPath.front()][builtinPath.back()];
+					output = builtin(test.call());
+					test.setFailure(output.empty());
+				}
 				else
 				{
 					soltestAssert(
@@ -214,14 +235,23 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 				}
 
 				bool outputMismatch = (output != test.call().expectations.rawBytes());
-				// Pre byzantium, it was not possible to return failure data, so we disregard
-				// output mismatch for those EVM versions.
-				if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
-					outputMismatch = false;
-				if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
-					success = false;
+				if (test.call().kind == FunctionCall::Kind::Builtin)
+				{
+					if (outputMismatch)
+						success = false;
+				}
+				else
+				{
+					// Pre byzantium, it was not possible to return failure data, so we disregard
+					// output mismatch for those EVM versions.
+					if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
+						outputMismatch = false;
 
-				test.setFailure(!m_transactionSuccessful);
+					if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
+						success = false;
+					test.setFailure(!m_transactionSuccessful);
+				}
+
 				test.setRawBytes(std::move(output));
 				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
 			}
@@ -362,9 +392,73 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
+bytes SemanticTest::numLogs(FunctionCall const&)
+{
+	// numLogs()
+	size_t result = SolidityExecutionFramework::numLogs();
+	bytes r = util::toBigEndian(u256{result});
+	return r;
+}
+
+bytes SemanticTest::numLogTopics(FunctionCall const& call)
+{
+	// numLogTopics(uint256)
+	assert(call.arguments.parameters.size() == 1);
+	size_t logCount = SolidityExecutionFramework::numLogs();
+	// todo: hex strings not supported by lexical_cast<..>(..)
+	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	if (logCount > 0 && logIdx < logCount)
+		return util::toBigEndian(u256{SolidityExecutionFramework::numLogTopics(logIdx)});
+	// empty result means failure.
+	return bytes{};
+}
+
+bytes SemanticTest::logTopic(FunctionCall const& call)
+{
+	// logTopic(uint256,uint256)
+	assert(call.arguments.parameters.size() == 2);
+	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	auto topicIdx = lexical_cast<size_t>(call.arguments.parameters.back().rawString);
+	size_t logCount = SolidityExecutionFramework::numLogs();
+	// todo: hex strings not supported by lexical_cast<..>(..)
+	if (logCount > 0 && logIdx < logCount)
+	{
+		size_t topicCount = SolidityExecutionFramework::numLogTopics(logIdx);
+		if (topicCount > 0 && topicIdx < topicCount)
+			return util::toBigEndian(u256{SolidityExecutionFramework::logTopic(logIdx, topicIdx)});
+	}
+	return{};
+}
+
+bytes SemanticTest::logAddress(FunctionCall const& call)
+{
+	// logAddress(uint256)
+	assert(call.arguments.parameters.size() == 1);
+	size_t logCount = SolidityExecutionFramework::numLogs();
+	// todo: hex strings not supported by lexical_cast<..>(..)
+	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	if (logCount > 0 && logIdx < logCount)
+		return util::toBigEndian(u256{u160{SolidityExecutionFramework::logAddress(logIdx)}});
+	// empty result means failure.
+	return bytes{};
+}
+
+bytes SemanticTest::logData(FunctionCall const& call)
+{
+	// logData(uint256)
+	assert(call.arguments.parameters.size() == 1);
+	size_t logCount = SolidityExecutionFramework::numLogs();
+	// todo: hex strings not supported by lexical_cast<..>(..)
+	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	if (logCount > 0 && logIdx < logCount)
+		return SolidityExecutionFramework::logData(logIdx);
+	// empty result means failure.
+	return bytes{};
+}
+
 void SemanticTest::parseExpectations(istream& _stream)
 {
-	TestFileParser parser{_stream};
+	TestFileParser parser{_stream, &this->m_builtins};
 	auto functionCalls = parser.parseFunctionCalls(m_lineOffset);
 	std::move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
 }

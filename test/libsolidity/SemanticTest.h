@@ -58,7 +58,15 @@ public:
 	/// Compiles and deploys currently held source.
 	/// Returns true if deployment was successful, false otherwise.
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
+
 private:
+	// logs builtins.
+	bytes numLogs(FunctionCall const& call);
+	bytes numLogTopics(FunctionCall const& call);
+	bytes logTopic(FunctionCall const& call);
+	bytes logAddress(FunctionCall const& call);
+	bytes logData(FunctionCall const& call);
+
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm);
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
@@ -70,6 +78,7 @@ private:
 	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
 	bool m_compileViaYulCanBeSet = false;
+	BuiltinFunctions m_builtins;
 };
 
 }

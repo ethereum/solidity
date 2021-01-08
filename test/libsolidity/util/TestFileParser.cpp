@@ -26,6 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <fstream>
@@ -106,6 +107,27 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						tie(call.signature, lowLevelCall) = parseFunctionSignature();
 						if (lowLevelCall)
 							call.kind = FunctionCall::Kind::LowLevel;
+
+						// Treat all calls to functions containing '.' as calls to builtin functions.
+						if (call.signature.find('.') != std::string::npos)
+						{
+							assert(m_builtins != nullptr);
+							std::vector<string> builtinPath;
+							boost::split(builtinPath, call.signature, boost::is_any_of("."));
+							assert(builtinPath.size() == 2);
+
+							auto module = m_builtins->find(builtinPath.front());
+							if (module == m_builtins->end())
+								throw TestParserError("builtin module '" + builtinPath.front() + "' not found");
+
+							auto builtin = module->second.find(builtinPath.back());
+							if (builtin == module->second.end())
+								throw TestParserError(
+									"builtin function '" + builtinPath.back() + "' not found in module '"
+									+ builtinPath.front() + "'");
+
+							call.kind = FunctionCall::Kind::Builtin;
+						}
 
 						if (accept(Token::Comma, true))
 							call.value = parseFunctionCallValue();
@@ -602,7 +624,7 @@ string TestFileParser::Scanner::scanIdentifierOrKeyword()
 {
 	string identifier;
 	identifier += current();
-	while (langutil::isIdentifierPart(peek()))
+	while (langutil::isIdentifierPartWithDot(peek()))
 	{
 		advance();
 		identifier += current();

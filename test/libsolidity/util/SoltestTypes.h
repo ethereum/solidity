@@ -17,6 +17,8 @@
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
 
+#include <test/ExecutionFramework.h>
+
 namespace solidity::frontend::test
 {
 
@@ -286,12 +288,16 @@ struct FunctionCall
 		/// Marks a library deployment call.
 		Library,
 		/// Check that the storage of the current contract is empty or non-empty.
-		Storage
+		Storage,
+		/// Call to a builtin.
+		Builtin
 	};
 	Kind kind = Kind::Regular;
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
 };
+
+using BuiltinFunctions = std::map<std::string, std::map<std::string, std::function<bytes(FunctionCall const&)>>>;
 
 }
