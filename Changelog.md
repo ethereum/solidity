@@ -9,6 +9,7 @@ Compiler Features:
  * SMTChecker: Support ABI functions as uninterpreted functions.
  * SMTChecker: Use checked arithmetic by default and support ``unchecked`` blocks.
  * SMTChecker: Show contract name in counterexample function call.
+ * SMTChecker: Support try/catch statements.
 
 Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.
