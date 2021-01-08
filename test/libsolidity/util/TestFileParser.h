@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <libsolutil/CommonData.h>
 #include <liblangutil/Exceptions.h>
+#include <libsolutil/CommonData.h>
 #include <test/libsolidity/util/SoltestTypes.h>
 
 #include <iosfwd>
@@ -52,7 +52,7 @@ class TestFileParser
 public:
 	/// Constructor that takes an input stream \param _stream to operate on
 	/// and creates the internal scanner.
-	TestFileParser(std::istream& _stream): m_scanner(_stream) {}
+	explicit TestFileParser(std::istream& _stream, Builtins* _builtins = nullptr): m_scanner(_stream), m_builtins(_builtins) {}
 
 	/// Parses function calls blockwise and returns a list of function calls found.
 	/// Throws an exception if a function call cannot be parsed because of its
@@ -177,12 +177,18 @@ private:
 	/// Parses the current string literal.
 	std::string parseString();
 
+	/// Checks whether a builtin function with the given signature exist.
+	/// This function will throw an TestParserError exception, if not.
+	void checkBuiltinFunction(std::string const& signature);
+
 	/// A scanner instance
 	Scanner m_scanner;
 
 	/// The current line number. Incremented when Token::Newline (//) is found and
 	/// used to enhance parser error messages.
 	size_t m_lineNumber = 0;
+
+	Builtins* m_builtins{nullptr};
 };
 
 }

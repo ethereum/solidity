@@ -45,6 +45,11 @@ inline bool isIdentifierPart(char c)
 	return isIdentifierStart(c) || isDecimalDigit(c);
 }
 
+inline bool isIdentifierPartWithDot(char c)
+{
+	return isIdentifierPart(c) || c == '.';
+}
+
 inline int hexValue(char c)
 {
 	if (c >= '0' && c <= '9')

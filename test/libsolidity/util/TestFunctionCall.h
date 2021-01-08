@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include <test/libsolidity/util/TestFileParser.h>
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <test/libsolidity/util/TestFileParser.h>
 
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>

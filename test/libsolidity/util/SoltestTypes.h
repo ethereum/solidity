@@ -17,6 +17,8 @@
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/CommonData.h>
 
+#include <test/ExecutionFramework.h>
+
 namespace solidity::frontend::test
 {
 
@@ -174,6 +176,8 @@ struct Parameter
 };
 using ParameterList = std::vector<Parameter>;
 
+struct FunctionCall;
+
 /**
  * Represents the expected result of a function call after it has been executed. This may be a single
  * return value or a comma-separated list of return values. It also contains the detected input
@@ -193,6 +197,9 @@ struct FunctionCallExpectations
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
+	/// An expectation can also be defined by a builtin function.
+	std::shared_ptr<FunctionCall> builtin;
+
 	/// ABI encoded `bytes` of parsed expected return values. It is checked
 	/// against the actual result of a function call when used in test framework.
 	bytes rawBytes() const
@@ -286,12 +293,17 @@ struct FunctionCall
 		/// Marks a library deployment call.
 		Library,
 		/// Check that the storage of the current contract is empty or non-empty.
-		Storage
+		Storage,
+		/// Call to a builtin.
+		Builtin
 	};
 	Kind kind = Kind::Regular;
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
 };
+
+using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;
+using Builtins = std::map<std::string, Builtin>;
 
 }
