@@ -61,6 +61,9 @@ public:
 
 private:
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm);
+
+	void initializeBuiltins();
+
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;

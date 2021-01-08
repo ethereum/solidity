@@ -11,8 +11,8 @@ contract c {
 // compileViaYul: also
 // compileToEwasm: also
 // ----
-// storage: empty
+// storage_empty -> true
 // fill() ->
-// storage: nonempty
+// storage_empty -> false
 // clear() ->
-// storage: empty
+// storage_empty -> true

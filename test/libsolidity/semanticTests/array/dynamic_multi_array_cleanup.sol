@@ -16,8 +16,8 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// storage: empty
+// storage_empty -> true
 // fill() -> 8
-// storage: nonempty
+// storage_empty -> false
 // clear() ->
-// storage: empty
+// storage_empty -> true

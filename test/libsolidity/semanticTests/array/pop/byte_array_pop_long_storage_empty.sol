@@ -18,4 +18,4 @@ contract c {
 // compileViaYul: also
 // ----
 // test() -> true
-// storage: empty
+// storage_empty -> true

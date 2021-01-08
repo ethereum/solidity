@@ -41,10 +41,10 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// storage: empty
+// storage_empty -> true
 // test_short() -> 1780731860627700044960722568376587075150542249149356309979516913770823710
-// storage: nonempty
+// storage_empty -> false
 // test_long() -> 67
-// storage: nonempty
+// storage_empty -> false
 // test_pop() -> 1780731860627700044960722568376592200742329637303199754547598369979433020
-// storage: nonempty
+// storage_empty -> false

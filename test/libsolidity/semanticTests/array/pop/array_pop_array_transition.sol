@@ -25,4 +25,4 @@ contract c {
 // compileViaYul: also
 // ----
 // test() -> 1, 2, 3
-// storage: empty
+// storage_empty -> true
