@@ -45,7 +45,7 @@ namespace
 vector<FunctionCall> parse(string const& _source)
 {
 	istringstream stream{_source, ios_base::out};
-	TestFileParser parser{stream};
+	TestFileParser parser{stream, {}};
 	return parser.parseFunctionCalls(0);
 }
 

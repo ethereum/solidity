@@ -13,9 +13,12 @@
 */
 
 #include <test/libsolidity/SemanticTest.h>
+
 #include <libsolutil/Whiskers.h>
 #include <libyul/Exceptions.h>
 #include <test/Common.h>
+#include <test/libsolidity/util/BytesUtils.h>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -25,7 +28,9 @@
 #include <cctype>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
+#include <utility>
 
 using namespace std;
 using namespace solidity;
@@ -119,7 +124,13 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 	return result;
 }
 
-TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm)
+TestCase::TestResult SemanticTest::runTest(
+	ostream& _stream,
+	string const& _linePrefix,
+	bool _formatted,
+	bool _compileViaYul,
+	bool _compileToEwasm
+)
 {
 	bool success = true;
 
@@ -142,21 +153,25 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 	if (_compileViaYul)
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
 
-	for (auto& test: m_tests)
+	for (TestFunctionCall& test: m_tests)
 		test.reset();
 
 	map<string, solidity::test::Address> libraries;
 
 	bool constructed = false;
 
-	for (auto& test: m_tests)
+	for (TestFunctionCall& test: m_tests)
 	{
 		if (constructed)
 		{
-			soltestAssert(test.call().kind != FunctionCall::Kind::Library, "Libraries have to be deployed before any other call.");
+			soltestAssert(
+				test.call().kind != FunctionCall::Kind::Library,
+				"Libraries have to be deployed before any other call."
+			);
 			soltestAssert(
 				test.call().kind != FunctionCall::Kind::Constructor,
-				"Constructor has to be the first function call expect for library deployments.");
+				"Constructor has to be the first function call expect for library deployments."
+			);
 		}
 		else if (test.call().kind == FunctionCall::Kind::Library)
 		{
@@ -197,6 +212,17 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			bytes output;
 			if (test.call().kind == FunctionCall::Kind::LowLevel)
 				output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
+			else if (test.call().kind == FunctionCall::Kind::Builtin)
+			{
+				std::optional<bytes> builtinOutput = m_builtins.at(test.call().signature)(test.call());
+				if (builtinOutput.has_value())
+				{
+					m_transactionSuccessful = true;
+					output = builtinOutput.value();
+				}
+				else
+					m_transactionSuccessful = false;
+			}
 			else
 			{
 				soltestAssert(
@@ -241,7 +267,7 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 	if (!success && (m_runWithYul || !_compileViaYul))
 	{
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-		for (auto const& test: m_tests)
+		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
 			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
@@ -249,7 +275,7 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 		}
 		_stream << endl;
 		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-		for (auto const& test: m_tests)
+		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
 			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
@@ -320,7 +346,7 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
-	for (auto const& test: m_tests)
+	for (TestFunctionCall const& test: m_tests)
 		_stream << test.format("", true, false) << endl;
 }
 
@@ -340,12 +366,16 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 
 void SemanticTest::parseExpectations(istream& _stream)
 {
-	TestFileParser parser{_stream};
-	auto functionCalls = parser.parseFunctionCalls(m_lineOffset);
-	std::move(functionCalls.begin(), functionCalls.end(), back_inserter(m_tests));
+	TestFileParser parser{_stream, m_builtins};
+	m_tests += parser.parseFunctionCalls(m_lineOffset);
 }
 
-bool SemanticTest::deploy(string const& _contractName, u256 const& _value, bytes const& _arguments, map<string, solidity::test::Address> const& _libraries)
+bool SemanticTest::deploy(
+	string const& _contractName,
+	u256 const& _value,
+	bytes const& _arguments,
+	map<string, solidity::test::Address> const& _libraries
+)
 {
 	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;
