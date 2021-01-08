@@ -474,9 +474,9 @@ And for Windows:
 
     mkdir build
     cd build
-    cmake -G "Visual Studio 16 2019 Win64" ..
+    cmake -G "Visual Studio 16 2019" ..
 
-In case you want to use the version of boost installed by ``./scripts/install_deps.ps1``, you will
+In case you want to use the version of boost installed by ``scripts\install_deps.ps1``, you will
 additionally need to pass ``-DBoost_DIR="..\deps\boost\lib\cmake\Boost-*"`` and ``-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded``
 as arguments to the call to ``cmake``.
 
