@@ -70,18 +70,6 @@ with two integers, you would use something like the following::
 
 Function parameters can be used as any other local variable and they can also be assigned to.
 
-.. note::
-
-  An :ref:`external function<external-function-calls>` cannot accept a
-  multi-dimensional array as an input
-  parameter. This functionality is possible if you enable the ABI coder v2
-  by adding ``pragma abicoder v2;`` to your source file.
-
-  An :ref:`internal function<external-function-calls>` can accept a
-  multi-dimensional array without enabling the feature.
-
-.. index:: return array, return string, array, string, array of strings, dynamic array, variably sized array, return struct, struct
-
 Return Variables
 ----------------
 
@@ -131,16 +119,6 @@ statement::
 
 If you use an early ``return`` to leave a function that has return variables,
 you must provide return values together with the return statement.
-
-.. note::
-    You cannot return some types from non-internal functions, notably
-    multi-dimensional dynamic arrays and structs. If you enable the
-    ABI coder v2 by adding ``pragma abicoder v2;``
-    to your source file then more types are available, but
-    ``mapping`` types are still limited to inside a single contract and you
-    cannot transfer them.
-
-.. _multi-return:
 
 Returning Multiple Values
 -------------------------
