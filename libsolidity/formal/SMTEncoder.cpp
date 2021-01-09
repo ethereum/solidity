@@ -2107,6 +2107,26 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 	return values.first;
 }
 
+void SMTEncoder::tryCatchAssignment(vector<shared_ptr<VariableDeclaration>> const& _variables, smt::SymbolicVariable const& _rhs)
+{
+	if (_variables.size() > 1)
+	{
+		auto const* symbTuple = dynamic_cast<smt::SymbolicTupleVariable const*>(&_rhs);
+		solAssert(symbTuple, "");
+		auto const& symbComponents = symbTuple->components();
+		solAssert(symbComponents.size() == _variables.size(), "");
+		for (unsigned i = 0; i < symbComponents.size(); ++i)
+		{
+			auto param = _variables.at(i);
+			solAssert(param, "");
+			solAssert(m_context.knownVariable(*param), "");
+			assignment(*param, symbTuple->component(i));
+		}
+	}
+	else if (_variables.size() == 1)
+		assignment(*_variables.front(), _rhs.currentValue());
+}
+
 void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
 	// In general, at this point, the SMT sorts of _variable and _value are the same,

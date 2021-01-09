@@ -563,25 +563,8 @@ bool CHC::visit(TryStatement const& _tryStatement)
 	endVisit(*externalCall);
 
 	if (_tryStatement.successClause()->parameters())
-	{
-		auto const& params = _tryStatement.successClause()->parameters()->parameters();
-		if (params.size() > 1)
-		{
-			auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*externalCall));
-			solAssert(symbTuple, "");
-			auto const& symbComponents = symbTuple->components();
-			solAssert(symbComponents.size() == params.size(), "");
-			for (unsigned i = 0; i < symbComponents.size(); ++i)
-			{
-				auto param = params.at(i);
-				solAssert(param, "");
-				solAssert(m_context.knownVariable(*param), "");
-				assignment(*param, symbTuple->component(i));
-			}
-		}
-		else if (params.size() == 1)
-			assignment(*params.front(), expr(*externalCall));
-	}
+		tryCatchAssignment(
+			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall));
 
 	connectBlocks(m_currentBlock, predicate(*tryAfterCallSuccessBlock));
 

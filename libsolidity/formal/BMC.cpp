@@ -352,23 +352,29 @@ bool BMC::visit(TryStatement const& _tryStatement)
 
 	externalCall->accept(*this);
 	auto callExpr = expr(*externalCall);
-	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
+	if (_tryStatement.successClause()->parameters())
+		tryCatchAssignment(
+			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall));
 
+	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
 	auto const& clauses = _tryStatement.clauses();
+	m_context.addAssertion(clauseId >= 0 && clauseId < clauses.size());
 	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
 	vector<set<VariableDeclaration const*>> touchedVars;
 	vector<pair<VariableIndices, smtutil::Expression>> clausesVisitResults;
 	for (size_t i = 0; i < clauses.size(); ++i)
 	{
-		clausesVisitResults.push_back(visitBranch(clauses[i].get(), clauseId == i));
+		clausesVisitResults.push_back(visitBranch(clauses[i].get()));
 		touchedVars.push_back(touchedVariables(*clauses[i]));
 	}
 
 	// merge the information from all clauses
 	smtutil::Expression pathCondition = clausesVisitResults.front().second;
+	auto currentIndices = clausesVisitResults[0].first;
 	for (size_t i = 1; i < clauses.size(); ++i)
 	{
-		mergeVariables(touchedVars[i - 1] + touchedVars[i], clauseId == (i - 1), clausesVisitResults[i - 1].first, clausesVisitResults[i].first);
+		mergeVariables(touchedVars[i - 1] + touchedVars[i], clauseId == i, clausesVisitResults[i].first, currentIndices);
+		currentIndices = copyVariableIndices();
 		pathCondition = pathCondition || clausesVisitResults[i].second;
 	}
 	setPathCondition(pathCondition);
