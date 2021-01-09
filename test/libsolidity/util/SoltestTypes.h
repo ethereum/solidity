@@ -198,7 +198,7 @@ struct FunctionCallExpectations
 	/// that is retained and can be displayed.
 	std::string comment;
 	/// An expectation can also be defined by a builtin function.
-	std::unique_ptr<FunctionCall> builtin;
+	std::shared_ptr<FunctionCall> builtin;
 
 	/// ABI encoded `bytes` of parsed expected return values. It is checked
 	/// against the actual result of a function call when used in test framework.
