@@ -124,19 +124,36 @@ string TestFunctionCall::format(
 
 		/// Format either the expected output or the actual result output
 		string result;
+		auto& builtin = m_call.expectations.builtin;
 		if (!_renderResult)
 		{
-			bool const isFailure = m_call.expectations.failure;
-			result = isFailure ?
-				formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
-				formatRawParameters(m_call.expectations.result);
+			if (builtin)
+			{
+				result = builtin->signature;
+				if (!builtin->arguments.parameters.empty())
+					result += ": ";
+				result += formatRawParameters(builtin->arguments.parameters);
+			}
+			else
+			{
+				bool const isFailure = m_call.expectations.failure;
+				result = isFailure ?
+						 formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
+						 formatRawParameters(m_call.expectations.result);
+			}
 			if (!result.empty())
-				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
+			{
+				AnsiColorized(stream, false, {util::formatting::RESET}) << ws;
+				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << result;
+			}
 		}
 		else
 		{
 			if (m_calledNonExistingFunction)
 				_errorReporter.warning("The function \"" + m_call.signature + "\" is not known to the compiler.");
+
+			if (builtin)
+				_errorReporter.warning("The expectation \"" + builtin->signature + ": " + formatRawParameters(builtin->arguments.parameters) + "\" will be replaced with the actual value returned by the test.");
 
 			bytes output = m_rawBytes;
 			bool const isFailure = m_failure;

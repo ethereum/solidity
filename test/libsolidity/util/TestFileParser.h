@@ -177,6 +177,10 @@ private:
 	/// Parses the current string literal.
 	std::string parseString();
 
+	/// Checks whether a builtin function with the given signature exist.
+	/// This function will throw an TestParserError exception, if not.
+	void checkBuiltinFunction(std::string const& signature);
+
 	/// A scanner instance
 	Scanner m_scanner;
 

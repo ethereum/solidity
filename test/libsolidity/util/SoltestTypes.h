@@ -176,6 +176,8 @@ struct Parameter
 };
 using ParameterList = std::vector<Parameter>;
 
+struct FunctionCall;
+
 /**
  * Represents the expected result of a function call after it has been executed. This may be a single
  * return value or a comma-separated list of return values. It also contains the detected input
@@ -195,6 +197,9 @@ struct FunctionCallExpectations
 	/// A Comment that can be attached to the expectations,
 	/// that is retained and can be displayed.
 	std::string comment;
+	/// An expectation can also be defined by a builtin function.
+	std::unique_ptr<FunctionCall> builtin;
+
 	/// ABI encoded `bytes` of parsed expected return values. It is checked
 	/// against the actual result of a function call when used in test framework.
 	bytes rawBytes() const
@@ -298,6 +303,7 @@ struct FunctionCall
 	bool omitsArrow = true;
 };
 
-using BuiltinFunctions = std::map<std::string, std::map<std::string, std::function<bytes(FunctionCall const&)>>>;
+using BuiltinFunction = std::function<bytes(FunctionCall const&)>;
+using BuiltinFunctions = std::map<std::string, std::map<std::string, BuiltinFunction>>;
 
 }

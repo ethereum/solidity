@@ -234,7 +234,19 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 					);
 				}
 
-				bool outputMismatch = (output != test.call().expectations.rawBytes());
+				bytes expectationOutput;
+				if (test.call().expectations.builtin)
+				{
+					std::vector<string> builtinPath;
+					boost::split(builtinPath, test.call().expectations.builtin->signature, boost::is_any_of("."));
+					assert(builtinPath.size() == 2);
+					auto builtin = m_builtins[builtinPath.front()][builtinPath.back()];
+					expectationOutput = builtin(*test.call().expectations.builtin);
+				}
+				else
+					expectationOutput = test.call().expectations.rawBytes();
+
+				bool outputMismatch = (output != expectationOutput);
 				if (test.call().kind == FunctionCall::Kind::Builtin)
 				{
 					if (outputMismatch)

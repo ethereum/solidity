@@ -111,21 +111,7 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						// Treat all calls to functions containing '.' as calls to builtin functions.
 						if (call.signature.find('.') != std::string::npos)
 						{
-							assert(m_builtins != nullptr);
-							std::vector<string> builtinPath;
-							boost::split(builtinPath, call.signature, boost::is_any_of("."));
-							assert(builtinPath.size() == 2);
-
-							auto module = m_builtins->find(builtinPath.front());
-							if (module == m_builtins->end())
-								throw TestParserError("builtin module '" + builtinPath.front() + "' not found");
-
-							auto builtin = module->second.find(builtinPath.back());
-							if (builtin == module->second.end())
-								throw TestParserError(
-									"builtin function '" + builtinPath.back() + "' not found in module '"
-									+ builtinPath.front() + "'");
-
+							checkBuiltinFunction(call.signature);
 							call.kind = FunctionCall::Kind::Builtin;
 						}
 
@@ -178,6 +164,24 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 		}
 	}
 	return calls;
+}
+
+void TestFileParser::checkBuiltinFunction(std::string const& signature)
+{
+	assert(m_builtins != nullptr);
+	vector<string> builtinPath;
+	boost::split(builtinPath, signature, boost::is_any_of("."));
+	assert(builtinPath.size() == 2);
+
+	auto module = m_builtins->find(builtinPath.front());
+	if (module == m_builtins->end())
+		throw TestParserError("builtin module '" + builtinPath.front() + "' not found");
+
+	auto builtin = module->second.find(builtinPath.back());
+	if (builtin == module->second.end())
+		throw TestParserError(
+			"builtin function '" + builtinPath.back() + "' not found in module '"
+				+ builtinPath.front() + "'");
 }
 
 bool TestFileParser::accept(Token _token, bool const _expect)
@@ -279,21 +283,43 @@ FunctionCallExpectations TestFileParser::parseFunctionCallExpectations()
 {
 	FunctionCallExpectations expectations;
 
-	auto param = parseParameter();
-	if (param.abiType.type == ABIType::None)
+	if (accept(Token::Identifier, false))
 	{
-		expectations.failure = false;
-		return expectations;
+		string signature;
+		FunctionCallArgs arguments;
+
+		signature = parseFunctionSignature().first;
+		if (signature.find('.') == std::string::npos)
+			throw TestParserError("Only builtins can be called as an expectation.");
+
+		checkBuiltinFunction(signature);
+
+		if (accept(Token::Colon, true))
+			arguments = parseFunctionCallArguments();
+
+		expectations.builtin = std::make_unique<FunctionCall>();
+		expectations.builtin->arguments = arguments;
+		expectations.builtin->signature = signature;
+		expectations.builtin->kind = FunctionCall::Kind::Builtin;
 	}
-	expectations.result.emplace_back(param);
+	else
+	{
+		auto param = parseParameter();
+		if (param.abiType.type == ABIType::None)
+		{
+			expectations.failure = false;
+			return expectations;
+		}
+		expectations.result.emplace_back(param);
 
-	while (accept(Token::Comma, true))
-		expectations.result.emplace_back(parseParameter());
+		while (accept(Token::Comma, true))
+			expectations.result.emplace_back(parseParameter());
 
-	/// We have always one virtual parameter in the parameter list.
-	/// If its type is FAILURE, the expected result is also a REVERT etc.
-	if (expectations.result.at(0).abiType.type != ABIType::Failure)
-		expectations.failure = false;
+		/// We have always one virtual parameter in the parameter list.
+		/// If its type is FAILURE, the expected result is also a REVERT etc.
+		if (expectations.result.at(0).abiType.type != ABIType::Failure)
+			expectations.failure = false;
+	}
 	return expectations;
 }
 
