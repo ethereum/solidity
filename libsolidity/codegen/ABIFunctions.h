@@ -79,7 +79,7 @@ public:
 	/// If @reversed is true, the order of the variables after <headStart> is reversed.
 	std::string tupleEncoder(
 		TypePointers const& _givenTypes,
-		TypePointers const& _targetTypes,
+		TypePointers _targetTypes,
 		bool _encodeAsLibraryTypes = false,
 		bool _reversed = false
 	);
@@ -106,7 +106,7 @@ public:
 	/// If @reversed is true, the order of the variables after <headStart> is reversed.
 	std::string tupleEncoderPacked(
 		TypePointers const& _givenTypes,
-		TypePointers const& _targetTypes,
+		TypePointers _targetTypes,
 		bool _reversed = false
 	);
 
