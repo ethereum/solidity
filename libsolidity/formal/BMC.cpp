@@ -354,7 +354,8 @@ bool BMC::visit(TryStatement const& _tryStatement)
 	auto callExpr = expr(*externalCall);
 	if (_tryStatement.successClause()->parameters())
 		tryCatchAssignment(
-			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall));
+			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall)
+		);
 
 	smtutil::Expression clauseId = m_context.newVariable("clause_choice_" + to_string(m_context.newUniqueId()), smtutil::SortProvider::uintSort);
 	auto const& clauses = _tryStatement.clauses();

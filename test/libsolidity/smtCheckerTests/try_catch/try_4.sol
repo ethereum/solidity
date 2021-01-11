@@ -23,6 +23,8 @@ contract C {
 		}
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (211-225): CHC: Assertion violation happens here.\nCounterexample:\nx = (- 1), d = 0\n\n\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()
-// Warning 6328: (351-365): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\n\n\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()
+// Warning 6328: (211-225): CHC: Assertion violation happens here.
+// Warning 6328: (351-365): CHC: Assertion violation happens here.

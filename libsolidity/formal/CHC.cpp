@@ -548,25 +548,7 @@ bool CHC::visit(TryStatement const& _tryStatement)
 	solAssert(m_currentFunction, "");
 
 	auto tryHeaderBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_header_");
-	auto tryAfterCallSuccessBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_after_call_success_");
-	auto tryAfterCallFailBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_after_call_fail_");
 	auto afterTryBlock = createBlock(&m_currentFunction->body(), PredicateType::FunctionBlock);
-
-	connectBlocks(m_currentBlock, predicate(*tryHeaderBlock));
-	setCurrentBlock(*tryHeaderBlock);
-	// fine-grained control over how the external call is visited
-	// cannot use "_tryStatement.externalCall().accept(*this);" since we need to insert the "connectBlocks"
-	// visit(*externalCall); currently there is nothing to do here, so it's commented out
-	externalCall->expression().accept(*this);
-	ASTNode::listAccept(externalCall->arguments(), *this);
-	connectBlocks(m_currentBlock, predicate(*tryAfterCallFailBlock));
-	endVisit(*externalCall);
-
-	if (_tryStatement.successClause()->parameters())
-		tryCatchAssignment(
-			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall));
-
-	connectBlocks(m_currentBlock, predicate(*tryAfterCallSuccessBlock));
 
 	auto const& clauses = _tryStatement.clauses();
 	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
@@ -574,12 +556,21 @@ bool CHC::visit(TryStatement const& _tryStatement)
 		return createBlock(clause.get(), PredicateType::FunctionBlock, "try_clause_" + std::to_string(clause->id()));
 	});
 
-	setCurrentBlock(*tryAfterCallSuccessBlock);
-	connectBlocks(m_currentBlock, predicate(*clauseBlocks[0]));
-
-	setCurrentBlock(*tryAfterCallFailBlock);
+	connectBlocks(m_currentBlock, predicate(*tryHeaderBlock));
+	setCurrentBlock(*tryHeaderBlock);
+	// Visit everything, except the actual external call.
+	externalCall->expression().accept(*this);
+	ASTNode::listAccept(externalCall->arguments(), *this);
+	// Branch directly to all catch clauses, since in these cases, any effects of the external call are reverted.
 	for (size_t i = 1; i < clauseBlocks.size(); ++i)
 		connectBlocks(m_currentBlock, predicate(*clauseBlocks[i]));
+	// Only now visit the actual call to record its effects and connect to the success clause.
+	endVisit(*externalCall);
+	if (_tryStatement.successClause()->parameters())
+		tryCatchAssignment(
+			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall)
+		);
+	connectBlocks(m_currentBlock, predicate(*clauseBlocks[0]));
 
 	for (size_t i = 0; i < clauses.size(); ++i)
 	{
