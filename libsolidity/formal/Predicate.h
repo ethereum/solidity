@@ -38,7 +38,8 @@ enum class PredicateType
 	FunctionSummary,
 	FunctionBlock,
 	InternalCall,
-	ExternalCall,
+	ExternalCallTrusted,
+	ExternalCallUntrusted,
 	Error,
 	Custom
 };
@@ -94,6 +95,10 @@ public:
 	/// or nullptr otherwise.
 	FunctionDefinition const* programFunction() const;
 
+	/// @returns the FunctionCall that this predicate represents
+	/// or nullptr otherwise.
+	FunctionCall const* programFunctionCall() const;
+
 	/// @returns the program state variables in the scope of this predicate.
 	std::optional<std::vector<VariableDeclaration const*>> stateVariables() const;
 
@@ -106,8 +111,11 @@ public:
 	/// @returns true if this predicate represents an internal function call.
 	bool isInternalCall() const;
 
-	/// @returns true if this predicate represents an external function call.
-	bool isExternalCall() const;
+	/// @returns true if this predicate represents a trusted external function call.
+	bool isExternalCallTrusted() const;
+
+	/// @returns true if this predicate represents an untrusted external function call.
+	bool isExternalCallUntrusted() const;
 
 	/// @returns true if this predicate represents a constructor summary.
 	bool isConstructorSummary() const;

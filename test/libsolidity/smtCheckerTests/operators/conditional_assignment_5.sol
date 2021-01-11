@@ -24,4 +24,4 @@ contract C {
 }
 // ----
 // Warning 2072: (282-288): Unused local variable.
-// Warning 6328: (304-328): CHC: Assertion violation happens here.\nCounterexample:\na = false, x = 3, d = 0\n = 0\n\nTransaction trace:\nC.constructor()\nState: a = false, x = 0, d = 0\nC.g()\n  C.g() -- internal call
+// Warning 6328: (304-328): CHC: Assertion violation happens here.\nCounterexample:\na = false, x = 3, d = 0\n = 0\n\nTransaction trace:\nC.constructor()\nState: a = false, x = 0, d = 0\nC.g()\n    d.d() -- untrusted external call, synthesized as:\n        C.f() -- reentrant call\n            C.g() -- internal call\n                d.d() -- untrusted external call, synthesized as:\n                    C.h() -- reentrant call
