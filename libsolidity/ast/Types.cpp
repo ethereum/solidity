@@ -46,6 +46,8 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
+#include <range/v3/view/enumerate.hpp>
+
 #include <limits>
 #include <unordered_set>
 #include <utility>
@@ -167,8 +169,8 @@ pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name)
 {
 	StorageOffsets const& offsets = storageOffsets();
 
-	for (size_t index = 0; index < m_memberTypes.size(); ++index)
-		if (m_memberTypes[index].name == _name)
+	for (auto&& [index, member]: m_memberTypes | ranges::views::enumerate)
+		if (member.name == _name)
 			return offsets.offset(index);
 	return nullptr;
 }
