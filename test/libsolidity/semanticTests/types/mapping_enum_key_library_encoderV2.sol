@@ -19,6 +19,7 @@ contract test {
     }
 }
 // ====
+// compileViaYul: also
 // EVMVersion: >=byzantium
 // ----
 // library: L
