@@ -18,6 +18,7 @@ contract c {
         return (data[0].a, data[0].b, data[0].c[2], data[0].d[2]);
     }
 }
-
+// ====
+// compileViaYul: also
 // ----
 // test() -> 2, 3, 4, 5

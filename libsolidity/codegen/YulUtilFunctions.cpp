@@ -1425,15 +1425,23 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 	});
 }
 
-string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
+string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type, Type const* _fromType)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
+	if (!_fromType)
+		_fromType = _type.baseType();
+	else if (_fromType->isValueType())
+		solUnimplementedAssert(*_fromType == *_type.baseType(), "");
 
-	string functionName = "array_push_" + _type.identifier();
+	string functionName =
+		string{"array_push_from_"} +
+		_fromType->identifier() +
+		"_to_" +
+		_type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
-			function <functionName>(array, value) {
+			function <functionName>(array <values>) {
 				<?isByteArray>
 					let data := sload(array)
 					let oldLen := <extractByteArrayLength>(data)
@@ -1441,7 +1449,7 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 
 					switch gt(oldLen, 31)
 					case 0 {
-						value := byte(0, value)
+						let value := byte(0 <values>)
 						switch oldLen
 						case 31 {
 							// Here we have special case when array switches from short array to long array
@@ -1464,23 +1472,24 @@ string YulUtilFunctions::storageArrayPushFunction(ArrayType const& _type)
 					default {
 						sstore(array, add(data, 2))
 						let slot, offset := <indexAccess>(array, oldLen)
-						<storeValue>(slot, offset, value)
+						<storeValue>(slot, offset <values>)
 					}
 				<!isByteArray>
 					let oldLen := sload(array)
 					if iszero(lt(oldLen, <maxArrayLength>)) { <panic>() }
 					sstore(array, add(oldLen, 1))
 					let slot, offset := <indexAccess>(array, oldLen)
-					<storeValue>(slot, offset, value)
+					<storeValue>(slot, offset <values>)
 				</isByteArray>
 			})")
 			("functionName", functionName)
+			("values", _fromType->sizeOnStack() == 0 ? "" : ", " + suffixedVariableNameList("value", 0, _fromType->sizeOnStack()))
 			("panic", panicFunction(PanicCode::ResourceError))
 			("extractByteArrayLength", _type.isByteArray() ? extractByteArrayLengthFunction() : "")
 			("dataAreaFunction", arrayDataAreaFunction(_type))
 			("isByteArray", _type.isByteArray())
 			("indexAccess", storageArrayIndexAccessFunction(_type))
-			("storeValue", updateStorageValueFunction(*_type.baseType(), *_type.baseType()))
+			("storeValue", updateStorageValueFunction(*_fromType, *_type.baseType()))
 			("maxArrayLength", (u256(1) << 64).str())
 			("shl", shiftLeftFunctionDynamic())
 			("shr", shiftRightFunction(248))
@@ -2572,142 +2581,32 @@ string YulUtilFunctions::updateStorageValueFunction(
 			fromReferenceType->location(),
 			fromReferenceType->isPointer()
 		).get() == *fromReferenceType, "");
+
 		solAssert(toReferenceType->category() == fromReferenceType->category(), "");
+		solAssert(_offset.value_or(0) == 0, "");
 
-		if (_toType.category() == Type::Category::Array)
-		{
-			solAssert(_offset.value_or(0) == 0, "");
-
-			Whiskers templ(R"(
-				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
-					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-					<copyArrayToStorage>(slot, <value>)
-				}
-			)");
-			templ("functionName", functionName);
-			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction(PanicCode::Generic));
-			templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
-			templ("copyArrayToStorage", copyArrayToStorageFunction(
+		Whiskers templ(R"(
+			function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset><value>) {
+				<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+				<copyToStorage>(slot, <value>)
+			}
+		)");
+		templ("functionName", functionName);
+		templ("dynamicOffset", !_offset.has_value());
+		templ("panic", panicFunction(PanicCode::Generic));
+		templ("value", suffixedVariableNameList("value_", 0, _fromType.sizeOnStack()));
+		if (_fromType.category() == Type::Category::Array)
+			templ("copyToStorage", copyArrayToStorageFunction(
 				dynamic_cast<ArrayType const&>(_fromType),
 				dynamic_cast<ArrayType const&>(_toType)
 			));
-
-			return templ.render();
-		}
 		else
-		{
-			solAssert(_toType.category() == Type::Category::Struct, "");
+			templ("copyToStorage", copyStructToStorageFunction(
+				dynamic_cast<StructType const&>(_fromType),
+				dynamic_cast<StructType const&>(_toType)
+			));
 
-			auto const& fromStructType = dynamic_cast<StructType const&>(_fromType);
-			auto const& toStructType = dynamic_cast<StructType const&>(_toType);
-			solAssert(fromStructType.structDefinition() == toStructType.structDefinition(), "");
-			solAssert(_offset.value_or(0) == 0, "");
-
-			Whiskers templ(R"(
-				function <functionName>(slot, <?dynamicOffset>offset, </dynamicOffset>value) {
-					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
-					<?fromStorage> if eq(slot, value) { leave } </fromStorage>
-					<#member>
-					{
-						<updateMemberCall>
-					}
-					</member>
-				}
-			)");
-			templ("functionName", functionName);
-			templ("dynamicOffset", !_offset.has_value());
-			templ("panic", panicFunction(PanicCode::Generic));
-			templ("fromStorage", fromStructType.dataStoredIn(DataLocation::Storage));
-
-			MemberList::MemberMap structMembers = fromStructType.nativeMembers(nullptr);
-			MemberList::MemberMap toStructMembers = toStructType.nativeMembers(nullptr);
-
-			vector<map<string, string>> memberParams(structMembers.size());
-			for (size_t i = 0; i < structMembers.size(); ++i)
-			{
-				Type const& memberType = *structMembers[i].type;
-				solAssert(memberType.memoryHeadSize() == 32, "");
-				auto const& [slotDiff, offset] = toStructType.storageOffsetsOfMember(structMembers[i].name);
-
-				Whiskers t(R"(
-					let memberSlot := add(slot, <memberStorageSlotDiff>)
-					let memberSrcPtr := add(value, <memberOffset>)
-
-					<?fromCalldata>
-						let <memberValues> :=
-							<?dynamicallyEncodedMember>
-								<accessCalldataTail>(value, memberSrcPtr)
-							<!dynamicallyEncodedMember>
-								memberSrcPtr
-							</dynamicallyEncodedMember>
-
-						<?isValueType>
-							<memberValues> := <read>(<memberValues>)
-						</isValueType>
-					</fromCalldata>
-
-					<?fromMemory>
-						let <memberValues> := <read>(memberSrcPtr)
-					</fromMemory>
-
-					<?fromStorage>
-						let <memberValues> :=
-							<?isValueType>
-								<read>(memberSrcPtr)
-							<!isValueType>
-								memberSrcPtr
-							</isValueType>
-					</fromStorage>
-
-					<updateStorageValue>(memberSlot, <memberValues>)
-				)");
-				bool fromCalldata = fromStructType.location() == DataLocation::CallData;
-				t("fromCalldata", fromCalldata);
-				bool fromMemory = fromStructType.location() == DataLocation::Memory;
-				t("fromMemory", fromMemory);
-				bool fromStorage = fromStructType.location() == DataLocation::Storage;
-				t("fromStorage", fromStorage);
-				t("isValueType", memberType.isValueType());
-				t("memberValues", suffixedVariableNameList("memberValue_", 0, memberType.stackItems().size()));
-
-				t("memberStorageSlotDiff", slotDiff.str());
-				if (fromCalldata)
-				{
-					t("memberOffset", to_string(fromStructType.calldataOffsetOfMember(structMembers[i].name)));
-					t("dynamicallyEncodedMember", memberType.isDynamicallyEncoded());
-					if (memberType.isDynamicallyEncoded())
-						t("accessCalldataTail", accessCalldataTailFunction(memberType));
-					if (memberType.isValueType())
-						t("read", readFromCalldata(memberType));
-				}
-				else if (fromMemory)
-				{
-					t("memberOffset", fromStructType.memoryOffsetOfMember(structMembers[i].name).str());
-					t("read", readFromMemory(memberType));
-				}
-				else if (fromStorage)
-				{
-					auto [srcSlotOffset, srcOffset] = fromStructType.storageOffsetsOfMember(structMembers[i].name);
-					t("memberOffset", formatNumber(srcSlotOffset));
-					if (memberType.isValueType())
-						t("read", readFromStorageValueType(memberType, srcOffset, false));
-					else
-						solAssert(srcOffset == 0, "");
-
-				}
-				t("memberStorageSlotOffset", to_string(offset));
-				t("updateStorageValue", updateStorageValueFunction(
-					memberType,
-					*toStructMembers[i].type,
-					optional<unsigned>{offset}
-				));
-				memberParams[i]["updateMemberCall"] = t.render();
-			}
-			templ("member", memberParams);
-
-			return templ.render();
-		}
+		return templ.render();
 	});
 }
 
@@ -3351,6 +3250,122 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 
 		solAssert(!body.empty(), _from.canonicalName() + " to " + _to.canonicalName());
 		templ("body", body);
+		return templ.render();
+	});
+}
+
+string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, StructType const& _to)
+{
+	solAssert(_to.dataStoredIn(DataLocation::Storage), "");
+	solAssert(_from.structDefinition() == _to.structDefinition(), "");
+
+	string functionName =
+		"copy_struct_to_storage_from_" +
+		_from.identifier() +
+		"_to_" +
+		_to.identifier();
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		Whiskers templ(R"(
+			function <functionName>(slot, value) {
+				<?fromStorage> if iszero(eq(slot, value)) { </fromStorage>
+				<#member>
+				{
+					<updateMemberCall>
+				}
+				</member>
+				<?fromStorage> } </fromStorage>
+			}
+		)");
+		templ("functionName", functionName);
+		templ("fromStorage", _from.dataStoredIn(DataLocation::Storage));
+
+		MemberList::MemberMap structMembers = _from.nativeMembers(nullptr);
+		MemberList::MemberMap toStructMembers = _to.nativeMembers(nullptr);
+
+		vector<map<string, string>> memberParams(structMembers.size());
+		for (size_t i = 0; i < structMembers.size(); ++i)
+		{
+			Type const& memberType = *structMembers[i].type;
+			solAssert(memberType.memoryHeadSize() == 32, "");
+			auto const&[slotDiff, offset] = _to.storageOffsetsOfMember(structMembers[i].name);
+
+			Whiskers t(R"(
+				let memberSlot := add(slot, <memberStorageSlotDiff>)
+				let memberSrcPtr := add(value, <memberOffset>)
+
+				<?fromCalldata>
+					let <memberValues> :=
+						<?dynamicallyEncodedMember>
+							<accessCalldataTail>(value, memberSrcPtr)
+						<!dynamicallyEncodedMember>
+							memberSrcPtr
+						</dynamicallyEncodedMember>
+
+					<?isValueType>
+						<memberValues> := <read>(<memberValues>)
+					</isValueType>
+				</fromCalldata>
+
+				<?fromMemory>
+					let <memberValues> := <read>(memberSrcPtr)
+				</fromMemory>
+
+				<?fromStorage>
+					let <memberValues> :=
+						<?isValueType>
+							<read>(memberSrcPtr)
+						<!isValueType>
+							memberSrcPtr
+						</isValueType>
+				</fromStorage>
+
+				<updateStorageValue>(memberSlot, <memberValues>)
+			)");
+			bool fromCalldata = _from.location() == DataLocation::CallData;
+			t("fromCalldata", fromCalldata);
+			bool fromMemory = _from.location() == DataLocation::Memory;
+			t("fromMemory", fromMemory);
+			bool fromStorage = _from.location() == DataLocation::Storage;
+			t("fromStorage", fromStorage);
+			t("isValueType", memberType.isValueType());
+			t("memberValues", suffixedVariableNameList("memberValue_", 0, memberType.stackItems().size()));
+
+			t("memberStorageSlotDiff", slotDiff.str());
+			if (fromCalldata)
+			{
+				t("memberOffset", to_string(_from.calldataOffsetOfMember(structMembers[i].name)));
+				t("dynamicallyEncodedMember", memberType.isDynamicallyEncoded());
+				if (memberType.isDynamicallyEncoded())
+					t("accessCalldataTail", accessCalldataTailFunction(memberType));
+				if (memberType.isValueType())
+					t("read", readFromCalldata(memberType));
+			}
+			else if (fromMemory)
+			{
+				t("memberOffset", _from.memoryOffsetOfMember(structMembers[i].name).str());
+				t("read", readFromMemory(memberType));
+			}
+			else if (fromStorage)
+			{
+				auto[srcSlotOffset, srcOffset] = _from.storageOffsetsOfMember(structMembers[i].name);
+				t("memberOffset", formatNumber(srcSlotOffset));
+				if (memberType.isValueType())
+					t("read", readFromStorageValueType(memberType, srcOffset, false));
+				else
+					solAssert(srcOffset == 0, "");
+
+			}
+			t("memberStorageSlotOffset", to_string(offset));
+			t("updateStorageValue", updateStorageValueFunction(
+				memberType,
+				*toStructMembers[i].type,
+				optional<unsigned>{offset}
+			));
+			memberParams[i]["updateMemberCall"] = t.render();
+		}
+		templ("member", memberParams);
+
 		return templ.render();
 	});
 }
