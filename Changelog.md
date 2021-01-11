@@ -8,6 +8,7 @@ Language Features:
 Compiler Features:
  * Standard JSON / combined JSON: New artifact "functionDebugData" that contains bytecode offsets of entry points of functions and potentially more information in the future.
  * Yul Optimizer: Evaluate ``keccak256(a, c)``, when the value at memory location ``a`` is known at compile time and ``c`` is a constant ``<= 32``.
+ * Yul Optimizer: If all cases of a ``switch`` statement with a default case start with the same prefix, move that prefix out of the ``switch``.
 
 
 Bugfixes:
