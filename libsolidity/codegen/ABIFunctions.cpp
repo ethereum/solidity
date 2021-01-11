@@ -37,7 +37,7 @@ using namespace solidity::frontend;
 
 string ABIFunctions::tupleEncoder(
 	TypePointers const& _givenTypes,
-	TypePointers const& _targetTypes,
+	TypePointers _targetTypes,
 	bool _encodeAsLibraryTypes,
 	bool _reversed
 )
@@ -48,6 +48,13 @@ string ABIFunctions::tupleEncoder(
 	options.encodeFunctionFromStack = true;
 	options.padded = true;
 	options.dynamicInplace = false;
+
+	for (Type const*& t: _targetTypes)
+	{
+		solAssert(t, "");
+		t = t->fullEncodingType(options.encodeAsLibraryTypes, true, !options.padded);
+		solAssert(t, "");
+	}
 
 	string functionName = string("abi_encode_tuple_");
 	for (auto const& t: _givenTypes)
@@ -111,7 +118,7 @@ string ABIFunctions::tupleEncoder(
 
 string ABIFunctions::tupleEncoderPacked(
 	TypePointers const& _givenTypes,
-	TypePointers const& _targetTypes,
+	TypePointers _targetTypes,
 	bool _reversed
 )
 {
@@ -120,6 +127,13 @@ string ABIFunctions::tupleEncoderPacked(
 	options.encodeFunctionFromStack = true;
 	options.padded = false;
 	options.dynamicInplace = true;
+
+	for (Type const*& t: _targetTypes)
+	{
+		solAssert(t, "");
+		t = t->fullEncodingType(options.encodeAsLibraryTypes, true, !options.padded);
+		solAssert(t, "");
+	}
 
 	string functionName = string("abi_encode_tuple_packed_");
 	for (auto const& t: _givenTypes)
@@ -392,7 +406,9 @@ string ABIFunctions::abiEncodeAndReturnUpdatedPosFunction(
 	return createFunction(functionName, [&]() {
 		string values = suffixedVariableNameList("value", 0, numVariablesForType(_givenType, _options));
 		string encoder = abiEncodingFunction(_givenType, _targetType, _options);
-		if (_targetType.isDynamicallyEncoded())
+		Type const* targetEncoding = _targetType.fullEncodingType(_options.encodeAsLibraryTypes, true, false);
+		solAssert(targetEncoding, "");
+		if (targetEncoding->isDynamicallyEncoded())
 			return Whiskers(R"(
 				function <functionName>(<values>, pos) -> updatedPos {
 					updatedPos := <encode>(<values>, pos)
@@ -404,7 +420,7 @@ string ABIFunctions::abiEncodeAndReturnUpdatedPosFunction(
 			.render();
 		else
 		{
-			unsigned encodedSize = _targetType.calldataEncodedSize(_options.padded);
+			unsigned encodedSize = targetEncoding->calldataEncodedSize(_options.padded);
 			solAssert(encodedSize != 0, "Invalid encoded size.");
 			return Whiskers(R"(
 				function <functionName>(<values>, pos) -> updatedPos {
