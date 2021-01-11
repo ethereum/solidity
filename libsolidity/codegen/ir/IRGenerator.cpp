@@ -851,7 +851,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 			solAssert(false, "Unexpected declaration for function!");
 
 		templ["allocate"] = m_utils.allocationFunction();
-		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), false);
+		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), _contract.isLibrary());
 	}
 	t("cases", functions);
 	if (FunctionDefinition const* etherReceiver = _contract.receiveFunction())
