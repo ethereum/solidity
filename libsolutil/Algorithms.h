@@ -106,11 +106,11 @@ struct BreadthFirstSearch
 			V v = std::move(verticesToTraverse.front());
 			verticesToTraverse.pop_front();
 
-			visited.insert(v);
+			if (!visited.insert(v).second)
+				continue;
 
 			_forEachChild(v, [this](V _vertex) {
-				if (!visited.count(_vertex))
-					verticesToTraverse.emplace_back(std::move(_vertex));
+				verticesToTraverse.emplace_back(std::move(_vertex));
 			});
 		}
 		return *this;
