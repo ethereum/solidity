@@ -39,6 +39,8 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <range/v3/view/zip.hpp>
+
 #include <memory>
 #include <vector>
 
@@ -980,18 +982,17 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 				to_string(parameters.size()) +
 				" variables."
 			);
-		size_t len = min(returnTypes.size(), parameters.size());
-		for (size_t i = 0; i < len; ++i)
+		for (auto&& [parameter, returnType]: ranges::views::zip(parameters, returnTypes))
 		{
-			solAssert(returnTypes[i], "");
-			if (parameters[i] && *parameters[i]->annotation().type != *returnTypes[i])
+			solAssert(returnType, "");
+			if (parameter && *parameter->annotation().type != *returnType)
 				m_errorReporter.typeError(
 					6509_error,
-					parameters[i]->location(),
+					parameter->location(),
 					"Invalid type, expected " +
-					returnTypes[i]->toString(false) +
+					returnType->toString(false) +
 					" but got " +
-					parameters[i]->annotation().type->toString() +
+					parameter->annotation().type->toString() +
 					"."
 				);
 		}
