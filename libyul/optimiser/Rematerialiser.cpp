@@ -26,7 +26,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 
-#include <libsolutil/cxx20.h>
+#include <range/v3/algorithm/all_of.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -88,7 +88,7 @@ void Rematerialiser::visit(Expression& _e)
 			)
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
-				if (cxx20::ranges::all_of(m_references[name], [&](auto const& ref) { return inScope(ref); }))
+				if (ranges::all_of(m_references[name], [&](auto const& ref) { return inScope(ref); }))
 				{
 					// update reference counts
 					m_referenceCounts[name]--;
