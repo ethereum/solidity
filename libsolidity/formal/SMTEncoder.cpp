@@ -324,36 +324,8 @@ void SMTEncoder::popInlineFrame(CallableDeclaration const&)
 
 void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 {
-	if (_varDecl.declarations().size() != 1)
-	{
-		if (auto init = _varDecl.initialValue())
-		{
-			auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(*init));
-			solAssert(symbTuple, "");
-			auto const& symbComponents = symbTuple->components();
-
-			auto tupleType = dynamic_cast<TupleType const*>(init->annotation().type);
-			solAssert(tupleType, "");
-			solAssert(tupleType->components().size() == symbTuple->components().size(), "");
-			auto const& components = tupleType->components();
-
-			auto const& declarations = _varDecl.declarations();
-			solAssert(symbComponents.size() == declarations.size(), "");
-			for (unsigned i = 0; i < declarations.size(); ++i)
-				if (
-					components.at(i) &&
-					declarations.at(i) &&
-					m_context.knownVariable(*declarations.at(i))
-				)
-					assignment(*declarations.at(i), symbTuple->component(i, components.at(i), declarations.at(i)->type()));
-		}
-	}
-	else
-	{
-		solAssert(m_context.knownVariable(*_varDecl.declarations().front()), "");
-		if (_varDecl.initialValue())
-			assignment(*_varDecl.declarations().front(), *_varDecl.initialValue());
-	}
+	if (auto init = _varDecl.initialValue())
+		expressionToTupleAssignment(_varDecl.declarations(), *init);
 }
 
 bool SMTEncoder::visit(Assignment const& _assignment)
@@ -2107,24 +2079,35 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 	return values.first;
 }
 
-void SMTEncoder::tryCatchAssignment(vector<shared_ptr<VariableDeclaration>> const& _variables, smt::SymbolicVariable const& _rhs)
+void SMTEncoder::expressionToTupleAssignment(vector<shared_ptr<VariableDeclaration>> const& _variables, Expression const& _rhs)
 {
+	auto symbolicVar = m_context.expression(_rhs);
 	if (_variables.size() > 1)
 	{
-		auto const* symbTuple = dynamic_cast<smt::SymbolicTupleVariable const*>(&_rhs);
+		auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(symbolicVar);
 		solAssert(symbTuple, "");
 		auto const& symbComponents = symbTuple->components();
 		solAssert(symbComponents.size() == _variables.size(), "");
+		auto tupleType = dynamic_cast<TupleType const*>(_rhs.annotation().type);
+		solAssert(tupleType, "");
+		auto const& typeComponents = tupleType->components();
+		solAssert(typeComponents.size() == symbComponents.size(), "");
 		for (unsigned i = 0; i < symbComponents.size(); ++i)
 		{
 			auto param = _variables.at(i);
-			solAssert(param, "");
-			solAssert(m_context.knownVariable(*param), "");
-			assignment(*param, symbTuple->component(i));
+			if (param)
+			{
+				solAssert(m_context.knownVariable(*param), "");
+				assignment(*param, symbTuple->component(i, typeComponents[i], param->type()));
+			}
 		}
 	}
 	else if (_variables.size() == 1)
-		assignment(*_variables.front(), _rhs.currentValue());
+	{
+		auto const& var = *_variables.front();
+		solAssert(m_context.knownVariable(var), "");
+		assignment(var, _rhs);
+	}
 }
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)

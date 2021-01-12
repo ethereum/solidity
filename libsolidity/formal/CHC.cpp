@@ -567,9 +567,8 @@ bool CHC::visit(TryStatement const& _tryStatement)
 	// Only now visit the actual call to record its effects and connect to the success clause.
 	endVisit(*externalCall);
 	if (_tryStatement.successClause()->parameters())
-		tryCatchAssignment(
-			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall)
-		);
+		expressionToTupleAssignment(_tryStatement.successClause()->parameters()->parameters(), *externalCall);
+
 	connectBlocks(m_currentBlock, predicate(*clauseBlocks[0]));
 
 	for (size_t i = 0; i < clauses.size(); ++i)
