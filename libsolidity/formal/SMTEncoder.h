@@ -76,6 +76,7 @@ public:
 
 	static std::vector<VariableDeclaration const*> localVariablesIncludingModifiers(FunctionDefinition const& _function, ContractDefinition const* _contract);
 	static std::vector<VariableDeclaration const*> modifiersVariables(FunctionDefinition const& _function, ContractDefinition const* _contract);
+	static std::vector<VariableDeclaration const*> tryCatchVariables(FunctionDefinition const& _function);
 
 	/// @returns the ModifierDefinition of a ModifierInvocation if possible, or nullptr.
 	static ModifierDefinition const* resolveModifierInvocation(ModifierInvocation const& _invocation, ContractDefinition const* _contract);
@@ -130,7 +131,7 @@ protected:
 	bool visit(InlineAssembly const& _node) override;
 	void endVisit(Break const&) override {}
 	void endVisit(Continue const&) override {}
-	bool visit(TryCatchClause const& _node) override;
+	bool visit(TryStatement const&) override { return false; }
 
 	virtual void pushInlineFrame(CallableDeclaration const&);
 	virtual void popInlineFrame(CallableDeclaration const&);
@@ -237,6 +238,8 @@ protected:
 	void tupleAssignment(Expression const& _left, Expression const& _right);
 	/// Computes the right hand side of a compound assignment.
 	smtutil::Expression compoundAssignment(Assignment const& _assignment);
+	/// Handles assignment of the result of external call in try statement to the parameters of success clause
+	void tryCatchAssignment(std::vector<std::shared_ptr<VariableDeclaration>> const& _variables, smt::SymbolicVariable const& rhs);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;

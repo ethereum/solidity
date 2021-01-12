@@ -84,6 +84,7 @@ private:
 	void endVisit(Continue const& _node) override;
 	void endVisit(IndexRangeAccess const& _node) override;
 	void endVisit(Return const& _node) override;
+	bool visit(TryStatement const& _node) override;
 
 	void pushInlineFrame(CallableDeclaration const& _callable) override;
 	void popInlineFrame(CallableDeclaration const& _callable) override;

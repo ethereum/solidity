@@ -91,6 +91,7 @@ private:
 	void endVisit(UnaryOperation const& _node) override;
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Return const& _node) override;
+	bool visit(TryStatement const& _node) override;
 	//@}
 
 	/// Visitor helpers.

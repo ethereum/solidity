@@ -312,20 +312,6 @@ bool SMTEncoder::visit(InlineAssembly const& _inlineAsm)
 	return false;
 }
 
-bool SMTEncoder::visit(TryCatchClause const& _clause)
-{
-	if (auto params = _clause.parameters())
-		for (auto const& var: params->parameters())
-			createVariable(*var);
-
-	m_errorReporter.warning(
-		7645_error,
-		_clause.location(),
-		"Assertion checker does not support try/catch clauses."
-	);
-	return false;
-}
-
 void SMTEncoder::pushInlineFrame(CallableDeclaration const&)
 {
 	pushPathCondition(currentPathConditions());
@@ -2121,6 +2107,26 @@ smtutil::Expression SMTEncoder::compoundAssignment(Assignment const& _assignment
 	return values.first;
 }
 
+void SMTEncoder::tryCatchAssignment(vector<shared_ptr<VariableDeclaration>> const& _variables, smt::SymbolicVariable const& _rhs)
+{
+	if (_variables.size() > 1)
+	{
+		auto const* symbTuple = dynamic_cast<smt::SymbolicTupleVariable const*>(&_rhs);
+		solAssert(symbTuple, "");
+		auto const& symbComponents = symbTuple->components();
+		solAssert(symbComponents.size() == _variables.size(), "");
+		for (unsigned i = 0; i < symbComponents.size(); ++i)
+		{
+			auto param = _variables.at(i);
+			solAssert(param, "");
+			solAssert(m_context.knownVariable(*param), "");
+			assignment(*param, symbTuple->component(i));
+		}
+	}
+	else if (_variables.size() == 1)
+		assignment(*_variables.front(), _rhs.currentValue());
+}
+
 void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression const& _value)
 {
 	// In general, at this point, the SMT sorts of _variable and _value are the same,
@@ -2688,7 +2694,29 @@ vector<VariableDeclaration const*> SMTEncoder::stateVariablesIncludingInheritedA
 
 vector<VariableDeclaration const*> SMTEncoder::localVariablesIncludingModifiers(FunctionDefinition const& _function, ContractDefinition const* _contract)
 {
-	return _function.localVariables() + modifiersVariables(_function, _contract);
+	return _function.localVariables() + tryCatchVariables(_function) + modifiersVariables(_function, _contract);
+}
+
+vector<VariableDeclaration const*> SMTEncoder::tryCatchVariables(FunctionDefinition const& _function)
+{
+	struct TryCatchVarsVisitor : public ASTConstVisitor
+	{
+		bool visit(TryCatchClause const& _catchClause) override
+		{
+			if (_catchClause.parameters())
+			{
+				auto const& params = _catchClause.parameters()->parameters();
+				for (auto param: params)
+					vars.push_back(param.get());
+			}
+
+			return false;
+		}
+
+		vector<VariableDeclaration const*> vars;
+	} tryCatchVarsVisitor;
+	_function.accept(tryCatchVarsVisitor);
+	return tryCatchVarsVisitor.vars;
 }
 
 vector<VariableDeclaration const*> SMTEncoder::modifiersVariables(FunctionDefinition const& _function, ContractDefinition const* _contract)

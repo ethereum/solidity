@@ -541,6 +541,48 @@ void CHC::endVisit(Return const& _return)
 	m_currentBlock = predicate(*returnGhost);
 }
 
+bool CHC::visit(TryStatement const& _tryStatement)
+{
+	FunctionCall const* externalCall = dynamic_cast<FunctionCall const*>(&_tryStatement.externalCall());
+	solAssert(externalCall && externalCall->annotation().tryCall, "");
+	solAssert(m_currentFunction, "");
+
+	auto tryHeaderBlock = createBlock(&_tryStatement, PredicateType::FunctionBlock, "try_header_");
+	auto afterTryBlock = createBlock(&m_currentFunction->body(), PredicateType::FunctionBlock);
+
+	auto const& clauses = _tryStatement.clauses();
+	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
+	auto clauseBlocks = applyMap(clauses, [this](ASTPointer<TryCatchClause> clause) {
+		return createBlock(clause.get(), PredicateType::FunctionBlock, "try_clause_" + std::to_string(clause->id()));
+	});
+
+	connectBlocks(m_currentBlock, predicate(*tryHeaderBlock));
+	setCurrentBlock(*tryHeaderBlock);
+	// Visit everything, except the actual external call.
+	externalCall->expression().accept(*this);
+	ASTNode::listAccept(externalCall->arguments(), *this);
+	// Branch directly to all catch clauses, since in these cases, any effects of the external call are reverted.
+	for (size_t i = 1; i < clauseBlocks.size(); ++i)
+		connectBlocks(m_currentBlock, predicate(*clauseBlocks[i]));
+	// Only now visit the actual call to record its effects and connect to the success clause.
+	endVisit(*externalCall);
+	if (_tryStatement.successClause()->parameters())
+		tryCatchAssignment(
+			_tryStatement.successClause()->parameters()->parameters(), *m_context.expression(*externalCall)
+		);
+	connectBlocks(m_currentBlock, predicate(*clauseBlocks[0]));
+
+	for (size_t i = 0; i < clauses.size(); ++i)
+	{
+		setCurrentBlock(*clauseBlocks[i]);
+		clauses[i]->accept(*this);
+		connectBlocks(m_currentBlock, predicate(*afterTryBlock));
+	}
+	setCurrentBlock(*afterTryBlock);
+
+	return false;
+}
+
 void CHC::pushInlineFrame(CallableDeclaration const& _callable)
 {
 	m_returnDests.push_back(createBlock(&_callable, PredicateType::FunctionBlock, "return_"));
