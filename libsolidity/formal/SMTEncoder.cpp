@@ -1547,9 +1547,12 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 	m_context.addAssertion(oldLength + 1 < (smt::maxValue(*TypeProvider::uint256()) - 1));
 
 	auto const& arguments = _funCall.arguments();
+	auto arrayType = dynamic_cast<ArrayType const*>(symbArray->type());
+	solAssert(arrayType, "");
+	auto elementType = arrayType->baseType();
 	smtutil::Expression element = arguments.empty() ?
-		smt::zeroValue(_funCall.annotation().type) :
-		expr(*arguments.front());
+		smt::zeroValue(elementType) :
+		expr(*arguments.front(), elementType);
 	smtutil::Expression store = smtutil::Expression::store(
 		symbArray->elements(),
 		oldLength,
