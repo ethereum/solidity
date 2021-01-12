@@ -40,6 +40,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <range/v3/view/zip.hpp>
+#include <range/v3/view/drop_exactly.hpp>
 
 #include <memory>
 #include <vector>
@@ -1001,9 +1002,9 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 	TryCatchClause const* panicClause = nullptr;
 	TryCatchClause const* errorClause = nullptr;
 	TryCatchClause const* lowLevelClause = nullptr;
-	for (size_t i = 1; i < _tryStatement.clauses().size(); ++i)
+	for (auto const& clausePointer: _tryStatement.clauses() | ranges::views::drop_exactly(1))
 	{
-		TryCatchClause const& clause = *_tryStatement.clauses()[i];
+		TryCatchClause const& clause = *clausePointer;
 		if (clause.errorName() == "")
 		{
 			if (lowLevelClause)
