@@ -1664,7 +1664,10 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			FunctionType const& functionType = dynamic_cast<FunctionType const&>(
 				*_memberAccess.expression().annotation().type
 			);
-			if (functionType.kind() == FunctionType::Kind::External)
+			if (
+				functionType.kind() == FunctionType::Kind::External ||
+				functionType.kind() == FunctionType::Kind::DelegateCall
+			)
 				define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionSelector"));
 			else if (functionType.kind() == FunctionType::Kind::Declaration)
 			{
@@ -1672,7 +1675,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				define(IRVariable{_memberAccess}) << formatNumber(functionType.externalIdentifier() << 224) << "\n";
 			}
 			else
-				solAssert(false, "Invalid use of .selector");
+				solAssert(false, "Invalid use of .selector: " + functionType.toString(false));
 		}
 		else if (member == "address")
 		{

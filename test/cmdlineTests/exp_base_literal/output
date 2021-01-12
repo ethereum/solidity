@@ -35,6 +35,7 @@ object "C_81" {
                 case 0x70cb9605
                 {
                     // f(uint256,uint256,uint256,uint256)
+
                     if callvalue() { revert(0, 0) }
                     let param_0, param_1, param_2, param_3 :=  abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(4, calldatasize())
                     let ret_0, ret_1, ret_2, ret_3 :=  fun_f_80(param_0, param_1, param_2, param_3)

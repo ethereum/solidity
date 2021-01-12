@@ -35,6 +35,7 @@ object "test_11" {
                 case 0x26121ff0
                 {
                     // f()
+
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
                     let ret_0 :=  fun_f_10()
