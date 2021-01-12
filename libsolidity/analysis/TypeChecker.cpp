@@ -34,12 +34,14 @@
 
 #include <libsolutil/Algorithms.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Views.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <range/v3/view/zip.hpp>
+#include <range/v3/view/drop_exactly.hpp>
 
 #include <memory>
 #include <vector>
@@ -1001,9 +1003,8 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 	TryCatchClause const* panicClause = nullptr;
 	TryCatchClause const* errorClause = nullptr;
 	TryCatchClause const* lowLevelClause = nullptr;
-	for (size_t i = 1; i < _tryStatement.clauses().size(); ++i)
+	for (auto const& clause: _tryStatement.clauses() | ranges::views::drop_exactly(1) | views::dereferenceChecked)
 	{
-		TryCatchClause const& clause = *_tryStatement.clauses()[i];
 		if (clause.errorName() == "")
 		{
 			if (lowLevelClause)

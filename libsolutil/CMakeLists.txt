@@ -34,6 +34,7 @@ set(sources
 	UTF8.cpp
 	UTF8.h
 	vector_ref.h
+	Views.h
 	Visitor.h
 	Whiskers.cpp
 	Whiskers.h
