@@ -8,4 +8,4 @@ contract Simp {
 	}
 }
 // ----
-// Warning 6328: (172-203): CHC: Assertion violation happens here.\nCounterexample:\n\n\n = 0\n\nTransaction trace:\nSimp.constructor()\nSimp.f3()
+// Warning 6328: (172-203): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\n\nTransaction trace:\nSimp.constructor()\nSimp.f3()

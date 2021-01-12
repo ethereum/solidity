@@ -60,11 +60,11 @@ contract D4 is B, C {
 	}
 }
 // ----
-// Warning 6328: (370-384): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 1, x = 0\n\n\n\nTransaction trace:\nD1.constructor()
-// Warning 6328: (403-418): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 1, x = 0\n\n\n\nTransaction trace:\nD1.constructor()
-// Warning 6328: (493-507): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 1, x = (- 1)\n\n\n\nTransaction trace:\nD2.constructor()
-// Warning 6328: (526-540): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 1, x = (- 1)\n\n\n\nTransaction trace:\nD2.constructor()
-// Warning 6328: (703-717): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 2, x = 1\n\n\n\nTransaction trace:\nD3.constructor()
-// Warning 6328: (769-784): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 2, x = 1\n\n\n\nTransaction trace:\nD3.constructor()
-// Warning 6328: (860-874): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 2, x = (- 1)\n\n\n\nTransaction trace:\nD4.constructor()
-// Warning 6328: (893-907): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 2, x = (- 1)\n\n\n\nTransaction trace:\nD4.constructor()
+// Warning 6328: (370-384): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 1, x = 0\n\nTransaction trace:\nD1.constructor()
+// Warning 6328: (403-418): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 1, x = 0\n\nTransaction trace:\nD1.constructor()
+// Warning 6328: (493-507): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 1, x = (- 1)\n\nTransaction trace:\nD2.constructor()
+// Warning 6328: (526-540): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 1, x = (- 1)\n\nTransaction trace:\nD2.constructor()
+// Warning 6328: (703-717): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 2, x = 1\n\nTransaction trace:\nD3.constructor()
+// Warning 6328: (769-784): CHC: Assertion violation happens here.\nCounterexample:\nz = 1, y = 2, x = 1\n\nTransaction trace:\nD3.constructor()
+// Warning 6328: (860-874): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 2, x = (- 1)\n\nTransaction trace:\nD4.constructor()
+// Warning 6328: (893-907): CHC: Assertion violation happens here.\nCounterexample:\nz = 2, y = 2, x = (- 1)\n\nTransaction trace:\nD4.constructor()

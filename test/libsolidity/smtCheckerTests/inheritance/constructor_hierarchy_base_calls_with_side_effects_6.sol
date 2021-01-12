@@ -35,4 +35,4 @@ contract C is Z, B {
 	}
 }
 // ----
-// Warning 6328: (449-463): CHC: Assertion violation happens here.\nCounterexample:\nk = 42, x = 1\n\n\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (449-463): CHC: Assertion violation happens here.\nCounterexample:\nk = 42, x = 1\n\nTransaction trace:\nC.constructor()

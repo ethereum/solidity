@@ -14,9 +14,9 @@ contract C {
 // Warning 7507: (105-117): Assertion checker does not yet support this expression.
 // Warning 7507: (142-162): Assertion checker does not yet support this expression.
 // Warning 7507: (186-205): Assertion checker does not yet support this expression.
-// Warning 6328: (92-131): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (135-175): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (179-218): CHC: Assertion violation happens here.\nCounterexample:\n\n\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (92-131): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (135-175): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (179-218): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 7507: (105-117): Assertion checker does not yet support this expression.
 // Warning 7507: (142-162): Assertion checker does not yet support this expression.
 // Warning 7507: (186-205): Assertion checker does not yet support this expression.

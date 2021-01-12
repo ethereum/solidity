@@ -10,4 +10,4 @@ contract C {
 // ====
 // SMTSolvers: z3
 // ----
-// Warning 6328: (187-201): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 3\n\n\nTransaction trace:\nC.constructor()\nC.f(3)
+// Warning 6328: (187-201): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 3\n\nTransaction trace:\nC.constructor()\nC.f(3)

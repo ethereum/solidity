@@ -3,7 +3,6 @@ Counterexample:
 
 x = 0
 
-
 Transaction trace:
 test.constructor()
 test.f(0)

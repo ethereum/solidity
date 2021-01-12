@@ -26,6 +26,6 @@ contract C is B {
 }
 // ----
 // Warning 5740: (152-157): Unreachable code.
-// Warning 6328: (310-324): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 1\n\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (343-357): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 1\n\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (376-390): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\na = 0\n\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (310-324): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 1\n\nTransaction trace:\nC.constructor(1)
+// Warning 6328: (343-357): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 1\n\nTransaction trace:\nC.constructor(1)
+// Warning 6328: (376-390): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\na = 0\n\nTransaction trace:\nC.constructor(0)

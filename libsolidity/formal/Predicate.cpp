@@ -141,7 +141,22 @@ optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 
 bool Predicate::isSummary() const
 {
-	return m_type == PredicateType::ConstructorSummary || m_type == PredicateType::FunctionSummary;
+	return m_type == PredicateType::ConstructorSummary || m_type == PredicateType::FunctionSummary || m_type == PredicateType::InternalCall || m_type == PredicateType::ExternalCall;
+}
+
+bool Predicate::isFunctionSummary() const
+{
+	return m_type == PredicateType::FunctionSummary;
+}
+
+bool Predicate::isInternalCall() const
+{
+	return m_type == PredicateType::InternalCall;
+}
+
+bool Predicate::isExternalCall() const
+{
+	return m_type == PredicateType::ExternalCall;
 }
 
 bool Predicate::isConstructorSummary() const

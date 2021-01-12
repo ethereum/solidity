@@ -1072,12 +1072,12 @@ Predicate const* CHC::createBlock(ASTNode const* _node, PredicateType _predType,
 	return block;
 }
 
-Predicate const* CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract)
+Predicate const* CHC::createSummaryBlock(FunctionDefinition const& _function, ContractDefinition const& _contract, PredicateType _type)
 {
 	return createSymbolicBlock(
 		functionSort(_function, &_contract, state()),
 		"summary_" + uniquePrefix() + "_" + predicateName(&_function, &_contract),
-		PredicateType::FunctionSummary,
+		_type,
 		&_function
 	);
 }
@@ -1179,6 +1179,8 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 	case PredicateType::ConstructorSummary:
 		return constructor(_block, m_context);
 	case PredicateType::FunctionSummary:
+	case PredicateType::InternalCall:
+	case PredicateType::ExternalCall:
 		return smt::function(_block, m_currentContract, m_context);
 	case PredicateType::FunctionBlock:
 		solAssert(m_currentFunction, "");
@@ -1250,7 +1252,17 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		args.push_back(currentValue(*var));
 	}
 
-	return (*m_summaries.at(calledContract).at(function))(args);
+	Predicate const& summary = *m_summaries.at(calledContract).at(function);
+	auto from = smt::function(summary, calledContract, m_context);
+	Predicate const& callPredicate = *createSummaryBlock(
+		*function,
+		*calledContract,
+		kind == FunctionType::Kind::Internal ? PredicateType::InternalCall : PredicateType::ExternalCall
+	);
+	auto to = smt::function(callPredicate, calledContract, m_context);
+	addRule(smtutil::Expression::implies(from, to), to.name);
+
+	return callPredicate(args);
 }
 
 void CHC::addRule(smtutil::Expression const& _rule, string const& _ruleName)
@@ -1506,6 +1518,9 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 
 	auto callGraph = summaryCalls(_graph, *rootId);
 
+	auto nodePred = [&](auto _node) { return Predicate::predicate(_graph.nodes.at(_node).name); };
+	auto nodeArgs = [&](auto _node) { return _graph.nodes.at(_node).arguments; };
+
 	bool first = true;
 	for (auto summaryId: callGraph.at(*rootId))
 	{
@@ -1518,8 +1533,6 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		auto stateValues = summaryPredicate->summaryStateValues(summaryArgs);
 		solAssert(stateValues.size() == stateVars->size(), "");
 
-		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
-
 		if (first)
 		{
 			first = false;
@@ -1529,10 +1542,12 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			{
 				auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
 				auto const& inParams = calledFun->parameters();
-				localState += formatVariableModel(inParams, inValues, "\n") + "\n";
+				if (auto inStr = formatVariableModel(inParams, inValues, "\n"); !inStr.empty())
+					localState += inStr + "\n";
 				auto outValues = summaryPredicate->summaryPostOutputValues(summaryArgs);
 				auto const& outParams = calledFun->returnParameters();
-				localState += formatVariableModel(outParams, outValues, "\n") + "\n";
+				if (auto outStr = formatVariableModel(outParams, outValues, "\n"); !outStr.empty())
+					localState += outStr + "\n";
 			}
 		}
 		else
@@ -1544,7 +1559,23 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 				path.emplace_back("State: " + modelMsg);
 		}
 
-		path.emplace_back(txCex);
+		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
+
+		list<string> calls;
+		auto dfs = [&](unsigned node, unsigned depth, auto&& _dfs) -> void {
+			auto pred = nodePred(node);
+			solAssert(pred && pred->isSummary(), "");
+			if (!pred->isConstructorSummary())
+				for (unsigned v: callGraph[node])
+					_dfs(v, depth + 1, _dfs);
+			calls.push_front(string(depth * 2, ' ') + pred->formatSummaryCall(nodeArgs(node)));
+			if (pred->isInternalCall())
+				calls.front() += " -- internal call";
+			else if (pred->isExternalCall())
+				calls.front() += " -- external call";
+		};
+		dfs(summaryId, 0, dfs);
+		path.emplace_back(boost::algorithm::join(calls, "\n"));
 	}
 
 	return localState + "\nTransaction trace:\n" + boost::algorithm::join(boost::adaptors::reverse(path), "\n");
@@ -1554,16 +1585,27 @@ map<unsigned, vector<unsigned>> CHC::summaryCalls(CHCSolverInterface::CexGraph c
 {
 	map<unsigned, vector<unsigned>> calls;
 
-	solidity::util::BreadthFirstSearch<pair<unsigned, unsigned>>{{{_root, _root}}}.run([&](auto info, auto&& _addChild) {
-		auto [node, root] = info;
-		if (Predicate::predicate(_graph.nodes.at(node).name)->isSummary())
+	auto compare = [&](unsigned _a, unsigned _b) {
+		return _graph.nodes.at(_a).name > _graph.nodes.at(_b).name;
+	};
+
+	queue<pair<unsigned, unsigned>> q;
+	q.push({_root, _root});
+	while (!q.empty())
+	{
+		auto [node, root] = q.front();
+		q.pop();
+
+		Predicate const* nodePred = Predicate::predicate(_graph.nodes.at(node).name);
+		if (nodePred->isSummary() && (_root == root || nodePred->isInternalCall() || nodePred->isExternalCall()))
 		{
 			calls[root].push_back(node);
 			root = node;
 		}
-		for (auto v: _graph.edges.at(node))
-			_addChild({v, root});
-	});
+		auto const& edges = _graph.edges.at(node);
+		for (unsigned v: set<unsigned, decltype(compare)>(begin(edges), end(edges), compare))
+			q.push({v, root});
+	}
 
 	return calls;
 }
