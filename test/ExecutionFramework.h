@@ -51,6 +51,25 @@ class ExecutionFramework
 {
 
 public:
+	/// LOG record.
+	struct log_record
+	{
+		/// The address of the account which created the log.
+		util::h160 creator;
+
+		/// The data attached to the log.
+		bytes data;
+
+		/// The log topics.
+		std::vector<util::h256> topics;
+
+		/// Equal operator.
+		bool operator==(const log_record& other) const noexcept
+		{
+			return creator == other.creator && data == other.data && topics == other.topics;
+		}
+	};
+
 	ExecutionFramework();
 	ExecutionFramework(langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _vmPaths);
 	virtual ~ExecutionFramework() = default;
@@ -276,6 +295,22 @@ protected:
 	util::h256 logTopic(size_t _logIdx, size_t _topicIdx) const;
 	util::h160 logAddress(size_t _logIdx) const;
 	bytes logData(size_t _logIdx) const;
+
+	std::vector<log_record> recordedLogs() {
+		std::vector<log_record> logs{};
+		for (size_t logIdx = 0; logIdx < numLogs(); ++logIdx)
+		{
+			log_record record;
+			const auto& data = m_evmcHost->recorded_logs.at(logIdx).data;
+			record.data = bytes{data.begin(), data.end()};
+			record.creator = EVMHost::convertFromEVMC(m_evmcHost->recorded_logs.at(logIdx).creator);
+			for (size_t topicIdx = 0; topicIdx < numLogTopics(logIdx); ++topicIdx) {
+				record.topics.emplace_back(EVMHost::convertFromEVMC(m_evmcHost->recorded_logs.at(logIdx).topics.at(topicIdx)));
+			}
+			logs.emplace_back(record);
+		}
+		return logs;
+	}
 
 	langutil::EVMVersion m_evmVersion;
 	solidity::frontend::RevertStrings m_revertStrings = solidity::frontend::RevertStrings::Default;

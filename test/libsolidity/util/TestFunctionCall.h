@@ -16,6 +16,7 @@
 
 #include <test/libsolidity/util/TestFileParser.h>
 #include <test/libsolidity/util/SoltestErrors.h>
+#include <test/ExecutionFramework.h>
 
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
@@ -27,6 +28,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace solidity::frontend::test
@@ -80,6 +82,26 @@ public:
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
+	std::vector<solidity::test::ExecutionFramework::log_record> logs()
+	{
+		return m_rawLogs;
+	}
+	void setLogs(std::vector<solidity::test::ExecutionFramework::log_record> _logs)
+	{
+		m_rawLogs = std::move(_logs);
+	}
+	std::set<size_t>& consumedLogs()
+	{
+		return m_consumedLogs;
+	}
+	void setPreviousCall(TestFunctionCall* _call)
+	{
+		m_previousCall = _call;
+	}
+	TestFunctionCall* previousCall()
+	{
+		return m_previousCall;
+	}
 
 private:
 	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each parameter.
@@ -124,6 +146,10 @@ private:
 	FunctionCall m_call;
 	/// Result of the actual call been made.
 	bytes m_rawBytes = bytes{};
+	/// Logs created by the actual call.
+	std::vector<solidity::test::ExecutionFramework::log_record> m_rawLogs{};
+	std::set<size_t> m_consumedLogs;
+
 	/// Transaction status of the actual call. False in case of a REVERT or any other failure.
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting
@@ -131,6 +157,8 @@ private:
 	Json::Value m_contractABI;
 	/// Flags that the test failed because the called function is not known to exist on the contract.
 	bool m_calledNonExistingFunction = false;
+
+	TestFunctionCall* m_previousCall = nullptr;
 };
 
 }

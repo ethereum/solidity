@@ -60,12 +60,19 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 private:
+	bool checkLogs(TestFunctionCall& _call);
+
 	// logs builtins.
 	bytes numLogs(FunctionCall const& call);
 	bytes numLogTopics(FunctionCall const& call);
 	bytes logTopic(FunctionCall const& call);
 	bytes logAddress(FunctionCall const& call);
 	bytes logData(FunctionCall const& call);
+	bytes expectEvent(FunctionCall const& call);
+	void touchLog(FunctionCall const& call, size_t _logIdx)
+	{
+		m_touchedLogs[&call].insert(_logIdx);
+	}
 
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm);
 	SourceMap m_sources;
@@ -79,6 +86,7 @@ private:
 	bool m_allowNonExistingFunctions = false;
 	bool m_compileViaYulCanBeSet = false;
 	BuiltinFunctions m_builtins;
+	std::map<FunctionCall const*, std::set<size_t>> m_touchedLogs;
 };
 
 }

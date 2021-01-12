@@ -56,6 +56,7 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 				{"logTopic(uint256,uint256)", std::bind(&SemanticTest::logTopic, this, _1)},
 				{"logAddress(uint256)", std::bind(&SemanticTest::logAddress, this, _1)},
 				{"logData(uint256)", std::bind(&SemanticTest::logData, this, _1)},
+				{"expectEvent(uint256,string)", std::bind(&SemanticTest::expectEvent, this, _1)},
 			}}};
 
 	string choice = m_reader.stringSetting("compileViaYul", "default");
@@ -142,6 +143,7 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
 
 		reset();
+		m_touchedLogs.clear();
 
 		m_compileViaYul = _compileViaYul;
 		if (_compileToEwasm)
@@ -161,6 +163,14 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 		map<string, solidity::test::Address> libraries;
 
 		bool constructed = false;
+
+		// Iterate through the test calls and set the previous call.
+		TestFunctionCall* previousCall{nullptr};
+		for (auto& test: m_tests)
+		{
+			test.setPreviousCall(previousCall);
+			previousCall = &test;
+		}
 
 		for (auto& test: m_tests)
 		{
@@ -261,6 +271,7 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 
 					if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
 						success = false;
+					success = checkLogs(test);
 					test.setFailure(!m_transactionSuccessful);
 				}
 
@@ -268,6 +279,10 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
 			}
 		}
+
+		TestFunctionCall fakeLastTestFunctionCall(FunctionCall{});
+		fakeLastTestFunctionCall.setPreviousCall(previousCall);
+		success = checkLogs(fakeLastTestFunctionCall);
 
 		if (success && !m_runWithYul && _compileViaYul)
 		{
@@ -404,6 +419,43 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 		_stream << _linePrefix << "// " << setting.first << ": " << setting.second << endl;
 }
 
+bool SemanticTest::checkLogs(TestFunctionCall& _call)
+{
+	_call.setLogs(SolidityExecutionFramework::recordedLogs());
+
+	TestFunctionCall* producer = _call.previousCall();
+	std::vector<FunctionCall const*> consumers{};
+	// Only non-builtins are able to produce logs.
+	// So lets search from the current call up to the first non-builtin.
+	while (producer != nullptr && producer->call().kind == FunctionCall::Kind::Builtin)
+		if (producer->previousCall() != nullptr)
+		{
+			// On the way up to the producer we track all builtins that where on the way.
+			// Only builtins can consume logs, we store them in the consumers vector.
+			consumers.emplace_back(&producer->call());
+			producer = producer->previousCall();
+		}
+
+	// Producer will now point to the call that probably produced a log.
+	if (producer)
+	{
+		// We iterate through the consumers to find out what logs they have consumed.
+		for (auto& consumer: consumers)
+			for (auto logIdx: m_touchedLogs[consumer])
+				// All logs that where touched by the consumer, will be marked as
+				// touched within the producer.
+				touchLog(producer->call(), logIdx);
+
+		// Finally we update the consumed logs within the producer.
+		for (auto& logIdx: m_touchedLogs[&producer->call()])
+			producer->consumedLogs().insert(logIdx);
+
+		std::cout << producer->consumedLogs().size() << " / " << producer->logs().size() << std::endl;
+		return producer->consumedLogs().size() == producer->logs().size();
+	}
+	return true;
+}
+
 bytes SemanticTest::numLogs(FunctionCall const&)
 {
 	// numLogs()
@@ -419,6 +471,7 @@ bytes SemanticTest::numLogTopics(FunctionCall const& call)
 	size_t logCount = SolidityExecutionFramework::numLogs();
 	// todo: hex strings not supported by lexical_cast<..>(..)
 	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	touchLog(call, logIdx);
 	if (logCount > 0 && logIdx < logCount)
 		return util::toBigEndian(u256{SolidityExecutionFramework::numLogTopics(logIdx)});
 	// empty result means failure.
@@ -430,6 +483,7 @@ bytes SemanticTest::logTopic(FunctionCall const& call)
 	// logTopic(uint256,uint256)
 	assert(call.arguments.parameters.size() == 2);
 	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	touchLog(call, logIdx);
 	auto topicIdx = lexical_cast<size_t>(call.arguments.parameters.back().rawString);
 	size_t logCount = SolidityExecutionFramework::numLogs();
 	// todo: hex strings not supported by lexical_cast<..>(..)
@@ -449,6 +503,7 @@ bytes SemanticTest::logAddress(FunctionCall const& call)
 	size_t logCount = SolidityExecutionFramework::numLogs();
 	// todo: hex strings not supported by lexical_cast<..>(..)
 	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	touchLog(call, logIdx);
 	if (logCount > 0 && logIdx < logCount)
 		return util::toBigEndian(u256{u160{SolidityExecutionFramework::logAddress(logIdx)}});
 	// empty result means failure.
@@ -462,8 +517,41 @@ bytes SemanticTest::logData(FunctionCall const& call)
 	size_t logCount = SolidityExecutionFramework::numLogs();
 	// todo: hex strings not supported by lexical_cast<..>(..)
 	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	touchLog(call, logIdx);
 	if (logCount > 0 && logIdx < logCount)
 		return SolidityExecutionFramework::logData(logIdx);
+	// empty result means failure.
+	return bytes{};
+}
+
+bytes SemanticTest::expectEvent(FunctionCall const& call)
+{
+	// expectEvent(uint256,string): logIdx, eventSignature
+	assert(call.arguments.parameters.size() == 2);
+	size_t logCount = SolidityExecutionFramework::numLogs();
+	// todo: hex strings not supported by lexical_cast<..>(..)
+	auto logIdx = lexical_cast<size_t>(call.arguments.parameters.front().rawString);
+	touchLog(call, logIdx);
+	auto logSignature = call.arguments.parameters.back().rawString;
+	assert(logSignature.length() >= 2);
+	logSignature = logSignature.substr(1, logSignature.length() - 2);
+	h256 logSignatureHash{util::keccak256(logSignature)};
+	if (logCount > 0 && logIdx < logCount)
+	{
+		vector<h256> topics;
+		size_t topicCount = SolidityExecutionFramework::numLogTopics(logIdx);
+		for (size_t topicIdx = 0; topicIdx < topicCount; ++topicIdx)
+			topics.push_back(SolidityExecutionFramework::logTopic(logIdx, topicIdx));
+		// remove topics[0], if the signature matches.
+		if (!topics.empty() && topics[0] == logSignatureHash)
+			topics.erase(topics.begin());
+		bytes result;
+		for (auto& topic : topics)
+			result += util::toBigEndian(topic);
+		result += SolidityExecutionFramework::logData(logIdx);
+		// todo: anonymous events with no data would be treated as error, maybe not that important.
+		return result;
+	}
 	// empty result means failure.
 	return bytes{};
 }
