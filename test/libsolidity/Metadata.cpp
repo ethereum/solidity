@@ -432,6 +432,124 @@ BOOST_AUTO_TEST_CASE(metadata_license_ignored_stray_unicode)
 	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
 }
 
+BOOST_AUTO_TEST_CASE(metadata_license_bidi_marks)
+{
+	char const* sourceCode =
+		"// \xE2\x80\xAE""0.3-LPG :reifitnedI-esneciL-XDPS\xE2\x80\xAC\n"
+		"// NOTE: The text above is reversed using Unicode directional marks. In raw form it would look like this:\n"
+		"// <LRO>0.3-LPG :reifitnedI-esneciL-XDPS<PDF>\n"
+		"contract C {}\n";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_bottom)
+{
+	char const* sourceCode = R"(
+		contract C {}
+		// SPDX-License-Identifier: GPL-3.0
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_cr_endings)
+{
+	char const* sourceCode =
+		"// SPDX-License-Identifier: GPL-3.0\r"
+		"contract C {}\r";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_crlf_endings)
+{
+	char const* sourceCode =
+		"// SPDX-License-Identifier: GPL-3.0\r\n"
+		"contract C {}\r\n";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_in_string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bytes license = "// SPDX-License-Identifier: GPL-3.0";
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_in_contract)
+{
+	char const* sourceCode = R"(
+		contract C {
+		// SPDX-License-Identifier: GPL-3.0
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_missing_colon)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_multiline)
+{
+	char const* sourceCode = R"(
+		/* SPDX-License-Identifier: GPL-3.0 */
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_natspec)
+{
+	char const* sourceCode = R"(
+		/// SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_natspec_multiline)
+{
+	char const* sourceCode = R"(
+		/** SPDX-License-Identifier: GPL-3.0 */
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace)
+{
+	char const* sourceCode = R"(
+		//SPDX-License-Identifier:GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace_multiline)
+{
+	char const* sourceCode = R"(
+		/*SPDX-License-Identifier:GPL-3.0*/
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_nonempty_line)
+{
+	char const* sourceCode = R"(
+		pragma solidity >= 0.0; // SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
