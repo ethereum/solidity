@@ -17,6 +17,7 @@ Bugfixes:
  * SMTChecker: Fix false negatives when analyzing external function calls.
  * SMTChecker: Fix missing type constraints for block variables.
  * SMTChecker: Fix internal error on ``block.chainid``.
+ * Type System: Disallow implicit conversion from ``uintN`` to ``intM`` when ``M > N``, and by extension, explicit conversion between the same types is also disallowed.
 
 ### 0.8.0 (2020-12-16)
 
