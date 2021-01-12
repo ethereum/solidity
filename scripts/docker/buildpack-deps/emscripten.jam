@@ -79,10 +79,10 @@ rule init ( version ? : command * : options * )
   # @todo this seems to be the right way, but this is a list somehow
   toolset.add-requirements <toolset>emscripten:<testing.launcher>node ;
 
-  toolset.flags emscripten.compile STDHDRS $(condition) : /emsdk/emscripten/sdk/system/include ;
-  toolset.flags emscripten.link STDLIBPATH $(condition) : /emsdk/emscripten/sdk/system/lib ;
-  toolset.flags emscripten AR $(condition) : /emsdk/emscripten/sdk/emar ;
-  toolset.flags emscripten RANLIB $(condition) : /emsdk/emscripten/sdk/emranlib ;
+  toolset.flags emscripten.compile STDHDRS $(condition) : /emsdk/upstream/emscripten/system/include ;
+  toolset.flags emscripten.link STDLIBPATH $(condition) : /emsdk/upstream/emscripten/system/lib ;
+  toolset.flags emscripten AR $(condition) : /emsdk/upstream/emscripten/emar ;
+  toolset.flags emscripten RANLIB $(condition) : /emsdk/upstream/emscripten/emranlib ;
 }
 
 type.set-generated-target-suffix EXE : <toolset>emscripten : js ;
