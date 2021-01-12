@@ -192,14 +192,21 @@ Array Literals
 ^^^^^^^^^^^^^^
 
 An array literal is a comma-separated list of one or more expressions, enclosed
-in square brackets (``[...]``). For example ``[1, a, f(3)]``. There must be a
-common type all elements can be implicitly converted to. This is the elementary
-type of the array.
+in square brackets (``[...]``). For example ``[1, a, f(3)]``. The type of the
+array literal is determined as follows:
 
-Array literals are always statically-sized memory arrays.
+It is always a statically-sized memory array whose length is the
+number of expressions.
+
+The base type of the array is the type of the first expression on the list such that all
+other expressions can be implicitly converted to it. It is a type error
+if this is not possible.
+
+It is not enough that there is a type all the elements can be converted to. One of the elements
+has to be of that type.
 
 In the example below, the type of ``[1, 2, 3]`` is
-``uint8[3] memory``. Because the type of each of these constants is ``uint8``, if
+``uint8[3] memory``, because the type of each of these constants is ``uint8``. If
 you want the result to be a ``uint[3] memory`` type, you need to convert
 the first element to ``uint``.
 
@@ -214,6 +221,28 @@ the first element to ``uint``.
         }
         function g(uint[3] memory) public pure {
             // ...
+        }
+    }
+
+The array literal ``[1, -1]`` is invalid because the type of the first expression
+is ``uint8`` while the type of the second is ``int8`` and they cannot be implicitly
+converted to each other. To make it work, you can use ``[int8(1), -1]``, for example.
+
+Since fixed-size memory arrays of different type cannot be converted into each other
+(even if the base types can), you always have to specify a common base type explicitly
+if you want to use two-dimensional array literals:
+
+::
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.4.16 <0.9.0;
+
+    contract C {
+        function f() public pure returns (uint24[2][4] memory) {
+            uint24[2][4] memory x = [[uint24(0x1), 1], [0xffffff, 2], [uint24(0xff), 3], [uint24(0xffff), 4]];
+            // The following does not work, because some of the inner arrays are not of the right type.
+            // uint[2][4] memory x = [[0x1, 1], [0xffffff, 2], [0xff, 3], [0xffff, 4]];
+            return x;
         }
     }
 
