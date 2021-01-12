@@ -99,6 +99,8 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart1(
 		}},
 		{Builtins::ADDMOD(A, B, C), [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) + bigint(B.d())) % C.d()); }},
 		{Builtins::MULMOD(A, B, C), [=]{ return C.d() == 0 ? 0 : Word((bigint(A.d()) * bigint(B.d())) % C.d()); }},
+        {Builtins::MOD(ADD(A, B), C), [=]{ return ADDMOD(A, B, C); }},
+        {Builtins::MOD(MUL(A, B), C), [=]{ return MULMOD(A,B,C); }},
 		{Builtins::SIGNEXTEND(A, B), [=]() -> Word {
 			if (A.d() >= Pattern::WordSize / 8 - 1)
 				return B.d();
