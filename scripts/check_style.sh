@@ -2,13 +2,19 @@
 
 . scripts/report_errors.sh
 
+EXCLUDE_FILES=(
+  "libsolutil/picosha2.h"
+  "test/libsolutil/UTF8.cpp"
+)
+EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
+EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
+
 (
 REPO_ROOT="$(dirname "$0")"/..
 cd $REPO_ROOT
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
-  grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE" |
-  grep -v -E "test/libsolidity/syntaxTests/comments/unicode_direction_override_1.sol"
+  grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}"
 )
 
 if [[ "$WHITESPACE" != "" ]]
@@ -20,10 +26,9 @@ fi
 
 function preparedGrep()
 {
-	git grep -nIE "$1" -- '*.h' '*.cpp' | grep -v "picosha2.h"
+	git grep -nIE "$1" -- '*.h' '*.cpp' | grep -v "${EXCLUDE_FILES_JOINED}"
 	return $?
 }
-
 
 FORMATERROR=$(
 (
