@@ -18,6 +18,7 @@ Bugfixes:
  * SMTChecker: Fix false negatives when analyzing external function calls.
  * SMTChecker: Fix missing type constraints for block variables.
  * SMTChecker: Fix internal error on ``block.chainid``.
+ * SMTChecker: Fix internal error on pushing string literal to ``bytes`` array.
  * Type Checker: Fix internal error caused by constant structs containing mappings.
  * Type System: Disallow implicit conversion from ``uintN`` to ``intM`` when ``M > N``, and by extension, explicit conversion between the same types is also disallowed.
 
