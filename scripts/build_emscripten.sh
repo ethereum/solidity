@@ -35,5 +35,5 @@ else
 fi
 
 docker run -v $(pwd):/root/project -w /root/project \
-    solbuildpackpusher/solidity-buildpack-deps@sha256:23dad3b34deae8107c8551804ef299f6a89c23ed506e8118fac151e2bdc9018c\
+    solbuildpackpusher/solidity-buildpack-deps@sha256:e92ff672095ae31ea62ee9f4c6b552890f08c03a650d2a694609cb4385a17615 \
     ./scripts/ci/build_emscripten.sh $BUILD_DIR
