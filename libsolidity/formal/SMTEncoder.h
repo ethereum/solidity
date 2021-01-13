@@ -238,8 +238,8 @@ protected:
 	void tupleAssignment(Expression const& _left, Expression const& _right);
 	/// Computes the right hand side of a compound assignment.
 	smtutil::Expression compoundAssignment(Assignment const& _assignment);
-	/// Handles assignment of the result of external call in try statement to the parameters of success clause
-	void tryCatchAssignment(std::vector<std::shared_ptr<VariableDeclaration>> const& _variables, smt::SymbolicVariable const& rhs);
+	/// Handles assignment of an expression to a tuple of variables.
+	void expressionToTupleAssignment(std::vector<std::shared_ptr<VariableDeclaration>> const& _variables, Expression const& _rhs);
 
 	/// Maps a variable to an SSA index.
 	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
