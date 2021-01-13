@@ -43,7 +43,12 @@
 
 #include <libsolutil/JSON.h>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/program_options.hpp>
+
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/drop.hpp>
+#include <range/v3/view/stride.hpp>
 
 #include <string>
 #include <sstream>
@@ -51,6 +56,7 @@
 #include <variant>
 
 using namespace std;
+using namespace ranges;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -102,23 +108,13 @@ public:
 		size_t _columns
 	)
 	{
-		auto hasShorterString = [](auto const& a, auto const& b){ return a.second.size() < b.second.size(); };
-		size_t longestDescriptionLength = max(
+		yulAssert(_columns > 0, "");
+
+		auto hasShorterString = [](auto const& a, auto const& b) { return a.second.size() < b.second.size(); };
+		size_t longestDescriptionLength = std::max(
 			max_element(_optimizationSteps.begin(), _optimizationSteps.end(), hasShorterString)->second.size(),
 			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
 		);
-
-		size_t index = 0;
-		auto printPair = [&](auto const& optionAndDescription)
-		{
-			cout << optionAndDescription.first << ": ";
-			cout << setw(static_cast<int>(longestDescriptionLength)) << setiosflags(ios::left);
-			cout << optionAndDescription.second << " ";
-
-			++index;
-			if (index % _columns == 0)
-				cout << endl;
-		};
 
 		for (auto const& optionAndDescription: _extraOptions)
 		{
@@ -131,11 +127,19 @@ public:
 				"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
 				"Please update the code to use a different character and recompile yulopti."
 			);
-			printPair(optionAndDescription);
 		}
 
-		for (auto const& abbreviationAndName: _optimizationSteps)
-			printPair(abbreviationAndName);
+		vector<tuple<char, string>> sortedOptions = views::concat(_optimizationSteps, _extraOptions);
+
+		yulAssert(sortedOptions.size() > 0, "");
+		size_t rows = (sortedOptions.size() - 1) / _columns + 1;
+		for (size_t row = 0; row < rows; ++row)
+		{
+			for (auto const& [key, name]: sortedOptions | views::drop(row) | views::stride(rows))
+				cout << key << ": " << setw(static_cast<int>(longestDescriptionLength)) << setiosflags(ios::left) << name << " ";
+
+			cout << endl;
+		}
 	}
 
 	void runInteractive(string source)
