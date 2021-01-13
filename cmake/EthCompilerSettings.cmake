@@ -150,7 +150,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM_ASYNC_COMPILATION=0")
 			# Output a single js file with the wasm binary embedded as base64 string.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s SINGLE_FILE=1")
-
+			# Allow new functions to be added to the wasm module via addFunction.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_TABLE_GROWTH=1")
 			# Disable warnings about not being pure asm.js due to memory growth.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-almost-asm")
 		endif()
