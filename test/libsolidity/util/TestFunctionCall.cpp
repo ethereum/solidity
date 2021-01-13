@@ -18,7 +18,9 @@
 #include <test/libsolidity/util/ContractABIUtils.h>
 
 #include <libsolutil/AnsiColorized.h>
+#include <libsolutil/JSON.h>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 #include <optional>
@@ -32,6 +34,46 @@ using namespace std;
 
 using Token = soltest::Token;
 
+TestFunctionCall::EventInformation
+TestFunctionCall::findEventSignature(solidity::test::ExecutionFramework::log_record const& log) const
+{
+	for (const auto& entity: m_contractABI)
+	{
+		EventInformation eventInfo;
+		if (entity["type"].isString() && entity["type"].asString() == "event")
+		{
+			string name{entity["name"].asString()};
+			bool anonymous{entity["anonymous"].asBool()};
+			vector<string> argumentTypes;
+			for (const auto& input: entity["inputs"])
+			{
+				string type{input["internalType"].asString()};
+				argumentTypes.emplace_back(type);
+				if (input["indexed"].asBool())
+					eventInfo.indexedTypes.push_back(type);
+				else
+					eventInfo.nonIndexedTypes.push_back(type);
+			}
+			if (!name.empty() && !anonymous)
+			{
+				std::string signature{name};
+				signature += "(";
+				for (auto& arg: argumentTypes)
+					signature += arg + ",";
+				if (!argumentTypes.empty())
+					signature = signature.substr(0, signature.length() - 1);
+				signature += ")";
+				if (!log.topics.empty() && log.topics[0] == util::keccak256(signature))
+				{
+					eventInfo.signature = signature;
+					return eventInfo;
+				}
+			}
+		}
+	}
+	return {};
+}
+
 string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
@@ -41,7 +83,7 @@ string TestFunctionCall::format(
 {
 	stringstream stream;
 
-	bool highlight = !matchesExpectation() && _highlight;
+	bool highlight = (!matchesExpectation() || hasUnconsumedLogs()) && _highlight;
 
 	auto formatOutput = [&](bool const _singleLine)
 	{
@@ -93,7 +135,6 @@ string TestFunctionCall::format(
 			if (!m_call.arguments.parameters.at(0).format.newline)
 				stream << ws;
 			stream << output;
-
 		}
 
 		/// Formats comments on the function parameters and the arrow taking
@@ -116,8 +157,8 @@ string TestFunctionCall::format(
 			stream << endl << _linePrefix << newline << ws;
 			if (!m_call.arguments.comment.empty())
 			{
-				 stream << comment << m_call.arguments.comment << comment;
-				 stream << endl << _linePrefix << newline << ws;
+				stream << comment << m_call.arguments.comment << comment;
+				stream << endl << _linePrefix << newline << ws;
 			}
 			stream << arrow;
 		}
@@ -125,6 +166,51 @@ string TestFunctionCall::format(
 		/// Format either the expected output or the actual result output
 		string result;
 		auto& builtin = m_call.expectations.builtin;
+		if (hasUnconsumedLogs())
+		{
+			for (auto& log: unconsumedLogs())
+			{
+				EventInformation eventInfo = findEventSignature(log);
+				string signature{eventInfo.signature};
+				stream << std::endl
+					   << "// logs.expectEvent(uint256,string): " << log.index << ", "
+					   << "\"" + signature + "\" -> ";
+
+				vector<u256> topicsAndData;
+				for (auto& topic: log.topics)
+					if ((topic != *log.topics.begin() && !signature.empty()) || signature.empty())
+						topicsAndData.emplace_back(u256{topic});
+
+				assert(log.data.size() % 32 == 0);
+
+				if (eventInfo.signature.empty())
+				{
+					for (long current = 0; current < static_cast<long>(log.data.size() / 32); ++current)
+					{
+						bytes parameter{log.data.begin() + current * 32, log.data.begin() + current * 32 + 32};
+						topicsAndData.emplace_back(util::fromBigEndian<u256>(parameter));
+					}
+				}
+				else
+				{
+					long current = 0;
+					for (auto& type: eventInfo.nonIndexedTypes)
+					{
+						// todo: use type information to improve decoding.
+						(void) type;
+						bytes parameter{log.data.begin() + current, log.data.begin() + current + 32};
+						current += 32;
+						topicsAndData.emplace_back(util::fromBigEndian<u256>(parameter));
+					}
+				}
+				for (auto& element: topicsAndData)
+				{
+					stream << util::toCompactHexWithPrefix(element);
+					if (&element != &*topicsAndData.rbegin())
+						stream << ", ";
+				}
+			}
+		}
 		if (!_renderResult)
 		{
 			if (builtin)
@@ -151,6 +237,13 @@ string TestFunctionCall::format(
 		{
 			if (m_calledNonExistingFunction)
 				_errorReporter.warning("The function \"" + m_call.signature + "\" is not known to the compiler.");
+
+			if (m_consumedLogs.size() != m_rawLogs.size())
+			{
+				stringstream str;
+				str << "The function \"" << m_call.signature << "\" produced " << m_rawLogs.size() <<" log(s), but only " << m_consumedLogs.size() << " log(s) where consumed.";
+				_errorReporter.error(str.str());
+			}
 
 			if (builtin)
 				_errorReporter.warning("The expectation \"" + builtin->signature + ": " + formatRawParameters(builtin->arguments.parameters) + "\" will be replaced with the actual value returned by the test.");

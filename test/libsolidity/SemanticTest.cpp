@@ -282,7 +282,7 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 
 		TestFunctionCall fakeLastTestFunctionCall(FunctionCall{});
 		fakeLastTestFunctionCall.setPreviousCall(previousCall);
-		success = checkLogs(fakeLastTestFunctionCall);
+		success &= checkLogs(fakeLastTestFunctionCall);
 
 		if (success && !m_runWithYul && _compileViaYul)
 		{
@@ -428,7 +428,9 @@ bool SemanticTest::checkLogs(TestFunctionCall& _call)
 	// Only non-builtins are able to produce logs.
 	// So lets search from the current call up to the first non-builtin.
 	while (producer != nullptr && producer->call().kind == FunctionCall::Kind::Builtin)
-		if (producer->previousCall() != nullptr)
+		if (producer->previousCall() == nullptr)
+			break;
+		else
 		{
 			// On the way up to the producer we track all builtins that where on the way.
 			// Only builtins can consume logs, we store them in the consumers vector.
@@ -450,8 +452,8 @@ bool SemanticTest::checkLogs(TestFunctionCall& _call)
 		for (auto& logIdx: m_touchedLogs[&producer->call()])
 			producer->consumedLogs().insert(logIdx);
 
-		std::cout << producer->consumedLogs().size() << " / " << producer->logs().size() << std::endl;
-		return producer->consumedLogs().size() == producer->logs().size();
+		// It is ok if some builtins consumed log events.
+		return producer->consumedLogs().size() >= producer->logs().size();
 	}
 	return true;
 }

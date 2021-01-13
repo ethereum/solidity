@@ -51,9 +51,9 @@ class ExecutionFramework
 {
 
 public:
-	/// LOG record.
 	struct log_record
 	{
+		size_t index;
 		/// The address of the account which created the log.
 		util::h160 creator;
 
@@ -302,6 +302,7 @@ protected:
 		{
 			log_record record;
 			const auto& data = m_evmcHost->recorded_logs.at(logIdx).data;
+			record.index = logIdx;
 			record.data = bytes{data.begin(), data.end()};
 			record.creator = EVMHost::convertFromEVMC(m_evmcHost->recorded_logs.at(logIdx).creator);
 			for (size_t topicIdx = 0; topicIdx < numLogTopics(logIdx); ++topicIdx) {

@@ -82,7 +82,7 @@ public:
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
-	std::vector<solidity::test::ExecutionFramework::log_record> logs()
+	std::vector<solidity::test::ExecutionFramework::log_record> logs() const
 	{
 		return m_rawLogs;
 	}
@@ -94,6 +94,18 @@ public:
 	{
 		return m_consumedLogs;
 	}
+	bool hasUnconsumedLogs() const
+	{
+		return m_consumedLogs.size() < m_rawLogs.size();
+	}
+	std::vector<solidity::test::ExecutionFramework::log_record> unconsumedLogs() const
+	{
+		std::vector<solidity::test::ExecutionFramework::log_record> result;
+		for (auto& log: m_rawLogs)
+			if (m_consumedLogs.find(log.index) == m_consumedLogs.end())
+				result.emplace_back(m_rawLogs[log.index]);
+		return result;
+	}
 	void setPreviousCall(TestFunctionCall* _call)
 	{
 		m_previousCall = _call;
@@ -104,6 +116,14 @@ public:
 	}
 
 private:
+	struct EventInformation
+	{
+		std::string signature;
+		std::vector<std::string> indexedTypes;
+		std::vector<std::string> nonIndexedTypes;
+	};
+	EventInformation findEventSignature(solidity::test::ExecutionFramework::log_record const& log) const;
+
 	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each parameter.
 	/// Throws if there's a mismatch in the size of `bytes` and the desired formats that are specified
 	/// in the ABI type.
