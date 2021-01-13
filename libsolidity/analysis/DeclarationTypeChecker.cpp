@@ -412,6 +412,15 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		type = TypeProvider::withLocation(ref, typeLoc, isPointer);
 	}
 
+	if (_variable.isConstant() && !type->isValueType())
+	{
+		bool allowed = false;
+		if (auto arrayType = dynamic_cast<ArrayType const*>(type))
+			allowed = arrayType->isByteArray();
+		if (!allowed)
+			m_errorReporter.fatalDeclarationError(9259_error, _variable.location(), "Constants of non-value type not yet implemented.");
+	}
+
 	_variable.annotation().type = type;
 }
 
