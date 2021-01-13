@@ -265,6 +265,39 @@ decltype(auto) valueOrDefault(MapType&& _map, KeyType const& _key, ValueType&& _
 	return (it == _map.end()) ? _defaultValue : it->second;
 }
 
+namespace detail
+{
+template<typename Callable>
+struct MapTuple
+{
+	Callable callable;
+	template<typename TupleType>
+	decltype(auto) operator()(TupleType&& _tuple) {
+		using PlainTupleType = std::remove_cv_t<std::remove_reference_t<TupleType>>;
+		return operator()(
+			std::forward<TupleType>(_tuple),
+			std::make_index_sequence<std::tuple_size_v<PlainTupleType>>{}
+		);
+	}
+private:
+	template<typename TupleType, size_t... I>
+	decltype(auto) operator()(TupleType&& _tuple, std::index_sequence<I...>)
+	{
+		return callable(std::get<I>(std::forward<TupleType>(_tuple))...);
+	}
+};
+}
+
+/// Wraps @a _callable, which takes multiple arguments, into a callable that takes a single tuple of arguments.
+/// Since structured binding in lambdas is not allowed, i.e. [](auto&& [key, value]) { ... } is invalid, this allows
+/// to instead use mapTuple([](auto&& key, auto&& value) { ... }).
+template<typename Callable>
+decltype(auto) mapTuple(Callable&& _callable)
+{
+	return detail::MapTuple<Callable>{std::forward<Callable>(_callable)};
+}
+
+
 // String conversion functions, mainly to/from hex/nibble/byte representations.
 
 enum class WhenError

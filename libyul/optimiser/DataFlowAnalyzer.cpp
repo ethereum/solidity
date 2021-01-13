@@ -63,19 +63,19 @@ void DataFlowAnalyzer::operator()(ExpressionStatement& _statement)
 	if (auto vars = isSimpleStore(StoreLoadLocation::Storage, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		cxx20::erase_if(m_storage, [&](auto const& entry) {
+		cxx20::erase_if(m_storage, mapTuple([&](auto&& key, auto&& value) {
 			return
-				!m_knowledgeBase.knownToBeDifferent(vars->first, entry.first) &&
-				!m_knowledgeBase.knownToBeEqual(vars->second, entry.second);
-		});
+				!m_knowledgeBase.knownToBeDifferent(vars->first, key) &&
+				!m_knowledgeBase.knownToBeEqual(vars->second, value);
+		}));
 		m_storage[vars->first] = vars->second;
 	}
 	else if (auto vars = isSimpleStore(StoreLoadLocation::Memory, _statement))
 	{
 		ASTModifier::operator()(_statement);
-		cxx20::erase_if(m_memory, [&](auto const& entry) {
-			return !m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, entry.first);
-		});
+		cxx20::erase_if(m_memory, mapTuple([&](auto&& key, auto&& /* value */) {
+			return !m_knowledgeBase.knownToBeDifferentByAtLeast32(vars->first, key);
+		}));
 		m_memory[vars->first] = vars->second;
 	}
 	else
@@ -261,11 +261,11 @@ void DataFlowAnalyzer::handleAssignment(set<YulString> const& _variables, Expres
 			// assignment to slot denoted by "name"
 			m_storage.erase(name);
 			// assignment to slot contents denoted by "name"
-			cxx20::erase_if(m_storage, [&](auto const& entry) { return entry.second == name; });
+			cxx20::erase_if(m_storage, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
 			// assignment to slot denoted by "name"
 			m_memory.erase(name);
 			// assignment to slot contents denoted by "name"
-			cxx20::erase_if(m_memory, [&](auto const& entry) { return entry.second == name; });
+			cxx20::erase_if(m_memory, mapTuple([&name](auto&& /* key */, auto&& value) { return value == name; }));
 		}
 	}
 
@@ -318,9 +318,9 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	// First clear storage knowledge, because we do not have to clear
 	// storage knowledge of variables whose expression has changed,
 	// since the value is still unchanged.
-	auto eraseCondition = [&](auto const& entry) {
-		return _variables.count(entry.first) || _variables.count(entry.second);
-	};
+	auto eraseCondition = mapTuple([&_variables](auto&& key, auto&& value) {
+		return _variables.count(key) || _variables.count(value);
+	});
 	cxx20::erase_if(m_storage, eraseCondition);
 	cxx20::erase_if(m_memory, eraseCondition);
 
@@ -379,10 +379,10 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 	// This also works for memory because _older is an "older version"
 	// of m_memory and thus any overlapping write would have cleared the keys
 	// that are not known to be different inside m_memory already.
-	cxx20::erase_if(_this, [&](auto const& entry){
-		YulString const* value = valueOrNullptr(_older, entry.first);
-		return !value || *value != entry.second;
-	});
+	cxx20::erase_if(_this, mapTuple([&_older](auto&& key, auto&& currentValue){
+		YulString const* oldValue = valueOrNullptr(_older, key);
+		return !oldValue || *oldValue != currentValue;
+	}));
 }
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const
