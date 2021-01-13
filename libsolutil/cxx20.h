@@ -23,30 +23,30 @@ namespace solidity::cxx20
 {
 
 // Taken from https://en.cppreference.com/w/cpp/container/map/erase_if.
-template< class Key, class T, class Compare, class Alloc, class Pred >
-typename std::map<Key,T,Compare,Alloc>::size_type erase_if(std::map<Key,T,Compare,Alloc>& c, Pred pred)
+template<class Key, class T, class Compare, class Alloc, class Pred>
+typename std::map<Key, T, Compare, Alloc>::size_type erase_if(std::map<Key,T,Compare,Alloc>& _c, Pred _pred)
 {
-	auto old_size = c.size();
-	for (auto i = c.begin(), last = c.end(); i != last;)
-		if (pred(*i))
-			i = c.erase(i);
+	auto old_size = _c.size();
+	for (auto i = _c.begin(), last = _c.end(); i != last;)
+		if (_pred(*i))
+			i = _c.erase(i);
 		else
 			++i;
-	return old_size - c.size();
+	return old_size - _c.size();
 }
 
 // Taken from https://en.cppreference.com/w/cpp/container/unordered_map/erase_if.
 template<class Key, class T, class Hash, class KeyEqual, class Alloc, class Pred>
-typename std::unordered_map<Key,T,Hash,KeyEqual,Alloc>::size_type
-erase_if(std::unordered_map<Key,T,Hash,KeyEqual,Alloc>& c, Pred pred)
+typename std::unordered_map<Key, T, Hash, KeyEqual, Alloc>::size_type
+erase_if(std::unordered_map<Key, T, Hash, KeyEqual, Alloc>& _c, Pred _pred)
 {
-	auto old_size = c.size();
-	for (auto i = c.begin(), last = c.end(); i != last;)
-		if (pred(*i))
-			i = c.erase(i);
+	auto old_size = _c.size();
+	for (auto i = _c.begin(), last = _c.end(); i != last;)
+		if (_pred(*i))
+			i = _c.erase(i);
 		else
 			++i;
-	return old_size - c.size();
+	return old_size - _c.size();
 }
 
 }

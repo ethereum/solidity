@@ -325,9 +325,9 @@ void DataFlowAnalyzer::clearValues(set<YulString> _variables)
 	cxx20::erase_if(m_memory, eraseCondition);
 
 	// Also clear variables that reference variables to be cleared.
-	for (auto const& name: _variables)
+	for (auto const& variableToClear: _variables)
 		for (auto const& [ref, names]: m_references)
-			if (names.count(name))
+			if (names.count(variableToClear))
 				_variables.emplace(ref);
 
 	// Clear the value and update the reference relation.
