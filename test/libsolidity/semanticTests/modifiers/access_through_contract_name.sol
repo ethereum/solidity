@@ -12,6 +12,8 @@ contract C is A {
         return 10;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // x() -> 7
 // f() -> 9
