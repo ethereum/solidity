@@ -3989,22 +3989,6 @@ BOOST_AUTO_TEST_CASE(create_memory_array_allocation_size)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(using_for_function_on_int)
-{
-	char const* sourceCode = R"(
-		library D { function double(uint self) public returns (uint) { return 2*self; } }
-		contract C {
-			using D for uint;
-			function f(uint a) public returns (uint) {
-				return a.double();
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "D");
-	compileAndRun(sourceCode, 0, "C", bytes(), map<string, h160>{{"D", m_contractAddress}});
-	ABI_CHECK(callContractFunction("f(uint256)", u256(9)), encodeArgs(u256(2 * 9)));
-}
-
 BOOST_AUTO_TEST_CASE(using_for_function_on_struct)
 {
 	char const* sourceCode = R"(
@@ -4174,34 +4158,6 @@ BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
 	// neither of the two should throw due to out-of-bounds access
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(0x01)).size() == 256 * 32);
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(0x101)).size() == 256 * 32);
-}
-
-BOOST_AUTO_TEST_CASE(failed_create)
-{
-	char const* sourceCode = R"(
-		contract D { constructor() payable {} }
-		contract C {
-			uint public x;
-			constructor() payable {}
-			function f(uint amount) public returns (D) {
-				x++;
-				return (new D){value: amount}();
-			}
-			function stack(uint depth) public returns (address) {
-				if (depth < 1024)
-					return this.stack(depth - 1);
-				else
-					return address(f(0));
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 20, "C");
-	BOOST_CHECK(callContractFunction("f(uint256)", 20) != encodeArgs(u256(0)));
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("f(uint256)", 20), encodeArgs());
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(1)));
-	ABI_CHECK(callContractFunction("stack(uint256)", 1023), encodeArgs());
-	ABI_CHECK(callContractFunction("x()"), encodeArgs(u256(1)));
 }
 
 BOOST_AUTO_TEST_CASE(correctly_initialize_memory_array_in_constructor)
