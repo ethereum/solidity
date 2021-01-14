@@ -264,14 +264,14 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 		/// Otherwise we create a tuple wrapping the necessary input or output types.
 		auto typesToSort = [](auto const& _types, string const& _name) -> shared_ptr<Sort> {
 			if (_types.size() == 1)
-				return smtSort(*_types.front());
+				return smtSortAbstractFunction(*_types.front());
 
 			vector<string> inNames;
 			vector<SortPointer> sorts;
 			for (unsigned i = 0; i < _types.size(); ++i)
 			{
 				inNames.emplace_back(_name + "_input_" + to_string(i));
-				sorts.emplace_back(smtSort(*_types.at(i)));
+				sorts.emplace_back(smtSortAbstractFunction(*_types.at(i)));
 			}
 			return make_shared<smtutil::TupleSort>(
 				_name + "_input",
