@@ -1121,6 +1121,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 					"))\n";
 				IRVariable selectorVariable(m_context.newYulVariable(), *TypeProvider::fixedBytes(4));
 				define(selectorVariable, hashVariable);
+				selector = selectorVariable.name();
 				m_code << "mstore(" << to_string(CompilerUtils::freeMemoryPointer) << ", " << freeMemoryPre << ")\n";
 			}
 		}
