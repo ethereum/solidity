@@ -76,12 +76,12 @@ object "D_16" {
                             returndatacopy(_1, _1, returndatasize())
                             revert(_1, returndatasize())
                         }
-                        return(allocateMemory(_1), _1)
+                        return(allocate_memory(_1), _1)
                     }
                 }
                 revert(0, 0)
             }
-            function allocateMemory(size) -> memPtr
+            function allocate_memory(size) -> memPtr
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, and(add(size, 31), not(31)))

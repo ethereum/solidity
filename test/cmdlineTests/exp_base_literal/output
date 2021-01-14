@@ -39,7 +39,7 @@ object "C_81" {
                     if callvalue() { revert(0, 0) }
                     let param_0, param_1, param_2, param_3 :=  abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(4, calldatasize())
                     let ret_0, ret_1, ret_2, ret_3 :=  fun_f_80(param_0, param_1, param_2, param_3)
-                    let memPos := allocateMemory(0)
+                    let memPos := allocate_memory(0)
                     let memEnd := abi_encode_tuple_t_uint256_t_int256_t_uint256_t_uint256__to_t_uint256_t_int256_t_uint256_t_uint256__fromStack(memPos , ret_0, ret_1, ret_2, ret_3)
                     return(memPos, sub(memEnd, memPos))
                 }
@@ -108,12 +108,13 @@ object "C_81" {
 
             }
 
-            function allocateMemory(size) -> memPtr {
+            function allocate_memory(size) -> memPtr {
+                memPtr := allocate_unbounded()
+                finalize_allocation(memPtr, size)
+            }
+
+            function allocate_unbounded() -> memPtr {
                 memPtr := mload(64)
-                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
-                // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
             }
 
             function checked_exp_t_rational_0_by_1_t_uint256(exponent) -> power {
@@ -200,6 +201,13 @@ object "C_81" {
 
             function convert_t_rational_minus_2_by_1_to_t_int256(value) -> converted {
                 converted := cleanup_t_int256(value)
+            }
+
+            function finalize_allocation(memPtr, size) {
+                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
+                // protect against overflow
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
             }
 
             function fun_f_80(vloc_a_4, vloc_b_6, vloc_c_8, vloc_d_10) -> vloc__13, vloc__15, vloc__17, vloc__19 {
