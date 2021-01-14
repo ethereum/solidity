@@ -742,7 +742,7 @@ A failure in an external call can be caught using a try/catch statement, as foll
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.9.0;
+    pragma solidity >0.8.0;
 
     interface DataFeed { function getData(address token) external returns (uint value); }
 
@@ -759,6 +759,13 @@ A failure in an external call can be caught using a try/catch statement, as foll
                 // This is executed in case
                 // revert was called inside getData
                 // and a reason string was provided.
+                errorCount++;
+                return (0, false);
+            } catch Panic(uint /*errorCode*/) {
+                // This is executed in case of a panic,
+                // i.e. a serious error like division by zero
+                // or overflow. The error code can be used
+                // to determine the kind of error.
                 errorCount++;
                 return (0, false);
             } catch (bytes memory /*lowLevelData*/) {
@@ -778,23 +785,28 @@ matching the types returned by the external call. In case there was no error,
 these variables are assigned and the contract's execution continues inside the
 first success block. If the end of the success block is reached, execution continues after the ``catch`` blocks.
 
-Currently, Solidity supports different kinds of catch blocks depending on the
-type of error. If the error was caused by ``revert("reasonString")`` or
-``require(false, "reasonString")`` (or an internal error that causes such an
-exception), then the catch clause
-of the type ``catch Error(string memory reason)`` will be executed.
+Solidity supports different kinds of catch blocks depending on the
+type of error:
+
+- ``catch Error(string memory reason) { ... }``: This catch clause is executed if the error was caused by ``revert("reasonString")`` or
+  ``require(false, "reasonString")`` (or an internal error that causes such an
+  exception).
+
+- ``catch Panic(uint errorCode) { ... }``: If the error was caused by a panic, i.e. by a failing ``assert``, division by zero,
+  invalid array access, arithmetic overflow and others, this catch clause will be run.
+
+- ``catch (bytes memory lowLevelData) { ... }``: This clause is executed if the error signature
+  does not match any other clause, if there was an error while decoding the error
+  message, or
+  if no error data was provided with the exception.
+  The declared variable provides access to the low-level error data in that case.
+
+- ``catch { ... }``: If you are not interested in the error data, you can just use
+  ``catch { ... }`` (even as the only catch clause) instead of the previous clause.
+
 
 It is planned to support other types of error data in the future.
-The string ``Error`` is currently parsed as is and is not treated as an identifier.
-
-The clause ``catch (bytes memory lowLevelData)`` is executed if the error signature
-does not match any other clause, if there was an error while decoding the error
-message, or
-if no error data was provided with the exception.
-The declared variable provides access to the low-level error data in that case.
-
-If you are not interested in the error data, you can just use
-``catch { ... }`` (even as the only catch clause).
+The strings ``Error`` and ``Panic`` are currently parsed as is and are not treated as an identifiers.
 
 In order to catch all error cases, you have to have at least the clause
 ``catch { ...}`` or the clause ``catch (bytes memory lowLevelData) { ... }``.
