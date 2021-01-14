@@ -30,6 +30,7 @@
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
+using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::frontend::test;
@@ -120,37 +121,38 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 
 TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm)
 {
-	try
+	bool success = true;
+
+	if (_compileViaYul && _compileToEwasm)
+		selectVM(evmc_capabilities::EVMC_CAPABILITY_EWASM);
+	else
+		selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
+
+	reset();
+
+	m_compileViaYul = _compileViaYul;
+	if (_compileToEwasm)
 	{
-		bool success = true;
+		soltestAssert(m_compileViaYul, "");
+		m_compileToEwasm = _compileToEwasm;
+	}
 
-		if (_compileViaYul && _compileToEwasm)
-			selectVM(evmc_capabilities::EVMC_CAPABILITY_EWASM);
-		else
-			selectVM(evmc_capabilities::EVMC_CAPABILITY_EVM1);
+	m_compileViaYulCanBeSet = false;
 
-		reset();
+	if (_compileViaYul)
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
 
-		m_compileViaYul = _compileViaYul;
-		if (_compileToEwasm)
-		{
-			soltestAssert(m_compileViaYul, "");
-			m_compileToEwasm = _compileToEwasm;
-		}
+	for (auto& test: m_tests)
+		test.reset();
 
-		m_compileViaYulCanBeSet = false;
+	map<string, solidity::test::Address> libraries;
 
-		if (_compileViaYul)
-			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Running via Yul:" << endl;
+	bool constructed = false;
 
-		for (auto& test: m_tests)
-			test.reset();
+	for (auto& test: m_tests)
+	{
 
-		map<string, solidity::test::Address> libraries;
-
-		bool constructed = false;
-
-		for (auto& test: m_tests)
+		try
 		{
 			if (constructed)
 			{
@@ -175,124 +177,111 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
 				constructed = true;
 			}
+		}
+		catch (langutil::UnimplementedFeatureError const&)
+		{
+			// ignore unimplemented feature errors when forcibly trying to compile via yul.
+			if (!_compileViaYul || m_runWithYul)
+				throw;
+		}
+		catch (langutil::Error const& _error)
+		{
+			// ignore unimplemented feature errors when forcibly trying to compile via yul.
+			if (_error.errorId() != 1834_error || !_compileViaYul || m_runWithYul)
+				throw;
+		}
 
-			if (test.call().kind == FunctionCall::Kind::Storage)
-			{
-				test.setFailure(false);
-				bytes result(1, !storageEmpty(m_contractAddress));
-				test.setRawBytes(result);
-				soltestAssert(test.call().expectations.rawBytes().size() == 1, "");
-				if (test.call().expectations.rawBytes() != result)
-					success = false;
-			}
-			else if (test.call().kind == FunctionCall::Kind::Constructor)
-			{
-				if (m_transactionSuccessful == test.call().expectations.failure)
-					success = false;
+		if (test.call().kind == FunctionCall::Kind::Storage)
+		{
+			test.setFailure(false);
+			bytes result(1, !storageEmpty(m_contractAddress));
+			test.setRawBytes(result);
+			soltestAssert(test.call().expectations.rawBytes().size() == 1, "");
+			if (test.call().expectations.rawBytes() != result)
+				success = false;
+		}
+		else if (test.call().kind == FunctionCall::Kind::Constructor)
+		{
+			if (m_transactionSuccessful == test.call().expectations.failure)
+				success = false;
 
-				test.setFailure(!m_transactionSuccessful);
-				test.setRawBytes(bytes());
-			}
+			test.setFailure(!m_transactionSuccessful);
+			test.setRawBytes(bytes());
+		}
+		else
+		{
+			bytes output;
+			if (test.call().kind == FunctionCall::Kind::LowLevel)
+				output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 			else
 			{
-				bytes output;
-				if (test.call().kind == FunctionCall::Kind::LowLevel)
-					output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
-				else
-				{
-					soltestAssert(
-						m_allowNonExistingFunctions ||
-						m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
-						"The function " + test.call().signature + " is not known to the compiler"
-					);
+				soltestAssert(
+					m_allowNonExistingFunctions ||
+					m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+					"The function " + test.call().signature + " is not known to the compiler"
+				);
 
-					output = callContractFunctionWithValueNoEncoding(
-						test.call().signature,
-						test.call().value.value,
-						test.call().arguments.rawBytes()
-					);
-				}
-
-				bool outputMismatch = (output != test.call().expectations.rawBytes());
-				// Pre byzantium, it was not possible to return failure data, so we disregard
-				// output mismatch for those EVM versions.
-				if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
-					outputMismatch = false;
-				if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
-					success = false;
-
-				test.setFailure(!m_transactionSuccessful);
-				test.setRawBytes(std::move(output));
-				test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+				output = callContractFunctionWithValueNoEncoding(
+					test.call().signature,
+					test.call().value.value,
+					test.call().arguments.rawBytes()
+				);
 			}
-		}
 
-		if (success && !m_runWithYul && _compileViaYul)
-		{
-			m_compileViaYulCanBeSet = true;
-			AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) <<
-				_linePrefix << endl <<
-				_linePrefix << "Test can pass via Yul and marked with compileViaYul: false." << endl;
-			return TestResult::Failure;
-		}
+			bool outputMismatch = (output != test.call().expectations.rawBytes());
+			// Pre byzantium, it was not possible to return failure data, so we disregard
+			// output mismatch for those EVM versions.
+			if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
+				outputMismatch = false;
+			if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
+				success = false;
 
-		if (!success && (m_runWithYul || !_compileViaYul))
+			test.setFailure(!m_transactionSuccessful);
+			test.setRawBytes(std::move(output));
+			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+		}
+	}
+
+	if (success && !m_runWithYul && _compileViaYul)
+	{
+		m_compileViaYulCanBeSet = true;
+		AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) <<
+			_linePrefix << endl <<
+			_linePrefix << "Test can pass via Yul and marked with compileViaYul: false." << endl;
+		return TestResult::Failure;
+	}
+
+	if (!success && (m_runWithYul || !_compileViaYul))
+	{
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
+		for (auto const& test: m_tests)
 		{
-			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Expected result:" << endl;
-			for (auto const& test: m_tests)
-			{
-				ErrorReporter errorReporter;
-				_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
-				_stream << errorReporter.format(_linePrefix, _formatted);
-			}
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
+		_stream << endl;
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
+		for (auto const& test: m_tests)
+		{
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
+		AnsiColorized(_stream, _formatted, {BOLD, RED})
+			<< _linePrefix << endl
+			<< _linePrefix << "Attention: Updates on the test will apply the detected format displayed." << endl;
+		if (_compileViaYul && m_runWithoutYul)
+		{
+			_stream << _linePrefix << endl << _linePrefix;
+			AnsiColorized(_stream, _formatted, {RED_BACKGROUND}) << "Note that the test passed without Yul.";
 			_stream << endl;
-			AnsiColorized(_stream, _formatted, {BOLD, CYAN}) << _linePrefix << "Obtained result:" << endl;
-			for (auto const& test: m_tests)
-			{
-				ErrorReporter errorReporter;
-				_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
-				_stream << errorReporter.format(_linePrefix, _formatted);
-			}
-			AnsiColorized(_stream, _formatted, {BOLD, RED})
-				<< _linePrefix << endl
-				<< _linePrefix << "Attention: Updates on the test will apply the detected format displayed." << endl;
-			if (_compileViaYul && m_runWithoutYul)
-			{
-				_stream << _linePrefix << endl << _linePrefix;
-				AnsiColorized(_stream, _formatted, {RED_BACKGROUND}) << "Note that the test passed without Yul.";
-				_stream << endl;
-			}
-			else if (!_compileViaYul && m_runWithYul)
-				AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
-					<< _linePrefix << endl
-					<< _linePrefix << "Note that the test also has to pass via Yul." << endl;
-			return TestResult::Failure;
 		}
-	}
-	catch (WhiskersError const&)
-	{
-		// this is an error in Whiskers template, so should be thrown anyway
-		throw;
-	}
-	catch (YulException const&)
-	{
-		// this should be an error in yul compilation or translation
-		throw;
-	}
-	catch (boost::exception const&)
-	{
-		if (!_compileViaYul || m_runWithYul)
-			throw;
-	}
-	catch (std::exception const&)
-	{
-		if (!_compileViaYul || m_runWithYul)
-			throw;
-	}
-	catch (...)
-	{
-		if (!_compileViaYul || m_runWithYul)
-			throw;
+		else if (!_compileViaYul && m_runWithYul)
+			AnsiColorized(_stream, _formatted, {BOLD, YELLOW})
+				<< _linePrefix << endl
+				<< _linePrefix << "Note that the test also has to pass via Yul." << endl;
+		return TestResult::Failure;
 	}
 
 	return TestResult::Success;
