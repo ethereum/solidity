@@ -29,7 +29,7 @@ using namespace solidity::util;
 namespace
 {
 
-bytes toLittleEndian(size_t _size)
+bytes toLittleEndian(uint64_t _size)
 {
 	bytes encoded(8);
 	for (size_t i = 0; i < 8; ++i)
