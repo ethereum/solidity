@@ -44,13 +44,17 @@
 #include <libsolutil/JSON.h>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
 
 #include <range/v3/action/sort.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/concat.hpp>
 #include <range/v3/view/drop.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/set_algorithm.hpp>
 #include <range/v3/view/stride.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include <cctype>
 #include <string>
@@ -119,18 +123,19 @@ public:
 			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
 		);
 
-		for (auto const& optionAndDescription: _extraOptions)
-		{
-			yulAssert(
-				_optimizationSteps.count(optionAndDescription.first) == 0,
-				"ERROR: Conflict between yulopti controls and Yul optimizer step abbreviations.\n"
-				"Character '" + string(1, optionAndDescription.first) + "' is assigned to both " +
-				optionAndDescription.second + " and " + _optimizationSteps.at(optionAndDescription.first) + " step.\n"
-				"This is most likely caused by someone adding a new step abbreviation to "
-				"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
-				"Please update the code to use a different character and recompile yulopti."
-			);
-		}
+		vector<string> overlappingAbbreviations =
+			ranges::views::set_intersection(_extraOptions | views::keys, _optimizationSteps | views::keys) |
+			views::transform([](char _abbreviation){ return string(1, _abbreviation); }) |
+			to<vector>();
+
+		yulAssert(
+			overlappingAbbreviations.empty(),
+			"ERROR: Conflict between yulopti controls and the following Yul optimizer step abbreviations: " +
+			boost::join(overlappingAbbreviations, ", ") + ".\n"
+			"This is most likely caused by someone adding a new step abbreviation to "
+			"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
+			"Please update the code to use a different character and recompile yulopti."
+		);
 
 		vector<tuple<char, string>> sortedOptions =
 			views::concat(_optimizationSteps, _extraOptions) |
