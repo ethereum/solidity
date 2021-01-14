@@ -111,19 +111,15 @@ private:
 		solUnimplementedAssert(varDecl, "");
 		string const& suffix = reference.suffix;
 
-		if (suffix.empty() && !varDecl->isStateVariable())
+		string value;
+		if (suffix.empty() && varDecl->isLocalVariable())
 		{
 			auto const& var = m_context.localVariable(*varDecl);
 			solAssert(var.type().sizeOnStack() == 1, "");
 
-			return yul::Identifier{
-				_identifier.location,
-				yul::YulString{var.commaSeparatedList()}
-			};
+			value = var.commaSeparatedList();
 		}
-
-		string value;
-		if (varDecl->isConstant())
+		else if (varDecl->isConstant())
 		{
 			VariableDeclaration const* variable = rootConstVariableDeclaration(*varDecl);
 			solAssert(variable, "");

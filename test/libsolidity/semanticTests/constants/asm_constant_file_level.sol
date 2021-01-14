@@ -5,5 +5,7 @@ contract C {
     assembly { z := e }
   }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 0x1212121212121212121212121000002134593163
