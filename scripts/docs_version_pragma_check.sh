@@ -32,6 +32,8 @@ SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 source "${REPO_ROOT}/scripts/common.sh"
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
+developmentVersion=$("$REPO_ROOT/scripts/get_version.sh")
+
 function versionGreater()
 {
     v1=$1
@@ -104,7 +106,7 @@ function findMinimalVersion()
     fi
 
     version=""
-    for ver in "${allVersions[@]}"
+    for ver in "${allVersions[@]}" "$developmentVersion"
     do
         if versionGreater "$ver" "$pragmaVersion"
         then
@@ -163,6 +165,11 @@ SOLTMPDIR=$(mktemp -d)
         findMinimalVersion $f
         if [ -z "$version" ]
         then
+            continue
+        fi
+        if [[ "$version" == "$developmentVersion" ]]
+        then
+            printWarning "Skipping unreleased development version $developmentVersion"
             continue
         fi
 
