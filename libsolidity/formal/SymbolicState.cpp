@@ -203,15 +203,20 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 		if (t->kind() == FunctionType::Kind::ABIDecode)
 		{
 			/// abi.decode : (bytes, tuple_of_types(return_types)) -> (return_types)
+			solAssert(args.size() == 2, "Unexpected number of arguments for abi.decode");
 			inTypes.emplace_back(TypeProvider::bytesMemory());
-			auto const* tupleType = dynamic_cast<TupleType const*>(args.at(1)->annotation().type);
-			solAssert(tupleType, "");
-			for (auto t: tupleType->components())
-			{
-				auto typeType = dynamic_cast<TypeType const*>(t);
-				solAssert(typeType, "");
+			auto argType = args.at(1)->annotation().type;
+			if (auto const* tupleType = dynamic_cast<TupleType const*>(argType))
+				for (auto componentType: tupleType->components())
+				{
+					auto typeType = dynamic_cast<TypeType const*>(componentType);
+					solAssert(typeType, "");
+					outTypes.emplace_back(typeType->actualType());
+				}
+			else if (auto const* typeType = dynamic_cast<TypeType const*>(argType))
 				outTypes.emplace_back(typeType->actualType());
-			}
+			else
+				solAssert(false, "Unexpected argument of abi.decode");
 		}
 		else
 		{
@@ -264,14 +269,14 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 		/// Otherwise we create a tuple wrapping the necessary input or output types.
 		auto typesToSort = [](auto const& _types, string const& _name) -> shared_ptr<Sort> {
 			if (_types.size() == 1)
-				return smtSort(*_types.front());
+				return smtSortAbstractFunction(*_types.front());
 
 			vector<string> inNames;
 			vector<SortPointer> sorts;
 			for (unsigned i = 0; i < _types.size(); ++i)
 			{
 				inNames.emplace_back(_name + "_input_" + to_string(i));
-				sorts.emplace_back(smtSort(*_types.at(i)));
+				sorts.emplace_back(smtSortAbstractFunction(*_types.at(i)));
 			}
 			return make_shared<smtutil::TupleSort>(
 				_name + "_input",

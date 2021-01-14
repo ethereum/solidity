@@ -773,7 +773,7 @@ void SMTEncoder::visitABIFunction(FunctionCall const& _funCall)
 
 	optional<smtutil::Expression> arg;
 	if (inTypes.size() == 1)
-		arg = expr(*args.at(0));
+		arg = expr(*args.at(0), inTypes.at(0));
 	else
 	{
 		auto inputSort = dynamic_cast<smtutil::ArraySort&>(*symbFunction.sort).domain;
