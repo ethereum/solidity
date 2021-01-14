@@ -338,14 +338,24 @@ string IRGenerator::generateModifier(
 		t("retParams", joinHumanReadable(retParams));
 		t("assignRetParams", assignRetParams);
 
-		solAssert(*_modifierInvocation.name().annotation().requiredLookup == VirtualLookup::Virtual, "");
-
-		ModifierDefinition const& modifier = dynamic_cast<ModifierDefinition const&>(
-			*_modifierInvocation.name().annotation().referencedDeclaration
-		).resolveVirtual(m_context.mostDerivedContract());
+		ModifierDefinition const* modifier = dynamic_cast<ModifierDefinition const*>(
+			_modifierInvocation.name().annotation().referencedDeclaration
+		);
+		solAssert(modifier, "");
+		switch (*_modifierInvocation.name().annotation().requiredLookup)
+		{
+		case VirtualLookup::Virtual:
+			modifier = &modifier->resolveVirtual(m_context.mostDerivedContract());
+			solAssert(modifier, "");
+			break;
+		case VirtualLookup::Static:
+			break;
+		case VirtualLookup::Super:
+			solAssert(false, "");
+		}
 
 		solAssert(
-			modifier.parameters().empty() ==
+			modifier->parameters().empty() ==
 			(!_modifierInvocation.arguments() || _modifierInvocation.arguments()->empty()),
 			""
 		);
@@ -355,10 +365,10 @@ string IRGenerator::generateModifier(
 			{
 				IRVariable argument = expressionEvaluator.evaluateExpression(
 					*_modifierInvocation.arguments()->at(i),
-					*modifier.parameters()[i]->annotation().type
+					*modifier->parameters()[i]->annotation().type
 				);
 				expressionEvaluator.define(
-					m_context.addLocalVariable(*modifier.parameters()[i]),
+					m_context.addLocalVariable(*modifier->parameters()[i]),
 					argument
 				);
 			}
@@ -370,7 +380,7 @@ string IRGenerator::generateModifier(
 				(ret.empty() ? "" : ret + " := ") +
 				_nextFunction + "(" + joinHumanReadable(params) + ")\n";
 		});
-		generator.generate(modifier.body());
+		generator.generate(modifier->body());
 		t("body", generator.code());
 		return t.render();
 	});
