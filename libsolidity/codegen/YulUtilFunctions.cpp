@@ -2056,8 +2056,7 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 				// Make sure we can allocate memory without overflow
 				if gt(length, 0xffffffffffffffff) { <panic>() }
 				<?byteArray>
-					// round up
-					size := and(add(length, 0x1f), not(0x1f))
+					size := <roundUp>(length)
 				<!byteArray>
 					size := mul(length, 0x20)
 				</byteArray>
@@ -2070,6 +2069,7 @@ string YulUtilFunctions::arrayAllocationSizeFunction(ArrayType const& _type)
 		w("functionName", functionName);
 		w("panic", panicFunction(PanicCode::ResourceError));
 		w("byteArray", _type.isByteArray());
+		w("roundUp", roundUpFunction());
 		w("dynamic", _type.isDynamicallySized());
 		return w.render();
 	});
