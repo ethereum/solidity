@@ -88,8 +88,7 @@ object \"C_11\" {
                 // Make sure we can allocate memory without overflow
                 if gt(length, 0xffffffffffffffff) { panic_error_0x41() }
 
-                // round up
-                size := and(add(length, 0x1f), not(0x1f))
+                size := round_up_to_mul_of_32(length)
 
                 // add length slot
                 size := add(size, 0x20)
