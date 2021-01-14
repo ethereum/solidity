@@ -3,6 +3,17 @@ cmake_minimum_required(VERSION 3.13.0)
 set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/cmake"   CACHE PATH "The the path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
+# Set the build type, if none was specified.
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+	if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+		set(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+	else()
+		set(DEFAULT_BUILD_TYPE "Release")
+	endif()
+	set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel" FORCE)
+	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "RelWithDebInfo" "MinSizeRel")
+endif()
+
 include(EthToolchains)
 
 # Set cmake_policies
