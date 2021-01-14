@@ -4218,13 +4218,7 @@ string YulUtilFunctions::extractReturndataFunction()
 						data := <emptyArray>()
 					}
 					default {
-						// allocate some memory into data of size returndatasize() + PADDING
-						data := <allocate>(<roundUp>(add(returndatasize(), 0x20)))
-
-						// store array length into the front
-						mstore(data, returndatasize())
-
-						// append to data
+						data := <allocateArray>(returndatasize())
 						returndatacopy(add(data, 0x20), 0, returndatasize())
 					}
 				<!supportsReturndata>
@@ -4234,8 +4228,7 @@ string YulUtilFunctions::extractReturndataFunction()
 		)")
 		("functionName", functionName)
 		("supportsReturndata", m_evmVersion.supportsReturndata())
-		("allocate", allocationFunction())
-		("roundUp", roundUpFunction())
+		("allocateArray", allocateMemoryArrayFunction(*TypeProvider::bytesMemory()))
 		("emptyArray", zeroValueFunction(*TypeProvider::bytesMemory()))
 		.render();
 	});
