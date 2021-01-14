@@ -12,8 +12,7 @@ else
     # Use last commit date rather than build date to avoid ending up with builds for
     # different platforms having different version strings (and therefore producing different bytecode)
     # if the CI is triggered just before midnight.
-    last_commit_timestamp=$(git log -1 --date=iso --format=%ad HEAD)
-    date -d "$last_commit_timestamp" -u "+ci.%Y.%-m.%-d" >prerelease.txt
+    TZ=UTC git show --quiet --date="format-local:%Y.%-m.%-d" --format="ci.%cd" >prerelease.txt
 fi
 
 if [ -n "$CIRCLE_SHA1" ]
