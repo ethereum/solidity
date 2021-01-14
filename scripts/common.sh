@@ -24,10 +24,12 @@ then
     export TERM="${TERM:-xterm}"
     function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput setaf 7)"; }
     function printError() { >&2 echo "$(tput setaf 1)$1$(tput setaf 7)"; }
+    function printWarning() { >&2 echo "$(tput setaf 11)$1$(tput setaf 7)"; }
     function printLog() { echo "$(tput setaf 3)$1$(tput setaf 7)"; }
 else
     function printTask() { echo "$(tput bold)$(tput setaf 2)$1$(tput sgr0)"; }
     function printError() { >&2 echo "$(tput setaf 1)$1$(tput sgr0)"; }
+    function printWarning() { >&2 echo "$(tput setaf 11)$1$(tput sgr0)"; }
     function printLog() { echo "$(tput setaf 3)$1$(tput sgr0)"; }
 fi
 
