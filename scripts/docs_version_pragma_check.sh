@@ -56,7 +56,7 @@ function versionGreater()
 
 function versionEqual()
 {
-    if [ "$1" == "$2" ]
+    if [[ "$1" == "$2" ]]
     then
         return 0
     fi
@@ -112,14 +112,14 @@ function findMinimalVersion()
         then
             version="$ver"
             break
-        elif ([ $greater == false ]) && versionEqual "$ver" "$pragmaVersion"
+        elif [[ "$greater" == false ]] && versionEqual "$ver" "$pragmaVersion"
         then
             version="$ver"
             break
         fi
     done
 
-    if [ -z "$version" ]
+    if [[ "$version" == "" ]]
     then
         if [[ "$greater" = true && "$pragmaVersion" =~ 99 ]]
         then
@@ -163,7 +163,7 @@ SOLTMPDIR=$(mktemp -d)
         opts="$opts -o"
 
         findMinimalVersion $f
-        if [ -z "$version" ]
+        if [[ "$version" == "" ]]
         then
             continue
         fi
