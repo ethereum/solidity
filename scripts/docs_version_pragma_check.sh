@@ -32,6 +32,8 @@ SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 source "${REPO_ROOT}/scripts/common.sh"
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
+developmentVersion=$("$REPO_ROOT/scripts/get_version.sh")
+
 function versionGreater()
 {
     v1=$1
@@ -54,7 +56,7 @@ function versionGreater()
 
 function versionEqual()
 {
-    if [ "$1" == "$2" ]
+    if [[ "$1" == "$2" ]]
     then
         return 0
     fi
@@ -104,28 +106,23 @@ function findMinimalVersion()
     fi
 
     version=""
-    for ver in "${allVersions[@]}"
+    for ver in "${allVersions[@]}" "$developmentVersion"
     do
         if versionGreater "$ver" "$pragmaVersion"
         then
             version="$ver"
             break
-        elif ([ $greater == false ]) && versionEqual "$ver" "$pragmaVersion"
+        elif [[ "$greater" == false ]] && versionEqual "$ver" "$pragmaVersion"
         then
             version="$ver"
             break
         fi
     done
 
-    if [ -z "$version" ]
+    if [[ "$version" == "" ]]
     then
-        if [[ "$greater" = true && "$pragmaVersion" =~ 99 ]]
-        then
-            printError "Skipping version check for pragma: $pragmaVersion"
-        else
-            printError "No release $sign$pragmaVersion was listed in available releases!"
-            exit 1
-        fi
+        printError "No release ${sign}${pragmaVersion} was listed in available releases!"
+        exit 1
     fi
 }
 
@@ -161,8 +158,13 @@ SOLTMPDIR=$(mktemp -d)
         opts="$opts -o"
 
         findMinimalVersion $f
-        if [ -z "$version" ]
+        if [[ "$version" == "" ]]
         then
+            continue
+        fi
+        if [[ "$version" == "$developmentVersion" ]]
+        then
+            printWarning "Skipping unreleased development version $developmentVersion"
             continue
         fi
 
