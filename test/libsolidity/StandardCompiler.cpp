@@ -1230,7 +1230,7 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 	);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["stackAllocation"].asBool() == true);
 	BOOST_CHECK(optimizer["details"]["yulDetails"]["optimizerSteps"].asString() == OptimiserSettings::DefaultYulOptimiserSteps);
-	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 8);
+	BOOST_CHECK_EQUAL(optimizer["details"].getMemberNames().size(), 9);
 	BOOST_CHECK(optimizer["runs"].asUInt() == 600);
 }
 

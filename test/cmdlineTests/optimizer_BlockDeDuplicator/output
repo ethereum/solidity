@@ -66,12 +66,12 @@ sub_0: assembly {
       dup1
       0x2e1fb2bc
       eq
-      tag_3
+      tag_4
       jumpi
       dup1
       0x4753a67d
       eq
-      tag_3
+      tag_4
       jumpi
     tag_2:
       0x00
@@ -79,11 +79,11 @@ sub_0: assembly {
       revert
         /* "optimizer_BlockDeDuplicator/input.sol":138:174  function f() public { true ? 1 : 3;} */
     tag_3:
-      tag_6
-      tag_7
-      jump	// in
-    tag_6:
       stop
+        /* "optimizer_BlockDeDuplicator/input.sol":108:133  function fun_() public {} */
+    tag_4:
+      jump(tag_3)
+        /* "optimizer_BlockDeDuplicator/input.sol":138:174  function f() public { true ? 1 : 3;} */
     tag_7:
       jump	// out
 

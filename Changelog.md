@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * AST: Export NatSpec comments above each statement as their documentation.
+ * Optimizer: Simple inlining when jumping to small blocks that jump again after a few side-effect free opcodes.
 
 
 Bugfixes:
