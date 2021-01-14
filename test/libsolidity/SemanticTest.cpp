@@ -151,44 +151,28 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 
 	for (auto& test: m_tests)
 	{
-
-		try
+		if (constructed)
 		{
-			if (constructed)
-			{
-				soltestAssert(test.call().kind != FunctionCall::Kind::Library, "Libraries have to be deployed before any other call.");
-				soltestAssert(
-					test.call().kind != FunctionCall::Kind::Constructor,
-					"Constructor has to be the first function call expect for library deployments.");
-			}
-			else if (test.call().kind == FunctionCall::Kind::Library)
-			{
-				soltestAssert(
-					deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
-					"Failed to deploy library " + test.call().signature);
-				libraries[test.call().signature] = m_contractAddress;
-				continue;
-			}
+			soltestAssert(test.call().kind != FunctionCall::Kind::Library, "Libraries have to be deployed before any other call.");
+			soltestAssert(
+				test.call().kind != FunctionCall::Kind::Constructor,
+				"Constructor has to be the first function call expect for library deployments.");
+		}
+		else if (test.call().kind == FunctionCall::Kind::Library)
+		{
+			soltestAssert(
+				deploy(test.call().signature, 0, {}, libraries) && m_transactionSuccessful,
+				"Failed to deploy library " + test.call().signature);
+			libraries[test.call().signature] = m_contractAddress;
+			continue;
+		}
+		else
+		{
+			if (test.call().kind == FunctionCall::Kind::Constructor)
+				deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
 			else
-			{
-				if (test.call().kind == FunctionCall::Kind::Constructor)
-					deploy("", test.call().value.value, test.call().arguments.rawBytes(), libraries);
-				else
-					soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
-				constructed = true;
-			}
-		}
-		catch (langutil::UnimplementedFeatureError const&)
-		{
-			// ignore unimplemented feature errors when forcibly trying to compile via yul.
-			if (!_compileViaYul || m_runWithYul)
-				throw;
-		}
-		catch (langutil::Error const& _error)
-		{
-			// ignore unimplemented feature errors when forcibly trying to compile via yul.
-			if (_error.errorId() != 1834_error || !_compileViaYul || m_runWithYul)
-				throw;
+				soltestAssert(deploy("", 0, bytes(), libraries), "Failed to deploy contract.");
+			constructed = true;
 		}
 
 		if (test.call().kind == FunctionCall::Kind::Storage)
