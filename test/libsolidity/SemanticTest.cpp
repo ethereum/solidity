@@ -226,12 +226,15 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 		}
 	}
 
-	if (success && !m_runWithYul && _compileViaYul)
+	if (!m_runWithYul && _compileViaYul)
 	{
-		m_compileViaYulCanBeSet = true;
-		AnsiColorized(_stream, _formatted, {BOLD, YELLOW}) <<
+		m_compileViaYulCanBeSet = success;
+		string message = success ?
+			"Test can pass via Yul, but marked with \"compileViaYul: false.\"" :
+			"Test compiles via Yul, but it gives different test results.";
+		AnsiColorized(_stream, _formatted, {BOLD, success ? YELLOW : MAGENTA}) <<
 			_linePrefix << endl <<
-			_linePrefix << "Test can pass via Yul and marked with compileViaYul: false." << endl;
+			_linePrefix << message << endl;
 		return TestResult::Failure;
 	}
 
