@@ -684,10 +684,11 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 			IRVariable modifiedValue(m_context.newYulVariable(), resultType);
 			IRVariable originalValue = readFromLValue(*m_currentLValue);
 
+			bool checked = m_context.arithmetic() == Arithmetic::Checked;
 			define(modifiedValue) <<
 				(op == Token::Inc ?
-					m_utils.incrementCheckedFunction(resultType) :
-					m_utils.decrementCheckedFunction(resultType)
+					(checked ? m_utils.incrementCheckedFunction(resultType) : m_utils.incrementWrappingFunction(resultType)) :
+					(checked ? m_utils.decrementCheckedFunction(resultType) : m_utils.decrementWrappingFunction(resultType))
 				) <<
 				"(" <<
 				originalValue.name() <<
