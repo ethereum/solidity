@@ -2576,7 +2576,30 @@ string YulUtilFunctions::updateStorageValueFunction(
 
 		auto const* toReferenceType = dynamic_cast<ReferenceType const*>(&_toType);
 		auto const* fromReferenceType = dynamic_cast<ReferenceType const*>(&_fromType);
-		solAssert(fromReferenceType && toReferenceType, "");
+		solAssert(toReferenceType, "");
+
+		if (!fromReferenceType)
+		{
+			solAssert(_fromType.category() == Type::Category::StringLiteral, "");
+			solAssert(toReferenceType->category() == Type::Category::Array, "");
+			auto const& toArrayType = dynamic_cast<ArrayType const&>(*toReferenceType);
+			solAssert(toArrayType.isByteArray(), "");
+
+			return Whiskers(R"(
+				function <functionName>(slot<?dynamicOffset>, offset</dynamicOffset>) {
+					<?dynamicOffset>if offset { <panic>() }</dynamicOffset>
+					let value := <copyLiteralToMemory>()
+					<copyToStorage>(slot, value)
+				}
+			)")
+			("functionName", functionName)
+			("dynamicOffset", !_offset.has_value())
+			("panic", panicFunction(PanicCode::Generic))
+			("copyLiteralToMemory", copyLiteralToMemoryFunction(dynamic_cast<StringLiteralType const&>(_fromType).value()))
+			("copyToStorage", copyArrayToStorageFunction(*TypeProvider::bytesMemory(), toArrayType))
+			.render();
+		}
+
 		solAssert(*toReferenceType->copyForLocation(
 			fromReferenceType->location(),
 			fromReferenceType->isPointer()

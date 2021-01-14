@@ -1325,8 +1325,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 				m_utils.storageArrayPushFunction(arrayType, &argument.type()) <<
 				"(" <<
 				IRVariable(_functionCall.expression()).commaSeparatedList() <<
-				", " <<
-				argument.commaSeparatedList() <<
+				(argument.stackSlots().empty() ? "" : (", " + argument.commaSeparatedList()))  <<
 				")\n";
 		}
 		break;
