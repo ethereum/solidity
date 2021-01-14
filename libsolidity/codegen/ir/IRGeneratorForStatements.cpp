@@ -1985,6 +1985,11 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			if (!_memberAccess.annotation().calledDirectly)
 				m_context.addToInternalDispatch(*function);
 		}
+		else if (auto const* contract = dynamic_cast<ContractDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+		{
+			if (contract->isLibrary())
+				define(IRVariable(_memberAccess).part("address")) << linkerSymbol(*contract) << "\n";
+		}
 		break;
 	}
 	default:
