@@ -1233,7 +1233,17 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	main.append(t1.toSubAssemblyTag(subId));
 	main.append(u256(8));
 
-	main.optimise(true, solidity::test::CommonOptions::get().evmVersion(), false, 200);
+	Assembly::OptimiserSettings settings;
+	settings.isCreation = false;
+	settings.maxInlineSize = 0;
+	settings.runJumpdestRemover = true;
+	settings.runPeephole = true;
+	settings.runDeduplicate = true;
+	settings.runCSE = true;
+	settings.runConstantOptimiser = true;
+	settings.evmVersion = solidity::test::CommonOptions::get().evmVersion();
+	settings.expectedExecutionsPerDeployment = 200;
+	main.optimise(settings);
 
 	AssemblyItems expectationMain{
 		AssemblyItem(PushSubSize, 0),

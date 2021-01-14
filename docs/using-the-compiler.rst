@@ -246,6 +246,9 @@ Input Description
             // The peephole optimizer is always on if no details are given,
             // use details to switch it off.
             "peephole": true,
+            // Maximum inline size is 5, if no details are given,
+            // use details to switch it off by setting it to zero.
+            "maxInlineSize": 5,
             // The unused jumpdest remover is always on if no details are given,
             // use details to switch it off.
             "jumpdestRemover": true,

@@ -174,9 +174,9 @@ BOOST_AUTO_TEST_CASE(location_test)
 	if (solidity::test::CommonOptions::get().optimize)
 		locations =
 			vector<SourceLocation>(31, SourceLocation{23, 103, sourceCode}) +
-			vector<SourceLocation>(21, SourceLocation{41, 100, sourceCode}) +
+			vector<SourceLocation>(1, SourceLocation{41, 100, sourceCode}) +
 			vector<SourceLocation>(1, SourceLocation{93, 95, sourceCode}) +
-			vector<SourceLocation>(2, SourceLocation{41, 100, sourceCode});
+			vector<SourceLocation>(15, SourceLocation{41, 100, sourceCode});
 	else
 		locations =
 			vector<SourceLocation>(hasShifts ? 31 : 32, SourceLocation{23, 103, sourceCode}) +
@@ -209,7 +209,10 @@ BOOST_AUTO_TEST_CASE(jump_type)
 		if (item.getJumpType() != AssemblyItem::JumpType::Ordinary)
 			jumpTypes += item.getJumpTypeAsString() + "\n";
 
-	BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[in]\n[out]\n");
+	if (solidity::test::CommonOptions::get().optimize)
+		BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[out]\n[in]\n[out]\n");
+	else
+		BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[in]\n[out]\n");
 }
 
 

@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Simple inlining when jumping to small blocks that jump again after a few side-effect free opcodes.
 
 
 Bugfixes:

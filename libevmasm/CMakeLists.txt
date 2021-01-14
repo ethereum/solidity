@@ -16,6 +16,8 @@ set(sources
 	ExpressionClasses.h
 	GasMeter.cpp
 	GasMeter.h
+	Inliner.cpp
+	Inliner.h
 	Instruction.cpp
 	Instruction.h
 	JumpdestRemover.cpp

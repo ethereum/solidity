@@ -25,6 +25,7 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/PeepholeOptimiser.h>
+#include <libevmasm/Inliner.h>
 #include <libevmasm/JumpdestRemover.h>
 #include <libevmasm/BlockDeduplicator.h>
 #include <libevmasm/ConstantOptimiser.h>
@@ -375,6 +376,7 @@ Assembly& Assembly::optimise(bool _enable, EVMVersion _evmVersion, bool _isCreat
 {
 	OptimiserSettings settings;
 	settings.isCreation = _isCreation;
+	settings.maxInlineSize = 5;
 	settings.runJumpdestRemover = true;
 	settings.runPeephole = true;
 	if (_enable)
@@ -420,6 +422,12 @@ map<u256, u256> Assembly::optimiseInternal(
 	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
+
+		if (_settings.maxInlineSize > 0)
+		{
+			Inliner inliner{m_items, _settings.maxInlineSize};
+			inliner.optimise();
+		}
 
 		if (_settings.runJumpdestRemover)
 		{
