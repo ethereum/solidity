@@ -3765,7 +3765,7 @@ string YulUtilFunctions::negateNumberWrappingFunction(Type const& _type)
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
-				value := <cleanupFunction>(sub(0, value)))
+				ret := <cleanupFunction>(sub(0, value))
 			}
 		)")
 		("functionName", functionName)

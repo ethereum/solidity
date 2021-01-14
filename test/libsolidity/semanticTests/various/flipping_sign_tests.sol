@@ -6,5 +6,7 @@ contract test {
     }
 }
 
+// ====
+// compileViaYul: also
 // ----
 // f() -> true
