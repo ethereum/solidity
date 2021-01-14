@@ -89,12 +89,9 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		if (m_value.count(name))
 		{
 			assertThrow(m_value.at(name).value, OptimizerException, "");
-			if (holds_alternative<Identifier>(*m_value.at(name).value))
-			{
-				YulString value = std::get<Identifier>(*m_value.at(name).value).name;
-				assertThrow(inScope(value), OptimizerException, "");
-				_e = Identifier{locationOf(_e), value};
-			}
+			if (Identifier const* value = get_if<Identifier>(m_value.at(name).value))
+				if (inScope(value->name))
+					_e = Identifier{locationOf(_e), value->name};
 		}
 	}
 	else
@@ -103,9 +100,8 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		for (auto const& [variable, value]: m_value)
 		{
 			assertThrow(value.value, OptimizerException, "");
-			if (SyntacticallyEqual{}(_e, *value.value))
+			if (SyntacticallyEqual{}(_e, *value.value) && inScope(variable))
 			{
-				assertThrow(inScope(variable), OptimizerException, "");
 				_e = Identifier{locationOf(_e), variable};
 				break;
 			}

@@ -8,6 +8,7 @@ set(sources
 	CommonData.h
 	CommonIO.cpp
 	CommonIO.h
+	cxx20.h
 	Exceptions.cpp
 	Exceptions.h
 	ErrorCodes.h
@@ -15,7 +16,6 @@ set(sources
 	FunctionSelector.h
 	IndentedWriter.cpp
 	IndentedWriter.h
-	InvertibleMap.h
 	IpfsHash.cpp
 	IpfsHash.h
 	JSON.cpp
