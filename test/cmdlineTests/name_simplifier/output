@@ -19,44 +19,40 @@ object "C_59" {
     object "C_59_deployed" {
         code {
             {
-                let _1 := 64
-                mstore(_1, 128)
+                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _2 := 0
-                    if eq(0xf8eddcc6, shr(224, calldataload(_2)))
+                    let _1 := 0
+                    if eq(0xf8eddcc6, shr(224, calldataload(_1)))
                     {
-                        if callvalue() { revert(_2, _2) }
-                        let _3 := 32
-                        if slt(add(calldatasize(), not(3)), _3) { revert(_2, _2) }
+                        if callvalue() { revert(_1, _1) }
+                        let _2 := 32
+                        if slt(add(calldatasize(), not(3)), _2) { revert(_1, _1) }
                         let offset := calldataload(4)
-                        let _4 := 0xffffffffffffffff
-                        if gt(offset, _4) { revert(_2, _2) }
-                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_2, _2) }
-                        let _5 := calldataload(add(4, offset))
-                        if gt(_5, _4) { panic_error_0x41() }
-                        let _6 := mul(_5, _3)
-                        let dst := allocateMemory(add(_6, _3))
+                        let _3 := 0xffffffffffffffff
+                        if gt(offset, _3) { revert(_1, _1) }
+                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
+                        let _4 := calldataload(add(4, offset))
+                        if gt(_4, _3) { panic_error_0x41() }
+                        let _5 := mul(_4, _2)
+                        let dst := allocateMemory(add(_5, _2))
                         let dst_1 := dst
-                        mstore(dst, _5)
-                        dst := add(dst, _3)
+                        mstore(dst, _4)
+                        dst := add(dst, _2)
                         let src := add(offset, 36)
-                        if gt(add(add(offset, _6), 36), calldatasize()) { revert(_2, _2) }
-                        let i := _2
-                        for { } lt(i, _5) { i := add(i, 1) }
+                        if gt(add(add(offset, _5), 36), calldatasize()) { revert(_1, _1) }
+                        let i := _1
+                        for { } lt(i, _4) { i := add(i, 1) }
                         {
-                            if slt(sub(calldatasize(), src), _3) { revert(_2, _2) }
-                            let memPtr := mload(_1)
-                            let newFreePtr := add(memPtr, _3)
-                            if or(gt(newFreePtr, _4), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                            mstore(_1, newFreePtr)
-                            mstore(memPtr, calldataload(src))
-                            mstore(dst, memPtr)
-                            dst := add(dst, _3)
-                            src := add(src, _3)
+                            if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
+                            let value := allocateMemory(_2)
+                            mstore(value, calldataload(src))
+                            mstore(dst, value)
+                            dst := add(dst, _2)
+                            src := add(src, _2)
                         }
                         let ret, ret_1 := fun_sumArray_58(dst_1)
-                        let memPos := allocateMemory(_2)
+                        let memPos := allocateMemory(_1)
                         return(memPos, sub(abi_encode_uint256_t_string(memPos, ret, ret_1), memPos))
                     }
                 }
@@ -83,16 +79,13 @@ object "C_59" {
             function allocateMemory(size) -> memPtr
             {
                 memPtr := mload(64)
-                let newFreePtr := add(memPtr, size)
+                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
             function copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927() -> memPtr
             {
-                let memPtr_1 := mload(64)
-                let newFreePtr := add(memPtr_1, 160)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr_1)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
+                let memPtr_1 := allocateMemory(160)
                 mstore(memPtr_1, 100)
                 memPtr := memPtr_1
                 mstore(add(memPtr_1, 0x20), "longstringlongstringlongstringlo")

@@ -2805,7 +2805,7 @@ string YulUtilFunctions::allocationFunction()
 		return Whiskers(R"(
 			function <functionName>(size) -> memPtr {
 				memPtr := mload(<freeMemoryPointer>)
-				let newFreePtr := add(memPtr, size)
+				let newFreePtr := add(memPtr, <roundUp>(size))
 				// protect against overflow
 				if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { <panic>() }
 				mstore(<freeMemoryPointer>, newFreePtr)
@@ -2813,6 +2813,7 @@ string YulUtilFunctions::allocationFunction()
 		)")
 		("functionName", functionName)
 		("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer))
+		("roundUp", roundUpFunction())
 		("panic", panicFunction(PanicCode::ResourceError))
 		.render();
 	});

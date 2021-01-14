@@ -54,7 +54,7 @@ object "Arraysum_34" {
             function allocateMemory(size) -> memPtr
             {
                 memPtr := mload(64)
-                let newFreePtr := add(memPtr, size)
+                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr))
                 {
                     mstore(0, shl(224, 0x4e487b71))

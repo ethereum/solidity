@@ -111,7 +111,7 @@ object \"D_16\" {
 
             function allocateMemory(size) -> memPtr {
                 memPtr := mload(64)
-                let newFreePtr := add(memPtr, size)
+                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
                 // protect against overflow
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
@@ -150,6 +150,10 @@ object \"D_16\" {
             function revert_forward_1() {
                 returndatacopy(0, 0, returndatasize())
                 revert(0, returndatasize())
+            }
+
+            function round_up_to_mul_of_32(value) -> result {
+                result := and(add(value, 31), not(31))
             }
 
             function shift_right_224_unsigned(value) -> newValue {
