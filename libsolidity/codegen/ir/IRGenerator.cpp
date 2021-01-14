@@ -795,7 +795,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 
 string IRGenerator::callValueCheck()
 {
-	return "if callvalue() { revert(0, 0) }";
+	return "if callvalue() { " + m_context.revertReasonIfDebug("Ether sent to non-payable function") + " }";
 }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
@@ -839,8 +839,10 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 			if (type->stateMutability() > StateMutability::View)
 				// If the function is not a view function and is called without DELEGATECALL,
 				// we revert.
-				// TODO add revert message.
-				delegatecallCheck = "if iszero(called_via_delegatecall) { revert(0, 0) }";
+				delegatecallCheck =
+					"if iszero(called_via_delegatecall) { " +
+					m_context.revertReasonIfDebug("Non-view function of library called without DELEGATECALL") +
+					" }";
 		}
 		templ["delegatecallCheck"] = delegatecallCheck;
 		templ["callValueCheck"] = (type->isPayable() || _contract.isLibrary()) ? "" : callValueCheck();
@@ -864,7 +866,8 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), _contract.isLibrary());
 	}
 	t("cases", functions);
-	if (FunctionDefinition const* etherReceiver = _contract.receiveFunction())
+	FunctionDefinition const* etherReceiver = _contract.receiveFunction();
+	if (etherReceiver)
 	{
 		solAssert(!_contract.isLibrary(), "");
 		t("receiveEther", m_context.enqueueFunctionForCodeGeneration(*etherReceiver) + "() stop()");
@@ -888,9 +891,15 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		}
 
 		t("fallback", fallbackCode);
+		t("revertNoSignature", "");
 	}
 	else
-		t("fallback", "revert(0, 0)");
+		t(
+			"fallback",
+			etherReceiver ?
+			m_context.revertReasonIfDebug("Unknown signature and no fallback defined") :
+			m_context.revertReasonIfDebug("Contract does not have fallback nor receive functions")
+		);
 	return t.render();
 }
 
