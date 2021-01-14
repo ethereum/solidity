@@ -14,7 +14,6 @@ contract C {
         }
     }
 }
-
 // ====
 // compileViaYul: also
 // ----
