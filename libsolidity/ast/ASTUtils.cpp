@@ -19,12 +19,41 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 
+#include <libsolutil/Algorithms.h>
+
 namespace solidity::frontend
 {
+
+bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
+{
+	solAssert(_varDecl.isConstant(), "Constant variable expected");
+
+	auto referencedDeclaration = [&](Expression const* _e) -> VariableDeclaration const*
+	{
+		if (auto identifier = dynamic_cast<Identifier const*>(_e))
+			return dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
+		else if (auto memberAccess = dynamic_cast<MemberAccess const*>(_e))
+			return dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration);
+		return nullptr;
+	};
+
+	auto visitor = [&](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
+	{
+		solAssert(_depth < 256, "Recursion depth limit reached");
+
+		if (auto referencedVarDecl = referencedDeclaration(_variable.value().get()))
+			if (referencedVarDecl->isConstant())
+				if (_cycleDetector.run(*referencedVarDecl))
+					return;
+	};
+
+	return util::CycleDetector<VariableDeclaration>(visitor).run(_varDecl);
+}
 
 VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration const& _varDecl)
 {
 	solAssert(_varDecl.isConstant(), "Constant variable expected");
+	solAssert(!isConstantVariableRecursive(_varDecl), "Recursive declaration");
 
 	VariableDeclaration const* rootDecl = &_varDecl;
 	Identifier const* identifier;
