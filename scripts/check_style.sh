@@ -2,8 +2,6 @@
 
 ERROR_LOG="$(mktemp -t check_style_XXXXXX.log)"
 
-. scripts/report_errors.sh
-
 EXCLUDE_FILES=(
   "libsolutil/picosha2.h"
   "test/libsolutil/UTF8.cpp"
@@ -23,6 +21,7 @@ if [[ "$WHITESPACE" != "" ]]
 then
 	echo "Error: Trailing whitespace found:" | tee -a $ERROR_LOG
 	echo "$WHITESPACE" | tee -a $ERROR_LOG
+	scripts/report_errors.sh "$ERROR_LOG"
 	exit 1
 fi
 
@@ -51,6 +50,7 @@ if [[ "$FORMATERROR" != "" ]]
 then
 	echo "Coding style error:" | tee -a $ERROR_LOG
 	echo "$FORMATERROR" | tee -a $ERROR_LOG
+	scripts/report_errors.sh "$ERROR_LOG"
 	exit 1
 fi
 )
