@@ -1,5 +1,4 @@
-pragma experimental ABIEncoderV2;
-
+pragma abicoder v2;
 enum E {
     E000, E001, E002, E003, E004, E005, E006, E007, E008, E009,
     E010, E011, E012, E013, E014, E015, E016, E017, E018, E019,
