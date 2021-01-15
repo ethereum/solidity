@@ -528,7 +528,9 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 		// is that there we don't have `_funCall`.
 		pushCallStack({funDef, &_funCall});
 		pushPathCondition(currentPathConditions());
+		auto oldChecked = std::exchange(m_checked, true);
 		funDef->accept(*this);
+		m_checked = oldChecked;
 		popPathCondition();
 	}
 
