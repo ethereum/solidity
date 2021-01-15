@@ -28,6 +28,6 @@ contract C {
 }
 
 // ====
-// compileViaYul: false
+// compileViaYul: also
 // ----
 // f() -> 42, 23, 34, 42, 42
