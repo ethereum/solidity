@@ -121,6 +121,11 @@ FunctionDefinition const* Predicate::programFunction() const
 	return nullptr;
 }
 
+FunctionCall const* Predicate::programFunctionCall() const
+{
+	return dynamic_cast<FunctionCall const*>(m_node);
+}
+
 optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 {
 	if (auto const* fun = programFunction())
@@ -141,7 +146,11 @@ optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 
 bool Predicate::isSummary() const
 {
-	return m_type == PredicateType::ConstructorSummary || m_type == PredicateType::FunctionSummary || m_type == PredicateType::InternalCall || m_type == PredicateType::ExternalCall;
+	return isFunctionSummary() ||
+		isInternalCall() ||
+		isExternalCallTrusted() ||
+		isExternalCallUntrusted() ||
+		isConstructorSummary();
 }
 
 bool Predicate::isFunctionSummary() const
@@ -154,9 +163,14 @@ bool Predicate::isInternalCall() const
 	return m_type == PredicateType::InternalCall;
 }
 
-bool Predicate::isExternalCall() const
+bool Predicate::isExternalCallTrusted() const
 {
-	return m_type == PredicateType::ExternalCall;
+	return m_type == PredicateType::ExternalCallTrusted;
+}
+
+bool Predicate::isExternalCallUntrusted() const
+{
+	return m_type == PredicateType::ExternalCallUntrusted;
 }
 
 bool Predicate::isConstructorSummary() const
@@ -171,10 +185,13 @@ bool Predicate::isInterface() const
 
 string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) const
 {
+	solAssert(isSummary(), "");
+
 	if (auto contract = programContract())
 		return contract->name() + ".constructor()";
 
-	solAssert(isSummary(), "");
+	if (auto funCall = programFunctionCall())
+		return funCall->location().text();
 
 	auto stateVars = stateVariables();
 	solAssert(stateVars.has_value(), "");

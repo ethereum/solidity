@@ -27,4 +27,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (307-321): CHC: Assertion violation happens here.\nCounterexample:\nx = 1, d = 0, lock = false\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0, lock = false\nC.f()
+// Warning 6328: (307-321): CHC: Assertion violation happens here.\nCounterexample:\nx = 1, d = 0, lock = false\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0, lock = false\nC.f()\n    d.d() -- untrusted external call, synthesized as:\n        C.set(1) -- reentrant call

@@ -12,6 +12,7 @@ Compiler Features:
  * SMTChecker: Show contract name in counterexample function call.
  * SMTChecker: Support try/catch statements.
  * SMTChecker: Output internal and trusted external function calls in a counterexample's transaction trace.
+ * SMTChecker: Synthesize untrusted functions called externally.
 
 Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.
