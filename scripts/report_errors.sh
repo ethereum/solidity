@@ -9,10 +9,6 @@ function report_error_to_github
         CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
     fi
 
-    ERROR_MSG=$(cat "$ERROR_LOG")
-
-    echo "$ERROR_MSG"
-
     if [[ $CI == "true" ]]
     then
         echo "posting error message to github"
