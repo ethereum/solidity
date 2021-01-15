@@ -96,7 +96,7 @@ BOOST_AUTO_TU_REGISTRAR( test_name )(                                   \
                                                                         \
 void test_name::test_method()                                           \
     { \
-	m_doEwasmTestrun = true;                    \
+	m_doEwasmTestrun = false;                    \
                                                 \
 	m_compileViaYul = false;                    \
 	m_compileToEwasm = false;                   \
@@ -105,13 +105,6 @@ void test_name::test_method()                                           \
 	m_compileViaYul = true;                     \
 	reset();                                    \
 	actual_test_method();                       \
-                                                \
-	if (m_doEwasmTestrun)                       \
-	{                                           \
-		m_compileToEwasm = true;                \
-		reset();                                \
-		actual_test_method();                   \
-	}                                           \
 } \
     void test_name::actual_test_method()\
 /**/
