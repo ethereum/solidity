@@ -39,7 +39,7 @@ FORMATERROR=$(
     preparedGrep "#include \"" | grep -E -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
     preparedGrep "\<(if|for|while|switch)\(" # no space after "if", "for", "while" or "switch"
     preparedGrep "\<for\>\s*\([^=]*\>\s:\s.*\)" # no space before range based for-loop
-    preparedGrep "\<if\>\s*\(.*\)\s*\{\s*$" # "{\n" on same line as "if" / "for"
+    preparedGrep "\<if\>\s*\(.*\)\s*\{\s*$" # "{\n" on same line as "if"
     preparedGrep "[,\(<]\s*const " # const on left side of type
     preparedGrep "^\s*(static)?\s*const " # const on left side of type (beginning of line)
     preparedGrep "^ [^*]|[^*] 	|	 [^*]" # uses spaces for indentation or mixes spaces and tabs
