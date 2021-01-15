@@ -113,20 +113,30 @@ void SyntaxTest::parseAndAnalyze()
 
 void SyntaxTest::filterObtainedErrors()
 {
-	string const preamble = "pragma solidity >=0.0;\n// SPDX-License-Identifier: GPL-3.0\n";
 	for (auto const& currentError: filterErrors(compiler().errors(), true))
 	{
 		int locationStart = -1, locationEnd = -1;
 		string sourceName;
 		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
 		{
+			solAssert(location->source, "");
+			sourceName = location->source->name();
+
+			solAssert(m_sources.count(sourceName) == 1, "");
+			int preambleSize = static_cast<int>(location->source->source().size()) - static_cast<int>(m_sources[sourceName].size());
+			solAssert(preambleSize >= 0, "");
+
 			// ignore the version & license pragma inserted by the testing tool when calculating locations.
-			if (location->start >= static_cast<int>(preamble.size()))
-				locationStart = location->start - static_cast<int>(preamble.size());
-			if (location->end >= static_cast<int>(preamble.size()))
-				locationEnd = location->end - static_cast<int>(preamble.size());
-			if (location->source)
-				sourceName = location->source->name();
+			if (location->start != -1)
+			{
+				solAssert(location->start >= preambleSize, "");
+				locationStart = location->start - preambleSize;
+			}
+			if (location->end != -1)
+			{
+				solAssert(location->end >= preambleSize, "");
+				locationEnd = location->end - preambleSize;
+			}
 		}
 		m_errorList.emplace_back(SyntaxTestError{
 			currentError->typeName(),
