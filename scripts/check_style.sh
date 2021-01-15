@@ -14,7 +14,7 @@ EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
 
 (
 REPO_ROOT="$(dirname "$0")"/..
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || exit 1
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
   grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}"
@@ -36,17 +36,17 @@ function preparedGrep()
 
 FORMATERROR=$(
 (
-	preparedGrep "#include \"" | egrep -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
+	preparedGrep "#include \"" | grep -E -v -e "license.h" -e "BuildInfo.h"  # Use include with <> characters
 	preparedGrep "\<(if|for|while|switch)\(" # no space after "if", "for", "while" or "switch"
 	preparedGrep "\<for\>\s*\([^=]*\>\s:\s.*\)" # no space before range based for-loop
 	preparedGrep "\<if\>\s*\(.*\)\s*\{\s*$" # "{\n" on same line as "if" / "for"
 	preparedGrep "[,\(<]\s*const " # const on left side of type
 	preparedGrep "^\s*(static)?\s*const " # const on left side of type (beginning of line)
 	preparedGrep "^ [^*]|[^*] 	|	 [^*]" # uses spaces for indentation or mixes spaces and tabs
-	preparedGrep "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" | egrep -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
+	preparedGrep "[a-zA-Z0-9_]\s*[&][a-zA-Z_]" | grep -E -v "return [&]" # right-aligned reference ampersand (needs to exclude return)
 	# right-aligned reference pointer star (needs to exclude return and comments)
-	preparedGrep "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" | egrep -v -e "return [*]" -e "^* [*]" -e "^*//.*"
-) | egrep -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/"
+	preparedGrep "[a-zA-Z0-9_]\s*[*][a-zA-Z_]" | grep -E -v -e "return [*]" -e "^* [*]" -e "^*//.*"
+) | grep -E -v -e "^[a-zA-Z\./]*:[0-9]*:\s*\/(\/|\*)" -e "^test/"
 )
 
 if [[ "$FORMATERROR" != "" ]]

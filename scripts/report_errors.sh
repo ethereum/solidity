@@ -4,7 +4,7 @@ ERROR_LOG="$1"
 
 function report_error_to_github
 {
-    if [ -z "$CIRCLE_PR_NUMBER" ]
+    if [[ $CIRCLE_PR_NUMBER != "" ]]
     then
         CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
     fi
@@ -13,7 +13,7 @@ function report_error_to_github
 
     echo "$ERROR_MSG"
 
-    if [ ! -z "$CI" ]
+    if [[ $CI == "true" ]]
     then
         echo "posting error message to github"
         post_error_to_github
@@ -43,7 +43,7 @@ function post_review_comment_to_github
 
     sed -i 1d "$ERROR_LOG"
 
-    while read line
+    while read -r line
     do
         ERROR_PATH=$(echo "$line" | grep -oE ".*\.cpp")
         ERROR_LINE=$(echo "$line" | grep -oE "[0-9]*")

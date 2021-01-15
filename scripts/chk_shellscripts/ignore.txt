@@ -14,7 +14,6 @@
 ./scripts/docker_build.sh
 ./scripts/docs_version_pragma_check.sh
 ./scripts/uniqueErrors.sh
-./scripts/report_errors.sh
 ./scripts/tests.sh
 ./scripts/docker_deploy.sh
 ./scripts/bytecodecompare/storebytecode.sh
@@ -24,7 +23,6 @@
 ./scripts/install_obsolete_jsoncpp_1_7_4.sh
 ./scripts/install_deps.sh
 ./scripts/build.sh
-./scripts/check_style.sh
 ./scripts/run_proofs.sh
 ./scripts/common_cmdline.sh
 ./scripts/docker_deploy_manual.sh
