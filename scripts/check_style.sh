@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+ERROR_LOG="$(mktemp -t check_style_XXXXXX.log)"
+
 . scripts/report_errors.sh
 
 EXCLUDE_FILES=(

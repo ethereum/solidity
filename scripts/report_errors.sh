@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-export ERROR_LOG="/tmp/error.log"
-
 function report_error_to_github
 {
     if [ $? -eq 0 ]
