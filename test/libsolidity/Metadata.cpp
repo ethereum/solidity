@@ -36,6 +36,7 @@ namespace solidity::frontend::test
 
 namespace
 {
+
 map<string, string> requireParsedCBORMetadata(bytes const& _bytecode)
 {
 	bytes cborMetadata = solidity::test::onlyMetadata(_bytecode);
@@ -44,6 +45,30 @@ map<string, string> requireParsedCBORMetadata(bytes const& _bytecode)
 	BOOST_REQUIRE(tmp);
 	return *tmp;
 }
+
+optional<string> compileAndCheckLicenseMetadata(string const& _contractName, char const* _sourceCode)
+{
+	CompilerStack compilerStack;
+	compilerStack.setSources({{"A.sol", std::string(_sourceCode)}});
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+
+	std::string const& serialisedMetadata = compilerStack.metadata(_contractName);
+	BOOST_CHECK(solidity::test::isValidMetadata(serialisedMetadata));
+	Json::Value metadata;
+	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
+
+	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
+	BOOST_REQUIRE(metadata["sources"].isMember("A.sol"));
+
+	if (metadata["sources"]["A.sol"].isMember("license"))
+	{
+		BOOST_REQUIRE(metadata["sources"]["A.sol"]["license"].isString());
+		return metadata["sources"]["A.sol"]["license"].asString();
+	}
+	else
+		return nullopt;
+}
+
 }
 
 BOOST_AUTO_TEST_SUITE(Metadata)
