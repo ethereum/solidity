@@ -14,7 +14,7 @@ EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
 
 (
 REPO_ROOT="$(dirname "$0")"/..
-cd $REPO_ROOT
+cd "$REPO_ROOT"
 
 WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
   grep -v "test/libsolidity/ASTJSON\|test/libsolidity/ASTRecoveryTests\|test/compilationTests/zeppelin/LICENSE\|${EXCLUDE_FILES_JOINED}"
@@ -22,8 +22,8 @@ WHITESPACE=$(git grep -n -I -E "^.*[[:space:]]+$" |
 
 if [[ "$WHITESPACE" != "" ]]
 then
-	echo "Error: Trailing whitespace found:" | tee -a $ERROR_LOG
-	echo "$WHITESPACE" | tee -a $ERROR_LOG
+	echo "Error: Trailing whitespace found:" | tee -a "$ERROR_LOG"
+	echo "$WHITESPACE" | tee -a "$ERROR_LOG"
 	scripts/report_errors.sh "$ERROR_LOG"
 	exit 1
 fi
@@ -51,8 +51,8 @@ FORMATERROR=$(
 
 if [[ "$FORMATERROR" != "" ]]
 then
-	echo "Coding style error:" | tee -a $ERROR_LOG
-	echo "$FORMATERROR" | tee -a $ERROR_LOG
+	echo "Coding style error:" | tee -a "$ERROR_LOG"
+	echo "$FORMATERROR" | tee -a "$ERROR_LOG"
 	scripts/report_errors.sh "$ERROR_LOG"
 	exit 1
 fi
