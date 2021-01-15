@@ -47,6 +47,8 @@ function post_review_comment_to_github
     do
         ERROR_PATH=$(echo $line | grep -oE ".*\.cpp")
         ERROR_LINE=$(echo $line | grep -oE "[0-9]*")
+        [[ $ERROR_PATH != "" ]] || { echo "ERROR: Error message does not contain file path."; exit 1; }
+        [[ $ERROR_LINE != "" ]] || { echo "ERROR: Error message does not contain line number."; exit 1; }
 
         curl --request POST \
             --url $GITHUB_API_URL \
