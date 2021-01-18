@@ -18,46 +18,50 @@
 
 #pragma once
 
-#include <test/TestCase.h>
+#include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/optimiser/NameDispenser.h>
 
-namespace solidity::langutil
-{
-class Error;
-using ErrorList = std::vector<std::shared_ptr<Error const>>;
-}
+#include <libyul/YulString.h>
+
+#include <set>
+#include <memory>
 
 namespace solidity::yul
 {
-struct AsmAnalysisInfo;
-struct Object;
-struct Dialect;
+	struct AsmAnalysisInfo;
+	struct Object;
+	struct Dialect;
 }
 
 namespace solidity::yul::test
 {
-
-class YulOptimizerTest: public solidity::frontend::test::EVMVersionRestrictedTestCase
+class YulOptimizerTestCommon
 {
 public:
-	static std::unique_ptr<TestCase> create(Config const& _config)
-	{
-		return std::make_unique<YulOptimizerTest>(_config.filename);
-	}
-
-	explicit YulOptimizerTest(std::string const& _filename);
-
-	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
-private:
-	std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> parse(
-		std::ostream& _stream, std::string const& _linePrefix, bool const _formatted, std::string const& _source
+	explicit YulOptimizerTestCommon(
+		std::shared_ptr<Object> _obj,
+		Dialect const& _dialect,
+		std::string const& _optimizerStep
 	);
-	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
+	/// Runs chosen optimiser step returning pointer
+	/// to yul AST Block post optimisation.
+	std::shared_ptr<Block> run();
+	/// Runs chosen optimiser step returning true if
+	/// successful, false otherwise.
+	bool runStep();
+private:
+	void disambiguate();
+	void updateContext();
 
 	std::string m_optimizerStep;
 
 	Dialect const* m_dialect = nullptr;
+	std::set<YulString> m_reservedIdentifiers;
+	std::unique_ptr<NameDispenser> m_nameDispenser;
+	std::unique_ptr<OptimiserStepContext> m_context;
 
 	std::shared_ptr<Object> m_object;
+	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 };
 

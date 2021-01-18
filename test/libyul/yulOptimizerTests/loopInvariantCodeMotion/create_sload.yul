@@ -15,10 +15,6 @@
 // step: loopInvariantCodeMotion
 //
 // {
-//     function g() -> x
-//     { x := create(100, 0, 32) }
-//     function f() -> x_1
-//     { x_1 := mload(0) }
 //     let b := 1
 //     let a := 1
 //     let z := f()
@@ -27,4 +23,8 @@
 //         let q := sload(5)
 //         let r := g()
 //     }
+//     function g() -> x
+//     { x := create(100, 0, 32) }
+//     function f() -> x_1
+//     { x_1 := mload(0) }
 // }
