@@ -2643,15 +2643,24 @@ pair<FunctionDefinition const*, ContractDefinition const*> SMTEncoder::functionC
 		auto funDef = dynamic_cast<FunctionDefinition const*>(_ref->annotation().referencedDeclaration);
 		if (!funDef)
 			return {funDef, _contract};
-		auto contextContract = _contract;
-		if (lookup == VirtualLookup::Virtual)
+		ContractDefinition const* contextContract = nullptr;
+		switch (lookup)
+		{
+		case VirtualLookup::Virtual:
 			funDef = &funDef->resolveVirtual(*_contract);
-		else if (lookup == VirtualLookup::Super)
+			contextContract = _contract;
+			break;
+		case VirtualLookup::Super:
 		{
 			auto super = _contract->superContract(*_contract);
 			solAssert(super, "Super contract not available.");
 			funDef = &funDef->resolveVirtual(*_contract, super);
 			contextContract = super;
+			break;
+		}
+		case VirtualLookup::Static:
+			contextContract = funDef->annotation().contract;
+			break;
 		}
 		return {funDef, contextContract};
 	};
