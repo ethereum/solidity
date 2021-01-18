@@ -5,6 +5,9 @@
 EXCLUDE_FILES=(
   "libsolutil/picosha2.h"
   "test/libsolutil/UTF8.cpp"
+  "test/libsolidity/syntaxTests/license/license_cr_endings.sol"
+  "test/libsolidity/syntaxTests/license/license_crlf_endings.sol"
+  "test/libsolidity/syntaxTests/license/license_whitespace_trailing.sol"
 )
 EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
 EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
