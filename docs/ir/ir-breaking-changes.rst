@@ -114,3 +114,22 @@ This causes differences in some contracts, for example:
 
 Previously `f()` would return `0x6465616462656566313564656164000000000000000000000000000000000010` (it has correct length, and correct first 8 elements, but than it contains dirty data which was set via assembly).
 Now it is returning `0x6465616462656566000000000000000000000000000000000000000000000010` (it has correct length, and correct elements, but doesn't contain dirty data).
+
+
+Internals
+=========
+
+Internal function pointers:
+
+The old code generator uses code offsets or tags for values of internal function pointers. This is especially complicated since
+these offsets are different at construction time and after deployment and the values can cross this border via storage.
+Because of that, both offsets are encoded at construction time into the same value (into different bytes).
+
+In the new code generator, function pointers use the AST IDs of the functions as values. Since calls via jumps are not possible,
+calls through function pointers always have to use an internal dispatch function that uses the ``switch`` statement to select
+the right function.
+
+The ID ``0`` is reserved for uninitialized function pointers which then cause a panic in the disptach function when called.
+
+In the old code generator, internal function pointers are initialized with a special function that always causes a panic.
+This causes a storage write at construction time for internal function pointers in storage.
