@@ -2705,7 +2705,7 @@ vector<VariableDeclaration const*> SMTEncoder::tryCatchVariables(FunctionDefinit
 					vars.push_back(param.get());
 			}
 
-			return false;
+			return true;
 		}
 
 		vector<VariableDeclaration const*> vars;
