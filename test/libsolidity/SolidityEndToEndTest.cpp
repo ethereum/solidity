@@ -2317,11 +2317,14 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 			}
 		}
 	)";
-	compileAndRun(sourceCode);
-	bytes calldata1 = FixedHash<4>(util::keccak256("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
-	sendMessage(calldata1, false);
-	BOOST_CHECK(m_transactionSuccessful);
-	BOOST_CHECK(m_output == encodeArgs(util::keccak256(bytes{'a', 'b', 'c'} + calldata1)));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN();
+		compileAndRun(sourceCode);
+		bytes calldata1 = FixedHash<4>(util::keccak256("f()")).asBytes() + bytes(61, 0x22) + bytes(12, 0x12);
+		sendMessage(calldata1, false);
+		BOOST_CHECK(m_transactionSuccessful);
+		BOOST_CHECK(m_output == encodeArgs(util::keccak256(bytes{'a', 'b', 'c'} + calldata1)));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(call_forward_bytes)
@@ -2342,15 +2345,18 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 			bytes savedData;
 		}
 	)";
-	compileAndRun(sourceCode, 0, "sender");
-	ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
-	ABI_CHECK(callContractFunction("forward()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
-	ABI_CHECK(callContractFunction("clear()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
-	ABI_CHECK(callContractFunction("forward()"), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN();
+		compileAndRun(sourceCode, 0, "sender");
+		ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
+		ABI_CHECK(callContractFunction("forward()"), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
+		ABI_CHECK(callContractFunction("clear()"), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
+		ABI_CHECK(callContractFunction("forward()"), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
@@ -2383,18 +2389,21 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes_length)
 			}
 		}
 	)";
-	compileAndRun(sourceCode, 0, "sender");
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN();
+		compileAndRun(sourceCode, 0, "sender");
 
-	// No additional data, just function selector
-	ABI_CHECK(callContractFunction("viaCalldata()"), encodeArgs(4));
-	ABI_CHECK(callContractFunction("viaMemory()"), encodeArgs(4));
-	ABI_CHECK(callContractFunction("viaStorage()"), encodeArgs(4));
+		// No additional data, just function selector
+		ABI_CHECK(callContractFunction("viaCalldata()"), encodeArgs(4));
+		ABI_CHECK(callContractFunction("viaMemory()"), encodeArgs(4));
+		ABI_CHECK(callContractFunction("viaStorage()"), encodeArgs(4));
 
-	// Some additional unpadded data
-	bytes unpadded = asBytes(string("abc"));
-	ABI_CHECK(callContractFunctionNoEncoding("viaCalldata()", unpadded), encodeArgs(7));
-	ABI_CHECK(callContractFunctionNoEncoding("viaMemory()", unpadded), encodeArgs(7));
-	ABI_CHECK(callContractFunctionNoEncoding("viaStorage()", unpadded), encodeArgs(7));
+		// Some additional unpadded data
+		bytes unpadded = asBytes(string("abc"));
+		ABI_CHECK(callContractFunctionNoEncoding("viaCalldata()", unpadded), encodeArgs(7));
+		ABI_CHECK(callContractFunctionNoEncoding("viaMemory()", unpadded), encodeArgs(7));
+		ABI_CHECK(callContractFunctionNoEncoding("viaStorage()", unpadded), encodeArgs(7));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
@@ -2419,15 +2428,18 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 			bytes savedData2;
 		}
 	)";
-	compileAndRun(sourceCode, 0, "sender");
-	ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
-	ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
-	ABI_CHECK(callContractFunction("forward(bool)", false), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(16));
-	ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode, 0, "sender");
+		ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
+		ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
+		ABI_CHECK(callContractFunction("forward(bool)", false), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(16));
+		ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)

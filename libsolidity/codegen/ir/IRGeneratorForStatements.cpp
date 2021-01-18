@@ -449,12 +449,11 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 
 	writeToLValue(*m_currentLValue, value);
 
-	if (
-		m_currentLValue->type.category() != Type::Category::Struct &&
-		m_currentLValue->type.category() != Type::Category::Array &&
-		*_assignment.annotation().type != *TypeProvider::emptyTuple()
-	)
+	if (dynamic_cast<ReferenceType const*>(&m_currentLValue->type))
+		define(_assignment, readFromLValue(*m_currentLValue));
+	else if (*_assignment.annotation().type != *TypeProvider::emptyTuple())
 		define(_assignment, value);
+
 	m_currentLValue.reset();
 
 	return false;
