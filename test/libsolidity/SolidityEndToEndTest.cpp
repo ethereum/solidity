@@ -2419,15 +2419,18 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 			bytes savedData2;
 		}
 	)";
-	compileAndRun(sourceCode, 0, "sender");
-	ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
-	ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
-	ABI_CHECK(callContractFunction("forward(bool)", false), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(16));
-	ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
-	ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
+	ALSO_VIA_YUL(
+		DISABLE_EWASM_TESTRUN()
+		compileAndRun(sourceCode, 0, "sender");
+		ABI_CHECK(callContractFunction("recv(uint256)", 7), bytes());
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(0));
+		ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(8));
+		ABI_CHECK(callContractFunction("forward(bool)", false), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(16));
+		ABI_CHECK(callContractFunction("forward(bool)", true), encodeArgs(true));
+		ABI_CHECK(callContractFunction("val()"), encodeArgs(0x80));
+	);
 }
 
 BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
