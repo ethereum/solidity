@@ -10,5 +10,5 @@ contract C
 	}
 }
 // ----
-// Warning 7737: (97-121): Assertion checker does not support inline assembly.
-// Warning 7737: (97-121): Assertion checker does not support inline assembly.
+// Warning 7737: (97-121): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
+// Warning 7737: (97-121): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
