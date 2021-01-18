@@ -43,14 +43,27 @@
 
 #include <libsolutil/JSON.h>
 
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
 
+#include <range/v3/action/sort.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/drop.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/set_algorithm.hpp>
+#include <range/v3/view/stride.hpp>
+#include <range/v3/view/transform.hpp>
+
+#include <cctype>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <variant>
 
 using namespace std;
+using namespace ranges;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -102,40 +115,48 @@ public:
 		size_t _columns
 	)
 	{
-		auto hasShorterString = [](auto const& a, auto const& b){ return a.second.size() < b.second.size(); };
-		size_t longestDescriptionLength = max(
+		yulAssert(_columns > 0, "");
+
+		auto hasShorterString = [](auto const& a, auto const& b) { return a.second.size() < b.second.size(); };
+		size_t longestDescriptionLength = std::max(
 			max_element(_optimizationSteps.begin(), _optimizationSteps.end(), hasShorterString)->second.size(),
 			max_element(_extraOptions.begin(), _extraOptions.end(), hasShorterString)->second.size()
 		);
 
-		size_t index = 0;
-		auto printPair = [&](auto const& optionAndDescription)
-		{
-			cout << optionAndDescription.first << ": ";
-			cout << setw(static_cast<int>(longestDescriptionLength)) << setiosflags(ios::left);
-			cout << optionAndDescription.second << " ";
+		vector<string> overlappingAbbreviations =
+			ranges::views::set_intersection(_extraOptions | views::keys, _optimizationSteps | views::keys) |
+			views::transform([](char _abbreviation){ return string(1, _abbreviation); }) |
+			to<vector>();
 
-			++index;
-			if (index % _columns == 0)
-				cout << endl;
-		};
+		yulAssert(
+			overlappingAbbreviations.empty(),
+			"ERROR: Conflict between yulopti controls and the following Yul optimizer step abbreviations: " +
+			boost::join(overlappingAbbreviations, ", ") + ".\n"
+			"This is most likely caused by someone adding a new step abbreviation to "
+			"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
+			"Please update the code to use a different character and recompile yulopti."
+		);
 
-		for (auto const& optionAndDescription: _extraOptions)
+		vector<tuple<char, string>> sortedOptions =
+			views::concat(_optimizationSteps, _extraOptions) |
+			to<vector<tuple<char, string>>>() |
+			actions::sort([](tuple<char, string> const& _a, tuple<char, string> const& _b) {
+				return (
+					!boost::algorithm::iequals(get<1>(_a), get<1>(_b)) ?
+					boost::algorithm::lexicographical_compare(get<1>(_a), get<1>(_b), boost::algorithm::is_iless()) :
+					tolower(get<0>(_a)) < tolower(get<0>(_b))
+				);
+			});
+
+		yulAssert(sortedOptions.size() > 0, "");
+		size_t rows = (sortedOptions.size() - 1) / _columns + 1;
+		for (size_t row = 0; row < rows; ++row)
 		{
-			yulAssert(
-				_optimizationSteps.count(optionAndDescription.first) == 0,
-				"ERROR: Conflict between yulopti controls and Yul optimizer step abbreviations.\n"
-				"Character '" + string(1, optionAndDescription.first) + "' is assigned to both " +
-				optionAndDescription.second + " and " + _optimizationSteps.at(optionAndDescription.first) + " step.\n"
-				"This is most likely caused by someone adding a new step abbreviation to "
-				"OptimiserSuite::stepNameToAbbreviationMap() and not realizing that it's used by yulopti.\n"
-				"Please update the code to use a different character and recompile yulopti."
-			);
-			printPair(optionAndDescription);
+			for (auto const& [key, name]: sortedOptions | views::drop(row) | views::stride(rows))
+				cout << key << ": " << setw(static_cast<int>(longestDescriptionLength)) << setiosflags(ios::left) << name << " ";
+
+			cout << endl;
 		}
-
-		for (auto const& abbreviationAndName: _optimizationSteps)
-			printPair(abbreviationAndName);
 	}
 
 	void runInteractive(string source)
@@ -157,7 +178,8 @@ public:
 			}
 			map<char, string> const& abbreviationMap = OptimiserSuite::stepAbbreviationToNameMap();
 			map<char, string> const& extraOptions = {
-				{'#', "quit"},
+				// QUIT starts with a non-letter character on purpose to get it to show up on top of the list
+				{'#', ">>> QUIT <<<"},
 				{',', "VarNameCleaner"},
 				{';', "StackCompressor"}
 			};
