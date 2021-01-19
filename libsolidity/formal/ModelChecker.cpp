@@ -36,8 +36,8 @@ ModelChecker::ModelChecker(
 ):
 	m_settings(_settings),
 	m_context(),
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, _settings.timeout),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, _settings.timeout)
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings)
 {
 }
 

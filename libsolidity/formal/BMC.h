@@ -30,6 +30,7 @@
 
 
 #include <libsolidity/formal/EncodingContext.h>
+#include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/SMTEncoder.h>
 
 #include <libsolidity/interface/ReadFile.h>
@@ -62,10 +63,10 @@ public:
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		smtutil::SMTSolverChoice _enabledSolvers,
-		std::optional<unsigned> timeout
+		ModelCheckerSettings const& _settings
 	);
 
-	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTarget::Type>> _solvedTargets);
+	void analyze(SourceUnit const& _sources, std::map<ASTNode const*, std::set<VerificationTargetType>> _solvedTargets);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
 	/// @returns a list of inputs to the SMT solver that were not part of the argument to
@@ -140,7 +141,7 @@ private:
 	void checkBalance(BMCVerificationTarget& _target);
 	void checkAssert(BMCVerificationTarget& _target);
 	void addVerificationTarget(
-		VerificationTarget::Type _type,
+		VerificationTargetType _type,
 		smtutil::Expression const& _value,
 		Expression const* _expression
 	);
@@ -186,7 +187,9 @@ private:
 	std::vector<BMCVerificationTarget> m_verificationTargets;
 
 	/// Targets that were already proven.
-	std::map<ASTNode const*, std::set<VerificationTarget::Type>> m_solvedTargets;
+	std::map<ASTNode const*, std::set<VerificationTargetType>> m_solvedTargets;
+
+	ModelCheckerSettings const& m_settings;
 };
 
 }

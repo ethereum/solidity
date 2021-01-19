@@ -29,7 +29,7 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
 
-#include <libsolidity/formal/ModelChecker.h>
+#include <libsolidity/formal/ModelCheckerSettings.h>
 
 #include <libsmtutil/SolverInterface.h>
 

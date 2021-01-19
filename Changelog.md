@@ -5,6 +5,9 @@ Language Features:
 
 Compiler Features:
  * Build system: Update the soljson.js build to emscripten 2.0.12 and boost 1.75.0.
+ * Command Line Interface: New option ``--model-checker-targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``,
+   ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time,
+   separated by a comma without spaces: ``underflow,overflow,assert``.
  * Optimizer: Add rule to replace ``iszero(sub(x,y))`` by ``eq(x,y)``.
  * Parser: Report meaningful error if parsing a version pragma failed.
  * SMTChecker: Support ABI functions as uninterpreted functions.
@@ -13,6 +16,9 @@ Compiler Features:
  * SMTChecker: Support try/catch statements.
  * SMTChecker: Output internal and trusted external function calls in a counterexample's transaction trace.
  * SMTChecker: Synthesize untrusted functions called externally.
+ * Standard JSON: New option ``modelCheckerSettings.targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``,
+   ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time,
+   separated by a comma without spaces: ``underflow,overflow,assert``.
 
 Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.

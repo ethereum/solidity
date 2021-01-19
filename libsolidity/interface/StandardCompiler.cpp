@@ -434,7 +434,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"engine", "timeout"};
+	static set<string> keys{"engine", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -906,6 +906,16 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		if (!engine)
 			return formatFatalError("JSONError", "Invalid model checker engine requested.");
 		ret.modelCheckerSettings.engine = *engine;
+	}
+
+	if (modelCheckerSettings.isMember("targets"))
+	{
+		if (!modelCheckerSettings["targets"].isString())
+			return formatFatalError("JSONError", "settings.modelChecker.targets must be a string.");
+		std::optional<ModelCheckerTargets> targets = ModelCheckerTargets::fromString(modelCheckerSettings["targets"].asString());
+		if (!targets)
+			return formatFatalError("JSONError", "Invalid model checker targets requested.");
+		ret.modelCheckerSettings.targets = *targets;
 	}
 
 	if (modelCheckerSettings.isMember("timeout"))

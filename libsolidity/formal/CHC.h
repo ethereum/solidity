@@ -31,6 +31,7 @@
 
 #pragma once
 
+#include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/Predicate.h>
 #include <libsolidity/formal/SMTEncoder.h>
 
@@ -56,13 +57,13 @@ public:
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		smtutil::SMTSolverChoice _enabledSolvers,
-		std::optional<unsigned> timeout
+		ModelCheckerSettings const& _settings
 	);
 
 	void analyze(SourceUnit const& _sources);
 
-	std::map<ASTNode const*, std::set<VerificationTarget::Type>> const& safeTargets() const { return m_safeTargets; }
-	std::map<ASTNode const*, std::set<VerificationTarget::Type>> const& unsafeTargets() const { return m_unsafeTargets; }
+	std::map<ASTNode const*, std::set<VerificationTargetType>> const& safeTargets() const { return m_safeTargets; }
+	std::map<ASTNode const*, std::set<VerificationTargetType>> const& unsafeTargets() const { return m_unsafeTargets; }
 
 	/// This is used if the Horn solver is not directly linked into this binary.
 	/// @returns a list of inputs to the Horn solver that were not part of the argument to
@@ -199,7 +200,7 @@ private:
 	/// @returns <false, model> otherwise.
 	std::pair<smtutil::CheckResult, smtutil::CHCSolverInterface::CexGraph> query(smtutil::Expression const& _query, langutil::SourceLocation const& _location);
 
-	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTarget::Type _type, smtutil::Expression const& _errorCondition);
+	void verificationTargetEncountered(ASTNode const* const _errorNode, VerificationTargetType _type, smtutil::Expression const& _errorCondition);
 
 	void checkVerificationTargets();
 	// Forward declaration. Definition is below.
@@ -321,9 +322,9 @@ private:
 	std::map<unsigned, CHCVerificationTarget> m_verificationTargets;
 
 	/// Targets proven safe.
-	std::map<ASTNode const*, std::set<VerificationTarget::Type>> m_safeTargets;
+	std::map<ASTNode const*, std::set<VerificationTargetType>> m_safeTargets;
 	/// Targets proven unsafe.
-	std::map<ASTNode const*, std::set<VerificationTarget::Type>> m_unsafeTargets;
+	std::map<ASTNode const*, std::set<VerificationTargetType>> m_unsafeTargets;
 	//@}
 
 	/// Control-flow.
@@ -369,8 +370,7 @@ private:
 	/// SMT solvers that are chosen at runtime.
 	smtutil::SMTSolverChoice m_enabledSolvers;
 
-	/// SMT query timeout in seconds.
-	std::optional<unsigned> m_queryTimeout;
+	ModelCheckerSettings const& m_settings;
 };
 
 }

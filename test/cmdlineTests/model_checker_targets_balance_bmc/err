@@ -1,0 +1,11 @@
+Warning: BMC: Insufficient funds happens here.
+  --> model_checker_targets_balance_bmc/input.sol:11:3:
+   |
+11 | 		a.transfer(x);
+   | 		^^^^^^^^^^^^^
+Note: Counterexample:
+  a = 0
+  x = 0
+
+Note: Callstack:
+Note:

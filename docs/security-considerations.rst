@@ -438,8 +438,16 @@ inside ``assert`` statements are always true.  If an assertion failure is
 found, a counterexample is given to the user, showing how the assertion can be
 violated.
 
-The SMTChecker also checks automatically for arithmetic underflow/overflow,
-trivial conditions and unreachable code.
+The other verification targets that the SMTChecker checks at compile time are:
+
+- Arithmetic underflow and overflow (`underflow` and `overflow`).
+- Division by zero (`divByZero`).
+- Trivial conditions and unreachable code (`constantCondition`).
+- Popping an empty array (`popEmptyArray`).
+- Insufficient funds for a transfer (`balance`).
+
+The names after each target above can be used when specifying subsets of targets.
+
 It is currently an experimental feature, therefore in order to use it you need
 to enable it via :ref:`a pragma directive<smt_checker>`.
 
