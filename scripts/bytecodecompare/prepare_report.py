@@ -42,7 +42,9 @@ class FileReport:
 
 
 def load_source(path: Union[Path, str]) -> str:
-    with open(path, mode='r', encoding='utf8') as source_file:
+    # NOTE: newline='' disables newline conversion.
+    # We want the file exactly as is because changing even a single byte in the source affects metadata.
+    with open(path, mode='r', encoding='utf8', newline='') as source_file:
         file_content = source_file.read()
 
     return file_content

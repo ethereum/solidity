@@ -4,7 +4,7 @@ import json
 import unittest
 from pathlib import Path
 
-from unittest_helpers import LIBSOLIDITY_TEST_DIR, load_fixture, load_libsolidity_test_case
+from unittest_helpers import FIXTURE_DIR, LIBSOLIDITY_TEST_DIR, load_fixture, load_libsolidity_test_case
 
 # NOTE: This test file file only works with scripts/ added to PYTHONPATH so pylint can't find the imports
 # pragma pylint: disable=import-error
@@ -15,6 +15,11 @@ from bytecodecompare.prepare_report import load_source, parse_standard_json_outp
 
 SMT_SMOKE_TEST_SOL_PATH = LIBSOLIDITY_TEST_DIR / 'smtCheckerTests/simple/smoke_test.sol'
 SMT_SMOKE_TEST_SOL_CODE = load_libsolidity_test_case(SMT_SMOKE_TEST_SOL_PATH)
+
+SMT_CONTRACT_WITH_LF_NEWLINES_SOL_PATH = FIXTURE_DIR / 'smt_contract_with_lf_newlines.sol'
+SMT_CONTRACT_WITH_CRLF_NEWLINES_SOL_PATH = FIXTURE_DIR / 'smt_contract_with_crlf_newlines.sol'
+SMT_CONTRACT_WITH_CR_NEWLINES_SOL_PATH = FIXTURE_DIR / 'smt_contract_with_cr_newlines.sol'
+SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH = FIXTURE_DIR / 'smt_contract_with_mixed_newlines.sol'
 
 SYNTAX_SMOKE_TEST_SOL_PATH = LIBSOLIDITY_TEST_DIR / 'syntaxTests/smoke_test.sol'
 SYNTAX_SMOKE_TEST_SOL_CODE = load_libsolidity_test_case(SYNTAX_SMOKE_TEST_SOL_PATH)
@@ -81,6 +86,46 @@ class TestPrepareReport(unittest.TestCase):
     def test_load_source(self):
         self.assertEqual(load_source(SMT_SMOKE_TEST_SOL_PATH), SMT_SMOKE_TEST_SOL_CODE)
 
+    def test_load_source_preserves_lf_newlines(self):
+        expected_output = (
+            "pragma experimental SMTChecker;\n"
+            "\n"
+            "contract C {\n"
+            "}\n"
+        )
+
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_LF_NEWLINES_SOL_PATH), expected_output)
+
+    def test_load_source_preserves_crlf_newlines(self):
+        expected_output = (
+            "pragma experimental SMTChecker;\r\n"
+            "\r\n"
+            "contract C {\r\n"
+            "}\r\n"
+        )
+
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_CRLF_NEWLINES_SOL_PATH), expected_output)
+
+    def test_load_source_preserves_cr_newlines(self):
+        expected_output = (
+            "pragma experimental SMTChecker;\r"
+            "\r"
+            "contract C {\r"
+            "}\r"
+        )
+
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_CR_NEWLINES_SOL_PATH), expected_output)
+
+    def test_load_source_preserves_mixed_newlines(self):
+        expected_output = (
+            "pragma experimental SMTChecker;\n"
+            "\n"
+            "contract C {\r"
+            "}\r\n"
+        )
+
+        self.assertEqual(load_source(SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH), expected_output)
+
     def test_prepare_compiler_input(self):
         expected_compiler_input = {
             'language': 'Solidity',
@@ -97,6 +142,34 @@ class TestPrepareReport(unittest.TestCase):
         (command_line, compiler_input) = prepare_compiler_input(
             Path('solc'),
             SMT_SMOKE_TEST_SOL_PATH,
+            optimize=True,
+        )
+
+        self.assertEqual(command_line, ['solc', '--standard-json'])
+        self.assertEqual(json.loads(compiler_input), expected_compiler_input)
+
+    def test_prepare_compiler_input_preserves_newlines(self):
+        expected_compiler_input = {
+            'language': 'Solidity',
+            'sources': {
+                str(SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH): {
+                    'content':
+                        "pragma experimental SMTChecker;\n"
+                        "\n"
+                        "contract C {\r"
+                        "}\r\n"
+                },
+            },
+            'settings': {
+                'optimizer': {'enabled': True},
+                'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}},
+                'modelChecker': {'engine': 'none'},
+            }
+        }
+
+        (command_line, compiler_input) = prepare_compiler_input(
+            Path('solc'),
+            SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_PATH,
             optimize=True,
         )
 
