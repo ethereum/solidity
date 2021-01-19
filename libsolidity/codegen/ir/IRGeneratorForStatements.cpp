@@ -1057,7 +1057,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		solAssert(arguments.size() > 0, "Expected at least one parameter for require/assert");
 		solAssert(arguments.size() <= 2, "Expected no more than two parameters for require/assert");
 
-		Type const* messageArgumentType = arguments.size() > 1 ? arguments[1]->annotation().type : nullptr;
+		Type const* messageArgumentType =
+			arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip ?
+			arguments[1]->annotation().type :
+			nullptr;
 		string requireOrAssertFunction = m_utils.requireOrAssertFunction(
 			functionType->kind() == FunctionType::Kind::Assert,
 			messageArgumentType
