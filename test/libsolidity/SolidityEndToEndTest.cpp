@@ -5435,24 +5435,6 @@ BOOST_AUTO_TEST_CASE(event_wrong_abi_name)
 	)
 }
 
-BOOST_AUTO_TEST_CASE(uninitialized_internal_storage_function)
-{
-	char const* sourceCode = R"(
-		contract Test {
-			function() internal x;
-			function f() public returns (uint r) {
-				function() internal t = x;
-				assembly { r := t }
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Test");
-
-	bytes result = callContractFunction("f()");
-	BOOST_CHECK(!result.empty());
-	BOOST_CHECK(result != encodeArgs(0));
-}
-
 BOOST_AUTO_TEST_CASE(dirty_scratch_space_prior_to_constant_optimiser)
 {
 	char const* sourceCode = R"(
