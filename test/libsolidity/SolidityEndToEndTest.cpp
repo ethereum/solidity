@@ -1381,6 +1381,8 @@ BOOST_AUTO_TEST_CASE(internal_constructor)
 			constructor() {}
 		}
 	)";
+	// via yul disabled because it will throw an error instead of
+	// returning empty bytecode.
 	BOOST_CHECK(compileAndRunWithoutCheck({{"", sourceCode}}, 0, "C").empty());
 }
 
