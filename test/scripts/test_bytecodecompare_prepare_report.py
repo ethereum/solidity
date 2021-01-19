@@ -3,7 +3,6 @@
 import json
 import unittest
 from pathlib import Path
-from textwrap import dedent
 
 from unittest_helpers import LIBSOLIDITY_TEST_DIR, load_fixture, load_libsolidity_test_case
 
@@ -51,23 +50,21 @@ class TestPrepareReport_FileReport(unittest.TestCase):
             ]
         )
 
-        expected_output = dedent("""\
-            syntaxTests/scoping/library_inherited2.sol:A <NO BYTECODE>
-            syntaxTests/scoping/library_inherited2.sol:A <NO METADATA>
-            syntaxTests/scoping/library_inherited2.sol:B <NO BYTECODE>
-            syntaxTests/scoping/library_inherited2.sol:B {"language":"Solidity"}
-            syntaxTests/scoping/library_inherited2.sol:Lib 60566050600b828282398051
-            syntaxTests/scoping/library_inherited2.sol:Lib <NO METADATA>
-        """)
+        expected_output = (
+            "syntaxTests/scoping/library_inherited2.sol:A <NO BYTECODE>\n"
+            "syntaxTests/scoping/library_inherited2.sol:A <NO METADATA>\n"
+            "syntaxTests/scoping/library_inherited2.sol:B <NO BYTECODE>\n"
+            "syntaxTests/scoping/library_inherited2.sol:B {\"language\":\"Solidity\"}\n"
+            "syntaxTests/scoping/library_inherited2.sol:Lib 60566050600b828282398051\n"
+            "syntaxTests/scoping/library_inherited2.sol:Lib <NO METADATA>\n"
+        )
 
         self.assertEqual(report.format_report(), expected_output)
 
     def test_format_report_should_print_error_if_contract_report_list_is_missing(self):
         report = FileReport(file_name=Path('file.sol'), contract_reports=None)
 
-        expected_output = dedent("""\
-            file.sol: <ERROR>
-        """)
+        expected_output = "file.sol: <ERROR>\n"
 
         self.assertEqual(report.format_report(), expected_output)
 
@@ -158,28 +155,28 @@ class TestPrepareReport(unittest.TestCase):
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
     def test_parse_standard_json_output_should_report_error_if_every_file_has_no_contracts(self):
-        compiler_output = dedent("""\
-            {
-                "contracts": {
-                    "contract1.sol": {},
-                    "contract2.sol": {}
-                }
-            }
-        """)
+        compiler_output = (
+            "{\n"
+            "    \"contracts\": {\n"
+            "        \"contract1.sol\": {},\n"
+            "        \"contract2.sol\": {}\n"
+            "    }\n"
+            "}\n"
+        )
 
         expected_report = FileReport(file_name=Path('contract.sol'), contract_reports=None)
 
         self.assertEqual(parse_standard_json_output(Path('contract.sol'), compiler_output), expected_report)
 
     def test_parse_standard_json_output_should_not_report_error_if_there_is_at_least_one_file_with_contracts(self):
-        compiler_output = dedent("""\
-            {
-                "contracts": {
-                    "contract1.sol": {"A": {}},
-                    "contract2.sol": {}
-                }
-            }
-        """)
+        compiler_output = (
+            "{\n"
+            "    \"contracts\": {\n"
+            "        \"contract1.sol\": {\"A\": {}},\n"
+            "        \"contract2.sol\": {}\n"
+            "    }\n"
+            "}\n"
+        )
 
         expected_report = FileReport(
             file_name=Path('contract.sol'),
