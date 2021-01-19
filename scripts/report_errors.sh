@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 
-export ERROR_LOG="/tmp/error.log"
+ERROR_LOG="$1"
 
 function report_error_to_github
 {
-    if [ $? -eq 0 ]
-    then
-        exit 0
-    fi
-
     if [ -z $CIRCLE_PR_NUMBER ]
     then
         CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
@@ -22,16 +17,12 @@ function report_error_to_github
     then
         echo "posting error message to github"
         post_error_to_github
+        post_review_comment_to_github
     fi
 }
 
 function post_error_to_github
 {
-    if [ -z $CIRCLE_PR_NUMBER ]
-    then
-        CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
-    fi
-
     GITHUB_API_URL="https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/issues/$CIRCLE_PR_NUMBER/comments"
 
     ESCAPED_ERROR_MSG=$(cat -e $ERROR_LOG | sed 's/\\/\\\\/g' | sed 's/"/\\\"/g')
@@ -44,8 +35,6 @@ function post_error_to_github
         --header 'content-type: application/json' \
         -u stackenbotten:$GITHUB_ACCESS_TOKEN \
         --data "{\"body\": \"There was an error when running \`$CIRCLE_JOB\` for commit \`$CIRCLE_SHA1\`:\n\`\`\`\n$FORMATTED_ERROR_MSG\n\`\`\`\nPlease check that your changes are working as intended.\"}"
-
-    post_review_comment_to_github
 }
 
 function post_review_comment_to_github
@@ -58,6 +47,8 @@ function post_review_comment_to_github
     do
         ERROR_PATH=$(echo $line | grep -oE ".*\.cpp")
         ERROR_LINE=$(echo $line | grep -oE "[0-9]*")
+        [[ $ERROR_PATH != "" ]] || { echo "ERROR: Error message does not contain file path."; exit 1; }
+        [[ $ERROR_LINE != "" ]] || { echo "ERROR: Error message does not contain line number."; exit 1; }
 
         curl --request POST \
             --url $GITHUB_API_URL \
@@ -68,4 +59,4 @@ function post_review_comment_to_github
     done < $ERROR_LOG
 }
 
-trap report_error_to_github EXIT
+report_error_to_github
