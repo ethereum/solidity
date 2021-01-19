@@ -63,6 +63,7 @@ private:
 	std::shared_ptr<Object> m_object;
 	std::shared_ptr<Block> m_ast;
 	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
+	std::map<std::string, std::function<void(void)>> m_namedSteps;
 };
 
 }

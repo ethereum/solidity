@@ -85,6 +85,279 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 	m_analysisInfo = m_object->analysisInfo;
 	m_dialect = &_dialect;
 	m_optimizerStep = _optimizerStep;
+
+	m_namedSteps = {
+		{"disambiguator", [&]() { disambiguate(); }},
+		{"nameDisplacer", [&]() {
+			disambiguate();
+			NameDisplacer{
+				*m_nameDispenser,
+				{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
+			}(*m_ast);
+		}},
+		{"blockFlattener", [&]() {
+			disambiguate();
+			BlockFlattener::run(*m_context, *m_ast);
+		}},
+		{"constantOptimiser", [&]() {
+			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+			ConstantOptimiser{dynamic_cast<EVMDialect const&>(*m_dialect), meter}(*m_ast);
+		}},
+		{"varDeclInitializer", [&]() { VarDeclInitializer::run(*m_context, *m_ast); }},
+		{"varNameCleaner", [&]() {
+			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
+			FunctionGrouper::run(*m_context, *m_ast);
+			VarNameCleaner::run(*m_context, *m_ast);
+		}},
+		{"forLoopConditionIntoBody", [&]() {
+			disambiguate();
+			ForLoopConditionIntoBody::run(*m_context, *m_ast);
+		}},
+		{"forLoopInitRewriter", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+		}},
+		{"commonSubexpressionEliminator", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			CommonSubexpressionEliminator::run(*m_context, *m_ast);
+		}},
+		{"conditionalUnsimplifier", [&]() {
+			disambiguate();
+			ConditionalUnsimplifier::run(*m_context, *m_ast);
+		}},
+		{"conditionalSimplifier", [&]() {
+			disambiguate();
+			ConditionalSimplifier::run(*m_context, *m_ast);
+		}},
+		{"expressionSplitter", [&]() { ExpressionSplitter::run(*m_context, *m_ast); }},
+		{"expressionJoiner", [&]() {
+			disambiguate();
+			ExpressionJoiner::run(*m_context, *m_ast);
+		}},
+		{"splitJoin", [&]() {
+			disambiguate();
+			ExpressionSplitter::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+		}},
+		{"functionGrouper", [&]() {
+			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
+		}},
+		{"functionHoister", [&]() {
+			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
+		}},
+		{"expressionInliner", [&]() {
+			disambiguate();
+			ExpressionInliner::run(*m_context, *m_ast);
+		}},
+		{"fullInliner", [&]() {
+			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
+			FunctionGrouper::run(*m_context, *m_ast);
+			ExpressionSplitter::run(*m_context, *m_ast);
+			FullInliner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+		}},
+		{"mainFunction", [&]() {
+			disambiguate();
+			FunctionGrouper::run(*m_context, *m_ast);
+			MainFunction::run(*m_context, *m_ast);
+		}},
+		{"rematerialiser", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			Rematerialiser::run(*m_context, *m_ast);
+		}},
+		{"expressionSimplifier", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			ExpressionSplitter::run(*m_context, *m_ast);
+			CommonSubexpressionEliminator::run(*m_context, *m_ast);
+			ExpressionSimplifier::run(*m_context, *m_ast);
+			ExpressionSimplifier::run(*m_context, *m_ast);
+			ExpressionSimplifier::run(*m_context, *m_ast);
+			UnusedPruner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+		}},
+		{"fullSimplify", [&]() {
+			disambiguate();
+			ExpressionSplitter::run(*m_context, *m_ast);
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			CommonSubexpressionEliminator::run(*m_context, *m_ast);
+			ExpressionSimplifier::run(*m_context, *m_ast);
+			UnusedPruner::run(*m_context, *m_ast);
+			CircularReferencesPruner::run(*m_context, *m_ast);
+			DeadCodeEliminator::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+		}},
+		{"unusedFunctionParameterPruner", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_object->code);
+			LiteralRematerialiser::run(*m_context, *m_object->code);
+			UnusedFunctionParameterPruner::run(*m_context, *m_object->code);
+		}},
+		{"unusedPruner", [&]() {
+			disambiguate();
+			UnusedPruner::run(*m_context, *m_ast);
+		}},
+		{"circularReferencesPruner", [&]() {
+			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
+			CircularReferencesPruner::run(*m_context, *m_ast);
+		}},
+		{"deadCodeEliminator", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			DeadCodeEliminator::run(*m_context, *m_ast);
+		}},
+		{"ssaTransform", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			SSATransform::run(*m_context, *m_ast);
+		}},
+		{"redundantAssignEliminator", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			RedundantAssignEliminator::run(*m_context, *m_ast);
+		}},
+		{"ssaPlusCleanup", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			SSATransform::run(*m_context, *m_ast);
+			RedundantAssignEliminator::run(*m_context, *m_ast);
+		}},
+		{"loadResolver", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			ExpressionSplitter::run(*m_context, *m_ast);
+			CommonSubexpressionEliminator::run(*m_context, *m_ast);
+			ExpressionSimplifier::run(*m_context, *m_ast);
+
+			LoadResolver::run(*m_context, *m_ast);
+
+			UnusedPruner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+		}},
+		{"loopInvariantCodeMotion", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			LoopInvariantCodeMotion::run(*m_context, *m_ast);
+		}},
+		{"controlFlowSimplifier", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			ControlFlowSimplifier::run(*m_context, *m_ast);
+		}},
+		{"structuralSimplifier", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			LiteralRematerialiser::run(*m_context, *m_ast);
+			StructuralSimplifier::run(*m_context, *m_ast);
+		}},
+		{"reasoningBasedSimplifier", [&]() {
+			disambiguate();
+			ReasoningBasedSimplifier::run(*m_context, *m_object->code);
+		}},
+		{"equivalentFunctionCombiner", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			EquivalentFunctionCombiner::run(*m_context, *m_ast);
+		}},
+		{"ssaReverser", [&]() {
+			disambiguate();
+			SSAReverser::run(*m_context, *m_ast);
+		}},
+		{"ssaAndBack", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			// apply SSA
+			SSATransform::run(*m_context, *m_ast);
+			RedundantAssignEliminator::run(*m_context, *m_ast);
+			// reverse SSA
+			SSAReverser::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			CommonSubexpressionEliminator::run(*m_context, *m_ast);
+			UnusedPruner::run(*m_context, *m_ast);
+		}},
+		{"stackCompressor", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			FunctionHoister::run(*m_context, *m_ast);
+			FunctionGrouper::run(*m_context, *m_ast);
+			size_t maxIterations = 16;
+			StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
+			BlockFlattener::run(*m_context, *m_ast);
+		}},
+		{"wordSizeTransform", [&]() {
+			disambiguate();
+			ExpressionSplitter::run(*m_context, *m_ast);
+			WordSizeTransform::run(*m_dialect, *m_dialect, *m_ast, *m_nameDispenser);
+		}},
+		{"fullSuite", [&]() {
+			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
+			OptimiserSuite::run(*m_dialect, &meter, *m_object, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
+		}},
+		{"stackLimitEvader", [&]() {
+			disambiguate();
+			StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
+				*m_dialect,
+				*m_object,
+				true
+			}.unreachableVariables);
+		}},
+		{"fakeStackLimitEvader", [&]() {
+			disambiguate();
+			// Mark all variables with a name starting with "$" for escalation to memory.
+			struct FakeUnreachableGenerator: ASTWalker
+			{
+				map<YulString, set<YulString>> fakeUnreachables;
+				using ASTWalker::operator();
+				void operator()(FunctionDefinition const& _function) override
+				{
+					YulString originalFunctionName = m_currentFunction;
+					m_currentFunction = _function.name;
+					ASTWalker::operator()(_function);
+					m_currentFunction = originalFunctionName;
+				}
+				void visitVariableName(YulString _var)
+				{
+					if (!_var.empty() && _var.str().front() == '$')
+						fakeUnreachables[m_currentFunction].insert(_var);
+				}
+				void operator()(VariableDeclaration const& _varDecl) override
+				{
+					for (auto const& var: _varDecl.variables)
+						visitVariableName(var.name);
+					ASTWalker::operator()(_varDecl);
+				}
+				void operator()(Identifier const& _identifier) override
+				{
+					visitVariableName(_identifier.name);
+					ASTWalker::operator()(_identifier);
+				}
+				YulString m_currentFunction = YulString{};
+			};
+			FakeUnreachableGenerator fakeUnreachableGenerator;
+			fakeUnreachableGenerator(*m_ast);
+			StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
+		}}
+	};
 }
 
 bool YulOptimizerTestCommon::runStep()
@@ -93,318 +366,8 @@ bool YulOptimizerTestCommon::runStep()
 
 	updateContext();
 
-	if (m_optimizerStep == "disambiguator")
-		disambiguate();
-	else if (m_optimizerStep == "nameDisplacer")
-	{
-		disambiguate();
-		NameDisplacer{
-			*m_nameDispenser,
-			{"illegal1"_yulstring, "illegal2"_yulstring, "illegal3"_yulstring, "illegal4"_yulstring, "illegal5"_yulstring}
-		}(*m_ast);
-	}
-	else if (m_optimizerStep == "blockFlattener")
-	{
-		disambiguate();
-		BlockFlattener::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "constantOptimiser")
-	{
-		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-		ConstantOptimiser{dynamic_cast<EVMDialect const&>(*m_dialect), meter}(*m_ast);
-	}
-	else if (m_optimizerStep == "varDeclInitializer")
-		VarDeclInitializer::run(*m_context, *m_ast);
-	else if (m_optimizerStep == "varNameCleaner")
-	{
-		disambiguate();
-		FunctionHoister::run(*m_context, *m_ast);
-		FunctionGrouper::run(*m_context, *m_ast);
-		VarNameCleaner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "forLoopConditionIntoBody")
-	{
-		disambiguate();
-		ForLoopConditionIntoBody::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "forLoopInitRewriter")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "commonSubexpressionEliminator")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		CommonSubexpressionEliminator::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "conditionalUnsimplifier")
-	{
-		disambiguate();
-		ConditionalUnsimplifier::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "conditionalSimplifier")
-	{
-		disambiguate();
-		ConditionalSimplifier::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "expressionSplitter")
-		ExpressionSplitter::run(*m_context, *m_ast);
-	else if (m_optimizerStep == "expressionJoiner")
-	{
-		disambiguate();
-		ExpressionJoiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "splitJoin")
-	{
-		disambiguate();
-		ExpressionSplitter::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "functionGrouper")
-	{
-		disambiguate();
-		FunctionGrouper::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "functionHoister")
-	{
-		disambiguate();
-		FunctionHoister::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "expressionInliner")
-	{
-		disambiguate();
-		ExpressionInliner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "fullInliner")
-	{
-		disambiguate();
-		FunctionHoister::run(*m_context, *m_ast);
-		FunctionGrouper::run(*m_context, *m_ast);
-		ExpressionSplitter::run(*m_context, *m_ast);
-		FullInliner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "mainFunction")
-	{
-		disambiguate();
-		FunctionGrouper::run(*m_context, *m_ast);
-		MainFunction::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "rematerialiser")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		Rematerialiser::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "expressionSimplifier")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		ExpressionSplitter::run(*m_context, *m_ast);
-		CommonSubexpressionEliminator::run(*m_context, *m_ast);
-		ExpressionSimplifier::run(*m_context, *m_ast);
-		ExpressionSimplifier::run(*m_context, *m_ast);
-		ExpressionSimplifier::run(*m_context, *m_ast);
-		UnusedPruner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "fullSimplify")
-	{
-		disambiguate();
-		ExpressionSplitter::run(*m_context, *m_ast);
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		CommonSubexpressionEliminator::run(*m_context, *m_ast);
-		ExpressionSimplifier::run(*m_context, *m_ast);
-		UnusedPruner::run(*m_context, *m_ast);
-		CircularReferencesPruner::run(*m_context, *m_ast);
-		DeadCodeEliminator::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "unusedFunctionParameterPruner")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_object->code);
-		LiteralRematerialiser::run(*m_context, *m_object->code);
-		UnusedFunctionParameterPruner::run(*m_context, *m_object->code);
-	}
-	else if (m_optimizerStep == "unusedPruner")
-	{
-		disambiguate();
-		UnusedPruner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "circularReferencesPruner")
-	{
-		disambiguate();
-		FunctionHoister::run(*m_context, *m_ast);
-		CircularReferencesPruner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "deadCodeEliminator")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		DeadCodeEliminator::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "ssaTransform")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		SSATransform::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "redundantAssignEliminator")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		RedundantAssignEliminator::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "ssaPlusCleanup")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		SSATransform::run(*m_context, *m_ast);
-		RedundantAssignEliminator::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "loadResolver")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		ExpressionSplitter::run(*m_context, *m_ast);
-		CommonSubexpressionEliminator::run(*m_context, *m_ast);
-		ExpressionSimplifier::run(*m_context, *m_ast);
-
-		LoadResolver::run(*m_context, *m_ast);
-
-		UnusedPruner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-		ExpressionJoiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "loopInvariantCodeMotion")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		LoopInvariantCodeMotion::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "controlFlowSimplifier")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		ControlFlowSimplifier::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "structuralSimplifier")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		LiteralRematerialiser::run(*m_context, *m_ast);
-		StructuralSimplifier::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "reasoningBasedSimplifier")
-	{
-		disambiguate();
-		ReasoningBasedSimplifier::run(*m_context, *m_object->code);
-	}
-	else if (m_optimizerStep == "equivalentFunctionCombiner")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		EquivalentFunctionCombiner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "ssaReverser")
-	{
-		disambiguate();
-		SSAReverser::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "ssaAndBack")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		// apply SSA
-		SSATransform::run(*m_context, *m_ast);
-		RedundantAssignEliminator::run(*m_context, *m_ast);
-		// reverse SSA
-		SSAReverser::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		CommonSubexpressionEliminator::run(*m_context, *m_ast);
-		UnusedPruner::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "stackCompressor")
-	{
-		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_ast);
-		FunctionHoister::run(*m_context, *m_ast);
-		FunctionGrouper::run(*m_context, *m_ast);
-		size_t maxIterations = 16;
-		StackCompressor::run(*m_dialect, *m_object, true, maxIterations);
-		BlockFlattener::run(*m_context, *m_ast);
-	}
-	else if (m_optimizerStep == "wordSizeTransform")
-	{
-		disambiguate();
-		ExpressionSplitter::run(*m_context, *m_ast);
-		WordSizeTransform::run(*m_dialect, *m_dialect, *m_ast, *m_nameDispenser);
-	}
-	else if (m_optimizerStep == "fullSuite")
-	{
-		GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-		OptimiserSuite::run(*m_dialect, &meter, *m_object, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
-	}
-	else if (m_optimizerStep == "stackLimitEvader")
-	{
-		disambiguate();
-		StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
-			*m_dialect,
-			*m_object,
-			true
-		}.unreachableVariables);
-	}
-	else if (m_optimizerStep == "fakeStackLimitEvader")
-	{
-		disambiguate();
-		// Mark all variables with a name starting with "$" for escalation to memory.
-		struct FakeUnreachableGenerator: ASTWalker
-		{
-			map<YulString, set<YulString>> fakeUnreachables;
-			using ASTWalker::operator();
-			void operator()(FunctionDefinition const& _function) override
-			{
-				YulString originalFunctionName = m_currentFunction;
-				m_currentFunction = _function.name;
-				ASTWalker::operator()(_function);
-				m_currentFunction = originalFunctionName;
-			}
-			void visitVariableName(YulString _var)
-			{
-				if (!_var.empty() && _var.str().front() == '$')
-					fakeUnreachables[m_currentFunction].insert(_var);
-			}
-			void operator()(VariableDeclaration const& _varDecl) override
-			{
-				for (auto const& var: _varDecl.variables)
-					visitVariableName(var.name);
-				ASTWalker::operator()(_varDecl);
-			}
-			void operator()(Identifier const& _identifier) override
-			{
-				visitVariableName(_identifier.name);
-				ASTWalker::operator()(_identifier);
-			}
-			YulString m_currentFunction = YulString{};
-		};
-		FakeUnreachableGenerator fakeUnreachableGenerator;
-		fakeUnreachableGenerator(*m_ast);
-		StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
-	}
+	if (m_namedSteps.count(m_optimizerStep))
+		m_namedSteps[m_optimizerStep]();
 	else
 		return false;
 
