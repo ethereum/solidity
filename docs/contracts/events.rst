@@ -93,10 +93,10 @@ The use in the JavaScript API is as follows:
     var ClientReceipt = web3.eth.contract(abi);
     var clientReceipt = ClientReceipt.at("0x1234...ab67" /* address */);
 
-    var event = clientReceipt.Deposit();
+    var depositEvent = clientReceipt.Deposit();
 
     // watch for changes
-    event.watch(function(error, result){
+    depositEvent.watch(function(error, result){
         // result contains non-indexed arguments and topics
         // given to the `Deposit` call.
         if (!error)
@@ -105,7 +105,7 @@ The use in the JavaScript API is as follows:
 
 
     // Or pass a callback to start watching immediately
-    var event = clientReceipt.Deposit(function(error, result) {
+    var depositEvent = clientReceipt.Deposit(function(error, result) {
         if (!error)
             console.log(result);
     });
