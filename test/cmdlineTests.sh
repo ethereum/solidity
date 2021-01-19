@@ -35,6 +35,12 @@ SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 source "${REPO_ROOT}/scripts/common.sh"
 source "${REPO_ROOT}/scripts/common_cmdline.sh"
 
+(( $# <= 1 )) || { printError "Too many arguments"; exit 1; }
+(( $# == 0 )) || [[ $1 == '--update' ]] || { printError "Invalid argument: '$1'"; exit 1; }
+
+AUTOUPDATE=false
+[[ $1 == --update ]] && AUTOUPDATE=true
+
 case "$OSTYPE" in
     msys)
         SOLC="${SOLIDITY_BUILD_DIR}/solc/Release/solc.exe"
@@ -62,20 +68,35 @@ fi
 
 ## FUNCTIONS
 
-function ask_expectation_update()
+function update_expectation {
+    local newExpectation="${1}"
+    local expectationFile="${2}"
+
+    echo "$newExpectation" > "$expectationFile"
+    printLog "File $expectationFile updated to match the expectation."
+}
+
+function ask_expectation_update
 {
-    if [ $INTERACTIVE ]
+    if [[ $INTERACTIVE != "" ]]
     then
         local newExpectation="${1}"
         local expectationFile="${2}"
-        while true;
-        do
-            read -p "(u)pdate expectation/(q)uit? "
-            case $REPLY in
-                u* ) echo "$newExpectation" > $expectationFile ; break;;
-                q* ) exit 1;;
-            esac
-        done
+
+        if [[ $AUTOUPDATE == true ]]
+        then
+            update_expectation "$newExpectation" "$expectationFile"
+        else
+            while true
+            do
+                read -N 1 -p "(u)pdate expectation/(q)uit? "
+                echo
+                case $REPLY in
+                    u*) update_expectation "$newExpectation" "$expectationFile"; break;;
+                    q*) exit 1;;
+                esac
+            done
+        fi
     else
         exit 1
     fi
