@@ -146,8 +146,6 @@ string ABIFunctions::tupleEncoderPacked(
 		functionName += "_reversed";
 
 	return createFunction(functionName, [&]() {
-		solAssert(!_givenTypes.empty(), "");
-
 		// Note that the values are in reverse due to the difference in calling semantics.
 		Whiskers templ(R"(
 			function <functionName>(pos <valueParams>) -> end {
