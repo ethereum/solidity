@@ -74,6 +74,53 @@ TestFunctionCall::findEventSignature(solidity::test::ExecutionFramework::log_rec
 	return {};
 }
 
+string TestFunctionCall::generateExpectation(string _linePrefix, solidity::test::ExecutionFramework::log_record const& _log) const
+{
+	stringstream sstream;
+	EventInformation eventInfo = findEventSignature(_log);
+	string signature{eventInfo.signature};
+	sstream << std::endl
+			<< _linePrefix << "// logs.expectEvent(uint256,string): " << _log.index << ", "
+			<< "\"" + signature + "\" -> ";
+
+	vector<u256> topicsAndData;
+	for (auto& topic: _log.topics)
+		if ((topic != *_log.topics.begin() && !signature.empty()) || signature.empty())
+			topicsAndData.emplace_back(u256{topic});
+
+	assert(_log.data.size() % 32 == 0);
+
+	if (eventInfo.signature.empty())
+	{
+		for (long current = 0; current < static_cast<long>(_log.data.size() / 32); ++current)
+		{
+			bytes parameter{_log.data.begin() + current * 32, _log.data.begin() + current * 32 + 32};
+			topicsAndData.emplace_back(util::fromBigEndian<u256>(parameter));
+		}
+	}
+	else
+	{
+		long current = 0;
+		for (auto& type: eventInfo.nonIndexedTypes)
+		{
+			// todo: use type information to improve decoding.
+			(void) type;
+			bytes parameter{_log.data.begin() + current, _log.data.begin() + current + 32};
+			current += 32;
+			topicsAndData.emplace_back(util::fromBigEndian<u256>(parameter));
+		}
+	}
+
+	for (auto& element: topicsAndData)
+	{
+		sstream << util::toCompactHexWithPrefix(element);
+		if (&element != &*topicsAndData.rbegin())
+			sstream << ", ";
+	}
+
+	return sstream.str();
+}
+
 string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
@@ -88,14 +135,8 @@ string TestFunctionCall::format(
 	auto formatOutput = [&](bool const _singleLine)
 	{
 		string ws = " ";
-		string arrow = formatToken(Token::Arrow);
-		string colon = formatToken(Token::Colon);
-		string comma = formatToken(Token::Comma);
-		string comment = formatToken(Token::Comment);
-		string ether = formatToken(Token::Ether);
-		string wei = formatToken(Token::Wei);
 		string newline = formatToken(Token::Newline);
-		string failure = formatToken(Token::Failure);
+		string colon = formatToken(Token::Colon);
 
 		if (m_call.kind == FunctionCall::Kind::Library)
 		{
@@ -116,208 +157,185 @@ string TestFunctionCall::format(
 
 			return;
 		}
-
-		/// Formats the function signature. This is the same independent from the display-mode.
-		stream << _linePrefix << newline << ws << m_call.signature;
-		if (m_call.value.value > u256(0))
+		else if (m_call.kind == FunctionCall::Kind::Builtin)
 		{
-			if (m_call.value.unit == FunctionValueUnit::Ether)
-				stream << comma << ws << (m_call.value.value / exp256(10, 18)) << ws << ether;
-			else if (m_call.value.unit == FunctionValueUnit::Wei)
-				stream << comma << ws << m_call.value.value << ws << wei;
-			else
-				soltestAssert(false, "");
+			//
+			return;
 		}
-		if (!m_call.arguments.rawBytes().empty())
+		else if (hasUnconsumedLogs())
 		{
-			string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
-			stream << colon;
-			if (!m_call.arguments.parameters.at(0).format.newline)
-				stream << ws;
-			stream << output;
-		}
+			formatFunctionCall(_linePrefix, _renderResult, _singleLine, !matchesExpectation(), _errorReporter, stream);
 
-		/// Formats comments on the function parameters and the arrow taking
-		/// the display-mode into account.
-		if (_singleLine)
-		{
-			if (!m_call.arguments.comment.empty())
-				stream << ws << comment << m_call.arguments.comment << comment;
+			for (auto& log: consumedLogs())
+				stream << generateExpectation(_linePrefix, log);
 
-			if (m_call.omitsArrow)
-			{
-				if (_renderResult && (m_failure || !matchesExpectation()))
-					stream << ws << arrow;
-			}
-			else
-				stream << ws << arrow;
-		}
-		else
-		{
-			stream << endl << _linePrefix << newline << ws;
-			if (!m_call.arguments.comment.empty())
-			{
-				stream << comment << m_call.arguments.comment << comment;
-				stream << endl << _linePrefix << newline << ws;
-			}
-			stream << arrow;
-		}
-
-		/// Format either the expected output or the actual result output
-		string result;
-		auto& builtin = m_call.expectations.builtin;
-		if (hasUnconsumedLogs())
-		{
+			std::stringstream sstream;
 			for (auto& log: unconsumedLogs())
-			{
-				EventInformation eventInfo = findEventSignature(log);
-				string signature{eventInfo.signature};
-				stream << std::endl
-					   << "// logs.expectEvent(uint256,string): " << log.index << ", "
-					   << "\"" + signature + "\" -> ";
+				sstream << generateExpectation(_linePrefix, log);
 
-				vector<u256> topicsAndData;
-				for (auto& topic: log.topics)
-					if ((topic != *log.topics.begin() && !signature.empty()) || signature.empty())
-						topicsAndData.emplace_back(u256{topic});
-
-				assert(log.data.size() % 32 == 0);
-
-				if (eventInfo.signature.empty())
-				{
-					for (long current = 0; current < static_cast<long>(log.data.size() / 32); ++current)
-					{
-						bytes parameter{log.data.begin() + current * 32, log.data.begin() + current * 32 + 32};
-						topicsAndData.emplace_back(util::fromBigEndian<u256>(parameter));
-					}
-				}
-				else
-				{
-					long current = 0;
-					for (auto& type: eventInfo.nonIndexedTypes)
-					{
-						// todo: use type information to improve decoding.
-						(void) type;
-						bytes parameter{log.data.begin() + current, log.data.begin() + current + 32};
-						current += 32;
-						topicsAndData.emplace_back(util::fromBigEndian<u256>(parameter));
-					}
-				}
-				for (auto& element: topicsAndData)
-				{
-					stream << util::toCompactHexWithPrefix(element);
-					if (&element != &*topicsAndData.rbegin())
-						stream << ", ";
-				}
-			}
-		}
-		if (!_renderResult)
-		{
-			if (builtin)
+			if (highlight)
 			{
-				result = builtin->signature;
-				if (!builtin->arguments.parameters.empty())
-					result += ": ";
-				result += formatRawParameters(builtin->arguments.parameters);
-			}
-			else
-			{
-				bool const isFailure = m_call.expectations.failure;
-				result = isFailure ?
-						 formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, highlight) :
-						 formatRawParameters(m_call.expectations.result);
-			}
-			if (!result.empty())
-			{
-				AnsiColorized(stream, false, {util::formatting::RESET}) << ws;
-				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << result;
-			}
+				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << sstream.str();
+				AnsiColorized(stream, highlight, {util::formatting::RESET});
+			} else
+				stream << sstream.str();
+			return;
 		}
 		else
-		{
-			if (m_calledNonExistingFunction)
-				_errorReporter.warning("The function \"" + m_call.signature + "\" is not known to the compiler.");
-
-			if (m_consumedLogs.size() != m_rawLogs.size())
-			{
-				stringstream str;
-				str << "The function \"" << m_call.signature << "\" produced " << m_rawLogs.size() <<" log(s), but only " << m_consumedLogs.size() << " log(s) where consumed.";
-				_errorReporter.error(str.str());
-			}
-
-			if (builtin)
-				_errorReporter.warning("The expectation \"" + builtin->signature + ": " + formatRawParameters(builtin->arguments.parameters) + "\" will be replaced with the actual value returned by the test.");
-
-			bytes output = m_rawBytes;
-			bool const isFailure = m_failure;
-			result = isFailure ?
-				formatFailure(_errorReporter, m_call, output, _renderResult, highlight) :
-				matchesExpectation() ?
-					formatRawParameters(m_call.expectations.result) :
-					formatBytesParameters(
-						_errorReporter,
-						output,
-						m_call.signature,
-						m_call.expectations.result,
-						highlight
-					);
-
-			if (!matchesExpectation())
-			{
-				std::optional<ParameterList> abiParams;
-
-				if (isFailure)
-				{
-					if (!output.empty())
-						abiParams = ContractABIUtils::failureParameters(output);
-				}
-				else
-					abiParams = ContractABIUtils::parametersFromJsonOutputs(
-						_errorReporter,
-						m_contractABI,
-						m_call.signature
-					);
-
-				string bytesOutput = abiParams ?
-					BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix) :
-					BytesUtils::formatRawBytes(
-						output,
-						ContractABIUtils::defaultParameters((output.size() + 31) / 32),
-						_linePrefix
-					);
-
-				_errorReporter.warning(
-					"The call to \"" + m_call.signature + "\" returned \n" +
-					bytesOutput
-				);
-			}
-
-			if (isFailure)
-				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
-			else
-				if (!result.empty())
-					stream << ws << result;
-
-		}
-
-		/// Format comments on expectations taking the display-mode into account.
-		if (_singleLine)
-		{
-			if (!m_call.expectations.comment.empty())
-				stream << ws << comment << m_call.expectations.comment << comment;
-		}
-		else
-		{
-			if (!m_call.expectations.comment.empty())
-			{
-				stream << endl << _linePrefix << newline << ws;
-				stream << comment << m_call.expectations.comment << comment;
-			}
-		}
+			formatFunctionCall(_linePrefix, _renderResult, _singleLine, highlight, _errorReporter, stream);
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
 	return stream.str();
+}
+
+void TestFunctionCall::formatFunctionCall(
+	const string& _linePrefix,
+	const bool _renderResult,
+	const bool _singleLine,
+	const bool _highlight,
+	ErrorReporter& _errorReporter,
+	stringstream& stream) const
+{
+	string ws = " ";
+	string arrow = formatToken(Token::Arrow);
+	string colon = formatToken(Token::Colon);
+	string comma = formatToken(Token::Comma);
+	string comment = formatToken(Token::Comment);
+	string ether = formatToken(Token::Ether);
+	string wei = formatToken(Token::Wei);
+	string newline = formatToken(Token::Newline);
+	string failure = formatToken(Token::Failure);
+
+	/// Formats the function signature. This is the same independent from the display-mode.
+	stream << _linePrefix << newline << ws << m_call.signature;
+	if (m_call.value.value > u256(0))
+	{
+		if (m_call.value.unit == FunctionValueUnit::Ether)
+			stream << comma << ws << (m_call.value.value / exp256(10, 18)) << ws << ether;
+		else if (m_call.value.unit == FunctionValueUnit::Wei)
+			stream << comma << ws << m_call.value.value << ws << wei;
+		else
+			soltestAssert(false, "");
+	}
+	if (!m_call.arguments.rawBytes().empty())
+	{
+		string output = formatRawParameters(m_call.arguments.parameters, _linePrefix);
+		stream << colon;
+		if (!m_call.arguments.parameters.at(0).format.newline)
+			stream << ws;
+		stream << output;
+	}
+
+	/// Formats comments on the function parameters and the arrow taking
+	/// the display-mode into account.
+	if (_singleLine)
+	{
+		if (!m_call.arguments.comment.empty())
+			stream << ws << comment << m_call.arguments.comment << comment;
+
+		if (m_call.omitsArrow)
+		{
+			if (_renderResult && (m_failure || !matchesExpectation()))
+				stream << ws << arrow;
+		}
+		else
+			stream << ws << arrow;
+	}
+	else
+	{
+		stream << endl << _linePrefix << newline << ws;
+		if (!m_call.arguments.comment.empty())
+		{
+			stream << comment << m_call.arguments.comment << comment;
+			stream << endl << _linePrefix << newline << ws;
+		}
+		stream << arrow;
+	}
+
+	/// Format either the expected output or the actual result output
+	string result;
+	auto& builtin = m_call.expectations.builtin;
+	if (!_renderResult)
+	{
+		bool const isFailure = m_call.expectations.failure;
+		result = isFailure ? formatFailure(_errorReporter, m_call, m_rawBytes, _renderResult, _highlight)
+						   : formatRawParameters(m_call.expectations.result);
+		if (!result.empty())
+		{
+			AnsiColorized(stream, _highlight, {util::formatting::RESET}) << ws;
+			AnsiColorized(stream, _highlight, {util::formatting::RED_BACKGROUND}) << result;
+		}
+	}
+	else
+	{
+		if (m_calledNonExistingFunction)
+			_errorReporter.warning("The function \"" + m_call.signature + "\" is not known to the compiler.");
+
+		if (m_consumedLogIndexes.size() != m_rawLogs.size())
+		{
+			stringstream str;
+			str << "The function \"" << m_call.signature << "\" produced " << m_rawLogs.size() << " log(s), but only "
+				<< m_consumedLogIndexes.size() << " log(s) where consumed.";
+			_errorReporter.error(str.str());
+		}
+
+		if (builtin)
+			_errorReporter.warning(
+				"The expectation \"" + builtin->signature + ": " + formatRawParameters(builtin->arguments.parameters)
+				+ "\" will be replaced with the actual value returned by the test.");
+
+		bytes output = m_rawBytes;
+		bool const isFailure = m_failure;
+		result = isFailure ? formatFailure(_errorReporter, m_call, output, _renderResult, _highlight)
+				 : matchesExpectation()
+					 ? formatRawParameters(m_call.expectations.result)
+					 : formatBytesParameters(
+						 _errorReporter, output, m_call.signature, m_call.expectations.result, _highlight);
+
+		if (!matchesExpectation())
+		{
+			std::optional<ParameterList> abiParams;
+
+			if (isFailure)
+			{
+				if (!output.empty())
+					abiParams = ContractABIUtils::failureParameters(output);
+			}
+			else
+				abiParams
+					= ContractABIUtils::parametersFromJsonOutputs(_errorReporter, m_contractABI, m_call.signature);
+
+			string bytesOutput
+				= abiParams ? BytesUtils::formatRawBytes(output, abiParams.value(), _linePrefix)
+							: BytesUtils::formatRawBytes(
+								output, ContractABIUtils::defaultParameters((output.size() + 31) / 32), _linePrefix);
+
+			_errorReporter.warning("The call to \"" + m_call.signature + "\" returned \n" + bytesOutput);
+		}
+
+		if (isFailure)
+			AnsiColorized(stream, _highlight, {util::formatting::RED_BACKGROUND}) << ws << result;
+		else if (!result.empty())
+			stream << ws << result;
+	}
+
+	/// Format comments on expectations taking the display-mode into account.
+	if (_singleLine)
+	{
+		if (!m_call.expectations.comment.empty())
+			stream << ws << comment << m_call.expectations.comment << comment;
+	}
+	else
+	{
+		if (!m_call.expectations.comment.empty())
+		{
+			stream << endl << _linePrefix << newline << ws;
+			stream << comment << m_call.expectations.comment << comment;
+		}
+	}
+	for (auto& log: consumedLogs())
+		stream << generateExpectation(_linePrefix, log);
 }
 
 string TestFunctionCall::formatBytesParameters(
@@ -326,8 +344,7 @@ string TestFunctionCall::formatBytesParameters(
 	string const& _signature,
 	solidity::frontend::test::ParameterList const& _parameters,
 	bool _highlight,
-	bool _failure
-) const
+	bool _failure) const
 {
 	using ParameterList = solidity::frontend::test::ParameterList;
 

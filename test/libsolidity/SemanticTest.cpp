@@ -271,7 +271,10 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 
 					if (m_transactionSuccessful != !test.call().expectations.failure || outputMismatch)
 						success = false;
-					success = checkLogs(test);
+
+					if (success)
+						success = checkLogs(test);
+
 					test.setFailure(!m_transactionSuccessful);
 				}
 
@@ -450,10 +453,10 @@ bool SemanticTest::checkLogs(TestFunctionCall& _call)
 
 		// Finally we update the consumed logs within the producer.
 		for (auto& logIdx: m_touchedLogs[&producer->call()])
-			producer->consumedLogs().insert(logIdx);
+			producer->consumedLogIndexes().insert(logIdx);
 
 		// It is ok if some builtins consumed log events.
-		return producer->consumedLogs().size() >= producer->logs().size();
+		return producer->consumedLogIndexes().size() >= producer->logs().size();
 	}
 	return true;
 }

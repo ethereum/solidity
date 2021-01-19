@@ -90,21 +90,31 @@ public:
 	{
 		m_rawLogs = std::move(_logs);
 	}
-	std::set<size_t>& consumedLogs()
+	std::set<size_t>& consumedLogIndexes()
 	{
-		return m_consumedLogs;
+		return m_consumedLogIndexes;
 	}
 	bool hasUnconsumedLogs() const
 	{
-		return m_consumedLogs.size() < m_rawLogs.size();
+		return m_consumedLogIndexes.size() < m_rawLogs.size();
 	}
-	std::vector<solidity::test::ExecutionFramework::log_record> unconsumedLogs() const
+	std::vector<solidity::test::ExecutionFramework::log_record> logs(bool _consumed) const
 	{
 		std::vector<solidity::test::ExecutionFramework::log_record> result;
 		for (auto& log: m_rawLogs)
-			if (m_consumedLogs.find(log.index) == m_consumedLogs.end())
+			if (_consumed && m_consumedLogIndexes.find(log.index) != m_consumedLogIndexes.end())
+				result.emplace_back(m_rawLogs[log.index]);
+			else if (!_consumed && m_consumedLogIndexes.find(log.index) == m_consumedLogIndexes.end())
 				result.emplace_back(m_rawLogs[log.index]);
 		return result;
+	}
+	std::vector<solidity::test::ExecutionFramework::log_record> consumedLogs() const
+	{
+		return logs(true);
+	}
+	std::vector<solidity::test::ExecutionFramework::log_record> unconsumedLogs() const
+	{
+		return logs(false);
 	}
 	void setPreviousCall(TestFunctionCall* _call)
 	{
@@ -168,7 +178,7 @@ private:
 	bytes m_rawBytes = bytes{};
 	/// Logs created by the actual call.
 	std::vector<solidity::test::ExecutionFramework::log_record> m_rawLogs{};
-	std::set<size_t> m_consumedLogs;
+	std::set<size_t> m_consumedLogIndexes;
 
 	/// Transaction status of the actual call. False in case of a REVERT or any other failure.
 	bool m_failure = true;
@@ -179,6 +189,15 @@ private:
 	bool m_calledNonExistingFunction = false;
 
 	TestFunctionCall* m_previousCall = nullptr;
+	void formatFunctionCall(
+		const std::string& _linePrefix,
+		const bool _renderResult,
+		const bool _singleLine,
+		const bool _highlight,
+		ErrorReporter& _errorReporter,
+		std::stringstream& _stream) const;
+
+	std::string generateExpectation(std::string _linePrefix, solidity::test::ExecutionFramework::log_record const& _log) const;
 };
 
 }
