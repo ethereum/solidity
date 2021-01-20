@@ -40,15 +40,22 @@ class YulOptimizerTestCommon
 public:
 	explicit YulOptimizerTestCommon(
 		std::shared_ptr<Object> _obj,
-		Dialect const& _dialect,
-		std::string const& _optimizerStep
+		Dialect const& _dialect
 	);
+	/// Sets optimiser step to be run to @param
+	/// _optimiserStep.
+	void setStep(std::string const& _optimizerStep);
 	/// Runs chosen optimiser step returning pointer
 	/// to yul AST Block post optimisation.
 	std::shared_ptr<Block> run();
 	/// Runs chosen optimiser step returning true if
 	/// successful, false otherwise.
 	bool runStep();
+	/// Returns the string name of a randomly chosen
+	/// optimiser step.
+	/// @param _seed is an unsigned integer that
+	/// seeds the random selection.
+	std::string randomOptimiserStep(unsigned _seed);
 private:
 	void disambiguate();
 	void updateContext();

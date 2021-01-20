@@ -66,6 +66,8 @@
 
 #include <libsolidity/interface/OptimiserSettings.h>
 
+#include <random>
+
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -76,15 +78,13 @@ using namespace std;
 
 YulOptimizerTestCommon::YulOptimizerTestCommon(
 	shared_ptr<Object> _obj,
-	Dialect const& _dialect,
-	string const& _optimizerStep
+	Dialect const& _dialect
 )
 {
 	m_object = _obj;
 	m_ast = m_object->code;
 	m_analysisInfo = m_object->analysisInfo;
 	m_dialect = &_dialect;
-	m_optimizerStep = _optimizerStep;
 
 	m_namedSteps = {
 		{"disambiguator", [&]() { disambiguate(); }},
@@ -360,6 +360,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 	};
 }
 
+void YulOptimizerTestCommon::setStep(string const& _optimizerStep)
+{
+	m_optimizerStep = _optimizerStep;
+}
+
 bool YulOptimizerTestCommon::runStep()
 {
 	yulAssert(m_dialect, "Dialect not set.");
@@ -372,6 +377,31 @@ bool YulOptimizerTestCommon::runStep()
 		return false;
 
 	return true;
+}
+
+string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
+{
+	std::mt19937 prng(_seed);
+	std::uniform_int_distribution<size_t> dist(1, m_namedSteps.size());
+	size_t idx = dist(prng);
+	size_t count = 1;
+	for (auto &step: m_namedSteps)
+	{
+		if (count == idx)
+		{
+			string optimiserStep = step.first;
+			// Do not fuzz mainFunction or wordSizeTransform
+			// because they do not preserve yul code semantics.
+			if (optimiserStep == "mainFunction" || optimiserStep == "wordSizeTransform")
+				// "Fullsuite" is fuzzed roughly three times more frequently than
+				// other steps because of the filtering in place above.
+				return "fullSuite";
+			else
+				return optimiserStep;
+		}
+		count++;
+	}
+	yulAssert(false, "Optimiser step selection failed.");
 }
 
 shared_ptr<Block> YulOptimizerTestCommon::run()

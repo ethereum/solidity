@@ -74,7 +74,8 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	soltestAssert(m_dialect, "Dialect not set.");
 
 	m_object->analysisInfo = m_analysisInfo;
-	YulOptimizerTestCommon tester(m_object, *m_dialect, m_optimizerStep);
+	YulOptimizerTestCommon tester(m_object, *m_dialect);
+	tester.setStep(m_optimizerStep);
 
 	if (!tester.runStep())
 	{
