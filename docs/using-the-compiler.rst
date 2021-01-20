@@ -372,6 +372,12 @@ Input Description
         {
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
+          // Choose which targets should be checked: all (default), constantCondition,
+          // underflow, overflow, divByZero, balance, assert, popEmptyArray.
+          // See the Formal Verification section for the targets description.
+          // Multiple targets can be selected at the same time, separated by a comma
+          // without spaces:
+          "targets": "underflow,overflow,assert",
           // Timeout for each SMT query in milliseconds.
           // If this option is not given, the SMTChecker will use a deterministic
           // resource limit by default.

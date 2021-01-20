@@ -153,6 +153,7 @@ static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerEngine = "model-checker-engine";
+static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
@@ -224,6 +225,7 @@ static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argModelCheckerEngine = g_strModelCheckerEngine;
+static string const g_argModelCheckerTargets = g_strModelCheckerTargets;
 static string const g_argModelCheckerTimeout = g_strModelCheckerTimeout;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
@@ -1034,6 +1036,13 @@ General Information)").c_str(),
 			"Select model checker engine."
 		)
 		(
+			g_strModelCheckerTargets.c_str(),
+			po::value<string>()->value_name("all,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray")->default_value("all"),
+			"Select model checker verification targets. "
+			"Multiple targets can be selected at the same time, separated by a comma "
+			"and no spaces."
+		)
+		(
 			g_strModelCheckerTimeout.c_str(),
 			po::value<unsigned>()->value_name("ms"),
 			"Set model checker timeout per query in milliseconds. "
@@ -1450,6 +1459,18 @@ bool CommandLineInterface::processInput()
 			return false;
 		}
 		m_modelCheckerSettings.engine = *engine;
+	}
+
+	if (m_args.count(g_argModelCheckerTargets))
+	{
+		string targetsStr = m_args[g_argModelCheckerTargets].as<string>();
+		optional<ModelCheckerTargets> targets = ModelCheckerTargets::fromString(targetsStr);
+		if (!targets)
+		{
+			serr() << "Invalid option for --" << g_argModelCheckerTargets << ": " << targetsStr << endl;
+			return false;
+		}
+		m_modelCheckerSettings.targets = *targets;
 	}
 
 	if (m_args.count(g_argModelCheckerTimeout))

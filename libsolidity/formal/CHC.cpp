@@ -54,12 +54,12 @@ CHC::CHC(
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
 	SMTSolverChoice _enabledSolvers,
-	optional<unsigned> _timeout
+	ModelCheckerSettings const& _settings
 ):
 	SMTEncoder(_context),
 	m_outerErrorReporter(_errorReporter),
 	m_enabledSolvers(_enabledSolvers),
-	m_queryTimeout(_timeout)
+	m_settings(_settings)
 {
 	bool usesZ3 = _enabledSolvers.z3;
 #ifdef HAVE_Z3
@@ -68,7 +68,7 @@ CHC::CHC(
 	usesZ3 = false;
 #endif
 	if (!usesZ3)
-		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback, m_queryTimeout);
+		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback, m_settings.timeout);
 }
 
 void CHC::analyze(SourceUnit const& _source)
@@ -606,14 +606,14 @@ void CHC::visitAssert(FunctionCall const& _funCall)
 	solAssert(m_currentContract, "");
 	solAssert(m_currentFunction, "");
 	auto errorCondition = !m_context.expression(*args.front())->currentValue();
-	verificationTargetEncountered(&_funCall, VerificationTarget::Type::Assert, errorCondition);
+	verificationTargetEncountered(&_funCall, VerificationTargetType::Assert, errorCondition);
 }
 
 void CHC::visitAddMulMod(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.arguments().at(2), "");
 
-	verificationTargetEncountered(&_funCall, VerificationTarget::Type::DivByZero, expr(*_funCall.arguments().at(2)) == 0);
+	verificationTargetEncountered(&_funCall, VerificationTargetType::DivByZero, expr(*_funCall.arguments().at(2)) == 0);
 
 	SMTEncoder::visitAddMulMod(_funCall);
 }
@@ -773,7 +773,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
 
-	verificationTargetEncountered(&_arrayPop, VerificationTarget::Type::PopEmptyArray, symbArray->length() <= 0);
+	verificationTargetEncountered(&_arrayPop, VerificationTargetType::PopEmptyArray, symbArray->length() <= 0);
 }
 
 pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
@@ -786,7 +786,7 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 {
 	// Unchecked does not disable div by 0 checks.
 	if (_op == Token::Mod || _op == Token::Div)
-		verificationTargetEncountered(&_expression, VerificationTarget::Type::DivByZero, _right == 0);
+		verificationTargetEncountered(&_expression, VerificationTargetType::DivByZero, _right == 0);
 
 	auto values = SMTEncoder::arithmeticOperation(_op, _left, _right, _commonType, _expression);
 
@@ -805,16 +805,16 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 		return values;
 
 	if (_op == Token::Div)
-		verificationTargetEncountered(&_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
+		verificationTargetEncountered(&_expression, VerificationTargetType::Overflow, values.second > intType->maxValue());
 	else if (intType->isSigned())
 	{
-		verificationTargetEncountered(&_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
-		verificationTargetEncountered(&_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
+		verificationTargetEncountered(&_expression, VerificationTargetType::Underflow, values.second < intType->minValue());
+		verificationTargetEncountered(&_expression, VerificationTargetType::Overflow, values.second > intType->maxValue());
 	}
 	else if (_op == Token::Sub)
-		verificationTargetEncountered(&_expression, VerificationTarget::Type::Underflow, values.second < intType->minValue());
+		verificationTargetEncountered(&_expression, VerificationTargetType::Underflow, values.second < intType->minValue());
 	else if (_op == Token::Add || _op == Token::Mul)
-		verificationTargetEncountered(&_expression, VerificationTarget::Type::Overflow, values.second > intType->maxValue());
+		verificationTargetEncountered(&_expression, VerificationTargetType::Overflow, values.second > intType->maxValue());
 	else
 		solAssert(false, "");
 	return values;
@@ -843,7 +843,7 @@ void CHC::resetSourceAnalysis()
 	if (usesZ3)
 	{
 		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
-		m_interface.reset(new Z3CHCInterface(m_queryTimeout));
+		m_interface.reset(new Z3CHCInterface(m_settings.timeout));
 		auto z3Interface = dynamic_cast<Z3CHCInterface const*>(m_interface.get());
 		solAssert(z3Interface, "");
 		m_context.setSolver(z3Interface->z3Interface());
@@ -1324,10 +1324,14 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 
 void CHC::verificationTargetEncountered(
 	ASTNode const* const _errorNode,
-	VerificationTarget::Type _type,
+	VerificationTargetType _type,
 	smtutil::Expression const& _errorCondition
 )
 {
+
+	if (!m_settings.targets.has(_type))
+		return;
+
 	solAssert(m_currentContract || m_currentFunction, "");
 	SourceUnit const* source = m_currentContract ? sourceUnitContaining(*m_currentContract) : sourceUnitContaining(*m_currentFunction);
 	solAssert(source, "");
@@ -1384,15 +1388,15 @@ void CHC::checkVerificationTargets()
 		string errorType;
 		ErrorId errorReporterId;
 
-		if (target.type == VerificationTarget::Type::PopEmptyArray)
+		if (target.type == VerificationTargetType::PopEmptyArray)
 		{
 			solAssert(dynamic_cast<FunctionCall const*>(target.errorNode), "");
 			errorType = "Empty array \"pop\"";
 			errorReporterId = 2529_error;
 		}
 		else if (
-			target.type == VerificationTarget::Type::Underflow ||
-			target.type == VerificationTarget::Type::Overflow
+			target.type == VerificationTargetType::Underflow ||
+			target.type == VerificationTargetType::Overflow
 		)
 		{
 			auto const* expr = dynamic_cast<Expression const*>(target.errorNode);
@@ -1401,23 +1405,23 @@ void CHC::checkVerificationTargets()
 			if (!intType)
 				intType = TypeProvider::uint256();
 
-			if (target.type == VerificationTarget::Type::Underflow)
+			if (target.type == VerificationTargetType::Underflow)
 			{
 				errorType = "Underflow (resulting value less than " + formatNumberReadable(intType->minValue()) + ")";
 				errorReporterId = 3944_error;
 			}
-			else if (target.type == VerificationTarget::Type::Overflow)
+			else if (target.type == VerificationTargetType::Overflow)
 			{
 				errorType = "Overflow (resulting value larger than " + formatNumberReadable(intType->maxValue()) + ")";
 				errorReporterId = 4984_error;
 			}
 		}
-		else if (target.type == VerificationTarget::Type::DivByZero)
+		else if (target.type == VerificationTargetType::DivByZero)
 		{
 			errorType = "Division by zero";
 			errorReporterId = 4281_error;
 		}
-		else if (target.type == VerificationTarget::Type::Assert)
+		else if (target.type == VerificationTargetType::Assert)
 		{
 			errorType = "Assertion violation";
 			errorReporterId = 6328_error;

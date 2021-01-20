@@ -25,6 +25,7 @@
 
 
 #include <libsolidity/formal/EncodingContext.h>
+#include <libsolidity/formal/ModelCheckerSettings.h>
 #include <libsolidity/formal/SymbolicVariables.h>
 #include <libsolidity/formal/VariableUsage.h>
 
@@ -348,7 +349,7 @@ protected:
 
 	struct VerificationTarget
 	{
-		enum class Type { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray } type;
+		VerificationTargetType type;
 		smtutil::Expression value;
 		smtutil::Expression constraints;
 	};

@@ -39,11 +39,12 @@ BMC::BMC(
 	map<h256, string> const& _smtlib2Responses,
 	ReadCallback::Callback const& _smtCallback,
 	smtutil::SMTSolverChoice _enabledSolvers,
-	optional<unsigned> _timeout
+	ModelCheckerSettings const& _settings
 ):
 	SMTEncoder(_context),
-	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _timeout)),
-	m_outerErrorReporter(_errorReporter)
+	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _settings.timeout)),
+	m_outerErrorReporter(_errorReporter),
+	m_settings(_settings)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (_enabledSolvers.some())
@@ -58,7 +59,7 @@ BMC::BMC(
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTarget::Type>> _solvedTargets)
+void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTargetType>> _solvedTargets)
 {
 	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
 
@@ -193,7 +194,7 @@ bool BMC::visit(IfStatement const& _node)
 	// specific input values.
 	if (isRootFunction())
 		addVerificationTarget(
-			VerificationTarget::Type::ConstantCondition,
+			VerificationTargetType::ConstantCondition,
 			expr(_node.condition()),
 			&_node.condition()
 		);
@@ -230,7 +231,7 @@ bool BMC::visit(Conditional const& _op)
 
 	if (isRootFunction())
 		addVerificationTarget(
-			VerificationTarget::Type::ConstantCondition,
+			VerificationTargetType::ConstantCondition,
 			expr(_op.condition()),
 			&_op.condition()
 		);
@@ -263,7 +264,7 @@ bool BMC::visit(WhileStatement const& _node)
 		_node.condition().accept(*this);
 		if (isRootFunction())
 			addVerificationTarget(
-				VerificationTarget::Type::ConstantCondition,
+				VerificationTargetType::ConstantCondition,
 				expr(_node.condition()),
 				&_node.condition()
 			);
@@ -273,7 +274,7 @@ bool BMC::visit(WhileStatement const& _node)
 		_node.condition().accept(*this);
 		if (isRootFunction())
 			addVerificationTarget(
-				VerificationTarget::Type::ConstantCondition,
+				VerificationTargetType::ConstantCondition,
 				expr(_node.condition()),
 				&_node.condition()
 			);
@@ -317,7 +318,7 @@ bool BMC::visit(ForStatement const& _node)
 		_node.condition()->accept(*this);
 		if (isRootFunction())
 			addVerificationTarget(
-				VerificationTarget::Type::ConstantCondition,
+				VerificationTargetType::ConstantCondition,
 				expr(*_node.condition()),
 				_node.condition()
 			);
@@ -392,7 +393,7 @@ void BMC::endVisit(UnaryOperation const& _op)
 
 	if (_op.getOperator() == Token::Sub && smt::isInteger(*_op.annotation().type))
 		addVerificationTarget(
-			VerificationTarget::Type::UnderOverflow,
+			VerificationTargetType::UnderOverflow,
 			expr(_op),
 			&_op
 		);
@@ -438,7 +439,7 @@ void BMC::endVisit(FunctionCall const& _funCall)
 		smtutil::Expression thisBalance = m_context.state().balance();
 
 		addVerificationTarget(
-			VerificationTarget::Type::Balance,
+			VerificationTargetType::Balance,
 			thisBalance < expr(*value),
 			&_funCall
 		);
@@ -474,7 +475,7 @@ void BMC::visitAssert(FunctionCall const& _funCall)
 	solAssert(args.size() == 1, "");
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
 	addVerificationTarget(
-		VerificationTarget::Type::Assert,
+		VerificationTargetType::Assert,
 		expr(*args.front()),
 		&_funCall
 	);
@@ -487,7 +488,7 @@ void BMC::visitRequire(FunctionCall const& _funCall)
 	solAssert(args.front()->annotation().type->category() == Type::Category::Bool, "");
 	if (isRootFunction())
 		addVerificationTarget(
-			VerificationTarget::Type::ConstantCondition,
+			VerificationTargetType::ConstantCondition,
 			expr(*args.front()),
 			args.front().get()
 		);
@@ -497,7 +498,7 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 {
 	solAssert(_funCall.arguments().at(2), "");
 	addVerificationTarget(
-		VerificationTarget::Type::DivByZero,
+		VerificationTargetType::DivByZero,
 		expr(*_funCall.arguments().at(2)),
 		&_funCall
 	);
@@ -572,7 +573,7 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 	// Unchecked does not disable div by 0 checks.
 	if (_op == Token::Div || _op == Token::Mod)
 		addVerificationTarget(
-			VerificationTarget::Type::DivByZero,
+			VerificationTargetType::DivByZero,
 			_right,
 			&_expression
 		);
@@ -590,24 +591,24 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 	if (_op == Token::Mod)
 		return values;
 
-	VerificationTarget::Type type;
+	VerificationTargetType type;
 	// The order matters here:
 	// If _op is Div and intType is signed, we only care about overflow.
 	if (_op == Token::Div)
 	{
 		if (intType->isSigned())
 			// Signed division can only overflow.
-			type = VerificationTarget::Type::Overflow;
+			type = VerificationTargetType::Overflow;
 		else
 			// Unsigned division cannot underflow/overflow.
 			return values;
 	}
 	else if (intType->isSigned())
-		type = VerificationTarget::Type::UnderOverflow;
+		type = VerificationTargetType::UnderOverflow;
 	else if (_op == Token::Sub)
-		type = VerificationTarget::Type::Underflow;
+		type = VerificationTargetType::Underflow;
 	else if (_op == Token::Add || _op == Token::Mul)
-		type = VerificationTarget::Type::Overflow;
+		type = VerificationTargetType::Overflow;
 	else
 		solAssert(false, "");
 
@@ -674,26 +675,26 @@ void BMC::checkVerificationTarget(BMCVerificationTarget& _target)
 {
 	switch (_target.type)
 	{
-		case VerificationTarget::Type::ConstantCondition:
+		case VerificationTargetType::ConstantCondition:
 			checkConstantCondition(_target);
 			break;
-		case VerificationTarget::Type::Underflow:
+		case VerificationTargetType::Underflow:
 			checkUnderflow(_target);
 			break;
-		case VerificationTarget::Type::Overflow:
+		case VerificationTargetType::Overflow:
 			checkOverflow(_target);
 			break;
-		case VerificationTarget::Type::UnderOverflow:
+		case VerificationTargetType::UnderOverflow:
 			checkUnderflow(_target);
 			checkOverflow(_target);
 			break;
-		case VerificationTarget::Type::DivByZero:
+		case VerificationTargetType::DivByZero:
 			checkDivByZero(_target);
 			break;
-		case VerificationTarget::Type::Balance:
+		case VerificationTargetType::Balance:
 			checkBalance(_target);
 			break;
-		case VerificationTarget::Type::Assert:
+		case VerificationTargetType::Assert:
 			checkAssert(_target);
 			break;
 		default:
@@ -714,15 +715,15 @@ void BMC::checkConstantCondition(BMCVerificationTarget& _target)
 void BMC::checkUnderflow(BMCVerificationTarget& _target)
 {
 	solAssert(
-		_target.type == VerificationTarget::Type::Underflow ||
-			_target.type == VerificationTarget::Type::UnderOverflow,
+		_target.type == VerificationTargetType::Underflow ||
+			_target.type == VerificationTargetType::UnderOverflow,
 		""
 	);
 
 	if (
 		m_solvedTargets.count(_target.expression) && (
-			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::Underflow) ||
-			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::UnderOverflow)
+			m_solvedTargets.at(_target.expression).count(VerificationTargetType::Underflow) ||
+			m_solvedTargets.at(_target.expression).count(VerificationTargetType::UnderOverflow)
 		)
 	)
 		return;
@@ -747,15 +748,15 @@ void BMC::checkUnderflow(BMCVerificationTarget& _target)
 void BMC::checkOverflow(BMCVerificationTarget& _target)
 {
 	solAssert(
-		_target.type == VerificationTarget::Type::Overflow ||
-			_target.type == VerificationTarget::Type::UnderOverflow,
+		_target.type == VerificationTargetType::Overflow ||
+			_target.type == VerificationTargetType::UnderOverflow,
 		""
 	);
 
 	if (
 		m_solvedTargets.count(_target.expression) && (
-			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::Overflow) ||
-			m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::UnderOverflow)
+			m_solvedTargets.at(_target.expression).count(VerificationTargetType::Overflow) ||
+			m_solvedTargets.at(_target.expression).count(VerificationTargetType::UnderOverflow)
 		)
 	)
 		return;
@@ -779,11 +780,11 @@ void BMC::checkOverflow(BMCVerificationTarget& _target)
 
 void BMC::checkDivByZero(BMCVerificationTarget& _target)
 {
-	solAssert(_target.type == VerificationTarget::Type::DivByZero, "");
+	solAssert(_target.type == VerificationTargetType::DivByZero, "");
 
 	if (
 		m_solvedTargets.count(_target.expression) &&
-		m_solvedTargets.at(_target.expression).count(VerificationTarget::Type::DivByZero)
+		m_solvedTargets.at(_target.expression).count(VerificationTargetType::DivByZero)
 	)
 		return;
 
@@ -802,7 +803,7 @@ void BMC::checkDivByZero(BMCVerificationTarget& _target)
 
 void BMC::checkBalance(BMCVerificationTarget& _target)
 {
-	solAssert(_target.type == VerificationTarget::Type::Balance, "");
+	solAssert(_target.type == VerificationTargetType::Balance, "");
 	checkCondition(
 		_target.constraints && _target.value,
 		_target.callStack,
@@ -817,7 +818,7 @@ void BMC::checkBalance(BMCVerificationTarget& _target)
 
 void BMC::checkAssert(BMCVerificationTarget& _target)
 {
-	solAssert(_target.type == VerificationTarget::Type::Assert, "");
+	solAssert(_target.type == VerificationTargetType::Assert, "");
 
 	if (
 		m_solvedTargets.count(_target.expression) &&
@@ -837,11 +838,14 @@ void BMC::checkAssert(BMCVerificationTarget& _target)
 }
 
 void BMC::addVerificationTarget(
-	VerificationTarget::Type _type,
+	VerificationTargetType _type,
 	smtutil::Expression const& _value,
 	Expression const* _expression
 )
 {
+	if (!m_settings.targets.has(_type))
+		return;
+
 	BMCVerificationTarget target{
 		{
 			_type,
@@ -852,7 +856,7 @@ void BMC::addVerificationTarget(
 		m_callStack,
 		modelExpressions()
 	};
-	if (_type == VerificationTarget::Type::ConstantCondition)
+	if (_type == VerificationTargetType::ConstantCondition)
 		checkVerificationTarget(target);
 	else
 		m_verificationTargets.emplace_back(move(target));

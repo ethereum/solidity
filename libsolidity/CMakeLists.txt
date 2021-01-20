@@ -102,6 +102,8 @@ set(sources
 	formal/EncodingContext.h
 	formal/ModelChecker.cpp
 	formal/ModelChecker.h
+	formal/ModelCheckerSettings.cpp
+	formal/ModelCheckerSettings.h
 	formal/Predicate.cpp
 	formal/Predicate.h
 	formal/PredicateInstance.cpp

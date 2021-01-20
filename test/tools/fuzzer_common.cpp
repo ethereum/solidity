@@ -93,7 +93,7 @@ void FuzzerUtil::testCompiler(StringMap& _input, bool _optimize, unsigned _rand,
 	if (_forceSMT)
 	{
 		forceSMT(_input);
-		compiler.setModelCheckerSettings({frontend::ModelCheckerEngine::All(), /*timeout=*/1});
+		compiler.setModelCheckerSettings({frontend::ModelCheckerEngine::All(), frontend::ModelCheckerTargets::All(), /*timeout=*/1});
 	}
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);

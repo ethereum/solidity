@@ -1,0 +1,147 @@
+{"auxiliaryInputRequested":{"smtlib2queries":{"0xbff03f53a7de50d2b79369639ee478ab1b8df545104dc83d93aafae02dde855a":"(set-option :produce-models true)
+(set-logic ALL)
+(declare-fun |error_0| () Int)
+(declare-fun |this_0| () Int)
+(declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
+(declare-fun |state_0| () |state_type|)
+(declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
+(declare-datatypes ((|tx_type| 0)) (((|tx_type| (|block.chainid| Int) (|block.coinbase| Int) (|block.difficulty| Int) (|block.gaslimit| Int) (|block.number| Int) (|block.timestamp| Int) (|blockhash| (Array Int Int)) (|msg.data| |bytes_tuple|) (|msg.sender| Int) (|msg.sig| Int) (|msg.value| Int) (|tx.gasprice| Int) (|tx.origin| Int)))))
+(declare-fun |tx_0| () |tx_type|)
+(declare-datatypes ((|ecrecover_input_type| 0)) (((|ecrecover_input_type| (|hash| Int) (|v| Int) (|r| Int) (|s| Int)))))
+(declare-datatypes ((|crypto_type| 0)) (((|crypto_type| (|ecrecover| (Array |ecrecover_input_type| Int)) (|keccak256| (Array |bytes_tuple| Int)) (|ripemd160| (Array |bytes_tuple| Int)) (|sha256| (Array |bytes_tuple| Int))))))
+(declare-fun |crypto_0| () |crypto_type|)
+(declare-datatypes ((|abi_type| 0)) (((|abi_type|))))
+(declare-fun |abi_0| () |abi_type|)
+(declare-datatypes ((|uint[]_tuple| 0)) (((|uint[]_tuple| (|uint[]_tuple_accessor_array| (Array Int Int)) (|uint[]_tuple_accessor_length| Int)))))
+(declare-fun |arr_5_length_pair_0| () |uint[]_tuple|)
+(declare-fun |a_7_0| () Int)
+(declare-fun |x_9_0| () Int)
+(declare-fun |arr_5_length_pair_1| () |uint[]_tuple|)
+(declare-fun |expr_13_0| () Int)
+(declare-fun |expr_14_0| () Int)
+(declare-fun |expr_15_1| () Bool)
+(declare-fun |expr_18_0| () Int)
+(declare-fun |expr_19_1| () Int)
+(declare-fun |x_9_1| () Int)
+(declare-fun |expr_21_0| () Int)
+(declare-fun |expr_26_1| () Int)
+(declare-fun |expr_27_1| () Int)
+(declare-fun |expr_29_0| () Int)
+(declare-fun |expr_30_0| () Int)
+(declare-fun |d_div_mod_0_0| () Int)
+(declare-fun |r_div_mod_0_0| () Int)
+(declare-fun |expr_31_1| () Int)
+(declare-fun |expr_33_0| () Int)
+(declare-fun |expr_36_0| () Int)
+(declare-fun |state_1| () |state_type|)
+(declare-fun |state_2| () |state_type|)
+(declare-fun |state_3| () |state_type|)
+(declare-fun |expr_40_0| () Int)
+(declare-fun |expr_41_0| () Int)
+(declare-fun |expr_42_1| () Bool)
+(declare-fun |expr_45_length_pair_0| () |uint[]_tuple|)
+(declare-fun |expr_45_length_pair_1| () |uint[]_tuple|)
+(declare-fun |arr_5_length_pair_2| () |uint[]_tuple|)
+(declare-fun |expr_45_length_pair_2| () |uint[]_tuple|)
+(declare-fun |expr_45_length_pair_3| () |uint[]_tuple|)
+
+(assert (and (and (and true true) (and (implies (and true true) (and (>= expr_18_0 0) (<= expr_18_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_18_0 x_9_0) (and (implies (and true true) expr_15_1) (and (= expr_15_1 (>= expr_13_0 expr_14_0)) (and (implies (and true true) true) (and (= expr_14_0 0) (and (implies (and true true) (and (>= expr_13_0 0) (<= expr_13_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_13_0 x_9_0) (and (and (>= x_9_0 0) (<= x_9_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (>= a_7_0 0) (<= a_7_0 1461501637330902918203684832716283019655932542975)) (and (>= (|uint[]_tuple_accessor_length| arr_5_length_pair_1) 0) (and (and (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (= (|msg.sig| tx_0) 1917212865)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 114)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 70)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 88)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 193)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4)) true))))))))))))) (< (- x_9_0 1) 0)))
+(declare-const |EVALEXPR_0| Int)
+(assert (= |EVALEXPR_0| a_7_0))
+(declare-const |EVALEXPR_1| Int)
+(assert (= |EVALEXPR_1| x_9_0))
+(declare-const |EVALEXPR_2| Int)
+(assert (= |EVALEXPR_2| (- x_9_0 1)))
+(check-sat)
+(get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| ))
+","0xc23473f0d9042c91db2816923860cf271ed38d055bf0c0a61ef777a2d890a4a3":"(set-option :produce-models true)
+(set-logic ALL)
+(declare-fun |error_0| () Int)
+(declare-fun |this_0| () Int)
+(declare-datatypes ((|state_type| 0)) (((|state_type| (|balances| (Array Int Int))))))
+(declare-fun |state_0| () |state_type|)
+(declare-datatypes ((|bytes_tuple| 0)) (((|bytes_tuple| (|bytes_tuple_accessor_array| (Array Int Int)) (|bytes_tuple_accessor_length| Int)))))
+(declare-datatypes ((|tx_type| 0)) (((|tx_type| (|block.chainid| Int) (|block.coinbase| Int) (|block.difficulty| Int) (|block.gaslimit| Int) (|block.number| Int) (|block.timestamp| Int) (|blockhash| (Array Int Int)) (|msg.data| |bytes_tuple|) (|msg.sender| Int) (|msg.sig| Int) (|msg.value| Int) (|tx.gasprice| Int) (|tx.origin| Int)))))
+(declare-fun |tx_0| () |tx_type|)
+(declare-datatypes ((|ecrecover_input_type| 0)) (((|ecrecover_input_type| (|hash| Int) (|v| Int) (|r| Int) (|s| Int)))))
+(declare-datatypes ((|crypto_type| 0)) (((|crypto_type| (|ecrecover| (Array |ecrecover_input_type| Int)) (|keccak256| (Array |bytes_tuple| Int)) (|ripemd160| (Array |bytes_tuple| Int)) (|sha256| (Array |bytes_tuple| Int))))))
+(declare-fun |crypto_0| () |crypto_type|)
+(declare-datatypes ((|abi_type| 0)) (((|abi_type|))))
+(declare-fun |abi_0| () |abi_type|)
+(declare-datatypes ((|uint[]_tuple| 0)) (((|uint[]_tuple| (|uint[]_tuple_accessor_array| (Array Int Int)) (|uint[]_tuple_accessor_length| Int)))))
+(declare-fun |arr_5_length_pair_0| () |uint[]_tuple|)
+(declare-fun |a_7_0| () Int)
+(declare-fun |x_9_0| () Int)
+(declare-fun |arr_5_length_pair_1| () |uint[]_tuple|)
+(declare-fun |expr_13_0| () Int)
+(declare-fun |expr_14_0| () Int)
+(declare-fun |expr_15_1| () Bool)
+(declare-fun |expr_18_0| () Int)
+(declare-fun |expr_19_1| () Int)
+(declare-fun |x_9_1| () Int)
+(declare-fun |expr_21_0| () Int)
+(declare-fun |expr_26_1| () Int)
+(declare-fun |expr_27_1| () Int)
+(declare-fun |expr_29_0| () Int)
+(declare-fun |expr_30_0| () Int)
+(declare-fun |d_div_mod_0_0| () Int)
+(declare-fun |r_div_mod_0_0| () Int)
+(declare-fun |expr_31_1| () Int)
+(declare-fun |expr_33_0| () Int)
+(declare-fun |expr_36_0| () Int)
+(declare-fun |state_1| () |state_type|)
+(declare-fun |state_2| () |state_type|)
+(declare-fun |state_3| () |state_type|)
+(declare-fun |expr_40_0| () Int)
+(declare-fun |expr_41_0| () Int)
+(declare-fun |expr_42_1| () Bool)
+(declare-fun |expr_45_length_pair_0| () |uint[]_tuple|)
+(declare-fun |expr_45_length_pair_1| () |uint[]_tuple|)
+(declare-fun |arr_5_length_pair_2| () |uint[]_tuple|)
+(declare-fun |expr_45_length_pair_2| () |uint[]_tuple|)
+(declare-fun |expr_45_length_pair_3| () |uint[]_tuple|)
+
+(assert (and (and (and true true) (and (implies (and true true) (and (>= expr_26_1 0) (<= expr_26_1 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_26_1 115792089237316195423570985008687907853269984665640564039457584007913129639935) (and (implies (and true true) (and (>= expr_21_0 0) (<= expr_21_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_21_0 x_9_1) (and (ite (and true true) (= x_9_1 (- x_9_0 1)) (= x_9_1 x_9_0)) (and (implies (and true true) (and (>= expr_19_1 0) (<= expr_19_1 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_19_1 (- x_9_0 1)) (and (implies (and true true) (and (>= expr_18_0 0) (<= expr_18_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_18_0 x_9_0) (and (implies (and true true) expr_15_1) (and (= expr_15_1 (>= expr_13_0 expr_14_0)) (and (implies (and true true) true) (and (= expr_14_0 0) (and (implies (and true true) (and (>= expr_13_0 0) (<= expr_13_0 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (= expr_13_0 x_9_0) (and (and (>= x_9_0 0) (<= x_9_0 115792089237316195423570985008687907853269984665640564039457584007913129639935)) (and (and (>= a_7_0 0) (<= a_7_0 1461501637330902918203684832716283019655932542975)) (and (>= (|uint[]_tuple_accessor_length| arr_5_length_pair_1) 0) (and (and (and (and (and (and (and (and (and (and (and (and (and (and (and (>= (|block.coinbase| tx_0) 0) (<= (|block.coinbase| tx_0) 1461501637330902918203684832716283019655932542975)) (and (>= (|block.chainid| tx_0) 0) (<= (|block.chainid| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.difficulty| tx_0) 0) (<= (|block.difficulty| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.gaslimit| tx_0) 0) (<= (|block.gaslimit| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.number| tx_0) 0) (<= (|block.number| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|block.timestamp| tx_0) 0) (<= (|block.timestamp| tx_0) 115792089237316195423570985008687907853269984665640564039457584007913129639935))) (and (>= (|msg.sender| tx_0) 0) (<= (|msg.sender| tx_0) 1461501637330902918203684832716283019655932542975))) (and (>= (|tx.origin| tx_0) 0) (<= (|tx.origin| tx_0) 1461501637330902918203684832716283019655932542975))) (= (|msg.sig| tx_0) 1917212865)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 0) 114)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 1) 70)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 2) 88)) (= (select (|bytes_tuple_accessor_array| (|msg.data| tx_0)) 3) 193)) (>= (|bytes_tuple_accessor_length| (|msg.data| tx_0)) 4)) true)))))))))))))))))))) (> (+ expr_21_0 expr_26_1) 115792089237316195423570985008687907853269984665640564039457584007913129639935)))
+(declare-const |EVALEXPR_0| Int)
+(assert (= |EVALEXPR_0| a_7_0))
+(declare-const |EVALEXPR_1| Int)
+(assert (= |EVALEXPR_1| x_9_1))
+(declare-const |EVALEXPR_2| Int)
+(assert (= |EVALEXPR_2| (+ expr_21_0 expr_26_1)))
+(check-sat)
+(get-value (|EVALEXPR_0| |EVALEXPR_1| |EVALEXPR_2| ))
+"}},"errors":[{"component":"general","errorCode":"4144","formattedMessage":"Warning: BMC: Underflow (resulting value less than 0) happens here.
+ --> A:8:7:
+  |
+8 | \t\t\t\t\t\t--x;
+  | \t\t\t\t\t\t^^^
+Note: Counterexample:
+  <result> = (- 1)
+  a = 0
+  x = 0
+
+Note: Callstack:
+Note:
+
+","message":"BMC: Underflow (resulting value less than 0) happens here.","secondarySourceLocations":[{"message":"Counterexample:
+  <result> = (- 1)
+  a = 0
+  x = 0
+"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":208,"file":"A","start":205},"type":"Warning"},{"component":"general","errorCode":"2661","formattedMessage":"Warning: BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+ --> A:9:7:
+  |
+9 | \t\t\t\t\t\tx + type(uint).max;
+  | \t\t\t\t\t\t^^^^^^^^^^^^^^^^^^
+Note: Counterexample:
+  <result> = 2**256
+  a = 0
+  x = 1
+
+Note: Callstack:
+Note:
+
+","message":"BMC: Overflow (resulting value larger than 2**256 - 1) happens here.","secondarySourceLocations":[{"message":"Counterexample:
+  <result> = 2**256
+  a = 0
+  x = 1
+"},{"message":"Callstack:"},{"message":""}],"severity":"warning","sourceLocation":{"end":234,"file":"A","start":216},"type":"Warning"}],"sources":{"A":{"id":0}}}
