@@ -110,7 +110,10 @@ void ControlFlowAnalyzer::checkUninitializedAccess(CFGNode const* _entry, CFGNod
 
 		// Propagate changes to all exits and queue them for traversal, if needed.
 		for (auto const& exit: currentNode->exits)
-			if (nodeInfos[exit].propagateFrom(nodeInfo))
+			if (
+				auto exists = valueOrNullptr(nodeInfos, exit);
+				nodeInfos[exit].propagateFrom(nodeInfo) || !exists
+			)
 				nodesToTraverse.insert(exit);
 	}
 
