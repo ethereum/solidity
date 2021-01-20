@@ -438,7 +438,10 @@ operations as long as there is enough gas passed on to it.
             // results in test.x becoming == 1 and test.y becoming 1.
 
             // If someone sends Ether to that contract, the receive function in TestPayable will be called.
-            require(payable(test).send(2 ether));
+            // Since that function writes to storage, it takes more gas than is available with a
+            // simple ``send`` or ``transfer``. Because of that, we have to use a low-level call.
+            (success,) = address(test).call{value: 2 ether}("");
+            require(success);
             // results in test.x becoming == 2 and test.y becoming 2 ether.
 
             return true;
