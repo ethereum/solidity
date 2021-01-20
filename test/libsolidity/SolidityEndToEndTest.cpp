@@ -4906,23 +4906,26 @@ BOOST_AUTO_TEST_CASE(bare_call_return_data)
 					}
 				}
 			)DELIMITER";
-			compileAndRun(sourceCode, 0, "C");
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_bool()"))), encodeArgs(true, 0x40, 0x20, true));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_int32()"))), encodeArgs(true, 0x40, 0x20, u256(-32)));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_uint32()"))), encodeArgs(true, 0x40, 0x20, u256(0x3232)));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_int256()"))), encodeArgs(true, 0x40, 0x20, u256(-256)));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_uint256()"))), encodeArgs(true, 0x40, 0x20, u256(0x256256)));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_bytes4()"))), encodeArgs(true, 0x40, 0x20, u256(0xabcd0012) << (28*8)));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_multi()"))), encodeArgs(true, 0x40, 0x60, false, u256(0x3232), u256(0xabcd0012) << (28*8)));
-			ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_bytes()"))), encodeArgs(true, 0x40, 0x60, 0x20, 0x02, encode(bytes{0x42,0x21}, false)));
-			ABI_CHECK(callContractFunction("check_bool()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_int32()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_uint32()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_int256()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_uint256()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_bytes4()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_multi()"), encodeArgs(true));
-			ABI_CHECK(callContractFunction("check_bytes()"), encodeArgs(true));
+			ALSO_VIA_YUL(
+				DISABLE_EWASM_TESTRUN()
+				compileAndRun(sourceCode, 0, "C");
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_bool()"))), encodeArgs(true, 0x40, 0x20, true));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_int32()"))), encodeArgs(true, 0x40, 0x20, u256(-32)));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_uint32()"))), encodeArgs(true, 0x40, 0x20, u256(0x3232)));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_int256()"))), encodeArgs(true, 0x40, 0x20, u256(-256)));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_uint256()"))), encodeArgs(true, 0x40, 0x20, u256(0x256256)));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_bytes4()"))), encodeArgs(true, 0x40, 0x20, u256(0xabcd0012) << (28*8)));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_multi()"))), encodeArgs(true, 0x40, 0x60, false, u256(0x3232), u256(0xabcd0012) << (28*8)));
+				ABI_CHECK(callContractFunction("f(string)", encodeDyn(string("return_bytes()"))), encodeArgs(true, 0x40, 0x60, 0x20, 0x02, encode(bytes{0x42,0x21}, false)));
+				ABI_CHECK(callContractFunction("check_bool()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_int32()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_uint32()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_int256()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_uint256()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_bytes4()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_multi()"), encodeArgs(true));
+				ABI_CHECK(callContractFunction("check_bytes()"), encodeArgs(true));
+			)
 		}
 	}
 }
