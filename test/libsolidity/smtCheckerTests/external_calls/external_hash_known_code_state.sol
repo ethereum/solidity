@@ -33,5 +33,7 @@ contract C {
 		assert(owner == address(0) || y != z);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (528-565): CHC: Assertion violation happens here.\nCounterexample:\nowner = 1, y = 0, z = 0, s = 0\n\nTransaction trace:\nC.constructor()\nState: owner = 1, y = 0, z = 0, s = 0\nC.f()\n    s.f() -- untrusted external call\n    s.f() -- untrusted external call, synthesized as:\n        C.inv() -- reentrant call
+// Warning 6328: (528-565): CHC: Assertion violation happens here.

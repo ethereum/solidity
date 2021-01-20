@@ -16,6 +16,7 @@ Compiler Features:
  * SMTChecker: Support try/catch statements.
  * SMTChecker: Output internal and trusted external function calls in a counterexample's transaction trace.
  * SMTChecker: Synthesize untrusted functions called externally.
+ * SMTChecker: Show ``msg.value`` in counterexample transaction traces when greater than 0.
  * Standard JSON: New option ``modelCheckerSettings.targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``,
    ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time,
    separated by a comma without spaces: ``underflow,overflow,assert``.
