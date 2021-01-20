@@ -63,8 +63,7 @@ contract C {
     }
 }
 
-// found expectation comments:
-// same offset for both arrays @ ABI_CHECK(
+// via yul disabled because of stack issues.
 
 // ====
 // compileViaYul: false
