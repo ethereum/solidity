@@ -637,7 +637,7 @@ Conversions:
 A function type ``A`` is implicitly convertible to a function type ``B`` if and only if
 their parameter types are identical, their return types are identical,
 their internal/external property is identical and the state mutability of ``A``
-is not more restrictive than the state mutability of ``B``. In particular:
+is more restrictive than the state mutability of ``B``. In particular:
 
  - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
  - ``view`` functions can be converted to ``non-payable`` functions
