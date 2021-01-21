@@ -116,9 +116,10 @@ function test_solc_behaviour()
     [ -z "$solc_stdin"  ] && solc_stdin="/dev/stdin"
     local stdout_expected="${4}"
     local exit_code_expected="${5}"
-    local stderr_expected="${6}"
-    local stdout_expectation_file="${7}" # the file to write to when user chooses to update stdout expectation
-    local stderr_expectation_file="${8}" # the file to write to when user chooses to update stderr expectation
+    local exit_code_expectation_file="${6}"
+    local stderr_expected="${7}"
+    local stdout_expectation_file="${8}" # the file to write to when user chooses to update stdout expectation
+    local stderr_expectation_file="${9}" # the file to write to when user chooses to update stderr expectation
     local stdout_path=`mktemp`
     local stderr_path=`mktemp`
 
@@ -179,7 +180,9 @@ function test_solc_behaviour()
     if [[ $exitCode -ne "$exit_code_expected" ]]
     then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
-        exit 1
+
+        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exit_code_expected" "$exit_code_expectation_file"
+        [[ $exit_code_expectation_file == "" ]] && exit 1
     fi
 
     if [[ "$(cat $stdout_path)" != "${stdout_expected}" ]]
@@ -192,12 +195,8 @@ function test_solc_behaviour()
 
         printError "When running $solc_command"
 
-        if [ -n "$stdout_expectation_file" ]
-        then
-            ask_expectation_update "$(cat $stdout_path)" "$stdout_expectation_file"
-        else
-            exit 1
-        fi
+        [[ $stdout_expectation_file != "" ]] && ask_expectation_update "$(cat "$stdout_path")" "$stdout_expectation_file"
+        [[ $stdout_expectation_file == "" ]] && exit 1
     fi
 
     if [[ "$(cat $stderr_path)" != "${stderr_expected}" ]]
@@ -210,12 +209,8 @@ function test_solc_behaviour()
 
         printError "When running $solc_command"
 
-        if [ -n "$stderr_expectation_file" ]
-        then
-            ask_expectation_update "$(cat $stderr_path)" "$stderr_expectation_file"
-        else
-            exit 1
-        fi
+        [[ $stderr_expectation_file != "" ]] && ask_expectation_update "$(cat "$stderr_path")" "$stderr_expectation_file"
+        [[ $stderr_expectation_file == "" ]] && exit 1
     fi
 
     rm -f "$stdout_path" "$stderr_path"
@@ -265,14 +260,14 @@ printTask "Testing unknown options..."
 
 
 printTask "Testing passing files that are not found..."
-test_solc_behaviour "file_not_found.sol" "" "" "" 1 "\"file_not_found.sol\" is not found." "" ""
+test_solc_behaviour "file_not_found.sol" "" "" "" 1 "" "\"file_not_found.sol\" is not found." "" ""
 
 printTask "Testing passing files that are not files..."
-test_solc_behaviour "." "" "" "" 1 "\".\" is not a valid file." "" ""
+test_solc_behaviour "." "" "" "" 1 "" "\".\" is not a valid file." "" ""
 
 printTask "Testing passing empty remappings..."
-test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "Invalid remapping: \"=/some/remapping/target\"." "" ""
-test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "=/some/remapping/target" "" "" 1 "" "Invalid remapping: \"=/some/remapping/target\"." "" ""
+test_solc_behaviour "${0}" "ctx:=/some/remapping/target" "" "" 1 "" "Invalid remapping: \"ctx:=/some/remapping/target\"." "" ""
 
 printTask "Running general commandline tests..."
 (
@@ -314,7 +309,8 @@ printTask "Running general commandline tests..."
             stdoutExpectationFile="${tdir}/output"
             args=$(cat ${tdir}/args 2>/dev/null || true)
         fi
-        exitCode=$(cat ${tdir}/exit 2>/dev/null || true)
+        exitCodeExpectationFile="${tdir}/exit"
+        exitCode=$(cat "$exitCodeExpectationFile" 2>/dev/null || true)
         err="$(cat ${tdir}/err 2>/dev/null || true)"
         stderrExpectationFile="${tdir}/err"
         test_solc_behaviour "$inputFile" \
@@ -322,6 +318,7 @@ printTask "Running general commandline tests..."
                             "$stdin" \
                             "$stdout" \
                             "$exitCode" \
+                            "$exitCodeExpectationFile" \
                             "$err" \
                             "$stdoutExpectationFile" \
                             "$stderrExpectationFile"
