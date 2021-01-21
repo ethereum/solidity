@@ -62,6 +62,9 @@ else
     log_directory=""
 fi
 
+printTask "Testing Python scripts..."
+"$REPO_ROOT/test/pyscriptTests.py"
+
 printTask "Running commandline tests..."
 # Only run in parallel if this is run on CI infrastructure
 if [[ -n "$CI" ]]
