@@ -1554,6 +1554,28 @@ void IRGeneratorForStatements::endVisit(FunctionCallOptions const& _options)
 	}
 }
 
+bool IRGeneratorForStatements::visit(MemberAccess const& _memberAccess)
+{
+	// A shortcut for <address>.code.length. We skip visiting <address>.code and directly visit
+	// <address>. The actual code is generated in endVisit.
+	if (
+		auto innerExpression = dynamic_cast<MemberAccess const*>(&_memberAccess.expression());
+		_memberAccess.memberName() == "length" &&
+		innerExpression &&
+		innerExpression->memberName() == "code" &&
+		innerExpression->expression().annotation().type->category() == Type::Category::Address
+	)
+	{
+		solAssert(innerExpression->annotation().type->category() == Type::Category::Array, "");
+		// Skip visiting <address>.code
+		innerExpression->expression().accept(*this);
+
+		return false;
+	}
+
+	return true;
+}
+
 void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 {
 	setLocation(_memberAccess);
@@ -1846,13 +1868,26 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Array:
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
-
 		if (member == "length")
-			define(_memberAccess) <<
-				m_utils.arrayLengthFunction(type) <<
-				"(" <<
-				IRVariable(_memberAccess.expression()).commaSeparatedList() <<
-				")\n";
+		{
+			// shortcut for <address>.code.length
+			if (
+				auto innerExpression = dynamic_cast<MemberAccess const*>(&_memberAccess.expression());
+				innerExpression &&
+				innerExpression->memberName() == "code" &&
+				innerExpression->expression().annotation().type->category() == Type::Category::Address
+			)
+				define(_memberAccess) <<
+					"extcodesize(" <<
+					expressionAsType(innerExpression->expression(), *TypeProvider::address()) <<
+					")\n";
+			else
+				define(_memberAccess) <<
+					m_utils.arrayLengthFunction(type) <<
+					"(" <<
+					IRVariable(_memberAccess.expression()).commaSeparatedList() <<
+					")\n";
+		}
 		else if (member == "pop" || member == "push")
 		{
 			solAssert(type.location() == DataLocation::Storage, "");
