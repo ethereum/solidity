@@ -28,4 +28,3 @@ rule.check(
     SIGNEXTEND(A, SHR(B, X)),
     SAR(B, X)
 )
-

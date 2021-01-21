@@ -20,7 +20,7 @@ repository. The changes are compared against ``origin/develop``.
 import subprocess
 from pathlib import Path
 from enum import Enum
-from parsec import *
+from parsec import generate, ParseError, regex, string
 from tabulate import tabulate
 
 class Kind(Enum):
@@ -56,10 +56,10 @@ def diff_string() -> (Kind, Diff, int):
     -// gas irOptimized: 138070
 
     """
-    diff_kind = yield (minus | plus)
+    diff_kind = yield minus | plus
     yield comment
     yield space
-    codegen_kind = yield (gas_ir_optimized ^ gas_legacy_optimized ^ gas_legacy)
+    codegen_kind = yield gas_ir_optimized ^ gas_legacy_optimized ^ gas_legacy
     yield colon
     yield space
     val = yield number()

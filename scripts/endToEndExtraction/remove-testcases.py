@@ -39,7 +39,7 @@ def colorize(left, right, id):
     reset = "\x1b[0m"
     colors = [red, yellow]
     color = colors[id % len(colors)]
-    function, arguments, results = parse_call(right)
+    function, _arguments, _results = parse_call(right)
     left = left.replace("compileAndRun", color + "compileAndRun" + reset)
     right = right.replace("constructor", color + "constructor" + reset)
     if function:
@@ -158,7 +158,7 @@ def main(argv):
     interactive = False
     input_file = None
     try:
-        opts, args = getopt.getopt(argv, "if:")
+        opts, _args = getopt.getopt(argv, "if:")
     except getopt.GetoptError:
         print("./remove-testcases.py [-i] [-f <full path to SolidityEndToEndTest.cpp>]")
         sys.exit(1)

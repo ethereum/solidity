@@ -261,9 +261,9 @@ def main(argv):
     no_confirm = False
     examine_coverage = False
     next_id = False
-    opts, args = getopt.getopt(argv, "", ["check", "fix", "no-confirm", "examine-coverage", "next"])
+    opts, _args = getopt.getopt(argv, "", ["check", "fix", "no-confirm", "examine-coverage", "next"])
 
-    for opt, arg in opts:
+    for opt, _arg in opts:
         if opt == "--check":
             check = True
         elif opt == "--fix":

@@ -34,4 +34,3 @@ rule3.check(
     SIGNEXTEND(A, SIGNEXTEND(B, X)),
     SIGNEXTEND(If(ULT(A, B), A, B), X)
 )
-

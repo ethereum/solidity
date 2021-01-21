@@ -6,7 +6,6 @@
 # into files for e.g. fuzz testing as
 # scripts/isolate_tests.py test/libsolidity/*
 
-import sys
 import re
 import os
 import hashlib
