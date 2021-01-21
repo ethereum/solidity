@@ -87,12 +87,16 @@ function ask_expectation_update
         then
             update_expectation "$newExpectation" "$expectationFile"
         else
+            local editor="${FCEDIT:-${VISUAL:-${EDITOR:-vi}}}"
+
             while true
             do
-                read -N 1 -p "(u)pdate expectation/(q)uit? "
+                read -N 1 -p "(e)dit/(u)pdate expectations/(s)kip/(q)uit? "
                 echo
                 case $REPLY in
+                    e*) "$editor" "$expectationFile"; break;;
                     u*) update_expectation "$newExpectation" "$expectationFile"; break;;
+                    s*) return;;
                     q*) exit 1;;
                 esac
             done
