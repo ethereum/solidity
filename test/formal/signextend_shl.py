@@ -1,5 +1,6 @@
+from opcodes import SHL, SIGNEXTEND
 from rule import Rule
-from opcodes import *
+from z3 import BitVec, LShR, ULE
 
 """
 Rule:

@@ -1,4 +1,4 @@
-from z3 import *
+from z3 import BitVecVal, BV2Int, If, LShR, UDiv, ULT, UGT, URem
 
 def ADD(x, y):
 	return x + y

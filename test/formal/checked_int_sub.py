@@ -1,6 +1,7 @@
+from opcodes import AND, ADD, ISZERO, SLT, SGT
 from rule import Rule
-from opcodes import *
-from util import *
+from util import BVSignedMax, BVSignedMin, BVSignedUpCast
+from z3 import BitVec, BVSubNoOverflow, BVSubNoUnderflow, Not
 
 """
 Overflow checked signed integer subtraction.
