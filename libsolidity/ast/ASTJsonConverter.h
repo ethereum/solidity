@@ -137,7 +137,8 @@ private:
 		std::string const& _nodeName,
 		std::vector<std::pair<std::string, Json::Value>>&& _attributes
 	);
-	size_t sourceIndexFromLocation(langutil::SourceLocation const& _location) const;
+	/// Maps source location to an index, if source is valid and a mapping does exist, otherwise returns std::nullopt.
+	std::optional<size_t> sourceIndexFromLocation(langutil::SourceLocation const& _location) const;
 	std::string sourceLocationToString(langutil::SourceLocation const& _location) const;
 	static std::string namePathToString(std::vector<ASTString> const& _namePath);
 	static Json::Value idOrNull(ASTNode const* _pt)

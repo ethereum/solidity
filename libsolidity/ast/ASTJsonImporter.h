@@ -67,6 +67,7 @@ private:
 	template<class T>
 	ASTPointer<T> convertJsonToASTNode(Json::Value const& _node);
 
+	langutil::SourceLocation createNameSourceLocation(Json::Value const& _node);
 
 	/// \defgroup nodeCreators JSON to AST-Nodes
 	///@{

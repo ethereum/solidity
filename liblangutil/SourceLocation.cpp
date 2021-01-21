@@ -34,9 +34,11 @@ SourceLocation const parseSourceLocation(std::string const& _input, std::string 
 
 	boost::algorithm::split(pos, _input, boost::is_any_of(":"));
 
+	solAssert(pos.size() == 3, "SourceLocation string must have 3 colon separated numeric fields.");
+	auto const sourceIndex = stoi(pos[Index]);
+
 	astAssert(
-		pos.size() == 3 &&
-		_maxIndex >= static_cast<size_t>(stoi(pos[Index])),
+		sourceIndex == -1 || _maxIndex >= static_cast<size_t>(sourceIndex),
 		"'src'-field ill-formatted or src-index too high"
 	);
 
@@ -44,7 +46,9 @@ SourceLocation const parseSourceLocation(std::string const& _input, std::string 
 	int end = start + stoi(pos[Length]);
 
 	// ASSUMPTION: only the name of source is used from here on, the m_source of the CharStream-Object can be empty
-	std::shared_ptr<langutil::CharStream> source = std::make_shared<langutil::CharStream>("", _sourceName);
+	std::shared_ptr<langutil::CharStream> source;
+	if (sourceIndex != -1)
+		source = std::make_shared<langutil::CharStream>("", _sourceName);
 
 	return SourceLocation{start, end, source};
 }
