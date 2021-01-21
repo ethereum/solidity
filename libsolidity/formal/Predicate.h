@@ -37,6 +37,7 @@ enum class PredicateType
 	ConstructorSummary,
 	FunctionSummary,
 	FunctionBlock,
+	FunctionErrorBlock,
 	InternalCall,
 	ExternalCallTrusted,
 	ExternalCallUntrusted,
@@ -56,14 +57,16 @@ public:
 		PredicateType _type,
 		smt::EncodingContext& _context,
 		ASTNode const* _node = nullptr,
-		ContractDefinition const* _contractContext = nullptr
+		ContractDefinition const* _contractContext = nullptr,
+		std::vector<ScopeOpener const*> _scopeStack = {}
 	);
 
 	Predicate(
 		smt::SymbolicFunctionVariable&& _predicate,
 		PredicateType _type,
 		ASTNode const* _node = nullptr,
-		ContractDefinition const* _contractContext = nullptr
+		ContractDefinition const* _contractContext = nullptr,
+		std::vector<ScopeOpener const*> _scopeStack = {}
 	);
 
 	/// Predicate should not be copiable.
@@ -89,6 +92,10 @@ public:
 	/// @returns the program node this predicate represents.
 	ASTNode const* programNode() const;
 
+	/// @returns the ContractDefinition of the most derived contract
+	/// being analyzed.
+	ContractDefinition const* contextContract() const;
+
 	/// @returns the ContractDefinition that this predicate represents
 	/// or nullptr otherwise.
 	ContractDefinition const* programContract() const;
@@ -109,6 +116,12 @@ public:
 
 	/// @returns true if this predicate represents a function summary.
 	bool isFunctionSummary() const;
+
+	/// @returns true if this predicate represents a function block.
+	bool isFunctionBlock() const;
+
+	/// @returns true if this predicate represents a function error block.
+	bool isFunctionErrorBlock() const;
 
 	/// @returns true if this predicate represents an internal function call.
 	bool isInternalCall() const;
@@ -142,6 +155,9 @@ public:
 	/// @returns the values of the function output variables from _args at the point
 	/// where this summary was reached.
 	std::vector<std::optional<std::string>> summaryPostOutputValues(std::vector<smtutil::Expression> const& _args) const;
+
+	/// @returns the values of the local variables used by this predicate.
+	std::pair<std::vector<std::optional<std::string>>, std::vector<VariableDeclaration const*>> localVariableValues(std::vector<smtutil::Expression> const& _args) const;
 
 private:
 	/// @returns the formatted version of the given SMT expressions. Those expressions must be SMT constants.
@@ -177,6 +193,10 @@ private:
 	/// Maps the name of the predicate to the actual Predicate.
 	/// Used in counterexample generation.
 	static std::map<std::string, Predicate> m_predicates;
+
+	/// The scope stack when the predicate was created.
+	/// Used to identify the subset of variables in scope.
+	std::vector<ScopeOpener const*> const m_scopeStack;
 };
 
 }

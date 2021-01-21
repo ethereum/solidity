@@ -30,9 +30,9 @@ contract C {
 // Warning 6368: (271-278): CHC: Out of bounds access might happen here.
 // Warning 6368: (271-281): CHC: Out of bounds access might happen here.
 // Warning 6368: (344-348): CHC: Out of bounds access happens here.
-// Warning 6368: (376-380): CHC: Out of bounds access happens here.\nCounterexample:\na = [], d = [5, 5, 5, 5, 5, 5, 5, 5, 7, 5, 9, 5, 11, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]\n\nTransaction trace:\nC.constructor()\nState: a = [], c = [[[0]]], d = [0, 0]\nC.f()
-// Warning 6328: (369-393): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nState: a = [], c = [[[0]]], d = [0, 0]\nC.f()
-// Warning 6368: (546-550): CHC: Out of bounds access happens here.\nCounterexample:\nc = []\n\nTransaction trace:\nC.constructor()\nState: a = [], c = [[[0]]], d = [0, 0]\nC.f()
-// Warning 6368: (546-553): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nState: a = [], c = [[[0]]], d = [0, 0]\nC.f()
+// Warning 6368: (376-380): CHC: Out of bounds access happens here.
+// Warning 6328: (369-393): CHC: Assertion violation happens here.
+// Warning 6368: (546-550): CHC: Out of bounds access happens here.
+// Warning 6368: (546-553): CHC: Out of bounds access happens here.
 // Warning 6368: (546-556): CHC: Out of bounds access happens here.
 // Warning 6328: (539-563): CHC: Assertion violation happens here.

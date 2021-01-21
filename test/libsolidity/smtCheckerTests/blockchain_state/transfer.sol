@@ -9,5 +9,7 @@ contract C {
 		assert(address(this).balance > 500);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (199-234): CHC: Assertion violation happens here.\nCounterexample:\n\na = 21238\n\nTransaction trace:\nC.constructor()\nC.f(21238)
+// Warning 6328: (199-234): CHC: Assertion violation happens here.

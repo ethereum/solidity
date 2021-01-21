@@ -10,4 +10,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (177-199): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 7719\ny = 7719\n\nTransaction trace:\nC.constructor()\nC.f(array, 7719, 7719)
+// Warning 6328: (177-199): CHC: Assertion violation happens here.\nCounterexample:\n\narray = [9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 12, 9, 9, 9, 9, 9, 9, 9, 9, 21, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 200]\nx = 38\ny = 38\n\nTransaction trace:\nC.constructor()\nC.f([9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 12, 9, 9, 9, 9, 9, 9, 9, 9, 21, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 199], 38, 38)

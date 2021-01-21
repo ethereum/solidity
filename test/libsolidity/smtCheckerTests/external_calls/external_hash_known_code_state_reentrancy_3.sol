@@ -11,24 +11,32 @@ contract State {
 contract C {
 	address owner;
 	uint y;
+	uint z;
 	State s;
+	bool insidef;
 
 	constructor() {
 		owner = msg.sender;
 	}
 
-	function f() public view {
+	function zz() public {
+		require(insidef);
+		z = 3;
+	}
+
+	function f() public {
+		require(!insidef);
 		address prevOwner = owner;
-		uint z = s.f();
+		insidef = true;
+		// s.f() cannot call zz() because it is `view`
+		// and zz modifies the state.
+		s.f();
 		assert(z == y);
 		assert(prevOwner == owner);
+		insidef = false;
 	}
 
 	function g() public view returns (uint) {
 		return y;
 	}
 }
-// ====
-// SMTIgnoreCex: yes
-// ----
-// Warning 6328: (299-313): CHC: Assertion violation happens here.
