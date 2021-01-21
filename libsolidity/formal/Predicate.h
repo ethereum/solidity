@@ -154,6 +154,8 @@ private:
 	/// and false if at least one element could not be built.
 	bool fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type) const;
 
+	std::map<std::string, std::optional<std::string>> readTxVars(smtutil::Expression const& _tx) const;
+
 	/// The actual SMT expression.
 	smt::SymbolicFunctionVariable m_predicate;
 

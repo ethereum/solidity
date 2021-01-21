@@ -15,5 +15,7 @@ contract C
 		assert(a[1] == b[1]);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (266-286): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (266-286): CHC: Assertion violation happens here.

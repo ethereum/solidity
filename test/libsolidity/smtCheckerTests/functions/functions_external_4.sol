@@ -15,5 +15,7 @@ contract D
 		assert(z == _y);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (191-206): CHC: Assertion violation happens here.\nCounterexample:\nc = 0\n_y = 0\n\nTransaction trace:\nD.constructor()\nState: c = 0\nD.g(0)\n    c.f(_y) -- untrusted external call
+// Warning 6328: (191-206): CHC: Assertion violation happens here.
