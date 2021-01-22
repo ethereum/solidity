@@ -844,6 +844,7 @@ jobs:
       name: win/default
       shell: powershell.exe
     steps:
+      # NOTE: Not disabling git's core.autocrlf here because we want to build using the typical Windows config.
       - checkout
       - restore_cache:
           keys:
@@ -880,6 +881,8 @@ jobs:
       name: win/default
       shell: powershell.exe
     steps:
+      # NOTE: Git's default core.autocrlf is fine for running soltest. We get additional coverage
+      # for files using CRLF that way.
       - checkout
       - attach_workspace:
           at: build
@@ -932,6 +935,9 @@ jobs:
       name: win/default
       shell: cmd.exe
     steps:
+      # NOTE: For bytecode generation we need the input files to be byte-for-byte identical on all
+      # platforms so line ending conversions must absolutely be disabled.
+      - run: git config --global core.autocrlf false
       - checkout
       - attach_workspace:
           at: build

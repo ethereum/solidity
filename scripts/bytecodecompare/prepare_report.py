@@ -27,7 +27,7 @@ class FileReport:
         report = ""
 
         if self.contract_reports is None:
-            return f"{self.file_name}: <ERROR>\n"
+            return f"{self.file_name.as_posix()}: <ERROR>\n"
 
         for contract_report in self.contract_reports:
             bytecode = contract_report.bytecode if contract_report.bytecode is not None else '<NO BYTECODE>'
@@ -35,14 +35,16 @@ class FileReport:
 
             # NOTE: Ignoring contract_report.file_name because it should always be either the same
             # as self.file_name (for Standard JSON) or just the '<stdin>' placeholder (for CLI).
-            report += f"{self.file_name}:{contract_report.contract_name} {bytecode}\n"
-            report += f"{self.file_name}:{contract_report.contract_name} {metadata}\n"
+            report += f"{self.file_name.as_posix()}:{contract_report.contract_name} {bytecode}\n"
+            report += f"{self.file_name.as_posix()}:{contract_report.contract_name} {metadata}\n"
 
         return report
 
 
 def load_source(path: Union[Path, str]) -> str:
-    with open(path, mode='r', encoding='utf8') as source_file:
+    # NOTE: newline='' disables newline conversion.
+    # We want the file exactly as is because changing even a single byte in the source affects metadata.
+    with open(path, mode='r', encoding='utf8', newline='') as source_file:
         file_content = source_file.read()
 
     return file_content

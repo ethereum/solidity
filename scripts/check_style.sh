@@ -8,6 +8,9 @@ EXCLUDE_FILES=(
     "test/libsolidity/syntaxTests/license/license_cr_endings.sol"
     "test/libsolidity/syntaxTests/license/license_crlf_endings.sol"
     "test/libsolidity/syntaxTests/license/license_whitespace_trailing.sol"
+    "test/scripts/fixtures/smt_contract_with_crlf_newlines.sol"
+    "test/scripts/fixtures/smt_contract_with_cr_newlines.sol"
+    "test/scripts/fixtures/smt_contract_with_mixed_newlines.sol"
 )
 EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
 EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
