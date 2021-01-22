@@ -146,6 +146,7 @@ def prepare_compiler_input(  # pylint: disable=too-many-arguments
     force_no_optimize_yul: bool,
     interface: CompilerInterface,
     smt_use: SMTUse,
+    metadata_option_supported: bool,
 ) -> Tuple[List[str], str]:
 
     if interface == CompilerInterface.STANDARD_JSON:
@@ -168,7 +169,9 @@ def prepare_compiler_input(  # pylint: disable=too-many-arguments
     else:
         assert interface == CompilerInterface.CLI
 
-        compiler_options = [str(source_file_name), '--bin', '--metadata']
+        compiler_options = [str(source_file_name), '--bin']
+        if metadata_option_supported:
+            compiler_options.append('--metadata')
         if optimize:
             compiler_options.append('--optimize')
         elif force_no_optimize_yul:
@@ -182,6 +185,29 @@ def prepare_compiler_input(  # pylint: disable=too-many-arguments
     return (command_line, compiler_input)
 
 
+def detect_metadata_cli_option_support(compiler_path: Path):
+    process = subprocess.run(
+        [str(compiler_path.absolute()), '--metadata', '-'],
+        input="contract C {}",
+        encoding='utf8',
+        capture_output=True,
+        check=False,
+    )
+
+    negative_response = "unrecognised option '--metadata'".strip()
+    if (process.returncode == 0) != (process.stderr.strip() != negative_response):
+        # If the error is other than expected or there's an error message but no error, don't try
+        # to guess. Just fail.
+        print(
+            f"Compiler exit code: {process.returncode}\n"
+            f"Compiler output:\n{process.stderr}\n",
+            file=sys.stderr
+        )
+        raise Exception("Failed to determine if the compiler supports the --metadata option.")
+
+    return process.returncode == 0
+
+
 def run_compiler(  # pylint: disable=too-many-arguments
     compiler_path: Path,
     source_file_name: Path,
@@ -189,6 +215,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
     force_no_optimize_yul: bool,
     interface: CompilerInterface,
     smt_use: SMTUse,
+    metadata_option_supported: bool,
     tmp_dir: Path,
 ) -> FileReport:
 
@@ -200,6 +227,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
             force_no_optimize_yul,
             interface,
             smt_use,
+            metadata_option_supported,
         )
 
         process = subprocess.run(
@@ -222,6 +250,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
             force_no_optimize_yul,
             interface,
             smt_use,
+            metadata_option_supported,
         )
 
         # Create a copy that we can use directly with the CLI interface
@@ -249,6 +278,8 @@ def generate_report(
     smt_use: SMTUse,
     force_no_optimize_yul: bool
 ):
+    metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
+
     with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
@@ -261,6 +292,7 @@ def generate_report(
                             force_no_optimize_yul,
                             interface,
                             smt_use,
+                            metadata_option_supported,
                             Path(tmp_dir),
                         )
                         report_file.write(report.format_report())

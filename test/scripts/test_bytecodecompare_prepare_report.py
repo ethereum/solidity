@@ -176,6 +176,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE,
+            metadata_option_supported=True,
         )
 
         self.assertEqual(command_line, ['solc', '--standard-json'])
@@ -189,6 +190,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             force_no_optimize_yul=False,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
+            metadata_option_supported=True,
         )
 
         self.assertEqual(
@@ -223,6 +225,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             force_no_optimize_yul=False,
             interface=CompilerInterface.STANDARD_JSON,
             smt_use=SMTUse.DISABLE,
+            metadata_option_supported=True,
         )
 
         self.assertEqual(command_line, ['solc', '--standard-json'])
@@ -236,6 +239,7 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             force_no_optimize_yul=True,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
+            metadata_option_supported=True,
         )
 
         self.assertEqual(compiler_input, SMT_CONTRACT_WITH_MIXED_NEWLINES_SOL_CODE)
@@ -248,11 +252,29 @@ class TestPrepareCompilerInput(PrepareReportTestBase):
             force_no_optimize_yul=True,
             interface=CompilerInterface.CLI,
             smt_use=SMTUse.DISABLE,
+            metadata_option_supported=True,
         )
 
         self.assertEqual(
             command_line,
             ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--metadata', '--no-optimize-yul', '--model-checker-engine', 'none'],
+        )
+        self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
+
+    def test_prepare_compiler_input_for_cli_should_not_use_metadata_option_if_not_supported(self):
+        (command_line, compiler_input) = prepare_compiler_input(
+            Path('solc'),
+            SMT_SMOKE_TEST_SOL_PATH,
+            optimize=True,
+            force_no_optimize_yul=False,
+            interface=CompilerInterface.CLI,
+            smt_use=SMTUse.PRESERVE,
+            metadata_option_supported=False,
+        )
+
+        self.assertEqual(
+            command_line,
+            ['solc', str(SMT_SMOKE_TEST_SOL_PATH), '--bin', '--optimize'],
         )
         self.assertEqual(compiler_input, SMT_SMOKE_TEST_SOL_CODE)
 
