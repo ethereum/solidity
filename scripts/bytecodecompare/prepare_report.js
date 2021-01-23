@@ -52,27 +52,41 @@ for (const optimize of [false, true])
             if (!stripSMTPragmas)
                 input['settings']['modelChecker'] = {engine: 'none'}
 
-            const result = JSON.parse(compiler.compile(JSON.stringify(input)))
+            let serializedOutput
+            let result
+            const serializedInput = JSON.stringify(input)
 
             let internalCompilerError = false
-            if ('errors' in result)
+            try
             {
-                for (const error of result['errors'])
-                    // JSON interface still returns contract metadata in case of an internal compiler error while
-                    // CLI interface does not. To make reports comparable we must force this case to be detected as
-                    // an error in both cases.
-                    if (['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError'].includes(error['type']))
-                    {
-                        internalCompilerError = true
-                        break
-                    }
+                serializedOutput = compiler.compile(serializedInput)
+            }
+            catch (exception)
+            {
+                internalCompilerError = true
+            }
+
+            if (!internalCompilerError)
+            {
+                result = JSON.parse(serializedOutput)
+
+                if ('errors' in result)
+                    for (const error of result['errors'])
+                        // JSON interface still returns contract metadata in case of an internal compiler error while
+                        // CLI interface does not. To make reports comparable we must force this case to be detected as
+                        // an error in both cases.
+                        if (['UnimplementedFeatureError', 'CompilerError', 'CodeGenerationError'].includes(error['type']))
+                        {
+                            internalCompilerError = true
+                            break
+                        }
             }
 
             if (
+                internalCompilerError ||
                 !('contracts' in result) ||
                 Object.keys(result['contracts']).length === 0 ||
-                Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0) ||
-                internalCompilerError
+                Object.keys(result['contracts']).every(file => Object.keys(result['contracts'][file]).length === 0)
             )
                 // NOTE: do not exit here because this may be run on source which cannot be compiled
                 console.log(filename + ': <ERROR>')
