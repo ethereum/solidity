@@ -36,9 +36,10 @@ public:
 	std::set<VariableDeclaration const*> touchedVariables(ASTNode const& _node, std::vector<CallableDeclaration const*> const& _outerCallstack);
 
 	/// Sets whether to inline function calls.
-	void setFunctionInlining(std::function<bool(FunctionCall const&, ContractDefinition const*)> _inlineFunctionCalls) { m_inlineFunctionCalls = _inlineFunctionCalls; }
+	void setFunctionInlining(std::function<bool(FunctionCall const&, ContractDefinition const*, ContractDefinition const*)> _inlineFunctionCalls) { m_inlineFunctionCalls = _inlineFunctionCalls; }
 
 	void setCurrentContract(ContractDefinition const& _contract) { m_currentContract = &_contract; }
+	void setCurrentFunction(FunctionDefinition const& _function) { m_currentFunction = &_function; }
 
 private:
 	void endVisit(Identifier const& _node) override;
@@ -56,8 +57,9 @@ private:
 	std::vector<CallableDeclaration const*> m_callStack;
 	CallableDeclaration const* m_lastCall = nullptr;
 	ContractDefinition const* m_currentContract = nullptr;
+	FunctionDefinition const* m_currentFunction = nullptr;
 
-	std::function<bool(FunctionCall const&, ContractDefinition const*)> m_inlineFunctionCalls = [](FunctionCall const&, ContractDefinition const*) { return false; };
+	std::function<bool(FunctionCall const&, ContractDefinition const*, ContractDefinition const*)> m_inlineFunctionCalls = [](FunctionCall const&, ContractDefinition const*, ContractDefinition const*) { return false; };
 };
 
 }
