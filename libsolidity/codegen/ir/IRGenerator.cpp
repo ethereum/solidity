@@ -891,7 +891,6 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		}
 
 		t("fallback", fallbackCode);
-		t("revertNoSignature", "");
 	}
 	else
 		t(
