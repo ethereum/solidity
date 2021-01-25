@@ -21,13 +21,13 @@ object "C_7" {
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let selector := shift_right_224_unsigned(calldataload(0))
+                    let selector := shift_right_unsigned(calldataload(0))
                     pop(selector)
                 }
                 pop(iszero(calldatasize()))
                 revert(0, 0)
             }
-            function shift_right_224_unsigned(value) -> newValue
+            function shift_right_unsigned(value) -> newValue
             { newValue := shr(224, value) }
         }
     }

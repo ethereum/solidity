@@ -486,17 +486,17 @@
 //             srcPtr := add(srcPtr, 0x20)
 //             pos := add(pos, 0x60)
 //         }
-//         let a, b, c, d := abi_decode_uint256t_uint256t_array$_t_uint256_$dynt_array$_t_array$_t_uint256_memory_$dyn(mload(0x20), mload(64))
+//         let a, b, c, d := abi_decode_uint256t_uint256t_array_uint256_dynt_array_array_uint256_memory_dyn(mload(0x20), mload(64))
 //         sstore(a, b)
 //         sstore(c, d)
 //         sstore(_1, pos)
 //     }
-//     function abi_decode_t_array$_t_array$_t_uint256_memory_$dyn(offset, end) -> array
+//     function abi_decode_array_array_uint256_memory_dyn(offset, end) -> array
 //     {
 //         let _1 := 0x1f
 //         if iszero(slt(add(offset, _1), end)) { revert(array, array) }
 //         let length := calldataload(offset)
-//         array := allocateMemory(array_allocation_size_t_array$_t_address_$dyn_memory(length))
+//         array := allocateMemory(array_allocation_size_array_address_dyn_memory(length))
 //         let dst := array
 //         mstore(array, length)
 //         let _2 := 0x20
@@ -525,7 +525,7 @@
 //             src := _4
 //         }
 //     }
-//     function abi_decode_uint256t_uint256t_array$_t_uint256_$dynt_array$_t_array$_t_uint256_memory_$dyn(headStart, dataEnd) -> value0, value1, value2, value3
+//     function abi_decode_uint256t_uint256t_array_uint256_dynt_array_array_uint256_memory_dyn(headStart, dataEnd) -> value0, value1, value2, value3
 //     {
 //         if slt(sub(dataEnd, headStart), 128) { revert(value2, value2) }
 //         value0 := calldataload(headStart)
@@ -537,7 +537,7 @@
 //         let _3 := add(headStart, offset)
 //         if iszero(slt(add(_3, 0x1f), dataEnd)) { revert(value2, value2) }
 //         let length := calldataload(_3)
-//         let dst := allocateMemory(array_allocation_size_t_array$_t_address_$dyn_memory(length))
+//         let dst := allocateMemory(array_allocation_size_array_address_dyn_memory(length))
 //         let dst_1 := dst
 //         mstore(dst, length)
 //         dst := add(dst, _1)
@@ -553,7 +553,7 @@
 //         value2 := dst_1
 //         let offset_1 := calldataload(add(headStart, 96))
 //         if gt(offset_1, _2) { revert(value3, value3) }
-//         value3 := abi_decode_t_array$_t_array$_t_uint256_memory_$dyn(add(headStart, offset_1), dataEnd)
+//         value3 := abi_decode_array_array_uint256_memory_dyn(add(headStart, offset_1), dataEnd)
 //     }
 //     function allocateMemory(size) -> memPtr
 //     {
@@ -562,7 +562,7 @@
 //         if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
 //         mstore(64, newFreePtr)
 //     }
-//     function array_allocation_size_t_array$_t_address_$dyn_memory(length) -> size
+//     function array_allocation_size_array_address_dyn_memory(length) -> size
 //     {
 //         if gt(length, 0xffffffffffffffff) { revert(size, size) }
 //         size := add(mul(length, 0x20), 0x20)

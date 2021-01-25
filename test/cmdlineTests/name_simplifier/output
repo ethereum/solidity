@@ -51,14 +51,14 @@ object "C_59" {
                             dst := add(dst, _2)
                             src := add(src, _2)
                         }
-                        let ret, ret_1 := fun_sumArray_58(dst_1)
+                        let ret, ret_1 := fun_sumArray(dst_1)
                         let memPos := allocate_memory(_1)
-                        return(memPos, sub(abi_encode_uint256_t_string(memPos, ret, ret_1), memPos))
+                        return(memPos, sub(abi_encode_uint256_string(memPos, ret, ret_1), memPos))
                     }
                 }
                 revert(0, 0)
             }
-            function abi_encode_uint256_t_string(headStart, value0, value1) -> tail
+            function abi_encode_uint256_string(headStart, value0, value1) -> tail
             {
                 mstore(headStart, value0)
                 let _1 := 32
@@ -97,23 +97,23 @@ object "C_59" {
             {
                 value := shr(mul(offset, 8), slot_value)
             }
-            function fun_sumArray_58(vloc__s_22_mpos) -> vloc, vloc__27_mpos
+            function fun_sumArray(var_s_mpos) -> var, var_mpos
             {
-                if iszero(lt(vloc, mload(vloc__s_22_mpos))) { panic_error_0x32() }
-                let _1 := mload(mload(add(add(vloc__s_22_mpos, mul(vloc, 32)), 32)))
-                let _2, _3 := storage_array_index_access$_t_struct$_S_storage(vloc, vloc)
+                if iszero(lt(var_mpos, mload(var_s_mpos))) { panic_error_0x32() }
+                let _1 := mload(mload(add(add(var_s_mpos, mul(var_mpos, 32)), 32)))
+                let _2, _3 := storage_array_index_access_struct_S(var_mpos, var_mpos)
                 sstore(_2, _1)
-                if iszero(lt(0x01, mload(vloc__s_22_mpos))) { panic_error_0x32() }
-                let _4 := mload(mload(add(vloc__s_22_mpos, 64)))
-                if iszero(lt(vloc, 0x02)) { panic_error_0x32() }
-                let slot := add(0x02, vloc)
+                if iszero(lt(0x01, mload(var_s_mpos))) { panic_error_0x32() }
+                let _4 := mload(mload(add(var_s_mpos, 64)))
+                if iszero(lt(var_mpos, 0x02)) { panic_error_0x32() }
+                let slot := add(0x02, var_mpos)
                 let _5 := sload(slot)
-                let shiftBits := mul(vloc, 8)
+                let shiftBits := mul(var_mpos, 8)
                 let mask := shl(shiftBits, not(0))
                 sstore(slot, or(and(_5, not(mask)), and(shl(shiftBits, _4), mask)))
-                let _6, _7 := storage_array_index_access$_t_struct$_S_storage(0x02, vloc)
-                vloc := extract_from_storage_value_dynamict_uint256(sload(_6), _7)
-                vloc__27_mpos := copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927()
+                let _6, _7 := storage_array_index_access_struct_S(0x02, var_mpos)
+                var := extract_from_storage_value_dynamict_uint256(sload(_6), _7)
+                var_mpos := copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927()
             }
             function panic_error_0x32()
             {
@@ -127,7 +127,7 @@ object "C_59" {
                 mstore(4, 0x41)
                 revert(0, 0x24)
             }
-            function storage_array_index_access$_t_struct$_S_storage(array, index) -> slot, offset
+            function storage_array_index_access_struct_S(array, index) -> slot, offset
             {
                 if iszero(lt(index, 0x02)) { panic_error_0x32() }
                 slot := add(array, index)

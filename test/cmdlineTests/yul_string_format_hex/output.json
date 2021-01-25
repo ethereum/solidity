@@ -92,12 +92,12 @@ object \"C_11\" {
                 mstore(64, newFreePtr)
             }
 
-            function fun_f_10() -> vloc__5 {
-                let zero_value_for_type_t_bytes4_1 := zero_value_for_split_t_bytes4()
-                vloc__5 := zero_value_for_type_t_bytes4_1
+            function fun_f_10() -> var__5 {
+                let zero_t_bytes4_1 := zero_value_for_split_t_bytes4()
+                var__5 := zero_t_bytes4_1
 
                 let expr_7 := 0xaabbccdd
-                vloc__5 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_7)
+                var__5 := convert_t_rational_2864434397_by_1_to_t_bytes4(expr_7)
                 leave
 
             }

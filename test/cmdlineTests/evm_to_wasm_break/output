@@ -42,11 +42,11 @@ object "object" {
                 x_7 := x_11
             }
             {
-                let _4, _5, _6, _7 := iszero_204_878_1509(_1, _1, _1, lt_206(x_4, x_5, x_6, x_7, _1, _1, _1, 10))
+                let _4, _5, _6, _7 := iszero_887(_1, _1, _1, lt(x_4, x_5, x_6, x_7, _1, _1, _1, 10))
                 if i32.eqz(i64.eqz(i64.or(i64.or(_4, _5), i64.or(_6, _7)))) { break }
-                let _8, _9, _10, _11 := eq_205_879_1510(x_4, x_5, x_6, x_7, _1, _1, _1, 2)
+                let _8, _9, _10, _11 := eq_888(x_4, x_5, x_6, x_7, _1, _1, _1, 2)
                 if i32.eqz(i64.eqz(i64.or(i64.or(_8, _9), i64.or(_10, _11)))) { break }
-                let _12, _13, _14, _15 := eq_205_879_1510(x_4, x_5, x_6, x_7, _1, _1, _1, 4)
+                let _12, _13, _14, _15 := eq_888(x_4, x_5, x_6, x_7, _1, _1, _1, 4)
                 if i32.eqz(i64.eqz(i64.or(i64.or(_12, _13), i64.or(_14, _15)))) { continue }
             }
             sstore(_1, _1, _1, _1, x_4, x_5, x_6, x_7)
@@ -68,15 +68,15 @@ object "object" {
             let r1_1, carry_2 := add_carry(x1, y1, carry_1)
             r1 := r1_1
         }
-        function iszero_204_878_1509(x1, x2, x3, x4) -> r1, r2, r3, r4
+        function iszero_887(x1, x2, x3, x4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4))))
         }
-        function eq_205_879_1510(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4
+        function eq_888(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i32.and(i64.eq(x1, y1), i32.and(i64.eq(x2, y2), i32.and(i64.eq(x3, y3), i64.eq(x4, y4)))))
         }
-        function lt_206(x1, x2, x3, x4, y1, y2, y3, y4) -> z4
+        function lt(x1, x2, x3, x4, y1, y2, y3, y4) -> z4
         {
             let z:i32 := false
             let _1:i32 := 0xffffffff:i32
@@ -230,7 +230,7 @@ Text representation:
                 (br_if $label__3 (i32.eqz (i32.eqz (local.get $_3))))
                 (block $label__4
                     (block
-                        (local.set $_4 (call $iszero_204_878_1509 (local.get $_1) (local.get $_1) (local.get $_1) (call $lt_206 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10))))
+                        (local.set $_4 (call $iszero_887 (local.get $_1) (local.get $_1) (local.get $_1) (call $lt (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10))))
                         (local.set $_5 (global.get $global_))
                         (local.set $_6 (global.get $global__1))
                         (local.set $_7 (global.get $global__2))
@@ -240,7 +240,7 @@ Text representation:
                         (br $label__3)
                     ))
                     (block
-                        (local.set $_8 (call $eq_205_879_1510 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 2)))
+                        (local.set $_8 (call $eq_888 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 2)))
                         (local.set $_9 (global.get $global_))
                         (local.set $_10 (global.get $global__1))
                         (local.set $_11 (global.get $global__2))
@@ -250,7 +250,7 @@ Text representation:
                         (br $label__3)
                     ))
                     (block
-                        (local.set $_12 (call $eq_205_879_1510 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 4)))
+                        (local.set $_12 (call $eq_888 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 4)))
                         (local.set $_13 (global.get $global_))
                         (local.set $_14 (global.get $global__1))
                         (local.set $_15 (global.get $global__2))
@@ -348,7 +348,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $iszero_204_878_1509
+(func $iszero_887
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -368,7 +368,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $eq_205_879_1510
+(func $eq_888
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -392,7 +392,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $lt_206
+(func $lt
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
