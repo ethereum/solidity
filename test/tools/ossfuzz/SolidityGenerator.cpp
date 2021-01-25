@@ -46,11 +46,9 @@ string GeneratorBase::visitChildren()
 
 void TestCaseGenerator::setup()
 {
-	addGenerators(
-		{
-			mutator->generator<SourceUnitGenerator>()
-		}
-	);
+	addGenerators({
+		mutator->generator<SourceUnitGenerator>()
+	});
 }
 
 string TestCaseGenerator::visit()
@@ -73,11 +71,9 @@ string TestCaseGenerator::visit()
 
 void SourceUnitGenerator::setup()
 {
-	addGenerators(
-		{
-			mutator->generator<PragmaGenerator>(),
-		}
-	);
+	addGenerators({
+		mutator->generator<PragmaGenerator>(),
+	});
 }
 
 string SourceUnitGenerator::visit()

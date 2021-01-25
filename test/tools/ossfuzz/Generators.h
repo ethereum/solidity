@@ -25,6 +25,20 @@
  * Alphabetically sorted Generator types.
  * SEP must appear between two elements and ENDSEP must
  * appear after the last element.
+ *
+ * This macro applies another macro (MACRO) that is
+ * passed as input to this macro on the list of Generator
+ * types. Example that uses forward declaration:
+ *
+ * #define MACRO(G) class G;
+ * #define SEMICOLON() ;
+ *
+ * GENERATORLIST(MACRO, SEMICOLON(), SEMICOLON())
+ *
+ * produces
+ *
+ * class PragmaGenerator;class SourceUnitGenerator;class TestCaseGenerator;
+ *
  */
 #define GENERATORLIST(MACRO, SEP, ENDSEP) \
 	MACRO(PragmaGenerator) SEP \

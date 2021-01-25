@@ -60,6 +60,8 @@ using Distribution = std::uniform_int_distribution<size_t>;
 
 struct GenerationProbability
 {
+	/// @returns an unsigned integer in the range [1, @param _n] chosen
+	/// uniformly at random.
 	static size_t distributionOneToN(size_t _n, std::shared_ptr<RandomEngine> _rand)
 	{
 		return Distribution(1, _n)(*_rand);
@@ -104,24 +106,37 @@ struct GeneratorBase
 				return std::get<std::shared_ptr<T>>(g);
 		solAssert(false, "");
 	}
-	/// Generator
+	/// Virtual visitor that returns a string representing
+	/// the generation of the Solidity grammar element.
 	virtual std::string visit() = 0;
+	/// Visitor that invokes child grammar elements of
+	/// this grammar element returning their string
+	/// representations.
 	std::string visitChildren();
+	/// Adds generators for child grammar elements of
+	/// this grammar element.
 	void addGenerators(std::set<GeneratorPtr> _generators)
 	{
-		for (auto& g: _generators)
-			generators.insert(g);
+		generators += _generators;
 	}
+	/// Virtual reset method used to reset test state or
+	/// a portion of it if necessary e.g., remove scoped
+	/// variables.
 	virtual void reset() = 0;
+	/// Virtual method to obtain string name of generator.
 	virtual std::string name() = 0;
+	/// Virtual method to add generators that this grammar
+	/// element depends on.
 	virtual void setup() = 0;
 	virtual ~GeneratorBase()
 	{
 		generators.clear();
 	}
+	/// Shared pointer to the mutator instance
 	std::shared_ptr<SolidityGenerator> mutator;
 	/// Random engine shared by Solidity mutators
 	std::shared_ptr<RandomEngine> rand;
+	/// Set of generators used by this generator.
 	std::set<GeneratorPtr> generators;
 };
 
@@ -144,8 +159,11 @@ private:
 	{
 		return m_sourceUnitNamePrefix + std::to_string(m_numSourceUnits) + ".sol";
 	}
+	/// Number of source units in test input
 	size_t m_numSourceUnits;
+	/// String prefix of source unit names
 	std::string const m_sourceUnitNamePrefix = "su";
+	/// Maximum number of source units per test input
 	static constexpr unsigned s_maxSourceUnits = 3;
 };
 
@@ -178,14 +196,18 @@ class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
 public:
 	explicit SolidityGenerator(unsigned _seed);
 
+	/// Returns a multi-source test case.
 	std::string visit();
+	/// Returns the generator of type @param T.
 	template <typename T>
 	std::shared_ptr<T> generator();
+	/// Returns a shared ptr to underlying random
+	/// number generator.
 	std::shared_ptr<RandomEngine> randomEngine()
 	{
 		return m_rand;
 	}
-	/// @returns a pseudo randomly generated test program
+	/// Returns a pseudo randomly generated test case.
 	std::string generateTestProgram();
 private:
 	template <typename T>
