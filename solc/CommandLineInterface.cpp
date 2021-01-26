@@ -666,16 +666,29 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	for (string const& lib: libraries)
 		if (!lib.empty())
 		{
-			//search for last colon in string as our binaries output placeholders in the form of file:Name
-			//so we need to search for the second `:` in the string
-			auto colon = lib.rfind(':');
-			if (colon == string::npos)
+			//search for equal sign or last colon in string as our binaries output placeholders in the form of file=Name or file:Name
+			//so we need to search for `=` or `:` in the string
+			auto separator = lib.rfind('=');
+			bool isSeparatorEqualSign = true;
+			if (separator == string::npos)
 			{
-				serr() << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
-				return false;
+				separator = lib.rfind(':');
+				if (separator == string::npos)
+				{
+					serr() << "Equal sign separator missing in library address specifier \"" << lib << "\"" << endl;
+					return false;
+				}
+				else
+					isSeparatorEqualSign = false; // separator is colon
 			}
+			else
+				if (lib.rfind('=') != lib.find('='))
+				{
+					serr() << "Only one equal sign \"=\" is allowed in the address string \"" << lib << "\"." << endl;
+					return false;
+				}
 
-			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(colon));
+			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(separator));
 			boost::trim(libName);
 			if (m_libraries.count(libName))
 			{
@@ -683,17 +696,25 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 				return false;
 			}
 
-			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
+			string addrString(lib.begin() + static_cast<ptrdiff_t>(separator) + 1, lib.end());
 			boost::trim(addrString);
-			if (addrString.substr(0, 2) == "0x")
-				addrString = addrString.substr(2);
 			if (addrString.empty())
 			{
-				serr() << "Empty address provided for library \"" << libName << "\":" << endl;
-				serr() << "Note that there should not be any whitespace after the colon." << endl;
+				serr() << "Empty address provided for library \"" << libName << "\"." << endl;
+				serr() << "Note that there should not be any whitespace after the " << (isSeparatorEqualSign ? "equal sign" : "colon") << "." << endl;
 				return false;
 			}
-			else if (addrString.length() != 40)
+
+			if (addrString.substr(0, 2) == "0x")
+				addrString = addrString.substr(2);
+			else
+			{
+				serr() << "The address " << addrString << " is not prefixed with \"0x\"." << endl;
+				serr() << "Note that the address must be prefixed with \"0x\"." << endl;
+				return false;
+			}
+
+			if (addrString.length() != 40)
 			{
 				serr() << "Invalid length for address for library \"" << libName << "\": " << addrString.length() << " instead of 40 characters." << endl;
 				return false;
@@ -924,8 +945,8 @@ General Information)").c_str(),
 			g_argLibraries.c_str(),
 			po::value<vector<string>>()->value_name("libs"),
 			"Direct string or file containing library addresses. Syntax: "
-			"<libraryName>:<address> [, or whitespace] ...\n"
-			"Address is interpreted as a hex string optionally prefixed by 0x."
+			"<libraryName>=<address> [, or whitespace] ...\n"
+			"Address is interpreted as a hex string prefixed by 0x."
 		)
 	;
 	desc.add(linkerModeOptions);
