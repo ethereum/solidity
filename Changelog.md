@@ -32,6 +32,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on pushing string literal to ``bytes`` array.
  * Type Checker: Fix internal error caused by constant structs containing mappings.
  * Type System: Disallow implicit conversion from ``uintN`` to ``intM`` when ``M > N``, and by extension, explicit conversion between the same types is also disallowed.
+ * Type Checker: Fix infinite loop when accessing circular constants from inline assembly.
  * Control Flow Graph: Fix missing error caused by read from/write to uninitialized variables.
 
 ### 0.8.0 (2020-12-16)

@@ -753,6 +753,16 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			}
 			if (var->isConstant())
 			{
+				if (isConstantVariableRecursive(*var))
+				{
+					m_errorReporter.typeError(
+						3558_error,
+						_identifier.location,
+						"Constant variable is circular."
+					);
+					return false;
+				}
+
 				var = rootConstVariableDeclaration(*var);
 
 				if (var && !var->value())
