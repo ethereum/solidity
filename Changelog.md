@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Build system: Update the soljson.js build to emscripten 2.0.12 and boost 1.75.0.
+ * Code Generator: Reduce the cost of ``<address>.code.length`` by using ``extcodesize`` directly.
  * Command Line Interface: Allow "=" as separator between library name and address in ``--libraries`` commandline option.
  * Command Line Interface: New option ``--model-checker-targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``, ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time, separated by a comma without spaces: ``underflow,overflow,assert``.
  * Command Line Interface: Only accept the library address that is prefixed with "0x" in ``--libraries`` commandline option.

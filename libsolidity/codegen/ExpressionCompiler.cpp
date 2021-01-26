@@ -1473,6 +1473,29 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 							return false;
 						}
 
+	// Another special case for `address.code.length`, which should simply call extcodesize
+	if (
+		auto innerExpression = dynamic_cast<MemberAccess const*>(&_memberAccess.expression());
+		member == "length" &&
+		innerExpression &&
+		innerExpression->memberName() == "code" &&
+		innerExpression->expression().annotation().type->category() == Type::Category::Address
+	)
+	{
+		solAssert(innerExpression->annotation().type->category() == Type::Category::Array, "");
+
+		innerExpression->expression().accept(*this);
+
+		utils().convertType(
+			*innerExpression->expression().annotation().type,
+			*TypeProvider::address(),
+			true
+		);
+		m_context << Instruction::EXTCODESIZE;
+
+		return false;
+	}
+
 	_memberAccess.expression().accept(*this);
 	switch (_memberAccess.expression().annotation().type->category())
 	{

@@ -87,6 +87,7 @@ public:
 	bool visit(BinaryOperation const& _binOp) override;
 	void endVisit(FunctionCall const& _funCall) override;
 	void endVisit(FunctionCallOptions const& _funCallOptions) override;
+	bool visit(MemberAccess const& _memberAccess) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
 	bool visit(InlineAssembly const& _inlineAsm) override;
 	void endVisit(IndexAccess const& _indexAccess) override;
