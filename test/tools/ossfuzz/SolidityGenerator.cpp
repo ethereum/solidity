@@ -64,7 +64,6 @@ string TestCaseGenerator::visit()
 	        << "\n";
 		m_numSourceUnits++;
 		os << visitChildren();
-		generator<SourceUnitGenerator>()->reset();
 	}
 	return os.str();
 }
@@ -78,15 +77,7 @@ void SourceUnitGenerator::setup()
 
 string SourceUnitGenerator::visit()
 {
-	string sourceUnit = visitChildren();
-	reset();
-	return sourceUnit;
-}
-
-void SourceUnitGenerator::reset()
-{
-	for (auto& g: generators)
-		std::visit(ResetVisitor{}, g);
+	return visitChildren();
 }
 
 string PragmaGenerator::visit()
@@ -132,7 +123,7 @@ string SolidityGenerator::generateTestProgram()
 	createGenerators();
 	for (auto& g: m_generators)
 		std::visit(AddDependenciesVisitor{}, g);
-	string program = generator<TestCaseGenerator>()->visit();
+	string program = generator<TestCaseGenerator>()->generate();
 	destroyGenerators();
 	return program;
 }

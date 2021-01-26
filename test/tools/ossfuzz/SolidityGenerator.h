@@ -82,16 +82,7 @@ struct GeneratorVisitor
 	template <typename T>
 	std::string operator()(T const& _t)
 	{
-		return _t->visit();
-	}
-};
-
-struct ResetVisitor
-{
-	template <typename T>
-	void operator()(T const& _t)
-	{
-		_t->reset();
+		return _t->generate();
 	}
 };
 
@@ -106,9 +97,19 @@ struct GeneratorBase
 				return std::get<std::shared_ptr<T>>(g);
 		solAssert(false, "");
 	}
+	/// Returns test fragment created by this generator.
+	std::string generate()
+	{
+		std::string generatedCode = visit();
+		endVisit();
+		return generatedCode;
+	}
 	/// Virtual visitor that returns a string representing
 	/// the generation of the Solidity grammar element.
 	virtual std::string visit() = 0;
+	/// Method called after visiting this generator. Used
+	/// for clearing state if necessary.
+	virtual void endVisit() {}
 	/// Visitor that invokes child grammar elements of
 	/// this grammar element returning their string
 	/// representations.
@@ -119,15 +120,12 @@ struct GeneratorBase
 	{
 		generators += _generators;
 	}
-	/// Virtual reset method used to reset test state or
-	/// a portion of it if necessary e.g., remove scoped
-	/// variables.
-	virtual void reset() = 0;
 	/// Virtual method to obtain string name of generator.
 	virtual std::string name() = 0;
 	/// Virtual method to add generators that this grammar
-	/// element depends on.
-	virtual void setup() = 0;
+	/// element depends on. If not overridden, there are
+	/// no dependencies.
+	virtual void setup() {}
 	virtual ~GeneratorBase()
 	{
 		generators.clear();
@@ -148,7 +146,6 @@ public:
 		m_numSourceUnits(0)
 	{}
 	void setup() override;
-	void reset() override {}
 	std::string visit() override;
 	std::string name() override
 	{
@@ -175,7 +172,6 @@ public:
 	{}
 	void setup() override;
 	std::string visit() override;
-	void reset() override;
 	std::string name() override { return "Source unit generator"; }
 };
 
@@ -185,8 +181,6 @@ public:
 	PragmaGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
-	void setup() override {}
-	void reset() override {}
 	std::string visit() override;
 	std::string name() override { return "Pragma generator"; }
 };
