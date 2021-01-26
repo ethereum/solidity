@@ -24,6 +24,7 @@ Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.
  * Control Flow Graph: Fix missing error caused by read from/write to uninitialized variables.
  * SMTChecker: Fix false negatives in overriding modifiers and functions.
+ * SMTChecker: Fix false negatives in the presence of inline assembly.
  * SMTChecker: Fix false negatives when analyzing external function calls.
  * SMTChecker: Fix internal error on ``block.chainid``.
  * SMTChecker: Fix internal error on pushing string literal to ``bytes`` array.
