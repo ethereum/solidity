@@ -5,35 +5,31 @@ Language Features:
 
 Compiler Features:
  * Build system: Update the soljson.js build to emscripten 2.0.12 and boost 1.75.0.
- * Command Line Interface: New option ``--model-checker-targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``,
-   ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time,
-   separated by a comma without spaces: ``underflow,overflow,assert``.
+ * Command Line Interface: Allow "=" as separator between library name and address in ``--libraries`` commandline option.
+ * Command Line Interface: New option ``--model-checker-targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``, ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time, separated by a comma without spaces: ``underflow,overflow,assert``.
+ * Command Line Interface: Only accept the library address that is prefixed with "0x" in ``--libraries`` commandline option.
  * Optimizer: Add rule to replace ``iszero(sub(x,y))`` by ``eq(x,y)``.
  * Parser: Report meaningful error if parsing a version pragma failed.
- * SMTChecker: Support ABI functions as uninterpreted functions.
- * SMTChecker: Use checked arithmetic by default and support ``unchecked`` blocks.
- * SMTChecker: Show contract name in counterexample function call.
- * SMTChecker: Support try/catch statements.
  * SMTChecker: Output internal and trusted external function calls in a counterexample's transaction trace.
- * SMTChecker: Synthesize untrusted functions called externally.
  * SMTChecker: Show ``msg.value`` in counterexample transaction traces when greater than 0.
- * Standard JSON: New option ``modelCheckerSettings.targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``,
-   ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time,
-   separated by a comma without spaces: ``underflow,overflow,assert``.
- * Command Line Interface: Allow "=" as separator between library name and address in ``--libraries`` commandline option.
- * Command Line Interface: Only accept the library address that is prefixed with "0x" in ``--libraries`` commandline option.
+ * SMTChecker: Show contract name in counterexample function call.
+ * SMTChecker: Support ABI functions as uninterpreted functions.
+ * SMTChecker: Support try/catch statements.
+ * SMTChecker: Synthesize untrusted functions called externally.
+ * SMTChecker: Use checked arithmetic by default and support ``unchecked`` blocks.
+ * Standard JSON: New option ``modelCheckerSettings.targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``, ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time, separated by a comma without spaces: ``underflow,overflow,assert``.
 
 Bugfixes:
  * Code Generator: Fix length check when decoding malformed error data in catch clause.
+ * Control Flow Graph: Fix missing error caused by read from/write to uninitialized variables.
  * SMTChecker: Fix false negatives in overriding modifiers and functions.
  * SMTChecker: Fix false negatives when analyzing external function calls.
- * SMTChecker: Fix missing type constraints for block variables.
  * SMTChecker: Fix internal error on ``block.chainid``.
  * SMTChecker: Fix internal error on pushing string literal to ``bytes`` array.
+ * SMTChecker: Fix missing type constraints for block variables.
+ * Type Checker: Fix infinite loop when accessing circular constants from inline assembly.
  * Type Checker: Fix internal error caused by constant structs containing mappings.
  * Type System: Disallow implicit conversion from ``uintN`` to ``intM`` when ``M > N``, and by extension, explicit conversion between the same types is also disallowed.
- * Type Checker: Fix infinite loop when accessing circular constants from inline assembly.
- * Control Flow Graph: Fix missing error caused by read from/write to uninitialized variables.
 
 ### 0.8.0 (2020-12-16)
 
