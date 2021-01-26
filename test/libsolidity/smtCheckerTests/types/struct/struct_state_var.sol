@@ -12,5 +12,7 @@ contract C {
 		assert(s.a[1] == s.a[0]);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (148-172): CHC: Assertion violation happens here.\nCounterexample:\ns = {x: 7720, a: []}\n_x = 7720\n\nTransaction trace:\nC.constructor()\nState: s = {x: 0, a: []}\nC.f(7720)
+// Warning 6328: (148-172): CHC: Assertion violation happens here.
