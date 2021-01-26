@@ -2454,7 +2454,6 @@ void IRGeneratorForStatements::appendExternalFunctionCall(
 	templ("retVars", retVars);
 	solAssert(retVars.empty() == returnInfo.returnTypes.empty(), "");
 
-	templ("roundUp", m_utils.roundUpFunction());
 	templ("abiDecode", m_context.abiFunctions().tupleDecoder(returnInfo.returnTypes, true));
 	templ("dynamicReturnSize", returnInfo.dynamicReturnSize);
 
