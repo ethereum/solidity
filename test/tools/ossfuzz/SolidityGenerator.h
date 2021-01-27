@@ -62,7 +62,7 @@ struct GenerationProbability
 {
 	/// @returns an unsigned integer in the range [1, @param _n] chosen
 	/// uniformly at random.
-	static size_t distributionOneToN(size_t _n, std::shared_ptr<RandomEngine> _rand)
+	static size_t distributionOneToN(size_t _n, std::shared_ptr<RandomEngine> const& _rand)
 	{
 		return Distribution(1, _n)(*_rand);
 	}
@@ -88,7 +88,7 @@ struct GeneratorVisitor
 
 struct GeneratorBase
 {
-	GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator);
+	explicit GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator);
 	template <typename T>
 	std::shared_ptr<T> generator()
 	{
@@ -141,7 +141,7 @@ struct GeneratorBase
 class TestCaseGenerator: public GeneratorBase
 {
 public:
-	TestCaseGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit TestCaseGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator)),
 		m_numSourceUnits(0)
 	{}
@@ -152,7 +152,11 @@ public:
 		return "Test case generator";
 	}
 private:
-	std::string path() const
+	/// Returns a new source path name that is formed by concatenating
+	/// a static prefix @name m_sourceUnitNamePrefix, a monotonically
+	/// increasing counter starting from 0 and the postfix (extension)
+	/// ".sol".
+	[[nodiscard]] std::string path() const
 	{
 		return m_sourceUnitNamePrefix + std::to_string(m_numSourceUnits) + ".sol";
 	}
@@ -167,7 +171,7 @@ private:
 class SourceUnitGenerator: public GeneratorBase
 {
 public:
-	SourceUnitGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit SourceUnitGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
@@ -178,7 +182,7 @@ public:
 class PragmaGenerator: public GeneratorBase
 {
 public:
-	PragmaGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit PragmaGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	std::string visit() override;
@@ -190,8 +194,6 @@ class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
 public:
 	explicit SolidityGenerator(unsigned _seed);
 
-	/// Returns a multi-source test case.
-	std::string visit();
 	/// Returns the generator of type @param T.
 	template <typename T>
 	std::shared_ptr<T> generator();
