@@ -36,14 +36,16 @@ string GeneratorBase::visitChildren()
 {
 	ostringstream os;
 	// Randomise visit order
-	vector<GeneratorPtr> randomisedChildren;
+	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
 	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
 	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
-	for (auto child: randomisedChildren)
-		os << std::visit(GenericVisitor{
-			[&](auto const& _item) { return _item->generate(); }
-		}, child);
+	for (auto const& child: randomisedChildren)
+		if (uRandDist->likely(child.second + 1))
+			for (unsigned i = 0; i < uRandDist->distributionOneToN(child.second); i++)
+				os << std::visit(GenericVisitor{
+					[&](auto const& _item) { return _item->generate(); }
+				}, child.first);
 	return os.str();
 }
 
@@ -96,39 +98,34 @@ string TestState::randomNonCurrentPath() const
 void TestCaseGenerator::setup()
 {
 	addGenerators({
-		mutator->generator<SourceUnitGenerator>()
+		{mutator->generator<SourceUnitGenerator>(), s_maxSourceUnits}
 	});
 }
 
 string TestCaseGenerator::visit()
 {
-	ostringstream os;
-	for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxSourceUnits); i++)
-	{
-		string sourcePath = path();
-		os << "\n"
-			<< "==== Source: "
-			<< sourcePath
-			<< " ===="
-	        << "\n";
-		updateSourcePath(sourcePath);
-		m_numSourceUnits++;
-		os << visitChildren();
-	}
-	return os.str();
+	return visitChildren();
 }
 
 void SourceUnitGenerator::setup()
 {
 	addGenerators({
-		mutator->generator<ImportGenerator>(),
-		mutator->generator<PragmaGenerator>()
+		{mutator->generator<ImportGenerator>(), s_maxImports},
+		{mutator->generator<PragmaGenerator>(), 1}
 	});
 }
 
 string SourceUnitGenerator::visit()
 {
-	return visitChildren();
+	state->addSource();
+	ostringstream os;
+	os << "\n"
+	   << "==== Source: "
+	   << state->currentPath()
+	   << " ===="
+	   << "\n";
+	os << visitChildren();
+	return os.str();
 }
 
 string PragmaGenerator::visit()

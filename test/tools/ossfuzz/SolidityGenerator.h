@@ -68,14 +68,23 @@ struct UniformRandomDistribution
 	/// uniformly at random.
 	[[nodiscard]] size_t distributionOneToN(size_t _n) const
 	{
+		solAssert(_n > 0, "");
 		return Distribution(1, _n)(*randomEngine);
 	}
 	/// @returns true with a probability of 1/(@param _n), false otherwise.
-	/// @param _n must be non zero.
+	/// @param _n > 1.
 	[[nodiscard]] bool probable(size_t _n) const
 	{
-		solAssert(_n > 0, "");
+		solAssert(_n > 1, "");
 		return distributionOneToN(_n) == 1;
+	}
+	/// @returns true with a probability of 1 - 1/(@param _n),
+	/// false otherwise.
+	/// @param _n > 1.
+	[[nodiscard]] bool likely(size_t _n) const
+	{
+		solAssert(_n > 1, "");
+		return !probable(_n);
 	}
 	std::unique_ptr<RandomEngine> randomEngine;
 };
@@ -85,7 +94,8 @@ struct TestState
 	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
 		sourceUnitPaths({}),
 		currentSourceUnitPath({}),
-		uRandDist(std::move(_urd))
+		uRandDist(std::move(_urd)),
+		numSourceUnits(0)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -94,24 +104,49 @@ struct TestState
 		sourceUnitPaths.insert(_path);
 		currentSourceUnitPath = _path;
 	}
-	/// @returns true if @name sourceUnitPaths is empty,
+	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
 	[[nodiscard]] bool empty() const
 	{
 		return sourceUnitPaths.empty();
 	}
-	/// @returns the number of items in @name sourceUnitPaths.
+	/// Returns the number of items in @name sourceUnitPaths.
 	[[nodiscard]] size_t size() const
 	{
 		return sourceUnitPaths.size();
 	}
+	/// Returns a new source path name that is formed by concatenating
+	/// a static prefix @name m_sourceUnitNamePrefix, a monotonically
+	/// increasing counter starting from 0 and the postfix (extension)
+	/// ".sol".
+	[[nodiscard]] std::string newPath() const
+	{
+		return sourceUnitNamePrefix + std::to_string(numSourceUnits) + ".sol";
+	}
+	[[nodiscard]] std::string currentPath() const
+	{
+		solAssert(numSourceUnits > 0, "");
+		return currentSourceUnitPath;
+	}
+	/// Adds @param _path to list of source paths in global test
+	/// state and increments @name m_numSourceUnits.
+	void updateSourcePath(std::string const& _path)
+	{
+		addSourceUnit(_path);
+		numSourceUnits++;
+	}
+	/// Adds a new source unit to test case.
+	void addSource()
+	{
+		updateSourcePath(newPath());
+	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
-	/// @returns a randomly chosen path from @param _sourceUnitPaths.
+	/// Returns a randomly chosen path from @param _sourceUnitPaths.
 	[[nodiscard]] std::string randomPath(std::set<std::string> const& _sourceUnitPaths) const;
-	/// @returns a randomly chosen path from @name sourceUnitPaths.
+	/// Returns a randomly chosen path from @name sourceUnitPaths.
 	[[nodiscard]] std::string randomPath() const;
-	/// @returns a randomly chosen non current source unit path.
+	/// Returns a randomly chosen non current source unit path.
 	[[nodiscard]] std::string randomNonCurrentPath() const;
 	/// List of source paths in test input.
 	std::set<std::string> sourceUnitPaths;
@@ -119,6 +154,10 @@ struct TestState
 	std::string currentSourceUnitPath;
 	/// Uniform random distribution.
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	/// Number of source units in test input
+	size_t numSourceUnits;
+	/// String prefix of source unit names
+	std::string const sourceUnitNamePrefix = "su";
 };
 
 struct GeneratorBase
@@ -128,8 +167,8 @@ struct GeneratorBase
 	std::shared_ptr<T> generator()
 	{
 		for (auto& g: generators)
-			if (std::holds_alternative<std::shared_ptr<T>>(g))
-				return std::get<std::shared_ptr<T>>(g);
+			if (std::holds_alternative<std::shared_ptr<T>>(g.first))
+				return std::get<std::shared_ptr<T>>(g.first);
 		solAssert(false, "");
 	}
 	/// @returns test fragment created by this generator.
@@ -151,7 +190,7 @@ struct GeneratorBase
 	std::string visitChildren();
 	/// Adds generators for child grammar elements of
 	/// this grammar element.
-	void addGenerators(std::set<GeneratorPtr> _generators)
+	void addGenerators(std::set<std::pair<GeneratorPtr, unsigned>> _generators)
 	{
 		generators += _generators;
 	}
@@ -168,7 +207,7 @@ struct GeneratorBase
 	/// Shared pointer to the mutator instance
 	std::shared_ptr<SolidityGenerator> mutator;
 	/// Set of generators used by this generator.
-	std::set<GeneratorPtr> generators;
+	std::set<std::pair<GeneratorPtr, unsigned>> generators;
 	/// Shared ptr to global test state.
 	std::shared_ptr<TestState> state;
 	/// Uniform random distribution
@@ -179,8 +218,7 @@ class TestCaseGenerator: public GeneratorBase
 {
 public:
 	explicit TestCaseGenerator(std::shared_ptr<SolidityGenerator> _mutator):
-		GeneratorBase(std::move(_mutator)),
-		m_numSourceUnits(0)
+		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
 	std::string visit() override;
@@ -221,6 +259,8 @@ public:
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Source unit generator"; }
+private:
+	static unsigned constexpr s_maxImports = 2;
 };
 
 class PragmaGenerator: public GeneratorBase
