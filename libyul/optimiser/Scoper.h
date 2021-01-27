@@ -41,7 +41,7 @@ protected:
 	bool inScope(YulString _variableName) const;
 
 	/// Creates a new inner scope.
-	void pushScope(bool _functionScope);
+	virtual void pushScope(bool _functionScope);
 	/// Removes the innermost scope and clears all variables in it.
 	virtual void popScope();
 
