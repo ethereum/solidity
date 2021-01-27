@@ -437,16 +437,16 @@ TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _line
 	else if (m_optimizerStep == "memoryLoadResolver")
 	{
 		disambiguate();
-		ForLoopInitRewriter::run(*m_context, *m_object->code);
-		ExpressionSplitter::run(*m_context, *m_object->code);
-		SSATransform::run(*m_context, *m_object->code);
+		// ForLoopInitRewriter::run(*m_context, *m_object->code);
+		// ExpressionSplitter::run(*m_context, *m_object->code);
+		// SSATransform::run(*m_context, *m_object->code);
 
 		MemoryLoadResolver::run(*m_context, *m_object->code);
 
-		// Cleanup
-		UnusedPruner::run(*m_context, *m_object->code);
-		ExpressionJoiner::run(*m_context, *m_object->code);
-		ExpressionJoiner::run(*m_context, *m_object->code);
+		// // Cleanup
+		// UnusedPruner::run(*m_context, *m_object->code);
+		// ExpressionJoiner::run(*m_context, *m_object->code);
+		// ExpressionJoiner::run(*m_context, *m_object->code);
 	}
 	else
 	{

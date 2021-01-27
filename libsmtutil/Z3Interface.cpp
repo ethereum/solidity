@@ -96,6 +96,7 @@ void Z3Interface::addAssertion(Expression const& _expr)
 
 pair<CheckResult, vector<string>> Z3Interface::check(vector<Expression> const& _expressionsToEvaluate)
 {
+	std::cout  << m_solver << std::endl;
 	CheckResult result;
 	vector<string> values;
 	try
