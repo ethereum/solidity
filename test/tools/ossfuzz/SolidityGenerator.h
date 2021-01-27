@@ -66,24 +66,54 @@ struct GenerationProbability
 	{
 		return Distribution(1, _n)(*_rand);
 	}
-};
-
-struct AddDependenciesVisitor
-{
-	template <typename T>
-	void operator()(T const& _t)
+	/// @returns true with a probability of 1/(@param _n), false otherwise.
+	/// @param _n must be non zero.
+	static bool probable(size_t _n, std::shared_ptr<RandomEngine> const& _rand)
 	{
-		_t->setup();
+		solAssert(_n > 0, "");
+		return distributionOneToN(_n, _rand) == 1;
 	}
 };
 
-struct GeneratorVisitor
+struct TestState
 {
-	template <typename T>
-	std::string operator()(T const& _t)
+	explicit TestState(std::shared_ptr<RandomEngine> _rand):
+		sourceUnitPaths({}),
+		currentSourceUnitPath({}),
+		rand(std::move(_rand))
+	{}
+	/// Adds @param _path to @name sourceUnitPaths updates
+	/// @name currentSourceUnitPath.
+	void addSourceUnit(std::string const& _path)
 	{
-		return _t->generate();
+		sourceUnitPaths.insert(_path);
+		currentSourceUnitPath = _path;
 	}
+	/// @returns true if @name sourceUnitPaths is empty,
+	/// false otherwise.
+	[[nodiscard]] bool empty() const
+	{
+		return sourceUnitPaths.empty();
+	}
+	/// Returns the number of items in @name sourceUnitPaths.
+	[[nodiscard]] size_t size() const
+	{
+		return sourceUnitPaths.size();
+	}
+	/// Prints test state to @param _os.
+	void print(std::ostream& _os) const;
+	/// Returns a randomly chosen path from @param _sourceUnitPaths.
+	[[nodiscard]] std::string randomPath(std::set<std::string> const& _sourceUnitPaths) const;
+	/// Returns a randomly chosen path from @name sourceUnitPaths.
+	[[nodiscard]] std::string randomPath() const;
+	/// Returns a randomly chosen non current source unit path.
+	[[nodiscard]] std::string randomNonCurrentPath() const;
+	/// List of source paths in test input.
+	std::set<std::string> sourceUnitPaths;
+	/// Source path being currently visited.
+	std::string currentSourceUnitPath;
+	/// Random number generator.
+	std::shared_ptr<RandomEngine> rand;
 };
 
 struct GeneratorBase
@@ -136,6 +166,8 @@ struct GeneratorBase
 	std::shared_ptr<RandomEngine> rand;
 	/// Set of generators used by this generator.
 	std::set<GeneratorPtr> generators;
+	/// Shared ptr to global test state.
+	std::shared_ptr<TestState> state;
 };
 
 class TestCaseGenerator: public GeneratorBase
@@ -159,6 +191,13 @@ private:
 	[[nodiscard]] std::string path() const
 	{
 		return m_sourceUnitNamePrefix + std::to_string(m_numSourceUnits) + ".sol";
+	}
+	/// Adds @param _path to list of source paths in global test
+	/// state and increments @name m_numSourceUnits.
+	void updateSourcePath(std::string const& _path)
+	{
+		state->addSourceUnit(_path);
+		m_numSourceUnits++;
 	}
 	/// Number of source units in test input
 	size_t m_numSourceUnits;
@@ -189,6 +228,25 @@ public:
 	std::string name() override { return "Pragma generator"; }
 };
 
+class ImportGenerator: public GeneratorBase
+{
+public:
+	explicit ImportGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	       GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override { return "Import generator"; }
+private:
+	/// Inverse probability with which a source unit
+	/// imports itself. Keeping this at 17 seems to
+	/// produce self imported source units with a
+	/// frequency small enough so that it does not
+	/// consume too many fuzzing cycles but large
+	/// enough so that the fuzzer generates self
+	/// import statements every once in a while.
+	static constexpr size_t s_selfImportInvProb = 17;
+};
+
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
 {
 public:
@@ -205,6 +263,11 @@ public:
 	}
 	/// Returns a pseudo randomly generated test case.
 	std::string generateTestProgram();
+	/// Returns shared ptr to global test state.
+	std::shared_ptr<TestState> testState()
+	{
+		return m_state;
+	}
 private:
 	template <typename T>
 	void createGenerator()
@@ -223,5 +286,7 @@ private:
 	std::shared_ptr<RandomEngine> m_rand;
 	/// Sub generators
 	std::set<GeneratorPtr> m_generators;
+	/// Shared global test state
+	std::shared_ptr<TestState> m_state;
 };
 }
