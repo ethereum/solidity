@@ -58,29 +58,34 @@ GENERATORLIST(VARIANTOFGENERATOR, COMMA(), )
 using RandomEngine = std::mt19937_64;
 using Distribution = std::uniform_int_distribution<size_t>;
 
-struct GenerationProbability
+struct UniformRandomDistribution
 {
+	explicit UniformRandomDistribution(std::unique_ptr<RandomEngine> _randomEngine):
+		randomEngine(std::move(_randomEngine))
+	{}
+
 	/// @returns an unsigned integer in the range [1, @param _n] chosen
 	/// uniformly at random.
-	static size_t distributionOneToN(size_t _n, std::shared_ptr<RandomEngine> const& _rand)
+	[[nodiscard]] size_t distributionOneToN(size_t _n) const
 	{
-		return Distribution(1, _n)(*_rand);
+		return Distribution(1, _n)(*randomEngine);
 	}
 	/// @returns true with a probability of 1/(@param _n), false otherwise.
 	/// @param _n must be non zero.
-	static bool probable(size_t _n, std::shared_ptr<RandomEngine> const& _rand)
+	[[nodiscard]] bool probable(size_t _n) const
 	{
 		solAssert(_n > 0, "");
-		return distributionOneToN(_n, _rand) == 1;
+		return distributionOneToN(_n) == 1;
 	}
+	std::unique_ptr<RandomEngine> randomEngine;
 };
 
 struct TestState
 {
-	explicit TestState(std::shared_ptr<RandomEngine> _rand):
+	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
 		sourceUnitPaths({}),
 		currentSourceUnitPath({}),
-		rand(std::move(_rand))
+		uRandDist(std::move(_urd))
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -89,7 +94,7 @@ struct TestState
 		sourceUnitPaths.insert(_path);
 		currentSourceUnitPath = _path;
 	}
-	/// @returns true if @name sourceUnitPaths is empty,
+	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
 	[[nodiscard]] bool empty() const
 	{
@@ -112,8 +117,8 @@ struct TestState
 	std::set<std::string> sourceUnitPaths;
 	/// Source path being currently visited.
 	std::string currentSourceUnitPath;
-	/// Random number generator.
-	std::shared_ptr<RandomEngine> rand;
+	/// Uniform random distribution.
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
 struct GeneratorBase
@@ -162,12 +167,12 @@ struct GeneratorBase
 	}
 	/// Shared pointer to the mutator instance
 	std::shared_ptr<SolidityGenerator> mutator;
-	/// Random engine shared by Solidity mutators
-	std::shared_ptr<RandomEngine> rand;
 	/// Set of generators used by this generator.
 	std::set<GeneratorPtr> generators;
 	/// Shared ptr to global test state.
 	std::shared_ptr<TestState> state;
+	/// Uniform random distribution
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
 class TestCaseGenerator: public GeneratorBase
@@ -256,10 +261,10 @@ public:
 	template <typename T>
 	std::shared_ptr<T> generator();
 	/// Returns a shared ptr to underlying random
-	/// number generator.
-	std::shared_ptr<RandomEngine> randomEngine()
+	/// number distribution.
+	std::shared_ptr<UniformRandomDistribution> uniformRandomDist()
 	{
-		return m_rand;
+		return m_urd;
 	}
 	/// Returns a pseudo randomly generated test case.
 	std::string generateTestProgram();
@@ -282,11 +287,11 @@ private:
 	{
 		m_generators.clear();
 	}
-	/// Random number generator
-	std::shared_ptr<RandomEngine> m_rand;
 	/// Sub generators
 	std::set<GeneratorPtr> m_generators;
 	/// Shared global test state
 	std::shared_ptr<TestState> m_state;
+	/// Uniform random distribution
+	std::shared_ptr<UniformRandomDistribution> m_urd;
 };
 }
