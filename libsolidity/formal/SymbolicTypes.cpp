@@ -426,7 +426,7 @@ smtutil::Expression maxValue(frontend::TypePointer _type)
 	)
 		return TypeProvider::uint(160)->maxValue();
 	if (auto const* enumType = dynamic_cast<EnumType const*>(_type))
-		return enumType->numberOfMembers();
+		return enumType->numberOfMembers() - 1;
 	if (auto const* bytesType = dynamic_cast<FixedBytesType const*>(_type))
 		return TypeProvider::uint(bytesType->numBytes() * 8)->maxValue();
 	solAssert(false, "");
@@ -544,18 +544,8 @@ void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer co
 smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::TypePointer const& _type)
 {
 	solAssert(_type, "");
-	if (isEnum(*_type))
-	{
-		auto enumType = dynamic_cast<frontend::EnumType const*>(_type);
-		solAssert(enumType, "");
-		return _expr >= 0 && _expr < enumType->numberOfMembers();
-	}
-	else if (isInteger(*_type))
-	{
-		auto intType = dynamic_cast<frontend::IntegerType const*>(_type);
-		solAssert(intType, "");
-		return _expr >= minValue(*intType) && _expr <= maxValue(*intType);
-	}
+	if (isEnum(*_type) || isInteger(*_type) || isAddress(*_type) || isFixedBytes(*_type))
+		return _expr >= minValue(_type) && _expr <= maxValue(_type);
 	else if (isArray(*_type) || isMapping(*_type))
 		/// Length cannot be negative.
 		return smtutil::Expression::tuple_get(_expr, 1) >= 0;
