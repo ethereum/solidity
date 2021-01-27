@@ -45,8 +45,12 @@ public:
 	static void run(OptimiserStepContext& _context, Block& _ast);
 
 	using ASTModifier::operator();
-	void operator()(VariableDeclaration& _v) override;
-	void operator()(FunctionCall& _f) override;
+	void operator()(VariableDeclaration& _variableDeclaration) override;
+	void operator()(FunctionCall& _functionCall) override;
+	void operator()(If& _if) override;
+	void operator()(Switch& _switch) override;
+	void operator()(ForLoop& _forLoop) override;
+	void operator()(FunctionDefinition& _functionDefinition) override;
 
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
@@ -63,7 +67,10 @@ private:
 		m_containsMsize(_containsMsize),
 		m_dialect(_dialect),
 		m_solver(std::make_unique<smtutil::SMTPortfolio>())
-	{}
+	{
+		for (auto const& name: m_ssaVariables)
+			std::cout << name.str() << std::endl;
+	}
 
 	/// The mapping for memory
 	std::map<YulString, YulString> m_memory;
@@ -80,11 +87,17 @@ private:
 
 	Dialect const& m_dialect;
 
+	/// Joins the `_older` and current memory during control flow joins
+	void joinMemory(std::map<YulString, YulString> const& _older);
+
+	void clearMemoryIfInvalidated(Block const& _block);
+
+	void clearMemoryIfInvalidated(Expression const& _expr);
+
 	/// Checks if a function call is identical to a mstore(x, y), where x and y are SSA variables.
 	std::optional<std::pair<YulString, YulString>> isSimpleMStore(
 		FunctionCall const& _functionCall
 	) const;
-
 
 	smtutil::Expression encodeExpression(
 		Expression const& _expression

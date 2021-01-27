@@ -16,7 +16,12 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libyul/Dialect.h"
+#include "libyul/YulString.h"
+#include "libyul/optimiser/ASTWalker.h"
 #include "libyul/optimiser/CallGraphGenerator.h"
+#include "libyul/optimiser/DataFlowAnalyzer.h"
+#include "libyul/optimiser/NameDispenser.h"
 #include "libyul/optimiser/OptimiserStep.h"
 #include "libyul/optimiser/SSAValueTracker.h"
 #include <libyul/optimiser/MemoryLoadResolver.h>
@@ -32,6 +37,7 @@
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/SolverInterface.h>
 #include <libsmtutil/Helpers.h>
+#include <optional>
 
 using namespace std;
 using namespace solidity;
@@ -57,6 +63,7 @@ void MemoryLoadResolver::visit(Expression& _e)
 	if (m_containsMsize)
 		return;
 
+	// TODO Extract this
 	// Check and replace the value of mload(x), if possible
 	if (FunctionCall const* functionCall = get_if<FunctionCall>(&_e))
 		if (functionCall->functionName.name == m_dialect.memoryLoadFunction(YulString{})->name)
@@ -87,21 +94,8 @@ void MemoryLoadResolver::operator()(VariableDeclaration& _v)
 			m_solver->newVariable("yul_" + variableName.str(), defaultSort())
 			}).second;
 		yulAssert(inserted, "");
+		std::cout << "encoding: " << variableName.str() << std::endl;
 		m_solver->addAssertion(m_variables.at(variableName) == encodeExpression(*_v.value));
-	}
-	else
-	{
-		for(auto const& v: _v.variables)
-		{
-			YulString const& variableName = v.name;
-			bool const inserted = m_variables.insert({
-				variableName,
-				m_solver->newVariable("yul_" + variableName.str(), defaultSort())
-				}).second;
-			yulAssert(inserted, "");
-			// TODO improve this by adding assertions directly, without the restricted variable.
-			m_solver->addAssertion(m_variables.at(variableName) == newRestrictedVariable());
-		}
 	}
 }
 
@@ -116,14 +110,120 @@ void MemoryLoadResolver::operator()(FunctionCall& _f)
 		set<YulString> keysToErase;
 		for ([[maybe_unused]] auto const& [key, value]: m_memory)
 			if (invalidatesMemoryLocation(key, _f))
-				m_memory.erase(key); // TODO iterator invalidation?
+				keysToErase.insert(key); // TODO
+
+		for (auto const& key: keysToErase)
+			m_memory.erase(key);
 	}
 
 	if (auto memoryMapping = isSimpleMStore(_f))
 		// TODO can the key be already present in the m_memory?
 		m_memory[memoryMapping->first] = memoryMapping->second;
-
 }
+
+void MemoryLoadResolver::operator()(If& _if)
+{
+	// We completely clear `m_memory` if condition writes to memory. Ideally this would not happen
+	// because of expression splitter, splitting the condition and replacing it by an identifier.
+	// That way, we only clear memory partially.
+	clearMemoryIfInvalidated(*_if.condition);
+
+	auto memory = m_memory;
+
+	ASTModifier::operator()(_if);
+
+	joinMemory(memory);
+}
+
+void MemoryLoadResolver::operator()(Switch& _switch)
+{
+	// See comment inside operator()(If& _if)
+	clearMemoryIfInvalidated(*_switch.expression);
+
+	visit(*_switch.expression);
+
+	for (auto& _case: _switch.cases)
+	{
+		auto memory = m_memory;
+
+		(*this)(_case.body);
+
+		joinMemory(memory);
+
+		clearMemoryIfInvalidated(_case.body);
+	}
+
+	for (auto& _case: _switch.cases)
+		clearMemoryIfInvalidated(_case.body);
+}
+
+void MemoryLoadResolver::operator()(FunctionDefinition& _functionDefinition)
+{
+	map<YulString, YulString> memory;
+	swap(memory, m_memory);
+
+	Scoper::operator()(_functionDefinition);
+
+	// Note that the contents of and memory at this point might be incorrect due to the fact that
+	// the DataFlowAnalyzer ignores the ``leave`` statement.
+	swap(memory, m_memory);
+}
+
+void MemoryLoadResolver::operator()(ForLoop& _for)
+{
+	// If the pre block was not empty,
+	// we would have to deal with more complicated scoping rules.
+	assertThrow(_for.pre.statements.empty(), OptimizerException, "");
+
+	clearMemoryIfInvalidated(*_for.condition);
+	clearMemoryIfInvalidated(_for.post);
+	clearMemoryIfInvalidated(_for.body);
+
+	visit(*_for.condition);
+	(*this)(_for.body);
+	clearMemoryIfInvalidated(_for.body);
+	(*this)(_for.post);
+	clearMemoryIfInvalidated(*_for.condition);
+	clearMemoryIfInvalidated(_for.post);
+	clearMemoryIfInvalidated(_for.body);
+}
+
+void MemoryLoadResolver::joinMemory(map<YulString, YulString> const& _older)
+{
+	// We clear if the key does not exist in the older map or if the value is different.
+	// This also works for memory because _older is an "older version"
+	// of m_memory and thus any overlapping write would have cleared the keys
+	// that are not known to be different inside m_memory already.
+	set<YulString> keysToErase;
+
+	for (auto const& [key, value]: m_memory)
+	{
+		auto it = _older.find(key);
+		if (it == _older.end() || it->second != value)
+			keysToErase.insert(key);
+	}
+
+	for (auto const& key: keysToErase)
+		m_memory.erase(key);
+}
+
+
+void MemoryLoadResolver::clearMemoryIfInvalidated(Block const& _block)
+{
+	SideEffectsCollector sideEffects(m_dialect, _block, &m_functionSideEffects);
+
+	if (sideEffects.invalidatesMemory())
+		m_memory.clear();
+}
+
+void MemoryLoadResolver::clearMemoryIfInvalidated(Expression const& _expr)
+{
+	SideEffectsCollector sideEffects(m_dialect, _expr, &m_functionSideEffects);
+
+	if (sideEffects.invalidatesMemory())
+		m_memory.clear();
+}
+
 
 std::optional<pair<YulString, YulString>> MemoryLoadResolver::isSimpleMStore(
 	FunctionCall const& _functionCall
@@ -306,12 +406,15 @@ bool MemoryLoadResolver::invalidatesMemoryLocation(YulString const& _name, Expre
 		}
 	};
 
+	std::cout << "Problem: ? " << _name.str() << std::endl;
+
 	if (auto dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
 		if (auto builtin = dialect->builtin(functionCall.functionName.name))
 			if (builtin->instruction)
 			{
 				// TODO at this point, the constraints should be satisfiable.
 				// ADD an assert about it?
+
 				m_solver->push();
 				addMemoryConstraints(
 					*builtin->instruction,
