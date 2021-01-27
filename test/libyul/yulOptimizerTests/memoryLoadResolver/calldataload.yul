@@ -24,6 +24,8 @@
 //     mstore(key, value)
 //     if callvalue() { revert(0, 0) }
 //     let _1 := 0
-//     calldatacopy(value, _1, calldatasize())
-//     sstore(0, value)
+//     let c := calldatasize()
+//     calldatacopy(value, _1, c)
+//     let out := value
+//     sstore(0, out)
 // }
