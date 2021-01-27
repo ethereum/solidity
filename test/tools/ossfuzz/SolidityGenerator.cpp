@@ -21,6 +21,12 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/Visitor.h>
 
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm/copy.hpp>
+
+
+using namespace solidity::test::fuzzer;
 using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
 using namespace std;
@@ -36,15 +42,30 @@ string GeneratorBase::visitChildren()
 {
 	ostringstream os;
 	// Randomise visit order
-	vector<GeneratorPtr> randomisedChildren;
+	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
 	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
 	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
-	for (auto child: randomisedChildren)
-		os << std::visit(GenericVisitor{
-			[&](auto const& _item) { return _item->generate(); }
-		}, child);
+	for (auto const& child: randomisedChildren)
+		if (uRandDist->likely(child.second + 1))
+			for (unsigned i = 0; i < uRandDist->distributionOneToN(child.second); i++)
+				os << std::visit(GenericVisitor{
+					[&](auto const& _item) { return _item->generate(); }
+				}, child.first);
 	return os.str();
+}
+
+void SourceState::print(std::ostream& _os) const
+{
+	for (auto const& import: importedSources)
+		_os << "Imports: " << import << std::endl;
+}
+
+set<string> TestState::sourceUnitPaths() const
+{
+	set<string> keys;
+	boost::copy(sourceUnitState | boost::adaptors::map_keys, std::inserter(keys, keys.begin()));
+	return keys;
 }
 
 string TestState::randomPath(set<string> const& _sourceUnitPaths) const
@@ -63,14 +84,17 @@ string TestState::randomPath(set<string> const& _sourceUnitPaths) const
 string TestState::randomPath() const
 {
 	solAssert(!empty(), "Solc custom mutator: Null test state");
-	return randomPath(sourceUnitPaths);
+	return randomPath(sourceUnitPaths());
 }
 
 void TestState::print(std::ostream& _os) const
 {
 	_os << "Printing test state" << std::endl;
-	for (auto const& item: sourceUnitPaths)
-		_os << "Source path: " << item << std::endl;
+	for (auto const& item: sourceUnitState)
+	{
+		_os << "Source path: " << item.first << std::endl;
+		item.second->print(_os);
+	}
 }
 
 string TestState::randomNonCurrentPath() const
@@ -82,9 +106,10 @@ string TestState::randomNonCurrentPath() const
 
 	set<string> filteredSourcePaths;
 	string currentPath = currentSourceUnitPath;
+	set<string> sourcePaths = sourceUnitPaths();
 	copy_if(
-		sourceUnitPaths.begin(),
-		sourceUnitPaths.end(),
+		sourcePaths.begin(),
+		sourcePaths.end(),
 		inserter(filteredSourcePaths, filteredSourcePaths.begin()),
 		[currentPath](string const& _item) {
 			return _item != currentPath;
@@ -96,52 +121,42 @@ string TestState::randomNonCurrentPath() const
 void TestCaseGenerator::setup()
 {
 	addGenerators({
-		mutator->generator<SourceUnitGenerator>()
+		{mutator->generator<SourceUnitGenerator>(), s_maxSourceUnits}
 	});
 }
 
 string TestCaseGenerator::visit()
 {
-	ostringstream os;
-	for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxSourceUnits); i++)
-	{
-		string sourcePath = path();
-		os << "\n"
-			<< "==== Source: "
-			<< sourcePath
-			<< " ===="
-	        << "\n";
-		updateSourcePath(sourcePath);
-		m_numSourceUnits++;
-		os << visitChildren();
-	}
-	return os.str();
+	return visitChildren();
 }
 
 void SourceUnitGenerator::setup()
 {
 	addGenerators({
-		mutator->generator<ImportGenerator>(),
-		mutator->generator<PragmaGenerator>()
+		{mutator->generator<ImportGenerator>(), s_maxImports},
+		{mutator->generator<PragmaGenerator>(), 1}
 	});
 }
 
 string SourceUnitGenerator::visit()
 {
-	return visitChildren();
+	state->addSource();
+	ostringstream os;
+	os << "\n"
+	   << "==== Source: "
+	   << state->currentPath()
+	   << " ===="
+	   << "\n";
+	os << visitChildren();
+	return os.str();
 }
 
 string PragmaGenerator::visit()
 {
-	static constexpr const char* preamble = R"(
-		pragma solidity >= 0.0.0;
-		pragma experimental SMTChecker;
-	)";
-	// Choose equally at random from coder v1 and v2
-	string abiPragma = "pragma abicoder v" +
-		to_string(uRandDist->distributionOneToN(2)) +
-		";\n";
-	return preamble + abiPragma;
+	set<string> pragmas = uRandDist->subset(s_genericPragmas);
+	// Choose either abicoder v1 or v2 but not both.
+	pragmas.insert(s_abiPragmas[uRandDist->distributionOneToN(s_abiPragmas.size()) - 1]);
+	return boost::algorithm::join(pragmas, "\n") + "\n";
 }
 
 string ImportGenerator::visit()
@@ -152,24 +167,19 @@ string ImportGenerator::visit()
 	 * Case 3: At least two source units defined
 	 */
 	ostringstream os;
-	// Self import with a small probability only if
-	// there is one source unit present in test.
-	if (state->size() == 1)
+	string importPath;
+	// Import a different source unit if at least
+	// two source units available.
+	if (state->size() > 1)
+		importPath = state->randomNonCurrentPath();
+	// Do not reimport already imported source unit
+	if (!importPath.empty() && !state->sourceUnitState[state->currentPath()]->sourcePathImported(importPath))
 	{
-		if (uRandDist->probable(s_selfImportInvProb))
-			os << "import "
-			   << "\""
-			   << state->randomPath()
-			   << "\";";
-	}
-	else
-	{
-		// Import a different source unit if at least
-		// two source units available.
 		os << "import "
-			<< "\""
-			<< state->randomNonCurrentPath()
-			<< "\";";
+		   << "\""
+		   << importPath
+		   << "\";\n";
+		state->sourceUnitState[state->currentPath()]->addImportedSourcePath(importPath);
 	}
 	return os.str();
 }
