@@ -68,57 +68,139 @@ struct UniformRandomDistribution
 	/// uniformly at random.
 	[[nodiscard]] size_t distributionOneToN(size_t _n) const
 	{
+		solAssert(_n > 0, "");
 		return Distribution(1, _n)(*randomEngine);
 	}
 	/// @returns true with a probability of 1/(@param _n), false otherwise.
-	/// @param _n must be non zero.
+	/// @param _n > 1.
 	[[nodiscard]] bool probable(size_t _n) const
 	{
-		solAssert(_n > 0, "");
+		solAssert(_n > 1, "");
 		return distributionOneToN(_n) == 1;
 	}
+	/// @returns true with a probability of 1 - 1/(@param _n),
+	/// false otherwise.
+	/// @param _n > 1.
+	[[nodiscard]] bool likely(size_t _n) const
+	{
+		solAssert(_n > 1, "");
+		return !probable(_n);
+	}
+	/// @returns a subset whose elements are of type @param T
+	/// created from the set @param _container using
+	/// uniform selection.
+	template <typename T>
+	std::set<T> subset(std::set<T> const& _container)
+	{
+		size_t s = _container.size();
+		solAssert(s > 1, "");
+		std::set<T> subContainer;
+		for (auto const& item: _container)
+			if (probable(s))
+				subContainer.insert(item);
+		return subContainer;
+	}
 	std::unique_ptr<RandomEngine> randomEngine;
+};
+
+struct SourceState
+{
+	explicit SourceState(std::shared_ptr<UniformRandomDistribution> _urd):
+		uRandDist(std::move(_urd)),
+		importedSources({})
+	{}
+	void addImportedSourcePath(std::string& _sourcePath)
+	{
+		importedSources.emplace(_sourcePath);
+	}
+	[[nodiscard]] bool sourcePathImported(std::string const& _sourcePath) const
+	{
+		return importedSources.count(_sourcePath);
+	}
+	~SourceState()
+	{
+		importedSources.clear();
+	}
+	/// Prints source state to @param _os.
+	void print(std::ostream& _os) const;
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::set<std::string> importedSources;
 };
 
 struct TestState
 {
 	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
-		sourceUnitPaths({}),
+		sourceUnitState({}),
 		currentSourceUnitPath({}),
-		uRandDist(std::move(_urd))
+		uRandDist(std::move(_urd)),
+		numSourceUnits(0)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
 	void addSourceUnit(std::string const& _path)
 	{
-		sourceUnitPaths.insert(_path);
+		sourceUnitState.emplace(_path, std::make_shared<SourceState>(uRandDist));
 		currentSourceUnitPath = _path;
 	}
-	/// @returns true if @name sourceUnitPaths is empty,
+	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
 	[[nodiscard]] bool empty() const
 	{
-		return sourceUnitPaths.empty();
+		return sourceUnitState.empty();
 	}
-	/// @returns the number of items in @name sourceUnitPaths.
+	/// Returns the number of items in @name sourceUnitPaths.
 	[[nodiscard]] size_t size() const
 	{
-		return sourceUnitPaths.size();
+		return sourceUnitState.size();
+	}
+	/// Returns a new source path name that is formed by concatenating
+	/// a static prefix @name m_sourceUnitNamePrefix, a monotonically
+	/// increasing counter starting from 0 and the postfix (extension)
+	/// ".sol".
+	[[nodiscard]] std::string newPath() const
+	{
+		return sourceUnitNamePrefix + std::to_string(numSourceUnits) + ".sol";
+	}
+	[[nodiscard]] std::string currentPath() const
+	{
+		solAssert(numSourceUnits > 0, "");
+		return currentSourceUnitPath;
+	}
+	/// Adds @param _path to list of source paths in global test
+	/// state and increments @name m_numSourceUnits.
+	void updateSourcePath(std::string const& _path)
+	{
+		addSourceUnit(_path);
+		numSourceUnits++;
+	}
+	/// Adds a new source unit to test case.
+	void addSource()
+	{
+		updateSourcePath(newPath());
+	}
+	~TestState()
+	{
+		sourceUnitState.clear();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
-	/// @returns a randomly chosen path from @param _sourceUnitPaths.
+	/// Returns a randomly chosen path from @param _sourceUnitPaths.
 	[[nodiscard]] std::string randomPath(std::set<std::string> const& _sourceUnitPaths) const;
-	/// @returns a randomly chosen path from @name sourceUnitPaths.
+	[[nodiscard]] std::set<std::string> sourceUnitPaths() const;
+	/// Returns a randomly chosen path from @name sourceUnitPaths.
 	[[nodiscard]] std::string randomPath() const;
-	/// @returns a randomly chosen non current source unit path.
+	/// Returns a randomly chosen non current source unit path.
 	[[nodiscard]] std::string randomNonCurrentPath() const;
 	/// List of source paths in test input.
-	std::set<std::string> sourceUnitPaths;
+	std::map<std::string, std::shared_ptr<SourceState>> sourceUnitState;
 	/// Source path being currently visited.
 	std::string currentSourceUnitPath;
 	/// Uniform random distribution.
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	/// Number of source units in test input
+	size_t numSourceUnits;
+	/// String prefix of source unit names
+	std::string const sourceUnitNamePrefix = "su";
 };
 
 struct GeneratorBase
@@ -128,8 +210,8 @@ struct GeneratorBase
 	std::shared_ptr<T> generator()
 	{
 		for (auto& g: generators)
-			if (std::holds_alternative<std::shared_ptr<T>>(g))
-				return std::get<std::shared_ptr<T>>(g);
+			if (std::holds_alternative<std::shared_ptr<T>>(g.first))
+				return std::get<std::shared_ptr<T>>(g.first);
 		solAssert(false, "");
 	}
 	/// @returns test fragment created by this generator.
@@ -151,7 +233,7 @@ struct GeneratorBase
 	std::string visitChildren();
 	/// Adds generators for child grammar elements of
 	/// this grammar element.
-	void addGenerators(std::set<GeneratorPtr> _generators)
+	void addGenerators(std::set<std::pair<GeneratorPtr, unsigned>> _generators)
 	{
 		generators += _generators;
 	}
@@ -168,7 +250,7 @@ struct GeneratorBase
 	/// Shared pointer to the mutator instance
 	std::shared_ptr<SolidityGenerator> mutator;
 	/// Set of generators used by this generator.
-	std::set<GeneratorPtr> generators;
+	std::set<std::pair<GeneratorPtr, unsigned>> generators;
 	/// Shared ptr to global test state.
 	std::shared_ptr<TestState> state;
 	/// Uniform random distribution
@@ -179,8 +261,7 @@ class TestCaseGenerator: public GeneratorBase
 {
 public:
 	explicit TestCaseGenerator(std::shared_ptr<SolidityGenerator> _mutator):
-		GeneratorBase(std::move(_mutator)),
-		m_numSourceUnits(0)
+		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
 	std::string visit() override;
@@ -221,6 +302,8 @@ public:
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Source unit generator"; }
+private:
+	static unsigned constexpr s_maxImports = 2;
 };
 
 class PragmaGenerator: public GeneratorBase
@@ -231,6 +314,15 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Pragma generator"; }
+private:
+	std::set<std::string> const s_genericPragmas = {
+		R"(pragma solidity >= 0.0.0;)",
+		R"(pragma experimental SMTChecker;)",
+	};
+	std::vector<std::string> const s_abiPragmas = {
+		R"(pragma abicoder v1;)",
+		R"(pragma abicoder v2;)"
+	};
 };
 
 class ImportGenerator: public GeneratorBase
@@ -241,15 +333,6 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Import generator"; }
-private:
-	/// Inverse probability with which a source unit
-	/// imports itself. Keeping this at 17 seems to
-	/// produce self imported source units with a
-	/// frequency small enough so that it does not
-	/// consume too many fuzzing cycles but large
-	/// enough so that the fuzzer generates self
-	/// import statements every once in a while.
-	static constexpr size_t s_selfImportInvProb = 17;
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
