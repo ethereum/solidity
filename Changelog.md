@@ -1,14 +1,13 @@
-### 0.8.1 (unreleased)
+### 0.8.1 (2021-01-27)
 
 Language Features:
  * Possibility to use ``catch Panic(uint code)`` to catch a panic failure from an external call.
 
 Compiler Features:
- * Build system: Update the soljson.js build to emscripten 2.0.12 and boost 1.75.0.
  * Code Generator: Reduce the cost of ``<address>.code.length`` by using ``extcodesize`` directly.
- * Command Line Interface: Allow "=" as separator between library name and address in ``--libraries`` commandline option.
+ * Command Line Interface: Allow ``=`` as separator between library name and address in ``--libraries`` commandline option.
  * Command Line Interface: New option ``--model-checker-targets`` allows specifying which targets should be checked. The valid options are ``all``, ``constantCondition``, ``underflow``, ``overflow``, ``divByZero``, ``balance``, ``assert``, ``popEmptyArray``, where the default is ``all``. Multiple targets can be chosen at the same time, separated by a comma without spaces: ``underflow,overflow,assert``.
- * Command Line Interface: Only accept the library address that is prefixed with "0x" in ``--libraries`` commandline option.
+ * Command Line Interface: Only accept library addresses with a prefix of ``0x`` in ``--libraries`` commandline option.
  * Optimizer: Add rule to replace ``iszero(sub(x,y))`` by ``eq(x,y)``.
  * Parser: Report meaningful error if parsing a version pragma failed.
  * SMTChecker: Output internal and trusted external function calls in a counterexample's transaction trace.
@@ -32,6 +31,10 @@ Bugfixes:
  * Type Checker: Fix infinite loop when accessing circular constants from inline assembly.
  * Type Checker: Fix internal error caused by constant structs containing mappings.
  * Type System: Disallow implicit conversion from ``uintN`` to ``intM`` when ``M > N``, and by extension, explicit conversion between the same types is also disallowed.
+
+Build System:
+ * Update the soljson.js build to emscripten 2.0.12 and boost 1.75.0.
+
 
 ### 0.8.0 (2020-12-16)
 
