@@ -29,6 +29,7 @@
 #include <libsolidity/codegen/LValue.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libevmasm/GasMeter.h>
@@ -786,27 +787,46 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case FunctionType::Kind::Revert:
 		{
-			if (arguments.empty())
+			bool usesString =
+				!arguments.empty() &&
+				arguments.front()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory());
+			if (arguments.empty() || (usesString && m_context.revertStrings() == RevertStrings::Strip))
+			{
+				if (!arguments.empty() && !*arguments.front()->annotation().isPure)
+				{
+					arguments.front()->accept(*this);
+					utils().popStackElement(*arguments.front()->annotation().type);
+				}
 				m_context.appendRevert();
+			}
 			else
 			{
-				// function-sel(Error(string)) + encoding
 				solAssert(arguments.size() == 1, "");
-				solUnimplementedAssert(arguments.front()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
-				if (m_context.revertStrings() == RevertStrings::Strip)
+				arguments.front()->accept(*this);
+
+				string signature;
+				vector<Type const*> parameterTypes;
+				vector<Type const*> argumentTypes;
+				if (usesString)
 				{
-					if (!*arguments.front()->annotation().isPure)
-					{
-						arguments.front()->accept(*this);
-						utils().popStackElement(*arguments.front()->annotation().type);
-					}
-					m_context.appendRevert();
+					signature = "Error(string)";
+					parameterTypes.push_back(TypeProvider::stringMemory());
+					argumentTypes = vector<Type const*>{arguments.front()->annotation().type};
 				}
 				else
 				{
-					arguments.front()->accept(*this);
-					utils().revertWithStringData(*arguments.front()->annotation().type);
+					ErrorDefinition const* error = nullptr;
+					FunctionCall const* errorCall = dynamic_cast<FunctionCall const*>(_functionCall.arguments().back().get());
+					solAssert(errorCall, "");
+					solAssert(*errorCall->annotation().kind == FunctionCallKind::FunctionCall, "");
+					error = dynamic_cast<ErrorDefinition const*>(referencedDeclaration(errorCall->expression()));
+					solAssert(error, "");
+					signature = error->functionType(true)->externalSignature();
+					parameterTypes = error->functionType(true)->parameterTypes();
+					for (ASTPointer<Expression const> const& arg: errorCall->sortedArguments())
+						argumentTypes.push_back(arg->annotation().type);
 				}
+				utils().revertWithError(signature, parameterTypes, argumentTypes);
 			}
 			break;
 		}
@@ -910,7 +930,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::Error:
 		{
-			solAssert(false, "");
+			for (ASTPointer<Expression const> const& arg: arguments)
+				arg->accept(*this);
+			// will be consumed in the revert / require call.
+			break;
 		}
 		case FunctionType::Kind::BlockHash:
 		{
@@ -1082,49 +1105,72 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			acceptAndConvert(*arguments.front(), *TypeProvider::boolean(), false);
 
-			bool haveReasonString = arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip;
+			solAssert(arguments.size() == 1|| arguments.size() == 2, "");
 
-			if (arguments.size() > 1)
+			bool usesString =
+				arguments.size() >= 2 &&
+				arguments.at(1)->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory());
+
+			if (arguments.size() == 1 || (usesString && m_context.revertStrings() == RevertStrings::Strip))
 			{
-				// Users probably expect the second argument to be evaluated
-				// even if the condition is false, as would be the case for an actual
-				// function call.
-				solAssert(arguments.size() == 2, "");
-				solAssert(function.kind() == FunctionType::Kind::Require, "");
-				solUnimplementedAssert(arguments.back()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
-				if (m_context.revertStrings() == RevertStrings::Strip)
+				// Shortcut without reason string.
+				if (arguments.size() == 2 && !*arguments.at(1)->annotation().isPure)
 				{
-					if (!*arguments.at(1)->annotation().isPure)
-					{
-						arguments.at(1)->accept(*this);
-						utils().popStackElement(*arguments.at(1)->annotation().type);
-					}
+					arguments.at(1)->accept(*this);
+					utils().popStackElement(*arguments.at(1)->annotation().type);
+				}
+				m_context << Instruction::ISZERO << Instruction::ISZERO;
+				auto success = m_context.appendConditionalJump();
+				if (function.kind() == FunctionType::Kind::Assert)
+					// condition was not met, flag an error
+					m_context.appendPanic(util::PanicCode::Assert);
+				else
+					m_context.appendRevert();
+				m_context << success;
+			}
+			else
+			{
+				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				solAssert(arguments.size() == 2, "");
+
+				string signature;
+				vector<Type const*> parameterTypes;
+				vector<Type const*> argumentTypes;
+				if (usesString)
+				{
+					signature = "Error(string)";
+					parameterTypes.push_back(TypeProvider::stringMemory());
+					argumentTypes = vector<Type const*>{arguments.at(1)->annotation().type};
+					arguments.at(1)->accept(*this);
+					utils().moveIntoStack(1, argumentTypes.front()->sizeOnStack());
 				}
 				else
 				{
-					arguments.at(1)->accept(*this);
-					utils().moveIntoStack(1, arguments.at(1)->annotation().type->sizeOnStack());
+					// Cannot use the size of the argument itself because its type is wrong.
+					ErrorDefinition const* error = nullptr;
+					FunctionCall const* errorCall = dynamic_cast<FunctionCall const*>(arguments.at(1).get());
+					solAssert(errorCall, "");
+					solAssert(*errorCall->annotation().kind == FunctionCallKind::FunctionCall, "");
+					error = dynamic_cast<ErrorDefinition const*>(referencedDeclaration(errorCall->expression()));
+					solAssert(error, "");
+					signature = error->functionType(true)->externalSignature();
+					parameterTypes = error->functionType(true)->parameterTypes();
+					// This uses a different visiting order, but that's the case for all named function calls.
+					for (ASTPointer<Expression const> const& arg: errorCall->sortedArguments())
+					{
+						arg->accept(*this);
+						argumentTypes.push_back(arg->annotation().type);
+						utils().moveIntoStack(1, arg->annotation().type->sizeOnStack());
+					}
 				}
+				m_context << Instruction::ISZERO << Instruction::ISZERO;
+				auto success = m_context.appendConditionalJump();
+				unsigned argSize = TupleType(argumentTypes).sizeOnStack();
+				utils().revertWithError(signature, parameterTypes, argumentTypes);
+				m_context.adjustStackOffset(static_cast<int>(argSize));
+				m_context << success;
+				utils().popStackSlots(argSize);
 			}
-			// Stack: <error string (unconverted)> <condition>
-			// jump if condition was met
-			m_context << Instruction::ISZERO << Instruction::ISZERO;
-			auto success = m_context.appendConditionalJump();
-			if (function.kind() == FunctionType::Kind::Assert)
-				// condition was not met, flag an error
-				m_context.appendPanic(util::PanicCode::Assert);
-			else if (haveReasonString)
-			{
-				utils().revertWithStringData(*arguments.at(1)->annotation().type);
-				// Here, the argument is consumed, but in the other branch, it is still there.
-				m_context.adjustStackOffset(static_cast<int>(arguments.at(1)->annotation().type->sizeOnStack()));
-			}
-			else
-				m_context.appendRevert();
-			// the success branch
-			m_context << success;
-			if (haveReasonString)
-				utils().popStackElement(*arguments.at(1)->annotation().type);
 			break;
 		}
 		case FunctionType::Kind::ABIEncode:
