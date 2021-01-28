@@ -103,6 +103,22 @@ void CompilerUtils::revertWithStringData(Type const& _argumentType)
 	m_context << Instruction::REVERT;
 }
 
+void CompilerUtils::revertWithError(
+	string const& _signature,
+	vector<Type const*> const& _parameterTypes,
+	vector<Type const*> const& _argumentTypes
+)
+{
+	fetchFreeMemoryPointer();
+	m_context << util::selectorFromSignature(_signature);
+	m_context << Instruction::DUP2 << Instruction::MSTORE;
+	m_context << u256(4) << Instruction::ADD;
+	// Stack: <arguments...> <mem pos of encoding start>
+	abiEncode(_argumentTypes, _parameterTypes);
+	toSizeAfterFreeMemoryPointer();
+	m_context << Instruction::REVERT;
+}
+
 void CompilerUtils::returnDataToArray()
 {
 	if (m_context.evmVersion().supportsReturndata())

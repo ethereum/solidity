@@ -106,6 +106,13 @@ private:
 	/// Generates code to rethrow an exception.
 	void rethrow();
 
+	/// Generates code to revert with an error, which might be a plain string
+	/// or an error instance. The error arguments and the strings are assumed to
+	/// be already evaluated and available in local IRVariables, but not yet
+	/// converted.
+	/// Honors the revert strings setting.
+	void revertWithError(ASTPointer<Expression const> const& _error);
+
 	void handleVariableReference(
 		VariableDeclaration const& _variable,
 		Expression const& _referencingExpression
