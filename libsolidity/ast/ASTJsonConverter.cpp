@@ -473,6 +473,18 @@ bool ASTJsonConverter::visit(EventDefinition const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(ErrorDefinition const& _node)
+{
+	m_inEvent = true;
+	setJsonNode(_node, "ErrorDefinition", {
+		make_pair("name", _node.name()),
+		make_pair("nameLocation", sourceLocationToString(_node.nameLocation())),
+		make_pair("documentation", _node.documentation() ? toJson(*_node.documentation()) : Json::nullValue),
+		make_pair("parameters", toJson(_node.parameterList()))
+	});
+	return false;
+}
+
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 {
 	std::vector<pair<string, Json::Value>> attributes = {

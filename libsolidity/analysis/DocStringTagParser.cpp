@@ -85,6 +85,13 @@ bool DocStringTagParser::visit(EventDefinition const& _event)
 	return true;
 }
 
+bool DocStringTagParser::visit(ErrorDefinition const& _error)
+{
+	handleCallable(_error, _error, _error.annotation());
+
+	return true;
+}
+
 void DocStringTagParser::checkParameters(
 	CallableDeclaration const& _callable,
 	StructurallyDocumented const& _node,
@@ -127,11 +134,14 @@ void DocStringTagParser::handleCallable(
 )
 {
 	static set<string> const validEventTags = set<string>{"dev", "notice", "return", "param"};
+	static set<string> const validErrorTags = set<string>{"dev", "notice", "param"};
 	static set<string> const validModifierTags = set<string>{"dev", "notice", "param", "inheritdoc"};
 	static set<string> const validTags = set<string>{"dev", "notice", "return", "param", "inheritdoc"};
 
 	if (dynamic_cast<EventDefinition const*>(&_callable))
 		parseDocStrings(_node, _annotation, validEventTags, "events");
+	else if (dynamic_cast<ErrorDefinition const*>(&_callable))
+		parseDocStrings(_node, _annotation, validErrorTags, "errors");
 	else if (dynamic_cast<ModifierDefinition const*>(&_callable))
 		parseDocStrings(_node, _annotation, validModifierTags, "modifiers");
 	else

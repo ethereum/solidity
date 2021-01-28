@@ -1149,6 +1149,7 @@ public:
 		SHA256, ///< CALL to special contract for sha256
 		RIPEMD160, ///< CALL to special contract for ripemd160
 		Event, ///< syntactic sugar for LOG*
+		Error, ///< creating an error instance in revert or require
 		SetGas, ///< modify the default gas value for the function call
 		SetValue, ///< modify the default value transfer for the function call
 		BlockHash, ///< BLOCKHASH
@@ -1180,6 +1181,7 @@ public:
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
+	explicit FunctionType(ErrorDefinition const& _error);
 	/// Creates the type of a function type name.
 	explicit FunctionType(FunctionTypeName const& _typeName);
 	/// Function type constructor to be used for a plain type (not derived from a declaration).

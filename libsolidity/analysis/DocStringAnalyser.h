@@ -43,6 +43,7 @@ private:
 	bool visit(VariableDeclaration const& _variable) override;
 	bool visit(ModifierDefinition const& _modifier) override;
 	bool visit(EventDefinition const& _event) override;
+	bool visit(ErrorDefinition const& _error) override;
 
 	CallableDeclaration const* resolveInheritDoc(
 		std::set<CallableDeclaration const*> const& _baseFunctions,

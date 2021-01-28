@@ -40,6 +40,7 @@ namespace solidity::frontend
  *  - issues deprecation warning for throw
  *  - whether the msize instruction is used and the Yul optimizer is enabled at the same time.
  *  - selection of the ABI coder through pragmas.
+ *  - whether user-defined errors are called Error or Panic.
  */
 class SyntaxChecker: private ASTConstVisitor
 {
@@ -60,6 +61,8 @@ private:
 
 	bool visit(ModifierDefinition const& _modifier) override;
 	void endVisit(ModifierDefinition const& _modifier) override;
+
+	bool visit(ErrorDefinition const& _error) override;
 
 	/// Reports an error if _statement is a VariableDeclarationStatement.
 	/// Used by if/while/for to check for single statement variable declarations

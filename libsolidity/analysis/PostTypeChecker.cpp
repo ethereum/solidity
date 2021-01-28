@@ -85,6 +85,11 @@ bool PostTypeChecker::visit(FunctionCall const& _functionCall)
 	return callVisit(_functionCall);
 }
 
+void PostTypeChecker::endVisit(FunctionCall const& _functionCall)
+{
+	callEndVisit(_functionCall);
+}
+
 bool PostTypeChecker::visit(Identifier const& _identifier)
 {
 	return callVisit(_identifier);
@@ -313,6 +318,67 @@ private:
 	bool m_insideEmitStatement = false;
 };
 
+struct ErrorOutsideRequireRevertChecker: public PostTypeChecker::Checker
+{
+	ErrorOutsideRequireRevertChecker(ErrorReporter& _errorReporter):
+		Checker(_errorReporter) {}
+
+	bool visit(FunctionCall const& _functionCall) override
+	{
+		if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+			return true;
+		auto const* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
+		solAssert(functionType, "");
+		switch (functionType->kind())
+		{
+		case FunctionType::Kind::Require:
+		case FunctionType::Kind::Revert:
+		{
+			solAssert(!m_insideRequireRevert, "");
+			m_insideRequireRevert = true;
+			break;
+		}
+		case FunctionType::Kind::Error:
+		{
+			// This will not catch situations like
+			// revert(Error1(Error2())), but as long as we
+			// do not exit the expression context inside "require" and "revert",
+			// this will be caught by the type checker since errors
+			// do not have return values.
+			if (!m_insideRequireRevert)
+				m_errorReporter.typeError(
+					7757_error,
+					_functionCall.location(),
+					"Errors can only be created directly inside require or revert calls."
+				);
+			break;
+		}
+		default:
+			break;
+		}
+		return true;
+	}
+
+	void endVisit(FunctionCall const& _functionCall) override
+	{
+		if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
+			return;
+		auto const* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
+		solAssert(functionType, "");
+		if (
+			functionType->kind() == FunctionType::Kind::Require ||
+			functionType->kind() == FunctionType::Kind::Revert
+		)
+		{
+			solAssert(m_insideRequireRevert, "");
+			m_insideRequireRevert = false;
+		}
+	}
+
+private:
+	bool m_insideRequireRevert = false;
+};
+
 struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
 {
 	NoVariablesInInterfaceChecker(ErrorReporter& _errorReporter):
@@ -370,5 +436,6 @@ PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_err
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<EventOutsideEmitChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<ErrorOutsideRequireRevertChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
 }

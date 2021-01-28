@@ -268,7 +268,7 @@ public:
 	/// @returns true if this is a declaration of a struct member.
 	bool isStructMember() const;
 	/// @returns true if this is a declaration of a parameter of an event.
-	bool isEventParameter() const;
+	bool isEventOrErrorParameter() const;
 
 	/// @returns the type of expressions referencing this declaration.
 	/// This can only be called once types of variable declarations have already been resolved.
@@ -509,6 +509,7 @@ public:
 	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
+	std::vector<ErrorDefinition const*> errors() const { return filteredNodes<ErrorDefinition>(m_subNodes); }
 	bool isInterface() const { return m_contractKind == ContractKind::Interface; }
 	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
 
@@ -736,7 +737,7 @@ private:
 
 /**
  * Base class for all nodes that define function-like objects, i.e. FunctionDefinition,
- * EventDefinition and ModifierDefinition.
+ * EventDefinition, ErrorDefinition and ModifierDefinition.
  */
 class CallableDeclaration: public Declaration, public VariableScope
 {
@@ -1153,6 +1154,47 @@ public:
 
 private:
 	bool m_anonymous = false;
+};
+
+/**
+ * Definition of an error type usable in ``revert(MyError(x))``, ``require(condition, MyError(x))``
+ * and ``catch MyError(_x)``.
+ */
+class ErrorDefinition: public CallableDeclaration, public StructurallyDocumented, public ScopeOpener
+{
+public:
+	ErrorDefinition(
+		int64_t _id,
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		SourceLocation _nameLocation,
+		ASTPointer<StructuredDocumentation> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters
+	):
+		CallableDeclaration(_id, _location, _name, std::move(_nameLocation), Visibility::Default, _parameters),
+		StructurallyDocumented(_documentation)
+	{
+	}
+
+	void accept(ASTVisitor& _visitor) override;
+	void accept(ASTConstVisitor& _visitor) const override;
+
+	TypePointer type() const override;
+
+	FunctionTypePointer functionType(bool _internal) const override;
+
+	bool isVisibleInDerivedContracts() const override { return true; }
+	bool isVisibleViaContractTypeAccess() const override { return true; }
+
+	ErrorDefinitionAnnotation& annotation() const override;
+
+	CallableDeclaration const& resolveVirtual(
+		ContractDefinition const&,
+		ContractDefinition const*
+	) const override
+	{
+		return *this;
+	}
 };
 
 /**

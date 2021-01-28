@@ -192,6 +192,17 @@ void SyntaxChecker::endVisit(ModifierDefinition const& _modifier)
 	m_placeholderFound = false;
 }
 
+bool SyntaxChecker::visit(ErrorDefinition const& _error)
+{
+	if (_error.name() == "Error" || _error.name() == "Panic")
+		m_errorReporter.syntaxError(
+			1855_error,
+			_error.location(),
+			"The built-in errors \"Error\" and \"Panic\" cannot be re-defined."
+		);
+	return true;
+}
+
 void SyntaxChecker::checkSingleStatementVariableDeclaration(ASTNode const& _statement)
 {
 	auto varDecl = dynamic_cast<VariableDeclarationStatement const*>(&_statement);

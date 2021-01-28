@@ -2729,13 +2729,34 @@ FunctionType::FunctionType(EventDefinition const& _event):
 	}
 
 	solAssert(
-			m_parameterNames.size() == m_parameterTypes.size(),
-			"Parameter names list must match parameter types list!"
-			);
+		m_parameterNames.size() == m_parameterTypes.size(),
+		"Parameter names list must match parameter types list!"
+	);
 	solAssert(
-			m_returnParameterNames.size() == m_returnParameterTypes.size(),
-			"Return parameter names list must match return parameter types list!"
-			);
+		m_returnParameterNames.size() == m_returnParameterTypes.size(),
+		"Return parameter names list must match return parameter types list!"
+	);
+}
+
+FunctionType::FunctionType(ErrorDefinition const& _error):
+	m_kind(Kind::Error),
+	m_stateMutability(StateMutability::Pure),
+	m_declaration(&_error)
+{
+	for (ASTPointer<VariableDeclaration> const& var: _error.parameters())
+	{
+		m_parameterNames.push_back(var->name());
+		m_parameterTypes.push_back(var->annotation().type);
+	}
+
+	solAssert(
+		m_parameterNames.size() == m_parameterTypes.size(),
+		"Parameter names list must match parameter types list!"
+	);
+	solAssert(
+		m_returnParameterNames.empty() && m_returnParameterTypes.empty(),
+		"Return parameter names list must match return parameter types list!"
+	);
 }
 
 FunctionType::FunctionType(FunctionTypeName const& _typeName):
@@ -2863,6 +2884,7 @@ string FunctionType::richIdentifier() const
 	case Kind::RIPEMD160: id += "ripemd160"; break;
 	case Kind::GasLeft: id += "gasleft"; break;
 	case Kind::Event: id += "event"; break;
+	case Kind::Error: id += "error"; break;
 	case Kind::SetGas: id += "setgas"; break;
 	case Kind::SetValue: id += "setvalue"; break;
 	case Kind::BlockHash: id += "blockhash"; break;
@@ -3100,7 +3122,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	// Note that m_declaration might also be a state variable!
 	solAssert(m_declaration, "Declaration needed to determine interface function type.");
 	bool isLibraryFunction = false;
-	if (kind() != Kind::Event)
+	if (kind() != Kind::Event && kind() != Kind::Error)
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope()))
 			isLibraryFunction = contract->isLibrary();
 
@@ -3389,15 +3411,16 @@ string FunctionType::externalSignature() const
 	case Kind::External:
 	case Kind::DelegateCall:
 	case Kind::Event:
+	case Kind::Error:
 	case Kind::Declaration:
 		break;
 	default:
 		solAssert(false, "Invalid function type for requesting external signature.");
 	}
 
-	// "inLibrary" is only relevant if this is not an event.
+	// "inLibrary" is only relevant if this is neither an event nor an error.
 	bool inLibrary = false;
-	if (kind() != Kind::Event)
+	if (kind() != Kind::Event && kind() != Kind::Error)
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_declaration->scope()))
 			inLibrary = contract->isLibrary();
 

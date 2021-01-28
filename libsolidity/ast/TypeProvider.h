@@ -139,6 +139,8 @@ public:
 	/// @returns the function type of an event.
 	static FunctionType const* function(EventDefinition const& _event);
 
+	static FunctionType const* function(ErrorDefinition const& _error);
+
 	/// @returns the type of a function type name.
 	static FunctionType const* function(FunctionTypeName const& _typeName);
 

@@ -26,4 +26,4 @@ contract C {
 // TypeError 5547: (401-404): Empty tuple on the left hand side.
 // TypeError 4289: (399-466): Compound assignment is not allowed for tuple types.
 // TypeError 7407: (410-466): Type bytes32 is not implicitly convertible to expected type tuple().
-// TypeError 9322: (389-396): No matching declaration found after argument-dependent lookup.
+// TypeError 2956: (399-466): Invalid type for argument in function call. Invalid implicit conversion from tuple() to bool requested.
