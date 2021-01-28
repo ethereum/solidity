@@ -70,7 +70,19 @@ public:
 
 	/// @returns the FunctionDefinition of a FunctionCall
 	/// if possible or nullptr.
-	static std::pair<FunctionDefinition const*, ContractDefinition const*> functionCallToDefinition(FunctionCall const& _funCall, ContractDefinition const* _contract = nullptr);
+	/// @param _scopeContract is the contract that contains the function currently being
+	///        analyzed, if applicable.
+	/// @param _contextContract is the most derived contract currently being analyzed.
+	/// The difference between the two parameters appears in the case of inheritance.
+	/// Let A and B be two contracts so that B derives from A, and A defines a function `f`
+	/// that `B` does not override. Function `f` is visited twice:
+	/// - Once when A is the most derived contract, where both _scopeContract and _contextContract are A.
+	/// - Once when B is the most derived contract, where _scopeContract is A and _contextContract is B.
+	static FunctionDefinition const* functionCallToDefinition(
+		FunctionCall const& _funCall,
+		ContractDefinition const* _scopeContract,
+		ContractDefinition const* _contextContract
+	);
 
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(ContractDefinition const& _contract);
 	static std::vector<VariableDeclaration const*> stateVariablesIncludingInheritedAndPrivate(FunctionDefinition const& _function);
@@ -339,12 +351,12 @@ protected:
 
 	/// Creates symbolic expressions for the returned values
 	/// and set them as the components of the symbolic tuple.
-	void createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contract);
+	void createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 
 	/// @returns the symbolic arguments for a function call,
 	/// taking into account bound functions and
 	/// type conversion.
-	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contract);
+	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
@@ -384,12 +396,21 @@ protected:
 	bool isRootFunction();
 	/// Returns true if _funDef was already visited.
 	bool visitedFunction(FunctionDefinition const* _funDef);
+	/// @returns the contract that contains the current FunctionDefinition that is being visited,
+	/// or nullptr if the analysis is not inside a FunctionDefinition.
+	ContractDefinition const* currentScopeContract();
 
 	/// @returns FunctionDefinitions of the given contract (including its constructor and inherited methods),
 	/// taking into account overriding of the virtual functions.
-	std::vector<FunctionDefinition const*> const& contractFunctions(ContractDefinition const& _contract);
+	std::set<FunctionDefinition const*, ASTNode::CompareByID> const& contractFunctions(ContractDefinition const& _contract);
 	/// Cache for the method contractFunctions.
-	std::map<ContractDefinition const*, std::vector<FunctionDefinition const*>> m_contractFunctions;
+	std::map<ContractDefinition const*, std::set<FunctionDefinition const*, ASTNode::CompareByID>> m_contractFunctions;
+
+	/// @returns FunctionDefinitions of the given contract (including its constructor and methods of bases),
+	/// without taking into account overriding of the virtual functions.
+	std::set<FunctionDefinition const*, ASTNode::CompareByID> const& contractFunctionsWithoutVirtual(ContractDefinition const& _contract);
+	/// Cache for the method contractFunctionsWithoutVirtual.
+	std::map<ContractDefinition const*, std::set<FunctionDefinition const*, ASTNode::CompareByID>> m_contractFunctionsWithoutVirtual;
 
 	/// Depth of visit to modifiers.
 	/// When m_modifierDepth == #modifiers the function can be visited

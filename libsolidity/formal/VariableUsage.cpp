@@ -60,11 +60,9 @@ void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 
 void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
-	if (m_inlineFunctionCalls(_funCall, m_currentContract))
-		if (
-			auto [funDef, contextContract] = SMTEncoder::functionCallToDefinition(_funCall, m_currentContract);
-			funDef
-		)
+	auto scopeContract = m_currentFunction->annotation().contract;
+	if (m_inlineFunctionCalls(_funCall, scopeContract, m_currentContract))
+		if (auto funDef = SMTEncoder::functionCallToDefinition(_funCall, scopeContract, m_currentContract))
 			if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
 				funDef->accept(*this);
 }

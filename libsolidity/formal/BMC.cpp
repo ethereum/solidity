@@ -101,9 +101,13 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 	m_errorReporter.clear();
 }
 
-bool BMC::shouldInlineFunctionCall(FunctionCall const& _funCall, ContractDefinition const* _contract)
+bool BMC::shouldInlineFunctionCall(
+	FunctionCall const& _funCall,
+	ContractDefinition const* _scopeContract,
+	ContractDefinition const* _contextContract
+)
 {
-	auto [funDef, contextContract] = functionCallToDefinition(_funCall, _contract);
+	auto funDef = functionCallToDefinition(_funCall, _scopeContract, _contextContract);
 	if (!funDef || !funDef->isImplemented())
 		return false;
 
@@ -508,8 +512,8 @@ void BMC::visitAddMulMod(FunctionCall const& _funCall)
 
 void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 {
-	solAssert(shouldInlineFunctionCall(_funCall, m_currentContract), "");
-	auto [funDef, contextContract] = functionCallToDefinition(_funCall, m_currentContract);
+	solAssert(shouldInlineFunctionCall(_funCall, currentScopeContract(), m_currentContract), "");
+	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	solAssert(funDef, "");
 
 	if (visitedFunction(funDef))
@@ -541,7 +545,7 @@ void BMC::inlineFunctionCall(FunctionCall const& _funCall)
 void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 {
 	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
-	if (shouldInlineFunctionCall(_funCall, m_currentContract))
+	if (shouldInlineFunctionCall(_funCall, currentScopeContract(), m_currentContract))
 		inlineFunctionCall(_funCall);
 	else if (isPublicGetter(_funCall.expression()))
 	{
