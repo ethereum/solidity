@@ -366,6 +366,28 @@ void EventDefinition::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void ErrorDefinition::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
+		m_parameters->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ErrorDefinition::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		if (m_documentation)
+			m_documentation->accept(_visitor);
+		m_parameters->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void ElementaryTypeName::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);

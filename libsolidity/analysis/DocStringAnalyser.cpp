@@ -157,6 +157,13 @@ bool DocStringAnalyser::visit(EventDefinition const& _event)
 	return true;
 }
 
+bool DocStringAnalyser::visit(ErrorDefinition const& _error)
+{
+	handleCallable(_error, _error, _error.annotation());
+
+	return true;
+}
+
 void DocStringAnalyser::handleCallable(
 	CallableDeclaration const& _callable,
 	StructurallyDocumented const& _node,

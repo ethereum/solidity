@@ -3,4 +3,4 @@ contract C {
     function f() pure public { require; }
 }
 // ----
-// TypeError 2144: (101-108): No matching declaration found after variable lookup.
+// Warning 6133: (101-108): Statement has no effect.

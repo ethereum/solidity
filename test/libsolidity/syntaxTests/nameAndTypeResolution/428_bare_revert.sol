@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2144: (81-87): No matching declaration found after variable lookup.
+// Warning 6133: (81-87): Statement has no effect.

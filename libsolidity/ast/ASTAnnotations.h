@@ -178,6 +178,11 @@ struct EventDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDoc
 {
 };
 
+struct ErrorDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
+{
+};
+
+
 struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 };

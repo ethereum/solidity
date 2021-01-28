@@ -368,7 +368,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 
 	// Find correct data location.
-	if (_variable.isEventParameter())
+	if (_variable.isEventOrErrorParameter())
 	{
 		solAssert(varLoc == Location::Unspecified, "");
 		typeLoc = DataLocation::Memory;

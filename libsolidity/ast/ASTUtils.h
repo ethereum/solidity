@@ -22,6 +22,8 @@ namespace solidity::frontend
 {
 
 class VariableDeclaration;
+class Declaration;
+class Expression;
 
 /// Find the topmost referenced constant variable declaration when the given variable
 /// declaration value is an identifier. Works only for constant variable declarations.
@@ -30,5 +32,9 @@ VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration cons
 
 /// Returns true if the constant variable declaration is recursive.
 bool isConstantVariableRecursive(VariableDeclaration const& _varDecl);
+
+/// @returns the declaration referenced from the expression which has to be MemberAccess
+/// or Identifier. Returns nullptr otherwise.
+Declaration const* referencedDeclaration(Expression const& _expression);
 
 }

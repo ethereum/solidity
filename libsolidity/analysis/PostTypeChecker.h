@@ -81,6 +81,7 @@ private:
 	void endVisit(EmitStatement const& _emit) override;
 
 	bool visit(FunctionCall const& _functionCall) override;
+	void endVisit(FunctionCall const& _functionCall) override;
 
 	bool visit(Identifier const& _identifier) override;
 	bool visit(MemberAccess const& _identifier) override;
