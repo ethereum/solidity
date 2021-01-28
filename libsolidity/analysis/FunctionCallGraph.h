@@ -21,6 +21,7 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 
+#include <ostream>
 #include <vector>
 #include <variant>
 
@@ -99,5 +100,7 @@ private:
 	std::unique_ptr<ContractCallGraph> m_graph = nullptr;
 	Node m_currentDispatch = SpecialNode::InternalCreationDispatch;
 };
+
+std::ostream& operator<<(std::ostream& _out, FunctionCallGraphBuilder::Node const& _node);
 
 }

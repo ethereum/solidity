@@ -18,6 +18,8 @@
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
 
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/join.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/transform.hpp>
 
@@ -248,4 +250,71 @@ void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _calla
 
 	if (!m_graph->edges.count(&_callable))
 		visitCallable(&_callable);
+}
+
+ostream& solidity::frontend::operator<<(ostream& _out, FunctionCallGraphBuilder::Node const& _node)
+{
+	using SpecialNode = FunctionCallGraphBuilder::SpecialNode;
+
+	if (holds_alternative<SpecialNode>(_node))
+	{
+		auto specialNode = get<SpecialNode>(_node);
+		switch (specialNode)
+		{
+			case SpecialNode::EntryCreation:
+				_out<< "EntryCreation";
+				break;
+			case SpecialNode::InternalCreationDispatch:
+				_out<< "InternalCreationDispatch";
+				break;
+			case SpecialNode::InternalDispatch:
+				_out<< "InternalDispatch";
+				break;
+			case SpecialNode::Entry:
+				_out<< "Entry";
+				break;
+			default: solAssert(false, "Invalid SpecialNode type");
+		}
+	}
+	else
+	{
+		solAssert(get<ASTNode const*>(_node) != nullptr, "");
+		auto const* callableDeclaration = dynamic_cast<CallableDeclaration const *>(get<ASTNode const*>(_node));
+
+		auto const* function = dynamic_cast<FunctionDefinition const *>(callableDeclaration);
+		auto const* event = dynamic_cast<EventDefinition const *>(callableDeclaration);
+		auto const* modifier = dynamic_cast<ModifierDefinition const *>(callableDeclaration);
+
+		auto typeToString = [](auto const& _var) -> string { return _var->type()->toString(true); };
+		vector<string> parameters = callableDeclaration->parameters() | views::transform(typeToString) | to<vector<string>>();
+		string joinedParameters = parameters | views::join(',') | to<string>();
+
+		string scopeName;
+		if (!function || !function->isFree())
+		{
+			solAssert(callableDeclaration->annotation().scope, "");
+			auto const* parentContract = dynamic_cast<ContractDefinition const*>(callableDeclaration->annotation().scope);
+			solAssert(parentContract, "");
+			scopeName = parentContract->name();
+		}
+
+		if (function && function->isFree())
+			_out << "function " << function->name() << "(" << joinedParameters << ")";
+		else if (function && function->isConstructor())
+			_out << "constructor of " << scopeName;
+		else if (function && function->isFallback())
+			_out << "fallback of " << scopeName;
+		else if (function && function->isReceive())
+			_out << "receive of " << scopeName;
+		else if (function)
+			_out << "function " << scopeName << "." << function->name() << "(" << joinedParameters << ")";
+		else if (event)
+			_out<< "event " << scopeName << "." << event->name() << "(" << joinedParameters << ")";
+		else if (modifier)
+			_out<< "modifier " << scopeName << "." << modifier->name();
+		else
+			solAssert(false, "Unexpected AST node type in function call graph");
+	}
+
+	return _out;
 }
