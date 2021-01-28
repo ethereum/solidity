@@ -124,7 +124,7 @@ bool DeclarationContainer::registerDeclaration(
 		// Do not warn about shadowing for structs and enums because their members are
 		// not accessible without prefixes. Also do not warn about event parameters
 		// because they do not participate in any proper scope.
-		bool special = _declaration.scope() && (_declaration.isStructMember() || _declaration.isEnumValue() || _declaration.isEventParameter());
+		bool special = _declaration.scope() && (_declaration.isStructMember() || _declaration.isEnumValue() || _declaration.isEventOrErrorParameter());
 		if (m_enclosingContainer && !special)
 			m_homonymCandidates.emplace_back(*_name, _location ? _location : &_declaration.location());
 	}

@@ -29,12 +29,13 @@ Do: 'do';
 Else: 'else';
 Emit: 'emit';
 Enum: 'enum';
+Error: 'error'; // not a real keyword
 Event: 'event';
 External: 'external';
 Fallback: 'fallback';
 False: 'false';
 Fixed: 'fixed' | ('fixed' [1-9][0-9]* 'x' [1-9][0-9]*);
-From: 'from';
+From: 'from'; // not a real keyword
 /**
  * Bytes types of fixed length.
  */

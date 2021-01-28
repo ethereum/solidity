@@ -71,6 +71,7 @@ public:
 	virtual bool visit(ModifierDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierInvocation& _node) { return visitNode(_node); }
 	virtual bool visit(EventDefinition& _node) { return visitNode(_node); }
+	virtual bool visit(ErrorDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(ElementaryTypeName& _node) { return visitNode(_node); }
 	virtual bool visit(UserDefinedTypeName& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionTypeName& _node) { return visitNode(_node); }
@@ -124,6 +125,7 @@ public:
 	virtual void endVisit(ModifierDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierInvocation& _node) { endVisitNode(_node); }
 	virtual void endVisit(EventDefinition& _node) { endVisitNode(_node); }
+	virtual void endVisit(ErrorDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(ElementaryTypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(UserDefinedTypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionTypeName& _node) { endVisitNode(_node); }
@@ -199,6 +201,7 @@ public:
 	virtual bool visit(ModifierDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(ModifierInvocation const& _node) { return visitNode(_node); }
 	virtual bool visit(EventDefinition const& _node) { return visitNode(_node); }
+	virtual bool visit(ErrorDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(ElementaryTypeName const& _node) { return visitNode(_node); }
 	virtual bool visit(UserDefinedTypeName const& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionTypeName const& _node) { return visitNode(_node); }
@@ -252,6 +255,7 @@ public:
 	virtual void endVisit(ModifierDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ModifierInvocation const& _node) { endVisitNode(_node); }
 	virtual void endVisit(EventDefinition const& _node) { endVisitNode(_node); }
+	virtual void endVisit(ErrorDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ElementaryTypeName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(UserDefinedTypeName const& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionTypeName const& _node) { endVisitNode(_node); }

@@ -174,6 +174,15 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	});
 }
 
+vector<ErrorDefinition const*> ContractDefinition::interfaceErrors() const
+{
+	set<ErrorDefinition const*, CompareByID> result;
+	// TODO add all referenced errors
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		result += filteredNodes<ErrorDefinition>(contract->m_subNodes);
+	return convertContainer<vector<ErrorDefinition const*>>(move(result));
+}
+
 vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
 {
 	return m_interfaceFunctionList[_includeInheritedFunctions].init([&]{
@@ -462,6 +471,24 @@ EventDefinitionAnnotation& EventDefinition::annotation() const
 	return initAnnotation<EventDefinitionAnnotation>();
 }
 
+Type const* ErrorDefinition::type() const
+{
+	return TypeProvider::function(*this);
+}
+
+FunctionTypePointer ErrorDefinition::functionType(bool _internal) const
+{
+	if (_internal)
+		return TypeProvider::function(*this);
+	else
+		return nullptr;
+}
+
+ErrorDefinitionAnnotation& ErrorDefinition::annotation() const
+{
+	return initAnnotation<ErrorDefinitionAnnotation>();
+}
+
 SourceUnit const& Scopable::sourceUnit() const
 {
 	ASTNode const* s = scope();
@@ -504,10 +531,10 @@ bool Declaration::isStructMember() const
 	return dynamic_cast<StructDefinition const*>(scope());
 }
 
-bool Declaration::isEventParameter() const
+bool Declaration::isEventOrErrorParameter() const
 {
 	solAssert(scope(), "");
-	return dynamic_cast<EventDefinition const*>(scope());
+	return dynamic_cast<EventDefinition const*>(scope()) || dynamic_cast<ErrorDefinition const*>(scope());
 }
 
 DeclarationAnnotation& Declaration::annotation() const
@@ -653,7 +680,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 {
 	using Location = VariableDeclaration::Location;
 
-	if (!hasReferenceOrMappingType() || isStateVariable() || isEventParameter())
+	if (!hasReferenceOrMappingType() || isStateVariable() || isEventOrErrorParameter())
 		return set<Location>{ Location::Unspecified };
 	else if (isCallableOrCatchParameter())
 	{

@@ -912,6 +912,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << logInstruction(numIndexed);
 			break;
 		}
+		case FunctionType::Kind::Error:
+		{
+			solAssert(false, "");
+		}
 		case FunctionType::Kind::BlockHash:
 		{
 			acceptAndConvert(*arguments[0], *function.parameterTypes()[0], true);
@@ -1418,6 +1422,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					case FunctionType::Kind::Event:
 						if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
 							solAssert(false, "event not found");
+						// no-op, because the parent node will do the job
+						break;
+					case FunctionType::Kind::Error:
+						if (!dynamic_cast<ErrorDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+							solAssert(false, "error not found");
 						// no-op, because the parent node will do the job
 						break;
 					case FunctionType::Kind::DelegateCall:
@@ -2088,6 +2097,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 			m_context.appendLibraryAddress(contract->fullyQualifiedName());
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<ErrorDefinition const*>(declaration))
 	{
 		// no-op
 	}

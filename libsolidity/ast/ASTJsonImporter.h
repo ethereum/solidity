@@ -88,6 +88,7 @@ private:
 	ASTPointer<ModifierDefinition> createModifierDefinition(Json::Value const& _node);
 	ASTPointer<ModifierInvocation> createModifierInvocation(Json::Value const& _node);
 	ASTPointer<EventDefinition> createEventDefinition(Json::Value const& _node);
+	ASTPointer<ErrorDefinition> createErrorDefinition(Json::Value const& _node);
 	ASTPointer<ElementaryTypeName> createElementaryTypeName(Json::Value const& _node);
 	ASTPointer<UserDefinedTypeName> createUserDefinedTypeName(Json::Value const& _node);
 	ASTPointer<FunctionTypeName> createFunctionTypeName(Json::Value const& _node);

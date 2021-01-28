@@ -112,8 +112,16 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseFunctionDefinition(true));
 				break;
 			default:
+				if (
+					// Workaround because `error` is not a keyword.
+					m_scanner->currentToken() == Token::Identifier &&
+					currentLiteral() == "error" &&
+					m_scanner->peekNextToken() == Token::Identifier &&
+					m_scanner->peekNextNextToken() == Token::LParen
+				)
+					nodes.push_back(parseErrorDefinition());
 				// Constant variable.
-				if (variableDeclarationStart() && m_scanner->peekNextToken() != Token::EOS)
+				else if (variableDeclarationStart() && m_scanner->peekNextToken() != Token::EOS)
 				{
 					VarDeclParserOptions options;
 					options.kind = VarDeclKind::FileLevel;
@@ -351,6 +359,14 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				subNodes.push_back(parseStructDefinition());
 			else if (currentTokenValue == Token::Enum)
 				subNodes.push_back(parseEnumDefinition());
+			else if (
+				// Workaround because `error` is not a keyword.
+				currentTokenValue == Token::Identifier &&
+				currentLiteral() == "error" &&
+				m_scanner->peekNextToken() == Token::Identifier &&
+				m_scanner->peekNextNextToken() == Token::LParen
+			)
+				subNodes.push_back(parseErrorDefinition());
 			else if (variableDeclarationStart())
 			{
 				VarDeclParserOptions options;
@@ -915,6 +931,21 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<EventDefinition>(name, nameLocation, documentation, parameters, anonymous);
+}
+
+ASTPointer<ErrorDefinition> Parser::parseErrorDefinition()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<StructuredDocumentation> documentation = parseStructuredDocumentation();
+
+	solAssert(*expectIdentifierToken() == "error", "");
+	auto&& [name, nameLocation] = expectIdentifierWithLocation();
+
+	ASTPointer<ParameterList> parameters = parseParameterList({});
+	nodeFactory.markEndPosition();
+	expectToken(Token::Semicolon);
+	return nodeFactory.createNode<ErrorDefinition>(name, move(nameLocation), documentation, parameters);
 }
 
 ASTPointer<UsingForDirective> Parser::parseUsingDirective()

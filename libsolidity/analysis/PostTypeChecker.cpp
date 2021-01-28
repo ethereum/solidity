@@ -23,6 +23,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/FunctionSelector.h>
 
 #include <boost/range/adaptor/map.hpp>
 #include <memory>
@@ -68,6 +69,11 @@ bool PostTypeChecker::visit(VariableDeclaration const& _variable)
 void PostTypeChecker::endVisit(VariableDeclaration const& _variable)
 {
 	callEndVisit(_variable);
+}
+
+void PostTypeChecker::endVisit(ErrorDefinition const& _error)
+{
+	callEndVisit(_error);
 }
 
 bool PostTypeChecker::visit(EmitStatement const& _emit)
@@ -362,6 +368,33 @@ private:
 	/// Flag indicating whether we are currently inside a StructDefinition.
 	int m_insideStruct = 0;
 };
+
+struct ReservedErrorSelector: public PostTypeChecker::Checker
+{
+	ReservedErrorSelector(ErrorReporter& _errorReporter):
+		Checker(_errorReporter)
+	{}
+
+	void endVisit(ErrorDefinition const& _error) override
+	{
+		if (_error.name() == "Error" || _error.name() == "Panic")
+			m_errorReporter.syntaxError(
+				1855_error,
+				_error.location(),
+				"The built-in errors \"Error\" and \"Panic\" cannot be re-defined."
+			);
+		else
+		{
+			uint32_t selector = selectorFromSignature32(_error.functionType(true)->externalSignature());
+			if (selector == 0 || ~selector == 0)
+				m_errorReporter.syntaxError(
+					2855_error,
+					_error.location(),
+					"The selector 0x" + toHex(toCompactBigEndian(selector, 4)) + " is reserved. Please rename the error to avoid the collision."
+				);
+		}
+	}
+};
 }
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
@@ -371,4 +404,5 @@ PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_err
 	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<EventOutsideEmitChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<ReservedErrorSelector>(_errorReporter));
 }
