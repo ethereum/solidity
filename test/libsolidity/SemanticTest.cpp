@@ -122,6 +122,7 @@ TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePref
 TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm)
 {
 	bool success = true;
+	m_gasCostFailure = false;
 
 	if (_compileViaYul && _compileToEwasm)
 		selectVM(evmc_capabilities::EVMC_CAPABILITY_EWASM);
@@ -188,6 +189,8 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 		{
 			if (m_transactionSuccessful == test.call().expectations.failure)
 				success = false;
+			if (success && !checkGasCostExpectation(test, _compileViaYul))
+				m_gasCostFailure = true;
 
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(bytes());
@@ -213,6 +216,9 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 			}
 
 			bool outputMismatch = (output != test.call().expectations.rawBytes());
+			if (!outputMismatch && !checkGasCostExpectation(test, _compileViaYul))
+				m_gasCostFailure = true;
+
 			// Pre byzantium, it was not possible to return failure data, so we disregard
 			// output mismatch for those EVM versions.
 			if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
@@ -271,7 +277,31 @@ TestCase::TestResult SemanticTest::runTest(ostream& _stream, string const& _line
 		return TestResult::Failure;
 	}
 
+	if (m_gasCostFailure)
+	{
+		AnsiColorized(_stream, _formatted, {BOLD, CYAN})
+			<< _linePrefix << "Gas results missing or wrong, obtained result:" << endl;
+		for (auto const& test: m_tests)
+		{
+			ErrorReporter errorReporter;
+			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << errorReporter.format(_linePrefix, _formatted);
+		}
+		return TestResult::Failure;
+	}
+
 	return TestResult::Success;
+}
+
+bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const
+{
+	string setting =
+		(_compileViaYul ? "ir"s : "legacy"s) +
+		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
+	io_test.setGasCost(setting, m_gasUsed);
+	return
+		io_test.call().expectations.gasUsed.count(setting) > 0 &&
+		m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
 }
 
 void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
@@ -321,7 +351,7 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
 	for (auto const& test: m_tests)
-		_stream << test.format("", true, false) << endl;
+		_stream << test.format("", /* _renderResult = */ !m_gasCostFailure, /* _highlight = */ false) << endl;
 }
 
 void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)

@@ -23,41 +23,42 @@ namespace solidity::frontend::test
 /**
  * All soltest tokens.
  */
-#define SOLT_TOKEN_LIST(T, K)      \
-	T(Unknown, "unknown", 0)       \
-	T(Invalid, "invalid", 0)       \
-	T(EOS, "EOS", 0)               \
-	T(Whitespace, "_", 0)          \
-	/* punctuations */             \
-	T(LParen, "(", 0)              \
-	T(RParen, ")", 0)              \
-	T(LBrack, "[", 0)              \
-	T(RBrack, "]", 0)              \
-	T(LBrace, "{", 0)              \
-	T(RBrace, "}", 0)              \
-	T(Sub,    "-", 0)              \
-	T(Colon,  ":", 0)              \
-	T(Comma,  ",", 0)              \
-	T(Period, ".", 0)              \
-	T(Arrow, "->", 0)              \
-	T(Newline, "//", 0)            \
-	/* Literals & identifier */    \
-	T(Comment, "#", 0)             \
-	T(Number, "number", 0)         \
-	T(HexNumber, "hex_number", 0)  \
-	T(String, "string", 0)         \
-	T(Identifier, "identifier", 0) \
-	/* type keywords */            \
-	K(Ether, "ether", 0)           \
-	K(Wei, "wei", 0)               \
-	K(Hex, "hex", 0)               \
-	K(Boolean, "boolean", 0)       \
-	/* special keywords */         \
-	K(Left, "left", 0)             \
-	K(Library, "library", 0)       \
-	K(Right, "right", 0)           \
-	K(Failure, "FAILURE", 0)       \
-	K(Storage, "storage", 0) \
+#define SOLT_TOKEN_LIST(T, K)          \
+	T(Unknown, "unknown", 0)           \
+	T(Invalid, "invalid", 0)           \
+	T(EOS, "EOS", 0)                   \
+	T(Whitespace, "_", 0)              \
+	/* punctuations */                 \
+	T(LParen, "(", 0)                  \
+	T(RParen, ")", 0)                  \
+	T(LBrack, "[", 0)                  \
+	T(RBrack, "]", 0)                  \
+	T(LBrace, "{", 0)                  \
+	T(RBrace, "}", 0)                  \
+	T(Sub,    "-", 0)                  \
+	T(Colon,  ":", 0)                  \
+	T(Comma,  ",", 0)                  \
+	T(Period, ".", 0)                  \
+	T(Arrow, "->", 0)                  \
+	T(Newline, "//", 0)                \
+	/* Literals & identifier */        \
+	T(Comment, "#", 0)                 \
+	T(Number, "number", 0)             \
+	T(HexNumber, "hex_number", 0)      \
+	T(String, "string", 0)             \
+	T(Identifier, "identifier", 0)     \
+	/* type keywords */                \
+	K(Ether, "ether", 0)               \
+	K(Wei, "wei", 0)                   \
+	K(Hex, "hex", 0)                   \
+	K(Boolean, "boolean", 0)           \
+	/* special keywords */             \
+	K(Left, "left", 0)                 \
+	K(Library, "library", 0)           \
+	K(Right, "right", 0)               \
+	K(Failure, "FAILURE", 0)           \
+	K(Storage, "storage", 0)           \
+	K(Gas, "gas", 0)                   \
 
 namespace soltest
 {
@@ -202,6 +203,9 @@ struct FunctionCallExpectations
 			raw += param.rawBytes;
 		return raw;
 	}
+	/// Gas used by function call
+	/// Should have values for Yul, YulOptimized, Legacy and LegacyOptimized
+	std::map<std::string, u256> gasUsed;
 };
 
 /**

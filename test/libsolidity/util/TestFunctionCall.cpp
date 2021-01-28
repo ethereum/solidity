@@ -93,7 +93,6 @@ string TestFunctionCall::format(
 			if (!m_call.arguments.parameters.at(0).format.newline)
 				stream << ws;
 			stream << output;
-
 		}
 
 		/// Formats comments on the function parameters and the arrow taking
@@ -204,6 +203,8 @@ string TestFunctionCall::format(
 				stream << comment << m_call.expectations.comment << comment;
 			}
 		}
+
+		stream << formatGasExpectations(_linePrefix);
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
@@ -316,6 +317,17 @@ string TestFunctionCall::formatRawParameters(
 			if (&param != &_params.back())
 				os << ", ";
 		}
+	return os.str();
+}
+
+string TestFunctionCall::formatGasExpectations(string const& _linePrefix) const
+{
+	stringstream os;
+	for (auto const& [runType, gasUsed]: m_call.expectations.gasUsed)
+		if (runType != get<0>(m_gasCost))
+			os << endl << _linePrefix << "// gas " << runType << ": " << gasUsed.str();
+	if (!get<0>(m_gasCost).empty())
+		os << endl << _linePrefix << "// gas " << get<0>(m_gasCost) << ": " << get<1>(m_gasCost).str();
 	return os.str();
 }
 

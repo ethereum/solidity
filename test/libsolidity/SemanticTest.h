@@ -60,6 +60,7 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 private:
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm);
+	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
@@ -70,6 +71,8 @@ private:
 	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
 	bool m_compileViaYulCanBeSet = false;
+
+	bool m_gasCostFailure = false;
 };
 
 }

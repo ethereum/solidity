@@ -79,6 +79,7 @@ public:
 	void calledNonExistingFunction() { m_calledNonExistingFunction = true; }
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
+	void setGasCost(std::string _runType, u256 _gasCost) { m_gasCost = {std::move(_runType), std::move(_gasCost)}; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 
 private:
@@ -116,6 +117,9 @@ private:
 		std::string const& _linePrefix = ""
 	) const;
 
+	/// Formats gas usage expectations one per line
+	std::string formatGasExpectations(std::string const& _linePrefix) const;
+
 	/// Compares raw expectations (which are converted to a byte representation before),
 	/// and also the expected transaction status of the function call to the actual test results.
 	bool matchesExpectation() const;
@@ -124,6 +128,8 @@ private:
 	FunctionCall m_call;
 	/// Result of the actual call been made.
 	bytes m_rawBytes = bytes{};
+	/// Actual gas cost for the type of the run
+	std::tuple<std::string, u256> m_gasCost;
 	/// Transaction status of the actual call. False in case of a REVERT or any other failure.
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting

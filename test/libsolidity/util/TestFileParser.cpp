@@ -62,8 +62,6 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 		{
 			if (!accept(Token::Whitespace))
 			{
-				FunctionCall call;
-
 				/// If this is not the first call in the test,
 				/// the last call to parseParameter could have eaten the
 				/// new line already. This could only be fixed with a one
@@ -77,76 +75,101 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 
 				try
 				{
-					if (accept(Token::Library, true))
+					if (accept(Token::Gas, true))
 					{
-						expect(Token::Colon);
-						call.signature = m_scanner.currentLiteral();
-						expect(Token::Identifier);
-						call.kind = FunctionCall::Kind::Library;
-						call.expectations.failure = false;
-					}
-					else if (accept(Token::Storage, true))
-					{
-						expect(Token::Colon);
-						call.expectations.failure = false;
-						call.expectations.result.push_back(Parameter());
-						// empty / non-empty is encoded as false / true
-						if (m_scanner.currentLiteral() == "empty")
-							call.expectations.result.back().rawBytes = bytes(1, uint8_t(false));
-						else if (m_scanner.currentLiteral() == "nonempty")
-							call.expectations.result.back().rawBytes = bytes(1, uint8_t(true));
+						if (calls.empty())
+							throw TestParserError("Expected function call before gas usage filter.");
+
+						string runType = m_scanner.currentLiteral();
+						if (set<string>{"ir", "irOptimized", "legacy", "legacyOptimized"}.count(runType) > 0)
+						{
+							m_scanner.scanNextToken();
+							expect(Token::Colon);
+							if (calls.back().expectations.gasUsed.count(runType) > 0)
+								throw TestParserError("Gas usage expectation set multiple times.");
+							calls.back().expectations.gasUsed[runType] = u256(parseDecimalNumber());
+						}
 						else
-							throw TestParserError("Expected \"empty\" or \"nonempty\".");
-						call.kind = FunctionCall::Kind::Storage;
-						m_scanner.scanNextToken();
+							throw TestParserError(
+								"Expected \"ir\", \"irOptimized\", \"legacy\", or \"legacyOptimized\"."
+							);
+
 					}
 					else
 					{
-						bool lowLevelCall = false;
-						tie(call.signature, lowLevelCall) = parseFunctionSignature();
-						if (lowLevelCall)
-							call.kind = FunctionCall::Kind::LowLevel;
+						FunctionCall call;
 
-						if (accept(Token::Comma, true))
-							call.value = parseFunctionCallValue();
-
-						if (accept(Token::Colon, true))
-							call.arguments = parseFunctionCallArguments();
-
-						if (accept(Token::Newline, true))
+						if (accept(Token::Library, true))
 						{
-							call.displayMode = FunctionCall::DisplayMode::MultiLine;
-							m_lineNumber++;
+							expect(Token::Colon);
+							call.signature = m_scanner.currentLiteral();
+							expect(Token::Identifier);
+							call.kind = FunctionCall::Kind::Library;
+							call.expectations.failure = false;
 						}
-
-						call.arguments.comment = parseComment();
-
-						if (accept(Token::Newline, true))
+						else if (accept(Token::Storage, true))
 						{
-							call.displayMode = FunctionCall::DisplayMode::MultiLine;
-							m_lineNumber++;
-						}
-
-						if (accept(Token::Arrow, true))
-						{
-							call.omitsArrow = false;
-							call.expectations = parseFunctionCallExpectations();
-							if (accept(Token::Newline, true))
-								m_lineNumber++;
+							expect(Token::Colon);
+							call.expectations.failure = false;
+							call.expectations.result.push_back(Parameter());
+							// empty / non-empty is encoded as false / true
+							if (m_scanner.currentLiteral() == "empty")
+								call.expectations.result.back().rawBytes = bytes(1, uint8_t(false));
+							else if (m_scanner.currentLiteral() == "nonempty")
+								call.expectations.result.back().rawBytes = bytes(1, uint8_t(true));
+							else
+								throw TestParserError("Expected \"empty\" or \"nonempty\".");
+							call.kind = FunctionCall::Kind::Storage;
+							m_scanner.scanNextToken();
 						}
 						else
 						{
-							call.expectations.failure = false;
-							call.displayMode = FunctionCall::DisplayMode::SingleLine;
+							bool lowLevelCall = false;
+							tie(call.signature, lowLevelCall) = parseFunctionSignature();
+							if (lowLevelCall)
+								call.kind = FunctionCall::Kind::LowLevel;
+
+							if (accept(Token::Comma, true))
+								call.value = parseFunctionCallValue();
+
+							if (accept(Token::Colon, true))
+								call.arguments = parseFunctionCallArguments();
+
+							if (accept(Token::Newline, true))
+							{
+								call.displayMode = FunctionCall::DisplayMode::MultiLine;
+								m_lineNumber++;
+							}
+
+							call.arguments.comment = parseComment();
+
+							if (accept(Token::Newline, true))
+							{
+								call.displayMode = FunctionCall::DisplayMode::MultiLine;
+								m_lineNumber++;
+							}
+
+							if (accept(Token::Arrow, true))
+							{
+								call.omitsArrow = false;
+								call.expectations = parseFunctionCallExpectations();
+								if (accept(Token::Newline, true))
+									m_lineNumber++;
+							}
+							else
+							{
+								call.expectations.failure = false;
+								call.displayMode = FunctionCall::DisplayMode::SingleLine;
+							}
+
+							call.expectations.comment = parseComment();
+
+							if (call.signature == "constructor()")
+								call.kind = FunctionCall::Kind::Constructor;
 						}
 
-						call.expectations.comment = parseComment();
-
-						if (call.signature == "constructor()")
-							call.kind = FunctionCall::Kind::Constructor;
+						calls.emplace_back(std::move(call));
 					}
-
-					calls.emplace_back(std::move(call));
 				}
 				catch (TestParserError const& _e)
 				{
@@ -498,6 +521,7 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "hex") return {Token::Hex, ""};
 		if (_literal == "FAILURE") return {Token::Failure, ""};
 		if (_literal == "storage") return {Token::Storage, ""};
+		if (_literal == "gas") return {Token::Gas, ""};
 		return {Token::Identifier, _literal};
 	};
 
