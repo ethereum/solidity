@@ -1041,11 +1041,20 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		m_code << templ.render();
 		break;
 	}
+	case FunctionType::Kind::Error:
+	{
+		solAssert(false, "");
+	}
 	case FunctionType::Kind::Assert:
 	case FunctionType::Kind::Require:
 	{
 		solAssert(arguments.size() > 0, "Expected at least one parameter for require/assert");
 		solAssert(arguments.size() <= 2, "Expected no more than two parameters for require/assert");
+		if (arguments.size() == 2)
+			solAssert(functionType->kind() == FunctionType::Kind::Require, "");
+
+		if (arguments.size() == 2)
+			solUnimplementedAssert(arguments.back()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
 
 		Type const* messageArgumentType =
 			arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip ?
@@ -1192,12 +1201,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	case FunctionType::Kind::Revert:
 	{
-		solAssert(arguments.size() == parameterTypes.size(), "");
 		if (arguments.empty())
 			m_code << "revert(0, 0)\n";
 		else
 		{
 			solAssert(arguments.size() == 1, "");
+			solUnimplementedAssert(arguments.front()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
 
 			if (m_context.revertStrings() == RevertStrings::Strip)
 				m_code << "revert(0, 0)\n";
@@ -1945,7 +1954,14 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 						dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration),
 						"Event not found"
 					);
-						// the call will do the resolving
+					// the call will do the resolving
+					break;
+				case FunctionType::Kind::Error:
+					solAssert(
+						dynamic_cast<ErrorDefinition const*>(_memberAccess.annotation().referencedDeclaration),
+						"Error not found"
+					);
+					// the call will do the resolving
 					break;
 				case FunctionType::Kind::DelegateCall:
 					define(IRVariable(_memberAccess).part("address"), _memberAccess.expression());
@@ -2273,6 +2289,11 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{
+		// no-op
+	}
+	else if (dynamic_cast<ErrorDefinition const*>(declaration))
+	{
+		// TODO should this rather be an assertion? Can we get here?
 		// no-op
 	}
 	else if (dynamic_cast<EnumDefinition const*>(declaration))

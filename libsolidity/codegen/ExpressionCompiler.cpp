@@ -792,7 +792,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			{
 				// function-sel(Error(string)) + encoding
 				solAssert(arguments.size() == 1, "");
-				solAssert(function.parameterTypes().size() == 1, "");
+				solUnimplementedAssert(arguments.front()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!*arguments.front()->annotation().isPure)
@@ -907,6 +907,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().toSizeAfterFreeMemoryPointer();
 			m_context << logInstruction(numIndexed);
 			break;
+		}
+		case FunctionType::Kind::Error:
+		{
+			solAssert(false, "");
 		}
 		case FunctionType::Kind::BlockHash:
 		{
@@ -1076,7 +1080,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::Assert:
 		case FunctionType::Kind::Require:
 		{
-			acceptAndConvert(*arguments.front(), *function.parameterTypes().front(), false);
+			acceptAndConvert(*arguments.front(), *TypeProvider::boolean(), false);
 
 			bool haveReasonString = arguments.size() > 1 && m_context.revertStrings() != RevertStrings::Strip;
 
@@ -1087,6 +1091,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				// function call.
 				solAssert(arguments.size() == 2, "");
 				solAssert(function.kind() == FunctionType::Kind::Require, "");
+				solUnimplementedAssert(arguments.back()->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()), "");
 				if (m_context.revertStrings() == RevertStrings::Strip)
 				{
 					if (!*arguments.at(1)->annotation().isPure)
@@ -1379,6 +1384,11 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 					case FunctionType::Kind::Event:
 						if (!dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration))
 							solAssert(false, "event not found");
+						// no-op, because the parent node will do the job
+						break;
+					case FunctionType::Kind::Error:
+						if (!dynamic_cast<ErrorDefinition const*>(_memberAccess.annotation().referencedDeclaration))
+							solAssert(false, "error not found");
 						// no-op, because the parent node will do the job
 						break;
 					case FunctionType::Kind::DelegateCall:
@@ -2049,6 +2059,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 			m_context.appendLibraryAddress(contract->fullyQualifiedName());
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<ErrorDefinition const*>(declaration))
 	{
 		// no-op
 	}

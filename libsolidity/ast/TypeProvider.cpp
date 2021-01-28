@@ -431,6 +431,11 @@ FunctionType const* TypeProvider::function(EventDefinition const& _def)
 	return createAndGet<FunctionType>(_def);
 }
 
+FunctionType const* TypeProvider::function(ErrorDefinition const& _def)
+{
+	return createAndGet<FunctionType>(_def);
+}
+
 FunctionType const* TypeProvider::function(FunctionTypeName const& _typeName)
 {
 	return createAndGet<FunctionType>(_typeName);

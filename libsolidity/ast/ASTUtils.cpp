@@ -67,4 +67,14 @@ VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration cons
 	return rootDecl;
 }
 
+Declaration const* referencedDeclaration(Expression const& _expression)
+{
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
+		return memberAccess->annotation().referencedDeclaration;
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
+		return identifier->annotation().referencedDeclaration;
+	else
+		return nullptr;
+}
+
 }

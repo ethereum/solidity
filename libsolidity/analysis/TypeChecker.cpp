@@ -42,6 +42,7 @@
 
 #include <range/v3/view/zip.hpp>
 #include <range/v3/view/drop_exactly.hpp>
+#include <range/v3/algorithm/count_if.hpp>
 
 #include <memory>
 #include <vector>
@@ -681,34 +682,23 @@ void TypeChecker::visitManually(
 bool TypeChecker::visit(EventDefinition const& _eventDef)
 {
 	solAssert(_eventDef.visibility() > Visibility::Internal, "");
-	unsigned numIndexed = 0;
-	for (ASTPointer<VariableDeclaration> const& var: _eventDef.parameters())
-	{
-		if (var->isIndexed())
-			numIndexed++;
-		if (type(*var)->containsNestedMapping())
-			m_errorReporter.typeError(
-				3448_error,
-				var->location(),
-				"Type containing a (nested) mapping is not allowed as event parameter type."
-			);
-		if (!type(*var)->interfaceType(false))
-			m_errorReporter.typeError(3417_error, var->location(), "Internal or recursive type is not allowed as event parameter type.");
-		if (
-			!useABICoderV2() &&
-			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
-		)
-			m_errorReporter.typeError(
-				3061_error,
-				var->location(),
-				"This type is only supported in ABI coder v2. "
-				"Use \"pragma abicoder v2;\" to enable the feature."
-			);
-	}
+	checkErrorAndEventParameters(_eventDef);
+
+	auto numIndexed = ranges::count_if(
+		_eventDef.parameters(),
+		[](ASTPointer<VariableDeclaration> const& var) { return var->isIndexed(); }
+	);
 	if (_eventDef.isAnonymous() && numIndexed > 4)
 		m_errorReporter.typeError(8598_error, _eventDef.location(), "More than 4 indexed arguments for anonymous event.");
 	else if (!_eventDef.isAnonymous() && numIndexed > 3)
 		m_errorReporter.typeError(7249_error, _eventDef.location(), "More than 3 indexed arguments for event.");
+	return true;
+}
+
+bool TypeChecker::visit(ErrorDefinition const& _errorDef)
+{
+	solAssert(_errorDef.visibility() > Visibility::Internal, "");
+	checkErrorAndEventParameters(_errorDef);
 	return true;
 }
 
@@ -2029,6 +2019,85 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	}
 }
 
+void TypeChecker::typeCheckRequireRevert(FunctionCall const& _functionCall, FunctionType::Kind _kind)
+{
+	solAssert(_kind == FunctionType::Kind::Require || _kind == FunctionType::Kind::Revert, "");
+	// Check for named arguments
+	if (!_functionCall.names().empty())
+	{
+		m_errorReporter.typeError(
+			1886_error,
+			_functionCall.location(),
+			"Named arguments cannot be used for this function call."
+		);
+		return;
+	}
+
+	bool isRequire = _kind == FunctionType::Kind::Require;
+	size_t argsExpected = isRequire ? 1 : 0;
+	string name = isRequire ? "require" : "revert";
+	if (
+		_functionCall.arguments().size() != argsExpected &&
+		_functionCall.arguments().size() != argsExpected + 1
+	)
+	{
+		m_errorReporter.typeError(
+			7445_error,
+			_functionCall.location(),
+			"Function \"" +
+			name +
+			"\" needs " +
+			to_string(argsExpected) +
+			" or " +
+			to_string(argsExpected + 1) +
+			" arguments, but provided " +
+			to_string(_functionCall.arguments().size()) +
+			"."
+		);
+		return;
+	}
+	if (isRequire)
+	{
+		BoolResult result = type(*_functionCall.arguments().front())->isImplicitlyConvertibleTo(*TypeProvider::boolean());
+		if (!result)
+			m_errorReporter.typeError(
+				2956_error,
+				_functionCall.arguments().front()->location(),
+				"Invalid type for argument in function call. "
+				"Invalid implicit conversion from " +
+				type(*_functionCall.arguments().front())->toString() +
+				" to " +
+				TypeProvider::boolean()->toString(false) +
+				" requested." +
+				(result.message().empty() ? "" : " " + result.message())
+			);
+	}
+
+	// Event is omitted, nothing more to check.
+	if (_functionCall.arguments().size() == argsExpected)
+		return;
+
+	if (type(*_functionCall.arguments().back())->isImplicitlyConvertibleTo(*TypeProvider::stringMemory()))
+		return;
+
+	Declaration const* declaration = nullptr;
+	if (auto const* errorCall = dynamic_cast<FunctionCall const*>(_functionCall.arguments().back().get()))
+		if (*errorCall->annotation().kind == FunctionCallKind::FunctionCall)
+			declaration = referencedDeclaration(errorCall->expression());
+	if (!dynamic_cast<ErrorDefinition const*>(declaration))
+	{
+		m_errorReporter.typeError(
+			4423_error,
+			_functionCall.arguments().back()->location(),
+			"Expected error instance or string." + string(
+				dynamic_cast<Identifier const*>(_functionCall.arguments().back().get()) ?
+				" Did you forget the \"()\" after the error?" :
+				""
+			)
+		);
+	}
+}
+
 void TypeChecker::typeCheckFunctionGeneralChecks(
 	FunctionCall const& _functionCall,
 	FunctionTypePointer _functionType
@@ -2248,7 +2317,8 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 		_functionType->kind() == FunctionType::Kind::DelegateCall ||
 		_functionType->kind() == FunctionType::Kind::External ||
 		_functionType->kind() == FunctionType::Kind::Creation ||
-		_functionType->kind() == FunctionType::Kind::Event;
+		_functionType->kind() == FunctionType::Kind::Event ||
+		_functionType->kind() == FunctionType::Kind::Error;
 
 	if (callRequiresABIEncoding && !useABICoderV2())
 	{
@@ -2430,6 +2500,10 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::MetaType:
 			returnTypes = typeCheckMetaTypeFunctionAndRetrieveReturnType(_functionCall);
+			break;
+		case FunctionType::Kind::Require:
+		case FunctionType::Kind::Revert:
+			typeCheckRequireRevert(_functionCall, functionType->kind());
 			break;
 		default:
 		{
@@ -3390,6 +3464,32 @@ void TypeChecker::endVisit(UsingForDirective const& _usingFor)
 			_usingFor.location(),
 			"The \"using for\" directive is not allowed inside interfaces."
 		);
+}
+
+void TypeChecker::checkErrorAndEventParameters(CallableDeclaration const& _callable)
+{
+	string kind = dynamic_cast<EventDefinition const*>(&_callable) ? "event" : "error";
+	for (ASTPointer<VariableDeclaration> const& var: _callable.parameters())
+	{
+		if (type(*var)->containsNestedMapping())
+			m_errorReporter.typeError(
+				3448_error,
+				var->location(),
+				"Type containing a (nested) mapping is not allowed as " + kind + " parameter type."
+			);
+		if (!type(*var)->interfaceType(false))
+			m_errorReporter.typeError(3417_error, var->location(), "Internal or recursive type is not allowed as " + kind + " parameter type.");
+		if (
+			!useABICoderV2() &&
+			!typeSupportedByOldABIEncoder(*type(*var), false /* isLibrary */)
+		)
+			m_errorReporter.typeError(
+				3061_error,
+				var->location(),
+				"This type is only supported in ABI coder v2. "
+				"Use \"pragma abicoder v2;\" to enable the feature."
+			);
+	}
 }
 
 bool TypeChecker::contractDependenciesAreCyclic(

@@ -25,9 +25,9 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
 #include <boost/range/adaptor/reversed.hpp>
-
 
 using namespace std;
 using namespace solidity;
@@ -432,6 +432,25 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 				string("Function signature hash collision for ") + it.second->externalSignature()
 			);
 		hashes.insert(hash);
+	}
+
+	map<uint32_t, SourceLocation> errorHashes;
+	// TODO all used errors?
+	for (ErrorDefinition const* error: _contract.errors())
+	{
+		if (!error->functionType(true)->interfaceFunctionType())
+			// Will create an error later on.
+			continue;
+		uint32_t hash = selectorFromSignature32(error->functionType(true)->externalSignature());
+		if (errorHashes.count(hash))
+			m_errorReporter.typeError(
+				4883_error,
+				_contract.location(),
+				SecondarySourceLocation{}.append("This error has the same selector: ", errorHashes[hash]),
+				string("Error signature hash collision for ") + error->functionType(true)->externalSignature()
+			);
+		else
+			errorHashes[hash] = error->location();
 	}
 }
 

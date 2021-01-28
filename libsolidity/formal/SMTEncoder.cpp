@@ -725,6 +725,8 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		arrayPop(_funCall);
 		break;
 	case FunctionType::Kind::Event:
+	case FunctionType::Kind::Error:
+		// TODO but are side-effects of arguments taken into account?
 		// This can be safely ignored.
 		break;
 	case FunctionType::Kind::ObjectCreation:
