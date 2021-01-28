@@ -29,6 +29,7 @@
 #include <libsolidity/codegen/LValue.h>
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
 
 #include <libevmasm/GasMeter.h>
@@ -914,7 +915,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case FunctionType::Kind::Error:
 		{
-			solAssert(false, "");
+			_functionCall.expression().accept(*this);
+			vector<Type const*> argumentTypes;
+			for (ASTPointer<Expression const> const& arg: _functionCall.sortedArguments())
+			{
+				arg->accept(*this);
+				argumentTypes.push_back(arg->annotation().type);
+			}
+			solAssert(dynamic_cast<ErrorDefinition const*>(&function.declaration()), "");
+			utils().revertWithError(
+				function.externalSignature(),
+				function.parameterTypes(),
+				argumentTypes
+			);
+			break;
 		}
 		case FunctionType::Kind::BlockHash:
 		{
@@ -1868,6 +1882,7 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 		solAssert(
 			dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration) ||
 			dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
+			dynamic_cast<ErrorDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
 			category == Type::Category::TypeType ||
 			category == Type::Category::Module,
 			""
