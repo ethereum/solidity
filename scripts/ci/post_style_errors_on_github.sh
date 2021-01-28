@@ -4,10 +4,7 @@ ERROR_LOG="$1"
 
 function report_error_to_github
 {
-    if [[ $CIRCLE_PR_NUMBER != "" ]]
-    then
-        CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
-    fi
+    [[ $CIRCLE_PR_NUMBER != "" ]] || CIRCLE_PR_NUMBER="${CIRCLE_PULL_REQUEST//[^0-9]/}"
 
     if [[ $CI == "true" ]]
     then
