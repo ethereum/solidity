@@ -17,9 +17,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
-#include <boost/range/adaptor/reversed.hpp>
+
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
+using namespace ranges;
 using namespace solidity::frontend;
 
 FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _contract):
@@ -30,7 +33,7 @@ FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _co
 	m_currentNode = SpecialNode::EntryCreation;
 	m_currentDispatch = SpecialNode::InternalCreationDispatch;
 
-	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts | boost::adaptors::reversed)
+	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts | views::reverse)
 	{
 		for (auto const* stateVar: contract->stateVariables())
 			stateVar->accept(*this);
@@ -49,10 +52,11 @@ FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _co
 	m_currentNode.reset();
 	m_currentDispatch = SpecialNode::InternalDispatch;
 
+	auto getSecondElement = [](auto const& _tuple){ return get<1>(_tuple); };
+
 	// Create graph for all publicly reachable functions
-	for (auto& [hash, functionType]: _contract.interfaceFunctionList())
+	for (FunctionTypePointer functionType: _contract.interfaceFunctionList() | views::transform(getSecondElement))
 	{
-		(void)hash;
 		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(&functionType->declaration()))
 			if (!m_graph->edges.count(funcDef))
 				visitCallable(funcDef);
