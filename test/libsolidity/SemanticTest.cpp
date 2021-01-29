@@ -49,13 +49,17 @@ SemanticTest::SemanticTest(
 	string const& _filename,
 	langutil::EVMVersion _evmVersion,
 	vector<boost::filesystem::path> const& _vmPaths,
-	bool enforceViaYul
+	bool _enforceViaYul,
+	bool _enforceGasCost,
+	u256 _enforceGasCostMinValue
 ):
 	SolidityExecutionFramework(_evmVersion, _vmPaths),
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
-	m_enforceViaYul(enforceViaYul)
+	m_enforceViaYul(_enforceViaYul),
+	m_enforceGasCost(_enforceGasCost),
+	m_enforceGasCostMinValue(_enforceGasCostMinValue)
 {
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
@@ -326,15 +330,23 @@ TestCase::TestResult SemanticTest::runTest(
 
 bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const
 {
+	if (m_evmVersion != EVMVersion{})
+		return true;
+
 	string setting =
 		(_compileViaYul ? "ir"s : "legacy"s) +
 		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
 
-	if (io_test.call().expectations.gasUsed.count(setting) == 0)
+	if (
+		(!m_enforceGasCost || m_gasUsed < m_enforceGasCostMinValue) &&
+		io_test.call().expectations.gasUsed.count(setting) == 0
+	)
 		return true;
 
 	io_test.setGasCost(setting, m_gasUsed);
-	return m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
+	return
+		io_test.call().expectations.gasUsed.count(setting) > 0 &&
+		m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
 }
 
 void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const

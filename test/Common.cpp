@@ -103,6 +103,8 @@ CommonOptions::CommonOptions(std::string _caption):
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
+		("enforce-gas-cost", po::bool_switch(&enforceGasTest), "Enforce gas cost expectations in semantic tests.")
+		("enforce-gas-cost-min-value", po::value(&enforceGasTestMinValue), "Threshold value when enforcing gas cost expectations.")
 		("abiencoderv1", po::bool_switch(&useABIEncoderV1), "enables abi encoder v1")
 		("show-messages", po::bool_switch(&showMessages), "enables message output")
 		("show-metadata", po::bool_switch(&showMetadata), "enables metadata output");
@@ -119,6 +121,11 @@ void CommonOptions::validate() const
 		fs::exists(testPath),
 		ConfigException,
 		"Invalid test path specified."
+	);
+	assertThrow(
+		!enforceGasTest || evmVersion() == langutil::EVMVersion{},
+		ConfigException,
+		"Gas costs can only be enforced on latest evm version."
 	);
 
 }
