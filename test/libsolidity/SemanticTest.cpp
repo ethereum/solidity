@@ -298,10 +298,12 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 	string setting =
 		(_compileViaYul ? "ir"s : "legacy"s) +
 		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
+
+	if (io_test.call().expectations.gasUsed.count(setting) == 0)
+		return true;
+
 	io_test.setGasCost(setting, m_gasUsed);
-	return
-		io_test.call().expectations.gasUsed.count(setting) > 0 &&
-		m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
+	return m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
 }
 
 void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
