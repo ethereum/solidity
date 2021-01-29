@@ -40,7 +40,12 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, vector<boost::filesystem::path> const& _vmPaths, bool enforceViaYul):
+SemanticTest::SemanticTest(
+	string const& _filename,
+	langutil::EVMVersion _evmVersion,
+	vector<boost::filesystem::path> const& _vmPaths,
+	bool enforceViaYul
+):
 	SolidityExecutionFramework(_evmVersion, _vmPaths),
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
