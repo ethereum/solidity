@@ -341,9 +341,9 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		DocStringTagParser DocStringTagParser(m_errorReporter);
+		DocStringTagParser docStringTagParser(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (source->ast && !DocStringTagParser.parseDocStrings(*source->ast))
+			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
