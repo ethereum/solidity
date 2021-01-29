@@ -387,7 +387,7 @@ bool CompilerStack::analyze()
 			if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
 				noErrors = false;
 
-		// New we run full type checks that go down to the expression level. This
+		// Now we run full type checks that go down to the expression level. This
 		// cannot be done earlier, because we need cross-contract types and information
 		// about whether a contract is abstract for the `new` expression.
 		// This populates the `type` annotation for all expressions.
