@@ -41,6 +41,8 @@ public:
 		langutil::EVMVersion evmVersion;
 		std::vector<boost::filesystem::path> vmPaths;
 		bool enforceCompileViaYul;
+		bool enforceGasCost;
+		u256 enforceGasCostMinValue;
 	};
 
 	enum class TestResult { Success, Failure, FatalError };

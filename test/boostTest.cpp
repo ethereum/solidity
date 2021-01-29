@@ -71,7 +71,14 @@ int registerTests(
 {
 	int numTestsAdded = 0;
 	fs::path fullpath = _basepath / _path;
-	TestCase::Config config{fullpath.string(), solidity::test::CommonOptions::get().evmVersion(), solidity::test::CommonOptions::get().vmPaths, _enforceViaYul};
+	TestCase::Config config{
+		fullpath.string(),
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().vmPaths,
+		_enforceViaYul,
+		/* enforceGasCost */ false,
+		0
+	};
 	if (fs::is_directory(fullpath))
 	{
 		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
