@@ -126,9 +126,9 @@ smtutil::Expression SymbolicState::txMember(string const& _member) const
 	return m_tx.member(_member);
 }
 
-smtutil::Expression SymbolicState::txConstraints(FunctionDefinition const& _function) const
+smtutil::Expression SymbolicState::txTypeConstraints() const
 {
-	smtutil::Expression conj = smt::symbolicUnknownConstraints(m_tx.member("block.chainid"), TypeProvider::uint256()) &&
+	return smt::symbolicUnknownConstraints(m_tx.member("block.chainid"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.coinbase"), TypeProvider::address()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.difficulty"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("block.gaslimit"), TypeProvider::uint256()) &&
@@ -138,14 +138,20 @@ smtutil::Expression SymbolicState::txConstraints(FunctionDefinition const& _func
 		smt::symbolicUnknownConstraints(m_tx.member("msg.value"), TypeProvider::uint256()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("tx.origin"), TypeProvider::address()) &&
 		smt::symbolicUnknownConstraints(m_tx.member("tx.gasprice"), TypeProvider::uint256());
+}
 
+smtutil::Expression SymbolicState::txNonPayableConstraint() const
+{
+	return m_tx.member("msg.value") == 0;
+}
+
+smtutil::Expression SymbolicState::txFunctionConstraints(FunctionDefinition const& _function) const
+{
+	smtutil::Expression conj = _function.isPayable() ? smtutil::Expression(true) : txNonPayableConstraint();
 	if (_function.isPartOfExternalInterface())
 	{
 		auto sig = TypeProvider::function(_function)->externalIdentifier();
 		conj = conj && m_tx.member("msg.sig") == sig;
-		if (!_function.isPayable())
-			conj = conj && m_tx.member("msg.value") == 0;
-
 		auto b0 = sig >> (3 * 8);
 		auto b1 = (sig & 0x00ff0000) >> (2 * 8);
 		auto b2 = (sig & 0x0000ff00) >> (1 * 8);

@@ -22,14 +22,14 @@ contract C {
 		assert(a0 == a1);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 1218: (168-184): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (168-184): CHC: Assertion violation might happen here.
-// Warning 1218: (305-321): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (305-321): CHC: Assertion violation might happen here.
+// Warning 6328: (305-321): CHC: Assertion violation happens here.
 // Warning 1218: (448-464): CHC: Error trying to invoke SMT solver.
 // Warning 6328: (448-464): CHC: Assertion violation might happen here.
-// Warning 6328: (673-689): CHC: Assertion violation happens here.\nCounterexample:\n\nh0 = 7719\nv0 = 21\nr0 = 10450\ns0 = 8365\nh1 = 38\nv1 = 151\nr1 = 32285\ns1 = 2437\n\nTransaction trace:\nC.constructor()\nC.e(7719, 21, 10450, 8365, 38, 151, 32285, 2437)
+// Warning 6328: (673-689): CHC: Assertion violation happens here.
 // Warning 4661: (168-184): BMC: Assertion violation happens here.
-// Warning 4661: (305-321): BMC: Assertion violation happens here.
 // Warning 4661: (448-464): BMC: Assertion violation happens here.

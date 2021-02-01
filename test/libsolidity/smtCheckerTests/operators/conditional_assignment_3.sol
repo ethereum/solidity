@@ -9,5 +9,7 @@ contract C {
 		assert(c > a);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (161-174): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\nb = 1\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)
+// Warning 6328: (161-174): CHC: Assertion violation happens here.

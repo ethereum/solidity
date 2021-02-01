@@ -7,7 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
 
 
 ### 0.8.1 (2021-01-27)
