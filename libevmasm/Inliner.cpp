@@ -90,8 +90,11 @@ namespace
 {
 optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _intoBlock, AssemblyItem::JumpType _outOfBlock)
 {
-	// Enable only full inlining.
+	// Enable full inlining.
 	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::OutOfFunction)
+		return AssemblyItem::JumpType::Ordinary;
+	// Enable ordinary jump reduction.
+	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::Ordinary)
 		return AssemblyItem::JumpType::Ordinary;
 	return nullopt;
 	/*
