@@ -22,5 +22,5 @@ contract Main {
 // gas ir: 217860
 // gas irOptimized: 125216
 // gas legacy: 155361
-// gas legacyOptimized: 137985
+// gas legacyOptimized: 139053
 // s() -> true

@@ -33,4 +33,4 @@ contract C is B {
 // gas ir: 272505
 // gas irOptimized: 139834
 // gas legacy: 174610
-// gas legacyOptimized: 128983
+// gas legacyOptimized: 131019

@@ -21,7 +21,7 @@ contract C {
 // gas ir: 437069
 // gas irOptimized: 232551
 // gas legacy: 324162
-// gas legacyOptimized: 218140
+// gas legacyOptimized: 218764
 // f(uint256): 20 -> 1370859564726510389319704988634906228201275401179
 // x() -> 1
 // f(uint256): 20 -> FAILURE

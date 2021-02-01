@@ -71,5 +71,5 @@ contract Test {
 // gas ir: 121180
 // gas irOptimized: 112341
 // gas legacy: 113999
-// gas legacyOptimized: 110546
+// gas legacyOptimized: 106338
 // store() -> 0x01, 0x02, 0x03, 0x04, 0x05, 0x06

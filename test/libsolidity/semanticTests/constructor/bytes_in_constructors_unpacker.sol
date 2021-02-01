@@ -13,6 +13,6 @@ contract Test {
 // gas ir: 412296
 // gas irOptimized: 311184
 // gas legacy: 319024
-// gas legacyOptimized: 268955
+// gas legacyOptimized: 270120
 // m_x() -> 7
 // m_s() -> 0x20, 78, "abcdefghijklmnopqrstuvwxyzabcdef", "ghijklmnopqrstuvwxyzabcdefghijkl", "mnopqrstuvwxyz"

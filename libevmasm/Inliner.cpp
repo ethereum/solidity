@@ -88,10 +88,12 @@ map<u256, Inliner::InlinableBlock> Inliner::determineInlinableBlocks(AssemblyIte
 
 namespace
 {
-optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType, AssemblyItem::JumpType)
+optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _into, AssemblyItem::JumpType _outOf)
 {
-	// blindly enable everything, not caring about jump types.
-	return AssemblyItem::JumpType::Ordinary;
+	// Revert to *only* enabling full function inlining.
+	if (_into == AssemblyItem::JumpType::IntoFunction && _outOf == AssemblyItem::JumpType::OutOfFunction)
+		return AssemblyItem::JumpType::Ordinary;
+	return nullopt;
 }
 }
 
