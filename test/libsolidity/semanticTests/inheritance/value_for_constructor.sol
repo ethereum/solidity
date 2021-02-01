@@ -45,7 +45,7 @@ contract Main {
 // gas ir: 601985
 // gas irOptimized: 357196
 // gas legacy: 443257
-// gas legacyOptimized: 325185
+// gas legacyOptimized: 325161
 // getFlag() -> true
 // getName() -> "abc"
 // getBalances() -> 12, 10
