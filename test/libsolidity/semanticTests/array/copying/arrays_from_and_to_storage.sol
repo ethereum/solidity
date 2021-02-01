@@ -15,7 +15,7 @@ contract Test {
 // gas ir: 130127
 // gas irOptimized: 121147
 // gas legacy: 125815
-// gas legacyOptimized: 123615
+// gas legacyOptimized: 123603
 // data(uint256): 7 -> 8
 // data(uint256): 15 -> 16
 // data(uint256): 18 -> FAILURE

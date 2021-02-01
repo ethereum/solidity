@@ -20,4 +20,4 @@ contract D {
 // g(), 100 wei -> 1
 // gas ir: 165194
 // gas legacy: 119754
-// gas legacyOptimized: 108370
+// gas legacyOptimized: 108358

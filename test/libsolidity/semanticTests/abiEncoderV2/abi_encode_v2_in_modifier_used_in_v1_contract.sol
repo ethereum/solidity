@@ -40,4 +40,4 @@ contract C is B {
 // test() -> 5, 10
 // gas ir: 175619
 // gas legacy: 118477
-// gas legacyOptimized: 96265
+// gas legacyOptimized: 99127

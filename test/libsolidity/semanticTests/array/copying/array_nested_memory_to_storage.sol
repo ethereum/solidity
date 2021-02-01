@@ -50,4 +50,4 @@ contract Test {
 // gas ir: 124684
 // gas irOptimized: 124684
 // gas legacy: 122795
-// gas legacyOptimized: 121880
+// gas legacyOptimized: 121868

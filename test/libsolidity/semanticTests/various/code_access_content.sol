@@ -42,8 +42,8 @@ contract C {
 // testRuntime() -> true
 // gas ir: 164297
 // gas legacy: 118814
-// gas legacyOptimized: 107794
+// gas legacyOptimized: 107782
 // testCreation() -> true
 // gas ir: 165984
 // gas legacy: 120027
-// gas legacyOptimized: 108719
+// gas legacyOptimized: 108707

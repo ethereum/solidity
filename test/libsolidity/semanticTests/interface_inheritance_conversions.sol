@@ -44,9 +44,9 @@ contract C {
 // gas ir: 187032
 // gas irOptimized: 124555
 // gas legacy: 119739
-// gas legacyOptimized: 94857
+// gas legacyOptimized: 94845
 // convertSubB() -> 1, 3
 // gas ir: 186966
 // gas irOptimized: 124489
 // gas legacy: 119673
-// gas legacyOptimized: 94791
+// gas legacyOptimized: 94779

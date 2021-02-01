@@ -114,6 +114,9 @@ optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _intoB
 	// Removing tail calls. Note: breaks frame balance! Note: this has no effect!
 	if (_intoBlock == AssemblyItem::JumpType::OutOfFunction && _outOfBlock == AssemblyItem::JumpType::OutOfFunction)
 		return AssemblyItem::JumpType::OutOfFunction;
+	// Removing "head calls". Note: breaks frame balance!
+	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::IntoFunction)
+		return AssemblyItem::JumpType::IntoFunction;
 	return nullopt;
 	/*
 	auto jumpTypeToInt = [](AssemblyItem::JumpType _jumpType) -> int {
