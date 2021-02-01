@@ -17,3 +17,4 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 1
+// gas ir: 102243

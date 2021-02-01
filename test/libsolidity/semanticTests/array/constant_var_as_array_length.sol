@@ -11,6 +11,10 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor(): 1, 2, 3 ->
+// gas ir: 273504
+// gas irOptimized: 141035
+// gas legacy: 194844
+// gas legacyOptimized: 167508
 // a(uint256): 0 -> 1
 // a(uint256): 1 -> 2
 // a(uint256): 2 -> 3

@@ -14,6 +14,10 @@ contract C {
 // compileViaYul: also
 // ----
 // constructor()
+// gas ir: 238520
+// gas irOptimized: 153493
+// gas legacy: 169113
+// gas legacyOptimized: 128707
 // genesisHash() -> 0x3737373737373737373737373737373737373737373737373737373737373737
 // currentHash() -> 0
 // f(uint256): 0 -> 0x3737373737373737373737373737373737373737373737373737373737373737

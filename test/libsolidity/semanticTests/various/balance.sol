@@ -10,4 +10,6 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor(), 23 wei ->
+// gas ir: 144887
+// gas legacy: 100085
 // getBalance() -> 23

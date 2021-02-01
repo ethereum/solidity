@@ -17,4 +17,8 @@ contract D {
 // compileViaYul: also
 // ----
 // constructor(): 2 ->
+// gas ir: 399719
+// gas irOptimized: 214602
+// gas legacy: 282420
+// gas legacyOptimized: 239863
 // f() -> 2

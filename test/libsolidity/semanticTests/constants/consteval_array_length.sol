@@ -11,4 +11,6 @@ contract C {
 // compileViaYul: true
 // ----
 // constructor() ->
+// gas ir: 240187
+// gas irOptimized: 105929
 // f() -> 0x0a, 0x0a

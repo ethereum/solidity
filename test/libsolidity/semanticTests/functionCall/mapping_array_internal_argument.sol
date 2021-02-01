@@ -20,6 +20,10 @@ contract test {
 // compileViaYul: also
 // ----
 // set(uint8,uint8,uint8,uint8,uint8): 1, 21, 22, 42, 43 -> 0, 0, 0, 0
+// gas ir: 110993
+// gas irOptimized: 110993
+// gas legacy: 111406
+// gas legacyOptimized: 108017
 // get(uint8): 1 -> 21, 22, 42, 43
 // set(uint8,uint8,uint8,uint8,uint8): 1, 10, 30, 11, 31 -> 21, 22, 42, 43
 // get(uint8): 1 -> 10, 30, 11, 31

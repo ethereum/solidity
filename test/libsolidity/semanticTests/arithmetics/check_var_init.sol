@@ -18,3 +18,6 @@ contract D {
 // ----
 // f() -> FAILURE, hex"4e487b71", 0x11
 // g(), 100 wei -> 1
+// gas ir: 165194
+// gas legacy: 119754
+// gas legacyOptimized: 111448

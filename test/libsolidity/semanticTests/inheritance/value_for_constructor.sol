@@ -42,6 +42,10 @@ contract Main {
 // compileViaYul: also
 // ----
 // constructor(), 22 wei ->
+// gas ir: 601985
+// gas irOptimized: 357196
+// gas legacy: 443257
+// gas legacyOptimized: 325185
 // getFlag() -> true
 // getName() -> "abc"
 // getBalances() -> 12, 10

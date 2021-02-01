@@ -288,11 +288,15 @@ contract Test {
 /// testMul() -> true
 //
 // ====
-// compileViaYul: also
 // EVMVersion: >=constantinople
+// compileViaYul: also
 // ----
 // library: Pairing
 // f() -> true
 // g() -> true
 // pair() -> true
 // verifyTx() -> true
+// gas ir: 146535
+// gas irOptimized: 146496
+// gas legacy: 130571
+// gas legacyOptimized: 101680

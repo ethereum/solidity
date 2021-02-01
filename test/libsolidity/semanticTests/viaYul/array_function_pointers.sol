@@ -24,6 +24,22 @@ contract C {
 // compileViaYul: also
 // ----
 // f(uint256,uint256): 1823621, 12323 -> FAILURE
+// gas ir: 100000000
+// gas irOptimized: 100000000
+// gas legacy: 100000000
+// gas legacyOptimized: 100000000
 // f2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE
+// gas ir: 100000000
+// gas irOptimized: 100000000
+// gas legacy: 100000000
+// gas legacyOptimized: 100000000
 // g(uint256,uint256): 1823621, 12323 -> FAILURE
+// gas ir: 100000000
+// gas irOptimized: 100000000
+// gas legacy: 100000000
+// gas legacyOptimized: 100000000
 // g2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE
+// gas ir: 100000000
+// gas irOptimized: 100000000
+// gas legacy: 100000000
+// gas legacyOptimized: 100000000

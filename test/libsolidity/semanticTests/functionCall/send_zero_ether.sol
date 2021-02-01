@@ -15,8 +15,12 @@ contract Main {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // constructor(), 20 wei ->
+// gas ir: 217860
+// gas irOptimized: 125216
+// gas legacy: 155361
+// gas legacyOptimized: 141837
 // s() -> true
