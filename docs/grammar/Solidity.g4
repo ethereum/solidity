@@ -19,6 +19,7 @@ sourceUnit: (
 	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
+	| errorDefinition
 )* EOF;
 
 //@doc: inline
@@ -90,6 +91,7 @@ contractBodyElement:
 	| enumDefinition
 	| stateVariableDeclaration
 	| eventDefinition
+	| errorDefinition
 	| usingDirective;
 //@doc:inline
 namedArgument: name=identifier Colon value=expression;
@@ -290,6 +292,18 @@ eventDefinition:
 	Semicolon;
 
 /**
+ * Parameter of an error.
+ */
+errorParameter: type=typeName name=identifier?;
+/**
+ * Definition of an error.
+ */
+errorDefinition:
+	Error name=identifier
+	LParen (parameters+=errorParameter (Comma parameters+=errorParameter)*)? RParen
+	Semicolon;
+
+/**
  * Using directive to bind library functions to types.
  * Can occur within contracts and libraries.
  */
@@ -367,7 +381,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, the 'from' keyword can also occur as identifier outside of import statements.
  */
-identifier: Identifier | From;
+identifier: Identifier | From | Error;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 booleanLiteral: True | False;
