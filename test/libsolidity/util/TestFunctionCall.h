@@ -42,7 +42,7 @@ namespace solidity::frontend::test
 class TestFunctionCall
 {
 public:
-	TestFunctionCall(FunctionCall _call): m_call(std::move(_call)) {}
+	TestFunctionCall(FunctionCall _call): m_call(std::move(_call)), m_gasCosts(m_call.expectations.gasUsed) {}
 
 	/// Formats this function call test and applies the format that was detected during parsing.
 	/// If _renderResult is false, the expected result of the call will be used, if it's true
@@ -79,7 +79,7 @@ public:
 	void calledNonExistingFunction() { m_calledNonExistingFunction = true; }
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
-	void setGasCost(std::string _runType, u256 _gasCost) { m_gasCost = {std::move(_runType), std::move(_gasCost)}; }
+	void setGasCost(std::string const& _runType, u256 const& _gasCost) { m_gasCosts[_runType] = _gasCost; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 
 private:
@@ -128,8 +128,8 @@ private:
 	FunctionCall m_call;
 	/// Result of the actual call been made.
 	bytes m_rawBytes = bytes{};
-	/// Actual gas cost for the type of the run
-	std::tuple<std::string, u256> m_gasCost;
+	/// Actual gas costs
+	std::map<std::string, u256> m_gasCosts;
 	/// Transaction status of the actual call. False in case of a REVERT or any other failure.
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting

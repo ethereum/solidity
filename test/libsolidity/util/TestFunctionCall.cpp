@@ -323,11 +323,9 @@ string TestFunctionCall::formatRawParameters(
 string TestFunctionCall::formatGasExpectations(string const& _linePrefix) const
 {
 	stringstream os;
-	for (auto const& [runType, gasUsed]: m_call.expectations.gasUsed)
-		if (runType != get<0>(m_gasCost))
-			os << endl << _linePrefix << "// gas " << runType << ": " << gasUsed.str();
-	if (!get<0>(m_gasCost).empty())
-		os << endl << _linePrefix << "// gas " << get<0>(m_gasCost) << ": " << get<1>(m_gasCost).str();
+	for (auto const& [runType, gasUsed]: m_gasCosts)
+		if (!runType.empty())
+			os << endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
 	return os.str();
 }
 
