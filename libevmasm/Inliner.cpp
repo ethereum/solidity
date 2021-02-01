@@ -88,55 +88,10 @@ map<u256, Inliner::InlinableBlock> Inliner::determineInlinableBlocks(AssemblyIte
 
 namespace
 {
-optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _intoBlock, AssemblyItem::JumpType _outOfBlock)
+optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType, AssemblyItem::JumpType)
 {
-	// Enable full inlining.
-	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::OutOfFunction)
-		return AssemblyItem::JumpType::Ordinary;
-	// Enable ordinary jump reduction. Note: seems to be worth it in combination with the others.
-	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::Ordinary)
-		return AssemblyItem::JumpType::Ordinary;
-	// Enable jump reduction before function entry.
-	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::IntoFunction)
-		return AssemblyItem::JumpType::IntoFunction;
-	// Move code into function tail.
-	if (_intoBlock == AssemblyItem::JumpType::OutOfFunction && _outOfBlock == AssemblyItem::JumpType::Ordinary)
-		return AssemblyItem::JumpType::OutOfFunction;
-	// Move code out of function tail.
-	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::OutOfFunction)
-		return AssemblyItem::JumpType::OutOfFunction;
-	// Enable jump reduction after function entry (extracting function prefix).
-	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::Ordinary)
-		return AssemblyItem::JumpType::IntoFunction;
-	// Removing "head calls". Note: breaks frame balance!
-	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::IntoFunction)
-		return AssemblyItem::JumpType::IntoFunction;
-	return nullopt;
-	/*
-	auto jumpTypeToInt = [](AssemblyItem::JumpType _jumpType) -> int {
-		switch (_jumpType)
-		{
-			case AssemblyItem::JumpType::IntoFunction:
-				return +1;
-			case AssemblyItem::JumpType::OutOfFunction:
-				return -1;
-			case AssemblyItem::JumpType::Ordinary:
-				return 0;
-		}
-		assertThrow(false, OptimizerException, "");
-	};
-	switch (jumpTypeToInt(_intoBlock) + jumpTypeToInt(_outOfBlock))
-	{
-		case 0:
-			return AssemblyItem::JumpType::Ordinary;
-		case 1:
-			return AssemblyItem::JumpType::IntoFunction;
-		case -1:
-			return AssemblyItem::JumpType::OutOfFunction;
-		default:
-			return nullopt;
-	}
-	 */
+	// blindly enable everything, not caring about jump types.
+	return AssemblyItem::JumpType::Ordinary;
 }
 }
 
