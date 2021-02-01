@@ -25,5 +25,5 @@ contract test {
 // gas ir: 402314
 // gas irOptimized: 203162
 // gas legacy: 303015
-// gas legacyOptimized: 222840
+// gas legacyOptimized: 222624
 // sendAmount(uint256): 5 -> 8

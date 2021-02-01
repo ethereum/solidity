@@ -22,6 +22,6 @@ contract Main {
 // gas ir: 242196
 // gas irOptimized: 148076
 // gas legacy: 165240
-// gas legacyOptimized: 123313
+// gas legacyOptimized: 122233
 // getFlag() -> true
 // getName() -> "abc"

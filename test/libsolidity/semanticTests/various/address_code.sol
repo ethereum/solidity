@@ -19,7 +19,7 @@ contract C {
 // gas ir: 390761
 // gas irOptimized: 240202
 // gas legacy: 261698
-// gas legacyOptimized: 176978
+// gas legacyOptimized: 176961
 // initCode() -> 0x20, 0
 // f() -> true
 // g() -> 0
