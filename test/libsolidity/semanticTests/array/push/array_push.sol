@@ -21,4 +21,4 @@ contract c {
 // gas ir: 120470
 // gas irOptimized: 117306
 // gas legacy: 111938
-// gas legacyOptimized: 110567
+// gas legacyOptimized: 110528

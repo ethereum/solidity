@@ -28,7 +28,7 @@ contract c {
 // gas ir: 127524
 // gas irOptimized: 124422
 // gas legacy: 124736
-// gas legacyOptimized: 124199
+// gas legacyOptimized: 124178
 // test(uint256): 32 -> "3"
 // storage: nonempty
 // copy() -> true

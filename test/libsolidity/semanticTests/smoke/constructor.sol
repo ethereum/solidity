@@ -17,7 +17,7 @@ contract C {
 // gas ir: 276160
 // gas irOptimized: 152784
 // gas legacy: 167446
-// gas legacyOptimized: 132104
+// gas legacyOptimized: 126250
 // state() -> 3
 // balance() -> 2
 // update(uint256): 4

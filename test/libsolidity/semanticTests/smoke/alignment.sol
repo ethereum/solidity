@@ -29,5 +29,5 @@ contract D {
 // internalStateDecimal() -> 0x20
 // gas ir: 165009
 // gas legacy: 119637
-// gas legacyOptimized: 111473
+// gas legacyOptimized: 108395
 // update(bool,uint256,bytes32): false, -23, left(0x2300ef) -> false, -23, left(0x2300ef)

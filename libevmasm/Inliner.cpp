@@ -90,9 +90,9 @@ namespace
 {
 optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _intoBlock, AssemblyItem::JumpType _outOfBlock)
 {
-	// Disable everything to establish a base line.
-	(void)_intoBlock;
-	(void)_outOfBlock;
+	// Enable only full inlining.
+	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::OutOfFunction)
+		return AssemblyItem::JumpType::Ordinary;
 	return nullopt;
 	/*
 	auto jumpTypeToInt = [](AssemblyItem::JumpType _jumpType) -> int {

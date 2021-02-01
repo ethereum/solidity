@@ -29,4 +29,4 @@ contract Creator {
 // gas ir: 648128
 // gas irOptimized: 472538
 // gas legacy: 588938
-// gas legacyOptimized: 458718
+// gas legacyOptimized: 454192

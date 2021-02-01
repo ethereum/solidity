@@ -21,5 +21,5 @@ contract D {
 // gas ir: 400381
 // gas irOptimized: 214833
 // gas legacy: 282810
-// gas legacyOptimized: 240119
+// gas legacyOptimized: 234231
 // f() -> 2

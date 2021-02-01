@@ -17,6 +17,6 @@ contract D is C {
 // gas ir: 220283
 // gas irOptimized: 157642
 // gas legacy: 154368
-// gas legacyOptimized: 138726
+// gas legacyOptimized: 134616
 // i() -> 2
 // k() -> 1

@@ -15,5 +15,5 @@ contract B is A {
 // gas ir: 232112
 // gas irOptimized: 153851
 // gas legacy: 151008
-// gas legacyOptimized: 137460
+// gas legacyOptimized: 131422
 // y() -> 42

@@ -14,4 +14,4 @@ contract C {
 // ----
 // test() -> left(0x01), left(0x02)
 // gas legacy: 154001
-// gas legacyOptimized: 152415
+// gas legacyOptimized: 152385

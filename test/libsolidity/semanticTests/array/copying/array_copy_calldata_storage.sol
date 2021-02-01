@@ -25,5 +25,5 @@ contract c {
 // gas ir: 644592
 // gas irOptimized: 629040
 // gas legacy: 817315
-// gas legacyOptimized: 816837
+// gas legacyOptimized: 816813
 // retrieve() -> 9, 28, 9, 28, 4, 3, 32

@@ -17,12 +17,12 @@ contract C {
 // gas ir: 917394
 // gas irOptimized: 434473
 // gas legacy: 619622
-// gas legacyOptimized: 600751
+// gas legacyOptimized: 600718
 // set_get_length(uint256): 0xFFF -> 0xFFF
 // gas ir: 14623616
 // gas irOptimized: 6743235
 // gas legacy: 9765519
-// gas legacyOptimized: 9461853
+// gas legacyOptimized: 9461820
 // set_get_length(uint256): 0xFFFFF -> FAILURE # Out-of-gas #
 // gas ir: 100000000
 // gas irOptimized: 100000000
