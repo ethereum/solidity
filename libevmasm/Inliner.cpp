@@ -99,6 +99,9 @@ optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _intoB
 	// Enable jump reduction before function entry.
 	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::IntoFunction)
 		return AssemblyItem::JumpType::IntoFunction;
+	// Move code into function tail.
+	if (_intoBlock == AssemblyItem::JumpType::OutOfFunction && _outOfBlock == AssemblyItem::JumpType::Ordinary)
+		return AssemblyItem::JumpType::OutOfFunction;
 	// Enable jump reduction after function entry (extracting function prefix).
 	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::Ordinary)
 		return AssemblyItem::JumpType::IntoFunction;
