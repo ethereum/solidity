@@ -42,11 +42,11 @@ object "object" {
                 x_7 := x_11
             }
             {
-                let _4, _5, _6, _7 := iszero_200_872_1499(_1, _1, _1, lt_202(x_4, x_5, x_6, x_7, _1, _1, _1, 10))
+                let _4, _5, _6, _7 := iszero_204_878_1509(_1, _1, _1, lt_206(x_4, x_5, x_6, x_7, _1, _1, _1, 10))
                 if i32.eqz(i64.eqz(i64.or(i64.or(_4, _5), i64.or(_6, _7)))) { break }
-                let _8, _9, _10, _11 := eq_201_873_1500(x_4, x_5, x_6, x_7, _1, _1, _1, 2)
+                let _8, _9, _10, _11 := eq_205_879_1510(x_4, x_5, x_6, x_7, _1, _1, _1, 2)
                 if i32.eqz(i64.eqz(i64.or(i64.or(_8, _9), i64.or(_10, _11)))) { break }
-                let _12, _13, _14, _15 := eq_201_873_1500(x_4, x_5, x_6, x_7, _1, _1, _1, 4)
+                let _12, _13, _14, _15 := eq_205_879_1510(x_4, x_5, x_6, x_7, _1, _1, _1, 4)
                 if i32.eqz(i64.eqz(i64.or(i64.or(_12, _13), i64.or(_14, _15)))) { continue }
             }
             sstore(_1, _1, _1, _1, x_4, x_5, x_6, x_7)
@@ -68,15 +68,15 @@ object "object" {
             let r1_1, carry_2 := add_carry(x1, y1, carry_1)
             r1 := r1_1
         }
-        function iszero_200_872_1499(x1, x2, x3, x4) -> r1, r2, r3, r4
+        function iszero_204_878_1509(x1, x2, x3, x4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i64.eqz(i64.or(i64.or(x1, x2), i64.or(x3, x4))))
         }
-        function eq_201_873_1500(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4
+        function eq_205_879_1510(x1, x2, x3, x4, y1, y2, y3, y4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i32.and(i64.eq(x1, y1), i32.and(i64.eq(x2, y2), i32.and(i64.eq(x3, y3), i64.eq(x4, y4)))))
         }
-        function lt_202(x1, x2, x3, x4, y1, y2, y3, y4) -> z4
+        function lt_206(x1, x2, x3, x4, y1, y2, y3, y4) -> z4
         {
             let z:i32 := false
             let _1:i32 := 0xffffffff:i32
@@ -102,19 +102,19 @@ object "object" {
             if i64.ne(0, i64.shr_u(x4, 32)) { unreachable() }
             v := i32.wrap_i64(x4)
         }
-        function bswap16(x) -> y
+        function bswap16(x:i32) -> y:i32
         {
-            y := i64.or(i64.and(i64.shl(x, 8), 0xff00), i64.and(i64.shr_u(x, 8), 0xff))
+            y := i32.or(i32.and(i32.shl(x, 8:i32), 0xff00:i32), i32.and(i32.shr_u(x, 8:i32), 0xff:i32))
         }
-        function bswap32(x) -> y
+        function bswap32(x:i32) -> y:i32
         {
-            let hi := i64.shl(bswap16(x), 16)
-            y := i64.or(hi, bswap16(i64.shr_u(x, 16)))
+            let hi:i32 := i32.shl(bswap16(x), 16:i32)
+            y := i32.or(hi, bswap16(i32.shr_u(x, 16:i32)))
         }
         function bswap64(x) -> y
         {
-            let hi := i64.shl(bswap32(x), 32)
-            y := i64.or(hi, bswap32(i64.shr_u(x, 32)))
+            let hi := i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(x))), 32)
+            y := i64.or(hi, i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(x, 32)))))
         }
         function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4
         {
@@ -150,6 +150,12 @@ object "object" {
             z3 := z3_1
             z4 := z4_1
         }
+        function sstore(x1, x2, x3, x4, y1, y2, y3, y4)
+        {
+            mstore_internal(0:i32, x1, x2, x3, x4)
+            mstore_internal(32:i32, y1, y2, y3, y4)
+            eth.storageStore(0:i32, 32:i32)
+        }
         function mstore_internal(pos:i32, y1, y2, y3, y4)
         {
             i64.store(pos, bswap64(y1))
@@ -157,18 +163,12 @@ object "object" {
             i64.store(i32.add(pos, 16:i32), bswap64(y3))
             i64.store(i32.add(pos, 24:i32), bswap64(y4))
         }
-        function sstore(x1, x2, x3, x4, y1, y2, y3, y4)
-        {
-            mstore_internal(0:i32, x1, x2, x3, x4)
-            mstore_internal(32:i32, y1, y2, y3, y4)
-            eth.storageStore(0:i32, 32:i32)
-        }
     }
 }
 
 
 Binary representation:
-0061736d01000000014e0b6000006000017f60017e017e60037e7e7e017e60047e7e7e7e017e60047e7e7e7e017f60087e7e7e7e7e7e7e7e0060087e7e7e7e7e7e7e7e017e60057f7e7e7e7e0060027f7f0060037f7f7f00025e0408657468657265756d0c73746f7261676553746f7265000908657468657265756d06726576657274000908657468657265756d0f67657443616c6c4461746153697a65000108657468657265756d0c63616c6c44617461436f7079000a030e0d0003070407070502020204080605030100010610037e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00040abc090dcb02030a7e017f107e02404200210002402000200020002000100e21012300210223012103230221040b20012105200221062003210720042108420121092000200084200020098484504545210a02400340200a45450d01024002402000200020002005200620072008200020002000420a10091007210b2300210c2301210d2302210e0b200b200c84200d200e8484504504400c030b0240200520062007200820002000200042021008210f2300211023012111230221120b200f201084201120128484504504400c030b024020052006200720082000200020004204100821132300211423012115230221160b2013201484201520168484504504400c010b0b0240200520062007200820002000200020091006211723002118230121192302211a0b201721052018210620192107201a21080c000b0b2000200020002000200520062007200810100b0b2901037e0240200020017c2105200520027c21032005200054200320055472ad21040b2004240020030b6c010b7e0240200320077c210c200c42007c210b024020022006200c200354200b200c5472ad1005210d2300210e0b200d210a024020012005200e1005210f230021100b200f2109024020002004201010052111230021120b201121080b20092400200a2401200b240220080b2401047e0240200020018420022003848450ad21070b20052400200624012007240220040b2f01047e02402000200451200120055120022006512003200751717171ad210b0b20092400200a2401200b240220080ba30102017e057f024041002109417f210a0240200a200020045220002004541b210b200b41004604400240200a200120055220012005541b210c200c41004604400240200a200220065220022006541b210d200d41004604402003200754210905200d41014604404100210905410121090b0b0b05200c41014604404100210905410121090b0b0b05200b41014604404100210905410121090b0b0b2009ad21080b20080b2901017f024042002000200184200284520440000b42002003422088520440000b2003a721040b20040b1f01017e024020004208864280fe0383200042088842ff01838421010b20010b1e01027e02402000100b421086210220022000421088100b8421010b20010b1e01027e02402000100c422086210220022000422088100c8421010b20010bfc0105047e017f017e087f047e024010022108420021092009200920092009100a210a2000200120022003100a210b2009200920094220100a210c200b417f200c6b4b04404100410010010b2008200b6b210d200b20084b04404100210d0b4100210e200d200e4b0440200a200b200d10030b200c200d4b0440200c200d6b210f200a200d6a2110200e2111024003402011200f49450d010240201020116a200e3a00000b201141016a21110c000b0b0b200e290000100d2112200e41086a290000100d2113200e41106a290000100d2114200e41186a290000100d2115201221042013210520142106201521070b20052400200624012007240220040b3200024020002001100d370000200041086a2002100d370000200041106a2003100d370000200041186a2004100d3700000b0b2300024041002000200120022003100f41202004200520062007100f4100412010000b0b
+0061736d0100000001530c6000006000017f60017e017e60037e7e7e017e60047e7e7e7e017e60047e7e7e7e017f60087e7e7e7e7e7e7e7e0060087e7e7e7e7e7e7e7e017e60017f017f60057f7e7e7e7e0060027f7f0060037f7f7f00025e0408657468657265756d0c73746f7261676553746f7265000a08657468657265756d06726576657274000a08657468657265756d0f67657443616c6c4461746153697a65000108657468657265756d0c63616c6c44617461436f7079000b030e0d0003070407070508080204060905030100010610037e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00040ac0090dcb02030a7e017f107e02404200210002402000200020002000100e21012300210223012103230221040b20012105200221062003210720042108420121092000200084200020098484504545210a02400340200a45450d01024002402000200020002005200620072008200020002000420a10091007210b2300210c2301210d2302210e0b200b200c84200d200e8484504504400c030b0240200520062007200820002000200042021008210f2300211023012111230221120b200f201084201120128484504504400c030b024020052006200720082000200020004204100821132300211423012115230221160b2013201484201520168484504504400c010b0b0240200520062007200820002000200020091006211723002118230121192302211a0b201721052018210620192107201a21080c000b0b20002000200020002005200620072008100f0b0b2901037e0240200020017c2105200520027c21032005200054200320055472ad21040b2004240020030b6c010b7e0240200320077c210c200c42007c210b024020022006200c200354200b200c5472ad1005210d2300210e0b200d210a024020012005200e1005210f230021100b200f2109024020002004201010052111230021120b201121080b20092400200a2401200b240220080b2401047e0240200020018420022003848450ad21070b20052400200624012007240220040b2f01047e02402000200451200120055120022006512003200751717171ad210b0b20092400200a2401200b240220080ba30102017e057f024041002109417f210a0240200a200020045220002004541b210b200b41004604400240200a200120055220012005541b210c200c41004604400240200a200220065220022006541b210d200d41004604402003200754210905200d41014604404100210905410121090b0b0b05200c41014604404100210905410121090b0b0b05200b41014604404100210905410121090b0b0b2009ad21080b20080b2901017f024042002000200184200284520440000b42002003422088520440000b2003a721040b20040b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100b411074210220022000411076100b7221010b20010b2201027e02402000a7100cad422086210220022000422088a7100cad8421010b20010bfc0105047e017f017e087f047e024010022108420021092009200920092009100a210a2000200120022003100a210b2009200920094220100a210c200b417f200c6b4b04404100410010010b2008200b6b210d200b20084b04404100210d0b4100210e200d200e4b0440200a200b200d10030b200c200d4b0440200c200d6b210f200a200d6a2110200e2111024003402011200f49450d010240201020116a200e3a00000b201141016a21110c000b0b0b200e290000100d2112200e41086a290000100d2113200e41106a290000100d2114200e41186a290000100d2115201221042013210520142106201521070b20052400200624012007240220040b230002404100200020012002200310104120200420052006200710104100412010000b0b3200024020002001100d370000200041086a2002100d370000200041106a2003100d370000200041186a2004100d3700000b0b
 
 Text representation:
 (module
@@ -230,7 +230,7 @@ Text representation:
                 (br_if $label__3 (i32.eqz (i32.eqz (local.get $_3))))
                 (block $label__4
                     (block
-                        (local.set $_4 (call $iszero_200_872_1499 (local.get $_1) (local.get $_1) (local.get $_1) (call $lt_202 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10))))
+                        (local.set $_4 (call $iszero_204_878_1509 (local.get $_1) (local.get $_1) (local.get $_1) (call $lt_206 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 10))))
                         (local.set $_5 (global.get $global_))
                         (local.set $_6 (global.get $global__1))
                         (local.set $_7 (global.get $global__2))
@@ -240,7 +240,7 @@ Text representation:
                         (br $label__3)
                     ))
                     (block
-                        (local.set $_8 (call $eq_201_873_1500 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 2)))
+                        (local.set $_8 (call $eq_205_879_1510 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 2)))
                         (local.set $_9 (global.get $global_))
                         (local.set $_10 (global.get $global__1))
                         (local.set $_11 (global.get $global__2))
@@ -250,7 +250,7 @@ Text representation:
                         (br $label__3)
                     ))
                     (block
-                        (local.set $_12 (call $eq_201_873_1500 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 4)))
+                        (local.set $_12 (call $eq_205_879_1510 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 4)))
                         (local.set $_13 (global.get $global_))
                         (local.set $_14 (global.get $global__1))
                         (local.set $_15 (global.get $global__2))
@@ -348,7 +348,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $iszero_200_872_1499
+(func $iszero_204_878_1509
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -368,7 +368,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $eq_201_873_1500
+(func $eq_205_879_1510
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -392,7 +392,7 @@ Text representation:
     (local.get $r1)
 )
 
-(func $lt_202
+(func $lt_206
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -473,24 +473,24 @@ Text representation:
 )
 
 (func $bswap16
-    (param $x i64)
-    (result i64)
-    (local $y i64)
+    (param $x i32)
+    (result i32)
+    (local $y i32)
     (block $label__14
-        (local.set $y (i64.or (i64.and (i64.shl (local.get $x) (i64.const 8)) (i64.const 65280)) (i64.and (i64.shr_u (local.get $x) (i64.const 8)) (i64.const 255))))
+        (local.set $y (i32.or (i32.and (i32.shl (local.get $x) (i32.const 8)) (i32.const 65280)) (i32.and (i32.shr_u (local.get $x) (i32.const 8)) (i32.const 255))))
 
     )
     (local.get $y)
 )
 
 (func $bswap32
-    (param $x i64)
-    (result i64)
-    (local $y i64)
-    (local $hi i64)
+    (param $x i32)
+    (result i32)
+    (local $y i32)
+    (local $hi i32)
     (block $label__15
-        (local.set $hi (i64.shl (call $bswap16 (local.get $x)) (i64.const 16)))
-        (local.set $y (i64.or (local.get $hi) (call $bswap16 (i64.shr_u (local.get $x) (i64.const 16)))))
+        (local.set $hi (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)))
+        (local.set $y (i32.or (local.get $hi) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
 
     )
     (local.get $y)
@@ -502,8 +502,8 @@ Text representation:
     (local $y i64)
     (local $hi i64)
     (block $label__16
-        (local.set $hi (i64.shl (call $bswap32 (local.get $x)) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (call $bswap32 (i64.shr_u (local.get $x) (i64.const 32)))))
+        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (local.get $x)))) (i64.const 32)))
+        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (local.get $x) (i64.const 32)))))))
 
     )
     (local.get $y)
@@ -580,20 +580,6 @@ Text representation:
     (local.get $z1)
 )
 
-(func $mstore_internal
-    (param $pos i32)
-    (param $y1 i64)
-    (param $y2 i64)
-    (param $y3 i64)
-    (param $y4 i64)
-    (block $label__21
-        (i64.store (local.get $pos) (call $bswap64 (local.get $y1)))
-        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $bswap64 (local.get $y2)))
-        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $bswap64 (local.get $y3)))
-        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $bswap64 (local.get $y4)))
-    )
-)
-
 (func $sstore
     (param $x1 i64)
     (param $x2 i64)
@@ -603,10 +589,24 @@ Text representation:
     (param $y2 i64)
     (param $y3 i64)
     (param $y4 i64)
-    (block $label__22
+    (block $label__21
         (call $mstore_internal (i32.const 0) (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4))
         (call $mstore_internal (i32.const 32) (local.get $y1) (local.get $y2) (local.get $y3) (local.get $y4))
         (call $eth.storageStore (i32.const 0) (i32.const 32))
+    )
+)
+
+(func $mstore_internal
+    (param $pos i32)
+    (param $y1 i64)
+    (param $y2 i64)
+    (param $y3 i64)
+    (param $y4 i64)
+    (block $label__22
+        (i64.store (local.get $pos) (call $bswap64 (local.get $y1)))
+        (i64.store (i32.add (local.get $pos) (i32.const 8)) (call $bswap64 (local.get $y2)))
+        (i64.store (i32.add (local.get $pos) (i32.const 16)) (call $bswap64 (local.get $y3)))
+        (i64.store (i32.add (local.get $pos) (i32.const 24)) (call $bswap64 (local.get $y4)))
     )
 )
 

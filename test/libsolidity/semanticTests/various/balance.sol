@@ -8,6 +8,7 @@ contract test {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // constructor(), 23 wei ->
 // getBalance() -> 23

@@ -9,6 +9,7 @@ contract C {
 }
 // ====
 // compileViaYul: true
+// compileToEwasm: also
 // ----
 // constructor() ->
 // f() -> 0x0a, 0x0a

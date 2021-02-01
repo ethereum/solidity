@@ -15,6 +15,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // div(uint256,uint256): 7, 2 -> 3
 // div(uint256,uint256): 7, 0 -> FAILURE, hex"4e487b71", 0x12 # throws #
