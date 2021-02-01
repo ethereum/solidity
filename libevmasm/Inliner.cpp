@@ -93,6 +93,9 @@ optional<AssemblyItem::JumpType> determineJumpType(AssemblyItem::JumpType _intoB
 	// Enable full inlining.
 	if (_intoBlock == AssemblyItem::JumpType::IntoFunction && _outOfBlock == AssemblyItem::JumpType::OutOfFunction)
 		return AssemblyItem::JumpType::Ordinary;
+	// Enable ordinary jump reduction. Note: seems to be worth it in combination with the others.
+	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::Ordinary)
+		return AssemblyItem::JumpType::Ordinary;
 	// Enable jump reduction before function entry.
 	if (_intoBlock == AssemblyItem::JumpType::Ordinary && _outOfBlock == AssemblyItem::JumpType::IntoFunction)
 		return AssemblyItem::JumpType::IntoFunction;
