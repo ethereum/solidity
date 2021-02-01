@@ -19,6 +19,7 @@ sourceUnit: (
 	| constantVariableDeclaration
 	| structDefinition
 	| enumDefinition
+	| errorDefinition
 )* EOF;
 
 //@doc: inline
@@ -90,6 +91,7 @@ contractBodyElement:
 	| enumDefinition
 	| stateVariableDeclaration
 	| eventDefinition
+	| errorDefinition
 	| usingDirective;
 //@doc:inline
 namedArgument: name=identifier Colon value=expression;
@@ -287,6 +289,14 @@ eventDefinition:
 	Event name=identifier
 	LParen (parameters+=eventParameter (Comma parameters+=eventParameter)*)? RParen
 	Anonymous?
+	Semicolon;
+
+/**
+ * Definition of an error.
+ */
+errorDefinition:
+	'error' name=identifier
+	LParen (parameters=parameterList)? RParen
 	Semicolon;
 
 /**
