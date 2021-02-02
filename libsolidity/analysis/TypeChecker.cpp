@@ -1007,7 +1007,7 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 					"This try statement already has a low-level catch clause."
 				);
 			lowLevelClause = &clause;
-			if (clause.parameters() && !clause.parameters()->parameters().empty())
+			if (clause.parameters())
 			{
 				if (
 					clause.parameters()->parameters().size() != 1 ||
@@ -1072,7 +1072,6 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 		else
 		{
 			solAssert(clause.kind() == TryCatchClause::Kind::UserDefined, "");
-			solAssert(*clause.errorName().annotation().requiredLookup == VirtualLookup::Static, "");
 			ErrorDefinition const* error = dynamic_cast<ErrorDefinition const*>(clause.errorName().annotation().referencedDeclaration);
 			if (!error)
 			{
@@ -1091,16 +1090,20 @@ void TypeChecker::endVisit(TryStatement const& _tryStatement)
 				!clause.parameters() ||
 				clause.parameters()->parameters().size() != error->parameters().size()
 			)
-				m_errorReporter.typeError(1271_error, clause.location(), "Expected `catch Panic(uint ...) { ... }`.");
-			else
-				for (auto&& [varDecl, parameter]: ranges::views::zip(clause.parameters()->parameters(), error->parameters()))
-					if (*varDecl->type() != *parameter->type())
-						m_errorReporter.typeError(
-							63958_error,
-							varDecl->location(),
-							("Expected a parameter of type \"" + parameter->type()->toString(true) + "\" ") +
-							("but got \"" + varDecl->type()->toString(true) + "\"")
-						);
+				m_errorReporter.typeError(
+					4873_error,
+					clause.location(),
+					("Expected " + to_string(error->parameters().size()) + " parameters for error \"") +
+					(error->name() + "\" but got " + to_string(clause.parameters()->parameters().size()) + ".")
+				);
+			for (auto&& [varDecl, parameter]: ranges::views::zip(clause.parameters()->parameters(), error->parameters()))
+				if (*varDecl->type() != *parameter->type())
+					m_errorReporter.typeError(
+						63958_error,
+						varDecl->location(),
+						("Expected a parameter of type \"" + parameter->type()->toString(true) + "\" ") +
+						("but got \"" + varDecl->type()->toString(true) + "\"")
+					);
 		}
 	}
 }

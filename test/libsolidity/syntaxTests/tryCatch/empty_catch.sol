@@ -8,4 +8,4 @@ contract C {
     }
 }
 // ----
-// ParserError 3546: (101-102): Expected type name
+// TypeError 6231: (94-115): Expected `catch (bytes memory ...) { ... }` or `catch { ... }`.
