@@ -224,6 +224,7 @@ if(UNIX AND NOT APPLE)
 	option(USE_Z3_DLOPEN "Dynamically load the Z3 SMT solver instead of linking against it." OFF)
 endif()
 option(USE_CVC4 "Allow compiling with CVC4 SMT solver integration" ON)
+option(USE_OSMT2 "Allow compiling with OpenSMT2 SMT solver integration" ON)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	option(USE_LD_GOLD "Use GNU gold linker" ON)

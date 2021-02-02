@@ -100,6 +100,12 @@ if (NOT (${Z3_FOUND} OR ${CVC4_FOUND}))
   \nPlease install Z3 or CVC4 or remove the option disabling them (USE_Z3, USE_CVC4).")
 endif()
 
+find_package(OSMT2 QUIET)
+if (${OSMT2_FOUND})
+  add_definitions(-DHAVE_OSMT2)
+  message("OpenSMT2 SMT solver found. This enables optional SMT-based Yul optimizations with OpenSMT2.")
+endif()
+
 add_subdirectory(libsolutil)
 add_subdirectory(liblangutil)
 add_subdirectory(libsmtutil)

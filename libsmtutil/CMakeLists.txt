@@ -24,19 +24,13 @@ else()
   set(cvc4_SRCS)
 endif()
 
-if (${USE_Z3_DLOPEN})
-  file(GLOB Z3_HEADERS ${Z3_HEADER_PATH}/z3*.h)
-  set(Z3_WRAPPER ${CMAKE_CURRENT_BINARY_DIR}/z3wrapper.cpp)
-  add_custom_command(
-    OUTPUT ${Z3_WRAPPER}
-    COMMAND ${Python3_EXECUTABLE} genz3wrapper.py ${Z3_HEADERS} > ${Z3_WRAPPER}
-    DEPENDS ${Z3_HEADERS} genz3wrapper.py
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-  set(z3_SRCS ${z3_SRCS} ${Z3_WRAPPER} Z3Loader.cpp Z3Loader.h)
+if (${OSMT2_FOUND})
+  set(osmt2_SRCS OpenSMT2Interface.cpp OpenSMT2Interface.h)
+else()
+  set(osmt2_SRCS)
 endif()
 
-add_library(smtutil ${sources} ${z3_SRCS} ${cvc4_SRCS})
+add_library(smtutil ${sources} ${z3_SRCS} ${cvc4_SRCS} ${osmt2_SRCS})
 target_link_libraries(smtutil PUBLIC solutil Boost::boost)
 
 if (${USE_Z3_DLOPEN})
@@ -48,4 +42,8 @@ endif()
 
 if (${CVC4_FOUND})
   target_link_libraries(smtutil PUBLIC CVC4::CVC4)
+endif()
+
+if (${OSMT2_FOUND})
+  target_link_libraries(smtutil PUBLIC OSMT2::OSMT2)
 endif()
