@@ -1,6 +1,7 @@
 ### 0.8.2 (unreleased)
 
 Language Features:
+ * Support user-defined errors: ``error X(uint a);``, ``require(c, X(7));``, ``revert(X(7));``
 
 
 Compiler Features:
@@ -12,6 +13,10 @@ Bugfixes:
  * Type Checker: Fix internal error when override specifier is not a contract.
  * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
  * AST: Added ``referencedDeclaration`` for enum members.
+
+AST Changes:
+ * Support user-defined errors.
+
 
 
 AST Changes:
