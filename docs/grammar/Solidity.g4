@@ -295,7 +295,7 @@ eventDefinition:
  * Definition of an error.
  */
 errorDefinition:
-	'error' name=identifier
+	Error name=identifier
 	LParen (parameters=parameterList)? RParen
 	Semicolon;
 
@@ -377,7 +377,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, the 'from' keyword can also occur as identifier outside of import statements.
  */
-identifier: Identifier | From;
+identifier: Identifier | From | Error;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 booleanLiteral: True | False;
