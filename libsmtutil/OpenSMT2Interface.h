@@ -29,7 +29,7 @@ namespace solidity::smtutil
 class OpenSMT2Interface: public SolverInterface, public boost::noncopyable
 {
 public:
-	OpenSMT2Interface();
+	OpenSMT2Interface(std::optional<unsigned> _queryTimeout = {});
 
 	void reset() override;
 

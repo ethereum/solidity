@@ -23,7 +23,7 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::smtutil;
 
-OpenSMT2Interface::OpenSMT2Interface():
+OpenSMT2Interface::OpenSMT2Interface(optional<unsigned> /*_queryTimeout*/):
 	m_opensmt(make_unique<Opensmt>(qf_lia, "OpenSMT")),
 	m_logic(m_opensmt->getLIALogic()),
 	m_solver(m_opensmt->getMainSolver())

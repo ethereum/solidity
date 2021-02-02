@@ -24,6 +24,9 @@
 #ifdef HAVE_CVC4
 #include <libsmtutil/CVC4Interface.h>
 #endif
+#ifdef HAVE_OSMT2
+#include <libsmtutil/OpenSMT2Interface.h>
+#endif
 #include <libsmtutil/SMTLib2Interface.h>
 
 using namespace std;
@@ -48,6 +51,9 @@ SMTPortfolio::SMTPortfolio(
 #ifdef HAVE_CVC4
 	if (_enabledSolvers.cvc4)
 		m_solvers.emplace_back(make_unique<CVC4Interface>(m_queryTimeout));
+#endif
+#ifdef HAVE_OSMT2
+	m_solvers.emplace_back(make_unique<OpenSMT2Interface>(m_queryTimeout));
 #endif
 }
 

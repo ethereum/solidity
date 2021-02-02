@@ -1,6 +1,6 @@
 if (USE_OSMT2)
 	find_path(OSMT2_INCLUDE_DIR opensmt/opensmt2.h)
-	find_library(OSMT2_LIBRARY NAMES opensmt2)
+	find_library(OSMT2_LIBRARY NAMES opensmt)
     include(FindPackageHandleStandardArgs)
 	find_package_handle_standard_args(OSMT2 DEFAULT_MSG OSMT2_LIBRARY OSMT2_INCLUDE_DIR)
 	if(OSMT2_FOUND)
