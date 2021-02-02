@@ -1,7 +1,5 @@
-Error: No matching declaration found after argument-dependent lookup.
- --> require_overload/input.sol:5:9:
+Error: Invalid type for argument in function call. Invalid implicit conversion from contract C to bool requested.
+ --> require_overload/input.sol:5:17:
   |
 5 |         require(this);
-  |         ^^^^^^^
-Note: Candidate: function require(bool)
-Note: Candidate: function require(bool, string memory)
+  |                 ^^^^
