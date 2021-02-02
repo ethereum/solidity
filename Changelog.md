@@ -1,12 +1,18 @@
 ### 0.8.2 (unreleased)
 
 Language Features:
+ * Support user-defined errors: ``error X(uint a);``, ``require(c, X(7));``, ``revert(X(7));``, ``catch X(uint a)``
 
 
 Compiler Features:
 
 
 Bugfixes:
+
+
+AST Changes:
+ * Support user-defined errors.
+ * The error name in ``TryCatchClause`` changed from a simple string to an ``IdentifierPath``.
 
 
 
