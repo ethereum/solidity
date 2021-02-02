@@ -1503,29 +1503,46 @@ private:
 class TryCatchClause: public ASTNode, public Scopable, public ScopeOpener
 {
 public:
+	enum Kind
+	{
+		Success,
+		Panic,
+		Error,
+		Fallback,
+		UserDefined
+	};
+
 	TryCatchClause(
 		int64_t _id,
 		SourceLocation const& _location,
-		ASTPointer<ASTString> _errorName,
+		Kind _kind,
+		ASTPointer<IdentifierPath> _errorName,
 		ASTPointer<ParameterList> _parameters,
 		ASTPointer<Block> _block
 	):
 		ASTNode(_id, _location),
+		m_kind(_kind),
 		m_errorName(std::move(_errorName)),
 		m_parameters(std::move(_parameters)),
 		m_block(std::move(_block))
-	{}
+	{
+		solAssert(!!m_errorName == (m_kind == Kind::UserDefined), "");
+	}
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	ASTString const& errorName() const { return *m_errorName; }
+
+	Kind kind() const { return m_kind; }
+	/// @returns the name of the error. Should only be called if catch kind is UserDefined.
+	IdentifierPath const& errorName() const { return *m_errorName; }
 	ParameterList const* parameters() const { return m_parameters.get(); }
 	Block const& block() const { return *m_block; }
 
 	TryCatchClauseAnnotation& annotation() const override;
 
 private:
-	ASTPointer<ASTString> m_errorName;
+	Kind m_kind;
+	ASTPointer<IdentifierPath> m_errorName;
 	ASTPointer<ParameterList> m_parameters;
 	ASTPointer<Block> m_block;
 };
@@ -1535,6 +1552,8 @@ private:
  * Syntax:
  * try <call> returns (uint x, uint y) {
  *   // success code
+ * } catch Custom(uint data) {
+ *   // custom error handler
  * } catch Panic(uint errorCode) {
  *   // panic
  * } catch Error(string memory cause) {

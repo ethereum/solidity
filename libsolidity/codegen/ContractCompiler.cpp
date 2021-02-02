@@ -975,14 +975,14 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 	ASTPointer<TryCatchClause> panic{};
 	ASTPointer<TryCatchClause> fallback{};
 	for (size_t i = 1; i < _catchClauses.size(); ++i)
-		if (_catchClauses[i]->errorName() == "Error")
+		if (_catchClauses[i]->kind() == TryCatchClause::Kind::Error)
 			error = _catchClauses[i];
-		else if (_catchClauses[i]->errorName() == "Panic")
+		else if (_catchClauses[i]->kind() == TryCatchClause::Kind::Panic)
 			panic = _catchClauses[i];
-		else if (_catchClauses[i]->errorName().empty())
+		else if (_catchClauses[i]->kind() == TryCatchClause::Kind::Fallback)
 			fallback = _catchClauses[i];
 		else
-			solAssert(false, "");
+			solUnimplementedAssert(false, "");
 
 	solAssert(_catchClauses.size() == 1ul + (error ? 1 : 0) + (panic ? 1 : 0) + (fallback ? 1 : 0), "");
 

@@ -542,6 +542,8 @@ void TryCatchClause::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_errorName)
+			m_errorName->accept(_visitor);
 		if (m_parameters)
 			m_parameters->accept(_visitor);
 		m_block->accept(_visitor);
@@ -553,6 +555,8 @@ void TryCatchClause::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
+		if (m_errorName)
+			m_errorName->accept(_visitor);
 		if (m_parameters)
 			m_parameters->accept(_visitor);
 		m_block->accept(_visitor);

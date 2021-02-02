@@ -856,13 +856,14 @@ string Literal::getChecksummedAddress() const
 TryCatchClause const* TryStatement::successClause() const
 {
 	solAssert(m_clauses.size() > 0, "");
+	solAssert(m_clauses.front()->kind() == TryCatchClause::Kind::Success, "");
 	return m_clauses[0].get();
 }
 
 TryCatchClause const* TryStatement::panicClause() const
 {
 	for (size_t i = 1; i < m_clauses.size(); ++i)
-		if (m_clauses[i]->errorName() == "Panic")
+		if (m_clauses[i]->kind() == TryCatchClause::Kind::Panic)
 			return m_clauses[i].get();
 	return nullptr;
 }
@@ -870,7 +871,7 @@ TryCatchClause const* TryStatement::panicClause() const
 TryCatchClause const* TryStatement::errorClause() const
 {
 	for (size_t i = 1; i < m_clauses.size(); ++i)
-		if (m_clauses[i]->errorName() == "Error")
+		if (m_clauses[i]->kind() == TryCatchClause::Kind::Error)
 			return m_clauses[i].get();
 	return nullptr;
 }
@@ -878,7 +879,7 @@ TryCatchClause const* TryStatement::errorClause() const
 TryCatchClause const* TryStatement::fallbackClause() const
 {
 	for (size_t i = 1; i < m_clauses.size(); ++i)
-		if (m_clauses[i]->errorName().empty())
+		if (m_clauses[i]->kind() == TryCatchClause::Kind::Fallback)
 			return m_clauses[i].get();
 	return nullptr;
 }

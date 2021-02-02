@@ -578,7 +578,10 @@ bool ASTJsonConverter::visit(IfStatement const& _node)
 bool ASTJsonConverter::visit(TryCatchClause const& _node)
 {
 	setJsonNode(_node, "TryCatchClause", {
-		make_pair("errorName", _node.errorName()),
+		make_pair("kind", catchClauseKind(_node.kind())),
+		make_pair("errorName", toJsonOrNull(
+			_node.kind() == TryCatchClause::Kind::UserDefined ? &_node.errorName() : nullptr
+		)),
 		make_pair("parameters", toJsonOrNull(_node.parameters())),
 		make_pair("block", toJson(_node.block()))
 	});
@@ -929,6 +932,19 @@ string ASTJsonConverter::functionCallKind(FunctionCallKind _kind)
 	default:
 		solAssert(false, "Unknown kind of function call.");
 	}
+}
+
+string ASTJsonConverter::catchClauseKind(TryCatchClause::Kind _kind)
+{
+	switch (_kind)
+	{
+	case TryCatchClause::Kind::Success: return "success";
+	case TryCatchClause::Kind::Panic: return "panic";
+	case TryCatchClause::Kind::Error: return "error";
+	case TryCatchClause::Kind::Fallback: return "fallback";
+	case TryCatchClause::Kind::UserDefined: return "userDefined";
+	}
+	solAssert(false, "Unknown kind of catch clause.");
 }
 
 string ASTJsonConverter::literalTokenKind(Token _token)

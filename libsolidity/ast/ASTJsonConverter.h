@@ -153,6 +153,7 @@ private:
 	static std::string location(VariableDeclaration::Location _location);
 	static std::string contractKind(ContractKind _kind);
 	static std::string functionCallKind(FunctionCallKind _kind);
+	static std::string catchClauseKind(TryCatchClause::Kind _kind);
 	static std::string literalTokenKind(Token _token);
 	static std::string type(Expression const& _expression);
 	static std::string type(VariableDeclaration const& _varDecl);

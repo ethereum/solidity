@@ -642,7 +642,8 @@ ASTPointer<TryCatchClause> ASTJsonImporter::createTryCatchClause(Json::Value con
 {
 	return createASTNode<TryCatchClause>(
 		_node,
-		memberAsASTString(_node, "errorName"),
+		tryCatchClauseKind(_node),
+		nullOrCast<IdentifierPath>(member(_node, "errorName")),
 		nullOrCast<ParameterList>(member(_node, "parameters")),
 		convertJsonToASTNode<Block>(member(_node, "block"))
 	);
@@ -958,6 +959,24 @@ bool ASTJsonImporter::memberAsBool(Json::Value const& _node, string const& _name
 
 
 // =========== JSON to definition helpers =======================
+
+TryCatchClause::Kind ASTJsonImporter::tryCatchClauseKind(Json::Value const& _node)
+{
+	astAssert(!member(_node, "kind").isNull(), "");
+	if (_node["kind"].asString() == "success")
+		return TryCatchClause::Kind::Success;
+	else if (_node["kind"].asString() == "error")
+		return TryCatchClause::Kind::Error;
+	else if (_node["kind"].asString() == "panic")
+		return TryCatchClause::Kind::Panic;
+	else if (_node["kind"].asString() == "fallback")
+		return TryCatchClause::Kind::Fallback;
+	else if (_node["kind"].asString() == "userDefined")
+		return TryCatchClause::Kind::UserDefined;
+	else
+		astAssert(false, "Unknown try catch clause kind");
+	return {};
+}
 
 ContractKind ASTJsonImporter::contractKind(Json::Value const& _node)
 {

@@ -1323,7 +1323,7 @@ ASTPointer<TryStatement> Parser::parseTryStatement(ASTPointer<ASTString> const& 
 	ASTPointer<Block> successBlock = parseBlock();
 	successClauseFactory.setEndPositionFromNode(successBlock);
 	clauses.emplace_back(successClauseFactory.createNode<TryCatchClause>(
-		make_shared<ASTString>(), returnsParameters, successBlock
+		TryCatchClause::Kind::Success, ASTPointer<IdentifierPath>{}, returnsParameters, successBlock
 	));
 
 	do
@@ -1342,20 +1342,42 @@ ASTPointer<TryCatchClause> Parser::parseCatchClause()
 	RecursionGuard recursionGuard(*this);
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Catch);
-	ASTPointer<ASTString> errorName = make_shared<string>();
+	TryCatchClause::Kind kind;
+	ASTPointer<IdentifierPath> errorName;
 	ASTPointer<ParameterList> errorParameters;
 	if (m_scanner->currentToken() != Token::LBrace)
 	{
 		if (m_scanner->currentToken() == Token::Identifier)
-			errorName = expectIdentifierToken();
+		{
+			string name = m_scanner->currentLiteral();
+			if (name == "Error")
+			{
+				kind = TryCatchClause::Kind::Error;
+				m_scanner->next();
+			}
+			else if (name == "Panic")
+			{
+				kind = TryCatchClause::Kind::Panic;
+				m_scanner->next();
+			}
+			else
+			{
+				errorName = parseIdentifierPath();
+				kind = TryCatchClause::Kind::UserDefined;
+			}
+		}
+		else
+			kind = TryCatchClause::Kind::Fallback;
 		VarDeclParserOptions options;
 		options.allowEmptyName = true;
 		options.allowLocationSpecifier = true;
-		errorParameters = parseParameterList(options, !errorName->empty());
+		errorParameters = parseParameterList(options);
 	}
+	else
+		kind = TryCatchClause::Kind::Fallback;
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<TryCatchClause>(errorName, errorParameters, block);
+	return nodeFactory.createNode<TryCatchClause>(kind, errorName, errorParameters, block);
 }
 
 ASTPointer<WhileStatement> Parser::parseWhileStatement(ASTPointer<ASTString> const& _docString)
