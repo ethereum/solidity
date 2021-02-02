@@ -1,0 +1,37 @@
+==== Source: s1.sol ====
+error E(uint);
+==== Source: s2.sol ====
+import "s1.sol" as S;
+==== Source: s3.sol ====
+import "s1.sol" as S;
+import "s2.sol" as T;
+import "s1.sol";
+contract C {
+  function a() public pure {
+    require(false, E(1));
+  }
+  function b() public pure {
+    require(false, S.E(2));
+  }
+  function c() public pure {
+    require(false, T.S.E(3));
+  }
+  function x() public pure {
+    revert(E(1));
+  }
+  function y() public pure {
+    revert(S.E(2));
+  }
+  function z() public pure {
+    revert(T.S.E(3));
+  }
+}
+// ====
+// compileViaYul: also
+// ----
+// a() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000001"
+// b() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000002"
+// c() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000003"
+// x() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000001"
+// y() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000002"
+// z() -> FAILURE, hex"002ff067", hex"0000000000000000000000000000000000000000000000000000000000000003"

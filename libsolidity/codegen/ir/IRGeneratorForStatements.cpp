@@ -1977,6 +1977,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		solAssert(
 			dynamic_cast<VariableDeclaration const*>(_memberAccess.annotation().referencedDeclaration) ||
 			dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
+			dynamic_cast<ErrorDefinition const*>(_memberAccess.annotation().referencedDeclaration) ||
 			category == Type::Category::TypeType ||
 			category == Type::Category::Module,
 			""
