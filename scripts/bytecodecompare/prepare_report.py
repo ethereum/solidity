@@ -13,9 +13,12 @@ from tempfile import TemporaryDirectory
 from typing import List, Optional, Tuple, Union
 
 
-CONTRACT_SEPARATOR_PATTERN = re.compile(r'^======= (?P<file_name>.+):(?P<contract_name>[^:]+) =======$', re.MULTILINE)
-BYTECODE_REGEX = re.compile(r'^Binary:\n(?P<bytecode>.*)$', re.MULTILINE)
-METADATA_REGEX = re.compile(r'^Metadata:\n(?P<metadata>\{.*\})$', re.MULTILINE)
+CONTRACT_SEPARATOR_PATTERN = re.compile(
+    r'^ *======= +(?:(?P<file_name>.+) *:)? *(?P<contract_name>[^:]+) +======= *$',
+    re.MULTILINE
+)
+BYTECODE_REGEX = re.compile(r'^ *Binary: *\n(?P<bytecode>.*[0-9a-f$_]+.*)$', re.MULTILINE)
+METADATA_REGEX = re.compile(r'^ *Metadata: *\n *(?P<metadata>\{.*\}) *$', re.MULTILINE)
 
 
 class CompilerInterface(Enum):
@@ -23,10 +26,16 @@ class CompilerInterface(Enum):
     STANDARD_JSON = 'standard-json'
 
 
+class SMTUse(Enum):
+    PRESERVE = 'preserve'
+    DISABLE = 'disable'
+    STRIP_PRAGMAS = 'strip-pragmas'
+
+
 @dataclass(frozen=True)
 class ContractReport:
     contract_name: str
-    file_name: Path
+    file_name: Optional[Path]
     bytecode: Optional[str]
     metadata: Optional[str]
 
@@ -54,13 +63,21 @@ class FileReport:
         return report
 
 
-def load_source(path: Union[Path, str]) -> str:
+def load_source(path: Union[Path, str], smt_use: SMTUse) -> str:
     # NOTE: newline='' disables newline conversion.
     # We want the file exactly as is because changing even a single byte in the source affects metadata.
     with open(path, mode='r', encoding='utf8', newline='') as source_file:
         file_content = source_file.read()
 
+    if smt_use == SMTUse.STRIP_PRAGMAS:
+        return file_content.replace('pragma experimental SMTChecker;', '', 1)
+
     return file_content
+
+
+def clean_string(value: Optional[str]) -> Optional[str]:
+    value = value.strip() if value is not None else None
+    return value if value != '' else None
 
 
 def parse_standard_json_output(source_file_name: Path, standard_json_output: str) -> FileReport:
@@ -89,8 +106,8 @@ def parse_standard_json_output(source_file_name: Path, standard_json_output: str
             file_report.contract_reports.append(ContractReport(
                 contract_name=contract_name,
                 file_name=Path(file_name),
-                bytecode=contract_results.get('evm', {}).get('bytecode', {}).get('object'),
-                metadata=contract_results.get('metadata'),
+                bytecode=clean_string(contract_results.get('evm', {}).get('bytecode', {}).get('object')),
+                metadata=clean_string(contract_results.get('metadata')),
             ))
 
     return file_report
@@ -113,55 +130,92 @@ def parse_cli_output(source_file_name: Path, cli_output: str) -> FileReport:
 
         assert file_report.contract_reports is not None
         file_report.contract_reports.append(ContractReport(
-            contract_name=contract_name,
-            file_name=Path(file_name),
-            bytecode=bytecode_match['bytecode'] if bytecode_match is not None else None,
-            metadata=metadata_match['metadata'] if metadata_match is not None else None,
+            contract_name=contract_name.strip(),
+            file_name=Path(file_name.strip()) if file_name is not None else None,
+            bytecode=clean_string(bytecode_match['bytecode'] if bytecode_match is not None else None),
+            metadata=clean_string(metadata_match['metadata'] if metadata_match is not None else None),
         ))
 
     return file_report
 
 
-def prepare_compiler_input(
+def prepare_compiler_input(  # pylint: disable=too-many-arguments
     compiler_path: Path,
     source_file_name: Path,
     optimize: bool,
-    interface: CompilerInterface
+    force_no_optimize_yul: bool,
+    interface: CompilerInterface,
+    smt_use: SMTUse,
+    metadata_option_supported: bool,
 ) -> Tuple[List[str], str]:
 
     if interface == CompilerInterface.STANDARD_JSON:
         json_input: dict = {
             'language': 'Solidity',
             'sources': {
-                str(source_file_name): {'content': load_source(source_file_name)}
+                str(source_file_name): {'content': load_source(source_file_name, smt_use)}
             },
             'settings': {
                 'optimizer': {'enabled': optimize},
                 'outputSelection': {'*': {'*': ['evm.bytecode.object', 'metadata']}},
-                'modelChecker': {'engine': 'none'},
             }
         }
+
+        if smt_use == SMTUse.DISABLE:
+            json_input['settings']['modelChecker'] = {'engine': 'none'}
 
         command_line = [str(compiler_path), '--standard-json']
         compiler_input = json.dumps(json_input)
     else:
         assert interface == CompilerInterface.CLI
 
-        compiler_options = [str(source_file_name), '--bin', '--metadata', '--model-checker-engine', 'none']
+        compiler_options = [str(source_file_name), '--bin']
+        if metadata_option_supported:
+            compiler_options.append('--metadata')
         if optimize:
             compiler_options.append('--optimize')
+        elif force_no_optimize_yul:
+            compiler_options.append('--no-optimize-yul')
+        if smt_use == SMTUse.DISABLE:
+            compiler_options += ['--model-checker-engine', 'none']
 
         command_line = [str(compiler_path)] + compiler_options
-        compiler_input = load_source(source_file_name)
+        compiler_input = load_source(source_file_name, smt_use)
 
     return (command_line, compiler_input)
 
 
-def run_compiler(
+def detect_metadata_cli_option_support(compiler_path: Path):
+    process = subprocess.run(
+        [str(compiler_path.absolute()), '--metadata', '-'],
+        input="contract C {}",
+        encoding='utf8',
+        capture_output=True,
+        check=False,
+    )
+
+    negative_response = "unrecognised option '--metadata'".strip()
+    if (process.returncode == 0) != (process.stderr.strip() != negative_response):
+        # If the error is other than expected or there's an error message but no error, don't try
+        # to guess. Just fail.
+        print(
+            f"Compiler exit code: {process.returncode}\n"
+            f"Compiler output:\n{process.stderr}\n",
+            file=sys.stderr
+        )
+        raise Exception("Failed to determine if the compiler supports the --metadata option.")
+
+    return process.returncode == 0
+
+
+def run_compiler(  # pylint: disable=too-many-arguments
     compiler_path: Path,
     source_file_name: Path,
     optimize: bool,
+    force_no_optimize_yul: bool,
     interface: CompilerInterface,
+    smt_use: SMTUse,
+    metadata_option_supported: bool,
     tmp_dir: Path,
 ) -> FileReport:
 
@@ -170,7 +224,10 @@ def run_compiler(
             compiler_path,
             Path(source_file_name.name),
             optimize,
-            interface
+            force_no_optimize_yul,
+            interface,
+            smt_use,
+            metadata_option_supported,
         )
 
         process = subprocess.run(
@@ -190,7 +247,10 @@ def run_compiler(
             compiler_path.absolute(),
             Path(source_file_name.name),
             optimize,
-            interface
+            force_no_optimize_yul,
+            interface,
+            smt_use,
+            metadata_option_supported,
         )
 
         # Create a copy that we can use directly with the CLI interface
@@ -211,13 +271,30 @@ def run_compiler(
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(source_file_names: List[str], compiler_path: Path, interface: CompilerInterface):
+def generate_report(
+    source_file_names: List[str],
+    compiler_path: Path,
+    interface: CompilerInterface,
+    smt_use: SMTUse,
+    force_no_optimize_yul: bool
+):
+    metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
+
     with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
         for optimize in [False, True]:
             with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
                 for source_file_name in sorted(source_file_names):
                     try:
-                        report = run_compiler(compiler_path, Path(source_file_name), optimize, interface, Path(tmp_dir))
+                        report = run_compiler(
+                            compiler_path,
+                            Path(source_file_name),
+                            optimize,
+                            force_no_optimize_yul,
+                            interface,
+                            smt_use,
+                            metadata_option_supported,
+                            Path(tmp_dir),
+                        )
                         report_file.write(report.format_report())
                     except subprocess.CalledProcessError as exception:
                         print(
@@ -250,7 +327,21 @@ def commandline_parser() -> ArgumentParser:
         dest='interface',
         default=CompilerInterface.STANDARD_JSON.value,
         choices=[c.value for c in CompilerInterface],
-        help="Compiler interface to use."
+        help="Compiler interface to use.",
+    )
+    parser.add_argument(
+        '--smt-use',
+        dest='smt_use',
+        default=SMTUse.DISABLE.value,
+        choices=[s.value for s in SMTUse],
+        help="What to do about contracts that use the experimental SMT checker."
+    )
+    parser.add_argument(
+        '--force-no-optimize-yul',
+        dest='force_no_optimize_yul',
+        default=False,
+        action='store_true',
+        help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1."
     )
     return parser;
 
@@ -261,4 +352,6 @@ if __name__ == "__main__":
         glob("*.sol"),
         Path(options.compiler_path),
         CompilerInterface(options.interface),
+        SMTUse(options.smt_use),
+        options.force_no_optimize_yul,
     )
