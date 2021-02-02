@@ -22,7 +22,7 @@
 #include <liblangutil/Exceptions.h>
 
 using namespace std;
-using namespace solidity::test::fuzzer;
+using namespace solidity::test::fuzzer::mutator;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" size_t LLVMFuzzerMutate(uint8_t* _data, size_t _size, size_t _maxSize);
