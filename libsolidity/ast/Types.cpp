@@ -3725,7 +3725,7 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 		EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).enumDefinition();
 		auto enumType = TypeProvider::enumType(enumDef);
 		for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
-			members.emplace_back(enumValue->name(), enumType);
+			members.emplace_back(enumValue->name(), enumType, enumValue.get());
 	}
 	return members;
 }
