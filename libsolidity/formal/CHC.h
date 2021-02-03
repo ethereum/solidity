@@ -258,7 +258,6 @@ private:
 	/// it into m_errorIds.
 	unsigned newErrorId();
 
-	smt::SymbolicState& state();
 	smt::SymbolicIntVariable& errorFlag();
 	//@}
 

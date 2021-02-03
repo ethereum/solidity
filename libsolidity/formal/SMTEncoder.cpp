@@ -79,7 +79,7 @@ bool SMTEncoder::analyze(SourceUnit const& _source)
 	if (!analysis)
 		return false;
 
-	m_context.state().prepareForSourceUnit(_source);
+	state().prepareForSourceUnit(_source);
 
 	return true;
 }
@@ -697,7 +697,7 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		visitCryptoFunction(_funCall);
 		break;
 	case FunctionType::Kind::BlockHash:
-		defineExpr(_funCall, m_context.state().blockhash(expr(*_funCall.arguments().at(0))));
+		defineExpr(_funCall, state().blockhash(expr(*_funCall.arguments().at(0))));
 		break;
 	case FunctionType::Kind::AddMod:
 	case FunctionType::Kind::MulMod:
@@ -711,10 +711,10 @@ void SMTEncoder::endVisit(FunctionCall const& _funCall)
 		auto const& value = args.front();
 		solAssert(value, "");
 
-		smtutil::Expression thisBalance = m_context.state().balance();
+		smtutil::Expression thisBalance = state().balance();
 		setSymbolicUnknownValue(thisBalance, TypeProvider::uint256(), m_context);
 
-		m_context.state().transfer(m_context.state().thisAddress(), expr(address), expr(*value));
+		state().transfer(state().thisAddress(), expr(address), expr(*value));
 		break;
 	}
 	case FunctionType::Kind::ArrayPush:
@@ -799,8 +799,8 @@ void SMTEncoder::visitRequire(FunctionCall const& _funCall)
 
 void SMTEncoder::visitABIFunction(FunctionCall const& _funCall)
 {
-	auto symbFunction = m_context.state().abiFunction(&_funCall);
-	auto const& [name, inTypes, outTypes] = m_context.state().abiFunctionTypes(&_funCall);
+	auto symbFunction = state().abiFunction(&_funCall);
+	auto const& [name, inTypes, outTypes] = state().abiFunctionTypes(&_funCall);
 
 	auto const& funType = dynamic_cast<FunctionType const&>(*_funCall.expression().annotation().type);
 	auto kind = funType.kind();
@@ -848,14 +848,14 @@ void SMTEncoder::visitCryptoFunction(FunctionCall const& _funCall)
 	auto arg0 = expr(*_funCall.arguments().at(0));
 	optional<smtutil::Expression> result;
 	if (kind == FunctionType::Kind::KECCAK256)
-		result = smtutil::Expression::select(m_context.state().cryptoFunction("keccak256"), arg0);
+		result = smtutil::Expression::select(state().cryptoFunction("keccak256"), arg0);
 	else if (kind == FunctionType::Kind::SHA256)
-		result = smtutil::Expression::select(m_context.state().cryptoFunction("sha256"), arg0);
+		result = smtutil::Expression::select(state().cryptoFunction("sha256"), arg0);
 	else if (kind == FunctionType::Kind::RIPEMD160)
-		result = smtutil::Expression::select(m_context.state().cryptoFunction("ripemd160"), arg0);
+		result = smtutil::Expression::select(state().cryptoFunction("ripemd160"), arg0);
 	else if (kind == FunctionType::Kind::ECRecover)
 	{
-		auto e = m_context.state().cryptoFunction("ecrecover");
+		auto e = state().cryptoFunction("ecrecover");
 		auto arg0 = expr(*_funCall.arguments().at(0));
 		auto arg1 = expr(*_funCall.arguments().at(1));
 		auto arg2 = expr(*_funCall.arguments().at(2));
@@ -953,7 +953,7 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 		defineGlobalVariable(_identifier.name(), _identifier);
 	else if (_identifier.name() == "this")
 	{
-		defineExpr(_identifier, m_context.state().thisAddress());
+		defineExpr(_identifier, state().thisAddress());
 		m_uninterpretedTerms.insert(&_identifier);
 	}
 	// Ignore type identifiers
@@ -1299,7 +1299,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		{
 			auto const& name = identifier->name();
 			solAssert(name == "block" || name == "msg" || name == "tx", "");
-			defineExpr(_memberAccess, m_context.state().txMember(name + "." + _memberAccess.memberName()));
+			defineExpr(_memberAccess, state().txMember(name + "." + _memberAccess.memberName()));
 		}
 		else if (auto magicType = dynamic_cast<MagicType const*>(exprType); magicType->kind() == MagicType::Kind::MetaType)
 		{
@@ -1360,7 +1360,7 @@ bool SMTEncoder::visit(MemberAccess const& _memberAccess)
 		_memberAccess.expression().accept(*this);
 		if (_memberAccess.memberName() == "balance")
 		{
-			defineExpr(_memberAccess, m_context.state().balance(expr(_memberAccess.expression())));
+			defineExpr(_memberAccess, state().balance(expr(_memberAccess.expression())));
 			setSymbolicUnknownValue(*m_context.expression(_memberAccess), m_context);
 			m_uninterpretedTerms.insert(&_memberAccess);
 			return false;
@@ -2571,7 +2571,7 @@ void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefin
 		for (auto const& var: localVariablesIncludingModifiers(*_function, _contract))
 			m_context.variable(*var)->resetIndex();
 	}
-	m_context.state().reset();
+	state().reset();
 }
 
 Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
@@ -3008,4 +3008,9 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
 
 	return args;
+}
+
+smt::SymbolicState& SMTEncoder::state()
+{
+	return m_context.state();
 }

@@ -1691,11 +1691,6 @@ unsigned CHC::newErrorId()
 	return errorId;
 }
 
-SymbolicState& CHC::state()
-{
-	return m_context.state();
-}
-
 SymbolicIntVariable& CHC::errorFlag()
 {
 	return state().errorFlag();
