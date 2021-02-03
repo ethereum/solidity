@@ -62,6 +62,53 @@ class FileReport:
 
         return report
 
+    def format_summary(self, verbose: bool) -> str:
+        error = (self.contract_reports is None)
+        contract_reports = self.contract_reports if self.contract_reports is not None else []
+        no_bytecode = any(bytecode is None for bytecode in contract_reports)
+        no_metadata = any(metadata is None for metadata in contract_reports)
+
+        if verbose:
+            flags = ('E' if error else ' ') + ('B' if no_bytecode else ' ') + ('M' if no_metadata else ' ')
+            contract_count = '?' if self.contract_reports is None else str(len(self.contract_reports))
+            return f"{contract_count} {flags} {self.file_name}"
+        else:
+            if error:
+                return 'E'
+            if no_bytecode:
+                return 'B'
+            if no_metadata:
+                return 'M'
+
+            return '.'
+
+
+@dataclass
+class Statistics:
+    file_count: int = 0
+    contract_count: int = 0
+    error_count: int = 0
+    missing_bytecode_count: int = 0
+    missing_metadata_count: int = 0
+
+    def aggregate(self, report: FileReport):
+        contract_reports = report.contract_reports if report.contract_reports is not None else []
+
+        self.file_count += 1
+        self.contract_count += len(contract_reports)
+        self.error_count += (1 if report.contract_reports is None else 0)
+        self.missing_bytecode_count += sum(1 for c in contract_reports if c.bytecode is None)
+        self.missing_metadata_count += sum(1 for c in contract_reports if c.metadata is None)
+
+    def __str__(self) -> str:
+        return "test cases: {}, contracts: {}, errors: {}, missing bytecode: {}, missing metadata: {}".format(
+            self.file_count,
+            str(self.contract_count) + ('+' if self.error_count > 0 else ''),
+            self.error_count,
+            self.missing_bytecode_count,
+            self.missing_metadata_count,
+        )
+
 
 def load_source(path: Union[Path, str], smt_use: SMTUse) -> str:
     # NOTE: newline='' disables newline conversion.
@@ -217,6 +264,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
     smt_use: SMTUse,
     metadata_option_supported: bool,
     tmp_dir: Path,
+    exit_on_error: bool,
 ) -> FileReport:
 
     if interface == CompilerInterface.STANDARD_JSON:
@@ -235,7 +283,7 @@ def run_compiler(  # pylint: disable=too-many-arguments
             input=compiler_input,
             encoding='utf8',
             capture_output=True,
-            check=False,
+            check=exit_on_error,
         )
 
         return parse_standard_json_output(Path(source_file_name), process.stdout)
@@ -265,53 +313,65 @@ def run_compiler(  # pylint: disable=too-many-arguments
             cwd=tmp_dir,
             encoding='utf8',
             capture_output=True,
-            check=False,
+            check=exit_on_error,
         )
 
         return parse_cli_output(Path(source_file_name), process.stdout)
 
 
-def generate_report(
+def generate_report(  # pylint: disable=too-many-arguments,too-many-locals
     source_file_names: List[str],
     compiler_path: Path,
     interface: CompilerInterface,
     smt_use: SMTUse,
-    force_no_optimize_yul: bool
+    force_no_optimize_yul: bool,
+    report_file_path: Path,
+    verbose: bool,
+    exit_on_error: bool,
 ):
+    statistics = Statistics()
     metadata_option_supported = detect_metadata_cli_option_support(compiler_path)
 
-    with open('report.txt', mode='w', encoding='utf8', newline='\n') as report_file:
-        for optimize in [False, True]:
-            with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
-                for source_file_name in sorted(source_file_names):
-                    try:
-                        report = run_compiler(
-                            compiler_path,
-                            Path(source_file_name),
-                            optimize,
-                            force_no_optimize_yul,
-                            interface,
-                            smt_use,
-                            metadata_option_supported,
-                            Path(tmp_dir),
-                        )
-                        report_file.write(report.format_report())
-                    except subprocess.CalledProcessError as exception:
-                        print(
-                            f"\n\nInterrupted by an exception while processing file "
-                            f"'{source_file_name}' with optimize={optimize}\n\n"
-                            f"COMPILER STDOUT:\n{exception.stdout}\n"
-                            f"COMPILER STDERR:\n{exception.stderr}\n",
-                            file=sys.stderr
-                        )
-                        raise
-                    except:
-                        print(
-                            f"\n\nInterrupted by an exception while processing file "
-                            f"'{source_file_name}' with optimize={optimize}\n",
-                            file=sys.stderr
-                        )
-                        raise
+    try:
+        with open(report_file_path, mode='w', encoding='utf8', newline='\n') as report_file:
+            for optimize in [False, True]:
+                with TemporaryDirectory(prefix='prepare_report-') as tmp_dir:
+                    for source_file_name in sorted(source_file_names):
+                        try:
+                            report = run_compiler(
+                                compiler_path,
+                                Path(source_file_name),
+                                optimize,
+                                force_no_optimize_yul,
+                                interface,
+                                smt_use,
+                                metadata_option_supported,
+                                Path(tmp_dir),
+                                exit_on_error,
+                            )
+
+                            statistics.aggregate(report)
+                            print(report.format_summary(verbose), end=('\n' if verbose else ''), flush=True)
+
+                            report_file.write(report.format_report())
+                        except subprocess.CalledProcessError as exception:
+                            print(
+                                f"\n\nInterrupted by an exception while processing file "
+                                f"'{source_file_name}' with optimize={optimize}\n\n"
+                                f"COMPILER STDOUT:\n{exception.stdout}\n"
+                                f"COMPILER STDERR:\n{exception.stderr}\n",
+                                file=sys.stderr
+                            )
+                            raise
+                        except:
+                            print(
+                                f"\n\nInterrupted by an exception while processing file "
+                                f"'{source_file_name}' with optimize={optimize}\n",
+                                file=sys.stderr
+                            )
+                            raise
+    finally:
+        print('\n', statistics, '\n', sep='')
 
 
 def commandline_parser() -> ArgumentParser:
@@ -343,6 +403,15 @@ def commandline_parser() -> ArgumentParser:
         action='store_true',
         help="Explicitly disable Yul optimizer in CLI runs without optimization to work around a bug in solc 0.6.0 and 0.6.1."
     )
+    parser.add_argument('--report-file', dest='report_file', default='report.txt', help="The file to write the report to.")
+    parser.add_argument('--verbose', dest='verbose', default=False, action='store_true', help="More verbose output.")
+    parser.add_argument(
+        '--exit-on-error',
+        dest='exit_on_error',
+        default=False,
+        action='store_true',
+        help="Immediately exit and print compiler output if the compiler exits with an error.",
+    )
     return parser;
 
 
@@ -354,4 +423,7 @@ if __name__ == "__main__":
         CompilerInterface(options.interface),
         SMTUse(options.smt_use),
         options.force_no_optimize_yul,
+        Path(options.report_file),
+        options.verbose,
+        options.exit_on_error,
     )

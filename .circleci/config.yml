@@ -927,8 +927,8 @@ jobs:
           at: build
       - run: mkdir test-cases/
       - run: cd test-cases && ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json && mv -v report.txt ../bytecode-report-ubuntu-json.txt
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli && mv -v report.txt ../bytecode-report-ubuntu-cli.txt
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json --report-file ../bytecode-report-ubuntu-json.txt
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli --report-file ../bytecode-report-ubuntu-cli.txt
       - store_artifacts:
           path: bytecode-report-ubuntu-json.txt
       - store_artifacts:
@@ -950,8 +950,8 @@ jobs:
           at: .
       - run: mkdir test-cases/
       - run: cd test-cases && ../scripts/isolate_tests.py ../test/
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json && mv -v report.txt ../bytecode-report-osx-json.txt
-      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli && mv -v report.txt ../bytecode-report-osx-cli.txt
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface standard-json --report-file ../bytecode-report-osx-json.txt
+      - run: cd test-cases && ../scripts/bytecodecompare/prepare_report.py ../build/solc/solc --interface cli --report-file ../bytecode-report-osx-cli.txt
       - store_artifacts:
           path: bytecode-report-osx-json.txt
       - store_artifacts:
@@ -975,8 +975,8 @@ jobs:
           at: build
       - run: mkdir test-cases\
       - run: cd test-cases\ && python ..\scripts\isolate_tests.py ..\test\
-      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface standard-json && move report.txt ..\bytecode-report-windows-json.txt
-      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface cli && move report.txt ..\bytecode-report-windows-cli.txt
+      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface standard-json --report-file ..\bytecode-report-windows-json.txt
+      - run: cd test-cases\ && python ..\scripts\bytecodecompare\prepare_report.py ..\build\solc\Release\solc.exe --interface cli --report-file ..\bytecode-report-windows-cli.txt
       - store_artifacts:
           path: bytecode-report-windows-json.txt
       - store_artifacts:
