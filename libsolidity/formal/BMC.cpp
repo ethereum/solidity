@@ -561,8 +561,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 	else
 	{
 		m_externalFunctionCallHappened = true;
-		resetStateVariables();
-		resetStorageReferences();
+		resetStorageVariables();
 	}
 }
 
@@ -622,11 +621,6 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 		&_expression
 	);
 	return values;
-}
-
-void BMC::resetStorageReferences()
-{
-	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
 }
 
 void BMC::reset()

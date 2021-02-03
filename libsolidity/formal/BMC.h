@@ -123,7 +123,6 @@ private:
 		Expression const& _expression
 	) override;
 
-	void resetStorageReferences();
 	void reset();
 
 	std::pair<std::vector<smtutil::Expression>, std::vector<std::string>> modelExpressions();

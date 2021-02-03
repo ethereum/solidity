@@ -880,8 +880,7 @@ void CHC::resetContractAnalysis()
 
 void CHC::eraseKnowledge()
 {
-	resetStateVariables();
-	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
+	resetStorageVariables();
 }
 
 void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
