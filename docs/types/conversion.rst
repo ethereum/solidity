@@ -28,7 +28,7 @@ In the example below, ``y`` and ``z``, the operands of the addition,
 do not have the same type, but ``uint8`` can
 be implicitly converted to ``uint16`` and not vice-versa. Because of that,
 ``y`` is converted to the type of ``z`` before the addition is performed
-in the ``uint16`` type. The resulting type of the expression ``y + z`` is ``uint16`.
+in the ``uint16`` type. The resulting type of the expression ``y + z`` is ``uint16``.
 Because it is assigned to a variable of type ``uint32`` another implicit conversion
 is performed after the addition.
 
