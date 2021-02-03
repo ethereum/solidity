@@ -3391,7 +3391,11 @@ string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, St
 
 string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayType const& _to)
 {
-	solAssert(_to.location() != DataLocation::CallData, "");
+	if (_to.dataStoredIn(DataLocation::CallData))
+		solAssert(
+			_from.dataStoredIn(DataLocation::CallData) && _from.isByteArray() && _to.isByteArray(),
+			""
+		);
 
 	// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 	if (_to.location() == DataLocation::Storage)
@@ -3409,16 +3413,22 @@ string YulUtilFunctions::arrayConversionFunction(ArrayType const& _from, ArrayTy
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		Whiskers templ(R"(
-			function <functionName>(value<?fromCalldataDynamic>, length</fromCalldataDynamic>) -> converted {
+			function <functionName>(value<?fromCalldataDynamic>, length</fromCalldataDynamic>) -> converted <?toCalldataDynamic>, outLength</toCalldataDynamic> {
 				<body>
+				<?toCalldataDynamic>
+					outLength := <length>
+				</toCalldataDynamic>
 			}
 		)");
 		templ("functionName", functionName);
 		templ("fromCalldataDynamic", _from.dataStoredIn(DataLocation::CallData) && _from.isDynamicallySized());
+		templ("toCalldataDynamic", _to.dataStoredIn(DataLocation::CallData) && _to.isDynamicallySized());
+		templ("length", _from.isDynamicallySized() ? "length" : _from.length().str());
 
 		if (
 			_from == _to ||
 			(_from.dataStoredIn(DataLocation::Memory) && _to.dataStoredIn(DataLocation::Memory)) ||
+			(_from.dataStoredIn(DataLocation::CallData) && _to.dataStoredIn(DataLocation::CallData)) ||
 			_to.dataStoredIn(DataLocation::Storage)
 		)
 			templ("body", "converted := value");
