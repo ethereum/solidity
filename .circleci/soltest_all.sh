@@ -26,7 +26,7 @@
 # ------------------------------------------------------------------------------
 set -e
 
-REPODIR="$(realpath $(dirname $0)/..)"
+REPODIR="$(realpath "$(dirname "$0")"/..)"
 
 EVM_VALUES=(homestead byzantium constantinople petersburg istanbul)
 OPTIMIZE_VALUES=(0 1)
@@ -65,9 +65,9 @@ STEP=$(($STEP + 1))
 [[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
 STEP=$(($STEP + 1))
 
-for OPTIMIZE in ${OPTIMIZE_VALUES[@]}
+for OPTIMIZE in "${OPTIMIZE_VALUES[@]}"
 do
-    for EVM in ${EVM_VALUES[@]}
+    for EVM in "${EVM_VALUES[@]}"
     do
         # run tests against hera ewasm evmc vm, only if OPTIMIZE == 0 and evm version is byzantium
         EWASM_ARGS=""

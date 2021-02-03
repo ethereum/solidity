@@ -43,7 +43,7 @@ function generate_bytecode_report() {
 
   local EXIT_STATUS
 
-  if semver -r "<0.4.12" $3 > /dev/null; then
+  if semver -r "<0.4.12" "$3" > /dev/null; then
     set +e
     "${SCRIPTDIR}/genbytecode.sh" "$1" >/dev/null 2>&1
     EXIT_STATUS=$?
@@ -87,7 +87,7 @@ function process_tag() {
   cd /src
   # Checkout the historic commit instead of the tag directly.
   local HISTORIC_COMMIT_HASH="$(grep "${TAG}+" /tmp/release_commit_list.txt | cut -d '+' -f 2 | cut -d '.' -f 2)"
-  if [ "$(git cat-file -t ${HISTORIC_COMMIT_HASH} 2>/dev/null)" == "commit" ]; then
+  if [ "$(git cat-file -t "${HISTORIC_COMMIT_HASH}" 2>/dev/null)" == "commit" ]; then
     clean_git_checkout "$HISTORIC_COMMIT_HASH"
   else
     clean_git_checkout "${TAG}"
@@ -138,11 +138,11 @@ function process_tag() {
   if [ -f "${OUTPUTDIR}/bin/soljson-${FULL_VERSION_SUFFIX}.js" ]; then
 
     echo -ne "GENERATE BYTECODE REPORT FOR ${CYAN}${TAG}${RESET}... "
-    generate_bytecode_report "${OUTPUTDIR}/bin/soljson-${FULL_VERSION_SUFFIX}.js" "${OUTPUTDIR}"/log/reports/report-${TAG}.txt "${TAG}"
+    generate_bytecode_report "${OUTPUTDIR}/bin/soljson-${FULL_VERSION_SUFFIX}.js" "${OUTPUTDIR}/log/reports/report-${TAG}.txt" "${TAG}"
     echo -ne "GENERATE BYTECODE REPORT FOR HISTORIC ${CYAN}${TAG}${RESET}... "
     rm -rf /tmp/soljson.js
     if wget -q "$RELEASE_URL/soljson-${HISTORIC_VERSION_SUFFIX}.js" -O /tmp/soljson.js; then
-      generate_bytecode_report /tmp/soljson.js "${OUTPUTDIR}"/log/reports/report-historic-${TAG}.txt "${TAG}"
+      generate_bytecode_report /tmp/soljson.js "${OUTPUTDIR}/log/reports/report-historic-${TAG}.txt" "${TAG}"
     else
       echo -e "${ORANGE}CANNOT FETCH RELEASE${RESET}"
     fi

@@ -39,8 +39,8 @@ function compileFull()
     fi
     local args=$FULLARGS
     if [[ $1 = '-v' ]]; then
-        if (echo $2 | grep -Po '(?<=0.4.)\d+' >/dev/null); then
-            patch=$(echo $2 | grep -Po '(?<=0.4.)\d+')
+        if (echo "$2" | grep -Po '(?<=0.4.)\d+' >/dev/null); then
+            patch=$(echo "$2" | grep -Po '(?<=0.4.)\d+')
             if (( patch < 22 )); then
                 args=$OLDARGS
             fi

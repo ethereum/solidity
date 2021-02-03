@@ -85,8 +85,8 @@ for (var optimize of [false, true])
                 }
             } catch (e) {
                 console.log(filename + ': FATAL ERROR')
-		console.error(filename)
-		console.error(inputs)
+                console.error(filename)
+                console.error(inputs)
             }
         }
     }

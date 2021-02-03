@@ -67,11 +67,11 @@ fi
 for distribution in $DISTRIBUTIONS
 do
 cd /tmp/
-rm -rf $distribution
-mkdir $distribution
-cd $distribution
+rm -rf "$distribution"
+mkdir "$distribution"
+cd "$distribution"
 
-if [ $distribution = STATIC ]
+if [ "$distribution" = STATIC ]
 then
     pparepo=ethereum-static
     SMTDEPENDENCY=""
@@ -83,12 +83,12 @@ else
     else
         pparepo=ethereum-dev
     fi
-    if [ $distribution = focal ]
+    if [ "$distribution" = focal ]
     then
         SMTDEPENDENCY="libz3-static-dev,
             libcvc4-dev,
             "
-    elif [ $distribution = disco ]
+    elif [ "$distribution" = disco ]
     then
         SMTDEPENDENCY="libz3-static-dev,
             libcvc4-dev,
@@ -112,7 +112,7 @@ wget -O ./solc/deps/downloads/range-v3-0.11.0.tar.gz https://github.com/ericnieb
 
 # Determine version
 cd solc
-version=$($(dirname "$0")/get_version.sh)
+version=$("$(dirname "$0")/get_version.sh")
 commithash=$(git rev-parse --short=8 HEAD)
 commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
@@ -128,11 +128,11 @@ fi
 # gzip will create different tars all the time and we are not allowed
 # to upload the same file twice with different contents, so we only
 # create it once.
-if [ ! -e /tmp/${packagename}_${debversion}.orig.tar.gz ]
+if [ ! -e "/tmp/${packagename}_${debversion}.orig.tar.gz" ]
 then
-    tar --exclude .git -czf /tmp/${packagename}_${debversion}.orig.tar.gz .
+    tar --exclude .git -czf "/tmp/${packagename}_${debversion}.orig.tar.gz" .
 fi
-cp /tmp/${packagename}_${debversion}.orig.tar.gz ../
+cp "/tmp/${packagename}_${debversion}.orig.tar.gz" ../
 
 # Create debian package information
 
@@ -244,7 +244,7 @@ chmod +x debian/rules
 
 versionsuffix=0ubuntu1~${distribution}
 # bump version / add entry to changelog
-EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithash}"
+EMAIL="$email" dch -v "1:${debversion}-${versionsuffix}" "git build of ${commithash}"
 
 
 # build source package
@@ -254,39 +254,39 @@ EMAIL="$email" dch -v 1:${debversion}-${versionsuffix} "git build of ${commithas
 debuild -S -d -sa -us -uc
 
 # prepare .changes file for Launchpad
-if [ $distribution = STATIC ]
+if [ "$distribution" = STATIC ]
 then
-    sed -i -e s/UNRELEASED/${static_build_distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
+    sed -i -e "s/UNRELEASED/${static_build_distribution}/" -e s/urgency=medium/urgency=low/ ../*.changes
 else
-    sed -i -e s/UNRELEASED/${distribution}/ -e s/urgency=medium/urgency=low/ ../*.changes
+    sed -i -e "s/UNRELEASED/${distribution}/" -e s/urgency=medium/urgency=low/ ../*.changes
 fi
 
 # check if ubuntu already has the source tarball
 (
 cd ..
-orig=${packagename}_${debversion}.orig.tar.gz
-orig_size=$(ls -l $orig | cut -d ' ' -f 5)
-orig_sha1=$(sha1sum $orig | cut -d ' ' -f 1)
-orig_sha256=$(sha256sum $orig | cut -d ' ' -f 1)
-orig_md5=$(md5sum $orig | cut -d ' ' -f 1)
+orig="${packagename}_${debversion}.orig.tar.gz"
+orig_size=$(ls -l "$orig" | cut -d ' ' -f 5)
+orig_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
+orig_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
+orig_md5=$(md5sum "$orig" | cut -d ' ' -f 1)
 
-if wget --quiet -O $orig-tmp "$ppafilesurl/$orig"
+if wget --quiet -O "$orig-tmp" "$ppafilesurl/$orig"
 then
     echo "[WARN] Original tarball found in Ubuntu archive, using it instead"
-    mv $orig-tmp $orig
+    mv "$orig-tmp" "$orig"
     new_size=$(ls -l *.orig.tar.gz | cut -d ' ' -f 5)
-    new_sha1=$(sha1sum $orig | cut -d ' ' -f 1)
-    new_sha256=$(sha256sum $orig | cut -d ' ' -f 1)
-    new_md5=$(md5sum $orig | cut -d ' ' -f 1)
-    sed -i -e s,$orig_sha1,$new_sha1,g -e s,$orig_sha256,$new_sha256,g -e s,$orig_size,$new_size,g -e s,$orig_md5,$new_md5,g *.dsc
-    sed -i -e s,$orig_sha1,$new_sha1,g -e s,$orig_sha256,$new_sha256,g -e s,$orig_size,$new_size,g -e s,$orig_md5,$new_md5,g *.changes
+    new_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
+    new_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
+    new_md5=$(md5sum "$orig" | cut -d ' ' -f 1)
+    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" *.dsc
+    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" *.changes
 fi
 )
 
 # sign the package
-debsign --re-sign -k ${keyid} ../${packagename}_${debversion}-${versionsuffix}_source.changes
+debsign --re-sign -k "${keyid}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 # upload
-dput ${pparepo} ../${packagename}_${debversion}-${versionsuffix}_source.changes
+dput "${pparepo}" "../${packagename}_${debversion}-${versionsuffix}_source.changes"
 
 done

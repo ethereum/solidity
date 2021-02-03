@@ -36,7 +36,7 @@ set -e
 
 OPTIMIZE=${OPTIMIZE:-"0"}
 EVM=${EVM:-"invalid"}
-REPODIR="$(realpath $(dirname $0)/..)"
+REPODIR="$(realpath "$(dirname "$0")/..")"
 
 source "${REPODIR}/scripts/common.sh"
 # Test result output directory (CircleCI is reading test results from here)
@@ -60,4 +60,4 @@ test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv1"
 
 echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}"
 
-${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}
+"${REPODIR}/build/test/soltest" ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}

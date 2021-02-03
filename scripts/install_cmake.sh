@@ -27,7 +27,7 @@ if test -f $BIN/cmake && ($BIN/cmake --version | grep -q "$VERSION"); then
 else
     FILE=cmake-$VERSION-$OS-x86_64.tar.gz
     URL=https://cmake.org/files/v$VERSION_MAJOR.$VERSION_MINOR/$FILE
-    TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
+    TMPFILE=$(mktemp --tmpdir "cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz")
     echo "Downloading CMake ($URL)..."
     wget "$URL" -O "$TMPFILE" -nv
     if ! (shasum -a256 "$TMPFILE" | grep -q "$SHA256"); then
@@ -36,5 +36,5 @@ else
     fi
     mkdir -p "$PREFIX"
     tar xzf "$TMPFILE" -C "$PREFIX" --strip 1
-    rm $TMPFILE
+    rm "$TMPFILE"
 fi

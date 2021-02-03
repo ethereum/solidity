@@ -46,7 +46,7 @@ TMPDIR=$(mktemp -d)
         git clone --depth 1 https://github.com/ethereum/solc-js.git solc-js
         ( cd solc-js; npm install )
         cp "$REPO_ROOT/emscripten_build/libsolc/soljson.js" solc-js/
-        cp ""$REPO_ROOT"/scripts/bytecodecompare/prepare_report.js" .
+        cp "$REPO_ROOT/scripts/bytecodecompare/prepare_report.js" .
         echo "Running the compiler..."
         ./prepare_report.js *.sol > report.txt
         echo "Finished running the compiler."

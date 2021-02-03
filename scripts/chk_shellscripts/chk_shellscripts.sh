@@ -17,8 +17,8 @@ find . -type f -name "*.sh" | sort >"${FOUND_FILES_TMP}"
 
 SHELLCHECK=${SHELLCHECK:-"$(command -v -- shellcheck)"}
 if [ ! -f "${SHELLCHECK}" ]; then
-  echo "error: shellcheck '${SHELLCHECK}' not found."
-  exit 1
+    echo "error: shellcheck '${SHELLCHECK}' not found."
+    exit 1
 fi
 
 FILES=$(join -v2 "${IGNORE_FILES_TMP}" "${FOUND_FILES_TMP}")
