@@ -40,7 +40,8 @@ Predicate const* Predicate::create(
 	string _name,
 	PredicateType _type,
 	EncodingContext& _context,
-	ASTNode const* _node
+	ASTNode const* _node,
+	ContractDefinition const* _contractContext
 )
 {
 	smt::SymbolicFunctionVariable predicate{_sort, move(_name), _context};
@@ -49,18 +50,20 @@ Predicate const* Predicate::create(
 	return &m_predicates.emplace(
 		std::piecewise_construct,
 		std::forward_as_tuple(functorName),
-		std::forward_as_tuple(move(predicate), _type, _node)
+		std::forward_as_tuple(move(predicate), _type, _node, _contractContext)
 	).first->second;
 }
 
 Predicate::Predicate(
 	smt::SymbolicFunctionVariable&& _predicate,
 	PredicateType _type,
-	ASTNode const* _node
+	ASTNode const* _node,
+	ContractDefinition const* _contractContext
 ):
 	m_predicate(move(_predicate)),
 	m_type(_type),
-	m_node(_node)
+	m_node(_node),
+	m_contractContext(_contractContext)
 {
 }
 
@@ -130,18 +133,8 @@ FunctionCall const* Predicate::programFunctionCall() const
 
 optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 {
-	if (auto const* fun = programFunction())
-		return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*fun);
-	if (auto const* contract = programContract())
-		return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*contract);
-
-	auto const* node = m_node;
-	while (auto const* scopable = dynamic_cast<Scopable const*>(node))
-	{
-		node = scopable->scope();
-		if (auto const* fun = dynamic_cast<FunctionDefinition const*>(node))
-			return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*fun);
-	}
+	if (m_contractContext)
+		return SMTEncoder::stateVariablesIncludingInheritedAndPrivate(*m_contractContext);
 
 	return nullopt;
 }

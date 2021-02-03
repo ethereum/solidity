@@ -126,7 +126,7 @@ private:
 	/// Predicate helpers.
 	//@{
 	/// @returns a new block of given _sort and _name.
-	Predicate const* createSymbolicBlock(smtutil::SortPointer _sort, std::string const& _name, PredicateType _predType, ASTNode const* _node = nullptr);
+	Predicate const* createSymbolicBlock(smtutil::SortPointer _sort, std::string const& _name, PredicateType _predType, ASTNode const* _node = nullptr, ContractDefinition const* _contractContext = nullptr);
 
 	/// Creates summary predicates for all functions of all contracts
 	/// in a given _source.

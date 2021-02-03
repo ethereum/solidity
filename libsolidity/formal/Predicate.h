@@ -55,13 +55,15 @@ public:
 		std::string _name,
 		PredicateType _type,
 		smt::EncodingContext& _context,
-		ASTNode const* _node = nullptr
+		ASTNode const* _node = nullptr,
+		ContractDefinition const* _contractContext = nullptr
 	);
 
 	Predicate(
 		smt::SymbolicFunctionVariable&& _predicate,
 		PredicateType _type,
-		ASTNode const* _node = nullptr
+		ASTNode const* _node = nullptr,
+		ContractDefinition const* _contractContext = nullptr
 	);
 
 	/// Predicate should not be copiable.
@@ -165,6 +167,12 @@ private:
 	/// The ASTNode that this predicate represents.
 	/// nullptr if this predicate is not associated with a specific program AST node.
 	ASTNode const* m_node = nullptr;
+
+	/// The ContractDefinition that contains this predicate.
+	/// nullptr if this predicate is not associated with a specific contract.
+	/// This is unfortunately necessary because of virtual resolution for
+	/// function nodes.
+	ContractDefinition const* m_contractContext = nullptr;
 
 	/// Maps the name of the predicate to the actual Predicate.
 	/// Used in counterexample generation.

@@ -936,9 +936,9 @@ SortPointer CHC::sort(ASTNode const* _node)
 	return functionBodySort(*m_currentFunction, m_currentContract, state());
 }
 
-Predicate const* CHC::createSymbolicBlock(SortPointer _sort, string const& _name, PredicateType _predType, ASTNode const* _node)
+Predicate const* CHC::createSymbolicBlock(SortPointer _sort, string const& _name, PredicateType _predType, ASTNode const* _node, ContractDefinition const* _contractContext)
 {
-	auto const* block = Predicate::create(_sort, _name, _predType, m_context, _node);
+	auto const* block = Predicate::create(_sort, _name, _predType, m_context, _node, _contractContext);
 	m_interface->registerRelation(block->functor());
 	return block;
 }
@@ -1081,7 +1081,8 @@ Predicate const* CHC::createBlock(ASTNode const* _node, PredicateType _predType,
 		sort(_node),
 		"block_" + uniquePrefix() + "_" + _prefix + predicateName(_node),
 		_predType,
-		_node
+		_node,
+		m_currentContract
 	);
 
 	solAssert(m_currentFunction, "");
@@ -1094,7 +1095,8 @@ Predicate const* CHC::createSummaryBlock(FunctionDefinition const& _function, Co
 		functionSort(_function, &_contract, state()),
 		"summary_" + uniquePrefix() + "_" + predicateName(&_function, &_contract),
 		_type,
-		&_function
+		&_function,
+		&_contract
 	);
 }
 
@@ -1104,6 +1106,7 @@ Predicate const* CHC::createConstructorBlock(ContractDefinition const& _contract
 		constructorSort(_contract, state()),
 		_prefix + "_" + contractSuffix(_contract) + "_" + uniquePrefix(),
 		PredicateType::ConstructorSummary,
+		&_contract,
 		&_contract
 	);
 }
