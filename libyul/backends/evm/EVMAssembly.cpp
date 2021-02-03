@@ -196,7 +196,7 @@ void EVMAssembly::appendAssemblySize()
 	m_bytecode += bytes(assemblySizeReferenceSize);
 }
 
-pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EVMAssembly::createSubAssembly()
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EVMAssembly::createSubAssembly(string)
 {
 	yulAssert(false, "Sub assemblies not implemented.");
 	return {};

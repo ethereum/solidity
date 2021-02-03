@@ -199,7 +199,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	switch (_machine)
 	{
 	case Machine::EVM:
-		return assembleAndGuessRuntime().first;
+		return assembleWithDeployed().first;
 	case Machine::EVM15:
 	{
 		MachineAssemblyObject object;
@@ -226,7 +226,7 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	return MachineAssemblyObject();
 }
 
-pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleAndGuessRuntime() const
+std::pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 {
 	yulAssert(m_analysisSuccessful, "");
 	yulAssert(m_parserResult, "");
@@ -248,22 +248,39 @@ pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleAndGue
 		)
 	);
 
-	MachineAssemblyObject runtimeObject;
-	// Heuristic: If there is a single sub-assembly, this is likely the runtime object.
-	if (assembly.numSubs() == 1)
+	MachineAssemblyObject deployedObject;
+	optional<size_t> subIndex;
+
+	// Pick matching assembly if name was given
+	if (_deployName.has_value())
 	{
-		evmasm::Assembly& runtimeAssembly = assembly.sub(0);
-		runtimeObject.bytecode = make_shared<evmasm::LinkerObject>(runtimeAssembly.assemble());
-		runtimeObject.assembly = runtimeAssembly.assemblyString();
-		runtimeObject.sourceMappings = make_unique<string>(
+		for (size_t i = 0; i < assembly.numSubs(); i++)
+			if (assembly.sub(i).name() == _deployName)
+			{
+				subIndex = i;
+				break;
+			}
+
+		solAssert(subIndex.has_value(), "Failed to find object to be deployed.");
+	}
+	// Otherwise use heuristic: If there is a single sub-assembly, this is likely the object to be deployed.
+	else if (assembly.numSubs() == 1)
+		subIndex = 0;
+
+	if (subIndex.has_value())
+	{
+		evmasm::Assembly& runtimeAssembly = assembly.sub(*subIndex);
+		deployedObject.bytecode = make_shared<evmasm::LinkerObject>(runtimeAssembly.assemble());
+		deployedObject.assembly = runtimeAssembly.assemblyString();
+		deployedObject.sourceMappings = make_unique<string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				runtimeAssembly.items(),
 				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
 			)
 		);
 	}
-	return {std::move(creationObject), std::move(runtimeObject)};
 
+	return {std::move(creationObject), std::move(deployedObject)};
 }
 
 string AssemblyStack::print() const
