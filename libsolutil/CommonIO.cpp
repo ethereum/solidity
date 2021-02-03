@@ -137,7 +137,10 @@ string solidity::util::absolutePath(string const& _path, string const& _referenc
 	if (p.begin() == p.end() || (*p.begin() != "." && *p.begin() != ".."))
 		return _path;
 	boost::filesystem::path result(_reference);
-	result.remove_filename();
+	if (!result.parent_path().empty())
+		result.remove_filename();
+	else
+		return "";
 	for (boost::filesystem::path::iterator it = p.begin(); it != p.end(); ++it)
 		if (*it == "..")
 			result = result.parent_path();
