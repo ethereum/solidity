@@ -1276,30 +1276,31 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	case FunctionType::Kind::ArrayPop:
 	{
-		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
-		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*memberAccessExpression.annotation().type);
+		solAssert(functionType->bound(), "");
+		solAssert(functionType->parameterTypes().empty(), "");
+		ArrayType const* arrayType = dynamic_cast<ArrayType const*>(functionType->selfType());
+		solAssert(arrayType, "");
 		define(_functionCall) <<
-			m_utils.storageArrayPopFunction(arrayType) <<
+			m_utils.storageArrayPopFunction(*arrayType) <<
 			"(" <<
 			IRVariable(_functionCall.expression()).commaSeparatedList() <<
 			")\n";
 		break;
 	}
-	case FunctionType::Kind::ByteArrayPush:
 	case FunctionType::Kind::ArrayPush:
 	{
-		auto const& memberAccessExpression = dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression();
-		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*memberAccessExpression.annotation().type);
+		ArrayType const* arrayType = dynamic_cast<ArrayType const*>(functionType->selfType());
+		solAssert(arrayType, "");
 
 		if (arguments.empty())
 		{
 			auto slotName = m_context.newYulVariable();
 			auto offsetName = m_context.newYulVariable();
 			m_code << "let " << slotName << ", " << offsetName << " := " <<
-				m_utils.storageArrayPushZeroFunction(arrayType) <<
+				m_utils.storageArrayPushZeroFunction(*arrayType) <<
 				"(" << IRVariable(_functionCall.expression()).commaSeparatedList() << ")\n";
 			setLValue(_functionCall, IRLValue{
-				*arrayType.baseType(),
+				*arrayType->baseType(),
 				IRLValue::Storage{
 					slotName,
 					offsetName,
@@ -1309,12 +1310,12 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		else
 		{
 			IRVariable argument =
-				arrayType.baseType()->isValueType() ?
-				convert(*arguments.front(), *arrayType.baseType()) :
+				arrayType->baseType()->isValueType() ?
+				convert(*arguments.front(), *arrayType->baseType()) :
 				*arguments.front();
 
 			m_code <<
-				m_utils.storageArrayPushFunction(arrayType, &argument.type()) <<
+				m_utils.storageArrayPushFunction(*arrayType, &argument.type()) <<
 				"(" <<
 				IRVariable(_functionCall.expression()).commaSeparatedList() <<
 				(argument.stackSlots().empty() ? "" : (", " + argument.commaSeparatedList()))  <<
@@ -1590,16 +1591,24 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}).count(objectCategory) > 0, "");
 
 		define(IRVariable(_memberAccess).part("self"), _memberAccess.expression());
-		auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(memberFunctionType->declaration());
 		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 		if (memberFunctionType->kind() == FunctionType::Kind::Internal)
 		{
+			auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(memberFunctionType->declaration());
 			define(IRVariable(_memberAccess).part("functionIdentifier")) << to_string(functionDefinition.id()) << "\n";
 			if (!_memberAccess.annotation().calledDirectly)
 				m_context.addToInternalDispatch(functionDefinition);
 		}
+		else if (
+			memberFunctionType->kind() == FunctionType::Kind::ArrayPush ||
+			memberFunctionType->kind() == FunctionType::Kind::ArrayPop
+		)
+		{
+			// Nothing to do.
+		}
 		else
 		{
+			auto const& functionDefinition = dynamic_cast<FunctionDefinition const&>(memberFunctionType->declaration());
 			solAssert(memberFunctionType->kind() == FunctionType::Kind::DelegateCall, "");
 			auto contract = dynamic_cast<ContractDefinition const*>(functionDefinition.scope());
 			solAssert(contract && contract->isLibrary(), "");

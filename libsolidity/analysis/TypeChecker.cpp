@@ -2345,10 +2345,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			*_functionCall.expression().annotation().isPure &&
 			functionType->isPure();
 
-		if (
-			functionType->kind() == FunctionType::Kind::ArrayPush ||
-			functionType->kind() == FunctionType::Kind::ByteArrayPush
-		)
+		if (functionType->kind() == FunctionType::Kind::ArrayPush)
 			isLValue = functionType->parameterTypes().empty();
 
 		break;

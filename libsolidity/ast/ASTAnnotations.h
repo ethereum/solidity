@@ -47,6 +47,7 @@ namespace solidity::frontend
 
 class Type;
 using TypePointer = Type const*;
+class ArrayType;
 using namespace util;
 
 struct CallGraph;
