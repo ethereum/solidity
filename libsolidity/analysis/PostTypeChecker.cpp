@@ -225,13 +225,12 @@ struct OverrideSpecifierChecker: public PostTypeChecker::Checker
 			if (dynamic_cast<ContractDefinition const*>(decl))
 				continue;
 
-			TypeType const* actualTypeType = dynamic_cast<TypeType const*>(decl->type());
-
+			auto const* typeType = dynamic_cast<TypeType const*>(decl->type());
 			m_errorReporter.typeError(
 				9301_error,
 				override->location(),
 				"Expected contract but got " +
-				actualTypeType->actualType()->toString(true) +
+				(typeType ? typeType->actualType() : decl->type())->toString(true) +
 				"."
 			);
 		}

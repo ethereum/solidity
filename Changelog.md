@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Type Checker: Fix internal error when override specifier is not a contract.
  * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
 
 
