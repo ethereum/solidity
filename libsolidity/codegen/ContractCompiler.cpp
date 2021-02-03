@@ -992,6 +992,7 @@ void ContractCompiler::handleCatch(vector<ASTPointer<TryCatchClause>> const& _ca
 	if (error || panic)
 		// Note that this function returns zero on failure, which is not a problem yet,
 		// but will be a problem once we allow user-defined errors.
+		// TODO
 		m_context.callYulFunction(m_context.utilFunctions().returnDataSelectorFunction(), 0, 1);
 		// stack: <selector>
 	if (error)

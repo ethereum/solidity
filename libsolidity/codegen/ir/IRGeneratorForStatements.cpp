@@ -2999,49 +2999,57 @@ bool IRGeneratorForStatements::visit(TryStatement const& _tryStatement)
 void IRGeneratorForStatements::handleCatch(TryStatement const& _tryStatement)
 {
 	string const runFallback = m_context.newYulVariable();
+	string const selector = m_context.newYulVariable();
+	string const shortCalldata = m_context.newYulVariable();
 	m_code << "let " << runFallback << " := 1\n";
+	m_code << "let " << selector << ", " << shortCalldata << ", " <<  " := " << m_utils.returnDataSelectorFunction() << "()\n";
+	m_code << "if iszero(" << shortCalldata << ") {\n";
 
-	// This function returns zero on "short returndata". We have to add a success flag
-	// once we implement custom error codes.
-	if (_tryStatement.errorClause() || _tryStatement.panicClause())
-		m_code << "switch " << m_utils.returnDataSelectorFunction() << "()\n";
+	if (_tryStatement.clauses().size() - 1 - (_tryStatement.fallback() ? 1 : 0) > 0)
+		m_code << "switch " << selector << "\n";
 
-	if (TryCatchClause const* errorClause = _tryStatement.errorClause())
+	for (ASTPointer<TryCatchClause> const& clause: _tryStatement.clauses())
 	{
-		m_code << "case " << selectorFromSignature32("Error(string)") << " {\n";
-		string const dataVariable = m_context.newYulVariable();
-		m_code << "let " << dataVariable << " := " << m_utils.tryDecodeErrorMessageFunction() << "()\n";
-		m_code << "if " << dataVariable << " {\n";
-		m_code << runFallback << " := 0\n";
-		if (errorClause->parameters())
+		if (clause->kind() == TryCatchClause::Kind::Success || clause->kind() == TryCatchClause::Kind::Fallback)
+			continue;
+
+		string signature;
+		vector<Type const*> parameterTypes;
+		if (clause->kind() == TryCatchClause::Kind::Error)
 		{
-			solAssert(errorClause->parameters()->parameters().size() == 1, "");
-			IRVariable const& var = m_context.addLocalVariable(*errorClause->parameters()->parameters().front());
-			define(var) << dataVariable << "\n";
+			signature = "Error(string)";
+			parameterTypes.push_back(TypeProvider::stringMemory);
 		}
+		else if (clause->kind() == TryCatchClause::Kind::Panic)
+		{
+			signature = "Panic(uint256)";
+			parameterTypes.push_back(TypeProvider::uint256();
+		}
+		else
+		{
+			ErrorDefinition const& error = dynamic_cast<ErrorDefinition const&>(
+				*clause->errorName().annotation().referecedDeclaration
+			);
+			signature = error->functionType(true)->externalSignature();
+			parameterTypes = error->functionType(true)->parameterTypes();
+		}
+		solAssert(clause->parameters(), "");
+		vector<string> variables;
+		string const success = m_context.newYulVariable();
+		variables.push_back(success);
+		for (ASTPointer<VariableDeclaration> const& varDecl: error->parameters()->parameters())
+			variables += m_context.addLocalVariable(*varDecl).stackSlots();
+
+		m_code << "case " << selectorFromSignature32(signature) << " {\n";
+		m_code << "let " << joinHumanReadable(variables) << " := " << m_utils.tryDecodeReturndata(parameterTypes) << "()\n";
+		m_code << "if " << success << " {\n";
+		m_code << runFallback << " := 0\n";
 		errorClause->accept(*this);
 		m_code << "}\n";
 		m_code << "}\n";
 	}
-	if (TryCatchClause const* panicClause = _tryStatement.panicClause())
-	{
-		m_code << "case " << selectorFromSignature32("Panic(uint256)") << " {\n";
-		string const success = m_context.newYulVariable();
-		string const code = m_context.newYulVariable();
-		m_code << "let " << success << ", " << code << " := " << m_utils.tryDecodePanicDataFunction() << "()\n";
-		m_code << "if " << success << " {\n";
-		m_code << runFallback << " := 0\n";
-		if (panicClause->parameters())
-		{
-			solAssert(panicClause->parameters()->parameters().size() == 1, "");
-			IRVariable const& var = m_context.addLocalVariable(*panicClause->parameters()->parameters().front());
-			define(var) << code << "\n";
-		}
-		panicClause->accept(*this);
-		m_code << "}\n";
-		m_code << "}\n";
-	}
 
+	m_code << "}\n";
 	m_code << "if " << runFallback << " {\n";
 	if (_tryStatement.fallbackClause())
 		handleCatchFallback(*_tryStatement.fallbackClause());

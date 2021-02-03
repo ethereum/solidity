@@ -4129,11 +4129,13 @@ string YulUtilFunctions::returnDataSelectorFunction()
 
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return util::Whiskers(R"(
-			function <functionName>() -> sig {
-				if gt(returndatasize(), 3) {
+			function <functionName>() -> sig, error {
+				switch gt(returndatasize(), 3)
+				case 1 {
 					returndatacopy(0, 0, 4)
 					sig := <shr224>(mload(0))
 				}
+				default { error := 1 }
 			}
 		)")
 		("functionName", functionName)
@@ -4197,6 +4199,30 @@ string YulUtilFunctions::tryDecodePanicDataFunction()
 			}
 		)")
 		("functionName", functionName)
+		.render();
+	});
+}
+
+string YulUtilFunctions::tryDecodeReturndata(vector<Type const*> const& _types)
+{
+	string const functionName = "try_decode_returndata_";
+	for (Type const* type: _types)
+		functionName += type->identifier();
+	solAssert(m_evmVersion.supportsReturndata(), "");
+
+	return m_functionCollector.createFunction(functionName, [&]() {
+		return util::Whiskers(R"(
+			function <functionName>() -> success<+values>, <values></+values> {
+				if lt(returndatasize(), 4) { leave }
+				let data := <allocate>(sub(returndatasize(), 4))
+				returndatacopy(data, 4, sub(returndatasize(), 4))
+
+				ret := msg
+			}
+		)")
+		("functionName", functionName)
+		("allocate", allocationFunction())
+		("finalizeAllocation", finalizeAllocationFunction())
 		.render();
 	});
 }

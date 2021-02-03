@@ -471,6 +471,12 @@ public:
 	/// signature: () -> success, value
 	std::string tryDecodePanicDataFunction();
 
+	/// @returns the name of a function that tries to abi-decode parameters in a catch clause
+	/// from the return data.
+	/// Does not check the return data signature.
+	/// signature: () -> success, value...
+	std::string tryDecodeReturndata(std::vector<Type const*> const& _types);
+
 	/// Returns a function name that returns a newly allocated `bytes` array that contains the return data.
 	///
 	/// If returndatacopy() is not supported by the underlying target, a empty array will be returned instead.

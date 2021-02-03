@@ -190,13 +190,15 @@ string ABIFunctions::tupleEncoderPacked(
 		return templ.render();
 	});
 }
-string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
+string ABIFunctions::tupleDecoder(TypePointers const& _types, OnError _onError, bool _fromMemory)
 {
 	string functionName = string("abi_decode_tuple_");
 	for (auto const& t: _types)
 		functionName += t->identifier();
 	if (_fromMemory)
 		functionName += "_fromMemory";
+	if (_onError == OnError::ReturnFalse)
+		functionName += "_try";
 
 	return createFunction(functionName, [&]() {
 		TypePointers decodingTypes;
@@ -204,17 +206,25 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 			decodingTypes.emplace_back(t->decodingType());
 
 		Whiskers templ(R"(
-			function <functionName>(headStart, dataEnd) <arrow> <valueReturnParams> {
+			function <functionName>(headStart, dataEnd) <+returnParams> -> <returnParams> </+returnParams> {
 				if slt(sub(dataEnd, headStart), <minimumSize>) { <revertString> }
+				<?try> success := 1 </try>
 				<decodeElements>
 			}
 		)");
 		templ("functionName", functionName);
-		templ("revertString", revertReasonIfDebug("ABI decoding: tuple data too short"));
+		templ("try", _onError == OnError::ReturnFalse);
+		if (_onError == OnError::ReturnFalse)
+			// TODO rename
+			templ("revertString", "success := 0 leave");
+		else
+			templ("revertString", revertReasonIfDebug("ABI decoding: tuple data too short"));
 		templ("minimumSize", to_string(headSize(decodingTypes)));
 
 		string decodeElements;
 		vector<string> valueReturnParams;
+		if (_onError == OnError::ReturnFalse)
+			valueReturnParams.emplace_back("success");
 		size_t headPos = 0;
 		size_t stackPos = 0;
 		for (size_t i = 0; i < _types.size(); ++i)
@@ -225,6 +235,8 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 			solAssert(sizeOnStack == decodingTypes[i]->sizeOnStack(), "");
 			solAssert(sizeOnStack > 0, "");
 			vector<string> valueNamesLocal;
+			if (_onError == OnError::ReturnFalse)
+				valueNamesLocal.push_back("success");
 			for (size_t j = 0; j < sizeOnStack; j++)
 			{
 				valueNamesLocal.emplace_back("value" + to_string(stackPos));
@@ -240,15 +252,22 @@ string ABIFunctions::tupleDecoder(TypePointers const& _types, bool _fromMemory)
 						let offset := <pos>
 					</dynamic>
 					<values> := <abiDecode>(add(headStart, offset), dataEnd)
+					<?try> if iszero(success) { leave } </try>
 				}
 			)");
 			elementTempl("dynamic", decodingTypes[i]->isDynamicallyEncoded());
 			// TODO add test
-			elementTempl("revertString", revertReasonIfDebug("ABI decoding: invalid tuple offset"));
+			if (_onError == OnError::ReturnFalse)
+				// TODO rename
+				elementTempl("revertString", "success := 0 leave");
+			else
+				elementTempl("revertString", revertReasonIfDebug("ABI decoding: invalid tuple offset"));
 			elementTempl("load", _fromMemory ? "mload" : "calldataload");
+			// TODO assign success
 			elementTempl("values", boost::algorithm::join(valueNamesLocal, ", "));
 			elementTempl("pos", to_string(headPos));
 			elementTempl("abiDecode", abiDecodingFunction(*_types[i], _fromMemory, true));
+			elementTempl("try", _onError == OnError::ReturnFalse);
 			decodeElements += elementTempl.render();
 			headPos += decodingTypes[i]->calldataHeadSize();
 		}
@@ -1062,7 +1081,7 @@ string ABIFunctions::abiEncodingFunctionFunctionType(
 		});
 }
 
-string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bool _forUseOnStack)
+string ABIFunctions::abiDecodingFunction(Type const& _type, OnError _onError, bool _fromMemory, bool _forUseOnStack)
 {
 	// The decoding function has to perform bounds checks unless it decodes a value type.
 	// Conversely, bounds checks have to be performed before the decoding function
@@ -1076,28 +1095,28 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 		if (arrayType->dataStoredIn(DataLocation::CallData))
 		{
 			solAssert(!_fromMemory, "");
-			return abiDecodingFunctionCalldataArray(*arrayType);
+			return abiDecodingFunctionCalldataArray(*arrayType, _onError);
 		}
 		else
-			return abiDecodingFunctionArray(*arrayType, _fromMemory);
+			return abiDecodingFunctionArray(*arrayType, _onError, _fromMemory);
 	}
 	else if (auto const* structType = dynamic_cast<StructType const*>(decodingType))
 	{
 		if (structType->dataStoredIn(DataLocation::CallData))
 		{
 			solAssert(!_fromMemory, "");
-			return abiDecodingFunctionCalldataStruct(*structType);
+			return abiDecodingFunctionCalldataStruct(*structType, _onError);
 		}
 		else
-			return abiDecodingFunctionStruct(*structType, _fromMemory);
+			return abiDecodingFunctionStruct(*structType, _onError, _fromMemory);
 	}
 	else if (auto const* functionType = dynamic_cast<FunctionType const*>(decodingType))
-		return abiDecodingFunctionFunctionType(*functionType, _fromMemory, _forUseOnStack);
+		return abiDecodingFunctionFunctionType(*functionType, _onError, _fromMemory, _forUseOnStack);
 	else
-		return abiDecodingFunctionValueType(_type, _fromMemory);
+		return abiDecodingFunctionValueType(_type, _onError, _fromMemory);
 }
 
-string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, OnError _onError, bool _fromMemory)
 {
 	TypePointer decodingType = _type.decodingType();
 	solAssert(decodingType, "");
@@ -1109,12 +1128,13 @@ string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromM
 	string functionName =
 		"abi_decode_" +
 		_type.identifier() +
-		(_fromMemory ? "_fromMemory" : "");
+		(_fromMemory ? "_fromMemory" : "") +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
-			function <functionName>(offset, end) -> value {
+			function <functionName>(offset, end) -> <?try> success, </try> value {
 				value := <load>(offset)
-				<validator>(value)
+				<?try> success := </try> <validator>(value)
 			}
 		)");
 		templ("functionName", functionName);
@@ -1122,58 +1142,65 @@ string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromM
 		// Validation should use the type and not decodingType, because e.g.
 		// the decoding type of an enum is a plain int.
 		templ("validator", m_utils.validatorFunction(_type, true));
+		// TODO extend the validator to retrun success
 		return templ.render();
 	});
 
 }
 
-string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionArray(ArrayType const& _type, OnError _onError, bool _fromMemory)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
 
 	string functionName =
 		"abi_decode_" +
 		_type.identifier() +
-		(_fromMemory ? "_fromMemory" : "");
+		(_fromMemory ? "_fromMemory" : "") +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 
 	return createFunction(functionName, [&]() {
 		string load = _fromMemory ? "mload" : "calldataload";
 		Whiskers templ(
 			R"(
 				// <readableTypeName>
-				function <functionName>(offset, end) -> array {
+				function <functionName>(offset, end) -> <?try> success, </try> array {
 					if iszero(slt(add(offset, 0x1f), end)) { <revertString> }
 					let length := <retrieveLength>
-					array := <abiDecodeAvailableLen>(<offset>, length, end)
+					<?try> success, </try> array := <abiDecodeAvailableLen>(<offset>, length, end)
 				}
 			)"
 		);
 		// TODO add test
-		templ("revertString", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
+		if (_onError == OnError::ReturnFalse)
+			// TODO rename
+			templ("revertString", "success := 0 leave");
+		else
+			templ("revertString", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
 		templ("functionName", functionName);
 		templ("readableTypeName", _type.toString(true));
 		templ("retrieveLength", _type.isDynamicallySized() ? (load + "(offset)") : toCompactHexWithPrefix(_type.length()));
 		templ("offset", _type.isDynamicallySized() ? "add(offset, 0x20)" : "offset");
-		templ("abiDecodeAvailableLen", abiDecodingFunctionArrayAvailableLength(_type, _fromMemory));
+		templ("abiDecodeAvailableLen", abiDecodingFunctionArrayAvailableLength(_type, _onError, _fromMemory));
 		return templ.render();
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _type, OnError _onError, bool _fromMemory)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
 	if (_type.isByteArray())
-		return abiDecodingFunctionByteArrayAvailableLength(_type, _fromMemory);
+		return abiDecodingFunctionByteArrayAvailableLength(_type, _onError, _fromMemory);
 
 	string functionName =
 		"abi_decode_available_length_" +
 		_type.identifier() +
-		(_fromMemory ? "_fromMemory" : "");
+		(_fromMemory ? "_fromMemory" : "") +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 			// <readableTypeName>
-			function <functionName>(offset, length, end) -> array {
+			function <functionName>(offset, length, end) -> <?try> success, </try> array {
 				array := <allocate>(<allocationSize>(length))
 				let dst := array
 				<storeLength>
@@ -1209,17 +1236,20 @@ string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _t
 			templ("staticBoundsCheck", "if gt(add(src, mul(length, " +
 				calldataStride +
 				")), end) { " +
-				revertReasonIfDebug("ABI decoding: invalid calldata array stride") +
+				(
+					_onError == OnError::ReturnFalse ? "success := 0 leave" :
+					revertReasonIfDebug("ABI decoding: invalid calldata array stride")
+				) +
 				" }"
 			);
 			templ("retrieveElementPos", "src");
 		}
-		templ("decodingFun", abiDecodingFunction(*_type.baseType(), _fromMemory, false));
+		templ("decodingFun", abiDecodingFunction(*_type.baseType(), _onError, _fromMemory, false));
 		return templ.render();
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
+string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type, OnError _onError)
 {
 	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
 	if (!_type.isDynamicallySized())
@@ -1229,14 +1259,16 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 
 	string functionName =
 		"abi_decode_" +
-		_type.identifier();
+		_type.identifier() +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
+
 	return createFunction(functionName, [&]() {
 		Whiskers w;
 		if (_type.isDynamicallySized())
 		{
 			w = Whiskers(R"(
 				// <readableTypeName>
-				function <functionName>(offset, end) -> arrayPos, length {
+				function <functionName>(offset, end) -> <+try> success, </try> arrayPos, length {
 					if iszero(slt(add(offset, 0x1f), end)) { <revertStringOffset> }
 					length := calldataload(offset)
 					if gt(length, 0xffffffffffffffff) { <revertStringLength> }
@@ -1244,6 +1276,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 					if gt(add(arrayPos, mul(length, <stride>)), end) { <revertStringPos> }
 				}
 			)");
+			// TODO modify to return failure
 			w("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
 			w("revertStringLength", revertReasonIfDebug("ABI decoding: invalid calldata array length"));
 		}
@@ -1251,13 +1284,14 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 		{
 			w = Whiskers(R"(
 				// <readableTypeName>
-				function <functionName>(offset, end) -> arrayPos {
+				function <functionName>(offset, end) -> <+try> success, </try> arrayPos {
 					arrayPos := offset
 					if gt(add(arrayPos, mul(<length>, <stride>)), end) { <revertStringPos> }
 				}
 			)");
 			w("length", toCompactHexWithPrefix(_type.length()));
 		}
+		// TODO modify to return failure
 		w("revertStringPos", revertReasonIfDebug("ABI decoding: invalid calldata array stride"));
 		w("functionName", functionName);
 		w("readableTypeName", _type.toString(true));
@@ -1268,7 +1302,7 @@ string ABIFunctions::abiDecodingFunctionCalldataArray(ArrayType const& _type)
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionByteArrayAvailableLength(ArrayType const& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionByteArrayAvailableLength(ArrayType const& _type, OnError _onError, bool _fromMemory)
 {
 	solAssert(_type.dataStoredIn(DataLocation::Memory), "");
 	solAssert(_type.isByteArray(), "");
@@ -1276,11 +1310,12 @@ string ABIFunctions::abiDecodingFunctionByteArrayAvailableLength(ArrayType const
 	string functionName =
 		"abi_decode_available_length_" +
 		_type.identifier() +
-		(_fromMemory ? "_fromMemory" : "");
+		(_fromMemory ? "_fromMemory" : "") +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
-			function <functionName>(src, length, end) -> array {
+			function <functionName>(src, length, end) -> <?try> success, </try> array {
 				array := <allocate>(<allocationSize>(length))
 				mstore(array, length)
 				let dst := add(array, 0x20)
@@ -1288,6 +1323,7 @@ string ABIFunctions::abiDecodingFunctionByteArrayAvailableLength(ArrayType const
 				<copyToMemFun>(src, dst, length)
 			}
 		)");
+		// TODO modify
 		templ("revertStringLength", revertReasonIfDebug("ABI decoding: invalid byte array length"));
 		templ("functionName", functionName);
 		templ("allocate", m_utils.allocationFunction());
@@ -1297,22 +1333,24 @@ string ABIFunctions::abiDecodingFunctionByteArrayAvailableLength(ArrayType const
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionCalldataStruct(StructType const& _type)
+string ABIFunctions::abiDecodingFunctionCalldataStruct(StructType const& _type, OnError _onError)
 {
 	solAssert(_type.dataStoredIn(DataLocation::CallData), "");
 	string functionName =
 		"abi_decode_" +
-		_type.identifier();
+		_type.identifier() +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 
 	return createFunction(functionName, [&]() {
 		Whiskers w{R"(
 				// <readableTypeName>
-				function <functionName>(offset, end) -> value {
+				function <functionName>(offset, end) -> <+try> success, </try> value {
 					if slt(sub(end, offset), <minimumSize>) { <revertString> }
 					value := offset
 				}
 		)"};
 		// TODO add test
+		// TODO modfy
 		w("revertString", revertReasonIfDebug("ABI decoding: struct calldata too short"));
 		w("functionName", functionName);
 		w("readableTypeName", _type.toString(true));
@@ -1321,18 +1359,19 @@ string ABIFunctions::abiDecodingFunctionCalldataStruct(StructType const& _type)
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fromMemory)
+string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, OnError _onError, bool _fromMemory)
 {
 	solAssert(!_type.dataStoredIn(DataLocation::CallData), "");
 	string functionName =
 		"abi_decode_" +
 		_type.identifier() +
-		(_fromMemory ? "_fromMemory" : "");
+		(_fromMemory ? "_fromMemory" : "") +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 
 	return createFunction(functionName, [&]() {
 		Whiskers templ(R"(
 			// <readableTypeName>
-			function <functionName>(headStart, end) -> value {
+			function <functionName>(headStart, end) -> <?try> success, </try> value {
 				if slt(sub(end, headStart), <minimumSize>) { <revertString> }
 				value := <allocate>(<memorySize>)
 				<#members>
@@ -1344,6 +1383,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 			}
 		)");
 		// TODO add test
+		// TODO modify
 		templ("revertString", revertReasonIfDebug("ABI decoding: struct data too short"));
 		templ("functionName", functionName);
 		templ("readableTypeName", _type.toString(true));
@@ -1365,10 +1405,12 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 				<!dynamic>
 					let offset := <pos>
 				</dynamic>
+// TODO outline and leave on error
 				mstore(add(value, <memoryOffset>), <abiDecode>(add(headStart, offset), end))
 			)");
 			memberTempl("dynamic", decodingType->isDynamicallyEncoded());
 			// TODO add test
+			// TODO modify
 			memberTempl("revertString", revertReasonIfDebug("ABI decoding: invalid struct offset"));
 			memberTempl("load", _fromMemory ? "mload" : "calldataload");
 			memberTempl("pos", to_string(headPos));
@@ -1386,7 +1428,7 @@ string ABIFunctions::abiDecodingFunctionStruct(StructType const& _type, bool _fr
 	});
 }
 
-string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, bool _fromMemory, bool _forUseOnStack)
+string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, OnError _onError, bool _fromMemory, bool _forUseOnStack)
 {
 	solAssert(_type.kind() == FunctionType::Kind::External, "");
 
@@ -1394,13 +1436,15 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 		"abi_decode_" +
 		_type.identifier() +
 		(_fromMemory ? "_fromMemory" : "") +
-		(_forUseOnStack ? "_onStack" : "");
+		(_forUseOnStack ? "_onStack" : "") +
+		(_onError == OnError::ReturnFalse ? "_try" : "");
 
 	return createFunction(functionName, [&]() {
 		if (_forUseOnStack)
 		{
 			return Whiskers(R"(
-				function <functionName>(offset, end) -> addr, function_selector {
+				function <functionName>(offset, end) -> <?try> failure, </try> addr, function_selector {
+// TODO split
 					addr, function_selector := <splitExtFun>(<decodeFun>(offset, end))
 				}
 			)")
@@ -1412,7 +1456,7 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 		else
 		{
 			return Whiskers(R"(
-				function <functionName>(offset, end) -> fun {
+				function <functionName>(offset, end) -> <?try> failure, </try> fun {
 					fun := <load>(offset)
 					<validateExtFun>(fun)
 				}
@@ -1425,17 +1469,18 @@ string ABIFunctions::abiDecodingFunctionFunctionType(FunctionType const& _type, 
 	});
 }
 
-string ABIFunctions::calldataAccessFunction(Type const& _type)
+string ABIFunctions::calldataAccessFunction(Type const& _type, OnError _onError)
 {
 	solAssert(_type.isValueType() || _type.dataStoredIn(DataLocation::CallData), "");
-	string functionName = "calldata_access_" + _type.identifier();
+	string functionName = "calldata_access_" + _type.identifier() + (_onError == OnError::ReturnFalse ? "_try" : "");
+
 	return createFunction(functionName, [&]() {
 		if (_type.isDynamicallyEncoded())
 		{
 			unsigned int tailSize = _type.calldataEncodedTailSize();
 			solAssert(tailSize > 1, "");
 			Whiskers w(R"(
-				function <functionName>(base_ref, ptr) -> <return> {
+				function <functionName>(base_ref, ptr) -> <?try> failure, </try> <return> {
 					let rel_offset_of_tail := calldataload(ptr)
 					if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <revertStringOffset> }
 					value := add(rel_offset_of_tail, base_ref)
@@ -1454,8 +1499,10 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 				)")
 				("calldataStride", toCompactHexWithPrefix(arrayType->calldataStride()))
 				// TODO add test
+				// TODO modify
 				("revertStringLength", revertReasonIfDebug("Invalid calldata access length"))
 				// TODO add test
+				  // TODO modify
 				("revertStringStride", revertReasonIfDebug("Invalid calldata access stride"))
 				.render());
 				w("return", "value, length");
@@ -1467,6 +1514,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 			}
 			w("neededLength", toCompactHexWithPrefix(tailSize));
 			w("functionName", functionName);
+			// TODO modify
 			w("revertStringOffset", revertReasonIfDebug("Invalid calldata access offset"));
 			return w.render();
 		}
@@ -1484,6 +1532,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 				}
 			)")
 			("functionName", functionName)
+					// TODO modify
 			("decodingFunction", decodingFunction)
 			.render();
 		}
@@ -1494,6 +1543,7 @@ string ABIFunctions::calldataAccessFunction(Type const& _type)
 				_type.category() == Type::Category::Struct,
 				""
 			);
+			// TODO modify
 			return Whiskers(R"(
 				function <functionName>(baseRef, ptr) -> value {
 					value := ptr
