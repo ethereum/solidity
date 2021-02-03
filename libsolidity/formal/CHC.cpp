@@ -880,8 +880,7 @@ void CHC::resetContractAnalysis()
 
 void CHC::eraseKnowledge()
 {
-	resetStateVariables();
-	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
+	resetStorageVariables();
 }
 
 void CHC::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)
@@ -1689,11 +1688,6 @@ unsigned CHC::newErrorId()
 	if (errorId == 0)
 		errorId = m_context.newUniqueId();
 	return errorId;
-}
-
-SymbolicState& CHC::state()
-{
-	return m_context.state();
 }
 
 SymbolicIntVariable& CHC::errorFlag()

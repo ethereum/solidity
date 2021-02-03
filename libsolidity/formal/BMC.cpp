@@ -162,7 +162,7 @@ bool BMC::visit(FunctionDefinition const& _function)
 	{
 		reset();
 		initFunction(_function);
-		m_context.addAssertion(m_context.state().txTypeConstraints() && m_context.state().txFunctionConstraints(_function));
+		m_context.addAssertion(state().txTypeConstraints() && state().txFunctionConstraints(_function));
 		resetStateVariables();
 	}
 
@@ -440,7 +440,7 @@ void BMC::endVisit(FunctionCall const& _funCall)
 	{
 		auto value = _funCall.arguments().front();
 		solAssert(value, "");
-		smtutil::Expression thisBalance = m_context.state().balance();
+		smtutil::Expression thisBalance = state().balance();
 
 		addVerificationTarget(
 			VerificationTargetType::Balance,
@@ -561,8 +561,7 @@ void BMC::internalOrExternalFunctionCall(FunctionCall const& _funCall)
 	else
 	{
 		m_externalFunctionCallHappened = true;
-		resetStateVariables();
-		resetStorageReferences();
+		resetStorageVariables();
 	}
 }
 
@@ -622,11 +621,6 @@ pair<smtutil::Expression, smtutil::Expression> BMC::arithmeticOperation(
 		&_expression
 	);
 	return values;
-}
-
-void BMC::resetStorageReferences()
-{
-	m_context.resetVariables([&](VariableDeclaration const& _variable) { return _variable.hasReferenceOrMappingType(); });
 }
 
 void BMC::reset()

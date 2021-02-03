@@ -424,6 +424,8 @@ protected:
 
 	/// Stores the context of the encoding.
 	smt::EncodingContext& m_context;
+
+	smt::SymbolicState& state();
 };
 
 }
