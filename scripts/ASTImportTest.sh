@@ -84,7 +84,10 @@ echo "Looking at $NSOURCES .sol files..."
 WORKINGDIR=$PWD
 
 # for solfile in $(find $DEV_DIR -name *.sol)
-for solfile in $(find "$SYNTAXTESTS_DIR" "$ASTJSONTESTS_DIR" -name *.sol)
+# boost_filesystem_bug specifically tests a local fix for a boost::filesystem
+# bug. Since the test involves a malformed path, there is no point in running
+# AST tests on it. See https://github.com/boostorg/filesystem/issues/176
+for solfile in $(find "$SYNTAXTESTS_DIR" "$ASTJSONTESTS_DIR" -name *.sol -and -not -name "boost_filesystem_bug.sol")
 do
     echo -n "."
     # create a temporary sub-directory
