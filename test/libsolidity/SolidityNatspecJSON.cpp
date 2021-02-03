@@ -2247,6 +2247,108 @@ BOOST_AUTO_TEST_CASE(dev_return_name_no_description)
 	checkNatspec(sourceCode, "B", natspec2, false);
 }
 
+BOOST_AUTO_TEST_CASE(error)
+{
+	char const* sourceCode = R"(
+		contract test {
+			/// Something failed.
+			/// @dev an error.
+			/// @param a first parameter
+			/// @param b second parameter
+			error E(uint a, uint b);
+		}
+	)";
+
+	char const* devdoc = R"X({
+		"errors":{
+			"E(uint256,uint256)": [{
+				"details" : "an error.",
+				"params" :
+				{
+					"a" : "first parameter",
+					"b" : "second parameter"
+				}
+			}]
+		},
+		"methods": {}
+	})X";
+
+	checkNatspec(sourceCode, "test", devdoc, false);
+
+	char const* userdoc = R"X({
+		"errors":{
+			"E(uint256,uint256)": [{
+				"notice" : "Something failed."
+			}]
+		},
+		"methods": {}
+	})X";
+	checkNatspec(sourceCode, "test", userdoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(error_multiple)
+{
+	char const* sourceCode = R"(
+		contract A {
+			/// Something failed.
+			/// @dev an error.
+			/// @param x first parameter
+			/// @param y second parameter
+			error E(uint x, uint y);
+		}
+		contract test {
+			/// X Something failed.
+			/// @dev X an error.
+			/// @param a X first parameter
+			/// @param b X second parameter
+			error E(uint a, uint b);
+			function f(bool a) public pure {
+				if (a)
+					revert E(1, 2);
+				else
+					revert A.E(5, 6);
+			}
+		}
+	)";
+
+	char const* devdoc = R"X({
+		"methods": {},
+		"errors": {
+			"E(uint256,uint256)": [
+				{
+					"details" : "an error.",
+					"params" :
+					{
+						"x" : "first parameter",
+						"y" : "second parameter"
+					}
+				},
+				{
+					"details" : "X an error.",
+					"params" :
+					{
+						"a" : "X first parameter",
+						"b" : "X second parameter"
+					}
+				}
+			]
+		}
+	})X";
+
+	checkNatspec(sourceCode, "test", devdoc, false);
+
+	char const* userdoc = R"X({
+		"errors":{
+			"E(uint256,uint256)": [
+				{ "notice" : "Something failed." },
+				{ "notice" : "X Something failed." }
+			]
+		},
+		"methods": {}
+	})X";
+	checkNatspec(sourceCode, "test", userdoc, true);
+}
+
 BOOST_AUTO_TEST_CASE(custom)
 {
 	char const* sourceCode = R"(
