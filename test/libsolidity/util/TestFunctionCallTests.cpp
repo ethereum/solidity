@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(format_unsigned_singleline)
 	test.setRawBytes(toBigEndian(u256{2}));
 	test.setFailure(false);
 
-	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(uint8): 1 -> 2");
+	BOOST_REQUIRE_EQUAL(test.format("", TestFunctionCall::RenderMode::ActualValuesExpectedGas), "// f(uint8): 1 -> 2");
 }
 
 BOOST_AUTO_TEST_CASE(format_unsigned_singleline_signed_encoding)
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(format_unsigned_singleline_signed_encoding)
 	test.setRawBytes(toBigEndian(u256{-1}));
 	test.setFailure(false);
 
-	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(uint8): 1 -> -1");
+	BOOST_REQUIRE_EQUAL(test.format("", TestFunctionCall::RenderMode::ActualValuesExpectedGas), "// f(uint8): 1 -> -1");
 }
 
 BOOST_AUTO_TEST_CASE(format_unsigned_multiline)
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(format_signed_singleline)
 	test.setRawBytes(toBigEndian(u256{-2}));
 	test.setFailure(false);
 
-	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(int8): -1 -> -2");
+	BOOST_REQUIRE_EQUAL(test.format("", TestFunctionCall::RenderMode::ActualValuesExpectedGas), "// f(int8): -1 -> -2");
 }
 
 BOOST_AUTO_TEST_CASE(format_hex_singleline)
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(format_hex_singleline)
 	test.setRawBytes(actualBytes);
 	test.setFailure(false);
 
-	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(bytes32): 0x31 -> 0x32");
+	BOOST_REQUIRE_EQUAL(test.format("", TestFunctionCall::RenderMode::ActualValuesExpectedGas), "// f(bytes32): 0x31 -> 0x32");
 }
 
 BOOST_AUTO_TEST_CASE(format_hex_string_singleline)
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(format_bool_true_singleline)
 	test.setRawBytes(actualBytes);
 	test.setFailure(false);
 
-	BOOST_REQUIRE_EQUAL(test.format("", true), "// f(bool): true -> false");
+	BOOST_REQUIRE_EQUAL(test.format("", TestFunctionCall::RenderMode::ActualValuesExpectedGas), "// f(bool): true -> false");
 }
 
 BOOST_AUTO_TEST_CASE(format_bool_false_singleline)
