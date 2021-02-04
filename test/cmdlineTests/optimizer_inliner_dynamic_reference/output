@@ -150,6 +150,7 @@ sub_0: assembly {
       revert(0x00, 0x24)
         /* "#utility.yul":196:425   */
     tag_22:
+        /* "#utility.yul":236:239   */
       0x00
         /* "#utility.yul":267:268   */
       dup3
