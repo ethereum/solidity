@@ -326,16 +326,21 @@ TestCase::TestResult SemanticTest::runTest(
 
 bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const
 {
-	if (m_evmVersion != EVMVersion{} || solidity::test::CommonOptions::get().useABIEncoderV1)
-		return true;
-
 	string setting =
 		(_compileViaYul ? "ir"s : "legacy"s) +
 		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
 
+	// We don't check gas if evm is not set to default version
+	// or in case we run abiencoderv1
+	// or gas used less than threshold for enforcing feature
+	// or setting is "ir" and it's not included in expectations
 	if (
-		(!m_enforceGasCost || m_gasUsed < m_enforceGasCostMinValue) &&
-		io_test.call().expectations.gasUsed.count(setting) == 0
+		m_evmVersion != EVMVersion{} ||
+		solidity::test::CommonOptions::get().useABIEncoderV1 ||
+		(
+			(!m_enforceGasCost || setting == "ir" || m_gasUsed < m_enforceGasCostMinValue) &&
+			io_test.call().expectations.gasUsed.count(setting) == 0
+		)
 	)
 		return true;
 
