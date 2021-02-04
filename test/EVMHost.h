@@ -64,6 +64,9 @@ public:
 	/// Prints contents of storage at all addresses in host to @param _os.
 	void print_all_storage(std::ostringstream& _os);
 
+	/// Prints contents of storage at @param _addr to @param _os.
+	void print_storage_at(evmc::address const& _addr, std::ostringstream& _os);
+
 	/// @returns contents of storage at @param _addr.
 	std::unordered_map<evmc::bytes32, evmc::storage_value> const& get_address_storage(evmc::address const& _addr);
 

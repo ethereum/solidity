@@ -90,6 +90,7 @@ defaults:
         - test/tools/ossfuzz/const_opt_ossfuzz
         - test/tools/ossfuzz/solc_mutator_ossfuzz
         - test/tools/ossfuzz/solc_ossfuzz
+        - test/tools/ossfuzz/stack_reuse_codegen_ossfuzz
         - test/tools/ossfuzz/strictasm_assembly_ossfuzz
         - test/tools/ossfuzz/strictasm_diff_ossfuzz
         - test/tools/ossfuzz/strictasm_opt_ossfuzz
