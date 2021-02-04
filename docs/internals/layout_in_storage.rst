@@ -6,22 +6,27 @@ Layout of State Variables in Storage
 
 .. _storage-inplace-encoding:
 
-Statically-sized variables (everything except mapping and dynamically-sized
-array types) are laid out contiguously in storage starting from position ``0``.
+State variables of contracts are stored in storage in a compact way such
+that multiple values sometimes use the same storage slot.
+Except for dynamically-sized arrays and mappings (see below), data is stored
+contiguously item after item starting with the first state variable,
+which is stored in slot ``0``. For each variable,
+a size in bytes is determined according to its type.
 Multiple, contiguous items that need less than 32 bytes are packed into a single
 storage slot if possible, according to the following rules:
 
 - The first item in a storage slot is stored lower-order aligned.
-- Elementary types use only as many bytes as are necessary to store them.
-- If an elementary type does not fit the remaining part of a storage slot, it is moved to the next storage slot.
-- Structs and array data always start a new slot and occupy whole slots
-  (but items inside a struct or array are packed tightly according to these rules).
+- Value types use only as many bytes as are necessary to store them.
+- If a value type does not fit the remaining part of a storage slot, it is stored in the next storage slot.
+- Structs and array data always start a new slot and their items are packed tightly according to these rules.
+- Items following struct or array data always start a new storage slot.
 
 For contracts that use inheritance, the ordering of state variables is determined by the
 C3-linearized order of contracts starting with the most base-ward contract. If allowed
 by the above rules, state variables from different contracts do share the same storage slot.
 
-The elements of structs and arrays are stored after each other, just as if they were given explicitly.
+The elements of structs and arrays are stored after each other, just as if they were given
+as individual values.
 
 .. warning::
     When using elements that are smaller than 32 bytes, your contract's gas usage may be higher.
@@ -29,9 +34,15 @@ The elements of structs and arrays are stored after each other, just as if they 
     than that, the EVM must use more operations in order to reduce the size of the element from 32
     bytes to the desired size.
 
-    It is only beneficial to use reduced-size arguments if you are dealing with storage values
+    It might be beneficial to use reduced-size types if you are dealing with storage values
     because the compiler will pack multiple elements into one storage slot, and thus, combine
-    multiple reads or writes into a single operation. When dealing with function arguments or memory
+    multiple reads or writes into a single operation.
+    If you are not reading or writing all the values in a slot at the same time, this can
+    have the opposite effect, though: When one value is written to a multi-value storage
+    slot, the storage slot has to be read first and then
+    combined with the new value such that other data in the same slot is not destroyed.
+
+    When dealing with function arguments or memory
     values, there is no inherent benefit because the compiler does not pack these values.
 
     Finally, in order to allow the EVM to optimize for this, ensure that you try to order your
@@ -53,48 +64,83 @@ Mappings and Dynamic Arrays
 
 .. _storage-hashed-encoding:
 
-Due to their unpredictable size, mapping and dynamically-sized array types use a Keccak-256 hash
-computation to find the starting position of the value or the array data.
-These starting positions are always full stack slots.
+Due to their unpredictable size, mappings and dynamically-sized array types cannot be stored
+"in between" the state variables preceding and following them.
+Instead, they are considered to occupy only 32 bytes with regards to the
+:ref:`rules above <storage-inplace-encoding>` and the elements they contain are stored starting at a different
+storage slot that is computed using a Keccak-256 hash.
 
-The mapping or the dynamic array itself occupies a slot in storage at some position ``p``
-according to the above rule (or by recursively applying this rule for
-mappings of mappings or arrays of arrays). For dynamic arrays,
+Assume the storage location of the mapping or array ends up being a slot ``p``
+after applying :ref:`the storage layout rules <storage-inplace-encoding>`.
+For dynamic arrays,
 this slot stores the number of elements in the array (byte arrays and
 strings are an exception, see :ref:`below <bytes-and-string>`).
-For mappings, the slot is unused (but it is needed so that two equal mappings after each other will use a different
-hash distribution). Array data is located at ``keccak256(p)`` and the value corresponding to a mapping key
-``k`` is located at ``keccak256(k . p)`` where ``.`` is concatenation. If the value is again a
-non-elementary type, the positions are found by adding an offset of ``keccak256(k . p)``.
+For mappings, the slot stays empty, but it is still needed to ensure that even if there are
+two mappings next to each other, their content ends up at different storage locations.
 
-So for the following contract snippet
-the position of ``data[4][9].b`` is at ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``::
+Array data is located starting at ``keccak256(p)`` and it is laid out in the same way as
+statically-sized array data would: One element after the other, potentially sharing
+storage slots if the elements are not longer than 16 bytes. Dynamic arrays of dynamic arrays apply this
+rule recursively. The location of element ``x[i][j]``, where the type of ``x`` is ``uint24[][]``, is
+computed as follows (again, assuming ``x`` itself is stored at slot ``p``):
+The slot is ``keccak256(keccak256(p) + i) + floor(j / floor(256 / 24))`` and
+the element can be obtained from the slot data ``v`` using ``(v >> ((j % floor(256 / 24)) * 24)) & type(uint24).max``.
 
+The value corresponding to a mapping key ``k`` is located at ``keccak256(h(k) . p)``
+where ``.`` is concatenation and ``h`` is a function that is applied to the key depending on its type:
+
+- for value types, ``h`` pads the value to 32 bytes in the same way as when storing the value in memory.
+- for strings and byte arrays, ``h`` computes the ``keccak256`` hash of the unpadded data.
+
+If the mapping value is a
+non-value type, the computed slot marks the start of the data. If the value is of struct type,
+for example, you have to add an offset corresponding to the struct member to reach the member.
+
+As an example, consider the following contract:
+
+::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
 
 
     contract C {
-        struct S { uint a; uint b; }
+        struct S { uint16 a; uint16 b; uint256 c; }
         uint x;
         mapping(uint => mapping(uint => S)) data;
     }
+
+Let us compute the storage location of ``data[4][9].c``.
+The position of the mapping itself is ``1`` (the variable ``x`` with 32 bytes precedes it).
+This means ``data[4]`` is stored at ``keccak256(uint256(4) . uint256(1))``. The type of ``data[4]`` is
+again a mapping and the data for ``data[4][9]`` starts at slot
+``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1)))``.
+The slot offset of the member ``c`` inside the struct ``S`` is ``1`` because ``a`` and ``b`` are packed
+in a single slot. This means the slot for
+``data[4][9].c`` is ``keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1``.
+The type of the value is ``uint256``, so it uses a single slot.
+
 
 .. _bytes-and-string:
 
 ``bytes`` and ``string``
 ------------------------
 
-``bytes`` and ``string`` are encoded identically. For short byte arrays, they store their data in the same
-slot where the length is also stored. In particular: if the data is at most ``31`` bytes long, it is stored
-in the higher-order bytes (left aligned) and the lowest-order byte stores ``length * 2``.
-For byte arrays that store data which is ``32`` or more bytes long, the main slot stores ``length * 2 + 1`` and the data is
-stored as usual in ``keccak256(slot)``. This means that you can distinguish a short array from a long array
+``bytes`` and ``string`` are encoded identically.
+In general, the encoding is similar to ``byte1[]``, in the sense that there is a slot for the array itself and
+a data area that is computed using a ``keccak256`` hash of that slot's position.
+However, for short values (shorter than 32 bytes) the array elements are stored together with the length in the same slot.
+
+In particular: if the data is at most ``31`` bytes long, the elements are stored
+in the higher-order bytes (left aligned) and the lowest-order byte stores the value ``length * 2``.
+For byte arrays that store data which is ``32`` or more bytes long, the main slot ``p`` stores ``length * 2 + 1`` and the data is
+stored as usual in ``keccak256(p)``. This means that you can distinguish a short array from a long array
 by checking if the lowest bit is set: short (not set) and long (set).
 
 .. note::
   Handling invalidly encoded slots is currently not supported but may be added in the future.
+  If you are compiling via the experimental IR-based compiler pipeline, reading an invalidly encoded
+  slot results in a ``Panic(0x22)`` error.
 
 JSON Output
 ===========
