@@ -185,7 +185,7 @@ invalid bids.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity ^0.8.3;
     contract BlindAuction {
         struct Bid {
             bytes32 blindedBid;

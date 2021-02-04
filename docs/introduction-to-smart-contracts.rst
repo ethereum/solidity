@@ -83,7 +83,7 @@ registering with a username and password, all you need is an Ethereum keypair.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity ^0.8.3;
 
     contract Coin {
         // The keyword "public" makes variables
@@ -112,6 +112,7 @@ registering with a username and password, all you need is an Ethereum keypair.
         // Sends an amount of existing coins
         // from any caller to an address
         function send(address receiver, uint amount) public {
+            // TODO use an error here
             require(amount <= balances[msg.sender], "Insufficient balance.");
             balances[msg.sender] -= amount;
             balances[receiver] += amount;

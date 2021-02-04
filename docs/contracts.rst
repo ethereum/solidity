@@ -24,6 +24,7 @@ There is no "cron" concept in Ethereum to call a function at a particular event 
 .. include:: contracts/functions.rst
 
 .. include:: contracts/events.rst
+.. include:: contracts/errors.rst
 
 .. include:: contracts/inheritance.rst
 
