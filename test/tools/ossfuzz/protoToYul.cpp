@@ -23,10 +23,13 @@
 
 #include <libsolutil/StringUtils.h>
 
-#include <boost/algorithm/cxx11/all_of.hpp>
-#include <boost/algorithm/string/classification.hpp>
+#include <range/v3/algorithm/all_of.hpp>
+
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+
+#include <algorithm>
 
 using namespace std;
 using namespace solidity::yul::test::yul_fuzzer;
@@ -1161,9 +1164,10 @@ void ProtoConverter::visit(CaseStmt const& _x)
 			// Ensure that all characters in the string literal except the first
 			// and the last (double quote characters) are alphanumeric.
 			yulAssert(
-				boost::algorithm::all_of(literal.begin() + 1, literal.end() - 2, [=](char c) -> bool {
-					return std::isalpha(c) || std::isdigit(c);
-				}),
+				ranges::all_of(
+					literal.begin() + 1,
+					literal.end() - 2,
+					[=](char c) { return isalpha(c) || isdigit(c); }),
 				"Proto fuzzer: Invalid string literal encountered"
 			);
 
