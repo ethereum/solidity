@@ -49,22 +49,16 @@ FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _co
 		}
 	}
 
-	m_currentNode.reset();
-	m_currentDispatch = SpecialNode::InternalDispatch;
-
 	auto getSecondElement = [](auto const& _tuple){ return get<1>(_tuple); };
 
 	// Create graph for all publicly reachable functions
+	m_currentNode = SpecialNode::Entry;
+	m_currentDispatch = SpecialNode::InternalDispatch;
+
 	for (FunctionTypePointer functionType: _contract.interfaceFunctionList() | views::transform(getSecondElement))
 	{
 		if (auto const* funcDef = dynamic_cast<FunctionDefinition const*>(&functionType->declaration()))
-		{
-			if (!m_graph->edges.count(funcDef))
-				visitCallable(funcDef);
-
-			// Add all external functions to the RuntimeDispatch
-			add(SpecialNode::Entry, &functionType->declaration());
-		}
+			processFunction(*funcDef);
 		else
 			// If it's not a function, it must be a getter of a public variable; we ignore those
 			solAssert(dynamic_cast<VariableDeclaration const*>(&functionType->declaration()), "");
@@ -201,10 +195,11 @@ bool FunctionCallGraphBuilder::add(Node _caller, Node _callee)
 
 void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _callable, bool _calledDirectly)
 {
-	if (m_currentNode.has_value() && _calledDirectly)
-		add(*m_currentNode, &_callable);
+	solAssert(m_currentNode.has_value(), "");
 
-	if (!_calledDirectly)
+	if (_calledDirectly)
+		add(*m_currentNode, &_callable);
+	else
 	{
 		add(m_currentDispatch, &_callable);
 
