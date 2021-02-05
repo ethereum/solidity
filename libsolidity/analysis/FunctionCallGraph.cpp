@@ -73,6 +73,8 @@ FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _co
 
 	if (_contract.receiveFunction())
 		add(SpecialNode::Entry, _contract.receiveFunction());
+
+	m_currentNode.reset();
 }
 
 bool FunctionCallGraphBuilder::CompareByID::operator()(Node const& _lhs, Node const& _rhs) const
