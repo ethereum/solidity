@@ -88,7 +88,7 @@ private:
 	void endVisit(MemberAccess const& _memberAccess) override;
 	void endVisit(ModifierInvocation const& _modifierInvocation) override;
 
-	void visitCallable(CallableDeclaration const* _callable, bool _directCall = true);
+	void visitCallable(CallableDeclaration const* _callable);
 
 	bool add(Node _caller, Node _callee);
 	void processFunction(CallableDeclaration const& _callable, bool _calledDirectly = true);

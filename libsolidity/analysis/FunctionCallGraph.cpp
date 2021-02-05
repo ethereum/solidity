@@ -177,17 +177,12 @@ void FunctionCallGraphBuilder::endVisit(ModifierInvocation const& _modifierInvoc
 	}
 }
 
-void FunctionCallGraphBuilder::visitCallable(CallableDeclaration const* _callable, bool _directCall)
+void FunctionCallGraphBuilder::visitCallable(CallableDeclaration const* _callable)
 {
 	solAssert(!m_graph->edges.count(_callable), "");
 
 	optional<Node> previousNode = m_currentNode;
 	m_currentNode = _callable;
-
-	if (previousNode.has_value() && _directCall)
-		add(*previousNode, _callable);
-	if (!_directCall)
-		add(*m_currentNode, m_currentDispatch);
 
 	_callable->accept(*this);
 
@@ -201,12 +196,16 @@ bool FunctionCallGraphBuilder::add(Node _caller, Node _callee)
 
 void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _callable, bool _calledDirectly)
 {
-	if (m_graph->edges.count(&_callable))
-		return;
+	if (m_currentNode.has_value() && _calledDirectly)
+		add(*m_currentNode, &_callable);
 
-	// Create edge to creation dispatch
 	if (!_calledDirectly)
+	{
 		add(m_currentDispatch, &_callable);
 
-	visitCallable(&_callable, _calledDirectly);
+		add(&_callable, m_currentDispatch);
+	}
+
+	if (!m_graph->edges.count(&_callable))
+		visitCallable(&_callable);
 }
