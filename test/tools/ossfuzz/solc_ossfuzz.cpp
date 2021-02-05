@@ -38,17 +38,23 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		{
 			TestCaseReader t = TestCaseReader(std::istringstream(input));
 			sourceCode = t.sources().sources;
+			map<string, string> settings = t.settings();
+			bool compileViaYul =
+				settings.count("compileViaYul") &&
+				(settings.at("compileViaYul") == "also" || settings.at("compileViaYul") == "true");
+			bool optimize = settings.count("optimize") && settings.at("optimize") == "true";
+			FuzzerUtil::testCompiler(
+				sourceCode,
+				optimize,
+				/*_rand=*/static_cast<unsigned>(_size),
+				/*forceSMT=*/true,
+				compileViaYul
+			);
 		}
 		catch (runtime_error const&)
 		{
 			return 0;
 		}
-		FuzzerUtil::testCompiler(
-			sourceCode,
-			/*optimize=*/false,
-			/*_rand=*/static_cast<unsigned>(_size),
-			/*forceSMT=*/true
-		);
 	}
 	return 0;
 }
