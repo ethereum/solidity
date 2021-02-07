@@ -102,7 +102,7 @@ private:
 	void visit(RetRevStmt const&);
 	void visit(SelfDestructStmt const&);
 	void visit(TerminatingStmt const&);
-	void visit(FunctionCall const&);
+	void visit(FunctionCall const&, std::string const&, bool _expression = false);
 	void visit(FunctionDef const&);
 	void visit(PopStmt const&);
 	void visit(LeaveStmt const&);
@@ -125,8 +125,6 @@ private:
 	void closeFunctionScope();
 	/// Adds @a _vars to current scope
 	void addVarsToScope(std::vector<std::string> const& _vars);
-	/// @returns number of variables that are in scope
-	unsigned numVarsInScope();
 
 	std::string createHex(std::string const& _hexBytes);
 
@@ -140,9 +138,9 @@ private:
 	/// alphabets nor digits from it and returns the said string.
 	static std::string createAlphaNum(std::string const& _strBytes);
 
-	enum class NumFunctionReturns
+	enum class NumFunctionReturns: unsigned
 	{
-		None,
+		None = 0,
 		Single,
 		Multiple
 	};
@@ -175,34 +173,6 @@ private:
 	/// - If there is at least one variable declaration that is
 	/// in scope
 	bool varDeclAvailable();
-
-	/// Return true if a function call cannot be made, false otherwise.
-	/// @param _type is an enum denoting the type of function call. It
-	/// can be one of NONE, SINGLE, MULTIDECL, MULTIASSIGN.
-	///		NONE -> Function call does not return a value
-	///		SINGLE -> Function call returns a single value
-	///		MULTIDECL -> Function call returns more than one value
-	///		and it is used to create a multi declaration
-	///		statement
-	///		MULTIASSIGN -> Function call returns more than one value
-	///		and it is used to create a multi assignment
-	///		statement
-	/// @return True if the function call cannot be created for one of the
-	/// following reasons
-	//   - It is a SINGLE function call (we reserve SINGLE functions for
-	//   expressions)
-	//   - It is a MULTIASSIGN function call and we do not have any
-	//   variables available for assignment.
-	bool functionCallNotPossible(FunctionCall_Returns _type);
-
-	/// Checks if function call of type @a _type returns the correct number
-	/// of values.
-	/// @param _type Function call type of the function being checked
-	/// @param _numOutParams Number of values returned by the function
-	/// being checked
-	/// @return true if the function returns the correct number of values,
-	/// false otherwise
-	bool functionValid(FunctionCall_Returns _type, unsigned _numOutParams);
 
 	/// Converts protobuf function call to a Yul function call and appends
 	/// it to output stream.
@@ -294,6 +264,9 @@ private:
 	/// Returns an EVMVersion object corresponding to the protobuf
 	/// enum of type Program_Version
 	static solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+
+	/// @returns name of Yul function with return type of @param _numReturns.
+	std::optional<std::string> functionExists(NumFunctionReturns _numReturns);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
