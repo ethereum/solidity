@@ -133,7 +133,7 @@ private:
 
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
-	std::string createAlphaNum(std::string const& _strBytes);
+	static std::string createAlphaNum(std::string const& _strBytes);
 
 	enum class NumFunctionReturns
 	{
@@ -153,7 +153,7 @@ private:
 	/// None -> "n"
 	/// Single -> "s"
 	/// Multiple -> "m"
-	std::string functionTypeToString(NumFunctionReturns _type);
+	static std::string functionTypeToString(NumFunctionReturns _type);
 
 	/// Builds a single vector containing variables declared in
 	/// function scope.
@@ -208,7 +208,7 @@ private:
 	/// true. Default value for the flag is true.
 	void convertFunctionCall(
 		FunctionCall const& _x,
-		std::string _name,
+		std::string const& _name,
 		unsigned _numInParams,
 		bool _newLine = true
 	);
@@ -248,7 +248,7 @@ private:
 	/// @param _funcName Name of the function to be called
 	/// @param _numInParams Number of input parameters in function signature
 	/// @param _numOutParams Number of output parameters in function signature
-	void createFunctionCall(std::string _funcName, unsigned _numInParams, unsigned _numOutParams);
+	void createFunctionCall(std::string const& _funcName, unsigned _numInParams, unsigned _numOutParams);
 
 	/// Print the Yul syntax to pass input arguments to a function that has
 	/// @a _numInParams number of input parameters to the output stream.
@@ -288,7 +288,7 @@ private:
 
 	/// Returns an EVMVersion object corresponding to the protobuf
 	/// enum of type Program_Version
-	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+	static solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
@@ -323,7 +323,7 @@ private:
 
 	/// Returns the object counter value corresponding to the object
 	/// being visited.
-	unsigned currentObjectId()
+	unsigned currentObjectId() const
 	{
 		return m_objectId - 1;
 	}
