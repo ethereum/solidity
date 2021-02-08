@@ -26,7 +26,7 @@ you can use state machine-like constructs inside a contract.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity ^0.8.4;
     contract Purchase {
         uint public value;
         address payable public seller;
@@ -41,27 +41,30 @@ you can use state machine-like constructs inside a contract.
             _;
         }
 
+        /// Only the buyer can call this function.
+        error OnlyBuyer();
+        /// Only the seller can call this function.
+        error OnlySeller();
+        /// The function cannot be called at the current state.
+        error InvalidState();
+        /// The provided value has to be even.
+        error ValueNotEven();
+
         modifier onlyBuyer() {
-            require(
-                msg.sender == buyer,
-                "Only buyer can call this."
-            );
+            if (msg.sender != buyer)
+                revert OnlyBuyer();
             _;
         }
 
         modifier onlySeller() {
-            require(
-                msg.sender == seller,
-                "Only seller can call this."
-            );
+            if (msg.sender != seller)
+                revert OnlySeller();
             _;
         }
 
         modifier inState(State _state) {
-            require(
-                state == _state,
-                "Invalid state."
-            );
+            if (state != _state)
+                revert InvalidState();
             _;
         }
 
@@ -76,7 +79,8 @@ you can use state machine-like constructs inside a contract.
         constructor() payable {
             seller = payable(msg.sender);
             value = msg.value / 2;
-            require((2 * value) == msg.value, "Value has to be even.");
+            if ((2 * value) != msg.value)
+                revert ValueNotEven();
         }
 
         /// Abort the purchase and reclaim the ether.
