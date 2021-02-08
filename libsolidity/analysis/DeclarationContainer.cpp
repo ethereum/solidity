@@ -26,6 +26,9 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/StringUtils.h>
 
+#include <range/v3/view/filter.hpp>
+#include <range/v3/range/conversion.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
@@ -139,16 +142,35 @@ bool DeclarationContainer::registerDeclaration(
 	return registerDeclaration(_declaration, nullptr, nullptr, _invisible, _update);
 }
 
-vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive, bool _alsoInvisible) const
+vector<Declaration const*> DeclarationContainer::resolveName(
+	ASTString const& _name,
+	bool _recursive,
+	bool _alsoInvisible,
+	bool _onlyVisibleAsUnqualifiedNames
+) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	vector<Declaration const*> result;
+
 	if (m_declarations.count(_name))
-		result = m_declarations.at(_name);
+	{
+		if (_onlyVisibleAsUnqualifiedNames)
+			result += m_declarations.at(_name) | ranges::views::filter(&Declaration::isVisibleAsUnqualifiedName) | ranges::to_vector;
+		else
+			result += m_declarations.at(_name);
+	}
+
 	if (_alsoInvisible && m_invisibleDeclarations.count(_name))
-		result += m_invisibleDeclarations.at(_name);
+	{
+		if (_onlyVisibleAsUnqualifiedNames)
+			result += m_invisibleDeclarations.at(_name) | ranges::views::filter(&Declaration::isVisibleAsUnqualifiedName) | ranges::to_vector;
+		else
+			result += m_invisibleDeclarations.at(_name);
+	}
+
 	if (result.empty() && _recursive && m_enclosingContainer)
-		result = m_enclosingContainer->resolveName(_name, true, _alsoInvisible);
+		result = m_enclosingContainer->resolveName(_name, true, _alsoInvisible, _onlyVisibleAsUnqualifiedNames);
+
 	return result;
 }
 

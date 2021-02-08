@@ -21,6 +21,7 @@ Bugfixes:
  * Control Flow Graph: Take internal calls to functions that always revert into account for reporting unused or unassigned variables.
  * Control Flow Graph: Assume unimplemented modifiers use a placeholder.
  * Function Call Graph: Fix internal error connected with circular constant references.
+ * Name Resolver: Do not issue shadowing warning if the shadowing name is not directly accessible.
  * Natspec: Allow multiple ``@return`` tags on public state variable documentation.
  * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
  * SMTChecker: Fix internal error on external calls from the constructor.
