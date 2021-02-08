@@ -387,6 +387,7 @@ string YulUtilFunctions::shiftRightSignedFunctionDynamic()
 
 string YulUtilFunctions::typedShiftLeftFunction(Type const& _type, Type const& _amountType)
 {
+	solUnimplementedAssert(_type.category() != Type::Category::FixedPoint, "Not yet implemented - FixedPointType.");
 	solAssert(_type.category() == Type::Category::FixedBytes || _type.category() == Type::Category::Integer, "");
 	solAssert(_amountType.category() == Type::Category::Integer, "");
 	solAssert(!dynamic_cast<IntegerType const&>(_amountType).isSigned(), "");
