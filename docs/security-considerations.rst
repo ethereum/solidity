@@ -181,13 +181,14 @@ Sending and Receiving Ether
      contract. Again, the best practice here is to use a :ref:`"withdraw"
      pattern instead of a "send" pattern <withdrawal_pattern>`.
 
-Callstack Depth
-===============
+Call stack Depth
+================
 
 External function calls can fail any time because they exceed the maximum
 call stack of 1024. In such situations, Solidity throws an exception.
 Malicious actors might be able to force the call stack to a high value
-before they interact with your contract.
+before they interact with your contract, by controlling the number of calls
+and local function variables on the stack.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
