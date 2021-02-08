@@ -187,7 +187,7 @@ Call Stack Depth
 External function calls can fail any time because they exceed the maximum
 call stack size limit of 1024. In such situations, Solidity throws an exception.
 Malicious actors might be able to force the call stack to a high value
-before they interact with your contract. Note that, since [Tangerine Whistle](https://eips.ethereum.org/EIPS/eip-608) hardfork, the [63/64 rule](https://eips.ethereum.org/EIPS/eip-150) makes call stack depth attack impractical. Also note that the call stack and the expression stack are unrelated, even though both have a size limit of 1024 stack slots.
+before they interact with your contract. Note that, since `Tangerine Whistle <https://eips.ethereum.org/EIPS/eip-608>`_ hardfork, the `63/64 rule <https://eips.ethereum.org/EIPS/eip-150>`_ makes call stack depth attack impractical. Also note that the call stack and the expression stack are unrelated, even though both have a size limit of 1024 stack slots.
 
 Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
