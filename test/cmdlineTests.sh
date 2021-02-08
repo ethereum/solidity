@@ -111,7 +111,8 @@ function ask_expectation_update
 function test_solc_behaviour()
 {
     local filename="${1}"
-    local solc_args="${2}"
+    local solc_args
+    IFS=" " read -r -a solc_args <<< "${2}"
     local solc_stdin="${3}"
     [ -z "$solc_stdin"  ] && solc_stdin="/dev/stdin"
     local stdout_expected="${4}"
@@ -127,13 +128,13 @@ function test_solc_behaviour()
 
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
-    local solc_command="$SOLC ${filename} ${solc_args} <$solc_stdin"
+    local solc_command="$SOLC ${filename} ${solc_args[*]} <$solc_stdin"
     set +e
-    "$SOLC" "${filename}" ${solc_args} <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
+    "$SOLC" "${filename}" "${solc_args[@]}" <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
     exitCode=$?
     set -e
 
-    if [[ "$solc_args" == *"--standard-json"* ]]
+    if [[ " ${solc_args[*]} " == *" --standard-json "* ]]
     then
         sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
@@ -221,17 +222,17 @@ function test_solc_assembly_output()
 {
     local input="${1}"
     local expected="${2}"
-    local solc_args="${3}"
+    IFS=" " read -r -a solc_args <<< "${3}"
 
     local expected_object="object \"object\" { code ${expected} }"
 
-    output=$(echo "${input}" | "$SOLC" - ${solc_args} 2>/dev/null)
+    output=$(echo "${input}" | "$SOLC" - "${solc_args[@]}" 2>/dev/null)
     empty=$(echo "$output" | tr '\n' ' ' | tr -s ' ' | sed -ne "/${expected_object}/p")
     if [ -z "$empty" ]
     then
         printError "Incorrect assembly output. Expected: "
         echo -e "${expected}"
-        printError "with arguments ${solc_args}, but got:"
+        printError "with arguments ${solc_args[*]}, but got:"
         echo "${output}"
         exit 1
     fi
@@ -302,19 +303,19 @@ printTask "Running general commandline tests..."
             inputFile=""
             stdout="$(cat "${tdir}/output.json" 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output.json"
-            args="--standard-json "$(cat "${tdir}/args" 2>/dev/null || true)
+            command_args="--standard-json "$(cat "${tdir}/args" 2>/dev/null || true)
         else
             stdin=""
             stdout="$(cat "${tdir}/output" 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output"
-            args=$(cat "${tdir}/args" 2>/dev/null || true)
+            command_args=$(cat "${tdir}/args" 2>/dev/null || true)
         fi
         exitCodeExpectationFile="${tdir}/exit"
         exitCode=$(cat "$exitCodeExpectationFile" 2>/dev/null || true)
         err="$(cat "${tdir}/err" 2>/dev/null || true)"
         stderrExpectationFile="${tdir}/err"
         test_solc_behaviour "$inputFile" \
-                            "$args" \
+                            "$command_args" \
                             "$stdin" \
                             "$stdout" \
                             "$exitCode" \
@@ -354,22 +355,22 @@ SOLTMPDIR=$(mktemp -d)
         fi
         echo "$f"
 
-        opts=''
+        opts=()
         # We expect errors if explicitly stated, or if imports
         # are used (in the style guide)
         if grep -E "This will not compile|import \"" "$f" >/dev/null
         then
-            opts="-e"
+            opts=(-e)
         fi
         if grep "This will report a warning" "$f" >/dev/null
         then
-            opts="$opts -w"
+            opts+=(-w)
         fi
         if grep "This may report a warning" "$f" >/dev/null
         then
-            opts="$opts -o"
+            opts+=(-o)
         fi
-        compileFull $opts "$SOLTMPDIR/$f"
+        compileFull "${opts[@]}" "$SOLTMPDIR/$f"
     done
 )
 rm -rf "$SOLTMPDIR"

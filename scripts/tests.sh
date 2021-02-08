@@ -30,6 +30,7 @@ set -e
 
 REPO_ROOT="$(dirname "$0")/.."
 SOLIDITY_BUILD_DIR="${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}"
+IFS=" " read -r -a SMT_FLAGS <<< "$SMT_FLAGS"
 
 source "${REPO_ROOT}/scripts/common.sh"
 
@@ -100,21 +101,21 @@ do
         fi
         for abiv1 in $FORCE_ABIV1_RUNS
         do
-            force_abiv1_flag=""
+            force_abiv1_flag=()
             if [[ "$abiv1" == "yes" ]]
             then
-                force_abiv1_flag="--abiencoderv1"
+                force_abiv1_flag=(--abiencoderv1)
             fi
-            printTask "--> Running tests using $optimize --evm-version $vm $force_abiv1_flag..."
+            printTask "--> Running tests using $optimize --evm-version $vm ${force_abiv1_flag[*]}..."
 
-            log=""
+            log=()
             if [ -n "$log_directory" ]
             then
                 if [ -n "$optimize" ]
                 then
-                    log=--logger=JUNIT,error,$log_directory/opt_$vm.xml
+                    log+=("--logger=JUNIT,error,$log_directory/opt_$vm.xml")
                 else
-                    log=--logger=JUNIT,error,$log_directory/noopt_$vm.xml
+                    log+=("--logger=JUNIT,error,$log_directory/noopt_$vm.xml")
                 fi
             fi
 
@@ -122,7 +123,7 @@ do
             [ "${vm}" = "byzantium" ] && [ "${optimize}" = "" ] && EWASM_ARGS="--ewasm"
 
             set +e
-            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress $log -- ${EWASM_ARGS} --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" $SMT_FLAGS $force_abiv1_flag
+            "${SOLIDITY_BUILD_DIR}"/test/soltest --show-progress "${log[@]}" -- ${EWASM_ARGS} --testpath "$REPO_ROOT"/test "$optimize" --evm-version "$vm" "${SMT_FLAGS[@]}" "${force_abiv1_flag[@]}"
 
             if test "0" -ne "$?"; then
                 exit 1

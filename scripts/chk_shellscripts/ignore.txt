@@ -1,5 +1,4 @@
 ./test/cmdlineTests.sh
-./scripts/soltest.sh
 ./scripts/wasm-rebuild/docker-scripts/rebuild_tags.sh
 ./scripts/wasm-rebuild/docker-scripts/rebuild_current.sh
 ./scripts/wasm-rebuild/docker-scripts/genbytecode.sh
