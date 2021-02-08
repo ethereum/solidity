@@ -173,7 +173,7 @@ void FunctionCallGraphBuilder::endVisit(ModifierInvocation const& _modifierInvoc
 		else
 			solAssert(requiredLookup == VirtualLookup::Static, "");
 
-		processFunction(*modifier, requiredLookup == VirtualLookup::Static);
+		processFunction(*modifier);
 	}
 }
 
