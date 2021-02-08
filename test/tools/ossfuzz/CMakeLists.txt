@@ -1,9 +1,7 @@
 add_custom_target(ossfuzz)
 add_dependencies(ossfuzz
-        solc_opt_ossfuzz
-        solc_opt_mutator_ossfuzz
-        solc_noopt_ossfuzz
-        solc_noopt_mutator_ossfuzz
+        solc_ossfuzz
+        solc_mutator_ossfuzz
         const_opt_ossfuzz
         strictasm_diff_ossfuzz
         strictasm_opt_ossfuzz
@@ -24,41 +22,23 @@ if (OSSFUZZ)
 endif()
 
 if (OSSFUZZ)
-    add_executable(solc_opt_ossfuzz
-            solc_opt_ossfuzz.cpp
+    add_executable(solc_ossfuzz
+            solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
     )
-    target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm)
-    set_target_properties(solc_opt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm)
+    set_target_properties(solc_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
-    add_executable(solc_opt_mutator_ossfuzz
-            solc_opt_ossfuzz.cpp
+    add_executable(solc_mutator_ossfuzz
+            solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
             SolidityGenerator.cpp
             SolidityCustomMutatorInterface.cpp
     )
-    target_link_libraries(solc_opt_mutator_ossfuzz PRIVATE libsolc evmasm)
-    set_target_properties(solc_opt_mutator_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
-
-    add_executable(solc_noopt_ossfuzz
-            solc_noopt_ossfuzz.cpp
-            ../fuzzer_common.cpp
-            ../../TestCaseReader.cpp
-    )
-    target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
-    set_target_properties(solc_noopt_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
-
-    add_executable(solc_noopt_mutator_ossfuzz
-            solc_noopt_ossfuzz.cpp
-            ../fuzzer_common.cpp
-            ../../TestCaseReader.cpp
-            SolidityGenerator.cpp
-            SolidityCustomMutatorInterface.cpp
-    )
-    target_link_libraries(solc_noopt_mutator_ossfuzz PRIVATE libsolc evmasm)
-    set_target_properties(solc_noopt_mutator_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+    target_link_libraries(solc_mutator_ossfuzz PRIVATE libsolc evmasm)
+    set_target_properties(solc_mutator_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(const_opt_ossfuzz const_opt_ossfuzz.cpp ../fuzzer_common.cpp)
     target_link_libraries(const_opt_ossfuzz PRIVATE libsolc evmasm)
@@ -189,29 +169,17 @@ if (OSSFUZZ)
     set_target_properties(sol_proto_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
     target_compile_options(sol_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion -Wno-suggest-destructor-override -Wno-inconsistent-missing-destructor-override)
 else()
-    add_library(solc_opt_ossfuzz
-            solc_opt_ossfuzz.cpp
+    add_library(solc_ossfuzz
+            solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             )
-    target_link_libraries(solc_opt_ossfuzz PRIVATE libsolc evmasm)
+    target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm)
 
-    add_library(solc_opt_mutator_ossfuzz
-            solc_opt_ossfuzz.cpp
+    add_library(solc_mutator_ossfuzz
+            solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             )
-    target_link_libraries(solc_opt_mutator_ossfuzz PRIVATE libsolc evmasm)
-
-    add_library(solc_noopt_ossfuzz
-            solc_noopt_ossfuzz.cpp
-            ../fuzzer_common.cpp
-            )
-    target_link_libraries(solc_noopt_ossfuzz PRIVATE libsolc evmasm)
-
-    add_library(solc_noopt_mutator_ossfuzz
-            solc_noopt_ossfuzz.cpp
-            ../fuzzer_common.cpp
-            )
-    target_link_libraries(solc_noopt_mutator_ossfuzz PRIVATE libsolc evmasm)
+    target_link_libraries(solc_mutator_ossfuzz PRIVATE libsolc evmasm)
 
     add_library(const_opt_ossfuzz
             const_opt_ossfuzz.cpp

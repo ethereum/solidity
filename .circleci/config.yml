@@ -88,10 +88,8 @@ defaults:
         - test/tools/ossfuzz/abiv2_proto_ossfuzz
         - test/tools/ossfuzz/abiv2_isabelle_ossfuzz
         - test/tools/ossfuzz/const_opt_ossfuzz
-        - test/tools/ossfuzz/solc_noopt_mutator_ossfuzz
-        - test/tools/ossfuzz/solc_noopt_ossfuzz
-        - test/tools/ossfuzz/solc_opt_mutator_ossfuzz
-        - test/tools/ossfuzz/solc_opt_ossfuzz
+        - test/tools/ossfuzz/solc_mutator_ossfuzz
+        - test/tools/ossfuzz/solc_ossfuzz
         - test/tools/ossfuzz/strictasm_assembly_ossfuzz
         - test/tools/ossfuzz/strictasm_diff_ossfuzz
         - test/tools/ossfuzz/strictasm_opt_ossfuzz
