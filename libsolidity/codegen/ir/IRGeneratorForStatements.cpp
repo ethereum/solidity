@@ -2918,10 +2918,7 @@ void IRGeneratorForStatements::setLValue(Expression const& _expression, IRLValue
 	solAssert(!m_currentLValue, "");
 
 	if (_expression.annotation().willBeWrittenTo)
-	{
 		m_currentLValue.emplace(std::move(_lvalue));
-		solAssert(!_lvalue.type.dataStoredIn(DataLocation::CallData), "");
-	}
 	else
 		// Only define the expression, if it will not be written to.
 		define(_expression, readFromLValue(_lvalue));
