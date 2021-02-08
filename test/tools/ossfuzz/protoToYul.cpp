@@ -164,12 +164,12 @@ bool ProtoConverter::varDeclAvailable()
 	if (m_inFunctionDef)
 	{
 		consolidateVarDeclsInFunctionDef();
-		return m_currentFuncVars.size() > 0;
+		return !m_currentFuncVars.empty();
 	}
 	else
 	{
 		consolidateGlobalVarDecls();
-		return m_currentGlobalVars.size() > 0;
+		return !m_currentGlobalVars.empty();
 	}
 }
 
@@ -192,13 +192,13 @@ void ProtoConverter::visit(VarRef const& _x)
 	if (m_inFunctionDef)
 	{
 		// Ensure that there is at least one variable declaration to reference in function scope.
-		yulAssert(m_currentFuncVars.size() > 0, "Proto fuzzer: No variables to reference.");
+		yulAssert(!m_currentFuncVars.empty(), "Proto fuzzer: No variables to reference.");
 		m_output << *m_currentFuncVars[static_cast<size_t>(_x.varnum()) % m_currentFuncVars.size()];
 	}
 	else
 	{
 		// Ensure that there is at least one variable declaration to reference in nested scopes.
-		yulAssert(m_currentGlobalVars.size() > 0, "Proto fuzzer: No global variables to reference.");
+		yulAssert(!m_currentGlobalVars.empty(), "Proto fuzzer: No global variables to reference.");
 		m_output << *m_currentGlobalVars[static_cast<size_t>(_x.varnum()) % m_currentGlobalVars.size()];
 	}
 }
@@ -436,7 +436,7 @@ void ProtoConverter::visit(MultiVarDecl const& _x)
 	// We support up to 4 variables in a single
 	// declaration statement.
 	unsigned numVars = _x.num_vars() % 3 + 2;
-	string delimiter = "";
+	string delimiter;
 	for (unsigned i = 0; i < numVars; i++)
 	{
 		string varName = newVarName();
@@ -872,7 +872,7 @@ bool ProtoConverter::functionValid(FunctionCall_Returns _type, unsigned _numOutP
 
 void ProtoConverter::convertFunctionCall(
 	FunctionCall const& _x,
-	std::string _name,
+	string const& _name,
 	unsigned _numInParams,
 	bool _newLine
 )
@@ -1211,7 +1211,7 @@ void ProtoConverter::visit(CaseStmt const& _x)
 		// a case statement containing a case literal that has already been used in a
 		// previous case statement. If the hash (u256 value) matches a previous hash,
 		// then we simply don't create a new case statement.
-		string noDoubleQuoteStr{""};
+		string noDoubleQuoteStr;
 		if (literal.size() > 2)
 		{
 			// Ensure that all characters in the string literal except the first
@@ -1438,7 +1438,7 @@ void ProtoConverter::visit(Statement const& _x)
 
 void ProtoConverter::openBlockScope()
 {
-	m_scopeFuncs.push_back({});
+	m_scopeFuncs.emplace_back(vector<string>{});
 
 	// Create new block scope inside current function scope
 	if (m_inFunctionDef)
@@ -1459,9 +1459,9 @@ void ProtoConverter::openBlockScope()
 	}
 	else
 	{
-		m_globalVars.push_back({});
+		m_globalVars.emplace_back(vector<string>{});
 		if (m_inForInitScope && m_forInitScopeExtEnabled)
-			m_globalForLoopInitVars.push_back(vector<string>{});
+			m_globalForLoopInitVars.emplace_back(vector<string>{});
 	}
 }
 
@@ -1692,7 +1692,7 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 		case 2:
 			m_output << "sload(" << slot << ")";
 			break;
-		case 3:
+		default:
 			// Call to dictionaryToken() automatically picks a token
 			// at a pseudo-random location.
 			m_output << dictionaryToken();
@@ -1721,7 +1721,7 @@ void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
 }
 
 void ProtoConverter::createFunctionCall(
-	string _funcName,
+	string const& _funcName,
 	unsigned _numInParams,
 	unsigned _numOutParams
 )
@@ -1847,7 +1847,7 @@ string ProtoConverter::getObjectIdentifier(unsigned _x)
 	unsigned currentId = currentObjectId();
 	string currentObjName = "object" + to_string(currentId);
 	yulAssert(
-		m_objectScope.count(currentObjName) && m_objectScope.at(currentObjName).size() > 0,
+		m_objectScope.count(currentObjName) && !m_objectScope.at(currentObjName).empty(),
 		"Yul proto fuzzer: Error referencing object"
 	);
 	vector<string> objectIdsInScope = m_objectScope.at(currentObjName);
@@ -1887,7 +1887,7 @@ void ProtoConverter::buildObjectScopeTree(Object const& _x)
 	string objectName = newObjectId(false);
 	vector<string> node{objectName};
 	if (_x.has_data())
-		node.push_back(s_dataIdentifier);
+		node.emplace_back(s_dataIdentifier);
 	for (auto const& subObj: _x.sub_obj())
 	{
 		// Identifies sub object whose numeric suffix is
@@ -1900,7 +1900,7 @@ void ProtoConverter::buildObjectScopeTree(Object const& _x)
 		yulAssert(m_objectScope.count(subObjectName), "Yul proto fuzzer: Invalid object hierarchy");
 		for (string const& item: m_objectScope.at(subObjectName))
 			if (item != subObjectName)
-				node.push_back(subObjectName + "." + item);
+				node.emplace_back(subObjectName + "." + item);
 	}
 	m_objectScope.emplace(objectName, node);
 }
@@ -1942,7 +1942,7 @@ string ProtoConverter::programToString(Program const& _input)
 	return m_output.str();
 }
 
-std::string ProtoConverter::functionTypeToString(NumFunctionReturns _type)
+string ProtoConverter::functionTypeToString(NumFunctionReturns _type)
 {
 	switch (_type)
 	{
