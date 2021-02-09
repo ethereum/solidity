@@ -24,10 +24,10 @@ to initiate a payment, she will let Bob do that, and therefore pay the transacti
 The contract will work as follows:
 
     1. Alice deploys the ``ReceiverPays`` contract, attaching enough Ether to cover the payments that will be made.
-    2. Alice authorises a payment by signing a message with their private key.
+    2. Alice authorises a payment by signing a message with her private key.
     3. Alice sends the cryptographically signed message to Bob. The message does not need to be kept secret
        (explained later), and the mechanism for sending it does not matter.
-    4. Bob claims their payment by presenting the signed message to the smart contract, it verifies the
+    4. Bob claims his payment by presenting the signed message to the smart contract, it verifies the
        authenticity of the message and then releases the funds.
 
 Creating the signature
@@ -222,7 +222,7 @@ unidirectional payment channel between two parties (Alice and Bob). It involves 
 
     1. Alice funds a smart contract with Ether. This "opens" the payment channel.
     2. Alice signs messages that specify how much of that Ether is owed to the recipient. This step is repeated for each payment.
-    3. Bob "closes" the payment channel, withdrawing their portion of the Ether and sending the remainder back to the sender.
+    3. Bob "closes" the payment channel, withdrawing his portion of the Ether and sending the remainder back to the sender.
 
 .. note::
   Only steps 1 and 3 require Ethereum transactions, step 2 means that the sender
@@ -230,9 +230,9 @@ unidirectional payment channel between two parties (Alice and Bob). It involves 
   methods (e.g. email). This means only two transactions are required to support
   any number of transfers.
 
-Bob is guaranteed to receive their funds because the smart contract escrows the
+Bob is guaranteed to receive his funds because the smart contract escrows the
 Ether and honours a valid signed message. The smart contract also enforces a
-timeout, so Alice is guaranteed to eventually recover their funds even if the
+timeout, so Alice is guaranteed to eventually recover her funds even if the
 recipient refuses to close the channel. It is up to the participants in a payment
 channel to decide how long to keep it open. For a short-lived transaction,
 such as paying an internet café for each minute of network access, the payment
@@ -300,7 +300,7 @@ Here is the modified JavaScript code to cryptographically sign a message from th
 Closing the Payment Channel
 ---------------------------
 
-When Bob is ready to receive their funds, it is time to
+When Bob is ready to receive his funds, it is time to
 close the payment channel by calling a ``close`` function on the smart contract.
 Closing the channel pays the recipient the Ether they are owed and
 destroys the contract, sending any remaining Ether back to Alice. To
@@ -325,9 +325,9 @@ Channel Expiration
 -------------------
 
 Bob can close the payment channel at any time, but if they fail to do so,
-Alice needs a way to recover their escrowed funds. An *expiration* time was set
+Alice needs a way to recover her escrowed funds. An *expiration* time was set
 at the time of contract deployment. Once that time is reached, Alice can call
-``claimTimeout`` to recover their funds. You can see the ``claimTimeout`` function in the full contract.
+``claimTimeout`` to recover her funds. You can see the ``claimTimeout`` function in the full contract.
 
 After this function is called, Bob can no longer receive any Ether,
 so it is important that Bob closes the channel before the expiration is reached.
