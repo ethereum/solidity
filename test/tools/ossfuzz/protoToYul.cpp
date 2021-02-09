@@ -1388,7 +1388,7 @@ void ProtoConverter::visit(Statement const& _x)
 
 void ProtoConverter::openBlockScope()
 {
-	m_scopeFuncs.emplace_back(vector<string>{});
+	m_scopeFuncs.emplace_back();
 
 	// Create new block scope inside current function scope
 	if (m_inFunctionDef)
@@ -1409,9 +1409,9 @@ void ProtoConverter::openBlockScope()
 	}
 	else
 	{
-		m_globalVars.emplace_back(vector<string>{});
+		m_globalVars.emplace_back();
 		if (m_inForInitScope && m_forInitScopeExtEnabled)
-			m_globalForLoopInitVars.emplace_back(vector<string>{});
+			m_globalForLoopInitVars.emplace_back();
 	}
 }
 
