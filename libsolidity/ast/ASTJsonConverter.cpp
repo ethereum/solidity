@@ -99,6 +99,9 @@ void ASTJsonConverter::setJsonNode(
 	m_currentValue = Json::objectValue;
 	m_currentValue["id"] = nodeId(_node);
 	m_currentValue["src"] = sourceLocationToString(_node.location());
+	if (auto const* documented = dynamic_cast<Documented const*>(&_node))
+		if (documented->documentation())
+			m_currentValue["documentation"] = *documented->documentation();
 	m_currentValue["nodeType"] = _nodeType;
 	for (auto& e: _attributes)
 		m_currentValue[e.first] = std::move(e.second);
