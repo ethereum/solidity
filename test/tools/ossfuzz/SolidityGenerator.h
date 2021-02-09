@@ -77,6 +77,20 @@ struct UniformRandomDistribution
 		solAssert(_n > 0, "");
 		return distributionOneToN(_n) == 1;
 	}
+	/// @returns a subset whose elements are of type @param T
+	/// created from the set @param _container using
+	/// uniform selection.
+	template <typename T>
+	std::set<T> subset(std::set<T> const& _container)
+	{
+		size_t s = _container.size();
+		solAssert(s > 1, "");
+		std::set<T> subContainer;
+		for (auto const& item: _container)
+			if (probable(s))
+				subContainer.insert(item);
+		return subContainer;
+	}
 	std::unique_ptr<RandomEngine> randomEngine;
 };
 
@@ -231,6 +245,15 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Pragma generator"; }
+private:
+	std::set<std::string> const s_genericPragmas = {
+		R"(pragma solidity >= 0.0.0;)",
+		R"(pragma experimental SMTChecker;)",
+	};
+	std::vector<std::string> const s_abiPragmas = {
+		R"(pragma abicoder v1;)",
+		R"(pragma abicoder v2;)"
+	};
 };
 
 class ImportGenerator: public GeneratorBase

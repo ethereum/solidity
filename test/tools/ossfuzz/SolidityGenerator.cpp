@@ -133,15 +133,12 @@ string SourceUnitGenerator::visit()
 
 string PragmaGenerator::visit()
 {
-	static constexpr const char* preamble = R"(
-		pragma solidity >= 0.0.0;
-		pragma experimental SMTChecker;
-	)";
-	// Choose equally at random from coder v1 and v2
-	string abiPragma = "pragma abicoder v" +
-		to_string(uRandDist->distributionOneToN(2)) +
-		";\n";
-	return preamble + abiPragma;
+	set<string> pragmas = uRandDist->subset(s_genericPragmas);
+	// Choose either abicoder v1 or v2 but not both.
+	pragmas.insert(s_abiPragmas[uRandDist->distributionOneToN(s_abiPragmas.size()) - 1]);
+	ostringstream pragmaString;
+	copy(pragmas.begin(), pragmas.end(), ostream_iterator<string>(pragmaString, "\n"));
+	return pragmaString.str() + "\n";
 }
 
 string ImportGenerator::visit()
@@ -160,7 +157,7 @@ string ImportGenerator::visit()
 			os << "import "
 			   << "\""
 			   << state->randomPath()
-			   << "\";";
+			   << "\";\n";
 	}
 	else
 	{
@@ -169,7 +166,7 @@ string ImportGenerator::visit()
 		os << "import "
 			<< "\""
 			<< state->randomNonCurrentPath()
-			<< "\";";
+			<< "\";\n";
 	}
 	return os.str();
 }
