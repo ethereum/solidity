@@ -68,10 +68,10 @@ private:
 
 	/// Helper-function that will create a json object for the "returns" field for a given function definition.
 	/// @param _tags docTags that are used.
-	/// @param _functionDef functionDefinition that is used to determine which return parameters are named.
+	/// @param _returnParameterNames names of the return parameters
 	/// @return      A JSON representation
 	///              of a method's return notice documentation
-	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef);
+	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames);
 };
 
 }
