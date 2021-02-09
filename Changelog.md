@@ -4,12 +4,16 @@ Language Features:
 
 
 Compiler Features:
+ * AST: Export NatSpec comments above each statement as their documentation.
 
 
 Bugfixes:
  * Type Checker: Fix internal error when override specifier is not a contract.
  * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
 
+
+AST Changes:
+ * Support field `documentation` to hold NatSpec comments above each statement.
 
 ### 0.8.1 (2021-01-27)
 
