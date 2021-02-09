@@ -1302,7 +1302,7 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	// TODO: use stack.assemble here!
 	yul::MachineAssemblyObject init;
 	yul::MachineAssemblyObject runtime;
-	std::tie(init, runtime) = stack.assembleAndGuessRuntime();
+	std::tie(init, runtime) = stack.assembleWithDeployed(IRNames::runtimeObject(_contract));
 	compiledContract.object = std::move(*init.bytecode);
 	compiledContract.runtimeObject = std::move(*runtime.bytecode);
 	// TODO: refactor assemblyItems, runtimeAssemblyItems, generatedSources,

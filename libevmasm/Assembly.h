@@ -44,6 +44,8 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
+	explicit Assembly(std::string _name = std::string()):m_name(std::move(_name)) { }
+
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
@@ -95,6 +97,7 @@ public:
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
+	std::string const& name() const { return m_name; }
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
@@ -194,6 +197,9 @@ protected:
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
 
 	int m_deposit = 0;
+	/// Internal name of the assembly object, only used with the Yul backend
+	/// currently
+	std::string m_name;
 
 	langutil::SourceLocation m_currentSourceLocation;
 public:

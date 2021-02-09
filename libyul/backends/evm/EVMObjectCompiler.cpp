@@ -42,10 +42,11 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 	BuiltinContext context;
 	context.currentObject = &_object;
 
+
 	for (auto const& subNode: _object.subObjects)
 		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
 		{
-			auto subAssemblyAndID = m_assembly.createSubAssembly();
+			auto subAssemblyAndID = m_assembly.createSubAssembly(subObject->name.str());
 			context.subIDs[subObject->name] = subAssemblyAndID.second;
 			subObject->subId = subAssemblyAndID.second;
 			compile(*subObject, *subAssemblyAndID.first, m_dialect, m_evm15, _optimize);

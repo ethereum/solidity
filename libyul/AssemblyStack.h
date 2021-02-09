@@ -95,6 +95,12 @@ public:
 	/// Only available for EVM.
 	std::pair<MachineAssemblyObject, MachineAssemblyObject> assembleAndGuessRuntime() const;
 
+	/// Run the assembly step (should only be called after parseAndAnalyze).
+	/// In addition to the value returned by @a assemble, returns
+	/// a second object that is the runtime code.
+	/// Only available for EVM.
+	std::pair<MachineAssemblyObject, MachineAssemblyObject> assembleWithDeployed(std::optional<std::string_view> _deployeName = {}) const;
+
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }
 

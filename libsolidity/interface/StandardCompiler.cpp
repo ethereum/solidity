@@ -1275,7 +1275,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	MachineAssemblyObject object;
 	MachineAssemblyObject runtimeObject;
-	tie(object, runtimeObject) = stack.assembleAndGuessRuntime();
+	tie(object, runtimeObject) = stack.assembleWithDeployed();
 
 	if (object.bytecode)
 		object.bytecode->link(_inputsAndSettings.libraries);
