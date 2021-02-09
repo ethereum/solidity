@@ -80,6 +80,8 @@ explanatory purposes.
           details: {
             // peephole defaults to "true"
             peephole: true,
+            // inliner defaults to "true"
+            inliner: true,
             // jumpdestRemover defaults to "true"
             jumpdestRemover: true,
             orderLiterals: false,

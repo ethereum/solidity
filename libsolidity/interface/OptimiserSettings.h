@@ -67,6 +67,7 @@ struct OptimiserSettings
 	{
 		OptimiserSettings s;
 		s.runOrderLiterals = true;
+		s.runInliner = true;
 		s.runJumpdestRemover = true;
 		s.runPeephole = true;
 		s.runDeduplicate = true;
@@ -87,6 +88,7 @@ struct OptimiserSettings
 	{
 		return
 			runOrderLiterals == _other.runOrderLiterals &&
+			runInliner == _other.runInliner &&
 			runJumpdestRemover == _other.runJumpdestRemover &&
 			runPeephole == _other.runPeephole &&
 			runDeduplicate == _other.runDeduplicate &&
@@ -101,6 +103,8 @@ struct OptimiserSettings
 	/// Move literals to the right of commutative binary operators during code generation.
 	/// This helps exploiting associativity.
 	bool runOrderLiterals = false;
+	/// Inliner
+	bool runInliner = false;
 	/// Non-referenced jump destination remover.
 	bool runJumpdestRemover = false;
 	/// Peephole optimizer

@@ -170,8 +170,8 @@ BOOST_AUTO_TEST_CASE(branches)
 			}
 		}
 	)";
-	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	testCreationTimeGas(sourceCode, 1);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)}, 1);
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)

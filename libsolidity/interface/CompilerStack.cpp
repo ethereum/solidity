@@ -1445,6 +1445,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		Json::Value details{Json::objectValue};
 
 		details["orderLiterals"] = m_optimiserSettings.runOrderLiterals;
+		details["inliner"] = m_optimiserSettings.runInliner;
 		details["jumpdestRemover"] = m_optimiserSettings.runJumpdestRemover;
 		details["peephole"] = m_optimiserSettings.runPeephole;
 		details["deduplicate"] = m_optimiserSettings.runDeduplicate;
