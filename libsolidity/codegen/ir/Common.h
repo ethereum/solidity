@@ -52,7 +52,7 @@ struct IRNames
 	static std::string modifierInvocation(ModifierInvocation const& _modifierInvocation);
 	static std::string functionWithModifierInner(FunctionDefinition const& _function);
 	static std::string creationObject(ContractDefinition const& _contract);
-	static std::string runtimeObject(ContractDefinition const& _contract);
+	static std::string deployedObject(ContractDefinition const& _contract);
 	static std::string internalDispatch(YulArity const& _arity);
 	static std::string implicitConstructor(ContractDefinition const& _contract);
 	static std::string libraryAddressImmutable();
