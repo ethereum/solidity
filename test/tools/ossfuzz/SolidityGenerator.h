@@ -94,24 +94,24 @@ struct TestState
 		sourceUnitPaths.insert(_path);
 		currentSourceUnitPath = _path;
 	}
-	/// Returns true if @name sourceUnitPaths is empty,
+	/// @returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
 	[[nodiscard]] bool empty() const
 	{
 		return sourceUnitPaths.empty();
 	}
-	/// Returns the number of items in @name sourceUnitPaths.
+	/// @returns the number of items in @name sourceUnitPaths.
 	[[nodiscard]] size_t size() const
 	{
 		return sourceUnitPaths.size();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
-	/// Returns a randomly chosen path from @param _sourceUnitPaths.
+	/// @returns a randomly chosen path from @param _sourceUnitPaths.
 	[[nodiscard]] std::string randomPath(std::set<std::string> const& _sourceUnitPaths) const;
-	/// Returns a randomly chosen path from @name sourceUnitPaths.
+	/// @returns a randomly chosen path from @name sourceUnitPaths.
 	[[nodiscard]] std::string randomPath() const;
-	/// Returns a randomly chosen non current source unit path.
+	/// @returns a randomly chosen non current source unit path.
 	[[nodiscard]] std::string randomNonCurrentPath() const;
 	/// List of source paths in test input.
 	std::set<std::string> sourceUnitPaths;
@@ -132,15 +132,15 @@ struct GeneratorBase
 				return std::get<std::shared_ptr<T>>(g);
 		solAssert(false, "");
 	}
-	/// Returns test fragment created by this generator.
+	/// @returns test fragment created by this generator.
 	std::string generate()
 	{
 		std::string generatedCode = visit();
 		endVisit();
 		return generatedCode;
 	}
-	/// Virtual visitor that returns a string representing
-	/// the generation of the Solidity grammar element.
+	/// @returns a string representing the generation of
+	/// the Solidity grammar element.
 	virtual std::string visit() = 0;
 	/// Method called after visiting this generator. Used
 	/// for clearing state if necessary.
@@ -189,7 +189,7 @@ public:
 		return "Test case generator";
 	}
 private:
-	/// Returns a new source path name that is formed by concatenating
+	/// @returns a new source path name that is formed by concatenating
 	/// a static prefix @name m_sourceUnitNamePrefix, a monotonically
 	/// increasing counter starting from 0 and the postfix (extension)
 	/// ".sol".
@@ -257,18 +257,18 @@ class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
 public:
 	explicit SolidityGenerator(unsigned _seed);
 
-	/// Returns the generator of type @param T.
+	/// @returns the generator of type @param T.
 	template <typename T>
 	std::shared_ptr<T> generator();
-	/// Returns a shared ptr to underlying random
+	/// @returns a shared ptr to underlying random
 	/// number distribution.
 	std::shared_ptr<UniformRandomDistribution> uniformRandomDist()
 	{
 		return m_urd;
 	}
-	/// Returns a pseudo randomly generated test case.
+	/// @returns a pseudo randomly generated test case.
 	std::string generateTestProgram();
-	/// Returns shared ptr to global test state.
+	/// @returns shared ptr to global test state.
 	std::shared_ptr<TestState> testState()
 	{
 		return m_state;
