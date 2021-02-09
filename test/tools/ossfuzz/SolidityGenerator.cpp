@@ -24,13 +24,12 @@
 using namespace solidity::test::fuzzer;
 using namespace solidity::util;
 using namespace std;
-using PrngUtil = solidity::test::fuzzer::GenerationProbability;
 
 GeneratorBase::GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator)
 {
 	mutator = std::move(_mutator);
-	rand = mutator->randomEngine();
 	state = mutator->testState();
+	uRandDist = mutator->uniformRandomDist();
 }
 
 string GeneratorBase::visitChildren()
@@ -38,9 +37,9 @@ string GeneratorBase::visitChildren()
 	ostringstream os;
 	// Randomise visit order
 	vector<GeneratorPtr> randomisedChildren;
-	for (auto child: generators)
+	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
-	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *rand);
+	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
 	for (auto child: randomisedChildren)
 		os << std::visit(GenericVisitor{
 			[&](auto const& _item) { return _item->generate(); }
@@ -52,7 +51,7 @@ string TestState::randomPath(set<string> const& _sourceUnitPaths) const
 {
 	auto it = _sourceUnitPaths.begin();
 	/// Advance iterator by n where 0 <= n <= sourceUnitPaths.size() - 1
-	size_t increment = PrngUtil{}.distributionOneToN(_sourceUnitPaths.size(), rand) - 1;
+	size_t increment = uRandDist->distributionOneToN(_sourceUnitPaths.size()) - 1;
 	solAssert(
 		increment >= 0 && increment < _sourceUnitPaths.size(),
 		"Solc custom mutator: Invalid increment"
@@ -104,7 +103,7 @@ void TestCaseGenerator::setup()
 string TestCaseGenerator::visit()
 {
 	ostringstream os;
-	for (unsigned i = 0; i < PrngUtil{}.distributionOneToN(s_maxSourceUnits, rand); i++)
+	for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxSourceUnits); i++)
 	{
 		string sourcePath = path();
 		os << "\n"
@@ -140,7 +139,7 @@ string PragmaGenerator::visit()
 	)";
 	// Choose equally at random from coder v1 and v2
 	string abiPragma = "pragma abicoder v" +
-		to_string(PrngUtil{}.distributionOneToN(2, rand)) +
+		to_string(uRandDist->distributionOneToN(2)) +
 		";\n";
 	return preamble + abiPragma;
 }
@@ -157,7 +156,7 @@ string ImportGenerator::visit()
 	// there is one source unit present in test.
 	if (state->size() == 1)
 	{
-		if (PrngUtil{}.probable(s_selfImportInvProb, rand))
+		if (uRandDist->probable(s_selfImportInvProb))
 			os << "import "
 			   << "\""
 			   << state->randomPath()
@@ -186,9 +185,9 @@ shared_ptr<T> SolidityGenerator::generator()
 
 SolidityGenerator::SolidityGenerator(unsigned _seed)
 {
-	m_rand = make_shared<RandomEngine>(_seed);
 	m_generators = {};
-	m_state = make_shared<TestState>(m_rand);
+	m_urd = make_shared<UniformRandomDistribution>(make_unique<RandomEngine>(_seed));
+	m_state = make_shared<TestState>(m_urd);
 }
 
 template <size_t I>

@@ -58,29 +58,34 @@ GENERATORLIST(VARIANTOFGENERATOR, COMMA(), )
 using RandomEngine = std::mt19937_64;
 using Distribution = std::uniform_int_distribution<size_t>;
 
-struct GenerationProbability
+struct UniformRandomDistribution
 {
+	explicit UniformRandomDistribution(std::unique_ptr<RandomEngine> _randomEngine):
+		randomEngine(std::move(_randomEngine))
+	{}
+
 	/// @returns an unsigned integer in the range [1, @param _n] chosen
 	/// uniformly at random.
-	static size_t distributionOneToN(size_t _n, std::shared_ptr<RandomEngine> const& _rand)
+	[[nodiscard]] size_t distributionOneToN(size_t _n) const
 	{
-		return Distribution(1, _n)(*_rand);
+		return Distribution(1, _n)(*randomEngine);
 	}
 	/// @returns true with a probability of 1/(@param _n), false otherwise.
 	/// @param _n must be non zero.
-	static bool probable(size_t _n, std::shared_ptr<RandomEngine> const& _rand)
+	[[nodiscard]] bool probable(size_t _n) const
 	{
 		solAssert(_n > 0, "");
-		return distributionOneToN(_n, _rand) == 1;
+		return distributionOneToN(_n) == 1;
 	}
+	std::unique_ptr<RandomEngine> randomEngine;
 };
 
 struct TestState
 {
-	explicit TestState(std::shared_ptr<RandomEngine> _rand):
+	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
 		sourceUnitPaths({}),
 		currentSourceUnitPath({}),
-		rand(std::move(_rand))
+		uRandDist(std::move(_urd))
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -95,25 +100,25 @@ struct TestState
 	{
 		return sourceUnitPaths.empty();
 	}
-	/// Returns the number of items in @name sourceUnitPaths.
+	/// @returns the number of items in @name sourceUnitPaths.
 	[[nodiscard]] size_t size() const
 	{
 		return sourceUnitPaths.size();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
-	/// Returns a randomly chosen path from @param _sourceUnitPaths.
+	/// @returns a randomly chosen path from @param _sourceUnitPaths.
 	[[nodiscard]] std::string randomPath(std::set<std::string> const& _sourceUnitPaths) const;
-	/// Returns a randomly chosen path from @name sourceUnitPaths.
+	/// @returns a randomly chosen path from @name sourceUnitPaths.
 	[[nodiscard]] std::string randomPath() const;
-	/// Returns a randomly chosen non current source unit path.
+	/// @returns a randomly chosen non current source unit path.
 	[[nodiscard]] std::string randomNonCurrentPath() const;
 	/// List of source paths in test input.
 	std::set<std::string> sourceUnitPaths;
 	/// Source path being currently visited.
 	std::string currentSourceUnitPath;
-	/// Random number generator.
-	std::shared_ptr<RandomEngine> rand;
+	/// Uniform random distribution.
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
 struct GeneratorBase
@@ -127,15 +132,15 @@ struct GeneratorBase
 				return std::get<std::shared_ptr<T>>(g);
 		solAssert(false, "");
 	}
-	/// Returns test fragment created by this generator.
+	/// @returns test fragment created by this generator.
 	std::string generate()
 	{
 		std::string generatedCode = visit();
 		endVisit();
 		return generatedCode;
 	}
-	/// Virtual visitor that returns a string representing
-	/// the generation of the Solidity grammar element.
+	/// @returns a string representing the generation of
+	/// the Solidity grammar element.
 	virtual std::string visit() = 0;
 	/// Method called after visiting this generator. Used
 	/// for clearing state if necessary.
@@ -162,12 +167,12 @@ struct GeneratorBase
 	}
 	/// Shared pointer to the mutator instance
 	std::shared_ptr<SolidityGenerator> mutator;
-	/// Random engine shared by Solidity mutators
-	std::shared_ptr<RandomEngine> rand;
 	/// Set of generators used by this generator.
 	std::set<GeneratorPtr> generators;
 	/// Shared ptr to global test state.
 	std::shared_ptr<TestState> state;
+	/// Uniform random distribution
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
 class TestCaseGenerator: public GeneratorBase
@@ -184,7 +189,7 @@ public:
 		return "Test case generator";
 	}
 private:
-	/// Returns a new source path name that is formed by concatenating
+	/// @returns a new source path name that is formed by concatenating
 	/// a static prefix @name m_sourceUnitNamePrefix, a monotonically
 	/// increasing counter starting from 0 and the postfix (extension)
 	/// ".sol".
@@ -252,18 +257,18 @@ class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
 public:
 	explicit SolidityGenerator(unsigned _seed);
 
-	/// Returns the generator of type @param T.
+	/// @returns the generator of type @param T.
 	template <typename T>
 	std::shared_ptr<T> generator();
-	/// Returns a shared ptr to underlying random
-	/// number generator.
-	std::shared_ptr<RandomEngine> randomEngine()
+	/// @returns a shared ptr to underlying random
+	/// number distribution.
+	std::shared_ptr<UniformRandomDistribution> uniformRandomDist()
 	{
-		return m_rand;
+		return m_urd;
 	}
-	/// Returns a pseudo randomly generated test case.
+	/// @returns a pseudo randomly generated test case.
 	std::string generateTestProgram();
-	/// Returns shared ptr to global test state.
+	/// @returns shared ptr to global test state.
 	std::shared_ptr<TestState> testState()
 	{
 		return m_state;
@@ -282,11 +287,11 @@ private:
 	{
 		m_generators.clear();
 	}
-	/// Random number generator
-	std::shared_ptr<RandomEngine> m_rand;
 	/// Sub generators
 	std::set<GeneratorPtr> m_generators;
 	/// Shared global test state
 	std::shared_ptr<TestState> m_state;
+	/// Uniform random distribution
+	std::shared_ptr<UniformRandomDistribution> m_urd;
 };
 }
