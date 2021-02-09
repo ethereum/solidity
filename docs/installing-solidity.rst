@@ -477,7 +477,7 @@ And for Windows:
     cmake -G "Visual Studio 16 2019" ..
 
 In case you want to use the version of boost installed by ``scripts\install_deps.ps1``, you will
-additionally need to pass ``-DBoost_DIR="..\deps\boost\lib\cmake\Boost-*"`` and ``-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded``
+additionally need to pass ``-DBoost_DIR="deps\boost\lib\cmake\Boost-*"`` and ``-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded``
 as arguments to the call to ``cmake``.
 
 This should result in the creation of **solidity.sln** in that build directory.
