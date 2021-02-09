@@ -2749,6 +2749,10 @@ std::string IRGeneratorForStatements::shiftOperation(
 	IRVariable const& _amountToShift
 )
 {
+	solUnimplementedAssert(
+		_amountToShift.type().category() != Type::Category::FixedPoint,
+		"Not yet implemented - FixedPointType."
+	);
 	IntegerType const* amountType = dynamic_cast<IntegerType const*>(&_amountToShift.type());
 	solAssert(amountType, "");
 
