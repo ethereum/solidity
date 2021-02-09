@@ -31,6 +31,9 @@
 
 #include <liblangutil/ErrorReporter.h>
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
+
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -154,7 +157,12 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 		);
 		if (!found && watcher.ok())
 			// Only add an error message if the callback did not do it.
-			m_errorReporter.declarationError(8198_error, _identifier.location, "Identifier not found.");
+			m_errorReporter.declarationError(
+				8198_error,
+				_identifier.location,
+				"Identifier \"" + _identifier.name.str() + "\" not found."
+			);
+
 	}
 
 	return {type};
@@ -199,7 +207,9 @@ void AsmAnalyzer::operator()(Assignment const& _assignment)
 		m_errorReporter.declarationError(
 			8678_error,
 			_assignment.location,
-			"Variable count does not match number of values (" +
+			"Variable count for assignment to \"" +
+			joinHumanReadable(applyMap(_assignment.variableNames, [](auto const& _identifier){ return _identifier.name.str(); })) +
+			"\" does not match number of values (" +
 			to_string(numVariables) +
 			" vs. " +
 			to_string(types.size()) +
@@ -235,7 +245,9 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 			m_errorReporter.declarationError(
 				3812_error,
 				_varDecl.location,
-				"Variable count mismatch: " +
+				"Variable count mismatch for declaration of \"" +
+				joinHumanReadable(applyMap(_varDecl.variables, [](auto const& _identifier){ return _identifier.name.str(); })) +
+				+ "\": " +
 				to_string(numVariables) +
 				" variables and " +
 				to_string(types.size()) +
@@ -314,7 +326,11 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 	}))
 	{
 		if (!validateInstructions(_funCall))
-			m_errorReporter.declarationError(4619_error, _funCall.functionName.location, "Function not found.");
+			m_errorReporter.declarationError(
+				4619_error,
+				_funCall.functionName.location,
+				"Function \"" + _funCall.functionName.name.str() + "\" not found."
+			);
 		yulAssert(!watcher.ok(), "Expected a reported error.");
 	}
 
@@ -322,7 +338,7 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		m_errorReporter.typeError(
 			7000_error,
 			_funCall.functionName.location,
-			"Function expects " +
+			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
 			to_string(parameterTypes->size()) +
 			" arguments but got " +
 			to_string(_funCall.arguments.size()) + "."
@@ -421,7 +437,13 @@ void AsmAnalyzer::operator()(Switch const& _switch)
 
 			/// Note: the parser ensures there is only one default case
 			if (watcher.ok() && !cases.insert(valueOfLiteral(*_case.value)).second)
-				m_errorReporter.declarationError(6792_error, _case.location, "Duplicate case defined.");
+				m_errorReporter.declarationError(
+					6792_error,
+					_case.location,
+					"Duplicate case \"" +
+					valueOfLiteral(*_case.value).str() +
+					"\" defined."
+				);
 		}
 
 		(*this)(_case.body);
