@@ -3,4 +3,4 @@
   f(x,1)
 }
 // ----
-// DeclarationError 8198: (27-28): Identifier not found.
+// DeclarationError 8198: (27-28): Identifier "x" not found.

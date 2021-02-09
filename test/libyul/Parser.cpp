@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(builtins_analysis)
 
 	SimpleDialect dialect;
 	BOOST_CHECK(successParse("{ let a, b, c := builtin(1, 2) }", dialect));
-	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function expects 2 arguments but got 1", dialect);
-	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch: 2 variables and 3 values.", dialect);
+	CHECK_ERROR_DIALECT("{ let a, b, c := builtin(1) }", TypeError, "Function \"builtin\" expects 2 arguments but got 1", dialect);
+	CHECK_ERROR_DIALECT("{ let a, b := builtin(1, 2) }", DeclarationError, "Variable count mismatch for declaration of \"a, b\": 2 variables and 3 values.", dialect);
 }
 
 BOOST_AUTO_TEST_CASE(default_types_set)

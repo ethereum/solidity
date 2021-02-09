@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 4619: (75-80): Function not found.
+// DeclarationError 4619: (75-80): Function "jumpi" not found.

@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// DeclarationError 4619: (63-64): Function not found.
+// DeclarationError 4619: (63-64): Function "k" not found.

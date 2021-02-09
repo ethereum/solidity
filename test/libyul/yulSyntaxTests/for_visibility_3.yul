@@ -4,4 +4,4 @@
 // ====
 // dialect: evm
 // ----
-// DeclarationError 8198: (33-34): Identifier not found.
+// DeclarationError 8198: (33-34): Identifier "i" not found.
