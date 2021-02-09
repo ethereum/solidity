@@ -6,4 +6,4 @@
 // ====
 // dialect: evmTyped
 // ----
-// DeclarationError 6792: (34-49): Duplicate case defined.
+// DeclarationError 6792: (34-49): Duplicate case "0" defined.

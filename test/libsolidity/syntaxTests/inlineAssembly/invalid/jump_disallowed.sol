@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// DeclarationError 4619: (75-79): Function not found.
+// DeclarationError 4619: (75-79): Function "jump" not found.

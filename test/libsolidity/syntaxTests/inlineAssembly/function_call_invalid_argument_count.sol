@@ -10,5 +10,5 @@ contract C {
   }
 }
 // ----
-// TypeError 7000: (87-88): Function expects 1 arguments but got 0.
-// TypeError 7000: (108-109): Function expects 1 arguments but got 2.
+// TypeError 7000: (87-88): Function "f" expects 1 arguments but got 0.
+// TypeError 7000: (108-109): Function "f" expects 1 arguments but got 2.
