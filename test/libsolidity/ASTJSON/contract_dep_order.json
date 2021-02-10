@@ -39,6 +39,7 @@
         1
       ],
       "name": "A",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 14,
@@ -75,6 +76,7 @@
         1
       ],
       "name": "B",
+      "nameLocation": "24:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 14,
@@ -113,6 +115,7 @@
         1
       ],
       "name": "C",
+      "nameLocation": "44:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 14,
@@ -153,6 +156,7 @@
         1
       ],
       "name": "D",
+      "nameLocation": "64:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 14,
@@ -195,6 +199,7 @@
         1
       ],
       "name": "E",
+      "nameLocation": "84:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 14,

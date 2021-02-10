@@ -11,6 +11,7 @@
       "contractKind": "library",
       "id": 1,
       "name": "L",
+      "nameLocation": "8:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "src": "0:12:1"
@@ -22,6 +23,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "C",
+      "nameLocation": "22:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [

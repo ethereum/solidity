@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -31,6 +32,7 @@
           },
           "id": 4,
           "name": "M",
+          "nameLocation": "22:1:1",
           "nodeType": "ModifierDefinition",
           "parameters":
           {

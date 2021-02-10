@@ -24,6 +24,7 @@
         1
       ],
       "name": "C",
+      "nameLocation": "45:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 2,

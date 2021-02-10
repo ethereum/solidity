@@ -23,6 +23,7 @@
         14
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -43,6 +44,7 @@
           },
           "id": 6,
           "name": "M",
+          "nameLocation": "22:1:1",
           "nodeType": "ModifierDefinition",
           "parameters":
           {
@@ -55,6 +57,7 @@
                 "id": 2,
                 "mutability": "mutable",
                 "name": "i",
+                "nameLocation": "29:1:1",
                 "nodeType": "VariableDeclaration",
                 "scope": 6,
                 "src": "24:6:1",
@@ -135,6 +138,7 @@
             }
           ],
           "name": "F",
+          "nameLocation": "48:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {

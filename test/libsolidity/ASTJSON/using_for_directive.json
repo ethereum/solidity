@@ -27,6 +27,7 @@
         1
       ],
       "name": "L",
+      "nameLocation": "8:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 6,
@@ -44,6 +45,7 @@
         5
       ],
       "name": "C",
+      "nameLocation": "22:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [

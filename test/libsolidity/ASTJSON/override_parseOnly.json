@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "A",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -27,6 +28,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "faa",
+          "nameLocation": "23:3:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -71,6 +73,7 @@
       "contractKind": "contract",
       "id": 16,
       "name": "B",
+      "nameLocation": "50:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -80,6 +83,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "foo",
+          "nameLocation": "69:3:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -113,6 +117,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "faa",
+          "nameLocation": "93:3:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {
@@ -164,6 +169,7 @@
       "contractKind": "contract",
       "id": 31,
       "name": "C",
+      "nameLocation": "129:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -180,6 +186,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "foo",
+          "nameLocation": "148:3:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {
@@ -220,6 +227,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "faa",
+          "nameLocation": "184:3:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {

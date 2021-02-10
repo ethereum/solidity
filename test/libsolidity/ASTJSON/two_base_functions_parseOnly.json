@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "A",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -27,6 +28,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -57,6 +59,7 @@
       "contractKind": "contract",
       "id": 10,
       "name": "B",
+      "nameLocation": "59:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -73,6 +76,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "76:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -129,6 +133,7 @@
       "contractKind": "contract",
       "id": 22,
       "name": "C",
+      "nameLocation": "109:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -145,6 +150,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "134:1:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {

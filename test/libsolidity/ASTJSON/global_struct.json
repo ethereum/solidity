@@ -21,6 +21,7 @@
           "id": 2,
           "mutability": "mutable",
           "name": "a",
+          "nameLocation": "19:1:1",
           "nodeType": "VariableDeclaration",
           "scope": 3,
           "src": "11:9:1",
@@ -47,6 +48,7 @@
         }
       ],
       "name": "S",
+      "nameLocation": "7:1:1",
       "nodeType": "StructDefinition",
       "scope": 4,
       "src": "0:23:1",

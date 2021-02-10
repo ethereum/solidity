@@ -11,11 +11,13 @@
         {
           "id": 1,
           "name": "A",
+          "nameLocation": "9:1:1",
           "nodeType": "EnumValue",
           "src": "9:1:1"
         }
       ],
       "name": "E",
+      "nameLocation": "5:1:1",
       "nodeType": "EnumDefinition",
       "src": "0:12:1"
     }

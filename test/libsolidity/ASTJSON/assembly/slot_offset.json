@@ -23,6 +23,7 @@
         12
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -36,6 +37,7 @@
               "id": 2,
               "mutability": "mutable",
               "name": "x",
+              "nameLocation": "33:1:1",
               "nodeType": "VariableDeclaration",
               "scope": 3,
               "src": "28:6:1",
@@ -62,6 +64,7 @@
             }
           ],
           "name": "S",
+          "nameLocation": "24:1:1",
           "nodeType": "StructDefinition",
           "scope": 12,
           "src": "17:20:1",
@@ -72,6 +75,7 @@
           "id": 6,
           "mutability": "mutable",
           "name": "s",
+          "nameLocation": "44:1:1",
           "nodeType": "VariableDeclaration",
           "scope": 12,
           "src": "42:3:1",
@@ -211,6 +215,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "e",
+          "nameLocation": "60:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
