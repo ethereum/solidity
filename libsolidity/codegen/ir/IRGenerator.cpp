@@ -102,16 +102,16 @@ string IRGenerator::generate(
 				<deploy>
 				<functions>
 			}
-			object "<RuntimeObject>" {
+			object "<DeployedObject>" {
 				code {
-					<memoryInitRuntime>
+					<memoryInitDeployed>
 					<?library>
 					let called_via_delegatecall := iszero(eq(loadimmutable("<library_address>"), address()))
 					</library>
 					<dispatch>
-					<runtimeFunctions>
+					<deployedFunctions>
 				}
-				<runtimeSubObjects>
+				<deployedSubObjects>
 			}
 			<subObjects>
 		}
@@ -155,21 +155,21 @@ string IRGenerator::generate(
 
 	// NOTE: Function pointers can be passed from creation code via storage variables. We need to
 	// get all the functions they could point to into the dispatch functions even if they're never
-	// referenced by name in the runtime code.
+	// referenced by name in the deployed code.
 	m_context.initializeInternalDispatch(move(internalDispatchMap));
 
 	// Do not register immutables to avoid assignment.
-	t("RuntimeObject", IRNames::runtimeObject(_contract));
+	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
 	generateQueuedFunctions();
 	generateInternalDispatchFunctions();
-	t("runtimeFunctions", m_context.functionCollector().requestedFunctions());
-	t("runtimeSubObjects", subObjectSources(m_context.subObjectsCreated()));
+	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
+	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
 
-	// This has to be called only after all other code generation for the runtime object is complete.
-	bool runtimeInvolvesAssembly = m_context.inlineAssemblySeen();
-	t("memoryInitRuntime", memoryInit(!runtimeInvolvesAssembly));
+	// This has to be called only after all other code generation for the deployed object is complete.
+	bool deployedInvolvesAssembly = m_context.inlineAssemblySeen();
+	t("memoryInitDeployed", memoryInit(!deployedInvolvesAssembly));
 	return t.render();
 }
 
@@ -757,7 +757,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 
 		return(0, datasize("<object>"))
 	)X");
-	t("object", IRNames::runtimeObject(_contract));
+	t("object", IRNames::deployedObject(_contract));
 
 	vector<map<string, string>> loadImmutables;
 	vector<map<string, string>> storeImmutables;

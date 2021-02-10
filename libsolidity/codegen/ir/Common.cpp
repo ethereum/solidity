@@ -63,7 +63,7 @@ string IRNames::creationObject(ContractDefinition const& _contract)
 	return _contract.name() + "_" + toString(_contract.id());
 }
 
-string IRNames::runtimeObject(ContractDefinition const& _contract)
+string IRNames::deployedObject(ContractDefinition const& _contract)
 {
 	return _contract.name() + "_" + toString(_contract.id()) + "_deployed";
 }
