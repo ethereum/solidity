@@ -76,6 +76,7 @@ void SyntaxTest::setupCompiler()
 		OptimiserSettings::full() :
 		OptimiserSettings::minimal()
 	);
+	compiler().enableIRGeneration();
 }
 
 void SyntaxTest::parseAndAnalyze()
@@ -148,4 +149,3 @@ void SyntaxTest::filterObtainedErrors()
 		});
 	}
 }
-
