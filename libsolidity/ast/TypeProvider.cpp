@@ -225,16 +225,20 @@ Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& 
 	case Token::BytesM:
 		return fixedBytes(m);
 	case Token::FixedMxN:
+		solUnimplemented("Not yet implemented - FixedPointType.");
 		return fixedPoint(m, n, FixedPointType::Modifier::Signed);
 	case Token::UFixedMxN:
+		solUnimplemented("Not yet implemented - FixedPointType.");
 		return fixedPoint(m, n, FixedPointType::Modifier::Unsigned);
 	case Token::Int:
 		return integer(256, IntegerType::Modifier::Signed);
 	case Token::UInt:
 		return integer(256, IntegerType::Modifier::Unsigned);
 	case Token::Fixed:
+		solUnimplemented("Not yet implemented - FixedPointType.");
 		return fixedPoint(128, 18, FixedPointType::Modifier::Signed);
 	case Token::UFixed:
+		solUnimplemented("Not yet implemented - FixedPointType.");
 		return fixedPoint(128, 18, FixedPointType::Modifier::Unsigned);
 	case Token::Address:
 	{
