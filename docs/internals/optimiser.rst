@@ -69,3 +69,73 @@ a jump in the beginning of the process:
 
     data[7] = 9;
     return 1;
+
+Simple Inlining
+---------------
+
+Since Solidity version 0.8.2, there is another optimizer step that replaces certain
+jumps to blocks containing "simple" instructions ending with a "jump" by a copy of these instructions.
+This corresponds to inlining of simple, small Solidity or Yul functions. In particular, the sequence
+``PUSHTAG(tag) JUMP`` may be replaced, whenever the ``JUMP`` is marked as jump "into" a
+function and behind ``tag`` there is a basic block (as described above for the
+"CommonSubexpressionEliminator") that ends in another ``JUMP`` which is marked as a jump
+"out of" a function.
+In particular, consider the following prototypical example of assembly generated for a
+call to an internal Solidity function:
+
+.. code-block:: text
+
+      tag_return
+      tag_f
+      jump      // in
+    tag_return:
+      ...opcodes after call to f...
+
+    tag_f:
+      ...body of function f...
+      jump      // out
+
+As long as the body of the function is a continuous basic block, the "Inliner" can replace ``tag_f jump`` by
+the block at ``tag_f`` resulting in:
+
+.. code-block:: text
+
+      tag_return
+      ...body of function f...
+      jump
+    tag_return:
+      ...opcodes after call to f...
+
+    tag_f:
+      ...body of function f...
+      jump      // out
+
+Now ideally, the other optimiser steps described above will result in the return tag push being moved
+towards the remaining jump resulting in:
+
+.. code-block:: text
+
+      ...body of function f...
+      tag_return
+      jump
+    tag_return:
+      ...opcodes after call to f...
+
+    tag_f:
+      ...body of function f...
+      jump      // out
+
+In this situation the "PeepholeOptimizer" will remove the return jump. Ideally, all of this can be done
+for all references to ``tag_f`` leaving it unused, s.t. it can be removed, yielding:
+
+.. code-block:: text
+
+      ...body of function f...
+      ...opcodes after call to f...
+
+So the call to function ``f`` is inlined and the original definition of ``f`` can be removed.
+
+Inlining like this is attempted, whenever a heuristics suggests that inlining is cheaper over the lifetime of a
+contract than not inlining. This heuristics depends on the size of the function body, the
+number of other references to its tag (approximating the number of calls to the function) and
+the expected number of executions of the contract (the global optimiser parameter "runs").
