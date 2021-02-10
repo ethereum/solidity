@@ -727,7 +727,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 						generateModifier(modifier, *constructor, next);
 					}
 					body =
-						IRNames::modifierInvocation(*constructor->modifiers().at(0)) +
+						IRNames::modifierInvocation(*realModifiers.at(0)) +
 						"(" +
 						joinHumanReadable(params) +
 						")";
