@@ -893,17 +893,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		return;
 	}
 
-	auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
-	if (memberAccess)
-	{
-		if (auto expressionType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
-		{
-			solAssert(!functionType->bound(), "");
-			if (auto contractType = dynamic_cast<ContractType const*>(expressionType->actualType()))
-				if (contractType->contractDefinition().isLibrary())
-					solAssert(functionType->kind() == FunctionType::Kind::Internal || functionType->kind() == FunctionType::Kind::DelegateCall, "");
-		}
-	}
+	auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
 
 	switch (functionType->kind())
 	{
