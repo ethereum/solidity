@@ -190,12 +190,15 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     test_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "error_codes", "err"))
 
     # white list of ids which are not covered by tests
+    # pylint: disable=W0511
     white_ids = {
         "3805", # "This is a pre-release compiler version, please do not use it in production."
                 # The warning may or may not exist in a compiler build.
         "4591", # "There are more than 256 warnings. Ignoring the rest."
                 # Due to 3805, the warning lists look different for different compiler builds.
-        "1834"  # Unimplemented feature error, as we do not test it anymore via cmdLineTests
+        "1834",  # Unimplemented feature error, as we do not test it anymore via cmdLineTests
+        "4426",  # FIXME remove this when fixed point types gets implemented
+        "5107"   # FIXME remove this when fixed point types gets implemented
     }
     assert len(test_ids & white_ids) == 0, "The sets are not supposed to intersect"
     test_ids |= white_ids
