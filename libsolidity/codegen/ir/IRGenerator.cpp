@@ -48,7 +48,8 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
 
-namespace {
+namespace
+{
 
 void verifyCallGraph(set<ASTNode const*, ASTNode::CompareByID> const& _nodes, set<string>& _functionList)
 {
