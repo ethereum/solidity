@@ -9,4 +9,3 @@ contract test {
 }
 // ----
 // UnimplementedFeatureError: Not yet implemented - FixedPointType.
-// Warning 2018: (20-147): Function state mutability can be restricted to pure

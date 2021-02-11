@@ -6,4 +6,4 @@ contract test {
     }
 }
 // ----
-// TypeError 9574: (73-82): Type fixed128x18 is not implicitly convertible to expected type int256.
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

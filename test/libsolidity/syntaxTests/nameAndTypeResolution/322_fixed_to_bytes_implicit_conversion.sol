@@ -5,4 +5,4 @@ contract test {
     }
 }
 // ----
-// TypeError 9574: (74-87): Type fixed128x18 is not implicitly convertible to expected type bytes32.
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

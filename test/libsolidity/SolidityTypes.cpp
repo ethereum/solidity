@@ -55,25 +55,27 @@ BOOST_AUTO_TEST_CASE(byte_types)
 		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::BytesM, i, 0)) == *TypeProvider::fixedBytes(i));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_types)
-{
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *TypeProvider::fixedPoint(128, 18, FixedPointType::Modifier::Signed));
-	for (unsigned i = 8; i <= 256; i += 8)
-	{
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 0)) == *TypeProvider::fixedPoint(i, 0, FixedPointType::Modifier::Signed));
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 2)) == *TypeProvider::fixedPoint(i, 2, FixedPointType::Modifier::Signed));
-	}
-}
+// FIXME when fixed point types get implemented
+// BOOST_AUTO_TEST_CASE(fixed_types)
+// {
+// 	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::Fixed, 0, 0)) == *TypeProvider::fixedPoint(128, 18, FixedPointType::Modifier::Signed));
+// 	for (unsigned i = 8; i <= 256; i += 8)
+// 	{
+// 		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 0)) == *TypeProvider::fixedPoint(i, 0, FixedPointType::Modifier::Signed));
+// 		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::FixedMxN, i, 2)) == *TypeProvider::fixedPoint(i, 2, FixedPointType::Modifier::Signed));
+// 	}
+// }
 
-BOOST_AUTO_TEST_CASE(ufixed_types)
-{
-	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *TypeProvider::fixedPoint(128, 18, FixedPointType::Modifier::Unsigned));
-	for (unsigned i = 8; i <= 256; i += 8)
-	{
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 0)) == *TypeProvider::fixedPoint(i, 0, FixedPointType::Modifier::Unsigned));
-		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 2)) == *TypeProvider::fixedPoint(i, 2, FixedPointType::Modifier::Unsigned));
-	}
-}
+// FIXME when fixed point types get implemented
+// BOOST_AUTO_TEST_CASE(ufixed_types)
+// {
+// 	BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixed, 0, 0)) == *TypeProvider::fixedPoint(128, 18, FixedPointType::Modifier::Unsigned));
+// 	for (unsigned i = 8; i <= 256; i += 8)
+// 	{
+// 		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 0)) == *TypeProvider::fixedPoint(i, 0, FixedPointType::Modifier::Unsigned));
+// 		BOOST_CHECK(*TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken(Token::UFixedMxN, i, 2)) == *TypeProvider::fixedPoint(i, 2, FixedPointType::Modifier::Unsigned));
+// 	}
+// }
 
 BOOST_AUTO_TEST_CASE(storage_layout_simple)
 {
@@ -151,8 +153,9 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("int128")->identifier(), "t_int128");
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("address")->identifier(), "t_address");
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("uint8")->identifier(), "t_uint8");
-	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("ufixed64x2")->identifier(), "t_ufixed64x2");
-	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("fixed128x8")->identifier(), "t_fixed128x8");
+	// FIXME when fixed point types get implemented
+	// BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("ufixed64x2")->identifier(), "t_ufixed64x2");
+	// BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("fixed128x8")->identifier(), "t_fixed128x8");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(7, 1)).identifier(), "t_rational_7_by_1");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(200, 77)).identifier(), "t_rational_200_by_77");
 	BOOST_CHECK_EQUAL(RationalNumberType(rational(2 * 200, 2 * 77)).identifier(), "t_rational_200_by_77");

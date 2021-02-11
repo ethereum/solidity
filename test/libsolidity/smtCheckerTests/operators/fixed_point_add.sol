@@ -5,4 +5,4 @@ contract test {
 	}
 }
 // ----
-// Warning 2072: (80-88): Unused local variable.
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

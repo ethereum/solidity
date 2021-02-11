@@ -4,3 +4,4 @@ contract C {
   function f() internal { b[0] += 1; }
 }
 // ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.

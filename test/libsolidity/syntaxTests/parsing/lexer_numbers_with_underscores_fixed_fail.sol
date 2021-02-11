@@ -9,6 +9,7 @@ contract C {
   }
 }
 // ----
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.
 // SyntaxError 2090: (57-64): Invalid use of underscores in number literal. No trailing underscores allowed.
 // SyntaxError 2990: (81-91): Invalid use of underscores in number literal. Only one consecutive underscores between digits allowed.
 // SyntaxError 1023: (108-112): Invalid use of underscores in number literal. No underscores in front of the fraction part allowed.

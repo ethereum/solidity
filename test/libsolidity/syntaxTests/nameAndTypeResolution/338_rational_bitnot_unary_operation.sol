@@ -4,4 +4,4 @@ contract test {
     }
 }
 // ----
-// TypeError 4907: (50-61): Unary operator ~ cannot be applied to type fixed128x18
+// UnimplementedFeatureError: Not yet implemented - FixedPointType.
