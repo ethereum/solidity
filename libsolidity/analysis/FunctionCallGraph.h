@@ -32,9 +32,12 @@ namespace solidity::frontend
  * functions and modifiers
  *
  * Includes the following special nodes:
- *  - EntryCreation: All calls made at contract creation originate from this node. Constructors are modelled to be all called by this node instead of calling each other due to implicit constructors that don't exist at this stage.
+ *  - EntryCreation: All calls made at contract creation originate from this node.
+ *    Constructors are modelled to be all called by this node instead of calling each other
+ *    due to implicit constructors that don't exist at this stage.
  *  - InternalCreationDispatch: Represents the internal dispatch function at creation time
- *  - InternalDispatch: Represents the runtime dispatch for internal function pointers and complex expressions
+ *  - InternalDispatch: Represents the runtime dispatch for internal function pointers
+ *    and complex expressions
  *  - Entry: Represents the runtime dispatch for all external functions
  *
  *  Nodes are a variant of either the enum SpecialNode or an ASTNode pointer.
