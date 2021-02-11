@@ -123,7 +123,32 @@ bool FunctionCallGraphBuilder::visit(FunctionCall const& _functionCall)
 		// change at runtime). All we can do is to add an edge to the dispatch which in turn has
 		// edges to all functions could possibly be called.
 		add(*m_currentNode, m_currentDispatch);
+	else if (functionType && functionType->kind() == FunctionType::Kind::Event)
+	{
+		// NOTE: calledDirectly is always false for events, no matter whether it's an actual emit
+		// or just event name used in an expression. Does not matter since this visit(FunctionCall)
+		// won't get triggered in the latter case.
+		solAssert(!_functionCall.expression().annotation().calledDirectly, "");
 
+		EventDefinition const* event = nullptr;
+		if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+		{
+			solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Static, "");
+			event = dynamic_cast<EventDefinition const*>(memberAccess->annotation().referencedDeclaration);
+		}
+		else if (auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+		{
+			// TMP: Why is the lookup type virtual for when we refer to the event just by name
+			// and static when we qualify it with the contract name?
+			solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
+			event = dynamic_cast<EventDefinition const*>(identifier->annotation().referencedDeclaration);
+		}
+		else
+			solAssert(false, "");
+
+		solAssert(event, "");
+		add(*m_currentNode, event);
+	}
 
 	return true;
 }
