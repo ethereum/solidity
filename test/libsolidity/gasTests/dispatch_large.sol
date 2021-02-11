@@ -24,9 +24,9 @@ contract Large {
 }
 // ----
 // creation:
-//   codeDepositCost: 913400
-//   executionCost: 948
-//   totalCost: 914348
+//   codeDepositCost: 902600
+//   executionCost: 942
+//   totalCost: 903542
 // external:
 //   a(): 1175
 //   b(uint256): infinite

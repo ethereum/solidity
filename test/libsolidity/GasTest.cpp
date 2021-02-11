@@ -106,7 +106,7 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 	// Prerelease CBOR metadata varies in size due to changing version numbers and build dates.
 	// This leads to volatile creation cost estimates. Therefore we force the compiler to
 	// release mode for testing gas estimates.
-	compiler().overwriteReleaseFlag(true);
+	compiler().setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	OptimiserSettings settings = m_optimise ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	if (m_optimiseYul)
 	{
