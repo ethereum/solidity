@@ -80,22 +80,26 @@ void SyntaxTest::setupCompiler()
 
 void SyntaxTest::parseAndAnalyze()
 {
-	if (compiler().parse() && compiler().analyze())
+	if (compiler().parse())
+	{
 		try
 		{
-			if (!compiler().compile())
+			if (compiler().analyze())
 			{
-				ErrorList const& errors = compiler().errors();
-				auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return error->type() == Error::Type::CodeGenerationError;
-				});
-				auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
-					return error->type() != Error::Type::Warning;
-				});
-				// failing compilation after successful analysis is a rare case,
-				// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError
-				if (codeGeneretionErrorCount != 1 || errorCount != 1)
-					BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+				if (!compiler().compile())
+				{
+					ErrorList const& errors = compiler().errors();
+					auto codeGeneretionErrorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
+						return error->type() == Error::Type::CodeGenerationError;
+					});
+					auto errorCount = count_if(errors.cbegin(), errors.cend(), [](auto const& error) {
+						return error->type() != Error::Type::Warning;
+					});
+					// failing compilation after successful analysis is a rare case,
+					// it assumes that errors contain exactly one error, and the error is of type Error::Type::CodeGenerationError
+					if (codeGeneretionErrorCount != 1 || errorCount != 1)
+						BOOST_THROW_EXCEPTION(runtime_error("Compilation failed even though analysis was successful."));
+				}
 			}
 		}
 		catch (UnimplementedFeatureError const& _e)
@@ -109,6 +113,7 @@ void SyntaxTest::parseAndAnalyze()
 				-1
 			});
 		}
+	}
 }
 
 void SyntaxTest::filterObtainedErrors()
@@ -148,4 +153,3 @@ void SyntaxTest::filterObtainedErrors()
 		});
 	}
 }
-
