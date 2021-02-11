@@ -323,7 +323,7 @@ string IRGenerator::generateModifier(
 		t("functionName", functionName);
 		vector<string> retParamsIn;
 		for (auto const& varDecl: _function.returnParameters())
-			retParamsIn += IRVariable(*varDecl).stackSlots();
+			retParamsIn += m_context.addLocalVariable(*varDecl).stackSlots();
 		vector<string> params = retParamsIn;
 		for (auto const& varDecl: _function.parameters())
 			params += m_context.addLocalVariable(*varDecl).stackSlots();
