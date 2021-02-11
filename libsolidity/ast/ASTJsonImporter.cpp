@@ -99,6 +99,13 @@ SourceLocation const ASTJsonImporter::createSourceLocation(Json::Value const& _n
 	return solidity::langutil::parseSourceLocation(_node["src"].asString(), m_currentSourceName, m_sourceLocations.size());
 }
 
+SourceLocation ASTJsonImporter::createNameSourceLocation(Json::Value const& _node)
+{
+	astAssert(member(_node, "nameLocation").isString(), "'nameLocation' must be a string");
+
+	return solidity::langutil::parseSourceLocation(_node["nameLocation"].asString(), m_currentSourceName, m_sourceLocations.size());
+}
+
 template<class T>
 ASTPointer<T> ASTJsonImporter::convertJsonToASTNode(Json::Value const& _node)
 {
@@ -272,6 +279,7 @@ ASTPointer<ImportDirective> ASTJsonImporter::createImportDirective(Json::Value c
 		_node,
 		path,
 		unitAlias,
+		createNameSourceLocation(_node),
 		move(symbolAliases)
 	);
 
@@ -298,6 +306,7 @@ ASTPointer<ContractDefinition> ASTJsonImporter::createContractDefinition(Json::V
 	return createASTNode<ContractDefinition>(
 		_node,
 		make_shared<ASTString>(_node["name"].asString()),
+		createNameSourceLocation(_node),
 		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
 		baseContracts,
 		subNodes,
@@ -352,6 +361,7 @@ ASTPointer<ASTNode> ASTJsonImporter::createStructDefinition(Json::Value const& _
 	return createASTNode<StructDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
 		members
 	);
 }
@@ -364,6 +374,7 @@ ASTPointer<EnumDefinition> ASTJsonImporter::createEnumDefinition(Json::Value con
 	return createASTNode<EnumDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
 		members
 	);
 }
@@ -434,6 +445,7 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 	return createASTNode<FunctionDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
 		vis,
 		stateMutability(_node),
 		freeFunction,
@@ -475,6 +487,7 @@ ASTPointer<VariableDeclaration> ASTJsonImporter::createVariableDeclaration(Json:
 		_node,
 		nullOrCast<TypeName>(member(_node, "typeName")),
 		make_shared<ASTString>(member(_node, "name").asString()),
+		createNameSourceLocation(_node),
 		nullOrCast<Expression>(member(_node, "value")),
 		visibility(_node),
 		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
@@ -490,6 +503,7 @@ ASTPointer<ModifierDefinition> ASTJsonImporter::createModifierDefinition(Json::V
 	return createASTNode<ModifierDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
 		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
 		createParameterList(member(_node, "parameters")),
 		memberAsBool(_node, "virtual"),
@@ -515,6 +529,7 @@ ASTPointer<EventDefinition> ASTJsonImporter::createEventDefinition(Json::Value c
 	return createASTNode<EventDefinition>(
 		_node,
 		memberAsASTString(_node, "name"),
+		createNameSourceLocation(_node),
 		_node["documentation"].isNull() ? nullptr : createDocumentation(member(_node, "documentation")),
 		createParameterList(member(_node, "parameters")),
 		memberAsBool(_node, "anonymous")

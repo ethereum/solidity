@@ -27,6 +27,7 @@
 #include <liblangutil/SourceLocation.h>
 #include <json/json.h>
 #include <boost/variant.hpp>
+#include <optional>
 #include <vector>
 
 namespace solidity::yul
@@ -40,7 +41,7 @@ class AsmJsonConverter: public boost::static_visitor<Json::Value>
 public:
 	/// Create a converter to JSON for any block of inline assembly
 	/// @a _sourceIndex to be used to abbreviate source name in the source locations
-	explicit AsmJsonConverter(size_t _sourceIndex): m_sourceIndex(std::to_string(_sourceIndex)) {}
+	explicit AsmJsonConverter(std::optional<size_t> _sourceIndex): m_sourceIndex(_sourceIndex) {}
 
 	Json::Value operator()(Block const& _node) const;
 	Json::Value operator()(TypedName const& _node) const;
@@ -65,7 +66,7 @@ private:
 	template <class T>
 	Json::Value vectorOfVariantsToJson(std::vector<T> const& vec) const;
 
-	std::string const m_sourceIndex;
+	std::optional<size_t> const m_sourceIndex;
 };
 
 }

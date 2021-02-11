@@ -7,6 +7,7 @@
     {
       "file": "notexisting.sol",
       "id": 1,
+      "nameLocation": "28:11:1",
       "nodeType": "ImportDirective",
       "src": "0:40:1",
       "symbolAliases": [],
@@ -33,6 +34,7 @@
       "contractKind": "contract",
       "id": 11,
       "name": "C",
+      "nameLocation": "50:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -41,6 +43,7 @@
           "id": 6,
           "mutability": "mutable",
           "name": "myStruct",
+          "nameLocation": "102:8:1",
           "nodeType": "VariableDeclaration",
           "src": "72:38:1",
           "stateVariable": false,
@@ -75,6 +78,7 @@
           "kind": "constructor",
           "modifiers": [],
           "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {

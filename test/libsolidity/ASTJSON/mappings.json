@@ -23,6 +23,7 @@
         19
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -34,23 +35,27 @@
             {
               "id": 1,
               "name": "A",
+              "nameLocation": "26:1:1",
               "nodeType": "EnumValue",
               "src": "26:1:1"
             },
             {
               "id": 2,
               "name": "B",
+              "nameLocation": "29:1:1",
               "nodeType": "EnumValue",
               "src": "29:1:1"
             },
             {
               "id": 3,
               "name": "C",
+              "nameLocation": "32:1:1",
               "nodeType": "EnumValue",
               "src": "32:1:1"
             }
           ],
           "name": "E",
+          "nameLocation": "22:1:1",
           "nodeType": "EnumDefinition",
           "src": "17:18:1"
         },
@@ -59,6 +64,7 @@
           "id": 9,
           "mutability": "mutable",
           "name": "a",
+          "nameLocation": "59:1:1",
           "nodeType": "VariableDeclaration",
           "scope": 19,
           "src": "40:20:1",
@@ -119,6 +125,7 @@
           "id": 13,
           "mutability": "mutable",
           "name": "b",
+          "nameLocation": "91:1:1",
           "nodeType": "VariableDeclaration",
           "scope": 19,
           "src": "66:26:1",
@@ -171,6 +178,7 @@
           "id": 18,
           "mutability": "mutable",
           "name": "c",
+          "nameLocation": "117:1:1",
           "nodeType": "VariableDeclaration",
           "scope": 19,
           "src": "98:20:1",

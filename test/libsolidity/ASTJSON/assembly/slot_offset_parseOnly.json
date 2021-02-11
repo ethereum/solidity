@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 12,
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -23,6 +24,7 @@
               "id": 2,
               "mutability": "mutable",
               "name": "x",
+              "nameLocation": "33:1:1",
               "nodeType": "VariableDeclaration",
               "src": "28:6:1",
               "stateVariable": false,
@@ -40,6 +42,7 @@
             }
           ],
           "name": "S",
+          "nameLocation": "24:1:1",
           "nodeType": "StructDefinition",
           "src": "17:20:1",
           "visibility": "public"
@@ -49,6 +52,7 @@
           "id": 6,
           "mutability": "mutable",
           "name": "s",
+          "nameLocation": "44:1:1",
           "nodeType": "VariableDeclaration",
           "src": "42:3:1",
           "stateVariable": false,
@@ -158,6 +162,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "e",
+          "nameLocation": "60:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {

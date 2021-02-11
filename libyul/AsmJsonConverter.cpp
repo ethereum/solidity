@@ -187,7 +187,7 @@ Json::Value AsmJsonConverter::createAstNode(langutil::SourceLocation const& _loc
 	int length = -1;
 	if (_location.start >= 0 && _location.end >= 0)
 		length = _location.end - _location.start;
-	ret["src"] = to_string(_location.start) + ":" + to_string(length) + ":" + m_sourceIndex;
+	ret["src"] = to_string(_location.start) + ":" + to_string(length) + ":" + (m_sourceIndex.has_value() ? to_string(m_sourceIndex.value()) : "-1");
 	return ret;
 }
 

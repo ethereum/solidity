@@ -31,6 +31,7 @@
         5
       ],
       "name": "A",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -48,6 +49,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -85,6 +87,7 @@
         10
       ],
       "name": "B",
+      "nameLocation": "59:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -102,6 +105,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "76:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -173,6 +177,7 @@
         5
       ],
       "name": "C",
+      "nameLocation": "109:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -195,6 +200,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "134:1:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {

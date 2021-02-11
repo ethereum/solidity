@@ -40,6 +40,7 @@ JSON AST (compact format):
         18
       ],
       "name": "Error1",
+      "nameLocation": "71:6:0",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -59,6 +60,7 @@ JSON AST (compact format):
           "kind": "constructor",
           "modifiers": [],
           "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -120,6 +122,7 @@ JSON AST (compact format):
           "kind": "function",
           "modifiers": [],
           "name": "five",
+          "nameLocation": "407:4:0",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -139,6 +142,7 @@ JSON AST (compact format):
                 "id": 12,
                 "mutability": "mutable",
                 "name": "",
+                "nameLocation": "-1:-1:-1",
                 "nodeType": "VariableDeclaration",
                 "scope": 17,
                 "src": "434:4:0",

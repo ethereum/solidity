@@ -15,6 +15,7 @@ Bugfixes:
 
 AST Changes:
  * Support field `documentation` to hold NatSpec comments above each statement.
+ * Adds `nameLocation` to declarations to represent the exact location of the symbolic name.
 
 ### 0.8.1 (2021-01-27)
 

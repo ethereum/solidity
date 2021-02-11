@@ -179,15 +179,15 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TypePointer multiArray = TypeProvider::array(DataLocation::Storage, stringArray);
 	BOOST_CHECK_EQUAL(multiArray->identifier(), "t_array$_t_array$_t_string_storage_$20_storage_$dyn_storage_ptr");
 
-	ContractDefinition c(++id, SourceLocation{}, make_shared<string>("MyContract$"), {}, {}, {}, ContractKind::Contract);
+	ContractDefinition c(++id, SourceLocation{}, make_shared<string>("MyContract$"), SourceLocation{}, {}, {}, {}, ContractKind::Contract);
 	BOOST_CHECK_EQUAL(c.type()->identifier(), "t_type$_t_contract$_MyContract$$$_$2_$");
 	BOOST_CHECK_EQUAL(ContractType(c, true).identifier(), "t_super$_MyContract$$$_$2");
 
-	StructDefinition s(++id, {}, make_shared<string>("Struct"), {});
+	StructDefinition s(++id, {}, make_shared<string>("Struct"), {}, {});
 	s.annotation().recursive = false;
 	BOOST_CHECK_EQUAL(s.type()->identifier(), "t_type$_t_struct$_Struct_$3_storage_ptr_$");
 
-	EnumDefinition e(++id, {}, make_shared<string>("Enum"), {});
+	EnumDefinition e(++id, {}, make_shared<string>("Enum"), {}, {});
 	BOOST_CHECK_EQUAL(e.type()->identifier(), "t_type$_t_enum$_Enum_$4_$");
 
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	// TypeType is tested with contract
 
 	auto emptyParams = make_shared<ParameterList>(++id, SourceLocation(), std::vector<ASTPointer<VariableDeclaration>>());
-	ModifierDefinition mod(++id, SourceLocation{}, make_shared<string>("modif"), {}, emptyParams, {}, {}, {});
+	ModifierDefinition mod(++id, SourceLocation{}, make_shared<string>("modif"), SourceLocation{}, {}, emptyParams, {}, {}, {});
 	BOOST_CHECK_EQUAL(ModifierType(mod).identifier(), "t_modifier$__$");
 
 	SourceUnit su(++id, {}, {}, {});

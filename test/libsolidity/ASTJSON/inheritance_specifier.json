@@ -27,6 +27,7 @@
         1
       ],
       "name": "C1",
+      "nameLocation": "9:2:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 5,
@@ -63,6 +64,7 @@
         1
       ],
       "name": "C2",
+      "nameLocation": "24:2:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 5,
