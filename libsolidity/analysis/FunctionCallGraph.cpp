@@ -108,6 +108,26 @@ unique_ptr<FunctionCallGraphBuilder::ContractCallGraph> FunctionCallGraphBuilder
 	return FunctionCallGraphBuilder(_contract).m_graph;
 }
 
+bool FunctionCallGraphBuilder::visit(FunctionCall const& _functionCall)
+{
+	solAssert(m_currentNode.has_value(), "");
+	solAssert(holds_alternative<SpecialNode>(*m_currentNode) || get<ASTNode const*>(*m_currentNode) != nullptr, "");
+
+	FunctionType const* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type);
+	if (
+		functionType &&
+		functionType->kind() == FunctionType::Kind::Internal &&
+		!_functionCall.expression().annotation().calledDirectly
+	)
+		// If it's not a direct call, we don't really know which function will be called (it may even
+		// change at runtime). All we can do is to add an edge to the dispatch which in turn has
+		// edges to all functions could possibly be called.
+		add(*m_currentNode, m_currentDispatch);
+
+
+	return true;
+}
+
 bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 {
 	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
@@ -199,11 +219,7 @@ void FunctionCallGraphBuilder::processFunction(CallableDeclaration const& _calla
 	if (_calledDirectly)
 		add(*m_currentNode, &_callable);
 	else
-	{
 		add(m_currentDispatch, &_callable);
-
-		add(&_callable, m_currentDispatch);
-	}
 
 	if (!m_graph->edges.count(&_callable))
 		visitCallable(&_callable);

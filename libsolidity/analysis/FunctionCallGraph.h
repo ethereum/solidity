@@ -83,6 +83,7 @@ public:
 private:
 	FunctionCallGraphBuilder(ContractDefinition const& _contract);
 
+	bool visit(FunctionCall const& _functionCall) override;
 	bool visit(Identifier const& _identifier) override;
 	bool visit(NewExpression const& _newExpression) override;
 	void endVisit(MemberAccess const& _memberAccess) override;
