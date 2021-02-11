@@ -111,6 +111,13 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 
 }
 
+MemberList::Member::Member(Declaration const* _declaration, Type const* _type):
+	name(_declaration->name()),
+	type(_type),
+	declaration(_declaration)
+{
+}
+
 void Type::clearCache() const
 {
 	m_members.clear();
@@ -365,7 +372,7 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ASTNode const& _sc
 			FunctionTypePointer fun =
 				dynamic_cast<FunctionType const&>(*function->typeViaContractName()).asBoundFunction();
 			if (_type.isImplicitlyConvertibleTo(*fun->selfType()))
-				members.emplace_back(function->name(), fun, function);
+				members.emplace_back(function, fun);
 		}
 	}
 
@@ -1985,9 +1992,8 @@ MemberList::MemberMap ContractType::nativeMembers(ASTNode const*) const
 	if (!m_contract.isLibrary())
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.emplace_back(
-				it.second->declaration().name(),
-				it.second->asExternallyCallableFunction(m_contract.isLibrary()),
-				&it.second->declaration()
+				&it.second->declaration(),
+				it.second->asExternallyCallableFunction(m_contract.isLibrary())
 			);
 
 	return members;
@@ -2213,9 +2219,8 @@ MemberList::MemberMap StructType::nativeMembers(ASTNode const*) const
 		solAssert(type, "");
 		solAssert(!(location() != DataLocation::Storage && type->containsNestedMapping()), "");
 		members.emplace_back(
-			variable->name(),
-			copyForLocationIfReference(type),
-			variable.get()
+			variable.get(),
+			copyForLocationIfReference(type)
 		);
 	}
 	return members;
@@ -3687,7 +3692,7 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 						break;
 					}
 					if (!functionWithEqualArgumentsFound)
-						members.emplace_back(function->name(), functionType, function);
+						members.emplace_back(function, functionType);
 				}
 		}
 		else
@@ -3708,15 +3713,15 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 						auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(declaration);
 						functionDefinition && !functionDefinition->isImplemented()
 					)
-						members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
+						members.emplace_back(declaration, declaration->typeViaContractName());
 					else
-						members.emplace_back(declaration->name(), declaration->type(), declaration);
+						members.emplace_back(declaration, declaration->type());
 				}
 				else if (
 					(contract.isLibrary() && declaration->isVisibleAsLibraryMember()) ||
 					declaration->isVisibleViaContractTypeAccess()
 				)
-					members.emplace_back(declaration->name(), declaration->typeViaContractName(), declaration);
+					members.emplace_back(declaration, declaration->typeViaContractName());
 			}
 		}
 	}
@@ -3725,7 +3730,7 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 		EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).enumDefinition();
 		auto enumType = TypeProvider::enumType(enumDef);
 		for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
-			members.emplace_back(enumValue->name(), enumType);
+			members.emplace_back(enumValue.get(), enumType);
 	}
 	return members;
 }
@@ -3801,9 +3806,12 @@ bool ModuleType::operator==(Type const& _other) const
 MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 {
 	MemberList::MemberMap symbols;
-	for (auto const& symbolName: *m_sourceUnit.annotation().exportedSymbols)
-		for (Declaration const* symbol: symbolName.second)
-			symbols.emplace_back(symbolName.first, symbol->type(), symbol);
+	for (auto const& [name, declarations]: *m_sourceUnit.annotation().exportedSymbols)
+		for (Declaration const* symbol: declarations)
+		{
+			solAssert(name == symbol->name(), "");
+			symbols.emplace_back(symbol, symbol->type());
+		}
 	return symbols;
 }
 
