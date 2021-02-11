@@ -24,7 +24,7 @@ using namespace solidity::frontend;
 
 FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _contract):
 	m_contract(&_contract),
-	m_graph(std::make_unique<ContractCallGraph>(_contract))
+	m_graph(make_unique<ContractCallGraph>(_contract))
 {
 	// Create graph for constructor, state vars, etc
 	m_currentNode = SpecialNode::EntryCreation;
@@ -76,23 +76,23 @@ bool FunctionCallGraphBuilder::CompareByID::operator()(Node const& _lhs, Node co
 	if (_lhs.index() != _rhs.index())
 		return _lhs.index() < _rhs.index();
 
-	if (std::holds_alternative<SpecialNode>(_lhs))
-		return std::get<SpecialNode>(_lhs) < std::get<SpecialNode>(_rhs);
-	return std::get<ASTNode const*>(_lhs)->id() < std::get<ASTNode const*>(_rhs)->id();
+	if (holds_alternative<SpecialNode>(_lhs))
+		return get<SpecialNode>(_lhs) < get<SpecialNode>(_rhs);
+	return get<ASTNode const*>(_lhs)->id() < get<ASTNode const*>(_rhs)->id();
 }
 
 bool FunctionCallGraphBuilder::CompareByID::operator()(Node const& _lhs, int64_t _rhs) const
 {
-	solAssert(!std::holds_alternative<SpecialNode>(_lhs), "");
+	solAssert(!holds_alternative<SpecialNode>(_lhs), "");
 
-	return std::get<ASTNode const*>(_lhs)->id() < _rhs;
+	return get<ASTNode const*>(_lhs)->id() < _rhs;
 }
 
 bool FunctionCallGraphBuilder::CompareByID::operator()(int64_t _lhs, Node const& _rhs) const
 {
-	solAssert(!std::holds_alternative<SpecialNode>(_rhs), "");
+	solAssert(!holds_alternative<SpecialNode>(_rhs), "");
 
-	return _lhs < std::get<ASTNode const*>(_rhs)->id();
+	return _lhs < get<ASTNode const*>(_rhs)->id();
 }
 
 unique_ptr<FunctionCallGraphBuilder::ContractCallGraph> FunctionCallGraphBuilder::create(ContractDefinition const& _contract)
@@ -175,7 +175,7 @@ void FunctionCallGraphBuilder::visitCallable(CallableDeclaration const* _callabl
 {
 	solAssert(!m_graph->edges.count(_callable), "");
 
-	std::optional<Node> previousNode = m_currentNode;
+	optional<Node> previousNode = m_currentNode;
 	m_currentNode = _callable;
 
 	if (previousNode.has_value() && _directCall)
