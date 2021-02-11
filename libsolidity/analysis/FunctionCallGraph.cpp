@@ -61,7 +61,7 @@ FunctionCallGraphBuilder::FunctionCallGraphBuilder(ContractDefinition const& _co
 		add(SpecialNode::Entry, &functionType->declaration());
 	}
 
-	// Add all InternalCreationDispatch calls to the RuntimeDispatch as well
+	// Add all InternalCreationDispatch calls to the InternalDispatch as well
 	add(SpecialNode::InternalDispatch, SpecialNode::InternalCreationDispatch);
 
 	if (_contract.fallbackFunction())
