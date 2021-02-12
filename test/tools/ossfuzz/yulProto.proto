@@ -286,15 +286,15 @@ message AssignmentStatement {
 
 message IfStmt {
   required Expression cond = 1;
-  required Block if_body = 2;
+  required Block block = 2;
 }
 
 message BoundedForStmt {
-  required Block for_body = 1;
+  required Block block = 1;
 }
 
 message ForStmt {
-  required Block for_body = 1;
+  required Block block = 1;
   required Block for_init = 2;
   required Block for_post = 3;
   required Expression for_cond = 4;
@@ -302,13 +302,13 @@ message ForStmt {
 
 message CaseStmt {
   required Literal case_lit = 1;
-  required Block case_block = 2;
+  required Block block = 2;
 }
 
 message SwitchStmt {
   required Expression switch_expr = 1;
   repeated CaseStmt case_stmt = 2;
-  optional Block default_block = 3;
+  optional Block block = 3;
 }
 
 message BreakStmt {}
@@ -363,7 +363,7 @@ message Statement {
     AssignmentStatement assignment      = 2;
     IfStmt              ifstmt          = 3;
     StoreFunc           storage_func    = 4;
-    Block               blockstmt       = 5;
+    Block               block           = 5;
     ForStmt             forstmt         = 6;
     SwitchStmt          switchstmt      = 7;
     BreakStmt           breakstmt       = 8;

@@ -1109,7 +1109,7 @@ void ProtoConverter::visit(IfStmt const& _x)
 	m_output << "if ";
 	visit(_x.cond());
 	m_output << " ";
-	visit(_x.if_body());
+	visit(_x.block());
 }
 
 void ProtoConverter::visit(StoreFunc const& _x)
@@ -1152,7 +1152,7 @@ void ProtoConverter::visit(ForStmt const& _x)
 	m_inForCond = false;
 	visit(_x.for_post());
 	m_inForBodyScope = true;
-	visit(_x.for_body());
+	visit(_x.block());
 	m_inForBodyScope = wasInForBody;
 	m_inForInitScope = wasInForInit;
 	if (m_inFunctionDef)
@@ -1186,7 +1186,7 @@ void ProtoConverter::visit(BoundedForStmt const& _x)
 	bool wasInForInit = m_inForInitScope;
 	m_inForBodyScope = true;
 	m_inForInitScope = false;
-	visit(_x.for_body());
+	visit(_x.block());
 	// Restore previous for body scope and init
 	m_inForBodyScope = wasInForBody;
 	m_inForInitScope = wasInForInit;
@@ -1254,13 +1254,13 @@ void ProtoConverter::visit(CaseStmt const& _x)
 	if (isUnique)
 	{
 		m_output << "case " << literal << " ";
-		visit(_x.case_block());
+		visit(_x.block());
 	}
 }
 
 void ProtoConverter::visit(SwitchStmt const& _x)
 {
-	if (_x.case_stmt_size() > 0 || _x.has_default_block())
+	if (_x.case_stmt_size() > 0 || _x.has_block())
 	{
 		std::set<u256> s;
 		m_switchLiteralSetPerScope.push(s);
@@ -1273,10 +1273,10 @@ void ProtoConverter::visit(SwitchStmt const& _x)
 
 		m_switchLiteralSetPerScope.pop();
 
-		if (_x.has_default_block())
+		if (_x.has_block())
 		{
 			m_output << "default ";
-			visit(_x.default_block());
+			visit(_x.block());
 		}
 	}
 }
@@ -1369,22 +1369,22 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.assignment());
 		break;
 	case Statement::kIfstmt:
-		if (_x.ifstmt().if_body().statements_size() > 0)
+		if (_x.ifstmt().block().statements_size() > 0)
 			visit(_x.ifstmt());
 		break;
 	case Statement::kStorageFunc:
 		visit(_x.storage_func());
 		break;
-	case Statement::kBlockstmt:
-		if (_x.blockstmt().statements_size() > 0)
-			visit(_x.blockstmt());
+	case Statement::kBlock:
+		if (_x.block().statements_size() > 0)
+			visit(_x.block());
 		break;
 	case Statement::kForstmt:
-		if (_x.forstmt().for_body().statements_size() > 0)
+		if (_x.forstmt().block().statements_size() > 0)
 			visit(_x.forstmt());
 		break;
 	case Statement::kBoundedforstmt:
-		if (_x.boundedforstmt().for_body().statements_size() > 0)
+		if (_x.boundedforstmt().block().statements_size() > 0)
 			visit(_x.boundedforstmt());
 		break;
 	case Statement::kSwitchstmt:
@@ -1611,7 +1611,7 @@ void ProtoConverter::visit(Block const& _x)
 			// If statement is block or introduces one and we are in for-init block
 			// then temporarily disable scope extension if it is not already disabled.
 			if (
-				(st.has_blockstmt() || st.has_switchstmt() || st.has_ifstmt()) &&
+				(st.has_block() || st.has_switchstmt() || st.has_ifstmt()) &&
 				m_inForInitScope &&
 				m_forInitScopeExtEnabled
 			)
