@@ -69,8 +69,10 @@ do
         # run tests against hera ewasm evmc vm, only if OPTIMIZE == 0 and evm version is byzantium
         EWASM_ARGS=""
         [ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
+        ENFORCE_GAS_ARGS=""
+        [ "${EVM}" = "istanbul" ] && ENFORCE_GAS_ARGS="--enforce-gas-cost"
 
-        [[ " $RUN_STEPS " == *" $STEP "* ]] && EVM="$EVM" OPTIMIZE="$OPTIMIZE" SOLTEST_FLAGS="$SOLTEST_FLAGS $EWASM_ARGS" BOOST_TEST_ARGS="-t !@nooptions" "${REPODIR}/.circleci/soltest.sh"
+        [[ " $RUN_STEPS " == *" $STEP "* ]] && EVM="$EVM" OPTIMIZE="$OPTIMIZE" SOLTEST_FLAGS="$SOLTEST_FLAGS $ENFORCE_GAS_ARGS $EWASM_ARGS" BOOST_TEST_ARGS="-t !@nooptions" "${REPODIR}/.circleci/soltest.sh"
         STEP=$((STEP + 1))
     done
 done
