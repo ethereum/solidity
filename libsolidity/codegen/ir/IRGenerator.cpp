@@ -129,7 +129,7 @@ string IRGenerator::generate(
 	vector<string> constructorParams;
 	if (constructor && !constructor->parameters().empty())
 	{
-		for (size_t i = 0; i < constructor->parameters().size(); ++i)
+		for (size_t i = 0; i < CompilerUtils::sizeOnStack(constructor->parameters()); ++i)
 			constructorParams.emplace_back(m_context.newYulVariable());
 		t(
 			"copyConstructorArguments",

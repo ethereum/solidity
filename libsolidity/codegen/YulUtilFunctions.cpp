@@ -4255,7 +4255,7 @@ string YulUtilFunctions::copyConstructorArgumentsToMemoryFunction(
 		toString(_contract.id());
 
 	return m_functionCollector.createFunction(functionName, [&]() {
-		string returnParams = suffixedVariableNameList("ret_param_",0, _contract.constructor()->parameters().size());
+		string returnParams = suffixedVariableNameList("ret_param_",0, CompilerUtils::sizeOnStack(_contract.constructor()->parameters()));
 		ABIFunctions abiFunctions(m_evmVersion, m_revertStrings, m_functionCollector);
 
 		return util::Whiskers(R"(
