@@ -76,8 +76,8 @@ int registerTests(
 		solidity::test::CommonOptions::get().evmVersion(),
 		solidity::test::CommonOptions::get().vmPaths,
 		_enforceViaYul,
-		/* enforceGasCost */ false,
-		0
+		solidity::test::CommonOptions::get().enforceGasTest,
+		solidity::test::CommonOptions::get().enforceGasTestMinValue
 	};
 	if (fs::is_directory(fullpath))
 	{

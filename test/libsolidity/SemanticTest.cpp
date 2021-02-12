@@ -115,9 +115,9 @@ SemanticTest::SemanticTest(
 	parseExpectations(m_reader.stream());
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
 
-	if (_evmVersion == EVMVersion{})
+	if (m_enforceGasCost)
 	{
-		m_compiler.setVersionType(CompilerStack::VersionType::Empty);
+		m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 		m_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 	}
 }
@@ -342,19 +342,20 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 		(_compileViaYul ? "ir"s : "legacy"s) +
 		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
 
-	// We don't check gas if evm is not set to default version
-	// or in case we run abiencoderv1
+	// We don't check gas if enforce gas cost is not active
+	// or test is run with abi encoder v1 only
 	// or gas used less than threshold for enforcing feature
 	// or setting is "ir" and it's not included in expectations
 	if (
-		m_evmVersion != EVMVersion{} ||
-		solidity::test::CommonOptions::get().useABIEncoderV1 ||
+		!m_enforceGasCost ||
 		(
-			(!m_enforceGasCost || setting == "ir" || m_gasUsed < m_enforceGasCostMinValue) &&
+			(setting == "ir" || m_gasUsed < m_enforceGasCostMinValue) &&
 			io_test.call().expectations.gasUsed.count(setting) == 0
 		)
 	)
 		return true;
+
+	solAssert(!m_runWithABIEncoderV1Only, "");
 
 	io_test.setGasCost(setting, m_gasUsed);
 	return
