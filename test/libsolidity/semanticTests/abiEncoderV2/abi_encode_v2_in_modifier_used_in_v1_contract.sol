@@ -38,3 +38,4 @@ contract C is B {
 // compileViaYul: also
 // ----
 // test() -> 5, 10
+// gas legacy: 100441

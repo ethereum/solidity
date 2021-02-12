@@ -17,4 +17,7 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f(uint32, (uint128, uint256[][2], uint32)): 55, 0x40, 77, 0x60, 88, 0x40, 0x40, 2, 1, 2 -> 55, 77, 1, 2, 88
+// f(uint32,(uint128,uint256[][2],uint32)): 55, 0x40, 77, 0x60, 88, 0x40, 0x40, 2, 1, 2 -> 55, 77, 1, 2, 88
+// gas irOptimized: 202421
+// gas legacy: 205149
+// gas legacyOptimized: 200516

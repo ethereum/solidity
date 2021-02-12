@@ -22,4 +22,6 @@ contract A {
 // compileViaYul: also
 // ----
 // g(int256): -1 -> -1
+// gas legacy: 103422
 // g(int256): 10 -> 10
+// gas legacy: 103050
