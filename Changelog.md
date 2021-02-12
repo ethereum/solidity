@@ -12,6 +12,7 @@ Bugfixes:
  * Type Checker: Fix internal error when override specifier is not a contract.
  * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
  * AST: Added ``referencedDeclaration`` for enum members.
+ * Code Generator: Fix internal error when functions are passed as parameters of other callables, when the function types can be implicitly converted, but not identical.
 
 
 AST Changes:
