@@ -1580,6 +1580,9 @@ private:
 
 bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
 {
+	if (m_metadataFormat == MetadataFormat::NoMetadata)
+		return bytes{};
+
 	bool const experimentalMode = !onlySafeExperimentalFeaturesActivated(
 		_contract.contract->sourceUnit().annotation().experimentalFeatures
 	);
@@ -1597,10 +1600,16 @@ bytes CompilerStack::createCBORMetadata(Contract const& _contract) const
 
 	if (experimentalMode || m_viaIR)
 		encoder.pushBool("experimental", true);
-	if (m_release)
+	if (m_metadataFormat == MetadataFormat::WithReleaseVersionTag)
 		encoder.pushBytes("solc", VersionCompactBytes);
 	else
+	{
+		solAssert(
+			m_metadataFormat == MetadataFormat::WithPrereleaseVersionTag,
+			"Invalid metadata format."
+		);
 		encoder.pushString("solc", VersionStringStrict);
+	}
 	return encoder.serialise();
 }
 

@@ -13,8 +13,8 @@ contract C {
 }
 // ----
 // creation:
-//   codeDepositCost: 398400
-//   executionCost: 436
-//   totalCost: 398836
+//   codeDepositCost: 387600
+//   executionCost: 424
+//   totalCost: 388024
 // external:
 //   f(): 428
