@@ -330,7 +330,7 @@ The following are dependencies for all builds of Solidity:
 
     Starting from 0.5.10 linking against Boost 1.70+ should work without manual intervention.
 
-Minimum compiler versions
+Minimum Compiler Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following C++ compilers and their minimum versions can build the Solidity codebase:
@@ -547,10 +547,10 @@ of the current nightly build, but without the ``prerelease`` specifier.
 
 Example:
 
-0. the 0.4.0 release is made
-1. nightly build has a version of 0.4.1 from now on
-2. non-breaking changes are introduced - no change in version
-3. a breaking change is introduced - version is bumped to 0.5.0
-4. the 0.5.0 release is made
+0. The 0.4.0 release is made.
+1. The nightly build has a version of 0.4.1 from now on.
+2. Non-breaking changes are introduced --> no change in version.
+3. A breaking change is introduced --> version is bumped to 0.5.0.
+4. The 0.5.0 release is made.
 
 This behaviour works well with the  :ref:`version pragma <version_pragma>`.

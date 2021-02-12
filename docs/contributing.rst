@@ -9,14 +9,14 @@ In particular, we appreciate support in the following areas:
 * Reporting issues.
 * Fixing and responding to `Solidity's GitHub issues
   <https://github.com/ethereum/solidity/issues>`_, especially those tagged as
-  `good first issue <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
+  `"good first issue" <https://github.com/ethereum/solidity/labels/good%20first%20issue>`_ which are
   meant as introductory issues for external contributors.
 * Improving the documentation.
 * Translating the documentation into more languages.
 * Responding to questions from other users on `StackExchange
   <https://ethereum.stackexchange.com>`_ and the `Solidity Gitter Chat
   <https://gitter.im/ethereum/solidity>`_.
-* Getting involved in the language design process by joining language design calls, proposing language changes or new features and providing feedback.
+* Getting involved in the language design process by proposing language changes or new features in the `Solidity forum <https://forum.soliditylang.org/>`_ and providing feedback.
 
 To get started, you can try :ref:`building-from-source` in order to familiarize
 yourself with the components of Solidity and the build process. Also, it may be
@@ -42,12 +42,11 @@ To report an issue, please use the
 `GitHub issues tracker <https://github.com/ethereum/solidity/issues>`_. When
 reporting issues, please mention the following details:
 
-* Which version of Solidity you are using.
-* What was the source code (if applicable).
-* Which platform are you running on.
-* How to reproduce the issue.
-* What was the result of the issue.
-* What the expected behaviour is.
+* Solidity version.
+* Source code (if applicable).
+* Operating system.
+* Steps to reproduce the issue.
+* Actual vs. expected behaviour.
 
 Reducing the source code that caused the issue to a bare minimum is always
 very helpful and sometimes even clarifies a misunderstanding.
@@ -460,17 +459,26 @@ needed for documentation and checks for any problems such as broken links or syn
 Solidity Language Design
 ========================
 
-If you want to get involved in the language design process and share your ideas, please join the `solidity-users forum <https://groups.google.com/g/solidity-users>`_,
-where existing properties of the language and proposals for new features can be discussed.
+To actively get involved in the language design process and share your ideas concerning the future of Solidity,
+please join the `Solidity forum <https://forum.soliditylang.org/>`_.
 
-We regularly host language design discussion calls, in which selected topics, issues or feature implementations are debated in detail. The invitation
-to those calls is shared via the aforementioned forum. We are also sharing feedback surveys and other language design relevant content in this forum.
+The Solidity forum serves as the place to propose and discuss new language features and their implementation in
+the early stages of ideation or modifications of existing features.
+
+As soon as proposals get more tangible, their
+implementation will also be discussed in the `Solidity GitHub repository <https://github.com/ethereum/solidity>`_
+in the form of issues.
+
+In addition to the forum and issue discussions, we regularly host language design discussion calls in which selected
+topics, issues or feature implementations are debated in detail. The invitation to those calls is shared via the forum.
+
+We are also sharing feedback surveys and other content that is relevant to language design in the forum.
+
+If you want to know where the team is standing in terms or implementing new features, you can follow the implementation status in the `Solidity Github project <https://github.com/ethereum/solidity/projects/43>`_.
+Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
+see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
 
 For ad-hoc cases and questions you can reach out to us via the `Solidity-dev Gitter channel <https://gitter.im/ethereum/solidity-dev>`_, a
 dedicated chatroom for conversations around the Solidity compiler and language development.
-
-You can follow the implementation status of new features in the `Solidity Github project <https://github.com/ethereum/solidity/projects/43>`_.
-Issues in the design backlog need further specification and will either be discussed in a language design call or in a regular team call. You can
-see the upcoming changes for the next breaking release by changing from the default branch (`develop`) to the `breaking branch <https://github.com/ethereum/solidity/tree/breaking>`_.
 
 We are happy to hear your thoughts on how we can improve the language design process to be even more collaborative and transparent.
