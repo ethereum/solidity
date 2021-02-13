@@ -93,7 +93,7 @@ contract DailyLimitModule is Module {
 
     /// @dev Setup function sets initial storage of contract.
     /// @param tokens List of token addresses. Ether is represented with address 0x0.
-    /// @param _dailyLimits List of daily limits in smalles units (e.g. Wei for Ether).
+    /// @param _dailyLimits List of daily limits in smallest units (e.g. Wei for Ether).
     function setup(address[] memory tokens, uint256[] memory _dailyLimits)
         public
     {
@@ -113,9 +113,9 @@ contract DailyLimitModule is Module {
     }
 
     /// @dev Returns if Safe transaction is a valid daily limit transaction.
-    /// @param token Address of the token that should be transfered (0 for Ether)
-    /// @param to Address to which the tokens should be transfered
-    /// @param amount Amount of tokens (or Ether) that should be transfered
+    /// @param token Address of the token that should be transferred (0 for Ether)
+    /// @param to Address to which the tokens should be transferred
+    /// @param amount Amount of tokens (or Ether) that should be transferred
     function executeDailyLimit(address token, address to, uint256 amount)
         public
     {
@@ -143,7 +143,7 @@ contract DailyLimitModule is Module {
             dailyLimit.lastDay = today();
             dailyLimit.spentToday = 0;
         }
-        if (dailyLimit.spentToday + amount <= dailyLimit.dailyLimit && 
+        if (dailyLimit.spentToday + amount <= dailyLimit.dailyLimit &&
             dailyLimit.spentToday + amount > dailyLimit.spentToday)
             return true;
         return false;
@@ -378,7 +378,7 @@ contract Module is MasterCopy {
     function setManager()
         internal
     {
-        // manager can only be 0 at initalization of contract.
+        // manager can only be 0 at initialization of contract.
         // Check ensures that setup function can only be called once.
         require(address(manager) == address(0), "Manager has already been set");
         manager = ModuleManager(msg.sender);
@@ -885,7 +885,7 @@ pragma solidity >=0.5.0;
 interface ERC1155TokenReceiver {
     /**
         @notice Handle the receipt of a single ERC1155 token type.
-        @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.        
+        @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.
         This function MUST return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` (i.e. 0xf23a6e61) if it accepts the transfer.
         This function MUST revert if it rejects the transfer.
         Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
@@ -900,7 +900,7 @@ interface ERC1155TokenReceiver {
 
     /**
         @notice Handle the receipt of multiple ERC1155 token types.
-        @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeBatchTransferFrom` after the balances have been updated.        
+        @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeBatchTransferFrom` after the balances have been updated.
         This function MUST return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` (i.e. 0xbc197c81) if it accepts the transfer(s).
         This function MUST revert if it rejects the transfer(s).
         Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
@@ -911,7 +911,7 @@ interface ERC1155TokenReceiver {
         @param _data      Additional data with no specified format
         @return           `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
     */
-    function onERC1155BatchReceived(address _operator, address _from, uint256[] calldata _ids, uint256[] calldata _values, bytes calldata _data) external returns(bytes4);       
+    function onERC1155BatchReceived(address _operator, address _from, uint256[] calldata _ids, uint256[] calldata _values, bytes calldata _data) external returns(bytes4);
 }
 ==== Source: ./contracts/interfaces/ERC721TokenReceiver.sol ====
 pragma experimental SMTChecker;
@@ -996,7 +996,7 @@ contract CreateAndAddModules {
 
     /// @dev Allows to create and add multiple module in one transaction.
     /// @param proxyFactory Module proxy factory contract.
-    /// @param data Modules constructor payload. This is the data for each proxy factory call concatinated. (e.g. <byte_array_len_1><byte_array_data_1><byte_array_len_2><byte_array_data_2>)
+    /// @param data Modules constructor payload. This is the data for each proxy factory call concatenated. (e.g. <byte_array_len_1><byte_array_data_1><byte_array_len_2><byte_array_data_2>)
     function createAndAddModules(address proxyFactory, bytes memory data)
         public
     {
@@ -1184,7 +1184,7 @@ pragma solidity >=0.5.0;
 /// @author Ricardo Guilherme Schmidt (Status Research & Development GmbH)
 /// @author Richard Meissner - <richard@gnosis.pm>
 contract SignatureDecoder {
-    
+
     /// @dev Recovers address who signed the message
     /// @param messageHash operation ethereum signed message hash
     /// @param messageSignature message `txHash` signature
@@ -1206,7 +1206,7 @@ contract SignatureDecoder {
     }
 
     /// @dev divides bytes signature into `uint8 v, bytes32 r, bytes32 s`.
-    /// @notice Make sure to peform a bounds check for @param pos, to avoid out of bounds access on @param signatures
+    /// @notice Make sure to perform a bounds check for @param pos, to avoid out of bounds access on @param signatures
     /// @param pos which signature to read. A prior bounds check of this parameter should be performed, to avoid out of bounds access
     /// @param signatures concatenated rsv signatures
     function signatureSplit(bytes memory signatures, uint256 pos)
@@ -1726,7 +1726,7 @@ contract GnosisSafe
     /// @param fallbackHandler Handler for fallback calls to this contract
     /// @param paymentToken Token that should be used for the payment (0 is ETH)
     /// @param payment Value that should be paid
-    /// @param paymentReceiver Adddress that should receive the payment (or 0 if tx.origin)
+    /// @param paymentReceiver Address that should receive the payment (or 0 if tx.origin)
     function setup(
         address[] calldata _owners,
         uint256 _threshold,
@@ -1754,13 +1754,13 @@ contract GnosisSafe
     }
 
     /// @dev Allows to execute a Safe transaction confirmed by required number of owners and then pays the account that submitted the transaction.
-    ///      Note: The fees are always transfered, even if the user transaction fails.
+    ///      Note: The fees are always transferred, even if the user transaction fails.
     /// @param to Destination address of Safe transaction.
     /// @param value Ether value of Safe transaction.
     /// @param data Data payload of Safe transaction.
     /// @param operation Operation type of Safe transaction.
     /// @param safeTxGas Gas that should be used for the Safe transaction.
-    /// @param baseGas Gas costs for that are indipendent of the transaction execution(e.g. base transaction fee, signature check, payment of the refund)
+    /// @param baseGas Gas costs for that are independent of the transaction execution(e.g. base transaction fee, signature check, payment of the refund)
     /// @param gasPrice Gas price that should be used for the payment calculation.
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
@@ -1801,7 +1801,7 @@ contract GnosisSafe
         {
             uint256 gasUsed = gasleft();
             // If the gasPrice is 0 we assume that nearly all available gas can be used (it is always more than safeTxGas)
-            // We only substract 2500 (compared to the 3000 before) to ensure that the amount passed is still higher than safeTxGas
+            // We only subtract 2500 (compared to the 3000 before) to ensure that the amount passed is still higher than safeTxGas
             success = execute(to, value, data, operation, gasPrice == 0 ? (gasleft() - 2500) : safeTxGas);
             gasUsed = gasUsed.sub(gasleft());
             // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
@@ -2198,7 +2198,7 @@ interface MockInterface {
  */
 contract MockContract is MockInterface {
 	enum MockType { Return, Revert, OutOfGas }
-	
+
 	bytes32 public constant MOCKS_LIST_START = hex"01";
 	bytes public constant MOCKS_LIST_END = "0xff";
 	bytes32 public constant MOCKS_LIST_END_HASH = keccak256(MOCKS_LIST_END);
@@ -2259,7 +2259,7 @@ contract MockContract is MockInterface {
 	}
 
 	function givenAnyReturnUint(uint response) override external {
-		_givenAnyReturn(uintToBytes(response));	
+		_givenAnyReturn(uintToBytes(response));
 	}
 
 	function givenAnyReturnAddress(address response) override external {
@@ -2307,7 +2307,7 @@ contract MockContract is MockInterface {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.Return;
 		methodIdExpectations[method] = response;
-		trackMethodIdMock(method);		
+		trackMethodIdMock(method);
 	}
 
 	function givenMethodReturn(bytes calldata call, bytes calldata response) override external {
@@ -2336,7 +2336,7 @@ contract MockContract is MockInterface {
 	function givenMethodRevert(bytes calldata call) override external {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.Revert;
-		trackMethodIdMock(method);		
+		trackMethodIdMock(method);
 	}
 
 	function givenCalldataRevertWithMessage(bytes calldata call, string calldata message) override external {
@@ -2349,7 +2349,7 @@ contract MockContract is MockInterface {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.Revert;
 		methodIdRevertMessages[method] = message;
-		trackMethodIdMock(method);		
+		trackMethodIdMock(method);
 	}
 
 	function givenCalldataRunOutOfGas(bytes calldata call) override external {
@@ -2360,7 +2360,7 @@ contract MockContract is MockInterface {
 	function givenMethodRunOutOfGas(bytes calldata call) override external {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.OutOfGas;
-		trackMethodIdMock(method);	
+		trackMethodIdMock(method);
 	}
 
 	function invocationCount() override external view returns (uint) {
@@ -2490,7 +2490,7 @@ contract MockContract is MockInterface {
 		// Record invocation as separate call so we don't rollback in case we are called with STATICCALL
 		(, bytes memory r) = address(this).call{gas: 100000}(abi.encodeWithSignature("updateInvocationCount(bytes4,bytes)", methodId, msg.data));
 		assert(r.length == 0);
-		
+
 		assembly {
 			return(add(0x20, result), mload(result))
 		}
@@ -2507,11 +2507,11 @@ import './ComplexInterface.sol';
 
 contract ExampleContractUnderTest {
     ComplexInterface complexInterface;
-  
+
     constructor(address _complexInterface) {
         complexInterface = ComplexInterface(_complexInterface);
     }
-   
+
     function callMockedFunction3Times() public view returns (bool) {
         complexInterface.acceptUintReturnUintView(1);
         complexInterface.acceptUintReturnUintView(1);
@@ -2634,7 +2634,7 @@ interface MockInterface {
  */
 contract MockContract is MockInterface {
 	enum MockType { Return, Revert, OutOfGas }
-	
+
 	bytes32 public constant MOCKS_LIST_START = hex"01";
 	bytes public constant MOCKS_LIST_END = "0xff";
 	bytes32 public constant MOCKS_LIST_END_HASH = keccak256(MOCKS_LIST_END);
@@ -2695,7 +2695,7 @@ contract MockContract is MockInterface {
 	}
 
 	function givenAnyReturnUint(uint response) override external {
-		_givenAnyReturn(uintToBytes(response));	
+		_givenAnyReturn(uintToBytes(response));
 	}
 
 	function givenAnyReturnAddress(address response) override external {
@@ -2743,7 +2743,7 @@ contract MockContract is MockInterface {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.Return;
 		methodIdExpectations[method] = response;
-		trackMethodIdMock(method);		
+		trackMethodIdMock(method);
 	}
 
 	function givenMethodReturn(bytes calldata call, bytes calldata response) override external {
@@ -2772,7 +2772,7 @@ contract MockContract is MockInterface {
 	function givenMethodRevert(bytes calldata call) override external {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.Revert;
-		trackMethodIdMock(method);		
+		trackMethodIdMock(method);
 	}
 
 	function givenCalldataRevertWithMessage(bytes calldata call, string calldata message) override external {
@@ -2785,7 +2785,7 @@ contract MockContract is MockInterface {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.Revert;
 		methodIdRevertMessages[method] = message;
-		trackMethodIdMock(method);		
+		trackMethodIdMock(method);
 	}
 
 	function givenCalldataRunOutOfGas(bytes calldata call) override external {
@@ -2796,7 +2796,7 @@ contract MockContract is MockInterface {
 	function givenMethodRunOutOfGas(bytes calldata call) override external {
 		bytes4 method = bytesToBytes4(call);
 		methodIdMockTypes[method] = MockType.OutOfGas;
-		trackMethodIdMock(method);	
+		trackMethodIdMock(method);
 	}
 
 	function invocationCount() override external view returns (uint) {
@@ -2926,7 +2926,7 @@ contract MockContract is MockInterface {
 		// Record invocation as separate call so we don't rollback in case we are called with STATICCALL
 		(, bytes memory r) = address(this).call{gas: 100000}(abi.encodeWithSignature("updateInvocationCount(bytes4,bytes)", methodId, msg.data));
 		assert(r.length == 0);
-		
+
 		assembly {
 			return(add(0x20, result), mload(result))
 		}
@@ -2943,11 +2943,11 @@ import './ComplexInterface.sol';
 
 contract ExampleContractUnderTest {
     ComplexInterface complexInterface;
-  
+
     constructor(address _complexInterface) {
         complexInterface = ComplexInterface(_complexInterface);
     }
-   
+
     function callMockedFunction3Times() public view returns (bool) {
         complexInterface.acceptUintReturnUintView(1);
         complexInterface.acceptUintReturnUintView(1);
