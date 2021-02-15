@@ -1,5 +1,5 @@
 ******************
-Using the compiler
+Using the Compiler
 ******************
 
 .. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
@@ -12,14 +12,14 @@ Using the Commandline Compiler
 .. note::
     This section does not apply to :ref:`solcjs <solcjs>`, not even if it is used in commandline mode.
 
-Basic usage
+Basic Usage
 -----------
 
 One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
 Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
 If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast-json --asm sourceFile.sol``.
 
-Optimizer options
+Optimizer Options
 -----------------
 
 Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
@@ -33,7 +33,7 @@ This parameter has effects on the following (this might change in the future):
  - the size of the binary search in the function dispatch routine
  - the way constants like large numbers or strings are stored
 
-Path remapping
+Path Remapping
 --------------
 
 The commandline compiler will automatically read imported files from the filesystem, but
@@ -64,7 +64,7 @@ Everything inside the path specified via ``--base-path`` is always allowed.
 
 .. _library-linking:
 
-Library linking
+Library Linking
 ---------------
 
 If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
@@ -104,7 +104,7 @@ If ``solc`` is called with the option ``--link``, all input files are interprete
 .. _evm-version:
 .. index:: ! EVM version, compile target
 
-Setting the EVM version to target
+Setting the EVM Version to Target
 *********************************
 
 When you compile your contract code you can specify the Ethereum virtual machine
@@ -135,7 +135,7 @@ key in the ``"settings"`` field:
     }
   }
 
-Target options
+Target Options
 --------------
 
 Below is a list of target EVM versions and the compiler-relevant changes introduced
@@ -540,7 +540,7 @@ Output Description
     }
 
 
-Error types
+Error Types
 ~~~~~~~~~~~
 
 1. ``JSONError``: JSON input doesn't conform to the required format, e.g. input is not a JSON object, the language is not supported, etc.
@@ -560,7 +560,7 @@ Error types
 
 .. _compiler-tools:
 
-Compiler tools
+Compiler Tools
 **************
 
 solidity-upgrade
@@ -583,7 +583,7 @@ would need plenty of repetitive manual adjustments otherwise.
     ``solidity-upgrade`` is not considered to be complete or free from bugs, so
     please use with care.
 
-How it works
+How it Works
 ~~~~~~~~~~~~
 
 You can pass (a) Solidity source file(s) to ``solidity-upgrade [files]``. If
@@ -624,7 +624,7 @@ the latest version of the compiler.
 
 .. _upgrade-modules:
 
-Available upgrade modules
+Available Upgrade Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------------------+---------+--------------------------------------------------+
@@ -686,7 +686,7 @@ Synopsis
 
 
 
-Bug Reports / Feature requests
+Bug Reports / Feature Requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you found a bug or if you have a feature request, please
@@ -731,7 +731,7 @@ Assume that you have the following contract in ``Source.sol``:
 
 
 
-Required changes
+Required Changes
 ^^^^^^^^^^^^^^^^
 
 The above contract will not compile starting from 0.7.0. To bring the contract up to date with the
@@ -740,7 +740,7 @@ current Solidity version, the following upgrade modules have to be executed:
 :ref:`available modules <upgrade-modules>` for further details.
 
 
-Running the upgrade
+Running the Upgrade
 ^^^^^^^^^^^^^^^^^^^
 
 It is recommended to explicitly specify the upgrade modules by using ``--modules`` argument.
