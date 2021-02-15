@@ -1636,20 +1636,13 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 			leftType->category() == Type::Category::RationalNumber &&
 			rightType->category() != Type::Category::RationalNumber
 		)
-			if ((
-				commonType->category() == Type::Category::Integer &&
-				dynamic_cast<IntegerType const&>(*commonType).numBits() != 256
-			) || (
-				commonType->category() == Type::Category::FixedPoint &&
-				dynamic_cast<FixedPointType const&>(*commonType).numBits() != 256
-			))
-				m_errorReporter.warning(
-					9085_error,
-					_operation.location(),
-					"Result of " + operation + " has type " + commonType->toString() + " and thus "
-					"might overflow. Silence this warning by converting the literal to the "
-					"expected type."
-				);
+		{
+			// These rules are enforced by the binary operator, but assert them here too.
+			if (auto type = dynamic_cast<IntegerType const*>(commonType))
+				solAssert(type->numBits() == 256, "");
+			if (auto type = dynamic_cast<FixedPointType const*>(commonType))
+				solAssert(type->numBits() == 256, "");
+		}
 		if (
 			commonType->category() == Type::Category::Integer &&
 			rightType->category() == Type::Category::Integer &&
