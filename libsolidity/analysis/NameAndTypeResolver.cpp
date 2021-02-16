@@ -76,16 +76,8 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 		if (auto imp = dynamic_cast<ImportDirective const*>(node.get()))
 		{
 			string const& path = *imp->annotation().absolutePath;
-			if (!_sourceUnits.count(path))
-			{
-				m_errorReporter.declarationError(
-					5073_error,
-					imp->location(),
-					"Import \"" + path + "\" (referenced as \"" + imp->path() + "\") not found."
-				);
-				error = true;
-				continue;
-			}
+			// The import resolution in CompilerStack enforces this.
+			solAssert(_sourceUnits.count(path), "");
 			auto scope = m_scopes.find(_sourceUnits.at(path));
 			solAssert(scope != end(m_scopes), "");
 			if (!imp->symbolAliases().empty())
