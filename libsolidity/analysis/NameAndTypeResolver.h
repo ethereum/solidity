@@ -92,9 +92,6 @@ public:
 	/// @note Returns a null pointer if any component in the path was not unique or not found.
 	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
 
-	/// Generate and store warnings about variables that are named like instructions.
-	void warnVariablesNamedLikeInstructions() const;
-
 	/// Generate and store warnings about declarations with the same name.
 	void warnHomonymDeclarations() const;
 

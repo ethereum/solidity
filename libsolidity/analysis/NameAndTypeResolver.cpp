@@ -195,27 +195,6 @@ Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> c
 		return nullptr;
 }
 
-void NameAndTypeResolver::warnVariablesNamedLikeInstructions() const
-{
-	for (auto const& instruction: evmasm::c_instructions)
-	{
-		string const instructionName{boost::algorithm::to_lower_copy(instruction.first)};
-		auto declarations = nameFromCurrentScope(instructionName, true);
-		for (Declaration const* const declaration: declarations)
-		{
-			solAssert(!!declaration, "");
-			if (dynamic_cast<MagicVariableDeclaration const* const>(declaration))
-				// Don't warn the user for what the user did not.
-				continue;
-			m_errorReporter.warning(
-				8261_error,
-				declaration->location(),
-				"Variable is shadowed in inline assembly by an instruction of the same name"
-			);
-		}
-	}
-}
-
 void NameAndTypeResolver::warnHomonymDeclarations() const
 {
 	DeclarationContainer::Homonyms homonyms;
