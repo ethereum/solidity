@@ -2082,7 +2082,10 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				".";
 
 			if (isStructConstructorCall)
-				return { isVariadic ? 1123_error : 9755_error, msg };
+			{
+				solAssert(!isVariadic, "");
+				return { 9755_error, msg };
+			}
 			else if (
 				_functionType->kind() == FunctionType::Kind::BareCall ||
 				_functionType->kind() == FunctionType::Kind::BareCallCode ||
@@ -2090,16 +2093,17 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				_functionType->kind() == FunctionType::Kind::BareStaticCall
 			)
 			{
+				solAssert(!isVariadic, "");
 				if (arguments.empty())
 					return {
-						isVariadic ? 7653_error : 6138_error,
+						6138_error,
 						msg +
 						" This function requires a single bytes argument."
 						" Use \"\" as argument to provide empty calldata."
 					};
 				else
 					return {
-						isVariadic ? 9390_error : 8922_error,
+						8922_error,
 						msg +
 						" This function requires a single bytes argument."
 						" If all your arguments are value types, you can use"
@@ -2111,13 +2115,16 @@ void TypeChecker::typeCheckFunctionGeneralChecks(
 				_functionType->kind() == FunctionType::Kind::SHA256 ||
 				_functionType->kind() == FunctionType::Kind::RIPEMD160
 			)
+			{
+				solAssert(!isVariadic, "");
 				return {
-					isVariadic ? 1220_error : 4323_error,
+					4323_error,
 					msg +
 					" This function requires a single bytes argument."
 					" Use abi.encodePacked(...) to obtain the pre-0.5.0"
 					" behaviour or abi.encode(...) to use ABI encoding."
 				};
+			}
 			else
 				return { isVariadic ? 9308_error : 6160_error, msg };
 		}();
