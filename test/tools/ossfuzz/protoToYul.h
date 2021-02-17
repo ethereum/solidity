@@ -102,7 +102,15 @@ private:
 	void visit(RetRevStmt const&);
 	void visit(SelfDestructStmt const&);
 	void visit(TerminatingStmt const&);
-	void visit(FunctionCall const&, std::string const&, bool _expression = false);
+	/// @param _f is the function call to be visited.
+	/// @param _name is the name of the function called.
+	/// @param _expression is a flag that is true if the function is called
+	/// as a single-value expression, false otherwise.
+	void visit(
+		FunctionCall const& _f,
+		std::string const& _name,
+		bool _expression = false
+	);
 	void visit(FunctionDef const&);
 	void visit(PopStmt const&);
 	void visit(LeaveStmt const&);
