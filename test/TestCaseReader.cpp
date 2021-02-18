@@ -95,10 +95,10 @@ string TestCaseReader::stringSetting(string const& _name, string const& _default
 void TestCaseReader::ensureAllSettingsRead() const
 {
 	if (!m_unreadSettings.empty())
-		throw runtime_error(
+		BOOST_THROW_EXCEPTION(runtime_error(
 			"Unknown setting(s): " +
 			util::joinHumanReadable(m_unreadSettings | boost::adaptors::map_keys)
-		);
+		));
 }
 
 pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(istream& _stream)
@@ -134,7 +134,7 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 					line.size() - sourceDelimiterEnd.size() - sourceDelimiterStart.size()
 				));
 				if (sources.count(currentSourceName))
-					throw runtime_error("Multiple definitions of test source \"" + currentSourceName + "\".");
+					BOOST_THROW_EXCEPTION(runtime_error("Multiple definitions of test source \"" + currentSourceName + "\"."));
 			}
 			else
 				currentSource += line + "\n";
@@ -143,7 +143,7 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 		{
 			size_t colon = line.find(':');
 			if (colon == string::npos)
-				throw runtime_error(string("Expected \":\" inside setting."));
+				BOOST_THROW_EXCEPTION(runtime_error(string("Expected \":\" inside setting.")));
 			string key = line.substr(comment.size(), colon - comment.size());
 			string value = line.substr(colon + 1);
 			boost::algorithm::trim(key);
@@ -151,7 +151,7 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 			m_settings[key] = value;
 		}
 		else
-			throw runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source."));
+			BOOST_THROW_EXCEPTION(runtime_error(string("Expected \"//\" or \"// ---\" to terminate settings and source.")));
 	}
 	// Register the last source as the main one
 	sources[currentSourceName] = currentSource;

@@ -80,14 +80,14 @@ bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
 		{
 			if (evmVmFound)
-				throw runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm.");
+				BOOST_THROW_EXCEPTION(runtime_error("Multiple evm1 evmc vms defined. Please only define one evm1 evmc vm."));
 			evmVmFound = true;
 		}
 
 		if (vm.has_capability(EVMC_CAPABILITY_EWASM))
 		{
 			if (ewasmVmFound)
-				throw runtime_error("Multiple ewasm evmc vms where defined. Please only define one ewasm evmc vm.");
+				BOOST_THROW_EXCEPTION(runtime_error("Multiple ewasm evmc vms where defined. Please only define one ewasm evmc vm."));
 			ewasmVmFound = true;
 		}
 	}

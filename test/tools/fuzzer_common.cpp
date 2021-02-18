@@ -139,7 +139,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 	{
 		string msg{"Compiler produced invalid JSON output."};
 		cout << msg << endl;
-		throw std::runtime_error(std::move(msg));
+		BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 	}
 	if (output.isMember("errors"))
 		for (auto const& error: output["errors"])
@@ -152,7 +152,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 			{
 				string msg = "Invalid error: \"" + error["type"].asString() + "\"";
 				cout << msg << endl;
-				throw std::runtime_error(std::move(msg));
+				BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 			}
 		}
 }

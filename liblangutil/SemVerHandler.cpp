@@ -43,7 +43,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		if (level < 2)
 		{
 			if (i == end || *i != '.')
-				throw SemVerError();
+				BOOST_THROW_EXCEPTION(SemVerError());
 			else
 				++i;
 		}
@@ -61,7 +61,7 @@ SemVerVersion::SemVerVersion(string const& _versionString)
 		build = string(buildStart, i);
 	}
 	if (i != end)
-		throw SemVerError();
+		BOOST_THROW_EXCEPTION(SemVerError());
 }
 
 bool SemVerMatchExpression::MatchComponent::matches(SemVerVersion const& _version) const
@@ -162,7 +162,7 @@ optional<SemVerMatchExpression> SemVerMatchExpressionParser::parse()
 			if (m_pos >= m_tokens.size())
 				break;
 			if (currentToken() != Token::Or)
-				throw SemVerError();
+				BOOST_THROW_EXCEPTION(SemVerError());
 			nextToken();
 		}
 	}
@@ -256,14 +256,14 @@ unsigned SemVerMatchExpressionParser::parseVersionPart()
 		{
 			c = currentChar();
 			if (v * 10 < v || v * 10 + static_cast<unsigned>(c - '0') < v * 10)
-				throw SemVerError();
+				BOOST_THROW_EXCEPTION(SemVerError());
 			v = v * 10 + static_cast<unsigned>(c - '0');
 			nextChar();
 		}
 		return v;
 	}
 	else
-		throw SemVerError();
+		BOOST_THROW_EXCEPTION(SemVerError());
 }
 
 char SemVerMatchExpressionParser::currentChar() const

@@ -178,7 +178,7 @@ u256 EwasmBuiltinInterpreter::evalBuiltin(
 	else if (fun == "unreachable")
 	{
 		logTrace(evmasm::Instruction::INVALID, {});
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (fun == "i64.store")
 	{
@@ -258,14 +258,14 @@ u256 EwasmBuiltinInterpreter::evalWasmBuiltin(string const& _fun, vector<Word> c
 	else if (_fun == "div_u")
 	{
 		if (arg[1] == 0)
-			throw ExplicitlyTerminated();
+			BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 		else
 			return arg[0] / arg[1];
 	}
 	else if (_fun == "rem_u")
 	{
 		if (arg[1] == 0)
-			throw ExplicitlyTerminated();
+			BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 		else
 			return arg[0] % arg[1];
 	}
@@ -337,7 +337,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	else if (_fun == "callDataCopy")
 	{
 		if (arg[1] + arg[2] < arg[1] || arg[1] + arg[2] > m_state.calldata.size())
-			throw ExplicitlyTerminated();
+			BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 		accessMemory(arg[0], arg[2]);
 		copyZeroExtended(
 			m_state.memory, m_state.calldata,
@@ -446,7 +446,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		accessMemory(arg[0], arg[1]);
 		uint64_t numberOfTopics = arg[2];
 		if (numberOfTopics > 4)
-			throw ExplicitlyTerminated();
+			BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 		if (numberOfTopics > 0)
 			readBytes32(arg[3]);
 		if (numberOfTopics > 1)
@@ -471,7 +471,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		accessMemory(arg[0], arg[1]);
 		data = readMemory(arg[0], arg[1]);
 		logTrace(evmasm::Instruction::RETURN, {}, data);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (_fun == "revert")
 	{
@@ -479,14 +479,14 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 		accessMemory(arg[0], arg[1]);
 		data = readMemory(arg[0], arg[1]);
 		logTrace(evmasm::Instruction::REVERT, {}, data);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (_fun == "getReturnDataSize")
 		return m_state.returndata.size();
 	else if (_fun == "returnDataCopy")
 	{
 		if (arg[1] + arg[2] < arg[1] || arg[1] + arg[2] > m_state.returndata.size())
-			throw ExplicitlyTerminated();
+			BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 		accessMemory(arg[0], arg[2]);
 		copyZeroExtended(
 			m_state.memory, m_state.calldata,
@@ -498,7 +498,7 @@ u256 EwasmBuiltinInterpreter::evalEthBuiltin(string const& _fun, vector<uint64_t
 	{
 		readAddress(arg[0]);
 		logTrace(evmasm::Instruction::SELFDESTRUCT, {});
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	else if (_fun == "getBlockTimestamp")
 		return m_state.timestamp;
@@ -516,7 +516,7 @@ void EwasmBuiltinInterpreter::accessMemory(u256 const& _offset, u256 const& _siz
 
 	if (((_offset + _size) < _offset) || ((_offset + _size) > m_state.msize))
 		// Ewasm throws out of bounds exception as opposed to the EVM.
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 }
 
 bytes EwasmBuiltinInterpreter::readMemory(uint64_t _offset, uint64_t _size)
@@ -604,6 +604,6 @@ void EwasmBuiltinInterpreter::logTrace(std::string const& _pseudoInstruction, st
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{
 		m_state.trace.emplace_back("Trace size limit reached.");
-		throw TraceLimitReached();
+		BOOST_THROW_EXCEPTION(TraceLimitReached());
 	}
 }

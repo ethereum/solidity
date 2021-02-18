@@ -241,7 +241,7 @@ void Interpreter::incrementStep()
 	if (m_state.maxSteps > 0 && m_state.numSteps >= m_state.maxSteps)
 	{
 		m_state.trace.emplace_back("Interpreter execution step limit reached.");
-		throw StepLimitReached();
+		BOOST_THROW_EXCEPTION(StepLimitReached());
 	}
 }
 
@@ -351,6 +351,6 @@ void ExpressionEvaluator::incrementStep()
 	if (m_state.maxExprNesting > 0 && m_nestingLevel > m_state.maxExprNesting)
 	{
 		m_state.trace.emplace_back("Maximum expression nesting level reached.");
-		throw ExpressionNestingLimitReached();
+		BOOST_THROW_EXCEPTION(ExpressionNestingLimitReached());
 	}
 }
