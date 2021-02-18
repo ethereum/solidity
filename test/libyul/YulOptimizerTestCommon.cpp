@@ -390,10 +390,16 @@ string YulOptimizerTestCommon::randomOptimiserStep(unsigned _seed)
 		if (count == idx)
 		{
 			string optimiserStep = step.first;
-			// Do not fuzz mainFunction or wordSizeTransform
+			// Do not fuzz mainFunction and wordSizeTransform
 			// because they do not preserve yul code semantics.
-			if (optimiserStep == "mainFunction" || optimiserStep == "wordSizeTransform")
-				// "Fullsuite" is fuzzed roughly three times more frequently than
+			// Do not fuzz reasoning based simplifier because
+			// it can sometimes drain memory.
+			if (
+				optimiserStep == "mainFunction"	||
+				optimiserStep == "wordSizeTransform" ||
+				optimiserStep == "reasoningBasedSimplifier"
+			)
+				// "Fullsuite" is fuzzed roughly four times more frequently than
 				// other steps because of the filtering in place above.
 				return "fullSuite";
 			else
