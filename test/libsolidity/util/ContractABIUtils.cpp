@@ -27,7 +27,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
 #include <boost/range/algorithm_ext/for_each.hpp>
 
 #include <fstream>
@@ -262,10 +261,11 @@ void ContractABIUtils::overwriteParameters(
 	solidity::frontend::test::ParameterList const& _sourceParameters
 )
 {
+	using namespace placeholders;
 	boost::for_each(
 		_sourceParameters,
 		_targetParameters,
-		boost::bind<void>(
+		std::bind<void>(
 			[&](Parameter _a, Parameter& _b) -> void
 			{
 				if (
