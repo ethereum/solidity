@@ -132,22 +132,11 @@ int solidity::util::readStandardInputChar()
 
 string solidity::util::absolutePath(string const& _path, string const& _reference)
 {
-	boost::filesystem::path p(_path);
-	// Anything that does not start with `.` is an absolute path.
-	if (p.begin() == p.end() || (*p.begin() != "." && *p.begin() != ".."))
-		return _path;
-	boost::filesystem::path result(_reference);
-
-	// If filename is "/", then remove_filename() throws.
-	// See: https://github.com/boostorg/filesystem/issues/176
-	if (result.filename() != boost::filesystem::path("/"))
-		result.remove_filename();
-	for (boost::filesystem::path::iterator it = p.begin(); it != p.end(); ++it)
-		if (*it == "..")
-			result = result.parent_path();
-		else if (*it != ".")
-			result /= *it;
-	return result.generic_string();
+	// TODO: Handle throw of boost::filesystem::filesystem_error
+	return boost::filesystem::canonical(
+		boost::filesystem::path(_path),
+		boost::filesystem::path(_reference).remove_filename();
+	).generic_string();
 }
 
 string solidity::util::sanitizePath(string const& _path) {
