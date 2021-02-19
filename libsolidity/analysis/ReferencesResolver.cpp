@@ -185,8 +185,6 @@ void ReferencesResolver::endVisit(IdentifierPath const& _path)
 
 bool ReferencesResolver::visit(InlineAssembly const& _inlineAssembly)
 {
-	m_resolver.warnVariablesNamedLikeInstructions();
-
 	m_yulAnnotation = &_inlineAssembly.annotation();
 	(*this)(_inlineAssembly.operations());
 	m_yulAnnotation = nullptr;

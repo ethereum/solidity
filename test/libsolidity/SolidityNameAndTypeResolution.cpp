@@ -379,58 +379,6 @@ BOOST_AUTO_TEST_CASE(warn_nonpresent_pragma)
 	BOOST_CHECK(searchErrorMessage(*sourceAndError.second.front(), "Source file does not specify required compiler version!"));
 }
 
-BOOST_AUTO_TEST_CASE(returndatasize_as_variable)
-{
-	char const* text = R"(
-		contract C { function f() public pure { uint returndatasize; returndatasize; assembly { pop(returndatasize()) }}}
-	)";
-	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
-	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata())
-	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"returndatasize\" instruction is only available for Byzantium-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
-	}
-	CHECK_ALLOW_MULTI(text, expectations);
-}
-
-BOOST_AUTO_TEST_CASE(create2_as_variable)
-{
-	char const* text = R"(
-		contract c { function f() public { uint create2; create2; assembly { pop(create2(0, 0, 0, 0)) } }}
-	)";
-	// This needs special treatment, because the message mentions the EVM version,
-	// so cannot be run via isoltest.
-	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
-	if (!solidity::test::CommonOptions::get().evmVersion().hasCreate2())
-	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"create2\" instruction is only available for Constantinople-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
-	}
-	CHECK_ALLOW_MULTI(text, expectations);
-}
-
-BOOST_AUTO_TEST_CASE(extcodehash_as_variable)
-{
-	char const* text = R"(
-		contract c { function f() public view { uint extcodehash; extcodehash; assembly { pop(extcodehash(0)) } }}
-	)";
-	// This needs special treatment, because the message mentions the EVM version,
-	// so cannot be run via isoltest.
-	vector<pair<Error::Type, std::string>> expectations(vector<pair<Error::Type, std::string>>{
-		{Error::Type::Warning, "Variable is shadowed in inline assembly by an instruction of the same name"}
-	});
-	if (!solidity::test::CommonOptions::get().evmVersion().hasExtCodeHash())
-	{
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("\"extcodehash\" instruction is only available for Constantinople-compatible VMs")));
-		expectations.emplace_back(make_pair(Error::Type::TypeError, std::string("Expected expression to evaluate to one value, but got 0 values instead.")));
-	}
-	CHECK_ALLOW_MULTI(text, expectations);
-}
-
 BOOST_AUTO_TEST_CASE(getter_is_memory_type)
 {
 	char const* text = R"(
