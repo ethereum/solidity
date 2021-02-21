@@ -29,7 +29,7 @@
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/FunctionSelector.h>
-
+#include <libsolidity/util/SoltestTypes.h>
 #include <liblangutil/Exceptions.h>
 
 #include <boost/test/framework.hpp>
@@ -264,6 +264,23 @@ bytes ExecutionFramework::logData(size_t _logIdx) const
 	// TODO: Return a copy of log data, because this is expected from REQUIRE_LOG_DATA(),
 	//       but reference type like string_view would be preferable.
 	return {data.begin(), data.end()};
+}
+
+vector<solidity::frontend::test::LogRecord>  ExecutionFramework::recordedLogs() const {
+	vector<solidity::frontend::test::LogRecord> logs{};
+	for (size_t logIdx = 0; logIdx < numLogs(); ++logIdx)
+	{
+		solidity::frontend::test::LogRecord record;
+		const auto& data = m_evmcHost->recorded_logs.at(logIdx).data;
+		record.index = logIdx;
+		record.data = bytes{data.begin(), data.end()};
+		record.creator = EVMHost::convertFromEVMC(m_evmcHost->recorded_logs.at(logIdx).creator);
+		for (size_t topicIdx = 0; topicIdx < numLogTopics(logIdx); ++topicIdx) {
+			record.topics.emplace_back(EVMHost::convertFromEVMC(m_evmcHost->recorded_logs.at(logIdx).topics.at(topicIdx)));
+		}
+		logs.emplace_back(record);
+	}
+	return logs;
 }
 
 u256 ExecutionFramework::balanceAt(h160 const& _addr)

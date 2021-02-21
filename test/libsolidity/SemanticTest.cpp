@@ -19,6 +19,7 @@
 #include <test/Common.h>
 #include <test/libsolidity/util/BytesUtils.h>
 #include <test/libsolidity/hooks/SmokeHook.h>
+#include <test/libsolidity/hooks/LogsHook.h>
 #include <test/libsolidity/TestHook.h>
 
 #include <boost/algorithm/string.hpp>
@@ -63,6 +64,7 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	addBuiltin("smoke_test3", simpleSmokeBuiltin);
 
 	addTestHook(make_unique<SmokeHook>());
+	addTestHook(make_unique<LogsHook>(this));
 
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
