@@ -44,7 +44,7 @@ namespace
 int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 {
 	if (_it == _end || !isdigit(*_it))
-		throw runtime_error("Invalid test expectation. Source location expected.");
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid test expectation. Source location expected."));
 	int result = 0;
 	while (_it != _end && isdigit(*_it))
 	{

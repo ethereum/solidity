@@ -221,7 +221,7 @@ void IRGeneratorForStatements::generate(Block const& _block)
 	{
 		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
 			_error << langutil::errinfo_sourceLocation(m_currentLocation);
-		throw _error;
+		BOOST_THROW_EXCEPTION(_error);
 	}
 }
 
@@ -255,7 +255,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 	{
 		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
 			_error << langutil::errinfo_sourceLocation(m_currentLocation);
-		throw _error;
+		BOOST_THROW_EXCEPTION(_error);
 	}
 }
 
@@ -281,7 +281,7 @@ void IRGeneratorForStatements::initializeLocalVar(VariableDeclaration const& _va
 	{
 		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
 			_error << langutil::errinfo_sourceLocation(m_currentLocation);
-		throw _error;
+		BOOST_THROW_EXCEPTION(_error);
 	}
 }
 
@@ -300,7 +300,7 @@ IRVariable IRGeneratorForStatements::evaluateExpression(Expression const& _expre
 	{
 		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
 			_error << langutil::errinfo_sourceLocation(m_currentLocation);
-		throw _error;
+		BOOST_THROW_EXCEPTION(_error);
 	}
 }
 
@@ -333,7 +333,7 @@ string IRGeneratorForStatements::constantValueFunction(VariableDeclaration const
 	{
 		if (!boost::get_error_info<langutil::errinfo_sourceLocation>(_error))
 			_error << langutil::errinfo_sourceLocation(m_currentLocation);
-		throw _error;
+		BOOST_THROW_EXCEPTION(_error);
 	}
 }
 

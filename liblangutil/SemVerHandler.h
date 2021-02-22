@@ -34,7 +34,7 @@
 namespace solidity::langutil
 {
 
-class SemVerError: util::Exception
+class SemVerError: public util::Exception
 {
 };
 

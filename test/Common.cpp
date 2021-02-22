@@ -145,7 +145,7 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 			errorMessage << "Unrecognized option: ";
 			for (auto const& token: parsedOption.original_tokens)
 				errorMessage << token;
-			throw std::runtime_error(errorMessage.str());
+			BOOST_THROW_EXCEPTION(std::runtime_error(errorMessage.str()));
 		}
 
 	if (vmPaths.empty())
@@ -185,7 +185,7 @@ langutil::EVMVersion CommonOptions::evmVersion() const
 	{
 		auto version = langutil::EVMVersion::fromString(evmVersionString);
 		if (!version)
-			throw std::runtime_error("Invalid EVM version: " + evmVersionString);
+			BOOST_THROW_EXCEPTION(std::runtime_error("Invalid EVM version: " + evmVersionString));
 		return *version;
 	}
 	else
@@ -196,7 +196,7 @@ langutil::EVMVersion CommonOptions::evmVersion() const
 CommonOptions const& CommonOptions::get()
 {
 	if (!m_singleton)
-		throw std::runtime_error("Options not yet constructed!");
+		BOOST_THROW_EXCEPTION(std::runtime_error("Options not yet constructed!"));
 
 	return *m_singleton;
 }
