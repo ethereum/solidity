@@ -78,8 +78,16 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 				doc["methods"][it.second->externalSignature()]["notice"] = value;
 		}
 
-	for (auto const& event: _contractDef.definedInterfaceEvents())
+	for (auto const& event: uniqueInterfaceEvents(_contractDef))
 	{
+		ContractDefinition const* eventOrigin = event->annotation().contract;
+		solAssert(eventOrigin);
+		solAssert(
+			*eventOrigin == _contractDef ||
+			(!eventOrigin->isLibrary() && _contractDef.derivesFrom(*eventOrigin)) ||
+			(eventOrigin->isLibrary() && !_contractDef.derivesFrom(*eventOrigin))
+		);
+
 		string value = extractDoc(event->annotation().docTags, "notice");
 		if (!value.empty())
 			doc["events"][event->functionType(true)->externalSignature()]["notice"] = value;
@@ -168,10 +176,18 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 			));
 	}
 
-	for (auto const& event: _contractDef.definedInterfaceEvents())
+	for (auto const& event: uniqueInterfaceEvents(_contractDef))
 		if (auto devDoc = devDocumentation(event->annotation().docTags); !devDoc.empty())
+		{
+			ContractDefinition const* eventOrigin = event->annotation().contract;
+			solAssert(eventOrigin);
+			solAssert(
+				*eventOrigin == _contractDef ||
+				(!eventOrigin->isLibrary() && _contractDef.derivesFrom(*eventOrigin)) ||
+				(eventOrigin->isLibrary() && !_contractDef.derivesFrom(*eventOrigin))
+			);
 			doc["events"][event->functionType(true)->externalSignature()] = devDoc;
-
+		}
 	for (auto const& error: _contractDef.interfaceErrors())
 		if (auto devDoc = devDocumentation(error->annotation().docTags); !devDoc.empty())
 			doc["errors"][error->functionType(true)->externalSignature()].append(devDoc);
@@ -254,4 +270,35 @@ Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& 
 		json["params"] = params;
 
 	return json;
+}
+
+vector<EventDefinition const*>  Natspec::uniqueInterfaceEvents(ContractDefinition const& _contract)
+{
+	auto eventSignature = [](EventDefinition const* _event) -> string {
+		FunctionType const* functionType = _event->functionType(true);
+		solAssert(functionType, "");
+		return functionType->externalSignature();
+	};
+	auto compareBySignature =
+		[&](EventDefinition const* _lhs, EventDefinition const* _rhs) -> bool {
+			return eventSignature(_lhs) < eventSignature(_rhs);
+		};
+
+	set<EventDefinition const*, decltype(compareBySignature)> uniqueEvents{compareBySignature};
+	// Insert events defined in the contract first so that in case of a conflict
+	// they're the ones that get selected.
+	uniqueEvents += _contract.definedInterfaceEvents();
+
+	set<EventDefinition const*, decltype(compareBySignature)> filteredUsedEvents{compareBySignature};
+	set<string> usedSignatures;
+	for (EventDefinition const* event: _contract.usedInterfaceEvents())
+	{
+		auto&& [eventIt, eventInserted] = filteredUsedEvents.insert(event);
+		auto&& [signatureIt, signatureInserted] = usedSignatures.insert(eventSignature(event));
+		if (!signatureInserted)
+			filteredUsedEvents.erase(eventIt);
+	}
+
+	uniqueEvents += filteredUsedEvents;
+	return util::convertContainer<vector<EventDefinition const*>>(std::move(uniqueEvents));
 }

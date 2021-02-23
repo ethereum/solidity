@@ -47,7 +47,8 @@
         }
       ],
       "src": "0:32:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:33:1"

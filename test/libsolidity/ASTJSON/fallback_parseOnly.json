@@ -51,7 +51,8 @@
         }
       ],
       "src": "0:50:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:51:1"

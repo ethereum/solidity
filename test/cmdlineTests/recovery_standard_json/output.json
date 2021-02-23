@@ -90,7 +90,8 @@
                         "nodes": [],
                         "scope": 4,
                         "src": "59:35:0",
-                        "usedErrors": []
+                        "usedErrors": [],
+                        "usedEvents": []
                     }
                 ],
                 "src": "36:84:0"

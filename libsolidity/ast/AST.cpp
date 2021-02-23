@@ -220,9 +220,9 @@ vector<EventDefinition const*> const& ContractDefinition::definedInterfaceEvents
 				/// NOTE: this requires the "internal" version of an Event,
 				///       though here internal strictly refers to visibility,
 				///       and not to function encoding (jump vs. call)
-				auto const& function = e->functionType(true);
-				solAssert(function, "");
-				string eventSignature = function->externalSignature();
+				FunctionType const* functionType = e->functionType(true);
+				solAssert(functionType, "");
+				string eventSignature = functionType->externalSignature();
 				if (eventsSeen.count(eventSignature) == 0)
 				{
 					eventsSeen.insert(eventSignature);
@@ -241,6 +241,21 @@ vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() c
 		(*annotation().creationCallGraph)->emittedEvents +
 		(*annotation().deployedCallGraph)->emittedEvents
 	);
+}
+
+vector<EventDefinition const*> ContractDefinition::interfaceEvents(bool _requireCallGraph) const
+{
+	set<EventDefinition const*, CompareByID> result;
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		result += contract->events();
+	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set());
+	if (_requireCallGraph)
+		solAssert(annotation().creationCallGraph.set());
+	if (annotation().creationCallGraph.set())
+		result += usedInterfaceEvents();
+	// We could filter out all events that do not have an external interface
+	// if _requireCallGraph is false.
+	return util::convertContainer<vector<EventDefinition const*>>(std::move(result));
 }
 
 vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const

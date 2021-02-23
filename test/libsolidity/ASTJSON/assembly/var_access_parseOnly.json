@@ -121,7 +121,8 @@
         }
       ],
       "src": "0:95:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:96:1"

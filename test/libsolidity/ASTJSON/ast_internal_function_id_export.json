@@ -568,7 +568,8 @@
       ],
       "scope": 142,
       "src": "60:299:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -1374,7 +1375,8 @@
       ],
       "scope": 142,
       "src": "360:462:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -1533,7 +1535,8 @@
       ],
       "scope": 142,
       "src": "823:85:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:909:1"

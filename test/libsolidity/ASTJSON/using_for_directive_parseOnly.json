@@ -45,7 +45,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "src": "20:12:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "body":
@@ -134,7 +135,8 @@
         }
       ],
       "src": "53:29:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:83:1"

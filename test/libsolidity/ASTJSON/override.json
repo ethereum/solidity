@@ -75,7 +75,8 @@
       ],
       "scope": 30,
       "src": "0:48:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": true,
@@ -193,7 +194,8 @@
       ],
       "scope": 30,
       "src": "49:103:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     },
     {
       "abstract": false,
@@ -330,7 +332,8 @@
       ],
       "scope": 30,
       "src": "153:91:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:245:1"

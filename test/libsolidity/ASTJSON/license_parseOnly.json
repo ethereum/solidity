@@ -16,7 +16,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "src": "36:13:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "36:14:1"

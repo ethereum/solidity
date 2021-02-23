@@ -29,7 +29,8 @@
       "nodes": [],
       "scope": 2,
       "src": "0:13:1",
-      "usedErrors": []
+      "usedErrors": [],
+      "usedEvents": []
     }
   ],
   "src": "0:14:1"
