@@ -262,13 +262,14 @@ ostream& solidity::frontend::operator<<(ostream& _out, CallGraph::Node const& _n
 	if (holds_alternative<CallGraph::SpecialNode>(_node))
 		switch (get<CallGraph::SpecialNode>(_node))
 		{
-			case CallGraph::SpecialNode::InternalDispatch:
-				_out << "InternalDispatch";
-				break;
-			case CallGraph::SpecialNode::Entry:
-				_out << "Entry";
-				break;
-			default: solAssert(false, "Invalid SpecialNode type");
+		case CallGraph::SpecialNode::InternalDispatch:
+			_out << "InternalDispatch";
+			break;
+		case CallGraph::SpecialNode::Entry:
+			_out << "Entry";
+			break;
+		default:
+			solAssert(false, "Invalid SpecialNode type");
 		}
 	else
 	{
