@@ -426,7 +426,7 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 	{
 		util::FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
-			m_errorReporter.typeError(
+			m_errorReporter.fatalTypeError(
 				1860_error,
 				_contract.location(),
 				string("Function signature hash collision for ") + it.second->externalSignature()
