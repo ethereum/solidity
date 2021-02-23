@@ -49,6 +49,8 @@ class Type;
 using TypePointer = Type const*;
 using namespace util;
 
+struct CallGraph;
+
 struct ASTAnnotation
 {
 	ASTAnnotation() = default;
@@ -162,6 +164,10 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocu
 	/// Mapping containing the nodes that define the arguments for base constructors.
 	/// These can either be inheritance specifiers or modifier invocations.
 	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
+	/// A graph with edges representing calls between functions that may happen during contract construction.
+	SetOnce<std::shared_ptr<CallGraph const>> creationCallGraph;
+	/// A graph with edges representing calls between functions that may happen in a deployed contract.
+	SetOnce<std::shared_ptr<CallGraph const>> deployedCallGraph;
 };
 
 struct CallableDeclarationAnnotation: DeclarationAnnotation

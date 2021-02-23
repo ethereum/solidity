@@ -407,8 +407,18 @@ bool CompilerStack::analyze()
 						if (auto const* contractDefinition = dynamic_cast<ContractDefinition*>(node.get()))
 						{
 							Contract& contractState = m_contracts.at(contractDefinition->fullyQualifiedName());
-							contractState.creationCallGraph.emplace(FunctionCallGraphBuilder::buildCreationGraph(*contractDefinition));
-							contractState.deployedCallGraph.emplace(FunctionCallGraphBuilder::buildDeployedGraph(*contractDefinition, *contractState.creationCallGraph));
+
+							contractState.contract->annotation().creationCallGraph = make_unique<CallGraph>(
+								FunctionCallGraphBuilder::buildCreationGraph(
+									*contractDefinition
+								)
+							);
+							contractState.contract->annotation().deployedCallGraph = make_unique<CallGraph>(
+								FunctionCallGraphBuilder::buildDeployedGraph(
+									*contractDefinition,
+									**contractState.contract->annotation().creationCallGraph
+								)
+							);
 						}
 		}
 
@@ -950,24 +960,6 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 	return _contract.metadata.init([&]{ return createMetadata(_contract); });
 }
 
-CallGraph const& CompilerStack::creationCallGraph(string const& _contractName) const
-{
-	if (m_stackState < AnalysisPerformed)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
-
-	solAssert(contract(_contractName).creationCallGraph.has_value(), "");
-	return contract(_contractName).creationCallGraph.value();
-}
-
-CallGraph const& CompilerStack::deployedCallGraph(string const& _contractName) const
-{
-	if (m_stackState < AnalysisPerformed)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
-
-	solAssert(contract(_contractName).deployedCallGraph.has_value(), "");
-	return contract(_contractName).deployedCallGraph.value();
-}
-
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
 {
 	if (m_stackState < SourcesSet)
@@ -1307,7 +1299,10 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
 
-	generator.verifyCallGraphs(compiledContract.creationCallGraph.value(), compiledContract.deployedCallGraph.value());
+	generator.verifyCallGraphs(
+		**compiledContract.contract->annotation().creationCallGraph,
+		**compiledContract.contract->annotation().deployedCallGraph
+	);
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)

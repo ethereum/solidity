@@ -116,8 +116,8 @@ tuple<CallGraphMap, CallGraphMap> collectGraphs(CompilerStack const& _compilerSt
 		soltestAssert(fullyQualifiedContractName.size() > 0 && fullyQualifiedContractName[0] == ':', "");
 		string contractName = fullyQualifiedContractName.substr(1);
 
-		get<0>(graphs).emplace(contractName, &_compilerStack.creationCallGraph(fullyQualifiedContractName));
-		get<1>(graphs).emplace(contractName, &_compilerStack.deployedCallGraph(fullyQualifiedContractName));
+		get<0>(graphs).emplace(contractName, _compilerStack.contractDefinition(fullyQualifiedContractName).annotation().creationCallGraph->get());
+		get<1>(graphs).emplace(contractName, _compilerStack.contractDefinition(fullyQualifiedContractName).annotation().deployedCallGraph->get());
 	}
 
 	return graphs;
