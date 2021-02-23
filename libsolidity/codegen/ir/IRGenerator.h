@@ -25,7 +25,7 @@
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
-#include <libsolidity/analysis/FunctionCallGraph.h>
+#include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <liblangutil/EVMVersion.h>
@@ -55,11 +55,6 @@ public:
 	std::pair<std::string, std::string> run(
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
-	);
-
-	void verifyCallGraphs(
-		FunctionCallGraphBuilder::ContractCallGraph const& _creationGraph,
-		FunctionCallGraphBuilder::ContractCallGraph const& _deployedGraph
 	);
 
 private:
@@ -121,9 +116,6 @@ private:
 
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;
-
-	std::set<FunctionDefinition const*> m_creationFunctionList;
-	std::set<FunctionDefinition const*> m_deployedFunctionList;
 
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;
