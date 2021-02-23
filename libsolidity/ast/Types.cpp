@@ -112,7 +112,11 @@ util::Result<TypePointers> transformParametersToExternal(TypePointers const& _pa
 }
 
 MemberList::Member::Member(Declaration const* _declaration, Type const* _type):
-	name(_declaration->name()),
+	Member(_declaration, _type, _declaration->name())
+{}
+
+MemberList::Member::Member(Declaration const* _declaration, Type const* _type, string _name):
+	name(move(_name)),
 	type(_type),
 	declaration(_declaration)
 {
@@ -3810,10 +3814,7 @@ MemberList::MemberMap ModuleType::nativeMembers(ASTNode const*) const
 	MemberList::MemberMap symbols;
 	for (auto const& [name, declarations]: *m_sourceUnit.annotation().exportedSymbols)
 		for (Declaration const* symbol: declarations)
-		{
-			solAssert(name == symbol->name(), "");
-			symbols.emplace_back(symbol, symbol->type());
-		}
+			symbols.emplace_back(symbol, symbol->type(), name);
 	return symbols;
 }
 
