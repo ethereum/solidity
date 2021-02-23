@@ -530,11 +530,9 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 	bool found = false;
 	if (Scope::Identifier const* var = m_currentScope->lookup(_variable.name))
 	{
-		// Check that it is a variable.
-		// This can also hold a function, but that is caught by error 6041.
-		yulAssert(holds_alternative<Scope::Variable>(*var), "Assignment requires variable.");
-
-		if (!m_activeVariables.count(&std::get<Scope::Variable>(*var)))
+		if (!holds_alternative<Scope::Variable>(*var))
+			m_errorReporter.typeError(2657_error, _variable.location, "Assignment requires variable.");
+		else if (!m_activeVariables.count(&std::get<Scope::Variable>(*var)))
 			m_errorReporter.declarationError(
 				1133_error,
 				_variable.location,
