@@ -584,8 +584,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		FunctionType const& function = *functionType;
 		if (function.bound())
-			// Only delegatecall and internal functions can be bound, this might be lifted later.
-			solAssert(function.kind() == FunctionType::Kind::DelegateCall || function.kind() == FunctionType::Kind::Internal, "");
+			solAssert(
+				function.kind() == FunctionType::Kind::DelegateCall ||
+				function.kind() == FunctionType::Kind::Internal ||
+				function.kind() == FunctionType::Kind::ArrayPush ||
+				function.kind() == FunctionType::Kind::ArrayPop,
+			"");
 		switch (function.kind())
 		{
 		case FunctionType::Kind::Declaration:
@@ -945,9 +949,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			appendExternalFunctionCall(function, arguments, false);
 			break;
 		}
-		case FunctionType::Kind::ByteArrayPush:
 		case FunctionType::Kind::ArrayPush:
 		{
+			solAssert(function.bound(), "");
 			_functionCall.expression().accept(*this);
 
 			if (function.parameterTypes().size() == 0)
@@ -955,10 +959,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				auto paramType = function.returnParameterTypes().at(0);
 				solAssert(paramType, "");
 
-				ArrayType const* arrayType =
-					function.kind() == FunctionType::Kind::ArrayPush ?
-					TypeProvider::array(DataLocation::Storage, paramType) :
-					TypeProvider::bytesStorage();
+				ArrayType const* arrayType = dynamic_cast<ArrayType const*>(function.selfType());
+				solAssert(arrayType, "");
 
 				// stack: ArrayReference
 				m_context << u256(1) << Instruction::DUP2;
@@ -978,10 +980,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				solAssert(function.parameterTypes().size() == 1, "");
 				solAssert(!!function.parameterTypes()[0], "");
 				TypePointer paramType = function.parameterTypes()[0];
-				ArrayType const* arrayType =
-					function.kind() == FunctionType::Kind::ArrayPush ?
-					TypeProvider::array(DataLocation::Storage, paramType) :
-					TypeProvider::bytesStorage();
+				ArrayType const* arrayType = dynamic_cast<ArrayType const*>(function.selfType());
+				solAssert(arrayType, "");
 
 				// stack: ArrayReference
 				arguments[0]->accept(*this);
@@ -1004,7 +1004,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				utils().moveToStackTop(1 + type->sizeOnStack());
 				// stack: argValue storageSlot slotOffset
-				if (function.kind() == FunctionType::Kind::ArrayPush)
+				if (!arrayType->isByteArray())
 					StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
 				else
 					StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
@@ -1014,14 +1014,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::ArrayPop:
 		{
 			_functionCall.expression().accept(*this);
+			solAssert(function.bound(), "");
 			solAssert(function.parameterTypes().empty(), "");
-
-			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(
-				*dynamic_cast<MemberAccess const&>(_functionCall.expression()).expression().annotation().type
-			);
-			solAssert(arrayType.dataStoredIn(DataLocation::Storage), "");
-
-			ArrayUtils(m_context).popStorageArrayElement(arrayType);
+			ArrayType const* arrayType = dynamic_cast<ArrayType const*>(function.selfType());
+			solAssert(arrayType && arrayType->dataStoredIn(DataLocation::Storage), "");
+			ArrayUtils(m_context).popStorageArrayElement(*arrayType);
 			break;
 		}
 		case FunctionType::Kind::ObjectCreation:
@@ -1324,6 +1321,12 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 				solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 				utils().pushCombinedFunctionEntryLabel(funDef);
 				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 1);
+			}
+			else if (
+				funType->kind() == FunctionType::Kind::ArrayPop ||
+				funType->kind() == FunctionType::Kind::ArrayPush
+			)
+			{
 			}
 			else
 			{
