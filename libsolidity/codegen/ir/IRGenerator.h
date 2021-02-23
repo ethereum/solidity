@@ -25,6 +25,7 @@
 
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/ast/ASTForward.h>
+#include <libsolidity/analysis/FunctionCallGraph.h>
 #include <libsolidity/codegen/ir/IRGenerationContext.h>
 #include <libsolidity/codegen/YulUtilFunctions.h>
 #include <liblangutil/EVMVersion.h>
@@ -56,6 +57,11 @@ public:
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 
+	void verifyCallGraphs(
+		FunctionCallGraphBuilder::ContractCallGraph const& _creationGraph,
+		FunctionCallGraphBuilder::ContractCallGraph const& _deployedGraph
+	);
+
 private:
 	std::string generate(
 		ContractDefinition const& _contract,
@@ -65,7 +71,8 @@ private:
 
 	/// Generates code for all the functions from the function generation queue.
 	/// The resulting code is stored in the function collector in IRGenerationContext.
-	void generateQueuedFunctions();
+	/// @returns A set of ast nodes of the generated functions.
+	std::set<FunctionDefinition const*> generateQueuedFunctions();
 	/// Generates  all the internal dispatch functions necessary to handle any function that could
 	/// possibly be called via a pointer.
 	/// @return The content of the dispatch for reuse in runtime code. Reuse is necessary because
@@ -114,6 +121,9 @@ private:
 
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;
+
+	std::set<FunctionDefinition const*> m_creationFunctionList;
+	std::set<FunctionDefinition const*> m_deployedFunctionList;
 
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;

@@ -2632,11 +2632,13 @@ FunctionType::FunctionType(FunctionDefinition const& _function, Kind _kind):
 
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
+		solAssert(var->annotation().type, "Parameter type is not yet available in the AST.");
 		m_parameterNames.push_back(var->name());
 		m_parameterTypes.push_back(var->annotation().type);
 	}
 	for (ASTPointer<VariableDeclaration> const& var: _function.returnParameters())
 	{
+		solAssert(var->annotation().type, "Return parameter type is not yet available in the AST.");
 		m_returnParameterNames.push_back(var->name());
 		m_returnParameterTypes.push_back(var->annotation().type);
 	}

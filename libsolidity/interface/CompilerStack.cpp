@@ -341,9 +341,9 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		DocStringTagParser DocStringTagParser(m_errorReporter);
+		DocStringTagParser docStringTagParser(m_errorReporter);
 		for (Source const* source: m_sourceOrder)
-			if (source->ast && !DocStringTagParser.parseDocStrings(*source->ast))
+			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
 				noErrors = false;
 
 		m_globalContext = make_shared<GlobalContext>();
@@ -387,7 +387,7 @@ bool CompilerStack::analyze()
 			if (source->ast && !docStringAnalyser.analyseDocStrings(*source->ast))
 				noErrors = false;
 
-		// New we run full type checks that go down to the expression level. This
+		// Now we run full type checks that go down to the expression level. This
 		// cannot be done earlier, because we need cross-contract types and information
 		// about whether a contract is abstract for the `new` expression.
 		// This populates the `type` annotation for all expressions.
@@ -398,6 +398,19 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
 				noErrors = false;
+
+		if (noErrors)
+		{
+			for (Source const* source: m_sourceOrder)
+				if (source->ast)
+					for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+						if (auto const* contractDefinition = dynamic_cast<ContractDefinition*>(node.get()))
+						{
+							Contract& contractState = m_contracts.at(contractDefinition->fullyQualifiedName());
+							contractState.creationCallGraph.emplace(FunctionCallGraphBuilder::buildCreationGraph(*contractDefinition));
+							contractState.deployedCallGraph.emplace(FunctionCallGraphBuilder::buildDeployedGraph(*contractDefinition, *contractState.creationCallGraph));
+						}
+		}
 
 		if (noErrors)
 		{
@@ -937,6 +950,24 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 	return _contract.metadata.init([&]{ return createMetadata(_contract); });
 }
 
+FunctionCallGraphBuilder::ContractCallGraph const& CompilerStack::creationCallGraph(string const& _contractName) const
+{
+	if (m_stackState < AnalysisPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
+
+	solAssert(contract(_contractName).creationCallGraph.has_value(), "");
+	return contract(_contractName).creationCallGraph.value();
+}
+
+FunctionCallGraphBuilder::ContractCallGraph const& CompilerStack::deployedCallGraph(string const& _contractName) const
+{
+	if (m_stackState < AnalysisPerformed)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
+
+	solAssert(contract(_contractName).deployedCallGraph.has_value(), "");
+	return contract(_contractName).deployedCallGraph.value();
+}
+
 Scanner const& CompilerStack::scanner(string const& _sourceName) const
 {
 	if (m_stackState < SourcesSet)
@@ -1275,6 +1306,8 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
+
+	generator.verifyCallGraphs(compiledContract.creationCallGraph.value(), compiledContract.deployedCallGraph.value());
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)

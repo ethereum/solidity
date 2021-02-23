@@ -36,17 +36,60 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Algorithms.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
+
+#include <range/v3/view/map.hpp>
 
 #include <boost/range/adaptor/map.hpp>
 
 #include <sstream>
+#include <variant>
 
 using namespace std;
+using namespace ranges;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
+
+namespace
+{
+
+void verifyCallGraph(
+	set<CallableDeclaration const*, ASTNode::CompareByID> const& _expectedCallables,
+	set<FunctionDefinition const*> _generatedFunctions
+)
+{
+	for (auto const& expectedCallable: _expectedCallables)
+		if (auto const* expectedFunction = dynamic_cast<FunctionDefinition const*>(expectedCallable))
+		{
+			solAssert(
+				_generatedFunctions.count(expectedFunction) == 1 || expectedFunction->isConstructor(),
+				"No code generated for function " + expectedFunction->name() + "even though it is not a constructor."
+			);
+			_generatedFunctions.erase(expectedFunction);
+		}
+
+	solAssert(
+		_generatedFunctions.size() == 0,
+		"Of the generated functions " + toString(_generatedFunctions.size()) + " are not in the call graph."
+	);
+}
+
+set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCallables(
+	FunctionCallGraphBuilder::ContractCallGraph const& _graph
+)
+{
+	set<CallableDeclaration const*, ASTNode::CompareByID> reachableCallables;
+	for (FunctionCallGraphBuilder::Node const& reachableNode: _graph.edges | views::keys)
+		if (holds_alternative<CallableDeclaration const*>(reachableNode))
+			reachableCallables.emplace(get<CallableDeclaration const*>(reachableNode));
+
+	return reachableCallables;
+}
+
+}
 
 pair<string, string> IRGenerator::run(
 	ContractDefinition const& _contract,
@@ -76,11 +119,31 @@ pair<string, string> IRGenerator::run(
 	return {warning + ir, warning + asmStack.print()};
 }
 
+void IRGenerator::verifyCallGraphs(
+	FunctionCallGraphBuilder::ContractCallGraph const& _creationGraph,
+	FunctionCallGraphBuilder::ContractCallGraph const& _deployedGraph
+)
+{
+	// m_creationFunctionList and m_deployedFunctionList are not used for any other purpose so
+	// we can just destroy them without bothering to make a copy.
+
+	verifyCallGraph(collectReachableCallables(_creationGraph), move(m_creationFunctionList));
+	m_creationFunctionList = {};
+
+	verifyCallGraph(collectReachableCallables(_deployedGraph), move(m_deployedFunctionList));
+	m_deployedFunctionList = {};
+}
+
 string IRGenerator::generate(
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
+	// Remember to call verifyCallGraphs() (which clears the list of generated functions) if you
+	// want to reuse the generator.
+	solAssert(m_creationFunctionList.empty(), "");
+	solAssert(m_deployedFunctionList.empty(), "");
+
 	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> string
 	{
 		std::string subObjectsSources;
@@ -142,8 +205,9 @@ string IRGenerator::generate(
 
 	t("deploy", deployCode(_contract));
 	generateImplicitConstructors(_contract);
-	generateQueuedFunctions();
+	m_creationFunctionList = generateQueuedFunctions();
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
+
 	t("functions", m_context.functionCollector().requestedFunctions());
 	t("subObjects", subObjectSources(m_context.subObjectsCreated()));
 
@@ -162,7 +226,7 @@ string IRGenerator::generate(
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
-	generateQueuedFunctions();
+	m_deployedFunctionList = generateQueuedFunctions();
 	generateInternalDispatchFunctions();
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
 	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
@@ -170,6 +234,7 @@ string IRGenerator::generate(
 	// This has to be called only after all other code generation for the deployed object is complete.
 	bool deployedInvolvesAssembly = m_context.inlineAssemblySeen();
 	t("memoryInitDeployed", memoryInit(!deployedInvolvesAssembly));
+
 	return t.render();
 }
 
@@ -180,11 +245,20 @@ string IRGenerator::generate(Block const& _block)
 	return generator.code();
 }
 
-void IRGenerator::generateQueuedFunctions()
+set<FunctionDefinition const*> IRGenerator::generateQueuedFunctions()
 {
+	set<FunctionDefinition const*> functions;
+
 	while (!m_context.functionGenerationQueueEmpty())
+	{
+		FunctionDefinition const& functionDefinition = *m_context.dequeueFunctionForCodeGeneration();
+
+		functions.emplace(&functionDefinition);
 		// NOTE: generateFunction() may modify function generation queue
-		generateFunction(*m_context.dequeueFunctionForCodeGeneration());
+		generateFunction(functionDefinition);
+	}
+
+	return functions;
 }
 
 InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
