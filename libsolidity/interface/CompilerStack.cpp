@@ -1298,11 +1298,6 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
-
-	generator.verifyCallGraphs(
-		**compiledContract.contract->annotation().creationCallGraph,
-		**compiledContract.contract->annotation().deployedCallGraph
-	);
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)

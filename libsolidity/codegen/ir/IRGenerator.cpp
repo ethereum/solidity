@@ -119,28 +119,11 @@ pair<string, string> IRGenerator::run(
 	return {warning + ir, warning + asmStack.print()};
 }
 
-void IRGenerator::verifyCallGraphs(CallGraph const& _creationGraph, CallGraph const& _deployedGraph)
-{
-	// m_creationFunctionList and m_deployedFunctionList are not used for any other purpose so
-	// we can just destroy them without bothering to make a copy.
-
-	verifyCallGraph(collectReachableCallables(_creationGraph), move(m_creationFunctionList));
-	m_creationFunctionList = {};
-
-	verifyCallGraph(collectReachableCallables(_deployedGraph), move(m_deployedFunctionList));
-	m_deployedFunctionList = {};
-}
-
 string IRGenerator::generate(
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
-	// Remember to call verifyCallGraphs() (which clears the list of generated functions) if you
-	// want to reuse the generator.
-	solAssert(m_creationFunctionList.empty(), "");
-	solAssert(m_deployedFunctionList.empty(), "");
-
 	auto subObjectSources = [&_otherYulSources](std::set<ContractDefinition const*, ASTNode::CompareByID> const& subObjects) -> string
 	{
 		std::string subObjectsSources;
@@ -202,7 +185,7 @@ string IRGenerator::generate(
 
 	t("deploy", deployCode(_contract));
 	generateImplicitConstructors(_contract);
-	m_creationFunctionList = generateQueuedFunctions();
+	set<FunctionDefinition const*> creationFunctionList = generateQueuedFunctions();
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
 
 	t("functions", m_context.functionCollector().requestedFunctions());
@@ -223,7 +206,7 @@ string IRGenerator::generate(
 	t("DeployedObject", IRNames::deployedObject(_contract));
 	t("library_address", IRNames::libraryAddressImmutable());
 	t("dispatch", dispatchRoutine(_contract));
-	m_deployedFunctionList = generateQueuedFunctions();
+	set<FunctionDefinition const*> deployedFunctionList = generateQueuedFunctions();
 	generateInternalDispatchFunctions();
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
 	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
@@ -231,6 +214,11 @@ string IRGenerator::generate(
 	// This has to be called only after all other code generation for the deployed object is complete.
 	bool deployedInvolvesAssembly = m_context.inlineAssemblySeen();
 	t("memoryInitDeployed", memoryInit(!deployedInvolvesAssembly));
+
+	solAssert(_contract.annotation().creationCallGraph->get() != nullptr, "");
+	solAssert(_contract.annotation().deployedCallGraph->get() != nullptr, "");
+	verifyCallGraph(collectReachableCallables(**_contract.annotation().creationCallGraph), move(creationFunctionList));
+	verifyCallGraph(collectReachableCallables(**_contract.annotation().deployedCallGraph), move(deployedFunctionList));
 
 	return t.render();
 }

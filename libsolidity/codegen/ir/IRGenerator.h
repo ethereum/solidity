@@ -57,8 +57,6 @@ public:
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 
-	void verifyCallGraphs(CallGraph const& _creationGraph, CallGraph const& _deployedGraph);
-
 private:
 	std::string generate(
 		ContractDefinition const& _contract,
@@ -118,9 +116,6 @@ private:
 
 	langutil::EVMVersion const m_evmVersion;
 	OptimiserSettings const m_optimiserSettings;
-
-	std::set<FunctionDefinition const*> m_creationFunctionList;
-	std::set<FunctionDefinition const*> m_deployedFunctionList;
 
 	IRGenerationContext m_context;
 	YulUtilFunctions m_utils;
