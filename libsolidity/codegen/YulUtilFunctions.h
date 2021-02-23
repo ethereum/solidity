@@ -292,6 +292,10 @@ public:
 	/// of the storage array into it.
 	std::string copyArrayFromStorageToMemoryFunction(ArrayType const& _from, ArrayType const& _to);
 
+	/// @returns the name of a function that does concatenation of variadic number of bytes
+	/// or fixed bytes
+	std::string bytesConcatFunction(std::vector<Type const*> const& _argumentTypes);
+
 	/// @returns the name of a function that performs index access for mappings.
 	/// @param _mappingType the type of the mapping
 	/// @param _keyType the type of the value provided
