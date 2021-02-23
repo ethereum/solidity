@@ -85,12 +85,12 @@ object "test_11" {
                 mstore(64, newFreePtr)
             }
 
-            function fun_f_10() -> vloc__5 {
-                let zero_value_for_type_t_bool_1 := zero_value_for_split_t_bool()
-                vloc__5 := zero_value_for_type_t_bool_1
+            function fun_f_10() -> var__5 {
+                let zero_t_bool_1 := zero_value_for_split_t_bool()
+                var__5 := zero_t_bool_1
 
                 let expr_7 := 0x01
-                vloc__5 := expr_7
+                var__5 := expr_7
                 leave
 
             }

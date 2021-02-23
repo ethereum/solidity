@@ -27,26 +27,26 @@ object "Arraysum_34" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        let vloc_sum := _1
-                        let vloc_i := _1
+                        let var_sum := _1
+                        let var_i := _1
                         let _2 := sload(_1)
                         for { }
-                        lt(vloc_i, _2)
+                        lt(var_i, _2)
                         {
-                            if eq(vloc_i, not(0)) { panic_error_0x11() }
-                            vloc_i := add(vloc_i, 1)
+                            if eq(var_i, not(0)) { panic_error_0x11() }
+                            var_i := add(var_i, 1)
                         }
                         {
                             mstore(_1, _1)
-                            vloc_sum := checked_add_t_uint256(vloc_sum, sload(add(keccak256(_1, 0x20), vloc_i)))
+                            var_sum := checked_add_uint256(var_sum, sload(add(keccak256(_1, 0x20), var_i)))
                         }
                         let memPos := allocate_memory(_1)
-                        return(memPos, sub(abi_encode_uint(memPos, vloc_sum), memPos))
+                        return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
                     }
                 }
                 revert(0, 0)
             }
-            function abi_encode_uint(headStart, value0) -> tail
+            function abi_encode_uint256(headStart, value0) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
@@ -63,7 +63,7 @@ object "Arraysum_34" {
                 }
                 mstore(64, newFreePtr)
             }
-            function checked_add_t_uint256(x, y) -> sum
+            function checked_add_uint256(x, y) -> sum
             {
                 if gt(x, not(y)) { panic_error_0x11() }
                 sum := add(x, y)

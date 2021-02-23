@@ -137,7 +137,7 @@ object \"D_16\" {
 
                 if iszero(expr_12_address) { revert_forward_1() }
 
-                let vloc_c_8_address := expr_12_address
+                let var_c_8_address := expr_12_address
 
             }
 

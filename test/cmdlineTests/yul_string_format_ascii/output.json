@@ -136,11 +136,11 @@ object \"C_11\" {
                 mstore(64, newFreePtr)
             }
 
-            function fun_f_10() -> vloc__5_mpos {
-                let zero_value_for_type_t_string_memory_ptr_1_mpos := zero_value_for_split_t_string_memory_ptr()
-                vloc__5_mpos := zero_value_for_type_t_string_memory_ptr_1_mpos
+            function fun_f_10() -> var__5_mpos {
+                let zero_t_string_memory_ptr_1_mpos := zero_value_for_split_t_string_memory_ptr()
+                var__5_mpos := zero_t_string_memory_ptr_1_mpos
 
-                vloc__5_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
+                var__5_mpos := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_string_memory_ptr()
                 leave
 
             }
