@@ -94,5 +94,14 @@ struct YulProtoMutator
 	static constexpr unsigned s_mediumIP = 29;
 	/// Modulo for mutations that should occur often
 	static constexpr unsigned s_highIP = 23;
+	/// Add control-flow statement to basic block.
+	template <typename T>
+	static void addControlFlow(T* _msg);
+	/// Obtain basic block for statement type.
+	template <typename T>
+	static Block* basicBlock(T* _msg);
+	/// Obtain a basic block in a for stmt uniformly
+	/// at random
+	static Block* randomBlock(ForStmt* _msg);
 };
 }
