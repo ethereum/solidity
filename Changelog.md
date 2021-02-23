@@ -1,7 +1,10 @@
 ### 0.8.17 (unreleased)
 
 Important Bugfixes:
+ * ABI: Include events in the ABI that are emitted by a contract but defined outside of it.
 
+AST Changes:
+ * Add field ``emittedEvents`` to ``ContractDefinition`` which contains the AST IDs of all inherited and emitted events.
 
 Language Features:
 

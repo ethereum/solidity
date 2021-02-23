@@ -1,0 +1,224 @@
+{
+  "absolutePath": "a",
+  "id": 26,
+  "license": "GPL-3.0",
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "library",
+      "emittedEvents": [],
+      "id": 10,
+      "name": "L",
+      "nameLocation": "44:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "id": 2,
+          "name": "E",
+          "nameLocation": "58:1:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 1,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "59:2:1"
+          },
+          "src": "52:10:1"
+        },
+        {
+          "body":
+          {
+            "id": 8,
+            "nodeType": "Block",
+            "src": "89:13:1",
+            "statements":
+            [
+              {
+                "eventCall":
+                {
+                  "arguments": [],
+                  "expression":
+                  {
+                    "id": 5,
+                    "name": "E",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "src": "96:1:1",
+                    "typeDescriptions": {}
+                  },
+                  "id": 6,
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "96:3:1",
+                  "tryCall": false,
+                  "typeDescriptions": {}
+                },
+                "id": 7,
+                "nodeType": "EmitStatement",
+                "src": "91:8:1"
+              }
+            ]
+          },
+          "id": 9,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "f",
+          "nameLocation": "76:1:1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 3,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "77:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 4,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "89:0:1"
+          },
+          "src": "67:35:1",
+          "stateMutability": "nonpayable",
+          "virtual": false,
+          "visibility": "internal"
+        }
+      ],
+      "src": "36:68:1",
+      "usedErrors": []
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "emittedEvents": [],
+      "id": 25,
+      "name": "C",
+      "nameLocation": "114:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "anonymous": false,
+          "id": 12,
+          "name": "H",
+          "nameLocation": "128:1:1",
+          "nodeType": "EventDefinition",
+          "parameters":
+          {
+            "id": 11,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "129:2:1"
+          },
+          "src": "122:10:1"
+        },
+        {
+          "body":
+          {
+            "id": 23,
+            "nodeType": "Block",
+            "src": "157:20:1",
+            "statements":
+            [
+              {
+                "expression":
+                {
+                  "arguments": [],
+                  "expression":
+                  {
+                    "expression":
+                    {
+                      "id": 15,
+                      "name": "L",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "src": "159:1:1",
+                      "typeDescriptions": {}
+                    },
+                    "id": 17,
+                    "memberName": "f",
+                    "nodeType": "MemberAccess",
+                    "src": "159:3:1",
+                    "typeDescriptions": {}
+                  },
+                  "id": 18,
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "159:5:1",
+                  "tryCall": false,
+                  "typeDescriptions": {}
+                },
+                "id": 19,
+                "nodeType": "ExpressionStatement",
+                "src": "159:5:1"
+              },
+              {
+                "eventCall":
+                {
+                  "arguments": [],
+                  "expression":
+                  {
+                    "id": 20,
+                    "name": "H",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "src": "171:1:1",
+                    "typeDescriptions": {}
+                  },
+                  "id": 21,
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "171:3:1",
+                  "tryCall": false,
+                  "typeDescriptions": {}
+                },
+                "id": 22,
+                "nodeType": "EmitStatement",
+                "src": "166:8:1"
+              }
+            ]
+          },
+          "id": 24,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "g",
+          "nameLocation": "146:1:1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 13,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "147:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 14,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "157:0:1"
+          },
+          "src": "137:40:1",
+          "stateMutability": "nonpayable",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "src": "105:74:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "36:144:1"
+}

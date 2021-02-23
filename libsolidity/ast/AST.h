@@ -522,6 +522,10 @@ public:
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& definedInterfaceEvents() const;
 	std::vector<EventDefinition const*> const usedInterfaceEvents() const;
+	/// @return all events defined in this contract and its base contracts and all events
+	/// that are emitted during the execution of the contract.
+	/// @param _requireCallGraph if false, do not fail if the call graph has not been computed yet.
+	std::vector<EventDefinition const*> interfaceEvents(bool _requireCallGraph = true) const;
 	/// @returns all errors defined in this contract or any base contract
 	/// and all errors referenced during execution.
 	/// @param _requireCallGraph if false, do not fail if the call graph has not been computed yet.
