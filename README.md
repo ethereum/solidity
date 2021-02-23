@@ -37,12 +37,13 @@ found in the [Solidity documentation](https://docs.soliditylang.org/en/latest/in
 A "Hello World" program in Solidity is of even less use than in other languages, but still:
 
 ```solidity
-pragma solidity >=0.6.0 <0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.6.0 <0.9.0;
 
 contract HelloWorld {
-  function helloWorld() external pure returns (string memory) {
-    return "Hello, World!";
-  }
+    function helloWorld() external pure returns (string memory) {
+        return "Hello, World!";
+    }
 }
 ```
 
