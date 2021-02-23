@@ -251,6 +251,10 @@ public:
 	/// @returns the parsed source unit with the supplied name.
 	SourceUnit const& ast(std::string const& _sourceName) const;
 
+	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
+	/// does not exist.
+	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
+
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
@@ -441,10 +445,6 @@ private:
 	/// @returns the source object for the given @a _sourceName.
 	/// Can only be called after state is SourcesSet.
 	Source const& source(std::string const& _sourceName) const;
-
-	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
-	/// does not exist.
-	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
 	/// @returns the metadata JSON as a compact string for the given contract.
 	std::string createMetadata(Contract const& _contract) const;
