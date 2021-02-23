@@ -110,6 +110,7 @@ public:
 
 		/// Constructs a Member with the name extracted from @p _declaration's name.
 		Member(Declaration const* _declaration, Type const* _type);
+		Member(Declaration const* _declaration, Type const* _type, std::string _name);
 
 		std::string name;
 		Type const* type = nullptr;
