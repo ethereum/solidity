@@ -2521,9 +2521,7 @@ void IRGeneratorForStatements::appendBareCall(
 		</needsEncoding>
 
 		let <success> := <call>(<gas>, <address>, <?+value> <value>, </+value> <pos>, <length>, 0, 0)
-		<?+returndataVar>
-			let <returndataVar> := <extractReturndataFunction>()
-		</+returndataVar>
+		let <returndataVar> := <extractReturndataFunction>()
 	)");
 
 	templ("allocateUnbounded", m_utils.allocateUnboundedFunction());
@@ -2542,13 +2540,8 @@ void IRGeneratorForStatements::appendBareCall(
 	}
 
 	templ("success", IRVariable(_functionCall).tupleComponent(0).name());
-	if (IRVariable(_functionCall).tupleComponent(1).type().category() == Type::Category::InaccessibleDynamic)
-		templ("returndataVar", "");
-	else
-	{
-		templ("returndataVar", IRVariable(_functionCall).tupleComponent(1).part("mpos").name());
-		templ("extractReturndataFunction", m_utils.extractReturndataFunction());
-	}
+	templ("returndataVar", IRVariable(_functionCall).tupleComponent(1).commaSeparatedList());
+	templ("extractReturndataFunction", m_utils.extractReturndataFunction());
 
 	templ("address", IRVariable(_functionCall.expression()).part("address").name());
 
