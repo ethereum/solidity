@@ -65,7 +65,8 @@ public:
 
 private:
 	FunctionCallGraphBuilder(ContractDefinition const& _contract):
-		m_graph{_contract, {}, {}, {}} {}
+		m_contract(_contract),
+		m_graph{{}, {}, {}} {}
 
 	bool visit(FunctionCall const& _functionCall) override;
 	bool visit(EmitStatement const& _emitStatement) override;
@@ -81,6 +82,7 @@ private:
 	void functionReferenced(CallableDeclaration const& _callable, bool _calledDirectly = true);
 
 	CallGraph::Node m_currentNode = CallGraph::SpecialNode::Entry;
+	ContractDefinition const& m_contract;
 	CallGraph m_graph;
 	std::deque<CallableDeclaration const*> m_visitQueue;
 };

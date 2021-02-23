@@ -56,9 +56,6 @@ struct CallGraph
 		bool operator()(int64_t _lhs, Node const& _rhs) const;
 	};
 
-	/// Contract for which this is the graph
-	ContractDefinition const& contract;
-
 	/// Graph edges. Edges are directed and lead from the caller to the callee.
 	/// The map contains a key for every possible caller, even if does not actually perform
 	/// any calls.
