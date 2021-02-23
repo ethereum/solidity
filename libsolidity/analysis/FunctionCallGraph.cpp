@@ -69,8 +69,6 @@ CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	CallGraph const& _creationGraph
 )
 {
-	solAssert(&_creationGraph.contract == &_contract, "");
-
 	FunctionCallGraphBuilder builder(_contract);
 	solAssert(builder.m_currentNode == CallGraph::Node(CallGraph::SpecialNode::Entry), "");
 
@@ -150,7 +148,7 @@ bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 
 		// For events kind() == Event, so we have an extra check here
 		if (funType && funType->kind() == FunctionType::Kind::Internal)
-			functionReferenced(callable->resolveVirtual(m_graph.contract), _identifier.annotation().calledDirectly);
+			functionReferenced(callable->resolveVirtual(m_contract), _identifier.annotation().calledDirectly);
 	}
 
 	return true;
@@ -171,8 +169,8 @@ bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 			{
 				solAssert(contractType->isSuper(), "");
 				functionDef = &functionDef->resolveVirtual(
-					m_graph.contract,
-					contractType->contractDefinition().superContract(m_graph.contract)
+					m_contract,
+					contractType->contractDefinition().superContract(m_contract)
 				);
 			}
 	}
@@ -191,7 +189,7 @@ bool FunctionCallGraphBuilder::visit(ModifierInvocation const& _modifierInvocati
 		VirtualLookup const& requiredLookup = *_modifierInvocation.name().annotation().requiredLookup;
 
 		if (requiredLookup == VirtualLookup::Virtual)
-			functionReferenced(modifier->resolveVirtual(m_graph.contract));
+			functionReferenced(modifier->resolveVirtual(m_contract));
 		else
 		{
 			solAssert(requiredLookup == VirtualLookup::Static, "");
@@ -264,13 +262,14 @@ ostream& solidity::frontend::operator<<(ostream& _out, CallGraph::Node const& _n
 	if (holds_alternative<CallGraph::SpecialNode>(_node))
 		switch (get<CallGraph::SpecialNode>(_node))
 		{
-			case CallGraph::SpecialNode::InternalDispatch:
-				_out << "InternalDispatch";
-				break;
-			case CallGraph::SpecialNode::Entry:
-				_out << "Entry";
-				break;
-			default: solAssert(false, "Invalid SpecialNode type");
+		case CallGraph::SpecialNode::InternalDispatch:
+			_out << "InternalDispatch";
+			break;
+		case CallGraph::SpecialNode::Entry:
+			_out << "Entry";
+			break;
+		default:
+			solAssert(false, "Invalid SpecialNode type");
 		}
 	else
 	{
