@@ -34,6 +34,7 @@ JSON AST (compact format):
       "canonicalName": "Error1",
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 18,
       "linearizedBaseContracts":

@@ -9,10 +9,18 @@ Compiler Features:
 Bugfixes:
 
 
+Important Bugfixes:
+ * ABI: Include events in the ABI that are emitted by a contract but defined outside of it.
+
+
+AST Changes:
+ * Add field ``emittedEvents`` to ``ContractDefinition`` which contains the AST IDs of all inherited and emitted events.
+
+
 ### 0.8.19 (2023-02-22)
 
 Language Features:
-* Allow defining custom operators for user-defined value types via ``using {f as +} for T global`` syntax.
+ * Allow defining custom operators for user-defined value types via ``using {f as +} for T global`` syntax.
 
 
 Compiler Features:

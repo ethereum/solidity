@@ -78,6 +78,7 @@
                         "canonicalName": "Errort6",
                         "contractDependencies": [],
                         "contractKind": "contract",
+                        "emittedEvents": [],
                         "fullyImplemented": true,
                         "id": 3,
                         "linearizedBaseContracts":

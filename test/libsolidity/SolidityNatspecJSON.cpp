@@ -496,10 +496,8 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 			/// @dev A test case!
 			event Transfer(address indexed from, address indexed to, uint amount);
 		}
-
 		contract A is ERC20 {
 		}
-
 		contract B is A {
 		}
 	)";

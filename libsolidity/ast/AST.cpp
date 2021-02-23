@@ -243,6 +243,21 @@ vector<EventDefinition const*> const ContractDefinition::usedInterfaceEvents() c
 	);
 }
 
+vector<EventDefinition const*> ContractDefinition::interfaceEvents(bool _requireCallGraph) const
+{
+	set<EventDefinition const*, CompareByID> result;
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		result += contract->events();
+	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set());
+	if (_requireCallGraph)
+		solAssert(annotation().creationCallGraph.set());
+	if (annotation().creationCallGraph.set())
+		result += usedInterfaceEvents();
+	// We could filter out all events that do not have an external interface
+	// if _requireCallGraph is false.
+	return util::convertContainer<vector<EventDefinition const*>>(std::move(result));
+}
+
 vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
 {
 	set<ErrorDefinition const*, CompareByID> result;

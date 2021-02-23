@@ -25,6 +25,7 @@
       "canonicalName": "A",
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -102,6 +103,7 @@
       "canonicalName": "B",
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": false,
       "id": 16,
       "linearizedBaseContracts":
@@ -220,6 +222,7 @@
       "canonicalName": "C",
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 29,
       "linearizedBaseContracts":
