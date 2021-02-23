@@ -950,7 +950,7 @@ string const& CompilerStack::metadata(Contract const& _contract) const
 	return _contract.metadata.init([&]{ return createMetadata(_contract); });
 }
 
-FunctionCallGraphBuilder::ContractCallGraph const& CompilerStack::creationCallGraph(string const& _contractName) const
+CallGraph const& CompilerStack::creationCallGraph(string const& _contractName) const
 {
 	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));
@@ -959,7 +959,7 @@ FunctionCallGraphBuilder::ContractCallGraph const& CompilerStack::creationCallGr
 	return contract(_contractName).creationCallGraph.value();
 }
 
-FunctionCallGraphBuilder::ContractCallGraph const& CompilerStack::deployedCallGraph(string const& _contractName) const
+CallGraph const& CompilerStack::deployedCallGraph(string const& _contractName) const
 {
 	if (m_stackState < AnalysisPerformed)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Analysis was not successful."));

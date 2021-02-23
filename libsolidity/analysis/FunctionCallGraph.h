@@ -20,18 +20,16 @@
 
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
+#include <libsolidity/ast/CallGraph.h>
 
 #include <deque>
 #include <ostream>
-#include <variant>
-#include <vector>
 
 namespace solidity::frontend
 {
 
 /**
- * Creates a Function call graph for a contract at the granularity of Solidity
- * functions and modifiers. The graph can represent the situation either at contract creation
+ * Creates a function call graph for a contract at the granularity of Solidity functions and modifiers.
  * or after deployment. The graph does not preserve temporal relations between calls - edges
  * coming out of the same node show which calls were performed but not in what order.
  *
@@ -59,43 +57,10 @@ namespace solidity::frontend
 class FunctionCallGraphBuilder: private ASTConstVisitor
 {
 public:
-	enum class SpecialNode
-	{
-		InternalDispatch,
-		Entry,
-	};
-
-	using Node = std::variant<CallableDeclaration const*, SpecialNode>;
-
-	struct CompareByID
-	{
-		using is_transparent = void;
-		bool operator()(Node const& _lhs, Node const& _rhs) const;
-		bool operator()(Node const& _lhs, int64_t _rhs) const;
-		bool operator()(int64_t _lhs, Node const& _rhs) const;
-	};
-
-	struct ContractCallGraph
-	{
-		/// Contract for which this is the graph
-		ContractDefinition const& contract;
-
-		/// Graph edges. Edges are directed and lead from the caller to the callee.
-		/// The map contains a key for every possible caller, even if does not actually perform
-		/// any calls.
-		std::map<Node, std::set<Node, CompareByID>, CompareByID> edges;
-
-		/// Contracts that may get created with `new` by functions present in the graph.
-		std::set<ContractDefinition const*, ASTNode::CompareByID> createdContracts;
-
-		/// Events that may get emitted by functions present in the graph.
-		std::set<EventDefinition const*, ASTNode::CompareByID> emittedEvents;
-	};
-
-	static ContractCallGraph buildCreationGraph(ContractDefinition const& _contract);
-	static ContractCallGraph buildDeployedGraph(
+	static CallGraph buildCreationGraph(ContractDefinition const& _contract);
+	static CallGraph buildDeployedGraph(
 		ContractDefinition const& _contract,
-		FunctionCallGraphBuilder::ContractCallGraph const& _creationGraph
+		CallGraph const& _creationGraph
 	);
 
 private:
@@ -112,14 +77,14 @@ private:
 	void enqueueCallable(CallableDeclaration const& _callable);
 	void processQueue();
 
-	void add(Node _caller, Node _callee);
+	void add(CallGraph::Node _caller, CallGraph::Node _callee);
 	void functionReferenced(CallableDeclaration const& _callable, bool _calledDirectly = true);
 
-	Node m_currentNode = SpecialNode::Entry;
-	ContractCallGraph m_graph;
+	CallGraph::Node m_currentNode = CallGraph::SpecialNode::Entry;
+	CallGraph m_graph;
 	std::deque<CallableDeclaration const*> m_visitQueue;
 };
 
-std::ostream& operator<<(std::ostream& _out, FunctionCallGraphBuilder::Node const& _node);
+std::ostream& operator<<(std::ostream& _out, CallGraph::Node const& _node);
 
 }

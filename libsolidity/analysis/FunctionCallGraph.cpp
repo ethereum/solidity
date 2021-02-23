@@ -29,41 +29,17 @@ using namespace ranges;
 using namespace solidity::frontend;
 using namespace solidity::util;
 
-bool FunctionCallGraphBuilder::CompareByID::operator()(Node const& _lhs, Node const& _rhs) const
-{
-	if (_lhs.index() != _rhs.index())
-		return _lhs.index() < _rhs.index();
-
-	if (holds_alternative<SpecialNode>(_lhs))
-		return get<SpecialNode>(_lhs) < get<SpecialNode>(_rhs);
-	return get<CallableDeclaration const*>(_lhs)->id() < get<CallableDeclaration const*>(_rhs)->id();
-}
-
-bool FunctionCallGraphBuilder::CompareByID::operator()(Node const& _lhs, int64_t _rhs) const
-{
-	solAssert(!holds_alternative<SpecialNode>(_lhs), "");
-
-	return get<CallableDeclaration const*>(_lhs)->id() < _rhs;
-}
-
-bool FunctionCallGraphBuilder::CompareByID::operator()(int64_t _lhs, Node const& _rhs) const
-{
-	solAssert(!holds_alternative<SpecialNode>(_rhs), "");
-
-	return _lhs < get<CallableDeclaration const*>(_rhs)->id();
-}
-
-FunctionCallGraphBuilder::ContractCallGraph FunctionCallGraphBuilder::buildCreationGraph(ContractDefinition const& _contract)
+CallGraph FunctionCallGraphBuilder::buildCreationGraph(ContractDefinition const& _contract)
 {
 	FunctionCallGraphBuilder builder(_contract);
-	solAssert(builder.m_currentNode == Node(SpecialNode::Entry), "");
+	solAssert(builder.m_currentNode == CallGraph::Node(CallGraph::SpecialNode::Entry), "");
 
 	// Create graph for constructor, state vars, etc
 	for (ContractDefinition const* base: _contract.annotation().linearizedBaseContracts | views::reverse)
 	{
 		// The constructor and functions called in state variable initial assignments should have
 		// an edge from Entry
-		builder.m_currentNode = SpecialNode::Entry;
+		builder.m_currentNode = CallGraph::SpecialNode::Entry;
 		for (auto const* stateVar: base->stateVariables())
 			stateVar->accept(builder);
 
@@ -82,21 +58,21 @@ FunctionCallGraphBuilder::ContractCallGraph FunctionCallGraphBuilder::buildCreat
 			inheritanceSpecifier->accept(builder);
 	}
 
-	builder.m_currentNode = SpecialNode::Entry;
+	builder.m_currentNode = CallGraph::SpecialNode::Entry;
 	builder.processQueue();
 
 	return move(builder.m_graph);
 }
 
-FunctionCallGraphBuilder::ContractCallGraph FunctionCallGraphBuilder::buildDeployedGraph(
+CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	ContractDefinition const& _contract,
-	FunctionCallGraphBuilder::ContractCallGraph const& _creationGraph
+	CallGraph const& _creationGraph
 )
 {
 	solAssert(&_creationGraph.contract == &_contract, "");
 
 	FunctionCallGraphBuilder builder(_contract);
-	solAssert(builder.m_currentNode == Node(SpecialNode::Entry), "");
+	solAssert(builder.m_currentNode == CallGraph::Node(CallGraph::SpecialNode::Entry), "");
 
 	auto getSecondElement = [](auto const& _tuple){ return get<1>(_tuple); };
 
@@ -121,17 +97,17 @@ FunctionCallGraphBuilder::ContractCallGraph FunctionCallGraphBuilder::buildDeplo
 
 	// All functions present in internal dispatch at creation time could potentially be pointers
 	// assigned to state variables and as such may be reachable after deployment as well.
-	builder.m_currentNode = SpecialNode::InternalDispatch;
-	for (Node const& dispatchTarget: valueOrDefault(_creationGraph.edges, SpecialNode::InternalDispatch, {}))
+	builder.m_currentNode = CallGraph::SpecialNode::InternalDispatch;
+	for (CallGraph::Node const& dispatchTarget: valueOrDefault(_creationGraph.edges, CallGraph::SpecialNode::InternalDispatch, {}))
 	{
-		solAssert(!holds_alternative<SpecialNode>(dispatchTarget), "");
+		solAssert(!holds_alternative<CallGraph::SpecialNode>(dispatchTarget), "");
 		solAssert(get<CallableDeclaration const*>(dispatchTarget) != nullptr, "");
 
 		// Visit the callable to add not only it but also everything it calls too
 		builder.functionReferenced(*get<CallableDeclaration const*>(dispatchTarget), false);
 	}
 
-	builder.m_currentNode = SpecialNode::Entry;
+	builder.m_currentNode = CallGraph::SpecialNode::Entry;
 	builder.processQueue();
 
 	return move(builder.m_graph);
@@ -149,7 +125,7 @@ bool FunctionCallGraphBuilder::visit(FunctionCall const& _functionCall)
 		// If it's not a direct call, we don't really know which function will be called (it may even
 		// change at runtime). All we can do is to add an edge to the dispatch which in turn has
 		// edges to all functions could possibly be called.
-		add(m_currentNode, SpecialNode::InternalDispatch);
+		add(m_currentNode, CallGraph::SpecialNode::InternalDispatch);
 
 	return true;
 }
@@ -241,13 +217,13 @@ void FunctionCallGraphBuilder::enqueueCallable(CallableDeclaration const& _calla
 		m_visitQueue.push_back(&_callable);
 
 		// Insert the callable to the graph (with no edges coming out of it) to mark it as visited.
-		m_graph.edges.insert({Node(&_callable), {}});
+		m_graph.edges.insert({CallGraph::Node(&_callable), {}});
 	}
 }
 
 void FunctionCallGraphBuilder::processQueue()
 {
-	solAssert(m_currentNode == Node(SpecialNode::Entry), "Visit queue is already being processed.");
+	solAssert(m_currentNode == CallGraph::Node(CallGraph::SpecialNode::Entry), "Visit queue is already being processed.");
 
 	while (!m_visitQueue.empty())
 	{
@@ -258,10 +234,10 @@ void FunctionCallGraphBuilder::processQueue()
 		get<CallableDeclaration const*>(m_currentNode)->accept(*this);
 	}
 
-	m_currentNode = SpecialNode::Entry;
+	m_currentNode = CallGraph::SpecialNode::Entry;
 }
 
-void FunctionCallGraphBuilder::add(Node _caller, Node _callee)
+void FunctionCallGraphBuilder::add(CallGraph::Node _caller, CallGraph::Node _callee)
 {
 	m_graph.edges[_caller].insert(_callee);
 }
@@ -271,29 +247,27 @@ void FunctionCallGraphBuilder::functionReferenced(CallableDeclaration const& _ca
 	if (_calledDirectly)
 	{
 		solAssert(
-			holds_alternative<SpecialNode>(m_currentNode) || m_graph.edges.count(m_currentNode) > 0,
+			holds_alternative<CallGraph::SpecialNode>(m_currentNode) || m_graph.edges.count(m_currentNode) > 0,
 			"Adding an edge from a node that has not been visited yet."
 		);
 
 		add(m_currentNode, &_callable);
 	}
 	else
-		add(SpecialNode::InternalDispatch, &_callable);
+		add(CallGraph::SpecialNode::InternalDispatch, &_callable);
 
 	enqueueCallable(_callable);
 }
 
-ostream& solidity::frontend::operator<<(ostream& _out, FunctionCallGraphBuilder::Node const& _node)
+ostream& solidity::frontend::operator<<(ostream& _out, CallGraph::Node const& _node)
 {
-	using SpecialNode = FunctionCallGraphBuilder::SpecialNode;
-
-	if (holds_alternative<SpecialNode>(_node))
-		switch (get<SpecialNode>(_node))
+	if (holds_alternative<CallGraph::SpecialNode>(_node))
+		switch (get<CallGraph::SpecialNode>(_node))
 		{
-			case SpecialNode::InternalDispatch:
+			case CallGraph::SpecialNode::InternalDispatch:
 				_out << "InternalDispatch";
 				break;
-			case SpecialNode::Entry:
+			case CallGraph::SpecialNode::Entry:
 				_out << "Entry";
 				break;
 			default: solAssert(false, "Invalid SpecialNode type");

@@ -78,11 +78,11 @@ void verifyCallGraph(
 }
 
 set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCallables(
-	FunctionCallGraphBuilder::ContractCallGraph const& _graph
+	CallGraph const& _graph
 )
 {
 	set<CallableDeclaration const*, ASTNode::CompareByID> reachableCallables;
-	for (FunctionCallGraphBuilder::Node const& reachableNode: _graph.edges | views::keys)
+	for (CallGraph::Node const& reachableNode: _graph.edges | views::keys)
 		if (holds_alternative<CallableDeclaration const*>(reachableNode))
 			reachableCallables.emplace(get<CallableDeclaration const*>(reachableNode));
 
@@ -119,10 +119,7 @@ pair<string, string> IRGenerator::run(
 	return {warning + ir, warning + asmStack.print()};
 }
 
-void IRGenerator::verifyCallGraphs(
-	FunctionCallGraphBuilder::ContractCallGraph const& _creationGraph,
-	FunctionCallGraphBuilder::ContractCallGraph const& _deployedGraph
-)
+void IRGenerator::verifyCallGraphs(CallGraph const& _creationGraph, CallGraph const& _deployedGraph)
 {
 	// m_creationFunctionList and m_deployedFunctionList are not used for any other purpose so
 	// we can just destroy them without bothering to make a copy.

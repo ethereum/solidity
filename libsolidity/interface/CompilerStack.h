@@ -348,10 +348,10 @@ public:
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
 	/// @returns a graph with edges representing calls between functions that may happen during contract construction.
-	FunctionCallGraphBuilder::ContractCallGraph const& creationCallGraph(std::string const& _contractName) const;
+	CallGraph const& creationCallGraph(std::string const& _contractName) const;
 
 	/// @returns a graph with edges representing calls between functions that may happen in a deployed contract.
-	FunctionCallGraphBuilder::ContractCallGraph const& deployedCallGraph(std::string const& _contractName) const;
+	CallGraph const& deployedCallGraph(std::string const& _contractName) const;
 
 	/// Changes the format of the metadata appended at the end of the bytecode.
 	/// This is mostly a workaround to avoid bytecode and gas differences between compiler builds
@@ -394,8 +394,8 @@ private:
 		util::LazyInit<Json::Value const> runtimeGeneratedSources;
 		mutable std::optional<std::string const> sourceMapping;
 		mutable std::optional<std::string const> runtimeSourceMapping;
-		std::optional<FunctionCallGraphBuilder::ContractCallGraph const> creationCallGraph;
-		std::optional<FunctionCallGraphBuilder::ContractCallGraph const> deployedCallGraph;
+		std::optional<CallGraph const> creationCallGraph;
+		std::optional<CallGraph const> deployedCallGraph;
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback

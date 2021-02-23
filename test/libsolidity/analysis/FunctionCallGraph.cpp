@@ -53,12 +53,12 @@ using namespace solidity::langutil;
 using namespace solidity::frontend;
 
 using EdgeMap = map<
-	FunctionCallGraphBuilder::Node,
-	set<FunctionCallGraphBuilder::Node, FunctionCallGraphBuilder::CompareByID>,
-	FunctionCallGraphBuilder::CompareByID
+	CallGraph::Node,
+	set<CallGraph::Node, CallGraph::CompareByID>,
+	CallGraph::CompareByID
 >;
 using EdgeNames = set<tuple<string, string>>;
-using CallGraphMap = map<string, FunctionCallGraphBuilder::ContractCallGraph const*>;
+using CallGraphMap = map<string, CallGraph const*>;
 
 namespace
 {
@@ -131,7 +131,7 @@ void checkCallGraphExpectations(
 )
 {
 	auto getContractName = [](ContractDefinition const* _contract){ return _contract->name(); };
-	auto eventToString = [](EventDefinition const* _event){ return toString(FunctionCallGraphBuilder::Node(_event)); };
+	auto eventToString = [](EventDefinition const* _event){ return toString(CallGraph::Node(_event)); };
 	auto notEmpty = [](set<string> const& _set){ return !_set.empty(); };
 
 	soltestAssert(
@@ -157,7 +157,7 @@ void checkCallGraphExpectations(
 	for (string const& contractName: _expectedEdges | views::keys)
 	{
 		soltestAssert(_callGraphs.at(contractName) != nullptr, "");
-		FunctionCallGraphBuilder::ContractCallGraph const& callGraph = *_callGraphs.at(contractName);
+		CallGraph const& callGraph = *_callGraphs.at(contractName);
 
 		edges[contractName] = edgeNames(callGraph.edges);
 		if (!callGraph.createdContracts.empty())
