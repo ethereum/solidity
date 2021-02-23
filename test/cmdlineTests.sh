@@ -465,12 +465,12 @@ SOLTMPDIR=$(mktemp -d)
 
     # This should not fail
     set +e
-    output=$(echo '' | "$SOLC" --ast-json - 2>/dev/null)
+    output=$(echo '' | "$SOLC" --ast-compact-json - 2>/dev/null)
     result=$?
     set -e
     if [[ $result != 0 ]]
     then
-        printError "Incorrect response to --ast-json option with empty stdin"
+        printError "Incorrect response to --ast-compact-json option with empty stdin"
         exit 1
     fi
 )
