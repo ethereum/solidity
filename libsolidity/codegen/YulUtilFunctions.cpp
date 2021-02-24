@@ -2353,8 +2353,6 @@ string YulUtilFunctions::copyArrayFromStorageToMemoryFunction(ArrayType const& _
 
 string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingType, Type const& _keyType)
 {
-	solAssert(_keyType.sizeOnStack() <= 1, "");
-
 	string functionName = "mapping_index_access_" + _mappingType.identifier() + "_of_" + _keyType.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		if (_mappingType.keyType()->isDynamicallySized())
@@ -2364,7 +2362,7 @@ string YulUtilFunctions::mappingIndexAccessFunction(MappingType const& _mappingT
 				}
 			)")
 			("functionName", functionName)
-			("key", _keyType.sizeOnStack() > 0 ? "key" : "")
+			("key", suffixedVariableNameList("key_", 0, _keyType.sizeOnStack()))
 			("hash", packedHashFunction(
 				{&_keyType, TypeProvider::uint256()},
 				{_mappingType.keyType(), TypeProvider::uint256()}
