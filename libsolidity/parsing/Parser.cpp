@@ -961,6 +961,14 @@ ASTPointer<Identifier> Parser::parseIdentifier()
 	return nodeFactory.createNode<Identifier>(expectIdentifierToken());
 }
 
+ASTPointer<Identifier> Parser::parseIdentifierOrAddress()
+{
+	RecursionGuard recursionGuard(*this);
+	ASTNodeFactory nodeFactory(*this);
+	nodeFactory.markEndPosition();
+	return nodeFactory.createNode<Identifier>(expectIdentifierTokenOrAddress());
+}
+
 ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 {
 	ASTNodeFactory nodeFactory(*this);
@@ -979,7 +987,7 @@ ASTPointer<IdentifierPath> Parser::parseIdentifierPath()
 	{
 		m_scanner->next();
 		nodeFactory.markEndPosition();
-		identifierPath.push_back(*expectIdentifierToken());
+		identifierPath.push_back(*expectIdentifierTokenOrAddress());
 	}
 	return nodeFactory.createNode<IdentifierPath>(identifierPath);
 }
@@ -1751,13 +1759,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		{
 			m_scanner->next();
 			nodeFactory.markEndPosition();
-			if (m_scanner->currentToken() == Token::Address)
-			{
-				expression = nodeFactory.createNode<MemberAccess>(expression, make_shared<ASTString>("address"));
-				m_scanner->next();
-			}
-			else
-				expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierToken());
+			expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierTokenOrAddress());
 			break;
 		}
 		case Token::LParen:
@@ -2081,7 +2083,7 @@ Parser::IndexAccessedPath Parser::parseIndexAccessedPath()
 		while (m_scanner->currentToken() == Token::Period)
 		{
 			m_scanner->next();
-			iap.path.push_back(parseIdentifier());
+			iap.path.push_back(parseIdentifierOrAddress());
 		}
 	}
 	else
@@ -2199,9 +2201,24 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 
 ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
-	// do not advance on success
-	expectToken(Token::Identifier, false);
+	expectToken(Token::Identifier, false /* do not advance */);
 	return getLiteralAndAdvance();
+}
+
+ASTPointer<ASTString> Parser::expectIdentifierTokenOrAddress()
+{
+	ASTPointer<ASTString> result;
+	if (m_scanner->currentToken() == Token::Address)
+	{
+		result = make_shared<ASTString>("address");
+		m_scanner->next();
+	}
+	else
+	{
+		expectToken(Token::Identifier, false /* do not advance */);
+		result = getLiteralAndAdvance();
+	}
+	return result;
 }
 
 ASTPointer<ASTString> Parser::getLiteralAndAdvance()
