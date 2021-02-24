@@ -2062,7 +2062,6 @@ void IRGeneratorForStatements::endVisit(IndexAccess const& _indexAccess)
 
 		MappingType const& mappingType = dynamic_cast<MappingType const&>(baseType);
 		Type const& keyType = *_indexAccess.indexExpression()->annotation().type;
-		solAssert(keyType.sizeOnStack() <= 1, "");
 
 		string slot = m_context.newYulVariable();
 		Whiskers templ("let <slot> := <indexAccess>(<base><?+key>,<key></+key>)\n");
