@@ -120,7 +120,6 @@ static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
 static string const g_strAssemble = "assemble";
 static string const g_strAst = "ast";
-static string const g_strAstJson = "ast-json";
 static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
@@ -203,7 +202,6 @@ static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
 static string const g_argAssemble = g_strAssemble;
 static string const g_argAstCompactJson = g_strAstCompactJson;
-static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCombinedJson = g_strCombinedJson;
@@ -318,7 +316,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argAbi,
 		g_argAsm,
 		g_argAsmJson,
-		g_argAstJson,
 		g_argBinary,
 		g_argBinaryRuntime,
 		g_argMetadata,
@@ -974,7 +971,6 @@ General Information)").c_str(),
 
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
-		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
 		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
 		(g_argAsm.c_str(), "EVM assembly of the contracts.")
 		(g_argAsmJson.c_str(), "EVM assembly of the contracts in JSON format.")
