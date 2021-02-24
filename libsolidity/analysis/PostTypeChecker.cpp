@@ -86,6 +86,16 @@ void PostTypeChecker::endVisit(EmitStatement const& _emit)
 	callEndVisit(_emit);
 }
 
+bool PostTypeChecker::visit(RevertStatement const& _revert)
+{
+	return callVisit(_revert);
+}
+
+void PostTypeChecker::endVisit(RevertStatement const& _revert)
+{
+	callEndVisit(_revert);
+}
+
 bool PostTypeChecker::visit(FunctionCall const& _functionCall)
 {
 	return callVisit(_functionCall);
@@ -281,42 +291,59 @@ private:
 	bool m_insideModifierInvocation = false;
 };
 
-struct EventOutsideEmitChecker: public PostTypeChecker::Checker
+struct EventOutsideEmitErrorOutsideRevertChecker: public PostTypeChecker::Checker
 {
-	EventOutsideEmitChecker(ErrorReporter& _errorReporter):
+	EventOutsideEmitErrorOutsideRevertChecker(ErrorReporter& _errorReporter):
 		Checker(_errorReporter) {}
 
-	bool visit(EmitStatement const&) override
+	bool visit(EmitStatement const& _emitStatement) override
 	{
-		m_insideEmitStatement = true;
+		m_currentStatement = &_emitStatement;
 		return true;
 	}
 
 	void endVisit(EmitStatement const&) override
 	{
-		m_insideEmitStatement = true;
+		m_currentStatement = nullptr;
+	}
+
+	bool visit(RevertStatement const& _revertStatement) override
+	{
+		m_currentStatement = &_revertStatement;
+		return true;
+	}
+
+	void endVisit(RevertStatement const&) override
+	{
+		m_currentStatement = nullptr;
 	}
 
 	bool visit(FunctionCall const& _functionCall) override
 	{
-		if (*_functionCall.annotation().kind != FunctionCallKind::FunctionCall)
-			return true;
-
-		if (FunctionTypePointer const functionType = dynamic_cast<FunctionTypePointer const>(_functionCall.expression().annotation().type))
-			// Check for event outside of emit statement
-			if (!m_insideEmitStatement && functionType->kind() == FunctionType::Kind::Event)
-				m_errorReporter.typeError(
-					3132_error,
-					_functionCall.location(),
-					"Event invocations have to be prefixed by \"emit\"."
-				);
+		if (*_functionCall.annotation().kind == FunctionCallKind::FunctionCall)
+			if (auto const* functionType = dynamic_cast<FunctionType const*>(_functionCall.expression().annotation().type))
+			{
+				// Check for event outside of emit statement
+				if (!dynamic_cast<EmitStatement const*>(m_currentStatement) && functionType->kind() == FunctionType::Kind::Event)
+					m_errorReporter.typeError(
+						3132_error,
+						_functionCall.location(),
+						"Event invocations have to be prefixed by \"emit\"."
+					);
+				else if (!dynamic_cast<RevertStatement const*>(m_currentStatement) && functionType->kind() == FunctionType::Kind::Error)
+					m_errorReporter.typeError(
+						7757_error,
+						_functionCall.location(),
+						"Errors can only be used with revert statements: \"revert MyError();\"."
+					);
+			}
+		m_currentStatement = nullptr;
 
 		return true;
 	}
 
 private:
-	/// Flag indicating whether we are currently inside an EmitStatement.
-	bool m_insideEmitStatement = false;
+	Statement const* m_currentStatement = nullptr;
 };
 
 struct NoVariablesInInterfaceChecker: public PostTypeChecker::Checker
@@ -395,14 +422,16 @@ struct ReservedErrorSelector: public PostTypeChecker::Checker
 		}
 	}
 };
+
 }
+
 
 PostTypeChecker::PostTypeChecker(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter)
 {
 	m_checkers.push_back(make_shared<ConstStateVarCircularReferenceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<OverrideSpecifierChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<ModifierContextChecker>(_errorReporter));
-	m_checkers.push_back(make_shared<EventOutsideEmitChecker>(_errorReporter));
+	m_checkers.push_back(make_shared<EventOutsideEmitErrorOutsideRevertChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<NoVariablesInInterfaceChecker>(_errorReporter));
 	m_checkers.push_back(make_shared<ReservedErrorSelector>(_errorReporter));
 }
