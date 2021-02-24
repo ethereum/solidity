@@ -14,6 +14,7 @@ Bugfixes:
  * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
  * AST: Added ``referencedDeclaration`` for enum members.
  * Code Generator: Fix internal error when functions are passed as parameters of other callables, when the function types can be implicitly converted, but not identical.
+ * Parser: Properly parse ``.address`` in some situations.
  * Type Checker: Make function-hash collision errors into fatal type errors.
 
 

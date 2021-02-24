@@ -105,6 +105,7 @@ private:
 	ASTPointer<UsingForDirective> parseUsingDirective();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
+	ASTPointer<Identifier> parseIdentifierOrAddress();
 	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
 	ASTPointer<IdentifierPath> parseIdentifierPath();
 	ASTPointer<TypeName> parseTypeNameSuffix(ASTPointer<TypeName> type, ASTNodeFactory& nodeFactory);
@@ -201,6 +202,7 @@ private:
 	ASTPointer<Expression> expressionFromIndexAccessStructure(IndexAccessedPath const& _pathAndIndices);
 
 	ASTPointer<ASTString> expectIdentifierToken();
+	ASTPointer<ASTString> expectIdentifierTokenOrAddress();
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
