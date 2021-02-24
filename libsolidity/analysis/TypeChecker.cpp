@@ -583,13 +583,18 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 
 	if (auto referenceType = dynamic_cast<ReferenceType const*>(varType))
 	{
-		auto result = referenceType->validForLocation(referenceType->location());
+		BoolResult result = referenceType->validForLocation(referenceType->location());
 		if (result)
 		{
 			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
 			bool callDataCheckRequired = ((_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) && !isLibraryStorageParameter);
 			if (callDataCheckRequired)
-				result = referenceType->validForLocation(DataLocation::CallData);
+			{
+				if (!referenceType->interfaceType(false))
+					solAssert(m_errorReporter.hasErrors(), "");
+				else
+					result = referenceType->validForLocation(DataLocation::CallData);
+			}
 		}
 		if (!result)
 		{

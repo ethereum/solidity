@@ -769,6 +769,8 @@ public:
 	bool isPointer() const;
 
 	/// @returns true if this is valid to be stored in data location _loc
+	/// The function mostly checks sizes. For calldata, this should only be called
+	/// if the type has an interfaceType.
 	virtual BoolResult validForLocation(DataLocation _loc) const = 0;
 
 	bool operator==(ReferenceType const& _other) const
