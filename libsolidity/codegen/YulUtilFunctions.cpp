@@ -3888,11 +3888,13 @@ string YulUtilFunctions::storageSetToZeroFunction(Type const& _type)
 		if (_type.isValueType())
 			return Whiskers(R"(
 				function <functionName>(slot, offset) {
-					<store>(slot, offset, <zeroValue>())
+					let <values> := <zeroValue>()
+					<store>(slot, offset, <values>)
 				}
 			)")
 			("functionName", functionName)
 			("store", updateStorageValueFunction(_type, _type))
+			("values", suffixedVariableNameList("zero_", 0, _type.sizeOnStack()))
 			("zeroValue", zeroValueFunction(_type))
 			.render();
 		else if (_type.category() == Type::Category::Array)
