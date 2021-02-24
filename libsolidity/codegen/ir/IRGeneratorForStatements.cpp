@@ -1323,6 +1323,11 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 		break;
 	}
+	case FunctionType::Kind::BytesConcat:
+	{
+		solUnimplementedAssert(false, "bytes.concat not yet implemented in codegen.");
+		break;
+	}
 	case FunctionType::Kind::MetaType:
 	{
 		break;

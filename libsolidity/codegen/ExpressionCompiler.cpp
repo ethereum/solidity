@@ -1021,6 +1021,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ArrayUtils(m_context).popStorageArrayElement(*arrayType);
 			break;
 		}
+		case FunctionType::Kind::BytesConcat:
+		{
+			_functionCall.expression().accept(*this);
+			solUnimplementedAssert(false, "Bytes concat not implemented in codegen yet.");
+			break;
+		}
 		case FunctionType::Kind::ObjectCreation:
 		{
 			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);

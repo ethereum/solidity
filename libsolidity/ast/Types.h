@@ -1158,6 +1158,7 @@ public:
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
 		ArrayPop, ///< .pop() from a dynamically sized array in storage
+		BytesConcat, ///< .concat() on bytes (type type)
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
 		Require, ///< require()
