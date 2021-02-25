@@ -41,7 +41,8 @@ CallGraph FunctionCallGraphBuilder::buildCreationGraph(ContractDefinition const&
 		// an edge from Entry
 		builder.m_currentNode = CallGraph::SpecialNode::Entry;
 		for (auto const* stateVar: base->stateVariables())
-			stateVar->accept(builder);
+			if (!stateVar->isConstant())
+				stateVar->accept(builder);
 
 		if (base->constructor())
 		{
@@ -140,7 +141,15 @@ bool FunctionCallGraphBuilder::visit(EmitStatement const& _emitStatement)
 
 bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 {
-	if (auto const* callable = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+	if (auto const* variable = dynamic_cast<VariableDeclaration const*>(_identifier.annotation().referencedDeclaration))
+	{
+		if (variable->isConstant())
+		{
+			solAssert(variable->isStateVariable() || variable->isFileLevelVariable(), "");
+			variable->accept(*this);
+		}
+	}
+	else if (auto const* callable = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
 	{
 		solAssert(*_identifier.annotation().requiredLookup == VirtualLookup::Virtual, "");
 

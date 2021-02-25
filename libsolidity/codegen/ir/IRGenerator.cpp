@@ -66,7 +66,7 @@ void verifyCallGraph(
 		{
 			solAssert(
 				_generatedFunctions.count(expectedFunction) == 1 || expectedFunction->isConstructor(),
-				"No code generated for function " + expectedFunction->name() + "even though it is not a constructor."
+				"No code generated for function " + expectedFunction->name() + " even though it is not a constructor."
 			);
 			_generatedFunctions.erase(expectedFunction);
 		}
