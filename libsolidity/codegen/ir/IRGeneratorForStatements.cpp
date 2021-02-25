@@ -1689,9 +1689,15 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				functionType.kind() == FunctionType::Kind::DelegateCall
 			)
 				define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionSelector"));
-			else if (functionType.kind() == FunctionType::Kind::Declaration)
+			else if (
+				functionType.kind() == FunctionType::Kind::Declaration ||
+				// In some situations, internal function types also provide the "selector" member.
+				// See Types.cpp for details.
+				functionType.kind() == FunctionType::Kind::Internal
+			)
 			{
 				solAssert(functionType.hasDeclaration(), "");
+				solAssert(functionType.declaration().isPartOfExternalInterface(), "");
 				define(IRVariable{_memberAccess}) << formatNumber(functionType.externalIdentifier() << 224) << "\n";
 			}
 			else
