@@ -29,6 +29,8 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <libyul/backends/evm/EVMCodeTransform.h>
+
 #include <sstream>
 
 using namespace std;
@@ -119,6 +121,11 @@ void FuzzerUtil::testCompiler(
 	{
 	}
 	catch (StackTooDeepError const&)
+	{
+	}
+	// If _compileViaYul is true, the yul
+	// codegen may throw StackTooDeepError.
+	catch (yul::StackTooDeepError const&)
 	{
 	}
 }
