@@ -202,6 +202,18 @@ public:
 	/// signature: (base, exponent) -> power
 	std::string wrappingIntExpFunction(IntegerType const& _type, IntegerType const& _exponentType);
 
+	/// signature: (x, y) -> sum
+	std::string fixedAddFunction(FixedPointType const& _type, bool _checked);
+
+	/// signature: (x, y) -> difference
+	std::string fixedSubFunction(FixedPointType const& _type, bool _checked);
+
+	/// signature: (x, y) -> product
+	std::string fixedMulFunction(FixedPointType const& _type, bool _checked);
+
+	/// signature: (x, y) -> quotient
+	std::string fixedDivFunction(FixedPointType const& _type, bool _checked);
+
 	/// @returns the name of a function that fetches the length of the given
 	/// array
 	/// signature: (array) -> length

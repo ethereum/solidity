@@ -797,6 +797,8 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(commonType))
 			isSigned = type->isSigned();
+		else if (auto type = dynamic_cast<FixedPointType const*>(commonType))
+			isSigned = type->isSigned();
 
 		string args =
 			expressionAsType(_binOp.leftExpression(), *commonType, true) +
@@ -2726,32 +2728,52 @@ string IRGeneratorForStatements::binaryOperation(
 	}
 	else if (TokenTraits::isArithmeticOp(_operator))
 	{
-		solUnimplementedAssert(
-			_type.category() != Type::Category::FixedPoint,
-			"Not yet implemented - FixedPointType."
-		);
-		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
-		solAssert(type, "");
 		bool checked = m_context.arithmetic() == Arithmetic::Checked;
-		switch (_operator)
+		if (_type.category() == Type::Category::Integer)
 		{
-		case Token::Add:
-			fun = checked ? m_utils.overflowCheckedIntAddFunction(*type) : m_utils.wrappingIntAddFunction(*type);
-			break;
-		case Token::Sub:
-			fun = checked ? m_utils.overflowCheckedIntSubFunction(*type) : m_utils.wrappingIntSubFunction(*type);
-			break;
-		case Token::Mul:
-			fun = checked ? m_utils.overflowCheckedIntMulFunction(*type) : m_utils.wrappingIntMulFunction(*type);
-			break;
-		case Token::Div:
-			fun = checked ? m_utils.overflowCheckedIntDivFunction(*type) : m_utils.wrappingIntDivFunction(*type);
-			break;
-		case Token::Mod:
-			fun = m_utils.intModFunction(*type);
-			break;
-		default:
-			break;
+			IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+			switch (_operator)
+			{
+			case Token::Add:
+				fun = checked ? m_utils.overflowCheckedIntAddFunction(type) : m_utils.wrappingIntAddFunction(type);
+				break;
+			case Token::Sub:
+				fun = checked ? m_utils.overflowCheckedIntSubFunction(type) : m_utils.wrappingIntSubFunction(type);
+				break;
+			case Token::Mul:
+				fun = checked ? m_utils.overflowCheckedIntMulFunction(type) : m_utils.wrappingIntMulFunction(type);
+				break;
+			case Token::Div:
+				fun = checked ? m_utils.overflowCheckedIntDivFunction(type) : m_utils.wrappingIntDivFunction(type);
+				break;
+			case Token::Mod:
+				fun = m_utils.intModFunction(type);
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			solAssert(_type.category() == Type::Category::FixedPoint, "");
+			FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
+			switch (_operator)
+			{
+			case Token::Add:
+				fun = m_utils.fixedAddFunction(type, checked);
+				break;
+			case Token::Sub:
+				fun = m_utils.fixedSubFunction(type, checked);
+				break;
+			case Token::Mul:
+				fun = m_utils.fixedMulFunction(type, checked);
+				break;
+			case Token::Div:
+				fun = m_utils.fixedDivFunction(type, checked);
+				break;
+			default:
+				solAssert(false, "Unknown arithmetic operator.");
+			}
 		}
 	}
 

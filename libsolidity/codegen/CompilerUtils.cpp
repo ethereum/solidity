@@ -893,6 +893,7 @@ void CompilerUtils::convertType(
 			unsigned fractionalDigitsOnStack = 0;
 			if (auto const* typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
 			{
+				// TODO do we have to subtract the fractional digits?
 				if (targetFixedPointType.numBits() > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
 			}

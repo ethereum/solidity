@@ -434,6 +434,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
+		// TODO
 		solUnimplementedAssert(
 			type.category() != Type::Category::FixedPoint,
 			"Not yet implemented - FixedPointType."
@@ -2265,7 +2266,30 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token _operator, Type 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token _operator, Type const& _type)
 {
 	if (_type.category() == Type::Category::FixedPoint)
-		solUnimplemented("Not yet implemented - FixedPointType.");
+	{
+		bool checked = (m_context.arithmetic() == Arithmetic::Checked);
+		FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
+		string functionName;
+		switch (_operator)
+		{
+		case Token::Add:
+			functionName = m_context.utilFunctions().fixedAddFunction(type, checked);
+			break;
+		case Token::Sub:
+			functionName = m_context.utilFunctions().fixedSubFunction(type, checked);
+			break;
+		case Token::Mul:
+			functionName = m_context.utilFunctions().fixedMulFunction(type, checked);
+			break;
+		case Token::Div:
+			functionName = m_context.utilFunctions().fixedDivFunction(type, checked);
+			break;
+		default:
+			solAssert(false, "Unknown arithmetic operator.");
+		}
+		m_context.callYulFunction(functionName, 2, 1);
+		return;
+	}
 
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	if (m_context.arithmetic() == Arithmetic::Checked)
