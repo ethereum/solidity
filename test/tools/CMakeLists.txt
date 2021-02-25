@@ -41,5 +41,6 @@ add_executable(isoltest
 	../libyul/YulInterpreterTest.cpp
 	../libsolidity/TestHook.h
 	../libsolidity/hooks/SmokeHook.h
+	../libsolidity/hooks/SmokeHook.cpp
 )
 target_link_libraries(isoltest PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)

@@ -100,6 +100,7 @@ set(libsolidity_sources
     libsolidity/analysis/FunctionCallGraph.cpp
     libsolidity/TestHook.h
     libsolidity/hooks/SmokeHook.h
+    libsolidity/hooks/SmokeHook.cpp
 )
 detect_stray_source_files("${libsolidity_sources}" "libsolidity/")
 

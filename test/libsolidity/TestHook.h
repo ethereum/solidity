@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 namespace solidity::frontend::test
 {
@@ -79,7 +80,8 @@ public:
 
 	/// This function gets called, after the actual `TestFunctionCall` got executed.
 	/// @param _call current `TestFunctionCall` defined in the test-case.
-	virtual void afterFunctionCall(TestFunctionCall const& _call) = 0;
+	/// @returns vector of strings containing the "reaction" of _call.
+	virtual std::vector<std::string> afterFunctionCall(TestFunctionCall const& _call) = 0;
 
 	/// If the test-case consists multiple test-runs (e.g. yul and/or ewasm), this function is called per test-run.
 	/// This function is called at the end of each test-run.

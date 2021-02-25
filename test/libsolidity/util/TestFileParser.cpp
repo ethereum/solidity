@@ -152,6 +152,8 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 							call.kind = FunctionCall::Kind::Constructor;
 					}
 
+					call.reactions = parseFunctionCallReactions();
+
 					calls.emplace_back(std::move(call));
 				}
 				catch (TestParserError const& _e)
@@ -269,6 +271,19 @@ FunctionCallArgs TestFileParser::parseFunctionCallArguments()
 	while (accept(Token::Comma, true))
 		arguments.parameters.emplace_back(parseParameter());
 	return arguments;
+}
+
+vector<string> TestFileParser::parseFunctionCallReactions()
+{
+	vector<string> result;
+	while (accept(Token::Reaction, false))
+	{
+		result.emplace_back(m_scanner.currentLiteral());
+		m_scanner.scanNextToken();
+		if (accept(Token::Newline, false))
+			m_scanner.scanNextToken();
+	}
+	return result;
 }
 
 FunctionCallExpectations TestFileParser::parseFunctionCallExpectations()
@@ -566,6 +581,11 @@ void TestFileParser::Scanner::scanNextToken()
 				advance();
 				selectToken(Token::Arrow);
 			}
+			else if (peek() == ' ')
+			{
+				advance();
+				selectToken(Token::Reaction, scanReactionString());
+			}
 			else
 				selectToken(Token::Sub);
 			break;
@@ -672,6 +692,19 @@ string TestFileParser::Scanner::scanHexNumber()
 		number += current();
 	}
 	return number;
+}
+
+string TestFileParser::Scanner::scanReactionString()
+{
+	string str;
+	advance();
+
+	while (current() != '.')
+	{
+		str += current();
+		advance();
+	}
+	return str;
 }
 
 string TestFileParser::Scanner::scanString()

@@ -84,6 +84,9 @@ public:
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 
+	void setExpectedReactions(std::vector<std::string> _reactions) { m_reactions = _reactions; }
+	std::vector<std::string> expectedReactions() { return m_reactions; }
+
 private:
 	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each parameter.
 	/// Throws if there's a mismatch in the size of `bytes` and the desired formats that are specified
@@ -134,6 +137,7 @@ private:
 	Json::Value m_contractABI;
 	/// Flags that the test failed because the called function is not known to exist on the contract.
 	bool m_calledNonExistingFunction = false;
+	std::vector<std::string> m_reactions{};
 };
 
 }

@@ -61,6 +61,7 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	addBuiltin("smoke.test1", simpleSmokeBuiltin);
 	addBuiltin("smoke.test2", simpleSmokeBuiltin);
 	addBuiltin("smoke_test3", simpleSmokeBuiltin);
+	addBuiltin("smoke.reaction", bind(&SemanticTest::builtinSmokeReactionTest, this, _1));
 
 	addTestHook(make_unique<SmokeHook>());
 
@@ -300,7 +301,11 @@ TestCase::TestResult SemanticTest::runTest(
 		}
 
 		for (std::unique_ptr<TestHook> const& hook: m_testHooks)
-			hook->afterFunctionCall(test);
+		{
+			vector<string> reactions = hook->afterFunctionCall(test);
+			test.setExpectedReactions(reactions);
+			success &= (reactions == test.call().reactions);
+		}
 	}
 
 	for (std::unique_ptr<TestHook> const& hook: m_testHooks)
@@ -441,6 +446,19 @@ bool SemanticTest::deploy(
 }
 
 std::optional<bytes> SemanticTest::builtinSmokeTest(FunctionCall const& call)
+{
+	// This function is only used in test/libsolidity/semanticTests/builtins/smoke.sol.
+	std::optional<bytes> result;
+	if (call.arguments.parameters.size() < 3)
+	{
+		result = bytes();
+		for (const auto& parameter: call.arguments.parameters)
+			result.value() += util::toBigEndian(u256{util::fromHex(parameter.rawString)});
+	}
+	return result;
+}
+
+std::optional<bytes> SemanticTest::builtinSmokeReactionTest(FunctionCall const& call)
 {
 	// This function is only used in test/libsolidity/semanticTests/builtins/smoke.sol.
 	std::optional<bytes> result;

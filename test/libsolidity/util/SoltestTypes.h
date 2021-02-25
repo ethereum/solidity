@@ -48,6 +48,7 @@ namespace solidity::frontend::test
 	T(Number, "number", 0)         \
 	T(HexNumber, "hex_number", 0)  \
 	T(String, "string", 0)         \
+	T(Reaction, "reaction", 0)     \
 	T(Identifier, "identifier", 0) \
 	/* type keywords */            \
 	K(Ether, "ether", 0)           \
@@ -301,6 +302,7 @@ struct FunctionCall
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
+	std::vector<std::string> reactions{};
 };
 
 using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;

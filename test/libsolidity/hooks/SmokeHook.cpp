@@ -12,40 +12,31 @@
 	along with solidity.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <test/libsolidity/hooks/SmokeHook.h>
+
+#include <test/libsolidity/util/TestFunctionCall.h>
 
 #include <iostream>
-#include <test/libsolidity/TestHook.h>
 
 namespace solidity::frontend::test
 {
 
-class SmokeHook: public TestHook
+void SmokeHook::beginTestCase() { m_count = 0; }
+
+std::vector<std::string> SmokeHook::afterFunctionCall(TestFunctionCall const& _call)
 {
-public:
-	SmokeHook() = default;
-	~SmokeHook() override = default;
-
-	void beginTestCase() override;
-	void beforeFunctionCall(TestFunctionCall const&) override {}
-	std::vector<std::string> afterFunctionCall(TestFunctionCall const& _call) override;
-
-	void endTestCase() override {}
-
-	bool verifyFunctionCall(TestFunctionCall const&) override { return true; }
-
-	std::string formatFunctionCall(
-		TestFunctionCall const&,
-		ErrorReporter&,
-		std::string const&,
-		const bool,
-		const bool
-	) const override
+	std::vector<std::string> result;
+	if (_call.call().kind == FunctionCall::Kind::Builtin && _call.call().signature == "smoke.reaction")
 	{
-		return "";
+		for (int i = 0; i <= m_count; ++i)
+		{
+			std::stringstream stream;
+			stream << i + 1 << " / " << m_count + 1;
+			result.emplace_back(stream.str());
+		}
+		++m_count;
 	}
-private:
-	int m_count{0};
-};
+	return result;
+}
 
 } // namespace  solidity::frontend::test

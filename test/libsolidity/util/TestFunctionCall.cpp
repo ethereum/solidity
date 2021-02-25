@@ -225,6 +225,17 @@ string TestFunctionCall::format(
 		if (_hooks != nullptr)
 			for (auto& hook: *_hooks)
 				stream << hook->formatFunctionCall(*this, _errorReporter, _linePrefix, _renderResult, _highlight);
+
+		if (!m_reactions.empty())
+			stream << std::endl;
+
+		for (string const& reaction: m_reactions)
+		{
+			soltestAssert(reaction.find('.') == string::npos, "'.' not allowed in reaction.");
+			stream << _linePrefix << "// - " << reaction << ".";
+			if (&reaction != &*m_reactions.rbegin())
+				stream << std::endl;
+		}
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
@@ -345,6 +356,7 @@ void TestFunctionCall::reset()
 	m_rawBytes = bytes{};
 	m_failure = true;
 	m_calledNonExistingFunction = false;
+	m_reactions.clear();
 }
 
 bool TestFunctionCall::matchesExpectation() const

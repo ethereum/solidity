@@ -87,6 +87,7 @@ private:
 		std::string scanDecimalNumber();
 		std::string scanHexNumber();
 		std::string scanString();
+		std::string scanReactionString();
 		char scanHexPart();
 
 	private:
@@ -140,6 +141,9 @@ private:
 
 	/// Parses the expected result of a function call execution.
 	FunctionCallExpectations parseFunctionCallExpectations();
+
+	/// Parses the expected result of a function call execution.
+	std::vector<std::string> parseFunctionCallReactions();
 
 	/// Parses the next parameter in a comma separated list.
 	/// Takes a newly parsed, and type-annotated `bytes` argument,
