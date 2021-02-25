@@ -2000,6 +2000,163 @@ BOOST_AUTO_TEST_CASE(conversions_and_struct_array_constructors)
 	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
 }
 
+BOOST_AUTO_TEST_CASE(immutable_initialization)
+{
+	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
+		function free() pure returns (uint) { return 42; }
+
+		contract Base {
+			function ext() external pure returns (uint) { free(); }
+			function inr() internal pure returns (uint) { free(); }
+		}
+
+		contract C is Base {
+			uint immutable extImmutable = this.ext();
+			uint immutable inrImmutable = inr();
+		}
+
+		contract D is Base {
+			uint immutable extImmutable;
+			uint immutable inrImmutable;
+
+			constructor () {
+				extImmutable = this.ext();
+				inrImmutable = inr();
+			}
+		}
+	)"s);
+	tuple<CallGraphMap, CallGraphMap> graphs = collectGraphs(*compilerStack);
+
+	map<string, EdgeNames> expectedCreationEdges = {
+		{"Base", {}},
+		{"C", {
+			{"Entry", "function Base.inr()"},
+			{"function Base.inr()", "function free()"},
+		}},
+		{"D", {
+			{"Entry", "constructor of D"},
+			{"constructor of D", "function Base.inr()"},
+			{"function Base.inr()", "function free()"},
+		}},
+	};
+
+	map<string, EdgeNames> expectedDeployedEdges = {
+		{"Base", {
+			{"Entry", "function Base.ext()"},
+			{"function Base.ext()", "function free()"},
+		}},
+		{"C", {
+			{"Entry", "function Base.ext()"},
+			{"function Base.ext()", "function free()"},
+		}},
+		{"D", {
+			{"Entry", "function Base.ext()"},
+			{"function Base.ext()", "function free()"},
+		}},
+	};
+
+	checkCallGraphExpectations(get<0>(graphs), expectedCreationEdges);
+	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
+}
+
+BOOST_AUTO_TEST_CASE(function_selector_access)
+{
+	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
+		function free() pure {}
+
+		bytes4 constant extFreeConst = Base.ext.selector;
+		bytes4 constant pubFreeConst = Base.pub.selector;
+
+		contract Base {
+			function ext() external pure { free(); extFreeConst; }
+			function pub() public pure { free(); pubFreeConst; }
+		}
+
+		contract C is Base {
+			bytes4 constant extConst = Base.ext.selector;
+			bytes4 constant pubConst = Base.pub.selector;
+		}
+
+		contract D is Base {
+			bytes4 immutable extImmutable = Base.ext.selector;
+			bytes4 immutable pubImmutable = Base.pub.selector;
+		}
+
+		contract E is Base {
+			bytes4 extVar = Base.ext.selector;
+			bytes4 pubVar = Base.pub.selector;
+		}
+
+		contract F is Base {
+			function f() public pure returns (bytes4, bytes4) {
+				return (Base.ext.selector, Base.pub.selector);
+			}
+		}
+
+		library L {
+			bytes4 constant extConst = Base.ext.selector;
+			bytes4 constant pubConst = Base.pub.selector;
+		}
+	)"s);
+	tuple<CallGraphMap, CallGraphMap> graphs = collectGraphs(*compilerStack);
+
+	map<string, EdgeNames> expectedCreationEdges = {
+		{"Base", {}},
+		{"C", {}},
+		{"D", {
+			{"InternalDispatch", "function Base.pub()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"E", {
+			{"InternalDispatch", "function Base.pub()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"F", {}},
+		{"L", {}},
+	};
+
+	map<string, EdgeNames> expectedDeployedEdges = {
+		{"Base", {
+			{"Entry", "function Base.ext()"},
+			{"Entry", "function Base.pub()"},
+			{"function Base.ext()", "function free()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"C", {
+			{"Entry", "function Base.ext()"},
+			{"Entry", "function Base.pub()"},
+			{"function Base.ext()", "function free()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"D", {
+			{"InternalDispatch", "function Base.pub()"},
+			{"Entry", "function Base.ext()"},
+			{"Entry", "function Base.pub()"},
+			{"function Base.ext()", "function free()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"E", {
+			{"InternalDispatch", "function Base.pub()"},
+			{"Entry", "function Base.ext()"},
+			{"Entry", "function Base.pub()"},
+			{"function Base.ext()", "function free()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"F", {
+			{"InternalDispatch", "function Base.pub()"},
+			{"Entry", "function Base.ext()"},
+			{"Entry", "function Base.pub()"},
+			{"Entry", "function F.f()"},
+			{"function Base.ext()", "function free()"},
+			{"function Base.pub()", "function free()"},
+		}},
+		{"L", {}},
+	};
+
+	checkCallGraphExpectations(get<0>(graphs), expectedCreationEdges);
+	checkCallGraphExpectations(get<1>(graphs), expectedDeployedEdges);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::frontend::test
