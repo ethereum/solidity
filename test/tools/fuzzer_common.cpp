@@ -104,7 +104,7 @@ void FuzzerUtil::testCompiler(
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
-	compiler.enableIRGeneration(_compileViaYul);
+	compiler.setViaIR(_compileViaYul);
 	try
 	{
 		compiler.compile();
