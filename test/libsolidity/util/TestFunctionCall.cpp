@@ -36,7 +36,8 @@ string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
 	bool const _renderResult,
-	bool const _highlight) const
+	bool const _highlight,
+	std::vector<std::unique_ptr<TestHook>> const* _hooks) const
 {
 	stringstream stream;
 
@@ -220,6 +221,10 @@ string TestFunctionCall::format(
 				stream << comment << m_call.expectations.comment << comment;
 			}
 		}
+
+		if (_hooks != nullptr)
+			for (auto& hook: *_hooks)
+				stream << hook->formatFunctionCall(*this, _errorReporter, _linePrefix, _renderResult, _highlight);
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);

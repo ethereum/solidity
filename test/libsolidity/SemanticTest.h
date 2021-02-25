@@ -19,6 +19,7 @@
 #include <test/TestCase.h>
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <test/libsolidity/TestHook.h>
 #include <test/libsolidity/util/TestFileParser.h>
 #include <test/libsolidity/util/TestFunctionCall.h>
 
@@ -60,6 +61,7 @@ public:
 	bool deploy(std::string const& _contractName, u256 const& _value, bytes const& _arguments, std::map<std::string, solidity::test::Address> const& _libraries = {});
 
 	void addBuiltin(std::string _name, Builtin _builtin);
+	void addTestHook(std::unique_ptr<TestHook> _testHook);
 
 private:
 	// builtin functions
@@ -77,6 +79,7 @@ private:
 	bool m_allowNonExistingFunctions = false;
 	bool m_compileViaYulCanBeSet = false;
 	Builtins m_builtins{};
+	std::vector<std::unique_ptr<TestHook>> m_testHooks{};
 };
 
 }

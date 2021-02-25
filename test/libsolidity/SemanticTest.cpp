@@ -18,6 +18,8 @@
 #include <libyul/Exceptions.h>
 #include <test/Common.h>
 #include <test/libsolidity/util/BytesUtils.h>
+#include <test/libsolidity/hooks/SmokeHook.h>
+#include <test/libsolidity/TestHook.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -59,6 +61,8 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	addBuiltin("smoke.test1", simpleSmokeBuiltin);
 	addBuiltin("smoke.test2", simpleSmokeBuiltin);
 	addBuiltin("smoke_test3", simpleSmokeBuiltin);
+
+	addTestHook(make_unique<SmokeHook>());
 
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
@@ -137,6 +141,11 @@ void SemanticTest::addBuiltin(string _name, Builtin _builtin)
 	m_builtins[std::move(_name)] = std::move(_builtin);
 }
 
+void SemanticTest::addTestHook(std::unique_ptr<TestHook> _testHook)
+{
+	m_testHooks.emplace_back(std::move(_testHook));
+}
+
 TestCase::TestResult SemanticTest::runTest(
 	ostream& _stream,
 	string const& _linePrefix,
@@ -173,8 +182,14 @@ TestCase::TestResult SemanticTest::runTest(
 
 	bool constructed = false;
 
+	for (std::unique_ptr<TestHook> const& hook: m_testHooks)
+		hook->beginTestCase();
+
 	for (TestFunctionCall& test: m_tests)
 	{
+		for (std::unique_ptr<TestHook> const& hook: m_testHooks)
+			hook->beforeFunctionCall(test);
+
 		if (constructed)
 		{
 			soltestAssert(
@@ -283,7 +298,17 @@ TestCase::TestResult SemanticTest::runTest(
 			test.setRawBytes(std::move(output));
 			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
 		}
+
+		for (std::unique_ptr<TestHook> const& hook: m_testHooks)
+			hook->afterFunctionCall(test);
 	}
+
+	for (std::unique_ptr<TestHook> const& hook: m_testHooks)
+		hook->endTestCase();
+
+	for (TestFunctionCall& test: m_tests)
+		for (std::unique_ptr<TestHook> const& hook: m_testHooks)
+			success &= hook->verifyFunctionCall(test);
 
 	if (!m_runWithYul && _compileViaYul)
 	{
@@ -303,7 +328,7 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << test.format(errorReporter, _linePrefix, false, _formatted, &m_testHooks) << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		_stream << endl;
@@ -311,7 +336,7 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+			_stream << test.format(errorReporter, _linePrefix, true, _formatted, &m_testHooks) << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
@@ -380,7 +405,7 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
 	for (TestFunctionCall const& test: m_tests)
-		_stream << test.format("", true, false) << endl;
+		_stream << test.format("", true, false, &m_testHooks) << endl;
 }
 
 void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)

@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <test/libsolidity/TestHook.h>
 #include <test/libsolidity/util/SoltestErrors.h>
 #include <test/libsolidity/util/TestFileParser.h>
 
@@ -56,7 +57,8 @@ public:
 		ErrorReporter& _errorReporter,
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _highlight = false
+		bool const _highlight = false,
+		std::vector<std::unique_ptr<TestHook>> const* _hooks = nullptr
 	) const;
 
 	/// Overloaded version that passes an error reporter which is never used outside
@@ -64,11 +66,12 @@ public:
 	std::string format(
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _highlight = false
+		bool const _highlight = false,
+		std::vector<std::unique_ptr<TestHook>> const* _hooks = nullptr
 	) const
 	{
 		ErrorReporter reporter;
-		return format(reporter, _linePrefix, _renderResult, _highlight);
+		return format(reporter, _linePrefix, _renderResult, _highlight, _hooks);
 	}
 
 	/// Resets current results in case the function was called and the result

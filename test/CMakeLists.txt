@@ -98,6 +98,8 @@ set(libsolidity_sources
     libsolidity/SyntaxTest.h
     libsolidity/ViewPureChecker.cpp
     libsolidity/analysis/FunctionCallGraph.cpp
+    libsolidity/TestHook.h
+    libsolidity/hooks/SmokeHook.h
 )
 detect_stray_source_files("${libsolidity_sources}" "libsolidity/")
 
