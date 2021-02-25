@@ -27,7 +27,9 @@
 #include <libsolidity/interface/Natspec.h>
 
 #include <libsolidity/ast/AST.h>
-#include <boost/range/irange.hpp>
+
+#include <boost/algorithm/string.hpp>
+
 
 using namespace std;
 using namespace solidity;
@@ -97,7 +99,7 @@ Json::Value Natspec::userDocumentation(ContractDefinition const& _contractDef)
 
 Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 {
-	Json::Value doc;
+	Json::Value doc = extractCustomDoc(_contractDef.annotation().docTags);
 	Json::Value methods(Json::objectValue);
 
 	doc["version"] = Json::Value(c_natspecVersion);
@@ -205,9 +207,21 @@ string Natspec::extractDoc(multimap<string, DocTag> const& _tags, string const& 
 	return value;
 }
 
+Json::Value Natspec::extractCustomDoc(multimap<string, DocTag> const& _tags)
+{
+	std::map<string, string> concatenated;
+	for (auto const& [tag, value]: _tags)
+		if (boost::starts_with(tag, "custom"))
+			concatenated[tag] += value.content;
+	Json::Value result;
+	for (auto& [tag, value]: concatenated)
+		result[tag] = move(value);
+	return result;
+}
+
 Json::Value Natspec::devDocumentation(std::multimap<std::string, DocTag> const& _tags)
 {
-	Json::Value json(Json::objectValue);
+	Json::Value json = extractCustomDoc(_tags);
 	auto dev = extractDoc(_tags, "dev");
 	if (!dev.empty())
 		json["details"] = Json::Value(dev);

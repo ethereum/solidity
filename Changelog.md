@@ -8,6 +8,7 @@ Compiler Features:
  * Inline Assembly: Do not warn anymore about variables or functions being shadowed by EVM opcodes.
  * NatSpec: Provide source locations for parsing errors.
  * Optimizer: Simple inlining when jumping to small blocks that jump again after a few side-effect free opcodes.
+ * NatSpec: Allow and export all tags that start with ``@custom:``.
 
 
 Bugfixes:

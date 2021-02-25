@@ -57,6 +57,9 @@ private:
 	/// @returns concatenation of all content under the given tag name.
 	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
 
+	/// Extract all custom tags from @a _tags.
+	static Json::Value extractCustomDoc(std::multimap<std::string, DocTag> const& _tags);
+
 	/// Helper-function that will create a json object with dev specific annotations, if present.
 	/// @param _tags docTags that are used.
 	/// @return      A JSON representation

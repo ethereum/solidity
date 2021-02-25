@@ -2247,6 +2247,68 @@ BOOST_AUTO_TEST_CASE(dev_return_name_no_description)
 	checkNatspec(sourceCode, "B", natspec2, false);
 }
 
+BOOST_AUTO_TEST_CASE(custom)
+{
+	char const* sourceCode = R"(
+		/// @custom:x one two three
+		/// @custom:y line
+		/// break
+		/// @custom:t one
+		/// @custom:t two
+		contract A {
+			/// @custom:note statevar
+			uint x;
+			/// @custom:since 2014
+			function g(int x) public pure virtual returns (int, int) { return (1, 2); }
+		}
+	)";
+
+	char const* natspec = R"ABCDEF({
+		"custom:t": "onetwo",
+		"custom:x": "one two three",
+		"custom:y": "line break",
+		"methods":
+		{
+			"g(int256)":
+			{
+				"custom:since": "2014"
+			}
+		},
+		"stateVariables": { "x": { "custom:note": "statevar" } }
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(custom_inheritance)
+{
+	char const *sourceCode = R"(
+		contract A {
+			/// @custom:since 2014
+			function g(uint x) public pure virtual {}
+		}
+		contract B is A {
+			function g(uint x) public pure override {}
+		}
+	)";
+
+	char const* natspecA = R"ABCDEF({
+		"methods":
+		{
+			"g(uint256)":
+			{
+				"custom:since": "2014"
+			}
+		}
+	)ABCDEF";
+	char const* natspecB = R"ABCDEF({
+		"methods": {}
+	})ABCDEF";
+
+	checkNatspec(sourceCode, "A", natspecA, false);
+	checkNatspec(sourceCode, "B", natspecB, false);
+}
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
