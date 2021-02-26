@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Fix internal compiler error when calling functions bound to calldata structs and arrays.
 
 
 ### 0.8.6 (2021-06-22)

@@ -1078,8 +1078,7 @@ void CompilerUtils::convertType(
 		}
 		case DataLocation::CallData:
 			solAssert(
-				targetType.isByteArray() &&
-				typeOnStack.isByteArray() &&
+				((targetType.isByteArray() && typeOnStack.isByteArray()) || _typeOnStack == _targetType) &&
 				typeOnStack.location() == DataLocation::CallData,
 				"Invalid conversion to calldata type."
 			);
@@ -1130,9 +1129,6 @@ void CompilerUtils::convertType(
 		solAssert(targetTypeCategory == stackTypeCategory, "");
 		auto& targetType = dynamic_cast<StructType const&>(_targetType);
 		auto& typeOnStack = dynamic_cast<StructType const&>(_typeOnStack);
-		solAssert(
-			targetType.location() != DataLocation::CallData
-		, "");
 		switch (targetType.location())
 		{
 		case DataLocation::Storage:
@@ -1208,7 +1204,8 @@ void CompilerUtils::convertType(
 			}
 			break;
 		case DataLocation::CallData:
-			solAssert(false, "Invalid type conversion target location CallData.");
+			solAssert(_typeOnStack == _targetType, "");
+			// nothing to do
 			break;
 		}
 		break;
