@@ -53,6 +53,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -95,8 +96,15 @@ public:
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
 	std::string lineAtPosition(int _position) const;
+
+	/// @returns (1-based) line and column that matches to the byte offset @p _position.
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
 	///@}
+
+	/// Translates a line:column to the absolute position.
+	std::optional<int> translateLineColumnToPosition(int _line, int _column) const;
+
+	static std::optional<int> translateLineColumnToPosition(std::string const& _text, int _line, int _column);
 
 	/// Tests whether or not given octet sequence is present at the current position in stream.
 	/// @returns true if the sequence could be found, false otherwise.
