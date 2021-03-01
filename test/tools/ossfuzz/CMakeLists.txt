@@ -110,7 +110,7 @@ if (OSSFUZZ)
     add_executable(abiv2_proto_ossfuzz
             ../../EVMHost.cpp
             abiV2ProtoFuzzer.cpp
-            abiV2FuzzerCommon.cpp
+            SolidityEvmoneInterface.cpp
             protoToAbiV2.cpp
             abiV2Proto.pb.cc
     )
@@ -128,9 +128,9 @@ if (OSSFUZZ)
     target_compile_options(abiv2_proto_ossfuzz PUBLIC ${COMPILE_OPTIONS} -Wno-sign-conversion -Wno-suggest-destructor-override -Wno-inconsistent-missing-destructor-override)
 
     add_executable(abiv2_isabelle_ossfuzz
-            ../../EVMHost.cpp
             AbiV2IsabelleFuzzer.cpp
-            abiV2FuzzerCommon.cpp
+            SolidityEvmoneInterface.cpp
+            ../../EVMHost.cpp
             protoToAbiV2.cpp
             abiV2Proto.pb.cc
     )
@@ -151,9 +151,9 @@ if (OSSFUZZ)
 
     add_executable(sol_proto_ossfuzz
             solProtoFuzzer.cpp
+            SolidityEvmoneInterface.cpp
             protoToSol.cpp
             solProto.pb.cc
-            abiV2FuzzerCommon.cpp
             ../../EVMHost.cpp
     )
     target_include_directories(sol_proto_ossfuzz PRIVATE

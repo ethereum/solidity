@@ -21,7 +21,7 @@
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/Visitor.h>
 
-using namespace solidity::test::fuzzer;
+using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
 using namespace std;
 
