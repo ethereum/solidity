@@ -144,3 +144,37 @@ string CharStream::singleLineSnippet(string const& _sourceCode, SourceLocation c
 
 	return cut;
 }
+
+optional<int> CharStream::translateLineColumnToPosition(int _line, int _column) const
+{
+	return translateLineColumnToPosition(m_source, _line, _column);
+}
+
+optional<int> CharStream::translateLineColumnToPosition(std::string const& _text, int _line, int _column)
+{
+	size_t offset = 0;
+
+	while (_line > 0)
+	{
+		offset = _text.find('\n', offset);
+		if (offset == _text.npos)
+			return nullopt;
+		offset++; // Skip linefeed.
+		_line--;
+	}
+
+	auto const nextEndOfLineOffset = _text.find('\n', offset);
+	if (nextEndOfLineOffset != string::npos)
+	{
+		if (offset + static_cast<size_t>(_column) < nextEndOfLineOffset)
+			return static_cast<int>(offset) + _column; // Column fitting current non-last line.
+		else
+			return nullopt; // Column-overflow in current non-last line.
+	}
+
+	if (offset + static_cast<size_t>(_column) < _text.size())
+		return static_cast<int>(offset) + _column; // Column fitting into last line
+
+	return nullopt;
+}
+
