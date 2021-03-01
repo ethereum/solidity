@@ -27,8 +27,13 @@
 #include <libsolidity/parsing/DocStringParser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Common.h>
+
+#include <range/v3/algorithm/any_of.hpp>
 
 #include <boost/algorithm/string.hpp>
+
+#include <regex>
 
 using namespace std;
 using namespace solidity;
@@ -157,8 +162,18 @@ void DocStringTagParser::parseDocStrings(
 	size_t returnTagsVisited = 0;
 	for (auto const& [tagName, tagValue]: _annotation.docTags)
 	{
-		if (boost::starts_with(tagName, "custom:") && tagName.size() > string("custom:").size())
+		string static const customPrefix("custom:");
+		if (boost::starts_with(tagName, customPrefix) && tagName.size() > customPrefix.size())
+		{
+			regex static const customRegex("^custom:[a-z][a-z-]*$");
+			if (!regex_match(tagName, customRegex))
+				m_errorReporter.docstringParsingError(
+					2968_error,
+					_node.documentation()->location(),
+					"Invalid character in custom tag @" + tagName + ". Only lowercase letters and \"-\" are permitted."
+				);
 			continue;
+		}
 		else if (!_validTags.count(tagName))
 			m_errorReporter.docstringParsingError(
 				6546_error,
