@@ -61,6 +61,11 @@ public:
 		tx_context.block_timestamp += 15;
 		recorded_logs.clear();
 	}
+	/// Prints contents of storage at all addresses in host to @param _os.
+	void print_all_storage(std::ostringstream& _os);
+
+	/// @returns contents of storage at @param _addr.
+	std::unordered_map<evmc::bytes32, evmc::storage_value> const& get_address_storage(evmc::address const& _addr);
 
 	bool account_exists(evmc::address const& _addr) const noexcept final
 	{

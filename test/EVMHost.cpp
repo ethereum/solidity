@@ -37,6 +37,8 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace evmc::literals;
 
+using StorageMap = std::unordered_map<evmc::bytes32, evmc::storage_value>;
+
 evmc::VM& EVMHost::getVM(string const& _path)
 {
 	static evmc::VM NullVM{nullptr};
@@ -753,4 +755,21 @@ evmc::result EVMHost::resultWithGas(
 	result.output_data = _data.data();
 	result.output_size = _data.size();
 	return result;
+}
+
+void EVMHost::print_all_storage(ostringstream& _os)
+{
+	for (auto const& [addr, mockedAccount]: accounts)
+	{
+		_os << "Address: " << convertFromEVMC(addr) << endl;
+		for (auto const& [slot, value]: get_address_storage(addr))
+			if (get_storage(addr, slot))
+				_os << convertFromEVMC(slot) << ": " << convertFromEVMC(value.value) << endl;
+	}
+}
+
+StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
+{
+	assertThrow(account_exists(_addr), Exception, "Account does not exist.");
+	return accounts[_addr].storage;
 }
