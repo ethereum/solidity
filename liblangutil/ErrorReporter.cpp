@@ -234,16 +234,6 @@ void ErrorReporter::fatalTypeError(ErrorId _error, SourceLocation const& _locati
 	);
 }
 
-void ErrorReporter::docstringParsingError(ErrorId _error, string const& _description)
-{
-	error(
-		_error,
-		Error::Type::DocstringParsingError,
-		SourceLocation(),
-		_description
-	);
-}
-
 void ErrorReporter::docstringParsingError(ErrorId _error, SourceLocation const& _location, string const& _description)
 {
 	error(

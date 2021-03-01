@@ -147,12 +147,10 @@ void DocStringTagParser::parseDocStrings(
 	string const& _nodeName
 )
 {
-	DocStringParser parser;
-	if (_node.documentation() && !_node.documentation()->text()->empty())
-	{
-		parser.parse(*_node.documentation()->text(), m_errorReporter);
-		_annotation.docTags = parser.tags();
-	}
+	if (!_node.documentation())
+		return;
+
+	_annotation.docTags = DocStringParser{*_node.documentation(), m_errorReporter}.parse();
 
 	size_t returnTagsVisited = 0;
 	for (auto const& docTag: _annotation.docTags)
