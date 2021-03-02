@@ -68,6 +68,12 @@ public:
 	/// otherwise _expr.
 	static Expression const* innermostTuple(Expression const& _expr);
 
+	/// @returns the expression after stripping redundant syntactic sugar.
+	/// Currently supports stripping:
+	/// 1. 1-tuple; i.e. ((x)) -> x
+	/// 2. Explicit cast from string to bytes; i.e. bytes(s) -> s; for s of type string
+	static Expression const* cleanExpression(Expression const& _expr);
+
 	/// @returns the FunctionDefinition of a FunctionCall
 	/// if possible or nullptr.
 	/// @param _scopeContract is the contract that contains the function currently being
