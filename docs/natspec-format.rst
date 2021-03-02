@@ -109,11 +109,15 @@ Tag                                                                             
 ``@param``      Documents a parameter just like in doxygen (must be followed by parameter name)        function, event
 ``@return``     Documents the return variables of a contract's function                                function, public state variable
 ``@inheritdoc`` Copies all missing tags from the base function (must be followed by the contract name) function, public state variable
+``@custom:...`` Custom tag, semantics is application-defined                                           everywhere
 =============== ====================================================================================== =============================
 
 If your function returns multiple values, like ``(int quotient, int remainder)``
 then use multiple ``@return`` statements in the same format as the
 ``@param`` statements.
+
+Custom tags start with ``@custom:`` and can contain lowercase characters and hyphens following that.
+They can be used everywhere and are part of the developer documentation.
 
 .. _header-dynamic:
 
