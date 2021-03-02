@@ -1,7 +1,4 @@
-### 0.8.2 (unreleased)
-
-Language Features:
-
+### 0.8.2 (2021-03-02)
 
 Compiler Features:
  * AST: Export NatSpec comments above each statement as their documentation.
@@ -12,18 +9,19 @@ Compiler Features:
 
 
 Bugfixes:
- * Type Checker: Fix internal error when override specifier is not a contract.
- * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
  * AST: Added ``referencedDeclaration`` for enum members.
  * Code Generator: Fix internal error when functions are passed as parameters of other callables, when the function types can be implicitly converted, but not identical.
  * Parser: Properly parse ``.address`` in some situations.
+ * SMTChecker: Fix missing type constraints on block and transaction variables in the deployment phase.
+ * Type Checker: Fix internal error when override specifier is not a contract.
  * Type Checker: Make function-hash collision errors into fatal type errors.
 
 
 AST Changes:
- * Support field `documentation` to hold NatSpec comments above each statement.
- * Adds `nameLocation` to declarations to represent the exact location of the symbolic name.
+ * Adds ``nameLocation`` to declarations to represent the exact location of the symbolic name.
  * Removed the redundant function type "bytearraypush" - replaced by "arraypush".
+ * Support field ``documentation`` to hold NatSpec comments above each statement.
+
 
 ### 0.8.1 (2021-01-27)
 
