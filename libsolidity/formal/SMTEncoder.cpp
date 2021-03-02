@@ -1654,8 +1654,10 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 		indexOrMemberAssignment(_expr, _array);
 	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(expr))
 	{
-		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
-		if (funType.kind() == FunctionType::Kind::ArrayPush)
+		if (
+			auto funType = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
+			funType && funType->kind() == FunctionType::Kind::ArrayPush
+		)
 		{
 			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
 			solAssert(memberAccess, "");
