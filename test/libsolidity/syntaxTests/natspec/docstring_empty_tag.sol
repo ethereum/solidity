@@ -3,4 +3,4 @@ abstract contract C {
     function vote(uint id) public {}
 }
 // ----
-// DocstringParsingError 3335: No param name given
+// DocstringParsingError 3335: (26-36): No param name given

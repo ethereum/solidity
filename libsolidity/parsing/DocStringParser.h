@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libsolidity/ast/ASTAnnotations.h>
+#include <liblangutil/SourceLocation.h>
 #include <string>
 
 namespace solidity::langutil
@@ -34,13 +35,17 @@ class ErrorReporter;
 namespace solidity::frontend
 {
 
+class StructurallyDocumented;
+
 class DocStringParser
 {
 public:
-	/// Parse the given @a _docString and stores the parsed components internally.
-	void parse(std::string const& _docString, langutil::ErrorReporter& _errorReporter);
-
-	std::multimap<std::string, DocTag> const& tags() const { return m_docTags; }
+	/// @param _documentedNode the node whose documentation is parsed.
+	DocStringParser(StructuredDocumentation const& _documentedNode, langutil::ErrorReporter& _errorReporter):
+		m_node(_documentedNode),
+		m_errorReporter(_errorReporter)
+	{}
+	std::multimap<std::string, DocTag> parse();
 
 private:
 	using iter = std::string::const_iterator;
@@ -58,10 +63,11 @@ private:
 	/// Creates and inserts a new tag and adjusts m_lastTag.
 	void newTag(std::string const& _tagName);
 
+	StructuredDocumentation const& m_node;
+	langutil::ErrorReporter& m_errorReporter;
 	/// Mapping tag name -> content.
 	std::multimap<std::string, DocTag> m_docTags;
 	DocTag* m_lastTag = nullptr;
-	langutil::ErrorReporter* m_errorReporter = nullptr;
 };
 
 }
