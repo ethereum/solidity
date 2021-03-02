@@ -27,6 +27,13 @@
 #include <libsolidity/parsing/DocStringParser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Common.h>
+
+#include <range/v3/algorithm/any_of.hpp>
+
+#include <boost/algorithm/string.hpp>
+
+#include <regex>
 
 using namespace std;
 using namespace solidity;
@@ -153,15 +160,27 @@ void DocStringTagParser::parseDocStrings(
 	_annotation.docTags = DocStringParser{*_node.documentation(), m_errorReporter}.parse();
 
 	size_t returnTagsVisited = 0;
-	for (auto const& docTag: _annotation.docTags)
+	for (auto const& [tagName, tagValue]: _annotation.docTags)
 	{
-		if (!_validTags.count(docTag.first))
+		string static const customPrefix("custom:");
+		if (boost::starts_with(tagName, customPrefix) && tagName.size() > customPrefix.size())
+		{
+			regex static const customRegex("^custom:[a-z][a-z-]*$");
+			if (!regex_match(tagName, customRegex))
+				m_errorReporter.docstringParsingError(
+					2968_error,
+					_node.documentation()->location(),
+					"Invalid character in custom tag @" + tagName + ". Only lowercase letters and \"-\" are permitted."
+				);
+			continue;
+		}
+		else if (!_validTags.count(tagName))
 			m_errorReporter.docstringParsingError(
 				6546_error,
 				_node.documentation()->location(),
-				"Documentation tag @" + docTag.first + " not valid for " + _nodeName + "."
+				"Documentation tag @" + tagName + " not valid for " + _nodeName + "."
 			);
-		else if (docTag.first == "return")
+		else if (tagName == "return")
 		{
 			returnTagsVisited++;
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
@@ -171,19 +190,19 @@ void DocStringTagParser::parseDocStrings(
 					m_errorReporter.docstringParsingError(
 						5256_error,
 						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + "\" is only allowed once on state-variables."
+						"Documentation tag \"@" + tagName + "\" is only allowed once on state-variables."
 					);
 			}
 			else if (auto const* function = dynamic_cast<FunctionDefinition const*>(&_node))
 			{
-				string content = docTag.second.content;
+				string content = tagValue.content;
 				string firstWord = content.substr(0, content.find_first_of(" \t"));
 
 				if (returnTagsVisited > function->returnParameters().size())
 					m_errorReporter.docstringParsingError(
 						2604_error,
 						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+						"Documentation tag \"@" + tagName + " " + tagValue.content + "\"" +
 						" exceeds the number of return parameters."
 					);
 				else
@@ -193,7 +212,7 @@ void DocStringTagParser::parseDocStrings(
 						m_errorReporter.docstringParsingError(
 							5856_error,
 							_node.documentation()->location(),
-							"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+							"Documentation tag \"@" + tagName + " " + tagValue.content + "\"" +
 							" does not contain the name of its return parameter."
 						);
 				}
