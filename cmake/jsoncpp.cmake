@@ -52,6 +52,8 @@ ExternalProject_Add(jsoncpp-project
                -DCMAKE_INSTALL_LIBDIR=lib
                # Build static lib but suitable to be included in a shared lib.
                -DCMAKE_POSITION_INDEPENDENT_CODE=${BUILD_SHARED_LIBS}
+               # avoid "_static" being appended. E.g. libjsoncpp_static.a
+               -DSTATIC_SUFFIX=
                -DJSONCPP_WITH_EXAMPLE=OFF
                -DJSONCPP_WITH_TESTS=OFF
                -DJSONCPP_WITH_PKGCONFIG_SUPPORT=OFF
