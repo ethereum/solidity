@@ -139,10 +139,12 @@ bool CHC::visit(ContractDefinition const& _contract)
 
 void CHC::endVisit(ContractDefinition const& _contract)
 {
-	if (auto constructor = _contract.constructor())
-		constructor->accept(*this);
-
-	defineContractInitializer(_contract);
+	for (auto base: _contract.annotation().linearizedBaseContracts)
+	{
+		if (auto constructor = base->constructor())
+			constructor->accept(*this);
+		defineContractInitializer(*base, _contract);
+	}
 
 	auto const& entry = *createConstructorBlock(_contract, "implicit_constructor_entry");
 
@@ -161,7 +163,6 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	// We need to evaluate the base constructor calls (arguments) from derived -> base
 	auto baseArgs = baseArguments(_contract);
 	for (auto base: _contract.annotation().linearizedBaseContracts)
-	{
 		if (base != &_contract)
 		{
 			m_callGraph[&_contract].insert(base);
@@ -183,13 +184,12 @@ void CHC::endVisit(ContractDefinition const& _contract)
 				}
 			}
 		}
-	}
 	m_errorDest = nullptr;
 	// Then call initializer_Base from base -> derived
 	for (auto base: _contract.annotation().linearizedBaseContracts | boost::adaptors::reversed)
 	{
 		errorFlag().increaseIndex();
-		m_context.addAssertion(smt::constructorCall(*m_contractInitializers.at(base), m_context));
+		m_context.addAssertion(smt::constructorCall(*m_contractInitializers.at(&_contract).at(base), m_context));
 		connectBlocks(m_currentBlock, summary(_contract), errorFlag().currentValue() > 0);
 		m_context.addAssertion(errorFlag().currentValue() == 0);
 	}
@@ -953,7 +953,6 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			m_interfaces[contract] = createSymbolicBlock(interfaceSort(*contract, state()), "interface_" + uniquePrefix() + "_" + suffix, PredicateType::Interface, contract);
 			m_nondetInterfaces[contract] = createSymbolicBlock(nondetInterfaceSort(*contract, state()), "nondet_interface_" + uniquePrefix() + "_" + suffix, PredicateType::NondetInterface, contract);
 			m_constructorSummaries[contract] = createConstructorBlock(*contract, "summary_constructor");
-			m_contractInitializers[contract] = createConstructorBlock(*contract, "contract_initializer");
 
 			for (auto const* var: stateVariablesIncludingInheritedAndPrivate(*contract))
 				if (!m_context.knownVariable(*var))
@@ -1001,23 +1000,24 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 		}
 }
 
-void CHC::defineContractInitializer(ContractDefinition const& _contract)
+void CHC::defineContractInitializer(ContractDefinition const& _contract, ContractDefinition const& _contextContract)
 {
+	m_contractInitializers[&_contextContract][&_contract] = createConstructorBlock(_contract, "contract_initializer");
 	auto const& implicitConstructorPredicate = *createConstructorBlock(_contract, "contract_initializer_entry");
 
 	auto implicitFact = smt::constructor(implicitConstructorPredicate, m_context);
 	addRule(smtutil::Expression::implies(initialConstraints(_contract), implicitFact), implicitFact.name);
 	setCurrentBlock(implicitConstructorPredicate);
 
-	solAssert(!m_errorDest, "");
-	m_errorDest = m_contractInitializers.at(&_contract);
+	auto prevErrorDest = m_errorDest;
+	m_errorDest = m_contractInitializers.at(&_contextContract).at(&_contract);
 	for (auto var: _contract.stateVariables())
 		if (var->value())
 		{
 			var->value()->accept(*this);
 			assignment(*var, *var->value());
 		}
-	m_errorDest = nullptr;
+	m_errorDest = prevErrorDest;
 
 	auto const& afterInit = *createConstructorBlock(_contract, "contract_initializer_after_init");
 	connectBlocks(m_currentBlock, predicate(afterInit));
@@ -1026,12 +1026,12 @@ void CHC::defineContractInitializer(ContractDefinition const& _contract)
 	if (auto constructor = _contract.constructor())
 	{
 		errorFlag().increaseIndex();
-		m_context.addAssertion(smt::functionCall(*m_summaries.at(&_contract).at(constructor), &_contract, m_context));
-		connectBlocks(m_currentBlock, initializer(_contract), errorFlag().currentValue() > 0);
+		m_context.addAssertion(smt::functionCall(*m_summaries.at(&_contextContract).at(constructor), &_contextContract, m_context));
+		connectBlocks(m_currentBlock, initializer(_contract, _contextContract), errorFlag().currentValue() > 0);
 		m_context.addAssertion(errorFlag().currentValue() == 0);
 	}
 
-	connectBlocks(m_currentBlock, initializer(_contract));
+	connectBlocks(m_currentBlock, initializer(_contract, _contextContract));
 }
 
 smtutil::Expression CHC::interface()
@@ -1055,9 +1055,9 @@ smtutil::Expression CHC::error(unsigned _idx)
 	return m_errorPredicate->functor(_idx)({});
 }
 
-smtutil::Expression CHC::initializer(ContractDefinition const& _contract)
+smtutil::Expression CHC::initializer(ContractDefinition const& _contract, ContractDefinition const& _contractContext)
 {
-	return predicate(*m_contractInitializers.at(&_contract));
+	return predicate(*m_contractInitializers.at(&_contractContext).at(&_contract));
 }
 
 smtutil::Expression CHC::summary(ContractDefinition const& _contract)

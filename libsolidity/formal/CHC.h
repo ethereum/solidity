@@ -135,7 +135,7 @@ private:
 	/// Creates a CHC system that, for a given contract,
 	/// - initializes its state variables (as 0 or given value, if any).
 	/// - "calls" the explicit constructor function of the contract, if any.
-	void defineContractInitializer(ContractDefinition const& _contract);
+	void defineContractInitializer(ContractDefinition const& _contract, ContractDefinition const& _contractContext);
 
 	/// Interface predicate over current variables.
 	smtutil::Expression interface();
@@ -183,8 +183,8 @@ private:
 	smtutil::Expression predicate(Predicate const& _block);
 	/// @returns the summary predicate for the called function.
 	smtutil::Expression predicate(FunctionCall const& _funCall);
-	/// @returns a predicate that defines a contract initializer.
-	smtutil::Expression initializer(ContractDefinition const& _contract);
+	/// @returns a predicate that defines a contract initializer for _contract in the context of _contractContext.
+	smtutil::Expression initializer(ContractDefinition const& _contract, ContractDefinition const& _contractContext);
 	/// @returns a predicate that defines a constructor summary.
 	smtutil::Expression summary(ContractDefinition const& _contract);
 	/// @returns a predicate that defines a function summary.
@@ -274,7 +274,7 @@ private:
 	std::map<ContractDefinition const*, Predicate const*> m_nondetInterfaces;
 
 	std::map<ContractDefinition const*, Predicate const*> m_constructorSummaries;
-	std::map<ContractDefinition const*, Predicate const*> m_contractInitializers;
+	std::map<ContractDefinition const*, std::map<ContractDefinition const*, Predicate const*>> m_contractInitializers;
 
 	/// Artificial Error predicate.
 	/// Single error block for all assertions.
