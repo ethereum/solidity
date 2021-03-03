@@ -1635,7 +1635,7 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 
 void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array)
 {
-	Expression const* expr = innermostTuple(_expr);
+	Expression const* expr = cleanExpression(_expr);
 
 	if (auto const* id = dynamic_cast<Identifier const*>(expr))
 	{
@@ -1654,8 +1654,10 @@ void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression
 		indexOrMemberAssignment(_expr, _array);
 	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(expr))
 	{
-		FunctionType const& funType = dynamic_cast<FunctionType const&>(*funCall->expression().annotation().type);
-		if (funType.kind() == FunctionType::Kind::ArrayPush)
+		if (
+			auto funType = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
+			funType && funType->kind() == FunctionType::Kind::ArrayPush
+		)
 		{
 			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
 			solAssert(memberAccess, "");
@@ -2604,6 +2606,33 @@ Expression const* SMTEncoder::innermostTuple(Expression const& _expr)
 		expr = tuple->components().front().get();
 		tuple = dynamic_cast<TupleExpression const*>(expr);
 	}
+	solAssert(expr, "");
+	return expr;
+}
+
+Expression const* SMTEncoder::cleanExpression(Expression const& _expr)
+{
+	auto const* expr = &_expr;
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(expr))
+		return cleanExpression(*innermostTuple(*tuple));
+	if (auto const* functionCall = dynamic_cast<FunctionCall const*>(expr))
+		if (*functionCall->annotation().kind == FunctionCallKind::TypeConversion)
+		{
+			auto typeType = dynamic_cast<TypeType const*>(functionCall->expression().annotation().type);
+			solAssert(typeType, "");
+			if (auto const* arrayType = dynamic_cast<ArrayType const*>(typeType->actualType()))
+				if (arrayType->isByteArray())
+				{
+					// this is a cast to `bytes`
+					solAssert(functionCall->arguments().size() == 1, "");
+					Expression const& arg = *functionCall->arguments()[0];
+					if (
+						auto const* argArrayType = dynamic_cast<ArrayType const*>(arg.annotation().type);
+						argArrayType && argArrayType->isByteArray()
+					)
+						return cleanExpression(arg);
+				}
+		}
 	solAssert(expr, "");
 	return expr;
 }

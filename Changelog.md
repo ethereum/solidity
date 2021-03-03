@@ -7,7 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
-
+ * SMTChecker: Fix internal error on pushing to ``string`` casted to ``bytes``.
 
 AST Changes:
 
