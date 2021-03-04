@@ -30,6 +30,7 @@ enum class PanicCode
 	DivisionByZero = 0x12, // division or modulo by zero
 	EnumConversionError = 0x21, // enum conversion error
 	StorageEncodingError = 0x22, // invalid encoding in storage
+	FixedBytesConversionError = 0x23, // error converting to fixed bytes type
 	EmptyArrayPop = 0x31, // empty array pop
 	ArrayOutOfBounds = 0x32, // array out of bounds access
 	ResourceError = 0x41, // resource error (too large allocation or too large array)
