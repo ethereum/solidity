@@ -249,10 +249,19 @@ void ProtoConverter::visit(Expression const& _x)
 		visit(_x.lowcall());
 		break;
 	case Expression::kCreate:
-		visit(_x.create());
+		// Create and create2 return address of created contract which
+		// may lead to state change via sstore of the returned address.
+		if (!m_filterStatefulInstructions)
+			visit(_x.create());
+		else
+			m_output << dictionaryToken();
 		break;
 	case Expression::kUnopdata:
-		if (m_isObject)
+		// Filter datasize and dataoffset because these instructions may return
+		// a value that is a function of optimisation. Therefore, when run on
+		// an EVM client, the execution traces for unoptimised vs optimised
+		// programs may differ. This ends up as a false-positive bug report.
+		if (m_isObject && !m_filterStatefulInstructions)
 			visit(_x.unopdata());
 		else
 			m_output << dictionaryToken();
@@ -572,6 +581,22 @@ void ProtoConverter::visit(UnaryOp const& _x)
 		return;
 	}
 
+	// The following instructions may lead to change of EVM state and are hence
+	// excluded to avoid false positives.
+	if (
+		m_filterStatefulInstructions &&
+		(
+			op == UnaryOp::EXTCODEHASH ||
+			op == UnaryOp::EXTCODESIZE ||
+			op == UnaryOp::BALANCE ||
+			op == UnaryOp::BLOCKHASH
+		)
+	)
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
 	switch (op)
 	{
 	case UnaryOp::NOT:
@@ -629,7 +654,26 @@ void ProtoConverter::visit(TernaryOp const& _x)
 
 void ProtoConverter::visit(NullaryOp const& _x)
 {
-	switch (_x.op())
+	auto op = _x.op();
+	// The following instructions may lead to a change in EVM state and are
+	// excluded to avoid false positive reports.
+	if (
+		m_filterStatefulInstructions &&
+		(
+			op == NullaryOp::GAS ||
+			op == NullaryOp::CODESIZE ||
+			op == NullaryOp::ADDRESS ||
+			op == NullaryOp::TIMESTAMP ||
+			op == NullaryOp::NUMBER ||
+			op == NullaryOp::DIFFICULTY
+		)
+	)
+	{
+		m_output << dictionaryToken();
+		return;
+	}
+
+	switch (op)
 	{
 	case NullaryOp::MSIZE:
 		m_output << "msize()";
@@ -712,6 +756,11 @@ void ProtoConverter::visit(CopyFunc const& _x)
 	// We don't generate code if the copy function is returndatacopy
 	// and the underlying evm does not support it.
 	if (type == CopyFunc::RETURNDATA && !m_evmVersion.supportsReturndata())
+		return;
+
+	// Code copy may change state if e.g., some byte of code
+	// is stored to storage via a sequence of mload and sstore.
+	if (m_filterStatefulInstructions && type == CopyFunc::CODE)
 		return;
 
 	switch (type)
@@ -1380,7 +1429,7 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.blockstmt());
 		break;
 	case Statement::kForstmt:
-		if (_x.forstmt().for_body().statements_size() > 0)
+		if (_x.forstmt().for_body().statements_size() > 0 && !m_filterUnboundedLoops)
 			visit(_x.forstmt());
 		break;
 	case Statement::kBoundedforstmt:
@@ -1405,7 +1454,10 @@ void ProtoConverter::visit(Statement const& _x)
 		visit(_x.copy_func());
 		break;
 	case Statement::kExtcodeCopy:
-		visit(_x.extcode_copy());
+		// Extcodecopy may change state if external code is copied via a
+		// sequence of mload/sstore.
+		if (!m_filterStatefulInstructions)
+			visit(_x.extcode_copy());
 		break;
 	case Statement::kTerminatestmt:
 		visit(_x.terminatestmt());
