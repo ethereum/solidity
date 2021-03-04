@@ -92,7 +92,10 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 						if (lowLevelCall)
 							call.kind = FunctionCall::Kind::LowLevel;
 						else if (isBuiltinFunction(call.signature))
+						{
 							call.kind = FunctionCall::Kind::Builtin;
+							call.builtinReturnType = m_builtins.at(call.signature).returnType;
+						}
 
 						if (accept(Token::Comma, true))
 							call.value = parseFunctionCallValue();

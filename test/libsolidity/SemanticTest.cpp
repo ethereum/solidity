@@ -14,6 +14,7 @@
 
 #include <test/libsolidity/SemanticTest.h>
 
+#include <libsolidity/ast/TypeProvider.h>
 #include <libsolutil/Whiskers.h>
 #include <libyul/Exceptions.h>
 #include <test/Common.h>
@@ -112,7 +113,8 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 
 void SemanticTest::initializeBuiltins()
 {
-	m_builtins["storage_empty"] = [this](FunctionCall const& _call) -> std::optional<bytes>
+	m_builtins["storage_empty"].returnType = TypeProvider::boolean();
+	m_builtins["storage_empty"].function = [this](FunctionCall const& _call) -> std::optional<bytes>
 	{
 	  soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
 	  return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
@@ -217,7 +219,7 @@ TestCase::TestResult SemanticTest::runTest(
 				output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 			else if (test.call().kind == FunctionCall::Kind::Builtin)
 			{
-				std::optional<bytes> builtinOutput = m_builtins.at(test.call().signature)(test.call());
+				std::optional<bytes> builtinOutput = m_builtins.at(test.call().signature).function(test.call());
 				if (builtinOutput.has_value())
 				{
 					m_transactionSuccessful = true;

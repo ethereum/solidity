@@ -19,6 +19,11 @@
 
 #include <test/ExecutionFramework.h>
 
+namespace solidity::frontend
+{
+class Type;
+}
+
 namespace solidity::frontend::test
 {
 
@@ -297,8 +302,13 @@ struct FunctionCall
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
+	solidity::frontend::Type const* builtinReturnType = nullptr;
 };
 
-using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;
+struct Builtin
+{
+	std::function<std::optional<bytes>(FunctionCall const&)> function;
+	solidity::frontend::Type const* returnType;
+};
 
 }

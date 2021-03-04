@@ -14,6 +14,7 @@
 
 #include <test/libsolidity/util/TestFunctionCall.h>
 
+#include <libsolidity/ast/TypeProvider.h>
 #include <test/libsolidity/util/BytesUtils.h>
 #include <test/libsolidity/util/ContractABIUtils.h>
 
@@ -30,8 +31,6 @@ using namespace solidity::util;
 using namespace solidity::frontend::test;
 using namespace std;
 
-using Token = soltest::Token;
-
 string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
@@ -46,14 +45,14 @@ string TestFunctionCall::format(
 	auto formatOutput = [&](bool const _singleLine)
 	{
 		string ws = " ";
-		string arrow = formatToken(Token::Arrow);
-		string colon = formatToken(Token::Colon);
-		string comma = formatToken(Token::Comma);
-		string comment = formatToken(Token::Comment);
-		string ether = formatToken(Token::Ether);
-		string wei = formatToken(Token::Wei);
-		string newline = formatToken(Token::Newline);
-		string failure = formatToken(Token::Failure);
+		string arrow = formatToken(soltest::Token::Arrow);
+		string colon = formatToken(soltest::Token::Colon);
+		string comma = formatToken(soltest::Token::Comma);
+		string comment = formatToken(soltest::Token::Comment);
+		string ether = formatToken(soltest::Token::Ether);
+		string wei = formatToken(soltest::Token::Wei);
+		string newline = formatToken(soltest::Token::Newline);
+		string failure = formatToken(soltest::Token::Failure);
 
 		if (m_call.kind == FunctionCall::Kind::Library)
 		{
@@ -247,10 +246,23 @@ string TestFunctionCall::formatBytesParameters(
 		}
 		else
 		{
-			ParameterList defaultParameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
+			if (call().kind == FunctionCall::Kind::Builtin && call().builtinReturnType)
+			{
+				if (call().builtinReturnType == TypeProvider::boolean())
+				{
+					if (util::toHex(_bytes) == "0000000000000000000000000000000000000000000000000000000000000000")
+						os << "false";
+					else
+						os << "true";
+				}
+			}
+			else
+			{
+				ParameterList defaultParameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 
-			ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
-			os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
+				ContractABIUtils::overwriteParameters(_errorReporter, defaultParameters, _parameters);
+				os << BytesUtils::formatBytesRange(_bytes, defaultParameters, _highlight);
+			}
 		}
 		return os.str();
 	}
@@ -266,7 +278,7 @@ string TestFunctionCall::formatFailure(
 {
 	stringstream os;
 
-	os << formatToken(Token::Failure);
+	os << formatToken(soltest::Token::Failure);
 
 	if (!_output.empty())
 		os << ", ";
