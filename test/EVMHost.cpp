@@ -140,6 +140,8 @@ void EVMHost::reset()
 {
 	accounts.clear();
 	m_currentAddress = {};
+	// Clear self destruct records
+	recorded_selfdestructs.clear();
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -164,6 +166,8 @@ void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 	evmc::uint256be balance = accounts[_addr].balance;
 	accounts.erase(_addr);
 	accounts[_beneficiary].balance = balance;
+	// Record self destructs
+	recorded_selfdestructs.push_back({_addr, _beneficiary});
 }
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
@@ -766,6 +770,13 @@ void EVMHost::print_all_storage(ostringstream& _os)
 			if (get_storage(addr, slot))
 				_os << convertFromEVMC(slot) << ": " << convertFromEVMC(value.value) << endl;
 	}
+}
+
+void EVMHost::print_storage_at(evmc::address const& _addr, ostringstream& _os)
+{
+	for (auto const& [slot, value]: get_address_storage(_addr))
+		if (get_storage(_addr, slot))
+			_os << convertFromEVMC(slot) << ": " << convertFromEVMC(value.value) << endl;
 }
 
 StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
