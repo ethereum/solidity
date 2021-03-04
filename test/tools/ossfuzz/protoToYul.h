@@ -39,7 +39,10 @@ namespace solidity::yul::test::yul_fuzzer
 class ProtoConverter
 {
 public:
-	ProtoConverter()
+	ProtoConverter(
+		bool _filterStatefulInstructions = false,
+		bool _filterUnboundedLoops = false
+	)
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
 		m_globalVars = std::vector<std::vector<std::string>>{};
@@ -54,6 +57,8 @@ public:
 		m_objectId = 0;
 		m_isObject = false;
 		m_forInitScopeExtEnabled = true;
+		m_filterStatefulInstructions = _filterStatefulInstructions;
+		m_filterUnboundedLoops = _filterUnboundedLoops;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -389,5 +394,11 @@ private:
 	bool m_forInitScopeExtEnabled;
 	/// Object that holds the targeted evm version specified by protobuf input
 	solidity::langutil::EVMVersion m_evmVersion;
+	/// Flag that, if set, stops the converter from generating state changing
+	/// opcodes.
+	bool m_filterStatefulInstructions;
+	/// Flat that, if set, stops the converter from generating potentially
+	/// unbounded loops.
+	bool m_filterUnboundedLoops;
 };
 }
