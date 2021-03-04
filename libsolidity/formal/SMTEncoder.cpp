@@ -35,6 +35,8 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <deque>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -1016,60 +1018,71 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 	auto paramExpectedTypes = FunctionType(*var).parameterTypes();
 	auto actualArguments = _funCall.arguments();
 	solAssert(actualArguments.size() == paramExpectedTypes.size(), "");
-	vector<smtutil::Expression> symbArguments;
+	deque<smtutil::Expression> symbArguments;
 	for (unsigned i = 0; i < paramExpectedTypes.size(); ++i)
 		symbArguments.push_back(expr(*actualArguments[i], paramExpectedTypes[i]));
 
+	// See FunctionType::FunctionType(VariableDeclaration const& _varDecl)
+	// to understand the return types of public getters.
 	TypePointer type = var->type();
-	if (
-		type->isValueType() ||
-		(type->category() == Type::Category::Array && dynamic_cast<ArrayType const&>(*type).isByteArray())
-	)
+	smtutil::Expression currentExpr = currentValue(*var);
+	while (true)
 	{
-		solAssert(symbArguments.empty(), "");
-		defineExpr(_funCall, currentValue(*var));
-		return;
-	}
-	switch (type->category())
-	{
-		case Type::Category::Array:
-		case Type::Category::Mapping:
+		if (
+			type->isValueType() ||
+			(type->category() == Type::Category::Array && dynamic_cast<ArrayType const&>(*type).isByteArray())
+		)
 		{
-			// For nested arrays/mappings, each argument in the call is an index to the next layer.
-			// We mirror this with `select` after unpacking the SMT-LIB array expression.
-			smtutil::Expression exprVal = currentValue(*var);
-			for (auto const& arg: symbArguments)
-			{
-				exprVal = smtutil::Expression::select(
-					smtutil::Expression::tuple_get(exprVal, 0),
-					arg
-				);
-			}
-			defineExpr(_funCall, exprVal);
-			break;
+			solAssert(symbArguments.empty(), "");
+			defineExpr(_funCall, currentExpr);
+			return;
 		}
-		case Type::Category::Struct:
+		switch (type->category())
 		{
-			auto returnedMembers = structGetterReturnedMembers(dynamic_cast<StructType const&>(*type));
-			solAssert(!returnedMembers.empty(), "");
-			auto structVar = dynamic_pointer_cast<smt::SymbolicStructVariable>(m_context.variable(*var));
-			solAssert(structVar, "");
-			auto returnedValues = applyMap(returnedMembers, [&](string const& memberName) { return structVar->member(memberName); });
-			if (returnedValues.size() == 1)
-				defineExpr(_funCall, returnedValues.front());
-			else
+			case Type::Category::Array:
+			case Type::Category::Mapping:
 			{
-				auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
-				solAssert(symbTuple, "");
-				symbTuple->increaseIndex(); // Increasing the index explicitly since we cannot use defineExpr in this case.
-				auto const& symbComponents = symbTuple->components();
-				solAssert(symbComponents.size() == returnedValues.size(), "");
-				for (unsigned i = 0; i < symbComponents.size(); ++i)
-					m_context.addAssertion(symbTuple->component(i) == returnedValues.at(i));
+				solAssert(!symbArguments.empty(), "");
+				// For nested arrays/mappings, each argument in the call is an index to the next layer.
+				// We mirror this with `select` after unpacking the SMT-LIB array expression.
+				currentExpr = smtutil::Expression::select(smtutil::Expression::tuple_get(currentExpr, 0), symbArguments.front());
+				symbArguments.pop_front();
+				if (auto arrayType = dynamic_cast<ArrayType const*>(type))
+					type = arrayType->baseType();
+				else if (auto mappingType = dynamic_cast<MappingType const*>(type))
+					type = mappingType->valueType();
+				else
+					solAssert(false, "");
+				break;
 			}
-			break;
+			case Type::Category::Struct:
+			{
+				solAssert(symbArguments.empty(), "");
+				smt::SymbolicStructVariable structVar(dynamic_cast<StructType const*>(type), "struct_temp_" + to_string(_funCall.id()), m_context);
+				m_context.addAssertion(structVar.currentValue() == currentExpr);
+				auto returnedMembers = structGetterReturnedMembers(dynamic_cast<StructType const&>(*structVar.type()));
+				solAssert(!returnedMembers.empty(), "");
+				auto returnedValues = applyMap(returnedMembers, [&](string const& memberName) { return structVar.member(memberName); });
+				if (returnedValues.size() == 1)
+					defineExpr(_funCall, returnedValues.front());
+				else
+				{
+					auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
+					solAssert(symbTuple, "");
+					symbTuple->increaseIndex(); // Increasing the index explicitly since we cannot use defineExpr in this case.
+					auto const& symbComponents = symbTuple->components();
+					solAssert(symbComponents.size() == returnedValues.size(), "");
+					for (unsigned i = 0; i < symbComponents.size(); ++i)
+						m_context.addAssertion(symbTuple->component(i) == returnedValues.at(i));
+				}
+				return;
+			}
+			default:
+			{
+				// Unsupported cases, do nothing and the getter will be abstracted.
+				return;
+			}
 		}
-		default: {} // Unsupported cases, do nothing and the getter will be abstracted.
 	}
 }
 
