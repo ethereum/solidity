@@ -260,6 +260,7 @@ public:
 	}
 	friend Expression operator==(Expression _a, Expression _b)
 	{
+		smtAssert(_a.sort->kind == _b.sort->kind, "Trying to create an 'equal' expression with different sorts");
 		return Expression("=", std::move(_a), std::move(_b), Kind::Bool);
 	}
 	friend Expression operator!=(Expression _a, Expression _b)

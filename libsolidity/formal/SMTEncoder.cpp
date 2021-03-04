@@ -940,7 +940,7 @@ void SMTEncoder::endVisit(Identifier const& _identifier)
 			{
 				solAssert(decl->value(), "");
 				decl->value()->accept(*this);
-				defineExpr(_identifier, expr(*decl->value()));
+				defineExpr(_identifier, expr(*decl->value(), _identifier.annotation().type));
 			}
 		}
 		else
