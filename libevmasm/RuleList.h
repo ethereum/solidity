@@ -507,6 +507,23 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		});
 	}
 
+	// Combine alternating AND/OR/AND with constant,
+	// AND(OR(AND(X, A), Y), B) -> OR(AND(X, A & B), AND(Y, B))
+	// Many versions due to commutativity.
+	for (auto const& inner: {Builtins::AND(X, A), Builtins::AND(A, X)})
+		for (auto const& second: {Builtins::OR(inner, Y), Builtins::OR(Y, inner)})
+		{
+			// We might swap X and Y but this is not an issue anymore.
+			rules.push_back({
+				Builtins::AND(second, B),
+				[=]() -> Pattern { return Builtins::OR(Builtins::AND(X, A.d() & B.d()), Builtins::AND(Y, B)); }
+			});
+			rules.push_back({
+				Builtins::AND(B, second),
+				[=]() -> Pattern { return Builtins::OR(Builtins::AND(X, A.d() & B.d()), Builtins::AND(Y, B)); }
+			});
+		}
+
 	rules.push_back({
 		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
 		Builtins::MUL(X, Builtins::SHL(Y, Word(1))),
