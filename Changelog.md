@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Optimizer: Try to move ``and`` with constant inside ``or`` to improve storage writes of small types.
 
 
 Bugfixes:
