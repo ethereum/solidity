@@ -41,7 +41,6 @@ using namespace solidity;
 using namespace solidity::test;
 using namespace solidity::test::fuzzer;
 using namespace solidity::yul;
-using namespace solidity::yul::test;
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
 using namespace std;
@@ -107,10 +106,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	if (callResult.status_code == EVMC_OUT_OF_GAS)
 		return;
 
-	if (YulEvmoneUtility{}.checkSelfDestructs(hostContext, deployResult.create_address))
-		return;
-	ostringstream unoptimizedStorage;
-	hostContext.print_storage_at(deployResult.create_address, unoptimizedStorage);
+	ostringstream unoptimizedState;
+	unoptimizedState << hostContext.dumpState(deployResult.create_address);
 
 	settings.runYulOptimiser = true;
 	settings.optimizeStackAllocation = true;
@@ -123,6 +120,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	{
 		return;
 	}
+
+	// Reset host before running optimised code.
+	hostContext.reset();
 	evmc::result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
 	solAssert(
 		deployResultOpt.status_code == EVMC_SUCCESS,
@@ -135,12 +135,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			callResultOpt.status_code != EVMC_REVERT,
 			"SolidityEvmoneInterface: EVM One reverted"
 		);
-	if (YulEvmoneUtility{}.checkSelfDestructs(hostContext, deployResultOpt.create_address))
-		return;
-	ostringstream optimizedStorage;
-	hostContext.print_storage_at(deployResultOpt.create_address, optimizedStorage);
+	ostringstream optimizedState;
+	optimizedState << hostContext.dumpState(deployResultOpt.create_address);
 	solAssert(
-		unoptimizedStorage.str() == optimizedStorage.str(),
+		unoptimizedState.str() == optimizedState.str(),
 		"Storage of unoptimised and optimised stack reused code do not match."
 	);
 }

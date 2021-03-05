@@ -61,11 +61,6 @@ public:
 		tx_context.block_timestamp += 15;
 		recorded_logs.clear();
 	}
-	/// Prints contents of storage at all addresses in host to @param _os.
-	void print_all_storage(std::ostringstream& _os);
-
-	/// Prints contents of storage at @param _addr to @param _os.
-	void print_storage_at(evmc::address const& _addr, std::ostringstream& _os);
 
 	/// @returns contents of storage at @param _addr.
 	std::unordered_map<evmc::bytes32, evmc::storage_value> const& get_address_storage(evmc::address const& _addr);
@@ -92,8 +87,23 @@ public:
 		return m_vm.has_capability(capability);
 	}
 
+	/// @returns the state as a string. State includes storage at and balance
+	/// of account at @param _addr and execution trace of the host post reset.
+	std::string dumpState(evmc::address _addr);
+
 private:
 	evmc::address m_currentAddress = {};
+
+	/// Records calls made via @param _message.
+	void recordCalls(evmc_message const& _message) noexcept;
+	/// Prints contents of storage at @param _addr to @param _os.
+	void print_storage_at(evmc::address const& _addr, std::ostringstream& _os);
+	/// Prints call summary to @param _os.
+	void print_call_records(std::ostringstream& _os) const noexcept;
+	/// Print self destruct records to @param _os.
+	void print_selfdestruct_records(std::ostringstream& _os) const noexcept;
+	/// Print balance of @param _addr to @param _os.
+	void print_balance(evmc::address const& _addr, std::ostringstream& _os) const noexcept;
 
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	static evmc::result precompileSha256(evmc_message const& _message) noexcept;

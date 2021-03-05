@@ -78,12 +78,3 @@ evmc_message YulEvmoneUtility::callMessage(evmc_address _address)
 	call.kind = EVMC_CALL;
 	return call;
 }
-
-bool YulEvmoneUtility::checkSelfDestructs(EVMHost& _host, evmc_address _address)
-{
-	for (auto const& selfDestructRecord: _host.recorded_selfdestructs)
-		if (selfDestructRecord.selfdestructed == _address)
-			return true;
-	return false;
-}
-

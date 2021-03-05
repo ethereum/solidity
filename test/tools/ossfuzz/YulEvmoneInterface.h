@@ -54,8 +54,5 @@ struct YulEvmoneUtility
 	static evmc::result deployCode(solidity::bytes const& _input, EVMHost& _host);
 	/// @returns call message to be sent to @param _address.
 	static evmc_message callMessage(evmc_address _address);
-	/// @returns true if @param _address is in the list of self destructed
-	/// accounts, false otherwise.
-	static bool checkSelfDestructs(EVMHost& _host, evmc_address _address);
 };
 }
