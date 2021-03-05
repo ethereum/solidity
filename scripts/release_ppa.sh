@@ -274,12 +274,12 @@ if wget --quiet -O "$orig-tmp" "$ppafilesurl/$orig"
 then
     echo "[WARN] Original tarball found in Ubuntu archive, using it instead"
     mv "$orig-tmp" "$orig"
-    new_size=$(ls -l *.orig.tar.gz | cut -d ' ' -f 5)
+    new_size=$(ls -l ./*.orig.tar.gz | cut -d ' ' -f 5)
     new_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
     new_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
     new_md5=$(md5sum "$orig" | cut -d ' ' -f 1)
-    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" *.dsc
-    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" *.changes
+    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" ./*.dsc
+    sed -i -e "s,$orig_sha1,$new_sha1,g" -e "s,$orig_sha256,$new_sha256,g" -e "s,$orig_size,$new_size,g" -e "s,$orig_md5,$new_md5,g" ./*.changes
 fi
 )
 

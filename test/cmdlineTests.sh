@@ -91,7 +91,7 @@ function ask_expectation_update
 
             while true
             do
-                read -N 1 -p "(e)dit/(u)pdate expectations/(s)kip/(q)uit? "
+                read -r -N 1 -p "(e)dit/(u)pdate expectations/(s)kip/(q)uit? "
                 echo
                 case $REPLY in
                     e*) "$editor" "$expectationFile"; break;;
@@ -121,8 +121,8 @@ function test_solc_behaviour()
     local stderr_expected="${7}"
     local stdout_expectation_file="${8}" # the file to write to when user chooses to update stdout expectation
     local stderr_expectation_file="${9}" # the file to write to when user chooses to update stderr expectation
-    local stdout_path=`mktemp`
-    local stderr_path=`mktemp`
+    local stdout_path; stdout_path=$(mktemp)
+    local stderr_path; stderr_path=$(mktemp)
 
     trap "rm -f $stdout_path $stderr_path" EXIT
 
@@ -282,7 +282,7 @@ printTask "Running general commandline tests..."
 
         inputFiles="$(ls -1 "${tdir}/input."* 2> /dev/null || true)"
         inputCount="$(echo "${inputFiles}" | wc -w)"
-        if (( ${inputCount} > 1 ))
+        if (( inputCount > 1 ))
         then
             printError "Ambiguous input. Found input files in multiple formats:"
             echo -e "${inputFiles}"
@@ -333,7 +333,7 @@ printTask "Compiling various other contracts and libraries..."
     do
         echo " - $dir"
         cd "$dir"
-        compileFull -w *.sol */*.sol
+        compileFull -w ./*.sol ./*/*.sol
         cd ..
     done
 )
@@ -378,7 +378,7 @@ echo "Done."
 
 printTask "Testing library checksum..."
 echo '' | "$SOLC" - --link --libraries a=0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
-! echo '' | "$SOLC" - --link --libraries a=0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null
+echo '' | "$SOLC" - --link --libraries a=0x80f20564390eAe531E810af625A22f51385Cd222 &>/dev/null && exit 1
 
 printTask "Testing long library names..."
 echo '' | "$SOLC" - --link --libraries aveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerylonglibraryname=0x90f20564390eAe531E810af625A22f51385Cd222 >/dev/null
@@ -408,7 +408,7 @@ SOLTMPDIR=$(mktemp -d)
     # First time it works
     echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
     # Second time it fails
-    ! echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
+    echo 'contract C {} ' | "$SOLC" - --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null && exit 1
     # Unless we force
     echo 'contract C {} ' | "$SOLC" - --overwrite --bin -o "$SOLTMPDIR/non-existing-stuff-to-create" 2>/dev/null
 )
@@ -422,8 +422,8 @@ printTask "Testing assemble, yul, strict-assembly and optimize..."
 
     # Test options above in conjunction with --optimize.
     # Using both, --assemble and --optimize should fail.
-    ! echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null
-    ! echo '{}' | "$SOLC" - --yul --optimize &>/dev/null
+    echo '{}' | "$SOLC" - --assemble --optimize &>/dev/null && exit 1
+    echo '{}' | "$SOLC" - --yul --optimize &>/dev/null && exit 1
 
     # Test yul and strict assembly output
     # Non-empty code results in non-empty binary representation with optimizations turned off,
@@ -451,24 +451,15 @@ SOLTMPDIR=$(mktemp -d)
         exit 1
     fi
 
-    set +e
-    output=$(echo 'contract C {} ' | "$SOLC" - --bin 2>/dev/null | grep -q "<stdin>:C")
-    result=$?
-    set -e
-
     # The contract should be compiled
-    if [[ "$result" != 0 ]]
+    if ! output=$(echo 'contract C {} ' | "$SOLC" - --bin 2>/dev/null | grep -q "<stdin>:C")
     then
         printError "Failed to compile a simple contract from standard input"
         exit 1
     fi
 
     # This should not fail
-    set +e
-    output=$(echo '' | "$SOLC" --ast-compact-json - 2>/dev/null)
-    result=$?
-    set -e
-    if [[ $result != 0 ]]
+    if ! output=$(echo '' | "$SOLC" --ast-compact-json - 2>/dev/null)
     then
         printError "Incorrect response to --ast-compact-json option with empty stdin"
         exit 1
@@ -479,8 +470,7 @@ printTask "Testing AST import..."
 SOLTMPDIR=$(mktemp -d)
 (
     cd "$SOLTMPDIR"
-    "$REPO_ROOT/scripts/ASTImportTest.sh"
-    if [ $? -ne 0 ]
+    if ! "$REPO_ROOT/scripts/ASTImportTest.sh"
     then
         rm -rf "$SOLTMPDIR"
         exit 1
@@ -499,8 +489,8 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/test/
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
 
-    echo *.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
-    echo *.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
+    echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --quiet --input-files
+    echo ./*.sol | xargs -P 4 -n 50 "${SOLIDITY_BUILD_DIR}/test/tools/solfuzzer" --without-optimizer --quiet --input-files
 )
 rm -rf "$SOLTMPDIR"
 

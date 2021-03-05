@@ -32,38 +32,35 @@ EVM_VALUES=(homestead byzantium constantinople petersburg istanbul)
 OPTIMIZE_VALUES=(0 1)
 STEPS=$(( 2 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))
 
-if (( $CIRCLE_NODE_TOTAL )) && (( $CIRCLE_NODE_TOTAL > 1 ))
+if (( CIRCLE_NODE_TOTAL )) && (( CIRCLE_NODE_TOTAL > 1 ))
 then
     # Run step 1 as the only step on the first executor
     # and evenly distribute the other steps among
     # the other executors.
     # The first step takes much longer than the other steps.
-    if (( $CIRCLE_NODE_INDEX == 0 ))
+    if (( CIRCLE_NODE_INDEX == 0 ))
     then
         RUN_STEPS="1"
     else
-        export CIRCLE_NODE_INDEX=$(($CIRCLE_NODE_INDEX - 1))
-        export CIRCLE_NODE_TOTAL=$(($CIRCLE_NODE_TOTAL - 1))
-        RUN_STEPS=$(seq 2 "$STEPS" | circleci tests split)
+        export CIRCLE_NODE_INDEX=$((CIRCLE_NODE_INDEX - 1))
+        export CIRCLE_NODE_TOTAL=$((CIRCLE_NODE_TOTAL - 1))
+        RUN_STEPS=$(seq 2 "$STEPS" | circleci tests split | xargs)
     fi
 else
-    RUN_STEPS=$(seq "$STEPS")
+    RUN_STEPS=$(seq "$STEPS" | xargs)
 fi
-
-# turn newlines into spaces
-RUN_STEPS=$(echo $RUN_STEPS)
 
 echo "Running steps $RUN_STEPS..."
 
 STEP=1
 
 # Run SMTChecker tests separately, as the heaviest expected run.
-[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t smtCheckerTests/*" "${REPODIR}/.circleci/soltest.sh"
-STEP=$(($STEP + 1))
+[[ " $RUN_STEPS " == *" $STEP "* ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t smtCheckerTests/*" "${REPODIR}/.circleci/soltest.sh"
+STEP=$((STEP + 1))
 
 # Run without SMTChecker tests.
-[[ " $RUN_STEPS " =~ " $STEP " ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
-STEP=$(($STEP + 1))
+[[ " $RUN_STEPS " == *" $STEP "* ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
+STEP=$((STEP + 1))
 
 for OPTIMIZE in "${OPTIMIZE_VALUES[@]}"
 do
@@ -73,12 +70,12 @@ do
         EWASM_ARGS=""
         [ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
 
-        [[ " $RUN_STEPS " =~ " $STEP " ]] && EVM="$EVM" OPTIMIZE="$OPTIMIZE" SOLTEST_FLAGS="$SOLTEST_FLAGS $EWASM_ARGS" BOOST_TEST_ARGS="-t !@nooptions" "${REPODIR}/.circleci/soltest.sh"
-        STEP=$(($STEP + 1))
+        [[ " $RUN_STEPS " == *" $STEP "* ]] && EVM="$EVM" OPTIMIZE="$OPTIMIZE" SOLTEST_FLAGS="$SOLTEST_FLAGS $EWASM_ARGS" BOOST_TEST_ARGS="-t !@nooptions" "${REPODIR}/.circleci/soltest.sh"
+        STEP=$((STEP + 1))
     done
 done
 
-if (($STEP != $STEPS + 1))
+if ((STEP != STEPS + 1))
 then
     echo "Step counter not properly adjusted!" >&2
     exit 1

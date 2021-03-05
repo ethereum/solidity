@@ -41,7 +41,14 @@ if [ -d jsoncpp ]; then
 fi
 
 set +e
-scripts/*/build_emscripten.sh
+
+if [ -e scripts/ci/build_emscripten.sh ]; then
+  scripts/ci/build_emscripten.sh
+else
+  # The script used to be in scripts/ci/ in earlier versions.
+  scripts/travis-emscripten/build_emscripten.sh
+fi
+
 set -e
 
 mkdir -p upload

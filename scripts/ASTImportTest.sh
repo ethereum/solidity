@@ -27,7 +27,7 @@ TESTED=0
 
 if [ "$(ls | wc -l)" -ne 0 ]; then
     echo "Test directory not empty. Skipping!"
-    exit -1
+    exit 1
 fi
 
 # function tests whether exporting and importing again leaves the JSON ast unchanged
@@ -45,8 +45,7 @@ function testImportExportEquivalence {
         # save exported json as expected result (silently)
         $SOLC --combined-json ast,compact-format --pretty-json "$nth_input_file" "${all_input_files[@]}" > expected.json 2> /dev/null
         # import it, and export it again as obtained result (silently)
-        $SOLC --import-ast --combined-json ast,compact-format --pretty-json expected.json > obtained.json 2> /dev/null
-        if [ $? -ne 0 ]
+        if ! $SOLC --import-ast --combined-json ast,compact-format --pretty-json expected.json > obtained.json 2> /dev/null
         then
             # For investigating, use exit 1 here so the script stops at the
             # first failing test
@@ -61,9 +60,9 @@ function testImportExportEquivalence {
             then
                 echo -e "ERROR: JSONS differ for $1: \n $DIFF \n"
                 echo "Expected:"
-                echo "$(cat ./expected.json)"
+                cat ./expected.json
                 echo "Obtained:"
-                echo "$(cat ./obtained.json)"
+                cat ./obtained.json
             else
                 # Use user supplied diff view binary
                 $DIFFVIEW expected.json obtained.json

@@ -1,5 +1,5 @@
-#!/usr/bin/env sh
-set -e
+#!/usr/bin/env bash
+set -eu
 
 TEMPDIR=$(mktemp -d)
 (

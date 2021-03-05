@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ------------------------------------------------------------------------------
 # vim:ts=4:et
 # This file is part of solidity.
@@ -50,12 +51,12 @@ function compileFull()
 
     local files=("$@")
 
-    local stderr_path=$(mktemp)
+    local stderr_path; stderr_path=$(mktemp)
 
     set +e
     "$SOLC" "${args[@]}" "${files[@]}" >/dev/null 2>"$stderr_path"
     local exit_code=$?
-    local errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\|' < "$stderr_path")
+    local errors; errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\|' < "$stderr_path")
     set -e
     rm "$stderr_path"
 

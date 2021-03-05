@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -eu
 
 REPO_ROOT="$(dirname "$0")"/..
 USE_DEBUGGER=0

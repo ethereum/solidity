@@ -66,11 +66,12 @@ function versionEqual()
 function getAllAvailableVersions()
 {
     allVersions=()
-    local allListedVersions=( $(
+    local allListedVersions
+    mapfile -t allListedVersions <<< "$(
         wget -q -O- https://binaries.soliditylang.org/bin/list.txt |
         grep -Po '(?<=soljson-v)\d+.\d+.\d+(?=\+commit)' |
         sort -V
-    ) )
+    )"
     for listed in "${allListedVersions[@]}"
     do
         if versionGreater "$listed" "0.4.10"
@@ -187,8 +188,7 @@ SOLTMPDIR=$(mktemp -d)
         ln -sf "$solc_bin" "solc"
         chmod a+x solc
 
-        SOLC="$SOLTMPDIR/solc"
-        compileFull "${opts[@]}" "$SOLTMPDIR/$f"
+        SOLC="$SOLTMPDIR/solc" compileFull "${opts[@]}" "$SOLTMPDIR/$f"
     done
 )
 rm -rf "$SOLTMPDIR"
