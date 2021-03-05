@@ -17,6 +17,8 @@ contract C {
 		assert(s1.x == 44 || s2.x == 44);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 8115: (81-85): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (88-92): Assertion checker does not yet support the type of this variable.
@@ -51,9 +53,9 @@ contract C {
 // Warning 8364: (366-368): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 7650: (380-384): Assertion checker does not yet support this expression.
 // Warning 8364: (380-382): Assertion checker does not yet implement type struct C.S storage ref
-// Warning 6328: (197-233): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\n\nTransaction trace:\nC.constructor()\nC.f(false, false)
-// Warning 6328: (237-273): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\n\nTransaction trace:\nC.constructor()\nC.f(false, false)
-// Warning 6328: (359-391): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\n\nTransaction trace:\nC.constructor()\nC.f(false, false)
+// Warning 6328: (197-233): CHC: Assertion violation happens here.
+// Warning 6328: (237-273): CHC: Assertion violation happens here.
+// Warning 6328: (359-391): CHC: Assertion violation happens here.
 // Warning 8115: (81-85): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (88-92): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (135-147): Assertion checker does not yet support the type of this variable.

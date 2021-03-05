@@ -14,4 +14,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (250-294): CHC: Assertion violation happens here.
+// Warning 6328: (250-294): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()\n    C.g() -- trusted external call
