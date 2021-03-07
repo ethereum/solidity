@@ -3285,19 +3285,17 @@ string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, St
 		"_to_" +
 		_to.identifier();
 
-	return m_functionCollector.createFunction(functionName, [&]() {
+	return m_functionCollector.createFunction(functionName, [&](auto& _arguments, auto&) {
+		_arguments = {"slot", "value"};
 		Whiskers templ(R"(
-			function <functionName>(slot, value) {
-				<?fromStorage> if iszero(eq(slot, value)) { </fromStorage>
-				<#member>
-				{
-					<updateMemberCall>
-				}
-				</member>
-				<?fromStorage> } </fromStorage>
+			<?fromStorage> if iszero(eq(slot, value)) { </fromStorage>
+			<#member>
+			{
+				<updateMemberCall>
 			}
+			</member>
+			<?fromStorage> } </fromStorage>
 		)");
-		templ("functionName", functionName);
 		templ("fromStorage", _from.dataStoredIn(DataLocation::Storage));
 
 		MemberList::MemberMap structMembers = _from.nativeMembers(nullptr);
@@ -3368,7 +3366,7 @@ string YulUtilFunctions::copyStructToStorageFunction(StructType const& _from, St
 			}
 			else if (fromStorage)
 			{
-				auto[srcSlotOffset, srcOffset] = _from.storageOffsetsOfMember(structMembers[i].name);
+				auto const& [srcSlotOffset, srcOffset] = _from.storageOffsetsOfMember(structMembers[i].name);
 				t("memberOffset", formatNumber(srcSlotOffset));
 				if (memberType.isValueType())
 					t("read", readFromStorageValueType(memberType, srcOffset, false));
