@@ -78,3 +78,21 @@ evmc_message YulEvmoneUtility::callMessage(evmc_address _address)
 	call.kind = EVMC_CALL;
 	return call;
 }
+
+bool YulEvmoneUtility::seriousCallError(evmc_status_code _code)
+{
+	if (_code == EVMC_OUT_OF_GAS)
+		return true;
+	else if (_code == EVMC_STACK_OVERFLOW)
+		return true;
+	else if (_code == EVMC_STACK_UNDERFLOW)
+		return true;
+	else if (_code == EVMC_INTERNAL_ERROR)
+		return true;
+	else if (_code == EVMC_UNDEFINED_INSTRUCTION)
+		return true;
+	else if (_code == EVMC_INVALID_MEMORY_ACCESS)
+		return true;
+	else
+		return false;
+}

@@ -54,5 +54,7 @@ struct YulEvmoneUtility
 	static evmc::result deployCode(solidity::bytes const& _input, EVMHost& _host);
 	/// @returns call message to be sent to @param _address.
 	static evmc_message callMessage(evmc_address _address);
+	/// @returns true if call result indicates a serious error, false otherwise.
+	static bool seriousCallError(evmc_status_code _code);
 };
 }

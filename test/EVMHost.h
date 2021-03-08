@@ -97,13 +97,13 @@ private:
 	/// Records calls made via @param _message.
 	void recordCalls(evmc_message const& _message) noexcept;
 	/// Prints contents of storage at @param _addr to @param _os.
-	void print_storage_at(evmc::address const& _addr, std::ostringstream& _os);
+	void printStorageAt(evmc::address const& _addr, std::ostringstream& _os);
 	/// Prints call summary to @param _os.
-	void print_call_records(std::ostringstream& _os) const noexcept;
+	void printCallRecords(std::ostringstream& _os) const noexcept;
 	/// Print self destruct records to @param _os.
-	void print_selfdestruct_records(std::ostringstream& _os) const noexcept;
+	void printSelfdestructRecords(std::ostringstream& _os) const noexcept;
 	/// Print balance of @param _addr to @param _os.
-	void print_balance(evmc::address const& _addr, std::ostringstream& _os) const noexcept;
+	void printBalance(evmc::address const& _addr, std::ostringstream& _os) const noexcept;
 
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	static evmc::result precompileSha256(evmc_message const& _message) noexcept;

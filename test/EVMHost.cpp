@@ -773,7 +773,7 @@ evmc::result EVMHost::resultWithGas(
 	return result;
 }
 
-void EVMHost::print_storage_at(evmc::address const& _addr, ostringstream& _os)
+void EVMHost::printStorageAt(evmc::address const& _addr, ostringstream& _os)
 {
 	for (auto const& [slot, value]: get_address_storage(_addr))
 		if (get_storage(_addr, slot))
@@ -786,9 +786,9 @@ StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
 	return accounts[_addr].storage;
 }
 
-void EVMHost::print_call_records(std::ostringstream& _os) const noexcept
+void EVMHost::printCallRecords(std::ostringstream& _os) const noexcept
 {
-	auto callKind = [](evmc_call_kind _kind) -> string
+	static const auto callKind = [](evmc_call_kind _kind) -> string
 	{
 		switch (_kind)
 		{
@@ -814,7 +814,7 @@ void EVMHost::print_call_records(std::ostringstream& _os) const noexcept
 			<< endl;
 }
 
-void EVMHost::print_selfdestruct_records(ostringstream& _os) const noexcept
+void EVMHost::printSelfdestructRecords(ostringstream& _os) const noexcept
 {
 	for (auto const& record: recorded_selfdestructs)
 		_os << "SELFDESTRUCT"
@@ -825,7 +825,7 @@ void EVMHost::print_selfdestruct_records(ostringstream& _os) const noexcept
 			<< endl;
 }
 
-void EVMHost::print_balance(evmc::address const& _addr, ostringstream& _os) const noexcept
+void EVMHost::printBalance(evmc::address const& _addr, ostringstream& _os) const noexcept
 {
 	_os << "BALANCE " << convertFromEVMC(get_balance(_addr)) << endl;
 }
@@ -837,13 +837,13 @@ string EVMHost::dumpState(evmc::address _addr)
 	// Print state and execution trace.
 	if (account_exists(_addr))
 	{
-		print_storage_at(_addr, stateStream);
-		print_balance(_addr, stateStream);
+		printStorageAt(_addr, stateStream);
+		printBalance(_addr, stateStream);
 	}
 	else
-		print_selfdestruct_records(stateStream);
+		printSelfdestructRecords(stateStream);
 
-	print_call_records(stateStream);
+	printCallRecords(stateStream);
 
 	return stateStream.str();
 }
