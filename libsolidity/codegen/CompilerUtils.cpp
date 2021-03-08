@@ -32,6 +32,8 @@
 #include <libevmasm/Instruction.h>
 #include <libsolutil/Whiskers.h>
 
+#include <liblangutil/Exceptions.h>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::evmasm;
@@ -1357,10 +1359,24 @@ void CompilerUtils::moveIntoStack(unsigned _stackDepth, unsigned _itemSize)
 {
 	if (_stackDepth <= _itemSize)
 		for (unsigned i = 0; i < _stackDepth; ++i)
+		{
+			if (i > 1)
+			{
+				std::cout << "Down: " << i << std::endl;
+				solAssert(false, "down");
+			}
 			rotateStackDown(_stackDepth + _itemSize);
+		}
 	else
 		for (unsigned i = 0; i < _itemSize; ++i)
+		{
+			if (i > 1)
+			{
+				std::cout << "Up: " << i << std::endl;
+				solAssert(false, "up");
+			}
 			rotateStackUp(_stackDepth + _itemSize);
+		}
 }
 
 void CompilerUtils::rotateStackUp(unsigned _items)
