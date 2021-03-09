@@ -107,8 +107,7 @@ bool successParse(
 bool successAssemble(string const& _source, bool _allowWarnings = true, AssemblyStack::Language _language = AssemblyStack::Language::Assembly)
 {
 	return
-		successParse(_source, true, _allowWarnings, _language, AssemblyStack::Machine::EVM) &&
-		successParse(_source, true, _allowWarnings, _language, AssemblyStack::Machine::EVM15);
+		successParse(_source, true, _allowWarnings, _language, AssemblyStack::Machine::EVM);
 }
 
 Error expectError(

@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * Command Line Interface: Drop experimental support for ``--machine evm15``.
  * Optimizer: Try to move ``and`` with constant inside ``or`` to improve storage writes of small types.
 
 

@@ -148,7 +148,7 @@ bool AssemblyStack::analyzeParsed(Object& _object)
 	return success;
 }
 
-void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _optimize) const
+void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _optimize) const
 {
 	EVMDialect const* dialect = nullptr;
 	switch (m_language)
@@ -165,7 +165,7 @@ void AssemblyStack::compileEVM(AbstractAssembly& _assembly, bool _evm15, bool _o
 			break;
 	}
 
-	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _evm15, _optimize);
+	EVMObjectCompiler::compile(*m_parserResult, _assembly, *dialect, _optimize);
 }
 
 void AssemblyStack::optimize(Object& _object, bool _isCreation)
@@ -200,15 +200,6 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	{
 	case Machine::EVM:
 		return assembleWithDeployed().first;
-	case Machine::EVM15:
-	{
-		MachineAssemblyObject object;
-		EVMAssembly assembly(true);
-		compileEVM(assembly, true, m_optimiserSettings.optimizeStackAllocation);
-		object.bytecode = make_shared<evmasm::LinkerObject>(assembly.finalize());
-		/// TODO: fill out text representation
-		return object;
-	}
 	case Machine::Ewasm:
 	{
 		yulAssert(m_language == Language::Ewasm, "");
@@ -235,7 +226,7 @@ std::pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleW
 
 	evmasm::Assembly assembly;
 	EthAssemblyAdapter adapter(assembly);
-	compileEVM(adapter, false, m_optimiserSettings.optimizeStackAllocation);
+	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
 
 	MachineAssemblyObject creationObject;
 	creationObject.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
