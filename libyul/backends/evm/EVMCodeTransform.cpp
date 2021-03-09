@@ -528,7 +528,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		);
 		stackError(std::move(error), static_cast<int>(_function.returnVariables.size()) + 1);
 	}
-	else
+	else if (m_allowStackOpt)
 	{
 		// This vector stores true for stack slots containing return labels or return values,
 		// false otherwise.
@@ -573,6 +573,55 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			// So we need an additional swap to completely order the return values and get the return label to the top.
 			m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(_function.returnVariables.size())));
 	}
+	else
+	{
+		// The stack layout here is:
+		// <return label> <arguments...> <return values...>
+		// But we would like it to be:
+		// <return values...> <return label>
+		// So we have to append some SWAP and POP instructions.
+
+		// This vector holds the desired target positions of all stack slots and is
+		// modified parallel to the actual stack.
+		vector<int> stackLayout(static_cast<size_t>(m_assembly.stackHeight()), -1);
+		stackLayout[0] = static_cast<int>(_function.returnVariables.size()); // Move return label to the top
+		for (auto&& [n, returnVariable]: ranges::views::enumerate(_function.returnVariables))
+			stackLayout.at(m_context->variableStackHeights.at(
+				&std::get<Scope::Variable>(virtualFunctionScope->identifiers.at(returnVariable.name))
+			)) = static_cast<int>(n);
+
+		if (stackLayout.size() > 17)
+		{
+			StackTooDeepError error(
+				_function.name,
+				YulString{},
+				static_cast<int>(stackLayout.size()) - 17,
+				"The function " +
+				_function.name.str() +
+				" has " +
+				to_string(stackLayout.size() - 17) +
+				" parameters or return variables too many to fit the stack size."
+			);
+			stackError(std::move(error), m_assembly.stackHeight() - static_cast<int>(_function.parameters.size()));
+		}
+		else
+		{
+			while (!stackLayout.empty() && stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
+				if (stackLayout.back() < 0)
+				{
+					m_assembly.appendInstruction(evmasm::Instruction::POP);
+					stackLayout.pop_back();
+				}
+				else
+				{
+					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u));
+					swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
+				}
+			for (size_t i = 0; i < stackLayout.size(); ++i)
+				yulAssert(i == static_cast<size_t>(stackLayout[i]), "Error reshuffling stack.");
+		}
+	}
+
 	m_assembly.appendJump(
 		stackHeightBefore - static_cast<int>(_function.returnVariables.size()),
 		AbstractAssembly::JumpType::OutOfFunction
@@ -705,6 +754,15 @@ void CodeTransform::setupReturnVariablesAndFunctionExit()
 	if (m_delayedReturnVariables.empty())
 	{
 		m_functionExitStackHeight = 1;
+		return;
+	}
+
+	if (!m_allowStackOpt)
+	{
+		for (TypedName const& var: m_delayedReturnVariables)
+			(*this)(VariableDeclaration{var.location, {var}, {}});
+		m_functionExitStackHeight = m_assembly.stackHeight();
+		m_delayedReturnVariables.clear();
 		return;
 	}
 
