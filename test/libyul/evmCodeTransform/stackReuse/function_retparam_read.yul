@@ -7,9 +7,9 @@
 // PUSH1 0x11
 // JUMP
 // JUMPDEST
-// PUSH1 0x0
 // ADDRESS
 // POP
+// PUSH1 0x0
 // DUP1
 // PUSH1 0x0
 // SSTORE

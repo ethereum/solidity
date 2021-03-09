@@ -7,9 +7,9 @@
 // PUSH1 0x19
 // JUMP
 // JUMPDEST
-// PUSH1 0x0
 // ADDRESS
 // POP
+// PUSH1 0x0
 // CALLVALUE
 // POP
 // JUMPDEST

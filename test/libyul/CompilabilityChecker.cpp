@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_used_arguments)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "h: 9 g: 3 f: 5 ");
+	BOOST_CHECK_EQUAL(out, "h: 9 g: 5 f: 5 ");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_functions_unused_arguments)
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(nested_used_arguments)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "h: 9 g: 3 f: 5 ");
+	BOOST_CHECK_EQUAL(out, "h: 9 g: 5 f: 5 ");
 }
 
 
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(also_in_outer_block_used_arguments)
 				sstore(s1, s2)
 			}
 	})");
-	BOOST_CHECK_EQUAL(out, "g: 3 : 9 ");
+	BOOST_CHECK_EQUAL(out, "g: 5 : 9 ");
 }
 
 BOOST_AUTO_TEST_CASE(also_in_outer_block_unused_arguments)

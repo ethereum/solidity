@@ -7,9 +7,9 @@
 // PUSH1 0xB
 // JUMP
 // JUMPDEST
-// PUSH1 0x0
 // CALLVALUE
 // POP
+// PUSH1 0x0
 // JUMPDEST
 // SWAP1
 // JUMP

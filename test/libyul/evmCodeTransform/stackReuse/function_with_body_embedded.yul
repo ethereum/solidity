@@ -14,19 +14,19 @@
 // JUMP
 // JUMPDEST
 // PUSH1 0x0
-// SWAP2
-// POP
-// DUP1
+// DUP2
 // POP
 // PUSH1 0x3
+// SWAP2
+// POP
+// DUP2
 // SWAP1
 // POP
-// DUP1
+// JUMPDEST
+// SWAP3
 // SWAP2
 // POP
 // POP
-// JUMPDEST
-// SWAP1
 // JUMP
 // JUMPDEST
 // PUSH1 0x7

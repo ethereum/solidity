@@ -7,21 +7,21 @@
 // PUSH1 0x17
 // JUMP
 // JUMPDEST
-// PUSH1 0x0
 // ADDRESS
 // POP
-// DUP4
 // DUP3
+// DUP2
 // SSTORE
+// POP
 // CALLVALUE
 // POP
-// DUP3
+// PUSH1 0x0
+// DUP2
 // SWAP1
 // POP
 // JUMPDEST
-// SWAP4
 // SWAP3
-// POP
+// SWAP2
 // POP
 // POP
 // JUMP
