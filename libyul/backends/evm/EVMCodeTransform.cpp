@@ -31,7 +31,10 @@
 
 #include <range/v3/algorithm/max.hpp>
 #include <range/v3/algorithm/none_of.hpp>
+#include <range/v3/view/drop.hpp>
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/take.hpp>
 #include <range/v3/view/transform.hpp>
 
 #include <utility>
@@ -401,6 +404,42 @@ void CodeTransform::operator()(Switch const& _switch)
 	m_assembly.appendInstruction(evmasm::Instruction::POP);
 }
 
+
+namespace
+{
+
+/// Shuffles @a _container by swapping and popping its elements using the
+/// @a _swap and @a _pop functions in order to remove the elements for which
+/// @a _keep returns false.
+template<typename C, typename KeepFn, typename SwapFn, typename PopFn>
+void shuffle(C& _container, KeepFn&& _keep, SwapFn&& _swap, PopFn&& _pop)
+{
+	set<int> slotsToBeRemoved;
+	for (auto&& [n, elem]: ranges::views::enumerate(_container))
+		if (!_keep(elem))
+			slotsToBeRemoved.emplace(static_cast<int>(n));
+
+	while (!slotsToBeRemoved.empty())
+	{
+		if (_keep(_container.back()))
+		{
+			yulAssert(!slotsToBeRemoved.empty(), "");
+			int slot = *slotsToBeRemoved.begin();
+			slotsToBeRemoved.erase(slotsToBeRemoved.begin());
+
+			_swap(slot);
+			_pop();
+		}
+		else
+		{
+			slotsToBeRemoved.erase(std::prev(slotsToBeRemoved.end()));
+			_pop();
+		}
+	}
+}
+
+}
+
 void CodeTransform::operator()(FunctionDefinition const& _function)
 {
 	yulAssert(m_scope, "");
@@ -475,52 +514,64 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 	m_assembly.appendLabel(*subTransform.m_functionExitLabel);
 
+	if (_function.returnVariables.size() > 16)
 	{
-		// The stack layout here is:
-		// <return label>? <arguments...> <return values...>
-		// But we would like it to be:
-		// <return values...> <return label>?
-		// So we have to append some SWAP and POP instructions.
-
-		// This vector holds the desired target positions of all stack slots and is
-		// modified parallel to the actual stack.
-		vector<int> stackLayout(static_cast<size_t>(m_assembly.stackHeight()), -1);
-		stackLayout[0] = static_cast<int>(_function.returnVariables.size()); // Move return label to the top
-		for (auto&& [n, returnVariable]: ranges::views::enumerate(_function.returnVariables))
+		StackTooDeepError error(
+			_function.name,
+			YulString{},
+			static_cast<int>(_function.returnVariables.size()) - 16,
+			"The function " +
+			_function.name.str() +
+			" has " +
+			to_string(_function.returnVariables.size() - 16) +
+			" return variables too many to fit the stack size."
+		);
+		stackError(std::move(error), static_cast<int>(_function.returnVariables.size()) + 1);
+	}
+	else
+	{
+		// This vector stores true for stack slots containing return labels or return values,
+		// false otherwise.
+		vector<bool> stackLayout(static_cast<size_t>(m_assembly.stackHeight()), false);
+		stackLayout[0] = true;
+		for (auto const& returnVariable: _function.returnVariables)
 			stackLayout.at(m_context->variableStackHeights.at(
 				&std::get<Scope::Variable>(virtualFunctionScope->identifiers.at(returnVariable.name))
-			)) = static_cast<int>(n);
+			)) = true;
 
-		if (stackLayout.size() > 17)
+		// Shuffle leftover arguments up and pop them.
+		int stackDeficit = 0;
+		shuffle(stackLayout, [](bool _v) { return _v; }, [&](int _slot) {
+			if (m_assembly.stackHeight() - _slot > 17)
+				stackDeficit = std::max(stackDeficit, m_assembly.stackHeight() - _slot - 17);
+			else
+				m_assembly.appendInstruction(evmasm::swapInstruction(
+					static_cast<unsigned>(m_assembly.stackHeight() - _slot - 1)
+				));
+			swap(stackLayout.at(static_cast<size_t>(_slot)), stackLayout.back());
+		}, [&]() { stackLayout.pop_back(); m_assembly.appendInstruction(evmasm::Instruction::POP); });
+
+		if (stackDeficit)
 		{
 			StackTooDeepError error(
 				_function.name,
 				YulString{},
-				static_cast<int>(stackLayout.size()) - 17,
+				stackDeficit,
 				"The function " +
 				_function.name.str() +
 				" has " +
-				to_string(stackLayout.size() - 17) +
+				to_string(stackDeficit) +
 				" parameters or return variables too many to fit the stack size."
 			);
-			stackError(std::move(error), m_assembly.stackHeight() - static_cast<int>(_function.parameters.size()));
+			stackError(std::move(error), static_cast<int>(_function.returnVariables.size()) + 1);
 		}
-		else
-		{
-			while (!stackLayout.empty() && stackLayout.back() != static_cast<int>(stackLayout.size() - 1))
-				if (stackLayout.back() < 0)
-				{
-					m_assembly.appendInstruction(evmasm::Instruction::POP);
-					stackLayout.pop_back();
-				}
-				else
-				{
-					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(stackLayout.size()) - static_cast<unsigned>(stackLayout.back()) - 1u));
-					swap(stackLayout[static_cast<size_t>(stackLayout.back())], stackLayout.back());
-				}
-			for (size_t i = 0; i < stackLayout.size(); ++i)
-				yulAssert(i == static_cast<size_t>(stackLayout[i]), "Error reshuffling stack.");
-		}
+		yulAssert(m_assembly.stackHeight() == static_cast<int>(_function.returnVariables.size()) + 1, "");
+
+		if (!_function.returnVariables.empty())
+			// The stack layout here is:
+			// <return label> <return values 2...n> <return value 1>
+			// So we need an additional swap to completely order the return values and get the return label to the top.
+			m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(_function.returnVariables.size())));
 	}
 	m_assembly.appendJump(
 		stackHeightBefore - static_cast<int>(_function.returnVariables.size()),
@@ -657,13 +708,52 @@ void CodeTransform::setupReturnVariablesAndFunctionExit()
 		return;
 	}
 
-	// Allocate slots for return variables as if they were declared as variables in the virtual function scope.
-	for (TypedName const& var: m_delayedReturnVariables)
-		(*this)(VariableDeclaration{var.location, {var}, {}});
+	int height = m_assembly.stackHeight();
 
-	m_functionExitStackHeight = ranges::max(m_delayedReturnVariables | ranges::views::transform([&](TypedName const& _name) {
-		return variableStackHeight(_name.name);
-	})) + 1;
+	// Determine the set of stack slots available for putting in return variables.
+	// If there are not enough unused stack slots, allocate additional ones at the stack top.
+	auto availableStackSlots = m_unusedStackSlots | ranges::views::take(m_delayedReturnVariables.size()) | ranges::to<std::set<int>>;
+	while (availableStackSlots.size() < m_delayedReturnVariables.size())
+		availableStackSlots.emplace(height++);
+	int maxHeight = (*availableStackSlots.crbegin()) + 1;
+
+	// Create a mask that is true for return variables and the return label and false for any remaining arguments in between.
+	// Create a layout that has an increasing integer sequence in place of the return variables.
+	vector<int> layout(static_cast<size_t>(maxHeight), -1);
+	for (auto&& [n, slot]: ranges::views::enumerate(availableStackSlots))
+		layout.at(static_cast<size_t>(slot)) = static_cast<int>(n + 1);
+	layout[0] = 0;
+
+	shuffle(layout, [](auto const& _v) { return _v != -1; }, [&](int slot) {
+		swap(layout.at(static_cast<size_t>(slot)), layout.back());
+	}, [&]() { layout.pop_back(); });
+
+	yulAssert(layout.size() == m_delayedReturnVariables.size() + 1, "");
+
+	// Rotate return variables, s.t. the first return variable comes last. This way it can be swapped with the
+	// return label.
+	vector<TypedName const*> returnVariablesRotated;
+	for (TypedName const& returnVar: m_delayedReturnVariables | ranges::views::drop(1))
+		returnVariablesRotated.emplace_back(&returnVar);
+	returnVariablesRotated.emplace_back(&m_delayedReturnVariables.front());
+
+	// Sort the rotated return variables according to the layout determined above.
+	vector<TypedName const*> sortedReturnVariables(m_delayedReturnVariables.size(), nullptr);
+	for (auto&& [pos, returnVar]: ranges::views::zip(layout | ranges::views::drop(1), returnVariablesRotated))
+		sortedReturnVariables.at(static_cast<size_t>(pos - 1)) = returnVar;
+
+	height = -1;
+	// Allocate slots for return variables as if they were declared as variables in the virtual function scope.
+	for (TypedName const* var: sortedReturnVariables)
+	{
+		yulAssert(var, "");
+		(*this)(VariableDeclaration{var->location, {*var}, {}});
+		int nextHeight = variableStackHeight(var->name);
+		yulAssert(nextHeight > height, "");
+		height = nextHeight;
+	}
+
+	m_functionExitStackHeight = height + 1;
 	m_delayedReturnVariables.clear();
 }
 
