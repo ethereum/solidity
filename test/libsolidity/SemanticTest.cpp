@@ -258,7 +258,10 @@ TestCase::TestResult SemanticTest::runTest(
 
 			bool outputMismatch = (output != test.call().expectations.rawBytes());
 			if (!outputMismatch && !checkGasCostExpectation(test, _compileViaYul))
+			{
+				success = false;
 				m_gasCostFailure = true;
+			}
 
 			// Pre byzantium, it was not possible to return failure data, so we disregard
 			// output mismatch for those EVM versions.
@@ -291,7 +294,7 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << test.format(errorReporter, _linePrefix, false, _formatted, false) << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		_stream << endl;
@@ -299,7 +302,7 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+			_stream << test.format(errorReporter, _linePrefix, !m_gasCostFailure, _formatted, m_gasCostFailure) << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
@@ -318,25 +321,12 @@ TestCase::TestResult SemanticTest::runTest(
 		return TestResult::Failure;
 	}
 
-	if (m_gasCostFailure)
-	{
-		AnsiColorized(_stream, _formatted, {BOLD, CYAN})
-			<< _linePrefix << "Gas results missing or wrong, obtained result:" << endl;
-		for (auto const& test: m_tests)
-		{
-			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
-			_stream << errorReporter.format(_linePrefix, _formatted);
-		}
-		return TestResult::Failure;
-	}
-
 	return TestResult::Success;
 }
 
 bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const
 {
-	if (m_evmVersion != EVMVersion{})
+	if (m_evmVersion != EVMVersion{} || solidity::test::CommonOptions::get().useABIEncoderV1)
 		return true;
 
 	string setting =
@@ -402,7 +392,12 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
 	for (TestFunctionCall const& test: m_tests)
-		_stream << test.format("", /* _renderResult = */ !m_gasCostFailure, /* _highlight = */ false) << endl;
+		_stream << test.format(
+			"",
+			/* _renderResult = */ !m_gasCostFailure,
+			/* _highlight = */ false,
+			/* _renderGasCostResult */ m_gasCostFailure
+		) << endl;
 }
 
 void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)

@@ -49,6 +49,8 @@ public:
 	/// the actual result is used.
 	/// If _highlight is false, it's formatted without colorized highlighting. If it's true, AnsiColorized is
 	/// used to apply a colorized highlighting.
+	/// If __renderGasCostResult is false, the expected gas costs will be used, if it's true
+	/// the actual gas costs will be used
 	/// If test expectations do not match, the contract ABI is consulted in order to get the
 	/// right encoding for returned bytes, based on the parsed return types.
 	/// Reports warnings and errors to the error reporter.
@@ -56,7 +58,8 @@ public:
 		ErrorReporter& _errorReporter,
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _highlight = false
+		bool const _highlight = false,
+		bool const _renderGasCostResult = false
 	) const;
 
 	/// Overloaded version that passes an error reporter which is never used outside
@@ -64,11 +67,12 @@ public:
 	std::string format(
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _highlight = false
+		bool const _highlight = false,
+		bool const _renderGasCostResult = false
 	) const
 	{
 		ErrorReporter reporter;
-		return format(reporter, _linePrefix, _renderResult, _highlight);
+		return format(reporter, _linePrefix, _renderResult, _highlight, _renderGasCostResult);
 	}
 
 	/// Resets current results in case the function was called and the result
@@ -118,7 +122,10 @@ private:
 	) const;
 
 	/// Formats gas usage expectations one per line
-	std::string formatGasExpectations(std::string const& _linePrefix) const;
+	std::string formatGasExpectations(
+		std::string const& _linePrefix,
+		bool const _renderGasCostResult
+	) const;
 
 	/// Compares raw expectations (which are converted to a byte representation before),
 	/// and also the expected transaction status of the function call to the actual test results.

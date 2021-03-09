@@ -36,7 +36,8 @@ string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
 	bool const _renderResult,
-	bool const _highlight
+	bool const _highlight,
+	bool const _renderGasCostResult
 ) const
 {
 	stringstream stream;
@@ -204,7 +205,7 @@ string TestFunctionCall::format(
 			}
 		}
 
-		stream << formatGasExpectations(_linePrefix);
+		stream << formatGasExpectations(_linePrefix, _renderGasCostResult);
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
@@ -320,10 +321,10 @@ string TestFunctionCall::formatRawParameters(
 	return os.str();
 }
 
-string TestFunctionCall::formatGasExpectations(string const& _linePrefix) const
+string TestFunctionCall::formatGasExpectations(string const& _linePrefix, bool const _renderGasCostResult) const
 {
 	stringstream os;
-	for (auto const& [runType, gasUsed]: m_gasCosts)
+	for (auto const& [runType, gasUsed]: (_renderGasCostResult ? m_gasCosts : m_call.expectations.gasUsed))
 		if (!runType.empty())
 			os << endl << _linePrefix << "// gas " << runType << ": " << (gasUsed.str());
 	return os.str();
