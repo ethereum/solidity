@@ -148,6 +148,7 @@ Contents
    080-breaking-changes.rst
    natspec-format.rst
    security-considerations.rst
+   smtchecker.rst
    resources.rst
    using-the-compiler.rst
    yul.rst
