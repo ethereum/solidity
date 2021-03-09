@@ -381,7 +381,7 @@ inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 /**
  * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
  */
-identifier: Identifier | From | Error;
+identifier: Identifier | From | Error | Revert;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 booleanLiteral: True | False;
@@ -422,6 +422,7 @@ statement:
 	| tryStatement
 	| returnStatement
 	| emitStatement
+	| revertStatement
 	| assemblyStatement
 ;
 
@@ -459,6 +460,10 @@ returnStatement: Return expression? Semicolon;
  * An emit statement. The contained expression needs to refer to an event.
  */
 emitStatement: Emit expression callArgumentList Semicolon;
+/**
+ * A revert statement. The contained expression needs to refer to an error.
+ */
+revertStatement: Revert expression callArgumentList Semicolon;
 /**
  * An inline assembly block.
  * The contents of an inline assembly block use a separate scanner/lexer, i.e. the set of keywords and

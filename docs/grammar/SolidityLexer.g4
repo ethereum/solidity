@@ -30,6 +30,7 @@ Else: 'else';
 Emit: 'emit';
 Enum: 'enum';
 Error: 'error'; // not a real keyword
+Revert: 'revert'; // not a real keyword
 Event: 'event';
 External: 'external';
 Fallback: 'fallback';
