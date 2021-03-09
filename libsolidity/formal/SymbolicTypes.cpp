@@ -93,14 +93,14 @@ SortPointer smtSort(frontend::Type const& _type)
 		}
 
 		string tupleName;
+		auto sliceArrayType = dynamic_cast<ArraySliceType const*>(&_type);
+		ArrayType const* arrayType = sliceArrayType ? &sliceArrayType->arrayType() : dynamic_cast<ArrayType const*>(&_type);
 		if (
-			auto arrayType = dynamic_cast<ArrayType const*>(&_type);
 			(arrayType && (arrayType->isString() || arrayType->isByteArray())) ||
-			_type.category() == frontend::Type::Category::ArraySlice ||
 			_type.category() == frontend::Type::Category::StringLiteral
 		)
 			tupleName = "bytes";
-		else if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
+		else if (arrayType)
 		{
 			auto baseType = arrayType->baseType();
 			// Solidity allows implicit conversion also when assigning arrays.
