@@ -19,6 +19,7 @@
 #include <liblangutil/CharStream.h>
 #include <liblangutil/Exceptions.h>
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 
@@ -87,7 +88,7 @@ SourceReference SourceReferenceExtractor::extract(SourceLocation const* _locatio
 		line = line.substr(
 			static_cast<size_t>(max(0, start.column - 35)),
 			static_cast<size_t>(min(start.column, 35)) + static_cast<size_t>(
-				min(locationLength + 35,len - start.column)
+				min(locationLength + 35, len - start.column)
 			)
 		);
 		if (start.column + locationLength + 35 < len)
@@ -106,7 +107,7 @@ SourceReference SourceReferenceExtractor::extract(SourceLocation const* _locatio
 		interest,
 		isMultiline,
 		line,
-		start.column,
-		end.column,
+		min(start.column, static_cast<int>(line.length())),
+		min(end.column, static_cast<int>(line.length()))
 	};
 }

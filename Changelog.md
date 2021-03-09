@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Error Reporter: Fix handling of carriage return.
  * SMTChecker: Fix internal error on ``FixedBytes`` constant initialized with string literal.
  * SMTChecker: Fix internal error on calling public getter on a state variable of type array (possibly nested) of structs.
  * SMTChecker: Fix internal error on pushing to ``string`` casted to ``bytes``.
