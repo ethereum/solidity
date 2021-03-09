@@ -4,7 +4,7 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x11
+// PUSH1 0xF
 // JUMP
 // JUMPDEST
 // CALLVALUE
@@ -13,8 +13,6 @@
 // PUSH1 0x0
 // PUSH1 0x0
 // JUMPDEST
-// SWAP1
-// SWAP2
 // SWAP3
 // JUMP
 // JUMPDEST

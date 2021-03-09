@@ -10,7 +10,7 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x14
+// PUSH1 0x13
 // JUMP
 // JUMPDEST
 // POP
@@ -23,17 +23,16 @@
 // PUSH1 0x0
 // PUSH1 0x0
 // JUMPDEST
-// SWAP1
 // SWAP2
 // JUMP
 // JUMPDEST
-// PUSH1 0x1E
+// PUSH1 0x1D
 // PUSH1 0x2
 // PUSH1 0x1
 // PUSH1 0x3
 // JUMP
 // JUMPDEST
-// PUSH1 0x28
+// PUSH1 0x27
 // PUSH1 0x4
 // PUSH1 0x3
 // PUSH1 0x3
@@ -42,11 +41,11 @@
 // SWAP1
 // POP
 // POP
-// PUSH1 0x31
+// PUSH1 0x30
 // PUSH1 0xB
 // JUMP
 // JUMPDEST
-// PUSH1 0x37
+// PUSH1 0x36
 // PUSH1 0xB
 // JUMP
 // JUMPDEST

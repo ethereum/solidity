@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(many_variables_few_uses)
 			x := add(add(add(add(add(add(add(add(add(x, r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "f: 4 ");
+	BOOST_CHECK_EQUAL(out, "f: 3 ");
 }
 
 BOOST_AUTO_TEST_CASE(many_variables_many_uses)
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(many_variables_many_uses)
 			x := add(add(add(add(add(add(add(add(add(add(add(add(x, r12), r11), r10), r9), r8), r7), r6), r5), r4), r3), r2), r1)
 		}
 	})");
-	BOOST_CHECK_EQUAL(out, "f: 10 ");
+	BOOST_CHECK_EQUAL(out, "f: 9 ");
 }
 
 BOOST_AUTO_TEST_CASE(many_return_variables_unused_arguments)

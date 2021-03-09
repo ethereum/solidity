@@ -109,8 +109,8 @@
 // SWAP1
 // POP
 // JUMPDEST
-// SWAP2
 // SWAP1
 // POP
+// SWAP1
 // JUMP
 // JUMPDEST
