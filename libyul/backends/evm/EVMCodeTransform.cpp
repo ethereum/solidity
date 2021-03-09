@@ -33,6 +33,7 @@
 #include <range/v3/algorithm/none_of.hpp>
 #include <range/v3/view/drop.hpp>
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/iota.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/take.hpp>
 #include <range/v3/view/transform.hpp>
@@ -408,33 +409,29 @@ void CodeTransform::operator()(Switch const& _switch)
 namespace
 {
 
-/// Shuffles @a _container by swapping and popping its elements using the
-/// @a _swap and @a _pop functions in order to remove the elements for which
+/// Shuffles @a _n elements by swapping and popping using the @a _swap
+/// and @a _pop functions in order to remove the elements for which
 /// @a _keep returns false.
-template<typename C, typename KeepFn, typename SwapFn, typename PopFn>
-void shuffle(C& _container, KeepFn&& _keep, SwapFn&& _swap, PopFn&& _pop)
+template<typename KeepFn, typename SwapFn, typename PopFn>
+void shuffle(int _n, KeepFn&& _keep, SwapFn&& _swap, PopFn&& _pop)
 {
 	set<int> slotsToBeRemoved;
-	for (auto&& [n, elem]: ranges::views::enumerate(_container))
-		if (!_keep(elem))
-			slotsToBeRemoved.emplace(static_cast<int>(n));
+	for (int slot: ranges::views::iota(0, _n))
+		if (!_keep(slot))
+			slotsToBeRemoved.emplace_hint(slotsToBeRemoved.end(), slot);
 
 	while (!slotsToBeRemoved.empty())
 	{
-		if (_keep(_container.back()))
+		if (_keep(--_n))
 		{
 			yulAssert(!slotsToBeRemoved.empty(), "");
 			int slot = *slotsToBeRemoved.begin();
 			slotsToBeRemoved.erase(slotsToBeRemoved.begin());
-
 			_swap(slot);
-			_pop();
 		}
 		else
-		{
 			slotsToBeRemoved.erase(std::prev(slotsToBeRemoved.end()));
-			_pop();
-		}
+		_pop();
 	}
 }
 
@@ -541,7 +538,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 
 		// Shuffle leftover arguments up and pop them.
 		int stackDeficit = 0;
-		auto keepSlot = [](bool _v) { return _v; };
+		auto keepSlot = [&](int _slot) { return keep.at(static_cast<size_t>(_slot)); };
 		auto swapSlot = [&](int _slot) {
 			if (m_assembly.stackHeight() - _slot > 17)
 				stackDeficit = std::max(stackDeficit, m_assembly.stackHeight() - _slot - 17);
@@ -555,7 +552,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 			keep.pop_back();
 			m_assembly.appendInstruction(evmasm::Instruction::POP);
 		};
-		shuffle(keep, keepSlot, swapSlot, popSlot);
+		shuffle(m_assembly.stackHeight(), keepSlot, swapSlot, popSlot);
 
 		if (stackDeficit)
 		{
@@ -788,12 +785,12 @@ void CodeTransform::setupReturnVariablesAndFunctionExit()
 		layout.at(static_cast<size_t>(slot)) = static_cast<int>(n + 1);
 	layout[0] = 0;
 
-	auto keepSlot = [](auto const& _v) { return _v != -1; };
-	auto swapSlot = [&](int slot) {
-		swap(layout.at(static_cast<size_t>(slot)), layout.back());
+	auto keepSlot = [&](int _slot) { return layout.at(static_cast<size_t>(_slot)) != -1; };
+	auto swapSlot = [&](int _slot) {
+		swap(layout.at(static_cast<size_t>(_slot)), layout.back());
 	};
 	auto popSlot = [&]() { layout.pop_back(); };
-	shuffle(layout, keepSlot, swapSlot, popSlot);
+	shuffle(maxHeight, keepSlot, swapSlot, popSlot);
 
 	yulAssert(layout.size() == m_delayedReturnVariables.size() + 1, "");
 
