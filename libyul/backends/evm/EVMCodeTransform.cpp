@@ -532,24 +532,30 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	{
 		// This vector stores true for stack slots containing return labels or return values,
 		// false otherwise.
-		vector<bool> stackLayout(static_cast<size_t>(m_assembly.stackHeight()), false);
-		stackLayout[0] = true;
+		vector<bool> keep(static_cast<size_t>(m_assembly.stackHeight()), false);
+		keep[0] = true;
 		for (auto const& returnVariable: _function.returnVariables)
-			stackLayout.at(m_context->variableStackHeights.at(
+			keep.at(m_context->variableStackHeights.at(
 				&std::get<Scope::Variable>(virtualFunctionScope->identifiers.at(returnVariable.name))
 			)) = true;
 
 		// Shuffle leftover arguments up and pop them.
 		int stackDeficit = 0;
-		shuffle(stackLayout, [](bool _v) { return _v; }, [&](int _slot) {
+		auto keepSlot = [](bool _v) { return _v; };
+		auto swapSlot = [&](int _slot) {
 			if (m_assembly.stackHeight() - _slot > 17)
 				stackDeficit = std::max(stackDeficit, m_assembly.stackHeight() - _slot - 17);
 			else
 				m_assembly.appendInstruction(evmasm::swapInstruction(
 					static_cast<unsigned>(m_assembly.stackHeight() - _slot - 1)
 				));
-			swap(stackLayout.at(static_cast<size_t>(_slot)), stackLayout.back());
-		}, [&]() { stackLayout.pop_back(); m_assembly.appendInstruction(evmasm::Instruction::POP); });
+			swap(keep.at(static_cast<size_t>(_slot)), keep.back());
+		};
+		auto popSlot = [&]() {
+			keep.pop_back();
+			m_assembly.appendInstruction(evmasm::Instruction::POP);
+		};
+		shuffle(keep, keepSlot, swapSlot, popSlot);
 
 		if (stackDeficit)
 		{
@@ -775,16 +781,19 @@ void CodeTransform::setupReturnVariablesAndFunctionExit()
 		availableStackSlots.emplace(height++);
 	int maxHeight = (*availableStackSlots.crbegin()) + 1;
 
-	// Create a mask that is true for return variables and the return label and false for any remaining arguments in between.
-	// Create a layout that has an increasing integer sequence in place of the return variables.
+	// Create a layout that has an increasing integer sequence in place of the return variables and
+	// contains -1 in place of arguments to be popped.
 	vector<int> layout(static_cast<size_t>(maxHeight), -1);
 	for (auto&& [n, slot]: ranges::views::enumerate(availableStackSlots))
 		layout.at(static_cast<size_t>(slot)) = static_cast<int>(n + 1);
 	layout[0] = 0;
 
-	shuffle(layout, [](auto const& _v) { return _v != -1; }, [&](int slot) {
+	auto keepSlot = [](auto const& _v) { return _v != -1; };
+	auto swapSlot = [&](int slot) {
 		swap(layout.at(static_cast<size_t>(slot)), layout.back());
-	}, [&]() { layout.pop_back(); });
+	};
+	auto popSlot = [&]() { layout.pop_back(); };
+	shuffle(layout, keepSlot, swapSlot, popSlot);
 
 	yulAssert(layout.size() == m_delayedReturnVariables.size() + 1, "");
 
