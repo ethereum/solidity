@@ -444,6 +444,9 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 
 void SMTEncoder::endVisit(TupleExpression const& _tuple)
 {
+	if (_tuple.annotation().type->category() == Type::Category::Function)
+		return;
+
 	createExpr(_tuple);
 
 	if (_tuple.isInlineArray())
@@ -1624,7 +1627,7 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 
 void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 {
-	auto memberAccess = dynamic_cast<MemberAccess const*>(&_funCall.expression());
+	auto memberAccess = dynamic_cast<MemberAccess const*>(cleanExpression(_funCall.expression()));
 	solAssert(memberAccess, "");
 	auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
