@@ -410,17 +410,6 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP14:
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
-	// --------------- EIP-615 ---------------
-	case Instruction::EIP615_JUMPTO:
-	case Instruction::EIP615_JUMPIF:
-	case Instruction::EIP615_JUMPV:
-	case Instruction::EIP615_JUMPSUB:
-	case Instruction::EIP615_JUMPSUBV:
-	case Instruction::EIP615_BEGINSUB:
-	case Instruction::EIP615_BEGINDATA:
-	case Instruction::EIP615_RETURNSUB:
-	case Instruction::EIP615_PUTLOCAL:
-	case Instruction::EIP615_GETLOCAL:
 	{
 		yulAssert(false, "");
 		return 0;

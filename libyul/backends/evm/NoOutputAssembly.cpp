@@ -26,8 +26,6 @@
 
 #include <libevmasm/Instruction.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 
 using namespace std;
 using namespace solidity;
@@ -53,7 +51,6 @@ void NoOutputAssembly::appendLabel(LabelID)
 
 void NoOutputAssembly::appendLabelReference(LabelID)
 {
-	yulAssert(!m_evm15, "Cannot use plain label references in EMV1.5 mode.");
 	appendInstruction(evmasm::pushInstruction(1));
 }
 
@@ -74,52 +71,20 @@ void NoOutputAssembly::appendLinkerSymbol(string const&)
 
 void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)
 {
-	yulAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
 	appendInstruction(evmasm::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
 void NoOutputAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
-	if (m_evm15)
-		m_stackHeight += _stackDiffAfter;
-	else
-	{
-		appendLabelReference(_labelId);
-		appendJump(_stackDiffAfter, _jumpType);
-	}
+	appendLabelReference(_labelId);
+	appendJump(_stackDiffAfter, _jumpType);
 }
 
 void NoOutputAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
-	if (m_evm15)
-		m_stackHeight--;
-	else
-	{
-		appendLabelReference(_labelId);
-		appendInstruction(evmasm::Instruction::JUMPI);
-	}
-}
-
-void NoOutputAssembly::appendBeginsub(LabelID, int _arguments)
-{
-	yulAssert(m_evm15, "BEGINSUB used for EVM 1.0");
-	yulAssert(_arguments >= 0, "");
-	m_stackHeight += _arguments;
-}
-
-void NoOutputAssembly::appendJumpsub(LabelID, int _arguments, int _returns)
-{
-	yulAssert(m_evm15, "JUMPSUB used for EVM 1.0");
-	yulAssert(_arguments >= 0 && _returns >= 0, "");
-	m_stackHeight += _returns - _arguments;
-}
-
-void NoOutputAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
-{
-	yulAssert(m_evm15, "RETURNSUB used for EVM 1.0");
-	yulAssert(_returns >= 0, "");
-	m_stackHeight += _stackDiffAfter - _returns;
+	appendLabelReference(_labelId);
+	appendInstruction(evmasm::Instruction::JUMPI);
 }
 
 void NoOutputAssembly::appendAssemblySize()

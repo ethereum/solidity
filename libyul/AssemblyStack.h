@@ -60,7 +60,7 @@ class AssemblyStack
 {
 public:
 	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
-	enum class Machine { EVM, EVM15, Ewasm };
+	enum class Machine { EVM, Ewasm };
 
 	AssemblyStack():
 		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, solidity::frontend::OptimiserSettings::none())
@@ -114,7 +114,7 @@ private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
 
-	void compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const;
+	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
 
 	void optimize(yul::Object& _object, bool _isCreation);
 

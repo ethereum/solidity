@@ -128,7 +128,6 @@ public:
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
 		bool _allowStackOpt = false,
-		bool _evm15 = false,
 		ExternalIdentifierAccess const& _identifierAccess = ExternalIdentifierAccess(),
 		bool _useNamedLabelsForFunctions = false
 	): CodeTransform(
@@ -138,7 +137,6 @@ public:
 		_allowStackOpt,
 		_dialect,
 		_builtinContext,
-		_evm15,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
 		nullptr
@@ -158,7 +156,6 @@ protected:
 		bool _allowStackOpt,
 		EVMDialect const& _dialect,
 		BuiltinContext& _builtinContext,
-		bool _evm15,
 		ExternalIdentifierAccess _identifierAccess,
 		bool _useNamedLabelsForFunctions,
 		std::shared_ptr<Context> _context
@@ -228,7 +225,6 @@ private:
 	EVMDialect const& m_dialect;
 	BuiltinContext& m_builtinContext;
 	bool const m_allowStackOpt = true;
-	bool const m_evm15 = false;
 	bool const m_useNamedLabelsForFunctions = false;
 	ExternalIdentifierAccess m_identifierAccess;
 	std::shared_ptr<Context> m_context;

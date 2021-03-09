@@ -87,15 +87,6 @@ public:
 	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0, JumpType _jumpType = JumpType::Ordinary) = 0;
 	/// Append a jump-to-if-immediate operation.
 	virtual void appendJumpToIf(LabelID _labelId, JumpType _jumpType = JumpType::Ordinary) = 0;
-	/// Start a subroutine identified by @a _labelId that takes @a _arguments
-	/// stack slots as arguments.
-	virtual void appendBeginsub(LabelID _labelId, int _arguments) = 0;
-	/// Call a subroutine identified by @a _labelId, taking @a _arguments from the
-	/// stack upon call and putting @a _returns arguments onto the stack upon return.
-	virtual void appendJumpsub(LabelID _labelId, int _arguments, int _returns) = 0;
-	/// Return from a subroutine.
-	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
 
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;

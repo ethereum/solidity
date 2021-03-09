@@ -101,7 +101,6 @@ CodeTransform::CodeTransform(
 	bool _allowStackOpt,
 	EVMDialect const& _dialect,
 	BuiltinContext& _builtinContext,
-	bool _evm15,
 	ExternalIdentifierAccess _identifierAccess,
 	bool _useNamedLabelsForFunctions,
 	shared_ptr<Context> _context
@@ -111,7 +110,6 @@ CodeTransform::CodeTransform(
 	m_dialect(_dialect),
 	m_builtinContext(_builtinContext),
 	m_allowStackOpt(_allowStackOpt),
-	m_evm15(_evm15),
 	m_useNamedLabelsForFunctions(_useNamedLabelsForFunctions),
 	m_identifierAccess(std::move(_identifierAccess)),
 	m_context(std::move(_context))
@@ -269,11 +267,9 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	{
 		m_assembly.setSourceLocation(_call.location);
 		EVMAssembly::LabelID returnLabel(numeric_limits<EVMAssembly::LabelID>::max()); // only used for evm 1.0
-		if (!m_evm15)
-		{
-			returnLabel = m_assembly.newLabelId();
-			m_assembly.appendLabelReference(returnLabel);
-		}
+
+		returnLabel = m_assembly.newLabelId();
+		m_assembly.appendLabelReference(returnLabel);
 
 		Scope::Function* function = nullptr;
 		yulAssert(m_scope->lookup(_call.functionName.name, GenericVisitor{
@@ -285,21 +281,12 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		for (auto const& arg: _call.arguments | boost::adaptors::reversed)
 			visitExpression(arg);
 		m_assembly.setSourceLocation(_call.location);
-		if (m_evm15)
-			m_assembly.appendJumpsub(
-				functionEntryID(_call.functionName.name, *function),
-				static_cast<int>(function->arguments.size()),
-				static_cast<int>(function->returns.size())
-			);
-		else
-		{
-			m_assembly.appendJumpTo(
-				functionEntryID(_call.functionName.name, *function),
-				static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
-				AbstractAssembly::JumpType::IntoFunction
-			);
-			m_assembly.appendLabel(returnLabel);
-		}
+		m_assembly.appendJumpTo(
+			functionEntryID(_call.functionName.name, *function),
+			static_cast<int>(function->returns.size() - function->arguments.size()) - 1,
+			AbstractAssembly::JumpType::IntoFunction
+		);
+		m_assembly.appendLabel(returnLabel);
 	}
 }
 
@@ -406,7 +393,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	yulAssert(m_scope->identifiers.count(_function.name), "");
 	Scope::Function& function = std::get<Scope::Function>(m_scope->identifiers.at(_function.name));
 
-	size_t height = m_evm15 ? 0 : 1;
+	size_t height = 1;
 	yulAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	yulAssert(varScope, "");
@@ -419,10 +406,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	m_assembly.setSourceLocation(_function.location);
 	int const stackHeightBefore = m_assembly.stackHeight();
 
-	if (m_evm15)
-		m_assembly.appendBeginsub(functionEntryID(_function.name, function), static_cast<int>(_function.parameters.size()));
-	else
-		m_assembly.appendLabel(functionEntryID(_function.name, function));
+	m_assembly.appendLabel(functionEntryID(_function.name, function));
 
 	m_assembly.setStackHeight(static_cast<int>(height));
 
@@ -444,7 +428,6 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		m_allowStackOpt,
 		m_dialect,
 		m_builtinContext,
-		m_evm15,
 		m_identifierAccess,
 		m_useNamedLabelsForFunctions,
 		m_context
@@ -474,8 +457,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 		// This vector holds the desired target positions of all stack slots and is
 		// modified parallel to the actual stack.
 		vector<int> stackLayout;
-		if (!m_evm15)
-			stackLayout.push_back(static_cast<int>(_function.returnVariables.size())); // Move return label to the top
+		stackLayout.push_back(static_cast<int>(_function.returnVariables.size())); // Move return label to the top
 		stackLayout += vector<int>(_function.parameters.size(), -1); // discard all arguments
 
 		for (size_t i = 0; i < _function.returnVariables.size(); ++i)
@@ -512,13 +494,10 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 				yulAssert(i == static_cast<size_t>(stackLayout[i]), "Error reshuffling stack.");
 		}
 	}
-	if (m_evm15)
-		m_assembly.appendReturnsub(static_cast<int>(_function.returnVariables.size()), stackHeightBefore);
-	else
-		m_assembly.appendJump(
-			stackHeightBefore - static_cast<int>(_function.returnVariables.size()),
-			AbstractAssembly::JumpType::OutOfFunction
-		);
+	m_assembly.appendJump(
+		stackHeightBefore - static_cast<int>(_function.returnVariables.size()),
+		AbstractAssembly::JumpType::OutOfFunction
+	);
 	m_assembly.setStackHeight(stackHeightBefore);
 }
 

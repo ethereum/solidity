@@ -38,7 +38,7 @@ namespace solidity::yul
 class EVMAssembly: public AbstractAssembly
 {
 public:
-	explicit EVMAssembly(bool _evm15 = false): m_evm15(_evm15) { }
+	explicit EVMAssembly() { }
 	~EVMAssembly() override = default;
 
 	/// Set a new source location valid starting from the next instruction.
@@ -70,12 +70,6 @@ public:
 	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
 	/// Append a jump-to-if-immediate operation.
 	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
-	/// Start a subroutine.
-	void appendBeginsub(LabelID _labelId, int _arguments) override;
-	/// Call a subroutine.
-	void appendJumpsub(LabelID _labelId, int _arguments, int _returns) override;
-	/// Return from a subroutine.
-	void appendReturnsub(int _returns, int _stackDiffAfter) override;
 
 	/// Append the assembled size as a constant.
 	void appendAssemblySize() override;
@@ -97,7 +91,6 @@ private:
 	void appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId);
 	void updateReference(size_t pos, size_t size, u256 value);
 
-	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
 	int m_stackHeight = 0;
 	bytes m_bytecode;

@@ -128,7 +128,6 @@ static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
 static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
-static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
 static string const g_strExperimentalViaIR = "experimental-via-ir";
@@ -268,7 +267,6 @@ static set<string> const g_combinedJsonArgs
 static set<string> const g_machineArgs
 {
 	g_strEVM,
-	g_strEVM15,
 	g_strEwasm
 };
 
@@ -1382,8 +1380,6 @@ bool CommandLineInterface::processInput()
 			string machine = m_args[g_argMachine].as<string>();
 			if (machine == g_strEVM)
 				targetMachine = Machine::EVM;
-			else if (machine == g_strEVM15)
-				targetMachine = Machine::EVM15;
 			else if (machine == g_strEwasm)
 				targetMachine = Machine::Ewasm;
 			else
@@ -1938,7 +1934,6 @@ bool CommandLineInterface::assemble(
 	{
 		string machine =
 			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
-			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
 			"Ewasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
