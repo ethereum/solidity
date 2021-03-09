@@ -1,0 +1,4 @@
+{}
+// ====
+// stackOptimization: true
+// ----

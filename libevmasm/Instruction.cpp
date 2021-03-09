@@ -353,18 +353,19 @@ void solidity::evmasm::eachInstruction(
 	}
 }
 
-string solidity::evmasm::disassemble(bytes const& _mem)
+string solidity::evmasm::disassemble(bytes const& _mem, string const& _delimiter)
 {
 	stringstream ret;
 	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
-			ret << "0x" << std::uppercase << std::hex << static_cast<int>(_instr) << " ";
+			ret << "0x" << std::uppercase << std::hex << static_cast<int>(_instr) << _delimiter;
 		else
 		{
 			InstructionInfo info = instructionInfo(_instr);
-			ret << info.name << " ";
+			ret << info.name;
 			if (info.additional)
-				ret << "0x" << std::uppercase << std::hex << _data << " ";
+				ret << " 0x" << std::uppercase << std::hex << _data;
+			ret << _delimiter;
 		}
 	});
 	return ret.str();
