@@ -87,23 +87,11 @@ public:
 		return m_vm.has_capability(capability);
 	}
 
-	/// @returns the state as a string. State includes storage at and balance
-	/// of account at @param _addr and execution trace of the host post reset.
-	std::string dumpState(evmc::address _addr);
-
 private:
 	evmc::address m_currentAddress = {};
 
 	/// Records calls made via @param _message.
 	void recordCalls(evmc_message const& _message) noexcept;
-	/// Prints contents of storage at @param _addr to @param _os.
-	void printStorageAt(evmc::address const& _addr, std::ostringstream& _os);
-	/// Prints call summary to @param _os.
-	void printCallRecords(std::ostringstream& _os) const noexcept;
-	/// Print self destruct records to @param _os.
-	void printSelfdestructRecords(std::ostringstream& _os) const noexcept;
-	/// Print balance of @param _addr to @param _os.
-	void printBalance(evmc::address const& _addr, std::ostringstream& _os) const noexcept;
 
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
@@ -125,5 +113,27 @@ private:
 	evmc_revision m_evmRevision;
 };
 
+struct EVMHostPrinter
+{
+	/// Constructs a host printer object for state at @param _address.
+	explicit EVMHostPrinter(EVMHost& _host, evmc::address _address):
+		host(_host),
+		account(_address)
+	{}
+	/// @returns state at account maintained by host.
+	std::string state();
+	/// Outputs storage at account to stateStream.
+	void storage();
+	/// Outputs call records for account to stateStream.
+	void callRecords();
+	/// Outputs balance of account to stateStream.
+	void balance();
+	/// Outputs self-destruct record for account to stateStream.
+	void selfdestructRecords();
+
+	std::ostringstream stateStream;
+	EVMHost& host;
+	evmc::address account;
+};
 
 }

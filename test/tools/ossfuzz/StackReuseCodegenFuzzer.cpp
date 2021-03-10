@@ -120,7 +120,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		"Unoptimised call failed."
 	);
 	ostringstream unoptimizedState;
-	unoptimizedState << hostContext.dumpState(deployResult.create_address);
+	unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
 
 	settings.runYulOptimiser = true;
 	settings.optimizeStackAllocation = true;
@@ -160,7 +160,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		"Optimised call failed."
 	);
 	ostringstream optimizedState;
-	optimizedState << hostContext.dumpState(deployResultOpt.create_address);
+	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
 
 	int64_t constexpr tolerance = 1000;
 	if (callResult.gas_left > callResultOpt.gas_left)

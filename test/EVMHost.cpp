@@ -133,6 +133,10 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	// Mainnet according to EIP-155
 	tx_context.chain_id = evmc::uint256be{1};
 
+	// Reserve space for recording calls.
+	if (!recorded_calls.capacity())
+		recorded_calls.reserve(max_recorded_calls);
+
 	reset();
 }
 
@@ -174,9 +178,6 @@ void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 
 void EVMHost::recordCalls(evmc_message const& _message) noexcept
 {
-	if (recorded_calls.empty())
-		recorded_calls.reserve(max_recorded_calls);
-
 	if (recorded_calls.size() < max_recorded_calls)
 		recorded_calls.emplace_back(_message);
 }
@@ -786,64 +787,73 @@ StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
 	return accounts[_addr].storage;
 }
 
-void EVMHost::printCallRecords(std::ostringstream& _os) const noexcept
+string EVMHostPrinter::state()
+{
+	// Print state and execution trace.
+	if (host.account_exists(account))
+	{
+		storage();
+		balance();
+	}
+	else
+		selfdestructRecords();
+
+	callRecords();
+	return stateStream.str();
+}
+
+void EVMHostPrinter::storage()
+{
+	for (auto const& [slot, value]: host.get_address_storage(account))
+		if (host.get_storage(account, slot))
+			stateStream << host.convertFromEVMC(slot)
+				<< ": "
+				<< host.convertFromEVMC(value.value)
+				<< endl;
+}
+
+void EVMHostPrinter::balance()
+{
+	stateStream << "BALANCE "
+		<< host.convertFromEVMC(host.get_balance(account))
+		<< endl;
+}
+
+void EVMHostPrinter::selfdestructRecords()
+{
+	for (auto const& record: host.recorded_selfdestructs)
+		stateStream << "SELFDESTRUCT"
+			<< " BENEFICIARY "
+			<< host.convertFromEVMC(record.beneficiary)
+			<< " BALANCE "
+			<< host.convertFromEVMC(record.balance)
+			<< endl;
+}
+
+void EVMHostPrinter::callRecords()
 {
 	static const auto callKind = [](evmc_call_kind _kind) -> string
 	{
 		switch (_kind)
 		{
-		case evmc_call_kind::EVMC_CALL:
-			return "CALL";
-		case evmc_call_kind::EVMC_DELEGATECALL:
-			return "DELEGATECALL";
-		case evmc_call_kind::EVMC_CALLCODE:
-			return "CALLCODE";
-		case evmc_call_kind::EVMC_CREATE:
-			return "CREATE";
-		case evmc_call_kind::EVMC_CREATE2:
-			return "CREATE2";
-		default:
-			assertThrow(false, Exception, "Invalid call kind.");
+			case evmc_call_kind::EVMC_CALL:
+				return "CALL";
+			case evmc_call_kind::EVMC_DELEGATECALL:
+				return "DELEGATECALL";
+			case evmc_call_kind::EVMC_CALLCODE:
+				return "CALLCODE";
+			case evmc_call_kind::EVMC_CREATE:
+				return "CREATE";
+			case evmc_call_kind::EVMC_CREATE2:
+				return "CREATE2";
+			default:
+				assertThrow(false, Exception, "Invalid call kind.");
 		}
 	};
 
-	for (auto const& record: recorded_calls)
-		_os << callKind(record.kind)
+	for (auto const& record: host.recorded_calls)
+		stateStream << callKind(record.kind)
 			<< " VALUE "
-			<< convertFromEVMC(record.value)
+			<< host.convertFromEVMC(record.value)
 			<< endl;
-}
-
-void EVMHost::printSelfdestructRecords(ostringstream& _os) const noexcept
-{
-	for (auto const& record: recorded_selfdestructs)
-		_os << "SELFDESTRUCT"
-			<< " BENEFICIARY "
-			<< convertFromEVMC(record.beneficiary)
-			<< " BALANCE "
-			<< convertFromEVMC(record.balance)
-			<< endl;
-}
-
-void EVMHost::printBalance(evmc::address const& _addr, ostringstream& _os) const noexcept
-{
-	_os << "BALANCE " << convertFromEVMC(get_balance(_addr)) << endl;
-}
-
-string EVMHost::dumpState(evmc::address _addr)
-{
-	ostringstream stateStream;
-
-	// Print state and execution trace.
-	if (account_exists(_addr))
-	{
-		printStorageAt(_addr, stateStream);
-		printBalance(_addr, stateStream);
-	}
-	else
-		printSelfdestructRecords(stateStream);
-
-	printCallRecords(stateStream);
-
-	return stateStream.str();
 }
