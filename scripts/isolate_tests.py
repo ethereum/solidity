@@ -54,10 +54,10 @@ def extract_docs_cases(path):
 
     codeStart = "(// SPDX-License-Identifier:|pragma solidity|contract.*{|library.*{|interface.*{)"
 
-    # Filter all tests that do not contain Solidity or are intended incorrectly.
+    # Filter all tests that do not contain Solidity or are indented incorrectly.
     for lines in extractedLines:
         if re.search(r'^\s{0,3}' + codeStart, lines, re.MULTILINE):
-            print("Intendation error in " + path + ":")
+            print("Indentation error in " + path + ":")
             print(lines)
             exit(1)
         if re.search(r'^\s{4}' + codeStart, lines, re.MULTILINE):
@@ -68,7 +68,7 @@ def extract_docs_cases(path):
 def write_cases(f, tests):
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
-        # When code examples are extracted they indented by 8 spaces, which violates the style guide,
+        # When code examples are extracted they are indented by 8 spaces, which violates the style guide,
         # so before checking remove 4 spaces from each line.
         remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
         sol_filename = 'test_%s_%s.sol' % (hashlib.sha256(test.encode("utf-8")).hexdigest(), cleaned_filename)
