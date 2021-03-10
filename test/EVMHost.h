@@ -113,15 +113,17 @@ private:
 	evmc_revision m_evmRevision;
 };
 
-struct EVMHostPrinter
+class EVMHostPrinter
 {
+public:
 	/// Constructs a host printer object for state at @param _address.
 	explicit EVMHostPrinter(EVMHost& _host, evmc::address _address):
-		host(_host),
-		account(_address)
+		m_host(_host),
+		m_account(_address)
 	{}
 	/// @returns state at account maintained by host.
 	std::string state();
+private:
 	/// Outputs storage at account to stateStream.
 	void storage();
 	/// Outputs call records for account to stateStream.
@@ -131,9 +133,9 @@ struct EVMHostPrinter
 	/// Outputs self-destruct record for account to stateStream.
 	void selfdestructRecords();
 
-	std::ostringstream stateStream;
-	EVMHost& host;
-	evmc::address account;
+	std::ostringstream m_stateStream;
+	EVMHost& m_host;
+	evmc::address m_account;
 };
 
 }

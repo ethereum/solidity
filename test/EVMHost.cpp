@@ -257,12 +257,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
-	else if (message.kind == EVMC_DELEGATECALL)
-	{
-		code = accounts[message.destination].code;
-		message.destination = m_currentAddress;
-	}
-	else if (message.kind == EVMC_CALLCODE)
+	else if (message.kind == EVMC_DELEGATECALL || message.kind == EVMC_CALLCODE)
 	{
 		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
@@ -774,13 +769,6 @@ evmc::result EVMHost::resultWithGas(
 	return result;
 }
 
-void EVMHost::printStorageAt(evmc::address const& _addr, ostringstream& _os)
-{
-	for (auto const& [slot, value]: get_address_storage(_addr))
-		if (get_storage(_addr, slot))
-			_os << convertFromEVMC(slot) << ": " << convertFromEVMC(value.value) << endl;
-}
-
 StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
 {
 	assertThrow(account_exists(_addr), Exception, "Account does not exist.");
@@ -790,7 +778,7 @@ StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
 string EVMHostPrinter::state()
 {
 	// Print state and execution trace.
-	if (host.account_exists(account))
+	if (m_host.account_exists(m_account))
 	{
 		storage();
 		balance();
@@ -799,34 +787,34 @@ string EVMHostPrinter::state()
 		selfdestructRecords();
 
 	callRecords();
-	return stateStream.str();
+	return m_stateStream.str();
 }
 
 void EVMHostPrinter::storage()
 {
-	for (auto const& [slot, value]: host.get_address_storage(account))
-		if (host.get_storage(account, slot))
-			stateStream << host.convertFromEVMC(slot)
+	for (auto const& [slot, value]: m_host.get_address_storage(m_account))
+		if (m_host.get_storage(m_account, slot))
+			m_stateStream << m_host.convertFromEVMC(slot)
 				<< ": "
-				<< host.convertFromEVMC(value.value)
+				<< m_host.convertFromEVMC(value.value)
 				<< endl;
 }
 
 void EVMHostPrinter::balance()
 {
-	stateStream << "BALANCE "
-		<< host.convertFromEVMC(host.get_balance(account))
+	m_stateStream << "BALANCE "
+		<< m_host.convertFromEVMC(m_host.get_balance(m_account))
 		<< endl;
 }
 
 void EVMHostPrinter::selfdestructRecords()
 {
-	for (auto const& record: host.recorded_selfdestructs)
-		stateStream << "SELFDESTRUCT"
+	for (auto const& record: m_host.recorded_selfdestructs)
+		m_stateStream << "SELFDESTRUCT"
 			<< " BENEFICIARY "
-			<< host.convertFromEVMC(record.beneficiary)
+			<< m_host.convertFromEVMC(record.beneficiary)
 			<< " BALANCE "
-			<< host.convertFromEVMC(record.balance)
+			<< m_host.convertFromEVMC(record.balance)
 			<< endl;
 }
 
@@ -851,9 +839,9 @@ void EVMHostPrinter::callRecords()
 		}
 	};
 
-	for (auto const& record: host.recorded_calls)
-		stateStream << callKind(record.kind)
+	for (auto const& record: m_host.recorded_calls)
+		m_stateStream << callKind(record.kind)
 			<< " VALUE "
-			<< host.convertFromEVMC(record.value)
+			<< m_host.convertFromEVMC(record.value)
 			<< endl;
 }
