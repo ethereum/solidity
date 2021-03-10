@@ -42,33 +42,45 @@ namespace solidity::frontend::test
 class TestFunctionCall
 {
 public:
-	TestFunctionCall(FunctionCall _call): m_call(std::move(_call)) {}
+	enum class RenderMode
+	{
+		ExpectedValuesExpectedGas,
+		ActualValuesExpectedGas,
+		ExpectedValuesActualGas
+	};
+
+	TestFunctionCall(FunctionCall _call): m_call(std::move(_call)), m_gasCosts(m_call.expectations.gasUsed) {}
 
 	/// Formats this function call test and applies the format that was detected during parsing.
-	/// If _renderResult is false, the expected result of the call will be used, if it's true
-	/// the actual result is used.
+	/// _renderMode determines the source of values to be inserted into the updated test expectations.
+	///     RenderMode::ActualValuesExpectedGas: use the values produced by the test but for gas preserve the original expectations,
+	///     RenderMode::ExpectedValuesExpectedGas: preserve the original expectations for both gas and other values,
+	///     RenderMode::ExpectedValuesActualGas: use the original expectations but for gas use actual values,
 	/// If _highlight is false, it's formatted without colorized highlighting. If it's true, AnsiColorized is
 	/// used to apply a colorized highlighting.
+	/// If _interactivePrint is true, we are producing output that will be interactively shown to the user
+	/// in the terminal rather than used to update the expectations in the test file.
 	/// If test expectations do not match, the contract ABI is consulted in order to get the
 	/// right encoding for returned bytes, based on the parsed return types.
 	/// Reports warnings and errors to the error reporter.
 	std::string format(
 		ErrorReporter& _errorReporter,
 		std::string const& _linePrefix = "",
-		bool const _renderResult = false,
-		bool const _highlight = false
+		RenderMode _renderMode = RenderMode::ExpectedValuesExpectedGas,
+		bool const _highlight = false,
+		bool const _interactivePrint = false
 	) const;
 
 	/// Overloaded version that passes an error reporter which is never used outside
 	/// of this function.
 	std::string format(
 		std::string const& _linePrefix = "",
-		bool const _renderResult = false,
+		RenderMode const _renderMode = RenderMode::ExpectedValuesExpectedGas,
 		bool const _highlight = false
 	) const
 	{
 		ErrorReporter reporter;
-		return format(reporter, _linePrefix, _renderResult, _highlight);
+		return format(reporter, _linePrefix, _renderMode, _highlight);
 	}
 
 	/// Resets current results in case the function was called and the result
@@ -79,6 +91,7 @@ public:
 	void calledNonExistingFunction() { m_calledNonExistingFunction = true; }
 	void setFailure(const bool _failure) { m_failure = _failure; }
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
+	void setGasCost(std::string const& _runType, u256 const& _gasCost) { m_gasCosts[_runType] = _gasCost; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
 
 private:
@@ -116,6 +129,13 @@ private:
 		std::string const& _linePrefix = ""
 	) const;
 
+	/// Formats gas usage expectations one per line
+	std::string formatGasExpectations(
+		std::string const& _linePrefix,
+		bool _useActualCost,
+		bool _showDifference
+	) const;
+
 	/// Compares raw expectations (which are converted to a byte representation before),
 	/// and also the expected transaction status of the function call to the actual test results.
 	bool matchesExpectation() const;
@@ -124,6 +144,8 @@ private:
 	FunctionCall m_call;
 	/// Result of the actual call been made.
 	bytes m_rawBytes = bytes{};
+	/// Actual gas costs
+	std::map<std::string, u256> m_gasCosts;
 	/// Transaction status of the actual call. False in case of a REVERT or any other failure.
 	bool m_failure = true;
 	/// JSON object which holds the contract ABI and that is used to set the output formatting

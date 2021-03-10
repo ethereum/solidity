@@ -45,12 +45,21 @@ using namespace boost::unit_test;
 namespace fs = boost::filesystem;
 
 
-SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVersion, vector<boost::filesystem::path> const& _vmPaths, bool enforceViaYul):
+SemanticTest::SemanticTest(
+	string const& _filename,
+	langutil::EVMVersion _evmVersion,
+	vector<boost::filesystem::path> const& _vmPaths,
+	bool _enforceViaYul,
+	bool _enforceGasCost,
+	u256 _enforceGasCostMinValue
+):
 	SolidityExecutionFramework(_evmVersion, _vmPaths),
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
-	m_enforceViaYul(enforceViaYul)
+	m_enforceViaYul(_enforceViaYul),
+	m_enforceGasCost(_enforceGasCost),
+	m_enforceGasCostMinValue(_enforceGasCostMinValue)
 {
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
@@ -105,6 +114,12 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 
 	parseExpectations(m_reader.stream());
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
+
+	if (m_enforceGasCost)
+	{
+		m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
+		m_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
+	}
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -133,6 +148,7 @@ TestCase::TestResult SemanticTest::runTest(
 )
 {
 	bool success = true;
+	m_gasCostFailure = false;
 
 	if (_compileViaYul && _compileToEwasm)
 		selectVM(evmc_capabilities::EVMC_CAPABILITY_EWASM);
@@ -203,6 +219,8 @@ TestCase::TestResult SemanticTest::runTest(
 		{
 			if (m_transactionSuccessful == test.call().expectations.failure)
 				success = false;
+			if (success && !checkGasCostExpectation(test, _compileViaYul))
+				m_gasCostFailure = true;
 
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(bytes());
@@ -239,6 +257,12 @@ TestCase::TestResult SemanticTest::runTest(
 			}
 
 			bool outputMismatch = (output != test.call().expectations.rawBytes());
+			if (!outputMismatch && !checkGasCostExpectation(test, _compileViaYul))
+			{
+				success = false;
+				m_gasCostFailure = true;
+			}
+
 			// Pre byzantium, it was not possible to return failure data, so we disregard
 			// output mismatch for those EVM versions.
 			if (test.call().expectations.failure && !m_transactionSuccessful && !m_evmVersion.supportsReturndata())
@@ -270,7 +294,13 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, false, _formatted) << endl;
+			_stream << test.format(
+				errorReporter,
+				_linePrefix,
+				TestFunctionCall::RenderMode::ExpectedValuesExpectedGas,
+				_formatted,
+				/* _interactivePrint */ true
+			) << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		_stream << endl;
@@ -278,7 +308,13 @@ TestCase::TestResult SemanticTest::runTest(
 		for (TestFunctionCall const& test: m_tests)
 		{
 			ErrorReporter errorReporter;
-			_stream << test.format(errorReporter, _linePrefix, true, _formatted) << endl;
+			_stream << test.format(
+				errorReporter,
+				_linePrefix,
+				m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
+				_formatted,
+				/* _interactivePrint */ true
+			) << endl;
 			_stream << errorReporter.format(_linePrefix, _formatted);
 		}
 		AnsiColorized(_stream, _formatted, {BOLD, RED})
@@ -298,6 +334,33 @@ TestCase::TestResult SemanticTest::runTest(
 	}
 
 	return TestResult::Success;
+}
+
+bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const
+{
+	string setting =
+		(_compileViaYul ? "ir"s : "legacy"s) +
+		(m_optimiserSettings == OptimiserSettings::full() ? "Optimized" : "");
+
+	// We don't check gas if enforce gas cost is not active
+	// or test is run with abi encoder v1 only
+	// or gas used less than threshold for enforcing feature
+	// or setting is "ir" and it's not included in expectations
+	if (
+		!m_enforceGasCost ||
+		(
+			(setting == "ir" || m_gasUsed < m_enforceGasCostMinValue || m_gasUsed >= m_gas) &&
+			io_test.call().expectations.gasUsed.count(setting) == 0
+		)
+	)
+		return true;
+
+	solAssert(!m_runWithABIEncoderV1Only, "");
+
+	io_test.setGasCost(setting, m_gasUsed);
+	return
+		io_test.call().expectations.gasUsed.count(setting) > 0 &&
+		m_gasUsed == io_test.call().expectations.gasUsed.at(setting);
 }
 
 void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
@@ -347,7 +410,11 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 void SemanticTest::printUpdatedExpectations(ostream& _stream, string const&) const
 {
 	for (TestFunctionCall const& test: m_tests)
-		_stream << test.format("", true, false) << endl;
+		_stream << test.format(
+			"",
+			m_gasCostFailure ? TestFunctionCall::RenderMode::ExpectedValuesActualGas : TestFunctionCall::RenderMode::ActualValuesExpectedGas,
+			/* _highlight = */ false
+		) << endl;
 }
 
 void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePrefix)

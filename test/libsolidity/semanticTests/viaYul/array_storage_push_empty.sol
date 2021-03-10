@@ -9,9 +9,15 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=petersburg
+// compileViaYul: also
 // ----
 // pushEmpty(uint256): 128
+// gas irOptimized: 632037
+// gas legacy: 607287
+// gas legacyOptimized: 589048
 // pushEmpty(uint256): 256
+// gas irOptimized: 862821
+// gas legacy: 828983
+// gas legacyOptimized: 802808
 // pushEmpty(uint256): 32768 -> FAILURE # out-of-gas #

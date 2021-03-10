@@ -40,9 +40,25 @@ class SemanticTest: public SolidityExecutionFramework, public EVMVersionRestrict
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _options)
-	{ return std::make_unique<SemanticTest>(_options.filename, _options.evmVersion, _options.vmPaths, _options.enforceCompileViaYul); }
+	{
+		return std::make_unique<SemanticTest>(
+			_options.filename,
+			_options.evmVersion,
+			_options.vmPaths,
+			_options.enforceCompileViaYul,
+			_options.enforceGasCost,
+			_options.enforceGasCostMinValue
+		);
+	}
 
-	explicit SemanticTest(std::string const& _filename, langutil::EVMVersion _evmVersion, std::vector<boost::filesystem::path> const& _vmPaths, bool _enforceViaYul = false);
+	explicit SemanticTest(
+		std::string const& _filename,
+		langutil::EVMVersion _evmVersion,
+		std::vector<boost::filesystem::path> const& _vmPaths,
+		bool _enforceViaYul = false,
+		bool _enforceGasCost = false,
+		u256 _enforceGasCostMinValue = 100000
+	);
 
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool _formatted = false) override;
 	void printSource(std::ostream &_stream, std::string const& _linePrefix = "", bool _formatted = false) const override;
@@ -61,6 +77,7 @@ public:
 
 private:
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _compileViaYul, bool _compileToEwasm);
+	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
@@ -72,6 +89,10 @@ private:
 	bool m_allowNonExistingFunctions = false;
 	bool m_compileViaYulCanBeSet = false;
 	std::map<std::string, Builtin> m_builtins{};
+
+	bool m_gasCostFailure = false;
+	bool m_enforceGasCost = false;
+	u256 m_enforceGasCostMinValue;
 };
 
 }
