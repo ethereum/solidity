@@ -41,7 +41,6 @@ using namespace solidity;
 using namespace solidity::test;
 using namespace solidity::test::fuzzer;
 using namespace solidity::yul;
-using namespace solidity::yul::test;
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
 using namespace std;
@@ -50,6 +49,10 @@ static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
 DEFINE_PROTO_FUZZER(Program const& _input)
 {
+	// Solidity creates an invalid instruction for subobjects, so we simply
+	// ignore them in this fuzzer.
+	if (_input.has_obj())
+		return;
 	bool filterStatefulInstructions = true;
 	bool filterUnboundedLoops = true;
 	ProtoConverter converter(
@@ -96,21 +99,28 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	// If the fuzzer synthesized input does not contain the revert opcode which
 	// we lazily check by string find, the EVM call should not revert.
 	bool noRevertInSource = yul_source.find("revert") == string::npos;
+	bool noInvalidInSource = yul_source.find("invalid") == string::npos;
+	if (noInvalidInSource)
+		solAssert(
+			callResult.status_code != EVMC_INVALID_INSTRUCTION,
+			"Invalid instruction."
+		);
 	if (noRevertInSource)
 		solAssert(
 			callResult.status_code != EVMC_REVERT,
 			"SolidityEvmoneInterface: EVM One reverted"
 		);
-	// Out of gas errors are problematic because it is possible that the
-	// optimizer makes them go away, making EVM state impossible to
-	// compare in general.
-	if (callResult.status_code == EVMC_OUT_OF_GAS)
+	// Bail out on serious errors encountered during a call.
+	if (YulEvmoneUtility{}.seriousCallError(callResult.status_code))
 		return;
-
-	if (YulEvmoneUtility{}.checkSelfDestructs(hostContext, deployResult.create_address))
-		return;
-	ostringstream unoptimizedStorage;
-	hostContext.print_storage_at(deployResult.create_address, unoptimizedStorage);
+	solAssert(
+		(callResult.status_code == EVMC_SUCCESS ||
+		(!noRevertInSource && callResult.status_code == EVMC_REVERT) ||
+		(!noInvalidInSource && callResult.status_code == EVMC_INVALID_INSTRUCTION)),
+		"Unoptimised call failed."
+	);
+	ostringstream unoptimizedState;
+	unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
 
 	settings.runYulOptimiser = true;
 	settings.optimizeStackAllocation = true;
@@ -123,6 +133,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	{
 		return;
 	}
+
+	// Reset host before running optimised code.
+	hostContext.reset();
 	evmc::result deployResultOpt = YulEvmoneUtility{}.deployCode(optimisedByteCode, hostContext);
 	solAssert(
 		deployResultOpt.status_code == EVMC_SUCCESS,
@@ -135,12 +148,34 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 			callResultOpt.status_code != EVMC_REVERT,
 			"SolidityEvmoneInterface: EVM One reverted"
 		);
-	if (YulEvmoneUtility{}.checkSelfDestructs(hostContext, deployResultOpt.create_address))
-		return;
-	ostringstream optimizedStorage;
-	hostContext.print_storage_at(deployResultOpt.create_address, optimizedStorage);
+	if (noInvalidInSource)
+		solAssert(
+			callResultOpt.status_code != EVMC_INVALID_INSTRUCTION,
+			"Invalid instruction."
+		);
 	solAssert(
-		unoptimizedStorage.str() == optimizedStorage.str(),
-		"Storage of unoptimised and optimised stack reused code do not match."
+		(callResultOpt.status_code == EVMC_SUCCESS ||
+		 (!noRevertInSource && callResultOpt.status_code == EVMC_REVERT) ||
+		 (!noInvalidInSource && callResultOpt.status_code == EVMC_INVALID_INSTRUCTION)),
+		"Optimised call failed."
+	);
+	ostringstream optimizedState;
+	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
+
+	int64_t constexpr tolerance = 1000;
+	if (callResult.gas_left > callResultOpt.gas_left)
+		if (callResult.gas_left - callResultOpt.gas_left > tolerance)
+		{
+			cout << "Gas differential " << callResult.gas_left - callResultOpt.gas_left << endl;
+			cout << "Unoptimised bytecode" << endl;
+			cout << util::toHex(unoptimisedByteCode) << endl;
+			cout << "Optimised bytecode" << endl;
+			cout << util::toHex(optimisedByteCode) << endl;
+			solAssert(false, "Optimised code consumed more than +1000 gas.");
+		}
+
+	solAssert(
+		unoptimizedState.str() == optimizedState.str(),
+		"State of unoptimised and optimised stack reused code do not match."
 	);
 }

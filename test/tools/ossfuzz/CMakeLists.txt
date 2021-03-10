@@ -119,11 +119,10 @@ if (OSSFUZZ)
     target_link_libraries(stack_reuse_codegen_ossfuzz PRIVATE yul
             evmc
             evmone-standalone
-            yulInterpreter
             protobuf-mutator-libfuzzer.a
             protobuf-mutator.a
             protobuf.a
-            )
+    )
     set_target_properties(stack_reuse_codegen_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
     target_compile_options(stack_reuse_codegen_ossfuzz PUBLIC
             ${COMPILE_OPTIONS}

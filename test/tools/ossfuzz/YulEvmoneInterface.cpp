@@ -79,11 +79,20 @@ evmc_message YulEvmoneUtility::callMessage(evmc_address _address)
 	return call;
 }
 
-bool YulEvmoneUtility::checkSelfDestructs(EVMHost& _host, evmc_address _address)
+bool YulEvmoneUtility::seriousCallError(evmc_status_code _code)
 {
-	for (auto const& selfDestructRecord: _host.recorded_selfdestructs)
-		if (selfDestructRecord.selfdestructed == _address)
-			return true;
-	return false;
+	if (_code == EVMC_OUT_OF_GAS)
+		return true;
+	else if (_code == EVMC_STACK_OVERFLOW)
+		return true;
+	else if (_code == EVMC_STACK_UNDERFLOW)
+		return true;
+	else if (_code == EVMC_INTERNAL_ERROR)
+		return true;
+	else if (_code == EVMC_UNDEFINED_INSTRUCTION)
+		return true;
+	else if (_code == EVMC_INVALID_MEMORY_ACCESS)
+		return true;
+	else
+		return false;
 }
-

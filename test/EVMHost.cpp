@@ -133,6 +133,10 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 	// Mainnet according to EIP-155
 	tx_context.chain_id = evmc::uint256be{1};
 
+	// Reserve space for recording calls.
+	if (!recorded_calls.capacity())
+		recorded_calls.reserve(max_recorded_calls);
+
 	reset();
 }
 
@@ -142,6 +146,8 @@ void EVMHost::reset()
 	m_currentAddress = {};
 	// Clear self destruct records
 	recorded_selfdestructs.clear();
+	// Clear call records
+	recorded_calls.clear();
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -167,11 +173,18 @@ void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 	accounts.erase(_addr);
 	accounts[_beneficiary].balance = balance;
 	// Record self destructs
-	recorded_selfdestructs.push_back({_addr, _beneficiary});
+	recorded_selfdestructs.push_back({_addr, _beneficiary, balance});
+}
+
+void EVMHost::recordCalls(evmc_message const& _message) noexcept
+{
+	if (recorded_calls.size() < max_recorded_calls)
+		recorded_calls.emplace_back(_message);
 }
 
 evmc::result EVMHost::call(evmc_message const& _message) noexcept
 {
+	recordCalls(_message);
 	if (_message.destination == 0x0000000000000000000000000000000000000001_address)
 		return precompileECRecover(_message);
 	else if (_message.destination == 0x0000000000000000000000000000000000000002_address)
@@ -244,12 +257,7 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 		code = evmc::bytes(message.input_data, message.input_data + message.input_size);
 	}
-	else if (message.kind == EVMC_DELEGATECALL)
-	{
-		code = accounts[message.destination].code;
-		message.destination = m_currentAddress;
-	}
-	else if (message.kind == EVMC_CALLCODE)
+	else if (message.kind == EVMC_DELEGATECALL || message.kind == EVMC_CALLCODE)
 	{
 		code = accounts[message.destination].code;
 		message.destination = m_currentAddress;
@@ -761,26 +769,79 @@ evmc::result EVMHost::resultWithGas(
 	return result;
 }
 
-void EVMHost::print_all_storage(ostringstream& _os)
-{
-	for (auto const& [addr, mockedAccount]: accounts)
-	{
-		_os << "Address: " << convertFromEVMC(addr) << endl;
-		for (auto const& [slot, value]: get_address_storage(addr))
-			if (get_storage(addr, slot))
-				_os << convertFromEVMC(slot) << ": " << convertFromEVMC(value.value) << endl;
-	}
-}
-
-void EVMHost::print_storage_at(evmc::address const& _addr, ostringstream& _os)
-{
-	for (auto const& [slot, value]: get_address_storage(_addr))
-		if (get_storage(_addr, slot))
-			_os << convertFromEVMC(slot) << ": " << convertFromEVMC(value.value) << endl;
-}
-
 StorageMap const& EVMHost::get_address_storage(evmc::address const& _addr)
 {
 	assertThrow(account_exists(_addr), Exception, "Account does not exist.");
 	return accounts[_addr].storage;
+}
+
+string EVMHostPrinter::state()
+{
+	// Print state and execution trace.
+	if (m_host.account_exists(m_account))
+	{
+		storage();
+		balance();
+	}
+	else
+		selfdestructRecords();
+
+	callRecords();
+	return m_stateStream.str();
+}
+
+void EVMHostPrinter::storage()
+{
+	for (auto const& [slot, value]: m_host.get_address_storage(m_account))
+		if (m_host.get_storage(m_account, slot))
+			m_stateStream << m_host.convertFromEVMC(slot)
+				<< ": "
+				<< m_host.convertFromEVMC(value.value)
+				<< endl;
+}
+
+void EVMHostPrinter::balance()
+{
+	m_stateStream << "BALANCE "
+		<< m_host.convertFromEVMC(m_host.get_balance(m_account))
+		<< endl;
+}
+
+void EVMHostPrinter::selfdestructRecords()
+{
+	for (auto const& record: m_host.recorded_selfdestructs)
+		m_stateStream << "SELFDESTRUCT"
+			<< " BENEFICIARY "
+			<< m_host.convertFromEVMC(record.beneficiary)
+			<< " BALANCE "
+			<< m_host.convertFromEVMC(record.balance)
+			<< endl;
+}
+
+void EVMHostPrinter::callRecords()
+{
+	static const auto callKind = [](evmc_call_kind _kind) -> string
+	{
+		switch (_kind)
+		{
+			case evmc_call_kind::EVMC_CALL:
+				return "CALL";
+			case evmc_call_kind::EVMC_DELEGATECALL:
+				return "DELEGATECALL";
+			case evmc_call_kind::EVMC_CALLCODE:
+				return "CALLCODE";
+			case evmc_call_kind::EVMC_CREATE:
+				return "CREATE";
+			case evmc_call_kind::EVMC_CREATE2:
+				return "CREATE2";
+			default:
+				assertThrow(false, Exception, "Invalid call kind.");
+		}
+	};
+
+	for (auto const& record: m_host.recorded_calls)
+		m_stateStream << callKind(record.kind)
+			<< " VALUE "
+			<< m_host.convertFromEVMC(record.value)
+			<< endl;
 }
