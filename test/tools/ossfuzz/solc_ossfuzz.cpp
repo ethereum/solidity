@@ -18,40 +18,98 @@
 
 #include <test/tools/fuzzer_common.h>
 
+#include <test/tools/ossfuzz/SolidityEvmoneInterface.h>
+
 #include <test/TestCaseReader.h>
+
+#include <evmone/evmone.h>
+
+#include <liblangutil/EVMVersion.h>
 
 #include <sstream>
 
 using namespace solidity::frontend::test;
+using namespace solidity::frontend;
+using namespace solidity::test::fuzzer;
+using namespace solidity::langutil;
+using namespace solidity::test;
 using namespace std;
 
 // Prototype as we can't use the FuzzerInterface.h header.
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
+
+static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
 	if (_size <= 600)
 	{
 		string input(reinterpret_cast<char const*>(_data), _size);
+		// TODO: Cannot fuzz tests containing libraries yet.
+		if (input.find("library") != string::npos)
+			return 0;
+
 		map<string, string> sourceCode;
 		try
 		{
+			EVMVersion version;
+			EVMHost hostContext(version, evmone);
+
 			TestCaseReader t = TestCaseReader(std::istringstream(input));
 			sourceCode = t.sources().sources;
-			map<string, string> settings = t.settings();
-			bool compileViaYul =
-				settings.count("compileViaYul") &&
-				(settings.at("compileViaYul") == "also" || settings.at("compileViaYul") == "true");
-			bool optimize = settings.count("optimize") && settings.at("optimize") == "true";
-			FuzzerUtil::testCompiler(
+			string contractName;
+			string methodName;
+			auto compilerSetting = OptimiserSettings::standard();
+			CompilerInput cInput = {
+				version,
 				sourceCode,
-				optimize,
-				/*_rand=*/static_cast<unsigned>(_size),
-				/*forceSMT=*/true,
-				compileViaYul
+				contractName,
+				compilerSetting,
+				{},
+				false,
+				false
+			};
+			EvmoneUtility evmoneUtil(
+				hostContext,
+				cInput,
+				contractName,
+				{},
+				methodName
 			);
+
+			auto compilerOutput = evmoneUtil.compileContract();
+			if (!compilerOutput.has_value())
+				return 0;
+
+			optional<string> noInputFunction = evmoneUtil.noInputFunction();
+			if (noInputFunction.has_value())
+				evmoneUtil.methodName(noInputFunction.value());
+			else
+				return 0;
+
+			auto deployResult = evmoneUtil.deployContract(compilerOutput->byteCode);
+			if (deployResult.status_code != EVMC_SUCCESS)
+				return 0;
+
+			auto callResult = evmoneUtil.executeContract(
+				solidity::util::fromHex(compilerOutput->methodIdentifiersInContract[noInputFunction.value()].asString()),
+				deployResult.create_address
+			);
+
+			if (callResult.status_code != EVMC_SUCCESS)
+				return 0;
+
+			solidity::bytes result;
+			for (size_t i = 0; i < callResult.output_size; i++)
+				result.push_back(callResult.output_data[i]);
+
+			cout << solidity::util::toHex(result) << endl;
 		}
 		catch (runtime_error const&)
+		{
+			return 0;
+		}
+		catch (solidity::langutil::UnimplementedFeatureError const&)
 		{
 			return 0;
 		}

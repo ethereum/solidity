@@ -65,6 +65,15 @@ optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 	}
 }
 
+optional<string> SolidityCompilationFramework::noInputFunction()
+{
+	Json::Value const& contractABI = m_compiler.contractABI(m_compiler.lastContractName());
+	for (auto const& functionABI: contractABI)
+		if (functionABI["inputs"].size() == 0)
+			return functionABI["name"].asString() + "()";
+	return {};
+}
+
 bool EvmoneUtility::zeroWord(uint8_t const* _result, size_t _length)
 {
 	return _length == 32 &&

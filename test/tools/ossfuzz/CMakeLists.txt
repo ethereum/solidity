@@ -27,8 +27,10 @@ if (OSSFUZZ)
             solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
+            ../../EVMHost.cpp
+            SolidityEvmoneInterface.cpp
     )
-    target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm)
+    target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone)
     set_target_properties(solc_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(solc_mutator_ossfuzz
