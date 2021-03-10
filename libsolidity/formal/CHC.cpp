@@ -774,7 +774,7 @@ void CHC::makeArrayPopVerificationTarget(FunctionCall const& _arrayPop)
 	FunctionType const& funType = dynamic_cast<FunctionType const&>(*_arrayPop.expression().annotation().type);
 	solAssert(funType.kind() == FunctionType::Kind::ArrayPop, "");
 
-	auto memberAccess = dynamic_cast<MemberAccess const*>(&_arrayPop.expression());
+	auto memberAccess = dynamic_cast<MemberAccess const*>(cleanExpression(_arrayPop.expression()));
 	solAssert(memberAccess, "");
 	auto symbArray = dynamic_pointer_cast<SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
 	solAssert(symbArray, "");
