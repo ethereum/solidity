@@ -61,10 +61,10 @@ contract C {
 // compileViaYul: also
 // ----
 // test_bytes() ->
-// gas irOptimized: 511133
+// gas irOptimized: 510917
 // gas legacy: 466763
 // gas legacyOptimized: 374591
 // test_uint256() ->
-// gas irOptimized: 706775
+// gas irOptimized: 706559
 // gas legacy: 634592
 // gas legacyOptimized: 499373
