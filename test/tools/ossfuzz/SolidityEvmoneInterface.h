@@ -105,6 +105,18 @@ public:
 	{
 		return m_compiler.lastContractName();
 	}
+	void optSetting(frontend::OptimiserSettings _opt)
+	{
+		m_compilerInput.optimiserSettings = _opt;
+	}
+	void source(StringMap const& _source)
+	{
+		m_compilerInput.sourceCode = _source;
+	}
+	void reset(bool _keepSettings)
+	{
+		m_compiler.reset(_keepSettings);
+	}
 private:
 	frontend::CompilerStack m_compiler;
 	CompilerInput m_compilerInput;
@@ -158,9 +170,21 @@ public:
 		m_contractName = m_compilationFramework.lastContractName();
 		m_compilationFramework.contractName(m_contractName);
 	}
+	void source(StringMap const& _source)
+	{
+		m_compilationFramework.source(_source);
+	}
+	void reset(bool _keepSettings)
+	{
+		m_compilationFramework.reset(_keepSettings);
+	}
 	std::optional<std::string> noInputFunction()
 	{
 		return m_compilationFramework.noInputFunction();
+	}
+	void optSetting(frontend::OptimiserSettings _opt)
+	{
+		m_compilationFramework.optSetting(_opt);
 	}
 
 	/// @returns the result of the execution of the function whose
