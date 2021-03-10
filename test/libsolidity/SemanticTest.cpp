@@ -349,7 +349,7 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 	if (
 		!m_enforceGasCost ||
 		(
-			(setting == "ir" || m_gasUsed < m_enforceGasCostMinValue) &&
+			(setting == "ir" || m_gasUsed < m_enforceGasCostMinValue || m_gasUsed >= m_gas) &&
 			io_test.call().expectations.gasUsed.count(setting) == 0
 		)
 	)
