@@ -91,8 +91,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			if (deployResult.status_code != EVMC_SUCCESS)
 				return 0;
 
+			auto methodSig = solidity::util::fromHex(compilerOutput->methodIdentifiersInContract[noInputFunction.value()].asString());
 			auto callResult = evmoneUtil.executeContract(
-				solidity::util::fromHex(compilerOutput->methodIdentifiersInContract[noInputFunction.value()].asString()),
+				methodSig,
 				deployResult.create_address
 			);
 
@@ -104,6 +105,50 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 				result.push_back(callResult.output_data[i]);
 
 			cout << solidity::util::toHex(result) << endl;
+
+			EVMHostPrinter p(hostContext, deployResult.create_address);
+			ostringstream oldCodeGen;
+			oldCodeGen << p.state();
+
+			compilerSetting.runYulOptimiser = true;
+			compilerSetting.optimizeStackAllocation = true;
+			CompilerInput cInputOpt = {
+				version,
+				sourceCode,
+				contractName,
+				compilerSetting,
+				{},
+				false,
+				true
+			};
+			hostContext.reset();
+			evmoneUtil.reset(true);
+			evmoneUtil.optSetting(compilerSetting);
+			auto compilerOutputOpt = evmoneUtil.compileContract();
+			solAssert(compilerOutputOpt.has_value(), "Contract could not be optimised.");
+
+			auto deployResultOpt = evmoneUtil.deployContract(compilerOutputOpt->byteCode);
+			solAssert(deployResultOpt.status_code == EVMC_SUCCESS, "Contract compiled via new code gen could not be deployed.");
+
+			auto callResultOpt = evmoneUtil.executeContract(
+				methodSig,
+				deployResultOpt.create_address
+			);
+			solAssert(callResultOpt.status_code == EVMC_SUCCESS, "New code gen contract call failed.");
+
+			solidity::bytes resultOpt;
+			for (size_t i = 0; i < callResultOpt.output_size; i++)
+				resultOpt.push_back(callResultOpt.output_data[i]);
+
+			cout << solidity::util::toHex(resultOpt) << endl;
+			solAssert(result == resultOpt, "Old and new code gen call results do not match.");
+
+			EVMHostPrinter pOpt(hostContext, deployResultOpt.create_address);
+			ostringstream newCodeGen;
+			newCodeGen << pOpt.state();
+
+			solAssert(oldCodeGen.str() == newCodeGen.str(), "Old and new code gen state do not match.");
+			return 0;
 		}
 		catch (runtime_error const&)
 		{
