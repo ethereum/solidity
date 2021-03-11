@@ -141,6 +141,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			ostringstream newCodeGen;
 			newCodeGen << pOpt.state();
 
+			cout << oldCodeGen.str() << endl;
+			cout << newCodeGen.str() << endl;
+
 			solAssert(oldCodeGen.str() == newCodeGen.str(), "Old and new code gen state do not match.");
 			return 0;
 		}
