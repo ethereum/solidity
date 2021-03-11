@@ -77,10 +77,15 @@ struct SideEffects
 	/// effect on `msize()`.
 	Effect memory = None;
 
+	/// Can write, read or have no effect on returndata, when the value of `memory` is `Write`, `Read`
+	/// or `None` respectively. Note that, when the value is `Read`, the expression can have an
+	/// effect on `returndatasize()`.
+	Effect returndata = None;
+
 	/// @returns the worst-case side effects.
 	static SideEffects worst()
 	{
-		return SideEffects{false, false, false, false, false, Write, Write, Write};
+		return SideEffects{false, false, false, false, false, Write, Write, Write, Write};
 	}
 
 	/// @returns the combined side effects of two pieces of code.
@@ -94,7 +99,8 @@ struct SideEffects
 			cannotLoop && _other.cannotLoop,
 			otherState + _other.otherState,
 			storage + _other.storage,
-			memory +  _other.memory
+			memory +  _other.memory,
+			returndata + _other.returndata
 		};
 	}
 
@@ -115,7 +121,8 @@ struct SideEffects
 			cannotLoop == _other.cannotLoop &&
 			otherState == _other.otherState &&
 			storage == _other.storage &&
-			memory == _other.memory;
+			memory == _other.memory &&
+			returndata == _other.returndata;
 	}
 };
 

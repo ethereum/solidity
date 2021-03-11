@@ -324,6 +324,25 @@ SemanticInformation::Effect SemanticInformation::storage(Instruction _instructio
 	}
 }
 
+SemanticInformation::Effect SemanticInformation::returndata(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+		case Instruction::CALL:
+		case Instruction::CALLCODE:
+		case Instruction::DELEGATECALL:
+		case Instruction::CREATE:
+		case Instruction::CREATE2:
+		case Instruction::STATICCALL:
+			return SemanticInformation::Write;
+		case Instruction::RETURNDATACOPY:
+		case Instruction::RETURNDATASIZE:
+			return SemanticInformation::Read;
+		default:
+			return SemanticInformation::None;
+	}
+}
+
 SemanticInformation::Effect SemanticInformation::otherState(Instruction _instruction)
 {
 	switch (_instruction)

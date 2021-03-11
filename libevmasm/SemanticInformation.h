@@ -82,6 +82,7 @@ struct SemanticInformation
 	static bool canBeRemovedIfNoMSize(Instruction _instruction);
 	static Effect memory(Instruction _instruction);
 	static Effect storage(Instruction _instruction);
+	static Effect returndata(Instruction _instruction);
 	static Effect otherState(Instruction _instruction);
 	static bool invalidInPureFunctions(Instruction _instruction);
 	static bool invalidInViewFunctions(Instruction _instruction);
