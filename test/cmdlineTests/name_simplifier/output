@@ -34,7 +34,7 @@ object "C_59" {
                         if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
                         let _4 := calldataload(add(4, offset))
                         if gt(_4, _3) { panic_error_0x41() }
-                        let _5 := mul(_4, _2)
+                        let _5 := shl(5, _4)
                         let dst := allocate_memory(add(_5, _2))
                         let dst_1 := dst
                         mstore(dst, _4)
@@ -95,12 +95,12 @@ object "C_59" {
             }
             function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
             {
-                value := shr(mul(offset, 8), slot_value)
+                value := shr(shl(3, offset), slot_value)
             }
             function fun_sumArray(var_s_mpos) -> var, var_mpos
             {
                 if iszero(lt(var_mpos, mload(var_s_mpos))) { panic_error_0x32() }
-                let _1 := mload(mload(add(add(var_s_mpos, mul(var_mpos, 32)), 32)))
+                let _1 := mload(mload(add(add(var_s_mpos, shl(5, var_mpos)), 32)))
                 let _2, _3 := storage_array_index_access_struct_S(var_mpos, var_mpos)
                 sstore(_2, _1)
                 if iszero(lt(0x01, mload(var_s_mpos))) { panic_error_0x32() }
@@ -108,7 +108,7 @@ object "C_59" {
                 if iszero(lt(var_mpos, 0x02)) { panic_error_0x32() }
                 let slot := add(0x02, var_mpos)
                 let _5 := sload(slot)
-                let shiftBits := mul(var_mpos, 8)
+                let shiftBits := shl(3, var_mpos)
                 let mask := shl(shiftBits, not(0))
                 sstore(slot, or(and(_5, not(mask)), and(shl(shiftBits, _4), mask)))
                 let _6, _7 := storage_array_index_access_struct_S(0x02, var_mpos)

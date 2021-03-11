@@ -25,4 +25,4 @@ contract CopyTest {
 // compileViaYul: also
 // ----
 // run() -> 2, 23, 42
-// gas irOptimized: 114778
+// gas irOptimized: 114638

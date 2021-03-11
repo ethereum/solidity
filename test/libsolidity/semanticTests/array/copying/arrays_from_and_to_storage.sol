@@ -12,9 +12,9 @@ contract Test {
 // compileViaYul: also
 // ----
 // set(uint24[]): 0x20, 18, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 -> 18
-// gas irOptimized: 121147
+// gas irOptimized: 121109
 // gas legacy: 125815
-// gas legacyOptimized: 123617
+// gas legacyOptimized: 123615
 // data(uint256): 7 -> 8
 // data(uint256): 15 -> 16
 // data(uint256): 18 -> FAILURE
