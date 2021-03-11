@@ -11,4 +11,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (229-243): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(data)\n    C.fi(data, 7719) -- internal call
+// Warning 6328: (229-243): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(data)\n    C.fi(data, 39) -- internal call
