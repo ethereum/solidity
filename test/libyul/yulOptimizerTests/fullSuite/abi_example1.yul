@@ -502,12 +502,12 @@
 //         let _2 := 0x20
 //         dst := add(array, _2)
 //         let src := add(offset, _2)
-//         let _3 := 0x40
-//         if gt(add(add(offset, mul(length, _3)), _2), end) { revert(0, 0) }
+//         if gt(add(add(offset, shl(6, length)), _2), end) { revert(0, 0) }
 //         let i := 0
 //         for { } lt(i, length) { i := add(i, 1) }
 //         {
 //             if iszero(slt(add(src, _1), end)) { revert(0, 0) }
+//             let _3 := 64
 //             let dst_1 := allocateMemory(_3)
 //             let dst_2 := dst_1
 //             let src_1 := src
@@ -542,7 +542,7 @@
 //         mstore(dst, length)
 //         dst := add(dst, _1)
 //         let src := add(_3, _1)
-//         if gt(add(add(_3, mul(length, _1)), _1), dataEnd) { revert(value2, value2) }
+//         if gt(add(add(_3, shl(5, length)), _1), dataEnd) { revert(value2, value2) }
 //         let i := value2
 //         for { } lt(i, length) { i := add(i, 1) }
 //         {
@@ -565,6 +565,6 @@
 //     function array_allocation_size_array_address_dyn_memory(length) -> size
 //     {
 //         if gt(length, 0xffffffffffffffff) { revert(size, size) }
-//         size := add(mul(length, 0x20), 0x20)
+//         size := add(shl(5, length), 0x20)
 //     }
 // }
