@@ -63,6 +63,12 @@ YulOptimizerTest::YulOptimizerTest(string const& _filename):
 	m_dialect = &dialect(dialectName, solidity::test::CommonOptions::get().evmVersion());
 
 	m_expectation = m_reader.simpleExpectations();
+
+	if (!solidity::test::CommonOptions::get().evmVersion().supportsReturndata() && (
+	   m_optimizerStep == "fullSuite" ||
+	   m_optimizerStep == "zeroByReturndatasizeReplacer"
+	))
+		m_shouldRun = false;
 }
 
 TestCase::TestResult YulOptimizerTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
