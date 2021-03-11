@@ -56,6 +56,7 @@
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
+#include <libyul/optimiser/ZeroByReturndatasizeReplacer.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
@@ -362,7 +363,11 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FakeUnreachableGenerator fakeUnreachableGenerator;
 			fakeUnreachableGenerator(*m_ast);
 			StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
-		}}
+		}},
+		{"zeroByReturndatasizeReplacer", [&]() {
+			disambiguate();
+			ZeroByReturndatasizeReplacer::run(*m_context, *m_ast);
+		}},
 	};
 }
 

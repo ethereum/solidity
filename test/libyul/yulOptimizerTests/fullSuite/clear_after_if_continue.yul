@@ -18,14 +18,17 @@
 //         {
 //             if y
 //             {
-//                 let _2 := 0
+//                 let _2 := returndatasize()
 //                 revert(_2, _2)
 //             }
 //         }
 //         {
 //             if y { continue }
-//             sstore(1, 0)
+//             sstore(1, returndatasize())
 //         }
-//         if y { revert(0, 0) }
+//         if y
+//         {
+//             revert(returndatasize(), returndatasize())
+//         }
 //     }
 // }

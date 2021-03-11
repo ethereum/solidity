@@ -18,17 +18,17 @@
 // {
 //     {
 //         f()
-//         sstore(0, 1)
+//         sstore(returndatasize(), 1)
 //         f()
-//         sstore(0, 1)
+//         sstore(returndatasize(), 1)
 //         f()
-//         sstore(0, 1)
+//         sstore(returndatasize(), 1)
 //     }
 //     function f()
 //     {
 //         let b := 10
-//         let _1 := 0
-//         let a := calldataload(_1)
+//         let _1 := returndatasize()
+//         let a := calldataload(returndatasize())
 //         let _2 := iszero(a)
 //         for { } iszero(b) { b := add(b, not(0)) }
 //         {

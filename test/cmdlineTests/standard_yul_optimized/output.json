@@ -1,6 +1,6 @@
 {"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */
-  0x00
-  0x00
+  returndatasize
+  returndatasize
     /* \"A\":11:19   */
   mload
     /* \"A\":20:40   */
@@ -12,6 +12,10 @@
     }
 }
 ","irOptimized":"object \"object\" {
-    code { { sstore(mload(0), 0) } }
+    code {
+        {
+            sstore(mload(returndatasize()), returndatasize())
+        }
+    }
 }
 "}}},"errors":[{"component":"general","formattedMessage":"Yul is still experimental. Please use the output with care.","message":"Yul is still experimental. Please use the output with care.","severity":"warning","type":"Warning"}]}

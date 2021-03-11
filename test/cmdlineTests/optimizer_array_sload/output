@@ -10,10 +10,13 @@ object "Arraysum_34" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                revert(returndatasize(), returndatasize())
+            }
             let _1 := datasize("Arraysum_34_deployed")
-            codecopy(0, dataoffset("Arraysum_34_deployed"), _1)
-            return(0, _1)
+            codecopy(returndatasize(), dataoffset("Arraysum_34_deployed"), _1)
+            return(returndatasize(), _1)
         }
     }
     object "Arraysum_34_deployed" {
@@ -22,7 +25,7 @@ object "Arraysum_34" {
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
+                    let _1 := returndatasize()
                     if eq(0x81d73423, shr(224, calldataload(_1)))
                     {
                         if callvalue() { revert(_1, _1) }
@@ -44,7 +47,7 @@ object "Arraysum_34" {
                         return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
                     }
                 }
-                revert(0, 0)
+                revert(returndatasize(), returndatasize())
             }
             function abi_encode_uint256(headStart, value0) -> tail
             {
@@ -56,9 +59,9 @@ object "Arraysum_34" {
                 memPtr := mload(64)
                 if gt(memPtr, 0xffffffffffffffff)
                 {
-                    mstore(0, shl(224, 0x4e487b71))
+                    mstore(returndatasize(), shl(224, 0x4e487b71))
                     mstore(4, 0x41)
-                    revert(0, 0x24)
+                    revert(returndatasize(), 0x24)
                 }
                 mstore(64, memPtr)
             }
@@ -69,9 +72,9 @@ object "Arraysum_34" {
             }
             function panic_error_0x11()
             {
-                mstore(0, shl(224, 0x4e487b71))
+                mstore(returndatasize(), shl(224, 0x4e487b71))
                 mstore(4, 0x11)
-                revert(0, 0x24)
+                revert(returndatasize(), 0x24)
             }
         }
     }

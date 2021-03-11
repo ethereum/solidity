@@ -25,7 +25,7 @@
 //
 // {
 //     {
-//         sstore(0, fib(0))
+//         sstore(returndatasize(), fib(returndatasize()))
 //         sstore(1, fib(2))
 //         sstore(2, fib(3))
 //         sstore(3, fib(4))

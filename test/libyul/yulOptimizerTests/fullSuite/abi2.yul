@@ -1078,9 +1078,12 @@
 // {
 //     {
 //         let _1 := mload(1)
-//         let _2 := mload(0)
-//         if slt(sub(_1, _2), 64) { revert(0, 0) }
-//         sstore(0, and(calldataload(_2), sub(shl(160, 1), 1)))
+//         let _2 := mload(returndatasize())
+//         if slt(sub(_1, _2), 64)
+//         {
+//             revert(returndatasize(), returndatasize())
+//         }
+//         sstore(returndatasize(), and(calldataload(_2), sub(shl(160, 1), 1)))
 //         let x0, x1, x2, x3, x4 := abi_decode_addresst_uint256t_bytes_calldatat_enum_Operation(mload(7), mload(8))
 //         sstore(x1, x0)
 //         sstore(x3, x2)

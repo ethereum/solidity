@@ -24,7 +24,7 @@
 //
 // {
 //     {
-//         sstore(0, A(2, 1))
+//         sstore(returndatasize(), A(2, 1))
 //         sstore(1, A(2, 2))
 //         sstore(2, A(4, 2))
 //     }

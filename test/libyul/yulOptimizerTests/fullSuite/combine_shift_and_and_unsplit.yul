@@ -13,7 +13,7 @@
 //
 // {
 //     {
-//         let x := calldataload(0)
+//         let x := calldataload(returndatasize())
 //         sstore(shr(248, x), and(shr(4, x), 3855))
 //     }
 // }

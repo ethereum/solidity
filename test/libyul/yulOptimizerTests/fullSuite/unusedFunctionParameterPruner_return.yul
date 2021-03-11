@@ -22,9 +22,9 @@
 // {
 //     {
 //         let out1, out2 := foo(sload(32))
-//         sstore(0, out1)
-//         sstore(0, out2)
-//         sstore(0, 0)
+//         sstore(returndatasize(), out1)
+//         sstore(returndatasize(), out2)
+//         sstore(returndatasize(), returndatasize())
 //         let out1_1, out2_1 := foo(sload(8))
 //     }
 //     function foo(b) -> out1, out2

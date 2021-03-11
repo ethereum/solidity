@@ -11,7 +11,7 @@
 //
 // {
 //     {
-//         switch mload(0)
+//         switch mload(returndatasize())
 //         case 0 { }
 //         case 1 { }
 //         default { invalid() }

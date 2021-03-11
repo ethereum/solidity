@@ -13,13 +13,13 @@ object "t" {
 //     /* "source":23:147   */
 //   dataSize(sub_0)
 //     /* "source":30:31   */
-//   0x00
+//   returndatasize
 //     /* "source":23:147   */
 //   sstore
 // stop
 //
 // sub_0: assembly {
 // }
-// Bytecode: 6000600055fe
-// Opcodes: PUSH1 0x0 PUSH1 0x0 SSTORE INVALID
+// Bytecode: 60003d55fe
+// Opcodes: PUSH1 0x0 RETURNDATASIZE SSTORE INVALID
 // SourceMappings: 23:124:0:-:0;30:1;23:124

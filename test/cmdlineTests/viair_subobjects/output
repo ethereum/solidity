@@ -1,9 +1,9 @@
 
 ======= viair_subobjects/input.sol:C =======
 Binary:
-60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+60806040523415600d573d3dfd5b600880601a3d39803df350fe60806040523d3dfd
 Binary of the runtime part:
-608060405260006000fd
+60806040523d3dfd
 Optimized IR:
 /*******************************************************
  *                       WARNING                       *
@@ -16,17 +16,20 @@ object "C_3" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                revert(returndatasize(), returndatasize())
+            }
             let _1 := datasize("C_3_deployed")
-            codecopy(0, dataoffset("C_3_deployed"), _1)
-            return(0, _1)
+            codecopy(returndatasize(), dataoffset("C_3_deployed"), _1)
+            return(returndatasize(), _1)
         }
     }
     object "C_3_deployed" {
         code {
             {
                 mstore(64, 128)
-                revert(0, 0)
+                revert(returndatasize(), returndatasize())
             }
         }
     }
@@ -35,9 +38,9 @@ object "C_3" {
 
 ======= viair_subobjects/input.sol:D =======
 Binary:
-608060405234156100105760006000fd5b60fb80610020600039806000f350fe6080604052600436101515610087576000803560e01c6326121ff0141561008557341561002a578081fd5b806003193601121561003a578081fd5b6028806080016080811067ffffffffffffffff8211171561005e5761005d6100b9565b5b50806100d360803980608083f01515610079573d82833e3d82fd5b5080610083610091565bf35b505b60006000fd6100d1565b6000604051905067ffffffffffffffff8111156100b1576100b06100b9565b5b806040525b90565b634e487b7160e01b600052604160045260246000fd5b565bfe60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+6080604052341561000e573d3dfd5b60f48061001c3d39803df350fe6080604052600436101515610086573d803560e01c6326121ff01415610084573415610029578081fd5b8060031936011215610039578081fd5b6022806080016080811067ffffffffffffffff8211171561005d5761005c6100b8565b5b50806100d260803980608083f01515610078573d82833e3d82fd5b5080610082610090565bf35b505b60006000fd6100d0565b6000604051905067ffffffffffffffff8111156100b0576100af6100b8565b5b806040525b90565b634e487b7160e01b600052604160045260246000fd5b565bfe60806040523415600d573d3dfd5b600880601a3d39803df350fe60806040523d3dfd
 Binary of the runtime part:
-6080604052600436101515610087576000803560e01c6326121ff0141561008557341561002a578081fd5b806003193601121561003a578081fd5b6028806080016080811067ffffffffffffffff8211171561005e5761005d6100b9565b5b50806100d360803980608083f01515610079573d82833e3d82fd5b5080610083610091565bf35b505b60006000fd6100d1565b6000604051905067ffffffffffffffff8111156100b1576100b06100b9565b5b806040525b90565b634e487b7160e01b600052604160045260246000fd5b565bfe60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+6080604052600436101515610086573d803560e01c6326121ff01415610084573415610029578081fd5b8060031936011215610039578081fd5b6022806080016080811067ffffffffffffffff8211171561005d5761005c6100b8565b5b50806100d260803980608083f01515610078573d82833e3d82fd5b5080610082610090565bf35b505b60006000fd6100d0565b6000604051905067ffffffffffffffff8111156100b0576100af6100b8565b5b806040525b90565b634e487b7160e01b600052604160045260246000fd5b565bfe60806040523415600d573d3dfd5b600880601a3d39803df350fe60806040523d3dfd
 Optimized IR:
 /*******************************************************
  *                       WARNING                       *
@@ -50,10 +53,13 @@ object "D_16" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                revert(returndatasize(), returndatasize())
+            }
             let _1 := datasize("D_16_deployed")
-            codecopy(0, dataoffset("D_16_deployed"), _1)
-            return(0, _1)
+            codecopy(returndatasize(), dataoffset("D_16_deployed"), _1)
+            return(returndatasize(), _1)
         }
     }
     object "D_16_deployed" {
@@ -62,7 +68,7 @@ object "D_16" {
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
+                    let _1 := returndatasize()
                     if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
                         if callvalue() { revert(_1, _1) }
@@ -98,17 +104,20 @@ object "D_16" {
             code {
                 {
                     mstore(64, 128)
-                    if callvalue() { revert(0, 0) }
+                    if callvalue()
+                    {
+                        revert(returndatasize(), returndatasize())
+                    }
                     let _1 := datasize("C_3_deployed")
-                    codecopy(0, dataoffset("C_3_deployed"), _1)
-                    return(0, _1)
+                    codecopy(returndatasize(), dataoffset("C_3_deployed"), _1)
+                    return(returndatasize(), _1)
                 }
             }
             object "C_3_deployed" {
                 code {
                     {
                         mstore(64, 128)
-                        revert(0, 0)
+                        revert(returndatasize(), returndatasize())
                     }
                 }
             }

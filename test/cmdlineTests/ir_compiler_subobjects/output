@@ -10,17 +10,20 @@ object "C_3" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                revert(returndatasize(), returndatasize())
+            }
             let _1 := datasize("C_3_deployed")
-            codecopy(0, dataoffset("C_3_deployed"), _1)
-            return(0, _1)
+            codecopy(returndatasize(), dataoffset("C_3_deployed"), _1)
+            return(returndatasize(), _1)
         }
     }
     object "C_3_deployed" {
         code {
             {
                 mstore(64, 128)
-                revert(0, 0)
+                revert(returndatasize(), returndatasize())
             }
         }
     }
@@ -38,10 +41,13 @@ object "D_16" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                revert(returndatasize(), returndatasize())
+            }
             let _1 := datasize("D_16_deployed")
-            codecopy(0, dataoffset("D_16_deployed"), _1)
-            return(0, _1)
+            codecopy(returndatasize(), dataoffset("D_16_deployed"), _1)
+            return(returndatasize(), _1)
         }
     }
     object "D_16_deployed" {
@@ -50,7 +56,7 @@ object "D_16" {
                 mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
+                    let _1 := returndatasize()
                     if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
                         if callvalue() { revert(_1, _1) }
@@ -86,17 +92,20 @@ object "D_16" {
             code {
                 {
                     mstore(64, 128)
-                    if callvalue() { revert(0, 0) }
+                    if callvalue()
+                    {
+                        revert(returndatasize(), returndatasize())
+                    }
                     let _1 := datasize("C_3_deployed")
-                    codecopy(0, dataoffset("C_3_deployed"), _1)
-                    return(0, _1)
+                    codecopy(returndatasize(), dataoffset("C_3_deployed"), _1)
+                    return(returndatasize(), _1)
                 }
             }
             object "C_3_deployed" {
                 code {
                     {
                         mstore(64, 128)
-                        revert(0, 0)
+                        revert(returndatasize(), returndatasize())
                     }
                 }
             }

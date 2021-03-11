@@ -18,7 +18,7 @@
 //         {
 //             for { } iszero(_1) { }
 //             { }
-//             mstore(192, 0)
+//             mstore(192, returndatasize())
 //         }
 //         { if iszero(msize()) { break } }
 //     }

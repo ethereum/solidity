@@ -16,16 +16,16 @@
 // {
 //     {
 //         f()
-//         sstore(0, 1)
+//         sstore(returndatasize(), 1)
 //         f()
-//         sstore(0, 1)
+//         sstore(returndatasize(), 1)
 //         f()
-//         sstore(0, 1)
+//         sstore(returndatasize(), 1)
 //     }
 //     function f()
 //     {
-//         let a := calldataload(0)
-//         mstore(a, 0)
+//         let a := calldataload(returndatasize())
+//         mstore(a, returndatasize())
 //         if iszero(a) { leave }
 //     }
 // }

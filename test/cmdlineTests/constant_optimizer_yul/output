@@ -10,19 +10,25 @@ object "C_12" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
-            sstore(0, shl(180, 1))
+            if callvalue()
+            {
+                revert(returndatasize(), returndatasize())
+            }
+            sstore(returndatasize(), shl(180, 1))
             let _1 := datasize("C_12_deployed")
-            codecopy(0, dataoffset("C_12_deployed"), _1)
-            return(0, _1)
+            codecopy(returndatasize(), dataoffset("C_12_deployed"), _1)
+            return(returndatasize(), _1)
         }
     }
     object "C_12_deployed" {
         code {
             {
                 mstore(64, 128)
-                if callvalue() { revert(0, 0) }
-                sstore(0, 0x1000000000000000000000000000000000000000000000)
+                if callvalue()
+                {
+                    revert(returndatasize(), returndatasize())
+                }
+                sstore(returndatasize(), 0x1000000000000000000000000000000000000000000000)
                 stop()
             }
         }

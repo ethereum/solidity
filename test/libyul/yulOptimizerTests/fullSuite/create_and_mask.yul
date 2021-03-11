@@ -14,7 +14,7 @@
 // {
 //     {
 //         let _1 := sub(shl(160, 1), 1)
-//         let a := and(create(0, 0, 0x20), _1)
+//         let a := and(create(returndatasize(), returndatasize(), 0x20), _1)
 //         sstore(a, and(_1, create(0, 0, 0x20)))
 //     }
 // }

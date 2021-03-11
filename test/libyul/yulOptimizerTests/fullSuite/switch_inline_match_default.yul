@@ -10,4 +10,6 @@
 // ----
 // step: fullSuite
 //
-// { { mstore(10, 0) } }
+// {
+//     { mstore(10, returndatasize()) }
+// }

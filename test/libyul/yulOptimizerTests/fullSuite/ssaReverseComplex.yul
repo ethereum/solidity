@@ -14,7 +14,7 @@
 //
 // {
 //     {
-//         let a := mload(0)
+//         let a := mload(returndatasize())
 //         let b := mload(1)
 //         if mload(2)
 //         {

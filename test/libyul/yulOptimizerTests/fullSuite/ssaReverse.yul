@@ -36,7 +36,7 @@
 //
 // {
 //     {
-//         let a, b := abi_decode_bytes_calldata(mload(0), mload(1))
+//         let a, b := abi_decode_bytes_calldata(mload(returndatasize()), mload(1))
 //         let a_1, b_1 := abi_decode_bytes_calldata(a, b)
 //         let a_2, b_2 := abi_decode_bytes_calldata(a_1, b_1)
 //         let a_3, b_3 := abi_decode_bytes_calldata(a_2, b_2)
@@ -47,10 +47,19 @@
 //     }
 //     function abi_decode_bytes_calldata(offset, end) -> arrayPos, length
 //     {
-//         if iszero(slt(add(offset, 0x1f), end)) { revert(arrayPos, arrayPos) }
+//         if iszero(slt(add(offset, 0x1f), end))
+//         {
+//             revert(returndatasize(), returndatasize())
+//         }
 //         length := calldataload(offset)
-//         if gt(length, 0xffffffffffffffff) { revert(arrayPos, arrayPos) }
+//         if gt(length, 0xffffffffffffffff)
+//         {
+//             revert(returndatasize(), returndatasize())
+//         }
 //         arrayPos := add(offset, 0x20)
-//         if gt(add(add(offset, length), 0x20), end) { revert(0, 0) }
+//         if gt(add(add(offset, length), 0x20), end)
+//         {
+//             revert(returndatasize(), returndatasize())
+//         }
 //     }
 // }

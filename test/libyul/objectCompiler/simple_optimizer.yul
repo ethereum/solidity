@@ -9,12 +9,12 @@
 // ----
 // Assembly:
 //     /* "source":26:27   */
-//   0x00
-//   0x00
+//   returndatasize
+//   returndatasize
 //     /* "source":13:28   */
 //   calldataload
 //     /* "source":79:99   */
 //   sstore
-// Bytecode: 600060003555
-// Opcodes: PUSH1 0x0 PUSH1 0x0 CALLDATALOAD SSTORE
+// Bytecode: 3d3d3555
+// Opcodes: RETURNDATASIZE RETURNDATASIZE CALLDATALOAD SSTORE
 // SourceMappings: 26:1:0:-:0;;13:15;79:20

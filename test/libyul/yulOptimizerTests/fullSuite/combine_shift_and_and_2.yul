@@ -22,14 +22,14 @@
 //
 // {
 //     {
-//         let x := calldataload(0)
+//         let x := calldataload(returndatasize())
 //         let b := and(shl(8, x), 15790080)
-//         sstore(10, 0)
+//         sstore(10, returndatasize())
 //         sstore(11, b)
 //         sstore(12, b)
-//         sstore(13, 0)
+//         sstore(13, returndatasize())
 //         sstore(14, and(shl(251, x), shl(255, 1)))
-//         sstore(0xf, 0)
-//         sstore(16, 0)
+//         sstore(0xf, returndatasize())
+//         sstore(16, returndatasize())
 //     }
 // }

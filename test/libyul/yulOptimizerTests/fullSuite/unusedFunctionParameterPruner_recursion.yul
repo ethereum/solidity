@@ -15,7 +15,7 @@
 // {
 //     {
 //         let x, y, z := f()
-//         sstore(0, x)
+//         sstore(returndatasize(), x)
 //         sstore(1, y)
 //         sstore(1, z)
 //     }

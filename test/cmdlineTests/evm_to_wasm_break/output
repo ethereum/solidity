@@ -5,13 +5,13 @@ Pretty printed source:
 object "object" {
     code {
         {
-            let x := calldataload(0)
+            let x := calldataload(returndatasize())
             for { } lt(x, 10) { x := add(x, 1) }
             {
                 if eq(x, 2) { break }
                 if eq(x, 4) { continue }
             }
-            sstore(0, x)
+            sstore(returndatasize(), x)
         }
     }
 }
@@ -24,14 +24,15 @@ object "object" {
     code {
         function main()
         {
-            let x, x_1, x_2, x_3 := calldataload()
+            let _1, _2, _3, _4 := returndatasize_1183()
+            let x, x_1, x_2, x_3 := calldataload(_1, _2, _3, _4)
             let x_4 := x
             let x_5 := x_1
             let x_6 := x_2
             let x_7 := x_3
-            let _1:i32 := i32.eqz(i32.eqz(i64.eqz(i64.or(i64.or(0, 0), i64.or(0, 1)))))
+            let _5:i32 := i32.eqz(i32.eqz(i64.eqz(i64.or(i64.or(0, 0), i64.or(0, 1)))))
             for { }
-            i32.eqz(_1)
+            i32.eqz(_5)
             {
                 let x_8, x_9, x_10, x_11 := add(x_4, x_5, x_6, x_7)
                 x_4 := x_8
@@ -40,14 +41,15 @@ object "object" {
                 x_7 := x_11
             }
             {
-                let _2, _3, _4, _5 := iszero_1300_2121(lt(x_4, x_5, x_6, x_7))
-                if i32.eqz(i64.eqz(i64.or(i64.or(_2, _3), i64.or(_4, _5)))) { break }
-                let _6, _7, _8, _9 := eq_740_2122(x_4, x_5, x_6, x_7)
+                let _6, _7, _8, _9 := iszero_1179(lt(x_4, x_5, x_6, x_7))
                 if i32.eqz(i64.eqz(i64.or(i64.or(_6, _7), i64.or(_8, _9)))) { break }
-                let _10, _11, _12, _13 := eq_741_2123(x_4, x_5, x_6, x_7)
-                if i32.eqz(i64.eqz(i64.or(i64.or(_10, _11), i64.or(_12, _13)))) { continue }
+                let _10, _11, _12, _13 := eq_734(x_4, x_5, x_6, x_7)
+                if i32.eqz(i64.eqz(i64.or(i64.or(_10, _11), i64.or(_12, _13)))) { break }
+                let _14, _15, _16, _17 := eq_735(x_4, x_5, x_6, x_7)
+                if i32.eqz(i64.eqz(i64.or(i64.or(_14, _15), i64.or(_16, _17)))) { continue }
             }
-            sstore(x_4, x_5, x_6, x_7)
+            let _18, _19, _20, _21 := returndatasize_1183()
+            sstore(_18, _19, _20, _21, x_4, x_5, x_6, x_7)
         }
         function add(x1, x2, x3, x4) -> r1, r2, r3, r4
         {
@@ -59,15 +61,15 @@ object "object" {
             r2 := i64.add(t_2, i64.extend_i32_u(i32.or(i64.lt_u(t_1, x3), i64.lt_u(r3, t_1))))
             r1 := i64.add(i64.add(x1, 0), i64.extend_i32_u(i32.or(i64.lt_u(t_2, x2), i64.lt_u(r2, t_2))))
         }
-        function iszero_1300_2121(x4) -> r1, r2, r3, r4
+        function iszero_1179(x4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i64.eqz(i64.or(i64.or(0, 0), i64.or(0, x4))))
         }
-        function eq_740_2122(x1, x2, x3, x4) -> r1, r2, r3, r4
+        function eq_734(x1, x2, x3, x4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i32.and(i64.eq(x1, 0), i32.and(i64.eq(x2, 0), i32.and(i64.eq(x3, 0), i64.eq(x4, 2)))))
         }
-        function eq_741_2123(x1, x2, x3, x4) -> r1, r2, r3, r4
+        function eq_735(x1, x2, x3, x4) -> r1, r2, r3, r4
         {
             r4 := i64.extend_i32_u(i32.and(i64.eq(x1, 0), i32.and(i64.eq(x2, 0), i32.and(i64.eq(x3, 0), i64.eq(x4, 4)))))
         }
@@ -92,18 +94,17 @@ object "object" {
             default { z := 1:i32 }
             z4 := i64.extend_i32_u(z)
         }
-        function u256_to_i32_744() -> v:i32
+        function u256_to_i32_737() -> v:i32
         {
             if i64.ne(0, i64.or(i64.or(0, 0), 0)) { unreachable() }
             if i64.ne(0, i64.shr_u(32, 32)) { unreachable() }
             v := i32.wrap_i64(32)
         }
-        function u256_to_i32() -> v:i32
+        function u256_to_i32(x1, x2, x3, x4) -> v:i32
         {
-            let _1 := 0
-            if i64.ne(_1, i64.or(i64.or(_1, _1), _1)) { unreachable() }
-            if i64.ne(_1, i64.shr_u(_1, 32)) { unreachable() }
-            v := i32.wrap_i64(_1)
+            if i64.ne(0, i64.or(i64.or(x1, x2), x3)) { unreachable() }
+            if i64.ne(0, i64.shr_u(x4, 32)) { unreachable() }
+            v := i32.wrap_i64(x4)
         }
         function bswap16(x:i32) -> y:i32
         {
@@ -119,15 +120,15 @@ object "object" {
             let hi := i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(x))), 32)
             y := i64.or(hi, i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(x, 32)))))
         }
-        function calldataload() -> z1, z2, z3, z4
+        function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4
         {
             let cds:i32 := eth.getCallDataSize()
             let _1 := 0
             if i64.ne(_1, i64.or(i64.or(_1, _1), _1)) { unreachable() }
             if i64.ne(_1, i64.shr_u(_1, 32)) { unreachable() }
             let v:i32 := i32.wrap_i64(_1)
-            let offset:i32 := u256_to_i32()
-            let requested_size:i32 := u256_to_i32_744()
+            let offset:i32 := u256_to_i32(x1, x2, x3, x4)
+            let requested_size:i32 := u256_to_i32_737()
             if i32.gt_u(offset, i32.sub(0xffffffff:i32, requested_size)) { eth.revert(0:i32, 0:i32) }
             let available_size:i32 := i32.sub(cds, offset)
             if i32.gt_u(offset, cds) { available_size := 0:i32 }
@@ -152,14 +153,16 @@ object "object" {
             z3 := z3_1
             z4 := z4_1
         }
-        function sstore(y1, y2, y3, y4)
+        function returndatasize_1183() -> z1, z2, z3, z4
         {
-            let hi := i64.shl(i64.extend_i32_u(bswap32(i32.wrap_i64(0))), 32)
-            let y := i64.or(hi, i64.extend_i32_u(bswap32(i32.wrap_i64(i64.shr_u(0, 32)))))
-            i64.store(0:i32, y)
-            i64.store(i32.add(0:i32, 8:i32), y)
-            i64.store(i32.add(0:i32, 16:i32), y)
-            i64.store(i32.add(0:i32, 24:i32), y)
+            z4 := i64.extend_i32_u(eth.getReturnDataSize())
+        }
+        function sstore(x1, x2, x3, x4, y1, y2, y3, y4)
+        {
+            i64.store(0:i32, bswap64(x1))
+            i64.store(i32.add(0:i32, 8:i32), bswap64(x2))
+            i64.store(i32.add(0:i32, 16:i32), bswap64(x3))
+            i64.store(i32.add(0:i32, 24:i32), bswap64(x4))
             i64.store(32:i32, bswap64(y1))
             i64.store(i32.add(32:i32, 8:i32), bswap64(y2))
             i64.store(i32.add(32:i32, 16:i32), bswap64(y3))
@@ -178,7 +181,7 @@ object "object" {
 
 
 Binary representation:
-0061736d010000000130096000006000017e6000017f60017e017e60047e7e7e7e0060047e7e7e7e017e60017f017f60027f7f0060037f7f7f00025e0408657468657265756d0c73746f7261676553746f7265000708657468657265756d06726576657274000708657468657265756d0f67657443616c6c4461746153697a65000208657468657265756d0c63616c6c44617461436f70790008030f0e00050305050502020606030104010503010001061a057e0142000b7e0142000b7e0142000b7f0141000b7f0141000b071102066d656d6f72790200046d61696e00040a8a0a0e8d0203087e017f107e02400240100f21002300210123012102230221030b200021042001210520022106200321074200420084420042018484504545210802400340200845450d010240024020042005200620071009100621092303210a2304210b2300210c0b2009200a84200b200c8484504504400c030b024020042005200620071007210d2300210e2301210f230221100b200d200e84200f20108484504504400c030b02402004200520062007100821112300211223012113230221140b2011201284201320148484504504400c010b0b02402004200520062007100521152300211623012117230221180b201521042016210520172106201821070c000b0b200420052006200710100b0b6701077e0240200342017c2108200842007c2107200242007c210920092008200354200720085472ad7c2106200142007c210a200a2009200254200620095472ad7c2105200042007c200a2001542005200a5472ad7c21040b20052400200624012007240220040b2401047e0240420042008442002000848450ad21040b20022400200324012004240220010b2f01047e02402000420051200142005120024200512003420251717171ad21070b20052400200624012007240220040b2f01047e02402000420051200142005120024200512003420451717171ad21070b20052400200624012007240220040bab0104017e017f017e047f02404100210542002106417f210702402007200020065220002006541b21082008410046044002402007200120065220012006541b21092009410046044002402007200220065220022006541b210a200a41004604402003420a54210505200a41014604404100210505410121050b0b0b05200941014604404100210505410121050b0b0b05200841014604404100210505410121050b0b0b2005ad21040b20040b2901017f024042004200420084420084520440000b42004220422088520440000b4220a721000b20000b2f02017f017e02404200210120012001200184200184520440000b20012001422088520440000b2001a721000b20000b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100c411074210220022000411076100c7221010b20010b2201027e02402000a7100dad422086210220022000422088a7100dad8421010b20010be60105047e017f017e087f047e0240100221044200210520052005200584200584520440000b20052005422088520440000b2005a72106100b2107100a21082007417f20086b4b04404100410010010b200420076b2109200720044b0440410021090b4100210a2009200a4b044020062007200910030b200820094b0440200820096b210b200620096a210c200a210d02400340200d200b49450d010240200c200d6a200a3a00000b200d41016a210d0c000b0b0b02401011210e2300210f23012110230221110b200e2100200f210120102102201121030b20012400200224012003240220000b7801027e02404200a7100dad422086210420044200422088a7100dad84210541002005370000410041086a2005370000410041106a2005370000410041186a200537000041202000100e370000412041086a2001100e370000412041106a2002100e370000412041186a2003100e3700004100412010000b0b4201047e02404100290000100e2100410041086a290000100e2101410041106a290000100e2102410041186a290000100e21030b20012400200224012003240220000b
+0061736d01000000013c0a6000006000017e6000017f60017e017e60047e7e7e7e017e60047e7e7e7e017f60087e7e7e7e7e7e7e7e0060017f017f60027f7f0060037f7f7f00027b0508657468657265756d0c73746f7261676553746f7265000808657468657265756d06726576657274000808657468657265756d0f67657443616c6c4461746153697a65000208657468657265756d0c63616c6c44617461436f7079000908657468657265756d1167657452657475726e4461746153697a65000203100f0004030404040205070703040106010503010001061f067f0141000b7f0141000b7f0141000b7e0142000b7e0142000b7e0142000b071102066d656d6f72790200046d61696e00050aca0a0fc302030c7e017f147e02400240101121002300210123012102230221030b02402000200120022003101021042303210523042106230521070b20042108200521092006210a2007210b4200420084420042018484504545210c02400340200c45450d010240024020082009200a200b100a1007210d2303210e2304210f230521100b200d200e84200f20108484504504400c030b024020082009200a200b100821112303211223042113230521140b2011201284201320148484504504400c030b024020082009200a200b100921152303211623042117230521180b2015201684201720188484504504400c010b0b024020082009200a200b100621192303211a2304211b2305211c0b20192108201a2109201b210a201c210b0c000b0b02401011211d2303211e2304211f230521200b201d201e201f202020082009200a200b10120b0b6701077e0240200342017c2108200842007c2107200242007c210920092008200354200720085472ad7c2106200142007c210a200a2009200254200620095472ad7c2105200042007c200a2001542005200a5472ad7c21040b20052403200624042007240520040b2401047e0240420042008442002000848450ad21040b20022403200324042004240520010b2f01047e02402000420051200142005120024200512003420251717171ad21070b20052403200624042007240520040b2f01047e02402000420051200142005120024200512003420451717171ad21070b20052403200624042007240520040bab0104017e017f017e047f02404100210542002106417f210702402007200020065220002006541b21082008410046044002402007200120065220012006541b21092009410046044002402007200220065220022006541b210a200a41004604402003420a54210505200a41014604404100210505410121050b0b0b05200941014604404100210505410121050b0b0b05200841014604404100210505410121050b0b0b2005ad21040b20040b2901017f024042004200420084420084520440000b42004220422088520440000b4220a721000b20000b2901017f024042002000200184200284520440000b42002003422088520440000b2003a721040b20040b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100d411074210220022000411076100d7221010b20010b2201027e02402000a7100ead422086210220022000422088a7100ead8421010b20010bee0105047e017f017e087f047e0240100221084200210920092009200984200984520440000b20092009422088520440000b2009a7210a2000200120022003100c210b100b210c200b417f200c6b4b04404100410010010b2008200b6b210d200b20084b04404100210d0b4100210e200d200e4b0440200a200b200d10030b200c200d4b0440200c200d6b210f200a200d6a2110200e2111024003402011200f49450d010240201020116a200e3a00000b201141016a21110c000b0b0b0240101321122303211323042114230521150b201221042013210520142106201521070b20052403200624042007240520040b1a01047e02401004ad21030b20012403200224042003240520000b6500024041002000100f370000410041086a2001100f370000410041106a2002100f370000410041186a2003100f37000041202004100f370000412041086a2005100f370000412041106a2006100f370000412041186a2007100f3700004100412010000b0b4201047e02404100290000100f2100410041086a290000100f2101410041106a290000100f2102410041186a290000100f21030b20012403200224042003240520000b
 
 Text representation:
 (module
@@ -186,15 +189,21 @@ Text representation:
     (import "ethereum" "revert" (func $eth.revert (param i32 i32)))
     (import "ethereum" "getCallDataSize" (func $eth.getCallDataSize (result i32)))
     (import "ethereum" "callDataCopy" (func $eth.callDataCopy (param i32 i32 i32)))
+    (import "ethereum" "getReturnDataSize" (func $eth.getReturnDataSize (result i32)))
     (memory $memory (export "memory") 1)
     (export "main" (func $main))
-    (global $global_ (mut i64) (i64.const 0))
-    (global $global__1 (mut i64) (i64.const 0))
-    (global $global__2 (mut i64) (i64.const 0))
-    (global $global__6 (mut i32) (i32.const 0))
-    (global $global__7 (mut i32) (i32.const 0))
+    (global $global_ (mut i32) (i32.const 0))
+    (global $global__1 (mut i32) (i32.const 0))
+    (global $global__2 (mut i32) (i32.const 0))
+    (global $global__3 (mut i64) (i64.const 0))
+    (global $global__4 (mut i64) (i64.const 0))
+    (global $global__5 (mut i64) (i64.const 0))
 
 (func $main
+    (local $_1 i64)
+    (local $_2 i64)
+    (local $_3 i64)
+    (local $_4 i64)
     (local $x i64)
     (local $x_1 i64)
     (local $x_2 i64)
@@ -203,11 +212,7 @@ Text representation:
     (local $x_5 i64)
     (local $x_6 i64)
     (local $x_7 i64)
-    (local $_1 i32)
-    (local $_2 i64)
-    (local $_3 i64)
-    (local $_4 i64)
-    (local $_5 i64)
+    (local $_5 i32)
     (local $_6 i64)
     (local $_7 i64)
     (local $_8 i64)
@@ -216,75 +221,97 @@ Text representation:
     (local $_11 i64)
     (local $_12 i64)
     (local $_13 i64)
+    (local $_14 i64)
+    (local $_15 i64)
+    (local $_16 i64)
+    (local $_17 i64)
     (local $x_8 i64)
     (local $x_9 i64)
     (local $x_10 i64)
     (local $x_11 i64)
+    (local $_18 i64)
+    (local $_19 i64)
+    (local $_20 i64)
+    (local $_21 i64)
     (block $label_
         (block
-            (local.set $x (call $calldataload))
-            (local.set $x_1 (global.get $global_))
-            (local.set $x_2 (global.get $global__1))
-            (local.set $x_3 (global.get $global__2))
+            (local.set $_1 (call $returndatasize_1183))
+            (local.set $_2 (global.get $global_))
+            (local.set $_3 (global.get $global__1))
+            (local.set $_4 (global.get $global__2))
+
+        )
+        (block
+            (local.set $x (call $calldataload (local.get $_1) (local.get $_2) (local.get $_3) (local.get $_4)))
+            (local.set $x_1 (global.get $global__3))
+            (local.set $x_2 (global.get $global__4))
+            (local.set $x_3 (global.get $global__5))
 
         )
         (local.set $x_4 (local.get $x))
         (local.set $x_5 (local.get $x_1))
         (local.set $x_6 (local.get $x_2))
         (local.set $x_7 (local.get $x_3))
-        (local.set $_1 (i32.eqz (i32.eqz (i64.eqz (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.or (i64.const 0) (i64.const 1)))))))
-        (block $label__3
-            (loop $label__5
-                (br_if $label__3 (i32.eqz (i32.eqz (local.get $_1))))
-                (block $label__4
+        (local.set $_5 (i32.eqz (i32.eqz (i64.eqz (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.or (i64.const 0) (i64.const 1)))))))
+        (block $label__6
+            (loop $label__8
+                (br_if $label__6 (i32.eqz (i32.eqz (local.get $_5))))
+                (block $label__7
                     (block
-                        (local.set $_2 (call $iszero_1300_2121 (call $lt (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7))))
-                        (local.set $_3 (global.get $global__6))
-                        (local.set $_4 (global.get $global__7))
-                        (local.set $_5 (global.get $global_))
-
-                    )
-                    (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_2) (local.get $_3)) (i64.or (local.get $_4) (local.get $_5))))) (then
-                        (br $label__3)
-                    ))
-                    (block
-                        (local.set $_6 (call $eq_740_2122 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7)))
-                        (local.set $_7 (global.get $global_))
-                        (local.set $_8 (global.get $global__1))
-                        (local.set $_9 (global.get $global__2))
+                        (local.set $_6 (call $iszero_1179 (call $lt (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7))))
+                        (local.set $_7 (global.get $global__3))
+                        (local.set $_8 (global.get $global__4))
+                        (local.set $_9 (global.get $global__5))
 
                     )
                     (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_6) (local.get $_7)) (i64.or (local.get $_8) (local.get $_9))))) (then
-                        (br $label__3)
+                        (br $label__6)
                     ))
                     (block
-                        (local.set $_10 (call $eq_741_2123 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7)))
-                        (local.set $_11 (global.get $global_))
-                        (local.set $_12 (global.get $global__1))
-                        (local.set $_13 (global.get $global__2))
+                        (local.set $_10 (call $eq_734 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7)))
+                        (local.set $_11 (global.get $global__3))
+                        (local.set $_12 (global.get $global__4))
+                        (local.set $_13 (global.get $global__5))
 
                     )
                     (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_10) (local.get $_11)) (i64.or (local.get $_12) (local.get $_13))))) (then
-                        (br $label__4)
+                        (br $label__6)
+                    ))
+                    (block
+                        (local.set $_14 (call $eq_735 (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7)))
+                        (local.set $_15 (global.get $global__3))
+                        (local.set $_16 (global.get $global__4))
+                        (local.set $_17 (global.get $global__5))
+
+                    )
+                    (if (i32.eqz (i64.eqz (i64.or (i64.or (local.get $_14) (local.get $_15)) (i64.or (local.get $_16) (local.get $_17))))) (then
+                        (br $label__7)
                     ))
 
                 )
                 (block
                     (local.set $x_8 (call $add (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7)))
-                    (local.set $x_9 (global.get $global_))
-                    (local.set $x_10 (global.get $global__1))
-                    (local.set $x_11 (global.get $global__2))
+                    (local.set $x_9 (global.get $global__3))
+                    (local.set $x_10 (global.get $global__4))
+                    (local.set $x_11 (global.get $global__5))
 
                 )
                 (local.set $x_4 (local.get $x_8))
                 (local.set $x_5 (local.get $x_9))
                 (local.set $x_6 (local.get $x_10))
                 (local.set $x_7 (local.get $x_11))
-                (br $label__5)
+                (br $label__8)
             )
 
         )
-        (call $sstore (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7))
+        (block
+            (local.set $_18 (call $returndatasize_1183))
+            (local.set $_19 (global.get $global__3))
+            (local.set $_20 (global.get $global__4))
+            (local.set $_21 (global.get $global__5))
+
+        )
+        (call $sstore (local.get $_18) (local.get $_19) (local.get $_20) (local.get $_21) (local.get $x_4) (local.get $x_5) (local.get $x_6) (local.get $x_7))
     )
 )
 
@@ -301,7 +328,7 @@ Text representation:
     (local $t i64)
     (local $t_1 i64)
     (local $t_2 i64)
-    (block $label__8
+    (block $label__9
         (local.set $t (i64.add (local.get $x4) (i64.const 1)))
         (local.set $r4 (i64.add (local.get $t) (i64.const 0)))
         (local.set $t_1 (i64.add (local.get $x3) (i64.const 0)))
@@ -311,33 +338,13 @@ Text representation:
         (local.set $r1 (i64.add (i64.add (local.get $x1) (i64.const 0)) (i64.extend_i32_u (i32.or (i64.lt_u (local.get $t_2) (local.get $x2)) (i64.lt_u (local.get $r2) (local.get $t_2))))))
 
     )
-    (global.set $global_ (local.get $r2))
-    (global.set $global__1 (local.get $r3))
-    (global.set $global__2 (local.get $r4))
+    (global.set $global__3 (local.get $r2))
+    (global.set $global__4 (local.get $r3))
+    (global.set $global__5 (local.get $r4))
     (local.get $r1)
 )
 
-(func $iszero_1300_2121
-    (param $x4 i64)
-    (result i64)
-    (local $r1 i64)
-    (local $r2 i64)
-    (local $r3 i64)
-    (local $r4 i64)
-    (block $label__9
-        (local.set $r4 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.or (i64.const 0) (local.get $x4))))))
-
-    )
-    (global.set $global_ (local.get $r2))
-    (global.set $global__1 (local.get $r3))
-    (global.set $global__2 (local.get $r4))
-    (local.get $r1)
-)
-
-(func $eq_740_2122
-    (param $x1 i64)
-    (param $x2 i64)
-    (param $x3 i64)
+(func $iszero_1179
     (param $x4 i64)
     (result i64)
     (local $r1 i64)
@@ -345,16 +352,16 @@ Text representation:
     (local $r3 i64)
     (local $r4 i64)
     (block $label__10
-        (local.set $r4 (i64.extend_i32_u (i32.and (i64.eq (local.get $x1) (i64.const 0)) (i32.and (i64.eq (local.get $x2) (i64.const 0)) (i32.and (i64.eq (local.get $x3) (i64.const 0)) (i64.eq (local.get $x4) (i64.const 2)))))))
+        (local.set $r4 (i64.extend_i32_u (i64.eqz (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.or (i64.const 0) (local.get $x4))))))
 
     )
-    (global.set $global_ (local.get $r2))
-    (global.set $global__1 (local.get $r3))
-    (global.set $global__2 (local.get $r4))
+    (global.set $global__3 (local.get $r2))
+    (global.set $global__4 (local.get $r3))
+    (global.set $global__5 (local.get $r4))
     (local.get $r1)
 )
 
-(func $eq_741_2123
+(func $eq_734
     (param $x1 i64)
     (param $x2 i64)
     (param $x3 i64)
@@ -365,12 +372,32 @@ Text representation:
     (local $r3 i64)
     (local $r4 i64)
     (block $label__11
+        (local.set $r4 (i64.extend_i32_u (i32.and (i64.eq (local.get $x1) (i64.const 0)) (i32.and (i64.eq (local.get $x2) (i64.const 0)) (i32.and (i64.eq (local.get $x3) (i64.const 0)) (i64.eq (local.get $x4) (i64.const 2)))))))
+
+    )
+    (global.set $global__3 (local.get $r2))
+    (global.set $global__4 (local.get $r3))
+    (global.set $global__5 (local.get $r4))
+    (local.get $r1)
+)
+
+(func $eq_735
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
+    (result i64)
+    (local $r1 i64)
+    (local $r2 i64)
+    (local $r3 i64)
+    (local $r4 i64)
+    (block $label__12
         (local.set $r4 (i64.extend_i32_u (i32.and (i64.eq (local.get $x1) (i64.const 0)) (i32.and (i64.eq (local.get $x2) (i64.const 0)) (i32.and (i64.eq (local.get $x3) (i64.const 0)) (i64.eq (local.get $x4) (i64.const 4)))))))
 
     )
-    (global.set $global_ (local.get $r2))
-    (global.set $global__1 (local.get $r3))
-    (global.set $global__2 (local.get $r4))
+    (global.set $global__3 (local.get $r2))
+    (global.set $global__4 (local.get $r3))
+    (global.set $global__5 (local.get $r4))
     (local.get $r1)
 )
 
@@ -385,9 +412,9 @@ Text representation:
     (local $_1 i64)
     (local $_2 i32)
     (local $condition i32)
-    (local $condition_13 i32)
     (local $condition_14 i32)
-    (block $label__12
+    (local $condition_15 i32)
+    (block $label__13
         (local.set $z (i32.const 0))
         (local.set $_1 (i64.const 0))
         (local.set $_2 (i32.const 4294967295))
@@ -395,14 +422,14 @@ Text representation:
             (local.set $condition (select (local.get $_2) (i64.ne (local.get $x1) (local.get $_1)) (i64.lt_u (local.get $x1) (local.get $_1))))
             (if (i32.eq (local.get $condition) (i32.const 0)) (then
                 (block
-                    (local.set $condition_13 (select (local.get $_2) (i64.ne (local.get $x2) (local.get $_1)) (i64.lt_u (local.get $x2) (local.get $_1))))
-                    (if (i32.eq (local.get $condition_13) (i32.const 0)) (then
+                    (local.set $condition_14 (select (local.get $_2) (i64.ne (local.get $x2) (local.get $_1)) (i64.lt_u (local.get $x2) (local.get $_1))))
+                    (if (i32.eq (local.get $condition_14) (i32.const 0)) (then
                         (block
-                            (local.set $condition_14 (select (local.get $_2) (i64.ne (local.get $x3) (local.get $_1)) (i64.lt_u (local.get $x3) (local.get $_1))))
-                            (if (i32.eq (local.get $condition_14) (i32.const 0)) (then
+                            (local.set $condition_15 (select (local.get $_2) (i64.ne (local.get $x3) (local.get $_1)) (i64.lt_u (local.get $x3) (local.get $_1))))
+                            (if (i32.eq (local.get $condition_15) (i32.const 0)) (then
                                 (local.set $z (i64.lt_u (local.get $x4) (i64.const 10)))
                             )(else
-                                (if (i32.eq (local.get $condition_14) (i32.const 1)) (then
+                                (if (i32.eq (local.get $condition_15) (i32.const 1)) (then
                                     (local.set $z (i32.const 0))
                                 )(else
                                     (local.set $z (i32.const 1))
@@ -411,7 +438,7 @@ Text representation:
 
                         )
                     )(else
-                        (if (i32.eq (local.get $condition_13) (i32.const 1)) (then
+                        (if (i32.eq (local.get $condition_14) (i32.const 1)) (then
                             (local.set $z (i32.const 0))
                         )(else
                             (local.set $z (i32.const 1))
@@ -434,10 +461,10 @@ Text representation:
     (local.get $z4)
 )
 
-(func $u256_to_i32_744
+(func $u256_to_i32_737
     (result i32)
     (local $v i32)
-    (block $label__15
+    (block $label__16
         (if (i64.ne (i64.const 0) (i64.or (i64.or (i64.const 0) (i64.const 0)) (i64.const 0))) (then
             (unreachable)))
         (if (i64.ne (i64.const 0) (i64.shr_u (i64.const 32) (i64.const 32))) (then
@@ -449,16 +476,18 @@ Text representation:
 )
 
 (func $u256_to_i32
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
     (result i32)
     (local $v i32)
-    (local $_1 i64)
-    (block $label__16
-        (local.set $_1 (i64.const 0))
-        (if (i64.ne (local.get $_1) (i64.or (i64.or (local.get $_1) (local.get $_1)) (local.get $_1))) (then
+    (block $label__17
+        (if (i64.ne (i64.const 0) (i64.or (i64.or (local.get $x1) (local.get $x2)) (local.get $x3))) (then
             (unreachable)))
-        (if (i64.ne (local.get $_1) (i64.shr_u (local.get $_1) (i64.const 32))) (then
+        (if (i64.ne (i64.const 0) (i64.shr_u (local.get $x4) (i64.const 32))) (then
             (unreachable)))
-        (local.set $v (i32.wrap_i64 (local.get $_1)))
+        (local.set $v (i32.wrap_i64 (local.get $x4)))
 
     )
     (local.get $v)
@@ -468,7 +497,7 @@ Text representation:
     (param $x i32)
     (result i32)
     (local $y i32)
-    (block $label__17
+    (block $label__18
         (local.set $y (i32.or (i32.and (i32.shl (local.get $x) (i32.const 8)) (i32.const 65280)) (i32.and (i32.shr_u (local.get $x) (i32.const 8)) (i32.const 255))))
 
     )
@@ -480,7 +509,7 @@ Text representation:
     (result i32)
     (local $y i32)
     (local $hi i32)
-    (block $label__18
+    (block $label__19
         (local.set $hi (i32.shl (call $bswap16 (local.get $x)) (i32.const 16)))
         (local.set $y (i32.or (local.get $hi) (call $bswap16 (i32.shr_u (local.get $x) (i32.const 16)))))
 
@@ -493,7 +522,7 @@ Text representation:
     (result i64)
     (local $y i64)
     (local $hi i64)
-    (block $label__19
+    (block $label__20
         (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (local.get $x)))) (i64.const 32)))
         (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (local.get $x) (i64.const 32)))))))
 
@@ -502,6 +531,10 @@ Text representation:
 )
 
 (func $calldataload
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
     (result i64)
     (local $z1 i64)
     (local $z2 i64)
@@ -521,7 +554,7 @@ Text representation:
     (local $z2_1 i64)
     (local $z3_1 i64)
     (local $z4_1 i64)
-    (block $label__20
+    (block $label__21
         (local.set $cds (call $eth.getCallDataSize))
         (local.set $_1 (i64.const 0))
         (if (i64.ne (local.get $_1) (i64.or (i64.or (local.get $_1) (local.get $_1)) (local.get $_1))) (then
@@ -529,8 +562,8 @@ Text representation:
         (if (i64.ne (local.get $_1) (i64.shr_u (local.get $_1) (i64.const 32))) (then
             (unreachable)))
         (local.set $v (i32.wrap_i64 (local.get $_1)))
-        (local.set $offset (call $u256_to_i32))
-        (local.set $requested_size (call $u256_to_i32_744))
+        (local.set $offset (call $u256_to_i32 (local.get $x1) (local.get $x2) (local.get $x3) (local.get $x4)))
+        (local.set $requested_size (call $u256_to_i32_737))
         (if (i32.gt_u (local.get $offset) (i32.sub (i32.const 4294967295) (local.get $requested_size))) (then
             (call $eth.revert (i32.const 0) (i32.const 0))))
         (local.set $available_size (i32.sub (local.get $cds) (local.get $offset)))
@@ -544,23 +577,23 @@ Text representation:
             (local.set $_3 (i32.sub (local.get $requested_size) (local.get $available_size)))
             (local.set $_4 (i32.add (local.get $v) (local.get $available_size)))
             (local.set $i (local.get $_2))
-            (block $label__21
-                (loop $label__23
-                    (br_if $label__21 (i32.eqz (i32.lt_u (local.get $i) (local.get $_3))))
-                    (block $label__22
+            (block $label__22
+                (loop $label__24
+                    (br_if $label__22 (i32.eqz (i32.lt_u (local.get $i) (local.get $_3))))
+                    (block $label__23
                         (i32.store8 (i32.add (local.get $_4) (local.get $i)) (local.get $_2))
                     )
                     (local.set $i (i32.add (local.get $i) (i32.const 1)))
-                    (br $label__23)
+                    (br $label__24)
                 )
 
             )
         ))
         (block
             (local.set $z1_1 (call $mload_internal))
-            (local.set $z2_1 (global.get $global_))
-            (local.set $z3_1 (global.get $global__1))
-            (local.set $z4_1 (global.get $global__2))
+            (local.set $z2_1 (global.get $global__3))
+            (local.set $z3_1 (global.get $global__4))
+            (local.set $z4_1 (global.get $global__5))
 
         )
         (local.set $z1 (local.get $z1_1))
@@ -569,26 +602,42 @@ Text representation:
         (local.set $z4 (local.get $z4_1))
 
     )
-    (global.set $global_ (local.get $z2))
-    (global.set $global__1 (local.get $z3))
-    (global.set $global__2 (local.get $z4))
+    (global.set $global__3 (local.get $z2))
+    (global.set $global__4 (local.get $z3))
+    (global.set $global__5 (local.get $z4))
+    (local.get $z1)
+)
+
+(func $returndatasize_1183
+    (result i64)
+    (local $z1 i64)
+    (local $z2 i64)
+    (local $z3 i64)
+    (local $z4 i64)
+    (block $label__25
+        (local.set $z4 (i64.extend_i32_u (call $eth.getReturnDataSize)))
+
+    )
+    (global.set $global__3 (local.get $z2))
+    (global.set $global__4 (local.get $z3))
+    (global.set $global__5 (local.get $z4))
     (local.get $z1)
 )
 
 (func $sstore
+    (param $x1 i64)
+    (param $x2 i64)
+    (param $x3 i64)
+    (param $x4 i64)
     (param $y1 i64)
     (param $y2 i64)
     (param $y3 i64)
     (param $y4 i64)
-    (local $hi i64)
-    (local $y i64)
-    (block $label__24
-        (local.set $hi (i64.shl (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.const 0)))) (i64.const 32)))
-        (local.set $y (i64.or (local.get $hi) (i64.extend_i32_u (call $bswap32 (i32.wrap_i64 (i64.shr_u (i64.const 0) (i64.const 32)))))))
-        (i64.store (i32.const 0) (local.get $y))
-        (i64.store (i32.add (i32.const 0) (i32.const 8)) (local.get $y))
-        (i64.store (i32.add (i32.const 0) (i32.const 16)) (local.get $y))
-        (i64.store (i32.add (i32.const 0) (i32.const 24)) (local.get $y))
+    (block $label__26
+        (i64.store (i32.const 0) (call $bswap64 (local.get $x1)))
+        (i64.store (i32.add (i32.const 0) (i32.const 8)) (call $bswap64 (local.get $x2)))
+        (i64.store (i32.add (i32.const 0) (i32.const 16)) (call $bswap64 (local.get $x3)))
+        (i64.store (i32.add (i32.const 0) (i32.const 24)) (call $bswap64 (local.get $x4)))
         (i64.store (i32.const 32) (call $bswap64 (local.get $y1)))
         (i64.store (i32.add (i32.const 32) (i32.const 8)) (call $bswap64 (local.get $y2)))
         (i64.store (i32.add (i32.const 32) (i32.const 16)) (call $bswap64 (local.get $y3)))
@@ -603,16 +652,16 @@ Text representation:
     (local $z2 i64)
     (local $z3 i64)
     (local $z4 i64)
-    (block $label__25
+    (block $label__27
         (local.set $z1 (call $bswap64 (i64.load (i32.const 0))))
         (local.set $z2 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 8)))))
         (local.set $z3 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 16)))))
         (local.set $z4 (call $bswap64 (i64.load (i32.add (i32.const 0) (i32.const 24)))))
 
     )
-    (global.set $global_ (local.get $z2))
-    (global.set $global__1 (local.get $z3))
-    (global.set $global__2 (local.get $z4))
+    (global.set $global__3 (local.get $z2))
+    (global.set $global__4 (local.get $z3))
+    (global.set $global__5 (local.get $z4))
     (local.get $z1)
 )
 
