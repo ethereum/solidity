@@ -21,6 +21,8 @@
 #include <libsolidity/formal/BMC.h>
 #include <libsolidity/formal/SMTEncoder.h>
 
+#include <range/v3/view.hpp>
+
 #include <algorithm>
 
 using namespace std;
@@ -60,7 +62,7 @@ void VariableUsage::endVisit(IndexAccess const& _indexAccess)
 
 void VariableUsage::endVisit(FunctionCall const& _funCall)
 {
-	auto scopeContract = m_currentFunction->annotation().contract;
+	auto scopeContract = currentScopeContract();
 	if (m_inlineFunctionCalls(_funCall, scopeContract, m_currentContract))
 		if (auto funDef = SMTEncoder::functionCallToDefinition(_funCall, scopeContract, m_currentContract))
 			if (find(m_callStack.begin(), m_callStack.end(), funDef) == m_callStack.end())
@@ -106,4 +108,12 @@ void VariableUsage::checkIdentifier(Identifier const& _identifier)
 		if (!varDecl->isLocalVariable() || (m_lastCall && varDecl->functionOrModifierDefinition() == m_lastCall))
 			m_touchedVariables.insert(varDecl);
 	}
+}
+
+ContractDefinition const* VariableUsage::currentScopeContract()
+{
+	for (auto&& f: m_callStack | ranges::views::reverse)
+		if (auto fun = dynamic_cast<FunctionDefinition const*>(f))
+			return fun->annotation().contract;
+	return nullptr;
 }
