@@ -440,7 +440,10 @@ ASTPointer<FunctionDefinition> ASTJsonImporter::createFunctionDefinition(Json::V
 		modifiers.push_back(createModifierInvocation(mod));
 
 	Visibility vis = Visibility::Default;
-	if (!freeFunction)
+	// Ignore public visibility for constructors
+	if (kind == Token::Constructor)
+		vis = (visibility(_node) == Visibility::Public) ? Visibility::Default : visibility(_node);
+	else if (!freeFunction)
 		vis = visibility(_node);
 	return createASTNode<FunctionDefinition>(
 		_node,

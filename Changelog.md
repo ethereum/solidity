@@ -9,6 +9,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * AST Import: For constructors, a public visibility is ignored during importing.
  * Error Reporter: Fix handling of carriage return.
  * SMTChecker: Fix internal error on ``array.pop`` nested inside 1-tuple.
  * SMTChecker: Fix internal error on ``FixedBytes`` constant initialized with string literal.
