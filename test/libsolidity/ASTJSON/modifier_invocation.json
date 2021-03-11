@@ -125,6 +125,7 @@
                 }
               ],
               "id": 10,
+              "kind": "modifierInvocation",
               "modifierName":
               {
                 "id": 8,

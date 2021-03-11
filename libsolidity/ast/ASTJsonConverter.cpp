@@ -453,10 +453,19 @@ bool ASTJsonConverter::visit(ModifierDefinition const& _node)
 
 bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 {
-	setJsonNode(_node, "ModifierInvocation", {
+	std::vector<pair<string, Json::Value>> attributes{
 		make_pair("modifierName", toJson(_node.name())),
 		make_pair("arguments", _node.arguments() ? toJson(*_node.arguments()) : Json::nullValue)
-	});
+	};
+	if (Declaration const* declaration = _node.name().annotation().referencedDeclaration)
+	{
+		if (dynamic_cast<ModifierDefinition const*>(declaration))
+			attributes.emplace_back("kind", "modifierInvocation");
+		else if (FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(declaration))
+			if (function->isConstructor())
+				attributes.emplace_back("kind", "baseConstructorSpecifier");
+	}
+	setJsonNode(_node, "ModifierInvocation", move(attributes));
 	return false;
 }
 

@@ -2,12 +2,16 @@
   "absolutePath": "a",
   "exportedSymbols":
   {
+    "A":
+    [
+      7
+    ],
     "C":
     [
-      14
+      17
     ]
   },
-  "id": 15,
+  "id": 18,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -17,12 +21,12 @@
       "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 14,
+      "id": 7,
       "linearizedBaseContracts":
       [
-        14
+        7
       ],
-      "name": "C",
+      "name": "A",
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
@@ -32,20 +36,16 @@
           {
             "id": 5,
             "nodeType": "Block",
-            "src": "32:6:1",
-            "statements":
-            [
-              {
-                "id": 4,
-                "nodeType": "PlaceholderStatement",
-                "src": "34:1:1"
-              }
-            ]
+            "src": "31:2:1",
+            "statements": []
           },
           "id": 6,
-          "name": "M",
-          "nameLocation": "22:1:1",
-          "nodeType": "ModifierDefinition",
+          "implemented": true,
+          "kind": "constructor",
+          "modifiers": [],
+          "name": "",
+          "nameLocation": "-1:-1:-1",
+          "nodeType": "FunctionDefinition",
           "parameters":
           {
             "id": 3,
@@ -56,11 +56,11 @@
                 "constant": false,
                 "id": 2,
                 "mutability": "mutable",
-                "name": "i",
-                "nameLocation": "29:1:1",
+                "name": "",
+                "nameLocation": "-1:-1:-1",
                 "nodeType": "VariableDeclaration",
                 "scope": 6,
-                "src": "24:6:1",
+                "src": "25:4:1",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions":
@@ -73,7 +73,7 @@
                   "id": 1,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "24:4:1",
+                  "src": "25:4:1",
                   "typeDescriptions":
                   {
                     "typeIdentifier": "t_uint256",
@@ -83,88 +83,134 @@
                 "visibility": "internal"
               }
             ],
-            "src": "23:8:1"
+            "src": "24:6:1"
           },
-          "src": "13:25:1",
+          "returnParameters":
+          {
+            "id": 4,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "31:0:1"
+          },
+          "scope": 7,
+          "src": "13:20:1",
+          "stateMutability": "nonpayable",
           "virtual": false,
-          "visibility": "internal"
-        },
+          "visibility": "public"
+        }
+      ],
+      "scope": 18,
+      "src": "0:35:1"
+    },
+    {
+      "abstract": false,
+      "baseContracts":
+      [
+        {
+          "baseName":
+          {
+            "id": 8,
+            "name": "A",
+            "nodeType": "IdentifierPath",
+            "referencedDeclaration": 7,
+            "src": "50:1:1"
+          },
+          "id": 9,
+          "nodeType": "InheritanceSpecifier",
+          "src": "50:1:1"
+        }
+      ],
+      "contractDependencies":
+      [
+        7
+      ],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 17,
+      "linearizedBaseContracts":
+      [
+        17,
+        7
+      ],
+      "name": "C",
+      "nameLocation": "45:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
         {
           "body":
           {
-            "id": 12,
+            "id": 15,
             "nodeType": "Block",
-            "src": "64:2:1",
+            "src": "73:2:1",
             "statements": []
           },
-          "functionSelector": "28811f59",
-          "id": 13,
+          "id": 16,
           "implemented": true,
-          "kind": "function",
+          "kind": "constructor",
           "modifiers":
           [
             {
               "arguments":
               [
                 {
-                  "hexValue": "31",
-                  "id": 9,
+                  "hexValue": "32",
+                  "id": 12,
                   "isConstant": false,
                   "isLValue": false,
                   "isPure": true,
                   "kind": "number",
                   "lValueRequested": false,
                   "nodeType": "Literal",
-                  "src": "54:1:1",
+                  "src": "70:1:1",
                   "typeDescriptions":
                   {
-                    "typeIdentifier": "t_rational_1_by_1",
-                    "typeString": "int_const 1"
+                    "typeIdentifier": "t_rational_2_by_1",
+                    "typeString": "int_const 2"
                   },
-                  "value": "1"
+                  "value": "2"
                 }
               ],
-              "id": 10,
-              "kind": "modifierInvocation",
+              "id": 13,
               "modifierName":
               {
-                "id": 8,
-                "name": "M",
+                "id": 11,
+                "name": "A",
                 "nodeType": "IdentifierPath",
-                "referencedDeclaration": 6,
-                "src": "52:1:1"
+                "referencedDeclaration": 7,
+                "src": "68:1:1"
               },
               "nodeType": "ModifierInvocation",
-              "src": "52:4:1"
+              "src": "68:4:1"
             }
           ],
-          "name": "F",
-          "nameLocation": "48:1:1",
+          "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
-            "id": 7,
+            "id": 10,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "49:2:1"
+            "src": "65:2:1"
           },
           "returnParameters":
           {
-            "id": 11,
+            "id": 14,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "64:0:1"
+            "src": "73:0:1"
           },
-          "scope": 14,
-          "src": "39:27:1",
+          "scope": 17,
+          "src": "54:21:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 15,
-      "src": "0:68:1"
+      "scope": 18,
+      "src": "36:41:1"
     }
   ],
-  "src": "0:69:1"
+  "src": "0:78:1"
 }
