@@ -22,9 +22,11 @@
 
 #include <test/TestCaseReader.h>
 
-#include <evmone/evmone.h>
+#include <libyul/backends/evm/EVMCodeTransform.h>
 
 #include <liblangutil/EVMVersion.h>
+
+#include <evmone/evmone.h>
 
 #include <sstream>
 
@@ -112,18 +114,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 			compilerSetting.runYulOptimiser = true;
 			compilerSetting.optimizeStackAllocation = true;
-			CompilerInput cInputOpt = {
-				version,
-				sourceCode,
-				contractName,
-				compilerSetting,
-				{},
-				false,
-				true
-			};
 			hostContext.reset();
 			evmoneUtil.reset(true);
 			evmoneUtil.optSetting(compilerSetting);
+			evmoneUtil.viaIR(true);
 			auto compilerOutputOpt = evmoneUtil.compileContract();
 			solAssert(compilerOutputOpt.has_value(), "Contract could not be optimised.");
 
@@ -159,6 +153,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			return 0;
 		}
 		catch (solidity::langutil::CompilerError const&)
+		{
+			return 0;
+		}
+		catch (solidity::yul::StackTooDeepError const&)
 		{
 			return 0;
 		}

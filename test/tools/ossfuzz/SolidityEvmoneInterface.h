@@ -109,6 +109,10 @@ public:
 	{
 		m_compilerInput.optimiserSettings = _opt;
 	}
+	void viaIR(bool _viaIR)
+	{
+		m_compilerInput.viaIR = _viaIR;
+	}
 	void reset(bool _keepSettings)
 	{
 		m_compiler.reset(_keepSettings);
@@ -177,6 +181,10 @@ public:
 	void optSetting(frontend::OptimiserSettings _opt)
 	{
 		m_compilationFramework.optSetting(_opt);
+	}
+	void viaIR(bool _viaIR)
+	{
+		m_compilationFramework.viaIR(_viaIR);
 	}
 
 	/// @returns the result of the execution of the function whose
