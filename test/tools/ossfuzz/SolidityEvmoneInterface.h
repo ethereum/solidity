@@ -109,10 +109,6 @@ public:
 	{
 		m_compilerInput.optimiserSettings = _opt;
 	}
-	void source(StringMap const& _source)
-	{
-		m_compilerInput.sourceCode = _source;
-	}
 	void reset(bool _keepSettings)
 	{
 		m_compiler.reset(_keepSettings);
@@ -169,10 +165,6 @@ public:
 	{
 		m_contractName = m_compilationFramework.lastContractName();
 		m_compilationFramework.contractName(m_contractName);
-	}
-	void source(StringMap const& _source)
-	{
-		m_compilationFramework.source(_source);
 	}
 	void reset(bool _keepSettings)
 	{
