@@ -58,12 +58,14 @@ public:
 		PrintStep,
 		PrintChanges
 	};
+	/// The value nullopt for `_expectedExecutionsPerDeployment` represents creation code.
 	static void run(
 		Dialect const& _dialect,
 		GasMeter const* _meter,
 		Object& _object,
 		bool _optimizeStackAllocation,
 		std::string const& _optimisationSequence,
+		std::optional<size_t> _expectedExecutionsPerDeployment,
 		std::set<YulString> const& _externallyUsedIdentifiers = {}
 	);
 
@@ -88,10 +90,11 @@ private:
 		Dialect const& _dialect,
 		std::set<YulString> const& _externallyUsedIdentifiers,
 		Debug _debug,
-		Block& _ast
+		Block& _ast,
+		std::optional<size_t> expectedExecutionsPerDeployment
 	):
 		m_dispenser{_dialect, _ast, _externallyUsedIdentifiers},
-		m_context{_dialect, m_dispenser, _externallyUsedIdentifiers},
+		m_context{_dialect, m_dispenser, _externallyUsedIdentifiers, expectedExecutionsPerDeployment},
 		m_debug(_debug)
 	{}
 

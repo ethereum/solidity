@@ -88,6 +88,7 @@ void OptimiserSuite::run(
 	Object& _object,
 	bool _optimizeStackAllocation,
 	string const& _optimisationSequence,
+	optional<size_t> _expectedExecutionsPerDeployment,
 	set<YulString> const& _externallyUsedIdentifiers
 )
 {
@@ -101,7 +102,7 @@ void OptimiserSuite::run(
 	)(*_object.code));
 	Block& ast = *_object.code;
 
-	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast);
+	OptimiserSuite suite(_dialect, reservedIdentifiers, Debug::None, ast, _expectedExecutionsPerDeployment);
 
 	// Some steps depend on properties ensured by FunctionHoister, BlockFlattener, FunctionGrouper and
 	// ForLoopInitRewriter. Run them first to be able to run arbitrary sequences safely.
