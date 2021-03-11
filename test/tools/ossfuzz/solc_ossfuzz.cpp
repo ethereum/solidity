@@ -158,6 +158,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		{
 			return 0;
 		}
+		catch (solidity::langutil::CompilerError const&)
+		{
+			return 0;
+		}
 	}
 	return 0;
 }
