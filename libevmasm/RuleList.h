@@ -60,7 +60,7 @@ template <class S> S shlWorkaround(S const& _x, unsigned _amount)
 /// @returns k if _x == 2**k, nullopt otherwise
 inline std::optional<size_t> binaryLogarithm(u256 const& _x)
 {
-	if (!_x)
+	if (_x == 0)
 		return std::nullopt;
 	size_t msb = boost::multiprecision::msb(_x);
 	return (u256(1) << msb) == _x ? std::make_optional(msb) : std::nullopt;
