@@ -9,8 +9,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // revertStrings: debug
 // ----
 // library: L

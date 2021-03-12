@@ -13,7 +13,7 @@ contract D is C {
   }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // h() -> 1337

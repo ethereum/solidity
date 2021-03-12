@@ -25,8 +25,8 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 0x20, 3, "\x03\x01\x02"
 // g() -> 0x20, 3, "\x03\x01\x02"

@@ -29,9 +29,9 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
-// compileToEwasm: also
 // EVMVersion: >=byzantium
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(bool): true -> true
 // f(bool): false -> FAILURE

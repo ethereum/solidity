@@ -8,8 +8,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // i() -> 2
 // k() -> 0

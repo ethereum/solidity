@@ -4,8 +4,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 0x9292929292929292929292929292929292929292
 // f() -> 0x9292929292929292929292929292929292929292

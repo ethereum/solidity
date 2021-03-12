@@ -10,7 +10,7 @@ contract Child is Base {
 	}
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // g(uint256): 4 -> 8

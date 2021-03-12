@@ -16,7 +16,7 @@ contract Derived is Base {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 2

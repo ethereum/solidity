@@ -20,8 +20,8 @@ contract C {
         return x[2];
     }}
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> FAILURE, hex"4e487b71", 0x41
 // g() -> FAILURE, hex"4e487b71", 0x41

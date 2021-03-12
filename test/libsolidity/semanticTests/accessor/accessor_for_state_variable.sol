@@ -3,7 +3,7 @@ contract Lotto {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // ticketPrice() -> 500

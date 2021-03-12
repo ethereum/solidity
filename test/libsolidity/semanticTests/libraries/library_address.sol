@@ -35,8 +35,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // ----
 // library: L
 // addr() -> false

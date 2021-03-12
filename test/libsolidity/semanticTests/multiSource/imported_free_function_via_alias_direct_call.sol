@@ -9,7 +9,7 @@ contract D {
   }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // h() -> 61337

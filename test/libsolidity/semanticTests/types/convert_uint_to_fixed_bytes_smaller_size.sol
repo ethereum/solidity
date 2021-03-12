@@ -4,7 +4,7 @@ contract Test {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // uintToBytes(uint32): 0x61626364 -> "cd"

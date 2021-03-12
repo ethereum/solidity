@@ -1,8 +1,8 @@
 contract test {
 }
 // ====
-// compileViaYul: also
-// compileToEwasm: also
 // allowNonExistingFunctions: true
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // i_am_not_there() -> FAILURE

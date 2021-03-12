@@ -21,8 +21,8 @@ contract C {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // set() -> 7
 // ca() -> 7
