@@ -1498,22 +1498,6 @@ void SMTEncoder::arrayAssignment()
 
 void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expression const& _rightHandSide)
 {
-	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
-	{
-		if (dynamic_cast<ContractDefinition const*>(expressionToDeclaration(memberAccess->expression())))
-		{
-			if (auto const* var = dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration))
-			{
-				if (var->hasReferenceOrMappingType())
-					resetReferences(*var);
-
-				assignment(*var, _rightHandSide);
-				defineExpr(_expr, currentValue(*var));
-				return;
-			}
-		}
-	}
-
 	auto toStore = _rightHandSide;
 	auto const* lastExpr = &_expr;
 	while (true)
@@ -1555,6 +1539,14 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 					"Assertion checker does not support recursive structs."
 				);
 				return;
+			}
+			if (auto varDecl = identifierToVariable(*memberAccess))
+			{
+				if (varDecl->hasReferenceOrMappingType())
+					resetReferences(*varDecl);
+
+				assignment(*varDecl, toStore);
+				break;
 			}
 
 			auto symbStruct = dynamic_pointer_cast<smt::SymbolicStructVariable>(m_context.expression(base));
@@ -2680,6 +2672,14 @@ VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _e
 			solAssert(m_context.knownVariable(*varDecl), "");
 			return varDecl;
 		}
+	// But we are interested in "contract.var", because that is the same as just "var".
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expr))
+		if (dynamic_cast<ContractDefinition const*>(expressionToDeclaration(memberAccess->expression())))
+			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration))
+			{
+				solAssert(m_context.knownVariable(*varDecl), "");
+				return varDecl;
+			}
 	return nullptr;
 }
 
