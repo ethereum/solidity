@@ -43,8 +43,7 @@ contract test {
 // ----
 // getToDelete() -> 0
 // getTopValue() -> 0
-// getNestedValue() -> 0
-// #mapping values should be the same#
+// getNestedValue() -> 0 #mapping values should be the same#
 // getTopMapping(uint256): 0 -> 1
 // getTopMapping(uint256): 1 -> 2
 // getNestedMapping(uint256): 0 -> true
