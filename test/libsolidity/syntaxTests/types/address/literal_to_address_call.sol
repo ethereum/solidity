@@ -3,3 +3,4 @@ contract C {
         (success, ) = (address(0)).call{value: 30}("");
     }
 }
+// ----

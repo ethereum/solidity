@@ -5,3 +5,4 @@ import "A.sol";
 contract C is A {}
 // ====
 // SMTEngine: all
+// ----

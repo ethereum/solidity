@@ -6,3 +6,4 @@ contract C {
     // No data location for events.
     event e(uint[]);
 }
+// ----

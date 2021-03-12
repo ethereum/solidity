@@ -3,3 +3,4 @@ contract test {
         return g(1);
     }
 }
+// ----

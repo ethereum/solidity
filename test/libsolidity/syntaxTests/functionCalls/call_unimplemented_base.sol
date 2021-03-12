@@ -6,3 +6,4 @@ abstract contract V is I
 {
     function b() public view returns(uint256) { return a(); }
 }
+// ----

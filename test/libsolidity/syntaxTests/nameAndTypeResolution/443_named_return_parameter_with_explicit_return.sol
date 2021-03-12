@@ -3,3 +3,4 @@ contract C {
         return 1;
     }
 }
+// ----

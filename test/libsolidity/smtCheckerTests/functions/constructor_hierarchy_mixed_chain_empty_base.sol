@@ -23,3 +23,4 @@ contract A is B {
 }
 // ====
 // SMTEngine: all
+// ----

@@ -133,3 +133,4 @@ contract Main {
     A constant FB = FC;
     A constant FC = A(address(0x00));
 }
+// ----

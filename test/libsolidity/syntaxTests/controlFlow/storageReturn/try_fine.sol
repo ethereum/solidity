@@ -22,3 +22,4 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// ----

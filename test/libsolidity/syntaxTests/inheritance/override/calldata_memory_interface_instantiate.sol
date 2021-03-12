@@ -10,3 +10,4 @@ contract C {
         i.f(new uint[](1));
     }
 }
+// ----

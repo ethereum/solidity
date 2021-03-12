@@ -19,3 +19,4 @@ contract D {
 }
 // ====
 // SMTEngine: all
+// ----

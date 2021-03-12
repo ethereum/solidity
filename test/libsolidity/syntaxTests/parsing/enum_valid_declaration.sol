@@ -5,3 +5,4 @@ contract c {
     }
     validEnum a;
 }
+// ----

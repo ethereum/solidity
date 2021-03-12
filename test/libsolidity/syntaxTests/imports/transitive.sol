@@ -13,3 +13,4 @@ contract C {
         return (y.mT[0].mS[0], z.mS[0]);
     }
 }
+// ----

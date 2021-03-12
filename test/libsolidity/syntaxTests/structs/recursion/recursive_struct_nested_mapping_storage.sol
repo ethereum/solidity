@@ -4,3 +4,4 @@ library a {
     }
     function d(b storage) public {}
 }
+// ----

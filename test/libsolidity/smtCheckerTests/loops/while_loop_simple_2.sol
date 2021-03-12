@@ -9,3 +9,4 @@ contract C {
 // ====
 // SMTEngine: all
 // SMTSolvers: z3
+// ----

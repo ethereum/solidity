@@ -5,3 +5,4 @@
 	function g() { }
 	function h(a) -> x { }
 }
+// ----

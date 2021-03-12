@@ -4,3 +4,4 @@ abstract contract A {
 }
 // ====
 // SMTEngine: all
+// ----

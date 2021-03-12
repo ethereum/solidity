@@ -9,3 +9,4 @@ contract C is A {
 }
 // ====
 // SMTEngine: all
+// ----

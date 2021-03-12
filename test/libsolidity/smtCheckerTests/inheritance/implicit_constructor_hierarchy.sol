@@ -15,3 +15,4 @@ contract C is B {
 // ====
 // SMTEngine: all
 // SMTSolvers: z3
+// ----

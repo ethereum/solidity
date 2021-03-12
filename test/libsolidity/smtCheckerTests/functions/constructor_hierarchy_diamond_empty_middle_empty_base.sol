@@ -18,3 +18,4 @@ contract A is B, B2 {
 }
 // ====
 // SMTEngine: all
+// ----

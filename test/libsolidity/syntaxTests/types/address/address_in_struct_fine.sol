@@ -18,3 +18,4 @@ contract B {
     receive() external payable {
     }
 }
+// ----

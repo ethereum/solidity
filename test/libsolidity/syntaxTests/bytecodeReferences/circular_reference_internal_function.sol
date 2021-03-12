@@ -9,3 +9,4 @@ contract D is C
 {
 	function callFoo() override public {}
 }
+// ----

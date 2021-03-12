@@ -14,3 +14,4 @@ contract __unstable__ERC20Owned is ERC20 {
 }
 // ====
 // SMTEngine: all
+// ----
