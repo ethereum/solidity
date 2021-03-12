@@ -37,7 +37,7 @@ using namespace solidity::util;
 using namespace solidity::test;
 using namespace evmc::literals;
 
-using StorageMap = std::unordered_map<evmc::bytes32, evmc::storage_value>;
+using StorageMap = std::map<evmc::bytes32, evmc::storage_value>;
 
 evmc::VM& EVMHost::getVM(string const& _path)
 {
