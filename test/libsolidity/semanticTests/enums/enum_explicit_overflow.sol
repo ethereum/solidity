@@ -26,8 +26,8 @@ contract test {
 // compileViaYul: also
 // ----
 // getChoiceExp(uint256): 2 -> 2
-// getChoiceExp(uint256): 3 -> FAILURE, hex"4e487b71", 33 # These should throw #
-// getChoiceFromSigned(int256): -1 -> FAILURE, hex"4e487b71", 33
-// getChoiceFromMax() -> FAILURE, hex"4e487b71", 33
+// getChoiceExp(uint256): 3 -> FAILURE, hex"4e487b71", 0x21 # These should throw #
+// getChoiceFromSigned(int256): -1 -> FAILURE, hex"4e487b71", 0x21
+// getChoiceFromMax() -> FAILURE, hex"4e487b71", 0x21
 // getChoiceExp(uint256): 2 -> 2 # These should work #
 // getChoiceExp(uint256): 0 -> 0

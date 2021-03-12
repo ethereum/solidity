@@ -65,3 +65,4 @@ contract C {
 // compileViaYul: false
 // ----
 // constructor() ->
+// gas legacy: 585330

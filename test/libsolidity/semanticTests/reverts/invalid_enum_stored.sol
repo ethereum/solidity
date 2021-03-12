@@ -23,4 +23,4 @@ contract C {
 // ----
 // test_store_ok() -> 1
 // x() -> 0
-// test_store() -> FAILURE, hex"4e487b71", 33 # should throw #
+// test_store() -> FAILURE, hex"4e487b71", 0x21 # should throw #

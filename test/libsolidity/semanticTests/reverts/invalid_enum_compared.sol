@@ -28,5 +28,5 @@ contract C {
 // compileViaYul: also
 // ----
 // test_eq_ok() -> 1
-// test_eq() -> FAILURE, hex"4e487b71", 33 # both should throw #
-// test_neq() -> FAILURE, hex"4e487b71", 33
+// test_eq() -> FAILURE, hex"4e487b71", 0x21 # both should throw #
+// test_neq() -> FAILURE, hex"4e487b71", 0x21

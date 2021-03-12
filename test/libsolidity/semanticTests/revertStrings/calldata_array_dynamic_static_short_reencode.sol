@@ -12,4 +12,4 @@ contract C {
 // compileViaYul: also
 // revertStrings: debug
 // ----
-// g(uint256[][2][]): 0x20, 0x01, 0x20, 0x00 -> FAILURE, hex"08c379a0", 0x20, 30, "Invalid calldata access offset"
+// g(uint256[][2][]): 0x20, 0x01, 0x20, 0x00 -> FAILURE, hex"08c379a0", 0x20, 0x1e, "Invalid calldata access offset"
