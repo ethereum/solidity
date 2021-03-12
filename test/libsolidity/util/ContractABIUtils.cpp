@@ -124,7 +124,9 @@ bool isFixedTupleArray(string const& _type)
 	return regex_match(_type, regex{"tuple\\[\\d+\\]"});
 }
 
-string functionSignatureFromABI(Json::Value const& _functionABI)
+}
+
+string ContractABIUtils::functionSignatureFromABI(Json::Value const& _functionABI)
 {
 	auto inputs = _functionABI["inputs"];
 	string signature = {_functionABI["name"].asString() + "("};
@@ -139,8 +141,6 @@ string functionSignatureFromABI(Json::Value const& _functionABI)
 	}
 
 	return signature + ")";
-}
-
 }
 
 std::optional<solidity::frontend::test::ParameterList> ContractABIUtils::parametersFromJsonOutputs(

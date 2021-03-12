@@ -30,19 +30,13 @@
 #include <libsolidity/interface/DebugSettings.h>
 
 #include <liblangutil/EVMVersion.h>
+#include <liblangutil/Exceptions.h>
 
 #include <libsolutil/FixedHash.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/ErrorCodes.h>
 
 #include <functional>
-
-#include <boost/test/unit_test.hpp>
-
-namespace solidity::frontend::test
-{
-struct LogRecord;
-} // namespace solidity::frontend::test
 
 namespace solidity::test
 {
@@ -84,8 +78,8 @@ public:
 			_arguments,
 			_libraryAddresses
 		);
-		BOOST_REQUIRE(m_transactionSuccessful);
-		BOOST_REQUIRE(!m_output.empty());
+		assertThrow(m_transactionSuccessful, langutil::TestFrameworkError, "");
+		assertThrow(!m_output.empty(), langutil::TestFrameworkError, "");
 		return m_output;
 	}
 
@@ -135,8 +129,9 @@ public:
 	{
 		bytes contractResult = callContractFunction(_sig, _arguments...);
 		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
-		BOOST_CHECK_MESSAGE(
+		assertThrow(
 			contractResult == cppResult,
+			langutil::TestFrameworkError,
 			"Computed values do not match.\nContract: " +
 				util::toHex(contractResult) +
 				"\nC++:      " +
@@ -151,8 +146,9 @@ public:
 		{
 			bytes contractResult = callContractFunction(_sig, argument);
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
-			BOOST_CHECK_MESSAGE(
+			assertThrow(
 				contractResult == cppResult,
+				langutil::TestFrameworkError,
 				"Computed values do not match.\nContract: " +
 					util::toHex(contractResult) +
 					"\nC++:      " +
@@ -311,7 +307,11 @@ protected:
 
 #define ABI_CHECK(result, expectation) do { \
 	auto abiCheckResult = ExecutionFramework::compareAndCreateMessage((result), (expectation)); \
-	BOOST_CHECK_MESSAGE(abiCheckResult.first, abiCheckResult.second); \
+	assertThrow(                               \
+		abiCheckResult.first == abiCheckResult.second,                                             \
+		langutil::TestFrameworkError,             \
+		""\
+	); \
 } while (0)
 
 

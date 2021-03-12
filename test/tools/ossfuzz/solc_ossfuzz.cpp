@@ -22,6 +22,8 @@
 
 #include <test/TestCaseReader.h>
 
+#include <libsolidity/util/ContractABIUtils.h>
+
 #include <libyul/backends/evm/EVMCodeTransform.h>
 
 #include <liblangutil/EVMVersion.h>
@@ -84,6 +86,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 				return 0;
 
 			optional<string> noInputFunction = evmoneUtil.noInputFunction();
+			if (auto r = evmoneUtil.randomFunction(); r.has_value())
+				cout << ContractABIUtils{}.functionSignatureFromABI(r.value()) << endl;
 			if (noInputFunction.has_value())
 				evmoneUtil.methodName(noInputFunction.value());
 			else

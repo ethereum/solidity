@@ -23,6 +23,7 @@
 
 #include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/span.hpp>
+#include <random>
 
 using namespace solidity::test::fuzzer;
 using namespace solidity::frontend;
@@ -72,6 +73,20 @@ optional<string> SolidityCompilationFramework::noInputFunction()
 		if (functionABI["inputs"].size() == 0)
 			return functionABI["name"].asString() + "()";
 	return {};
+}
+
+optional<Json::Value> SolidityCompilationFramework::randomFunction()
+{
+	Json::Value const& contractABI = m_compiler.contractABI(m_compiler.lastContractName());
+	unsigned numFunctions = contractABI.size();
+	if (numFunctions == 0)
+		return {};
+	else
+	{
+		uniform_int_distribution<unsigned> d(0, contractABI.size());
+		minstd_rand r(contractABI.size());
+		return contractABI[d(r)];
+	}
 }
 
 bool EvmoneUtility::zeroWord(uint8_t const* _result, size_t _length)

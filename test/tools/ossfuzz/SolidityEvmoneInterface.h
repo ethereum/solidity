@@ -100,6 +100,9 @@ public:
 	/// @returns name of a public/external method that does not contain
 	/// input parameters in its signature.
 	std::optional<std::string> noInputFunction();
+	/// @returns FunctionABI of a randomly chosen external function in
+	/// current contract.
+	std::optional<Json::Value> randomFunction();
 	/// @returns name of the last contract in source unit.
 	std::string lastContractName()
 	{
@@ -177,6 +180,10 @@ public:
 	std::optional<std::string> noInputFunction()
 	{
 		return m_compilationFramework.noInputFunction();
+	}
+	std::optional<Json::Value> randomFunction()
+	{
+		return m_compilationFramework.randomFunction();
 	}
 	void optSetting(frontend::OptimiserSettings _opt)
 	{

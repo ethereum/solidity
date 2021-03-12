@@ -75,6 +75,9 @@ public:
 	/// on the size of their types.
 	static size_t encodingSize(ParameterList const& _paremeters);
 
+	/// @returns function signature from ABI.
+	static std::string functionSignatureFromABI(Json::Value const& _functionABI);
+
 private:
 	/// Parses and translates a single type and returns a list of
 	/// internal type representations of isoltest.
