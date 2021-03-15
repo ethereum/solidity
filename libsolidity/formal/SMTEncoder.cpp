@@ -782,7 +782,6 @@ void SMTEncoder::initFunction(FunctionDefinition const& _function)
 	createLocalVariables(_function);
 	m_arrayAssignmentHappened = false;
 	clearIndices(m_currentContract, &_function);
-	m_variableUsage.setCurrentFunction(_function);
 	m_checked = true;
 }
 
