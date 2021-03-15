@@ -175,6 +175,7 @@ case $(uname -s) in
 
             Debian*|Raspbian)
                 #Debian
+                # shellcheck disable=SC1091
                 . /etc/os-release
                 install_z3=""
                 case $VERSION_ID in
@@ -354,7 +355,10 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
             CentOS*)
                 echo "Attention: CentOS 7 is currently not supported!";
+                # FIXME: read -p and [[ ]] are bash features but our shebang says we're using sh
+                # shellcheck disable=SC2039
                 read -p "This script will heavily modify your system in order to allow for compilation of Solidity. Are you sure? [Y/N]" -n 1 -r
+                # shellcheck disable=SC2039
                 if [[ $REPLY =~ ^[Yy]$ ]]; then
                     # Make Sure we have the EPEL repos
                     sudo yum -y install epel-release

@@ -32,6 +32,7 @@ REPO_ROOT="$(dirname "$0")/.."
 SOLIDITY_BUILD_DIR="${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}"
 IFS=" " read -r -a SMT_FLAGS <<< "$SMT_FLAGS"
 
+# shellcheck source=scripts/common.sh
 source "${REPO_ROOT}/scripts/common.sh"
 
 WORKDIR=$(mktemp -d)

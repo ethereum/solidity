@@ -265,6 +265,7 @@ fi
 (
 cd ..
 orig="${packagename}_${debversion}.orig.tar.gz"
+# shellcheck disable=SC2012
 orig_size=$(ls -l "$orig" | cut -d ' ' -f 5)
 orig_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
 orig_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
@@ -274,6 +275,7 @@ if wget --quiet -O "$orig-tmp" "$ppafilesurl/$orig"
 then
     echo "[WARN] Original tarball found in Ubuntu archive, using it instead"
     mv "$orig-tmp" "$orig"
+    # shellcheck disable=SC2012
     new_size=$(ls -l ./*.orig.tar.gz | cut -d ' ' -f 5)
     new_sha1=$(sha1sum "$orig" | cut -d ' ' -f 1)
     new_sha256=$(sha256sum "$orig" | cut -d ' ' -f 1)
