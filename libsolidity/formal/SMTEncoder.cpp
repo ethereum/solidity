@@ -2034,7 +2034,11 @@ void SMTEncoder::assignment(
 			m_context.newValue(*varDecl);
 	}
 	else if (auto varDecl = identifierToVariable(*left))
+	{
+		if (varDecl->hasReferenceOrMappingType())
+			resetReferences(*varDecl);
 		assignment(*varDecl, _right);
+	}
 	else if (
 		dynamic_cast<IndexAccess const*>(left) ||
 		dynamic_cast<MemberAccess const*>(left)
