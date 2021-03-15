@@ -65,7 +65,7 @@ string SyntaxTest::addPreamble(string const& _sourceCode)
 void SyntaxTest::setupCompiler()
 {
 	compiler().reset();
-	auto sourcesWithPragma = m_sources;
+	auto sourcesWithPragma = m_sources.sources;
 	for (auto& source: sourcesWithPragma)
 		source.second = addPreamble(source.second);
 	compiler().setSources(sourcesWithPragma);
@@ -122,8 +122,8 @@ void SyntaxTest::filterObtainedErrors()
 			solAssert(location->source, "");
 			sourceName = location->source->name();
 
-			solAssert(m_sources.count(sourceName) == 1, "");
-			int preambleSize = static_cast<int>(location->source->source().size()) - static_cast<int>(m_sources[sourceName].size());
+			solAssert(m_sources.sources.count(sourceName) == 1, "");
+			int preambleSize = static_cast<int>(location->source->source().size()) - static_cast<int>(m_sources.sources[sourceName].size());
 			solAssert(preambleSize >= 0, "");
 
 			// ignore the version & license pragma inserted by the testing tool when calculating locations.

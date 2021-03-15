@@ -36,10 +36,13 @@ using namespace std;
 
 bytes SolidityExecutionFramework::multiSourceCompileContract(
 	map<string, string> const& _sourceCode,
+	optional<string> const& _mainSourceName,
 	string const& _contractName,
 	map<string, Address> const& _libraryAddresses
 )
 {
+	if (_mainSourceName.has_value())
+		solAssert(_sourceCode.find(_mainSourceName.value()) != _sourceCode.end(), "");
 	map<string, string> sourcesWithPreamble = _sourceCode;
 	for (auto& entry: sourcesWithPreamble)
 		entry.second = addPreamble(entry.second);
@@ -68,7 +71,7 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			formatter.printErrorInformation(*error);
 		BOOST_ERROR("Compiling contract failed");
 	}
-	std::string contractName(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
+	string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
 	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
@@ -98,7 +101,7 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 				try
 				{
 					asmStack.optimize();
-					obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+					obj = move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
 					obj.link(_libraryAddresses);
 					break;
 				}
@@ -126,6 +129,7 @@ bytes SolidityExecutionFramework::compileContract(
 {
 	return multiSourceCompileContract(
 		{{"", _sourceCode}},
+		nullopt,
 		_contractName,
 		_libraryAddresses
 	);

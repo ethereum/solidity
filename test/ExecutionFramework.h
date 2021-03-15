@@ -60,7 +60,8 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = {},
-		std::map<std::string, util::h160> const& _libraryAddresses = {}
+		std::map<std::string, util::h160> const& _libraryAddresses = {},
+		std::optional<std::string> const& _sourceName = std::nullopt
 	) = 0;
 
 	bytes const& compileAndRun(
