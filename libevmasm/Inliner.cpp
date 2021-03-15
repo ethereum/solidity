@@ -183,7 +183,7 @@ bool Inliner::shouldInlineFullFunctionBody(size_t _tag, ranges::span<AssemblyIte
 	// the heuristics is optimistic.
 	if (m_tagsReferencedFromOutside.count(_tag))
 		inlinedDepositCost += GasMeter::dataGas(
-			uninlinedFunctionPattern.size() + functionBodySize,
+			codeSize(uninlinedFunctionPattern) + functionBodySize,
 			m_isCreation,
 			m_evmVersion
 		);
