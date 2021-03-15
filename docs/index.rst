@@ -165,6 +165,7 @@ Contents
    security-considerations.rst
    smtchecker.rst
    resources.rst
+   path-resolution.rst
    yul.rst
    style-guide.rst
    common-patterns.rst

@@ -33,11 +33,13 @@ This parameter has effects on the following (this might change in the future):
  - the size of the binary search in the function dispatch routine
  - the way constants like large numbers or strings are stored
 
-Path Remapping
---------------
+.. index:: allowed paths, --allow-paths, base path, --base-path
+
+Base Path and Import Remapping
+------------------------------
 
 The commandline compiler will automatically read imported files from the filesystem, but
-it is also possible to provide path redirects using ``prefix=path`` in the following way:
+it is also possible to provide :ref:`path redirects <import-remapping>` using ``prefix=path`` in the following way:
 
 ::
 
@@ -49,18 +51,21 @@ This essentially instructs the compiler to search for anything starting with
 the remapping targets and outside of the directories where explicitly specified source
 files reside, so things like ``import "/etc/passwd";`` only work if you add ``/=/`` as a remapping.
 
-An empty remapping prefix is not allowed.
+When accessing the filesystem to search for imports, :ref:`relative paths that do not start with ./
+or ../ <relative-imports>` are treated as relative to the directory specified using
+``--base-path`` option (or the current working directory if base path is not specified).
+Furthermore, the part added via ``--base-path`` will not appear in the contract metadata.
 
-If there are multiple matches due to remappings, the one with the longest common prefix is selected.
-
-When accessing the filesystem to search for imports, all paths are treated as if they were fully qualified paths.
-This behaviour can be customized by adding the command line option ``--base-path`` with a path to be prepended
-before each filesystem access for imports is performed. Furthermore, the part added via ``--base-path``
-will not appear in the contract metadata.
-
-For security reasons the compiler has restrictions what directories it can access. Paths (and their subdirectories) of source files specified on the commandline and paths defined by remappings are allowed for import statements, but everything else is rejected. Additional paths (and their subdirectories) can be allowed via the ``--allow-paths /sample/path,/another/sample/path`` switch.
-
+For security reasons the compiler has restrictions on what directories it can access.
+Paths of source files (and their subdirectories) specified on the command line and paths defined by
+remappings are automatically allowed in import statements, but everything else is rejected by default.
+Additional paths (and their subdirectories) can be allowed via the
+``--allow-paths /sample/path,/another/sample/path`` switch.
 Everything inside the path specified via ``--base-path`` is always allowed.
+
+The above is only a simplification of how the compiler handles import paths.
+For a detailed explanation with examples and discussion of corner cases please refer to the section on
+:ref:`path resolution <path-resolution>`.
 
 .. _library-linking:
 
