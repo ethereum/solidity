@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(jump_type)
 			jumpTypes += item.getJumpTypeAsString() + "\n";
 
 	if (solidity::test::CommonOptions::get().optimize)
-		BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[in]\n[out]\n");
+		BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[out]\n[in]\n[out]\n");
 	else
 		BOOST_CHECK_EQUAL(jumpTypes, "[in]\n[out]\n[in]\n[out]\n");
 }

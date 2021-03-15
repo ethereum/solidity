@@ -58,9 +58,9 @@ sub_0: assembly {
       revert
         /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
     tag_3:
-      tag_6
-      tag_7
-      jump	// in
+        /* "optimizer_inliner_dynamic_reference/input.sol":361:362  6 */
+      0x06
+        /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
     tag_6:
       mload(0x40)
         /* "#utility.yul":160:185   */
@@ -100,12 +100,6 @@ sub_0: assembly {
       sstore
         /* "optimizer_inliner_dynamic_reference/input.sol":125:155  function g() public { x = f; } */
       stop
-        /* "optimizer_inliner_dynamic_reference/input.sol":160:215  function a() public pure returns (uint) { return f(); } */
-    tag_7:
-        /* "optimizer_inliner_dynamic_reference/input.sol":194:198  uint */
-      0x00
-        /* "optimizer_inliner_dynamic_reference/input.sol":361:362  6 */
-      0x06
         /* "optimizer_inliner_dynamic_reference/input.sol":209:212  f() */
     tag_16:
         /* "optimizer_inliner_dynamic_reference/input.sol":202:212  return f() */
@@ -147,8 +141,8 @@ sub_0: assembly {
     tag_17:
         /* "optimizer_inliner_dynamic_reference/input.sol":361:362  6 */
       0x06
-        /* "optimizer_inliner_dynamic_reference/input.sol":310:365  function f() internal pure returns (uint) { return 6; } */
       swap1
+        /* "optimizer_inliner_dynamic_reference/input.sol":310:365  function f() internal pure returns (uint) { return 6; } */
       jump	// out
     tag_20:
       mstore(0x00, shl(0xe0, 0x4e487b71))

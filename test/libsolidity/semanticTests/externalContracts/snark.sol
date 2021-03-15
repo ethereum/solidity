@@ -298,4 +298,4 @@ contract Test {
 // verifyTx() -> true
 // gas irOptimized: 145824
 // gas legacy: 130571
-// gas legacyOptimized: 100187
+// gas legacyOptimized: 100147

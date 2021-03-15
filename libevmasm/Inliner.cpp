@@ -82,9 +82,7 @@ bool Inliner::isInlineCandidate(size_t _tag, ranges::span<AssemblyItem const> _i
 {
 	assertThrow(_items.size() > 0, OptimizerException, "");
 
-	// Only consider blocks that end in a JUMP for now. This can e.g. be extended to include transaction terminating
-	// instructions as well in the future.
-	if (_items.back() != Instruction::JUMP)
+	if (_items.back() != Instruction::JUMP && !SemanticInformation::terminatesControlFlow(_items.back()))
 		return false;
 
 	// Never inline tags that reference themselves.
@@ -196,19 +194,38 @@ bool Inliner::shouldInlineFullFunctionBody(size_t _tag, ranges::span<AssemblyIte
 	return false;
 }
 
-
-optional<AssemblyItem::JumpType> Inliner::shouldInline(size_t _tag, AssemblyItem const& _jump, InlinableBlock const& _block) const
+optional<AssemblyItem> Inliner::shouldInline(size_t _tag, AssemblyItem const& _jump, InlinableBlock const& _block) const
 {
-	AssemblyItem exitJump = _block.items.back();
-	assertThrow(_jump == Instruction::JUMP && exitJump == Instruction::JUMP, OptimizerException, "");
+	assertThrow(_jump == Instruction::JUMP, OptimizerException, "");
+	AssemblyItem blockExit = _block.items.back();
 
 	if (
 		_jump.getJumpType() == AssemblyItem::JumpType::IntoFunction &&
-		exitJump.getJumpType() == AssemblyItem::JumpType::OutOfFunction
+		blockExit == Instruction::JUMP &&
+		blockExit.getJumpType() == AssemblyItem::JumpType::OutOfFunction &&
+		shouldInlineFullFunctionBody(_tag, _block.items, _block.pushTagCount)
 	)
-		return
-			shouldInlineFullFunctionBody(_tag, _block.items, _block.pushTagCount) ?
-			make_optional(AssemblyItem::JumpType::Ordinary) : nullopt;
+	{
+		blockExit.setJumpType(AssemblyItem::JumpType::Ordinary);
+		return blockExit;
+	}
+
+	// Inline small blocks, if the jump to it is ordinary or the blockExit is a terminating instruction.
+	if (
+		_jump.getJumpType() == AssemblyItem::JumpType::Ordinary ||
+		SemanticInformation::terminatesControlFlow(blockExit)
+	)
+	{
+		static AssemblyItems const jumpPattern = {
+			AssemblyItem{PushTag},
+			AssemblyItem{Instruction::JUMP},
+		};
+		if (
+			GasMeter::dataGas(codeSize(_block.items), m_isCreation, m_evmVersion) <=
+			GasMeter::dataGas(codeSize(jumpPattern), m_isCreation, m_evmVersion)
+		)
+			return blockExit;
+	}
 
 	return nullopt;
 }
@@ -232,10 +249,10 @@ void Inliner::optimise()
 			{
 				if (optional<size_t> tag = getLocalTag(item))
 					if (auto* inlinableBlock = util::valueOrNullptr(inlinableBlocks, *tag))
-						if (auto exitJumpType = shouldInline(*tag, nextItem, *inlinableBlock))
+						if (auto exitItem = shouldInline(*tag, nextItem, *inlinableBlock))
 						{
-							newItems += inlinableBlock->items;
-							newItems.back().setJumpType(*exitJumpType);
+							newItems += inlinableBlock->items | ranges::views::drop_last(1);
+							newItems.emplace_back(move(*exitItem));
 
 							// We are removing one push tag to the block we inline.
 							--inlinableBlock->pushTagCount;

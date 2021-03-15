@@ -1637,6 +1637,27 @@ BOOST_AUTO_TEST_CASE(inliner_cse_break)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(inliner_stop)
+{
+	AssemblyItem jumpTo{Instruction::JUMP};
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	AssemblyItems expectation{
+		Instruction::STOP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	Inliner{items, {}, 200, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces

@@ -30,7 +30,7 @@ contract C {
 // index(uint256): 0xFF -> true
 // gas irOptimized: 167533
 // gas legacy: 248854
-// gas legacyOptimized: 152640
+// gas legacyOptimized: 152638
 // accessIndex(uint256,int256): 10, 1 -> 2
 // accessIndex(uint256,int256): 10, 0 -> 1
 // accessIndex(uint256,int256): 10, 11 -> FAILURE, hex"4e487b71", 0x32
