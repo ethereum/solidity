@@ -20,6 +20,8 @@
 
 #include <test/tools/ossfuzz/SolidityEvmoneInterface.h>
 
+#include <test/tools/ossfuzz/ValueGenerator.h>
+
 #include <test/TestCaseReader.h>
 
 #include <libsolidity/util/ContractABIUtils.h>
@@ -70,7 +72,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 				contractName,
 				compilerSetting,
 				{},
-				false,
+				true,
 				false
 			};
 			EvmoneUtility evmoneUtil(
@@ -87,7 +89,13 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 			optional<string> noInputFunction = evmoneUtil.noInputFunction();
 			if (auto r = evmoneUtil.randomFunction(); r.has_value())
+			{
 				cout << ContractABIUtils{}.functionSignatureFromABI(r.value()) << endl;
+				for (auto const& i: r.value()["inputs"])
+					if (auto v = ValueGenerator{i["type"].asString(), 0}.type(); v.has_value())
+						cout << v.value().name << endl;
+				return 0;
+			}
 			if (noInputFunction.has_value())
 				evmoneUtil.methodName(noInputFunction.value());
 			else
@@ -153,18 +161,23 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		}
 		catch (runtime_error const&)
 		{
+			cout << "Runtime error!" << endl;
 			return 0;
 		}
 		catch (solidity::langutil::UnimplementedFeatureError const&)
 		{
+			cout << "Unimplemented feature!" << endl;
 			return 0;
 		}
-		catch (solidity::langutil::CompilerError const&)
+		catch (solidity::langutil::CompilerError const& _e)
 		{
+			cout << "Compiler error!" << endl;
+			cout << _e.what() << endl;
 			return 0;
 		}
 		catch (solidity::yul::StackTooDeepError const&)
 		{
+			cout << "Stack too deep" << endl;
 			return 0;
 		}
 	}

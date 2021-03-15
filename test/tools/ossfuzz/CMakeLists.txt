@@ -25,6 +25,7 @@ endif()
 if (OSSFUZZ)
     add_executable(solc_ossfuzz
             solc_ossfuzz.cpp
+            ValueGenerator.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
             ../../EVMHost.cpp

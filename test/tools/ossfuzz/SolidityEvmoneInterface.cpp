@@ -83,7 +83,7 @@ optional<Json::Value> SolidityCompilationFramework::randomFunction()
 		return {};
 	else
 	{
-		uniform_int_distribution<unsigned> d(0, contractABI.size());
+		uniform_int_distribution<unsigned> d(0, contractABI.size() - 1);
 		minstd_rand r(contractABI.size());
 		return contractABI[d(r)];
 	}

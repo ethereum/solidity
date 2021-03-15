@@ -46,7 +46,7 @@ struct CompilerInput
 		std::string const& _contractName,
 		frontend::OptimiserSettings _optimiserSettings,
 		std::map<std::string, solidity::util::h160> _libraryAddresses,
-		bool _debugFailure = false,
+		bool _debugFailure = true,
 		bool _viaIR = false
 	):
 		evmVersion(_evmVersion),
