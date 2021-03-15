@@ -19,6 +19,7 @@
 
 
 #include <functional>
+#include <list>
 #include <set>
 
 namespace solidity::util
