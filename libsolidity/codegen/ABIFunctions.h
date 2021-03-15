@@ -273,7 +273,7 @@ private:
 	/// is true), for which it is two.
 	static size_t numVariablesForType(Type const& _type, EncodingOptions const& _options);
 
-	/// @returns code that stores @param _message for revert reason
+	/// @returns the name of a function that uses @param _message for revert reason
 	/// if m_revertStrings is debug.
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
