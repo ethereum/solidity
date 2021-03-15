@@ -143,10 +143,6 @@ public:
 
 	ABIFunctions abiFunctions();
 
-	/// @returns code that stores @param _message for revert reason
-	/// if m_revertStrings is debug.
-	std::string revertReasonIfDebug(std::string const& _message = "");
-
 	RevertStrings revertStrings() const { return m_revertStrings; }
 
 	std::set<ContractDefinition const*, ASTNode::CompareByID>& subObjectsCreated() { return m_subObjects; }

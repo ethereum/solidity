@@ -453,12 +453,18 @@ public:
 	/// signature: (slot, offset) ->
 	std::string storageSetToZeroFunction(Type const& _type);
 
-	/// If revertStrings is debug, @returns inline assembly code that
+	/// If revertStrings is debug, @returns the name of a function that
 	/// stores @param _message in memory position 0 and reverts.
-	/// Otherwise returns "revert(0, 0)".
-	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
+	/// Otherwise returns the name of a function that uses "revert(0, 0)".
+	std::string revertReasonIfDebugFunction(std::string const& _message = "");
 
-	std::string revertReasonIfDebug(std::string const& _message = "");
+	/// @returns the function body of ``revertReasonIfDebug``.
+	/// Should only be used internally and by the old code generator.
+	static std::string revertReasonIfDebugBody(
+		RevertStrings _revertStrings,
+		std::string const& _allocation,
+		std::string const& _message
+	);
 
 	/// Reverts with ``Panic(uint256)`` and the given code.
 	std::string panicFunction(util::PanicCode _code);

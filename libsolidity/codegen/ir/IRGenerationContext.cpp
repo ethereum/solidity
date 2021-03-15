@@ -177,8 +177,3 @@ ABIFunctions IRGenerationContext::abiFunctions()
 {
 	return ABIFunctions(m_evmVersion, m_revertStrings, m_functions);
 }
-
-std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)
-{
-	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
-}

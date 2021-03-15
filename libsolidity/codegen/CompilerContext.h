@@ -268,7 +268,7 @@ public:
 	);
 
 	/// If m_revertStrings is debug, @returns inline assembly code that
-	/// stores @param _message in memory position 0 and reverts.
+	/// stores @param _message at the free memory pointer and reverts.
 	/// Otherwise returns "revert(0, 0)".
 	std::string revertReasonIfDebug(std::string const& _message = "");
 

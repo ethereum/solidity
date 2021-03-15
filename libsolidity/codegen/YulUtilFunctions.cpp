@@ -2220,16 +2220,16 @@ string YulUtilFunctions::calldataArrayIndexRangeAccess(ArrayType const& _type)
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(offset, length, startIndex, endIndex) -> offsetOut, lengthOut {
-				if gt(startIndex, endIndex) { <revertSliceStartAfterEnd> }
-				if gt(endIndex, length) { <revertSliceGreaterThanLength> }
+				if gt(startIndex, endIndex) { <revertSliceStartAfterEnd>() }
+				if gt(endIndex, length) { <revertSliceGreaterThanLength>() }
 				offsetOut := add(offset, mul(startIndex, <stride>))
 				lengthOut := sub(endIndex, startIndex)
 			}
 		)")
 		("functionName", functionName)
 		("stride", to_string(_type.calldataStride()))
-		("revertSliceStartAfterEnd", revertReasonIfDebug("Slice starts after end"))
-		("revertSliceGreaterThanLength", revertReasonIfDebug("Slice is greater than length"))
+		("revertSliceStartAfterEnd", revertReasonIfDebugFunction("Slice starts after end"))
+		("revertSliceGreaterThanLength", revertReasonIfDebugFunction("Slice is greater than length"))
 		.render();
 	});
 }
@@ -2243,13 +2243,13 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 		return Whiskers(R"(
 			function <functionName>(base_ref, ptr_to_tail) -> addr<?dynamicallySized>, length</dynamicallySized> {
 				let rel_offset_of_tail := calldataload(ptr_to_tail)
-				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <invalidCalldataTailOffset> }
+				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <invalidCalldataTailOffset>() }
 				addr := add(base_ref, rel_offset_of_tail)
 				<?dynamicallySized>
 					length := calldataload(addr)
-					if gt(length, 0xffffffffffffffff) { <invalidCalldataTailLength> }
+					if gt(length, 0xffffffffffffffff) { <invalidCalldataTailLength>() }
 					addr := add(addr, 32)
-					if sgt(addr, sub(calldatasize(), mul(length, <calldataStride>))) { <shortCalldataTail> }
+					if sgt(addr, sub(calldatasize(), mul(length, <calldataStride>))) { <shortCalldataTail>() }
 				</dynamicallySized>
 			}
 		)")
@@ -2257,9 +2257,9 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 		("dynamicallySized", _type.isDynamicallySized())
 		("neededLength", toCompactHexWithPrefix(_type.calldataEncodedTailSize()))
 		("calldataStride", toCompactHexWithPrefix(_type.isDynamicallySized() ? dynamic_cast<ArrayType const&>(_type).calldataStride() : 0))
-		("invalidCalldataTailOffset", revertReasonIfDebug("Invalid calldata tail offset"))
-		("invalidCalldataTailLength", revertReasonIfDebug("Invalid calldata tail length"))
-		("shortCalldataTail", revertReasonIfDebug("Calldata tail too short"))
+		("invalidCalldataTailOffset", revertReasonIfDebugFunction("Invalid calldata tail offset"))
+		("invalidCalldataTailLength", revertReasonIfDebugFunction("Invalid calldata tail length"))
+		("shortCalldataTail", revertReasonIfDebugFunction("Calldata tail too short"))
 		.render();
 	});
 }
@@ -4212,42 +4212,52 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 	});
 }
 
-string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string const& _message)
+string YulUtilFunctions::revertReasonIfDebugFunction(string const& _message)
 {
-	if (revertStrings >= RevertStrings::Debug && !_message.empty())
-	{
-		Whiskers templ(R"({
-			mstore(0, <sig>)
-			mstore(4, 0x20)
-			mstore(add(4, 0x20), <length>)
-			let reasonPos := add(4, 0x40)
-			<#word>
-				mstore(add(reasonPos, <offset>), <wordValue>)
-			</word>
-			revert(0, add(reasonPos, <end>))
-		})");
-		templ("sig", util::selectorFromSignature("Error(string)").str());
-		templ("length", to_string(_message.length()));
-
-		size_t words = (_message.length() + 31) / 32;
-		vector<map<string, string>> wordParams(words);
-		for (size_t i = 0; i < words; ++i)
-		{
-			wordParams[i]["offset"] = to_string(i * 32);
-			wordParams[i]["wordValue"] = formatAsStringOrNumber(_message.substr(32 * i, 32));
-		}
-		templ("word", wordParams);
-		templ("end", to_string(words * 32));
-
-		return templ.render();
-	}
-	else
-		return "revert(0, 0)";
+	string functionName = "revert_error_" + util::toHex(util::keccak256(_message).asBytes());
+	return m_functionCollector.createFunction(functionName, [&](auto&, auto&) -> string {
+		return revertReasonIfDebugBody(m_revertStrings, allocateUnboundedFunction() + "()", _message);
+	});
 }
 
-string YulUtilFunctions::revertReasonIfDebug(string const& _message)
+string YulUtilFunctions::revertReasonIfDebugBody(
+	RevertStrings _revertStrings,
+	string const& _allocation,
+	string const& _message
+)
 {
-	return revertReasonIfDebug(m_revertStrings, _message);
+	if (_revertStrings < RevertStrings::Debug || _message.empty())
+		return "revert(0, 0)";
+
+	Whiskers templ(R"(
+		let start := <allocate>
+		let pos := start
+		mstore(pos, <sig>)
+		pos := add(pos, 4)
+		mstore(pos, 0x20)
+		pos := add(pos, 0x20)
+		mstore(pos, <length>)
+		pos := add(pos, 0x20)
+		<#word>
+			mstore(add(pos, <offset>), <wordValue>)
+		</word>
+		revert(start, <overallLength>)
+	)");
+	templ("allocate", _allocation);
+	templ("sig", util::selectorFromSignature("Error(string)").str());
+	templ("length", to_string(_message.length()));
+
+	size_t words = (_message.length() + 31) / 32;
+	vector<map<string, string>> wordParams(words);
+	for (size_t i = 0; i < words; ++i)
+	{
+		wordParams[i]["offset"] = to_string(i * 32);
+		wordParams[i]["wordValue"] = formatAsStringOrNumber(_message.substr(32 * i, 32));
+	}
+	templ("word", wordParams);
+	templ("overallLength", to_string(4 + 0x20 + 0x20 + words * 32));
+
+	return templ.render();
 }
 
 string YulUtilFunctions::panicFunction(util::PanicCode _code)
