@@ -839,7 +839,7 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 
 string IRGenerator::callValueCheck()
 {
-	return "if callvalue() { " + m_context.revertReasonIfDebug("Ether sent to non-payable function") + " }";
+	return "if callvalue() { " + m_utils.revertReasonIfDebugFunction("Ether sent to non-payable function") + "() }";
 }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
@@ -885,8 +885,8 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 				// we revert.
 				delegatecallCheck =
 					"if iszero(called_via_delegatecall) { " +
-					m_context.revertReasonIfDebug("Non-view function of library called without DELEGATECALL") +
-					" }";
+					m_utils.revertReasonIfDebugFunction("Non-view function of library called without DELEGATECALL") +
+					"() }";
 		}
 		templ["delegatecallCheck"] = delegatecallCheck;
 		templ["callValueCheck"] = (type->isPayable() || _contract.isLibrary()) ? "" : callValueCheck();
@@ -937,12 +937,11 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		t("fallback", fallbackCode);
 	}
 	else
-		t(
-			"fallback",
+		t("fallback", (
 			etherReceiver ?
-			m_context.revertReasonIfDebug("Unknown signature and no fallback defined") :
-			m_context.revertReasonIfDebug("Contract does not have fallback nor receive functions")
-		);
+			m_utils.revertReasonIfDebugFunction("Unknown signature and no fallback defined") :
+			m_utils.revertReasonIfDebugFunction("Contract does not have fallback nor receive functions")
+		) + "()");
 	return t.render();
 }
 
