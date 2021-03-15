@@ -804,31 +804,27 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 string IRGenerator::deployCode(ContractDefinition const& _contract)
 {
 	Whiskers t(R"X(
-		<#loadImmutables>
-			let <var> := mload(<memoryOffset>)
-		</loadImmutables>
+		let codeOffset := <allocate>(datasize("<object>"))
+		codecopy(codeOffset, dataoffset("<object>"), datasize("<object>"))
 
-		codecopy(0, dataoffset("<object>"), datasize("<object>"))
+		<#immutables>
+			setimmutable(codeOffset, "<name>", <value>)
+		</immutables>
 
-		<#storeImmutables>
-			setimmutable(0, "<immutableName>", <var>)
-		</storeImmutables>
-
-		return(0, datasize("<object>"))
+		return(codeOffset, datasize("<object>"))
 	)X");
 	t("object", IRNames::deployedObject(_contract));
+	t("allocate", m_utils.allocationFunction());
 
-	vector<map<string, string>> loadImmutables;
-	vector<map<string, string>> storeImmutables;
+	vector<map<string, string>> immutables;
 
 	if (_contract.isLibrary())
 	{
 		solAssert(ContractType(_contract).immutableVariables().empty(), "");
-		storeImmutables.emplace_back(map<string, string>{
-			{"var"s, "address()"},
-			{"immutableName"s, IRNames::libraryAddressImmutable()}
+		immutables.emplace_back(map<string, string>{
+			{"name"s, IRNames::libraryAddressImmutable()},
+			{"value"s, "address()"}
 		});
-
 	}
 	else
 		for (VariableDeclaration const* immutable: ContractType(_contract).immutableVariables())
@@ -836,19 +832,12 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 			solUnimplementedAssert(immutable->type()->isValueType(), "");
 			solUnimplementedAssert(immutable->type()->sizeOnStack() == 1, "");
 			string yulVar = m_context.newYulVariable();
-			loadImmutables.emplace_back(map<string, string>{
-				{"var"s, yulVar},
-				{"memoryOffset"s, to_string(m_context.immutableMemoryOffset(*immutable))}
-			});
-			storeImmutables.emplace_back(map<string, string>{
-				{"var"s, yulVar},
-				{"immutableName"s, to_string(immutable->id())}
+			immutables.emplace_back(map<string, string>{
+				{"name"s, to_string(immutable->id())},
+				{"value"s, "mload("s + to_string(m_context.immutableMemoryOffset(*immutable)) + ")"s}
 			});
 		}
-	t("loadImmutables", std::move(loadImmutables));
-	// reverse order to ease stack strain
-	reverse(storeImmutables.begin(), storeImmutables.end());
-	t("storeImmutables", std::move(storeImmutables));
+	t("immutables", std::move(immutables));
 	return t.render();
 }
 
