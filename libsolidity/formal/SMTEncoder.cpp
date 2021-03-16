@@ -457,33 +457,23 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 
 		addArrayLiteralAssertions(*symbArray, applyMap(_tuple.components(), [&](auto const& c) { return expr(*c); }));
 	}
-	else if (_tuple.components().size() == 1)
-		defineExpr(_tuple, expr(*_tuple.components().front()));
 	else
 	{
-		solAssert(_tuple.annotation().type->category() == Type::Category::Tuple, "");
-		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_tuple));
-		solAssert(symbTuple, "");
-		auto const& symbComponents = symbTuple->components();
-		auto const* tuple = dynamic_cast<TupleExpression const*>(innermostTuple(_tuple));
-		solAssert(tuple, "");
-		auto const& tupleComponents = tuple->components();
-		solAssert(symbComponents.size() == tupleComponents.size(), "");
-		for (unsigned i = 0; i < symbComponents.size(); ++i)
-		{
-			auto tComponent = tupleComponents.at(i);
-			if (tComponent)
+		auto values = applyMap(_tuple.components(), [this](auto const& component) -> optional<smtutil::Expression> {
+			if (component)
 			{
-				if (auto varDecl = identifierToVariable(*tComponent))
-					m_context.addAssertion(symbTuple->component(i) == currentValue(*varDecl));
+				if (auto varDecl = identifierToVariable(*component))
+					return currentValue(*varDecl);
 				else
 				{
-					if (!m_context.knownExpression(*tComponent))
-						createExpr(*tComponent);
-					m_context.addAssertion(symbTuple->component(i) == expr(*tComponent));
+					if (!m_context.knownExpression(*component))
+						createExpr(*component);
+					return expr(*component);
 				}
 			}
-		}
+			return {};
+		});
+		defineExpr(_tuple, values);
 	}
 }
 
@@ -1064,19 +1054,8 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 				m_context.addAssertion(structVar.currentValue() == currentExpr);
 				auto returnedMembers = structGetterReturnedMembers(dynamic_cast<StructType const&>(*structVar.type()));
 				solAssert(!returnedMembers.empty(), "");
-				auto returnedValues = applyMap(returnedMembers, [&](string const& memberName) { return structVar.member(memberName); });
-				if (returnedValues.size() == 1)
-					defineExpr(_funCall, returnedValues.front());
-				else
-				{
-					auto symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
-					solAssert(symbTuple, "");
-					symbTuple->increaseIndex(); // Increasing the index explicitly since we cannot use defineExpr in this case.
-					auto const& symbComponents = symbTuple->components();
-					solAssert(symbComponents.size() == returnedValues.size(), "");
-					for (unsigned i = 0; i < symbComponents.size(); ++i)
-						m_context.addAssertion(symbTuple->component(i) == returnedValues.at(i));
-				}
+				auto returnedValues = applyMap(returnedMembers, [&](string const& memberName) -> optional<smtutil::Expression> { return structVar.member(memberName); });
+				defineExpr(_funCall, returnedValues);
 				return;
 			}
 			default:
@@ -2476,7 +2455,23 @@ void SMTEncoder::defineExpr(Expression const& _e, smtutil::Expression _value)
 			currentPathConditions(),
 			smt::symbolicUnknownConstraints(expr(_e), type)
 		));
+}
 
+void SMTEncoder::defineExpr(Expression const& _e, vector<optional<smtutil::Expression>> const& _values)
+{
+	if (_values.size() == 1 && _values.front())
+	{
+		defineExpr(_e, *_values.front());
+		return;
+	}
+	auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_e));
+	solAssert(symbTuple, "");
+	symbTuple->increaseIndex();
+	auto const& symbComponents = symbTuple->components();
+	solAssert(symbComponents.size() == _values.size(), "");
+	for (unsigned i = 0; i < symbComponents.size(); ++i)
+		if (_values[i])
+			m_context.addAssertion(symbTuple->component(i) == *_values[i]);
 }
 
 void SMTEncoder::popPathCondition()
@@ -3007,23 +3002,11 @@ void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall, Contrac
 	auto const& returnParams = funDef->returnParameters();
 	for (auto param: returnParams)
 		createVariable(*param);
-
-	if (returnParams.size() > 1)
-	{
-		auto const& symbTuple = dynamic_pointer_cast<smt::SymbolicTupleVariable>(m_context.expression(_funCall));
-		solAssert(symbTuple, "");
-		auto const& symbComponents = symbTuple->components();
-		solAssert(symbComponents.size() == returnParams.size(), "");
-		for (unsigned i = 0; i < symbComponents.size(); ++i)
-		{
-			auto param = returnParams.at(i);
-			solAssert(param, "");
-			solAssert(m_context.knownVariable(*param), "");
-			m_context.addAssertion(symbTuple->component(i) == currentValue(*param));
-		}
-	}
-	else if (returnParams.size() == 1)
-		defineExpr(_funCall, currentValue(*returnParams.front()));
+	auto returnValues = applyMap(returnParams, [this](auto const& param) -> optional<smtutil::Expression> {
+		solAssert(param && m_context.knownVariable(*param), "");
+		return currentValue(*param);
+	});
+	defineExpr(_funCall, returnValues);
 }
 
 vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract)
