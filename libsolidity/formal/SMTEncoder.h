@@ -311,6 +311,8 @@ protected:
 	void createExpr(Expression const& _e);
 	/// Creates the expression and sets its value.
 	void defineExpr(Expression const& _e, smtutil::Expression _value);
+	/// Creates the tuple expression and sets its value.
+	void defineExpr(Expression const& _e, std::vector<std::optional<smtutil::Expression>> const& _values);
 	/// Overwrites the current path condition
 	void setPathCondition(smtutil::Expression const& _e);
 	/// Adds a new path condition
