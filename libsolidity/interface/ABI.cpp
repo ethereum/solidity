@@ -118,7 +118,18 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 			params.append(std::move(param));
 		}
 		event["inputs"] = std::move(params);
-		abi.emplace(std::move(event));
+
+		// If two different events are indistinguisable in the ABI,
+		// we only add one.
+		bool existsAlready = false;
+		for (auto const& existingEvent: abi)
+			if (existingEvent == event)
+			{
+				existsAlready = true;
+				break;
+			}
+		if (!existsAlready)
+			abi.emplace(std::move(event));
 	}
 
 	Json::Value abiJson{Json::arrayValue};

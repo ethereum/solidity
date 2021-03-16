@@ -270,6 +270,8 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("abstract", _node.abstract()),
 		make_pair("baseContracts", toJson(_node.baseContracts())),
 		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies, true)),
+		// Ignore errors because the AST is also created for incorrect sources.
+		make_pair("emittedEvents", getContainerIds(_node.interfaceEvents(true))),
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))
 	};

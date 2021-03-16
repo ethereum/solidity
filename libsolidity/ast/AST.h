@@ -508,7 +508,11 @@ public:
 	std::vector<ModifierDefinition const*> functionModifiers() const { return filteredNodes<ModifierDefinition>(m_subNodes); }
 	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
-	std::vector<EventDefinition const*> const& interfaceEvents() const;
+	/// @return all events defined in this contract and its base contracts and all events
+	/// that are emitted during the execution of the contract.
+	/// @param _ignoreErrors do not fail if the call graph is not yet available
+	/// or some events have invalid parameter types.
+	std::vector<EventDefinition const*> const& interfaceEvents(bool _ignoreErrors = false) const;
 	bool isInterface() const { return m_contractKind == ContractKind::Interface; }
 	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
 

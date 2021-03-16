@@ -24,6 +24,7 @@
         "src": "0:27:1",
         "text": "This contract is empty"
       },
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 2,
       "linearizedBaseContracts":
@@ -65,6 +66,7 @@
         "src": "0:61:2",
         "text": "This contract is empty\nand has a line-breaking comment."
       },
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -99,6 +101,10 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents":
+      [
+        12
+      ],
       "fullyImplemented": true,
       "id": 23,
       "linearizedBaseContracts":

@@ -154,7 +154,7 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	}
 
 	Json::Value events(Json::objectValue);
-	for (auto const& event: _contractDef.events())
+	for (auto const& event: _contractDef.interfaceEvents())
 		if (auto devDoc = devDocumentation(event->annotation().docTags); !devDoc.empty())
 			events[event->functionType(true)->externalSignature()] = devDoc;
 

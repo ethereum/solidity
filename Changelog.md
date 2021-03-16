@@ -4,6 +4,7 @@ Language Features:
 
 
 Compiler Features:
+ * ABI: Include events in the ABI that are emitted by but not defined inside a contract.
  * Command Line Interface: Drop experimental support for ``--machine evm15``.
  * Optimizer: Try to move ``and`` with constant inside ``or`` to improve storage writes of small types.
 
@@ -19,6 +20,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on pushing to ``string`` casted to ``bytes``.
 
 AST Changes:
+ * Add field ``emittedEvents`` to ``ContractDefinition`` which contains the AST IDs of all inherited and emitted events.
 
 ### 0.8.2 (2021-03-02)
 

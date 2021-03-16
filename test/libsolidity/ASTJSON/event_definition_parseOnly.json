@@ -9,6 +9,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "id": 3,
       "name": "C",
       "nameLocation": "9:1:1",

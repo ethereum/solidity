@@ -17,6 +17,7 @@
         "src": "0:27:1",
         "text": "This contract is empty"
       },
+      "emittedEvents": [],
       "id": 2,
       "name": "C",
       "nameLocation": "37:1:1",
@@ -45,6 +46,7 @@
         "src": "0:61:2",
         "text": "This contract is empty\nand has a line-breaking comment."
       },
+      "emittedEvents": [],
       "id": 5,
       "name": "C",
       "nameLocation": "71:1:2",
@@ -66,6 +68,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "id": 23,
       "name": "C",
       "nameLocation": "9:1:3",

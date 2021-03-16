@@ -33,6 +33,7 @@ JSON AST (compact format):
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 18,
       "linearizedBaseContracts":

@@ -26,6 +26,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/ast/CallGraph.h>
 #include <libsolutil/Keccak256.h>
 
 #include <boost/algorithm/string.hpp>
@@ -136,29 +137,24 @@ FunctionDefinition const* ContractDefinition::receiveFunction() const
 	return nullptr;
 }
 
-vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
+vector<EventDefinition const*> const& ContractDefinition::interfaceEvents(bool _ignoreErrors) const
 {
 	return m_interfaceEvents.init([&]{
-		set<string> eventsSeen;
-		vector<EventDefinition const*> interfaceEvents;
-
+		std::set<EventDefinition const*, ASTNode::CompareByID> interfaceEvents;
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
-			for (EventDefinition const* e: contract->events())
-			{
-				/// NOTE: this requires the "internal" version of an Event,
-				///       though here internal strictly refers to visibility,
-				///       and not to function encoding (jump vs. call)
-				auto const& function = e->functionType(true);
-				solAssert(function, "");
-				string eventSignature = function->externalSignature();
-				if (eventsSeen.count(eventSignature) == 0)
-				{
-					eventsSeen.insert(eventSignature);
-					interfaceEvents.push_back(e);
-				}
-			}
+			interfaceEvents += contract->events();
+		solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set(), "");
+		if (annotation().creationCallGraph.set())
+		{
+			interfaceEvents += (*annotation().creationCallGraph)->emittedEvents;
+			interfaceEvents += (*annotation().deployedCallGraph)->emittedEvents;
+		}
+		else
+			solAssert(_ignoreErrors, "Interface events requested before call graph has been computed.");
 
-		return interfaceEvents;
+		// We could filter out all events that do not have an external interface
+		// if _ignoreErrors is true.
+		return convertContainer<vector<EventDefinition const*>>(interfaceEvents);
 	});
 }
 

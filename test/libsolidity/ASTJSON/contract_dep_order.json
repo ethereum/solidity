@@ -32,6 +32,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 1,
       "linearizedBaseContracts":
@@ -68,6 +69,7 @@
         1
       ],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 4,
       "linearizedBaseContracts":
@@ -106,6 +108,7 @@
         4
       ],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 7,
       "linearizedBaseContracts":
@@ -146,6 +149,7 @@
         7
       ],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 10,
       "linearizedBaseContracts":
@@ -188,6 +192,7 @@
         10
       ],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 13,
       "linearizedBaseContracts":

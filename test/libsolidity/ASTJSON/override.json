@@ -24,6 +24,7 @@
       "baseContracts": [],
       "contractDependencies": [],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 5,
       "linearizedBaseContracts":
@@ -98,6 +99,7 @@
         5
       ],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": false,
       "id": 16,
       "linearizedBaseContracts":
@@ -214,6 +216,7 @@
         16
       ],
       "contractKind": "contract",
+      "emittedEvents": [],
       "fullyImplemented": true,
       "id": 31,
       "linearizedBaseContracts":
