@@ -8,6 +8,7 @@ Compiler Features:
 
 Bugfixes:
  * AST Output: Fix ``kind`` field of ``ModifierInvocation`` for base constructor calls.
+ * SMTChecker: Fix internal error on public getter returning dynamic data on older EVM versions where these are not available.
 
 
 AST Changes:

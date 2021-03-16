@@ -386,6 +386,11 @@ bool isNonRecursiveStruct(frontend::Type const& _type)
 	return structType && !structType->recursive();
 }
 
+bool isInaccessibleDynamic(frontend::Type const& _type)
+{
+	return _type.category() == frontend::Type::Category::InaccessibleDynamic;
+}
+
 smtutil::Expression minValue(frontend::IntegerType const& _type)
 {
 	return smtutil::Expression(_type.minValue());
