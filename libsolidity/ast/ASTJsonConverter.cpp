@@ -675,6 +675,14 @@ bool ASTJsonConverter::visit(EmitStatement const& _node)
 	return false;
 }
 
+bool ASTJsonConverter::visit(RevertStatement const& _node)
+{
+	setJsonNode(_node, "RevertStatement", {
+		make_pair("errorCall", toJson(_node.errorCall()))
+	});
+	return false;
+}
+
 bool ASTJsonConverter::visit(VariableDeclarationStatement const& _node)
 {
 	Json::Value varDecs(Json::arrayValue);
