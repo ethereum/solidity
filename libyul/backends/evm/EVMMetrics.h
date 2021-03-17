@@ -43,7 +43,7 @@ public:
 	GasMeter(EVMDialect const& _dialect, bool _isCreation, size_t _runs):
 		m_dialect(_dialect),
 		m_isCreation{_isCreation},
-		m_runs(_runs)
+		m_runs(_isCreation? 1 : _runs)
 	{}
 
 	/// @returns the full combined costs of deploying and evaluating the expression.
