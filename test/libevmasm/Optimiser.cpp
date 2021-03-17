@@ -33,6 +33,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <range/v3/algorithm/any_of.hpp>
+
 #include <string>
 #include <tuple>
 #include <memory>
@@ -67,7 +69,9 @@ namespace
 	{
 		AssemblyItems input = addDummyLocations(_input);
 
-		bool usesMsize = (find(_input.begin(), _input.end(), AssemblyItem{Instruction::MSIZE}) != _input.end());
+		bool usesMsize = ranges::any_of(_input, [](AssemblyItem const& _i) {
+			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+		});
 		evmasm::CommonSubexpressionEliminator cse(_state);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end(), usesMsize) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();

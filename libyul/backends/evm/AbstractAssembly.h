@@ -77,6 +77,9 @@ public:
 	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;
 
+	/// Append raw bytes that stay untouched by the optimizer.
+	virtual void appendVerbatim(bytes const& _data, int _stackDifference) = 0;
+
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	/// This is helpful to stack height analysis if there is no continuing control flow.

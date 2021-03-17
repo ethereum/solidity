@@ -91,6 +91,8 @@ size_t AssemblyItem::bytesRequired(size_t _addressLength) const
 			return 1 + (3 + 32) * *m_immutableOccurrences;
 		else
 			return 1 + (3 + 32) * 1024; // 1024 occurrences are beyond the maximum code size anyways.
+	case VerbatimBytecode:
+		return m_verbatimBytecode->second.size();
 	default:
 		break;
 	}
@@ -241,6 +243,9 @@ string AssemblyItem::toAssemblyText(Assembly const& _assembly) const
 	case UndefinedItem:
 		assertThrow(false, AssemblyException, "Invalid assembly item.");
 		break;
+	case VerbatimBytecode:
+		text = string("verbatimbytecode_") + util::toHex(m_verbatimBytecode->second);
+		break;
 	default:
 		assertThrow(false, InvalidOpcode, "");
 	}
@@ -308,6 +313,9 @@ ostream& solidity::evmasm::operator<<(ostream& _out, AssemblyItem const& _item)
 		break;
 	case AssignImmutable:
 		_out << " AssignImmutable";
+		break;
+	case VerbatimBytecode:
+		_out << " Verbatim " << util::toHex(_item.verbatimData());
 		break;
 	case UndefinedItem:
 		_out << " ???";

@@ -33,8 +33,10 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <fstream>
 #include <json/json.h>
+
+#include <fstream>
+#include <range/v3/algorithm/any_of.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -317,6 +319,9 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		case PushData:
 			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
+		case VerbatimBytecode:
+			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, toHex(i.verbatimData())));
+			break;
 		default:
 			assertThrow(false, InvalidOpcode, "");
 		}
@@ -482,7 +487,9 @@ map<u256, u256> Assembly::optimiseInternal(
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
 
-			bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem{Instruction::MSIZE}) != m_items.end());
+			bool usesMSize = ranges::any_of(m_items, [](AssemblyItem const& _i) {
+				return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+			});
 
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
@@ -681,6 +688,9 @@ LinkerObject const& Assembly::assemble() const
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
 			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + 32);
+			break;
+		case VerbatimBytecode:
+			ret.bytecode += i.verbatimData();
 			break;
 		case AssignImmutable:
 		{

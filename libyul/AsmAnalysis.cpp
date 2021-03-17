@@ -369,16 +369,26 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 				);
 			else if (*literalArgumentKind == LiteralKind::String)
 			{
-				if (
-					_funCall.functionName.name.str() == "datasize" ||
-					_funCall.functionName.name.str() == "dataoffset"
-				)
+				string functionName = _funCall.functionName.name.str();
+				if (functionName == "datasize" || functionName == "dataoffset")
+				{
 					if (!m_dataNames.count(get<Literal>(arg).value))
 						m_errorReporter.typeError(
 							3517_error,
 							get<Literal>(arg).location,
 							"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
 						);
+				}
+				else if (functionName.substr(0, "verbatim_"s.size()) == "verbatim_")
+				{
+					if (get<Literal>(arg).value.empty())
+						m_errorReporter.typeError(
+							1844_error,
+							get<Literal>(arg).location,
+							"The \"verbatim_*\" builtins cannot be used with empty bytecode."
+						);
+				}
+
 				argTypes.emplace_back(expectUnlimitedStringLiteral(get<Literal>(arg)));
 				continue;
 			}

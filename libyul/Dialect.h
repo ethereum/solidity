@@ -44,7 +44,7 @@ struct BuiltinFunction
 	std::vector<Type> returns;
 	SideEffects sideEffects;
 	ControlFlowSideEffects controlFlowSideEffects;
-	/// If true, this is the msize instruction.
+	/// If true, this is the msize instruction or might contain it.
 	bool isMSize = false;
 	/// Must be empty or the same length as the arguments.
 	/// If set at index i, the i'th argument has to be a literal which means it can't be moved to variables.
