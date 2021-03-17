@@ -177,6 +177,11 @@ documentation using:
 
 And the output is below.
 
+.. note::
+    Starting Solidity version 0.6.11 the NatSpec output also contains a ``version`` and a ``kind`` field.
+    Currently the ``version`` is set to ``1`` and ``kind`` must be one of ``user`` or ``dev``.
+    In the future it is possible that new versions will be introduced, deprecating older ones.
+
 .. _header-user-doc:
 
 User Documentation
@@ -188,6 +193,8 @@ JSON file as output:
 .. code::
 
     {
+      "version" : 1,
+      "kind" : "user",
       "methods" :
       {
         "age(uint256)" :
@@ -214,6 +221,8 @@ file should also be produced and should look like this:
 .. code::
 
     {
+      "version" : 1,
+      "kind" : "dev",
       "author" : "Larry A. Gardner",
       "details" : "All function calls are currently implemented without side effects",
       "methods" :
