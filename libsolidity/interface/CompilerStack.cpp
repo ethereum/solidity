@@ -889,7 +889,7 @@ evmasm::LinkerObject const& CompilerStack::runtimeObject(string const& _contract
 }
 
 /// TODO: cache this string
-string CompilerStack::assemblyString(string const& _contractName, StringMap _sourceCodes) const
+string CompilerStack::assemblyString(string const& _contractName, StringMap const& _sourceCodes) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));

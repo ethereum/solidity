@@ -312,7 +312,7 @@ public:
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	std::string assemblyString(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
+	std::string assemblyString(std::string const& _contractName, StringMap const& _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
