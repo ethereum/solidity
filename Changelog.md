@@ -17,9 +17,11 @@ Bugfixes:
  * SMTChecker: Fix internal error on array slices.
  * SMTChecker: Fix internal error on calling public getter on a state variable of type array (possibly nested) of structs.
  * SMTChecker: Fix internal error on pushing to ``string`` casted to ``bytes``.
+ * SMTChecker: Fix bug in virtual functions called by constructors.
 
 AST Changes:
  * ModifierInvocation: Add ``kind`` field which can be ``modifierInvocation`` or ``baseConstructorSpecifier``.
+
 
 
 ### 0.8.2 (2021-03-02)

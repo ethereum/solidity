@@ -2902,8 +2902,7 @@ set<FunctionDefinition const*, ASTNode::CompareByID> const& SMTEncoder::contract
 		auto allFunctions = contractFunctions(_contract);
 		for (auto const* base: _contract.annotation().linearizedBaseContracts)
 			for (auto const* baseFun: base->definedFunctions())
-				if (!baseFun->isConstructor())
-					allFunctions.insert(baseFun);
+				allFunctions.insert(baseFun);
 
 		m_contractFunctionsWithoutVirtual.emplace(&_contract, move(allFunctions));
 

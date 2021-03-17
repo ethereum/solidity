@@ -12,5 +12,3 @@ contract C
 	}
 }
 // ----
-// Warning 4984: (139-144): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 2661: (139-144): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
