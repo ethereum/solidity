@@ -236,6 +236,16 @@ bool ControlFlowBuilder::visit(Throw const& _throw)
 	return false;
 }
 
+bool ControlFlowBuilder::visit(RevertStatement const& _revert)
+{
+	solAssert(!!m_currentNode, "");
+	solAssert(!!m_revertNode, "");
+	visitNode(_revert);
+	connect(m_currentNode, m_revertNode);
+	m_currentNode = newLabel();
+	return false;
+}
+
 bool ControlFlowBuilder::visit(PlaceholderStatement const&)
 {
 	solAssert(!!m_currentNode, "");
