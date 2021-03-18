@@ -28,7 +28,7 @@ contract C {
 // index(uint256): 10 -> true
 // index(uint256): 20 -> true
 // index(uint256): 0xFF -> true
-// gas irOptimized: 168557
+// gas irOptimized: 167533
 // gas legacy: 248854
 // gas legacyOptimized: 152640
 // accessIndex(uint256,int256): 10, 1 -> 2

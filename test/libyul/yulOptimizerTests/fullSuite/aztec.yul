@@ -228,15 +228,17 @@
         mstore(0x00, keccak256(0x300, mul(n, 0x80)))
     }
 }
+// ====
+// EVMVersion: >=istanbul
 // ----
 // step: fullSuite
 //
 // {
 //     {
-//         let _1 := 0x80
-//         mstore(_1, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
+//         mstore(0x80, 7673901602397024137095011250362199966051872585513276903826533215767972925880)
 //         mstore(0xa0, 8489654445897228341090914135473290831551238522473825886865492707826370766375)
-//         let notes := add(0x04, calldataload(0x04))
+//         let _1 := calldataload(0x04)
+//         let notes := add(0x04, _1)
 //         let m := calldataload(0x24)
 //         let n := calldataload(notes)
 //         let _2 := 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
@@ -252,11 +254,11 @@
 //         mstore(0x2e0, m)
 //         kn := mulmod(sub(_2, kn), challenge, _2)
 //         hashCommitments(notes, n)
-//         let b := add(0x300, mul(n, _1))
+//         let b := add(0x300, shl(7, n))
 //         let i := 0
 //         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
-//             let _3 := add(calldataload(0x04), mul(i, 0xc0))
+//             let _3 := add(_1, mul(i, 0xc0))
 //             let noteIndex := add(_3, 0x24)
 //             let k := 0
 //             let a := calldataload(add(_3, 0x44))
@@ -282,14 +284,17 @@
 //             let _5 := 0x40
 //             calldatacopy(0xe0, add(_3, 164), _5)
 //             calldatacopy(0x20, add(_3, 100), _5)
-//             mstore(0x120, sub(_2, c))
-//             mstore(0x60, k)
+//             let _6 := 0x120
+//             mstore(_6, sub(_2, c))
+//             let _7 := 0x60
+//             mstore(_7, k)
 //             mstore(0xc0, a)
-//             let result := call(gas(), 7, 0, 0xe0, 0x60, 0x1a0, _5)
-//             let result_1 := and(result, call(gas(), 7, 0, 0x20, 0x60, 0x120, _5))
-//             let result_2 := and(result_1, call(gas(), 7, 0, _1, 0x60, 0x160, _5))
-//             let result_3 := and(result_2, call(gas(), 6, 0, 0x120, _1, 0x160, _5))
-//             result := and(result_3, call(gas(), 6, 0, 0x160, _1, b, _5))
+//             let result := call(gas(), 7, 0, 0xe0, _7, 0x1a0, _5)
+//             let result_1 := and(result, call(gas(), 7, 0, 0x20, _7, _6, _5))
+//             let _8 := 0x160
+//             let result_2 := and(result_1, call(gas(), 7, 0, 0x80, _7, _8, _5))
+//             let result_3 := and(result_2, call(gas(), 6, 0, _6, 0x80, _8, _5))
+//             result := and(result_3, call(gas(), 6, 0, _8, 0x80, b, _5))
 //             if eq(i, m)
 //             {
 //                 mstore(0x260, mload(0x20))
@@ -299,10 +304,10 @@
 //             }
 //             if gt(i, m)
 //             {
-//                 mstore(0x60, c)
-//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, 0x60, 0x220, _5))
-//                 let result_5 := and(result_4, call(gas(), 6, 0, 0x220, _1, 0x260, _5))
-//                 result := and(result_5, call(gas(), 6, 0, 0x1a0, _1, 0x1e0, _5))
+//                 mstore(_7, c)
+//                 let result_4 := and(result, call(gas(), 7, 0, 0x20, _7, 0x220, _5))
+//                 let result_5 := and(result_4, call(gas(), 6, 0, 0x220, 0x80, 0x260, _5))
+//                 result := and(result_5, call(gas(), 6, 0, 0x1a0, 0x80, 0x1e0, _5))
 //             }
 //             if iszero(result)
 //             {
@@ -375,9 +380,8 @@
 //         let i := 0
 //         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
-//             let _1 := 0x80
-//             calldatacopy(add(0x300, mul(i, _1)), add(add(notes, mul(i, 0xc0)), 0x60), _1)
+//             calldatacopy(add(0x300, shl(7, i)), add(add(notes, mul(i, 0xc0)), 0x60), 0x80)
 //         }
-//         mstore(0, keccak256(0x300, mul(n, 0x80)))
+//         mstore(0, keccak256(0x300, shl(7, n)))
 //     }
 // }
