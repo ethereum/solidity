@@ -515,7 +515,8 @@ public:
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
 	/// @returns all errors defined in this contract or any base contract
 	/// and all errors referenced during execution.
-	std::vector<ErrorDefinition const*> interfaceErrors() const;
+	/// @param _requireCallGraph if false, do not fail if the call graph has not been computed yet.
+	std::vector<ErrorDefinition const*> interfaceErrors(bool _requireCallGraph = true) const;
 	bool isInterface() const { return m_contractKind == ContractKind::Interface; }
 	bool isLibrary() const { return m_contractKind == ContractKind::Library; }
 

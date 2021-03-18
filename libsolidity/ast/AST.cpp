@@ -23,6 +23,7 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -174,12 +175,19 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	});
 }
 
-vector<ErrorDefinition const*> ContractDefinition::interfaceErrors() const
+vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
 {
 	set<ErrorDefinition const*, CompareByID> result;
-	// TODO add all referenced errors
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		result += filteredNodes<ErrorDefinition>(contract->m_subNodes);
+	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set(), "");
+	if (_requireCallGraph)
+		solAssert(annotation().creationCallGraph.set(), "");
+	if (annotation().creationCallGraph.set())
+	{
+		result += (*annotation().creationCallGraph)->usedErrors;
+		result += (*annotation().deployedCallGraph)->usedErrors;
+	}
 	return convertContainer<vector<ErrorDefinition const*>>(move(result));
 }
 
