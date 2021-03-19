@@ -197,13 +197,17 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	connectBlocks(m_currentBlock, summary(_contract));
 
 	setCurrentBlock(*m_constructorSummaries.at(&_contract));
-	auto constructor = _contract.constructor();
-	auto txConstraints = state().txTypeConstraints();
-	if (!constructor || !constructor->isPayable())
-		txConstraints = txConstraints && state().txNonPayableConstraint();
-	m_queryPlaceholders[&_contract].push_back({txConstraints, errorFlag().currentValue(), m_currentBlock});
-	connectBlocks(m_currentBlock, interface(), txConstraints && errorFlag().currentValue() == 0);
 
+	solAssert(&_contract == m_currentContract, "");
+	if (_contract.canBeDeployed())
+	{
+		auto constructor = _contract.constructor();
+		auto txConstraints = state().txTypeConstraints();
+		if (!constructor || !constructor->isPayable())
+			txConstraints = txConstraints && state().txNonPayableConstraint();
+		m_queryPlaceholders[&_contract].push_back({txConstraints, errorFlag().currentValue(), m_currentBlock});
+		connectBlocks(m_currentBlock, interface(), txConstraints && errorFlag().currentValue() == 0);
+	}
 	SMTEncoder::endVisit(_contract);
 }
 
@@ -262,7 +266,8 @@ void CHC::endVisit(FunctionDefinition const& _function)
 	if (
 		!_function.isConstructor() &&
 		_function.isPublic() &&
-		contractFunctions(*m_currentContract).count(&_function)
+		contractFunctions(*m_currentContract).count(&_function) &&
+		m_currentContract->canBeDeployed()
 	)
 	{
 		auto sum = summary(_function);

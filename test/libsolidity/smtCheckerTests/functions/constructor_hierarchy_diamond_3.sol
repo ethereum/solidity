@@ -29,7 +29,6 @@ contract A is B2, B1 {
 // ====
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (160-165): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4984: (241-246): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 4984: (225-230): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 // Warning 6328: (334-350): CHC: Assertion violation happens here.
