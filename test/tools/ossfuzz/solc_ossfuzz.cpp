@@ -32,6 +32,8 @@
 
 #include <evmone/evmone.h>
 
+#include <abicoder.hpp>
+
 #include <sstream>
 
 using namespace solidity::frontend::test;
@@ -45,10 +47,11 @@ using namespace std;
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
+static constexpr size_t abiCoderHeapSize = 1024 * 512;
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
-	if (_size <= 600)
+//	if (_size <= 600)
 	{
 		string input(reinterpret_cast<char const*>(_data), _size);
 		// TODO: Cannot fuzz tests containing libraries yet.
@@ -87,27 +90,33 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			if (!compilerOutput.has_value())
 				return 0;
 
-			optional<string> noInputFunction = evmoneUtil.noInputFunction();
-			if (auto r = evmoneUtil.randomFunction(); r.has_value())
+			auto r = evmoneUtil.randomFunction();
+			if (!r.has_value())
+				return 0;
+
+			auto x = ValueGenerator{r.value()["inputs"], 0}.type();
+			bool encodeStatus;
+			string encodedData;
+			bool functionWithInputs = x.first != "()";
+			if (functionWithInputs)
 			{
-				cout << ContractABIUtils{}.functionSignatureFromABI(r.value()) << endl;
-				for (auto const& i: r.value()["inputs"])
-					if (auto v = ValueGenerator{i["type"].asString(), 0}.type(); v.has_value())
-						cout << v.value().name << endl;
-				return 0;
+				abicoder::ABICoder coder(abiCoderHeapSize);
+				auto s = coder.encode(x.first, x.second);
+				encodeStatus = s.first;
+				encodedData = s.second;
+				solAssert(encodeStatus, "Isabelle coder: failed.");
 			}
-			if (noInputFunction.has_value())
-				evmoneUtil.methodName(noInputFunction.value());
-			else
-				return 0;
 
 			auto deployResult = evmoneUtil.deployContract(compilerOutput->byteCode);
 			if (deployResult.status_code != EVMC_SUCCESS)
 				return 0;
 
-			auto methodSig = solidity::util::fromHex(compilerOutput->methodIdentifiersInContract[noInputFunction.value()].asString());
+			auto sig = r.value()["name"].asString() + x.first;
+			auto methodSig = compilerOutput->methodIdentifiersInContract[sig].asString();
+			if (functionWithInputs)
+				methodSig += encodedData.substr(2, encodedData.size());
 			auto callResult = evmoneUtil.executeContract(
-				methodSig,
+				solidity::util::fromHex(methodSig),
 				deployResult.create_address
 			);
 
@@ -137,7 +146,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			solAssert(deployResultOpt.status_code == EVMC_SUCCESS, "Contract compiled via new code gen could not be deployed.");
 
 			auto callResultOpt = evmoneUtil.executeContract(
-				methodSig,
+				solidity::util::fromHex(methodSig),
 				deployResultOpt.create_address
 			);
 			solAssert(callResultOpt.status_code == EVMC_SUCCESS, "New code gen contract call failed.");
@@ -181,5 +190,4 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			return 0;
 		}
 	}
-	return 0;
 }

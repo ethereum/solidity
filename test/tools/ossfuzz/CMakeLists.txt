@@ -32,7 +32,7 @@ if (OSSFUZZ)
             SolidityEvmoneInterface.cpp
             ../../libsolidity/util/ContractABIUtils.cpp
     )
-    target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone)
+    target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone abicoder gmp.a)
     set_target_properties(solc_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(solc_mutator_ossfuzz
