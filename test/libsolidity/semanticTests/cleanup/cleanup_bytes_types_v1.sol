@@ -1,3 +1,4 @@
+pragma abicoder v1;
 // Checks that bytesXX types are properly cleaned before they are compared.
 contract C {
     function f(bytes2 a, uint16 x) public returns (uint256) {
@@ -7,7 +8,5 @@ contract C {
         return 0;
     }
 }
-// ====
-// ABIEncoderV1Only: true
 // ----
 // f(bytes2,uint16): "abc", 0x40102 -> 0x0 # We input longer data on purpose. #

@@ -85,7 +85,6 @@ private:
 	bool m_runWithEwasm = false;
 	bool m_runWithoutYul = true;
 	bool m_enforceViaYul = false;
-	bool m_runWithABIEncoderV1Only = false;
 	bool m_allowNonExistingFunctions = false;
 	bool m_compileViaYulCanBeSet = false;
 	std::map<std::string, Builtin> m_builtins{};

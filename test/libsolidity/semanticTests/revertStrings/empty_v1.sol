@@ -8,7 +8,6 @@ contract C {
 	}
 }
 // ====
-// ABIEncoderV1Only: true
 // EVMVersion: >=byzantium
 // compileViaYul: false
 // revertStrings: debug

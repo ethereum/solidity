@@ -1,10 +1,9 @@
+pragma abicoder v1;
 contract C {
     function f(int32 a, uint32 b) public returns (int32) {
         return a >> b;
     }
 }
-// ====
-// ABIEncoderV1Only: true
 // ----
 // f(int32,uint32): 0xffffff99, 0x00 -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff99
 // f(int32,uint32): 0xffffff99, 0x01 -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffcc

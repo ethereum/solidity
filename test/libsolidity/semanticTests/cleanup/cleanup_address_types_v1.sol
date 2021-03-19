@@ -1,3 +1,4 @@
+pragma abicoder v1;
 // Checks that address types are properly cleaned before they are compared.
 contract C {
     function f(address a) public returns (uint256) {
@@ -11,7 +12,7 @@ contract C {
     }
 }
 // ====
-// ABIEncoderV1Only: true
+// compileViaYul: false
 // ----
 // f(address): 0xffff1234567890123456789012345678901234567890 -> 0x0 # We input longer data on purpose.#
 // g(address): 0xffff1234567890123456789012345678901234567890 -> 0x0

@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
     function f(bool _b) public returns (uint256) {
         if (_b) return 1;
@@ -9,7 +10,7 @@ contract C {
     }
 }
 // ====
-// ABIEncoderV1Only: true
+// compileViaYul: false
 // ----
 // f(bool): 0x0 -> 0x0
 // f(bool): 0x1 -> 0x1

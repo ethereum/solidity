@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
     function f(int8 a, uint8 b) public returns (int256) {
         assembly {
@@ -15,8 +16,6 @@ contract C {
         return a >> b;
     }
 }
-// ====
-// ABIEncoderV1Only: true
 // ----
 // f(int8,uint8): 0x00, 0x03 -> 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
 // f(int8,uint8): 0x00, 0x04 -> 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
