@@ -1,6 +1,6 @@
 // https://en.wikipedia.org/wiki/Ackermann_function
 // Test to see how FunctionSpecializer deals with functions that are too recursive / resource intensive.
-// Unlike the test ackermann_function.yul, this one implements it using `if` nad leave
+// Unlike the test ackermann_function.yul, this one implements it using `if` and leave
 {
     // 5
     sstore(0, A(2, 1))
