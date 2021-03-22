@@ -159,21 +159,17 @@ public:
 	{
 
 	}
-	static void typeHelper(Json::Value const& _type, TypeInfo& _typeInfo);
-	static TypeInfo type(Json::Value const& _type);
-	static void tuple(Json::Value const& _tuple, TypeInfo& _typeInfo);
+	void typeHelper(Json::Value const& _type, TypeInfo& _typeInfo);
+	TypeInfo type(Json::Value const& _type);
+	void tuple(Json::Value const& _tuple, TypeInfo& _typeInfo);
 	std::pair<std::string, std::string> type();
-	static void initialiseTuple(TypeInfo& _tuple);
-	static void initialiseType(TypeInfo& _t);
-	static void initialiseArray(
+	void initialiseTuple(TypeInfo& _tuple);
+	void initialiseType(TypeInfo& _t);
+	void initialiseArray(
 		ArrayInfo& _arrayInfo,
 	    TypeInfo& _typeInfo
     );
-	static void initialiseArrayOfTuple(
-		std::vector<ArrayInfo>& _arrayInfo,
-		TypeInfo& _typeInfo
-	);
-	static void initialiseArray(
+	void initialiseArray(
 		std::vector<ArrayInfo>& _arrayInfo,
 		TypeInfo& _typeInfo
 	);

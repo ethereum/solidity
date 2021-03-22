@@ -98,6 +98,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			bool encodeStatus;
 			string encodedData;
 			bool functionWithInputs = x.first != "()";
+			auto sig = r.value()["name"].asString() + x.first;
+			cout << sig << endl;
 			if (functionWithInputs)
 			{
 				abicoder::ABICoder coder(abiCoderHeapSize);
@@ -111,7 +113,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			if (deployResult.status_code != EVMC_SUCCESS)
 				return 0;
 
-			auto sig = r.value()["name"].asString() + x.first;
 			auto methodSig = compilerOutput->methodIdentifiersInContract[sig].asString();
 			if (functionWithInputs)
 				methodSig += encodedData.substr(2, encodedData.size());
@@ -121,7 +122,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			);
 
 			if (callResult.status_code != EVMC_SUCCESS)
+			{
+				cout << "Old code gen call failed with status code: "
+					<< callResult.status_code
+					<< endl;
 				return 0;
+			}
 
 			solidity::bytes result;
 			for (size_t i = 0; i < callResult.output_size; i++)

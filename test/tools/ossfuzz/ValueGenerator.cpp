@@ -20,38 +20,167 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <libsolutil/Keccak256.h>
+
+#include <boost/preprocessor.hpp>
+
 #include <regex>
 #include <iostream>
 
 using namespace std;
+
+/// Convenience macros
+/// Returns a valid Solidity integer width w such that 8 <= w <= 256.
+#define INTWIDTH(z, n, _ununsed) BOOST_PP_MUL(BOOST_PP_ADD(n, 1), 8)
+/// Using declaration that aliases long boost multiprecision types with
+/// s(u)<width> where <width> is a valid Solidity integer width and "s"
+/// stands for "signed" and "u" for "unsigned".
+#define USINGDECL(z, n, sign) \
+	using BOOST_PP_CAT(BOOST_PP_IF(sign, s, u), INTWIDTH(z, n,)) =             \
+	boost::multiprecision::number<                                             \
+		boost::multiprecision::cpp_int_backend<                                \
+			INTWIDTH(z, n,),                                                   \
+			INTWIDTH(z, n,),                                                   \
+			BOOST_PP_IF(                                                       \
+				sign,                                                          \
+				boost::multiprecision::signed_magnitude,                       \
+				boost::multiprecision::unsigned_magnitude                      \
+			),                                                                 \
+			boost::multiprecision::unchecked,                                  \
+			void                                                               \
+		>                                                                      \
+	>;
+/// Instantiate the using declarations for signed and unsigned integer types.
+BOOST_PP_REPEAT(32, USINGDECL, 1)
+BOOST_PP_REPEAT(32, USINGDECL, 0)
+/// Case implementation that returns an integer value of the specified type.
+/// For signed integers, we divide by two because the range for boost multiprecision
+/// types is double that of Solidity integer types. Example, 8-bit signed boost
+/// number range is [-255, 255] but Solidity `int8` range is [-128, 127]
+#define CASEIMPL(z, n, sign)                                                   \
+	case INTWIDTH(z, n,):                                                      \
+		stream << BOOST_PP_IF(                                                 \
+			sign,                                                              \
+			integerValue<                                                      \
+				BOOST_PP_CAT(                                                  \
+					BOOST_PP_IF(sign, s, u),                                   \
+					INTWIDTH(z, n,)                                            \
+                )>(_counter) / 2,                                              \
+			integerValue<                                                      \
+				BOOST_PP_CAT(                                                  \
+					BOOST_PP_IF(sign, s, u),                                   \
+					INTWIDTH(z, n,)                                            \
+                )>(_counter)                                                   \
+        );                                                                     \
+		break;
+/// Switch implementation that instantiates case statements for (un)signed
+/// Solidity integer types.
+#define SWITCHIMPL(sign)                                                       \
+	ostringstream stream;                                                      \
+	switch (_intWidth)                                                         \
+	{                                                                          \
+	BOOST_PP_REPEAT(32, CASEIMPL, sign)	                                       \
+	}	                                                                       \
+	return stream.str();
+
+namespace
+{
+template<typename V>
+V integerValue(size_t _counter)
+{
+	V value = V(
+		u256(solidity::util::keccak256(solidity::util::h256(_counter))) %
+		u256(boost::math::tools::max_value<V>())
+	);
+	if (boost::multiprecision::is_signed_number<V>::value && value % 2 == 0)
+		return value * (-1);
+	else
+		return value;
+}
+
+string signedIntegerValue(size_t _counter, size_t _intWidth)
+{
+	SWITCHIMPL(1)
+}
+
+string unsignedIntegerValue(size_t _counter, size_t _intWidth)
+{
+	SWITCHIMPL(0)
+}
+
+string integerValue(size_t _counter, size_t _intWidth, bool _signed)
+{
+	if (_signed)
+		return signedIntegerValue(_counter, _intWidth);
+	else
+		return unsignedIntegerValue(_counter, _intWidth);
+}
+
+string fixedBytes(
+	size_t _numBytes,
+	size_t _counter,
+	bool _isHexLiteral
+)
+{
+	solAssert(
+		_numBytes > 0 && _numBytes <= 32,
+		"Proto ABIv2 fuzzer: Too short or too long a cropped string"
+	);
+
+	// Number of masked nibbles is twice the number of bytes for a
+	// hex literal of _numBytes bytes. For a string literal, each nibble
+	// is treated as a character.
+	size_t numMaskNibbles = _isHexLiteral ? _numBytes * 2 : _numBytes;
+
+	// Start position of substring equals totalHexStringLength - numMaskNibbles
+	// totalHexStringLength = 64 + 2 = 66
+	// e.g., 0x12345678901234567890123456789012 is a total of 66 characters
+	//      |---------------------^-----------|
+	//      <--- start position---><--numMask->
+	//      <-----------total length --------->
+	// Note: This assumes that maskUnsignedIntToHex() invokes toHex(..., HexPrefix::Add)
+	size_t startPos = 66 - numMaskNibbles;
+	// Extracts the least significant numMaskNibbles from the result
+	// of maskUnsignedIntToHex().
+	return solidity::util::toHex(
+		u256(solidity::util::keccak256(solidity::util::h256(_counter))) &
+		u256("0x" + std::string(numMaskNibbles, 'f')),
+		solidity::util::HexPrefix::Add
+	).substr(startPos, numMaskNibbles);
+}
+}
 
 void ValueGenerator::initialiseType(TypeInfo& _t)
 {
 	switch (_t.type)
 	{
 	case Type::Boolean:
-		_t.value += "true";
+		_t.value += m_bernoulli(m_rand) ? "true" : "false";
 		break;
 	case Type::Integer:
-		_t.value += "12";
+		_t.value += integerValue(m_rand(), static_cast<size_t>(_t.intType.width), true);
 		break;
 	case Type::UInteger:
-		_t.value += "23";
+		_t.value += integerValue(m_rand(), static_cast<size_t>(_t.intType.width), false);
 		break;
 	case Type::String:
 		_t.value += "0xdeadbeef";
 		break;
 	case Type::Bytes:
-		_t.value += "0xc0de";
+	{
+		// Bytes can contain between 1--32 bytes.
+		size_t bytesWidth = (m_rand() % 32) + 1;
+		_t.value += "0x" + fixedBytes(bytesWidth, m_rand(), true);
 		break;
+	}
 	case Type::FixedBytes:
-		_t.value += "0x" + std::string(static_cast<size_t>(_t.fixedByteWidth) * 2, 'a');
+		_t.value += "0x" + fixedBytes(static_cast<size_t>(_t.fixedByteWidth), m_rand(), true);
 		break;
 	case Type::Address:
-		_t.value += "0x" + std::string(static_cast<size_t>(FixedBytesWidth::Bytes20) * 2, 'a');
+		_t.value += "0x" + fixedBytes(static_cast<size_t>(FixedBytesWidth::Bytes20), m_rand(), true);
 		break;
 	case Type::Function:
-		_t.value += "0x" + std::string(static_cast<size_t>(FixedBytesWidth::Bytes24) * 2, 'a');
+		_t.value += "0x" + fixedBytes(static_cast<size_t>(FixedBytesWidth::Bytes24), m_rand(), true);
 		break;
 	default:
 		solAssert(false, "Value Generator: Invalid value type.");
@@ -133,14 +262,6 @@ void ValueGenerator::initialiseArray(
 		}
 		_typeInfo.value += "]";
 	}
-}
-
-void ValueGenerator::initialiseArrayOfTuple(
-	vector<ArrayInfo>&,
-	TypeInfo&
-)
-{
-
 }
 
 void ValueGenerator::typeHelper(Json::Value const& _type, TypeInfo& _typeInfo)
