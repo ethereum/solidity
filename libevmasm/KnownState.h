@@ -178,7 +178,7 @@ private:
 	/// Structure containing the classes of equivalent expressions.
 	std::shared_ptr<ExpressionClasses> m_expressionClasses;
 	/// Container for unions of tags stored on the stack.
-	boost::bimap<Id, std::set<u256>> m_tagUnions;
+	boost::bimap<boost::bimaps::set_of<Id, std::less<Id>>, boost::bimaps::set_of<std::set<u256>, std::less<std::set<u256>>>> m_tagUnions;
 };
 
 }
