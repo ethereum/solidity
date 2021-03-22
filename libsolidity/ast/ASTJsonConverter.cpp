@@ -129,7 +129,7 @@ string ASTJsonConverter::namePathToString(std::vector<ASTString> const& _namePat
 	return boost::algorithm::join(_namePath, ".");
 }
 
-Json::Value ASTJsonConverter::typePointerToJson(TypePointer _tp, bool _short)
+Json::Value ASTJsonConverter::typePointerToJson(Type const* _tp, bool _short)
 {
 	Json::Value typeDescriptions(Json::objectValue);
 	typeDescriptions["typeString"] = _tp ? Json::Value(_tp->toString(_short)) : Json::nullValue;

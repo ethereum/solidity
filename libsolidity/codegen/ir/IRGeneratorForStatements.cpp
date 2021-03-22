@@ -135,7 +135,7 @@ private:
 			}
 			else if (auto const* literal = dynamic_cast<Literal const*>(variable->value().get()))
 			{
-				TypePointer type = literal->annotation().type;
+				Type const* type = literal->annotation().type;
 
 				switch (type->category())
 				{
@@ -738,7 +738,7 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 	setLocation(_binOp);
 
 	solAssert(!!_binOp.annotation().commonType, "");
-	TypePointer commonType = _binOp.annotation().commonType;
+	Type const* commonType = _binOp.annotation().commonType;
 	langutil::Token op = _binOp.getOperator();
 
 	if (op == Token::And || op == Token::Or)
@@ -1157,7 +1157,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			<?+retVars>let <retVars> := </+retVars> <abiDecode>(<offset>, add(<offset>, <length>))
 		)");
 
-		TypePointer firstArgType = arguments.front()->annotation().type;
+		Type const* firstArgType = arguments.front()->annotation().type;
 		TypePointers targetTypes;
 
 		if (TupleType const* targetTupleType = dynamic_cast<TupleType const*>(_functionCall.annotation().type))
@@ -1756,7 +1756,7 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 			solAssert(false, "Blockhash has been removed.");
 		else if (member == "creationCode" || member == "runtimeCode")
 		{
-			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
 			solAssert(!contractType.isSuper(), "");
 			ContractDefinition const& contract = contractType.contractDefinition();
@@ -1774,13 +1774,13 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}
 		else if (member == "name")
 		{
-			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*arg).contractDefinition();
 			define(IRVariable(_memberAccess)) << m_utils.copyLiteralToMemoryFunction(contract.name()) << "()\n";
 		}
 		else if (member == "interfaceId")
 		{
-			TypePointer arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
+			Type const* arg = dynamic_cast<MagicType const&>(*_memberAccess.expression().annotation().type).typeArgument();
 			auto const& contractType = dynamic_cast<ContractType const&>(*arg);
 			solAssert(!contractType.isSuper(), "");
 			ContractDefinition const& contract = contractType.contractDefinition();

@@ -22,7 +22,7 @@ using namespace solidity::tools;
 
 void DotSyntax::endVisit(FunctionCall const& _functionCall)
 {
-	TypePointer type = _functionCall.annotation().type;
+	Type const* type = _functionCall.annotation().type;
 	if (auto const funcType = dynamic_cast<FunctionType const*>(type))
 	{
 		if (funcType->valueSet())

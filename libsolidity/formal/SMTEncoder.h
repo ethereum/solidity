@@ -62,7 +62,7 @@ public:
 	/// @returns the key type in _type.
 	/// _type must allow IndexAccess, that is,
 	/// it must be either ArrayType or MappingType
-	static TypePointer keyType(TypePointer _type);
+	static Type const* keyType(Type const* _type);
 
 	/// @returns the innermost element in a chain of 1-tuples if applicable,
 	/// otherwise _expr.
@@ -166,7 +166,7 @@ protected:
 		Token _op,
 		smtutil::Expression const& _left,
 		smtutil::Expression const& _right,
-		TypePointer const& _commonType,
+		Type const* _commonType,
 		Expression const& _expression
 	);
 
@@ -174,7 +174,7 @@ protected:
 		Token _op,
 		smtutil::Expression const& _left,
 		smtutil::Expression const& _right,
-		TypePointer const& _commonType
+		Type const* _commonType
 	);
 
 	void compareOperation(BinaryOperation const& _op);
@@ -251,7 +251,7 @@ protected:
 	void assignment(
 		Expression const& _left,
 		smtutil::Expression const& _right,
-		TypePointer const& _type
+		Type const* _type
 	);
 	/// Handle assignments between tuples.
 	void tupleAssignment(Expression const& _left, Expression const& _right);
@@ -284,11 +284,11 @@ protected:
 	/// a subexpression of the same type as _varDecl.
 	void resetReferences(VariableDeclaration const& _varDecl);
 	/// Resets all references/pointers that have type _type.
-	void resetReferences(TypePointer _type);
+	void resetReferences(Type const* _type);
 	/// @returns the type without storage pointer information if it has it.
-	TypePointer typeWithoutPointer(TypePointer const& _type);
+	Type const* typeWithoutPointer(Type const* _type);
 	/// @returns whether _a or a subtype of _a is the same as _b.
-	bool sameTypeOrSubtype(TypePointer _a, TypePointer _b);
+	bool sameTypeOrSubtype(Type const* _a, Type const* _b);
 
 	/// Given two different branches and the touched variables,
 	/// merge the touched variables into after-branch ite variables
@@ -306,7 +306,7 @@ protected:
 	/// Returns the expression corresponding to the AST node.
 	/// If _targetType is not null apply conversion.
 	/// Throws if the expression does not exist.
-	smtutil::Expression expr(Expression const& _e, TypePointer _targetType = nullptr);
+	smtutil::Expression expr(Expression const& _e, Type const* _targetType = nullptr);
 	/// Creates the expression (value can be arbitrary)
 	void createExpr(Expression const& _e);
 	/// Creates the expression and sets its value.

@@ -208,8 +208,8 @@ void SymbolicState::buildABIFunctions(set<FunctionCall const*> const& _abiFuncti
 
 		/// Since each abi.* function may have a different number of input/output parameters,
 		/// we generically compute those types.
-		vector<TypePointer> inTypes;
-		vector<TypePointer> outTypes;
+		vector<frontend::Type const*> inTypes;
+		vector<frontend::Type const*> outTypes;
 		if (t->kind() == FunctionType::Kind::ABIDecode)
 		{
 			/// abi.decode : (bytes, tuple_of_types(return_types)) -> (return_types)

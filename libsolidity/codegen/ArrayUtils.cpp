@@ -49,9 +49,9 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack layout: [source_ref] [source length] target_ref (top)
 	solAssert(_targetType.location() == DataLocation::Storage, "");
 
-	TypePointer uint256 = TypeProvider::uint256();
-	TypePointer targetBaseType = _targetType.isByteArray() ? uint256 : _targetType.baseType();
-	TypePointer sourceBaseType = _sourceType.isByteArray() ? uint256 : _sourceType.baseType();
+	Type const* uint256 = TypeProvider::uint256();
+	Type const* targetBaseType = _targetType.isByteArray() ? uint256 : _targetType.baseType();
+	Type const* sourceBaseType = _sourceType.isByteArray() ? uint256 : _sourceType.baseType();
 
 	// TODO unroll loop for small sizes
 
@@ -79,8 +79,8 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	}
 
 	// stack: target_ref source_ref source_length
-	TypePointer targetType = &_targetType;
-	TypePointer sourceType = &_sourceType;
+	Type const* targetType = &_targetType;
+	Type const* sourceType = &_sourceType;
 	m_context.callLowLevelFunction(
 		"$copyArrayToStorage_" + sourceType->identifier() + "_to_" + targetType->identifier(),
 		3,
@@ -549,7 +549,7 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 
 void ArrayUtils::clearArray(ArrayType const& _typeIn) const
 {
-	TypePointer type = &_typeIn;
+	Type const* type = &_typeIn;
 	m_context.callLowLevelFunction(
 		"$clearArray_" + _typeIn.identifier(),
 		2,
@@ -654,7 +654,7 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 
 void ArrayUtils::resizeDynamicArray(ArrayType const& _typeIn) const
 {
-	TypePointer type = &_typeIn;
+	Type const* type = &_typeIn;
 	m_context.callLowLevelFunction(
 		"$resizeDynamicArray_" + _typeIn.identifier(),
 		2,
@@ -934,7 +934,7 @@ void ArrayUtils::popStorageArrayElement(ArrayType const& _type) const
 	}
 }
 
-void ArrayUtils::clearStorageLoop(TypePointer _type) const
+void ArrayUtils::clearStorageLoop(Type const* _type) const
 {
 	solAssert(_type->storageBytes() >= 32, "");
 	m_context.callLowLevelFunction(

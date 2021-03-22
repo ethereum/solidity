@@ -166,7 +166,7 @@ SortPointer smtSort(frontend::Type const& _type)
 	}
 }
 
-vector<SortPointer> smtSort(vector<frontend::TypePointer> const& _types)
+vector<SortPointer> smtSort(vector<frontend::Type const*> const& _types)
 {
 	vector<SortPointer> sorts;
 	for (auto const& type: _types)
@@ -181,7 +181,7 @@ SortPointer smtSortAbstractFunction(frontend::Type const& _type)
 	return smtSort(_type);
 }
 
-vector<SortPointer> smtSortAbstractFunction(vector<frontend::TypePointer> const& _types)
+vector<SortPointer> smtSortAbstractFunction(vector<frontend::Type const*> const& _types)
 {
 	vector<SortPointer> sorts;
 	for (auto const& type: _types)
@@ -232,7 +232,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 {
 	bool abstract = false;
 	shared_ptr<SymbolicVariable> var;
-	frontend::TypePointer type = &_type;
+	frontend::Type const* type = &_type;
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
@@ -249,7 +249,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 			return find_if(
 				begin(params),
 				end(params),
-				[&](TypePointer _paramType) { return _paramType->category() == frontend::Type::Category::Function; }
+				[&](frontend::Type const* _paramType) { return _paramType->category() == frontend::Type::Category::Function; }
 			);
 		};
 		if (
@@ -391,7 +391,7 @@ smtutil::Expression minValue(frontend::IntegerType const& _type)
 	return smtutil::Expression(_type.minValue());
 }
 
-smtutil::Expression minValue(frontend::TypePointer _type)
+smtutil::Expression minValue(frontend::Type const* _type)
 {
 	solAssert(isNumber(*_type), "");
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
@@ -413,7 +413,7 @@ smtutil::Expression maxValue(frontend::IntegerType const& _type)
 	return smtutil::Expression(_type.maxValue());
 }
 
-smtutil::Expression maxValue(frontend::TypePointer _type)
+smtutil::Expression maxValue(frontend::Type const* _type)
 {
 	solAssert(isNumber(*_type), "");
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
@@ -437,13 +437,13 @@ void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _c
 	setSymbolicZeroValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicZeroValue(smtutil::Expression _expr, frontend::Type const* _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
 	_context.addAssertion(_expr == zeroValue(_type));
 }
 
-smtutil::Expression zeroValue(frontend::TypePointer const& _type)
+smtutil::Expression zeroValue(frontend::Type const* _type)
 {
 	solAssert(_type, "");
 	if (isSupportedType(*_type))
@@ -496,7 +496,7 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 	return 0;
 }
 
-bool isSigned(TypePointer const& _type)
+bool isSigned(frontend::Type const* _type)
 {
 	solAssert(smt::isNumber(*_type), "");
 	bool isSigned = false;
@@ -519,7 +519,7 @@ bool isSigned(TypePointer const& _type)
 	return isSigned;
 }
 
-pair<unsigned, bool> typeBvSizeAndSignedness(frontend::TypePointer const& _type)
+pair<unsigned, bool> typeBvSizeAndSignedness(frontend::Type const* _type)
 {
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
 		return {intType->numBits(), intType->isSigned()};
@@ -536,12 +536,12 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::Type const* _type, EncodingContext& _context)
 {
 	_context.addAssertion(symbolicUnknownConstraints(_expr, _type));
 }
 
-smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::TypePointer const& _type)
+smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::Type const* _type)
 {
 	solAssert(_type, "");
 	if (isEnum(*_type) || isInteger(*_type) || isAddress(*_type) || isFixedBytes(*_type))
@@ -553,7 +553,7 @@ smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, fronte
 	return smtutil::Expression(true);
 }
 
-optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
+optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* _from, frontend::Type const* _to)
 {
 	if (_to && _from)
 		// StringLiterals are encoded as SMT arrays in the generic case,

@@ -76,13 +76,13 @@ bool TypeChecker::checkTypeRequirements(SourceUnit const& _source)
 	return Error::containsOnlyWarnings(m_errorReporter.errors());
 }
 
-TypePointer const& TypeChecker::type(Expression const& _expression) const
+Type const* TypeChecker::type(Expression const& _expression) const
 {
 	solAssert(!!_expression.annotation().type, "Type requested but not present.");
 	return _expression.annotation().type;
 }
 
-TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
+Type const* TypeChecker::type(VariableDeclaration const& _variable) const
 {
 	solAssert(!!_variable.annotation().type, "Type requested but not present.");
 	return _variable.annotation().type;
@@ -183,7 +183,7 @@ TypePointers TypeChecker::typeCheckABIDecodeAndRetrieveReturnType(FunctionCall c
 		solAssert(typeArgument, "");
 		if (TypeType const* argTypeType = dynamic_cast<TypeType const*>(type(*typeArgument)))
 		{
-			TypePointer actualType = argTypeType->actualType();
+			Type const* actualType = argTypeType->actualType();
 			solAssert(actualType, "");
 			// We force memory because the parser currently cannot handle
 			// data locations. Furthermore, storage can be a little dangerous and
@@ -237,7 +237,7 @@ TypePointers TypeChecker::typeCheckMetaTypeFunctionAndRetrieveReturnType(Functio
 			toString(arguments.size()) +
 			" were provided."
 		);
-	TypePointer firstArgType = type(*arguments.front());
+	Type const* firstArgType = type(*arguments.front());
 
 	bool wrongType = false;
 	if (firstArgType->category() == Type::Category::TypeType)
@@ -502,7 +502,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 
 	// type is filled either by ReferencesResolver directly from the type name or by
 	// TypeChecker at the VariableDeclarationStatement level.
-	TypePointer varType = _variable.annotation().type;
+	Type const* varType = _variable.annotation().type;
 	solAssert(!!varType, "Variable type not provided.");
 
 	if (_variable.value())
@@ -1152,7 +1152,7 @@ void TypeChecker::endVisit(Return const& _return)
 		m_errorReporter.typeError(8863_error, _return.location(), "Different number of arguments in return statement than in returns declaration.");
 	else
 	{
-		TypePointer const& expected = type(*params->parameters().front());
+		Type const* expected = type(*params->parameters().front());
 		BoolResult result = type(*_return.expression())->isImplicitlyConvertibleTo(*expected);
 		if (!result)
 			m_errorReporter.typeErrorConcatenateDescriptions(
@@ -1236,7 +1236,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			continue;
 		VariableDeclaration const& var = *variables[i];
 		solAssert(!var.value(), "Value has to be tied to statement.");
-		TypePointer const& valueComponentType = valueTypes[i];
+		Type const* valueComponentType = valueTypes[i];
 		solAssert(!!valueComponentType, "");
 		solAssert(var.annotation().type, "");
 
@@ -1322,10 +1322,10 @@ bool TypeChecker::visit(Conditional const& _conditional)
 	_conditional.trueExpression().accept(*this);
 	_conditional.falseExpression().accept(*this);
 
-	TypePointer trueType = type(_conditional.trueExpression())->mobileType();
-	TypePointer falseType = type(_conditional.falseExpression())->mobileType();
+	Type const* trueType = type(_conditional.trueExpression())->mobileType();
+	Type const* falseType = type(_conditional.falseExpression())->mobileType();
 
-	TypePointer commonType = nullptr;
+	Type const* commonType = nullptr;
 
 	if (!trueType)
 		m_errorReporter.typeError(9717_error, _conditional.trueExpression().location(), "Invalid mobile type in true expression.");
@@ -1387,7 +1387,7 @@ void TypeChecker::checkExpressionAssignment(Type const& _type, Expression const&
 			m_errorReporter.typeError(5547_error, _expression.location(), "Empty tuple on the left hand side.");
 
 		auto const* tupleType = dynamic_cast<TupleType const*>(&_type);
-		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components() : vector<TypePointer> { &_type };
+		auto const& types = tupleType && tupleExpression->components().size() != 1 ? tupleType->components() : vector<Type const*> { &_type };
 
 		solAssert(
 			tupleExpression->components().size() == types.size() || m_errorReporter.hasErrors(),
@@ -1419,7 +1419,7 @@ bool TypeChecker::visit(Assignment const& _assignment)
 		_assignment.leftHandSide(),
 		_assignment.assignmentOperator() == Token::Assign
 	);
-	TypePointer t = type(_assignment.leftHandSide());
+	Type const* t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
 	_assignment.annotation().isPure = false;
 	_assignment.annotation().isLValue = false;
@@ -1450,7 +1450,7 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	{
 		// compound assignment
 		_assignment.rightHandSide().accept(*this);
-		TypePointer resultType = t->binaryOperatorResult(
+		Type const* resultType = t->binaryOperatorResult(
 			TokenTraits::AssignmentToBinaryOp(_assignment.assignmentOperator()),
 			type(_assignment.rightHandSide())
 		);
@@ -1489,7 +1489,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				types.push_back(type(*component));
 			}
 			else
-				types.push_back(TypePointer());
+				types.push_back(nullptr);
 		if (components.size() == 1)
 			_tuple.annotation().type = type(*components[0]);
 		else
@@ -1501,7 +1501,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	else
 	{
 		bool isPure = true;
-		TypePointer inlineArrayType = nullptr;
+		Type const* inlineArrayType = nullptr;
 
 		for (size_t i = 0; i < components.size(); ++i)
 		{
@@ -1581,8 +1581,8 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 		requireLValue(_operation.subExpression(), false);
 	else
 		_operation.subExpression().accept(*this);
-	TypePointer const& subExprType = type(_operation.subExpression());
-	TypePointer t = type(_operation.subExpression())->unaryOperatorResult(op);
+	Type const* subExprType = type(_operation.subExpression());
+	Type const* t = type(_operation.subExpression())->unaryOperatorResult(op);
 	if (!t)
 	{
 		string description = "Unary operator " + string(TokenTraits::toString(op)) + " cannot be applied to type " + subExprType->toString();
@@ -1604,10 +1604,10 @@ bool TypeChecker::visit(UnaryOperation const& _operation)
 
 void TypeChecker::endVisit(BinaryOperation const& _operation)
 {
-	TypePointer const& leftType = type(_operation.leftExpression());
-	TypePointer const& rightType = type(_operation.rightExpression());
+	Type const* leftType = type(_operation.leftExpression());
+	Type const* rightType = type(_operation.rightExpression());
 	TypeResult result = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
-	TypePointer commonType = result.get();
+	Type const* commonType = result.get();
 	if (!commonType)
 	{
 		m_errorReporter.typeError(
@@ -1669,17 +1669,17 @@ void TypeChecker::endVisit(BinaryOperation const& _operation)
 	}
 }
 
-TypePointer TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
+Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 	FunctionCall const& _functionCall
 )
 {
 	solAssert(*_functionCall.annotation().kind == FunctionCallKind::TypeConversion, "");
-	TypePointer const& expressionType = type(_functionCall.expression());
+	Type const* expressionType = type(_functionCall.expression());
 
 	vector<ASTPointer<Expression const>> const& arguments = _functionCall.arguments();
 	bool const isPositionalCall = _functionCall.names().empty();
 
-	TypePointer resultType = dynamic_cast<TypeType const&>(*expressionType).actualType();
+	Type const* resultType = dynamic_cast<TypeType const&>(*expressionType).actualType();
 	if (arguments.size() != 1)
 		m_errorReporter.typeError(
 			2558_error,
@@ -2358,7 +2358,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	case Type::Category::TypeType:
 	{
 		// Determine type for type conversion or struct construction expressions
-		TypePointer const& actualType = dynamic_cast<TypeType const&>(*expressionType).actualType();
+		Type const* actualType = dynamic_cast<TypeType const&>(*expressionType).actualType();
 		solAssert(!!actualType, "");
 
 		if (actualType->category() == Type::Category::Struct)
@@ -2610,7 +2610,7 @@ bool TypeChecker::visit(FunctionCallOptions const& _functionCallOptions)
 
 void TypeChecker::endVisit(NewExpression const& _newExpression)
 {
-	TypePointer type = _newExpression.typeName().annotation().type;
+	Type const* type = _newExpression.typeName().annotation().type;
 	solAssert(!!type, "Type name not resolved.");
 
 	_newExpression.annotation().isConstant = false;
@@ -2684,7 +2684,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 bool TypeChecker::visit(MemberAccess const& _memberAccess)
 {
 	_memberAccess.expression().accept(*this);
-	TypePointer exprType = type(_memberAccess.expression());
+	Type const* exprType = type(_memberAccess.expression());
 	ASTString const& memberName = _memberAccess.memberName();
 
 	auto& annotation = _memberAccess.annotation();
@@ -2972,8 +2972,8 @@ bool TypeChecker::visit(IndexAccess const& _access)
 {
 	_access.annotation().isConstant = false;
 	_access.baseExpression().accept(*this);
-	TypePointer baseType = type(_access.baseExpression());
-	TypePointer resultType = nullptr;
+	Type const* baseType = type(_access.baseExpression());
+	Type const* resultType = nullptr;
 	bool isLValue = false;
 	bool isPure = *_access.baseExpression().annotation().isPure;
 	Expression const* index = _access.indexExpression();
@@ -3109,7 +3109,7 @@ bool TypeChecker::visit(IndexRangeAccess const& _access)
 	_access.annotation().isLValue = isLValue;
 	_access.annotation().isPure = isPure;
 
-	TypePointer exprType = type(_access.baseExpression());
+	Type const* exprType = type(_access.baseExpression());
 	if (exprType->category() == Type::Category::TypeType)
 	{
 		m_errorReporter.typeError(1760_error, _access.location(), "Types cannot be sliced.");
@@ -3157,7 +3157,7 @@ vector<Declaration const*> TypeChecker::cleanOverloadedDeclarations(
 			functionType = declaration->functionType(true);
 		solAssert(functionType, "Failed to determine the function type of the overloaded.");
 
-		for (TypePointer parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
+		for (Type const* parameter: functionType->parameterTypes() + functionType->returnParameterTypes())
 			if (!parameter)
 				m_errorReporter.fatalDeclarationError(3893_error, _identifier.location(), "Function type can not be used in this context.");
 

@@ -42,10 +42,10 @@ private:
 	Json::Value generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset);
 
 	/// Generates the JSON information for @param _type
-	void generate(TypePointer _type);
+	void generate(Type const* _type);
 
 	/// The key for the JSON object describing a type.
-	std::string typeKeyName(TypePointer _type);
+	std::string typeKeyName(Type const* _type);
 
 	Json::Value m_types;
 

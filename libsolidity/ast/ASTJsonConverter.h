@@ -179,7 +179,7 @@ private:
 
 		return json;
 	}
-	static Json::Value typePointerToJson(TypePointer _tp, bool _short = false);
+	static Json::Value typePointerToJson(Type const* _tp, bool _short = false);
 	static Json::Value typePointerToJson(std::optional<FuncCallArguments> const& _tps);
 	void appendExpressionAttributes(
 		std::vector<std::pair<std::string, Json::Value>> &_attributes,

@@ -145,10 +145,10 @@ public:
 
 private:
 	/// @returns the formatted version of the given SMT expressions. Those expressions must be SMT constants.
-	std::vector<std::optional<std::string>> formatExpressions(std::vector<smtutil::Expression> const& _exprs, std::vector<TypePointer> const& _types) const;
+	std::vector<std::optional<std::string>> formatExpressions(std::vector<smtutil::Expression> const& _exprs, std::vector<Type const*> const& _types) const;
 
 	/// @returns a string representation of the SMT expression based on a Solidity type.
-	std::optional<std::string> expressionToString(smtutil::Expression const& _expr, TypePointer _type) const;
+	std::optional<std::string> expressionToString(smtutil::Expression const& _expr, Type const* _type) const;
 
 	/// Recursively fills _array from _expr.
 	/// _expr should have the form `store(store(...(const_array(x_0), i_0, e_0), i_m, e_m), i_k, e_k)`.

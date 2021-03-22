@@ -31,7 +31,6 @@ namespace solidity::frontend
 // Forward declarations
 class ContractDefinition;
 class Type;
-using TypePointer = Type const*;
 
 class ABI
 {
@@ -48,8 +47,8 @@ private:
 	/// ABI types used for the actual encoding.
 	static Json::Value formatTypeList(
 		std::vector<std::string> const& _names,
-		std::vector<TypePointer> const& _encodingTypes,
-		std::vector<TypePointer> const& _solidityTypes,
+		std::vector<Type const*> const& _encodingTypes,
+		std::vector<Type const*> const& _solidityTypes,
 		bool _forLibrary
 	);
 	/// @returns a Json object with "name", "type", "internalType" and potentially

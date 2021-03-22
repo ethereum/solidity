@@ -58,7 +58,7 @@ public:
 
 	/// Converts a given elementary type name with optional data location
 	/// suffix " storage", " calldata" or " memory" to a type pointer. If suffix not given, defaults to " storage".
-	static TypePointer fromElementaryTypeName(std::string const& _name);
+	static Type const* fromElementaryTypeName(std::string const& _name);
 
 	/// @returns boolean type.
 	static BoolType const* boolean() noexcept { return &m_boolean; }
@@ -169,7 +169,7 @@ public:
 
 	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does
 	/// not fit any type.
-	static TypePointer forLiteral(Literal const& _literal);
+	static Type const* forLiteral(Literal const& _literal);
 	static RationalNumberType const* rationalNumber(Literal const& _literal);
 
 	static RationalNumberType const* rationalNumber(

@@ -537,7 +537,7 @@ string IRGenerator::generateGetter(VariableDeclaration const& _varDecl)
 		// In each iteration of the loop below, we consume one parameter, perform an
 		// index access, reassign the yul variable `slot` and move @a currentType further "down".
 		// The initial value of @a currentType is only used if we skip the loop completely.
-		TypePointer currentType = _varDecl.annotation().type;
+		Type const* currentType = _varDecl.annotation().type;
 
 		vector<string> parameters;
 		vector<string> returnVariables;

@@ -150,8 +150,8 @@ public:
 	smtutil::Expression abiFunction(FunctionCall const* _funCall);
 	using SymbolicABIFunction = std::tuple<
 		std::string,
-		std::vector<TypePointer>,
-		std::vector<TypePointer>
+		std::vector<frontend::Type const*>,
+		std::vector<frontend::Type const*>
 	>;
 	SymbolicABIFunction const& abiFunctionTypes(FunctionCall const* _funCall) const;
 

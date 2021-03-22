@@ -280,7 +280,7 @@ string ABIFunctions::abiEncodingFunction(
 	EncodingOptions const& _options
 )
 {
-	TypePointer toInterface = _to.fullEncodingType(_options.encodeAsLibraryTypes, true, false);
+	Type const* toInterface = _to.fullEncodingType(_options.encodeAsLibraryTypes, true, false);
 	solUnimplementedAssert(toInterface, "Encoding type \"" + _to.toString() + "\" not yet implemented.");
 	Type const& to = *toInterface;
 
@@ -871,7 +871,7 @@ string ABIFunctions::abiEncodingFunctionStruct(
 		{
 			solAssert(member.type, "");
 			solAssert(!member.type->containsNestedMapping(), "");
-			TypePointer memberTypeTo = member.type->fullEncodingType(_options.encodeAsLibraryTypes, true, false);
+			Type const* memberTypeTo = member.type->fullEncodingType(_options.encodeAsLibraryTypes, true, false);
 			solUnimplementedAssert(memberTypeTo, "Encoding type \"" + member.type->toString() + "\" not yet implemented.");
 			auto memberTypeFrom = _from.memberType(member.name);
 			solAssert(memberTypeFrom, "");
@@ -1074,7 +1074,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 	// Conversely, bounds checks have to be performed before the decoding function
 	// of a value type is called.
 
-	TypePointer decodingType = _type.decodingType();
+	Type const* decodingType = _type.decodingType();
 	solAssert(decodingType, "");
 
 	if (auto arrayType = dynamic_cast<ArrayType const*>(decodingType))
@@ -1105,7 +1105,7 @@ string ABIFunctions::abiDecodingFunction(Type const& _type, bool _fromMemory, bo
 
 string ABIFunctions::abiDecodingFunctionValueType(Type const& _type, bool _fromMemory)
 {
-	TypePointer decodingType = _type.decodingType();
+	Type const* decodingType = _type.decodingType();
 	solAssert(decodingType, "");
 	solAssert(decodingType->sizeOnStack() == 1, "");
 	solAssert(decodingType->isValueType(), "");
