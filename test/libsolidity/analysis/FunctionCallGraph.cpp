@@ -159,8 +159,8 @@ void checkCallGraphExpectations(
 		CallGraph const& callGraph = *_callGraphs.at(contractName);
 
 		edges[contractName] = edgeNames(callGraph.edges);
-		if (!callGraph.createdContracts.empty())
-			createdContractSets[contractName] = callGraph.createdContracts | views::transform(getContractName) | to<set<string>>();
+		if (!callGraph.bytecodeDependency.empty())
+			createdContractSets[contractName] = callGraph.bytecodeDependency | views::keys | views::transform(getContractName) | to<set<string>>();
 		if (!callGraph.emittedEvents.empty())
 			emittedEventSets[contractName] = callGraph.emittedEvents | views::transform(eventToString) | to<set<string>>();
 	}

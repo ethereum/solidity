@@ -165,6 +165,18 @@ bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 
 bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 {
+	TypePointer exprType = _memberAccess.expression().annotation().type;
+	ASTString const& memberName = _memberAccess.memberName();
+
+	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
+		if (magicType->kind() == MagicType::Kind::MetaType && (
+			memberName == "creationCode" || memberName == "runtimeCode"
+		))
+		{
+			ContractType const& accessedContractType = dynamic_cast<ContractType const&>(*magicType->typeArgument());
+			m_graph.bytecodeDependency.emplace(&accessedContractType.contractDefinition(), &_memberAccess);
+		}
+
 	auto functionType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type);
 	auto functionDef = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
 	if (!functionType || !functionDef || functionType->kind() != FunctionType::Kind::Internal)
@@ -173,7 +185,7 @@ bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 	// Super functions
 	if (*_memberAccess.annotation().requiredLookup == VirtualLookup::Super)
 	{
-		if (auto const* typeType = dynamic_cast<TypeType const*>(_memberAccess.expression().annotation().type))
+		if (auto const* typeType = dynamic_cast<TypeType const*>(exprType))
 			if (auto const contractType = dynamic_cast<ContractType const*>(typeType->actualType()))
 			{
 				solAssert(contractType->isSuper(), "");
@@ -187,7 +199,6 @@ bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 
 	functionReferenced(*functionDef, _memberAccess.annotation().calledDirectly);
-
 	return true;
 }
 
@@ -212,7 +223,7 @@ bool FunctionCallGraphBuilder::visit(ModifierInvocation const& _modifierInvocati
 bool FunctionCallGraphBuilder::visit(NewExpression const& _newExpression)
 {
 	if (ContractType const* contractType = dynamic_cast<ContractType const*>(_newExpression.typeName().annotation().type))
-		m_graph.createdContracts.emplace(&contractType->contractDefinition());
+		m_graph.bytecodeDependency.emplace(&contractType->contractDefinition(), &_newExpression);
 
 	return true;
 }
