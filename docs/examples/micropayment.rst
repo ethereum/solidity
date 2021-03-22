@@ -431,7 +431,7 @@ The full contract
 .. note::
   The function ``splitSignature`` does not use all security
   checks. A real implementation should use a more rigorously tested library,
-  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/cryptography/ECDSA.sol>`_ of this code.
+  such as openzepplin's `version  <https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/ECDSA.sol>`_ of this code.
 
 Verifying Payments
 ------------------
