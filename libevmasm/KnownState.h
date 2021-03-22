@@ -37,7 +37,12 @@
 #pragma clang diagnostic ignored "-Wredeclared-class-member"
 #endif // defined(__clang__)
 
+#pragma warning(push)
+#pragma warning(disable: 4834)
+
 #include <boost/bimap.hpp>
+
+#pragma warning(pop)
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
