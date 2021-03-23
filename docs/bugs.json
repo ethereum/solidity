@@ -1,5 +1,16 @@
 [
     {
+        "name": "KeccakCaching",
+        "summary": "The bytecode optimizer incorrectly re-used previously evaluated Keccak-256 hashes. You are unlikely to be affected if you do not compute Keccak-256 hashes in inline assembly.",
+        "description": "Solidity's bytecode optimizer has a step that can compute Keccak-256 hashes, if the contents of the memory are known during compilation time. This step also has a mechanism to determine that two Keccak-256 hashes are equal even if the values in memory are not known during compile time. This mechanism had a bug where Keccak-256 of the same memory content, but different sizes were considered equal. More specifically, ``keccak256(mpos1, length1)`` and ``keccak256(mpos2, length2)`` in some cases were considered equal if ``length1`` and ``length2``, when rounded up to nearest multiple of 32 were the same, and when the memory contents at ``mpos1`` and ``mpos2`` can be deduced to be equal. You maybe affected if you compute multiple Keccak-256 hashes of the same content, but with different lengths inside inline assembly. You are unaffected if your code uses ``keccak256`` with a length that is not a compile-time constant or if it is always a multiple of 32.",
+        "link": "https://blog.soliditylang.org/2021/03/23/keccak-optimizer-bug/",
+        "fixed": "0.8.3",
+        "conditions": {
+            "optimizer": true
+        },
+        "severity": "medium"
+    },
+    {
         "name": "EmptyByteArrayCopy",
         "summary": "Copying an empty byte array (or string) from memory or calldata to storage can result in data corruption if the target array's length is increased subsequently without storing new data.",
         "description": "The routine that copies byte arrays from memory or calldata to storage stores unrelated data from after the source array in the storage slot if the source array is empty. If the storage array's length is subsequently increased either by using ``.push()`` or by assigning to its ``.length`` attribute (only before 0.6.0), the newly created byte array elements will not be zero-initialized, but contain the unrelated data. You are not affected if you do not assign to ``.length`` and do not use ``.push()`` on byte arrays, or only use ``.push(<arg>)`` or manually initialize the new elements.",

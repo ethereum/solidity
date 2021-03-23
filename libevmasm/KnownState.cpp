@@ -166,7 +166,10 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				// We could be a bit more fine-grained here (CALL only invalidates part of
 				// memory, etc), but we do not for now.
 				if (invMem)
+				{
 					resetMemory();
+					resetKnownKeccak256Hashes();
+				}
 				if (invStor)
 					resetStorage();
 				if (invMem || invStor)
@@ -376,18 +379,18 @@ KnownState::Id KnownState::applyKeccak256(
 	// unknown or too large length
 	if (!l || *l > 128)
 		return m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
-
+	unsigned length = unsigned(*l);
 	vector<Id> arguments;
-	for (u256 i = 0; i < *l; i += 32)
+	for (unsigned i = 0; i < length; i += 32)
 	{
 		Id slot = m_expressionClasses->find(
 			AssemblyItem(Instruction::ADD, _location),
-			{_start, m_expressionClasses->find(i)}
+			{_start, m_expressionClasses->find(u256(i))}
 		);
 		arguments.push_back(loadFromMemory(slot, _location));
 	}
-	if (m_knownKeccak256Hashes.count(arguments))
-		return m_knownKeccak256Hashes.at(arguments);
+	if (m_knownKeccak256Hashes.count({arguments, length}))
+		return m_knownKeccak256Hashes.at({arguments, length});
 	Id v;
 	// If all arguments are known constants, compute the Keccak-256 here
 	if (all_of(arguments.begin(), arguments.end(), [this](Id _a) { return !!m_expressionClasses->knownConstant(_a); }))
@@ -395,12 +398,12 @@ KnownState::Id KnownState::applyKeccak256(
 		bytes data;
 		for (Id a: arguments)
 			data += util::toBigEndian(*m_expressionClasses->knownConstant(a));
-		data.resize(static_cast<size_t>(*l));
+		data.resize(length);
 		v = m_expressionClasses->find(AssemblyItem(u256(util::keccak256(data)), _location));
 	}
 	else
 		v = m_expressionClasses->find(keccak256Item, {_start, _length}, true, m_sequenceNumber);
-	return m_knownKeccak256Hashes[arguments] = v;
+	return m_knownKeccak256Hashes[{arguments, length}] = v;
 }
 
 set<u256> KnownState::tagsInExpression(KnownState::Id _expressionId)
