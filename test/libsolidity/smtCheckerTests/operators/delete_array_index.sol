@@ -3,6 +3,12 @@ pragma experimental SMTChecker;
 contract C
 {
 	uint[] a;
+	constructor() {
+		a.push();
+		a.push();
+		a.push();
+		a.push();
+	}
 	function f(bool b) public {
 		a[2] = 3;
 		require(!b);
@@ -14,4 +20,4 @@ contract C
 	}
 }
 // ----
-// Warning 6838: (119-120): BMC: Condition is always false.
+// Warning 6838: (187-188): BMC: Condition is always false.

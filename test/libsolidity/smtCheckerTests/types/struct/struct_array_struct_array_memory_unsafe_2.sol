@@ -20,15 +20,20 @@ contract C {
 		s1.t.y = 3;
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(s1.t.y == s2.t.y);
+		s1.a = new uint[](3);
 		s1.a[2] = 4;
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(s1.a[2] == s2.a[2]);
+		s1.ts = new T[](6);
 		s1.ts[3].y = 5;
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(s1.ts[3].y == s2.ts[3].y);
+		s1.ts[4].a = new uint[](6);
 		s1.ts[4].a[5] = 6;
+		require(s2.ts.length > 4);
+		require(s2.ts[4].a.length > 6);
 		assert(s1.ts[4].a[5] == s2.ts[4].a[5]);
 	}
 }
 // ----
-// Warning 6328: (697-735): CHC: Assertion violation happens here.
+// Warning 6328: (836-874): CHC: Assertion violation happens here.

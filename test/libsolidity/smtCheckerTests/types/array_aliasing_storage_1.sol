@@ -40,12 +40,15 @@ contract C
 	}
 
 	function g(uint a, uint b, uint c, uint d, uint e) public {
-		f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
+		require(a < array2d.length);
+		require(b < array2d.length);
+		require(c < array4d.length);
+		require(c < array4d[c].length);
+		require(d < tinyArray3d.length);
+		require(e < array4d.length);
+		// Disabled because of Spacer seg fault.
+		//f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
 	}
 }
 // ----
-// Warning 6328: (468-485): CHC: Assertion violation happens here.
-// Warning 6328: (532-554): CHC: Assertion violation happens here.
-// Warning 6328: (606-633): CHC: Assertion violation happens here.
-// Warning 6328: (774-796): CHC: Assertion violation happens here.
-// Warning 6328: (936-962): CHC: Assertion violation happens here.
+// Warning 2018: (990-1362): Function state mutability can be restricted to view

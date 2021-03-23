@@ -18,17 +18,20 @@ contract C {
 		assert(s1.x != 2);
 		s1.t.y = 3;
 		assert(s1.t.y != 3);
+		s1.a = new uint[](3);
 		s1.a[2] = 4;
 		assert(s1.a[2] != 4);
+		s1.ts = new T[](6);
 		s1.ts[3].y = 5;
 		assert(s1.ts[3].y != 5);
+		s1.ts[4].a = new uint[](6);
 		s1.ts[4].a[5] = 6;
 		assert(s1.ts[4].a[5] != 6);
 	}
 }
 // ----
-// Warning 6328: (228-245): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (263-282): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (301-321): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (343-366): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (391-417): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (228-245): CHC: Assertion violation happens here.
+// Warning 6328: (263-282): CHC: Assertion violation happens here.
+// Warning 6328: (325-345): CHC: Assertion violation happens here.
+// Warning 6328: (389-412): CHC: Assertion violation happens here.
+// Warning 6328: (467-493): CHC: Assertion violation happens here.

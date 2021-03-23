@@ -16,4 +16,4 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (317-343): CHC: Assertion violation happens here.\nCounterexample:\nb = [[0], [0]]\n\nTransaction trace:\nC.constructor()\nState: b = []\nC.f()
+// Warning 6328: (317-343): CHC: Assertion violation happens here.

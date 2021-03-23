@@ -72,3 +72,18 @@ test.f(0, 1)
    |
 13 | 		arr.pop();
    | 		^^^^^^^^^
+
+Warning: CHC: Out of bounds access happens here.
+Counterexample:
+arr = []
+a = 0
+x = 0
+
+Transaction trace:
+test.constructor()
+State: arr = []
+test.f(0, 1)
+  --> model_checker_targets_all_chc/input.sol:14:3:
+   |
+14 | 		arr[x];
+   | 		^^^^^^

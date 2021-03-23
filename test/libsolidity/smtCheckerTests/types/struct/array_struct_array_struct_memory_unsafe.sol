@@ -22,9 +22,11 @@ contract C {
 		s1[1].t.y = 3;
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(s1[1].t.y == s2.t.y);
+		s1[2].a = new uint[](3);
 		s1[2].a[2] = 4;
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(s1[2].a[2] == s2.a[2]);
+		s1[0].ts = new T[](4);
 		s1[0].ts[3].y = 5;
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(s1[0].ts[3].y == s2.ts[3].y);

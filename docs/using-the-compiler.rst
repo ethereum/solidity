@@ -379,7 +379,7 @@ Input Description
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
           // Choose which targets should be checked: all (default), constantCondition,
-          // underflow, overflow, divByZero, balance, assert, popEmptyArray.
+          // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
           // See the Formal Verification section for the targets description.
           // Multiple targets can be selected at the same time, separated by a comma
           // without spaces:

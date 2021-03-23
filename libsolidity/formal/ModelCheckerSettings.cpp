@@ -36,7 +36,8 @@ std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const&
 		{"divByZero", TargetType::DivByZero},
 		{"balance", TargetType::Balance},
 		{"assert", TargetType::Assert},
-		{"popEmptyArray", TargetType::PopEmptyArray}
+		{"popEmptyArray", TargetType::PopEmptyArray},
+		{"outOfBounds", TargetType::OutOfBounds}
 	};
 
 	set<TargetType> chosenTargets;

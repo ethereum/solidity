@@ -54,7 +54,7 @@ struct ModelCheckerEngine
 	}
 };
 
-enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray };
+enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
 
 struct ModelCheckerTargets
 {

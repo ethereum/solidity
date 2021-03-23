@@ -7,6 +7,7 @@ contract C
 	mapping (uint => uint8)[2] severalMaps8;
 	mapping (uint => uint)[2][2] severalMaps3d;
 	function f(mapping (uint => uint) storage map) internal {
+		// Accesses are safe but reported as unsafe due to aliasing.
 		map[0] = 42;
 		severalMaps[0][0] = 42;
 		severalMaps8[0][0] = 42;
@@ -23,8 +24,15 @@ contract C
 		assert(map[0] == 42);
 	}
 	function g(uint x) public {
+		require(x < 2);
 		f(severalMaps3d[x][0]);
 	}
 }
 // ----
-// Warning 6328: (830-850): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)\n    C.f(map) -- internal call
+// Warning 6368: (347-361): CHC: Out of bounds access happens here.
+// Warning 6368: (400-416): CHC: Out of bounds access happens here.
+// Warning 6368: (400-419): CHC: Out of bounds access happens here.
+// Warning 6368: (530-544): CHC: Out of bounds access happens here.
+// Warning 6328: (893-913): CHC: Assertion violation happens here.
+// Warning 6368: (969-985): CHC: Out of bounds access might happen here.
+// Warning 6368: (969-988): CHC: Out of bounds access might happen here.

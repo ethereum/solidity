@@ -9,4 +9,12 @@ contract C {
     }
 }
 // ----
+// Warning 6368: (108-113): CHC: Out of bounds access might happen here.
+// Warning 6368: (108-116): CHC: Out of bounds access might happen here.
+// Warning 6368: (151-156): CHC: Out of bounds access might happen here.
+// Warning 6368: (151-159): CHC: Out of bounds access might happen here.
+// Warning 6368: (181-186): CHC: Out of bounds access might happen here.
+// Warning 6368: (181-189): CHC: Out of bounds access might happen here.
+// Warning 6368: (198-203): CHC: Out of bounds access might happen here.
+// Warning 6368: (198-206): CHC: Out of bounds access might happen here.
 // Warning 6328: (174-212): CHC: Assertion violation might happen here.

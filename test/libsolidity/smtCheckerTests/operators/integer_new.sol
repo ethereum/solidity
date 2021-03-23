@@ -34,3 +34,5 @@ contract C {
 	}
 }
 // ----
+// Warning 6368: (507-511): CHC: Out of bounds access happens here.
+// Warning 6368: (529-533): CHC: Out of bounds access happens here.

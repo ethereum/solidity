@@ -3,7 +3,9 @@ pragma experimental SMTChecker;
 contract C
 {
 	uint[] array;
+	function q() public { array.push(); }
 	function f(uint x, uint p) public {
+		require(p < array.length);
 		require(x < 10);
 		array[p] = 10;
 		array[p] *= array[p] + x;
@@ -12,4 +14,4 @@ contract C
 	}
 }
 // ----
-// Warning 6328: (191-212): CHC: Assertion violation happens here.\nCounterexample:\narray = []\nx = 0\np = 38\n\nTransaction trace:\nC.constructor()\nState: array = []\nC.f(0, 38)
+// Warning 6328: (259-280): CHC: Assertion violation happens here.\nCounterexample:\narray = [100]\nx = 0\np = 0\n\nTransaction trace:\nC.constructor()\nState: array = []\nC.q()\nState: array = [0]\nC.f(0, 0)

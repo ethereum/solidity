@@ -10,5 +10,7 @@ contract C
 		assert(c[0] > 0);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (176-192): CHC: Assertion violation happens here.\nCounterexample:\n\nb = false\nc = [0, 8]\n\nTransaction trace:\nC.constructor()\nC.f(false, [38, 8])
+// Warning 6328: (176-192): CHC: Assertion violation happens here.
