@@ -373,32 +373,10 @@ void SMTEncoder::endVisit(VariableDeclarationStatement const& _varDecl)
 
 bool SMTEncoder::visit(Assignment const& _assignment)
 {
-	auto const& left = _assignment.leftHandSide();
-	auto const& right = _assignment.rightHandSide();
-
-	if (auto const* memberAccess = isEmptyPush(left))
-	{
-		right.accept(*this);
-		left.accept(*this);
-
-		auto const& memberExpr = memberAccess->expression();
-		auto& symbArray = dynamic_cast<smt::SymbolicArrayVariable&>(*m_context.expression(memberExpr));
-		smtutil::Expression oldElements = symbArray.elements();
-		smtutil::Expression length = symbArray.length();
-		symbArray.increaseIndex();
-		m_context.addAssertion(symbArray.elements() == smtutil::Expression::store(
-			oldElements,
-			length - 1,
-			expr(right)
-		));
-		m_context.addAssertion(symbArray.length() == length);
-
-		arrayPushPopAssign(memberExpr, symbArray.currentValue());
-		defineExpr(_assignment, expr(left));
-		return false;
-	}
-
-	return true;
+	// RHS must be visited before LHS; as opposed to what Assignment::accept does
+	_assignment.rightHandSide().accept(*this);
+	_assignment.leftHandSide().accept(*this);
+	return false;
 }
 
 void SMTEncoder::endVisit(Assignment const& _assignment)
@@ -407,9 +385,6 @@ void SMTEncoder::endVisit(Assignment const& _assignment)
 
 	Token op = _assignment.assignmentOperator();
 	solAssert(TokenTraits::isAssignmentOp(op), "");
-
-	if (isEmptyPush(_assignment.leftHandSide()))
-		return;
 
 	if (!smt::isSupportedType(*_assignment.annotation().type))
 	{
@@ -2022,6 +1997,8 @@ void SMTEncoder::assignment(
 		dynamic_cast<MemberAccess const*>(left)
 	)
 		indexOrMemberAssignment(*left, _right);
+	else if (isEmptyPush(*left))
+		arrayPushPopAssign(*left, _right);
 	else
 		solAssert(false, "");
 }
