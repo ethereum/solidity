@@ -173,7 +173,7 @@ void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _ben
 	accounts.erase(_addr);
 	accounts[_beneficiary].balance = balance;
 	// Record self destructs
-	recorded_selfdestructs.push_back({_addr, _beneficiary, balance});
+	recorded_selfdestructs.push_back({_addr, _beneficiary});
 }
 
 void EVMHost::recordCalls(evmc_message const& _message) noexcept
@@ -814,8 +814,6 @@ void EVMHostPrinter::selfdestructRecords()
 		m_stateStream << "SELFDESTRUCT"
 			<< " BENEFICIARY "
 			<< m_host.convertFromEVMC(record.beneficiary)
-			<< " BALANCE "
-			<< m_host.convertFromEVMC(record.balance)
 			<< endl;
 }
 

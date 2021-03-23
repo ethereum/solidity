@@ -15,7 +15,7 @@
 
 #if defined(EVMC_LOADER_MOCK)
 #include "../../test/unittests/loader_mock.h"
-#elif _WIN32
+#elif defined(_WIN32)
 #include <Windows.h>
 #define DLL_HANDLE HMODULE
 #define DLL_OPEN(filename) LoadLibrary(filename)
@@ -136,7 +136,7 @@ evmc_create_fn evmc_load(const char* filename, enum evmc_loader_error_code* erro
 
     // Find filename in the path.
     const char* sep_pos = strrchr(filename, '/');
-#if _WIN32
+#ifdef _WIN32
     // On Windows check also Windows classic path separator.
     const char* sep_pos_windows = strrchr(filename, '\\');
     sep_pos = sep_pos_windows > sep_pos ? sep_pos_windows : sep_pos;

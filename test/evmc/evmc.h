@@ -28,7 +28,7 @@
 #include <stddef.h>  /* Definition of size_t. */
 #include <stdint.h>  /* Definition of int64_t, uint64_t. */
 
-#if __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -294,6 +294,9 @@ enum evmc_status_code
      * reasons, including division by zero, validation errors, etc.
      */
     EVMC_WASM_TRAP = 16,
+
+    /** The caller does not have enough funds for value transfer. */
+    EVMC_INSUFFICIENT_BALANCE = 17,
 
     /** EVM implementation generic internal error. */
     EVMC_INTERNAL_ERROR = -1,
@@ -914,7 +917,7 @@ struct evmc_vm
 
 /* END Python CFFI declarations */
 
-#if EVMC_DOCUMENTATION
+#ifdef EVMC_DOCUMENTATION
 /**
  * Example of a function creating an instance of an example EVM implementation.
  *
@@ -933,7 +936,7 @@ struct evmc_vm
 struct evmc_vm* evmc_create_example_vm(void);
 #endif
 
-#if __cplusplus
+#ifdef __cplusplus
 }
 #endif
 
