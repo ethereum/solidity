@@ -37,7 +37,17 @@
 #pragma clang diagnostic ignored "-Wredeclared-class-member"
 #endif // defined(__clang__)
 
+// Disable warning about nodiscard. Could be a compiler bug, might be removed in the future.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4834)
+#endif
+
 #include <boost/bimap.hpp>
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
