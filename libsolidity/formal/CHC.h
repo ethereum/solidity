@@ -102,7 +102,7 @@ private:
 		Token _op,
 		smtutil::Expression const& _left,
 		smtutil::Expression const& _right,
-		TypePointer const& _commonType,
+		Type const* _commonType,
 		Expression const& _expression
 	) override;
 	//@}

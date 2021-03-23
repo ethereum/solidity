@@ -32,8 +32,8 @@ using namespace solidity::frontend;
 using namespace solidity::frontend::smt;
 
 SymbolicVariable::SymbolicVariable(
-	TypePointer _type,
-	TypePointer _originalType,
+	frontend::Type const* _type,
+	frontend::Type const* _originalType,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -61,7 +61,7 @@ SymbolicVariable::SymbolicVariable(
 	solAssert(m_sort, "");
 }
 
-smtutil::Expression SymbolicVariable::currentValue(frontend::TypePointer const&) const
+smtutil::Expression SymbolicVariable::currentValue(frontend::Type const*) const
 {
 	return valueAtIndex(m_ssa->index());
 }
@@ -105,7 +105,7 @@ smtutil::Expression SymbolicVariable::increaseIndex()
 }
 
 SymbolicBoolVariable::SymbolicBoolVariable(
-	frontend::TypePointer _type,
+	frontend::Type const* _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -115,8 +115,8 @@ SymbolicBoolVariable::SymbolicBoolVariable(
 }
 
 SymbolicIntVariable::SymbolicIntVariable(
-	frontend::TypePointer _type,
-	frontend::TypePointer _originalType,
+	frontend::Type const* _type,
+	frontend::Type const* _originalType,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -134,7 +134,7 @@ SymbolicAddressVariable::SymbolicAddressVariable(
 }
 
 SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
-	frontend::TypePointer _originalType,
+	frontend::Type const* _originalType,
 	unsigned _numBytes,
 	string _uniqueName,
 	EncodingContext& _context
@@ -144,7 +144,7 @@ SymbolicFixedBytesVariable::SymbolicFixedBytesVariable(
 }
 
 SymbolicFunctionVariable::SymbolicFunctionVariable(
-	frontend::TypePointer _type,
+	frontend::Type const* _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -165,7 +165,7 @@ SymbolicFunctionVariable::SymbolicFunctionVariable(
 	solAssert(m_sort->kind == Kind::Function, "");
 }
 
-smtutil::Expression SymbolicFunctionVariable::currentValue(frontend::TypePointer const& _targetType) const
+smtutil::Expression SymbolicFunctionVariable::currentValue(frontend::Type const* _targetType) const
 {
 	return m_abstract.currentValue(_targetType);
 }
@@ -216,7 +216,7 @@ void SymbolicFunctionVariable::resetDeclaration()
 }
 
 SymbolicEnumVariable::SymbolicEnumVariable(
-	frontend::TypePointer _type,
+	frontend::Type const* _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -226,7 +226,7 @@ SymbolicEnumVariable::SymbolicEnumVariable(
 }
 
 SymbolicTupleVariable::SymbolicTupleVariable(
-	frontend::TypePointer _type,
+	frontend::Type const* _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -245,7 +245,7 @@ SymbolicTupleVariable::SymbolicTupleVariable(
 	solAssert(m_sort->kind == Kind::Tuple, "");
 }
 
-smtutil::Expression SymbolicTupleVariable::currentValue(frontend::TypePointer const& _targetType) const
+smtutil::Expression SymbolicTupleVariable::currentValue(frontend::Type const* _targetType) const
 {
 	if (!_targetType || sort() == smtSort(*_targetType))
 		return SymbolicVariable::currentValue();
@@ -272,8 +272,8 @@ vector<SortPointer> const& SymbolicTupleVariable::components() const
 
 smtutil::Expression SymbolicTupleVariable::component(
 	size_t _index,
-	TypePointer _fromType,
-	TypePointer _toType
+	frontend::Type const* _fromType,
+	frontend::Type const* _toType
 ) const
 {
 	optional<smtutil::Expression> conversion = symbolicTypeConversion(_fromType, _toType);
@@ -284,8 +284,8 @@ smtutil::Expression SymbolicTupleVariable::component(
 }
 
 SymbolicArrayVariable::SymbolicArrayVariable(
-	frontend::TypePointer _type,
-	frontend::TypePointer _originalType,
+	frontend::Type const* _type,
+	frontend::Type const* _originalType,
 	string _uniqueName,
 	EncodingContext& _context
 ):
@@ -318,7 +318,7 @@ SymbolicArrayVariable::SymbolicArrayVariable(
 	solAssert(m_sort->kind == Kind::Array, "");
 }
 
-smtutil::Expression SymbolicArrayVariable::currentValue(frontend::TypePointer const& _targetType) const
+smtutil::Expression SymbolicArrayVariable::currentValue(frontend::Type const* _targetType) const
 {
 	optional<smtutil::Expression> conversion = symbolicTypeConversion(m_originalType, _targetType);
 	if (conversion)
@@ -343,7 +343,7 @@ smtutil::Expression SymbolicArrayVariable::length() const
 }
 
 SymbolicStructVariable::SymbolicStructVariable(
-	frontend::TypePointer _type,
+	frontend::Type const* _type,
 	string _uniqueName,
 	EncodingContext& _context
 ):

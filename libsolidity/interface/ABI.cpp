@@ -31,7 +31,7 @@ namespace
 {
 bool anyDataStoredInStorage(TypePointers const& _pointers)
 {
-	for (TypePointer const& pointer: _pointers)
+	for (Type const* pointer: _pointers)
 		if (pointer->dataStoredIn(DataLocation::Storage))
 			return true;
 
@@ -129,8 +129,8 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 
 Json::Value ABI::formatTypeList(
 	vector<string> const& _names,
-	vector<TypePointer> const& _encodingTypes,
-	vector<TypePointer> const& _solidityTypes,
+	vector<Type const*> const& _encodingTypes,
+	vector<Type const*> const& _solidityTypes,
 	bool _forLibrary
 )
 {

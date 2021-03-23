@@ -40,8 +40,8 @@ class SymbolicVariable
 {
 public:
 	SymbolicVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalType,
+		frontend::Type const* _type,
+		frontend::Type const* _originalType,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -55,7 +55,7 @@ public:
 
 	virtual ~SymbolicVariable() = default;
 
-	virtual smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const;
+	virtual smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const;
 	std::string currentName() const;
 	virtual smtutil::Expression valueAtIndex(unsigned _index) const;
 	virtual std::string nameAtIndex(unsigned _index) const;
@@ -71,8 +71,8 @@ public:
 	unsigned& index() { return m_ssa->index(); }
 
 	smtutil::SortPointer const& sort() const { return m_sort; }
-	frontend::TypePointer const& type() const { return m_type; }
-	frontend::TypePointer const& originalType() const { return m_originalType; }
+	frontend::Type const* type() const { return m_type; }
+	frontend::Type const* originalType() const { return m_originalType; }
 
 protected:
 	std::string uniqueSymbol(unsigned _index) const;
@@ -80,9 +80,9 @@ protected:
 	/// SMT sort.
 	smtutil::SortPointer m_sort;
 	/// Solidity type, used for size and range in number types.
-	frontend::TypePointer m_type;
+	frontend::Type const* m_type;
 	/// Solidity original type, used for type conversion if necessary.
-	frontend::TypePointer m_originalType;
+	frontend::Type const* m_originalType;
 	std::string m_uniqueName;
 	EncodingContext& m_context;
 	std::unique_ptr<SSAVariable> m_ssa;
@@ -95,7 +95,7 @@ class SymbolicBoolVariable: public SymbolicVariable
 {
 public:
 	SymbolicBoolVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -108,8 +108,8 @@ class SymbolicIntVariable: public SymbolicVariable
 {
 public:
 	SymbolicIntVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalType,
+		frontend::Type const* _type,
+		frontend::Type const* _originalType,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -134,7 +134,7 @@ class SymbolicFixedBytesVariable: public SymbolicIntVariable
 {
 public:
 	SymbolicFixedBytesVariable(
-		frontend::TypePointer _originalType,
+		frontend::Type const* _originalType,
 		unsigned _numBytes,
 		std::string _uniqueName,
 		EncodingContext& _context
@@ -153,7 +153,7 @@ class SymbolicFunctionVariable: public SymbolicVariable
 {
 public:
 	SymbolicFunctionVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -163,7 +163,7 @@ public:
 		EncodingContext& _context
 	);
 
-	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const override;
 
 	// Explicit request the function declaration.
 	smtutil::Expression currentFunctionValue() const;
@@ -202,7 +202,7 @@ class SymbolicEnumVariable: public SymbolicVariable
 {
 public:
 	SymbolicEnumVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -215,7 +215,7 @@ class SymbolicTupleVariable: public SymbolicVariable
 {
 public:
 	SymbolicTupleVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -225,13 +225,13 @@ public:
 		EncodingContext& _context
 	);
 
-	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const override;
 
 	std::vector<smtutil::SortPointer> const& components() const;
 	smtutil::Expression component(
 		size_t _index,
-		TypePointer _fromType = nullptr,
-		TypePointer _toType = nullptr
+		frontend::Type const* _fromType = nullptr,
+		frontend::Type const* _toType = nullptr
 	) const;
 };
 
@@ -242,8 +242,8 @@ class SymbolicArrayVariable: public SymbolicVariable
 {
 public:
 	SymbolicArrayVariable(
-		frontend::TypePointer _type,
-		frontend::TypePointer _originalTtype,
+		frontend::Type const* _type,
+		frontend::Type const* _originalTtype,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);
@@ -255,7 +255,7 @@ public:
 
 	SymbolicArrayVariable(SymbolicArrayVariable&&) = default;
 
-	smtutil::Expression currentValue(frontend::TypePointer const& _targetType = TypePointer{}) const override;
+	smtutil::Expression currentValue(frontend::Type const* _targetType = nullptr) const override;
 	smtutil::Expression valueAtIndex(unsigned _index) const override;
 	smtutil::Expression resetIndex() override { SymbolicVariable::resetIndex(); return m_pair.resetIndex(); }
 	smtutil::Expression setIndex(unsigned _index) override { SymbolicVariable::setIndex(_index); return m_pair.setIndex(_index); }
@@ -276,7 +276,7 @@ class SymbolicStructVariable: public SymbolicVariable
 {
 public:
 	SymbolicStructVariable(
-		frontend::TypePointer _type,
+		frontend::Type const* _type,
 		std::string _uniqueName,
 		EncodingContext& _context
 	);

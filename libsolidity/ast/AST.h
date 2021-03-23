@@ -272,11 +272,11 @@ public:
 
 	/// @returns the type of expressions referencing this declaration.
 	/// This can only be called once types of variable declarations have already been resolved.
-	virtual TypePointer type() const = 0;
+	virtual Type const* type() const = 0;
 
 	/// @returns the type for members of the containing contract type that refer to this declaration.
 	/// This can only be called once types of variable declarations have already been resolved.
-	virtual TypePointer typeViaContractName() const { return type(); }
+	virtual Type const* typeViaContractName() const { return type(); }
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
@@ -366,7 +366,7 @@ public:
 	}
 	ImportAnnotation& annotation() const override;
 
-	TypePointer type() const override;
+	Type const* type() const override;
 
 private:
 	ASTPointer<ASTString> m_path;
@@ -539,7 +539,7 @@ public:
 
 	std::string fullyQualifiedName() const { return sourceUnitName() + ":" + name(); }
 
-	TypePointer type() const override;
+	Type const* type() const override;
 
 	ContractDefinitionAnnotation& annotation() const override;
 
@@ -658,7 +658,7 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& members() const { return m_members; }
 
-	TypePointer type() const override;
+	Type const* type() const override;
 
 	bool isVisibleInDerivedContracts() const override { return true; }
 	bool isVisibleViaContractTypeAccess() const override { return true; }
@@ -688,7 +688,7 @@ public:
 
 	std::vector<ASTPointer<EnumValue>> const& members() const { return m_members; }
 
-	TypePointer type() const override;
+	Type const* type() const override;
 
 	TypeDeclarationAnnotation& annotation() const override;
 
@@ -708,7 +708,7 @@ public:
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
-	TypePointer type() const override;
+	Type const* type() const override;
 };
 
 /**
@@ -883,8 +883,8 @@ public:
 	/// @returns the external identifier of this function (the hash of the signature) as a hex string.
 	std::string externalIdentifierHex() const;
 
-	TypePointer type() const override;
-	TypePointer typeViaContractName() const override;
+	Type const* type() const override;
+	Type const* typeViaContractName() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
@@ -1010,7 +1010,7 @@ public:
 	/// @returns the external identifier of this variable (the hash of the signature) as a hex string (works only for public state variables).
 	std::string externalIdentifierHex() const;
 
-	TypePointer type() const override;
+	Type const* type() const override;
 
 	/// @param _internal false indicates external interface is concerned, true indicates internal interface is concerned.
 	/// @returns null when it is not accessible as a function.
@@ -1062,7 +1062,7 @@ public:
 
 	Block const& body() const { solAssert(m_body, ""); return *m_body; }
 
-	TypePointer type() const override;
+	Type const* type() const override;
 
 	Visibility defaultVisibility() const override { return Visibility::Internal; }
 
@@ -1135,7 +1135,7 @@ public:
 
 	bool isAnonymous() const { return m_anonymous; }
 
-	TypePointer type() const override;
+	Type const* type() const override;
 	FunctionTypePointer functionType(bool /*_internal*/) const override;
 
 	bool isVisibleInDerivedContracts() const override { return true; }
@@ -1179,7 +1179,7 @@ public:
 		solAssert(m_type->category() == Type::Category::Function, "");
 		return dynamic_cast<FunctionType const*>(m_type);
 	}
-	TypePointer type() const override { return m_type; }
+	Type const* type() const override { return m_type; }
 
 private:
 	Type const* m_type;

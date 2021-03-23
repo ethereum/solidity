@@ -97,7 +97,7 @@ vector<string> CompilerContext::immutableVariableSlotNames(VariableDeclaration c
 	if (_variable.annotation().type->sizeOnStack() == 1)
 		return {baseName};
 	vector<string> names;
-	auto collectSlotNames = [&](string const& _baseName, TypePointer type, auto const& _recurse) -> void {
+	auto collectSlotNames = [&](string const& _baseName, Type const* type, auto const& _recurse) -> void {
 		for (auto const& [slot, type]: type->stackItems())
 			if (type)
 				_recurse(_baseName + " " + slot, type, _recurse);

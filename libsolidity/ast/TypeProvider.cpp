@@ -259,7 +259,7 @@ Type const* TypeProvider::fromElementaryTypeName(ElementaryTypeNameToken const& 
 	}
 }
 
-TypePointer TypeProvider::fromElementaryTypeName(string const& _name)
+Type const* TypeProvider::fromElementaryTypeName(string const& _name)
 {
 	vector<string> nameParts;
 	boost::split(nameParts, _name, boost::is_any_of(" "));
@@ -339,7 +339,7 @@ ArrayType const* TypeProvider::stringMemory()
 	return m_stringMemory.get();
 }
 
-TypePointer TypeProvider::forLiteral(Literal const& _literal)
+Type const* TypeProvider::forLiteral(Literal const& _literal)
 {
 	switch (_literal.token())
 	{
@@ -363,7 +363,7 @@ RationalNumberType const* TypeProvider::rationalNumber(Literal const& _literal)
 	std::tuple<bool, rational> validLiteral = RationalNumberType::isValidLiteral(_literal);
 	if (std::get<0>(validLiteral))
 	{
-		TypePointer compatibleBytesType = nullptr;
+		Type const* compatibleBytesType = nullptr;
 		if (_literal.isHexNumber())
 		{
 			size_t const digitCount = _literal.valueWithoutUnderscores().length() - 2;

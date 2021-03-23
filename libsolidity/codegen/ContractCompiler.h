@@ -134,7 +134,7 @@ private:
 	/// If the default value is complex (needs memory allocation) and @a _provideDefaultValue
 	/// is false, this might be skipped.
 	void appendStackVariableInitialisation(VariableDeclaration const& _variable, bool _provideDefaultValue);
-	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
+	void compileExpression(Expression const& _expression, Type const* _targetType = nullptr);
 
 	/// Frees the variables of a certain scope (to be used when leaving).
 	void popScopedVariables(ASTNode const* _node);

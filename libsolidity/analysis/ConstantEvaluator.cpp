@@ -308,7 +308,7 @@ void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 	if (!value)
 		return;
 
-	TypePointer resultType = value->type->unaryOperatorResult(_operation.getOperator());
+	Type const* resultType = value->type->unaryOperatorResult(_operation.getOperator());
 	if (!resultType)
 		return;
 	value = convertType(value, *resultType);
@@ -340,7 +340,7 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 	if (TokenTraits::isCompareOp(_operation.getOperator()))
 		return;
 
-	TypePointer resultType = left->type->binaryOperatorResult(_operation.getOperator(), right->type);
+	Type const* resultType = left->type->binaryOperatorResult(_operation.getOperator(), right->type);
 	if (!resultType)
 	{
 		m_errorReporter.fatalTypeError(

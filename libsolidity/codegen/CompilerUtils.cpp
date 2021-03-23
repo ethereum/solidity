@@ -257,10 +257,10 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 
 	// Retain the offset pointer as base_offset, the point from which the data offsets are computed.
 	m_context << Instruction::DUP1;
-	for (TypePointer const& parameterType: _typeParameters)
+	for (Type const* parameterType: _typeParameters)
 	{
 		// stack: v1 v2 ... v(k-1) input_end base_offset current_offset
-		TypePointer type = parameterType->decodingType();
+		Type const* type = parameterType->decodingType();
 		solUnimplementedAssert(type, "No decoding type found.");
 		if (type->category() == Type::Category::Array)
 		{
@@ -328,7 +328,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 			else
 			{
 				// first load from calldata and potentially convert to memory if arrayType is memory
-				TypePointer calldataType = TypeProvider::withLocation(&arrayType, DataLocation::CallData, false);
+				Type const* calldataType = TypeProvider::withLocation(&arrayType, DataLocation::CallData, false);
 				if (calldataType->isDynamicallySized())
 				{
 					// put on stack: data_pointer length
@@ -415,9 +415,9 @@ void CompilerUtils::encodeToMemory(
 	bool const encoderV2 = m_context.useABICoderV2();
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
-	for (TypePointer& t: targetTypes)
+	for (Type const*& t: targetTypes)
 	{
-		TypePointer tEncoding = t->fullEncodingType(_encodeAsLibraryTypes, encoderV2, !_padToWordBoundaries);
+		Type const* tEncoding = t->fullEncodingType(_encodeAsLibraryTypes, encoderV2, !_padToWordBoundaries);
 		solUnimplementedAssert(tEncoding, "Encoding type \"" + t->toString() + "\" not yet implemented.");
 		t = std::move(tEncoding);
 	}
@@ -450,7 +450,7 @@ void CompilerUtils::encodeToMemory(
 	unsigned dynPointers = 0; // number of dynamic head pointers on the stack
 	for (size_t i = 0; i < _givenTypes.size(); ++i)
 	{
-		TypePointer targetType = targetTypes[i];
+		Type const* targetType = targetTypes[i];
 		solAssert(!!targetType, "Externalable type expected.");
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
@@ -468,7 +468,7 @@ void CompilerUtils::encodeToMemory(
 			bool needCleanup = true;
 			copyToStackTop(argSize - stackPos + dynPointers + 2, _givenTypes[i]->sizeOnStack());
 			solAssert(!!targetType, "Externalable type expected.");
-			TypePointer type = targetType;
+			Type const* type = targetType;
 			if (_givenTypes[i]->dataStoredIn(DataLocation::Storage) && targetType->isValueType())
 			{
 				// special case: convert storage reference type to value type - this is only
@@ -513,7 +513,7 @@ void CompilerUtils::encodeToMemory(
 	unsigned thisDynPointer = 0;
 	for (size_t i = 0; i < _givenTypes.size(); ++i)
 	{
-		TypePointer targetType = targetTypes[i];
+		Type const* targetType = targetTypes[i];
 		solAssert(!!targetType, "Externalable type expected.");
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
@@ -1103,7 +1103,7 @@ void CompilerUtils::convertType(
 						_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 						_context << u256(offsets.second);
 						StorageItem(_context, *member.type).retrieveValue(SourceLocation(), true);
-						TypePointer targetMemberType = targetType->memberType(member.name);
+						Type const* targetMemberType = targetType->memberType(member.name);
 						solAssert(!!targetMemberType, "Member not found in target type.");
 						utils.convertType(*member.type, *targetMemberType, true);
 						utils.storeInMemoryDynamic(*targetMemberType, true);
@@ -1160,8 +1160,8 @@ void CompilerUtils::convertType(
 		unsigned depth = sourceTuple.sizeOnStack();
 		for (size_t i = 0; i < sourceTuple.components().size(); ++i)
 		{
-			TypePointer sourceType = sourceTuple.components()[i];
-			TypePointer targetType = targetTuple.components()[i];
+			Type const* sourceType = sourceTuple.components()[i];
+			Type const* targetType = targetTuple.components()[i];
 			if (!sourceType)
 			{
 				solAssert(!targetType, "");
@@ -1279,7 +1279,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 			return;
 		}
 
-	TypePointer type = &_type;
+	Type const* type = &_type;
 	m_context.callLowLevelFunction(
 		"$pushZeroValue_" + referenceType->identifier(),
 		0,
@@ -1408,7 +1408,7 @@ void CompilerUtils::popAndJump(unsigned _toHeight, evmasm::AssemblyItem const& _
 unsigned CompilerUtils::sizeOnStack(vector<Type const*> const& _variableTypes)
 {
 	unsigned size = 0;
-	for (Type const* const& type: _variableTypes)
+	for (Type const* type: _variableTypes)
 		size += type->sizeOnStack();
 	return size;
 }

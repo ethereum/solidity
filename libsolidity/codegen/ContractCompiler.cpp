@@ -739,7 +739,7 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 					}
 					else if (Literal const* literal = dynamic_cast<Literal const*>(variable->value().get()))
 					{
-						TypePointer type = literal->annotation().type;
+						Type const* type = literal->annotation().type;
 
 						switch (type->category())
 						{
@@ -949,7 +949,7 @@ bool ContractCompiler::visit(TryStatement const& _tryStatement)
 		TryCatchClause const& successClause = *_tryStatement.clauses().front();
 		if (successClause.parameters())
 		{
-			vector<TypePointer> exprTypes{_tryStatement.externalCall().annotation().type};
+			vector<Type const*> exprTypes{_tryStatement.externalCall().annotation().type};
 			if (auto tupleType = dynamic_cast<TupleType const*>(exprTypes.front()))
 				exprTypes = tupleType->components();
 			vector<ASTPointer<VariableDeclaration>> const& params = successClause.parameters()->parameters();
@@ -1251,7 +1251,7 @@ bool ContractCompiler::visit(Return const& _return)
 		for (auto const& retVariable: returnParameters)
 			types.push_back(retVariable->annotation().type);
 
-		TypePointer expectedType;
+		Type const* expectedType;
 		if (expression->annotation().type->category() == Type::Category::Tuple || types.size() != 1)
 			expectedType = TypeProvider::tuple(move(types));
 		else
@@ -1470,7 +1470,7 @@ void ContractCompiler::appendStackVariableInitialisation(
 		CompilerUtils(m_context).pushZeroValue(*_variable.annotation().type);
 }
 
-void ContractCompiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
+void ContractCompiler::compileExpression(Expression const& _expression, Type const* _targetType)
 {
 	ExpressionCompiler expressionCompiler(m_context, m_optimiserSettings.runOrderLiterals);
 	expressionCompiler.compile(_expression);

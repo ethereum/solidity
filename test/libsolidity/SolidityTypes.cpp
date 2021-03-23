@@ -175,8 +175,8 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	BOOST_CHECK_EQUAL(TypeProvider::fromElementaryTypeName("string calldata")->identifier(), "t_string_calldata_ptr");
 	ArrayType largeintArray(DataLocation::Memory, TypeProvider::fromElementaryTypeName("int128"), u256("2535301200456458802993406410752"));
 	BOOST_CHECK_EQUAL(largeintArray.identifier(), "t_array$_t_int128_$2535301200456458802993406410752_memory_ptr");
-	TypePointer stringArray = TypeProvider::array(DataLocation::Storage, TypeProvider::fromElementaryTypeName("string"), u256("20"));
-	TypePointer multiArray = TypeProvider::array(DataLocation::Storage, stringArray);
+	Type const* stringArray = TypeProvider::array(DataLocation::Storage, TypeProvider::fromElementaryTypeName("string"), u256("20"));
+	Type const* multiArray = TypeProvider::array(DataLocation::Storage, stringArray);
 	BOOST_CHECK_EQUAL(multiArray->identifier(), "t_array$_t_array$_t_string_storage_$20_storage_$dyn_storage_ptr");
 
 	ContractDefinition c(++id, SourceLocation{}, make_shared<string>("MyContract$"), SourceLocation{}, {}, {}, {}, ContractKind::Contract);
@@ -193,13 +193,13 @@ BOOST_AUTO_TEST_CASE(type_identifiers)
 	TupleType t({e.type(), s.type(), stringArray, nullptr});
 	BOOST_CHECK_EQUAL(t.identifier(), "t_tuple$_t_type$_t_enum$_Enum_$4_$_$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$_t_array$_t_string_storage_$20_storage_ptr_$__$");
 
-	TypePointer keccak256fun = TypeProvider::function(strings{}, strings{}, FunctionType::Kind::KECCAK256);
+	Type const* keccak256fun = TypeProvider::function(strings{}, strings{}, FunctionType::Kind::KECCAK256);
 	BOOST_CHECK_EQUAL(keccak256fun->identifier(), "t_function_keccak256_nonpayable$__$returns$__$");
 
 	FunctionType metaFun(TypePointers{keccak256fun}, TypePointers{s.type()}, strings{""}, strings{""});
 	BOOST_CHECK_EQUAL(metaFun.identifier(), "t_function_internal_nonpayable$_t_function_keccak256_nonpayable$__$returns$__$_$returns$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$");
 
-	TypePointer m = TypeProvider::mapping(TypeProvider::fromElementaryTypeName("bytes32"), s.type());
+	Type const* m = TypeProvider::mapping(TypeProvider::fromElementaryTypeName("bytes32"), s.type());
 	MappingType m2(TypeProvider::fromElementaryTypeName("uint64"), m);
 	BOOST_CHECK_EQUAL(m2.identifier(), "t_mapping$_t_uint64_$_t_mapping$_t_bytes32_$_t_type$_t_struct$_Struct_$3_storage_ptr_$_$_$");
 

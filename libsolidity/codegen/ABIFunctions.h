@@ -41,8 +41,7 @@ class Type;
 class ArrayType;
 class StructType;
 class FunctionType;
-using TypePointer = Type const*;
-using TypePointers = std::vector<TypePointer>;
+using TypePointers = std::vector<Type const*>;
 
 /**
  * Class to generate encoding and decoding functions. Also maintains a collection

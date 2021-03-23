@@ -369,9 +369,9 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				for (auto const& member: structType.members(nullptr))
 				{
 					// assign each member that can live outside of storage
-					TypePointer const& memberType = member.type;
+					Type const* memberType = member.type;
 					solAssert(memberType->nameable(), "");
-					TypePointer sourceMemberType = sourceType.memberType(member.name);
+					Type const* sourceMemberType = sourceType.memberType(member.name);
 					if (sourceType.location() == DataLocation::Storage)
 					{
 						// stack layout: source_ref target_ref
@@ -431,7 +431,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 		for (auto const& member: structType.members(nullptr))
 		{
 			// zero each member that is not a mapping
-			TypePointer const& memberType = member.type;
+			Type const* memberType = member.type;
 			if (memberType->category() == Type::Category::Mapping)
 				continue;
 			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
@@ -558,7 +558,7 @@ void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	for (size_t i = 0; i < m_lvalues.size(); ++i)
 	{
 		unique_ptr<LValue> const& lvalue = m_lvalues[m_lvalues.size() - i - 1];
-		TypePointer const& valType = valueTypes[valueTypes.size() - i - 1];
+		Type const* valType = valueTypes[valueTypes.size() - i - 1];
 		unsigned stackHeight = m_context.stackHeight();
 		solAssert(!valType == !lvalue, "");
 		if (!lvalue)

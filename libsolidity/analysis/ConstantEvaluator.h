@@ -48,7 +48,7 @@ class ConstantEvaluator: private ASTConstVisitor
 public:
 	struct TypedRational
 	{
-		TypePointer type;
+		Type const* type;
 		rational value;
 	};
 

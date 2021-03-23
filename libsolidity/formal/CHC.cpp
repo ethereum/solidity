@@ -787,7 +787,7 @@ pair<smtutil::Expression, smtutil::Expression> CHC::arithmeticOperation(
 	Token _op,
 	smtutil::Expression const& _left,
 	smtutil::Expression const& _right,
-	TypePointer const& _commonType,
+	Type const* _commonType,
 	frontend::Expression const& _expression
 )
 {

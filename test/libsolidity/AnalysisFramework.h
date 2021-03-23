@@ -33,7 +33,6 @@ namespace solidity::frontend
 {
 class Type;
 class FunctionType;
-using TypePointer = Type const*;
 using FunctionTypePointer = FunctionType const*;
 }
 

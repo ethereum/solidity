@@ -215,7 +215,7 @@ public:
 /// @param _fromType represents the type of the element being pushed.
 /// If _fromType is ReferenceType the function will perform deep copy.
 	/// signature: (array, value)
-	std::string storageArrayPushFunction(ArrayType const& _type, TypePointer _fromType = nullptr);
+	std::string storageArrayPushFunction(ArrayType const& _type, Type const* _fromType = nullptr);
 
 	/// @returns the name of a function that pushes the base type's zero element to a storage array and returns storage slot and offset of the added element.
 	/// signature: (array) -> slot, offset

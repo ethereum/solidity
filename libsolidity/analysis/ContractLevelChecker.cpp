@@ -474,7 +474,7 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 
 		auto const& currentLoc = func.second->declaration().location();
 
-		for (TypePointer const& paramType: func.second->parameterTypes() + func.second->returnParameterTypes())
+		for (Type const* paramType: func.second->parameterTypes() + func.second->returnParameterTypes())
 			if (!TypeChecker::typeSupportedByOldABIEncoder(*paramType, false))
 			{
 				errors.append("Type only supported by ABIEncoderV2", currentLoc);

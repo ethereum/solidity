@@ -978,7 +978,7 @@ void SMTEncoder::endVisit(ElementaryTypeNameExpression const& _typeName)
 namespace // helpers for SMTEncoder::visitPublicGetter
 {
 
-bool isReturnedFromStructGetter(TypePointer _type)
+bool isReturnedFromStructGetter(Type const* _type)
 {
 	// So far it seems that only Mappings and ordinary Arrays are not returned.
 	auto category = _type->category();
@@ -1016,7 +1016,7 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 
 	// See FunctionType::FunctionType(VariableDeclaration const& _varDecl)
 	// to understand the return types of public getters.
-	TypePointer type = var->type();
+	Type const* type = var->type();
 	smtutil::Expression currentExpr = currentValue(*var);
 	while (true)
 	{
@@ -1450,7 +1450,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	auto arrayVar = dynamic_pointer_cast<smt::SymbolicArrayVariable>(array);
 	solAssert(arrayVar, "");
-	TypePointer baseType = _indexAccess.baseExpression().annotation().type;
+	Type const* baseType = _indexAccess.baseExpression().annotation().type;
 	defineExpr(_indexAccess, smtutil::Expression::select(
 		arrayVar->elements(),
 		expr(*_indexAccess.indexExpression(), keyType(baseType))
@@ -1486,7 +1486,7 @@ void SMTEncoder::indexOrMemberAssignment(Expression const& _expr, smtutil::Expre
 			if (dynamic_cast<Identifier const*>(&base))
 				base.accept(*this);
 
-			TypePointer baseType = base.annotation().type;
+			Type const* baseType = base.annotation().type;
 			auto indexExpr = expr(*indexAccess->indexExpression(), keyType(baseType));
 			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(base));
 			solAssert(symbArray, "");
@@ -1735,7 +1735,7 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::arithmeticOperation(
 	Token _op,
 	smtutil::Expression const& _left,
 	smtutil::Expression const& _right,
-	TypePointer const& _commonType,
+	Type const* _commonType,
 	Expression const& _operation
 )
 {
@@ -1826,7 +1826,7 @@ smtutil::Expression SMTEncoder::bitwiseOperation(
 	Token _op,
 	smtutil::Expression const& _left,
 	smtutil::Expression const& _right,
-	TypePointer const& _commonType
+	Type const* _commonType
 )
 {
 	static set<Token> validOperators{
@@ -1995,7 +1995,7 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
 void SMTEncoder::assignment(
 	Expression const& _left,
 	smtutil::Expression const& _right,
-	TypePointer const& _type
+	Type const* _type
 )
 {
 	solAssert(
@@ -2156,7 +2156,7 @@ void SMTEncoder::assignment(VariableDeclaration const& _variable, Expression con
 
 void SMTEncoder::assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value)
 {
-	TypePointer type = _variable.type();
+	Type const* type = _variable.type();
 	if (type->category() == Type::Category::Mapping)
 		arrayAssignment();
 	assignment(*m_context.variable(_variable), _value);
@@ -2315,16 +2315,16 @@ void SMTEncoder::resetReferences(VariableDeclaration const& _varDecl)
 	});
 }
 
-void SMTEncoder::resetReferences(TypePointer _type)
+void SMTEncoder::resetReferences(Type const* _type)
 {
 	m_context.resetVariables([&](VariableDeclaration const& _var) {
 		return sameTypeOrSubtype(_var.type(), _type);
 	});
 }
 
-bool SMTEncoder::sameTypeOrSubtype(TypePointer _a, TypePointer _b)
+bool SMTEncoder::sameTypeOrSubtype(Type const* _a, Type const* _b)
 {
-	TypePointer prefix = _a;
+	Type const* prefix = _a;
 	while (
 		prefix->category() == Type::Category::Mapping ||
 		prefix->category() == Type::Category::Array
@@ -2348,7 +2348,7 @@ bool SMTEncoder::sameTypeOrSubtype(TypePointer _a, TypePointer _b)
 	return false;
 }
 
-TypePointer SMTEncoder::typeWithoutPointer(TypePointer const& _type)
+Type const* SMTEncoder::typeWithoutPointer(Type const* _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 		return TypeProvider::withLocationIfReference(refType->location(), _type);
@@ -2419,7 +2419,7 @@ bool SMTEncoder::createVariable(VariableDeclaration const& _varDecl)
 	return true;
 }
 
-smtutil::Expression SMTEncoder::expr(Expression const& _e, TypePointer _targetType)
+smtutil::Expression SMTEncoder::expr(Expression const& _e, Type const* _targetType)
 {
 	if (!m_context.knownExpression(_e))
 	{
@@ -2587,7 +2587,7 @@ Expression const* SMTEncoder::leftmostBase(IndexAccess const& _indexAccess)
 	return base;
 }
 
-TypePointer SMTEncoder::keyType(TypePointer _type)
+Type const* SMTEncoder::keyType(Type const* _type)
 {
 	if (auto const* mappingType = dynamic_cast<MappingType const*>(_type))
 		return mappingType->keyType();

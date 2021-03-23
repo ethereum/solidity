@@ -46,7 +46,6 @@ namespace solidity::frontend
 {
 
 class Type;
-using TypePointer = Type const*;
 class ArrayType;
 using namespace util;
 
@@ -192,7 +191,7 @@ struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, Structurally
 struct VariableDeclarationAnnotation: DeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
-	TypePointer type = nullptr;
+	Type const* type = nullptr;
 	/// The set of functions this (public state) variable overrides.
 	std::set<CallableDeclaration const*> baseFunctions;
 };
@@ -239,7 +238,7 @@ struct TypeNameAnnotation: ASTAnnotation
 {
 	/// Type declared by this type name, i.e. type of a variable where this type name is used.
 	/// Set during reference resolution stage.
-	TypePointer type = nullptr;
+	Type const* type = nullptr;
 };
 
 struct IdentifierPathAnnotation: ASTAnnotation
@@ -253,7 +252,7 @@ struct IdentifierPathAnnotation: ASTAnnotation
 struct ExpressionAnnotation: ASTAnnotation
 {
 	/// Inferred type of the expression.
-	TypePointer type = nullptr;
+	Type const* type = nullptr;
 	/// Whether the expression is a constant variable
 	SetOnce<bool> isConstant;
 	/// Whether the expression is pure, i.e. compile-time constant.
@@ -305,7 +304,7 @@ struct BinaryOperationAnnotation: ExpressionAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).
-	TypePointer commonType = nullptr;
+	Type const* commonType = nullptr;
 };
 
 enum class FunctionCallKind

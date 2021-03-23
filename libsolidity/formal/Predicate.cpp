@@ -308,7 +308,7 @@ vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expr
 	return formatExpressions(outValues, outTypes);
 }
 
-vector<optional<string>> Predicate::formatExpressions(vector<smtutil::Expression> const& _exprs, vector<TypePointer> const& _types) const
+vector<optional<string>> Predicate::formatExpressions(vector<smtutil::Expression> const& _exprs, vector<Type const*> const& _types) const
 {
 	solAssert(_exprs.size() == _types.size(), "");
 	vector<optional<string>> strExprs;
@@ -317,7 +317,7 @@ vector<optional<string>> Predicate::formatExpressions(vector<smtutil::Expression
 	return strExprs;
 }
 
-optional<string> Predicate::expressionToString(smtutil::Expression const& _expr, TypePointer _type) const
+optional<string> Predicate::expressionToString(smtutil::Expression const& _expr, Type const* _type) const
 {
 	if (smt::isNumber(*_type))
 	{
@@ -456,7 +456,7 @@ bool Predicate::fillArray(smtutil::Expression const& _expr, vector<string>& _arr
 
 map<string, optional<string>> Predicate::readTxVars(smtutil::Expression const& _tx) const
 {
-	map<string, TypePointer> const txVars{
+	map<string, Type const*> const txVars{
 		{"block.chainid", TypeProvider::uint256()},
 		{"block.coinbase", TypeProvider::address()},
 		{"block.difficulty", TypeProvider::uint256()},

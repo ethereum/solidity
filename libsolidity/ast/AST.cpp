@@ -78,7 +78,7 @@ ImportAnnotation& ImportDirective::annotation() const
 	return initAnnotation<ImportAnnotation>();
 }
 
-TypePointer ImportDirective::type() const
+Type const* ImportDirective::type() const
 {
 	solAssert(!!annotation().sourceUnit, "");
 	return TypeProvider::module(*annotation().sourceUnit);
@@ -206,7 +206,7 @@ uint32_t ContractDefinition::interfaceId() const
 	return result;
 }
 
-TypePointer ContractDefinition::type() const
+Type const* ContractDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::contract(*this));
 }
@@ -252,7 +252,7 @@ TypeNameAnnotation& TypeName::annotation() const
 	return initAnnotation<TypeNameAnnotation>();
 }
 
-TypePointer StructDefinition::type() const
+Type const* StructDefinition::type() const
 {
 	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");
 	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
@@ -263,14 +263,14 @@ StructDeclarationAnnotation& StructDefinition::annotation() const
 	return initAnnotation<StructDeclarationAnnotation>();
 }
 
-TypePointer EnumValue::type() const
+Type const* EnumValue::type() const
 {
 	auto parentDef = dynamic_cast<EnumDefinition const*>(scope());
 	solAssert(parentDef, "Enclosing Scope of EnumValue was not set");
 	return TypeProvider::enumType(*parentDef);
 }
 
-TypePointer EnumDefinition::type() const
+Type const* EnumDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::enumType(*this));
 }
@@ -328,13 +328,13 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 	return {};
 }
 
-TypePointer FunctionDefinition::type() const
+Type const* FunctionDefinition::type() const
 {
 	solAssert(visibility() != Visibility::External, "");
 	return TypeProvider::function(*this, FunctionType::Kind::Internal);
 }
 
-TypePointer FunctionDefinition::typeViaContractName() const
+Type const* FunctionDefinition::typeViaContractName() const
 {
 	if (libraryFunction())
 	{
@@ -395,7 +395,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 	return *this; // not reached
 }
 
-TypePointer ModifierDefinition::type() const
+Type const* ModifierDefinition::type() const
 {
 	return TypeProvider::modifier(*this);
 }
@@ -432,7 +432,7 @@ ModifierDefinition const& ModifierDefinition::resolveVirtual(
 }
 
 
-TypePointer EventDefinition::type() const
+Type const* EventDefinition::type() const
 {
 	return TypeProvider::function(*this);
 }
@@ -672,7 +672,7 @@ string VariableDeclaration::externalIdentifierHex() const
 	return TypeProvider::function(*this)->externalIdentifierHex();
 }
 
-TypePointer VariableDeclaration::type() const
+Type const* VariableDeclaration::type() const
 {
 	return annotation().type;
 }
