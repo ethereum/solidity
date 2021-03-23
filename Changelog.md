@@ -1,16 +1,12 @@
-### 0.8.3 (unreleased)
+### 0.8.3 (2021-03-23)
 
 Important Bugfixes:
  * Optimizer: Fix bug on incorrect caching of Keccak-256 hashes.
-
-Language Features:
-
 
 Compiler Features:
  * Command Line Interface: Drop experimental support for ``--machine evm15``.
  * Optimizer: Try to move ``and`` with constant inside ``or`` to improve storage writes of small types.
  * Optimizer: Replace multiplications and divisions with powers of two by shifts.
-
 
 Bugfixes:
  * AST Import: For constructors, a public visibility is ignored during importing.
@@ -25,7 +21,6 @@ Bugfixes:
 
 AST Changes:
  * ModifierInvocation: Add ``kind`` field which can be ``modifierInvocation`` or ``baseConstructorSpecifier``.
-
 
 
 ### 0.8.2 (2021-03-02)

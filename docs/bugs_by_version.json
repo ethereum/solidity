@@ -1481,5 +1481,9 @@
             "KeccakCaching"
         ],
         "released": "2021-03-02"
+    },
+    "0.8.3": {
+        "bugs": [],
+        "released": "2021-03-23"
     }
 }
