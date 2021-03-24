@@ -1447,7 +1447,7 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 {
 	auto it = m_sources.find(_sourceName);
 	if (it == m_sources.end())
-		solThrow(CompilerError, "Given source file not found.");
+		solThrow(CompilerError, "Given source file not found: " + _sourceName);
 
 	return it->second;
 }
