@@ -172,6 +172,7 @@
                 }
               ],
               "id": 13,
+              "kind": "baseConstructorSpecifier",
               "modifierName":
               {
                 "id": 11,

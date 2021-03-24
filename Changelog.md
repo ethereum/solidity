@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * AST Output: Fix ``kind`` field of ``ModifierInvocation`` for base constructor calls.
 
 
 AST Changes:

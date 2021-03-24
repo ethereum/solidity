@@ -461,9 +461,8 @@ bool ASTJsonConverter::visit(ModifierInvocation const& _node)
 	{
 		if (dynamic_cast<ModifierDefinition const*>(declaration))
 			attributes.emplace_back("kind", "modifierInvocation");
-		else if (FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(declaration))
-			if (function->isConstructor())
-				attributes.emplace_back("kind", "baseConstructorSpecifier");
+		else if (dynamic_cast<ContractDefinition const*>(declaration))
+			attributes.emplace_back("kind", "baseConstructorSpecifier");
 	}
 	setJsonNode(_node, "ModifierInvocation", move(attributes));
 	return false;
