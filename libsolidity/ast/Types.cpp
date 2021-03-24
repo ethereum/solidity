@@ -2877,6 +2877,7 @@ string FunctionType::richIdentifier() const
 	case Kind::MulMod: id += "mulmod"; break;
 	case Kind::ArrayPush: id += "arraypush"; break;
 	case Kind::ArrayPop: id += "arraypop"; break;
+	case Kind::BytesConcat: id += "bytesconcat"; break;
 	case Kind::ObjectCreation: id += "objectcreation"; break;
 	case Kind::Assert: id += "assert"; break;
 	case Kind::Require: id += "require"; break;
@@ -3736,6 +3737,20 @@ MemberList::MemberMap TypeType::nativeMembers(ASTNode const* _currentScope) cons
 		for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
 			members.emplace_back(enumValue.get(), enumType);
 	}
+	else if (
+		auto const* arrayType = dynamic_cast<ArrayType const*>(m_actualType);
+		arrayType && arrayType->isByteArray()
+	)
+		members.emplace_back("concat", TypeProvider::function(
+			TypePointers{},
+			TypePointers{TypeProvider::bytesMemory()},
+			strings{},
+			strings{string()},
+			FunctionType::Kind::BytesConcat,
+			/* _arbitraryParameters */ true,
+			StateMutability::Pure
+		));
+
 	return members;
 }
 

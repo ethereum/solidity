@@ -1021,6 +1021,42 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ArrayUtils(m_context).popStorageArrayElement(*arrayType);
 			break;
 		}
+		case FunctionType::Kind::BytesConcat:
+		{
+			_functionCall.expression().accept(*this);
+			vector<Type const*> argumentTypes;
+			vector<Type const*> targetTypes;
+			for (auto const& argument: arguments)
+			{
+				argument->accept(*this);
+				solAssert(argument->annotation().type, "");
+				argumentTypes.emplace_back(argument->annotation().type);
+				if (argument->annotation().type->category() == Type::Category::FixedBytes)
+					targetTypes.emplace_back(argument->annotation().type);
+				else if (
+					auto const* literalType = dynamic_cast<StringLiteralType const*>(argument->annotation().type);
+					literalType && literalType->value().size() <= 32
+				)
+					targetTypes.emplace_back(TypeProvider::fixedBytes(static_cast<unsigned>(literalType->value().size())));
+				else
+				{
+					solAssert(argument->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()), "");
+					targetTypes.emplace_back(TypeProvider::bytesMemory());
+				}
+			}
+			utils().fetchFreeMemoryPointer();
+			// stack: <arg1> <arg2> ... <argn> <free mem>
+			m_context << u256(32) << Instruction::ADD;
+			utils().packedEncode(argumentTypes, targetTypes);
+			utils().fetchFreeMemoryPointer();
+			m_context.appendInlineAssembly(R"({
+				mstore(mem_ptr, sub(sub(mem_end, mem_ptr), 0x20))
+			})", {"mem_end", "mem_ptr"});
+			m_context << Instruction::SWAP1;
+			utils().storeFreeMemoryPointer();
+
+			break;
+		}
 		case FunctionType::Kind::ObjectCreation:
 		{
 			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);

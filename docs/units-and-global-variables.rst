@@ -136,6 +136,13 @@ ABI Encoding and Decoding Functions
 See the documentation about the :ref:`ABI <ABI>` and the
 :ref:`tightly packed encoding <abi_packed_mode>` for details about the encoding.
 
+.. index:: bytes members
+
+Members of bytes
+----------------
+
+- ``bytes.concat(...) returns (bytes memory)``: :ref:`Concatenates variable number of bytes and bytes1, ..., bytes32 arguments to one byte array<bytes-concat>`
+
 .. index:: assert, revert, require
 
 Error Handling

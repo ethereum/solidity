@@ -1323,6 +1323,23 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		}
 		break;
 	}
+	case FunctionType::Kind::BytesConcat:
+	{
+		TypePointers argumentTypes;
+		vector<string> argumentVars;
+		for (ASTPointer<Expression const> const& argument: arguments)
+		{
+			argumentTypes.emplace_back(&type(*argument));
+			argumentVars += IRVariable(*argument).stackSlots();
+		}
+		define(IRVariable(_functionCall)) <<
+			m_utils.bytesConcatFunction(argumentTypes) <<
+			"(" <<
+			joinHumanReadable(argumentVars) <<
+			")\n";
+
+		break;
+	}
 	case FunctionType::Kind::MetaType:
 	{
 		break;
@@ -1993,6 +2010,8 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 		}
 		else if (EnumType const* enumType = dynamic_cast<EnumType const*>(&actualType))
 			define(_memberAccess) << to_string(enumType->memberValue(_memberAccess.memberName())) << "\n";
+		else if (auto const* arrayType = dynamic_cast<ArrayType const*>(&actualType))
+			solAssert(arrayType->isByteArray() && member == "concat", "");
 		else
 			// The old code generator had a generic "else" case here
 			// without any specific code being generated,

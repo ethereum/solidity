@@ -111,6 +111,12 @@ private:
 		FunctionTypePointer _functionType
 	);
 
+	/// Performs general checks and checks specific to bytes concat function call
+	void typeCheckBytesConcatFunction(
+		FunctionCall const& _functionCall,
+		FunctionType const* _functionType
+	);
+
 	void endVisit(InheritanceSpecifier const& _inheritance) override;
 	void endVisit(ModifierDefinition const& _modifier) override;
 	bool visit(FunctionDefinition const& _function) override;

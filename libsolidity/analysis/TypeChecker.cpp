@@ -2027,6 +2027,32 @@ void TypeChecker::typeCheckABIEncodeFunctions(
 	}
 }
 
+void TypeChecker::typeCheckBytesConcatFunction(
+	FunctionCall const& _functionCall,
+	FunctionType const* _functionType
+)
+{
+	solAssert(_functionType, "");
+	solAssert(_functionType->kind() == FunctionType::Kind::BytesConcat, "");
+	solAssert(_functionCall.names().empty(), "");
+
+	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
+
+	for (shared_ptr<Expression const> const& argument: _functionCall.arguments())
+		if (
+			Type const* argumentType = type(*argument);
+			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32)) &&
+			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory())
+		)
+			m_errorReporter.typeError(
+				8015_error,
+				argument->location(),
+				"Invalid type for argument in the bytes.concat function call. "
+				"bytes or fixed bytes type is required, but " +
+				argumentType->toString(true) + " provided."
+			);
+}
+
 void TypeChecker::typeCheckFunctionGeneralChecks(
 	FunctionCall const& _functionCall,
 	FunctionTypePointer _functionType
@@ -2433,6 +2459,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 		case FunctionType::Kind::MetaType:
 			returnTypes = typeCheckMetaTypeFunctionAndRetrieveReturnType(_functionCall);
 			break;
+		case FunctionType::Kind::BytesConcat:
+		{
+			typeCheckBytesConcatFunction(_functionCall, functionType);
+			returnTypes = functionType->returnParameterTypes();
+			break;
+		}
 		default:
 		{
 			typeCheckFunctionCall(_functionCall, functionType);
