@@ -330,8 +330,8 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
 
 .. note::
   A single-line comment is terminated by any unicode line terminator
-  (LF, VF, FF, CR, NEL, LS or PS) in utf8 encoding. The terminator is still part of
-  the source code after the comment, so if it is not an ascii symbol
+  (LF, VF, FF, CR, NEL, LS or PS) in UTF-8 encoding. The terminator is still part of
+  the source code after the comment, so if it is not an ASCII symbol
   (these are NEL, LS and PS), it will lead to a parser error.
 
 Additionally, there is another type of comment called a natspec comment,

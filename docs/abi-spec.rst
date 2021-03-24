@@ -199,9 +199,9 @@ on the type of ``X`` being
 
 - ``string``:
 
-  ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is utf-8 encoded and this value is interpreted
+  ``enc(X) = enc(enc_utf8(X))``, i.e. ``X`` is UTF-8 encoded and this value is interpreted
   as of ``bytes`` type and encoded further. Note that the length used in this subsequent
-  encoding is the number of bytes of the utf-8 encoded string, not its number of characters.
+  encoding is the number of bytes of the UTF-8 encoded string, not its number of characters.
 
 - ``uint<M>``: ``enc(X)`` is the big-endian encoding of ``X``, padded on the higher-order
   (left) side with zero-bytes such that the length is 32 bytes.
