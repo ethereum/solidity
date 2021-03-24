@@ -165,7 +165,7 @@ bool FunctionCallGraphBuilder::visit(Identifier const& _identifier)
 
 bool FunctionCallGraphBuilder::visit(MemberAccess const& _memberAccess)
 {
-	TypePointer exprType = _memberAccess.expression().annotation().type;
+	Type const* exprType = _memberAccess.expression().annotation().type;
 	ASTString const& memberName = _memberAccess.memberName();
 
 	if (auto magicType = dynamic_cast<MagicType const*>(exprType))
