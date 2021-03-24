@@ -1637,6 +1637,113 @@ BOOST_AUTO_TEST_CASE(inliner_cse_break)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(inliner_stop)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	AssemblyItems expectation{
+		Instruction::STOP,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	Inliner{items, {}, 200, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_stop_jumpi)
+{
+	// Because of `jumpi`, will not be inlined.
+	AssemblyItems items{
+		u256(1),
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI,
+		AssemblyItem(Tag, 1),
+		Instruction::STOP
+	};
+	AssemblyItems expectation = items;
+	Inliner{items, {}, 200, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_revert)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+	AssemblyItems expectation{
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		Instruction::DUP1,
+		Instruction::REVERT
+	};
+
+	Inliner{items, {}, 200, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_revert_increased_datagas)
+{
+	// Inlining this would increase data gas (5 bytes v/s 4 bytes), therefore, skipped.
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(0),
+		u256(0),
+		Instruction::REVERT
+	};
+
+	AssemblyItems expectation = items;
+	Inliner{items, {}, 200, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+BOOST_AUTO_TEST_CASE(inliner_invalid)
+{
+	AssemblyItems items{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		Instruction::INVALID
+	};
+
+	AssemblyItems expectation = {
+		Instruction::INVALID,
+		AssemblyItem(Tag, 1),
+		Instruction::INVALID
+	};
+	Inliner{items, {}, 200, false, {}}.optimise();
+	BOOST_CHECK_EQUAL_COLLECTIONS(
+		items.begin(), items.end(),
+		expectation.begin(), expectation.end()
+	);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces

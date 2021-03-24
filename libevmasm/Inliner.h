@@ -61,8 +61,8 @@ private:
 		uint64_t pushTagCount = 0;
 	};
 
-	/// @returns the exit jump type for the block to be inlined, if a particular jump to it should be inlined, otherwise nullopt.
-	std::optional<AssemblyItem::JumpType> shouldInline(size_t _tag, AssemblyItem const& _jump, InlinableBlock const& _block) const;
+	/// @returns the exit item for the block to be inlined, if a particular jump to it should be inlined, otherwise nullopt.
+	std::optional<AssemblyItem> shouldInline(size_t _tag, AssemblyItem const& _jump, InlinableBlock const& _block) const;
 	/// @returns true, if the full function at tag @a _tag with body @a _block that is referenced @a _pushTagCount times
 	/// should be inlined, false otherwise. @a _block should start at the first instruction after the function entry tag
 	/// up to and including the return jump.
