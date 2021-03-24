@@ -2443,14 +2443,13 @@ void SMTEncoder::createExpr(Expression const& _e)
 
 void SMTEncoder::defineExpr(Expression const& _e, smtutil::Expression _value)
 {
+	auto type = _e.annotation().type;
 	createExpr(_e);
 	solAssert(_value.sort->kind != smtutil::Kind::Function, "Equality operator applied to type that is not fully supported");
-	m_context.addAssertion(expr(_e) == _value);
+	if (!smt::isInaccessibleDynamic(*type))
+		m_context.addAssertion(expr(_e) == _value);
 
-	if (
-		auto type = _e.annotation().type;
-		m_checked && smt::isNumber(*type)
-	)
+	if (m_checked && smt::isNumber(*type))
 		m_context.addAssertion(smtutil::Expression::implies(
 			currentPathConditions(),
 			smt::symbolicUnknownConstraints(expr(_e), type)
@@ -2469,8 +2468,11 @@ void SMTEncoder::defineExpr(Expression const& _e, vector<optional<smtutil::Expre
 	symbTuple->increaseIndex();
 	auto const& symbComponents = symbTuple->components();
 	solAssert(symbComponents.size() == _values.size(), "");
+	auto tupleType = dynamic_cast<TupleType const*>(_e.annotation().type);
+	solAssert(tupleType, "");
+	solAssert(tupleType->components().size() == symbComponents.size(), "");
 	for (unsigned i = 0; i < symbComponents.size(); ++i)
-		if (_values[i])
+		if (_values[i] && !smt::isInaccessibleDynamic(*tupleType->components()[i]))
 			m_context.addAssertion(symbTuple->component(i) == *_values[i]);
 }
 

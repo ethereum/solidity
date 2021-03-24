@@ -59,6 +59,7 @@ bool isArray(frontend::Type const& _type);
 bool isTuple(frontend::Type const& _type);
 bool isStringLiteral(frontend::Type const& _type);
 bool isNonRecursiveStruct(frontend::Type const& _type);
+bool isInaccessibleDynamic(frontend::Type const& _type);
 
 /// Returns a new symbolic variable, according to _type.
 /// Also returns whether the type is abstract or not,
