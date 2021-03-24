@@ -149,6 +149,12 @@ set(sources
 	interface/StorageLayout.h
 	interface/Version.cpp
 	interface/Version.h
+	lsp/LanguageServer.cpp
+	lsp/LanguageServer.h
+	lsp/ReferenceCollector.cpp
+	lsp/ReferenceCollector.h
+	lsp/Transport.cpp
+	lsp/Transport.h
 	parsing/DocStringParser.cpp
 	parsing/DocStringParser.h
 	parsing/Parser.cpp
