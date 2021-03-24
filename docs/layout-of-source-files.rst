@@ -79,7 +79,7 @@ be sure that your code compiles the way you intended. The exact version of the
 compiler is not fixed, so that bugfix releases are still possible.
 
 It is possible to specify more complex rules for the compiler version,
-these follow the same syntax used by `npm <https://docs.npmjs.com/misc/semver>`_.
+these follow the same syntax used by `npm <https://docs.npmjs.com/cli/v6/using-npm/semver>`_.
 
 .. note::
   Using the version pragma *does not* change the version of the compiler.
