@@ -66,11 +66,6 @@ struct IRNames
 	static std::string zeroValue(Type const& _type, std::string const& _variableName);
 };
 
-struct IRHelpers
-{
-	static FunctionDefinition const* referencedFunctionDeclaration(Expression const& _expression);
-};
-
 }
 
 // Overloading std::less() makes it possible to use YulArity as a map key. We could define operator<

@@ -903,7 +903,9 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	case FunctionType::Kind::Internal:
 	{
 		auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression());
-		FunctionDefinition const* functionDef = IRHelpers::referencedFunctionDeclaration(_functionCall.expression());
+		auto const* functionDef = dynamic_cast<FunctionDefinition const*>(
+			ASTNode::referencedDeclaration(_functionCall.expression())
+		);
 
 		if (functionDef)
 		{
