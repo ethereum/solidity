@@ -334,14 +334,10 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
   the source code after the comment, so if it is not an ASCII symbol
   (these are NEL, LS and PS), it will lead to a parser error.
 
-Additionally, there is another type of comment called a natspec comment,
-which is detailed in the :ref:`style guide<natspec>`. They are written with a
+Additionally, there is another type of comment called a NatSpec comment,
+which is detailed in the :ref:`style guide<natspec>` section. They are written with a
 triple slash (``///``) or a double asterisk block(``/** ... */``) and
 they should be used directly above function declarations or statements.
-You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
-functions, annotate conditions for formal verification, and provide a
-**confirmation text** which is shown to users when they attempt to invoke a
-function.
 
 In the following example we document the title of the contract, the explanation
 for the two function parameters and two return variables.
