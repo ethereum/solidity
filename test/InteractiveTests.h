@@ -67,7 +67,7 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
 	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
 	{"JSON ABI",            "libsolidity", "ABIJson",             false, false, &ABIJsonTest::create},
-	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create, {"nooptions"}},
+	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create},
 	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
 };
 
