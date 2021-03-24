@@ -1443,7 +1443,7 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 {
 	auto it = m_sources.find(_sourceName);
 	if (it == m_sources.end())
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found."));
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found. " + _sourceName));
 
 	return it->second;
 }
