@@ -19,17 +19,21 @@
 #include <test/TestCaseReader.h>
 
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace solidity::frontend::test;
 
-#ifdef _WIN32
-#error "ERROR: This is a big fat error!!!11"
-#endif
+namespace fs = boost::filesystem;
+
+//#ifdef _WIN32
+//#error "ERROR: This is a big fat error!!!11"
+//#endif
 
 TestCaseReader::TestCaseReader(string const& _filename):
 	m_file(_filename)
@@ -40,6 +44,10 @@ TestCaseReader::TestCaseReader(string const& _filename):
 
 	tie(m_sources, m_lineNumber) = parseSourcesAndSettingsWithLineNumber(m_file);
 	m_unreadSettings = m_settings;
+
+	fs::path path(_filename);
+	std::cout << _filename << std::endl;
+	std::cout << util::readFileAsString(path.c_str()) << std::endl << std::endl;
 }
 
 TestCaseReader::TestCaseReader(istringstream const& _str)
