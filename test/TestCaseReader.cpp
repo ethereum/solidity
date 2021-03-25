@@ -27,6 +27,10 @@
 using namespace std;
 using namespace solidity::frontend::test;
 
+#ifdef _WIN32
+#error "ERROR: This is a big fat error!!!11"
+#endif
+
 TestCaseReader::TestCaseReader(string const& _filename):
 	m_file(_filename)
 {
