@@ -1125,6 +1125,7 @@ Abbreviation Full name
 ``i``        ``FullInliner``
 ``g``        ``FunctionGrouper``
 ``h``        ``FunctionHoister``
+``F``        ``FunctionSpecializer``
 ``T``        ``LiteralRematerialiser``
 ``L``        ``LoadResolver``
 ``M``        ``LoopInvariantCodeMotion``
