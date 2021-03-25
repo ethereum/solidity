@@ -17,50 +17,13 @@
 //
 // {
 //     {
-//         pop(mstore_1011())
-//         let y := 8
-//         let _1 := calldataload(y)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         sstore(y, _1)
-//         nonmstore_1012()
-//         let _2 := calldataload(2)
-//         let _3 := 10
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//         sstore(_3, _2)
-//     }
-//     function nonmstore_1012()
-//     {
+//         pop(mstore_(7))
 //         nonmstore(70)
-//         sstore(10, calldataload(2))
 //     }
 //     function nonmstore(x)
 //     {
 //         nonmstore(x)
 //         sstore(10, calldataload(2))
-//     }
-//     function mstore_1011() -> y
-//     {
-//         pop(mstore_(7))
-//         y := 8
-//         sstore(y, calldataload(y))
 //     }
 //     function mstore_(x) -> y
 //     {

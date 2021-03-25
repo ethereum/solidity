@@ -66,7 +66,12 @@ public:
 	void operator()(FunctionCall& _f) override;
 
 private:
-	explicit FunctionSpecializer(NameDispenser& _nameDispenser, Dialect const& _dialect):
+	explicit FunctionSpecializer(
+		std::set<YulString> _recursiveFunctions,
+		NameDispenser& _nameDispenser,
+		Dialect const& _dialect
+	):
+		m_recursiveFunctions(std::move(_recursiveFunctions)),
 		m_nameDispenser(_nameDispenser),
 		m_dialect(_dialect)
 	{}
@@ -98,6 +103,8 @@ private:
 	/// A mapping between the old function name and a pair of new function name and its arguments.
 	/// Note that at least one of the argument will have a literal value.
 	std::map<YulString, std::vector<std::pair<YulString, LiteralArguments>>> m_oldToNewMap;
+	/// We skip specializing recursive functions. Need backtracking to properly deal with them.
+	std::set<YulString> const m_recursiveFunctions;
 
 	NameDispenser& m_nameDispenser;
 	Dialect const& m_dialect;

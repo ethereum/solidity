@@ -19,6 +19,7 @@
 #include <libyul/optimiser/FunctionSpecializer.h>
 
 #include <libyul/optimiser/ASTCopier.h>
+#include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/NameDispenser.h>
 
@@ -53,7 +54,11 @@ void FunctionSpecializer::operator()(FunctionCall& _f)
 {
 	ASTModifier::operator()(_f);
 
-	if (m_dialect.builtin(_f.functionName.name))
+	// TODO When backtracking is implemented, the restriction of recursive functions can be lifted.
+	if (
+		m_dialect.builtin(_f.functionName.name) ||
+		m_recursiveFunctions.count(_f.functionName.name)
+	)
 		return;
 
 	LiteralArguments arguments = specializableArguments(_f);
@@ -108,7 +113,7 @@ FunctionDefinition FunctionSpecializer::specialize(
 	newFunction.body.statements =
 		move(missingVariableDeclarations) + move(newFunction.body.statements);
 
-	// Only take those indices where optional in arguments in nullopt
+	// Only take those indices that cannot be specialized, i.e., whose value is `nullopt`.
 	newFunction.parameters =
 		util::filter(
 			newFunction.parameters,
@@ -122,8 +127,11 @@ FunctionDefinition FunctionSpecializer::specialize(
 
 void FunctionSpecializer::run(OptimiserStepContext& _context, Block& _ast)
 {
-	// Finds all function calls that can be replaced.
-	FunctionSpecializer f{_context.dispenser, _context.dialect};
+	FunctionSpecializer f{
+		CallGraphGenerator::callGraph(_ast).recursiveFunctions(),
+		_context.dispenser,
+		_context.dialect
+	};
 	f(_ast);
 
 	iterateReplacing(_ast.statements, [&](Statement& _s) -> optional<vector<Statement>>
