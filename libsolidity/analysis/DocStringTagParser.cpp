@@ -163,7 +163,13 @@ void DocStringTagParser::parseDocStrings(
 	for (auto const& [tagName, tagValue]: _annotation.docTags)
 	{
 		string static const customPrefix("custom:");
-		if (boost::starts_with(tagName, customPrefix) && tagName.size() > customPrefix.size())
+		if (tagName == "custom" || tagName == "custom:")
+			m_errorReporter.docstringParsingError(
+				6564_error,
+				_node.documentation()->location(),
+				"Custom documentation tag must contain a chosen name, i.e. @custom:mytag."
+			);
+		else if (boost::starts_with(tagName, customPrefix) && tagName.size() > customPrefix.size())
 		{
 			regex static const customRegex("^custom:[a-z][a-z-]*$");
 			if (!regex_match(tagName, customRegex))
