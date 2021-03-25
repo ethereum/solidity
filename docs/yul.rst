@@ -688,7 +688,7 @@ We will use a destructuring notation for the AST nodes.
         Let G'', L'', mode = E(Gn, L', block)
         G'', Ln, L''[$ret1], ..., L''[$retm]
     E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
-        where utf8EncodeLeftAligned performs a utf8 encoding of l
+        where utf8EncodeLeftAligned performs a UTF-8 encoding of l
         and aligns it left into 32 bytes
     E(G, L, n: HexNumber) = G, L, hex(n)
         where hex is the hexadecimal decoding function

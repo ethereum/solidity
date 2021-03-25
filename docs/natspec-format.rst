@@ -8,6 +8,13 @@ Solidity contracts can use a special form of comments to provide rich
 documentation for functions, return variables and more. This special form is
 named the Ethereum Natural Language Specification Format (NatSpec).
 
+.. note:
+
+  NatSpec was inspired by `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_.
+  While it uses Doxygen-style comments and tags, there is no intention to keep
+  strict compatibility with Doxygen. Please carefully examine the supported tags
+  listed below.
+
 This documentation is segmented into developer-focused messages and end-user-facing
 messages. These messages may be shown to the end user (the human) at the
 time that they will interact with the contract (i.e. sign a transaction).
@@ -20,13 +27,17 @@ use, and which are understood by the Solidity compiler. Also detailed below is
 output of the Solidity compiler, which extracts these comments into a machine-readable
 format.
 
+NatSpec may also include annotations used by third-party tools. These are most likely
+accomplished via the ``@custom:<name>`` tag, and a good use case is analysis and verification
+tools.
+
 .. _header-doc-example:
 
 Documentation Example
 =====================
 
 Documentation is inserted above each ``class``, ``interface`` and
-``function`` using the doxygen notation format.
+``function`` using the Doxygen notation format.
 
 Note: a ``public`` state variable is equivalent to a ``function``
 for the purposes of NatSpec.
@@ -106,7 +117,7 @@ Tag                                                                             
 ``@author``     The name of the author                                                                 contract, interface
 ``@notice``     Explain to an end user what this does                                                  contract, interface, function, public state variable, event
 ``@dev``        Explain to a developer any extra details                                               contract, interface, function, state variable, event
-``@param``      Documents a parameter just like in doxygen (must be followed by parameter name)        function, event
+``@param``      Documents a parameter just like in Doxygen (must be followed by parameter name)        function, event
 ``@return``     Documents the return variables of a contract's function                                function, public state variable
 ``@inheritdoc`` Copies all missing tags from the base function (must be followed by the contract name) function, public state variable
 ``@custom:...`` Custom tag, semantics is application-defined                                           everywhere
