@@ -532,6 +532,12 @@ and will wrap without an error if used inside an unchecked block:
     or modulo by zero using the ``unchecked`` block.
 
 .. note::
+   Bitwise operators do not perform overflow or underflow checks.
+   This is particularly visible when using bitwise shifts (``<<``, ``>>``, ``<<=``, ``>>=``) in
+   place of integer division and multiplication by a power of 2.
+   For example ``type(uint256).max << 3`` does not revert even though ``type(uint256).max * 8`` would.
+
+.. note::
     The second statement in ``int x = type(int).min; -x;`` will result in an overflow
     because the negative range can hold one more value than the positive range.
 
