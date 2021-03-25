@@ -34,6 +34,7 @@
 
 #include <abicoder.hpp>
 
+#include <regex>
 #include <sstream>
 
 using namespace solidity::frontend::test;
@@ -54,9 +55,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 //	if (_size <= 600)
 	{
 		string input(reinterpret_cast<char const*>(_data), _size);
-		// TODO: Cannot fuzz tests containing libraries yet.
-		if (input.find("library") != string::npos)
-			return 0;
+		regex re = regex("library\\s*(\\w+)\\s*\\{");
+		smatch matches;
+		std::string libraryName;
+		auto match = regex_search(input, matches, re);
+		if (match && matches[1].matched)
+			libraryName = matches[1].str();
 
 		map<string, string> sourceCode;
 		try
@@ -82,10 +86,22 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 				hostContext,
 				cInput,
 				contractName,
-				{},
+				libraryName,
 				methodName
 			);
 
+			if (!libraryName.empty())
+			{
+				cout << "Deploying library" << endl;
+				auto l = evmoneUtil.compileAndDeployLibrary();
+				if (!l.has_value())
+					return 0;
+				cout << "Deployed" << endl;
+			}
+
+			hostContext.reset();
+			evmoneUtil.reset(true);
+			evmoneUtil.optSetting(compilerSetting);
 			auto compilerOutput = evmoneUtil.compileContract();
 			if (!compilerOutput.has_value())
 				return 0;

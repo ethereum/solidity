@@ -218,6 +218,9 @@ public:
 	/// identifiers for methods in @param _contractName.
 	std::optional<CompilerOutput> compileContract();
 
+	/// Compiles and deploys library on blockchain.
+	std::optional<evmc::result> compileAndDeployLibrary();
+
 private:
 
 	/// EVM Host implementation

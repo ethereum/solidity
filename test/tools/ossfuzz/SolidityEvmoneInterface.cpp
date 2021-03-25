@@ -154,30 +154,39 @@ evmc::result EvmoneUtility::deployAndExecute(
 	return callResult;
 }
 
+optional<evmc::result> EvmoneUtility::compileAndDeployLibrary()
+{
+	solAssert(!m_libraryName.empty(), "SolidityEvmoneInterface: No library set.");
+	m_compilationFramework.contractName(m_libraryName);
+	auto compilationOutput = m_compilationFramework.compileContract();
+	m_compilationFramework.contractName(m_contractName);
+	if (compilationOutput.has_value())
+	{
+		CompilerOutput cOutput = compilationOutput.value();
+		// Deploy contract and signal failure if deploy failed
+		evmc::result createResult = deployContract(cOutput.byteCode);
+		solAssert(
+			createResult.status_code == EVMC_SUCCESS,
+			"SolidityEvmoneInterface: Library deployment failed"
+		);
+		m_compilationFramework.libraryAddresses(
+			{{m_libraryName, EVMHost::convertFromEVMC(createResult.create_address)}}
+		);
+		return createResult;
+	}
+	else
+		return nullopt;
+}
+
 optional<evmc::result> EvmoneUtility::compileDeployAndExecute(string _fuzzIsabelle)
 {
-	map<string, h160> libraryAddressMap;
-	// Stage 1: Compile and deploy library if present.
+	// Stage 1: Deploy library if it exists.
 	if (!m_libraryName.empty())
 	{
-		m_compilationFramework.contractName(m_libraryName);
-		auto compilationOutput = m_compilationFramework.compileContract();
-		if (compilationOutput.has_value())
-		{
-			CompilerOutput cOutput = compilationOutput.value();
-			// Deploy contract and signal failure if deploy failed
-			evmc::result createResult = deployContract(cOutput.byteCode);
-			solAssert(
-				createResult.status_code == EVMC_SUCCESS,
-				"SolidityEvmoneInterface: Library deployment failed"
-			);
-			libraryAddressMap[m_libraryName] = EVMHost::convertFromEVMC(createResult.create_address);
-			m_compilationFramework.libraryAddresses(libraryAddressMap);
-		}
-		else
-			return {};
+		auto r = compileAndDeployLibrary();
+		if (!r.has_value())
+			return r;
 	}
-
 	// Stage 2: Compile, deploy, and execute contract, optionally using library
 	// address map.
 	m_compilationFramework.contractName(m_contractName);
