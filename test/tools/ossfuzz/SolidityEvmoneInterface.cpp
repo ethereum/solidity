@@ -106,6 +106,8 @@ evmc_message EvmoneUtility::initializeMessage(bytes const& _input)
 	msg.gas = std::numeric_limits<int64_t>::max();
 	msg.input_data = _input.data();
 	msg.input_size = _input.size();
+	// Value = 10^9 gwei = 1 ether
+	msg.value = {0x0, 0xca, 0x9a, 0x3b};
 	return msg;
 }
 
