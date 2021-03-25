@@ -28,26 +28,21 @@ bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
 {
 	solAssert(_varDecl.isConstant(), "Constant variable expected");
 
-	auto referencedDeclaration = [&](Expression const* _e) -> VariableDeclaration const*
-	{
-		if (auto identifier = dynamic_cast<Identifier const*>(_e))
-			return dynamic_cast<VariableDeclaration const*>(identifier->annotation().referencedDeclaration);
-		else if (auto memberAccess = dynamic_cast<MemberAccess const*>(_e))
-			return dynamic_cast<VariableDeclaration const*>(memberAccess->annotation().referencedDeclaration);
-		return nullptr;
-	};
-
-	auto visitor = [&](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
+	auto visitor = [](VariableDeclaration const& _variable, util::CycleDetector<VariableDeclaration>& _cycleDetector, size_t _depth)
 	{
 		solAssert(_depth < 256, "Recursion depth limit reached");
+		if (!_variable.value())
+			// This should result in an error later on.
+			return;
 
-		if (auto referencedVarDecl = referencedDeclaration(_variable.value().get()))
+		if (auto referencedVarDecl = dynamic_cast<VariableDeclaration const*>(
+			ASTNode::referencedDeclaration(*_variable.value()))
+		)
 			if (referencedVarDecl->isConstant())
-				if (_cycleDetector.run(*referencedVarDecl))
-					return;
+				_cycleDetector.run(*referencedVarDecl);
 	};
 
-	return util::CycleDetector<VariableDeclaration>(visitor).run(_varDecl);
+	return util::CycleDetector<VariableDeclaration>(visitor).run(_varDecl) != nullptr;
 }
 
 VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration const& _varDecl)

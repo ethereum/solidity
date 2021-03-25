@@ -112,6 +112,10 @@ public:
 	template <class T>
 	static std::vector<T const*> filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes);
 
+	/// Extracts the referenced declaration from all nodes whose annotations support
+	/// `referencedDeclaration`.
+	static Declaration const* referencedDeclaration(Expression const& _expression);
+
 	/// Returns the source code location of this node.
 	SourceLocation const& location() const { return m_location; }
 

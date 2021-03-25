@@ -44,6 +44,18 @@ ASTNode::ASTNode(int64_t _id, SourceLocation _location):
 {
 }
 
+Declaration const* ASTNode::referencedDeclaration(Expression const& _expression)
+{
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
+		return memberAccess->annotation().referencedDeclaration;
+	else if (auto const* identifierPath = dynamic_cast<IdentifierPath const*>(&_expression))
+		return identifierPath->annotation().referencedDeclaration;
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
+		return identifier->annotation().referencedDeclaration;
+	else
+		return nullptr;
+}
+
 ASTAnnotation& ASTNode::annotation() const
 {
 	if (!m_annotation)

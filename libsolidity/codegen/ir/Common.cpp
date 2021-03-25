@@ -122,13 +122,3 @@ string IRNames::zeroValue(Type const& _type, string const& _variableName)
 {
 	return "zero_" + _type.identifier() + _variableName;
 }
-
-FunctionDefinition const* IRHelpers::referencedFunctionDeclaration(Expression const& _expression)
-{
-	if (auto memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
-		return dynamic_cast<FunctionDefinition const*>(memberAccess->annotation().referencedDeclaration);
-	else if (auto identifier = dynamic_cast<Identifier const*>(&_expression))
-		return dynamic_cast<FunctionDefinition const*>(identifier->annotation().referencedDeclaration);
-	else
-		return nullptr;
-}
