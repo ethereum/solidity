@@ -174,7 +174,7 @@ If you want to use string parameters or other types, you need to convert them to
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.8.3;
+    pragma solidity ^0.8.4;
 
     contract C {
         bytes s = "Storage";
