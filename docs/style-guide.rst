@@ -1136,23 +1136,21 @@ Avoiding Naming Collisions
 This convention is suggested when the desired name collides with that of a
 built-in or otherwise reserved name.
 
+.. _style_guide_natspec:
+
 *******
 NatSpec
 *******
 
-Solidity contracts can have a form of comments that are the basis of the
-Ethereum Natural Language Specification Format.
-
-Add comments above functions or contracts following `doxygen <https://www.doxygen.nl>`_ notation
-of one or multiple lines starting with ``///`` or a
-multiline comment starting with ``/**`` and ending with ``*/``.
+Solidity contracts can also contain NatSpec comments. They are written with a
+triple slash (``///``) or a double asterisk block (``/** ... */``) and
+they should be used directly above function declarations or statements.
 
 For example, the contract from :ref:`a simple smart contract <simple-smart-contract>` with the comments
 added looks like the one below::
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
-
 
     /// @author The Solidity Team
     /// @title A simple storage example

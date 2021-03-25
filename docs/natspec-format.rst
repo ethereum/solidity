@@ -8,7 +8,7 @@ Solidity contracts can use a special form of comments to provide rich
 documentation for functions, return variables and more. This special form is
 named the Ethereum Natural Language Specification Format (NatSpec).
 
-.. note:
+.. note::
 
   NatSpec was inspired by `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_.
   While it uses Doxygen-style comments and tags, there is no intention to keep
@@ -36,17 +36,16 @@ tools.
 Documentation Example
 =====================
 
-Documentation is inserted above each ``class``, ``interface`` and
-``function`` using the Doxygen notation format.
-
-Note: a ``public`` state variable is equivalent to a ``function``
+Documentation is inserted above each ``contract``, ``interface``,
+``function``, and ``event`` using the Doxygen notation format.
+A ``public`` state variable is equivalent to a ``function``
 for the purposes of NatSpec.
 
 -  For Solidity you may choose ``///`` for single or multi-line
    comments, or ``/**`` and ending with ``*/``.
 
 -  For Vyper, use ``"""`` indented to the inner contents with bare
-   comments. See `Vyper
+   comments. See the `Vyper
    documentation <https://vyper.readthedocs.io/en/latest/natspec.html>`__.
 
 The following example shows a contract and a function using all available tags.
@@ -56,6 +55,8 @@ The following example shows a contract and a function using all available tags.
   The Solidity compiler only interprets tags if they are external or
   public. You are welcome to use similar comments for your internal and
   private functions, but those will not be parsed.
+
+  This may change in the future.
 
 .. code:: Solidity
 
@@ -125,11 +126,10 @@ Tag                                                                             
 =============== ====================================================================================== =============================
 
 If your function returns multiple values, like ``(int quotient, int remainder)``
-then use multiple ``@return`` statements in the same format as the
-``@param`` statements.
+then use multiple ``@return`` statements in the same format as the ``@param`` statements.
 
-Custom tags start with ``@custom:`` and can contain lowercase characters and hyphens following that.
-They can be used everywhere and are part of the developer documentation.
+Custom tags start with ``@custom:`` and must be followed by one or more lowercase letters or hyphens.
+It cannot start with a hyphen however. They can be used everywhere and are part of the developer documentation.
 
 .. _header-dynamic:
 
@@ -237,7 +237,7 @@ file should also be produced and should look like this:
       "kind" : "dev",
       "author" : "Larry A. Gardner",
       "details" : "All function calls are currently implemented without side effects",
-      "custom:experimental": "This is an experimental contract.",
+      "custom:experimental" : "This is an experimental contract.",
       "methods" :
       {
         "age(uint256)" :
