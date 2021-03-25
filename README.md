@@ -3,6 +3,8 @@ You can talk to us on [![solidity at https://gitter.im/ethereum/solidity](https:
 
 Solidity is a statically typed, contract-oriented, high-level language for implementing smart contracts on the Ethereum platform.
 
+For a good overview and starting point, please check out the official [Solidity Language Portal](https://soliditylang.org).
+
 ## Table of Contents
 
 - [Background](#background)
