@@ -32,6 +32,7 @@ For state variables, ``external`` is not possible.
     Those functions and state variables can only be
     accessed internally (i.e. from within the current contract
     or contracts deriving from it), without using ``this``.
+    This is the default visibility level for state variables.
 
 ``private``
     Private functions and state variables are only
