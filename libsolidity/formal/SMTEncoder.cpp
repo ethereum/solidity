@@ -775,8 +775,13 @@ void SMTEncoder::visitABIFunction(FunctionCall const& _funCall)
 	auto const& args = _funCall.sortedArguments();
 	auto argsActualLength = kind == FunctionType::Kind::ABIDecode ? 1 : args.size();
 
-	vector<smtutil::Expression> symbArgs;
 	solAssert(inTypes.size() == argsActualLength, "");
+	if (argsActualLength == 0)
+	{
+		defineExpr(_funCall, smt::zeroValue(TypeProvider::bytesMemory()));
+		return;
+	}
+	vector<smtutil::Expression> symbArgs;
 	for (unsigned i = 0; i < argsActualLength; ++i)
 		if (args.at(i))
 			symbArgs.emplace_back(expr(*args.at(i), inTypes.at(i)));
