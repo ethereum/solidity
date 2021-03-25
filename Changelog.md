@@ -10,6 +10,7 @@ Compiler Features:
 Bugfixes:
  * AST Output: Fix ``kind`` field of ``ModifierInvocation`` for base constructor calls.
  * SMTChecker: Fix false positive and false negative on ``push`` as LHS of a compound assignment.
+ * SMTChecker: Fix false positive in contracts that cannot be deployed.
  * SMTChecker: Fix internal error on public getter returning dynamic data on older EVM versions where these are not available.
 
 

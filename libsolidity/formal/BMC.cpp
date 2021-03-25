@@ -841,7 +841,7 @@ void BMC::addVerificationTarget(
 	Expression const* _expression
 )
 {
-	if (!m_settings.targets.has(_type))
+	if (!m_settings.targets.has(_type) || (m_currentContract && !m_currentContract->canBeDeployed()))
 		return;
 
 	BMCVerificationTarget target{
