@@ -19,6 +19,7 @@ We assume that all contracts will have the interface definitions of any contract
 This specification does not address contracts whose interface is dynamic or otherwise known only at run-time.
 
 .. _abi_function_selector:
+.. index:: selector
 
 Function Selector
 =================
