@@ -86,7 +86,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		stack.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion())
 	);
-	if (termReason == yulFuzzerUtil::TerminationReason::StepLimitReached)
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return 0;
 
 	stack.optimize();
@@ -96,6 +96,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		EVMDialect::strictAssemblyForEVMObjects(langutil::EVMVersion()),
 		(yul::test::yul_fuzzer::yulFuzzerUtil::maxSteps * 4)
 	);
+
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
+		return 0;
 
 	bool isTraceEq = (os1.str() == os2.str());
 	yulAssert(isTraceEq, "Interpreted traces for optimized and unoptimized code differ.");

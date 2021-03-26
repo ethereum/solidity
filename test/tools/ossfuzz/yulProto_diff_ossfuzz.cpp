@@ -100,11 +100,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 
-	if (
-		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached
-	)
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
 	YulOptimizerTestCommon optimizerTest(
@@ -119,11 +115,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		astBlock,
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
-	if (
-		termReason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
-		termReason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached
-	)
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
 	bool isTraceEq = (os1.str() == os2.str());
