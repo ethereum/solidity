@@ -50,7 +50,14 @@
 # FIXME: Can't use set -u because the old Bash on macOS treats empty arrays as unbound variables
 set -eo pipefail
 
-(( $# == 5 )) || { echo "ERROR: Not enough arguments."; exit 1; }
+die()
+{
+    # shellcheck disable=SC2059
+    >&2 printf "ERROR: $1\n" "${@:2}"
+    exit 1
+}
+
+(( $# == 5 )) || die "ERROR: Not enough arguments."
 
 platform="$1"
 base_ref="$2"
@@ -85,7 +92,7 @@ echo "$modified_release_versions"
 # NOTE: We want perform the check when the soljson-* files in bin/ and wasm/ are modified too
 # because in that case the symlinks in emscripten-wasm32/ and emscripten-asmjs/ might remain
 # unchanged but were're assuming that these directories are never directly used as a platform name.
-[[ $platform != bin && $platform != wasm ]] || { echo "Invalid platform name."; exit 1; }
+[[ $platform != bin && $platform != wasm ]] || die "Invalid platform name."
 
 platform_binaries="$(git ls-files "solc-${platform}-v*+commit.*" | sort -V)"
 
