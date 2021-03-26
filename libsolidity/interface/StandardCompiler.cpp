@@ -36,6 +36,8 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <range/v3/view.hpp>
+
 #include <algorithm>
 #include <optional>
 
@@ -613,6 +615,8 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 
 }
 
+char const queryKeyDelimiter = '#';
+
 std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
 {
 	InputsAndSettings ret;
@@ -719,8 +723,11 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			if (!smtlib2Responses.isObject())
 				return formatFatalError("JSONError", "\"auxiliaryInput.smtlib2responses\" must be an object.");
 
-			for (auto const& hashString: smtlib2Responses.getMemberNames())
+			for (auto const& key: smtlib2Responses.getMemberNames())
 			{
+				auto delimiterPos = key.find(queryKeyDelimiter);
+				auto hashStart = delimiterPos == string::npos ? 0 : delimiterPos + 1;
+				string hashString = key.substr(hashStart);
 				util::h256 hash;
 				try
 				{
@@ -731,13 +738,13 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 					return formatFatalError("JSONError", "Invalid hex encoding of SMTLib2 auxiliary input.");
 				}
 
-				if (!smtlib2Responses[hashString].isString())
+				if (!smtlib2Responses[key].isString())
 					return formatFatalError(
 						"JSONError",
 						"\"smtlib2Responses." + hashString + "\" must be a string."
 					);
 
-				ret.smtLib2Responses[hash] = smtlib2Responses[hashString].asString();
+				ret.smtLib2Responses[hash] = smtlib2Responses[key].asString();
 			}
 		}
 	}
@@ -1097,8 +1104,8 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		output["errors"] = std::move(errors);
 
 	if (!compilerStack.unhandledSMTLib2Queries().empty())
-		for (string const& query: compilerStack.unhandledSMTLib2Queries())
-			output["auxiliaryInputRequested"]["smtlib2queries"]["0x" + util::keccak256(query).hex()] = query;
+		for (auto&& [index, query]: compilerStack.unhandledSMTLib2Queries() | ranges::views::enumerate)
+			output["auxiliaryInputRequested"]["smtlib2queries"][to_string(index) + queryKeyDelimiter + "0x" + util::keccak256(query).hex()] = query;
 
 	bool const wildcardMatchesExperimental = false;
 
