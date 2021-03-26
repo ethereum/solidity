@@ -73,3 +73,11 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	state.dumpTraceAndState(_os);
 	return reason;
 }
+
+bool yulFuzzerUtil::resourceLimitsExceeded(TerminationReason _reason)
+{
+	return
+		_reason == yulFuzzerUtil::TerminationReason::StepLimitReached ||
+		_reason == yulFuzzerUtil::TerminationReason::TraceLimitReached ||
+		_reason == yulFuzzerUtil::TerminationReason::ExpresionNestingLimitReached;
+}
