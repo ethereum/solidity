@@ -484,44 +484,16 @@ void SMTEncoder::endVisit(UnaryOperation const& _op)
 	{
 		solAssert(smt::isInteger(*type) || smt::isFixedPoint(*type), "");
 		solAssert(subExpr->annotation().willBeWrittenTo, "");
-		auto computeNewValue = [&](auto currentValue) {
-			return arithmeticOperation(
-				_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
-				currentValue,
-				smtutil::Expression(size_t(1)),
-				_op.annotation().type,
-				_op
-			).first;
-		};
-		if (auto identifier = dynamic_cast<Identifier const*>(subExpr))
-		{
-			auto decl = identifierToVariable(*identifier);
-			solAssert(decl, "");
-			auto innerValue = currentValue(*decl);
-			auto newValue = computeNewValue(innerValue);
-			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			assignment(*decl, newValue);
-		}
-		else if (
-			dynamic_cast<IndexAccess const*>(subExpr) ||
-			dynamic_cast<MemberAccess const*>(subExpr)
-		)
-		{
-			auto innerValue = expr(*subExpr);
-			auto newValue = computeNewValue(innerValue);
-			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			indexOrMemberAssignment(*subExpr, newValue);
-		}
-		else if (isEmptyPush(*subExpr))
-		{
-			auto innerValue = expr(*subExpr);
-			auto newValue = computeNewValue(innerValue);
-			defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
-			arrayPushPopAssign(*subExpr, newValue);
-		}
-		else
-			solAssert(false, "");
-
+		auto innerValue = expr(*subExpr);
+		auto newValue = arithmeticOperation(
+			_op.getOperator() == Token::Inc ? Token::Add : Token::Sub,
+			innerValue,
+			smtutil::Expression(size_t(1)),
+			_op.annotation().type,
+			_op
+		).first;
+		defineExpr(_op, _op.isPrefixOperation() ? newValue : innerValue);
+		assignment(*subExpr, newValue);
 		break;
 	}
 	case Token::Sub: // -
@@ -1578,9 +1550,9 @@ void SMTEncoder::arrayPush(FunctionCall const& _funCall)
 	m_context.addAssertion(symbArray->length() == oldLength + 1);
 
 	if (arguments.empty())
-		defineExpr(_funCall, smtutil::Expression::select(symbArray->elements(), oldLength));
+		defineExpr(_funCall, element);
 
-	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
+	assignment(memberAccess->expression(), symbArray->currentValue());
 }
 
 void SMTEncoder::arrayPop(FunctionCall const& _funCall)
@@ -1604,54 +1576,7 @@ void SMTEncoder::arrayPop(FunctionCall const& _funCall)
 	);
 	m_context.addAssertion(symbArray->length() == newLength);
 
-	arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
-}
-
-void SMTEncoder::arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array)
-{
-	Expression const* expr = cleanExpression(_expr);
-
-	if (auto const* id = dynamic_cast<Identifier const*>(expr))
-	{
-		auto varDecl = identifierToVariable(*id);
-		solAssert(varDecl, "");
-		if (varDecl->hasReferenceOrMappingType())
-			resetReferences(*varDecl);
-		m_context.addAssertion(m_context.newValue(*varDecl) == _array);
-		m_context.expression(*id)->increaseIndex();
-		defineExpr(*id,currentValue(*varDecl));
-	}
-	else if (
-		dynamic_cast<IndexAccess const*>(expr) ||
-		dynamic_cast<MemberAccess const*>(expr)
-	)
-		indexOrMemberAssignment(_expr, _array);
-	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(expr))
-	{
-		if (
-			auto funType = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
-			funType && funType->kind() == FunctionType::Kind::ArrayPush
-		)
-		{
-			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
-			solAssert(memberAccess, "");
-			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
-			solAssert(symbArray, "");
-
-			auto oldLength = symbArray->length();
-			auto store = smtutil::Expression::store(
-				symbArray->elements(),
-				symbArray->length() - 1,
-				_array
-			);
-			symbArray->increaseIndex();
-			m_context.addAssertion(symbArray->elements() == store);
-			m_context.addAssertion(symbArray->length() == oldLength);
-			arrayPushPopAssign(memberAccess->expression(), symbArray->currentValue());
-		}
-	}
-	else
-		solAssert(false, "");
+	assignment(memberAccess->expression(), symbArray->currentValue());
 }
 
 void SMTEncoder::defineGlobalVariable(string const& _name, Expression const& _expr, bool _increaseIndex)
@@ -1980,6 +1905,11 @@ pair<smtutil::Expression, smtutil::Expression> SMTEncoder::divModWithSlacks(
 	return {divResult, modResult};
 }
 
+void SMTEncoder::assignment(Expression const& _left, smtutil::Expression const& _right)
+{
+	assignment(_left, _right, _left.annotation().type);
+}
+
 void SMTEncoder::assignment(
 	Expression const& _left,
 	smtutil::Expression const& _right,
@@ -1991,7 +1921,7 @@ void SMTEncoder::assignment(
 		"Tuple assignments should be handled by tupleAssignment."
 	);
 
-	Expression const* left = innermostTuple(_left);
+	Expression const* left = cleanExpression(_left);
 
 	if (!smt::isSupportedType(*_type))
 	{
@@ -2010,8 +1940,30 @@ void SMTEncoder::assignment(
 		dynamic_cast<MemberAccess const*>(left)
 	)
 		indexOrMemberAssignment(*left, _right);
-	else if (isEmptyPush(*left))
-		arrayPushPopAssign(*left, _right);
+	else if (auto const* funCall = dynamic_cast<FunctionCall const*>(left))
+	{
+		if (
+			auto funType = dynamic_cast<FunctionType const*>(funCall->expression().annotation().type);
+			funType && funType->kind() == FunctionType::Kind::ArrayPush
+		)
+		{
+			auto memberAccess = dynamic_cast<MemberAccess const*>(&funCall->expression());
+			solAssert(memberAccess, "");
+			auto symbArray = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(memberAccess->expression()));
+			solAssert(symbArray, "");
+
+			auto oldLength = symbArray->length();
+			auto store = smtutil::Expression::store(
+				symbArray->elements(),
+				symbArray->length() - 1,
+				_right
+			);
+			symbArray->increaseIndex();
+			m_context.addAssertion(symbArray->elements() == store);
+			m_context.addAssertion(symbArray->length() == oldLength);
+			assignment(memberAccess->expression(), symbArray->currentValue());
+		}
+	}
 	else
 		solAssert(false, "");
 }
