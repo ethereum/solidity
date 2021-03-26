@@ -920,10 +920,15 @@ void CHC::setCurrentBlock(Predicate const& _block)
 set<unsigned> CHC::transactionVerificationTargetsIds(ASTNode const* _txRoot)
 {
 	set<unsigned> verificationTargetsIds;
-	solidity::util::BreadthFirstSearch<ASTNode const*>{{_txRoot}}.run([&](auto const* function, auto&& _addChild) {
-		verificationTargetsIds.insert(m_functionTargetIds[function].begin(), m_functionTargetIds[function].end());
-		for (auto const* called: m_callGraph[function])
-		_addChild(called);
+	struct ASTNodeCompare: EncodingContext::IdCompare
+	{
+		bool operator<(ASTNodeCompare _other) const { return operator()(node, _other.node); }
+		ASTNode const* node;
+	};
+	solidity::util::BreadthFirstSearch<ASTNodeCompare>{{{{}, _txRoot}}}.run([&](auto _node, auto&& _addChild) {
+		verificationTargetsIds.insert(m_functionTargetIds[_node.node].begin(), m_functionTargetIds[_node.node].end());
+		for (ASTNode const* called: m_callGraph[_node.node])
+			_addChild({{}, called});
 	});
 	return verificationTargetsIds;
 }
