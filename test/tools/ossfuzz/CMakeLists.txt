@@ -1,6 +1,7 @@
 add_custom_target(ossfuzz)
 add_dependencies(ossfuzz
         solc_ossfuzz
+        bytecode_optimizer_ossfuzz
         solc_mutator_ossfuzz
         const_opt_ossfuzz
         strictasm_diff_ossfuzz
@@ -34,6 +35,18 @@ if (OSSFUZZ)
     )
     target_link_libraries(solc_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone abicoder gmp.a)
     set_target_properties(solc_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
+
+    add_executable(bytecode_optimizer_ossfuzz
+            BytecodeOptimizerFuzzer.cpp
+	        ValueGenerator.cpp
+            ../fuzzer_common.cpp
+            ../../TestCaseReader.cpp
+            ../../EVMHost.cpp
+            SolidityEvmoneInterface.cpp
+            ../../libsolidity/util/ContractABIUtils.cpp
+            )
+    target_link_libraries(bytecode_optimizer_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone abicoder gmp.a)
+    set_target_properties(bytecode_optimizer_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(solc_mutator_ossfuzz
             solc_ossfuzz.cpp

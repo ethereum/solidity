@@ -219,15 +219,17 @@ void ValueGenerator::initialiseArray(
 	TypeInfo& _typeInfo
 )
 {
+#if 0
 	cout << "Init 1D array" << endl;
 	cout << _typeInfo.value << endl;
+#endif
 	_typeInfo.value += "[";
 	std::string separator;
 	for (size_t j = 0; j < _arrayInfo.numElements; j++)
 	{
 		_typeInfo.value += separator;
 		if (_typeInfo.type == Type::Tuple) {
-			cout << "Tuple inside array" << endl;
+//			cout << "Tuple inside array" << endl;
 			initialiseTuple(_typeInfo);
 		}
 		else
@@ -236,7 +238,9 @@ void ValueGenerator::initialiseArray(
 			separator = ",";
 	}
 	_typeInfo.value += "]";
+#if 0
 	cout << _typeInfo.value << endl;
+#endif
 }
 
 void ValueGenerator::initialiseArray(
@@ -389,7 +393,7 @@ void ValueGenerator::typeHelper(Json::Value const& _type, TypeInfo& _typeInfo)
 	if (_typeInfo.arrayInfo.empty())
 	{
 		if (_typeInfo.type == Type::Tuple) {
-			cout << "Init tuple" << endl;
+//			cout << "Init tuple" << endl;
 			initialiseTuple(_typeInfo);
 		}
 		else
@@ -397,7 +401,7 @@ void ValueGenerator::typeHelper(Json::Value const& _type, TypeInfo& _typeInfo)
 	}
 	else
 	{
-		cout << "Init array" << endl;
+//		cout << "Init array" << endl;
 		initialiseArray(_typeInfo.arrayInfo, _typeInfo);
 	}
 }
