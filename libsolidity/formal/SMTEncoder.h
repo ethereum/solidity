@@ -266,7 +266,7 @@ protected:
 	void expressionToTupleAssignment(std::vector<std::shared_ptr<VariableDeclaration>> const& _variables, Expression const& _rhs);
 
 	/// Maps a variable to an SSA index.
-	using VariableIndices = std::unordered_map<VariableDeclaration const*, int>;
+	using VariableIndices = std::unordered_map<VariableDeclaration const*, unsigned>;
 
 	/// Visits the branch given by the statement, pushes and pops the current path conditions.
 	/// @param _condition if present, asserts that this condition is true within the branch.
@@ -295,10 +295,9 @@ protected:
 	/// @returns whether _a or a subtype of _a is the same as _b.
 	bool sameTypeOrSubtype(Type const* _a, Type const* _b);
 
-	/// Given two different branches and the touched variables,
-	/// merge the touched variables into after-branch ite variables
-	/// using the branch condition as guard.
-	void mergeVariables(std::set<VariableDeclaration const*> const& _variables, smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
+	/// Given the state of the symbolic variables at the end of two different branches,
+	/// create a merged state using the given branch condition.
+	void mergeVariables(smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse);
 	/// Tries to create an uninitialized variable and returns true on success.
 	bool createVariable(VariableDeclaration const& _varDecl);
 
