@@ -25,6 +25,6 @@ contract B {
 // compileViaYul: also
 // ----
 // g() -> 42
-// gas irOptimized: 127215
+// gas irOptimized: 134269
 // gas legacy: 180597
 // gas legacyOptimized: 116351

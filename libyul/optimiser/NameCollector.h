@@ -35,9 +35,24 @@ namespace solidity::yul
 class NameCollector: public ASTWalker
 {
 public:
-	explicit NameCollector(Block const& _block)
+	enum CollectWhat { VariablesAndFunctions, OnlyVariables };
+
+	explicit NameCollector(
+		Block const& _block,
+		CollectWhat _collectWhat = VariablesAndFunctions
+	):
+		m_collectWhat(_collectWhat)
 	{
 		(*this)(_block);
+	}
+
+	explicit NameCollector(
+		FunctionDefinition const& _functionDefinition,
+		CollectWhat _collectWhat = VariablesAndFunctions
+	):
+		m_collectWhat(_collectWhat)
+	{
+		(*this)(_functionDefinition);
 	}
 
 	using ASTWalker::operator ();
@@ -47,6 +62,7 @@ public:
 	std::set<YulString> names() const { return m_names; }
 private:
 	std::set<YulString> m_names;
+	CollectWhat m_collectWhat = VariablesAndFunctions;
 };
 
 /**

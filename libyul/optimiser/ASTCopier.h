@@ -29,6 +29,7 @@
 #include <optional>
 #include <set>
 #include <vector>
+#include <map>
 
 namespace solidity::yul
 {
@@ -117,5 +118,22 @@ std::vector<T> ASTCopier::translateVector(std::vector<T> const& _values)
 	return translated;
 }
 
+/// Helper class that creates a copy of the function definition, replacing the names of the variable
+/// declarations with new names.
+class FunctionCopier: public ASTCopier
+{
+public:
+	FunctionCopier(
+		std::map<YulString, YulString> const& _translations
+	):
+		m_translations(_translations)
+	{}
+	using ASTCopier::operator();
+	YulString translateIdentifier(YulString _name) override;
+private:
+	/// A mapping between old and new names. We replace the names of variable declarations contained
+	/// in the mapping with their new names.
+	std::map<YulString, YulString> const& m_translations;
+};
 
 }

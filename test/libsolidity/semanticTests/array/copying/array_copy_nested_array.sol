@@ -15,6 +15,6 @@ contract c {
 // compileViaYul: also
 // ----
 // test(uint256[2][]): 32, 3, 7, 8, 9, 10, 11, 12 -> 10
-// gas irOptimized: 611490
+// gas irOptimized: 610623
 // gas legacy: 604268
 // gas legacyOptimized: 603688

@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Low-Level Inliner: Inline ordinary jumps to small blocks and jumps to small blocks that terminate.
+ * Yul Optimizer: Added a new step FunctionSpecializer, that specializes a function with its literal arguments.
 
 
 Bugfixes:
