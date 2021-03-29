@@ -145,6 +145,8 @@ add_library(yul
 	optimiser/LoopInvariantCodeMotion.h
 	optimiser/MainFunction.cpp
 	optimiser/MainFunction.h
+	optimiser/MemoryStoreRemover.cpp
+	optimiser/MemoryStoreRemover.h
 	optimiser/Metrics.cpp
 	optimiser/Metrics.h
 	optimiser/NameCollector.cpp
