@@ -47,6 +47,7 @@
 #include <libyul/optimiser/UnusedFunctionParameterPruner.h>
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionJoiner.h>
+#include <libyul/optimiser/MemoryStoreRemover.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 #include <libyul/optimiser/SSAReverser.h>
@@ -369,6 +370,10 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			FakeUnreachableGenerator fakeUnreachableGenerator;
 			fakeUnreachableGenerator(*m_ast);
 			StackLimitEvader::run(*m_context, *m_object, fakeUnreachableGenerator.fakeUnreachables);
+		}},
+		{"memoryStoreRemover", [&]() {
+			disambiguate();
+			MemoryStoreRemover::run(*m_context, *m_object->code);
 		}}
 	};
 }
