@@ -35,6 +35,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/StorageLayout.h>
 
 #include <libyul/AssemblyStack.h>
@@ -579,7 +580,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
 			{
-				if (auto r = CompilerStack::parseRemapping(path))
+				if (auto r = ImportRemapper::parseRemapping(path))
 				{
 					m_remappings.emplace_back(std::move(*r));
 					path = string(eq + 1, path.end());

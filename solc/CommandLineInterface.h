@@ -24,6 +24,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -117,7 +118,7 @@ private:
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
 	/// list of remappings
-	std::vector<frontend::CompilerStack::Remapping> m_remappings;
+	std::vector<ImportRemapper::Remapping> m_remappings;
 	/// list of allowed directories to read files from
 	std::vector<boost::filesystem::path> m_allowedDirectories;
 	/// Base path, used for resolving relative paths in imports.
