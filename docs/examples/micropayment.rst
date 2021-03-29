@@ -445,7 +445,7 @@ in the end.
 
 The recipient should verify each message using the following process:
 
-    1. Verify that the contact address in the message matches the payment channel.
+    1. Verify that the contract address in the message matches the payment channel.
     2. Verify that the new total is the expected amount.
     3. Verify that the new total does not exceed the amount of Ether escrowed.
     4. Verify that the signature is valid and comes from the payment channel sender.
