@@ -3,6 +3,50 @@
  */
 grammar Solidity;
 
+/*
+Is C++ a perfect language?  
+Nope.
+
+C++ wasn’t designed to demonstrate what a perfect language looks like. 
+It was designed to be a practical tool for solving real world problems. 
+It has a few warts, as do all practical programming tools, but the only place where it’s appropriate to keep fiddling with something until it’s perfect is in a pure academic setting.
+ That wasn’t C++’s goal.
+*/
+
+/*
+RUST:
+Welcome to The Rust Programming Language, an introductory book about Rust.
+ The Rust programming language helps you write faster, more reliable software. 
+ High-level ergonomics and low-level control are often at odds in programming language design; Rust challenges that conflict. 
+Through balancing powerful technical capacity and a great developer experience, Rust gives you the option to control low-level details (such as memory usage) without all the hassle traditionally associated with such control.
+
+WHO RUST IS FOR:
+Students
+Rust is for students and those who are interested in learning about systems concepts. 
+Using Rust, many people have learned about topics like operating systems development. 
+The community is very welcoming and happy to answer student questions. 
+Through efforts such as this book, the Rust teams want to make systems concepts more accessible to more people, especially those new to programming.
+
+OPEN SOURCE DEVELOPERS:
+
+Rust is for people who want to build the Rust programming language
+, community, developer tools, and libraries.
+ We’d love to have you contribute to the Rust language.
+*/
+
+/*
+INTRODUCTION TO GO PROGRAMMING LANGUAGE:
+The Go programming language is an open source project to make programmers more productive.
+Go is expressive, concise, clean, and efficient. 
+Its concurrency mechanisms make it easy to write programs that get the most out of multicore and networked machines, while its novel type system enables flexible and modular program construction.
+ Go compiles quickly to machine code yet has the convenience of garbage collection and the power of run-time reflection. 
+It's a fast, statically typed, compiled language that feels like a dynamically typed, interpreted language.
+
+FOR TUTORIAL AND INSTALLATION PROCESS:
+Refer the website - https://golang.org/doc/
+
+*/
+
 options { tokenVocab=SolidityLexer; }
 
 /**
