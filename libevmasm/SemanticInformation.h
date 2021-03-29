@@ -79,6 +79,10 @@ struct SemanticInformation
 	/// msize instruction.
 	static bool canBeRemovedIfNoMSize(Instruction _instruction);
 	static Effect memory(Instruction _instruction);
+	/// Returns `true` if the instruction reads from memory. Different from
+	/// `SemanticInformation::memory(..) == SideEffects::Read` because some builtins read and write
+	/// memory at the same time.
+	static bool readsMemory(Instruction const _instruction);
 	static Effect storage(Instruction _instruction);
 	static Effect otherState(Instruction _instruction);
 	static bool invalidInPureFunctions(Instruction _instruction);

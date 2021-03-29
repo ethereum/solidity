@@ -268,6 +268,37 @@ SemanticInformation::Effect SemanticInformation::memory(Instruction _instruction
 	}
 }
 
+bool SemanticInformation::readsMemory(Instruction const _instruction)
+{
+	switch (_instruction)
+	{
+	// Instructions that only read from memory
+	case Instruction::CREATE:
+	case Instruction::CREATE2:
+	case Instruction::KECCAK256:
+	case Instruction::MLOAD:
+	case Instruction::MSIZE:
+	case Instruction::RETURN:
+	case Instruction::REVERT:
+	case Instruction::LOG0:
+	case Instruction::LOG1:
+	case Instruction::LOG2:
+	case Instruction::LOG3:
+	case Instruction::LOG4:
+
+	// Instructions that read and write from memory
+	case Instruction::CODECOPY:
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+	case Instruction::STATICCALL:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 bool SemanticInformation::movableApartFromEffects(Instruction _instruction)
 {
 	switch (_instruction)
