@@ -152,9 +152,7 @@ void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _c
 	m_baseArguments = &_contract.annotation().baseConstructorArguments;
 
 	// Initialization of state variables in base-to-derived order.
-	for (ContractDefinition const* contract: ranges::views::reverse(
-		_contract.annotation().linearizedBaseContracts
-	))
+	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		initializeStateVariables(*contract);
 
 	if (FunctionDefinition const* constructor = _contract.constructor())
@@ -200,10 +198,10 @@ size_t ContractCompiler::packIntoContractCreator(ContractDefinition const& _cont
 	m_context.pushSubroutineOffset(m_context.runtimeSub());
 	m_context << u256(0) << Instruction::CODECOPY;
 	// Assign immutable values from stack in reversed order.
-	for (auto const& immutable: ranges::views::reverse(immutables))
+	for (auto const& immutable: immutables | ranges::views::reverse)
 	{
 		auto slotNames = m_context.immutableVariableSlotNames(*immutable);
-		for (auto&& slotName: ranges::views::reverse(slotNames))
+		for (auto&& slotName: slotNames | ranges::views::reverse)
 		{
 			m_context << u256(0);
 			m_context.appendImmutableAssignment(slotName);
@@ -1096,7 +1094,7 @@ bool ContractCompiler::visit(TryCatchClause const& _clause)
 	unsigned varSize = 0;
 
 	if (_clause.parameters())
-		for (ASTPointer<VariableDeclaration> const& varDecl: ranges::views::reverse(_clause.parameters()->parameters()))
+		for (ASTPointer<VariableDeclaration> const& varDecl: _clause.parameters()->parameters() | ranges::views::reverse)
 		{
 			solAssert(varDecl, "");
 			varSize += varDecl->annotation().type->sizeOnStack();
@@ -1258,7 +1256,7 @@ bool ContractCompiler::visit(Return const& _return)
 			expectedType = types.front();
 		compileExpression(*expression, expectedType);
 
-		for (auto const& retVariable: ranges::views::reverse(returnParameters))
+		for (auto const& retVariable: returnParameters | ranges::views::reverse)
 			CompilerUtils(m_context).moveToStackVariable(*retVariable);
 	}
 

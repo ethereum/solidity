@@ -33,7 +33,7 @@ using namespace solidity::util;
 void ASTWalker::operator()(FunctionCall const& _funCall)
 {
 	// Does not visit _funCall.functionName on purpose
-	walkVector(ranges::views::reverse(_funCall.arguments));
+	walkVector(_funCall.arguments | ranges::views::reverse);
 }
 
 void ASTWalker::operator()(ExpressionStatement const& _statement)
@@ -102,7 +102,7 @@ void ASTWalker::visit(Expression const& _e)
 void ASTModifier::operator()(FunctionCall& _funCall)
 {
 	// Does not visit _funCall.functionName on purpose
-	walkVector(ranges::views::reverse(_funCall.arguments));
+	walkVector(_funCall.arguments | ranges::views::reverse);
 }
 
 void ASTModifier::operator()(ExpressionStatement& _statement)

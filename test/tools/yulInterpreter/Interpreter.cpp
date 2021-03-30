@@ -332,7 +332,7 @@ void ExpressionEvaluator::evaluateArgs(
 	vector<u256> values;
 	size_t i = 0;
 	/// Function arguments are evaluated in reverse.
-	for (auto const& expr: ranges::views::reverse(_expr))
+	for (auto const& expr: _expr | ranges::views::reverse)
 	{
 		if (!_literalArguments || !_literalArguments->at(_expr.size() - i - 1))
 			visit(expr);

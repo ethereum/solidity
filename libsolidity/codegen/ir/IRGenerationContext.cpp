@@ -133,7 +133,7 @@ void IRGenerationContext::initializeInternalDispatch(InternalDispatchMap _intern
 {
 	solAssert(internalDispatchClean(), "");
 
-	for (DispatchSet const& functions: ranges::views::values(_internalDispatch))
+	for (DispatchSet const& functions: _internalDispatch | ranges::views::values)
 		for (auto function: functions)
 			enqueueFunctionForCodeGeneration(*function);
 

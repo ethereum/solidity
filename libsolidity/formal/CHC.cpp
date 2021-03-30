@@ -186,7 +186,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 		}
 	m_errorDest = nullptr;
 	// Then call initializer_Base from base -> derived
-	for (auto base: ranges::views::reverse(_contract.annotation().linearizedBaseContracts))
+	for (auto base: _contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 	{
 		errorFlag().increaseIndex();
 		m_context.addAssertion(smt::constructorCall(*m_contractInitializers.at(&_contract).at(base), m_context));
@@ -1625,7 +1625,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 		path.emplace_back(boost::algorithm::join(calls, "\n"));
 	}
 
-	return localState + "\nTransaction trace:\n" + boost::algorithm::join(ranges::views::reverse(path), "\n");
+	return localState + "\nTransaction trace:\n" + boost::algorithm::join(path | ranges::views::reverse, "\n");
 }
 
 map<unsigned, vector<unsigned>> CHC::summaryCalls(CHCSolverInterface::CexGraph const& _graph, unsigned _root)

@@ -387,7 +387,7 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const
 {
-	for (auto const& scope: ranges::views::reverse(m_variableScopes))
+	for (auto const& scope: m_variableScopes | ranges::views::reverse)
 	{
 		if (scope.variables.count(_variableName))
 			return true;

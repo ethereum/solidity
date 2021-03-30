@@ -2014,7 +2014,7 @@ FunctionType const* ContractType::newExpressionType() const
 vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVariables() const
 {
 	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: ranges::views::reverse(m_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: m_contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
 				variables.push_back(variable);
@@ -2034,7 +2034,7 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 vector<VariableDeclaration const*> ContractType::immutableVariables() const
 {
 	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: ranges::views::reverse(m_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: m_contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (variable->immutable())
 				variables.push_back(variable);
