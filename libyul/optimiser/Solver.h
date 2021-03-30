@@ -72,7 +72,7 @@ protected:
 
 	virtual std::shared_ptr<smtutil::Sort> defaultSort() const;
 	virtual smtutil::Expression booleanValue(smtutil::Expression _value) const;
-	virtual smtutil::Expression constantValue(size_t _value) const;
+	virtual smtutil::Expression constantValue(bigint _value) const;
 	virtual smtutil::Expression literalValue(Literal const& _literal) const;
 	virtual smtutil::Expression unsignedToSigned(smtutil::Expression _value);
 	virtual smtutil::Expression signedToUnsigned(smtutil::Expression _value);
