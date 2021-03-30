@@ -26,7 +26,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <liblangutil/ErrorReporter.h>
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 
 using namespace std;
@@ -238,7 +238,7 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 
 	// Search from base to derived, collect all functions and modifiers and
 	// update proxies.
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: ranges::views::reverse(_contract.annotation().linearizedBaseContracts))
 	{
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
@@ -511,7 +511,7 @@ void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition
 void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 {
 	bigint size = 0;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: ranges::views::reverse(_contract.annotation().linearizedBaseContracts))
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
 			{
