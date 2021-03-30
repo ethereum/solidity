@@ -1043,6 +1043,10 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		m_code << templ.render();
 		break;
 	}
+	case FunctionType::Kind::Error:
+	{
+		solAssert(false, "");
+	}
 	case FunctionType::Kind::Assert:
 	case FunctionType::Kind::Require:
 	{
@@ -1710,13 +1714,18 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 				define(IRVariable{_memberAccess}, IRVariable(_memberAccess.expression()).part("functionSelector"));
 			else if (
 				functionType.kind() == FunctionType::Kind::Declaration ||
+				functionType.kind() == FunctionType::Kind::Error ||
 				// In some situations, internal function types also provide the "selector" member.
 				// See Types.cpp for details.
 				functionType.kind() == FunctionType::Kind::Internal
 			)
 			{
 				solAssert(functionType.hasDeclaration(), "");
-				solAssert(functionType.declaration().isPartOfExternalInterface(), "");
+				solAssert(
+					functionType.kind() == FunctionType::Kind::Error ||
+					functionType.declaration().isPartOfExternalInterface(),
+					""
+				);
 				define(IRVariable{_memberAccess}) << formatNumber(functionType.externalIdentifier() << 224) << "\n";
 			}
 			else
@@ -1978,6 +1987,13 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 					solAssert(
 						dynamic_cast<EventDefinition const*>(_memberAccess.annotation().referencedDeclaration),
 						"Event not found"
+					);
+						// the call will do the resolving
+					break;
+				case FunctionType::Kind::Error:
+					solAssert(
+						dynamic_cast<ErrorDefinition const*>(_memberAccess.annotation().referencedDeclaration),
+						"Error not found"
 					);
 						// the call will do the resolving
 					break;
@@ -2307,6 +2323,10 @@ void IRGeneratorForStatements::endVisit(Identifier const& _identifier)
 			define(IRVariable(_identifier).part("address")) << linkerSymbol(*contract) << "\n";
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<ErrorDefinition const*>(declaration))
 	{
 		// no-op
 	}

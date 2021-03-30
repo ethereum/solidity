@@ -125,6 +125,7 @@ private:
 	/// case this is a base constructor call.
 	void visitManually(ModifierInvocation const& _modifier, std::vector<ContractDefinition const*> const& _bases);
 	bool visit(EventDefinition const& _eventDef) override;
+	bool visit(ErrorDefinition const& _errorDef) override;
 	void endVisit(FunctionTypeName const& _funType) override;
 	bool visit(InlineAssembly const& _inlineAssembly) override;
 	bool visit(IfStatement const& _ifStatement) override;
@@ -152,6 +153,8 @@ private:
 	void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	void endVisit(Literal const& _literal) override;
 	void endVisit(UsingForDirective const& _usingForDirective) override;
+
+	void checkErrorAndEventParameters(CallableDeclaration const& _callable);
 
 	bool contractDependenciesAreCyclic(
 		ContractDefinition const& _contract,
