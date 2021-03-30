@@ -26,8 +26,8 @@
 #include <libsolutil/Visitor.h>
 #include <libsolutil/LEB128.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/map.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/map.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 
 using namespace std;
@@ -580,7 +580,7 @@ map<string, size_t> BinaryTransform::enumerateFunctionTypes(map<Type, vector<str
 {
 	map<string, size_t> functionTypes;
 	size_t typeID = 0;
-	for (vector<string> const& funNames: _typeToFunctionMap | boost::adaptors::map_values)
+	for (vector<string> const& funNames: _typeToFunctionMap | ranges::views::values)
 	{
 		for (string const& name: funNames)
 			functionTypes[name] = typeID;
@@ -594,7 +594,7 @@ bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> co
 {
 	bytes result;
 	size_t index = 0;
-	for (Type const& type: _typeToFunctionMap | boost::adaptors::map_keys)
+	for (Type const& type: _typeToFunctionMap | ranges::views::keys)
 	{
 		result += toBytes(ValueType::Function);
 		result += lebEncode(type.first.size()) + type.first;
@@ -695,7 +695,7 @@ bytes BinaryTransform::visit(vector<Expression> const& _expressions)
 bytes BinaryTransform::visitReversed(vector<Expression> const& _expressions)
 {
 	bytes result;
-	for (auto const& expr: _expressions | boost::adaptors::reversed)
+	for (auto const& expr: ranges::views::reverse(_expressions))
 		result += std::visit(*this, expr);
 	return result;
 }
@@ -704,7 +704,7 @@ bytes BinaryTransform::encodeLabelIdx(string const& _label) const
 {
 	yulAssert(!_label.empty(), "Empty label.");
 	size_t depth = 0;
-	for (string const& label: m_labels | boost::adaptors::reversed)
+	for (string const& label: ranges::views::reverse(m_labels))
 		if (label == _label)
 			return lebEncode(depth);
 		else
