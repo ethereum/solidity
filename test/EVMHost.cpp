@@ -168,12 +168,19 @@ void EVMHost::reset()
 	}
 }
 
+void EVMHost::transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept
+{
+	assertThrow(u256(convertFromEVMC(_sender.balance)) >= _value, Exception, "Insufficient balance for transfer");
+	_sender.balance = convertToEVMC(u256(convertFromEVMC(_sender.balance)) - _value);
+	_recipient.balance = convertToEVMC(u256(convertFromEVMC(_recipient.balance)) + _value);
+}
+
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc::uint256be balance = accounts[_addr].balance;
+
+	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
 	accounts.erase(_addr);
-	accounts[_beneficiary].balance = balance;
 	// Record self destructs
 	recorded_selfdestructs.push_back({_addr, _beneficiary});
 }
@@ -271,8 +278,14 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
-		sender.balance = convertToEVMC(u256(convertFromEVMC(sender.balance)) - value);
-		destination.balance = convertToEVMC(u256(convertFromEVMC(destination.balance)) + value);
+		if (value > convertFromEVMC(sender.balance))
+		{
+			evmc::result result({});
+			result.status_code = EVMC_INSUFFICIENT_BALANCE;
+			accounts = stateBackup;
+			return result;
+		}
+		transfer(sender, destination, value);
 	}
 
 	// Populate the access access list.
