@@ -83,7 +83,7 @@ registering with a username and password, all you need is an Ethereum keypair.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.7.0 <0.9.0;
+    pragma solidity ^0.8.4;
 
     contract Coin {
         // The keyword "public" makes variables
@@ -109,10 +109,20 @@ registering with a username and password, all you need is an Ethereum keypair.
             balances[receiver] += amount;
         }
 
+        // Errors allow you to provide information about
+        // why an operation failed. They are returned
+        // to the caller of the function.
+        error InsufficientBalance(uint requested, uint available);
+
         // Sends an amount of existing coins
         // from any caller to an address
         function send(address receiver, uint amount) public {
-            require(amount <= balances[msg.sender], "Insufficient balance.");
+            if (amount > balances[msg.sender])
+                revert InsufficientBalance({
+                    requested: amount,
+                    available: balances[msg.sender]
+                });
+
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
             emit Sent(msg.sender, receiver, amount);
@@ -199,6 +209,14 @@ The ``mint`` function sends an amount of newly created coins to another address.
 The :ref:`require <assert-and-require>` function call defines conditions that reverts all changes if not met.
 In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``,
 and ``require(amount < 1e60);`` ensures a maximum amount of tokens. This ensures that there are no overflow errors in the future.
+
+:ref:`Errors <errors>` allow you to provide more information to the caller about
+why a condition or operation failed. Errors are used together with the
+:ref:`revert statement <revert-statement>`. The revert statement unconditionally
+aborts and reverts all changes similar to the ``require`` function, but it also
+allows you to provide the name of an error and additional data which will be supplied to the caller
+(and eventually to the front-end application or block explorer) so that
+a failure can more easily be debugged or reacted upon.
 
 The ``send`` function can be used by anyone (who already
 has some of these coins) to send coins to anyone else. If the sender does not have
