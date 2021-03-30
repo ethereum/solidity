@@ -72,7 +72,7 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/map.hpp>
+#include <range/v3/view/map.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <libyul/CompilabilityChecker.h>
 
@@ -247,7 +247,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 	yulAssert(lookupTable.size() == allSteps().size(), "");
 	yulAssert((
 			util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
-			util::convertContainer<set<char>>(lookupTable | boost::adaptors::map_values)
+			util::convertContainer<set<char>>( ranges::views::values(lookupTable))
 		).size() == string(NonStepAbbreviations).size(),
 		"Step abbreviation conflicts with a character reserved for another syntactic element"
 	);
