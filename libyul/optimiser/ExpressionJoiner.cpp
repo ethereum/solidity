@@ -94,7 +94,7 @@ void ExpressionJoiner::handleArguments(vector<Expression>& _arguments)
 	// on the right is an identifier or literal.
 
 	size_t i = _arguments.size();
-	for (Expression const& arg: ranges::views::reverse(_arguments))
+	for (Expression const& arg: _arguments | ranges::views::reverse)
 	{
 		--i;
 		if (!holds_alternative<Identifier>(arg) && !holds_alternative<Literal>(arg))

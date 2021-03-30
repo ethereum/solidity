@@ -49,7 +49,7 @@ void visitArguments(
 	function<void(Expression const&)> _visitExpression
 )
 {
-	for (auto const& arg: ranges::views::reverse(_call.arguments))
+	for (auto const& arg: _call.arguments | ranges::views::reverse)
 		_visitExpression(arg);
 
 	_assembly.setSourceLocation(_call.location);

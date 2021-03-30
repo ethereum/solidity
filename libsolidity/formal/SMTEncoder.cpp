@@ -30,9 +30,9 @@
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
 
-#include <range/v3/view.hpp>
-
 #include <boost/range/adaptors.hpp>
+
+#include <range/v3/view.hpp>
 
 #include <deque>
 
@@ -2498,7 +2498,7 @@ SecondarySourceLocation SMTEncoder::callStackMessage(vector<CallStackEntry> cons
 	SecondarySourceLocation callStackLocation;
 	solAssert(!_callStack.empty(), "");
 	callStackLocation.append("Callstack:", SourceLocation());
-	for (auto const& call: ranges::views::reverse(_callStack))
+	for (auto const& call: _callStack | ranges::views::reverse)
 		if (call.second)
 			callStackLocation.append("", call.second->location());
 	return callStackLocation;

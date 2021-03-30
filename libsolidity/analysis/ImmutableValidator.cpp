@@ -29,7 +29,7 @@ void ImmutableValidator::analyze()
 {
 	m_inConstructionContext = true;
 
-	auto linearizedContracts = ranges::views::reverse(m_currentContract.annotation().linearizedBaseContracts);
+	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | ranges::views::reverse;
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (VariableDeclaration const* stateVar: contract->stateVariables())

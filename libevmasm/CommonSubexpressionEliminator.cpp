@@ -330,7 +330,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		"Undefined item requested but not available."
 	);
 	vector<Id> const& arguments = expr.arguments;
-	for (Id arg: ranges::views::reverse(arguments))
+	for (Id arg: arguments | ranges::views::reverse)
 		generateClassElement(arg);
 
 	SourceLocation const& itemLocation = expr.item->location();
