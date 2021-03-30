@@ -250,7 +250,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 	yulAssert(lookupTable.size() == allSteps().size(), "");
 	yulAssert((
 			util::convertContainer<set<char>>(string(NonStepAbbreviations)) -
-			util::convertContainer<set<char>>( ranges::views::values(lookupTable))
+			util::convertContainer<set<char>>(lookupTable | ranges::views::values)
 		).size() == string(NonStepAbbreviations).size(),
 		"Step abbreviation conflicts with a character reserved for another syntactic element"
 	);
