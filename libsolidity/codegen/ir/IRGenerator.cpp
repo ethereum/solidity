@@ -253,7 +253,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 	);
 
 	InternalDispatchMap internalDispatchMap = m_context.consumeInternalDispatchMap();
-	for (YulArity const& arity: internalDispatchMap | ranges::views::keys)
+	for (YulArity const& arity: ranges::views::keys(internalDispatchMap))
 	{
 		string funName = IRNames::internalDispatch(arity);
 		m_context.functionCollector().createFunction(funName, [&]() {
