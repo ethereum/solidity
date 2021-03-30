@@ -23,7 +23,7 @@
 
 #include <libyul/AST.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -33,7 +33,7 @@ using namespace solidity::util;
 void ASTWalker::operator()(FunctionCall const& _funCall)
 {
 	// Does not visit _funCall.functionName on purpose
-	walkVector(_funCall.arguments | boost::adaptors::reversed);
+	walkVector(ranges::views::reverse(_funCall.arguments));
 }
 
 void ASTWalker::operator()(ExpressionStatement const& _statement)
@@ -102,7 +102,7 @@ void ASTWalker::visit(Expression const& _e)
 void ASTModifier::operator()(FunctionCall& _funCall)
 {
 	// Does not visit _funCall.functionName on purpose
-	walkVector(_funCall.arguments | boost::adaptors::reversed);
+	walkVector(ranges::views::reverse(_funCall.arguments));
 }
 
 void ASTModifier::operator()(ExpressionStatement& _statement)

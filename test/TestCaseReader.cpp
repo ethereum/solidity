@@ -21,7 +21,7 @@
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/adaptor/map.hpp>
+#include <range/v3/view/map.hpp>
 #include <boost/throw_exception.hpp>
 
 using namespace std;
@@ -97,7 +97,7 @@ void TestCaseReader::ensureAllSettingsRead() const
 	if (!m_unreadSettings.empty())
 		BOOST_THROW_EXCEPTION(runtime_error(
 			"Unknown setting(s): " +
-			util::joinHumanReadable(m_unreadSettings | boost::adaptors::map_keys)
+			util::joinHumanReadable(ranges::views::keys(m_unreadSettings))
 		));
 }
 

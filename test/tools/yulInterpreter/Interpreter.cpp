@@ -34,7 +34,7 @@
 
 #include <libsolutil/FixedHash.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 
 #include <ostream>
@@ -332,7 +332,7 @@ void ExpressionEvaluator::evaluateArgs(
 	vector<u256> values;
 	size_t i = 0;
 	/// Function arguments are evaluated in reverse.
-	for (auto const& expr: _expr | boost::adaptors::reversed)
+	for (auto const& expr: ranges::views::reverse(_expr))
 	{
 		if (!_literalArguments || !_literalArguments->at(_expr.size() - i - 1))
 			visit(expr);
