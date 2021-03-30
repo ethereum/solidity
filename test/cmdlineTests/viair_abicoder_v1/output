@@ -78,6 +78,7 @@ object "test_11" {
                 var__5 := zero_t_bool_1
 
                 let expr_7 := 0x01
+                /// @origin viair_abicoder_v1/input.sol:149,160
                 var__5 := expr_7
                 leave
 
