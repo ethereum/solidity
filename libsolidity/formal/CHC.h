@@ -77,14 +77,19 @@ private:
 	void endVisit(ContractDefinition const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	void endVisit(FunctionDefinition const& _node) override;
+	bool visit(Block const& _block) override;
+	void endVisit(Block const& _block) override;
 	bool visit(IfStatement const& _node) override;
 	bool visit(WhileStatement const&) override;
 	bool visit(ForStatement const&) override;
+	void endVisit(ForStatement const&) override;
 	void endVisit(FunctionCall const& _node) override;
 	void endVisit(Break const& _node) override;
 	void endVisit(Continue const& _node) override;
 	void endVisit(IndexRangeAccess const& _node) override;
 	void endVisit(Return const& _node) override;
+	bool visit(TryCatchClause const&) override;
+	void endVisit(TryCatchClause const&) override;
 	bool visit(TryStatement const& _node) override;
 
 	void pushInlineFrame(CallableDeclaration const& _callable) override;
@@ -97,6 +102,7 @@ private:
 	void externalFunctionCallToTrustedCode(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
+	void makeOutOfBoundsVerificationTarget(IndexAccess const& _access) override;
 	/// Creates underflow/overflow verification targets.
 	std::pair<smtutil::Expression, smtutil::Expression> arithmeticOperation(
 		Token _op,

@@ -7,4 +7,4 @@ contract C {
     }
 }
 // ----
-// Warning 6328: (141-154): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\n\nTransaction trace:\nC.constructor()\nC.f(false, false)
+// Warning 6328: (141-154): CHC: Assertion violation happens here.\nCounterexample:\n\nb1 = false\nb2 = false\nc = 1\n\nTransaction trace:\nC.constructor()\nC.f(false, false)

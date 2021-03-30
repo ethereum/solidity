@@ -15,4 +15,4 @@ contract C {
 }
 // ----
 // Warning 4281: (118-123): CHC: Division by zero happens here.\nCounterexample:\n\na = 0\nb = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)
-// Warning 4984: (275-281): CHC: Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here.\nCounterexample:\n\n_check = true\n = 0\n\nTransaction trace:\nC.constructor()\nC.g(true)
+// Warning 4984: (275-281): CHC: Overflow (resulting value larger than 0x80 * 2**248 - 1) happens here.\nCounterexample:\n\n_check = true\n = 0\nx = (- 57896044618658097711785492504343953926634992332820282019728792003956564819968)\n\nTransaction trace:\nC.constructor()\nC.g(true)

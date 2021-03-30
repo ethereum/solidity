@@ -4,8 +4,11 @@ pragma experimental SMTChecker;
 contract LoopFor2 {
 	uint[] b;
 	//uint[] c;
-
+	function p() public {
+		b.push();
+	}
 	function testUnboundedForLoop(uint n) public {
+		require(b.length > 0);
 		b[0] = 900;
 		//uint[] memory a = b;
 		require(n > 0 && n < 100);

@@ -74,7 +74,7 @@ cd "${solc_bin_dir}/${platform}/"
 echo "Commit range: ${base_ref}..${top_ref}"
 
 modified_release_versions=$(
-    git diff --name-only "${base_ref}" |
+    git diff --name-only "${base_ref}" "${top_ref}" |
     sed -n -E 's/^[^\/]+\/(solc|soljson)-[0-9a-zA-Z-]+-v([0-9.]+)\+commit\.[0-9a-f]+(.[^.]+)?$/\2/p' |
     sort -V |
     uniq

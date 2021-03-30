@@ -171,3 +171,9 @@ TypedName ASTCopier::translate(TypedName const& _typedName)
 	return TypedName{_typedName.location, translateIdentifier(_typedName.name), _typedName.type};
 }
 
+YulString FunctionCopier::translateIdentifier(YulString _name)
+{
+	if (m_translations.count(_name))
+		return m_translations.at(_name);
+	return _name;
+}

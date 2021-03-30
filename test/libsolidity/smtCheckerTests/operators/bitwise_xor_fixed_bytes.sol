@@ -7,5 +7,7 @@ contract Simp {
 		return y[0];
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (172-203): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\n\nTransaction trace:\nSimp.constructor()\nSimp.f3()
+// Warning 6328: (172-203): CHC: Assertion violation happens here.

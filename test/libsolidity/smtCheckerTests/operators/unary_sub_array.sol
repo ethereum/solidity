@@ -3,7 +3,9 @@ pragma experimental SMTChecker;
 contract C
 {
 	uint[] array;
+	function p() public { array.push(); }
 	function f(uint x) public {
+		require(x < array.length);
 		array[x] = 5;
 		uint a = --array[x];
 		assert(array[x] == 4);
@@ -17,4 +19,4 @@ contract C
 // ====
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (240-253): CHC: Assertion violation happens here.
+// Warning 6328: (308-321): CHC: Assertion violation happens here.

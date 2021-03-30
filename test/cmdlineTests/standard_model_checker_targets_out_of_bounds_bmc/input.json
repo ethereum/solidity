@@ -14,6 +14,7 @@
 						a.transfer(x);
 						assert(x > 0);
 						arr.pop();
+						arr[x];
 					}
 				}"
 		}
@@ -23,7 +24,7 @@
 		"modelChecker":
 		{
 			"engine": "bmc",
-			"targets": "underflow,overflow"
+			"targets": "outOfBounds"
 		}
 	}
 }

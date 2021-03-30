@@ -8,4 +8,4 @@ contract c {
 }
 // ----
 // Warning 6321: (80-84): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6328: (128-142): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\n\nTransaction trace:\nc.constructor()\nc.f()
+// Warning 6328: (128-142): CHC: Assertion violation happens here.\nCounterexample:\n\n = 0\nx = 8\n\nTransaction trace:\nc.constructor()\nc.f()

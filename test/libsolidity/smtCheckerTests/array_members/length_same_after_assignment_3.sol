@@ -2,7 +2,19 @@ pragma experimental SMTChecker;
 
 contract C {
 	uint[][] arr;
-	uint[][] arr2;
+
+	constructor() {
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+	}
+
 	function f() public {
 		uint x = arr[2].length;
 		uint y = arr[3].length;

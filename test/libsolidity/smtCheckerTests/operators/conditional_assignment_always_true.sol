@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (118-131): CHC: Assertion violation happens here.\nCounterexample:\n\nb = true\n\nTransaction trace:\nC.constructor()\nC.f(true)
+// Warning 6328: (118-131): CHC: Assertion violation happens here.\nCounterexample:\n\nb = true\nc = 5\n\nTransaction trace:\nC.constructor()\nC.f(true)
 // Warning 6838: (105-106): BMC: Condition is always true.

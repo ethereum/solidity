@@ -5,10 +5,15 @@ contract C
 	uint[] b;
 	uint[] d;
 	uint[][] array2d;
+	function p() public {
+		array2d.push().push();
+	}
 	function g(uint x, uint[] memory c) public {
+		require(x < array2d.length);
 		f(array2d[x], c);
 	}
 	function f(uint[] storage a, uint[] memory c) internal {
+		// Accesses are safe but oob is reported because of aliasing.
 		d[0] = 42;
 		c[0] = 42;
 		a[0] = 2;
@@ -29,4 +34,11 @@ contract C
 // ====
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (572-589): CHC: Assertion violation happens here.
+// Warning 6368: (362-366): CHC: Out of bounds access happens here.
+// Warning 6368: (375-379): CHC: Out of bounds access happens here.
+// Warning 6368: (388-392): CHC: Out of bounds access happens here.
+// Warning 6368: (400-404): CHC: Out of bounds access happens here.
+// Warning 6368: (523-527): CHC: Out of bounds access happens here.
+// Warning 6368: (725-729): CHC: Out of bounds access happens here.
+// Warning 6328: (718-735): CHC: Assertion violation happens here.
+// Warning 6368: (829-833): CHC: Out of bounds access happens here.

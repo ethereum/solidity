@@ -34,3 +34,5 @@ contract C {
 	}
 }
 // ----
+// Warning 6368: (507-511): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [18, 52, 0]\n\nTransaction trace:\nC.constructor()\nC.h()
+// Warning 6368: (529-533): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [18, 52, 0]\n\nTransaction trace:\nC.constructor()\nC.h()

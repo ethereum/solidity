@@ -31,6 +31,7 @@ The other verification targets that the SMTChecker checks at compile time are:
 - Division by zero.
 - Trivial conditions and unreachable code.
 - Popping an empty array.
+- Out of bounds index access.
 - Insufficient funds for a transfer.
 
 The potential warnings that the SMTChecker reports are:
@@ -457,6 +458,7 @@ list of one or more verification targets. The keywords that represent the target
 - Division by zero: ``divByZero``.
 - Trivial conditions and unreachable code: ``constantCondition``.
 - Popping an empty array: ``popEmptyArray``.
+- Out of bounds array/fixed bytes index access: ``outOfBounds``.
 - Insufficient funds for a transfer: ``balance``.
 - All of the above: ``all``.
 - None of the above: ``none``.

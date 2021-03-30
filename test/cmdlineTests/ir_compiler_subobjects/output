@@ -64,17 +64,16 @@ object "D_16" {
                             returndatacopy(_1, _1, returndatasize())
                             revert(_1, returndatasize())
                         }
-                        return(allocate_memory(_1), _1)
+                        return(allocate_memory(), _1)
                     }
                 }
                 revert(0, 0)
             }
-            function allocate_memory(size) -> memPtr
+            function allocate_memory() -> memPtr
             {
                 memPtr := mload(64)
-                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
+                if gt(memPtr, 0xffffffffffffffff) { panic_error_0x41() }
+                mstore(64, memPtr)
             }
             function panic_error_0x41()
             {

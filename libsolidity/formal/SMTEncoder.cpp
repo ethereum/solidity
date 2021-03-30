@@ -191,7 +191,12 @@ void SMTEncoder::visitFunctionOrModifier()
 		if (dynamic_cast<ContractDefinition const*>(refDecl))
 			visitFunctionOrModifier();
 		else if (auto modifier = resolveModifierInvocation(*modifierInvocation, m_currentContract))
+		{
+			m_scopes.push_back(modifier);
 			inlineModifierInvocation(modifierInvocation.get(), modifier);
+			solAssert(m_scopes.back() == modifier, "");
+			m_scopes.pop_back();
+		}
 		else
 			solAssert(false, "");
 	}
@@ -1381,6 +1386,9 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	if (_indexAccess.annotation().type->category() == Type::Category::TypeType)
 		return;
+
+	makeOutOfBoundsVerificationTarget(_indexAccess);
+
 	if (auto const* type = dynamic_cast<FixedBytesType const*>(_indexAccess.baseExpression().annotation().type))
 	{
 		smtutil::Expression base = expr(_indexAccess.baseExpression());
@@ -1429,6 +1437,7 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 
 	auto arrayVar = dynamic_pointer_cast<smt::SymbolicArrayVariable>(array);
 	solAssert(arrayVar, "");
+
 	Type const* baseType = _indexAccess.baseExpression().annotation().type;
 	defineExpr(_indexAccess, smtutil::Expression::select(
 		arrayVar->elements(),

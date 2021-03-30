@@ -129,6 +129,7 @@ protected:
 	bool visit(IfStatement const&) override { return false; }
 	bool visit(WhileStatement const&) override { return false; }
 	bool visit(ForStatement const&) override { return false; }
+	void endVisit(ForStatement const&) override {}
 	void endVisit(VariableDeclarationStatement const& _node) override;
 	bool visit(Assignment const& _node) override;
 	void endVisit(Assignment const& _node) override;
@@ -150,6 +151,8 @@ protected:
 	bool visit(InlineAssembly const& _node) override;
 	void endVisit(Break const&) override {}
 	void endVisit(Continue const&) override {}
+	bool visit(TryCatchClause const&) override { return true; }
+	void endVisit(TryCatchClause const&) override {}
 	bool visit(TryStatement const&) override { return false; }
 
 	virtual void pushInlineFrame(CallableDeclaration const&);
@@ -224,6 +227,8 @@ protected:
 	/// Allows BMC and CHC to create verification targets for popping
 	/// an empty array.
 	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
+	/// Allows BMC and CHC to create verification targets for out of bounds access.
+	virtual void makeOutOfBoundsVerificationTarget(IndexAccess const&) {}
 
 	void addArrayLiteralAssertions(
 		smt::SymbolicArrayVariable& _symArray,
@@ -398,6 +403,10 @@ protected:
 
 	/// Stores the current function/modifier call/invocation path.
 	std::vector<CallStackEntry> m_callStack;
+
+	/// Stack of scopes.
+	std::vector<ScopeOpener const*> m_scopes;
+
 	/// Returns true if the current function was not visited by
 	/// a function call.
 	bool isRootFunction();
