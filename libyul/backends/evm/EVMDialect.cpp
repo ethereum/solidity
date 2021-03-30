@@ -33,7 +33,7 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -49,7 +49,7 @@ void visitArguments(
 	function<void(Expression const&)> _visitExpression
 )
 {
-	for (auto const& arg: _call.arguments | boost::adaptors::reversed)
+	for (auto const& arg: _call.arguments | ranges::views::reverse)
 		_visitExpression(arg);
 
 	_assembly.setSourceLocation(_call.location);

@@ -23,7 +23,7 @@
  */
 
 #include <functional>
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 #include <libsolutil/Keccak256.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/AssemblyItem.h>
@@ -330,7 +330,8 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		"Undefined item requested but not available."
 	);
 	vector<Id> const& arguments = expr.arguments;
-	for (Id arg: boost::adaptors::reverse(arguments))
+
+	for (Id arg: arguments | ranges::views::reverse)
 		generateClassElement(arg);
 
 	SourceLocation const& itemLocation = expr.item->location();

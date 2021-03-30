@@ -42,13 +42,10 @@
 
 #include <range/v3/view/map.hpp>
 
-#include <boost/range/adaptor/map.hpp>
-
 #include <sstream>
 #include <variant>
 
 using namespace std;
-using namespace ranges;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
@@ -82,7 +79,7 @@ set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCallables(
 )
 {
 	set<CallableDeclaration const*, ASTNode::CompareByID> reachableCallables;
-	for (CallGraph::Node const& reachableNode: _graph.edges | views::keys)
+	for (CallGraph::Node const& reachableNode: _graph.edges | ranges::views::keys)
 		if (holds_alternative<CallableDeclaration const*>(reachableNode))
 			reachableCallables.emplace(get<CallableDeclaration const*>(reachableNode));
 
@@ -255,7 +252,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 	);
 
 	InternalDispatchMap internalDispatchMap = m_context.consumeInternalDispatchMap();
-	for (YulArity const& arity: internalDispatchMap | boost::adaptors::map_keys)
+	for (YulArity const& arity: internalDispatchMap | ranges::views::keys)
 	{
 		string funName = IRNames::internalDispatch(arity);
 		m_context.functionCollector().createFunction(funName, [&]() {
