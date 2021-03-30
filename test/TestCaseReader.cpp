@@ -97,7 +97,7 @@ void TestCaseReader::ensureAllSettingsRead() const
 	if (!m_unreadSettings.empty())
 		BOOST_THROW_EXCEPTION(runtime_error(
 			"Unknown setting(s): " +
-			util::joinHumanReadable(m_unreadSettings | ranges::views::keys)
+			util::joinHumanReadable(ranges::views::keys(m_unreadSettings))
 		));
 }
 
