@@ -580,7 +580,7 @@ map<string, size_t> BinaryTransform::enumerateFunctionTypes(map<Type, vector<str
 {
 	map<string, size_t> functionTypes;
 	size_t typeID = 0;
-	for (vector<string> const& funNames: ranges::views::values(_typeToFunctionMap))
+	for (vector<string> const& funNames: _typeToFunctionMap | ranges::views::values)
 	{
 		for (string const& name: funNames)
 			functionTypes[name] = typeID;
@@ -594,19 +594,7 @@ bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> co
 {
 	bytes result;
 	size_t index = 0;
-	for (Type const& type: ranges::views::keys(_typeToFunctionMap))
-	{
-		result += toBytes(ValueType::Function);
-		result += lebEncode(type.first.size()) + type.first;
-		result += lebEncode(type.second.size()) + type.second;
-
-		index++;
-	}
-
-	return makeSection(Section::TYPE, lebEncode(index) + move(result));
-}
-
-bytes BinaryTransform::importSection(
+	for (Type const& type: _typeToFunctionMap | ranges::views::keys)
 	vector<FunctionImport> const& _imports,
 	map<string, size_t> const& _functionTypes
 )
