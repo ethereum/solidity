@@ -2,6 +2,7 @@ pragma experimental SMTChecker;
 
 contract C {
 	function f(bytes calldata b) external pure {
+		require(b.length > 10);
 		require(b[10] == 0xff);
 		assert(bytes(b[10:20]).length == 10);
 		// Disabled because of Spacer nondeterminism

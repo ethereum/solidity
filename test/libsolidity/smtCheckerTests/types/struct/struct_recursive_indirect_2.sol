@@ -54,6 +54,12 @@ contract C {
 // Warning 8364: (248-250): Assertion checker does not yet implement type struct C.S storage ref
 // Warning 8364: (248-255): Assertion checker does not yet implement type struct C.T storage ref
 // Warning 8364: (248-260): Assertion checker does not yet implement type struct C.S storage ref
+// Warning 6368: (183-190): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (203-210): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (230-237): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (230-242): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (248-255): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (248-260): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (223-263): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 8115: (115-119): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (122-126): Assertion checker does not yet support the type of this variable.

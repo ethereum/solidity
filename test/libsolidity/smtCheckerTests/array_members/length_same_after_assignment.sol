@@ -2,6 +2,12 @@ pragma experimental SMTChecker;
 
 contract C {
 	uint[] arr;
+	constructor() {
+		arr.push();
+		arr.push();
+		arr.push();
+		arr.push();
+	}
 	function f() public view {
 		uint[] memory arr2 = arr;
 		arr2[2] = 3;

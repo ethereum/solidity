@@ -10,5 +10,6 @@ contract test {
 		a.transfer(x);
 		assert(x > 0);
 		arr.pop();
+		arr[x];
     }
 }

@@ -66,7 +66,11 @@ contract C {
 // Warning 4375: (320-329): Assertion checker does not support recursive structs.
 // Warning 6328: (124-144): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (148-182): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (193-200): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (206-213): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
 // Warning 6328: (186-216): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6368: (302-309): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6368: (320-327): CHC: Out of bounds access happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
 // Warning 8115: (81-85): Assertion checker does not yet support the type of this variable.
 // Warning 8115: (88-92): Assertion checker does not yet support the type of this variable.
 // Warning 7650: (131-135): Assertion checker does not yet support this expression.

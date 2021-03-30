@@ -224,6 +224,8 @@ protected:
 	/// Allows BMC and CHC to create verification targets for popping
 	/// an empty array.
 	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
+	/// Allows BMC and CHC to create verification targets for out of bounds access.
+	virtual void makeOutOfBoundsVerificationTarget(IndexAccess const&) {}
 
 	void addArrayLiteralAssertions(
 		smt::SymbolicArrayVariable& _symArray,

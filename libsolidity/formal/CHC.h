@@ -97,6 +97,7 @@ private:
 	void externalFunctionCallToTrustedCode(FunctionCall const& _funCall);
 	void unknownFunctionCall(FunctionCall const& _funCall);
 	void makeArrayPopVerificationTarget(FunctionCall const& _arrayPop) override;
+	void makeOutOfBoundsVerificationTarget(IndexAccess const& _access) override;
 	/// Creates underflow/overflow verification targets.
 	std::pair<smtutil::Expression, smtutil::Expression> arithmeticOperation(
 		Token _op,
