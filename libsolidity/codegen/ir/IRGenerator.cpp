@@ -42,8 +42,6 @@
 
 #include <range/v3/view/map.hpp>
 
-#include <boost/range/adaptor/map.hpp>
-
 #include <sstream>
 #include <variant>
 
@@ -255,7 +253,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions()
 	);
 
 	InternalDispatchMap internalDispatchMap = m_context.consumeInternalDispatchMap();
-	for (YulArity const& arity: internalDispatchMap | boost::adaptors::map_keys)
+	for (YulArity const& arity: internalDispatchMap | ranges::views::keys)
 	{
 		string funName = IRNames::internalDispatch(arity);
 		m_context.functionCollector().createFunction(funName, [&]() {
