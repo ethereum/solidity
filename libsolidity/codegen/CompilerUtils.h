@@ -69,6 +69,12 @@ public:
 	/// Stack post:
 	void revertWithStringData(Type const& _argumentType);
 
+	void revertWithError(
+		std::string const& _errorName,
+		std::vector<Type const*> const& _parameterTypes,
+		std::vector<Type const*> const& _argumentTypes
+	);
+
 	/// Allocates a new array and copies the return data to it.
 	/// If the EVM does not support return data, creates an empty array.
 	void returnDataToArray();

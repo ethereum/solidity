@@ -34,6 +34,7 @@
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
+#include <libsolidity/analysis/PostTypeContractLevelChecker.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/analysis/Scoper.h>
@@ -432,6 +433,11 @@ bool CompilerStack::analyze()
 			if (!postTypeChecker.finalize())
 				noErrors = false;
 		}
+
+		if (noErrors)
+			for (Source const* source: m_sourceOrder)
+				if (source->ast && !PostTypeContractLevelChecker{m_errorReporter}.check(*source->ast))
+					noErrors = false;
 
 		// Check that immutable variables are never read in c'tors and assigned
 		// exactly once

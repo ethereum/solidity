@@ -125,6 +125,8 @@ bool FunctionCallGraphBuilder::visit(FunctionCall const& _functionCall)
 		// change at runtime). All we can do is to add an edge to the dispatch which in turn has
 		// edges to all functions could possibly be called.
 		add(m_currentNode, CallGraph::SpecialNode::InternalDispatch);
+	else if (functionType->kind() == FunctionType::Kind::Error)
+		m_graph.usedErrors.insert(&dynamic_cast<ErrorDefinition const&>(functionType->declaration()));
 
 	return true;
 }

@@ -65,8 +65,8 @@ public:
 
 private:
 	FunctionCallGraphBuilder(ContractDefinition const& _contract):
-		m_contract(_contract),
-		m_graph{{}, {}, {}} {}
+		m_contract(_contract)
+	{}
 
 	bool visit(FunctionCall const& _functionCall) override;
 	bool visit(EmitStatement const& _emitStatement) override;

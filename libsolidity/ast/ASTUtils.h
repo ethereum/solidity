@@ -25,10 +25,6 @@ class VariableDeclaration;
 class Declaration;
 class Expression;
 
-/// @returns the declaration referenced from the expression which has to be MemberAccess
-/// or Identifier. Returns nullptr otherwise.
-Declaration const* referencedDeclaration(Expression const& _expression);
-
 /// Find the topmost referenced constant variable declaration when the given variable
 /// declaration value is an identifier. Works only for constant variable declarations.
 /// Returns nullptr if an identifier in the chain is not referencing a constant variable declaration.

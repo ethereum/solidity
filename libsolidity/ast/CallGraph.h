@@ -67,6 +67,9 @@ struct CallGraph
 
 	/// Events that may get emitted by functions present in the graph.
 	std::set<EventDefinition const*, ASTNode::CompareByID> emittedEvents;
+
+	/// Errors that are used by functions present in the graph.
+	std::set<ErrorDefinition const*, ASTNode::CompareByID> usedErrors;
 };
 
 }

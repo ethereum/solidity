@@ -107,6 +107,7 @@ private:
 	ASTPointer<Return> createReturn(Json::Value const& _node);
 	ASTPointer<Throw> createThrow(Json::Value const& _node);
 	ASTPointer<EmitStatement> createEmitStatement(Json::Value const& _node);
+	ASTPointer<RevertStatement> createRevertStatement(Json::Value const& _node);
 	ASTPointer<VariableDeclarationStatement> createVariableDeclarationStatement(Json::Value const& _node);
 	ASTPointer<ExpressionStatement> createExpressionStatement(Json::Value const& _node);
 	ASTPointer<Conditional> createConditional(Json::Value const& _node);

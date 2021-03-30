@@ -117,9 +117,12 @@ done < <(
     "^\/\/ (Syntax|Type|Declaration)Error|^\/\/ ParserError (1684|2837|3716|3997|5333|6275|6281|6933|7319)|^==== Source:" \
     "${ROOT_DIR}/test/libsolidity/syntaxTests" \
     "${ROOT_DIR}/test/libsolidity/semanticTests" |
-      grep -v -E 'comments/.*_direction_override.*.sol' |
-      grep -v -E 'literals/.*_direction_override.*.sol'
       # Skipping the unicode tests as I couldn't adapt the lexical grammar to recursively counting RLO/LRO/PDF's.
+      grep -v -E 'comments/.*_direction_override.*.sol' |
+      grep -v -E 'literals/.*_direction_override.*.sol' |
+      # Skipping a test with "revert E;" because ANTLR cannot distinguish it from
+      # a variable declaration.
+      grep -v -E 'revertStatement/non_called.sol'
 )
 
 YUL_FILES=()

@@ -433,24 +433,6 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 			);
 		hashes.insert(hash);
 	}
-
-	map<uint32_t, SourceLocation> errorHashes;
-	for (ErrorDefinition const* error: _contract.interfaceErrors())
-	{
-		if (!error->functionType(true)->interfaceFunctionType())
-			// This will result in an error later on, so we can ignore it here.
-			continue;
-		uint32_t hash = selectorFromSignature32(error->functionType(true)->externalSignature());
-		if (errorHashes.count(hash))
-			m_errorReporter.typeError(
-				4883_error,
-				_contract.location(),
-				SecondarySourceLocation{}.append("This error has the same selector: "s, errorHashes[hash]),
-				"Error signature hash collision for " + error->functionType(true)->externalSignature()
-			);
-		else
-			errorHashes[hash] = error->location();
-	}
 }
 
 void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _contract)
