@@ -75,7 +75,7 @@ optional<string> SolidityCompilationFramework::noInputFunction()
 	return {};
 }
 
-optional<Json::Value> SolidityCompilationFramework::randomFunction()
+optional<Json::Value> SolidityCompilationFramework::randomFunction(size_t _seed)
 {
 	Json::Value const& contractABI = m_compiler.contractABI(m_compiler.lastContractName());
 	unsigned numFunctions = contractABI.size();
@@ -84,7 +84,7 @@ optional<Json::Value> SolidityCompilationFramework::randomFunction()
 	else
 	{
 		uniform_int_distribution<unsigned> d(0, contractABI.size() - 1);
-		minstd_rand r(contractABI.size());
+		minstd_rand r(_seed);
 		return contractABI[d(r)];
 	}
 }

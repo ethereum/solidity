@@ -106,7 +106,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			if (!compilerOutput.has_value())
 				return 0;
 
-			auto r = evmoneUtil.randomFunction();
+			auto r = evmoneUtil.randomFunction(_size);
 			if (!r.has_value())
 				return 0;
 
