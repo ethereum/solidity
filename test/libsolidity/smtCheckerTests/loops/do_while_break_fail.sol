@@ -15,4 +15,4 @@ contract C {
 // ----
 // Warning 5740: (104-109): Unreachable code.
 // Warning 5740: (122-128): Unreachable code.
-// Warning 6328: (133-147): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (133-147): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()

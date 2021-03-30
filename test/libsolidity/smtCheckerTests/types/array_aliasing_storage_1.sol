@@ -50,5 +50,7 @@ contract C
 		//f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 2018: (990-1362): Function state mutability can be restricted to view

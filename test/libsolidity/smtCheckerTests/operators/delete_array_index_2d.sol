@@ -17,7 +17,6 @@ contract C
 	}
 	function f(bool b) public {
 		a[1][1] = 512;
-		a[2][1] = 4;
 		if (b)
 			delete a;
 		else
@@ -32,13 +31,11 @@ contract C
 // ----
 // Warning 6368: (247-251): CHC: Out of bounds access might happen here.
 // Warning 6368: (247-254): CHC: Out of bounds access might happen here.
-// Warning 6368: (264-268): CHC: Out of bounds access might happen here.
-// Warning 6368: (264-271): CHC: Out of bounds access might happen here.
-// Warning 6368: (316-320): CHC: Out of bounds access might happen here.
-// Warning 6368: (341-345): CHC: Out of bounds access might happen here.
-// Warning 6368: (341-348): CHC: Out of bounds access might happen here.
-// Warning 6328: (334-354): CHC: Assertion violation might happen here.
-// Warning 6368: (365-369): CHC: Out of bounds access might happen here.
-// Warning 6368: (365-372): CHC: Out of bounds access might happen here.
-// Warning 6328: (358-378): CHC: Assertion violation might happen here.
-// Warning 4661: (358-378): BMC: Assertion violation happens here.
+// Warning 6368: (301-305): CHC: Out of bounds access might happen here.
+// Warning 6368: (326-330): CHC: Out of bounds access might happen here.
+// Warning 6368: (326-333): CHC: Out of bounds access might happen here.
+// Warning 6328: (319-339): CHC: Assertion violation might happen here.
+// Warning 6368: (350-354): CHC: Out of bounds access might happen here.
+// Warning 6368: (350-357): CHC: Out of bounds access might happen here.
+// Warning 6328: (343-363): CHC: Assertion violation might happen here.
+// Warning 4661: (343-363): BMC: Assertion violation happens here.

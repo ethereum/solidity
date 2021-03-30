@@ -14,5 +14,5 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (183-197): CHC: Assertion violation happens here.\nCounterexample:\n\nb = false\na = 0\n\nTransaction trace:\nC.constructor()\nC.f(false, 0)
+// Warning 6328: (183-197): CHC: Assertion violation happens here.\nCounterexample:\n\nb = false\na = 0\nc = 2\n\nTransaction trace:\nC.constructor()\nC.f(false, 0)
 // Warning 6838: (155-156): BMC: Condition is always false.

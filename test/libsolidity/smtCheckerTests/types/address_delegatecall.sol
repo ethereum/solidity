@@ -17,11 +17,12 @@ contract C
 }
 // ====
 // EVMVersion: >spuriousDragon
+// SMTIgnoreCex: yes
 // ----
 // Warning 2072: (224-240): Unused local variable.
 // Warning 4588: (244-264): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (268-283): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\na = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f(0, data)
-// Warning 6328: (287-301): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f(0, data)
-// Warning 6328: (305-324): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f(0, data)
-// Warning 6328: (328-352): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\na = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f(0, data)
+// Warning 6328: (268-283): CHC: Assertion violation happens here.
+// Warning 6328: (287-301): CHC: Assertion violation happens here.
+// Warning 6328: (305-324): CHC: Assertion violation happens here.
+// Warning 6328: (328-352): CHC: Assertion violation happens here.
 // Warning 4588: (244-264): Assertion checker does not yet implement this type of function call.

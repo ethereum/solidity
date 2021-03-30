@@ -9,4 +9,4 @@ contract C {
     }
 }
 // ----
-// Warning 6328: (185-206): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (185-206): CHC: Assertion violation happens here.\nCounterexample:\n\nx = [0, 17, 34, 51]\n\nTransaction trace:\nC.constructor()\nC.f()

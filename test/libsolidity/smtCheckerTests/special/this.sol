@@ -6,5 +6,7 @@ contract C
 		assert(a == address(this));
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (85-111): CHC: Assertion violation happens here.\nCounterexample:\n\na = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (85-111): CHC: Assertion violation happens here.

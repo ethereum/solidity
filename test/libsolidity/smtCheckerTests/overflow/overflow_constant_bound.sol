@@ -13,5 +13,6 @@ contract DepositContract {
     }
 }
 // ----
+// Warning 1218: (289-310): CHC: Error trying to invoke SMT solver.
 // Warning 4984: (289-310): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 2661: (289-310): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

@@ -28,6 +28,8 @@ contract C
 		f(severalMaps3d[x][0]);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6368: (347-361): CHC: Out of bounds access happens here.
 // Warning 6368: (400-416): CHC: Out of bounds access happens here.

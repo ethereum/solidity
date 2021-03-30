@@ -32,6 +32,8 @@
 #include <libsmtutil/CHCSmtLib2Interface.h>
 #include <libsolutil/Algorithms.h>
 
+#include <range/v3/algorithm/for_each.hpp>
+
 #include <boost/range/adaptor/reversed.hpp>
 
 #ifdef HAVE_Z3_DLOPEN
@@ -130,6 +132,8 @@ bool CHC::visit(ContractDefinition const& _contract)
 	initContract(_contract);
 	clearIndices(&_contract);
 
+	m_scopes.push_back(&_contract);
+
 	m_stateVariables = SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract);
 	solAssert(m_currentContract, "");
 
@@ -208,6 +212,10 @@ void CHC::endVisit(ContractDefinition const& _contract)
 		m_queryPlaceholders[&_contract].push_back({txConstraints, errorFlag().currentValue(), m_currentBlock});
 		connectBlocks(m_currentBlock, interface(), txConstraints && errorFlag().currentValue() == 0);
 	}
+
+	solAssert(m_scopes.back() == &_contract, "");
+	m_scopes.pop_back();
+
 	SMTEncoder::endVisit(_contract);
 }
 
@@ -222,6 +230,8 @@ bool CHC::visit(FunctionDefinition const& _function)
 	// No inlining.
 	solAssert(!m_currentFunction, "Function inlining should not happen in CHC.");
 	m_currentFunction = &_function;
+
+	m_scopes.push_back(&_function);
 
 	initFunction(_function);
 
@@ -257,6 +267,9 @@ void CHC::endVisit(FunctionDefinition const& _function)
 	// No inlining.
 	solAssert(m_currentFunction == &_function, "");
 
+	solAssert(m_scopes.back() == &_function, "");
+	m_scopes.pop_back();
+
 	connectBlocks(m_currentBlock, summary(_function));
 	setCurrentBlock(*m_summaries.at(m_currentContract).at(&_function));
 
@@ -280,6 +293,19 @@ void CHC::endVisit(FunctionDefinition const& _function)
 	m_currentFunction = nullptr;
 
 	SMTEncoder::endVisit(_function);
+}
+
+bool CHC::visit(Block const& _block)
+{
+	m_scopes.push_back(&_block);
+	return SMTEncoder::visit(_block);
+}
+
+void CHC::endVisit(Block const& _block)
+{
+	solAssert(m_scopes.back() == &_block, "");
+	m_scopes.pop_back();
+	SMTEncoder::endVisit(_block);
 }
 
 bool CHC::visit(IfStatement const& _if)
@@ -382,6 +408,8 @@ bool CHC::visit(WhileStatement const& _while)
 
 bool CHC::visit(ForStatement const& _for)
 {
+	m_scopes.push_back(&_for);
+
 	bool unknownFunctionCallWasSeen = m_unknownFunctionCallSeen;
 	m_unknownFunctionCallSeen = false;
 
@@ -439,6 +467,12 @@ bool CHC::visit(ForStatement const& _for)
 	m_unknownFunctionCallSeen = unknownFunctionCallWasSeen;
 
 	return false;
+}
+
+void CHC::endVisit(ForStatement const& _for)
+{
+	solAssert(m_scopes.back() == &_for, "");
+	m_scopes.pop_back();
 }
 
 void CHC::endVisit(FunctionCall const& _funCall)
@@ -550,6 +584,18 @@ void CHC::endVisit(Return const& _return)
 	// Add an unreachable ghost node to collect unreachable statements after a return.
 	auto returnGhost = createBlock(&_return, PredicateType::FunctionBlock, "return_ghost_");
 	m_currentBlock = predicate(*returnGhost);
+}
+
+bool CHC::visit(TryCatchClause const& _tryStatement)
+{
+	m_scopes.push_back(&_tryStatement);
+	return SMTEncoder::visit(_tryStatement);
+}
+
+void CHC::endVisit(TryCatchClause const& _tryStatement)
+{
+	solAssert(m_scopes.back() == &_tryStatement, "");
+	m_scopes.pop_back();
 }
 
 bool CHC::visit(TryStatement const& _tryStatement)
@@ -975,7 +1021,7 @@ SortPointer CHC::sort(ASTNode const* _node)
 
 Predicate const* CHC::createSymbolicBlock(SortPointer _sort, string const& _name, PredicateType _predType, ASTNode const* _node, ContractDefinition const* _contractContext)
 {
-	auto const* block = Predicate::create(_sort, _name, _predType, m_context, _node, _contractContext);
+	auto const* block = Predicate::create(_sort, _name, _predType, m_context, _node, _contractContext, m_scopes);
 	m_interface->registerRelation(block->functor());
 	return block;
 }
@@ -1150,7 +1196,11 @@ Predicate const* CHC::createConstructorBlock(ContractDefinition const& _contract
 
 void CHC::createErrorBlock()
 {
-	m_errorPredicate = createSymbolicBlock(arity0FunctionSort(), "error_target_" + to_string(m_context.newUniqueId()), PredicateType::Error);
+	m_errorPredicate = createSymbolicBlock(
+		arity0FunctionSort(),
+		"error_target_" + to_string(m_context.newUniqueId()),
+		PredicateType::Error
+	);
 	m_interface->registerRelation(m_errorPredicate->functor());
 }
 
@@ -1240,6 +1290,7 @@ smtutil::Expression CHC::predicate(Predicate const& _block)
 	case PredicateType::ExternalCallUntrusted:
 		return smt::function(_block, m_currentContract, m_context);
 	case PredicateType::FunctionBlock:
+	case PredicateType::FunctionErrorBlock:
 		solAssert(m_currentFunction, "");
 		return functionBlock(_block, *m_currentFunction, m_currentContract, m_context);
 	case PredicateType::Error:
@@ -1375,7 +1426,6 @@ void CHC::verificationTargetEncountered(
 	smtutil::Expression const& _errorCondition
 )
 {
-
 	if (!m_settings.targets.has(_type))
 		return;
 
@@ -1396,13 +1446,18 @@ void CHC::verificationTargetEncountered(
 	auto previousError = errorFlag().currentValue();
 	errorFlag().increaseIndex();
 
-	// create an error edge to the summary
-	solAssert(m_errorDest, "");
+	Predicate const* localBlock = m_currentFunction ?
+		createBlock(m_currentFunction, PredicateType::FunctionErrorBlock) :
+		createConstructorBlock(*m_currentContract, "local_error");
+
+	auto pred = predicate(*localBlock);
 	connectBlocks(
 		m_currentBlock,
-		predicate(*m_errorDest),
+		pred,
 		_errorCondition && errorFlag().currentValue() == errorId
 	);
+	solAssert(m_errorDest, "");
+	addRule(smtutil::Expression::implies(pred, predicate(*m_errorDest)), pred.name);
 
 	m_context.addAssertion(errorFlag().currentValue() == previousError);
 }
@@ -1606,6 +1661,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			first = false;
 			/// Generate counterexample message local to the failed target.
 			localState = formatVariableModel(*stateVars, stateValues, ", ") + "\n";
+
 			if (auto calledFun = summaryPredicate->programFunction())
 			{
 				auto inValues = summaryPredicate->summaryPostInputValues(summaryArgs);
@@ -1616,6 +1672,30 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 				auto const& outParams = calledFun->returnParameters();
 				if (auto outStr = formatVariableModel(outParams, outValues, "\n"); !outStr.empty())
 					localState += outStr + "\n";
+
+				optional<unsigned> localErrorId;
+				solidity::util::BreadthFirstSearch<unsigned> bfs{{summaryId}};
+				bfs.run([&](auto _nodeId, auto&& _addChild) {
+					auto const& children = _graph.edges.at(_nodeId);
+					if (
+						children.size() == 1 &&
+						nodePred(children.front())->isFunctionErrorBlock()
+					)
+					{
+						localErrorId = children.front();
+						bfs.abort();
+					}
+					ranges::for_each(children, _addChild);
+				});
+
+				if (localErrorId.has_value())
+				{
+					auto const* localError = nodePred(*localErrorId);
+					solAssert(localError && localError->isFunctionErrorBlock(), "");
+					auto const [localValues, localVars] = localError->localVariableValues(nodeArgs(*localErrorId));
+					if (auto localStr = formatVariableModel(localVars, localValues, "\n"); !localStr.empty())
+						localState += localStr + "\n";
+				}
 			}
 		}
 		else

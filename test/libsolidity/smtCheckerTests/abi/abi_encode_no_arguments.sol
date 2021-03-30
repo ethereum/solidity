@@ -13,8 +13,10 @@ contract C {
 		assert(res.length == 4); // should hold, but SMTChecker cannot know this yet
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (152-174): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (263-285): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (152-174): CHC: Assertion violation happens here.
+// Warning 6328: (263-285): CHC: Assertion violation happens here.
 // Warning 6328: (339-362): CHC: Assertion violation happens here.
 // Warning 6328: (455-478): CHC: Assertion violation happens here.

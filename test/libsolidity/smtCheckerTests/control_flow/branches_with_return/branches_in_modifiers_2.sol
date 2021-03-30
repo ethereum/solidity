@@ -44,5 +44,5 @@ contract C {
 }
 // ----
 // Warning 6328: (288-302): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.test()\n    C.reset_if_overflow() -- internal call
-// Warning 6328: (535-552): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.set(1)\nState: x = 1\nC.test()\n    C.reset_if_overflow() -- internal call
+// Warning 6328: (535-552): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\noldx = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.set(1)\nState: x = 1\nC.test()\n    C.reset_if_overflow() -- internal call
 // Warning 6328: (648-662): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.set(10)\nState: x = 10\nC.test()\n    C.reset_if_overflow() -- internal call

@@ -8,5 +8,5 @@ contract C {
 	}
 }
 // ----
-// Warning 6368: (132-136): CHC: Out of bounds access happens here.\nCounterexample:\n\ni = 4\n\nTransaction trace:\nC.constructor()\nC.f(4)
-// Warning 6328: (125-145): CHC: Assertion violation happens here.\nCounterexample:\n\ni = 4\n\nTransaction trace:\nC.constructor()\nC.f(4)
+// Warning 6368: (132-136): CHC: Out of bounds access happens here.\nCounterexample:\n\ni = 4\nx = 16909060\n\nTransaction trace:\nC.constructor()\nC.f(4)
+// Warning 6328: (125-145): CHC: Assertion violation happens here.\nCounterexample:\n\ni = 4\nx = 16909060\n\nTransaction trace:\nC.constructor()\nC.f(4)

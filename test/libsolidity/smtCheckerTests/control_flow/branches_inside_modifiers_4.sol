@@ -20,5 +20,7 @@ contract C {
         assert(x == 6);
     }
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (365-379): CHC: Assertion violation happens here.\nCounterexample:\nx = 7\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.g()\n    C.f() -- internal call
+// Warning 6328: (365-379): CHC: Assertion violation happens here.

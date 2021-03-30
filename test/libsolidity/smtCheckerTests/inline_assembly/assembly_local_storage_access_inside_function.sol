@@ -19,6 +19,6 @@ contract C {
 }
 // ----
 // Warning 7737: (116-182): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
-// Warning 6328: (185-200): CHC: Assertion violation happens here.\nCounterexample:\nz = 43\n\nTransaction trace:\nC.constructor()\nState: z = 0\nC.f()
-// Warning 6328: (219-233): CHC: Assertion violation happens here.\nCounterexample:\nz = 0\n\nTransaction trace:\nC.constructor()\nState: z = 0\nC.f()
+// Warning 6328: (185-200): CHC: Assertion violation happens here.\nCounterexample:\nz = 0\ni = 32\n\nTransaction trace:\nC.constructor()\nState: z = 0\nC.f()
+// Warning 6328: (219-233): CHC: Assertion violation happens here.\nCounterexample:\nz = 43\ni = 32\n\nTransaction trace:\nC.constructor()\nState: z = 0\nC.f()
 // Warning 7737: (116-182): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).

@@ -22,7 +22,7 @@ contract C {
 }
 // ----
 // Warning 6321: (253-260): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 4281: (94-109): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
-// Warning 6328: (113-126): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
-// Warning 4281: (180-195): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
-// Warning 6328: (199-212): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
+// Warning 4281: (94-109): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (113-126): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 4281: (180-195): CHC: Division by zero happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)
+// Warning 6328: (199-212): CHC: Assertion violation happens here.\nCounterexample:\n\nd = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.g(0)

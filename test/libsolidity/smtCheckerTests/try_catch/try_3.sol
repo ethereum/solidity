@@ -22,4 +22,4 @@ contract C {
 }
 // ----
 // Warning 5667: (291-305): Unused try/catch parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (312-326): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f()\n    C.postinc() -- internal call
+// Warning 6328: (312-326): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\ns = []\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.f()\n    C.postinc() -- internal call

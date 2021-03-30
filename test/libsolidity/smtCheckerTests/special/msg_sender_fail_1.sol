@@ -9,5 +9,7 @@ contract C
 		assert(c == msg.sender);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (155-178): CHC: Assertion violation happens here.\nCounterexample:\n\nc = 39\n\nTransaction trace:\nC.constructor()\nC.f(39)
+// Warning 6328: (155-178): CHC: Assertion violation happens here.
