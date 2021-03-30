@@ -157,11 +157,6 @@ private:
 
 	void checkErrorAndEventParameters(CallableDeclaration const& _callable);
 
-	bool contractDependenciesAreCyclic(
-		ContractDefinition const& _contract,
-		std::set<ContractDefinition const*> const& _seenContracts = std::set<ContractDefinition const*>()
-	) const;
-
 	/// @returns the referenced declaration and throws on error.
 	Declaration const& dereference(Identifier const& _identifier) const;
 	/// @returns the referenced declaration and throws on error.

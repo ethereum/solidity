@@ -120,10 +120,7 @@
           "src": "50:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        7
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 17,

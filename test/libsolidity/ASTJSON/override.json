@@ -12,10 +12,10 @@
     ],
     "C":
     [
-      31
+      29
     ]
   },
-  "id": 32,
+  "id": 30,
   "nodeType": "SourceUnit",
   "nodes":
   [
@@ -40,7 +40,7 @@
           {
             "id": 3,
             "nodeType": "Block",
-            "src": "36:2:1",
+            "src": "44:2:1",
             "statements": []
           },
           "functionSelector": "a399b6a2",
@@ -63,20 +63,20 @@
             "id": 2,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "36:0:1"
+            "src": "44:0:1"
           },
           "scope": 5,
-          "src": "14:24:1",
+          "src": "14:32:1",
           "stateMutability": "nonpayable",
-          "virtual": false,
+          "virtual": true,
           "visibility": "public"
         }
       ],
-      "scope": 32,
-      "src": "0:40:1"
+      "scope": 30,
+      "src": "0:48:1"
     },
     {
-      "abstract": false,
+      "abstract": true,
       "baseContracts":
       [
         {
@@ -86,17 +86,14 @@
             "name": "A",
             "nodeType": "IdentifierPath",
             "referencedDeclaration": 5,
-            "src": "55:1:1"
+            "src": "72:1:1"
           },
           "id": 7,
           "nodeType": "InheritanceSpecifier",
-          "src": "55:1:1"
+          "src": "72:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        5
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": false,
       "id": 16,
@@ -106,7 +103,7 @@
         5
       ],
       "name": "B",
-      "nameLocation": "50:1:1",
+      "nameLocation": "67:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -117,26 +114,26 @@
           "kind": "function",
           "modifiers": [],
           "name": "foo",
-          "nameLocation": "69:3:1",
+          "nameLocation": "86:3:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
             "id": 8,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "72:2:1"
+            "src": "89:2:1"
           },
           "returnParameters":
           {
             "id": 9,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "81:0:1"
+            "src": "106:0:1"
           },
           "scope": 16,
-          "src": "60:22:1",
+          "src": "77:30:1",
           "stateMutability": "nonpayable",
-          "virtual": false,
+          "virtual": true,
           "visibility": "public"
         },
         {
@@ -148,7 +145,7 @@
           {
             "id": 14,
             "nodeType": "Block",
-            "src": "115:2:1",
+            "src": "148:2:1",
             "statements": []
           },
           "functionSelector": "a399b6a2",
@@ -157,38 +154,38 @@
           "kind": "function",
           "modifiers": [],
           "name": "faa",
-          "nameLocation": "93:3:1",
+          "nameLocation": "118:3:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {
             "id": 12,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
-            "src": "106:8:1"
+            "src": "139:8:1"
           },
           "parameters":
           {
             "id": 11,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "96:2:1"
+            "src": "121:2:1"
           },
           "returnParameters":
           {
             "id": 13,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "115:0:1"
+            "src": "148:0:1"
           },
           "scope": 16,
-          "src": "84:33:1",
+          "src": "109:41:1",
           "stateMutability": "nonpayable",
-          "virtual": false,
+          "virtual": true,
           "visibility": "public"
         }
       ],
-      "scope": 32,
-      "src": "41:78:1"
+      "scope": 30,
+      "src": "49:103:1"
     },
     {
       "abstract": false,
@@ -201,29 +198,25 @@
             "name": "B",
             "nodeType": "IdentifierPath",
             "referencedDeclaration": 16,
-            "src": "134:1:1"
+            "src": "167:1:1"
           },
           "id": 18,
           "nodeType": "InheritanceSpecifier",
-          "src": "134:1:1"
+          "src": "167:1:1"
         }
       ],
-      "contractDependencies":
-      [
-        5,
-        16
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
-      "id": 31,
+      "id": 29,
       "linearizedBaseContracts":
       [
-        31,
+        29,
         16,
         5
       ],
       "name": "C",
-      "nameLocation": "129:1:1",
+      "nameLocation": "162:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -236,7 +229,7 @@
           {
             "id": 22,
             "nodeType": "Block",
-            "src": "170:3:1",
+            "src": "203:3:1",
             "statements": []
           },
           "functionSelector": "c2985578",
@@ -245,31 +238,31 @@
           "kind": "function",
           "modifiers": [],
           "name": "foo",
-          "nameLocation": "148:3:1",
+          "nameLocation": "181:3:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {
             "id": 20,
             "nodeType": "OverrideSpecifier",
             "overrides": [],
-            "src": "161:8:1"
+            "src": "194:8:1"
           },
           "parameters":
           {
             "id": 19,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "151:2:1"
+            "src": "184:2:1"
           },
           "returnParameters":
           {
             "id": 21,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "170:0:1"
+            "src": "203:0:1"
           },
-          "scope": 31,
-          "src": "139:34:1",
+          "scope": 29,
+          "src": "172:34:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
@@ -281,66 +274,50 @@
           ],
           "body":
           {
-            "id": 29,
+            "id": 27,
             "nodeType": "Block",
-            "src": "212:2:1",
+            "src": "239:3:1",
             "statements": []
           },
           "functionSelector": "a399b6a2",
-          "id": 30,
+          "id": 28,
           "implemented": true,
           "kind": "function",
           "modifiers": [],
           "name": "faa",
-          "nameLocation": "184:3:1",
+          "nameLocation": "217:3:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {
-            "id": 27,
+            "id": 25,
             "nodeType": "OverrideSpecifier",
-            "overrides":
-            [
-              {
-                "id": 25,
-                "name": "A",
-                "nodeType": "IdentifierPath",
-                "referencedDeclaration": 5,
-                "src": "206:1:1"
-              },
-              {
-                "id": 26,
-                "name": "B",
-                "nodeType": "IdentifierPath",
-                "referencedDeclaration": 16,
-                "src": "209:1:1"
-              }
-            ],
-            "src": "197:14:1"
+            "overrides": [],
+            "src": "230:8:1"
           },
           "parameters":
           {
             "id": 24,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "187:2:1"
+            "src": "220:2:1"
           },
           "returnParameters":
           {
-            "id": 28,
+            "id": 26,
             "nodeType": "ParameterList",
             "parameters": [],
-            "src": "212:0:1"
+            "src": "239:0:1"
           },
-          "scope": 31,
-          "src": "175:39:1",
+          "scope": 29,
+          "src": "208:34:1",
           "stateMutability": "nonpayable",
           "virtual": false,
           "visibility": "public"
         }
       ],
-      "scope": 32,
-      "src": "120:96:1"
+      "scope": 30,
+      "src": "153:91:1"
     }
   ],
-  "src": "0:217:1"
+  "src": "0:245:1"
 }
