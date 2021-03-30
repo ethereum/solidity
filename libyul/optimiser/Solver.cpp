@@ -102,7 +102,7 @@ smtutil::Expression Solver::booleanValue(smtutil::Expression _value) const
 	return smtutil::Expression::ite(_value, constantValue(1), constantValue(0));
 }
 
-smtutil::Expression Solver::constantValue(size_t _value) const
+smtutil::Expression Solver::constantValue(bigint _value) const
 {
 	return _value;
 }
