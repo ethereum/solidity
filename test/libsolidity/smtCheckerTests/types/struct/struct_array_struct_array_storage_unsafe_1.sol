@@ -40,8 +40,10 @@ contract C {
 		assert(s1.ts[4].a[5] != 6);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (181-198): CHC: Assertion violation happens here.\nCounterexample:\ns1 = {x: 2, t: {y: 0, a: []}, a: [], ts: []}\n\nTransaction trace:\nC.constructor()\nState: s1 = {x: 0, t: {y: 0, a: []}, a: [], ts: []}\nC.f()
+// Warning 6328: (181-198): CHC: Assertion violation happens here.
 // Warning 6328: (216-235): CHC: Assertion violation happens here.
 // Warning 6328: (299-319): CHC: Assertion violation happens here.
 // Warning 6328: (437-460): CHC: Assertion violation happens here.

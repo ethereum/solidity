@@ -223,7 +223,6 @@ protected:
 
 	void arrayPush(FunctionCall const& _funCall);
 	void arrayPop(FunctionCall const& _funCall);
-	void arrayPushPopAssign(Expression const& _expr, smtutil::Expression const& _array);
 	/// Allows BMC and CHC to create verification targets for popping
 	/// an empty array.
 	virtual void makeArrayPopVerificationTarget(FunctionCall const&) {}
@@ -253,6 +252,7 @@ protected:
 	void assignment(VariableDeclaration const& _variable, smtutil::Expression const& _value);
 	/// Handles assignments between generic expressions.
 	/// Will also be used for assignments of tuple components.
+	void assignment(Expression const& _left, smtutil::Expression const& _right);
 	void assignment(
 		Expression const& _left,
 		smtutil::Expression const& _right,
