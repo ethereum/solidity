@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract LoopFor2 {
 	uint[] a;
 	function p() public {
@@ -15,7 +13,8 @@ contract LoopFor2 {
 		for (uint i = 0; i < n; i += 1) {
 			// Accesses are safe but oob is reported due to potential aliasing after c's assignment.
 			b[i] = i + 1;
-			c[i] = b[i];
+			// Disabled because of Spacer's nondeterminism.
+			//c[i] = b[i];
 		}
 		// Removed because current Spacer seg faults in cex generation.
 		//assert(b[0] == c[0]);
@@ -24,8 +23,6 @@ contract LoopFor2 {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 6368: (442-446): CHC: Out of bounds access happens here.
-// Warning 6368: (466-470): CHC: Out of bounds access happens here.
-// Warning 6368: (459-463): CHC: Out of bounds access happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(bytes memory b) public pure returns (bytes memory) {
@@ -7,5 +5,7 @@ contract C
 		return b;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2072: (113-127): Unused local variable.
+// Warning 2072: (80-94): Unused local variable.

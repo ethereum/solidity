@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[] b;
 
@@ -17,5 +15,7 @@ contract C {
 	}
 
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (232-262): CHC: Assertion violation happens here.\nCounterexample:\nb = [1]\n\nTransaction trace:\nC.constructor()\nState: b = []\nC.g()
+// Warning 6328: (199-229): CHC: Assertion violation happens here.\nCounterexample:\nb = [1]\n\nTransaction trace:\nC.constructor()\nState: b = []\nC.g()

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function k(bytes memory b0, bytes memory b1) public pure {
 		bytes32 k0 = keccak256(b0);
@@ -24,12 +22,15 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (589-599): Unused local variable.
-// Warning 2072: (631-641): Unused local variable.
-// Warning 1218: (168-184): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (168-184): CHC: Assertion violation might happen here.
-// Warning 6328: (305-321): CHC: Assertion violation happens here.
-// Warning 6328: (448-464): CHC: Assertion violation happens here.
-// Warning 4661: (168-184): BMC: Assertion violation happens here.
+// Warning 2072: (556-566): Unused local variable.
+// Warning 2072: (598-608): Unused local variable.
+// Warning 1218: (135-151): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (135-151): CHC: Assertion violation might happen here.
+// Warning 6328: (272-288): CHC: Assertion violation happens here.
+// Warning 1218: (415-431): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (415-431): CHC: Assertion violation might happen here.
+// Warning 4661: (135-151): BMC: Assertion violation happens here.
+// Warning 4661: (415-431): BMC: Assertion violation happens here.

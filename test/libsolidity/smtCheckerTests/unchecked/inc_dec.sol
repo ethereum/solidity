@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function o() public pure {
 		uint x = type(uint).max;
@@ -25,3 +23,5 @@ contract C {
 		assert(x == type(int).max);
 	}
 }
+// ====
+// SMTEngine: all

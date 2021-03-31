@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	string public str1 = 'b';
 
@@ -9,7 +7,9 @@ contract C {
 		assert(keccak256(bytes(a1)) == keccak256('a')); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (211-257): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (211-257): CHC: Assertion violation might happen here.
-// Warning 4661: (211-257): BMC: Assertion violation happens here.
+// Warning 1218: (178-224): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (178-224): CHC: Assertion violation might happen here.
+// Warning 4661: (178-224): BMC: Assertion violation happens here.

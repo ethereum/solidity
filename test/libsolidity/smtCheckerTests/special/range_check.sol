@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	constructor() payable {
 		assert(tx.origin >= address(0));
@@ -54,3 +52,5 @@ contract D {
 	}
 }
 
+// ====
+// SMTEngine: all

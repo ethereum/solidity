@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder               v2;
 
 contract C {
@@ -35,5 +34,7 @@ contract C {
 		assert(s1.ts[4].a[5] == s2.ts[4].a[5]);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (836-874): CHC: Assertion violation happens here.
+// Warning 6328: (804-842): CHC: Assertion violation happens here.

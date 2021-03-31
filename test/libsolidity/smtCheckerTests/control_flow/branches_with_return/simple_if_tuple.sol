@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 
 	uint x;
@@ -22,6 +20,8 @@ contract C {
 		(x,y) = (1,1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (160-174): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call
-// Warning 6328: (194-208): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call
+// Warning 6328: (127-141): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call
+// Warning 6328: (161-175): CHC: Assertion violation happens here.\nCounterexample:\nx = 2, y = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0, y = 0\nC.check()\n    C.conditional_increment() -- internal call

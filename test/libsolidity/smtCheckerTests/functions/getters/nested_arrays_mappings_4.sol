@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	mapping (uint => mapping (uint => uint[])) public m;
 
@@ -17,6 +15,7 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (293-307): CHC: Assertion violation happens here.
+// Warning 6328: (260-274): CHC: Assertion violation happens here.

@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract A {
     uint x = msg.value;
     constructor() {
@@ -11,5 +10,7 @@ contract B {
         assert(msg.value == 0); // should fail
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (186-208): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nB.constructor(){ value: 1 }
+// Warning 6328: (154-176): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nB.constructor(){ value: 1 }

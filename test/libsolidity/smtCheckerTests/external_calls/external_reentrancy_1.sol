@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 interface D { function e() external; }
 
 contract C {
@@ -15,5 +13,7 @@ contract C {
 		assert(locked);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (239-253): CHC: Assertion violation happens here.\nCounterexample:\nlocked = false\ntarget = 0\n\nTransaction trace:\nC.constructor()\nState: locked = true\nC.call(0)\n    D(target).e() -- untrusted external call, synthesized as:\n        C.broken() -- reentrant call
+// Warning 6328: (206-220): CHC: Assertion violation happens here.\nCounterexample:\nlocked = false\ntarget = 0\n\nTransaction trace:\nC.constructor()\nState: locked = true\nC.call(0)\n    D(target).e() -- untrusted external call, synthesized as:\n        C.broken() -- reentrant call

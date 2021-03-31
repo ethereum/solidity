@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function mul(uint8 a, uint8 b) internal pure returns (uint8) {
 		uint8 c;
@@ -9,5 +8,7 @@ contract C {
 		return c;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6838: (161-171): BMC: Condition is always true.
+// Warning 6838: (129-139): BMC: Condition is always true.

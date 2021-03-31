@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
   function f() public pure returns (uint y) {
     unchecked{{
@@ -10,3 +8,5 @@ contract C {
 	assert(y == 0);
   }
 }
+// ====
+// SMTEngine: all

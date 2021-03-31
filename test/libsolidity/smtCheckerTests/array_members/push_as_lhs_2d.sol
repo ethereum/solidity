@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] c;
 
@@ -20,5 +18,7 @@ contract C {
 		assert(c[c.length - 1][c[c.length - 1].length - 1] == 200);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (395-453): CHC: Assertion violation happens here.\nCounterexample:\nc = [[2]]\n\nTransaction trace:\nC.constructor()\nState: c = []\nC.g()
+// Warning 6328: (362-420): CHC: Assertion violation happens here.\nCounterexample:\nc = [[2]]\n\nTransaction trace:\nC.constructor()\nState: c = []\nC.g()

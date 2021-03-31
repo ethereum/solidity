@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes calldata x) external pure {
 		x[:18726387213];
@@ -7,4 +5,6 @@ contract C {
 		x[18726387213:111111111111111111];
 	}
 }
+// ====
+// SMTEngine: all
 // ----

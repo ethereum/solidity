@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {
 	function d() external virtual;
 }
@@ -16,4 +14,6 @@ contract C {
 		assert(x < 11);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

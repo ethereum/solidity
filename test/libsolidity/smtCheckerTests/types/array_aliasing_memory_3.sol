@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder               v2;
 
 contract C
@@ -26,3 +25,5 @@ contract C
 		//assert(b[0] == 1);
 	}
 }
+// ====
+// SMTEngine: all

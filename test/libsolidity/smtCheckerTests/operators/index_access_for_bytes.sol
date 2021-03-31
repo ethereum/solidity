@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     function f() public pure {
         bytes memory x = hex"00112233";
@@ -8,5 +6,7 @@ contract C {
         assert(x.length == 3);
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (185-206): CHC: Assertion violation happens here.\nCounterexample:\n\nx = [0, 17, 34, 51]\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (152-173): CHC: Assertion violation happens here.\nCounterexample:\n\nx = [0, 17, 34, 51]\n\nTransaction trace:\nC.constructor()\nC.f()

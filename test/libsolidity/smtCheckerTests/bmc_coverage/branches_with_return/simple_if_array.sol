@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 
 	uint[] a;
@@ -27,4 +25,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (205-222): BMC: Assertion violation happens here.
+// Warning 4661: (172-189): BMC: Assertion violation happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes calldata x, uint y) external pure {
 		require(x.length > 10);
@@ -8,7 +6,8 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (144-147): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6368: (139-148): CHC: Out of bounds access happens here.
+// Warning 4984: (111-114): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6368: (106-115): CHC: Out of bounds access happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(uint b) public pure returns (uint d) {
 		require(b < 10);
@@ -7,5 +5,7 @@ contract C {
 		d = c > 5 ? 3 : 2;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6838: (148-153): BMC: Condition is always false.
+// Warning 6838: (115-120): BMC: Condition is always false.

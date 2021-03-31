@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 // Check that side-effects of condition are taken into account
 contract C {
     function f(uint x, uint y) public pure {
@@ -10,6 +9,7 @@ contract C {
     }
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 6328: (224-238): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)
+// Warning 6328: (192-206): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f(0, 0)

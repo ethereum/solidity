@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() public pure {
 		uint x = type(uint256).max - 1;
@@ -7,4 +5,6 @@ contract C {
 		assert(~1 == -2);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

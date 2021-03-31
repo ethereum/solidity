@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint[2] memory a, uint[2] memory b, uint[2] memory c) public pure {
@@ -18,6 +16,8 @@ contract C
 		assert(b[0] == 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (500-504): CHC: Out of bounds access happens here.
-// Warning 6328: (493-510): CHC: Assertion violation happens here.
+// Warning 6368: (467-471): CHC: Out of bounds access happens here.
+// Warning 6328: (460-477): CHC: Assertion violation happens here.

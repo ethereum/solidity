@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 // 2 warnings, A.f and A.g
 contract A {
 	uint x;
@@ -35,10 +33,12 @@ contract C is B {
 		assert(x == 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (121-135): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.f()
-// Warning 6328: (170-184): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.g()
-// Warning 6328: (296-310): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\nTransaction trace:\nB.constructor()\nState: y = 0, x = 0\nB.f()
-// Warning 6328: (345-359): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\nTransaction trace:\nB.constructor()\nState: y = 0, x = 0\nB.h()
-// Warning 6328: (468-482): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, y = 0, x = 0\n\nTransaction trace:\nC.constructor()\nState: z = 0, y = 0, x = 0\nC.f()
-// Warning 6328: (517-531): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, y = 0, x = 0\n\nTransaction trace:\nC.constructor()\nState: z = 0, y = 0, x = 0\nC.i()
+// Warning 6328: (88-102): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.f()
+// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nA.constructor()\nState: x = 0\nA.g()
+// Warning 6328: (263-277): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\nTransaction trace:\nB.constructor()\nState: y = 0, x = 0\nB.f()
+// Warning 6328: (312-326): CHC: Assertion violation happens here.\nCounterexample:\ny = 0, x = 0\n\nTransaction trace:\nB.constructor()\nState: y = 0, x = 0\nB.h()
+// Warning 6328: (435-449): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, y = 0, x = 0\n\nTransaction trace:\nC.constructor()\nState: z = 0, y = 0, x = 0\nC.f()
+// Warning 6328: (484-498): CHC: Assertion violation happens here.\nCounterexample:\nz = 0, y = 0, x = 0\n\nTransaction trace:\nC.constructor()\nState: z = 0, y = 0, x = 0\nC.i()

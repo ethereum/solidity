@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes calldata b) external pure {
 		require(b.length == 30);
@@ -11,6 +9,8 @@ contract C {
 		//assert(bytes(b[10:])[19] == 0xaa); // Removed because of Spacer nondeterminism
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (221-253): CHC: Assertion violation might happen here.
-// Warning 4661: (221-253): BMC: Assertion violation happens here.
+// Warning 6328: (188-220): CHC: Assertion violation might happen here.
+// Warning 4661: (188-220): BMC: Assertion violation happens here.

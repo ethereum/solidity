@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract A {
     function f() internal virtual {
         v();
@@ -19,5 +18,7 @@ contract C is B {
             f();
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6838: (303-307): BMC: Condition is always false.
+// Warning 6838: (271-275): BMC: Condition is always false.

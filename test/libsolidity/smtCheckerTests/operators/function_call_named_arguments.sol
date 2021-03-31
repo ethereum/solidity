@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 library L {
 	function l(uint x, uint y) internal pure returns (uint) {
 		return x + y;
@@ -28,5 +27,7 @@ contract C {
 		assert(b == 6);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (507-521): CHC: Assertion violation happens here.\nCounterexample:\n\na = 2\nb = 2\n\nTransaction trace:\nC.constructor()\nC.call()\n    L.l(2, 3) -- internal call\n    L.l(3, 3) -- internal call\n    C.f(1, 2, true) -- internal call\n    C.f(1, 2, false) -- internal call
+// Warning 6328: (475-489): CHC: Assertion violation happens here.\nCounterexample:\n\na = 2\nb = 2\n\nTransaction trace:\nC.constructor()\nC.call()\n    L.l(2, 3) -- internal call\n    L.l(3, 3) -- internal call\n    C.f(1, 2, true) -- internal call\n    C.f(1, 2, false) -- internal call

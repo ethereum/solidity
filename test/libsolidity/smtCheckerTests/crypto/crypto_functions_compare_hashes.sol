@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes memory data) public pure {
 		bytes32 k = keccak256(data);
@@ -11,8 +9,9 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (183-197): CHC: Assertion violation happens here.
-// Warning 6328: (201-215): CHC: Assertion violation happens here.
-// Warning 6328: (219-233): CHC: Assertion violation happens here.
+// Warning 6328: (150-164): CHC: Assertion violation happens here.
+// Warning 6328: (168-182): CHC: Assertion violation happens here.
+// Warning 6328: (186-200): CHC: Assertion violation happens here.

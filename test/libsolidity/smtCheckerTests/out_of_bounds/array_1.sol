@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[] a;
 	uint l;
@@ -18,9 +16,11 @@ contract C {
 		return a[l]; // oob access
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 4984: (145-148): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
-// Warning 3944: (214-217): CHC: Underflow (resulting value less than 0) might happen here.
-// Warning 6368: (292-296): CHC: Out of bounds access happens here.
-// Warning 2661: (145-148): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 4144: (214-217): BMC: Underflow (resulting value less than 0) happens here.
+// Warning 4984: (112-115): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
+// Warning 3944: (181-184): CHC: Underflow (resulting value less than 0) might happen here.
+// Warning 6368: (259-263): CHC: Out of bounds access happens here.
+// Warning 2661: (112-115): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4144: (181-184): BMC: Underflow (resulting value less than 0) happens here.

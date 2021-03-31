@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 
 	struct S {
@@ -25,4 +24,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (368-383): BMC: Assertion violation happens here.
+// Warning 4661: (336-351): BMC: Assertion violation happens here.

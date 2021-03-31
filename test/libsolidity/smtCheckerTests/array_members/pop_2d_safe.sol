@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] a;
 	function f() public {
@@ -8,3 +6,5 @@ contract C {
 		a[0].pop();
 	}
 }
+// ====
+// SMTEngine: all

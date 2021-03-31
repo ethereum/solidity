@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint x;
@@ -17,12 +15,13 @@ contract C
 }
 // ====
 // EVMVersion: >spuriousDragon
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (224-240): Unused local variable.
-// Warning 4588: (244-256): Assertion checker does not yet implement this type of function call.
-// Warning 6328: (260-275): CHC: Assertion violation happens here.
-// Warning 6328: (279-293): CHC: Assertion violation happens here.
-// Warning 6328: (297-316): CHC: Assertion violation happens here.
-// Warning 6328: (320-344): CHC: Assertion violation happens here.
-// Warning 4588: (244-256): Assertion checker does not yet implement this type of function call.
+// Warning 2072: (191-207): Unused local variable.
+// Warning 4588: (211-223): Assertion checker does not yet implement this type of function call.
+// Warning 6328: (227-242): CHC: Assertion violation happens here.
+// Warning 6328: (246-260): CHC: Assertion violation happens here.
+// Warning 6328: (264-283): CHC: Assertion violation happens here.
+// Warning 6328: (287-311): CHC: Assertion violation happens here.
+// Warning 4588: (211-223): Assertion checker does not yet implement this type of function call.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] a;
 	function p() public { a.push(); }
@@ -13,3 +11,5 @@ contract C {
 				a[i][j]; // safe access
 	}
 }
+// ====
+// SMTEngine: all

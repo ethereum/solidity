@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder v2;
 
 contract C {
@@ -8,6 +7,8 @@ contract C {
 		assert(x1 == x2);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2072: (123-130): Unused local variable.
-// Warning 2072: (178-185): Unused local variable.
+// Warning 2072: (91-98): Unused local variable.
+// Warning 2072: (146-153): Unused local variable.

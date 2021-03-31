@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract A {
 	uint[] a;
 	function f() public {
@@ -10,5 +9,7 @@ contract A {
 		assert(A.a.length == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (156-178): CHC: Assertion violation happens here.\nCounterexample:\na = []\n\nTransaction trace:\nA.constructor()\nState: a = []\nA.f()
+// Warning 6328: (124-146): CHC: Assertion violation happens here.\nCounterexample:\na = []\n\nTransaction trace:\nA.constructor()\nState: a = []\nA.f()

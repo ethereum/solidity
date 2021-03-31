@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
     struct S {
         uint[] x;
@@ -17,3 +16,5 @@ contract C {
         //assert(s.x[2] != 1);
     }
 }
+// ====
+// SMTEngine: all

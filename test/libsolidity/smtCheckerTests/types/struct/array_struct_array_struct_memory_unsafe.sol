@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder               v2;
 
 contract C {
@@ -32,5 +31,7 @@ contract C {
 		//assert(s1[0].ts[3].y == s2.ts[3].y);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 5667: (183-194): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (151-162): Unused function parameter. Remove or comment out the variable name to silence this warning.

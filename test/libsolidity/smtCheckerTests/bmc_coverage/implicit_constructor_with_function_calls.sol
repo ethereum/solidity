@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint x = initX();
 	uint y = initY();
@@ -16,4 +14,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (205-220): BMC: Assertion violation happens here.
+// Warning 4661: (172-187): BMC: Assertion violation happens here.

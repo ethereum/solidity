@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     function f() public pure {
         uint v = 1;
@@ -27,7 +25,9 @@ contract C {
         assert(y == 0xff); // fails
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (177-191): CHC: Assertion violation happens here.\nCounterexample:\n\nv = 3\nc = 0\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (380-399): CHC: Assertion violation happens here.\nCounterexample:\n\nv = 3\nc = 0\nx = 255\ny = 255\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (506-523): CHC: Assertion violation happens here.\nCounterexample:\n\nv = 3\nc = 0\nx = 255\ny = 65535\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (144-158): CHC: Assertion violation happens here.\nCounterexample:\n\nv = 3\nc = 0\nx = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (347-366): CHC: Assertion violation happens here.\nCounterexample:\n\nv = 3\nc = 0\nx = 255\ny = 255\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (473-490): CHC: Assertion violation happens here.\nCounterexample:\n\nv = 3\nc = 0\nx = 255\ny = 65535\n\nTransaction trace:\nC.constructor()\nC.f()

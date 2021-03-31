@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 int[] s;
 function f(int[] calldata b, uint256 start, uint256 end) public returns (int) {
@@ -12,6 +10,8 @@ function f(int[] calldata b, uint256 start, uint256 end) public returns (int) {
     return s[0];
 }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (259-290): CHC: Assertion violation might happen here.
-// Warning 4661: (259-290): BMC: Assertion violation happens here.
+// Warning 6328: (226-257): CHC: Assertion violation might happen here.
+// Warning 4661: (226-257): BMC: Assertion violation happens here.

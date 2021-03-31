@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract LoopFor2 {
 	uint[] a;
 	function p() public {
@@ -32,6 +30,7 @@ contract LoopFor2 {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 2072: (313-319): Unused local variable.
+// Warning 2072: (280-286): Unused local variable.

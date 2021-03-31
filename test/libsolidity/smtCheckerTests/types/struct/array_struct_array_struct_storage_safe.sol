@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder               v2;
 
 contract C {
@@ -51,3 +50,5 @@ contract C {
 		s1.pop();
 	}
 }
+// ====
+// SMTEngine: all

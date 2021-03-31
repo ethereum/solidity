@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct T {
 		uint y;
@@ -39,3 +37,5 @@ contract C {
 		assert(s1.ts[4].a[5] == 6);
 	}
 }
+// ====
+// SMTEngine: all

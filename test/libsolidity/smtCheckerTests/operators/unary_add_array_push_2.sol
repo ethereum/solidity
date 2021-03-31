@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct S {
 		int[][] d;
@@ -17,3 +15,5 @@ contract C {
 		++data[1].d[3].push();
 	}
 }
+// ====
+// SMTEngine: all

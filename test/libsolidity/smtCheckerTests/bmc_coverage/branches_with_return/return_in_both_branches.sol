@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 
 	function test() public pure {
@@ -20,4 +18,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 5740: (265-273): Unreachable code.
+// Warning 5740: (232-240): Unreachable code.
