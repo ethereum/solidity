@@ -21,6 +21,9 @@
 #include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
+
+#include <range/v3/view/map.hpp>
+
 #include <boost/throw_exception.hpp>
 
 #include <range/v3/view/map.hpp>

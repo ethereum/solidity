@@ -26,6 +26,9 @@
 #include <libsolutil/Visitor.h>
 #include <libsolutil/LEB128.h>
 
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/map.hpp>
+
 #include <boost/range/adaptor/transformed.hpp>
 
 #include <range/v3/view/reverse.hpp>
