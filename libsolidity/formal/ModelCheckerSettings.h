@@ -69,7 +69,7 @@ struct ModelCheckerTargets
 
 struct ModelCheckerSettings
 {
-	ModelCheckerEngine engine = ModelCheckerEngine::All();
+	ModelCheckerEngine engine = ModelCheckerEngine::None();
 	ModelCheckerTargets targets = ModelCheckerTargets::All();
 	std::optional<unsigned> timeout;
 };

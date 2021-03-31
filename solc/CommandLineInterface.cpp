@@ -1055,7 +1055,7 @@ General Information)").c_str(),
 	smtCheckerOptions.add_options()
 		(
 			g_strModelCheckerEngine.c_str(),
-			po::value<string>()->value_name("all,bmc,chc,none")->default_value("all"),
+			po::value<string>()->value_name("all,bmc,chc,none")->default_value("none"),
 			"Select model checker engine."
 		)
 		(
