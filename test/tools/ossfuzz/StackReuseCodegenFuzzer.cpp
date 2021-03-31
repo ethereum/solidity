@@ -59,24 +59,40 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		filterStatefulInstructions,
 		filterUnboundedLoops
 	);
-	string yul_source = converter.programToString(_input);
+	string yulSubObject = converter.programToString(_input);
 	// Fuzzer also fuzzes the EVM version field.
 	langutil::EVMVersion version = converter.version();
 	EVMHost hostContext(version, evmone);
 	hostContext.reset();
+
+	// Do not proceed with tests that are too large. 1200 is an arbitrary
+	// threshold.
+	if (yulSubObject.size() > 1200)
+		return;
+
+	YulStringRepository::reset();
+
+	// Package test case into a sub-object
+	solidity::util::Whiskers yulObjectFormat(R"(
+object "main" {
+	code {
+		codecopy(0, dataoffset("deployed"), datasize("deployed"))
+		return(0, datasize("deployed"))
+	}
+	object "deployed" {
+		code {
+			<fuzzerInput>
+		}
+	}
+}
+	)");
+	string yul_source = yulObjectFormat("fuzzerInput", yulSubObject).render();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
 	{
 		ofstream of(dump_path);
 		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
-
-	// Do not proceed with tests that are too large. 1200 is an arbitrary
-	// threshold.
-	if (yul_source.size() > 1200)
-		return;
-
-	YulStringRepository::reset();
 
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
 	settings.runYulOptimiser = false;
@@ -93,7 +109,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 
 	evmc::result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
 	if (deployResult.status_code != EVMC_SUCCESS)
+	{
+		cout << "Deploy unoptimised failed." << endl;
 		return;
+	}
 	auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
 	evmc::result callResult = hostContext.call(callMessage);
 	// If the fuzzer synthesized input does not contain the revert opcode which
@@ -112,13 +131,17 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		);
 	// Bail out on serious errors encountered during a call.
 	if (YulEvmoneUtility{}.seriousCallError(callResult.status_code))
+	{
+		cout << "Unoptimised call failed." << endl;
 		return;
+	}
 	solAssert(
 		(callResult.status_code == EVMC_SUCCESS ||
 		(!noRevertInSource && callResult.status_code == EVMC_REVERT) ||
 		(!noInvalidInSource && callResult.status_code == EVMC_INVALID_INSTRUCTION)),
 		"Unoptimised call failed."
 	);
+
 	ostringstream unoptimizedState;
 	unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
 
@@ -162,18 +185,11 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
 
-	int64_t constexpr tolerance = 1000;
-	if (callResult.gas_left > callResultOpt.gas_left)
-		if (callResult.gas_left - callResultOpt.gas_left > tolerance)
-		{
-			cout << "Gas differential " << callResult.gas_left - callResultOpt.gas_left << endl;
-			cout << "Unoptimised bytecode" << endl;
-			cout << util::toHex(unoptimisedByteCode) << endl;
-			cout << "Optimised bytecode" << endl;
-			cout << util::toHex(optimisedByteCode) << endl;
-			solAssert(false, "Optimised code consumed more than +1000 gas.");
-		}
-
+	if (unoptimizedState.str() != optimizedState.str())
+	{
+		cout << unoptimizedState.str() << endl;
+		cout << optimizedState.str() << endl;
+	}
 	solAssert(
 		unoptimizedState.str() == optimizedState.str(),
 		"State of unoptimised and optimised stack reused code do not match."
