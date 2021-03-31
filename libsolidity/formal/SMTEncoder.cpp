@@ -600,12 +600,10 @@ bool SMTEncoder::visit(Conditional const& _op)
 	_op.condition().accept(*this);
 
 	auto indicesEndTrue = visitBranch(&_op.trueExpression(), expr(_op.condition())).first;
-	auto touchedVars = touchedVariables(_op.trueExpression());
 
 	auto indicesEndFalse = visitBranch(&_op.falseExpression(), !expr(_op.condition())).first;
-	touchedVars += touchedVariables(_op.falseExpression());
 
-	mergeVariables(touchedVars, expr(_op.condition()), indicesEndTrue, indicesEndFalse);
+	mergeVariables(expr(_op.condition()), indicesEndTrue, indicesEndFalse);
 
 	defineExpr(_op, smtutil::Expression::ite(
 		expr(_op.condition()),
@@ -1916,13 +1914,13 @@ void SMTEncoder::booleanOperation(BinaryOperation const& _op)
 	if (_op.getOperator() == Token::And)
 	{
 		auto indicesAfterSecond = visitBranch(&_op.rightExpression(), expr(_op.leftExpression())).first;
-		mergeVariables(touchedVariables(_op.rightExpression()), !expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
+		mergeVariables(!expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 		defineExpr(_op, expr(_op.leftExpression()) && expr(_op.rightExpression()));
 	}
 	else
 	{
 		auto indicesAfterSecond = visitBranch(&_op.rightExpression(), !expr(_op.leftExpression())).first;
-		mergeVariables(touchedVariables(_op.rightExpression()), expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
+		mergeVariables(expr(_op.leftExpression()), copyVariableIndices(), indicesAfterSecond);
 		defineExpr(_op, expr(_op.leftExpression()) || expr(_op.rightExpression()));
 	}
 }
@@ -2347,38 +2345,20 @@ Type const* SMTEncoder::typeWithoutPointer(Type const* _type)
 	return _type;
 }
 
-void SMTEncoder::mergeVariables(set<VariableDeclaration const*> const& _variables, smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
+void SMTEncoder::mergeVariables(smtutil::Expression const& _condition, VariableIndices const& _indicesEndTrue, VariableIndices const& _indicesEndFalse)
 {
-	auto cmp = [] (VariableDeclaration const* var1, VariableDeclaration const* var2) {
-		return var1->id() < var2->id();
-	};
-	set<VariableDeclaration const*, decltype(cmp)> sortedVars(begin(_variables), end(_variables), cmp);
-
-	/// Knowledge about references is erased if a reference is assigned,
-	/// so those also need their SSA's merged.
-	/// This does not cause scope harm since the symbolic variables
-	/// are kept alive.
-	for (auto const& var: _indicesEndTrue)
+	for (auto const& entry: _indicesEndTrue)
 	{
-		solAssert(_indicesEndFalse.count(var.first), "");
-		if (
-			_indicesEndFalse.at(var.first) != var.second &&
-			!sortedVars.count(var.first)
-		)
-			sortedVars.insert(var.first);
-	}
-
-	for (auto const* decl: sortedVars)
-	{
-		solAssert(_indicesEndTrue.count(decl) && _indicesEndFalse.count(decl), "");
-		auto trueIndex = static_cast<unsigned>(_indicesEndTrue.at(decl));
-		auto falseIndex = static_cast<unsigned>(_indicesEndFalse.at(decl));
-		solAssert(trueIndex != falseIndex, "");
-		m_context.addAssertion(m_context.newValue(*decl) == smtutil::Expression::ite(
-			_condition,
-			valueAtIndex(*decl, trueIndex),
-			valueAtIndex(*decl, falseIndex))
-		);
+		VariableDeclaration const* var = entry.first;
+		auto trueIndex = entry.second;
+		if (_indicesEndFalse.count(var) && _indicesEndFalse.at(var) != trueIndex)
+		{
+			m_context.addAssertion(m_context.newValue(*var) == smtutil::Expression::ite(
+				_condition,
+				valueAtIndex(*var, trueIndex),
+				valueAtIndex(*var, _indicesEndFalse.at(var)))
+			);
+		}
 	}
 }
 
@@ -2555,7 +2535,7 @@ SMTEncoder::VariableIndices SMTEncoder::copyVariableIndices()
 void SMTEncoder::resetVariableIndices(VariableIndices const& _indices)
 {
 	for (auto const& var: _indices)
-		m_context.variable(*var.first)->setIndex(static_cast<unsigned>(var.second));
+		m_context.variable(*var.first)->setIndex(var.second);
 }
 
 void SMTEncoder::clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function)

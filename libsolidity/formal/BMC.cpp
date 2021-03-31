@@ -208,22 +208,18 @@ bool BMC::visit(IfStatement const& _node)
 	auto conditionExpr = expr(_node.condition());
 	// visit true branch
 	auto [indicesEndTrue, trueEndPathCondition] = visitBranch(&_node.trueStatement(), conditionExpr);
-	auto touchedVars = touchedVariables(_node.trueStatement());
 
 	// visit false branch
 	decltype(indicesEndTrue) indicesEndFalse;
 	auto falseEndPathCondition = currentPathConditions() && !conditionExpr;
 	if (_node.falseStatement())
-	{
 		std::tie(indicesEndFalse, falseEndPathCondition) = visitBranch(_node.falseStatement(), !conditionExpr);
-		touchedVars += touchedVariables(*_node.falseStatement());
-	}
 	else
 		indicesEndFalse = copyVariableIndices();
 
 	// merge the information from branches
 	setPathCondition(trueEndPathCondition || falseEndPathCondition);
-	mergeVariables(touchedVars, expr(_node.condition()), indicesEndTrue, indicesEndFalse);
+	mergeVariables(expr(_node.condition()), indicesEndTrue, indicesEndFalse);
 
 	return false;
 }
@@ -258,8 +254,7 @@ bool BMC::visit(Conditional const& _op)
 bool BMC::visit(WhileStatement const& _node)
 {
 	auto indicesBeforeLoop = copyVariableIndices();
-	auto touchedVars = touchedVariables(_node);
-	m_context.resetVariables(touchedVars);
+	m_context.resetVariables(touchedVariables(_node));
 	decltype(indicesBeforeLoop) indicesAfterLoop;
 	if (_node.isDoWhile())
 	{
@@ -294,7 +289,7 @@ bool BMC::visit(WhileStatement const& _node)
 	if (!_node.isDoWhile())
 		_node.condition().accept(*this);
 
-	mergeVariables(touchedVars, expr(_node.condition()), indicesAfterLoop, copyVariableIndices());
+	mergeVariables(expr(_node.condition()), indicesAfterLoop, copyVariableIndices());
 
 	m_loopExecutionHappened = true;
 	return false;
@@ -344,7 +339,7 @@ bool BMC::visit(ForStatement const& _node)
 		_node.condition()->accept(*this);
 
 	auto forCondition = _node.condition() ? expr(*_node.condition()) : smtutil::Expression(true);
-	mergeVariables(touchedVars, forCondition, indicesAfterLoop, copyVariableIndices());
+	mergeVariables(forCondition, indicesAfterLoop, copyVariableIndices());
 
 	m_loopExecutionHappened = true;
 	return false;
@@ -363,20 +358,16 @@ bool BMC::visit(TryStatement const& _tryStatement)
 	auto const& clauses = _tryStatement.clauses();
 	m_context.addAssertion(clauseId >= 0 && clauseId < clauses.size());
 	solAssert(clauses[0].get() == _tryStatement.successClause(), "First clause of TryStatement should be the success clause");
-	vector<set<VariableDeclaration const*>> touchedVars;
 	vector<pair<VariableIndices, smtutil::Expression>> clausesVisitResults;
 	for (size_t i = 0; i < clauses.size(); ++i)
-	{
 		clausesVisitResults.push_back(visitBranch(clauses[i].get()));
-		touchedVars.push_back(touchedVariables(*clauses[i]));
-	}
 
 	// merge the information from all clauses
 	smtutil::Expression pathCondition = clausesVisitResults.front().second;
 	auto currentIndices = clausesVisitResults[0].first;
 	for (size_t i = 1; i < clauses.size(); ++i)
 	{
-		mergeVariables(touchedVars[i - 1] + touchedVars[i], clauseId == i, clausesVisitResults[i].first, currentIndices);
+		mergeVariables(clauseId == i, clausesVisitResults[i].first, currentIndices);
 		currentIndices = copyVariableIndices();
 		pathCondition = pathCondition || clausesVisitResults[i].second;
 	}
