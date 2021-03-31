@@ -41,12 +41,12 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/reverse.hpp>
 
 #include <limits>
 #include <unordered_set>
@@ -2014,7 +2014,7 @@ FunctionType const* ContractType::newExpressionType() const
 vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVariables() const
 {
 	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: m_contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
 				variables.push_back(variable);
@@ -2034,7 +2034,7 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 vector<VariableDeclaration const*> ContractType::immutableVariables() const
 {
 	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: m_contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (variable->immutable())
 				variables.push_back(variable);
