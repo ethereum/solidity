@@ -1,12 +1,12 @@
 Warning: CHC: Assertion violation might happen here.
-  --> model_checker_timeout_all/input.sol:10:3:
-   |
-10 | 		assert(r % k == 0);
-   | 		^^^^^^^^^^^^^^^^^^
+ --> model_checker_timeout_all/input.sol:9:3:
+  |
+9 | 		assert(r % k == 0);
+  | 		^^^^^^^^^^^^^^^^^^
 
 Warning: BMC: Assertion violation might happen here.
-  --> model_checker_timeout_all/input.sol:10:3:
-   |
-10 | 		assert(r % k == 0);
-   | 		^^^^^^^^^^^^^^^^^^
+ --> model_checker_timeout_all/input.sol:9:3:
+  |
+9 | 		assert(r % k == 0);
+  | 		^^^^^^^^^^^^^^^^^^
 Note:

@@ -1,1 +1,1 @@
---model-checker-timeout 1000
+--model-checker-engine all --model-checker-timeout 1000

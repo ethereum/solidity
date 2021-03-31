@@ -18,4 +18,4 @@ x = 0
 
 Transaction trace:
 C.constructor()
-C.f(0)","severity":"warning","sourceLocation":{"end":150,"file":"A","start":137},"type":"Warning"}],"sources":{"A":{"id":0}}}
+C.f(0)","severity":"warning","sourceLocation":{"end":119,"file":"A","start":106},"type":"Warning"}],"sources":{"A":{"id":0}}}
