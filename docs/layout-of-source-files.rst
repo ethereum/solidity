@@ -335,27 +335,6 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
   (these are NEL, LS and PS), it will lead to a parser error.
 
 Additionally, there is another type of comment called a NatSpec comment,
-which is detailed in the :ref:`style guide<natspec>` section. They are written with a
-triple slash (``///``) or a double asterisk block(``/** ... */``) and
+which is detailed in the :ref:`style guide<style_guide_natspec>`. They are written with a
+triple slash (``///``) or a double asterisk block (``/** ... */``) and
 they should be used directly above function declarations or statements.
-
-In the following example we document the title of the contract, the explanation
-for the two function parameters and two return variables.
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.21 <0.9.0;
-
-    /** @title Shape calculator. */
-    contract ShapeCalculator {
-        /// @dev Calculates a rectangle's surface and perimeter.
-        /// @param w Width of the rectangle.
-        /// @param h Height of the rectangle.
-        /// @return s The calculated surface.
-        /// @return p The calculated perimeter.
-        function rectangle(uint w, uint h) public pure returns (uint s, uint p) {
-            s = w * h;
-            p = 2 * (w + h);
-        }
-    }
