@@ -50,7 +50,48 @@
 # FIXME: Can't use set -u because the old Bash on macOS treats empty arrays as unbound variables
 set -eo pipefail
 
-(( $# == 5 )) || { echo "ERROR: Not enough arguments."; exit 1; }
+die()
+{
+    # shellcheck disable=SC2059
+    >&2 printf "ERROR: $1\n" "${@:2}"
+    exit 1
+}
+
+get_reported_solc_version()
+{
+    local solc_binary="$1"
+
+    local version_banner; version_banner=$("$solc_binary" --version)
+
+    if [[ ! $(echo "$version_banner" | head -n 1) =~ ^solc,.*$ ]]; then
+        die "%s\nFULL OUTPUT:\n" "Invalid format of --version output" "$version_banner"
+    fi
+
+    echo "$version_banner" | tail -n 1 | sed -n -E 's/^Version: (.*)$/\1/p'
+}
+
+validate_reported_version()
+{
+    local reported_version="$1"
+    local expected_version_and_commit="$2"
+
+    if [[ $reported_version =~ [\-.]mod\. ]]; then
+        die "Version '%s' reported by the '%s' binary indicates that it was built from modified source." "$reported_version" "$expected_version_and_commit"
+    fi
+
+    local actual_version_and_commit; actual_version_and_commit=$(
+        echo "$reported_version" |
+        sed -E 's/^[[:space:]]*([0-9.]+\+commit\.[0-9a-f]+)\..+\..+$/\1/'
+    )
+
+    if [[ $actual_version_and_commit != "$expected_version_and_commit" ]]; then
+        die "Binary identifies itself as version '%s' which does not match '%s' present in its name." "$actual_version_and_commit" "$expected_version_and_commit"
+    fi
+
+    echo "Binary for version ${expected_version_and_commit} reports correct version."
+}
+
+(( $# == 5 )) || die "ERROR: Not enough arguments."
 
 platform="$1"
 base_ref="$2"
@@ -85,12 +126,13 @@ echo "$modified_release_versions"
 # NOTE: We want perform the check when the soljson-* files in bin/ and wasm/ are modified too
 # because in that case the symlinks in emscripten-wasm32/ and emscripten-asmjs/ might remain
 # unchanged but were're assuming that these directories are never directly used as a platform name.
-[[ $platform != bin && $platform != wasm ]] || { echo "Invalid platform name."; exit 1; }
+[[ $platform != bin && $platform != wasm ]] || die "Invalid platform name."
 
 platform_binaries="$(git ls-files "solc-${platform}-v*+commit.*" | sort -V)"
 
 for binary_name in $platform_binaries; do
-    solidity_version=$(echo "$binary_name" | sed -n -E 's/^solc-'"${platform}"'-v([0-9.]+)\+commit.+$/\1/p')
+    solidity_version_and_commit=$(echo "$binary_name" | sed -n -E 's/^solc-'"${platform}"'-v([0-9.]+\+commit\.[0-9a-f]+).*$/\1/p')
+    solidity_version=$(echo "$solidity_version_and_commit" | sed -n -E 's/^([0-9.]+).*$/\1/p')
 
     if echo "$modified_release_versions" | grep -x "$solidity_version"; then
         echo "Binary ${binary_name} (version ${solidity_version}) matches one of the modified versions."
@@ -109,6 +151,10 @@ for binary_name in $platform_binaries; do
             ln -s "${solcjs_dir}" solc-js
             cp "${script_dir}/bytecodecompare/prepare_report.js" prepare_report.js
 
+            validate_reported_version \
+                "$(solc-js/solcjs --version)" \
+                "$solidity_version_and_commit"
+
             # shellcheck disable=SC2035
             ./prepare_report.js --strip-smt-pragmas *.sol > "${report_dir}/report-${binary_name}.txt"
         else
@@ -116,6 +162,10 @@ for binary_name in $platform_binaries; do
             if [[ $solidity_version == 0.6.0 ]] || [[ $solidity_version == 0.6.1 ]]; then
                 yul_optimizer_flags+=(--force-no-optimize-yul)
             fi
+
+            validate_reported_version \
+                "$(get_reported_solc_version "${solc_bin_dir}/${platform}/${binary_name}")" \
+                "$solidity_version_and_commit"
 
             "${script_dir}/bytecodecompare/prepare_report.py" "${solc_bin_dir}/${platform}/${binary_name}" \
                 --interface cli \
