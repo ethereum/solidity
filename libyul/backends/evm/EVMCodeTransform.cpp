@@ -28,7 +28,7 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 #include <utility>
 #include <variant>
@@ -278,7 +278,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		}), "Function name not found.");
 		yulAssert(function, "");
 		yulAssert(function->arguments.size() == _call.arguments.size(), "");
-		for (auto const& arg: _call.arguments | boost::adaptors::reversed)
+		for (auto const& arg: _call.arguments | ranges::views::reverse)
 			visitExpression(arg);
 		m_assembly.setSourceLocation(_call.location);
 		m_assembly.appendJumpTo(
@@ -397,7 +397,7 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	yulAssert(m_info.scopes.at(&_function.body), "");
 	Scope* varScope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
 	yulAssert(varScope, "");
-	for (auto const& v: _function.parameters | boost::adaptors::reversed)
+	for (auto const& v: _function.parameters | ranges::views::reverse)
 	{
 		auto& var = std::get<Scope::Variable>(varScope->identifiers.at(v.name));
 		m_context->variableStackHeights[&var] = height++;
@@ -664,7 +664,7 @@ void CodeTransform::finalizeBlock(Block const& _block, int blockStartStackHeight
 void CodeTransform::generateMultiAssignment(vector<Identifier> const& _variableNames)
 {
 	yulAssert(m_scope, "");
-	for (auto const& variableName: _variableNames | boost::adaptors::reversed)
+	for (auto const& variableName: _variableNames | ranges::views::reverse)
 		generateAssignment(variableName);
 }
 

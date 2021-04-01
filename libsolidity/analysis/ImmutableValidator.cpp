@@ -20,7 +20,7 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -29,7 +29,7 @@ void ImmutableValidator::analyze()
 {
 	m_inConstructionContext = true;
 
-	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | boost::adaptors::reversed;
+	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | ranges::views::reverse;
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (VariableDeclaration const* stateVar: contract->stateVariables())

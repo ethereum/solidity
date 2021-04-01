@@ -31,9 +31,10 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/cxx20.h>
 
-#include <boost/range/adaptor/reversed.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <variant>
+
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -387,7 +388,7 @@ void DataFlowAnalyzer::joinKnowledgeHelper(
 
 bool DataFlowAnalyzer::inScope(YulString _variableName) const
 {
-	for (auto const& scope: m_variableScopes | boost::adaptors::reversed)
+	for (auto const& scope: m_variableScopes | ranges::views::reverse)
 	{
 		if (scope.variables.count(_variableName))
 			return true;

@@ -29,7 +29,7 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -94,7 +94,7 @@ void ExpressionJoiner::handleArguments(vector<Expression>& _arguments)
 	// on the right is an identifier or literal.
 
 	size_t i = _arguments.size();
-	for (Expression const& arg: _arguments | boost::adaptors::reversed)
+	for (Expression const& arg: _arguments | ranges::views::reverse)
 	{
 		--i;
 		if (!holds_alternative<Identifier>(arg) && !holds_alternative<Literal>(arg))
