@@ -197,6 +197,9 @@ the ``.push`` member functions are not available).
 You either have to calculate the required size in advance
 or create a new memory array and copy every element.
 
+As all variables in Solidity, the elements of newly allocated arrays are always initialized
+with the :ref:`default value<default-value>`.
+
 ::
 
     // SPDX-License-Identifier: GPL-3.0

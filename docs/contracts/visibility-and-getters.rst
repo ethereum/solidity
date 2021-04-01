@@ -21,9 +21,6 @@ For state variables, ``external`` is not possible.
     which means they can be called from other contracts and
     via transactions. An external function ``f`` cannot be called
     internally (i.e. ``f()`` does not work, but ``this.f()`` works).
-    External functions are sometimes more efficient when
-    they receive large arrays of data, because the data
-    is not copied from calldata to memory.
 
 ``public``
     Public functions are part of the contract interface
@@ -35,6 +32,7 @@ For state variables, ``external`` is not possible.
     Those functions and state variables can only be
     accessed internally (i.e. from within the current contract
     or contracts deriving from it), without using ``this``.
+    This is the default visibility level for state variables.
 
 ``private``
     Private functions and state variables are only

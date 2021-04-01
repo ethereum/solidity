@@ -109,6 +109,8 @@ Due to the fact that the EVM considers a call to a non-existing contract to
 always succeed, Solidity uses the ``extcodesize`` opcode to check that
 the contract that is about to be called actually exists (it contains code)
 and causes an exception if it does not.
+Note that this check is not performed in case of :ref:`low-level calls <address_related>` which
+operate on addresses rather than contract instances.
 
 Function calls also cause exceptions if the called contract itself
 throws an exception or goes out of gas.
@@ -530,6 +532,12 @@ and will wrap without an error if used inside an unchecked block:
 .. warning::
     It is not possible to disable the check for division by zero
     or modulo by zero using the ``unchecked`` block.
+
+.. note::
+   Bitwise operators do not perform overflow or underflow checks.
+   This is particularly visible when using bitwise shifts (``<<``, ``>>``, ``<<=``, ``>>=``) in
+   place of integer division and multiplication by a power of 2.
+   For example ``type(uint256).max << 3`` does not revert even though ``type(uint256).max * 8`` would.
 
 .. note::
     The second statement in ``int x = type(int).min; -x;`` will result in an overflow

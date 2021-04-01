@@ -38,6 +38,12 @@ To realize this in the EVM, code of internal library functions
 and all functions called from therein will at compile time be included in the calling
 contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
 
+.. note::
+    The inheritance analogy breaks down when it comes to public functions.
+    Calling a public library function with ``L.f()`` results in an external call (``DELEGATECALL``
+    to be precise).
+    In contrast, ``A.f()`` is an internal call when ``A`` is a base contract of the current contract.
+
 .. index:: using for, set
 
 The following example illustrates how to use libraries (but using a manual method,
@@ -204,6 +210,7 @@ In comparison to contracts, libraries are restricted in the following ways:
 (These might be lifted at a later point.)
 
 .. _library-selectors:
+.. index:: selector
 
 Function Signatures and Selectors in Libraries
 ==============================================
