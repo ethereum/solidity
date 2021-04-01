@@ -226,22 +226,23 @@ In the simplest cases they may end up being used directly to load files from dis
 the final path can be substantially different due to abstractions necessary to ensure reproducible
 builds on different platforms.
 
-.. index:: ! virtual filesystem, ! source unit ID, ! import; path, filesystem path
+.. index:: ! virtual filesystem, ! source unit name, ! import; path, filesystem path
 .. _virtual-filesystem:
 
 Virtual Filesystem
 ~~~~~~~~~~~~~~~~~~
 
 The compiler maintains an internal database (virtual filesystem) where each compiled source unit is
-assigned a unique *source unit ID* which is an opaque and unstructured identifier.
+assigned a unique *source unit name* which is an opaque and unstructured identifier.
 
-While a source unit ID in the virtual filesystem can be anything, it should be a valid path if the
+While a source unit name in the virtual filesystem can be anything, it should be a valid path if the
 source is meant to be loaded from the underlying filesystem.
-When the requested ID is not present in the virtual filesystem, it is passed to the file loader.
+When the requested source unit name is not present in the virtual filesystem, it is passed to the
+file loader.
 In case of the command-line compiler the file loader simply uses it as a path.
 The `JavaScript interface <https://github.com/ethereum/solc-js>`_ is a bit more flexible in that
 regard and allows the user to provide a callback to perform this operation - in this case the
-IDs can be arbitrary.
+names can be arbitrary.
 For example they could be URLs as long as the custom loader can handle them.
 
 There are several ways to load source units into the virtual filesystem:
@@ -252,8 +253,8 @@ There are several ways to load source units into the virtual filesystem:
    from that module.
 
    We will refer to the path used in the statement as *import path*.
-   The import path is translated into a source unit ID first and then the compiler uses the ID to
-   look up the file in its virtual filesystem.
+   The import path is translated into a source unit name first and then the compiler uses the name
+   to look up the file in its virtual filesystem.
 
    Imports can be broadly classified into three categories based on how the path is specified:
 
@@ -266,11 +267,11 @@ There are several ways to load source units into the virtual filesystem:
 
    There is actually no distinction between :ref:`absolute imports <absolute-imports>` and
    :ref:`imports relative to base <imports-relative-to-base>` at the virtual filesystem level.
-   In both cases the import path is translated into a source unit ID using the same rules and they
+   In both cases the import path is translated into a source unit name using the same rules and they
    are only handled differently by the default file loader.
 
    :ref:`Imports relative to source <imports-relative-to-source>`, on the other hand, need to be
-   interpreted as paths and normalized to be properly resolved into source unit IDs.
+   interpreted as paths and normalized to be properly resolved into source unit names.
    The path in this case must conform to UNIX path conventions regardless of the underlying platform.
 
    .. _virtual-filesystem-loading-files-cli:
@@ -283,8 +284,8 @@ There are several ways to load source units into the virtual filesystem:
 
        solc contract.sol /usr/local/dapp-bin/token.sol
 
-   These are interpreted as *filesystem paths* and the rules for translating them into source unit IDs
-   are different than for import paths.
+   These are interpreted as *filesystem paths* and the rules for translating them into source unit
+   names are different than for import paths.
    Most importantly, filesystem paths are platform-specific while import paths are not.
    For example a path like ``C:\project\contract.sol`` will be interpreted differently on Windows
    and on systems that follow the UNIX path conventions.
@@ -295,8 +296,8 @@ There are several ways to load source units into the virtual filesystem:
    Then the path is normalized, which involves first a conversion from the platform-specific format
    the internal UNIX-like format, collapsing all the relative ``./`` and ``../`` segments and
    removing redundant slashes.
-   Finally, :ref:`the base path <imports-relative-to-base>` is stripped from the source unit ID.
-   This way the resulting ID is a path relative to base if and only if the file is located inside
+   Finally, :ref:`the base path <imports-relative-to-base>` is stripped from the source unit name.
+   This way the resulting name is a path relative to base if and only if the file is located inside
    the base directory.
 
 #. **Standard JSON (as content)**
@@ -323,7 +324,7 @@ There are several ways to load source units into the virtual filesystem:
        }
 
    The ``sources`` dictionary specifies the initial content of the virtual filesystem and you
-   can use source unit IDs directly there.
+   can use source unit names directly there.
    They do not undergo any extra translation or normalization.
 
    The path to the JSON file does not affect the path resolution in any way.
@@ -354,7 +355,7 @@ There are several ways to load source units into the virtual filesystem:
        }
 
    The path specified in ``urls`` is only passed to the file loader and used to locate the file.
-   It does not affect the source unit ID and is not included in contract metadata.
+   It does not affect the source unit name and is not included in contract metadata.
 
    Paths in ``urls`` are affected by base path and any other transformations performed by the file loader.
 
@@ -366,13 +367,13 @@ There are several ways to load source units into the virtual filesystem:
 
        echo 'import "./util.sol"; contract C {}' | solc -
 
-   The content of the standard input is identified in the virtual filesystem by a special source unit ID:
+   The content of the standard input is identified in the virtual filesystem by a special source unit name:
    ``<stdin>``.
 
 .. warning::
 
-    The compiler uses source unit IDs to determine whether imports refer to the same source unit or not.
-    If you refer to a file in multiple ways that translate to different IDs, it will be compiled
+    The compiler uses source unit names to determine whether imports refer to the same source unit or not.
+    If you refer to a file in multiple ways that translate to different names, it will be compiled
     multiple times.
 
     For example:
@@ -380,23 +381,23 @@ There are several ways to load source units into the virtual filesystem:
     .. code-block:: solidity
         :caption: /code/contract.sol
 
-        import "tokens/token.sol" as token1;   // source unit ID: tokens/token.sol
-        import "tokens///token.sol" as token2; // source unit ID: tokens///token.sol
+        import "tokens/token.sol" as token1;   // source unit name: tokens/token.sol
+        import "tokens///token.sol" as token2; // source unit name: tokens///token.sol
 
     .. code-block:: bash
 
         cd /code
-        solc contract.sol /code/tokens/token.sol # source unit ID: /code/tokens/token.sol
+        solc contract.sol /code/tokens/token.sol # source unit name: /code/tokens/token.sol
 
     In the above ``token.sol`` will end up in the virtual filesystem under three different
-    source unit IDs even though all the paths refer to the same file in the underlying filesystem.
+    source unit names even though all the paths refer to the same file in the underlying filesystem.
 
     To avoid this situation it is recommended to always use the canonical form of paths in your
     imports and to only list the top-level files that are not imported by other files when
     invoking the CLI compiler.
 
 Now that we know how the virtual filesystem works, let us go through the rules used to translate
-import paths into source unit IDs in more detail.
+import paths into source unit names in more detail.
 
 .. index:: absolute import
 .. _absolute-imports:
@@ -405,18 +406,18 @@ Absolute Imports
 ~~~~~~~~~~~~~~~~
 
 An *absolute import* always starts with a forward slash (``/``).
-The import path translates directly to a source unit ID without normalization of any kind:
+The import path translates directly to a source unit name without normalization of any kind:
 
 ::
 
-    import "/project/lib/util.sol" as util;          // source unit ID: /project/lib/util.sol
-    import "/project/lib/../lib///math.sol" as math; // source unit ID: /project/lib/../lib///math.sol
+    import "/project/lib/util.sol" as util;          // source unit name: /project/lib/util.sol
+    import "/project/lib/../lib///math.sol" as math; // source unit name: /project/lib/../lib///math.sol
 
-In the above you might expect the source unit ID be reduced to ``/project/lib/math.sol`` but it is
+In the above you might expect the source unit name be reduced to ``/project/lib/math.sol`` but it is
 in fact ``/project/lib/../lib///math.sol``, exactly as stated in the file.
 
-If no file is present under that ID in the virtual filesystem, the file loader will also use it as
-is for filesystem lookup.
+If no file is present under that source unit name in the virtual filesystem, the file loader will
+also use it as is for filesystem lookup.
 The resulting filesystem path is not affected by the value of base path.
 
 .. index:: import relative to base, relative import
@@ -429,43 +430,43 @@ Any import that does not start with ``/``, ``./`` or ``../`` is an *import relat
 
 ::
 
-    import "lib/util.sol" as util;                   // source unit ID: lib/util.sol
-    import "@openzeppelin/address.sol" as address;   // source unit ID: @openzeppelin/address.sol
-    import "https://example.com/token.sol" as token; // source unit ID: https://example.com/token.sol
+    import "lib/util.sol" as util;                   // source unit name: lib/util.sol
+    import "@openzeppelin/address.sol" as address;   // source unit name: @openzeppelin/address.sol
+    import "https://example.com/token.sol" as token; // source unit name: https://example.com/token.sol
 
 There is no difference between such imports and absolute ones at the virtual filesystem level.
 The compiler sees both as opaque identifiers and there is no normalization involved:
 
 ::
 
-    import "lib/../lib///math.sol" as math; // source unit ID: lib/../lib///math.sol
+    import "lib/../lib///math.sol" as math; // source unit name: lib/../lib///math.sol
 
-Only when the ID is passed to the file loader and needs to be converted into an actual filesystem
-path different rules kick in.
+Only when the source unit name is passed to the file loader and needs to be converted into an actual
+filesystem path different rules kick in.
 To convert the path into an absolute one, the loader combines it with the path specified using the
 ``--base-path`` option.
 If the base path itself is relative, it is interpreted as relative to the current working directory
 just like any other path given on the command line.
 
 Base path also affects :ref:`the way paths specified on the command line are converted into source
-IDs <virtual-filesystem-loading-files-cli>`.
-The source unit ID normally is the absolute, normalized path to the file in the UNIX format but if
+unit names <virtual-filesystem-loading-files-cli>`.
+The source unit name normally is the absolute, normalized path to the file in the UNIX format but if
 the file happens to be inside the directory designated as the base path or one of its subdirectories
-the prefix is stripped from its source unit ID and it becomes relative to base.
+the prefix is stripped from its source unit name and it becomes relative to base.
 
 .. code-block:: bash
 
     cd /home/user
-    solc /project/contract.sol                      # source unit ID: /project/contract.sol
-    solc /project/contract.sol --base-path /project # source unit ID: contract.sol
+    solc /project/contract.sol                      # source unit name: /project/contract.sol
+    solc /project/contract.sol --base-path /project # source unit name: contract.sol
 
 Note that if you do not specify base path, it is by default equal to the current working directory:
 
 .. code-block:: bash
 
     cd /project
-    solc /home/user/contract.sol                      # source unit ID: contract.sol
-    solc /home/user/contract.sol --base-path /project # source unit ID: contract.sol
+    solc /home/user/contract.sol                      # source unit name: contract.sol
+    solc /home/user/contract.sol --base-path /project # source unit name: contract.sol
 
 .. index:: import relative to source, relative import
 .. _imports-relative-to-source:
@@ -475,81 +476,81 @@ Imports Relative to Source
 
 An import starting with ``./`` or ``../`` is *relative to source*.
 It differs from imports relative to base in that the compiler does interpret it as a path and
-combines it with the path of the importing source unit to get the source unit ID.
+combines it with the path of the importing source unit to get the source unit name.
 
 .. code-block:: solidity
     :caption: /project/lib/math.sol
 
-    import "./util.sol" as util;    // source unit ID: /project/lib/util.sol
-    import "../token.sol" as token; // source unit ID: /lib/token.sol
+    import "./util.sol" as util;    // source unit name: /project/lib/util.sol
+    import "../token.sol" as token; // source unit name: /lib/token.sol
 
-If the parent source unit ID is relative to base, the resulting source unit ID is relative to
+If the parent source unit name is relative to base, the resulting source unit name is relative to
 base as well:
 
 .. code-block:: solidity
     :caption: lib/math.sol
 
-    import "./util.sol" as util;    // source unit ID: lib/util.sol
-    import "../token.sol" as token; // source unit ID: token.sol
+    import "./util.sol" as util;    // source unit name: lib/util.sol
+    import "../token.sol" as token; // source unit name: token.sol
 
-To evaluate the prefix, the compiler starts with the source unit ID of the importing source unit and
+To evaluate the prefix, the compiler starts with the source unit name of the importing source unit and
 first strips the file name.
-Then, for every ``../`` segment in the import path it strips one segment from the ID.
+Then, for every ``../`` segment in the import path it strips one segment from the name.
 
 .. code-block:: solidity
     :caption: /a/b/c/contract.sol
 
-    import "../util.sol";          // source unit ID: /a/b/util.sol
-    import "../../util.sol";       // source unit ID: /a/util.sol
-    import "../../../util.sol";    // source unit ID: /util.sol
+    import "../util.sol";          // source unit name: /a/b/util.sol
+    import "../../util.sol";       // source unit name: /a/util.sol
+    import "../../../util.sol";    // source unit name: /util.sol
 
-    import "../././.././util.sol"; // source unit ID: /a/util.sol
+    import "../././.././util.sol"; // source unit name: /a/util.sol
 
-If there are more ``../`` segments than directory segments in the parent source unit ID, the
+If there are more ``../`` segments than directory segments in the parent source unit name, the
 evaluation stops at the root:
 
 .. code-block:: solidity
     :caption: /a/b/c/contract.sol
 
-    import "../../../../util.sol";       // source unit ID: /util.sol
-    import "../../../../../util.sol";    // source unit ID: /util.sol
-    import "../../../../../../util.sol"; // source unit ID: /util.sol
+    import "../../../../util.sol";       // source unit name: /util.sol
+    import "../../../../../util.sol";    // source unit name: /util.sol
+    import "../../../../../../util.sol"; // source unit name: /util.sol
 
 .. code-block:: solidity
     :caption: a/b/c/contract.sol
 
-    import "../../../../util.sol";       // source unit ID: util.sol
-    import "../../../../../util.sol";    // source unit ID: util.sol
-    import "../../../../../../util.sol"; // source unit ID: util.sol
+    import "../../../../util.sol";       // source unit name: util.sol
+    import "../../../../../util.sol";    // source unit name: util.sol
+    import "../../../../../../util.sol"; // source unit name: util.sol
 
 After stripping the leading relative segments, the import path is normalized so that the
-resulting source unit ID does not contain any ``./`` or ``../``:
+resulting source unit name does not contain any ``./`` or ``../``:
 
 .. code-block:: solidity
     :caption: /a/b/c/contract.sol
 
-    import "../../d/e///.././util.sol"; // source unit ID: /a/e/util.sol
+    import "../../d/e///.././util.sol"; // source unit name: /a/e/util.sol
 
 This is quite different from imports relative to base where the ``///.././`` part would remain
-in the source unit ID.
+in the source unit name.
 
-Note that the parent source unit ID is **not** normalized, and the ``./`` and ``../`` segments in it
-have no special meaning:
+Note that the parent source unit name is **not** normalized, and the ``./`` and ``../`` segments in
+it have no special meaning:
 
 .. code-block:: solidity
     :caption: ../lib/math.sol
 
-    import "./util.sol" as util;    // source unit ID: ../lib/util.sol
-    import "../token.sol" as token; // source unit ID: ../../token.sol
+    import "./util.sol" as util;    // source unit name: ../lib/util.sol
+    import "../token.sol" as token; // source unit name: ../../token.sol
 
 This may lead to surprising results in corner cases:
 
 .. code-block:: solidity
     :caption: /a/./b/contract.sol
 
-    import "../c/util.sol";       // source unit ID: /a/./c/util.sol
-    import "../../c/util.sol";    // source unit ID: /a/c/util.sol
-    import "../../../c/util.sol"; // source unit ID: /c/util.sol
+    import "../c/util.sol";       // source unit name: /a/./c/util.sol
+    import "../../c/util.sol";    // source unit name: /a/c/util.sol
+    import "../../../c/util.sol"; // source unit name: /c/util.sol
 
 .. note::
 
@@ -568,10 +569,10 @@ filesystem but force you to keep all files within a single directory and its sub
 When using external libraries it is often desirable to keep their files in a separate location.
 To help with that, the compiler provides another mechanism: import remapping.
 
-Remapping allows you to use placeholders for source unit ID prefixes and then have the compiler
+Remapping allows you to use placeholders for source unit name prefixes and then have the compiler
 replace them with actual paths.
 For example you can set up a remapping so that everything imported from the virtual directory
-``github.com/ethereum/dapp-bin/library`` would actually receive source unit IDs starting with
+``github.com/ethereum/dapp-bin/library`` would actually receive source unit names starting with
 ``dapp-bin/library``.
 By setting base path to ``/project`` you could then have the compiler find them in
 ``/project/dapp-bin/library``
@@ -616,20 +617,20 @@ point to the new version.
 
 Here are the detailed rules governing the behaviour of remappings:
 
-#. **Remappings only affect the translation between import paths and source unit IDs.**
+#. **Remappings only affect the translation between import paths and source unit names.**
 
-   Source unit IDs added via other means cannot be remapped.
+   Source unit names added via other means cannot be remapped.
    For example the paths you specify on the command-line and the ones in ``sources.urls`` in
    Standard JSON are not affected.
 
     .. code-block:: bash
 
-        solc /project=/contracts /project/contract.sol # source unit ID: /project/contract.sol
+        solc /project=/contracts /project/contract.sol # source unit name: /project/contract.sol
 
-#. **Context and prefix must match source unit IDs, not import paths.**
+#. **Context and prefix must match source unit names, not import paths.**
 
    - This means that you cannot remap ``./`` or ``../`` directly since they are replaced during
-     translation to source unit IDs but you can remap the source locations they resolve into:
+     translation to source unit names but you can remap the source locations they resolve into:
 
      .. code-block:: bash
 
@@ -638,7 +639,7 @@ Here are the detailed rules governing the behaviour of remappings:
      .. code-block:: solidity
          :caption: /project/contract.sol
 
-         import "./util.sol" as util; // source unit ID: b/util.sol
+         import "./util.sol" as util; // source unit name: b/util.sol
 
    - You cannot remap base path or any other part of the path that is only added when the file is
      looked up in the underlying filesystem by the file loader:
@@ -650,9 +651,9 @@ Here are the detailed rules governing the behaviour of remappings:
      .. code-block:: solidity
          :caption: /project/contract.sol
 
-         import "util.sol" as util; // source unit ID: util.sol
+         import "util.sol" as util; // source unit name: util.sol
 
-#. **Target is inserted directly into the source unit ID and does not necessarily have to be a valid path.**
+#. **Target is inserted directly into the source unit name and does not necessarily have to be a valid path.**
 
    - It can be anything as long as the file loader can handle it.
      In case of the command-line interface this includes also relative paths.
@@ -675,13 +676,13 @@ Here are the detailed rules governing the behaviour of remappings:
      .. code-block:: solidity
          :caption: /project/contract.sol
 
-         import "/project/util.sol" as util; // source unit ID: /contractsutil.sol
+         import "/project/util.sol" as util; // source unit name: /contractsutil.sol
 
 #. **Context and prefix are patterns and matches must be exact.**
 
    - ``a//b=c`` will not match ``a/b``.
 
-   - Source unit IDs are not normalized so ``a/b=c`` will not match ``a//b`` either.
+   - source unit names are not normalized so ``a/b=c`` will not match ``a//b`` either.
 
    - Parts of file and directory names can match as well.
      ``/newProject/con:/new=old`` will match ``/newProject/contract.sol`` and remap it to
@@ -689,7 +690,7 @@ Here are the detailed rules governing the behaviour of remappings:
 
 #. **At most one remapping can be applied to a single import.**
 
-   - If multiple remappings match the same source unit ID, the one with the longest matching
+   - If multiple remappings match the same source unit name, the one with the longest matching
      prefix is chosen.
    - If prefixes are identical, the one specified last wins.
    - Remappings do not work on other remappings. For example ``a=b b=c c=d`` will not result in ``a``
@@ -747,10 +748,10 @@ Otherwise the ``https:`` part would be interpreted by the compiler as the contex
 
     Also, since URLs look to the compiler just like imports relative to base there is no
     normalization involved.
-    The source unit ID for ``EXAMPLE.COM/project///contract.sol`` is exactly
+    The source unit name for ``EXAMPLE.COM/project///contract.sol`` is exactly
     ``EXAMPLE.COM/project///contract.sol`` and not ``https://example.com/project/contract.sol``.
-    It will only get normalized if the compiler passes the ID to the file loader but then the
-    normalization rules for paths, not URLs will be applied.
+    It will only get normalized if the compiler passes the source unit name to the file loader but
+    then the normalization rules for paths, not URLs will be applied.
 
 .. note::
 
@@ -772,7 +773,7 @@ Standard Input
 ~~~~~~~~~~~~~~
 
 The content of the standard input stream of the command-line compiler for all intents and purposes
-behaves like a source file with an source unit ID of ``<stdin>`` placed directly in compiler's
+behaves like a source file with an source unit name of ``<stdin>`` placed directly in compiler's
 virtual filesystem.
 This means that:
 
@@ -788,14 +789,14 @@ This means that:
       as one of the arguments, it will actually try to find a file called ``<stdin>`` in the
       filesystem when it encounters such an import.
 
-- Paths in imports relative to source resolve into source unit IDs relative to base because
+- Paths in imports relative to source resolve into source unit names relative to base because
   ``<stdin>`` is not an absolute path.
 
   .. code-block:: solidity
       :caption: <stdin>
 
-      import "./contract.sol"; // source unit ID: contract.sol
-      import "../token.sol";   // source unit ID: token.sol
+      import "./contract.sol"; // source unit name: contract.sol
+      import "../token.sol";   // source unit name: token.sol
 
 - It can be freely used in remappings. For example ``/project/contract.sol=<stdin>`` and
   ``<stdin>=contract.sol`` are both valid.
