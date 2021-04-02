@@ -208,7 +208,7 @@ The functions that make up the contract, and that users and contracts can call a
 The ``mint`` function sends an amount of newly created coins to another address.
 The :ref:`require <assert-and-require>` function call defines conditions that reverts all changes if not met.
 In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``,
-and ``require(amount < 1e60);`` ensures balance isn't overflowed by any feasible number of calls (``uint`` 
+and ``require(amount < 1e60);`` ensures balance isn't overflowed by any feasible number of calls (``uint``
 maximum value exceeds 1e77.)
 
 :ref:`Errors <errors>` allow you to provide more information to the caller about
