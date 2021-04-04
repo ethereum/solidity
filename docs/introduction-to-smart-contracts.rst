@@ -412,7 +412,7 @@ Each account has a data area called **storage**, which is persistent between fun
 and transactions.
 Storage is a key-value store that maps 256-bit words to 256-bit words.
 It is not possible to enumerate storage from within a contract, it is
-comparatively costly to read, and even more to initialise and modify storage. Because of this cost,
+comparatively costly to read, and even more to initialize and modify storage. Because of this cost,
 you should minimize what you store in persistent storage to what the contract needs to run.
 Store data like derived calculations, caching, and aggregates outside of the contract.
 A contract can neither read nor write to any storage apart from its own.
