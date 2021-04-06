@@ -129,6 +129,13 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Compiler
+
+   using-the-compiler.rst
+   analysing-compilation-output.rst
+
+.. toctree::
+   :maxdepth: 2
    :caption: Internals
 
    internals/layout_in_storage.rst
@@ -152,7 +159,6 @@ Contents
    security-considerations.rst
    smtchecker.rst
    resources.rst
-   using-the-compiler.rst
    yul.rst
    style-guide.rst
    common-patterns.rst
