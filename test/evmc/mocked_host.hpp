@@ -108,7 +108,7 @@ public:
     };
 
     /// The set of all accounts in the Host, organized by their addresses.
-    std::unordered_map<address, MockedAccount> accounts;
+    std::map<address, MockedAccount> accounts;
 
     /// The EVMC transaction context to be returned by get_tx_context().
     evmc_tx_context tx_context = {};

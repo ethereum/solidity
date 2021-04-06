@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <libsolutil/FixedHash.h>
+
 #include <json/json.h>
 
 #include <functional>
@@ -132,10 +134,15 @@ public:
 		std::string name;
 		std::string value;
 	};
-	explicit ValueGenerator(Json::Value const& _type, unsigned _seed):
+	explicit ValueGenerator(
+		Json::Value const& _type,
+		unsigned _seed,
+		std::vector<solidity::util::h160> _addresses
+	):
 		m_rand(_seed),
 		m_type(_type),
-		m_bernoulli(0.5)
+		m_bernoulli(0.5),
+		m_addresses(std::move(_addresses))
 	{}
 	void boolean()
 	{
@@ -173,9 +180,11 @@ public:
 		std::vector<ArrayInfo>& _arrayInfo,
 		TypeInfo& _typeInfo
 	);
+	std::string addressLiteral(bool _hexPrefix = true);
 private:
 	std::ostringstream m_stream;
 	std::minstd_rand m_rand;
 	Json::Value const& m_type;
 	std::bernoulli_distribution m_bernoulli;
+	std::vector<solidity::util::h160> m_addresses;
 };

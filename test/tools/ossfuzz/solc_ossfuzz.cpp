@@ -50,166 +50,200 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size);
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 static constexpr size_t abiCoderHeapSize = 1024 * 512;
 
+namespace
+{
+string abiEncoding(
+	Json::Value const& _functionABI,
+	vector<h160> _addressLiterals,
+	Json::Value const& _methodIdentifiers
+)
+{
+	string abiTypeString;
+	string abiValueString;
+	tie(abiTypeString, abiValueString) = ValueGenerator{
+		_functionABI["inputs"],
+		0,
+		_addressLiterals
+		}.type();
+	string encodedData;
+	// A function with inputs must contain type names within
+	// parentheses.
+	bool functionWithInputs = abiTypeString != "()";
+	string functionSignature = _functionABI["name"].asString() + abiTypeString;
+	cout << functionSignature << endl;
+	string encoding = _methodIdentifiers[functionSignature].asString();
+	if (functionWithInputs)
+	{
+		abicoder::ABICoder coder(abiCoderHeapSize);
+		auto [status, data] = coder.encode(abiTypeString, abiValueString);
+		cout << abiTypeString << endl;
+		cout << abiValueString << endl;
+		solAssert(status, "Isabelle coder: failed.");
+		encoding += data.substr(2, data.size());
+	}
+	return encoding;
+}
+}
+
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 {
-//	if (_size <= 600)
+	string input(reinterpret_cast<char const*>(_data), _size);
+	regex re = regex("library\\s*(\\w+)\\s*\\{");
+	smatch matches;
+	std::string libraryName;
+	auto match = regex_search(input, matches, re);
+	if (match && matches[1].matched)
+		libraryName = matches[1].str();
+
+	map<string, string> sourceCode;
+	try
 	{
-		string input(reinterpret_cast<char const*>(_data), _size);
-		regex re = regex("library\\s*(\\w+)\\s*\\{");
-		smatch matches;
-		std::string libraryName;
-		auto match = regex_search(input, matches, re);
-		if (match && matches[1].matched)
-			libraryName = matches[1].str();
+		EVMVersion version;
+		EVMHost hostContext(version, evmone);
 
-		map<string, string> sourceCode;
-		try
+		TestCaseReader t = TestCaseReader(std::istringstream(input));
+		sourceCode = t.sources().sources;
+		string contractName;
+		string methodName;
+		auto compilerSetting = OptimiserSettings::standard();
+		CompilerInput cInput = {
+			version,
+			sourceCode,
+			contractName,
+			compilerSetting,
+			{},
+			true,
+			false
+		};
+		EvmoneUtility evmoneUtil(
+			hostContext,
+			cInput,
+			contractName,
+			libraryName,
+			methodName
+		);
+
+		if (!libraryName.empty()) {
+			cout << "Deploying library" << endl;
+			auto l = evmoneUtil.compileAndDeployLibrary();
+			if (!l.has_value())
+				return 0;
+			cout << "Deployed" << endl;
+		}
+
+		vector<h160> addressLiterals;
+		for (auto const& account: hostContext.accounts)
+			addressLiterals.push_back(EVMHost::convertFromEVMC(account.first));
+
+		hostContext.reset();
+		evmoneUtil.reset(true);
+		evmoneUtil.optSetting(compilerSetting);
+		auto compilerOutput = evmoneUtil.compileContract();
+		if (!compilerOutput.has_value())
+			return 0;
+
+		auto r = evmoneUtil.randomFunction(_size);
+		if (!r.has_value())
+			return 0;
+
+		auto deployResult = evmoneUtil.deployContract(compilerOutput->byteCode);
+		if (deployResult.status_code != EVMC_SUCCESS)
+			return 0;
+
+		// Add deployed contract to list of address literals.
+		addressLiterals.push_back(EVMHost::convertFromEVMC(deployResult.create_address));
+
+		string encodedData = abiEncoding(r.value(), addressLiterals,
+		                                 compilerOutput->methodIdentifiersInContract);
+		auto callResult = evmoneUtil.executeContract(
+			solidity::util::fromHex(encodedData),
+			deployResult.create_address
+		);
+
+		if (callResult.status_code != EVMC_SUCCESS) {
+			cout << "Old code gen call failed with status code: "
+			     << callResult.status_code
+			     << endl;
+			return 0;
+		}
+
+		solidity::bytes result;
+		for (size_t i = 0; i < callResult.output_size; i++)
+			result.push_back(callResult.output_data[i]);
+
+		EVMHostPrinter p(hostContext, deployResult.create_address);
+		ostringstream oldCodeGen;
+		oldCodeGen << p.state();
+
+		compilerSetting.runYulOptimiser = true;
+		compilerSetting.optimizeStackAllocation = true;
+		hostContext.reset();
+		// Remove contract compiled via old code gen from list of address
+		// literals.
+		addressLiterals.pop_back();
+		evmoneUtil.reset(true);
+		evmoneUtil.optSetting(compilerSetting);
+		evmoneUtil.viaIR(true);
+		auto compilerOutputOpt = evmoneUtil.compileContract();
+		solAssert(compilerOutputOpt.has_value(), "Contract could not be optimised.");
+
+		auto deployResultOpt = evmoneUtil.deployContract(compilerOutputOpt->byteCode);
+		solAssert(deployResultOpt.status_code == EVMC_SUCCESS,
+		          "Contract compiled via new code gen could not be deployed.");
+
+		// Add address literal of contract compiled via Yul IR.
+		addressLiterals.push_back(EVMHost::convertFromEVMC(deployResultOpt.create_address));
+		string encodedDataIR = abiEncoding(r.value(), addressLiterals,
+		                                   compilerOutput->methodIdentifiersInContract);
+
+		auto callResultOpt = evmoneUtil.executeContract(
+			solidity::util::fromHex(encodedDataIR),
+			deployResultOpt.create_address
+		);
+		solAssert(callResultOpt.status_code == EVMC_SUCCESS, "New code gen contract call failed.");
+
+		solidity::bytes resultOpt;
+		for (size_t i = 0; i < callResultOpt.output_size; i++)
+			resultOpt.push_back(callResultOpt.output_data[i]);
+
+		if (result != resultOpt)
 		{
-			EVMVersion version;
-			EVMHost hostContext(version, evmone);
-
-			TestCaseReader t = TestCaseReader(std::istringstream(input));
-			sourceCode = t.sources().sources;
-			string contractName;
-			string methodName;
-			auto compilerSetting = OptimiserSettings::standard();
-			CompilerInput cInput = {
-				version,
-				sourceCode,
-				contractName,
-				compilerSetting,
-				{},
-				true,
-				false
-			};
-			EvmoneUtility evmoneUtil(
-				hostContext,
-				cInput,
-				contractName,
-				libraryName,
-				methodName
-			);
-
-			if (!libraryName.empty())
-			{
-				cout << "Deploying library" << endl;
-				auto l = evmoneUtil.compileAndDeployLibrary();
-				if (!l.has_value())
-					return 0;
-				cout << "Deployed" << endl;
-			}
-
-			hostContext.reset();
-			evmoneUtil.reset(true);
-			evmoneUtil.optSetting(compilerSetting);
-			auto compilerOutput = evmoneUtil.compileContract();
-			if (!compilerOutput.has_value())
-				return 0;
-
-			auto r = evmoneUtil.randomFunction(_size);
-			if (!r.has_value())
-				return 0;
-
-			auto x = ValueGenerator{r.value()["inputs"], 0}.type();
-			bool encodeStatus;
-			string encodedData;
-			bool functionWithInputs = x.first != "()";
-			auto sig = r.value()["name"].asString() + x.first;
-			cout << sig << endl;
-			if (functionWithInputs)
-			{
-				abicoder::ABICoder coder(abiCoderHeapSize);
-				auto s = coder.encode(x.first, x.second);
-				encodeStatus = s.first;
-				encodedData = s.second;
-				solAssert(encodeStatus, "Isabelle coder: failed.");
-			}
-
-			auto deployResult = evmoneUtil.deployContract(compilerOutput->byteCode);
-			if (deployResult.status_code != EVMC_SUCCESS)
-				return 0;
-
-			auto methodSig = compilerOutput->methodIdentifiersInContract[sig].asString();
-			if (functionWithInputs)
-				methodSig += encodedData.substr(2, encodedData.size());
-			auto callResult = evmoneUtil.executeContract(
-				solidity::util::fromHex(methodSig),
-				deployResult.create_address
-			);
-
-			if (callResult.status_code != EVMC_SUCCESS)
-			{
-				cout << "Old code gen call failed with status code: "
-					<< callResult.status_code
-					<< endl;
-				return 0;
-			}
-
-			solidity::bytes result;
-			for (size_t i = 0; i < callResult.output_size; i++)
-				result.push_back(callResult.output_data[i]);
-
 			cout << solidity::util::toHex(result) << endl;
-
-			EVMHostPrinter p(hostContext, deployResult.create_address);
-			ostringstream oldCodeGen;
-			oldCodeGen << p.state();
-
-			compilerSetting.runYulOptimiser = true;
-			compilerSetting.optimizeStackAllocation = true;
-			hostContext.reset();
-			evmoneUtil.reset(true);
-			evmoneUtil.optSetting(compilerSetting);
-			evmoneUtil.viaIR(true);
-			auto compilerOutputOpt = evmoneUtil.compileContract();
-			solAssert(compilerOutputOpt.has_value(), "Contract could not be optimised.");
-
-			auto deployResultOpt = evmoneUtil.deployContract(compilerOutputOpt->byteCode);
-			solAssert(deployResultOpt.status_code == EVMC_SUCCESS, "Contract compiled via new code gen could not be deployed.");
-
-			auto callResultOpt = evmoneUtil.executeContract(
-				solidity::util::fromHex(methodSig),
-				deployResultOpt.create_address
-			);
-			solAssert(callResultOpt.status_code == EVMC_SUCCESS, "New code gen contract call failed.");
-
-			solidity::bytes resultOpt;
-			for (size_t i = 0; i < callResultOpt.output_size; i++)
-				resultOpt.push_back(callResultOpt.output_data[i]);
-
 			cout << solidity::util::toHex(resultOpt) << endl;
-			solAssert(result == resultOpt, "Old and new code gen call results do not match.");
+		}
+		solAssert(result == resultOpt, "Old and new code gen call results do not match.");
 
-			EVMHostPrinter pOpt(hostContext, deployResultOpt.create_address);
-			ostringstream newCodeGen;
-			newCodeGen << pOpt.state();
+		EVMHostPrinter pOpt(hostContext, deployResultOpt.create_address);
+		ostringstream newCodeGen;
+		newCodeGen << pOpt.state();
 
+		if (oldCodeGen.str() != newCodeGen.str())
+		{
 			cout << oldCodeGen.str() << endl;
 			cout << newCodeGen.str() << endl;
-
-			solAssert(oldCodeGen.str() == newCodeGen.str(), "Old and new code gen state do not match.");
-			return 0;
 		}
-		catch (runtime_error const&)
-		{
-			cout << "Runtime error!" << endl;
-			return 0;
-		}
-		catch (solidity::langutil::UnimplementedFeatureError const&)
-		{
-			cout << "Unimplemented feature!" << endl;
-			return 0;
-		}
-		catch (solidity::langutil::CompilerError const& _e)
-		{
-			cout << "Compiler error!" << endl;
-			cout << _e.what() << endl;
-			return 0;
-		}
-		catch (solidity::yul::StackTooDeepError const&)
-		{
-			cout << "Stack too deep" << endl;
-			return 0;
-		}
+		solAssert(oldCodeGen.str() == newCodeGen.str(), "Old and new code gen state do not match.");
+		return 0;
+	}
+	catch (runtime_error const&)
+	{
+		cout << "Runtime error!" << endl;
+		return 0;
+	}
+	catch (solidity::langutil::UnimplementedFeatureError const&)
+	{
+		cout << "Unimplemented feature!" << endl;
+		return 0;
+	}
+	catch (solidity::langutil::CompilerError const& _e)
+	{
+		cout << "Compiler error!" << endl;
+		cout << _e.what() << endl;
+		return 0;
+	}
+	catch (solidity::yul::StackTooDeepError const&)
+	{
+		cout << "Stack too deep" << endl;
+		return 0;
 	}
 }
