@@ -1,13 +1,13 @@
 {
-  let a := calldataload(42)
-  switch a
-  case 0 {
-    let b := calldataload(23)
-    switch b
-    case 0 { sstore(0, 1) }
-    default { sstore(0, 1) }
-  }
-  default { sstore(1, 2) }
+    let a := calldataload(42)
+    switch a
+    case 0 {
+        let b := calldataload(23)
+        switch b
+        case 0 { sstore(0, 1) }
+        default { sstore(0, 1) }
+    }
+    default { sstore(1, 2) }
 }
 // ----
 // step: commonSwitchCasePrefixMover

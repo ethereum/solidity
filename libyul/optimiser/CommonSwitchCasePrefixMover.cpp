@@ -68,15 +68,16 @@ namespace
 template<typename Container>
 auto eraseFirst(Container& _container) { return _container.erase(begin(_container)); }
 
-optional<Statement> tryExtractFirstStatement(Identifier const* _identifier, vector<Case>& _cases)
+optional<Statement> tryExtractFirstStatement(Identifier const* _switchExpressionAsIdentifier, vector<Case>& _cases)
 {
+	yulAssert(!_cases.empty() && !_cases.front().body.statements.empty(), "");
 	Statement& referenceStatement = _cases.front().body.statements.front();
 
-	if (_identifier)
+	if (_switchExpressionAsIdentifier)
 	{
 		Assignments assignments;
 		visit(assignments, referenceStatement);
-		if (assignments.names().count(_identifier->name))
+		if (assignments.names().count(_switchExpressionAsIdentifier->name))
 			return nullopt;
 	}
 
@@ -136,11 +137,11 @@ void CommonSwitchCasePrefixMover::operator()(Block& _block)
 
 				Identifier const* identifier = std::get_if<Identifier>(switchStatement->expression.get());
 				if (!identifier && !holds_alternative<Literal>(*switchStatement->expression.get()))
-					return {};
+					return nullopt;
 
 				// We need to be able to tell how the default case behaves.
-				if (switchStatement->cases.back().value)
-					return {};
+				if (switchStatement->cases.back().value != nullptr)
+					return nullopt;
 
 				vector<Statement> result;
 				while (!switchStatement->cases.front().body.statements.empty())
@@ -155,7 +156,7 @@ void CommonSwitchCasePrefixMover::operator()(Block& _block)
 					return result;
 				}
 			}
-			return {};
+			return nullopt;
 		}
 	);
 }

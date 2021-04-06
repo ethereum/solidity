@@ -1,17 +1,17 @@
 {
-  function f() -> x {
-    x := calldataload(0)
-    sstore(0, 42)
-  }
-  switch f()
-  case 0 {
-    let x := sload(0)
-    sstore(1, x)
-  }
-  default {
-    let x := sload(0)
-    sstore(1, x)
-  }
+    function f() -> x {
+        x := calldataload(0)
+        sstore(0, 42)
+    }
+    switch f()
+    case 0 {
+        let x := sload(0)
+        sstore(1, x)
+    }
+    default {
+        let x := sload(0)
+        sstore(1, x)
+    }
 }
 // ----
 // step: commonSwitchCasePrefixMover
