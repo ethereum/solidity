@@ -340,8 +340,8 @@ private:
 	/// Map of object name to list of sub-object namespace(s) in scope
 	std::map<std::string, std::vector<std::string>> m_objectScope;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
-	static unsigned constexpr s_modInputParams = 5;
-	static unsigned constexpr s_modOutputParams = 5;
+	static unsigned constexpr s_modInputParams = 8;
+	static unsigned constexpr s_modOutputParams = 8;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If false, break/continue

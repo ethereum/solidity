@@ -869,6 +869,18 @@ void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _
 	// We reverse the order of function input visits since it helps keep this switch case concise.
 	switch (_numInputParams)
 	{
+	case 7:
+		visit(_x.in_param7());
+		m_output << ", ";
+		[[fallthrough]];
+	case 6:
+		visit(_x.in_param6());
+		m_output << ", ";
+		[[fallthrough]];
+	case 5:
+		visit(_x.in_param5());
+		m_output << ", ";
+		[[fallthrough]];
 	case 4:
 		visit(_x.in_param4());
 		m_output << ", ";
