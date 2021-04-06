@@ -69,7 +69,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	string contractName = ":C";
 	string libraryName = converter.libraryTest() ? converter.libraryName() : "";
 	string methodName = "test()";
-	CompilerInput cInput(version, sol_source, contractName, OptimiserSettings::minimal(), {}, false);
+	CompilerInput cInput(version, {{"test.sol", sol_source}}, contractName, OptimiserSettings::minimal(), {});
 	EvmoneUtility evmoneUtil(
 		hostContext,
 		cInput,

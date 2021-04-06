@@ -50,7 +50,7 @@ DEFINE_PROTO_FUZZER(Contract const& _input)
 	EVMHost hostContext(version, evmone);
 	string contractName = ":C";
 	string methodName = "test()";
-	CompilerInput cInput(version, contract_source, contractName, OptimiserSettings::minimal(), {}, false);
+	CompilerInput cInput(version, {{"test.sol", contract_source}}, contractName, OptimiserSettings::minimal(), {});
 	EvmoneUtility evmoneUtil(
 		hostContext,
 		cInput,
