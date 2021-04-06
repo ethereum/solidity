@@ -187,7 +187,7 @@ void ValueGenerator::initialiseType(TypeInfo& _t)
 		_t.value += "0x" + fixedBytes(static_cast<size_t>(_t.fixedByteWidth), m_rand(), true);
 		break;
 	case Type::Address:
-		_t.value = addressLiteral();
+		_t.value += addressLiteral();
 		break;
 	case Type::Function:
 		_t.value += "0x" +
