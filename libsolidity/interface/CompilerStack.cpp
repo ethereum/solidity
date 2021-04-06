@@ -24,6 +24,7 @@
 
 
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/ImportRemapper.h>
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
@@ -196,33 +197,13 @@ void CompilerStack::findAndReportCyclicContractDependencies()
 	}
 }
 
-std::optional<CompilerStack::Remapping> CompilerStack::parseRemapping(string const& _remapping)
-{
-	auto eq = find(_remapping.begin(), _remapping.end(), '=');
-	if (eq == _remapping.end())
-		return {};
-
-	auto colon = find(_remapping.begin(), eq, ':');
-
-	Remapping r;
-
-	r.context = colon == eq ? string() : string(_remapping.begin(), colon);
-	r.prefix = colon == eq ? string(_remapping.begin(), eq) : string(colon + 1, eq);
-	r.target = string(eq + 1, _remapping.end());
-
-	if (r.prefix.empty())
-		return {};
-
-	return r;
-}
-
-void CompilerStack::setRemappings(vector<Remapping> const& _remappings)
+void CompilerStack::setRemappings(vector<ImportRemapper::Remapping> _remappings)
 {
 	if (m_stackState >= ParsedAndImported)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set remappings before parsing."));
 	for (auto const& remapping: _remappings)
 		solAssert(!remapping.prefix.empty(), "");
-	m_remappings = _remappings;
+	m_importRemapper.setRemappings(move(_remappings));
 }
 
 void CompilerStack::setViaIR(bool _viaIR)
@@ -312,7 +293,7 @@ void CompilerStack::reset(bool _keepSettings)
 	m_unhandledSMTLib2Queries.clear();
 	if (!_keepSettings)
 	{
-		m_remappings.clear();
+		m_importRemapper.clear();
 		m_libraries.clear();
 		m_viaIR = false;
 		m_evmVersion = langutil::EVMVersion();
@@ -889,7 +870,7 @@ evmasm::LinkerObject const& CompilerStack::runtimeObject(string const& _contract
 }
 
 /// TODO: cache this string
-string CompilerStack::assemblyString(string const& _contractName, StringMap _sourceCodes) const
+string CompilerStack::assemblyString(string const& _contractName, StringMap const& _sourceCodes) const
 {
 	if (m_stackState != CompilationSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
@@ -1170,43 +1151,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 string CompilerStack::applyRemapping(string const& _path, string const& _context)
 {
 	solAssert(m_stackState < ParsedAndImported, "");
-	// Try to find the longest prefix match in all remappings that are active in the current context.
-	auto isPrefixOf = [](string const& _a, string const& _b)
-	{
-		if (_a.length() > _b.length())
-			return false;
-		return std::equal(_a.begin(), _a.end(), _b.begin());
-	};
-
-	size_t longestPrefix = 0;
-	size_t longestContext = 0;
-	string bestMatchTarget;
-
-	for (auto const& redir: m_remappings)
-	{
-		string context = util::sanitizePath(redir.context);
-		string prefix = util::sanitizePath(redir.prefix);
-
-		// Skip if current context is closer
-		if (context.length() < longestContext)
-			continue;
-		// Skip if redir.context is not a prefix of _context
-		if (!isPrefixOf(context, _context))
-			continue;
-		// Skip if we already have a closer prefix match.
-		if (prefix.length() < longestPrefix && context.length() == longestContext)
-			continue;
-		// Skip if the prefix does not match.
-		if (!isPrefixOf(prefix, _path))
-			continue;
-
-		longestContext = context.length();
-		longestPrefix = prefix.length();
-		bestMatchTarget = util::sanitizePath(redir.target);
-	}
-	string path = bestMatchTarget;
-	path.append(_path.begin() + static_cast<string::difference_type>(longestPrefix), _path.end());
-	return path;
+	return m_importRemapper.apply(_path, _context);
 }
 
 void CompilerStack::resolveImports()
@@ -1584,7 +1529,7 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 
 	meta["settings"]["remappings"] = Json::arrayValue;
 	set<string> remappings;
-	for (auto const& r: m_remappings)
+	for (auto const& r: m_importRemapper.remappings())
 		remappings.insert(r.context + ":" + r.prefix + "=" + r.target);
 	for (auto const& r: remappings)
 		meta["settings"]["remappings"].append(r);

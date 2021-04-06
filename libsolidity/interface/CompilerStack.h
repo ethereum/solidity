@@ -26,6 +26,7 @@
 
 #include <libsolidity/analysis/FunctionCallGraph.h>
 #include <libsolidity/interface/ReadFile.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/OptimiserSettings.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/interface/DebugSettings.h>
@@ -111,13 +112,6 @@ public:
 		None
 	};
 
-	struct Remapping
-	{
-		std::string context;
-		std::string prefix;
-		std::string target;
-	};
-
 	/// Creates a new compiler stack.
 	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
@@ -139,12 +133,9 @@ public:
 	/// all settings are reset as well.
 	void reset(bool _keepSettings = false);
 
-	// Parses a remapping of the format "context:prefix=target".
-	static std::optional<Remapping> parseRemapping(std::string const& _remapping);
-
 	/// Sets path remappings.
 	/// Must be set before parsing.
-	void setRemappings(std::vector<Remapping> const& _remappings);
+	void setRemappings(std::vector<ImportRemapper::Remapping> _remappings);
 
 	/// Sets library addresses. Addresses are cleared iff @a _libraries is missing.
 	/// Must be set before parsing.
@@ -312,7 +303,7 @@ public:
 	/// @return a verbose text representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// Prerequisite: Successful compilation.
-	std::string assemblyString(std::string const& _contractName, StringMap _sourceCodes = StringMap()) const;
+	std::string assemblyString(std::string const& _contractName, StringMap const& _sourceCodes = StringMap()) const;
 
 	/// @returns a JSON representation of the assembly.
 	/// @arg _sourceCodes is the map of input files to source code strings
@@ -487,9 +478,7 @@ private:
 	bool m_generateIR = false;
 	bool m_generateEwasm = false;
 	std::map<std::string, util::h160> m_libraries;
-	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
-	/// "context:prefix=target"
-	std::vector<Remapping> m_remappings;
+	ImportRemapper m_importRemapper;
 	std::map<std::string const, Source> m_sources;
 	// if imported, store AST-JSONS for each filename
 	std::map<std::string, Json::Value> m_sourceJsons;
