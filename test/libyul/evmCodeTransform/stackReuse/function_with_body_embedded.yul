@@ -23,10 +23,10 @@
 // SWAP1
 // POP
 // JUMPDEST
-// SWAP3
 // SWAP2
 // POP
 // POP
+// SWAP1
 // JUMP
 // JUMPDEST
 // PUSH1 0x7
