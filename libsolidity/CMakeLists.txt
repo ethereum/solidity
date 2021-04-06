@@ -133,6 +133,8 @@ set(sources
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
 	interface/DebugSettings.h
+	interface/FileReader.cpp
+	interface/FileReader.h
 	interface/ImportRemapper.cpp
 	interface/ImportRemapper.h
 	interface/GasEstimator.cpp
