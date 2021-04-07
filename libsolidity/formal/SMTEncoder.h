@@ -112,6 +112,10 @@ public:
 
 	static std::set<FunctionCall const*> collectABICalls(ASTNode const* _node);
 
+	/// @returns all the sources that @param _source depends on,
+	/// including itself.
+	static std::set<SourceUnit const*, ASTNode::CompareByID> sourceDependencies(SourceUnit const& _source);
+
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
 	// because the order of expression evaluation is undefined
@@ -373,6 +377,8 @@ protected:
 	/// and internal library functions in m_freeFunctions.
 	void collectFreeFunctions(std::set<SourceUnit const*, ASTNode::CompareByID> const& _sources);
 	std::set<FunctionDefinition const*, ASTNode::CompareByID> const& allFreeFunctions() const { return m_freeFunctions; }
+	/// Create symbolic variables for the free constants in all @param _sources.
+	void createFreeConstants(std::set<SourceUnit const*, ASTNode::CompareByID> const& _sources);
 
 	/// @returns a note to be added to warnings.
 	std::string extraComment();

@@ -76,17 +76,13 @@ CHC::CHC(
 
 void CHC::analyze(SourceUnit const& _source)
 {
-	/// This is currently used to abort analysis of SourceUnits
-	/// containing file level functions or constants.
 	if (SMTEncoder::analyze(_source))
 	{
 		resetSourceAnalysis();
 
-		set<SourceUnit const*, ASTNode::CompareByID> sources;
-		sources.insert(&_source);
-		for (auto const& source: _source.referencedSourceUnits(true))
-			sources.insert(source);
+		auto sources = sourceDependencies(_source);
 		collectFreeFunctions(sources);
+		createFreeConstants(sources);
 		for (auto const* source: sources)
 			defineInterfacesAndSummaries(*source);
 		for (auto const* source: sources)
@@ -1422,7 +1418,8 @@ void CHC::verificationTargetEncountered(
 	if (!m_settings.targets.has(_type))
 		return;
 
-	solAssert(m_currentContract || m_currentFunction, "");
+	if (!(m_currentContract || m_currentFunction))
+		return;
 
 	bool scopeIsFunction = m_currentFunction && !m_currentFunction->isConstructor();
 	auto errorId = newErrorId();
