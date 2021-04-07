@@ -137,35 +137,13 @@ public:
 	explicit ValueGenerator(
 		Json::Value const& _type,
 		unsigned _seed,
-		std::vector<solidity::util::h160> _addresses
+		std::map<solidity::util::h160, std::vector<std::string>> _addressSelectors
 	):
 		m_rand(_seed),
 		m_type(_type),
 		m_bernoulli(0.5),
-		m_addresses(std::move(_addresses))
+		m_addressSelector(std::move(_addressSelectors))
 	{}
-	void boolean()
-	{
-		m_stream << (m_bernoulli(m_rand) ? "true" : "false");
-	}
-	void string()
-	{
-		m_stream << "hello";
-	}
-	void bytes()
-	{
-		m_stream << "0x1234";
-	}
-	void function();
-	void fixedbytes()
-	{
-
-	}
-	void address();
-	void integer()
-	{
-
-	}
 	void typeHelper(Json::Value const& _type, TypeInfo& _typeInfo);
 	TypeInfo type(Json::Value const& _type);
 	void tuple(Json::Value const& _tuple, TypeInfo& _typeInfo);
@@ -181,10 +159,11 @@ public:
 		TypeInfo& _typeInfo
 	);
 	std::string addressLiteral();
+	std::string contractAddress();
+	std::string functionLiteral();
 private:
-	std::ostringstream m_stream;
 	std::mt19937_64 m_rand;
 	Json::Value const& m_type;
 	std::bernoulli_distribution m_bernoulli;
-	std::vector<solidity::util::h160> m_addresses;
+	std::map<solidity::util::h160, std::vector<std::string>> m_addressSelector;
 };

@@ -54,7 +54,7 @@ namespace
 {
 string abiEncoding(
 	Json::Value const& _functionABI,
-	vector<h160> _addressLiterals,
+	map<h160, vector<string>> _addressSelectors,
 	Json::Value const& _methodIdentifiers
 )
 {
@@ -63,7 +63,7 @@ string abiEncoding(
 	tie(abiTypeString, abiValueString) = ValueGenerator{
 		_functionABI["inputs"],
 		0,
-		_addressLiterals
+		_addressSelectors
 		}.type();
 	string encodedData;
 	// A function with inputs must contain type names within
@@ -131,13 +131,10 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			cout << "Deployed" << endl;
 		}
 
-		vector<h160> addressLiterals;
+		map<h160, vector<string>> addressSelector;
 		for (auto const& account: hostContext.accounts)
-			addressLiterals.push_back(EVMHost::convertFromEVMC(account.first));
+			addressSelector[EVMHost::convertFromEVMC(account.first)] = {};
 
-		hostContext.reset();
-		evmoneUtil.reset(true);
-		evmoneUtil.optSetting(compilerSetting);
 		auto compilerOutput = evmoneUtil.compileContract();
 		if (!compilerOutput.has_value())
 			return 0;
@@ -150,10 +147,15 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		if (deployResult.status_code != EVMC_SUCCESS)
 			return 0;
 
-		// Add deployed contract to list of address literals.
-		addressLiterals.push_back(EVMHost::convertFromEVMC(deployResult.create_address));
+		// Record function selectors in contract
+		vector<string> functionSelectors;
+		for (auto const& item: compilerOutput->methodIdentifiersInContract)
+			functionSelectors.push_back(item.asString());
 
-		string encodedData = abiEncoding(r.value(), addressLiterals,
+		// Add deployed contract to list of address literals.
+		addressSelector[EVMHost::convertFromEVMC(deployResult.create_address)] = functionSelectors;
+
+		string encodedData = abiEncoding(r.value(), addressSelector,
 		                                 compilerOutput->methodIdentifiersInContract);
 		auto callResult = evmoneUtil.executeContract(
 			solidity::util::fromHex(encodedData),
@@ -177,13 +179,21 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 
 		compilerSetting.runYulOptimiser = true;
 		compilerSetting.optimizeStackAllocation = true;
+
+		// Reset call state post old code gen run
 		hostContext.reset();
-		// Remove contract compiled via old code gen from list of address
-		// literals.
-		addressLiterals.pop_back();
-		evmoneUtil.reset(true);
+		addressSelector.clear();
 		evmoneUtil.optSetting(compilerSetting);
 		evmoneUtil.viaIR(true);
+		if (!libraryName.empty())
+		{
+			auto l = evmoneUtil.compileAndDeployLibrary();
+			solAssert(l.has_value(), "Deploying library failed for the second time");
+		}
+
+		for (auto const& account: hostContext.accounts)
+			addressSelector[EVMHost::convertFromEVMC(account.first)] = {};
+
 		auto compilerOutputOpt = evmoneUtil.compileContract();
 		solAssert(compilerOutputOpt.has_value(), "Contract could not be optimised.");
 
@@ -192,8 +202,9 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		          "Contract compiled via new code gen could not be deployed.");
 
 		// Add address literal of contract compiled via Yul IR.
-		addressLiterals.push_back(EVMHost::convertFromEVMC(deployResultOpt.create_address));
-		string encodedDataIR = abiEncoding(r.value(), addressLiterals,
+		addressSelector[EVMHost::convertFromEVMC(deployResultOpt.create_address)] = functionSelectors;
+
+		string encodedDataIR = abiEncoding(r.value(), addressSelector,
 		                                   compilerOutput->methodIdentifiersInContract);
 
 		auto callResultOpt = evmoneUtil.executeContract(

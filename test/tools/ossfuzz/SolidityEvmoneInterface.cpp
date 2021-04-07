@@ -33,6 +33,8 @@ using namespace std;
 
 optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 {
+	// Reset since compiler stack may be called multiple times.
+	m_compiler.reset(true);
 	m_compiler.setSources(m_compilerInput.sourceCode);
 	m_compiler.setLibraries(m_compilerInput.libraryAddresses);
 	m_compiler.setEVMVersion(m_compilerInput.evmVersion);
@@ -84,7 +86,7 @@ optional<Json::Value> SolidityCompilationFramework::randomFunction(size_t _seed)
 	else
 	{
 		uniform_int_distribution<unsigned> d(0, contractABI.size() - 1);
-		minstd_rand r(_seed);
+		mt19937_64 r(_seed);
 		return contractABI[d(r)];
 	}
 }

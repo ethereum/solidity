@@ -152,8 +152,30 @@ string fixedBytes(
 
 std::string ValueGenerator::addressLiteral()
 {
-	std::uniform_int_distribution<size_t> dist(0, m_addresses.size() - 1);
-	return "0x" + m_addresses[dist(m_rand)].hex();
+	auto iter = m_addressSelector.begin();
+	std::uniform_int_distribution<size_t> dist(0, m_addressSelector.size() - 1);
+	std::advance(iter, dist(m_rand));
+	return "0x" + iter->first.hex();
+}
+
+std::string ValueGenerator::functionLiteral()
+{
+	std::string contractAddress;
+	std::string functionSelector;
+	for (auto const& item: m_addressSelector)
+		if (!item.second.empty())
+		{
+			contractAddress = "0x" + item.first.hex();
+			auto selectors = item.second;
+			std::uniform_int_distribution<size_t> dist(0, selectors.size() - 1);
+			functionSelector = "0x" + selectors[dist(m_rand)];
+			return contractAddress + ":" + functionSelector;
+		}
+	// If no function found, simply output a (valid address, invalid function) pair.
+	return addressLiteral() +
+		":" +
+		"0x" +
+		fixedBytes(static_cast<size_t>(FixedBytesWidth::Bytes4), m_rand(), true);
 }
 
 void ValueGenerator::initialiseType(TypeInfo& _t)
@@ -186,10 +208,7 @@ void ValueGenerator::initialiseType(TypeInfo& _t)
 		_t.value += addressLiteral();
 		break;
 	case Type::Function:
-		_t.value += addressLiteral() +
-			":" +
-			"0x" +
-			fixedBytes(static_cast<size_t>(FixedBytesWidth::Bytes4), m_rand(), true);
+		_t.value += functionLiteral();
 		break;
 	default:
 		solAssert(false, "Value Generator: Invalid value type.");
