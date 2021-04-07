@@ -1182,12 +1182,28 @@ string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _t
 			function <functionName>(offset, length, end) -> array {
 				array := <allocate>(<allocationSize>(length))
 				let dst := array
-				<storeLength>
+				<?dynamic>
+					mstore(array, length)
+					dst := add(array, 0x20)
+				</dynamic>
 				let src := offset
-				<staticBoundsCheck>
+				<?dynamicBase>
+					// TODO add check that we can actually load from all
+					// offset pointers, i.e. as below, but with stride being 0x20.
+				<!dynamicBase>
+					if gt(add(src, mul(length, <stride>)), end) {
+						<revertInvalidStride>
+					}
+				</dynamicBase>
 				for { let i := 0 } lt(i, length) { i := add(i, 1) }
 				{
-					let elementPos := <retrieveElementPos>
+					<?dynamicBase>
+						let innerOffset := <load>(src)
+						// TODO add overflow check
+						let elementPos := add(offset, innerOffset)
+					<!dynamicBase>
+						let elementPos := src
+					</dynamicBase>
 					mstore(dst, <decodingFun>(elementPos, end))
 					dst := add(dst, 0x20)
 					src := add(src, <stride>)
@@ -1198,28 +1214,15 @@ string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _t
 		templ("readableTypeName", _type.toString(true));
 		templ("allocate", m_utils.allocationFunction());
 		templ("allocationSize", m_utils.arrayAllocationSizeFunction(_type));
-		string calldataStride = toCompactHexWithPrefix(_type.calldataStride());
-		templ("stride", calldataStride);
-		if (_type.isDynamicallySized())
-			templ("storeLength", "mstore(array, length) dst := add(array, 0x20)");
-		else
-			templ("storeLength", "");
-		if (_type.baseType()->isDynamicallyEncoded())
-		{
-			templ("staticBoundsCheck", "");
-			string load = _fromMemory ? "mload" : "calldataload";
-			templ("retrieveElementPos", "add(offset, " + load + "(src))");
-		}
-		else
-		{
-			templ("staticBoundsCheck", "if gt(add(src, mul(length, " +
-				calldataStride +
-				")), end) { " +
-				revertReasonIfDebug("ABI decoding: invalid calldata array stride") +
-				" }"
+		templ("stride", toCompactHexWithPrefix(_type.calldataStride()));
+		templ("dynamic", _type.isDynamicallySized());
+		templ("load", _fromMemory ? "mload" : "calldataload");
+		templ("dynamicBase", _type.baseType()->isDynamicallyEncoded());
+		if (!_type.baseType()->isDynamicallyEncoded())
+			templ(
+				"revertInvalidStride",
+				revertReasonIfDebug("ABI decoding: invalid calldata array stride")
 			);
-			templ("retrieveElementPos", "src");
-		}
 		templ("decodingFun", abiDecodingFunction(*_type.baseType(), _fromMemory, false));
 		return templ.render();
 	});
