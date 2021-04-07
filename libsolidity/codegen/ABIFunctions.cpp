@@ -1187,19 +1187,14 @@ string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _t
 					dst := add(array, 0x20)
 				</dynamic>
 				let src := offset
-				<?dynamicBase>
-					// TODO add check that we can actually load from all
-					// offset pointers, i.e. as below, but with stride being 0x20.
-				<!dynamicBase>
-					if gt(add(src, mul(length, <stride>)), end) {
-						<revertInvalidStride>
-					}
-				</dynamicBase>
+				if gt(add(src, mul(length, <stride>)), end) {
+					<revertInvalidStride>
+				}
 				for { let i := 0 } lt(i, length) { i := add(i, 1) }
 				{
 					<?dynamicBase>
 						let innerOffset := <load>(src)
-						// TODO add overflow check
+						if gt(innerOffset, 0xffffffffffffffff) { <revertStringOffset> }
 						let elementPos := add(offset, innerOffset)
 					<!dynamicBase>
 						let elementPos := src
@@ -1218,11 +1213,11 @@ string ABIFunctions::abiDecodingFunctionArrayAvailableLength(ArrayType const& _t
 		templ("dynamic", _type.isDynamicallySized());
 		templ("load", _fromMemory ? "mload" : "calldataload");
 		templ("dynamicBase", _type.baseType()->isDynamicallyEncoded());
-		if (!_type.baseType()->isDynamicallyEncoded())
-			templ(
-				"revertInvalidStride",
-				revertReasonIfDebug("ABI decoding: invalid calldata array stride")
-			);
+		templ(
+			"revertInvalidStride",
+			revertReasonIfDebug("ABI decoding: invalid calldata array stride")
+		);
+		templ("revertStringOffset", revertReasonIfDebug("ABI decoding: invalid calldata array offset"));
 		templ("decodingFun", abiDecodingFunction(*_type.baseType(), _fromMemory, false));
 		return templ.render();
 	});

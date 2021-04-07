@@ -20,4 +20,4 @@ contract Test {
 // ====
 // compileViaYul: also
 // ----
-// test() -> 0x01e240
+// test() -> FAILURE
