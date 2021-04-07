@@ -59,16 +59,7 @@ bool SMTEncoder::analyze(SourceUnit const& _source)
 	bool analysis = true;
 	for (auto source: sources)
 		for (auto node: source->nodes())
-			if (auto function = dynamic_pointer_cast<FunctionDefinition>(node))
-			{
-				m_errorReporter.warning(
-					6660_error,
-					function->location(),
-					"Model checker analysis was not possible because file level functions are not supported."
-				);
-				analysis = false;
-			}
-			else if (auto var = dynamic_pointer_cast<VariableDeclaration>(node))
+			if (auto var = dynamic_pointer_cast<VariableDeclaration>(node))
 			{
 				m_errorReporter.warning(
 					8195_error,
@@ -116,7 +107,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 	// the constructor.
 	// Constructors are visited as part of the constructor
 	// hierarchy inlining.
-	for (auto const* function: contractFunctionsWithoutVirtual(_contract))
+	for (auto const* function: contractFunctionsWithoutVirtual(_contract) + allFreeFunctions())
 		if (!function->isConstructor())
 			function->accept(*this);
 
@@ -152,6 +143,8 @@ bool SMTEncoder::visit(ModifierDefinition const&)
 
 bool SMTEncoder::visit(FunctionDefinition const& _function)
 {
+	solAssert(m_currentContract, "");
+
 	m_modifierDepthStack.push_back(-1);
 
 	initializeLocalVariables(_function);
@@ -288,6 +281,8 @@ bool SMTEncoder::visit(PlaceholderStatement const&)
 
 void SMTEncoder::endVisit(FunctionDefinition const&)
 {
+	solAssert(m_currentContract, "");
+
 	popCallStack();
 	solAssert(m_modifierDepthStack.back() == -1, "");
 	m_modifierDepthStack.pop_back();
@@ -2961,6 +2956,26 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
 
 	return args;
+}
+
+void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)
+{
+	if (!m_freeFunctions.empty())
+		return;
+
+	for (auto source: _sources)
+		for (auto node: source->nodes())
+			if (auto function = dynamic_cast<FunctionDefinition const*>(node.get()))
+				m_freeFunctions.insert(function);
+			else if (
+				auto contract = dynamic_cast<ContractDefinition const*>(node.get());
+				contract && contract->isLibrary()
+			)
+			{
+				for (auto function: contract->definedFunctions())
+					if (!function->isPublic())
+						m_freeFunctions.insert(function);
+			}
 }
 
 smt::SymbolicState& SMTEncoder::state()

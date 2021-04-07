@@ -99,19 +99,19 @@ inline std::vector<T> operator+(std::vector<T>&& _a, std::vector<T>&& _b)
 }
 
 /// Concatenate something to a sets of elements.
-template <class T, class U>
-inline std::set<T> operator+(std::set<T> const& _a, U&& _b)
+template <class U, class... T>
+inline std::set<T...> operator+(std::set<T...> const& _a, U&& _b)
 {
-	std::set<T> ret(_a);
+	std::set<T...> ret(_a);
 	ret += std::forward<U>(_b);
 	return ret;
 }
 
 /// Concatenate something to a sets of elements, move variant.
-template <class T, class U>
-inline std::set<T> operator+(std::set<T>&& _a, U&& _b)
+template <class U, class... T>
+inline std::set<T...> operator+(std::set<T...>&& _a, U&& _b)
 {
-	std::set<T> ret(std::move(_a));
+	std::set<T...> ret(std::move(_a));
 	ret += std::forward<U>(_b);
 	return ret;
 }

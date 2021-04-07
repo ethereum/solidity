@@ -369,6 +369,11 @@ protected:
 	/// type conversion.
 	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 
+	/// Traverses all source units available collecting free functions
+	/// and internal library functions in m_freeFunctions.
+	void collectFreeFunctions(std::set<SourceUnit const*, ASTNode::CompareByID> const& _sources);
+	std::set<FunctionDefinition const*, ASTNode::CompareByID> const& allFreeFunctions() const { return m_freeFunctions; }
+
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 
@@ -436,6 +441,10 @@ protected:
 	std::map<ContractDefinition const*, ModifierInvocation const*> m_baseConstructorCalls;
 
 	ContractDefinition const* m_currentContract = nullptr;
+
+	/// Stores the free functions and internal library functions.
+	/// Those need to be encoded repeatedely for every analyzed contract.
+	std::set<FunctionDefinition const*, ASTNode::CompareByID> m_freeFunctions;
 
 	/// Stores the context of the encoding.
 	smt::EncodingContext& m_context;

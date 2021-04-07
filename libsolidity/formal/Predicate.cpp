@@ -243,9 +243,16 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 		fun->isFallback() ? "fallback" :
 		fun->isReceive() ? "receive" :
 		fun->name();
-	solAssert(fun->annotation().contract, "");
-	return fun->annotation().contract->name() + "." + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + value;
 
+	string prefix;
+	if (fun->isFree())
+		prefix = !fun->sourceUnitName().empty() ? (fun->sourceUnitName() + ":") : "";
+	else
+	{
+		solAssert(fun->annotation().contract, "");
+		prefix = fun->annotation().contract->name() + ".";
+	}
+	return prefix + fName + "(" + boost::algorithm::join(functionArgs, ", ") + ")" + value;
 }
 
 vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expression> const& _args) const

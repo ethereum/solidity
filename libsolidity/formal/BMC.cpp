@@ -149,11 +149,13 @@ void BMC::endVisit(ContractDefinition const& _contract)
 
 bool BMC::visit(FunctionDefinition const& _function)
 {
+	// Free functions need to be visited in the context of a contract.
+	if (!m_currentContract)
+		return false;
+
 	auto contract = dynamic_cast<ContractDefinition const*>(_function.scope());
-	solAssert(contract, "");
-	solAssert(m_currentContract, "");
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
-	if (find(hierarchy.begin(), hierarchy.end(), contract) == hierarchy.end())
+	if (contract && find(hierarchy.begin(), hierarchy.end(), contract) == hierarchy.end())
 		createStateVariables(*contract);
 
 	if (m_callStack.empty())
@@ -165,7 +167,10 @@ bool BMC::visit(FunctionDefinition const& _function)
 	}
 
 	if (_function.isConstructor())
-		inlineConstructorHierarchy(dynamic_cast<ContractDefinition const&>(*_function.scope()));
+	{
+		solAssert(contract, "");
+		inlineConstructorHierarchy(*contract);
+	}
 
 	/// Already visits the children.
 	SMTEncoder::visit(_function);
@@ -175,6 +180,10 @@ bool BMC::visit(FunctionDefinition const& _function)
 
 void BMC::endVisit(FunctionDefinition const& _function)
 {
+	// Free functions need to be visited in the context of a contract.
+	if (!m_currentContract)
+		return;
+
 	if (isRootFunction())
 	{
 		checkVerificationTargets();
