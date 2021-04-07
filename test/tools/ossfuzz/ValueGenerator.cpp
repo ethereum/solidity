@@ -150,14 +150,10 @@ string fixedBytes(
 }
 }
 
-std::string ValueGenerator::addressLiteral(bool _hexPrefix)
+std::string ValueGenerator::addressLiteral()
 {
 	std::uniform_int_distribution<size_t> dist(0, m_addresses.size() - 1);
-	std::string addressLiteral;
-	if (_hexPrefix)
-		addressLiteral = "0x";
-	addressLiteral += m_addresses[dist(m_rand)].hex();
-	return addressLiteral;
+	return "0x" + m_addresses[dist(m_rand)].hex();
 }
 
 void ValueGenerator::initialiseType(TypeInfo& _t)
@@ -190,8 +186,7 @@ void ValueGenerator::initialiseType(TypeInfo& _t)
 		_t.value += addressLiteral();
 		break;
 	case Type::Function:
-		_t.value += "0x" +
-			addressLiteral(false) +
+		_t.value += addressLiteral() +
 			":" +
 			"0x" +
 			fixedBytes(static_cast<size_t>(FixedBytesWidth::Bytes4), m_rand(), true);

@@ -180,10 +180,10 @@ public:
 		std::vector<ArrayInfo>& _arrayInfo,
 		TypeInfo& _typeInfo
 	);
-	std::string addressLiteral(bool _hexPrefix = true);
+	std::string addressLiteral();
 private:
 	std::ostringstream m_stream;
-	std::minstd_rand m_rand;
+	std::mt19937_64 m_rand;
 	Json::Value const& m_type;
 	std::bernoulli_distribution m_bernoulli;
 	std::vector<solidity::util::h160> m_addresses;
