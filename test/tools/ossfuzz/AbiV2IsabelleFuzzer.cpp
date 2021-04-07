@@ -58,8 +58,9 @@ DEFINE_PROTO_FUZZER(Contract const& _contract)
 		// We target the default EVM which is the latest
 		langutil::EVMVersion version;
 		EVMHost hostContext(version, evmone);
-		string contractName = ":C";
-		CompilerInput cInput(version, {{"test.sol", contractSource}}, contractName, OptimiserSettings::minimal(), {});
+		string contractName = "C";
+		StringMap source({{"test.sol", contractSource}});
+		CompilerInput cInput(version, source, contractName, OptimiserSettings::minimal(), {});
 		EvmoneUtility evmoneUtil(
 			hostContext,
 			cInput,
