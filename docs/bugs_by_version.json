@@ -595,6 +595,7 @@
     },
     "0.4.16": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -615,6 +616,7 @@
     },
     "0.4.17": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -636,6 +638,7 @@
     },
     "0.4.18": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -656,6 +659,7 @@
     },
     "0.4.19": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -699,6 +703,7 @@
     },
     "0.4.20": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -720,6 +725,7 @@
     },
     "0.4.21": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -741,6 +747,7 @@
     },
     "0.4.22": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -762,6 +769,7 @@
     },
     "0.4.23": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -782,6 +790,7 @@
     },
     "0.4.24": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -802,6 +811,7 @@
     },
     "0.4.25": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -820,6 +830,7 @@
     },
     "0.4.26": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -987,6 +998,7 @@
     },
     "0.5.0": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1005,6 +1017,7 @@
     },
     "0.5.1": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1023,6 +1036,7 @@
     },
     "0.5.10": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1037,6 +1051,7 @@
     },
     "0.5.11": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1050,6 +1065,7 @@
     },
     "0.5.12": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1063,6 +1079,7 @@
     },
     "0.5.13": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1076,6 +1093,7 @@
     },
     "0.5.14": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1091,6 +1109,7 @@
     },
     "0.5.15": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1105,6 +1124,7 @@
     },
     "0.5.16": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1118,6 +1138,7 @@
     },
     "0.5.17": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1130,6 +1151,7 @@
     },
     "0.5.2": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1148,6 +1170,7 @@
     },
     "0.5.3": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1166,6 +1189,7 @@
     },
     "0.5.4": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1184,6 +1208,7 @@
     },
     "0.5.5": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1204,6 +1229,7 @@
     },
     "0.5.6": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1224,6 +1250,7 @@
     },
     "0.5.7": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1242,6 +1269,7 @@
     },
     "0.5.8": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1259,6 +1287,7 @@
     },
     "0.5.9": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1275,6 +1304,7 @@
     },
     "0.6.0": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1289,6 +1319,7 @@
     },
     "0.6.1": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1302,6 +1333,7 @@
     },
     "0.6.10": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup"
@@ -1310,6 +1342,7 @@
     },
     "0.6.11": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup"
@@ -1318,6 +1351,7 @@
     },
     "0.6.12": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup"
@@ -1326,6 +1360,7 @@
     },
     "0.6.2": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1339,6 +1374,7 @@
     },
     "0.6.3": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1352,6 +1388,7 @@
     },
     "0.6.4": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1365,6 +1402,7 @@
     },
     "0.6.5": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1377,6 +1415,7 @@
     },
     "0.6.6": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1388,6 +1427,7 @@
     },
     "0.6.7": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1399,6 +1439,7 @@
     },
     "0.6.8": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup"
@@ -1407,6 +1448,7 @@
     },
     "0.6.9": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1416,6 +1458,7 @@
     },
     "0.7.0": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup"
@@ -1424,6 +1467,7 @@
     },
     "0.7.1": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup",
@@ -1433,6 +1477,7 @@
     },
     "0.7.2": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy",
             "DynamicArrayCleanup"
@@ -1441,6 +1486,7 @@
     },
     "0.7.3": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching",
             "EmptyByteArrayCopy"
         ],
@@ -1448,42 +1494,50 @@
     },
     "0.7.4": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
         ],
         "released": "2020-10-19"
     },
     "0.7.5": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
         ],
         "released": "2020-11-18"
     },
     "0.7.6": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
         ],
         "released": "2020-12-16"
     },
     "0.8.0": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
         ],
         "released": "2020-12-16"
     },
     "0.8.1": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
         ],
         "released": "2021-01-27"
     },
     "0.8.2": {
         "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory",
             "KeccakCaching"
         ],
         "released": "2021-03-02"
     },
     "0.8.3": {
-        "bugs": [],
+        "bugs": [
+            "ABIDecodeTwoDimensionalArrayMemory"
+        ],
         "released": "2021-03-23"
     }
 }
