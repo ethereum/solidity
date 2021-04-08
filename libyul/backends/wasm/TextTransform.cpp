@@ -31,7 +31,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -67,7 +68,7 @@ string TextTransform::run(wasm::Module const& _module)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
 		if (!imp.paramTypes.empty())
-			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | boost::adaptors::transformed(encodeType), " ", " ") + ")";
+			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | ranges::views::transform(encodeType), " ", " ") + ")";
 		if (imp.returnType)
 			ret += " (result " + encodeType(*imp.returnType) + ")";
 		ret += "))\n";

@@ -59,9 +59,10 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 #ifdef _WIN32 // windows
 	#include <io.h>
@@ -2090,7 +2091,7 @@ size_t CommandLineInterface::countEnabledOptions(vector<string> const& _optionNa
 string CommandLineInterface::joinOptionNames(vector<string> const& _optionNames, string _separator)
 {
 	return boost::algorithm::join(
-		_optionNames | boost::adaptors::transformed([](string const& _option){ return "--" + _option; }),
+		_optionNames | ranges::views::transform([](string const& _option){ return "--" + _option; }),
 		_separator
 	);
 }
