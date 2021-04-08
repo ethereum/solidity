@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
     function f(uint x) public pure {
         require(x == 2);
@@ -14,6 +13,7 @@ contract C {
     }
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 2072: (115-121): Unused local variable.
+// Warning 2072: (83-89): Unused local variable.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	bytes data;
 	bytes32 h;
@@ -44,16 +42,18 @@ contract C {
 		assert(_erc == erc);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (726-745): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (726-745): CHC: Assertion violation might happen here.
-// Warning 1218: (749-768): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (749-768): CHC: Assertion violation might happen here.
-// Warning 1218: (772-791): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (772-791): CHC: Assertion violation might happen here.
-// Warning 1218: (795-814): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (795-814): CHC: Assertion violation might happen here.
-// Warning 4661: (726-745): BMC: Assertion violation happens here.
-// Warning 4661: (749-768): BMC: Assertion violation happens here.
-// Warning 4661: (772-791): BMC: Assertion violation happens here.
-// Warning 4661: (795-814): BMC: Assertion violation happens here.
+// Warning 1218: (693-712): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (693-712): CHC: Assertion violation might happen here.
+// Warning 1218: (716-735): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (716-735): CHC: Assertion violation might happen here.
+// Warning 1218: (739-758): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (739-758): CHC: Assertion violation might happen here.
+// Warning 1218: (762-781): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (762-781): CHC: Assertion violation might happen here.
+// Warning 4661: (693-712): BMC: Assertion violation happens here.
+// Warning 4661: (716-735): BMC: Assertion violation happens here.
+// Warning 4661: (739-758): BMC: Assertion violation happens here.
+// Warning 4661: (762-781): BMC: Assertion violation happens here.

@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract A {
     int[] a;
     function f() public {
@@ -7,3 +6,5 @@ contract A {
     }
 }
 
+// ====
+// SMTEngine: all

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] b;
 	function f() public {
@@ -15,5 +13,7 @@ contract C {
 		assert(b[0][0] != b[1][0]);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (317-343): CHC: Assertion violation happens here.\nCounterexample:\nb = [[0], [0]]\n\nTransaction trace:\nC.constructor()\nState: b = []\nC.f()
+// Warning 6328: (284-310): CHC: Assertion violation happens here.\nCounterexample:\nb = [[0], [0]]\n\nTransaction trace:\nC.constructor()\nState: b = []\nC.f()

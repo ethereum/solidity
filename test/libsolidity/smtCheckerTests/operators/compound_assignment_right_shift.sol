@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(int a, uint b) public view {
 		a >>= tx.gasprice;
@@ -8,4 +6,6 @@ contract C {
 		assert(a == 4); // should hold
 	}
 }
+// ====
+// SMTEngine: all
 // ----

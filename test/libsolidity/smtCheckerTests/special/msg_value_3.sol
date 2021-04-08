@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	bool lock = true;
 	function f() public {
@@ -11,3 +10,5 @@ contract C {
 		assert(msg.value == 0);
 	}
 }
+// ====
+// SMTEngine: all

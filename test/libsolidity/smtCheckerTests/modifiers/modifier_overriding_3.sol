@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract A {
 	bool s;
 
@@ -17,6 +15,8 @@ contract B is A {
 		_;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 5740: (95-156): Unreachable code.
-// Warning 6328: (127-137): CHC: Assertion violation happens here.\nCounterexample:\ns = true\nx = true\n\nTransaction trace:\nB.constructor()\nState: s = false\nA.f()
+// Warning 5740: (62-123): Unreachable code.
+// Warning 6328: (94-104): CHC: Assertion violation happens here.\nCounterexample:\ns = true\nx = true\n\nTransaction trace:\nB.constructor()\nState: s = false\nA.f()

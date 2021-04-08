@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract State {
 	uint x;
 	C c;
@@ -38,6 +36,8 @@ contract C {
 		return y;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2018: (66-121): Function state mutability can be restricted to view
-// Warning 6328: (400-414): CHC: Assertion violation happens here.\nCounterexample:\nowner = 0, y = 0, z = 3, s = 0, insidef = true\nprevOwner = 0\n\nTransaction trace:\nC.constructor()\nState: owner = 0, y = 0, z = 0, s = 0, insidef = false\nC.f()\n    s.f() -- untrusted external call, synthesized as:\n        C.zz() -- reentrant call
+// Warning 2018: (33-88): Function state mutability can be restricted to view
+// Warning 6328: (367-381): CHC: Assertion violation happens here.\nCounterexample:\nowner = 0, y = 0, z = 3, s = 0, insidef = true\nprevOwner = 0\n\nTransaction trace:\nC.constructor()\nState: owner = 0, y = 0, z = 0, s = 0, insidef = false\nC.f()\n    s.f() -- untrusted external call, synthesized as:\n        C.zz() -- reentrant call

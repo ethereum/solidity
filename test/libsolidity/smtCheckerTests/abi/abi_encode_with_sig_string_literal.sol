@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiEncodeStringLiteral(string memory sig) public pure {
 		bytes memory b1 = abi.encodeWithSignature(sig, "");
@@ -20,17 +19,19 @@ contract C {
 		assert(b4.length == b6.length); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (293-323): CHC: Assertion violation happens here.
-// Warning 1218: (389-419): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (389-419): CHC: Assertion violation might happen here.
-// Warning 1218: (574-604): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (574-604): CHC: Assertion violation might happen here.
-// Warning 1218: (671-701): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (671-701): CHC: Assertion violation might happen here.
-// Warning 1218: (785-815): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (785-815): CHC: Assertion violation might happen here.
-// Warning 4661: (389-419): BMC: Assertion violation happens here.
-// Warning 4661: (574-604): BMC: Assertion violation happens here.
-// Warning 4661: (671-701): BMC: Assertion violation happens here.
-// Warning 4661: (785-815): BMC: Assertion violation happens here.
+// Warning 6328: (261-291): CHC: Assertion violation happens here.
+// Warning 1218: (357-387): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (357-387): CHC: Assertion violation might happen here.
+// Warning 1218: (542-572): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (542-572): CHC: Assertion violation might happen here.
+// Warning 1218: (639-669): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (639-669): CHC: Assertion violation might happen here.
+// Warning 1218: (753-783): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (753-783): CHC: Assertion violation might happen here.
+// Warning 4661: (357-387): BMC: Assertion violation happens here.
+// Warning 4661: (542-572): BMC: Assertion violation happens here.
+// Warning 4661: (639-669): BMC: Assertion violation happens here.
+// Warning 4661: (753-783): BMC: Assertion violation happens here.

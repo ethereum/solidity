@@ -1,7 +1,7 @@
 Warning: BMC: Underflow (resulting value less than 0) happens here.
- --> model_checker_targets_underflow_bmc/input.sol:8:3:
+ --> model_checker_targets_underflow_bmc/input.sol:7:3:
   |
-8 | 		--x;
+7 | 		--x;
   | 		^^^
 Note: Counterexample:
   <result> = (- 1)

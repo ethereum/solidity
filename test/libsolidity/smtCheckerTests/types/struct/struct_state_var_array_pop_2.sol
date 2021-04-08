@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct S {
 		uint x;
@@ -18,7 +16,8 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2529: (133-142): CHC: Empty array "pop" happens here.
-// Warning 6328: (189-213): CHC: Assertion violation happens here.
+// Warning 2529: (100-109): CHC: Empty array "pop" happens here.
+// Warning 6328: (156-180): CHC: Assertion violation happens here.

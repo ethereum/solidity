@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiencodePackedSlice(bytes calldata data) external pure {
 		bytes memory b1 = abi.encodePacked(data);
@@ -28,9 +27,10 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (159-174): Unused local variable.
-// Warning 2072: (723-738): Unused local variable.
-// Warning 2072: (1131-1146): Unused local variable.
-// Warning 6328: (1079-1109): CHC: Assertion violation happens here.
+// Warning 2072: (127-142): Unused local variable.
+// Warning 2072: (691-706): Unused local variable.
+// Warning 2072: (1099-1114): Unused local variable.
+// Warning 6328: (1047-1077): CHC: Assertion violation happens here.

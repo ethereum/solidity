@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract A {
 	int[] a;
 	constructor() {
@@ -24,8 +23,10 @@ contract A {
 		a.push(x);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (350-354): CHC: Out of bounds access happens here.\nCounterexample:\na = [0, 0]\nu = []\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
-// Warning 6328: (343-360): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
-// Warning 6368: (454-458): CHC: Out of bounds access happens here.\nCounterexample:\na = [0, 0]\nu = []\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
-// Warning 6328: (447-464): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
+// Warning 6368: (318-322): CHC: Out of bounds access happens here.\nCounterexample:\na = [0, 0]\nu = []\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
+// Warning 6328: (311-328): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
+// Warning 6368: (422-426): CHC: Out of bounds access happens here.\nCounterexample:\na = [0, 0]\nu = []\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
+// Warning 6328: (415-432): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()

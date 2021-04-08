@@ -8,7 +8,7 @@ Transaction trace:
 test.constructor()
 State: arr = []
 test.f(0, 0)
- --> model_checker_targets_underflow_chc/input.sol:8:3:
+ --> model_checker_targets_underflow_chc/input.sol:7:3:
   |
-8 | 		--x;
+7 | 		--x;
   | 		^^^

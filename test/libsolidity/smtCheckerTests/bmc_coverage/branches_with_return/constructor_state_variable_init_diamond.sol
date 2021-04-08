@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	int x;
 }
@@ -62,11 +60,11 @@ contract D4 is B, C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (370-384): BMC: Assertion violation happens here.
-// Warning 4661: (403-418): BMC: Assertion violation happens here.
+// Warning 4661: (337-351): BMC: Assertion violation happens here.
+// Warning 4661: (370-385): BMC: Assertion violation happens here.
+// Warning 4661: (460-474): BMC: Assertion violation happens here.
 // Warning 4661: (493-507): BMC: Assertion violation happens here.
-// Warning 4661: (526-540): BMC: Assertion violation happens here.
-// Warning 4661: (703-717): BMC: Assertion violation happens here.
-// Warning 4661: (769-784): BMC: Assertion violation happens here.
+// Warning 4661: (670-684): BMC: Assertion violation happens here.
+// Warning 4661: (736-751): BMC: Assertion violation happens here.
+// Warning 4661: (827-841): BMC: Assertion violation happens here.
 // Warning 4661: (860-874): BMC: Assertion violation happens here.
-// Warning 4661: (893-907): BMC: Assertion violation happens here.

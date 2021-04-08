@@ -76,8 +76,6 @@ CHC::CHC(
 
 void CHC::analyze(SourceUnit const& _source)
 {
-	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
-
 	/// This is currently used to abort analysis of SourceUnits
 	/// containing file level functions or constants.
 	if (SMTEncoder::analyze(_source))
@@ -1430,10 +1428,6 @@ void CHC::verificationTargetEncountered(
 		return;
 
 	solAssert(m_currentContract || m_currentFunction, "");
-	SourceUnit const* source = m_currentContract ? sourceUnitContaining(*m_currentContract) : sourceUnitContaining(*m_currentFunction);
-	solAssert(source, "");
-	if (!source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
-		return;
 
 	bool scopeIsFunction = m_currentFunction && !m_currentFunction->isConstructor();
 	auto errorId = newErrorId();

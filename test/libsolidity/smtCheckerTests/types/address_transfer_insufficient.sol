@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(address payable a, address payable b) public {
@@ -10,7 +8,9 @@ contract C
 		assert(a.balance == 600);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (213-237): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7719\nb = 7719\n\nTransaction trace:\nC.constructor()\nC.f(7719, 7719)
-// Warning 1236: (134-149): BMC: Insufficient funds happens here.
-// Warning 1236: (153-169): BMC: Insufficient funds happens here.
+// Warning 6328: (180-204): CHC: Assertion violation happens here.\nCounterexample:\n\na = 7719\nb = 7719\n\nTransaction trace:\nC.constructor()\nC.f(7719, 7719)
+// Warning 1236: (101-116): BMC: Insufficient funds happens here.
+// Warning 1236: (120-136): BMC: Insufficient funds happens here.

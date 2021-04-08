@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {
     function d() public virtual ;
 }
@@ -22,5 +20,7 @@ contract C {
         x = 3;
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2072: (288-294): Unused local variable.
+// Warning 2072: (255-261): Unused local variable.

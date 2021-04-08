@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[] a;
 	constructor() {
@@ -20,10 +18,11 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (240-244): CHC: Out of bounds access happens here.
-// Warning 6368: (254-258): CHC: Out of bounds access happens here.
-// Warning 6368: (304-310): CHC: Out of bounds access happens here.
-// Warning 6368: (325-331): CHC: Out of bounds access happens here.
-// Warning 6328: (318-337): CHC: Assertion violation happens here.
+// Warning 6368: (207-211): CHC: Out of bounds access happens here.
+// Warning 6368: (221-225): CHC: Out of bounds access happens here.
+// Warning 6368: (271-277): CHC: Out of bounds access happens here.
+// Warning 6368: (292-298): CHC: Out of bounds access happens here.
+// Warning 6328: (285-304): CHC: Assertion violation happens here.

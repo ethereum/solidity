@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 
 	function g() public pure returns (bytes memory) {
@@ -14,3 +13,5 @@ contract C {
 		}
 	}
 }
+// ====
+// SMTEngine: all

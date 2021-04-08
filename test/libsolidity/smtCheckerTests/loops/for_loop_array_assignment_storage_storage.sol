@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract LoopFor2 {
 	uint[] b;
 	uint[] c;
@@ -23,5 +21,6 @@ contract LoopFor2 {
 	*/
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----

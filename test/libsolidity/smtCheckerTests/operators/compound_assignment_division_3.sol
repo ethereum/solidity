@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	mapping (uint => uint) map;
 	function f(uint x, uint p) public {
@@ -9,5 +8,7 @@ contract C {
 		assert(map[p] == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (194-213): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 2\np = 0\n\nTransaction trace:\nC.constructor()\nC.f(2, 0)
+// Warning 6328: (162-181): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 2\np = 0\n\nTransaction trace:\nC.constructor()\nC.f(2, 0)

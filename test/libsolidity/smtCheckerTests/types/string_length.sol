@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() public pure {
 		string memory x = "Hello World";
@@ -15,4 +13,6 @@ contract C {
 		assert(bytes(y).length == 11);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

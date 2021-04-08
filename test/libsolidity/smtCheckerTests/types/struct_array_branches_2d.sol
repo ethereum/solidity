@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	struct S { uint[][] a; }
@@ -15,6 +13,8 @@ contract C
 		assert(c.a[0][0] > 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (249-258): CHC: Out of bounds access might happen here.
-// Warning 6328: (242-263): CHC: Assertion violation might happen here.
+// Warning 6368: (216-225): CHC: Out of bounds access might happen here.
+// Warning 6328: (209-230): CHC: Assertion violation might happen here.

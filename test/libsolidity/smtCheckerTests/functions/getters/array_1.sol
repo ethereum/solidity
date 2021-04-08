@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[] public a;
 	constructor() {
@@ -14,5 +12,7 @@ contract C {
 		assert(y == 1); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (220-234): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0, 0, 0]\ny = 0\n\nTransaction trace:\nC.constructor()\nState: a = [0, 0, 0, 0]\nC.f()
+// Warning 6328: (187-201): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0, 0, 0]\ny = 0\n\nTransaction trace:\nC.constructor()\nState: a = [0, 0, 0, 0]\nC.f()

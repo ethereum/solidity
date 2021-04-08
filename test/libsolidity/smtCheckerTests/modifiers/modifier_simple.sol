@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint x;
@@ -13,3 +11,5 @@ contract C
 		assert(x > 0);
 	}
 }
+// ====
+// SMTEngine: all

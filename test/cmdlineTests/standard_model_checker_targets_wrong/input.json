@@ -4,7 +4,7 @@
 	{
 		"A":
 		{
-			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\npragma experimental SMTChecker;\ncontract test {
+			"content": "// SPDX-License-Identifier: GPL-3.0\npragma solidity >=0.0;\n\ncontract test {
 					uint[] arr;
 					function f(address payable a, uint x) public {
 						require(x >= 0);
@@ -23,6 +23,7 @@
 	{
 		"modelChecker":
 		{
+			"engine": "all",
 			"targets": "aaa,bbb"
 		}
 	}

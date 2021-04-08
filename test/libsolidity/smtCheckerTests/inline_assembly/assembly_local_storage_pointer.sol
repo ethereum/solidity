@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint256[] public a;
 
@@ -17,9 +15,10 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 7737: (203-238): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
-// Warning 6328: (241-262): CHC: Assertion violation happens here.
-// Warning 6328: (281-302): CHC: Assertion violation happens here.
-// Warning 7737: (203-238): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
+// Warning 7737: (170-205): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).
+// Warning 6328: (208-229): CHC: Assertion violation happens here.
+// Warning 6328: (248-269): CHC: Assertion violation happens here.
+// Warning 7737: (170-205): Inline assembly may cause SMTChecker to produce spurious warnings (false positives).

@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract BaseBase {
 	uint x;
 	function init(uint a, uint b) public virtual {
@@ -17,7 +16,8 @@ contract Child is Base {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 5667: (84-90): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (314-328): CHC: Assertion violation happens here.
+// Warning 5667: (52-58): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (282-296): CHC: Assertion violation happens here.

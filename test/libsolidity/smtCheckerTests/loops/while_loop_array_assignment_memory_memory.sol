@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract LoopFor2 {
 	function testUnboundedForLoop(uint n, uint[] memory b, uint[] memory c) public pure {
 		require(n < b.length);
@@ -26,8 +24,9 @@ contract LoopFor2 {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // SMTSolvers: z3
 // ----
-// Warning 2072: (235-250): Unused local variable.
-// Warning 2072: (258-264): Unused local variable.
+// Warning 2072: (202-217): Unused local variable.
+// Warning 2072: (225-231): Unused local variable.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	modifier m(uint x) {
@@ -17,4 +15,6 @@ contract C
 		assert(x == 3);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

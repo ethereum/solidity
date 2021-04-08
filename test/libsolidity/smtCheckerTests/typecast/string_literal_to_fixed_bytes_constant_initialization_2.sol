@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract MockContract {
 	bytes4 public constant SENTINEL_ANY_MOCKS = hex"01";
 
@@ -7,3 +5,5 @@ contract MockContract {
 		assert(SENTINEL_ANY_MOCKS >= 0);
 	}
 }
+// ====
+// SMTEngine: all

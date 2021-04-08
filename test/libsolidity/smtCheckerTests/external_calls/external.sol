@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {
 	function d() external virtual;
 }
@@ -16,5 +14,7 @@ contract C {
 		assert(x < 10);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (200-214): CHC: Assertion violation happens here.
+// Warning 6328: (167-181): CHC: Assertion violation happens here.

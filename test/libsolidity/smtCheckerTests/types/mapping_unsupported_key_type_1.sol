@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	mapping (string => uint) map;
@@ -8,4 +6,6 @@ contract C
 		assert(x == map[s]);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

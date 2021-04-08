@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiEncodeHash(uint a, uint b) public pure {
 		require(a == b);
@@ -7,3 +6,5 @@ contract C {
 		assert(keccak256(b1) == keccak256(b2));
 	}
 }
+// ====
+// SMTEngine: all

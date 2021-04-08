@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 interface I1 {
 }
 
@@ -27,6 +25,8 @@ contract C {
 		assert(type(I2).interfaceId == type(I3).interfaceId);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (449-501): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
-// Warning 6328: (536-588): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.h()
+// Warning 6328: (416-468): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g()
+// Warning 6328: (503-555): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.h()

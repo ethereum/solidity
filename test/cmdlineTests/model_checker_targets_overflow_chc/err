@@ -8,7 +8,7 @@ Transaction trace:
 test.constructor()
 State: arr = []
 test.f(0, 2)
- --> model_checker_targets_overflow_chc/input.sol:9:3:
+ --> model_checker_targets_overflow_chc/input.sol:8:3:
   |
-9 | 		x + type(uint).max;
+8 | 		x + type(uint).max;
   | 		^^^^^^^^^^^^^^^^^^

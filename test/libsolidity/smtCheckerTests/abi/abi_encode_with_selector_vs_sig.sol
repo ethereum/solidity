@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f(string memory sig, uint x, uint[] memory a) public pure {
 		bytes memory b1 = abi.encodeWithSignature(sig, x, a);
@@ -7,5 +6,7 @@ contract C {
 		assert(b1.length == b2.length);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (326-356): CHC: Assertion violation happens here.
+// Warning 6328: (294-324): CHC: Assertion violation happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] a;
 	function f(uint[] memory x, uint y) public {
@@ -10,7 +8,8 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 3944: (162-177): CHC: Underflow (resulting value less than 0) happens here.
-// Warning 6328: (150-184): CHC: Assertion violation happens here.
+// Warning 3944: (129-144): CHC: Underflow (resulting value less than 0) happens here.
+// Warning 6328: (117-151): CHC: Assertion violation happens here.

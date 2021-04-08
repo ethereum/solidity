@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder               v2;
 
 contract C {
@@ -9,3 +8,5 @@ contract C {
 		assert(arr.length == arr2.length);
 	}
 }
+// ====
+// SMTEngine: all

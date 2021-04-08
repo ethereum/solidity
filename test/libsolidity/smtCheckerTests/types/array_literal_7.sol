@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[] s;
@@ -18,6 +16,8 @@ contract C
 		assert(s[2] == c[3]);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (259-287): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\nb = [1, 2, 4, 3]\nc = [1, 2, 4, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()
-// Warning 6328: (348-368): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\nb = [1, 2, 4, 3]\nc = [1, 2, 4, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()
+// Warning 6328: (226-254): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\nb = [1, 2, 4, 3]\nc = [1, 2, 4, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()
+// Warning 6328: (315-335): CHC: Assertion violation happens here.\nCounterexample:\ns = [1, 2, 3]\na = [1, 2, 3]\nb = [1, 2, 4, 3]\nc = [1, 2, 4, 3]\n\nTransaction trace:\nC.constructor()\nState: s = []\nC.f()

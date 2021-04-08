@@ -1,7 +1,7 @@
 Warning: BMC: Underflow (resulting value less than 0) happens here.
- --> model_checker_targets_underflow_overflow_assert_bmc/input.sol:8:3:
+ --> model_checker_targets_underflow_overflow_assert_bmc/input.sol:7:3:
   |
-8 | 		--x;
+7 | 		--x;
   | 		^^^
 Note: Counterexample:
   <result> = (- 1)
@@ -12,9 +12,9 @@ Note: Callstack:
 Note:
 
 Warning: BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
- --> model_checker_targets_underflow_overflow_assert_bmc/input.sol:9:3:
+ --> model_checker_targets_underflow_overflow_assert_bmc/input.sol:8:3:
   |
-9 | 		x + type(uint).max;
+8 | 		x + type(uint).max;
   | 		^^^^^^^^^^^^^^^^^^
 Note: Counterexample:
   <result> = 2**256
@@ -25,9 +25,9 @@ Note: Callstack:
 Note:
 
 Warning: BMC: Assertion violation happens here.
-  --> model_checker_targets_underflow_overflow_assert_bmc/input.sol:12:3:
+  --> model_checker_targets_underflow_overflow_assert_bmc/input.sol:11:3:
    |
-12 | 		assert(x > 0);
+11 | 		assert(x > 0);
    | 		^^^^^^^^^^^^^
 Note: Counterexample:
   a = 0

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[] a;
 	uint l;
@@ -20,4 +18,6 @@ contract C {
 		return a[l - 1]; // safe access
 	}
 }
+// ====
+// SMTEngine: all
 // ----

@@ -1,5 +1,4 @@
 pragma solidity >=0.0;
-pragma experimental SMTChecker;
 contract test {
 	uint[] arr;
     function f(address payable a, uint x) public {

@@ -1,7 +1,7 @@
 Warning: BMC: Insufficient funds happens here.
-  --> model_checker_targets_balance_bmc/input.sol:11:3:
+  --> model_checker_targets_balance_bmc/input.sol:10:3:
    |
-11 | 		a.transfer(x);
+10 | 		a.transfer(x);
    | 		^^^^^^^^^^^^^
 Note: Counterexample:
   a = 0

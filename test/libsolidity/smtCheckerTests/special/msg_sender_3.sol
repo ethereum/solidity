@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	address owner;
 
@@ -19,3 +17,5 @@ contract D {
 		}
 	}
 }
+// ====
+// SMTEngine: all

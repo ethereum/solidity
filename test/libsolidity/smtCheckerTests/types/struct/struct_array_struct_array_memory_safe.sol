@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 pragma abicoder               v2;
 
 contract C {
@@ -29,3 +28,5 @@ contract C {
 		assert(s1.ts[4].a[5] == 6);
 	}
 }
+// ====
+// SMTEngine: all

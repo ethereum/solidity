@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	struct S
@@ -16,4 +14,6 @@ contract C
 		assert(s.x == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

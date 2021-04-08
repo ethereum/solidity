@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library L
 {
 	function add(uint x, uint y) internal pure returns (uint) {
@@ -17,5 +15,7 @@ contract C
 		assert(y < 1000);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (261-277): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 1\ny = 1000\n\nTransaction trace:\nC.constructor()\nC.f(1)\n    L.add(1, 999) -- internal call
+// Warning 6328: (228-244): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 1\ny = 1000\n\nTransaction trace:\nC.constructor()\nC.f(1)\n    L.add(1, 999) -- internal call

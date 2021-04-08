@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiEncodeStringLiteral() public pure {
 		bytes memory b1 = abi.encode("");
@@ -17,16 +16,18 @@ contract C {
 		assert(b1.length == b5.length); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (240-270): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (240-270): CHC: Assertion violation might happen here.
-// Warning 1218: (318-348): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (318-348): CHC: Assertion violation might happen here.
-// Warning 1218: (485-515): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (485-515): CHC: Assertion violation might happen here.
-// Warning 1218: (564-594): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (564-594): CHC: Assertion violation might happen here.
-// Warning 4661: (240-270): BMC: Assertion violation happens here.
-// Warning 4661: (318-348): BMC: Assertion violation happens here.
-// Warning 4661: (485-515): BMC: Assertion violation happens here.
-// Warning 4661: (564-594): BMC: Assertion violation happens here.
+// Warning 1218: (208-238): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (208-238): CHC: Assertion violation might happen here.
+// Warning 1218: (286-316): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (286-316): CHC: Assertion violation might happen here.
+// Warning 1218: (453-483): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (453-483): CHC: Assertion violation might happen here.
+// Warning 1218: (532-562): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (532-562): CHC: Assertion violation might happen here.
+// Warning 4661: (208-238): BMC: Assertion violation happens here.
+// Warning 4661: (286-316): BMC: Assertion violation happens here.
+// Warning 4661: (453-483): BMC: Assertion violation happens here.
+// Warning 4661: (532-562): BMC: Assertion violation happens here.

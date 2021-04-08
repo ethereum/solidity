@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 /**
  * @title MerkleProof
  * @dev Merkle proof verification based on
@@ -33,4 +31,6 @@ library MerkleProof {
     }
 }
 
+// ====
+// SMTEngine: all
 // ----

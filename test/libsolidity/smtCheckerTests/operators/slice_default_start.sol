@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes calldata b) external pure {
 		require(b.length > 20);
@@ -9,7 +7,9 @@ contract C {
 		assert(bytes(b[:20])[5] == 0xff);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (183-215): CHC: Assertion violation might happen here.
-// Warning 6328: (219-251): CHC: Assertion violation happens here.
-// Warning 4661: (183-215): BMC: Assertion violation happens here.
+// Warning 6328: (150-182): CHC: Assertion violation might happen here.
+// Warning 6328: (186-218): CHC: Assertion violation happens here.
+// Warning 4661: (150-182): BMC: Assertion violation happens here.

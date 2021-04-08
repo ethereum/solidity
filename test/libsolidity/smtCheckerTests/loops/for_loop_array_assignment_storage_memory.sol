@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 // Most of the code has been commented out because of nondeterminism in Spacer in Z3 4.8.9
 contract LoopFor2 {
 	uint[] b;
@@ -22,4 +20,6 @@ contract LoopFor2 {
 		//assert(b[0] == 900);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

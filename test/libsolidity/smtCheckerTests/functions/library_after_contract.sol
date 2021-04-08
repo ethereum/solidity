@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function g(uint y) public {
 		uint z = L.f(y);
@@ -13,5 +11,7 @@ library L {
 	}
 }
 
+// ====
+// SMTEngine: all
 // ----
-// Warning 2018: (131-190): Function state mutability can be restricted to pure
+// Warning 2018: (98-157): Function state mutability can be restricted to pure

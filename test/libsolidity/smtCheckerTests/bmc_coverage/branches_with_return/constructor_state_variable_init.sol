@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	int x;
 	constructor (int a) { x = a;}
@@ -37,7 +35,7 @@ contract C is B {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (330-344): BMC: Assertion violation happens here.
-// Warning 4661: (422-445): BMC: Assertion violation happens here.
-// Warning 4661: (522-546): BMC: Assertion violation happens here.
-// Warning 4661: (566-579): BMC: Assertion violation happens here.
+// Warning 4661: (297-311): BMC: Assertion violation happens here.
+// Warning 4661: (389-412): BMC: Assertion violation happens here.
+// Warning 4661: (489-513): BMC: Assertion violation happens here.
+// Warning 4661: (533-546): BMC: Assertion violation happens here.

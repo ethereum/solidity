@@ -4,4 +4,4 @@
 6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
   |                                                                                     ^^^^^^^^^^^^^^^^^^
 
-","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":258,"file":"A","start":240},"type":"Warning"}],"sources":{"A":{"id":0}}}
+","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":227,"file":"A","start":209},"type":"Warning"}],"sources":{"A":{"id":0}}}

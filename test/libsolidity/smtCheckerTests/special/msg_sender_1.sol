@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public view {
@@ -8,3 +6,5 @@ contract C
 		assert(a == b);
 	}
 }
+// ====
+// SMTEngine: all

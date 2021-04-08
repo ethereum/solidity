@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     function f(uint256 a, uint256 b) internal pure returns (uint256) {
         a >>= b;
@@ -12,4 +10,6 @@ contract C {
         assert(f(57896044618658097711785492504343953926634992332820282019728792003956564819968, 5) == 1809251394333065553493296640760748560207343510400633813116524750123642650624);
     }
 }
+// ====
+// SMTEngine: all
 // ----

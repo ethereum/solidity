@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 
 	function test() view public {
@@ -11,4 +9,6 @@ contract C {
 		return msg.sender == tx.origin;
 	}
 }
+// ====
+// SMTEngine: all
 // ----

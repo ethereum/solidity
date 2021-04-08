@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract LoopFor2 {
 	uint[] b;
 	uint[] c;
@@ -24,10 +22,12 @@ contract LoopFor2 {
 		assert(b[0] == 900);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (321-325): CHC: Out of bounds access might happen here.
-// Warning 6368: (345-349): CHC: Out of bounds access might happen here.
-// Warning 6368: (338-342): CHC: Out of bounds access might happen here.
-// Warning 6368: (444-448): CHC: Out of bounds access happens here.\nCounterexample:\nb = [1, 0], c = [1, 0]\nn = 1\na = []\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
-// Warning 6328: (437-456): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [1, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
-// Warning 6328: (460-479): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [1, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6368: (288-292): CHC: Out of bounds access might happen here.
+// Warning 6368: (312-316): CHC: Out of bounds access might happen here.
+// Warning 6368: (305-309): CHC: Out of bounds access might happen here.
+// Warning 6368: (411-415): CHC: Out of bounds access happens here.\nCounterexample:\nb = [1, 0], c = [1, 0]\nn = 1\na = []\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6328: (404-423): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [1, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)
+// Warning 6328: (427-446): CHC: Assertion violation happens here.\nCounterexample:\nb = [1, 0], c = [1, 0]\nn = 1\ni = 1\n\nTransaction trace:\nLoopFor2.constructor()\nState: b = [], c = []\nLoopFor2.p()\nState: b = [0], c = [0]\nLoopFor2.p()\nState: b = [0, 0], c = [0, 0]\nLoopFor2.testUnboundedForLoop(1)

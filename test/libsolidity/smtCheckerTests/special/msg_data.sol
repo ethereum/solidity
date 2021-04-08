@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public payable {
@@ -21,6 +19,8 @@ contract C
 		assert(msg.data[3] == 0x8f);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (153-180): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(){ value: 30612 }
-// Warning 6328: (500-527): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g(){ value: 30612 }
+// Warning 6328: (120-147): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f(){ value: 30612 }
+// Warning 6328: (467-494): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.g(){ value: 30612 }

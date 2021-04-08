@@ -22,7 +22,7 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 0)","severity":"warning","sourceLocation":{"end":208,"file":"A","start":205},"type":"Warning"},{"component":"general","errorCode":"4984","formattedMessage":"Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+test.f(0, 0)","severity":"warning","sourceLocation":{"end":177,"file":"A","start":174},"type":"Warning"},{"component":"general","errorCode":"4984","formattedMessage":"Warning: CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
 Counterexample:
 arr = []
 a = 0
@@ -46,4 +46,4 @@ x = 1
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 2)","severity":"warning","sourceLocation":{"end":234,"file":"A","start":216},"type":"Warning"}],"sources":{"A":{"id":0}}}
+test.f(0, 2)","severity":"warning","sourceLocation":{"end":203,"file":"A","start":185},"type":"Warning"}],"sources":{"A":{"id":0}}}

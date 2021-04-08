@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint256[] x;
 	function f(uint256 l) public {
@@ -11,4 +9,6 @@ contract C {
 		assert(x[0] == 42);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

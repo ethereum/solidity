@@ -8,7 +8,7 @@ Transaction trace:
 test.constructor()
 State: arr = []
 test.f(0, 1)
-  --> model_checker_targets_div_by_zero_chc/input.sol:10:3:
-   |
-10 | 		2 / x;
-   | 		^^^^^
+ --> model_checker_targets_div_by_zero_chc/input.sol:9:3:
+  |
+9 | 		2 / x;
+  | 		^^^^^
