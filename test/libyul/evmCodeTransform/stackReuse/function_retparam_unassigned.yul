@@ -1,14 +1,16 @@
 {
-    function f(a, b) { }
+    function f() -> x { pop(callvalue()) }
 }
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x8
+// PUSH1 0xB
 // JUMP
 // JUMPDEST
+// CALLVALUE
 // POP
-// POP
+// PUSH1 0x0
 // JUMPDEST
+// SWAP1
 // JUMP
 // JUMPDEST
