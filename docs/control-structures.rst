@@ -478,6 +478,7 @@ In any case, you will get a warning about the outer variable being shadowed.
     }
 
 
+.. index:: ! safe math, safemath, checked, unchecked
 .. _unchecked:
 
 Checked or Unchecked Arithmetic
@@ -501,11 +502,11 @@ To obtain the previous behaviour, an ``unchecked`` block can be used:
     pragma solidity ^0.8.0;
     contract C {
         function f(uint a, uint b) pure public returns (uint) {
-            // This addition will wrap on underflow.
+            // This subtraction will wrap on underflow.
             unchecked { return a - b; }
         }
         function g(uint a, uint b) pure public returns (uint) {
-            // This addition will revert on underflow.
+            // This subtraction will revert on underflow.
             return a - b;
         }
     }
