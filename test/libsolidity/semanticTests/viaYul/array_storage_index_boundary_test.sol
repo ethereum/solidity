@@ -22,7 +22,7 @@ contract C {
 // gas legacy: 648515
 // gas legacyOptimized: 628739
 // test_boundary_check(uint256,uint256): 256, 255 -> 0
-// gas irOptimized: 677586
+// gas irOptimized: 677515
 // gas legacy: 649549
 // gas legacyOptimized: 629633
 // test_boundary_check(uint256,uint256): 256, 0xFFFF -> FAILURE, hex"4e487b71", 0x32

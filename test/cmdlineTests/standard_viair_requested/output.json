@@ -89,7 +89,7 @@ object \"D_16\" {
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
                     fun_f_15()
-                    let memPos := allocate_memory(0)
+                    let memPos := allocate_unbounded()
                     let memEnd := abi_encode_tuple__to__fromStack(memPos  )
                     return(memPos, sub(memEnd, memPos))
                 }
@@ -109,20 +109,8 @@ object \"D_16\" {
 
             }
 
-            function allocate_memory(size) -> memPtr {
-                memPtr := allocate_unbounded()
-                finalize_allocation(memPtr, size)
-            }
-
             function allocate_unbounded() -> memPtr {
                 memPtr := mload(64)
-            }
-
-            function finalize_allocation(memPtr, size) {
-                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
-                // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
             }
 
             function fun_f_15() {
@@ -150,10 +138,6 @@ object \"D_16\" {
             function revert_forward_1() {
                 returndatacopy(0, 0, returndatasize())
                 revert(0, returndatasize())
-            }
-
-            function round_up_to_mul_of_32(value) -> result {
-                result := and(add(value, 31), not(31))
             }
 
             function shift_right_224_unsigned(value) -> newValue {

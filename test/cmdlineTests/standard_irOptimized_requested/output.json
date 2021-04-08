@@ -26,7 +26,7 @@ object \"C_7\" {
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
                     fun_f_6()
-                    let memPos := allocate_memory(0)
+                    let memPos := allocate_unbounded()
                     let memEnd := abi_encode_tuple__to__fromStack(memPos)
                     return(memPos, sub(memEnd, memPos))
                 }
@@ -40,31 +40,10 @@ object \"C_7\" {
             }
             function abi_encode_tuple__to__fromStack(headStart) -> tail
             { tail := add(headStart, 0) }
-            function allocate_memory(size) -> memPtr
-            {
-                memPtr := allocate_unbounded()
-                finalize_allocation(memPtr, size)
-            }
             function allocate_unbounded() -> memPtr
             { memPtr := mload(64) }
-            function finalize_allocation(memPtr, size)
-            {
-                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-            }
             function fun_f_6()
             { }
-            function panic_error_0x41()
-            {
-                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
-                mstore(4, 0x41)
-                revert(0, 0x24)
-            }
-            function round_up_to_mul_of_32(value) -> result
-            {
-                result := and(add(value, 31), not(31))
-            }
             function shift_right_224_unsigned(value) -> newValue
             { newValue := shr(224, value) }
         }

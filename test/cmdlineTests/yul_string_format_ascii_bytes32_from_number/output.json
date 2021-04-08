@@ -38,7 +38,7 @@ object \"C_11\" {
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
                     let ret_0 :=  fun_f_10()
-                    let memPos := allocate_memory(0)
+                    let memPos := allocate_unbounded()
                     let memEnd := abi_encode_tuple_t_bytes4__to_t_bytes4__fromStack(memPos , ret_0)
                     return(memPos, sub(memEnd, memPos))
                 }
@@ -64,11 +64,6 @@ object \"C_11\" {
 
             }
 
-            function allocate_memory(size) -> memPtr {
-                memPtr := allocate_unbounded()
-                finalize_allocation(memPtr, size)
-            }
-
             function allocate_unbounded() -> memPtr {
                 memPtr := mload(64)
             }
@@ -85,13 +80,6 @@ object \"C_11\" {
                 converted := shift_left_224(cleanup_t_rational_1633837924_by_1(value))
             }
 
-            function finalize_allocation(memPtr, size) {
-                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
-                // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-            }
-
             function fun_f_10() -> var__5 {
                 let zero_t_bytes4_1 := zero_value_for_split_t_bytes4()
                 var__5 := zero_t_bytes4_1
@@ -100,16 +88,6 @@ object \"C_11\" {
                 var__5 := convert_t_rational_1633837924_by_1_to_t_bytes4(expr_7)
                 leave
 
-            }
-
-            function panic_error_0x41() {
-                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
-                mstore(4, 0x41)
-                revert(0, 0x24)
-            }
-
-            function round_up_to_mul_of_32(value) -> result {
-                result := and(add(value, 31), not(31))
             }
 
             function shift_left_224(value) -> newValue {

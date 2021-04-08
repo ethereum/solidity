@@ -40,7 +40,7 @@ object "Arraysum_34" {
                             mstore(_1, _1)
                             var_sum := checked_add_uint256(var_sum, sload(add(keccak256(_1, 0x20), var_i)))
                         }
-                        let memPos := allocate_memory()
+                        let memPos := mload(64)
                         return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
                     }
                 }
@@ -50,17 +50,6 @@ object "Arraysum_34" {
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
-            }
-            function allocate_memory() -> memPtr
-            {
-                memPtr := mload(64)
-                if gt(memPtr, 0xffffffffffffffff)
-                {
-                    mstore(0, shl(224, 0x4e487b71))
-                    mstore(4, 0x41)
-                    revert(0, 0x24)
-                }
-                mstore(64, memPtr)
             }
             function checked_add_uint256(x, y) -> sum
             {

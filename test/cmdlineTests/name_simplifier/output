@@ -45,14 +45,14 @@ object "C_59" {
                         for { } lt(i, _4) { i := add(i, 1) }
                         {
                             if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
-                            let value := allocate_memory_1246()
+                            let value := allocate_memory_1245()
                             mstore(value, calldataload(src))
                             mstore(dst, value)
                             dst := add(dst, _2)
                             src := add(src, _2)
                         }
                         let ret, ret_1 := fun_sumArray(dst_1)
-                        let memPos := allocate_memory_1247()
+                        let memPos := mload(64)
                         return(memPos, sub(abi_encode_uint256_string(memPos, ret, ret_1), memPos))
                     }
                 }
@@ -76,18 +76,12 @@ object "C_59" {
                 }
                 tail := add(add(headStart, and(add(length, 31), not(31))), 96)
             }
-            function allocate_memory_1246() -> memPtr
+            function allocate_memory_1245() -> memPtr
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, 32)
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
-            }
-            function allocate_memory_1247() -> memPtr
-            {
-                memPtr := mload(64)
-                if gt(memPtr, 0xffffffffffffffff) { panic_error_0x41() }
-                mstore(64, memPtr)
             }
             function allocate_memory(size) -> memPtr
             {
@@ -117,7 +111,7 @@ object "C_59" {
             {
                 if iszero(lt(var_mpos, mload(var_s_mpos))) { panic_error_0x32() }
                 let _1 := mload(mload(add(add(var_s_mpos, shl(5, var_mpos)), 32)))
-                let _2, _3 := storage_array_index_access_struct_S_1254()
+                let _2, _3 := storage_array_index_access_struct_S_1252()
                 sstore(_2, _1)
                 if iszero(lt(0x01, mload(var_s_mpos))) { panic_error_0x32() }
                 let _4 := mload(mload(add(var_s_mpos, 64)))
@@ -143,7 +137,7 @@ object "C_59" {
                 mstore(4, 0x41)
                 revert(0, 0x24)
             }
-            function storage_array_index_access_struct_S_1254() -> slot, offset
+            function storage_array_index_access_struct_S_1252() -> slot, offset
             {
                 if iszero(lt(slot, 0x02)) { panic_error_0x32() }
                 slot := add(slot, slot)
