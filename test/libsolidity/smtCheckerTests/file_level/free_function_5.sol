@@ -5,4 +5,4 @@ function f() pure {
 // ====
 // SMTEngine: all
 // ----
-// Warning 6133: (67-83): Statement has no effect.
+// Warning 6133: (35-51): Statement has no effect.
