@@ -123,10 +123,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			methodName
 		);
 
+		optional<EvmoneUtility::LibraryStatus> libraryInfo;
+
 		if (!libraryName.empty()) {
 			cout << "Deploying library" << endl;
-			auto l = evmoneUtil.compileAndDeployLibrary();
-			if (!l.has_value())
+			libraryInfo = evmoneUtil.compileAndDeployLibrary();
+			if (!libraryInfo.has_value() || get<0>(libraryInfo.value()) != EVMC_SUCCESS)
 				return 0;
 			cout << "Deployed" << endl;
 		}
@@ -134,6 +136,11 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		map<h160, vector<string>> addressSelector;
 		for (auto const& account: hostContext.accounts)
 			addressSelector[EVMHost::convertFromEVMC(account.first)] = {};
+
+		// Add library functions to address selector
+		vector<string> libraryFunctionSelectors = get<2>(libraryInfo.value());
+		if (!libraryFunctionSelectors.empty())
+			addressSelector[get<1>(libraryInfo.value())] = libraryFunctionSelectors;
 
 		auto compilerOutput = evmoneUtil.compileContract();
 		if (!compilerOutput.has_value())
@@ -183,16 +190,36 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 		// Reset call state post old code gen run
 		hostContext.reset();
 		addressSelector.clear();
+		bool libraryFunctions = !libraryFunctionSelectors.empty();
+		libraryFunctionSelectors.clear();
 		evmoneUtil.optSetting(compilerSetting);
 		evmoneUtil.viaIR(true);
+
+		optional<EvmoneUtility::LibraryStatus> libraryInfoNew;
 		if (!libraryName.empty())
 		{
-			auto l = evmoneUtil.compileAndDeployLibrary();
-			solAssert(l.has_value(), "Deploying library failed for the second time");
+			libraryInfoNew = evmoneUtil.compileAndDeployLibrary();
+			solAssert(
+				libraryInfoNew.has_value() && get<0>(libraryInfoNew.value()) == EVMC_SUCCESS,
+				"Deploying library failed for the second time"
+			);
 		}
 
 		for (auto const& account: hostContext.accounts)
 			addressSelector[EVMHost::convertFromEVMC(account.first)] = {};
+
+		libraryFunctionSelectors = get<2>(libraryInfoNew.value());
+		// Library functions in both runs should either be both empty or
+		// both non-empty.
+		solAssert(
+			(
+				(libraryFunctions && !libraryFunctionSelectors.empty()) ||
+				(!libraryFunctions && libraryFunctionSelectors.empty())
+			),
+			"Library function mismatch."
+		);
+		if (!libraryFunctionSelectors.empty())
+			addressSelector[get<1>(libraryInfoNew.value())] = libraryFunctionSelectors;
 
 		auto compilerOutputOpt = evmoneUtil.compileContract();
 		solAssert(compilerOutputOpt.has_value(), "Contract could not be optimised.");

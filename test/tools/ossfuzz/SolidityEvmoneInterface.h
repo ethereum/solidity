@@ -218,8 +218,10 @@ public:
 	/// identifiers for methods in @param _contractName.
 	std::optional<CompilerOutput> compileContract();
 
+	using LibraryStatus = std::tuple<evmc_status_code, solidity::util::h160, std::vector<std::string>>;
+
 	/// Compiles and deploys library on blockchain.
-	std::optional<evmc::result> compileAndDeployLibrary();
+	std::optional<LibraryStatus> compileAndDeployLibrary();
 
 private:
 

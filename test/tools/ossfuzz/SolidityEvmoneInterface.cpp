@@ -156,7 +156,7 @@ evmc::result EvmoneUtility::deployAndExecute(
 	return callResult;
 }
 
-optional<evmc::result> EvmoneUtility::compileAndDeployLibrary()
+optional<EvmoneUtility::LibraryStatus> EvmoneUtility::compileAndDeployLibrary()
 {
 	solAssert(!m_libraryName.empty(), "SolidityEvmoneInterface: No library set.");
 	m_compilationFramework.contractName(m_libraryName);
@@ -171,10 +171,15 @@ optional<evmc::result> EvmoneUtility::compileAndDeployLibrary()
 			createResult.status_code == EVMC_SUCCESS,
 			"SolidityEvmoneInterface: Library deployment failed"
 		);
+		auto libraryAt = EVMHost::convertFromEVMC(createResult.create_address);
 		m_compilationFramework.libraryAddresses(
-			{{m_libraryName, EVMHost::convertFromEVMC(createResult.create_address)}}
+			{{m_libraryName, libraryAt}}
 		);
-		return createResult;
+		vector<string> libraryFunctionSelectors;
+		for (auto const& function: compilationOutput->methodIdentifiersInContract)
+			libraryFunctionSelectors.push_back(function.asString());
+
+		return LibraryStatus{createResult.status_code, libraryAt, libraryFunctionSelectors};
 	}
 	else
 		return nullopt;
@@ -187,7 +192,7 @@ optional<evmc::result> EvmoneUtility::compileDeployAndExecute(string _fuzzIsabel
 	{
 		auto r = compileAndDeployLibrary();
 		if (!r.has_value())
-			return r;
+			return nullopt;
 	}
 	// Stage 2: Compile, deploy, and execute contract, optionally using library
 	// address map.
