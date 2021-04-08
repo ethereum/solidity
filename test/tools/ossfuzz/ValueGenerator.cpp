@@ -162,6 +162,11 @@ std::string ValueGenerator::functionLiteral()
 {
 	std::string contractAddress;
 	std::string functionSelector;
+	// Selects a random function from the first address that contains non-zero
+	// number of function selectors. Usually this means that if a library and
+	// a contract are both present, then a library function is selected. If
+	// either only a contract or a library is present then a function in that
+	// unit is selected.
 	for (auto const& item: m_addressSelector)
 		if (!item.second.empty())
 		{
