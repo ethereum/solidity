@@ -263,6 +263,7 @@ YulLeave: 'leave';
 YulLet: 'let';
 YulSwitch: 'switch';
 YulTrue: 'true';
+YulHex: 'hex';
 
 /**
  * Builtin functions in the EVM Yul dialect.
@@ -314,7 +315,7 @@ YulDecimalNumber: '0' | ([1-9] [0-9]*);
 YulStringLiteral:
 	'"' DoubleQuotedStringCharacter* '"'
 	| '\'' SingleQuotedStringCharacter* '\'';
-
+YulHexStringLiteral: HexString;
 
 YulWS: [ \t\r\n\u000C]+ -> skip ;
 YulCOMMENT: '/*' .*? '*/' -> channel(HIDDEN) ;

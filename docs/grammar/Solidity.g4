@@ -564,5 +564,5 @@ yulPath: YulIdentifier (YulPeriod YulIdentifier)*;
  */
 yulFunctionCall: (YulIdentifier | YulEVMBuiltin) YulLParen (yulExpression (YulComma yulExpression)*)? YulRParen;
 yulBoolean: YulTrue | YulFalse;
-yulLiteral: YulDecimalNumber | YulStringLiteral | YulHexNumber | yulBoolean;
+yulLiteral: YulDecimalNumber | YulStringLiteral | YulHexNumber | yulBoolean | YulHexStringLiteral;
 yulExpression: yulPath | yulFunctionCall | yulLiteral;
