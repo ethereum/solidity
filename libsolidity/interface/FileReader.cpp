@@ -55,8 +55,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _pa
 		if (validPath.find("file://") == 0)
 			validPath.erase(0, 7);
 
-		auto const path = m_basePath / validPath;
-		auto canonicalPath = boost::filesystem::weakly_canonical(path);
+		auto canonicalPath = boost::filesystem::weakly_canonical(m_basePath / validPath);
 		bool isAllowed = false;
 		for (auto const& allowedDir: m_allowedDirectories)
 		{
@@ -81,7 +80,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _pa
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
 		auto contents = readFileAsString(canonicalPath.string());
-		m_sourceCodes[path.generic_string()] = contents;
+		m_sourceCodes[_path] = contents;
 		return ReadCallback::Result{true, contents};
 	}
 	catch (util::Exception const& _exception)
