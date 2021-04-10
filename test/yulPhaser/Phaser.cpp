@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <test/TemporaryDirectory.h>
 #include <test/yulPhaser/TestHelpers.h>
 
 #include <tools/yulPhaser/Exceptions.h>
@@ -31,6 +32,7 @@
 #include <algorithm>
 
 using namespace std;
+using namespace solidity::test;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
