@@ -27,19 +27,22 @@ using solidity::frontend::ReadCallback;
 using solidity::langutil::InternalCompilerError;
 using solidity::util::errinfo_comment;
 using solidity::util::readFileAsString;
+using std::distance;
+using std::equal;
+using std::move;
 using std::string;
 
 namespace solidity::frontend
 {
 
-void FileReader::setSource(boost::filesystem::path const& _path, std::string _source)
+void FileReader::setSource(boost::filesystem::path const& _path, string _source)
 {
-	m_sourceCodes[_path.generic_string()] = std::move(_source);
+	m_sourceCodes[_path.generic_string()] = move(_source);
 }
 
 void FileReader::setSources(StringMap _sources)
 {
-	m_sourceCodes = std::move(_sources);
+	m_sourceCodes = move(_sources);
 }
 
 ReadCallback::Result FileReader::readFile(string const& _kind, string const& _sourceUnitName)
@@ -55,14 +58,14 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 		if (strippedSourceUnitName.find("file://") == 0)
 			strippedSourceUnitName.erase(0, 7);
 
-		auto canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
+		boost::filesystem::path canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
 		bool isAllowed = false;
-		for (auto const& allowedDir: m_allowedDirectories)
+		for (boost::filesystem::path const& allowedDir: m_allowedDirectories)
 		{
 			// If dir is a prefix of boostPath, we are fine.
 			if (
-				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-				std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
+				distance(allowedDir.begin(), allowedDir.end()) <= distance(canonicalPath.begin(), canonicalPath.end()) &&
+				equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
 			)
 			{
 				isAllowed = true;
@@ -79,9 +82,9 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			return ReadCallback::Result{false, "Not a valid file."};
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		auto contents = readFileAsString(canonicalPath.string());
+		string contents = readFileAsString(canonicalPath.string());
 		m_sourceCodes[_sourceUnitName] = contents;
-		return ReadCallback::Result{true, contents};
+		return ReadCallback::Result{true, move(contents)};
 	}
 	catch (util::Exception const& _exception)
 	{

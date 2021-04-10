@@ -605,36 +605,36 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				addStdin = true;
 			else
 			{
-				auto infile = boost::filesystem::path(path);
-				if (!boost::filesystem::exists(infile))
+				boost::filesystem::path inputFilePath = path;
+				if (!boost::filesystem::exists(inputFilePath))
 				{
 					if (!ignoreMissing)
 					{
-						serr() << infile << " is not found." << endl;
+						serr() << inputFilePath << " is not found." << endl;
 						return false;
 					}
 					else
-						serr() << infile << " is not found. Skipping." << endl;
+						serr() << inputFilePath << " is not found. Skipping." << endl;
 
 					continue;
 				}
 
-				if (!boost::filesystem::is_regular_file(infile))
+				if (!boost::filesystem::is_regular_file(inputFilePath))
 				{
 					if (!ignoreMissing)
 					{
-						serr() << infile << " is not a valid file." << endl;
+						serr() << inputFilePath << " is not a valid file." << endl;
 						return false;
 					}
 					else
-						serr() << infile << " is not a valid file. Skipping." << endl;
+						serr() << inputFilePath << " is not a valid file. Skipping." << endl;
 
 					continue;
 				}
 
 				// NOTE: we ignore the FileNotFound exception as we manually check above
-				m_fileReader.setSource(infile, readFileAsString(infile.string()));
-				m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(infile).string()).remove_filename());
+				m_fileReader.setSource(inputFilePath, readFileAsString(inputFilePath.string()));
+				m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(inputFilePath).string()).remove_filename());
 			}
 		}
 
@@ -1184,13 +1184,13 @@ bool CommandLineInterface::processInput()
 {
 	if (m_args.count(g_argBasePath))
 	{
-		boost::filesystem::path const fspath{m_args[g_argBasePath].as<string>()};
-		if (!boost::filesystem::is_directory(fspath))
+		boost::filesystem::path basePath = m_args[g_argBasePath].as<string>();
+		if (!boost::filesystem::is_directory(basePath))
 		{
-			serr() << "Base path must be a directory: \"" << fspath << "\"\n";
+			serr() << "Base path must be a directory: \"" << basePath << "\"\n";
 			return false;
 		}
-		m_fileReader.setBasePath(fspath);
+		m_fileReader.setBasePath(basePath);
 	}
 
 	if (m_args.count(g_argAllowPaths))
