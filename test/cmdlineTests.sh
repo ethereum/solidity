@@ -304,13 +304,22 @@ printTask "Running general commandline tests..."
 
         if [ "${inputFile}" = "${tdir}/input.json" ]
         then
+            ! [ -e "${tdir}/stdin" ] || { printError "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."; exit 1; }
+
             stdin="${inputFile}"
             inputFile=""
             stdout="$(cat "${tdir}/output.json" 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output.json"
             command_args="--standard-json "$(cat "${tdir}/args" 2>/dev/null || true)
         else
-            stdin=""
+            if [ -e "${tdir}/stdin" ]
+            then
+                stdin="${tdir}/stdin"
+                [ -f "${tdir}/stdin" ] || { printError "'stdin' is not a regular file."; exit 1; }
+            else
+                stdin=""
+            fi
+
             stdout="$(cat "${tdir}/output" 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output"
             command_args=$(cat "${tdir}/args" 2>/dev/null || true)
