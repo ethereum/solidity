@@ -114,7 +114,7 @@ private:
 
 	bool m_onlyLink = false;
 
-	FileReader m_fileReader;
+	std::optional<FileReader> m_fileReader;
 
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;

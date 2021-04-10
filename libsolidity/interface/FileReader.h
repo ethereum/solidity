@@ -46,7 +46,6 @@ public:
 		FileSystemPathSet _allowedDirectories = {}
 	);
 
-	void setBasePath(boost::filesystem::path _path) { m_basePath = std::move(_path); }
 	boost::filesystem::path const& basePath() const noexcept { return m_basePath; }
 
 	void allowDirectory(boost::filesystem::path _path);
