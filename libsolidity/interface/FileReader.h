@@ -81,6 +81,9 @@ public:
 		return [this](std::string const& _kind, std::string const& _path) { return readFile(_kind, _path); };
 	}
 
+	std::string toSourceUnitName(boost::filesystem::path const& _cliPath) const;
+	boost::filesystem::path fromSourceUnitName(std::string _sourceUnitName) const;
+
 private:
 	/// Base path, used for resolving relative paths in imports.
 	boost::filesystem::path m_basePath;

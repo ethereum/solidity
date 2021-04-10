@@ -90,7 +90,7 @@ bool FileReader::inAllowedDirectory(boost::filesystem::path const& _canonicalPat
 
 void FileReader::setSource(boost::filesystem::path const& _path, string _source)
 {
-	m_sourceCodes[_path.generic_string()] = move(_source);
+	m_sourceCodes[toSourceUnitName(_path)] = move(_source);
 }
 
 void FileReader::setSources(StringMap _sources)
@@ -107,11 +107,8 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 				"ReadFile callback used as callback kind " +
 				_kind
 			));
-		string strippedSourceUnitName = _sourceUnitName;
-		if (strippedSourceUnitName.find("file://") == 0)
-			strippedSourceUnitName.erase(0, 7);
 
-		boost::filesystem::path canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
+		boost::filesystem::path canonicalPath = fromSourceUnitName(_sourceUnitName);
 
 		if (!inAllowedDirectory(canonicalPath))
 			return ReadCallback::Result{false, "File outside of allowed directories."};
@@ -137,5 +134,17 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
+string FileReader::toSourceUnitName(boost::filesystem::path const& _fsPath) const
+{
+	return _fsPath.generic_string();
 }
 
+boost::filesystem::path FileReader::fromSourceUnitName(string _sourceUnitName) const
+{
+	if (_sourceUnitName.find("file://") == 0)
+		_sourceUnitName.erase(0, 7);
+
+	return boost::filesystem::weakly_canonical(m_basePath / _sourceUnitName);
+}
+
+}
