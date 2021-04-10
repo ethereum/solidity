@@ -44,16 +44,14 @@ public:
 	explicit FileReader(
 		boost::filesystem::path _basePath = {},
 		FileSystemPathSet _allowedDirectories = {}
-	):
-		m_basePath(std::move(_basePath)),
-		m_allowedDirectories(std::move(_allowedDirectories)),
-		m_sourceCodes()
-	{}
+	);
 
 	void setBasePath(boost::filesystem::path _path) { m_basePath = std::move(_path); }
 	boost::filesystem::path const& basePath() const noexcept { return m_basePath; }
 
-	void allowDirectory(boost::filesystem::path _path) { m_allowedDirectories.insert(std::move(_path)); }
+	void allowDirectory(boost::filesystem::path _path);
+	void allowParentDirectory(boost::filesystem::path _file);
+	bool inAllowedDirectory(boost::filesystem::path const& _canonicalPath) const;
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
 
 	StringMap const& sourceCodes() const noexcept { return m_sourceCodes; }

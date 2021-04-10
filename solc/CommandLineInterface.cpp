@@ -599,7 +599,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				}
 
 				string remappingTarget(eq + 1, path.end());
-				m_fileReader.allowDirectory(boost::filesystem::path(remappingTarget).remove_filename());
+				m_fileReader.allowParentDirectory(boost::filesystem::path(remappingTarget));
 			}
 			else if (path == "-")
 				addStdin = true;
@@ -633,8 +633,9 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				}
 
 				// NOTE: we ignore the FileNotFound exception as we manually check above
+				// TMP: canonical() should not be needed here
+				m_fileReader.allowParentDirectory(boost::filesystem::canonical(inputFilePath).string());
 				m_fileReader.setSource(inputFilePath, readFileAsString(inputFilePath.string()));
-				m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(inputFilePath).string()).remove_filename());
 			}
 		}
 
@@ -1195,18 +1196,9 @@ bool CommandLineInterface::processInput()
 
 	if (m_args.count(g_argAllowPaths))
 	{
-		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
-		{
-			auto filesystem_path = boost::filesystem::path(path);
-			// If the given path had a trailing slash, the Boost filesystem
-			// path will have it's last component set to '.'. This breaks
-			// path comparison in later parts of the code, so we need to strip
-			// it.
-			if (filesystem_path.filename() == ".")
-				filesystem_path.remove_filename();
-			m_fileReader.allowDirectory(filesystem_path);
-		}
+		vector<string> allowedDirectoriesAsStrings;
+		for (string const& path: boost::split(allowedDirectoriesAsStrings, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
+			m_fileReader.allowDirectory(path);
 	}
 
 	if (m_args.count(g_strStopAfter))
