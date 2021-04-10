@@ -24,11 +24,6 @@
 namespace solidity::frontend
 {
 
-// Some helper typedefs to make reading the signatures more self explaining.
-using SourceUnitName = std::string;
-using SourceCode = std::string;
-using ImportPath = std::string;
-
 /// The ImportRemapper is being used on imported file paths for being remapped to source unit IDs before being loaded.
 class ImportRemapper
 {
@@ -45,7 +40,7 @@ public:
 	void setRemappings(std::vector<Remapping> _remappings);
 	std::vector<Remapping> const& remappings() const noexcept { return m_remappings; }
 
-	SourceUnitName apply(ImportPath const& _path, std::string const& _context) const;
+	std::string apply(std::string const& _path, std::string const& _context) const;
 
 	// Parses a remapping of the format "context:prefix=target".
 	static std::optional<Remapping> parseRemapping(std::string const& _remapping);

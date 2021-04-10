@@ -750,7 +750,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 	map<string, Json::Value> sourceJsons;
 	map<string, string> tmpSources;
 
-	for (SourceCode const& sourceCode: m_fileReader.sourceCodes() | ranges::views::values)
+	for (string const& sourceCode: m_fileReader.sourceCodes() | ranges::views::values)
 	{
 		Json::Value ast;
 		astAssert(jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");

@@ -36,7 +36,7 @@ void ImportRemapper::setRemappings(vector<Remapping> _remappings)
 	m_remappings = move(_remappings);
 }
 
-SourceUnitName ImportRemapper::apply(ImportPath const& _path, string const& _context) const
+std::string ImportRemapper::apply(std::string const& _path, string const& _context) const
 {
 	// Try to find the longest prefix match in all remappings that are active in the current context.
 	auto isPrefixOf = [](string const& _a, string const& _b)

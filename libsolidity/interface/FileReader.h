@@ -35,8 +35,8 @@ namespace solidity::frontend
 class FileReader
 {
 public:
-	using StringMap = std::map<SourceUnitName, SourceCode>;
-	using PathMap = std::map<SourceUnitName, boost::filesystem::path>;
+	using StringMap = std::map<std::string, std::string>;
+	using PathMap = std::map<std::string, boost::filesystem::path>;
 	using FileSystemPathSet = std::set<boost::filesystem::path>;
 
 	/// Constructs a FileReader with a base path and a set of allowed directories that
@@ -59,7 +59,7 @@ public:
 	StringMap const& sourceCodes() const noexcept { return m_sourceCodes; }
 
 	/// Retrieves the source code for a given source unit ID.
-	SourceCode const& sourceCode(SourceUnitName const& _sourceUnitName) const { return m_sourceCodes.at(_sourceUnitName); }
+	std::string const& sourceCode(std::string const& _sourceUnitName) const { return m_sourceCodes.at(_sourceUnitName); }
 
 	/// Resets all sources to the given map of source unit ID to source codes.
 	/// Does not enforce @a allowedDirectories().
@@ -67,7 +67,7 @@ public:
 
 	/// Adds the source code for a given source unit ID.
 	/// Does not enforce @a allowedDirectories().
-	void setSource(boost::filesystem::path const& _path, SourceCode _source);
+	void setSource(boost::filesystem::path const& _path, std::string _source);
 
 	/// Receives a @p _sourceUnitName that refers to a source unit in compiler's virtual filesystem
 	/// and attempts to interpret it as a path and read the corresponding file from disk.

@@ -32,7 +32,7 @@ using std::string;
 namespace solidity::frontend
 {
 
-void FileReader::setSource(boost::filesystem::path const& _path, SourceCode _source)
+void FileReader::setSource(boost::filesystem::path const& _path, std::string _source)
 {
 	m_sourceCodes[_path.generic_string()] = std::move(_source);
 }
