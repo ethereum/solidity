@@ -131,9 +131,11 @@ function test_solc_behaviour()
 
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
-    local solc_command="$SOLC ${filename} ${solc_args[*]} <$solc_stdin"
+    [[ $filename == "" ]] || solc_args+=("$filename")
+
+    local solc_command="$SOLC ${solc_args[*]} <$solc_stdin"
     set +e
-    "$SOLC" "${filename}" "${solc_args[@]}" <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
+    "$SOLC" "${solc_args[@]}" <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
     exitCode=$?
     set -e
 
@@ -299,11 +301,6 @@ printTask "Running general commandline tests..."
 
         # Use printf to get rid of the trailing newline
         inputFile=$(printf "%s" "${inputFiles}")
-
-        # If no files specified, assume input.sol as the default
-        if [ -z "${inputFile}" ]; then
-            inputFile="${tdir}/input.sol"
-        fi
 
         if [ "${inputFile}" = "${tdir}/input.json" ]
         then
