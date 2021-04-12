@@ -19,6 +19,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Antlr Grammar: Fix parsing of import paths involving properly distinguishing between empty and non-empty string literals in general.
  * AST Output: Fix ``kind`` field of ``ModifierInvocation`` for base constructor calls.
  * SMTChecker: Fix false positive and false negative on ``push`` as LHS of a compound assignment.
  * SMTChecker: Fix false positive in contracts that cannot be deployed.
