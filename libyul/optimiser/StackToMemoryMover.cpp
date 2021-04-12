@@ -50,7 +50,7 @@ vector<Statement> generateMemoryStore(
 		Identifier{_loc, memoryStoreFunction->name},
 		{
 			Literal{_loc, LiteralKind::Number, _mpos, {}},
-			std::move(_value)
+			move(_value)
 		}
 	}});
 	return result;
@@ -89,7 +89,7 @@ void StackToMemoryMover::run(
 		util::applyMap(
 			FunctionDefinitionCollector::run(_block),
 			util::mapTuple([](YulString _name, FunctionDefinition const* _funDef) {
-				return std::make_pair(_name, _funDef->returnVariables);
+				return make_pair(_name, _funDef->returnVariables);
 			}),
 			map<YulString, TypedNameList>{}
 		)
@@ -123,7 +123,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 
 	vector<Statement> memoryVariableInits;
 
-	// All function arguments with a memory slot are moved at the beginning of the function body.
+	// All function parameters with a memory slot are moved at the beginning of the function body.
 	for (TypedName const& param: _functionDefinition.parameters)
 		if (auto slot = m_memoryOffsetTracker(param.name))
 			memoryVariableInits += generateMemoryStore(
@@ -146,15 +146,15 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 	// Special case of a function with a single return argument that needs to move to memory.
 	if (_functionDefinition.returnVariables.size() == 1 && m_memoryOffsetTracker(_functionDefinition.returnVariables.front().name))
 	{
-		TypedNameList stackArguments = _functionDefinition.parameters | ranges::views::filter([&](TypedName const& _arg){
-			return !m_memoryOffsetTracker(_arg.name);
-		}) | ranges::to<TypedNameList>;
-		// Generate new function without return argument and with only the non-moved arguments.
+		TypedNameList stackParameters = _functionDefinition.parameters | ranges::views::filter(
+			not_fn(m_memoryOffsetTracker)
+		) | ranges::to<TypedNameList>;
+		// Generate new function without return variable and with only the non-moved parameters.
 		YulString newFunctionName = m_context.dispenser.newName(_functionDefinition.name);
 		m_newFunctionDefinitions.emplace_back(FunctionDefinition{
 			_functionDefinition.location,
 			newFunctionName,
-			stackArguments,
+			stackParameters,
 			{},
 			move(_functionDefinition.body)
 		});
@@ -165,11 +165,8 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 			FunctionCall{
 				_functionDefinition.location,
 				Identifier{_functionDefinition.location, newFunctionName},
-				stackArguments | ranges::views::transform([&](TypedName const& _arg) {
-					return Expression{Identifier{
-						_functionDefinition.location,
-						_arg.name
-					}};
+				stackParameters | ranges::views::transform([&](TypedName const& _arg) {
+					return Expression{Identifier{_arg.location, _arg.name}};
 				}) | ranges::to<vector<Expression>>
 			}
 		});
@@ -186,19 +183,16 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 	}
 
 	if (!memoryVariableInits.empty())
-	{
-		memoryVariableInits += move(_functionDefinition.body.statements);
-		_functionDefinition.body.statements = move(memoryVariableInits);
-	}
+		_functionDefinition.body.statements = move(memoryVariableInits) + move(_functionDefinition.body.statements);
 
-	_functionDefinition.returnVariables = _functionDefinition.returnVariables | ranges::views::filter([&](TypedName const& _name){
-		return !m_memoryOffsetTracker(_name.name);
-	}) | ranges::to<TypedNameList>;
+	_functionDefinition.returnVariables = _functionDefinition.returnVariables | ranges::views::filter(
+		not_fn(m_memoryOffsetTracker)
+	) | ranges::to<TypedNameList>;
 }
 
 void StackToMemoryMover::operator()(Block& _block)
 {
-	using OptionalStatements = std::optional<vector<Statement>>;
+	using OptionalStatements = optional<vector<Statement>>;
 
 	auto rewriteAssignmentOrVariableDeclarationLeftHandSide = [this](
 		auto& _stmt,
@@ -209,38 +203,36 @@ void StackToMemoryMover::operator()(Block& _block)
 		langutil::SourceLocation  loc = _stmt.location;
 		if (_lhsVars.size() == 1)
 		{
-			optional<YulString> offset = m_memoryOffsetTracker(_lhsVars.front().name);
-			if (offset)
+			if (optional<YulString> offset = m_memoryOffsetTracker(_lhsVars.front().name))
 				return generateMemoryStore(
 					m_context.dialect,
 					loc,
 					*offset,
-					_stmt.value ? *std::move(_stmt.value) : Literal{loc, LiteralKind::Number, "0"_yulstring, {}}
+					_stmt.value ? *move(_stmt.value) : Literal{loc, LiteralKind::Number, "0"_yulstring, {}}
 				);
 			else
 				return {};
 		}
 		FunctionCall const* functionCall = get_if<FunctionCall>(_stmt.value.get());
 		yulAssert(functionCall, "");
-		auto rhsSlots = m_functionReturnVariables.at(functionCall->functionName.name) |
-			ranges::views::transform([&](auto const& _var) {
-				return m_memoryOffsetTracker(_var.name);
-			}) | ranges::to<vector<optional<YulString>>>;
+		auto rhsMemorySlots = m_functionReturnVariables.at(functionCall->functionName.name) |
+			ranges::views::transform(m_memoryOffsetTracker) |
+			ranges::to<vector<optional<YulString>>>;
 
 		// Nothing to do, if the right-hand-side remains entirely on the stack and
 		// none of the variables in the left-hand-side are moved.
 		if (
-			ranges::none_of(rhsSlots, [](optional<YulString> const& _slot) { return _slot.has_value(); }) &&
-			!util::contains_if(_lhsVars, [&](auto const& var) { return m_memoryOffsetTracker(var.name); })
+			ranges::none_of(rhsMemorySlots, [](optional<YulString> const& _slot) { return _slot.has_value(); }) &&
+			!util::contains_if(_lhsVars, m_memoryOffsetTracker)
 		)
 			return {};
 
 		vector<Statement> memoryAssignments;
 		vector<Statement> variableAssignments;
-		VariableDeclaration tempDecl{loc, {}, std::move(_stmt.value)};
+		VariableDeclaration tempDecl{loc, {}, move(_stmt.value)};
 
-		yulAssert(rhsSlots.size() == _lhsVars.size(), "");
-		for (auto&& [lhsVar, rhsSlot]: ranges::views::zip(_lhsVars, rhsSlots))
+		yulAssert(rhsMemorySlots.size() == _lhsVars.size(), "");
+		for (auto&& [lhsVar, rhsSlot]: ranges::views::zip(_lhsVars, rhsMemorySlots))
 		{
 			unique_ptr<Expression> rhs;
 			if (rhsSlot)
@@ -261,20 +253,21 @@ void StackToMemoryMover::operator()(Block& _block)
 				);
 			else
 				variableAssignments.emplace_back(StatementType{
-					loc, { std::move(lhsVar) },
+					loc,
+					{ move(lhsVar) },
 					move(rhs)
 				});
 		}
 
-		std::vector<Statement> result;
+		vector<Statement> result;
 		if (tempDecl.variables.empty())
 			result.emplace_back(ExpressionStatement{loc, *move(tempDecl.value)});
 		else
-			result.emplace_back(std::move(tempDecl));
-		std::reverse(memoryAssignments.begin(), memoryAssignments.end());
-		result += std::move(memoryAssignments);
-		std::reverse(variableAssignments.begin(), variableAssignments.end());
-		result += std::move(variableAssignments);
+			result.emplace_back(move(tempDecl));
+		reverse(memoryAssignments.begin(), memoryAssignments.end());
+		result += move(memoryAssignments);
+		reverse(variableAssignments.begin(), variableAssignments.end());
+		result += move(variableAssignments);
 		return OptionalStatements{move(result)};
 	};
 
@@ -283,9 +276,9 @@ void StackToMemoryMover::operator()(Block& _block)
 		[&](Statement& _statement) -> OptionalStatements
 		{
 			visit(_statement);
-			if (auto* assignment = std::get_if<Assignment>(&_statement))
+			if (auto* assignment = get_if<Assignment>(&_statement))
 				return rewriteAssignmentOrVariableDeclarationLeftHandSide(*assignment, assignment->variableNames);
-			else if (auto* varDecl = std::get_if<VariableDeclaration>(&_statement))
+			else if (auto* varDecl = get_if<VariableDeclaration>(&_statement))
 				return rewriteAssignmentOrVariableDeclarationLeftHandSide(*varDecl, varDecl->variables);
 			return {};
 		}
@@ -295,7 +288,7 @@ void StackToMemoryMover::operator()(Block& _block)
 void StackToMemoryMover::visit(Expression& _expression)
 {
 	ASTModifier::visit(_expression);
-	if (Identifier* identifier = std::get_if<Identifier>(&_expression))
+	if (Identifier* identifier = get_if<Identifier>(&_expression))
 		if (optional<YulString> offset = m_memoryOffsetTracker(identifier->name))
 			_expression = generateMemoryLoad(m_context.dialect, identifier->location, *offset);
 }
@@ -309,5 +302,15 @@ optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(
 		return YulString{util::toCompactHexWithPrefix(m_reservedMemory + 32 * (m_numRequiredSlots - slot - 1))};
 	}
 	else
-		return std::nullopt;
+		return nullopt;
+}
+
+optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(TypedName const& _variable) const
+{
+	return (*this)(_variable.name);
+}
+
+optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(Identifier const& _variable) const
+{
+	return (*this)(_variable.name);
 }
