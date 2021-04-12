@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
+ * Code generator for translating Yul / inline assembly to EVM.
  */
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
@@ -24,6 +24,8 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Utilities.h>
+
+#include <libsolutil/Visitor.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -41,62 +43,6 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::util;
-
-void VariableReferenceCounter::operator()(Identifier const& _identifier)
-{
-	increaseRefIfFound(_identifier.name);
-}
-
-void VariableReferenceCounter::operator()(FunctionDefinition const& _function)
-{
-	Scope* originalScope = m_scope;
-
-	yulAssert(m_info.virtualBlocks.at(&_function), "");
-	m_scope = m_info.scopes.at(m_info.virtualBlocks.at(&_function).get()).get();
-	yulAssert(m_scope, "Variable scope does not exist.");
-
-	for (auto const& v: _function.returnVariables)
-		increaseRefIfFound(v.name);
-
-	VariableReferenceCounter{m_context, m_info}(_function.body);
-
-	m_scope = originalScope;
-}
-
-void VariableReferenceCounter::operator()(ForLoop const& _forLoop)
-{
-	Scope* originalScope = m_scope;
-	// Special scoping rules.
-	m_scope = m_info.scopes.at(&_forLoop.pre).get();
-
-	walkVector(_forLoop.pre.statements);
-	visit(*_forLoop.condition);
-	(*this)(_forLoop.body);
-	(*this)(_forLoop.post);
-
-	m_scope = originalScope;
-}
-
-void VariableReferenceCounter::operator()(Block const& _block)
-{
-	Scope* originalScope = m_scope;
-	m_scope = m_info.scopes.at(&_block).get();
-
-	ASTWalker::operator()(_block);
-
-	m_scope = originalScope;
-}
-
-void VariableReferenceCounter::increaseRefIfFound(YulString _variableName)
-{
-	m_scope->lookup(_variableName, GenericVisitor{
-		[&](Scope::Variable const& _var)
-		{
-			++m_context.variableReferences[&_var];
-		},
-		[](Scope::Function const&) { }
-	});
-}
 
 CodeTransform::CodeTransform(
 	AbstractAssembly& _assembly,
@@ -127,7 +73,7 @@ CodeTransform::CodeTransform(
 		// initialize
 		m_context = make_shared<Context>();
 		if (m_allowStackOpt)
-			VariableReferenceCounter{*m_context, m_info}(_block);
+			m_context->variableReferences = VariableReferenceCounter::run(m_info, _block);
 	}
 }
 
