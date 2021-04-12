@@ -11,7 +11,8 @@ function fun(uint[] calldata _x, uint[] storage _y) view  returns (uint, uint[] 
 }
 // ====
 // SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 4984: (190-202): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\ndata = []\nx = 1\n = 0\n = 0\na = 0\n\nTransaction trace:\nC.constructor()\nState: data = []\nC.f(1, input)\n    ::fun(_x, []) -- internal call
-// Warning 4984: (190-206): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.\nCounterexample:\ndata = []\nx = 115792089237316195423570985008687907853269984665640564039457584007913129632175\n = 0\n = 0\na = 0\n\nTransaction trace:\nC.constructor()\nState: data = []\nC.f(115792089237316195423570985008687907853269984665640564039457584007913129632175, input)\n    ::fun(_x, []) -- internal call
-// Warning 6368: (315-320): CHC: Out of bounds access happens here.\nCounterexample:\ndata = []\nx = 0\ninput = [5, 5, 5, 5, 5, 5, 5, 5, 5, 11, 5, 5, 14, 5, 5, 5, 5, 5, 19, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]\n = 0\n = 0\n\nTransaction trace:\nC.constructor()\nState: data = []\nC.f(0, [5, 5, 5, 5, 5, 5, 5, 5, 5, 11, 5, 5, 14, 5, 5, 5, 5, 5, 19, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5])\n    ::fun([5, 5, 5, 5, 5, 5, 5, 5, 5, 11, 5, 5, 14, 5, 5, 5, 5, 5, 19, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5], []) -- internal call
+// Warning 4984: (190-202): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 4984: (190-206): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6368: (315-320): CHC: Out of bounds access happens here.
