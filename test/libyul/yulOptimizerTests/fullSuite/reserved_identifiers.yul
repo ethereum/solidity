@@ -26,7 +26,7 @@
 //     }
 //     function datasize_(x) -> linkersymbol_
 //     {
-//         if calldataload(linkersymbol_) { linkersymbol_ := datasize_(x) }
+//         if calldataload(0) { linkersymbol_ := datasize_(x) }
 //         sstore(linkersymbol_, calldataload(linkersymbol_))
 //     }
 // }

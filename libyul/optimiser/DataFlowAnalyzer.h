@@ -83,7 +83,8 @@ public:
 	///            The parameter is mostly used to determine movability of expressions.
 	explicit DataFlowAnalyzer(
 		Dialect const& _dialect,
-		std::map<YulString, SideEffects> _functionSideEffects = {}
+		std::map<YulString, SideEffects> _functionSideEffects = {},
+		bool _assumeReturnVariablesZeroInitialized = true
 	);
 
 	using ASTModifier::operator();
@@ -186,6 +187,9 @@ protected:
 	Expression const m_zero{Literal{{}, LiteralKind::Number, YulString{"0"}, {}}};
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
+
+	/// True if uninitialized function return variables should be assumed to be zero.
+	bool m_assumeReturnVariablesZeroInitialized = true;
 };
 
 }

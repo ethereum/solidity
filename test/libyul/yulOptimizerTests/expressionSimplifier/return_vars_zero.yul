@@ -12,5 +12,5 @@
 // {
 //     let t, v := f()
 //     function f() -> c, d
-//     { sstore(d, 7) }
+//     { sstore(0, 7) }
 // }

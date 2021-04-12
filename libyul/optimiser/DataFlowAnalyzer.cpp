@@ -43,11 +43,13 @@ using namespace solidity::yul;
 
 DataFlowAnalyzer::DataFlowAnalyzer(
 	Dialect const& _dialect,
-	map<YulString, SideEffects> _functionSideEffects
+	map<YulString, SideEffects> _functionSideEffects,
+	bool _assumeReturnVariablesZeroInitialized
 ):
 m_dialect(_dialect),
 m_functionSideEffects(std::move(_functionSideEffects)),
-m_knowledgeBase(_dialect, m_value)
+m_knowledgeBase(_dialect, m_value),
+m_assumeReturnVariablesZeroInitialized(_assumeReturnVariablesZeroInitialized)
 {
 	if (auto const* builtin = _dialect.memoryStoreFunction(YulString{}))
 		m_storeFunctionName[static_cast<unsigned>(StoreLoadLocation::Memory)] = builtin->name;
@@ -173,7 +175,8 @@ void DataFlowAnalyzer::operator()(FunctionDefinition& _fun)
 	for (auto const& var: _fun.returnVariables)
 	{
 		m_variableScopes.back().variables.emplace(var.name);
-		handleAssignment({var.name}, nullptr, true);
+		if (m_assumeReturnVariablesZeroInitialized)
+			handleAssignment({var.name}, nullptr, true);
 	}
 	ASTModifier::operator()(_fun);
 
