@@ -48,6 +48,13 @@ using namespace solidity::yul::test;
 
 using solidity::util::h256;
 
+void InterpreterState::dumpStorage(ostream& _out) const
+{
+	for (auto const& slot: storage)
+		if (slot.second != h256{})
+			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+}
+
 void InterpreterState::dumpTraceAndState(ostream& _out) const
 {
 	_out << "Trace:" << endl;
@@ -61,9 +68,7 @@ void InterpreterState::dumpTraceAndState(ostream& _out) const
 		if (value != 0)
 			_out << "  " << std::uppercase << std::hex << std::setw(4) << offset << ": " << h256(value).hex() << endl;
 	_out << "Storage dump:" << endl;
-	for (auto const& slot: storage)
-		if (slot.second != h256{})
-			_out << "  " << slot.first.hex() << ": " << slot.second.hex() << endl;
+	dumpStorage(_out);
 }
 
 void Interpreter::run(InterpreterState& _state, Dialect const& _dialect, Block const& _ast)
