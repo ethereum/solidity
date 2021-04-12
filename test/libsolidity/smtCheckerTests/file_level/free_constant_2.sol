@@ -10,4 +10,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 2018: (220-310): Function state mutability can be restricted to pure
+// Warning 2018: (188-278): Function state mutability can be restricted to pure
