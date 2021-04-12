@@ -36,6 +36,8 @@ struct EVMDialect;
  *
  * Assumes that EXP is not used with exponents larger than a single byte.
  * Is not particularly exact for anything apart from arithmetic.
+ *
+ * Assumes that Keccak-256 is computed on a single word (rounded up).
  */
 class GasMeter
 {
