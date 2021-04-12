@@ -24,6 +24,7 @@ Bugfixes:
  * SMTChecker: Fix false positive in contracts that cannot be deployed.
  * SMTChecker: Fix internal error on public getter returning dynamic data on older EVM versions where these are not available.
  * SMTChecker: Fix internal error on try-catch with function call in catch block.
+ * Type Checker: Fix missing error when events are used without an emit statement.
 
 
 AST Changes:
