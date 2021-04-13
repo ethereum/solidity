@@ -76,11 +76,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	EVMHost hostContext(version, evmone);
 	hostContext.reset();
 
-	// Do not proceed with tests that are too large. 1200 is an arbitrary
-	// threshold.
-	if (yulSubObject.size() > 1200)
-		return;
-
 	YulStringRepository::reset();
 
 	// Package test case into a sub-object
@@ -120,7 +115,10 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		unoptimizedState,
 		stackUnoptimized.parserResult()->code,
 		EVMDialect::strictAssemblyForEVMObjects(version),
-		true
+		true,
+		10000,
+		10000,
+		100
 	);
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
