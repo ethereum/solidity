@@ -28,7 +28,7 @@ contract Large {
 //   executionCost: 942
 //   totalCost: 905342
 // external:
-//   a(): 1175
+//   a(): 2475
 //   b(uint256): infinite
 //   f0(uint256): infinite
 //   f1(uint256): infinite
