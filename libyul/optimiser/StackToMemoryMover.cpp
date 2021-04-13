@@ -213,11 +213,17 @@ void StackToMemoryMover::operator()(Block& _block)
 			else
 				return {};
 		}
-		FunctionCall const* functionCall = get_if<FunctionCall>(_stmt.value.get());
-		yulAssert(functionCall, "");
-		auto rhsMemorySlots = m_functionReturnVariables.at(functionCall->functionName.name) |
-			ranges::views::transform(m_memoryOffsetTracker) |
-			ranges::to<vector<optional<YulString>>>;
+		vector<optional<YulString>> rhsMemorySlots;
+		if (_stmt.value)
+		{
+			FunctionCall const* functionCall = get_if<FunctionCall>(_stmt.value.get());
+			yulAssert(functionCall, "");
+			rhsMemorySlots = m_functionReturnVariables.at(functionCall->functionName.name) |
+				ranges::views::transform(m_memoryOffsetTracker) |
+				ranges::to<vector<optional<YulString>>>;
+		}
+		else
+			rhsMemorySlots = vector<optional<YulString>>(_lhsVars.size(), nullopt);
 
 		// Nothing to do, if the right-hand-side remains entirely on the stack and
 		// none of the variables in the left-hand-side are moved.
