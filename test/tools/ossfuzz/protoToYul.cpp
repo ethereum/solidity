@@ -757,7 +757,10 @@ void ProtoConverter::visit(CopyFunc const& _x)
 
 	// Code copy may change state if e.g., some byte of code
 	// is stored to storage via a sequence of mload and sstore.
-	if (m_filterStatefulInstructions && type == CopyFunc::CODE)
+	if (
+		m_filterStatefulInstructions &&
+		(type == CopyFunc::CODE || type == CopyFunc::CALLDATA || type == CopyFunc::RETURNDATA)
+	)
 		return;
 
 	switch (type)
@@ -1285,7 +1288,8 @@ void ProtoConverter::visit(TerminatingStmt const& _x)
 		visit(_x.ret_rev());
 		break;
 	case TerminatingStmt::kSelfDes:
-		visit(_x.self_des());
+		if (!m_filterStatefulInstructions)
+			visit(_x.self_des());
 		break;
 	case TerminatingStmt::TERM_ONEOF_NOT_SET:
 		break;
