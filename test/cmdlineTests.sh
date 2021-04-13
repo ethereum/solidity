@@ -190,7 +190,7 @@ function test_solc_behaviour()
     then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
 
-        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exit_code_expected" "$exit_code_expectation_file"
+        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exitCode" "$exit_code_expectation_file"
         [[ $exit_code_expectation_file == "" ]] && exit 1
     fi
 
