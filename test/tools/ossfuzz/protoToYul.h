@@ -63,6 +63,7 @@ public:
 		m_filterUnboundedLoops = _filterUnboundedLoops;
 		m_filterMemoryWrites = _filterMemoryWrites;
 		m_filterLogs = _filterLogs;
+		m_currentFunctionName = {};
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -344,8 +345,8 @@ private:
 	/// Map of object name to list of sub-object namespace(s) in scope
 	std::map<std::string, std::vector<std::string>> m_objectScope;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
-	static unsigned constexpr s_modInputParams = 5;
-	static unsigned constexpr s_modOutputParams = 5;
+	static unsigned constexpr s_modInputParams = 33;
+	static unsigned constexpr s_modOutputParams = 33;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If false, break/continue
@@ -391,5 +392,7 @@ private:
 	/// Flag that, if set, stops the converter from generating log
 	/// records.
 	bool m_filterLogs;
+	/// Name of current function definition
+	std::string m_currentFunctionName;
 };
 }
