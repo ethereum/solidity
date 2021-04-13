@@ -46,6 +46,7 @@
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -872,9 +873,9 @@ General Information)").c_str(),
 		)
 		(
 			g_strEVMVersion.c_str(),
-			po::value<string>()->value_name("version"),
+			po::value<string>()->value_name("version")->default_value(EVMVersion{}.name()),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
-			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
+			"byzantium, constantinople, petersburg, istanbul or berlin."
 		)
 		(
 			g_strExperimentalViaIR.c_str(),

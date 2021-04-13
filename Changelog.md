@@ -6,6 +6,7 @@ Language Features:
 
 
 Compiler Features:
+ * EVM: Set the default EVM version to "Berlin".
  * SMTChecker: Function definitions can be annotated with the custom Natspec tag ``custom:smtchecker abstract-function-nondet`` to be abstracted by a nondeterministic value when called.
  * Standard JSON / combined JSON: New artifact "functionDebugData" that contains bytecode offsets of entry points of functions and potentially more information in the future.
  * Yul Optimizer: Evaluate ``keccak256(a, c)``, when the value at memory location ``a`` is known at compile time and ``c`` is a constant ``<= 32``.
