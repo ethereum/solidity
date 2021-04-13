@@ -1057,6 +1057,9 @@ optional<string> ProtoConverter::functionExists(NumFunctionReturns _numReturns)
 
 void ProtoConverter::visit(FunctionCall const& _x, string const& _functionName, bool _expression)
 {
+	// Disable recursive calls.
+	if (_functionName == m_currentFunctionName)
+		return;
 	yulAssert(m_functionSigMap.count(_functionName), "Proto fuzzer: Invalid function.");
 	auto ret = m_functionSigMap.at(_functionName);
 	unsigned numInParams = ret.first;
