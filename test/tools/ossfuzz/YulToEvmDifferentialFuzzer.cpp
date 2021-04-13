@@ -131,7 +131,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	// HACK: Force this to fake stack limit evader for now
-	string step = "fakeStackLimitEvader";
+	string step = "stackLimitEvader";
 	optimizerTest.setStep(step);
 //	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
 	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
@@ -190,6 +190,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 	solAssert(
 		unoptimizedState.str() == optimizedState.str(),
-		"State of unoptimised and optimised stack reused code do not match."
+		"State of unoptimised and optimised stack saver code do not match."
 	);
 }
