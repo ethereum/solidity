@@ -46,6 +46,28 @@ static LPMPostProcessor<Block> addStoreToZero(
 	}
 );
 
+static LPMPostProcessor<FunctionDef> addStackPressure(
+	[](FunctionDef* _message, unsigned _seed)
+	{
+		{
+			MutationInfo m{_message, "Added stack pressure"};
+			auto functionBlock = _message->mutable_block();
+			int numInputParams = _message->num_input_params() % 33;
+			int numOutputParams = _message->num_output_params() % 33;
+			if (numOutputParams > 0)
+			{
+				for (int i = 0; i < numOutputParams; i++)
+				{
+					auto varRef = new VarRef();
+					varRef->set_varnum(numInputParams + i);
+					auto assignOutI = new AssignmentStatement();
+					assignOutI->set_allocated_ref_id(varRef);
+					functionBlock->add_statements()->set_allocated_assignment(assignOutI);
+				}
+			}
+		}
+	}
+);
 
 namespace
 {

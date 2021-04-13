@@ -216,7 +216,11 @@ void ProtoConverter::visit(Expression const& _x)
 		if (auto v = functionExists(NumFunctionReturns::Single); v.has_value())
 		{
 			string functionName = v.value();
-			visit(_x.func_expr(), functionName, true);
+			// Disable recursive calls.
+			if (functionName == m_currentFunctionName)
+				m_output << dictionaryToken();
+			else
+				visit(_x.func_expr(), functionName, true);
 		}
 		else
 			m_output << dictionaryToken();
@@ -1053,9 +1057,6 @@ optional<string> ProtoConverter::functionExists(NumFunctionReturns _numReturns)
 
 void ProtoConverter::visit(FunctionCall const& _x, string const& _functionName, bool _expression)
 {
-	// Disable recursive calls.
-	if (_functionName == m_currentFunctionName)
-		return;
 	yulAssert(m_functionSigMap.count(_functionName), "Proto fuzzer: Invalid function.");
 	auto ret = m_functionSigMap.at(_functionName);
 	unsigned numInParams = ret.first;
@@ -1350,7 +1351,8 @@ void ProtoConverter::visit(TerminatingStmt const& _x)
 			visit(_x.stop_invalid());
 		break;
 	case TerminatingStmt::kRetRev:
-		visit(_x.ret_rev());
+		if (!m_filterStatefulInstructions)
+			visit(_x.ret_rev());
 		break;
 	case TerminatingStmt::kSelfDes:
 		if (!m_filterStatefulInstructions)
@@ -1444,7 +1446,8 @@ void ProtoConverter::visit(Statement const& _x)
 			unsigned index = counter() % m_functionSigMap.size();
 			auto iter = m_functionSigMap.begin();
 			advance(iter, index);
-			visit(_x.functioncall(), iter->first);
+			if (iter->first != m_currentFunctionName)
+				visit(_x.functioncall(), iter->first);
 		}
 		break;
 	case Statement::kFuncdef:
@@ -1738,16 +1741,10 @@ void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
 {
 	for (auto const& var: _varsVec)
 	{
-		// Flip a dice to choose whether to save output values
-		// in storage or memory.
-		bool coinFlip = counter() % 2 == 0;
 		// Pseudo-randomly choose one of the first ten 32-byte
 		// aligned slots.
 		string slot = to_string((counter() % 10) * 32);
-		if (coinFlip)
-			m_output << "sstore(" << slot << ", " << var << ")\n";
-		else
-			m_output << "mstore(" << slot << ", " << var << ")\n";
+		m_output << "sstore(" << slot << ", " << var << ")\n";
 	}
 }
 
@@ -1895,7 +1892,7 @@ void ProtoConverter::visit(Code const& _x)
 	m_output << "}\n";
 }
 
-void ProtoConverter::visit(Data const& _x)
+void ProtoConverter::visit(Data const&)
 {
 	// TODO: Generate random data block identifier
 	m_output << "data \"" << s_dataIdentifier << "\" hex\"" << "deadbeef" << "\"\n";

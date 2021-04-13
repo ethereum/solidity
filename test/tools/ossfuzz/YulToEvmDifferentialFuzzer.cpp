@@ -108,6 +108,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
 	// Stack evader requires stack allocation to be done.
 	settings.optimizeStackAllocation = true;
+	settings.runYulOptimiser = true;
 	AssemblyStack stackUnoptimized(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
 		stackUnoptimized.parseAndAnalyze("source", yulSubObject),
@@ -156,6 +157,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		.render();
 	cout << AsmPrinter{}(*astBlock) << endl;
 	bytes optimisedByteCode;
+	settings.runYulOptimiser = false;
 	optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
 
 	// Reset host before running optimised code.
@@ -185,6 +187,8 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		 (!noInvalidInSource && callResultOpt.status_code == EVMC_INVALID_INSTRUCTION)),
 		"Optimised call failed."
 	);
+	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
+		return;
 	ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.storageOnly();
 
