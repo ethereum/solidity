@@ -226,16 +226,24 @@ void CodeTransform::operator()(VariableDeclaration const& _varDecl)
 			else
 				m_variablesScheduledForDeletion.insert(&var);
 		}
-		else if (m_unusedStackSlots.empty())
-			atTopOfStack = false;
 		else
 		{
-			auto slot = static_cast<size_t>(*m_unusedStackSlots.begin());
-			m_unusedStackSlots.erase(m_unusedStackSlots.begin());
-			m_context->variableStackHeights[&var] = slot;
-			if (size_t heightDiff = variableHeightDiff(var, varName, true))
-				m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
-			m_assembly.appendInstruction(evmasm::Instruction::POP);
+			bool foundUnusedSlot = false;
+			for (auto it = m_unusedStackSlots.begin(); it != m_unusedStackSlots.end(); ++it)
+			{
+				if (m_assembly.stackHeight() - *it > 17)
+					continue;
+				foundUnusedSlot = true;
+				m_unusedStackSlots.erase(it);
+				auto slot = static_cast<size_t>(*it);
+				m_context->variableStackHeights[&var] = slot;
+				if (size_t heightDiff = variableHeightDiff(var, varName, true))
+					m_assembly.appendInstruction(evmasm::swapInstruction(static_cast<unsigned>(heightDiff - 1)));
+				m_assembly.appendInstruction(evmasm::Instruction::POP);
+				break;
+			}
+			if (!foundUnusedSlot)
+				atTopOfStack = false;
 		}
 	}
 }
