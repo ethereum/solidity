@@ -19,6 +19,6 @@ contract C {
 //   executionCost: 81
 //   totalCost: 27081
 // external:
-//   readX(): 990
+//   readX(): 2290
 //   resetX(): 5116
-//   setX(uint256): 20212
+//   setX(uint256): 22312
