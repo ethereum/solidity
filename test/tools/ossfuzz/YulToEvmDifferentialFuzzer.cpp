@@ -63,10 +63,12 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	bool filterStatefulInstructions = true;
 	bool filterUnboundedLoops = true;
 	bool filterMemoryWrites = true;
+	bool filterLogs = true;
 	ProtoConverter converter(
 		filterStatefulInstructions,
 		filterUnboundedLoops,
-		filterMemoryWrites
+		filterMemoryWrites,
+		filterLogs
 	);
 	string yulSubObject = converter.programToString(_input);
 	// Fuzzer also fuzzes the EVM version field.
@@ -104,7 +106,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
-	AssemblyStack stackUnoptimized;
+	AssemblyStack stackUnoptimized(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
 		stackUnoptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
