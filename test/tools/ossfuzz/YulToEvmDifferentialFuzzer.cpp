@@ -106,11 +106,14 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
+	// Stack evader requires stack allocation to be done.
+	settings.optimizeStackAllocation = true;
 	AssemblyStack stackUnoptimized(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
 		stackUnoptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
+	stackUnoptimized.optimize();
 	ostringstream unoptimizedState;
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		unoptimizedState,
@@ -121,11 +124,12 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
-	AssemblyStack stackOptimized;
+	AssemblyStack stackOptimized(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
 		stackOptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
+	stackOptimized.optimize();
 	YulOptimizerTestCommon optimizerTest(
 		stackOptimized.parserResult(),
 		EVMDialect::strictAssemblyForEVMObjects(version)
@@ -150,6 +154,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		)")
 		("fuzzerInput", AsmPrinter{}(*astBlock))
 		.render();
+	cout << AsmPrinter{}(*astBlock) << endl;
 	bytes optimisedByteCode;
 	optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
 
