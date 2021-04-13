@@ -652,7 +652,17 @@ void ProtoConverter::visit(NullaryOp const& _x)
 			op == NullaryOp::ADDRESS ||
 			op == NullaryOp::TIMESTAMP ||
 			op == NullaryOp::NUMBER ||
-			op == NullaryOp::DIFFICULTY
+			op == NullaryOp::DIFFICULTY ||
+			op == NullaryOp::ORIGIN ||
+			op == NullaryOp::CALLER ||
+			op == NullaryOp::CALLVALUE ||
+			op == NullaryOp::GASPRICE ||
+			op == NullaryOp::GASLIMIT ||
+			op == NullaryOp::COINBASE ||
+			op == NullaryOp::TIMESTAMP ||
+			op == NullaryOp::NUMBER ||
+			op == NullaryOp::CHAINID ||
+			op == NullaryOp::SELFBALANCE
 		)
 	)
 	{
@@ -1344,7 +1354,8 @@ void ProtoConverter::visit(Statement const& _x)
 			m_output << "continue\n";
 		break;
 	case Statement::kLogFunc:
-		visit(_x.log_func());
+		if (!m_filterLogs)
+			visit(_x.log_func());
 		break;
 	case Statement::kCopyFunc:
 		visit(_x.copy_func());

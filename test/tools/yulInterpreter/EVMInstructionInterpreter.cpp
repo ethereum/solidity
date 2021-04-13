@@ -41,6 +41,7 @@ using solidity::util::keccak256;
 namespace
 {
 
+#if 0
 /// Reads 32 bytes from @a _data at position @a _offset bytes while
 /// interpreting @a _data to be padded with an infinite number of zero
 /// bytes beyond its end.
@@ -63,6 +64,7 @@ u256 readZeroExtended(bytes const& _data, u256 const& _offset)
 		return val;
 	}
 }
+#endif
 
 /// Copy @a _size bytes of @a _source at offset @a _sourceOffset to
 /// @a _target at offset @a _targetOffset. Behaves as if @a _source would
@@ -196,9 +198,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CALLVALUE:
 		return m_state.callvalue;
 	case Instruction::CALLDATALOAD:
-		return readZeroExtended(m_state.calldata, arg[0]);
+//		return readZeroExtended(m_state.calldata, arg[0]);
+		return u256{};
 	case Instruction::CALLDATASIZE:
-		return m_state.calldata.size();
+		//return m_state.calldata.size();
+		return 0;
 	case Instruction::CALLDATACOPY:
 		if (accessMemory(arg[0], arg[2]))
 			copyZeroExtended(
@@ -457,6 +461,10 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 				size_t(_evaluatedArguments.at(2))
 			);
 		return 0;
+	}
+	else if (fun == "memoryguard")
+	{
+		return _evaluatedArguments.at(0);
 	}
 	else
 		yulAssert(false, "Unknown builtin: " + fun);
