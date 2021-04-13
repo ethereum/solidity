@@ -62,6 +62,34 @@ message FunctionCall {
   required Expression in_param2 = 2;
   required Expression in_param3 = 3;
   required Expression in_param4 = 4;
+  required Expression in_param5 = 5;
+  required Expression in_param6 = 6;
+  required Expression in_param7 = 7;
+  required Expression in_param8 = 8;
+  required Expression in_param9 = 9;
+  required Expression in_param10 = 10;
+  required Expression in_param11 = 11;
+  required Expression in_param12 = 12;
+  required Expression in_param13 = 13;
+  required Expression in_param14 = 14;
+  required Expression in_param15 = 15;
+  required Expression in_param16 = 16;
+  required Expression in_param17 = 17;
+  required Expression in_param18 = 18;
+  required Expression in_param19 = 19;
+  required Expression in_param20 = 20;
+  required Expression in_param21 = 21;
+  required Expression in_param22 = 22;
+  required Expression in_param23 = 23;
+  required Expression in_param24 = 24;
+  required Expression in_param25 = 25;
+  required Expression in_param26 = 26;
+  required Expression in_param27 = 27;
+  required Expression in_param28 = 28;
+  required Expression in_param29 = 29;
+  required Expression in_param30 = 30;
+  required Expression in_param31 = 31;
+  required Expression in_param32 = 32;
 }
 
 message TypedVarDecl {

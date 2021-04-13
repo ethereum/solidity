@@ -875,6 +875,118 @@ void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _
 	// We reverse the order of function input visits since it helps keep this switch case concise.
 	switch (_numInputParams)
 	{
+	case 32:
+		visit(_x.in_param32());
+		m_output << ", ";
+		[[fallthrough]];
+	case 31:
+		visit(_x.in_param31());
+		m_output << ", ";
+		[[fallthrough]];
+	case 30:
+		visit(_x.in_param30());
+		m_output << ", ";
+		[[fallthrough]];
+	case 29:
+		visit(_x.in_param29());
+		m_output << ", ";
+		[[fallthrough]];
+	case 28:
+		visit(_x.in_param28());
+		m_output << ", ";
+		[[fallthrough]];
+	case 27:
+		visit(_x.in_param27());
+		m_output << ", ";
+		[[fallthrough]];
+	case 26:
+		visit(_x.in_param26());
+		m_output << ", ";
+		[[fallthrough]];
+	case 25:
+		visit(_x.in_param25());
+		m_output << ", ";
+		[[fallthrough]];
+	case 24:
+		visit(_x.in_param24());
+		m_output << ", ";
+		[[fallthrough]];
+	case 23:
+		visit(_x.in_param23());
+		m_output << ", ";
+		[[fallthrough]];
+	case 22:
+		visit(_x.in_param22());
+		m_output << ", ";
+		[[fallthrough]];
+	case 21:
+		visit(_x.in_param21());
+		m_output << ", ";
+		[[fallthrough]];
+	case 20:
+		visit(_x.in_param20());
+		m_output << ", ";
+		[[fallthrough]];
+	case 19:
+		visit(_x.in_param19());
+		m_output << ", ";
+		[[fallthrough]];
+	case 18:
+		visit(_x.in_param18());
+		m_output << ", ";
+		[[fallthrough]];
+	case 17:
+		visit(_x.in_param17());
+		m_output << ", ";
+		[[fallthrough]];
+	case 16:
+		visit(_x.in_param16());
+		m_output << ", ";
+		[[fallthrough]];
+	case 15:
+		visit(_x.in_param15());
+		m_output << ", ";
+		[[fallthrough]];
+	case 14:
+		visit(_x.in_param14());
+		m_output << ", ";
+		[[fallthrough]];
+	case 13:
+		visit(_x.in_param13());
+		m_output << ", ";
+		[[fallthrough]];
+	case 12:
+		visit(_x.in_param12());
+		m_output << ", ";
+		[[fallthrough]];
+	case 11:
+		visit(_x.in_param11());
+		m_output << ", ";
+		[[fallthrough]];
+	case 10:
+		visit(_x.in_param10());
+		m_output << ", ";
+		[[fallthrough]];
+	case 9:
+		visit(_x.in_param9());
+		m_output << ", ";
+		[[fallthrough]];
+	case 8:
+		visit(_x.in_param8());
+		m_output << ", ";
+		[[fallthrough]];
+	case 7:
+		visit(_x.in_param7());
+		m_output << ", ";
+		[[fallthrough]];
+	case 6:
+		visit(_x.in_param6());
+		m_output << ", ";
+		[[fallthrough]];
+	case 5:
+		visit(_x.in_param5());
+		m_output << ", ";
+		[[fallthrough]];
 	case 4:
 		visit(_x.in_param4());
 		m_output << ", ";
@@ -941,6 +1053,9 @@ optional<string> ProtoConverter::functionExists(NumFunctionReturns _numReturns)
 
 void ProtoConverter::visit(FunctionCall const& _x, string const& _functionName, bool _expression)
 {
+	// Disable recursive calls.
+	if (_functionName == m_currentFunctionName)
+		return;
 	yulAssert(m_functionSigMap.count(_functionName), "Proto fuzzer: Invalid function.");
 	auto ret = m_functionSigMap.at(_functionName);
 	unsigned numInParams = ret.first;
@@ -1686,6 +1801,8 @@ void ProtoConverter::createFunctionDefAndCall(
 	// Obtain function name
 	yulAssert(m_functionDefMap.count(&_x), "Proto fuzzer: Unregistered function");
 	string funcName = m_functionDefMap.at(&_x);
+	string wasFuncName = m_currentFunctionName;
+	m_currentFunctionName = funcName;
 
 	vector<string> varsVec = {};
 	m_output << "function " << funcName << "(";
@@ -1730,6 +1847,7 @@ void ProtoConverter::createFunctionDefAndCall(
 
 	m_inForBodyScope = wasInForBody;
 	m_inFunctionDef = wasInFunctionDef;
+	m_currentFunctionName = wasFuncName;
 
 	yulAssert(
 		!m_inForInitScope,
