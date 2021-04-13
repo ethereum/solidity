@@ -1317,7 +1317,8 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.ifstmt());
 		break;
 	case Statement::kStorageFunc:
-		visit(_x.storage_func());
+		if (!m_filterMemoryWrites || (_x.storage_func().has_st() && _x.storage_func().st() == StoreFunc_Storage_SSTORE))
+			visit(_x.storage_func());
 		break;
 	case Statement::kBlockstmt:
 		if (_x.blockstmt().statements_size() > 0)
@@ -1869,6 +1870,8 @@ void ProtoConverter::visit(Program const& _x)
 	{
 	case Program::kBlock:
 		m_output << "{\n";
+		// TODO: Clean up
+		m_output << "mstore(0x40, memoryguard(0x60))\n";
 		visit(_x.block());
 		m_output << "}\n";
 		break;

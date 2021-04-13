@@ -41,7 +41,8 @@ class ProtoConverter
 public:
 	ProtoConverter(
 		bool _filterStatefulInstructions = false,
-		bool _filterUnboundedLoops = false
+		bool _filterUnboundedLoops = false,
+		bool _filterMemoryWrites = false
 	)
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
@@ -59,6 +60,7 @@ public:
 		m_forInitScopeExtEnabled = true;
 		m_filterStatefulInstructions = _filterStatefulInstructions;
 		m_filterUnboundedLoops = _filterUnboundedLoops;
+		m_filterMemoryWrites = _filterMemoryWrites;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -381,5 +383,8 @@ private:
 	/// Flat that, if set, stops the converter from generating potentially
 	/// unbounded loops.
 	bool m_filterUnboundedLoops;
+	/// Flag that, if set, stops the converter from generating memory
+	/// writes i.e., mstore/mstore8.
+	bool m_filterMemoryWrites;
 };
 }

@@ -790,11 +790,19 @@ string EVMHostPrinter::state()
 	return m_stateStream.str();
 }
 
+string EVMHostPrinter::storageOnly()
+{
+	if (m_host.account_exists(m_account))
+		storage();
+	return m_stateStream.str();
+}
+
 void EVMHostPrinter::storage()
 {
 	for (auto const& [slot, value]: m_host.get_address_storage(m_account))
 		if (m_host.get_storage(m_account, slot))
-			m_stateStream << m_host.convertFromEVMC(slot)
+			m_stateStream << "  "
+				<< m_host.convertFromEVMC(slot)
 				<< ": "
 				<< m_host.convertFromEVMC(value.value)
 				<< endl;
