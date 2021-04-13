@@ -23,9 +23,9 @@ namespace solidity::yul::test::yul_fuzzer
 
 struct yulFuzzerUtil
 {
-	enum class TerminationReason
+	enum class TerminationReason: size_t
 	{
-		ExplicitlyTerminated,
+		ExplicitlyTerminated = 0,
 		StepLimitReached,
 		TraceLimitReached,
 		ExpresionNestingLimitReached,
