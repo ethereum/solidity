@@ -464,7 +464,7 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 	}
 	else if (fun == "memoryguard")
 	{
-		return _evaluatedArguments.at(0);
+		return u256(std::get<Literal>(_arguments.at(0)).value.str());
 	}
 	else
 		yulAssert(false, "Unknown builtin: " + fun);

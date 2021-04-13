@@ -233,7 +233,10 @@ void ProtoConverter::visit(Expression const& _x)
 			m_output << dictionaryToken();
 		break;
 	case Expression::kLowcall:
-		visit(_x.lowcall());
+		if (!m_filterStatefulInstructions)
+			visit(_x.lowcall());
+		else
+			m_output << dictionaryToken();
 		break;
 	case Expression::kCreate:
 		// Create and create2 return address of created contract which
@@ -263,8 +266,9 @@ void ProtoConverter::visit(BinaryOp const& _x)
 {
 	BinaryOp_BOp op = _x.op();
 
-	if ((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) &&
-		!m_evmVersion.hasBitwiseShifting())
+	if (((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) && !m_evmVersion.hasBitwiseShifting()) ||
+		(m_filterStatefulInstructions && op == BinaryOp::KECCAK)
+	)
 	{
 		m_output << dictionaryToken();
 		return;
@@ -1282,7 +1286,8 @@ void ProtoConverter::visit(TerminatingStmt const& _x)
 	switch (_x.term_oneof_case())
 	{
 	case TerminatingStmt::kStopInvalid:
-		visit(_x.stop_invalid());
+		if (!m_filterStatefulInstructions)
+			visit(_x.stop_invalid());
 		break;
 	case TerminatingStmt::kRetRev:
 		visit(_x.ret_rev());
