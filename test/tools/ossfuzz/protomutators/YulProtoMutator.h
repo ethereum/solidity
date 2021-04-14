@@ -46,6 +46,8 @@ struct YulRandomNumGenerator
 
 struct YulProtoMutator
 {
+	YulProtoMutator(unsigned _seed): prng(_seed)
+	{}
 	/// @param _value: Value of the integer literal
 	/// @returns an integer literal protobuf message initialized with
 	/// the given value.
@@ -96,12 +98,14 @@ struct YulProtoMutator
 	static constexpr unsigned s_highIP = 23;
 	/// Add control-flow statement to basic block.
 	template <typename T>
-	static void addControlFlow(T* _msg);
+	void addControlFlow(T* _msg);
 	/// Obtain basic block for statement type.
 	template <typename T>
-	static Block* basicBlock(T* _msg);
+	Block* basicBlock(T* _msg);
 	/// Obtain a basic block in a for stmt uniformly
 	/// at random
-	static Block* randomBlock(ForStmt* _msg);
+	Block* randomBlock(ForStmt* _msg);
+	/// Random number generator
+	YulRandomNumGenerator prng;
 };
 }
