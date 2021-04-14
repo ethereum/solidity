@@ -142,6 +142,7 @@ if (OSSFUZZ)
             ../../EVMHost.cpp
             YulEvmoneInterface.cpp
             yulFuzzerCommon.cpp
+            protomutators/YulProtoMutator.cpp
     )
     target_include_directories(yul_evm_diff_ossfuzz PRIVATE
             /usr/include/libprotobuf-mutator
