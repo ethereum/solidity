@@ -61,7 +61,7 @@ struct CompilerInput
 	langutil::EVMVersion evmVersion;
 	/// Source code to be compiled
 	StringMap const& sourceCode;
-	/// Contract name
+	/// Contract name without a colon prefix
 	std::string contractName;
 	/// Optimiser setting to be used during compilation
 	frontend::OptimiserSettings optimiserSettings;
