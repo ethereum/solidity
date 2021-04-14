@@ -48,7 +48,7 @@ void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 	LoadResolver{
 		_context.dialect,
 		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
-		!containsMSize,
+		containsMSize,
 		_context.expectedExecutionsPerDeployment
 	}(_ast);
 }
@@ -66,7 +66,7 @@ void LoadResolver::visit(Expression& _e)
 				break;
 			}
 
-		if (funCall->functionName.name == m_dialect.hashFunction({}))
+		if (!m_containsMSize && funCall->functionName.name == m_dialect.hashFunction({}))
 			tryEvaluateKeccak(_e, funCall->arguments);
 	}
 }
@@ -87,7 +87,7 @@ void LoadResolver::tryResolve(
 			if (inScope(*value))
 				_e = Identifier{locationOf(_e), *value};
 	}
-	else if (m_optimizeMLoad && _location == StoreLoadLocation::Memory)
+	else if (!m_containsMSize && _location == StoreLoadLocation::Memory)
 		if (auto value = util::valueOrNullptr(m_memory, key))
 			if (inScope(*value))
 				_e = Identifier{locationOf(_e), *value};

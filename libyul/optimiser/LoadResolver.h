@@ -50,11 +50,11 @@ private:
 	LoadResolver(
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> _functionSideEffects,
-		bool _optimizeMLoad,
+		bool _containsMSize,
 		std::optional<size_t> _expectedExecutionsPerDeployment
 	):
 		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
-		m_optimizeMLoad(_optimizeMLoad),
+		m_containsMSize(_containsMSize),
 		m_expectedExecutionsPerDeployment(std::move(_expectedExecutionsPerDeployment))
 	{}
 
@@ -75,7 +75,8 @@ protected:
 		std::vector<Expression> const& _arguments
 	);
 
-	bool m_optimizeMLoad = false;
+	/// If the AST contains `msize`, then we skip resolving `mload` and `keccak256`.
+	bool m_containsMSize = false;
 	/// The --optimize-runs parameter. Value `nullopt` represents creation code.
 	std::optional<size_t> m_expectedExecutionsPerDeployment;
 };
