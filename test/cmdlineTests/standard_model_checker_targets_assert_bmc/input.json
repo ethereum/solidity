@@ -24,7 +24,7 @@
 		"modelChecker":
 		{
 			"engine": "bmc",
-			"targets": "assert"
+			"targets": ["assert"]
 		}
 	}
 }

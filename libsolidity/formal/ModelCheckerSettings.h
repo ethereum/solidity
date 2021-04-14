@@ -58,12 +58,18 @@ enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, Unde
 
 struct ModelCheckerTargets
 {
-	static ModelCheckerTargets All() { return *fromString("all"); }
-	static ModelCheckerTargets None() { return {}; }
+	static ModelCheckerTargets All() { return *fromString("default"); }
 
 	static std::optional<ModelCheckerTargets> fromString(std::string const& _targets);
 
 	bool has(VerificationTargetType _type) const { return targets.count(_type); }
+
+	/// @returns true if the @p _target is valid,
+	/// and false otherwise.
+	bool setFromString(std::string const& _target);
+
+	static std::map<std::string, VerificationTargetType> const targetStrings;
+
 	std::set<VerificationTargetType> targets;
 };
 

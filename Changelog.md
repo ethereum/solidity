@@ -18,6 +18,7 @@ Compiler Features:
  * SMTChecker: Report local variables in CHC counterexamples.
  * SMTChecker: Report out of bounds index access for arrays and fixed bytes.
  * Standard JSON: Model checker option ``settings.modelChecker.targets`` also accepts ``outOfBounds``.
+ * Standard JSON: Model checker option ``settings.modelChecker.targets`` takes an array of string targets instead of string of comma separated targets.
  * Yul Optimizer: Added a new step FunctionSpecializer, that specializes a function with its literal arguments.
  * Yul EVM Code Transform: Stack Optimization: Reuse slots of unused function arguments and defer allocating stack slots for return variables until after expression statements and assignments that do not reference them.
  * NatSpec: Allow ``@notice`` tag on non-public state variables and local variable declarations. The documentation will only be part of the AST, under the field ``documentation``.

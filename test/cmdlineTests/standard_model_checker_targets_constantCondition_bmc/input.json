@@ -24,7 +24,7 @@
 		"modelChecker":
 		{
 			"engine": "bmc",
-			"targets": "constantCondition"
+			"targets": ["constantCondition"]
 		}
 	}
 }
