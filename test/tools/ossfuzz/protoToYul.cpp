@@ -573,7 +573,8 @@ void ProtoConverter::visit(UnaryOp const& _x)
 			op == UnaryOp::EXTCODEHASH ||
 			op == UnaryOp::EXTCODESIZE ||
 			op == UnaryOp::BALANCE ||
-			op == UnaryOp::BLOCKHASH
+			op == UnaryOp::BLOCKHASH ||
+			op == UnaryOp::MLOAD
 		)
 	)
 	{
@@ -659,7 +660,8 @@ void ProtoConverter::visit(NullaryOp const& _x)
 			op == NullaryOp::TIMESTAMP ||
 			op == NullaryOp::NUMBER ||
 			op == NullaryOp::CHAINID ||
-			op == NullaryOp::SELFBALANCE
+			op == NullaryOp::SELFBALANCE ||
+			op == NullaryOp::MSIZE
 		)
 	)
 	{
@@ -1724,7 +1726,7 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 			m_output << "calldataload(" << slot << ")";
 			break;
 		case 1:
-			m_output << "mload(" << slot << ")";
+			m_output << "sload(" << slot << ")";
 			break;
 		case 2:
 			m_output << "sload(" << slot << ")";

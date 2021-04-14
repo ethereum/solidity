@@ -100,16 +100,15 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
 
-	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
-	// Stack evader requires stack allocation to be done.
-	settings.optimizeStackAllocation = true;
-	settings.runYulOptimiser = true;
-	AssemblyStack stackUnoptimized(version, AssemblyStack::Language::StrictAssembly, settings);
+	AssemblyStack stackUnoptimized(
+		version,
+		AssemblyStack::Language::StrictAssembly,
+		solidity::frontend::OptimiserSettings::none()
+	);
 	solAssert(
 		stackUnoptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
-	stackUnoptimized.optimize();
 	ostringstream unoptimizedState;
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		unoptimizedState,
@@ -123,21 +122,17 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
-	AssemblyStack stackOptimized(version, AssemblyStack::Language::StrictAssembly, settings);
+	AssemblyStack stackOptimized(
+		version,
+		AssemblyStack::Language::StrictAssembly,
+		solidity::frontend::OptimiserSettings::standard()
+	);
 	solAssert(
 		stackOptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
 	stackOptimized.optimize();
-	YulOptimizerTestCommon optimizerTest(
-		stackOptimized.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
-	);
-	// HACK: Force this to fake stack limit evader for now
-	string step = "stackLimitEvader";
-	optimizerTest.setStep(step);
-//	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
-	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	string optObject = AsmPrinter{}(*stackOptimized.parserResult()->code);
 	string optimisedProgram = Whiskers(R"(
 	object "main" {
 		code {
@@ -151,12 +146,20 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		}
 	}
 		)")
-		("fuzzerInput", AsmPrinter{}(*astBlock))
+		("fuzzerInput", optObject)
 		.render();
-	cout << AsmPrinter{}(*astBlock) << endl;
+	cout << optObject << endl;
 	bytes optimisedByteCode;
-	settings.runYulOptimiser = false;
-	optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
+	solidity::frontend::OptimiserSettings s = solidity::frontend::OptimiserSettings::none();
+	s.optimizeStackAllocation = true;
+	try
+	{
+		optimisedByteCode = YulAssembler{version, s, optimisedProgram}.assemble();
+	}
+	catch (yul::StackTooDeepError const&)
+	{
+		return;
+	}
 
 	// Reset host before running optimised code.
 	hostContext.reset();
@@ -167,6 +170,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	);
 	auto callMessageOpt = YulEvmoneUtility{}.callMessage(deployResultOpt.create_address);
 	evmc::result callResultOpt = hostContext.call(callMessageOpt);
+	// Bail out if we ran out of gas.
+	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
+		return;
 	bool noRevertInSource = yulSubObject.find("revert") == string::npos;
 	bool noInvalidInSource = yulSubObject.find("invalid") == string::npos;
 	if (noRevertInSource)
@@ -185,8 +191,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		 (!noInvalidInSource && callResultOpt.status_code == EVMC_INVALID_INSTRUCTION)),
 		"Optimised call failed."
 	);
-	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
-		return;
 	ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.storageOnly();
 
