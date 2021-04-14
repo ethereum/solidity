@@ -135,14 +135,6 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	}
 }
 
-bool SemanticInformation::terminatesControlFlow(AssemblyItem const& _item)
-{
-	if (_item.type() != Operation)
-		return false;
-	else
-		return terminatesControlFlow(_item.instruction());
-}
-
 bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
 {
 	switch (_instruction)
@@ -156,14 +148,6 @@ bool SemanticInformation::terminatesControlFlow(Instruction _instruction)
 	default:
 		return false;
 	}
-}
-
-bool SemanticInformation::reverts(AssemblyItem const& _item)
-{
-	if (_item.type() != Operation)
-		return false;
-	else
-		return reverts(_item.instruction());
 }
 
 bool SemanticInformation::reverts(Instruction _instruction)
