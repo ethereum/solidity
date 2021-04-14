@@ -42,7 +42,7 @@ void FileReader::setSources(StringMap _sources)
 	m_sourceCodes = std::move(_sources);
 }
 
-ReadCallback::Result FileReader::readFile(string const& _kind, string const& _path)
+ReadCallback::Result FileReader::readFile(string const& _kind, string const& _sourceUnitName)
 {
 	try
 	{
@@ -51,12 +51,11 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _pa
 				"ReadFile callback used as callback kind " +
 				_kind
 			));
-		string validPath = _path;
-		if (validPath.find("file://") == 0)
-			validPath.erase(0, 7);
+		string strippedSourceUnitName = _sourceUnitName;
+		if (strippedSourceUnitName.find("file://") == 0)
+			strippedSourceUnitName.erase(0, 7);
 
-		auto const path = m_basePath / validPath;
-		auto canonicalPath = boost::filesystem::weakly_canonical(path);
+		auto canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
 		bool isAllowed = false;
 		for (auto const& allowedDir: m_allowedDirectories)
 		{
@@ -81,7 +80,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _pa
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
 		auto contents = readFileAsString(canonicalPath.string());
-		m_sourceCodes[path.generic_string()] = contents;
+		m_sourceCodes[_sourceUnitName] = contents;
 		return ReadCallback::Result{true, contents};
 	}
 	catch (util::Exception const& _exception)

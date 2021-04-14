@@ -31,6 +31,7 @@ Bugfixes:
  * SMTChecker: Fix internal error on public getter returning dynamic data on older EVM versions where these are not available.
  * SMTChecker: Fix internal error on try-catch with function call in catch block.
  * Type Checker: Fix missing error when events are used without an emit statement.
+ * Commandline interface: Fix internal error when printing AST and using ``--base-path`` or ``file://`` prefix in imports.
 
 
 AST Changes:

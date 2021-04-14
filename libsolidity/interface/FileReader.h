@@ -62,14 +62,21 @@ public:
 	SourceCode const& sourceCode(SourceUnitName const& _sourceUnitName) const { return m_sourceCodes.at(_sourceUnitName); }
 
 	/// Resets all sources to the given map of source unit ID to source codes.
+	/// Does not enforce @a allowedDirectories().
 	void setSources(StringMap _sources);
 
 	/// Adds the source code for a given source unit ID.
+	/// Does not enforce @a allowedDirectories().
 	void setSource(boost::filesystem::path const& _path, SourceCode _source);
 
-	/// Reads a given file at @p _path of kind @p _kind from the local filesystem and returns the result.
-	/// @p _kind must always be passed as "source".
-	frontend::ReadCallback::Result readFile(std::string const& _kind, std::string const& _path);
+	/// Receives a @p _sourceUnitName that refers to a source unit in compiler's virtual filesystem
+	/// and attempts to interpret it as a path and read the corresponding file from disk.
+	/// The read will only succeed if the canonical path of the file is within one of the @a allowedDirectories().
+	/// @param _kind must be equal to "source". Other values are not supported.
+	/// @return Content of the loaded file or an error message. If the operation succeeds, a copy of
+	/// the content is retained in @a sourceCodes() under the key of @a _sourceUnitName. If the key
+	/// already exists, previous content is discarded.
+	frontend::ReadCallback::Result readFile(std::string const& _kind, std::string const& _sourceUnitName);
 
 	frontend::ReadCallback::Callback reader()
 	{
