@@ -36,14 +36,15 @@ vector<Statement> generateMemoryStore(
 	Expression _value
 )
 {
+	auto const debugData = make_shared<DebugData>(_loc);
 	BuiltinFunction const* memoryStoreFunction = _dialect.memoryStoreFunction(_dialect.defaultType);
 	yulAssert(memoryStoreFunction, "");
 	vector<Statement> result;
-	result.emplace_back(ExpressionStatement{_loc, FunctionCall{
-		_loc,
-		Identifier{_loc, memoryStoreFunction->name},
+	result.emplace_back(ExpressionStatement{debugData, FunctionCall{
+		debugData,
+		Identifier{debugData, memoryStoreFunction->name},
 		{
-			Literal{_loc, LiteralKind::Number, _mpos, {}},
+			Literal{debugData, LiteralKind::Number, _mpos, {}},
 			std::move(_value)
 		}
 	}});
@@ -52,13 +53,14 @@ vector<Statement> generateMemoryStore(
 
 FunctionCall generateMemoryLoad(Dialect const& _dialect, langutil::SourceLocation const& _loc, YulString _mpos)
 {
+	auto const debugData = make_shared<DebugData>(_loc);
 	BuiltinFunction const* memoryLoadFunction = _dialect.memoryLoadFunction(_dialect.defaultType);
 	yulAssert(memoryLoadFunction, "");
 	return FunctionCall{
-		_loc,
-		Identifier{_loc, memoryLoadFunction->name}, {
+		debugData,
+		Identifier{debugData, memoryLoadFunction->name}, {
 			Literal{
-				_loc,
+				debugData,
 				LiteralKind::Number,
 				_mpos,
 				{}
@@ -123,7 +125,7 @@ void StackToMemoryMover::operator()(Block& _block)
 		if (!leftHandSideNeedsMoving)
 			return {};
 
-		langutil::SourceLocation loc = _stmt.location;
+		langutil::SourceLocation loc = _stmt.debugData->irLocation;
 
 		if (_variables.size() == 1)
 		{
@@ -133,29 +135,29 @@ void StackToMemoryMover::operator()(Block& _block)
 				m_context.dialect,
 				loc,
 				*offset,
-				_stmt.value ? *std::move(_stmt.value) : Literal{loc, LiteralKind::Number, "0"_yulstring, {}}
+				_stmt.value ? *std::move(_stmt.value) : Literal{_stmt.debugData, LiteralKind::Number, "0"_yulstring, {}}
 			);
 		}
 
-		VariableDeclaration tempDecl{loc, {}, std::move(_stmt.value)};
+		VariableDeclaration tempDecl{_stmt.debugData, {}, std::move(_stmt.value)};
 		vector<Statement> memoryAssignments;
 		vector<Statement> variableAssignments;
 		for (auto& var: _variables)
 		{
 			YulString tempVarName = m_nameDispenser.newName(var.name);
-			tempDecl.variables.emplace_back(TypedName{var.location, tempVarName, {}});
+			tempDecl.variables.emplace_back(TypedName{var.debugData, tempVarName, {}});
 
 			if (optional<YulString> offset = m_memoryOffsetTracker(var.name))
 				memoryAssignments += generateMemoryStore(
 					m_context.dialect,
 					loc,
 					*offset,
-					Identifier{loc, tempVarName}
+					Identifier{_stmt.debugData, tempVarName}
 				);
 			else
 				variableAssignments.emplace_back(StatementType{
-					loc, {move(var)},
-					make_unique<Expression>(Identifier{loc, tempVarName})
+					_stmt.debugData, {move(var)},
+					make_unique<Expression>(Identifier{_stmt.debugData, tempVarName})
 				});
 		}
 		std::vector<Statement> result;
@@ -191,7 +193,7 @@ void StackToMemoryMover::visit(Expression& _expression)
 	ASTModifier::visit(_expression);
 	if (Identifier* identifier = std::get_if<Identifier>(&_expression))
 		if (optional<YulString> offset = m_memoryOffsetTracker(identifier->name))
-			_expression = generateMemoryLoad(m_context.dialect, identifier->location, *offset);
+			_expression = generateMemoryLoad(m_context.dialect, identifier->debugData->irLocation, *offset);
 }
 
 optional<YulString> StackToMemoryMover::VariableMemoryOffsetTracker::operator()(YulString _variable) const

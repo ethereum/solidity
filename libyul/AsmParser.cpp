@@ -70,7 +70,7 @@ Block Parser::parseBlock()
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
-	block.location.end = currentLocation().end;
+	block.debugData->irLocation.end = currentLocation().end;
 	advance();
 	return block;
 }
@@ -109,7 +109,7 @@ Statement Parser::parseStatement()
 			fatalParserError(4904_error, "Case not allowed after default case.");
 		if (_switch.cases.empty())
 			fatalParserError(2418_error, "Switch statement without any cases.");
-		_switch.location.end = _switch.cases.back().body.location.end;
+		_switch.debugData->irLocation.end = _switch.cases.back().body.debugData->irLocation.end;
 		return Statement{move(_switch)};
 	}
 	case Token::For:
@@ -156,7 +156,7 @@ Statement Parser::parseStatement()
 	case Token::AssemblyAssign:
 	{
 		Assignment assignment;
-		assignment.location = locationOf(elementary);
+		assignment.debugData = locationOf(elementary);
 
 		while (true)
 		{
@@ -191,7 +191,7 @@ Statement Parser::parseStatement()
 		expectToken(Token::AssemblyAssign);
 
 		assignment.value = make_unique<Expression>(parseExpression());
-		assignment.location.end = locationOf(*assignment.value).end;
+		assignment.debugData->irLocation.end = locationOf(*assignment.value)->irLocation.end;
 
 		return Statement{move(assignment)};
 	}
@@ -221,7 +221,7 @@ Case Parser::parseCase()
 	else
 		yulAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
-	_case.location.end = _case.body.location.end;
+	_case.debugData->irLocation.end = _case.body.debugData->irLocation.end;
 	return _case;
 }
 
@@ -241,7 +241,7 @@ ForLoop Parser::parseForLoop()
 	forLoop.post = parseBlock();
 	m_currentForLoopComponent = ForLoopComponent::ForLoopBody;
 	forLoop.body = parseBlock();
-	forLoop.location.end = forLoop.body.location.end;
+	forLoop.debugData->irLocation.end = forLoop.body.debugData->irLocation.end;
 
 	m_currentForLoopComponent = outerForLoopComponent;
 
@@ -261,7 +261,7 @@ Expression Parser::parseExpression()
 			if (m_dialect.builtin(_identifier.name))
 				fatalParserError(
 					7104_error,
-					_identifier.location,
+					_identifier.debugData->irLocation,
 					"Builtin function \"" + _identifier.name.str() + "\" must be called."
 				);
 			return move(_identifier);
@@ -280,7 +280,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	{
 	case Token::Identifier:
 	{
-		Identifier identifier{currentLocation(), YulString{currentLiteral()}};
+		Identifier identifier{make_shared<DebugData>(currentLocation()), YulString{currentLiteral()}};
 		advance();
 		return identifier;
 	}
@@ -311,7 +311,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		}
 
 		Literal literal{
-			currentLocation(),
+			make_shared<DebugData>(currentLocation()),
 			kind,
 			YulString{currentLiteral()},
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
@@ -320,7 +320,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
-			literal.location.end = currentLocation().end;
+			literal.debugData->irLocation.end = currentLocation().end;
 			literal.type = expectAsmIdentifier();
 		}
 
@@ -332,7 +332,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
-	return {};
+	return Literal{make_shared<DebugData>(), {}, {}, {}};
 }
 
 VariableDeclaration Parser::parseVariableDeclaration()
@@ -352,10 +352,10 @@ VariableDeclaration Parser::parseVariableDeclaration()
 	{
 		expectToken(Token::AssemblyAssign);
 		varDecl.value = make_unique<Expression>(parseExpression());
-		varDecl.location.end = locationOf(*varDecl.value).end;
+		varDecl.debugData->irLocation.end = locationOf(*varDecl.value)->irLocation.end;
 	}
 	else
-		varDecl.location.end = varDecl.variables.back().location.end;
+		varDecl.debugData->irLocation.end = varDecl.variables.back().debugData->irLocation.end;
 	return varDecl;
 }
 
@@ -400,7 +400,7 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	m_insideFunction = true;
 	funDef.body = parseBlock();
 	m_insideFunction = preInsideFunction;
-	funDef.location.end = funDef.body.location.end;
+	funDef.debugData->irLocation.end = funDef.body.debugData->irLocation.end;
 
 	m_currentForLoopComponent = outerForLoopComponent;
 	return funDef;
@@ -415,7 +415,7 @@ FunctionCall Parser::parseCall(variant<Literal, Identifier>&& _initialOp)
 
 	FunctionCall ret;
 	ret.functionName = std::move(std::get<Identifier>(_initialOp));
-	ret.location = ret.functionName.location;
+	ret.debugData = ret.functionName.debugData;
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -427,7 +427,7 @@ FunctionCall Parser::parseCall(variant<Literal, Identifier>&& _initialOp)
 			ret.arguments.emplace_back(parseExpression());
 		}
 	}
-	ret.location.end = currentLocation().end;
+	ret.debugData->irLocation.end = currentLocation().end;
 	expectToken(Token::RParen);
 	return ret;
 }
@@ -440,7 +440,7 @@ TypedName Parser::parseTypedName()
 	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
-		typedName.location.end = currentLocation().end;
+		typedName.debugData->irLocation.end = currentLocation().end;
 		typedName.type = expectAsmIdentifier();
 	}
 	else

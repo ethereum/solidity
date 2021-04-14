@@ -41,11 +41,19 @@ bool KnowledgeBase::knownToBeDifferent(YulString _a, YulString _b)
 	// current values to turn `sub(_a, _b)` into a nonzero constant.
 	// If that fails, try `eq(_a, _b)`.
 
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	Expression expr1 = simplify(FunctionCall{
+		make_shared<DebugData>(),
+		{make_shared<DebugData>(), "sub"_yulstring},
+		util::make_vector<Expression>(Identifier{make_shared<DebugData>(), _a}, Identifier{make_shared<DebugData>(), _b})
+	});
 	if (holds_alternative<Literal>(expr1))
 		return valueOfLiteral(std::get<Literal>(expr1)) != 0;
 
-	Expression expr2 = simplify(FunctionCall{{}, {{}, "eq"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	Expression expr2 = simplify(FunctionCall{
+		make_shared<DebugData>(),
+		{make_shared<DebugData>(), "eq"_yulstring},
+		util::make_vector<Expression>(Identifier{make_shared<DebugData>(), _a}, Identifier{{}, _b})
+	});
 	if (holds_alternative<Literal>(expr2))
 		return valueOfLiteral(std::get<Literal>(expr2)) == 0;
 
@@ -57,7 +65,11 @@ bool KnowledgeBase::knownToBeDifferentByAtLeast32(YulString _a, YulString _b)
 	// Try to use the simplification rules together with the
 	// current values to turn `sub(_a, _b)` into a constant whose absolute value is at least 32.
 
-	Expression expr1 = simplify(FunctionCall{{}, {{}, "sub"_yulstring}, util::make_vector<Expression>(Identifier{{}, _a}, Identifier{{}, _b})});
+	Expression expr1 = simplify(FunctionCall{
+		make_shared<DebugData>(),
+		{make_shared<DebugData>(), "sub"_yulstring},
+		util::make_vector<Expression>(Identifier{make_shared<DebugData>(), _a}, Identifier{make_shared<DebugData>(), _b})
+	});
 	if (holds_alternative<Literal>(expr1))
 	{
 		u256 val = valueOfLiteral(std::get<Literal>(expr1));
@@ -84,7 +96,7 @@ Expression KnowledgeBase::simplify(Expression _expression)
 			arg = simplify(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
-		return simplify(match->action().toExpression(locationOf(_expression)));
+		return simplify(match->action().toExpression(locationOf(_expression)->irLocation));
 
 	return _expression;
 }

@@ -49,9 +49,9 @@ EthAssemblyAdapter::EthAssemblyAdapter(evmasm::Assembly& _assembly):
 {
 }
 
-void EthAssemblyAdapter::setSourceLocation(SourceLocation const& _location)
+void EthAssemblyAdapter::setSourceLocation(shared_ptr<DebugData const> const& _debugData)
 {
-	m_assembly.setSourceLocation(_location);
+	m_assembly.setSourceLocation(_debugData ? _debugData->irLocation : langutil::SourceLocation{});
 }
 
 int EthAssemblyAdapter::stackHeight() const

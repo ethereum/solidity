@@ -192,9 +192,9 @@ private:
 			solAssert(false, "");
 
 		if (isdigit(value.front()))
-			return yul::Literal{_identifier.location, yul::LiteralKind::Number, yul::YulString{value}, {}};
+			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::YulString{value}, {}};
 		else
-			return yul::Identifier{_identifier.location, yul::YulString{value}};
+			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}
 
 
@@ -3167,6 +3167,23 @@ bool IRGeneratorForStatements::visit(TryCatchClause const& _clause)
 void IRGeneratorForStatements::setLocation(ASTNode const& _node)
 {
 	m_currentLocation = _node.location();
+	appendCurrentLocation();
+}
+
+void IRGeneratorForStatements::appendCurrentLocation()
+{
+	if (m_currentLocation.isValid() && m_code.tellp() != m_lastSourceLocationPosition)
+	{
+		m_code <<
+			"/// @origin " <<
+			m_currentLocation.source->name() <<
+			":" <<
+			m_currentLocation.start <<
+			"," <<
+			m_currentLocation.end <<
+			"\n";
+		m_lastSourceLocationPosition = m_code.tellp();
+	}
 }
 
 string IRGeneratorForStatements::linkerSymbol(ContractDefinition const& _library) const

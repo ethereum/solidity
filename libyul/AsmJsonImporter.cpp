@@ -52,9 +52,11 @@ template <class T>
 T AsmJsonImporter::createAsmNode(Json::Value const& _node)
 {
 	T r;
-	r.location = createSourceLocation(_node);
+	r.debugData = make_shared<DebugData>(createSourceLocation(_node));
 	yulAssert(
-		r.location.source && 0 <= r.location.start && r.location.start <= r.location.end,
+		r.debugData->irLocation.source &&
+		0 <= r.debugData->irLocation.start &&
+		r.debugData->irLocation.start <= r.debugData->irLocation.end,
 		"Invalid source location in Asm AST"
 	);
 	return r;

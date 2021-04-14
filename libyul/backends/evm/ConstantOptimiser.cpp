@@ -180,7 +180,7 @@ Representation const& RepresentationFinder::findRepresentation(u256 const& _valu
 Representation RepresentationFinder::represent(u256 const& _value) const
 {
 	Representation repr;
-	repr.expression = make_unique<Expression>(Literal{m_location, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
+	repr.expression = make_unique<Expression>(Literal{m_debugData, LiteralKind::Number, YulString{formatNumber(_value)}, {}});
 	repr.cost = m_meter.costs(*repr.expression);
 	return repr;
 }
@@ -192,8 +192,8 @@ Representation RepresentationFinder::represent(
 {
 	Representation repr;
 	repr.expression = make_unique<Expression>(FunctionCall{
-		m_location,
-		Identifier{m_location, _instruction},
+		m_debugData,
+		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_argument.expression)}
 	});
 	repr.cost = _argument.cost + m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction);
@@ -208,8 +208,8 @@ Representation RepresentationFinder::represent(
 {
 	Representation repr;
 	repr.expression = make_unique<Expression>(FunctionCall{
-		m_location,
-		Identifier{m_location, _instruction},
+		m_debugData,
+		Identifier{m_debugData, _instruction},
 		{ASTCopier{}.translate(*_arg1.expression), ASTCopier{}.translate(*_arg2.expression)}
 	});
 	repr.cost = m_meter.instructionCosts(*m_dialect.builtin(_instruction)->instruction) + _arg1.cost + _arg2.cost;

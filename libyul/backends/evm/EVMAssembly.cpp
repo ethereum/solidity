@@ -39,7 +39,7 @@ size_t constexpr assemblySizeReferenceSize = 4;
 }
 
 
-void EVMAssembly::setSourceLocation(SourceLocation const&)
+void EVMAssembly::setSourceLocation(shared_ptr<DebugData const> const&)
 {
 	// Ignored for now;
 }

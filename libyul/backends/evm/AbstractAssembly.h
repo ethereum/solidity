@@ -42,6 +42,7 @@ enum class Instruction: uint8_t;
 namespace solidity::yul
 {
 struct Identifier;
+struct DebugData;
 
 ///
 /// Assembly class that abstracts both the libevmasm assembly and the new Yul assembly.
@@ -56,7 +57,7 @@ public:
 	virtual ~AbstractAssembly() = default;
 
 	/// Set a new source location valid starting from the next instruction.
-	virtual void setSourceLocation(langutil::SourceLocation const& _location) = 0;
+	virtual void setSourceLocation(std::shared_ptr<DebugData const> const& _debugData) = 0;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	virtual int stackHeight() const = 0;

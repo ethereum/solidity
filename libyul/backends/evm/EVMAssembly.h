@@ -42,7 +42,7 @@ public:
 	~EVMAssembly() override = default;
 
 	/// Set a new source location valid starting from the next instruction.
-	void setSourceLocation(langutil::SourceLocation const& _location) override;
+	void setSourceLocation(std::shared_ptr<DebugData const> const& _debugData) override;
 	/// Retrieve the current height of the stack. This does not have to be zero
 	/// at the beginning.
 	int stackHeight() const override { return m_stackHeight; }

@@ -426,7 +426,7 @@ void CompilerContext::appendInlineAssembly(
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
 				StackTooDeepError() <<
-				errinfo_sourceLocation(_identifier.location) <<
+				errinfo_sourceLocation(_identifier.debugData->irLocation) <<
 				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
 		if (_context == yul::IdentifierContext::RValue)

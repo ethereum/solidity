@@ -34,13 +34,13 @@ using namespace solidity::util;
 
 Statement ASTCopier::operator()(ExpressionStatement const& _statement)
 {
-	return ExpressionStatement{ _statement.location, translate(_statement.expression) };
+	return ExpressionStatement{ _statement.debugData, translate(_statement.expression) };
 }
 
 Statement ASTCopier::operator()(VariableDeclaration const& _varDecl)
 {
 	return VariableDeclaration{
-		_varDecl.location,
+		_varDecl.debugData,
 		translateVector(_varDecl.variables),
 		translate(_varDecl.value)
 	};
@@ -49,7 +49,7 @@ Statement ASTCopier::operator()(VariableDeclaration const& _varDecl)
 Statement ASTCopier::operator()(Assignment const& _assignment)
 {
 	return Assignment{
-		_assignment.location,
+		_assignment.debugData,
 		translateVector(_assignment.variableNames),
 		translate(_assignment.value)
 	};
@@ -58,7 +58,7 @@ Statement ASTCopier::operator()(Assignment const& _assignment)
 Expression ASTCopier::operator()(FunctionCall const& _call)
 {
 	return FunctionCall{
-		_call.location,
+		_call.debugData,
 		translate(_call.functionName),
 		translateVector(_call.arguments)
 	};
@@ -76,12 +76,12 @@ Expression ASTCopier::operator()(Literal const& _literal)
 
 Statement ASTCopier::operator()(If const& _if)
 {
-	return If{_if.location, translate(_if.condition), translate(_if.body)};
+	return If{_if.debugData, translate(_if.condition), translate(_if.body)};
 }
 
 Statement ASTCopier::operator()(Switch const& _switch)
 {
-	return Switch{_switch.location, translate(_switch.expression), translateVector(_switch.cases)};
+	return Switch{_switch.debugData, translate(_switch.expression), translateVector(_switch.cases)};
 }
 
 Statement ASTCopier::operator()(FunctionDefinition const& _function)
@@ -92,7 +92,7 @@ Statement ASTCopier::operator()(FunctionDefinition const& _function)
 	ScopeGuard g([&]() { this->leaveFunction(_function); });
 
 	return FunctionDefinition{
-		_function.location,
+		_function.debugData,
 		translatedName,
 		translateVector(_function.parameters),
 		translateVector(_function.returnVariables),
@@ -106,7 +106,7 @@ Statement ASTCopier::operator()(ForLoop const& _forLoop)
 	ScopeGuard g([&]() { this->leaveScope(_forLoop.pre); });
 
 	return ForLoop{
-		_forLoop.location,
+		_forLoop.debugData,
 		translate(_forLoop.pre),
 		translate(_forLoop.condition),
 		translate(_forLoop.post),
@@ -148,17 +148,17 @@ Block ASTCopier::translate(Block const& _block)
 	enterScope(_block);
 	ScopeGuard g([&]() { this->leaveScope(_block); });
 
-	return Block{_block.location, translateVector(_block.statements)};
+	return Block{_block.debugData, translateVector(_block.statements)};
 }
 
 Case ASTCopier::translate(Case const& _case)
 {
-	return Case{_case.location, translate(_case.value), translate(_case.body)};
+	return Case{_case.debugData, translate(_case.value), translate(_case.body)};
 }
 
 Identifier ASTCopier::translate(Identifier const& _identifier)
 {
-	return Identifier{_identifier.location, translateIdentifier(_identifier.name)};
+	return Identifier{_identifier.debugData, translateIdentifier(_identifier.name)};
 }
 
 Literal ASTCopier::translate(Literal const& _literal)
@@ -168,7 +168,7 @@ Literal ASTCopier::translate(Literal const& _literal)
 
 TypedName ASTCopier::translate(TypedName const& _typedName)
 {
-	return TypedName{_typedName.location, translateIdentifier(_typedName.name), _typedName.type};
+	return TypedName{_typedName.debugData, translateIdentifier(_typedName.name), _typedName.type};
 }
 
 YulString FunctionCopier::translateIdentifier(YulString _name)

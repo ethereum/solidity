@@ -241,7 +241,12 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, LiteralKind::Number, YulString{util::formatNumber(*m_data)}, {}};
+		return Literal{
+			make_shared<DebugData>(_location),
+			LiteralKind::Number,
+			YulString{util::formatNumber(*m_data)},
+			{}
+		};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
@@ -252,9 +257,10 @@ Expression Pattern::toExpression(SourceLocation const& _location) const
 		string name = instructionInfo(m_instruction).name;
 		transform(begin(name), end(name), begin(name), [](auto _c) { return tolower(_c); });
 
+		auto const debugData = make_shared<DebugData>(_location);
 		return FunctionCall{
-			_location,
-			Identifier{_location, YulString{name}},
+			debugData,
+			Identifier{debugData, YulString{name}},
 			std::move(arguments)
 		};
 	}

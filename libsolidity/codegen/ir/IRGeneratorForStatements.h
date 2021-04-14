@@ -195,6 +195,8 @@ private:
 
 	void setLocation(ASTNode const& _node);
 
+	void appendCurrentLocation();
+
 	std::string linkerSymbol(ContractDefinition const& _library) const;
 
 	std::ostringstream m_code;
@@ -203,6 +205,7 @@ private:
 	YulUtilFunctions& m_utils;
 	std::optional<IRLValue> m_currentLValue;
 	langutil::SourceLocation m_currentLocation;
+	std::streampos m_lastSourceLocationPosition;
 };
 
 }

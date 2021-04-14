@@ -1302,7 +1302,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
 
-	location.end = block->location.end;
+	location.end = block->debugData->irLocation.end;
 	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, block);
 }
 
