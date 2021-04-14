@@ -62,10 +62,6 @@ message FunctionCall {
   required Expression in_param2 = 2;
   required Expression in_param3 = 3;
   required Expression in_param4 = 4;
-  required VarRef out_param1 = 5;
-  required VarRef out_param2 = 6;
-  required VarRef out_param3 = 7;
-  required VarRef out_param4 = 8;
 }
 
 message TypedVarDecl {
