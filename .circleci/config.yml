@@ -1025,6 +1025,20 @@ jobs:
           name: Print diff
           when: on_fail
           command: diff --unified=0 --report-identical-files --from-file $REPORT_FILES | head --lines 50
+      - run:
+          name: Install zip
+          when: on_fail
+          command: |
+            apt update --quiet
+            apt install zip --assume-yes
+      - run:
+          name: Bundle reports into a single package
+          when: on_fail
+          command: zip all-bytecode-reports.zip $REPORT_FILES
+      - store_artifacts:
+          # NOTE: store_artifacts does not support the 'when' attribute.
+          # Fortunately when the artifact does not exist it just says "No artifact files found" and ignores it.
+          path: all-bytecode-reports.zip
 
 workflows:
   version: 2
