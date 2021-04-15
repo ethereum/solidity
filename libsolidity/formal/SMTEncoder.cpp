@@ -43,9 +43,13 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
-SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
+SMTEncoder::SMTEncoder(
+	smt::EncodingContext& _context,
+	ModelCheckerSettings const& _settings
+):
 	m_errorReporter(m_smtErrors),
-	m_context(_context)
+	m_context(_context),
+	m_settings(_settings)
 {
 }
 
@@ -990,6 +994,15 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 			}
 		}
 	}
+}
+
+bool SMTEncoder::shouldAnalyze(ContractDefinition const& _contract) const
+{
+	if (!_contract.canBeDeployed())
+		return false;
+
+	return m_settings.contracts.isDefault() ||
+		m_settings.contracts.has(_contract.sourceUnitName(), _contract.name());
 }
 
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)

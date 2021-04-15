@@ -59,10 +59,9 @@ CHC::CHC(
 	SMTSolverChoice _enabledSolvers,
 	ModelCheckerSettings const& _settings
 ):
-	SMTEncoder(_context),
+	SMTEncoder(_context, _settings),
 	m_outerErrorReporter(_errorReporter),
-	m_enabledSolvers(_enabledSolvers),
-	m_settings(_settings)
+	m_enabledSolvers(_enabledSolvers)
 {
 	bool usesZ3 = _enabledSolvers.z3;
 #ifdef HAVE_Z3
@@ -198,7 +197,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	setCurrentBlock(*m_constructorSummaries.at(&_contract));
 
 	solAssert(&_contract == m_currentContract, "");
-	if (_contract.canBeDeployed())
+	if (shouldAnalyze(_contract))
 	{
 		auto constructor = _contract.constructor();
 		auto txConstraints = state().txTypeConstraints();
@@ -283,7 +282,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		!_function.isConstructor() &&
 		_function.isPublic() &&
 		contractFunctions(*m_currentContract).count(&_function) &&
-		m_currentContract->canBeDeployed()
+		shouldAnalyze(*m_currentContract)
 	)
 	{
 		auto sum = summary(_function);

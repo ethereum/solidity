@@ -51,7 +51,10 @@ namespace solidity::frontend
 class SMTEncoder: public ASTConstVisitor
 {
 public:
-	SMTEncoder(smt::EncodingContext& _context);
+	SMTEncoder(
+		smt::EncodingContext& _context,
+		ModelCheckerSettings const& _settings
+	);
 
 	/// @returns true if engine should proceed with analysis.
 	bool analyze(SourceUnit const& _sources);
@@ -202,6 +205,10 @@ protected:
 	void visitStructConstructorCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 	void visitPublicGetter(FunctionCall const& _funCall);
+
+	/// @returns true if @param _contract is set for analysis in the settings
+	/// and it is not abstract.
+	bool shouldAnalyze(ContractDefinition const& _contract) const;
 
 	bool isPublicGetter(Expression const& _expr);
 
@@ -454,6 +461,8 @@ protected:
 
 	/// Stores the context of the encoding.
 	smt::EncodingContext& m_context;
+
+	ModelCheckerSettings const& m_settings;
 
 	smt::SymbolicState& state();
 };

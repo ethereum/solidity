@@ -547,7 +547,9 @@ bool CompilerStack::analyze()
 		if (noErrors)
 		{
 			ModelChecker modelChecker(m_errorReporter, m_smtlib2Responses, m_modelCheckerSettings, m_readFile, m_enabledSMTSolvers);
-			modelChecker.enableAllEnginesIfPragmaPresent(applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; }));
+			auto allSources = applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
+			modelChecker.enableAllEnginesIfPragmaPresent(allSources);
+			modelChecker.checkRequestedSourcesAndContracts(allSources);
 			for (Source const* source: m_sourceOrder)
 				if (source->ast)
 					modelChecker.analyze(*source->ast);

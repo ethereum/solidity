@@ -377,6 +377,12 @@ Input Description
         // The modelChecker object is experimental and subject to changes.
         "modelChecker":
         {
+          // Chose which contracts should be analyzed as the deployed one.
+          contracts:
+          {
+            "source1.sol": ["contract1"],
+            "source2.sol": ["contract2", "contract3"]
+          },
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
           // Choose which targets should be checked: constantCondition,

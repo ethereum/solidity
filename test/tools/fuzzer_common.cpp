@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libsolidity/formal/ModelCheckerSettings.h"
 #include <test/tools/fuzzer_common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -99,7 +100,12 @@ void FuzzerUtil::testCompiler(
 	if (_forceSMT)
 	{
 		forceSMT(_input);
-		compiler.setModelCheckerSettings({frontend::ModelCheckerEngine::All(), frontend::ModelCheckerTargets::All(), /*timeout=*/1});
+		compiler.setModelCheckerSettings({
+			frontend::ModelCheckerContracts::Default(),
+			frontend::ModelCheckerEngine::All(),
+			frontend::ModelCheckerTargets::Default(),
+			/*timeout=*/1
+		});
 	}
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);

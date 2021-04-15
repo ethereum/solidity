@@ -22,6 +22,7 @@
 #endif
 
 #include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -52,6 +53,38 @@ void ModelChecker::enableAllEnginesIfPragmaPresent(vector<shared_ptr<SourceUnit>
 	});
 	if (hasPragma)
 		m_settings.engine = ModelCheckerEngine::All();
+}
+
+void ModelChecker::checkRequestedSourcesAndContracts(vector<shared_ptr<SourceUnit>> const& _sources)
+{
+	map<string, set<string>> exist;
+	for (auto const& source: _sources)
+		for (auto node: source->nodes())
+			if (auto contract = dynamic_pointer_cast<ContractDefinition>(node))
+				exist[contract->sourceUnitName()].insert(contract->name());
+
+	// Requested sources
+	for (auto const& sourceName: m_settings.contracts.contracts | ranges::views::keys)
+	{
+		if (!exist.count(sourceName))
+		{
+			m_errorReporter.warning(
+				9134_error,
+				SourceLocation(),
+				"Requested source \"" + sourceName + "\" does not exist."
+			);
+			continue;
+		}
+		auto const& source = exist.at(sourceName);
+		// Requested contracts in source `s`.
+		for (auto const& contract: m_settings.contracts.contracts.at(sourceName))
+			if (!source.count(contract))
+				m_errorReporter.warning(
+					7400_error,
+					SourceLocation(),
+					"Requested contract \"" + contract + "\" does not exist in source \"" + sourceName + "\"."
+				);
+	}
 }
 
 void ModelChecker::analyze(SourceUnit const& _source)

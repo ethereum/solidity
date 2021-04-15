@@ -41,10 +41,9 @@ BMC::BMC(
 	smtutil::SMTSolverChoice _enabledSolvers,
 	ModelCheckerSettings const& _settings
 ):
-	SMTEncoder(_context),
+	SMTEncoder(_context, _settings),
 	m_interface(make_unique<smtutil::SMTPortfolio>(_smtlib2Responses, _smtCallback, _enabledSolvers, _settings.timeout)),
-	m_outerErrorReporter(_errorReporter),
-	m_settings(_settings)
+	m_outerErrorReporter(_errorReporter)
 {
 #if defined (HAVE_Z3) || defined (HAVE_CVC4)
 	if (_enabledSolvers.some())
@@ -838,7 +837,7 @@ void BMC::addVerificationTarget(
 	Expression const* _expression
 )
 {
-	if (!m_settings.targets.has(_type) || (m_currentContract && !m_currentContract->canBeDeployed()))
+	if (!m_settings.targets.has(_type) || (m_currentContract && !shouldAnalyze(*m_currentContract)))
 		return;
 
 	BMCVerificationTarget target{
