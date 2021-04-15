@@ -21,13 +21,15 @@ class MutationInfo: public ScopeGuard
 public:
 	MutationInfo(ProtobufMessage const* _message, std::string const& _info);
 
-	static void writeLine(std::string const& _str)
+	void writeLine(std::string const& _str)
 	{
-		std::cout << _str << std::endl;
+		if (m_debug)
+			std::cout << _str << std::endl;
 	}
 	void exitInfo();
 
 	ProtobufMessage const* m_protobufMsg;
+	bool m_debug;
 };
 
 struct YulRandomNumGenerator

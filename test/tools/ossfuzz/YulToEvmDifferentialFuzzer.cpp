@@ -30,6 +30,9 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
+#include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/CompilabilityChecker.h>
+
 #include <libyul/AsmPrinter.h>
 
 #include <libevmasm/Instruction.h>
@@ -51,6 +54,24 @@ using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace std;
+
+namespace
+{
+/// @returns true if there are no recursive functions, false otherwise.
+bool recursiveFunctionExists(Dialect const& _dialect, yul::Object& _object)
+{
+	auto recursiveFunctions = CallGraphGenerator::callGraph(*_object.code).recursiveFunctions();
+	for(auto&& [function, variables]: CompilabilityChecker{
+			_dialect,
+			_object,
+			true
+		}.unreachableVariables
+	)
+		if(recursiveFunctions.count(function))
+			return true;
+	return false;
+}
+}
 
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
@@ -101,16 +122,18 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
-	AssemblyStack stackUnoptimized(version, AssemblyStack::Language::StrictAssembly, settings);
+	AssemblyStack yulStack(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
-		stackUnoptimized.parseAndAnalyze("source", yulSubObject),
+		yulStack.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
 	ostringstream unoptimizedState;
+	std::shared_ptr<yul::Object> subObject = yulStack.parserResult();
+	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(version);
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		unoptimizedState,
-		stackUnoptimized.parserResult()->code,
-		EVMDialect::strictAssemblyForEVMObjects(version),
+		subObject->code,
+		dialect,
 		true,
 		10000,
 		10000,
@@ -119,19 +142,16 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
 		return;
 
-	AssemblyStack stackOptimized(version, AssemblyStack::Language::StrictAssembly, settings);
-	solAssert(
-		stackOptimized.parseAndAnalyze("source", yulSubObject),
-		"Parsing fuzzer generated input failed."
-	);
 	YulOptimizerTestCommon optimizerTest(
-		stackOptimized.parserResult(),
-		EVMDialect::strictAssemblyForEVMObjects(version)
+		subObject,
+		dialect
 	);
 	// Run circular references pruner and then stack limit evader.
 	string step = "stackLimitEvader";
 	optimizerTest.setStep(step);
 	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	bool recursiveFunction = recursiveFunctionExists(dialect, *subObject);
+	string optimisedSubObject = AsmPrinter{}(*astBlock);
 	string optimisedProgram = Whiskers(R"(
 	object "main" {
 		code {
@@ -145,12 +165,31 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		}
 	}
 		)")
-		("fuzzerInput", AsmPrinter{}(*astBlock))
+		("fuzzerInput", optimisedSubObject)
 		.render();
-	cout << AsmPrinter{}(*astBlock) << endl;
+	cout << optimisedSubObject << endl;
 	bytes optimisedByteCode;
 	settings.optimizeStackAllocation = true;
-	optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
+	try
+	{
+		optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
+	}
+	catch (yul::StackTooDeepError const&)
+	{
+		// If there are recursive functions, stack too deep errors are expected
+		// even post stack evasion optimisation and hence ignored. Otherwise,
+		// they are rethrown for further investigation.
+		if (recursiveFunction)
+			return;
+		throw;
+	}
+	// InvalidDeposit
+	catch (Exception const&)
+	{
+		if (recursiveFunction)
+			return;
+		throw;
+	}
 
 	// Reset host before running optimised code.
 	hostContext.reset();
