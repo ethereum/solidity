@@ -216,6 +216,63 @@ the code below creates new global symbols ``alias`` and ``symbol2`` which refere
 
   import {symbol1 as alias, symbol2} from "filename";
 
+.. index:: virtual filesystem, source unit name, import; path, filesystem path
+
+Import paths
+------------
+
+The paths used in imports in a general case do not have to be filesystem paths.
+The compiler maintains an internal database (:ref:`virtual filesystem <virtual-filesystem>`) where
+each compiled source unit is assigned a unique *source unit name* which is an opaque and unstructured identifier.
+The import path is translated into a source unit name and used to find the corresponding source unit
+in this database.
+If you directly provide source code to the compiler using the :ref:`Standard JSON interface
+<compiler-api>`, you can choose arbitrary source unit names and use them in your imports, completely
+ignoring the actual filesystem.
+
+While this mechanism provides a lot of freedom, in most cases the source files do reside on disk
+and it is convenient if the compiler can find and load them automatically.
+For this reason, if the source unit name corresponding to the import path is not found in the
+virtual filesystem, the compiler invokes the file loader.
+If you are using the command-line interface, the file loader simply assumes that the source unit
+name passed to it is a path and tries to load the file from the actual filesystem.
+The `JavaScript interface <https://github.com/ethereum/solc-js>`_ is a bit more flexible in that
+regard and allows the user to provide a callback to load the file.
+`The Remix IDE <https://remix.ethereum.org/>`_ uses this mechanism to allow files to be imported
+directly from github.
+
+The compiler recognizes two kinds of imports, based on how the import path looks like:
+
+- All the imports mentioned in the previous section are :ref:`direct imports <direct-imports>`.
+  In this case the import path simply becomes the source unit name.
+
+  Examples:
+
+  .. code-block:: solidity
+
+     import "contracts/lib/token.sol" as token1;
+     import "@contracts/lib/token.sol" as token2;
+     import "/contracts/lib/token.sol" as token3;
+     import "https://example.com/contracts/lib/token.sol" as token4;
+
+- The other kind is a :ref:`relative import <relative-imports>`.
+  Such an import must start with ``./`` or ``../``:
+
+  .. code-block:: solidity
+
+     import "./contracts/lib/token.sol" as token1;
+     import "../contracts/lib/token.sol" as token2;
+
+  Unlike in case of a direct import, the compiler does assume that the import path is actually a path.
+  The source unit name is a result of combining the source unit name of the importing file with
+  the part of the path provided in the statement.
+
+There are several compiler features that can affect import paths. Imports can be redirected using
+:ref:`import remapping <import-remapping>` while the way file loader resolves relative paths depends
+on :ref:`base path <base-path>`.
+For a complete description of the virtual filesystem and the path resolution logic used by the
+compiler see :ref:`Path Resolution <path-resolution>`.
+
 .. index:: ! comment, natspec
 
 Comments
