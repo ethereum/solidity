@@ -50,7 +50,8 @@
           "visibility": "public"
         }
       ],
-      "src": "0:48:1"
+      "src": "0:48:1",
+      "usedErrors": []
     },
     {
       "abstract": true,
@@ -146,7 +147,8 @@
           "visibility": "public"
         }
       ],
-      "src": "49:103:1"
+      "src": "49:103:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -256,7 +258,8 @@
           "visibility": "public"
         }
       ],
-      "src": "153:91:1"
+      "src": "153:91:1",
+      "usedErrors": []
     }
   ],
   "src": "0:245:1"

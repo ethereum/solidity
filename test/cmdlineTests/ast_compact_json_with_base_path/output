@@ -43,7 +43,8 @@ JSON AST (compact format):
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 6,
-      "src": "60:13:0"
+      "src": "60:13:0",
+      "usedErrors": []
     }
   ],
   "src": "36:38:0"

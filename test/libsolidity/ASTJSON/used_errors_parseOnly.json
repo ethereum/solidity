@@ -1,0 +1,172 @@
+{
+  "absolutePath": "a",
+  "id": 20,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "id": 2,
+      "name": "X",
+      "nameLocation": "6:1:1",
+      "nodeType": "ErrorDefinition",
+      "parameters":
+      {
+        "id": 1,
+        "nodeType": "ParameterList",
+        "parameters": [],
+        "src": "7:2:1"
+      },
+      "src": "0:10:1"
+    },
+    {
+      "body":
+      {
+        "id": 8,
+        "nodeType": "Block",
+        "src": "24:15:1",
+        "statements":
+        [
+          {
+            "errorCall":
+            {
+              "arguments": [],
+              "expression":
+              {
+                "id": 5,
+                "name": "X",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "src": "33:1:1",
+                "typeDescriptions": {}
+              },
+              "id": 6,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "33:3:1",
+              "tryCall": false,
+              "typeDescriptions": {}
+            },
+            "id": 7,
+            "nodeType": "RevertStatement",
+            "src": "26:10:1"
+          }
+        ]
+      },
+      "id": 9,
+      "implemented": true,
+      "kind": "freeFunction",
+      "modifiers": [],
+      "name": "f",
+      "nameLocation": "20:1:1",
+      "nodeType": "FunctionDefinition",
+      "parameters":
+      {
+        "id": 3,
+        "nodeType": "ParameterList",
+        "parameters": [],
+        "src": "21:2:1"
+      },
+      "returnParameters":
+      {
+        "id": 4,
+        "nodeType": "ParameterList",
+        "parameters": [],
+        "src": "24:0:1"
+      },
+      "src": "11:28:1",
+      "stateMutability": "nonpayable",
+      "virtual": false,
+      "visibility": "internal"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "id": 19,
+      "name": "C",
+      "nameLocation": "49:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "id": 11,
+          "name": "T",
+          "nameLocation": "63:1:1",
+          "nodeType": "ErrorDefinition",
+          "parameters":
+          {
+            "id": 10,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "64:2:1"
+          },
+          "src": "57:10:1"
+        },
+        {
+          "body":
+          {
+            "id": 17,
+            "nodeType": "Block",
+            "src": "97:8:1",
+            "statements":
+            [
+              {
+                "expression":
+                {
+                  "arguments": [],
+                  "expression":
+                  {
+                    "id": 14,
+                    "name": "f",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "src": "99:1:1",
+                    "typeDescriptions": {}
+                  },
+                  "id": 15,
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "99:3:1",
+                  "tryCall": false,
+                  "typeDescriptions": {}
+                },
+                "id": 16,
+                "nodeType": "ExpressionStatement",
+                "src": "99:3:1"
+              }
+            ]
+          },
+          "id": 18,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "h",
+          "nameLocation": "81:1:1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 12,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "82:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 13,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "97:0:1"
+          },
+          "src": "72:33:1",
+          "stateMutability": "pure",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "src": "40:67:1",
+      "usedErrors": []
+    }
+  ],
+  "src": "0:108:1"
+}

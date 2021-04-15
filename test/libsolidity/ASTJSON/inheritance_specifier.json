@@ -31,7 +31,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 5,
-      "src": "0:14:1"
+      "src": "0:14:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -65,7 +66,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 5,
-      "src": "15:20:1"
+      "src": "15:20:1",
+      "usedErrors": []
     }
   ],
   "src": "0:36:1"

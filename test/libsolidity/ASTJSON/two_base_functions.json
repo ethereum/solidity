@@ -73,7 +73,8 @@
         }
       ],
       "scope": 23,
-      "src": "0:49:1"
+      "src": "0:49:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -129,7 +130,8 @@
         }
       ],
       "scope": 23,
-      "src": "50:49:1"
+      "src": "50:49:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -243,7 +245,8 @@
         }
       ],
       "scope": 23,
-      "src": "100:64:1"
+      "src": "100:64:1",
+      "usedErrors": []
     }
   ],
   "src": "0:165:1"

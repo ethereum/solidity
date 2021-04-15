@@ -1,0 +1,230 @@
+{
+  "absolutePath": "a",
+  "exportedSymbols":
+  {
+    "C":
+    [
+      19
+    ],
+    "X":
+    [
+      2
+    ],
+    "f":
+    [
+      9
+    ]
+  },
+  "id": 20,
+  "nodeType": "SourceUnit",
+  "nodes":
+  [
+    {
+      "id": 2,
+      "name": "X",
+      "nameLocation": "6:1:1",
+      "nodeType": "ErrorDefinition",
+      "parameters":
+      {
+        "id": 1,
+        "nodeType": "ParameterList",
+        "parameters": [],
+        "src": "7:2:1"
+      },
+      "src": "0:10:1"
+    },
+    {
+      "body":
+      {
+        "id": 8,
+        "nodeType": "Block",
+        "src": "24:15:1",
+        "statements":
+        [
+          {
+            "errorCall":
+            {
+              "arguments": [],
+              "expression":
+              {
+                "argumentTypes": [],
+                "id": 5,
+                "name": "X",
+                "nodeType": "Identifier",
+                "overloadedDeclarations": [],
+                "referencedDeclaration": 2,
+                "src": "33:1:1",
+                "typeDescriptions":
+                {
+                  "typeIdentifier": "t_function_error_pure$__$returns$__$",
+                  "typeString": "function () pure"
+                }
+              },
+              "id": 6,
+              "isConstant": false,
+              "isLValue": false,
+              "isPure": false,
+              "kind": "functionCall",
+              "lValueRequested": false,
+              "names": [],
+              "nodeType": "FunctionCall",
+              "src": "33:3:1",
+              "tryCall": false,
+              "typeDescriptions":
+              {
+                "typeIdentifier": "t_tuple$__$",
+                "typeString": "tuple()"
+              }
+            },
+            "id": 7,
+            "nodeType": "RevertStatement",
+            "src": "26:10:1"
+          }
+        ]
+      },
+      "id": 9,
+      "implemented": true,
+      "kind": "freeFunction",
+      "modifiers": [],
+      "name": "f",
+      "nameLocation": "20:1:1",
+      "nodeType": "FunctionDefinition",
+      "parameters":
+      {
+        "id": 3,
+        "nodeType": "ParameterList",
+        "parameters": [],
+        "src": "21:2:1"
+      },
+      "returnParameters":
+      {
+        "id": 4,
+        "nodeType": "ParameterList",
+        "parameters": [],
+        "src": "24:0:1"
+      },
+      "scope": 20,
+      "src": "11:28:1",
+      "stateMutability": "nonpayable",
+      "virtual": false,
+      "visibility": "internal"
+    },
+    {
+      "abstract": false,
+      "baseContracts": [],
+      "contractDependencies": [],
+      "contractKind": "contract",
+      "fullyImplemented": true,
+      "id": 19,
+      "linearizedBaseContracts":
+      [
+        19
+      ],
+      "name": "C",
+      "nameLocation": "49:1:1",
+      "nodeType": "ContractDefinition",
+      "nodes":
+      [
+        {
+          "id": 11,
+          "name": "T",
+          "nameLocation": "63:1:1",
+          "nodeType": "ErrorDefinition",
+          "parameters":
+          {
+            "id": 10,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "64:2:1"
+          },
+          "src": "57:10:1"
+        },
+        {
+          "body":
+          {
+            "id": 17,
+            "nodeType": "Block",
+            "src": "97:8:1",
+            "statements":
+            [
+              {
+                "expression":
+                {
+                  "arguments": [],
+                  "expression":
+                  {
+                    "argumentTypes": [],
+                    "id": 14,
+                    "name": "f",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 9,
+                    "src": "99:1:1",
+                    "typeDescriptions":
+                    {
+                      "typeIdentifier": "t_function_internal_nonpayable$__$returns$__$",
+                      "typeString": "function ()"
+                    }
+                  },
+                  "id": 15,
+                  "isConstant": false,
+                  "isLValue": false,
+                  "isPure": false,
+                  "kind": "functionCall",
+                  "lValueRequested": false,
+                  "names": [],
+                  "nodeType": "FunctionCall",
+                  "src": "99:3:1",
+                  "tryCall": false,
+                  "typeDescriptions":
+                  {
+                    "typeIdentifier": "t_tuple$__$",
+                    "typeString": "tuple()"
+                  }
+                },
+                "id": 16,
+                "nodeType": "ExpressionStatement",
+                "src": "99:3:1"
+              }
+            ]
+          },
+          "functionSelector": "b8c9d365",
+          "id": 18,
+          "implemented": true,
+          "kind": "function",
+          "modifiers": [],
+          "name": "h",
+          "nameLocation": "81:1:1",
+          "nodeType": "FunctionDefinition",
+          "parameters":
+          {
+            "id": 12,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "82:2:1"
+          },
+          "returnParameters":
+          {
+            "id": 13,
+            "nodeType": "ParameterList",
+            "parameters": [],
+            "src": "97:0:1"
+          },
+          "scope": 19,
+          "src": "72:33:1",
+          "stateMutability": "pure",
+          "virtual": false,
+          "visibility": "public"
+        }
+      ],
+      "scope": 20,
+      "src": "40:67:1",
+      "usedErrors":
+      [
+        2,
+        11
+      ]
+    }
+  ],
+  "src": "0:108:1"
+}
