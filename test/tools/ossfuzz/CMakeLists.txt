@@ -133,7 +133,7 @@ if (OSSFUZZ)
             -Wno-zero-length-array
             -Wno-suggest-destructor-override
     )
-    
+
     add_executable(yul_evm_diff_ossfuzz
             YulToEvmDifferentialFuzzer.cpp
             ../../libyul/YulOptimizerTestCommon.cpp
