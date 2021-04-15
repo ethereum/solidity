@@ -321,6 +321,8 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"stackLimitEvader", [&]() {
 			disambiguate();
+			FunctionHoister::run(*m_context, *m_ast);
+			CircularReferencesPruner::run(*m_context, *m_ast);
 			StackLimitEvader::run(*m_context, *m_object, CompilabilityChecker{
 				*m_dialect,
 				*m_object,

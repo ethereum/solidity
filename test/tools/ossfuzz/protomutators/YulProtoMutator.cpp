@@ -12,7 +12,8 @@ using YPM = YulProtoMutator;
 
 MutationInfo::MutationInfo(ProtobufMessage const* _message, string const& _info):
 	ScopeGuard([&]{ exitInfo(); }),
-	m_protobufMsg(_message)
+	m_protobufMsg(_message),
+	m_debug(false)
 {
 	writeLine("----------------------------------");
 	writeLine("YULMUTATOR: " + _info);
@@ -26,26 +27,46 @@ void MutationInfo::exitInfo()
 	writeLine(SaveMessageAsText(*m_protobufMsg));
 }
 
-/// Initialize deterministic PRNG.
-static YulRandomNumGenerator s_rand(1337);
-
 /// Add m/sstore(0, variable)
 static LPMPostProcessor<Block> addStoreToZero(
 	[](Block* _message, unsigned _seed)
 	{
+		YPM mutator{_seed};
 		if (_seed % YPM::s_highIP == 0)
 		{
 			MutationInfo m{_message, "Added store to zero"};
 			auto storeStmt = new StoreFunc();
-			storeStmt->set_st(YPM::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(s_rand()));
+			storeStmt->set_st(YPM::EnumTypeConverter<StoreFunc_Storage>{}.enumFromSeed(mutator.prng()));
 			storeStmt->set_allocated_loc(YPM::litExpression(0));
-			storeStmt->set_allocated_val(YPM::refExpression(s_rand));
+			storeStmt->set_allocated_val(YPM::refExpression(mutator.prng));
 			auto stmt = _message->add_statements();
 			stmt->set_allocated_storage_func(storeStmt);
 		}
 	}
 );
 
+static LPMPostProcessor<FunctionDef> addStackPressure(
+	[](FunctionDef* _message, unsigned)
+	{
+		{
+			MutationInfo m{_message, "Added stack pressure"};
+			auto functionBlock = _message->mutable_block();
+			int numInputParams = _message->num_input_params() % 33;
+			int numOutputParams = _message->num_output_params() % 33;
+			if (numOutputParams > 0)
+			{
+				for (int i = 0; i < numOutputParams; i++)
+				{
+					auto varRef = new VarRef();
+					varRef->set_varnum(numInputParams + i);
+					auto assignOutI = new AssignmentStatement();
+					assignOutI->set_allocated_ref_id(varRef);
+					functionBlock->add_statements()->set_allocated_assignment(assignOutI);
+				}
+			}
+		}
+	}
+);
 
 namespace
 {
@@ -54,10 +75,10 @@ struct addControlFlow
 {
 	addControlFlow()
 	{
-		function = [](T* _message, unsigned)
+		function = [](T* _message, unsigned _seed)
 		{
 			MutationInfo m{_message, "Added control flow."};
-			YPM::addControlFlow(_message);
+			YPM{_seed}.addControlFlow(_message);
 		};
 		/// Unused variable registers callback.
 		LPMPostProcessor<T> callback(function);
@@ -187,7 +208,7 @@ void YPM::addControlFlow(T* _msg)
 		static_cast<unsigned>(ControlFlowStmt::For),
 		static_cast<unsigned>(ControlFlowStmt::Termination)
 	);
-	auto random = static_cast<ControlFlowStmt>(d(s_rand.m_random));
+	auto random = static_cast<ControlFlowStmt>(d(prng.m_random));
 	Statement* s = basicBlock(_msg)->add_statements();
 	switch (random)
 	{
@@ -233,7 +254,7 @@ Block* YPM::randomBlock(ForStmt* _stmt)
 		static_cast<unsigned>(ForBlocks::Init),
 		static_cast<unsigned>(ForBlocks::Body)
 	);
-	switch (static_cast<ForBlocks>(d(s_rand.m_random)))
+	switch (static_cast<ForBlocks>(d(prng.m_random)))
 	{
 	case ForBlocks::Init:
 		return _stmt->mutable_for_init();

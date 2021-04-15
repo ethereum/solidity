@@ -23,9 +23,9 @@ namespace solidity::yul::test::yul_fuzzer
 
 struct yulFuzzerUtil
 {
-	enum class TerminationReason
+	enum class TerminationReason: size_t
 	{
-		ExplicitlyTerminated,
+		ExplicitlyTerminated = 0,
 		StepLimitReached,
 		TraceLimitReached,
 		ExpresionNestingLimitReached,
@@ -36,6 +36,7 @@ struct yulFuzzerUtil
 		std::ostream& _os,
 		std::shared_ptr<yul::Block> _ast,
 		Dialect const& _dialect,
+		bool _outputStorageOnly = false,
 		size_t _maxSteps = maxSteps,
 		size_t _maxTraceSize = maxTraceSize,
 		size_t _maxExprNesting = maxExprNesting

@@ -27,6 +27,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/algorithm_ext/erase.hpp>
+#include <random>
 
 using namespace std;
 using namespace solidity::yul::test::yul_fuzzer;
@@ -35,7 +36,7 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity;
 
-string ProtoConverter::dictionaryToken(HexPrefix _p)
+string ProtoConverter::dictionaryToken()
 {
 	std::string token;
 	// If dictionary constant is requested while converting
@@ -49,10 +50,10 @@ string ProtoConverter::dictionaryToken(HexPrefix _p)
 		token = hexDictionary[indexVar % hexDictionary.size()];
 		yulAssert(token.size() <= 64, "Proto Fuzzer: Dictionary token too large");
 	}
-
-	return _p == HexPrefix::Add ? "0x" + token : token;
+	return "mod(0x" + token + ", 0x100)";
 }
 
+#if 0
 string ProtoConverter::createHex(string const& _hexBytes)
 {
 	string tmp{_hexBytes};
@@ -66,7 +67,7 @@ string ProtoConverter::createHex(string const& _hexBytes)
 	// We need this awkward if case because hex literals cannot be empty.
 	// Use a dictionary token.
 	if (tmp.empty())
-		tmp = dictionaryToken(HexPrefix::DontAdd);
+		tmp = dictionaryToken();
 	// Hex literals must have even number of digits
 	if (tmp.size() % 2)
 		tmp.insert(0, "0");
@@ -87,7 +88,7 @@ string ProtoConverter::createAlphaNum(string const& _strBytes)
 	}
 	return tmp;
 }
-
+#endif
 EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 {
 	switch (_ver)
@@ -111,21 +112,9 @@ EVMVersion ProtoConverter::evmVersionMapping(Program_Version const& _ver)
 	}
 }
 
-string ProtoConverter::visit(Literal const& _x)
+string ProtoConverter::visit(Literal const&)
 {
-	switch (_x.literal_oneof_case())
-	{
-	case Literal::kIntval:
-		return to_string(_x.intval());
-	case Literal::kHexval:
-		return "0x" + createHex(_x.hexval());
-	case Literal::kStrval:
-		return "\"" + createAlphaNum(_x.strval()) + "\"";
-	case Literal::kBoolval:
-		return _x.boolval() ? "true" : "false";
-	case Literal::LITERAL_ONEOF_NOT_SET:
-		return dictionaryToken();
-	}
+	return dictionaryToken();
 }
 
 void ProtoConverter::consolidateVarDeclsInFunctionDef()
@@ -227,13 +216,20 @@ void ProtoConverter::visit(Expression const& _x)
 		if (auto v = functionExists(NumFunctionReturns::Single); v.has_value())
 		{
 			string functionName = v.value();
-			visit(_x.func_expr(), functionName, true);
+			// Disable recursive calls.
+			if (functionName == m_currentFunctionName)
+				m_output << dictionaryToken();
+			else
+				visit(_x.func_expr(), functionName, true);
 		}
 		else
 			m_output << dictionaryToken();
 		break;
 	case Expression::kLowcall:
-		visit(_x.lowcall());
+		if (!m_filterStatefulInstructions)
+			visit(_x.lowcall());
+		else
+			m_output << dictionaryToken();
 		break;
 	case Expression::kCreate:
 		// Create and create2 return address of created contract which
@@ -263,8 +259,9 @@ void ProtoConverter::visit(BinaryOp const& _x)
 {
 	BinaryOp_BOp op = _x.op();
 
-	if ((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) &&
-		!m_evmVersion.hasBitwiseShifting())
+	if (((op == BinaryOp::SHL || op == BinaryOp::SHR || op == BinaryOp::SAR) && !m_evmVersion.hasBitwiseShifting()) ||
+		(m_filterStatefulInstructions && op == BinaryOp::KECCAK)
+	)
 	{
 		m_output << dictionaryToken();
 		return;
@@ -576,7 +573,8 @@ void ProtoConverter::visit(UnaryOp const& _x)
 			op == UnaryOp::EXTCODEHASH ||
 			op == UnaryOp::EXTCODESIZE ||
 			op == UnaryOp::BALANCE ||
-			op == UnaryOp::BLOCKHASH
+			op == UnaryOp::BLOCKHASH ||
+			op == UnaryOp::MLOAD
 		)
 	)
 	{
@@ -652,7 +650,18 @@ void ProtoConverter::visit(NullaryOp const& _x)
 			op == NullaryOp::ADDRESS ||
 			op == NullaryOp::TIMESTAMP ||
 			op == NullaryOp::NUMBER ||
-			op == NullaryOp::DIFFICULTY
+			op == NullaryOp::DIFFICULTY ||
+			op == NullaryOp::ORIGIN ||
+			op == NullaryOp::CALLER ||
+			op == NullaryOp::CALLVALUE ||
+			op == NullaryOp::GASPRICE ||
+			op == NullaryOp::GASLIMIT ||
+			op == NullaryOp::COINBASE ||
+			op == NullaryOp::TIMESTAMP ||
+			op == NullaryOp::NUMBER ||
+			op == NullaryOp::CHAINID ||
+			op == NullaryOp::SELFBALANCE ||
+			op == NullaryOp::MSIZE
 		)
 	)
 	{
@@ -747,7 +756,10 @@ void ProtoConverter::visit(CopyFunc const& _x)
 
 	// Code copy may change state if e.g., some byte of code
 	// is stored to storage via a sequence of mload and sstore.
-	if (m_filterStatefulInstructions && type == CopyFunc::CODE)
+	if (
+		m_filterStatefulInstructions &&
+		(type == CopyFunc::CODE || type == CopyFunc::CALLDATA || type == CopyFunc::RETURNDATA)
+	)
 		return;
 
 	switch (type)
@@ -869,6 +881,118 @@ void ProtoConverter::visitFunctionInputParams(FunctionCall const& _x, unsigned _
 	// We reverse the order of function input visits since it helps keep this switch case concise.
 	switch (_numInputParams)
 	{
+	case 32:
+		visit(_x.in_param32());
+		m_output << ", ";
+		[[fallthrough]];
+	case 31:
+		visit(_x.in_param31());
+		m_output << ", ";
+		[[fallthrough]];
+	case 30:
+		visit(_x.in_param30());
+		m_output << ", ";
+		[[fallthrough]];
+	case 29:
+		visit(_x.in_param29());
+		m_output << ", ";
+		[[fallthrough]];
+	case 28:
+		visit(_x.in_param28());
+		m_output << ", ";
+		[[fallthrough]];
+	case 27:
+		visit(_x.in_param27());
+		m_output << ", ";
+		[[fallthrough]];
+	case 26:
+		visit(_x.in_param26());
+		m_output << ", ";
+		[[fallthrough]];
+	case 25:
+		visit(_x.in_param25());
+		m_output << ", ";
+		[[fallthrough]];
+	case 24:
+		visit(_x.in_param24());
+		m_output << ", ";
+		[[fallthrough]];
+	case 23:
+		visit(_x.in_param23());
+		m_output << ", ";
+		[[fallthrough]];
+	case 22:
+		visit(_x.in_param22());
+		m_output << ", ";
+		[[fallthrough]];
+	case 21:
+		visit(_x.in_param21());
+		m_output << ", ";
+		[[fallthrough]];
+	case 20:
+		visit(_x.in_param20());
+		m_output << ", ";
+		[[fallthrough]];
+	case 19:
+		visit(_x.in_param19());
+		m_output << ", ";
+		[[fallthrough]];
+	case 18:
+		visit(_x.in_param18());
+		m_output << ", ";
+		[[fallthrough]];
+	case 17:
+		visit(_x.in_param17());
+		m_output << ", ";
+		[[fallthrough]];
+	case 16:
+		visit(_x.in_param16());
+		m_output << ", ";
+		[[fallthrough]];
+	case 15:
+		visit(_x.in_param15());
+		m_output << ", ";
+		[[fallthrough]];
+	case 14:
+		visit(_x.in_param14());
+		m_output << ", ";
+		[[fallthrough]];
+	case 13:
+		visit(_x.in_param13());
+		m_output << ", ";
+		[[fallthrough]];
+	case 12:
+		visit(_x.in_param12());
+		m_output << ", ";
+		[[fallthrough]];
+	case 11:
+		visit(_x.in_param11());
+		m_output << ", ";
+		[[fallthrough]];
+	case 10:
+		visit(_x.in_param10());
+		m_output << ", ";
+		[[fallthrough]];
+	case 9:
+		visit(_x.in_param9());
+		m_output << ", ";
+		[[fallthrough]];
+	case 8:
+		visit(_x.in_param8());
+		m_output << ", ";
+		[[fallthrough]];
+	case 7:
+		visit(_x.in_param7());
+		m_output << ", ";
+		[[fallthrough]];
+	case 6:
+		visit(_x.in_param6());
+		m_output << ", ";
+		[[fallthrough]];
+	case 5:
+		visit(_x.in_param5());
+		m_output << ", ";
+		[[fallthrough]];
 	case 4:
 		visit(_x.in_param4());
 		m_output << ", ";
@@ -935,6 +1059,9 @@ optional<string> ProtoConverter::functionExists(NumFunctionReturns _numReturns)
 
 void ProtoConverter::visit(FunctionCall const& _x, string const& _functionName, bool _expression)
 {
+	// Disable recursive calls.
+	if (_functionName == m_currentFunctionName)
+		return;
 	yulAssert(m_functionSigMap.count(_functionName), "Proto fuzzer: Invalid function.");
 	auto ret = m_functionSigMap.at(_functionName);
 	unsigned numInParams = ret.first;
@@ -1138,55 +1265,11 @@ void ProtoConverter::visit(BoundedForStmt const& _x)
 
 void ProtoConverter::visit(CaseStmt const& _x)
 {
-	string literal = visit(_x.case_lit());
+	std::uniform_int_distribution<unsigned> dist(0, 100);
+	std::minstd_rand r(0);
+	string literal = to_string(dist(r));
 	// u256 value of literal
-	u256 literalVal;
-
-	// Convert string to u256 before looking for duplicate case literals
-	if (_x.case_lit().has_strval())
-	{
-		// Since string literals returned by the Literal visitor are enclosed within
-		// double quotes (like this "\"<string>\""), their size is at least two in the worst case
-		// that <string> is empty. Here we assert this invariant.
-		yulAssert(literal.size() >= 2, "Proto fuzzer: String literal too short");
-		// This variable stores the <string> part i.e., literal minus the first and last
-		// double quote characters. This is used to compute the keccak256 hash of the
-		// string literal. The hashing is done to check whether we are about to create
-		// a case statement containing a case literal that has already been used in a
-		// previous case statement. If the hash (u256 value) matches a previous hash,
-		// then we simply don't create a new case statement.
-		string noDoubleQuoteStr;
-		if (literal.size() > 2)
-		{
-			// Ensure that all characters in the string literal except the first
-			// and the last (double quote characters) are alphanumeric.
-			yulAssert(
-				boost::algorithm::all_of(literal.begin() + 1, literal.end() - 2, [=](char c) -> bool {
-					return std::isalpha(c) || std::isdigit(c);
-				}),
-				"Proto fuzzer: Invalid string literal encountered"
-			);
-
-			// Make a copy because literal will need to be used later
-			noDoubleQuoteStr = literal.substr(1, literal.size() - 2);
-		}
-		// Hash the result to check for duplicate case literal strings
-		literalVal = u256(h256(noDoubleQuoteStr, h256::FromBinary, h256::AlignLeft));
-
-		// Make sure that an empty string literal evaluates to zero. This is to detect creation of
-		// duplicate case literals like so
-		// switch (x)
-		// {
-		//    case "": { x := 0 }
-		//    case 0: { x:= 1 } // Case statement with duplicate literal is invalid
-		// } // This snippet will not be parsed successfully.
-		if (noDoubleQuoteStr.empty())
-			yulAssert(literalVal == 0, "Proto fuzzer: Empty string does not evaluate to zero");
-	}
-	else if (_x.case_lit().has_boolval())
-		literalVal = _x.case_lit().boolval() ? u256(1) : u256(0);
-	else
-		literalVal = u256(literal);
+	u256 literalVal = u256(literal);
 
 	// Check if set insertion fails (case literal present) or succeeds (case literal
 	// absent).
@@ -1269,13 +1352,16 @@ void ProtoConverter::visit(TerminatingStmt const& _x)
 	switch (_x.term_oneof_case())
 	{
 	case TerminatingStmt::kStopInvalid:
-		visit(_x.stop_invalid());
+		if (!m_filterStatefulInstructions)
+			visit(_x.stop_invalid());
 		break;
 	case TerminatingStmt::kRetRev:
-		visit(_x.ret_rev());
+		if (!m_filterStatefulInstructions)
+			visit(_x.ret_rev());
 		break;
 	case TerminatingStmt::kSelfDes:
-		visit(_x.self_des());
+		if (!m_filterStatefulInstructions)
+			visit(_x.self_des());
 		break;
 	case TerminatingStmt::TERM_ONEOF_NOT_SET:
 		break;
@@ -1317,7 +1403,8 @@ void ProtoConverter::visit(Statement const& _x)
 			visit(_x.ifstmt());
 		break;
 	case Statement::kStorageFunc:
-		visit(_x.storage_func());
+		if (!m_filterMemoryWrites || (_x.storage_func().has_st() && _x.storage_func().st() == StoreFunc_Storage_SSTORE))
+			visit(_x.storage_func());
 		break;
 	case Statement::kBlockstmt:
 		if (_x.blockstmt().statements_size() > 0)
@@ -1343,7 +1430,8 @@ void ProtoConverter::visit(Statement const& _x)
 			m_output << "continue\n";
 		break;
 	case Statement::kLogFunc:
-		visit(_x.log_func());
+		if (!m_filterLogs)
+			visit(_x.log_func());
 		break;
 	case Statement::kCopyFunc:
 		visit(_x.copy_func());
@@ -1363,7 +1451,8 @@ void ProtoConverter::visit(Statement const& _x)
 			unsigned index = counter() % m_functionSigMap.size();
 			auto iter = m_functionSigMap.begin();
 			advance(iter, index);
-			visit(_x.functioncall(), iter->first);
+			if (iter->first != m_currentFunctionName)
+				visit(_x.functioncall(), iter->first);
 		}
 		break;
 	case Statement::kFuncdef:
@@ -1637,7 +1726,7 @@ void ProtoConverter::fillFunctionCallInput(unsigned _numInParams)
 			m_output << "calldataload(" << slot << ")";
 			break;
 		case 1:
-			m_output << "mload(" << slot << ")";
+			m_output << "sload(" << slot << ")";
 			break;
 		case 2:
 			m_output << "sload(" << slot << ")";
@@ -1657,16 +1746,10 @@ void ProtoConverter::saveFunctionCallOutput(vector<string> const& _varsVec)
 {
 	for (auto const& var: _varsVec)
 	{
-		// Flip a dice to choose whether to save output values
-		// in storage or memory.
-		bool coinFlip = counter() % 2 == 0;
 		// Pseudo-randomly choose one of the first ten 32-byte
 		// aligned slots.
 		string slot = to_string((counter() % 10) * 32);
-		if (coinFlip)
-			m_output << "sstore(" << slot << ", " << var << ")\n";
-		else
-			m_output << "mstore(" << slot << ", " << var << ")\n";
+		m_output << "sstore(" << slot << ", " << var << ")\n";
 	}
 }
 
@@ -1720,6 +1803,8 @@ void ProtoConverter::createFunctionDefAndCall(
 	// Obtain function name
 	yulAssert(m_functionDefMap.count(&_x), "Proto fuzzer: Unregistered function");
 	string funcName = m_functionDefMap.at(&_x);
+	string wasFuncName = m_currentFunctionName;
+	m_currentFunctionName = funcName;
 
 	vector<string> varsVec = {};
 	m_output << "function " << funcName << "(";
@@ -1764,6 +1849,7 @@ void ProtoConverter::createFunctionDefAndCall(
 
 	m_inForBodyScope = wasInForBody;
 	m_inFunctionDef = wasInFunctionDef;
+	m_currentFunctionName = wasFuncName;
 
 	yulAssert(
 		!m_inForInitScope,
@@ -1811,10 +1897,10 @@ void ProtoConverter::visit(Code const& _x)
 	m_output << "}\n";
 }
 
-void ProtoConverter::visit(Data const& _x)
+void ProtoConverter::visit(Data const&)
 {
 	// TODO: Generate random data block identifier
-	m_output << "data \"" << s_dataIdentifier << "\" hex\"" << createHex(_x.hex()) << "\"\n";
+	m_output << "data \"" << s_dataIdentifier << "\" hex\"" << "deadbeef" << "\"\n";
 }
 
 void ProtoConverter::visit(Object const& _x)
@@ -1869,6 +1955,8 @@ void ProtoConverter::visit(Program const& _x)
 	{
 	case Program::kBlock:
 		m_output << "{\n";
+		// TODO: Clean up
+		m_output << "mstore(0x40, memoryguard(0x60))\n";
 		visit(_x.block());
 		m_output << "}\n";
 		break;

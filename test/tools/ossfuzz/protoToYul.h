@@ -41,7 +41,9 @@ class ProtoConverter
 public:
 	ProtoConverter(
 		bool _filterStatefulInstructions = false,
-		bool _filterUnboundedLoops = false
+		bool _filterUnboundedLoops = false,
+		bool _filterMemoryWrites = false,
+		bool _filterLogs = false
 	)
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
@@ -59,6 +61,9 @@ public:
 		m_forInitScopeExtEnabled = true;
 		m_filterStatefulInstructions = _filterStatefulInstructions;
 		m_filterUnboundedLoops = _filterUnboundedLoops;
+		m_filterMemoryWrites = _filterMemoryWrites;
+		m_filterLogs = _filterLogs;
+		m_currentFunctionName = {};
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -134,7 +139,7 @@ private:
 	/// Adds @a _vars to current scope
 	void addVarsToScope(std::vector<std::string> const& _vars);
 
-	std::string createHex(std::string const& _hexBytes);
+//	std::string createHex(std::string const& _hexBytes);
 
 	/// Returns a new variable name.
 	std::string newVarName()
@@ -144,7 +149,7 @@ private:
 
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
-	static std::string createAlphaNum(std::string const& _strBytes);
+//	static std::string createAlphaNum(std::string const& _strBytes);
 
 	enum class NumFunctionReturns: unsigned
 	{
@@ -267,7 +272,7 @@ private:
 	///		index = (m_inputSize * m_inputSize + counter) % dictionarySize
 	/// where m_inputSize is the size of the protobuf input and
 	/// dictionarySize is the total number of entries in the dictionary.
-	std::string dictionaryToken(util::HexPrefix _p = util::HexPrefix::Add);
+	std::string dictionaryToken();
 
 	/// Returns an EVMVersion object corresponding to the protobuf
 	/// enum of type Program_Version
@@ -340,8 +345,8 @@ private:
 	/// Map of object name to list of sub-object namespace(s) in scope
 	std::map<std::string, std::vector<std::string>> m_objectScope;
 	// mod input/output parameters impose an upper bound on the number of input/output parameters a function may have.
-	static unsigned constexpr s_modInputParams = 5;
-	static unsigned constexpr s_modOutputParams = 5;
+	static unsigned constexpr s_modInputParams = 33;
+	static unsigned constexpr s_modOutputParams = 33;
 	/// Hard-coded identifier for a Yul object's data block
 	static auto constexpr s_dataIdentifier = "datablock";
 	/// Predicate to keep track of for body scope. If false, break/continue
@@ -381,5 +386,13 @@ private:
 	/// Flat that, if set, stops the converter from generating potentially
 	/// unbounded loops.
 	bool m_filterUnboundedLoops;
+	/// Flag that, if set, stops the converter from generating memory
+	/// writes i.e., mstore/mstore8.
+	bool m_filterMemoryWrites;
+	/// Flag that, if set, stops the converter from generating log
+	/// records.
+	bool m_filterLogs;
+	/// Name of current function definition
+	std::string m_currentFunctionName;
 };
 }

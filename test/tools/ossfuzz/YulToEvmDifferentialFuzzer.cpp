@@ -17,15 +17,23 @@
 
 #include <test/tools/ossfuzz/yulProto.pb.h>
 #include <test/tools/ossfuzz/protoToYul.h>
+#include <test/tools/ossfuzz/yulFuzzerCommon.h>
 
 #include <test/EVMHost.h>
 
 #include <test/tools/ossfuzz/YulEvmoneInterface.h>
 
+#include <test/libyul/YulOptimizerTestCommon.h>
+
 #include <libyul/Exceptions.h>
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
+
+#include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/CompilabilityChecker.h>
+
+#include <libyul/AsmPrinter.h>
 
 #include <libevmasm/Instruction.h>
 
@@ -41,9 +49,29 @@ using namespace solidity;
 using namespace solidity::test;
 using namespace solidity::test::fuzzer;
 using namespace solidity::yul;
+using namespace solidity::yul::test;
 using namespace solidity::yul::test::yul_fuzzer;
 using namespace solidity::langutil;
+using namespace solidity::util;
 using namespace std;
+
+namespace
+{
+/// @returns true if there are no recursive functions, false otherwise.
+bool recursiveFunctionHasUnreachableVariables(Dialect const& _dialect, yul::Object& _object)
+{
+	auto recursiveFunctions = CallGraphGenerator::callGraph(*_object.code).recursiveFunctions();
+	for(auto&& [function, variables]: CompilabilityChecker{
+			_dialect,
+			_object,
+			true
+		}.unreachableVariables
+	)
+		if(recursiveFunctions.count(function))
+			return true;
+	return false;
+}
+}
 
 static evmc::VM evmone = evmc::VM{evmc_create_evmone()};
 
@@ -55,9 +83,13 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		return;
 	bool filterStatefulInstructions = true;
 	bool filterUnboundedLoops = true;
+	bool filterMemoryWrites = true;
+	bool filterLogs = true;
 	ProtoConverter converter(
 		filterStatefulInstructions,
-		filterUnboundedLoops
+		filterUnboundedLoops,
+		filterMemoryWrites,
+		filterLogs
 	);
 	string yulSubObject = converter.programToString(_input);
 	// Fuzzer also fuzzes the EVM version field.
@@ -65,27 +97,22 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	EVMHost hostContext(version, evmone);
 	hostContext.reset();
 
-	// Do not proceed with tests that are too large. 1200 is an arbitrary
-	// threshold.
-	if (yulSubObject.size() > 1200)
-		return;
-
 	YulStringRepository::reset();
 
 	// Package test case into a sub-object
-	solidity::util::Whiskers yulObjectFormat(R"(
-object "main" {
-	code {
-		codecopy(0, dataoffset("deployed"), datasize("deployed"))
-		return(0, datasize("deployed"))
-	}
-	object "deployed" {
+	Whiskers yulObjectFormat(R"(
+	object "main" {
 		code {
-			<fuzzerInput>
+			codecopy(0, dataoffset("deployed"), datasize("deployed"))
+			return(0, datasize("deployed"))
+		}
+		object "deployed" {
+			code {
+				<fuzzerInput>
+			}
 		}
 	}
-}
-	)");
+		)");
 	string yul_source = yulObjectFormat("fuzzerInput", yulSubObject).render();
 
 	if (const char* dump_path = getenv("PROTO_FUZZER_DUMP_PATH"))
@@ -94,67 +121,74 @@ object "main" {
 		of.write(yul_source.data(), static_cast<streamsize>(yul_source.size()));
 	}
 
-	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
-	settings.runYulOptimiser = false;
-	settings.optimizeStackAllocation = false;
-	bytes unoptimisedByteCode;
-	try
-	{
-		unoptimisedByteCode = YulAssembler{version, settings, yul_source}.assemble();
-	}
-	catch (solidity::yul::StackTooDeepError const&)
-	{
-		return;
-	}
-
-	evmc::result deployResult = YulEvmoneUtility{}.deployCode(unoptimisedByteCode, hostContext);
-	if (deployResult.status_code != EVMC_SUCCESS)
-	{
-		cout << "Deploy unoptimised failed." << endl;
-		return;
-	}
-	auto callMessage = YulEvmoneUtility{}.callMessage(deployResult.create_address);
-	evmc::result callResult = hostContext.call(callMessage);
-	// If the fuzzer synthesized input does not contain the revert opcode which
-	// we lazily check by string find, the EVM call should not revert.
-	bool noRevertInSource = yul_source.find("revert") == string::npos;
-	bool noInvalidInSource = yul_source.find("invalid") == string::npos;
-	if (noInvalidInSource)
-		solAssert(
-			callResult.status_code != EVMC_INVALID_INSTRUCTION,
-			"Invalid instruction."
-		);
-	if (noRevertInSource)
-		solAssert(
-			callResult.status_code != EVMC_REVERT,
-			"SolidityEvmoneInterface: EVM One reverted"
-		);
-	// Bail out on serious errors encountered during a call.
-	if (YulEvmoneUtility{}.seriousCallError(callResult.status_code))
-	{
-		cout << "Unoptimised call failed." << endl;
-		return;
-	}
+	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
+	AssemblyStack yulStack(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
-		(callResult.status_code == EVMC_SUCCESS ||
-		(!noRevertInSource && callResult.status_code == EVMC_REVERT) ||
-		(!noInvalidInSource && callResult.status_code == EVMC_INVALID_INSTRUCTION)),
-		"Unoptimised call failed."
+		yulStack.parseAndAnalyze("source", yulSubObject),
+		"Parsing fuzzer generated input failed."
 	);
-
 	ostringstream unoptimizedState;
-	unoptimizedState << EVMHostPrinter{hostContext, deployResult.create_address}.state();
+	std::shared_ptr<yul::Object> subObject = yulStack.parserResult();
+	Dialect const& dialect = EVMDialect::strictAssemblyForEVMObjects(version);
+	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
+		unoptimizedState,
+		subObject->code,
+		dialect,
+		true,
+		10000,
+		10000,
+		100
+	);
+	if (yulFuzzerUtil::resourceLimitsExceeded(termReason))
+		return;
 
-	settings.runYulOptimiser = true;
-	settings.optimizeStackAllocation = true;
+	YulOptimizerTestCommon optimizerTest(
+		subObject,
+		dialect
+	);
+	// Run circular references pruner and then stack limit evader.
+	string step = "stackLimitEvader";
+	optimizerTest.setStep(step);
+	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	bool recursiveFunction = recursiveFunctionHasUnreachableVariables(dialect, *subObject);
+	string optimisedSubObject = AsmPrinter{}(*astBlock);
+	string optimisedProgram = Whiskers(R"(
+	object "main" {
+		code {
+			codecopy(0, dataoffset("deployed"), datasize("deployed"))
+			return(0, datasize("deployed"))
+		}
+		object "deployed" {
+			code {
+				<fuzzerInput>
+			}
+		}
+	}
+		)")
+		("fuzzerInput", optimisedSubObject)
+		.render();
+	cout << optimisedSubObject << endl;
 	bytes optimisedByteCode;
+	settings.optimizeStackAllocation = true;
 	try
 	{
-		optimisedByteCode = YulAssembler{version, settings, yul_source}.assemble();
+		optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
 	}
-	catch (solidity::yul::StackTooDeepError const&)
+	catch (yul::StackTooDeepError const&)
 	{
-		return;
+		// If there are recursive functions, stack too deep errors are expected
+		// even post stack evasion optimisation and hence ignored. Otherwise,
+		// they are rethrown for further investigation.
+		if (recursiveFunction)
+			return;
+		throw;
+	}
+	// InvalidDeposit
+	catch (Exception const&)
+	{
+		if (recursiveFunction)
+			return;
+		throw;
 	}
 
 	// Reset host before running optimised code.
@@ -166,6 +200,11 @@ object "main" {
 	);
 	auto callMessageOpt = YulEvmoneUtility{}.callMessage(deployResultOpt.create_address);
 	evmc::result callResultOpt = hostContext.call(callMessageOpt);
+	// Bail out if we ran out of gas.
+	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
+		return;
+	bool noRevertInSource = yulSubObject.find("revert") == string::npos;
+	bool noInvalidInSource = yulSubObject.find("invalid") == string::npos;
 	if (noRevertInSource)
 		solAssert(
 			callResultOpt.status_code != EVMC_REVERT,
@@ -183,7 +222,7 @@ object "main" {
 		"Optimised call failed."
 	);
 	ostringstream optimizedState;
-	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.state();
+	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.storageOnly();
 
 	if (unoptimizedState.str() != optimizedState.str())
 	{
@@ -192,6 +231,6 @@ object "main" {
 	}
 	solAssert(
 		unoptimizedState.str() == optimizedState.str(),
-		"State of unoptimised and optimised stack reused code do not match."
+		"State of unoptimised and optimised stack saver code do not match."
 	);
 }

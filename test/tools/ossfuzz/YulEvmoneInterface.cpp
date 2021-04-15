@@ -48,24 +48,8 @@ evmc::result YulEvmoneUtility::deployCode(bytes const& _input, EVMHost& _host)
 		_input.size() <= 0xffff,
 		"Deployed byte code is larger than the permissible 65535 bytes."
 	);
-	uint8_t inputSizeHigher = static_cast<uint8_t>(_input.size() >> 8);
-	uint8_t inputSizeLower = _input.size() & 0xff;
-	/*
-	 * CODESIZE
-	 * PUSH0 0xc
-	 * PUSH0 0x0
-	 * CODECOPY
-	 * PUSH1 <INPUTSIZE>
-	 * PUSH0 0x0
-	 * RETURN
-	 */
-	bytes deployCode = bytes{
-		0x38, 0x60, 0x0c, 0x60, 0x00, 0x39, 0x61,
-		inputSizeHigher, inputSizeLower,
-		0x60, 0x00, 0xf3
-	} + _input;
-	msg.input_data = deployCode.data();
-	msg.input_size = deployCode.size();
+	msg.input_data = _input.data();
+	msg.input_size = _input.size();
 	msg.kind = EVMC_CREATE;
 	return _host.call(msg);
 }
