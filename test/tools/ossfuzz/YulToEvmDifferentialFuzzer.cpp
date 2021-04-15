@@ -58,7 +58,7 @@ using namespace std;
 namespace
 {
 /// @returns true if there are no recursive functions, false otherwise.
-bool recursiveFunctionExists(Dialect const& _dialect, yul::Object& _object)
+bool recursiveFunctionHasUnreachableVariables(Dialect const& _dialect, yul::Object& _object)
 {
 	auto recursiveFunctions = CallGraphGenerator::callGraph(*_object.code).recursiveFunctions();
 	for(auto&& [function, variables]: CompilabilityChecker{
@@ -150,7 +150,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	string step = "stackLimitEvader";
 	optimizerTest.setStep(step);
 	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	bool recursiveFunction = recursiveFunctionExists(dialect, *subObject);
+	bool recursiveFunction = recursiveFunctionHasUnreachableVariables(dialect, *subObject);
 	string optimisedSubObject = AsmPrinter{}(*astBlock);
 	string optimisedProgram = Whiskers(R"(
 	object "main" {
@@ -200,6 +200,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	);
 	auto callMessageOpt = YulEvmoneUtility{}.callMessage(deployResultOpt.create_address);
 	evmc::result callResultOpt = hostContext.call(callMessageOpt);
+	// Bail out if we ran out of gas.
+	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
+		return 0;
 	bool noRevertInSource = yulSubObject.find("revert") == string::npos;
 	bool noInvalidInSource = yulSubObject.find("invalid") == string::npos;
 	if (noRevertInSource)
@@ -218,8 +221,6 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		 (!noInvalidInSource && callResultOpt.status_code == EVMC_INVALID_INSTRUCTION)),
 		"Optimised call failed."
 	);
-	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
-		return;
 	ostringstream optimizedState;
 	optimizedState << EVMHostPrinter{hostContext, deployResultOpt.create_address}.storageOnly();
 

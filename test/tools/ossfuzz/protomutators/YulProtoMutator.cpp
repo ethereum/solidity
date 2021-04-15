@@ -46,7 +46,7 @@ static LPMPostProcessor<Block> addStoreToZero(
 );
 
 static LPMPostProcessor<FunctionDef> addStackPressure(
-	[](FunctionDef* _message, unsigned _seed)
+	[](FunctionDef* _message, unsigned)
 	{
 		{
 			MutationInfo m{_message, "Added stack pressure"};
