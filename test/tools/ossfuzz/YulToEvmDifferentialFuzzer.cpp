@@ -101,15 +101,11 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	}
 
 	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
-	// Stack evader requires stack allocation to be done.
-	settings.optimizeStackAllocation = true;
-	settings.runYulOptimiser = true;
 	AssemblyStack stackUnoptimized(version, AssemblyStack::Language::StrictAssembly, settings);
 	solAssert(
 		stackUnoptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
-	stackUnoptimized.optimize();
 	ostringstream unoptimizedState;
 	yulFuzzerUtil::TerminationReason termReason = yulFuzzerUtil::interpret(
 		unoptimizedState,
@@ -128,16 +124,17 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		stackOptimized.parseAndAnalyze("source", yulSubObject),
 		"Parsing fuzzer generated input failed."
 	);
-	stackOptimized.optimize();
 	YulOptimizerTestCommon optimizerTest(
 		stackOptimized.parserResult(),
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
-	// HACK: Force this to fake stack limit evader for now
-	string step = "stackLimitEvader";
+	// Run circular references pruner and then stack limit evader.
+	string step = "circularReferencesPruner";
 	optimizerTest.setStep(step);
-//	optimizerTest.setStep(optimizerTest.randomOptimiserStep(_input.step()));
 	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
+	step = "stackLimitEvader";
+	optimizerTest.setStep(step);
+	astBlock = optimizerTest.run();
 	string optimisedProgram = Whiskers(R"(
 	object "main" {
 		code {
@@ -155,7 +152,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		.render();
 	cout << AsmPrinter{}(*astBlock) << endl;
 	bytes optimisedByteCode;
-	settings.runYulOptimiser = false;
+	settings.optimizeStackAllocation = true;
 	optimisedByteCode = YulAssembler{version, settings, optimisedProgram}.assemble();
 
 	// Reset host before running optimised code.
