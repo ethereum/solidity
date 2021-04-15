@@ -19,6 +19,6 @@ contract C {
 // compileViaYul: also
 // ----
 // f(), 2000 ether -> true
-// gas irOptimized: 123796
+// gas irOptimized: 123725
 // gas legacy: 123226
 // gas legacyOptimized: 123092

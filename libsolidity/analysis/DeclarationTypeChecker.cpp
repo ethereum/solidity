@@ -26,7 +26,7 @@
 
 #include <libsolutil/Algorithms.h>
 
-#include <boost/range/adaptor/transformed.hpp>
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -344,7 +344,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		{
 			errorString = "Data location must be " +
 				util::joinHumanReadable(
-					allowedDataLocations | boost::adaptors::transformed(locationToString),
+					allowedDataLocations | ranges::views::transform(locationToString),
 					", ",
 					" or "
 				);

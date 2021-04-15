@@ -8,7 +8,7 @@ Transaction trace:
 test.constructor()
 State: arr = []
 test.f(0, 1)
-  --> model_checker_targets_pop_empty_chc/input.sol:13:3:
+  --> model_checker_targets_pop_empty_chc/input.sol:12:3:
    |
-13 | 		arr.pop();
+12 | 		arr.pop();
    | 		^^^^^^^^^

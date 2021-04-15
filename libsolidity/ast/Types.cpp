@@ -42,11 +42,11 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/range/adaptor/sliced.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/copy.hpp>
 
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include <limits>
 #include <unordered_set>
@@ -227,7 +227,7 @@ string richIdentifier(Type const* _type)
 
 string identifierList(vector<Type const*> const& _list)
 {
-	return identifierList(_list | boost::adaptors::transformed(richIdentifier));
+	return identifierList(_list | ranges::views::transform(richIdentifier));
 }
 
 string identifierList(Type const* _type)
@@ -2374,7 +2374,7 @@ string StructType::signatureInExternalFunction(bool _structsByName) const
 	else
 	{
 		TypePointers memberTypes = memoryMemberTypes();
-		auto memberTypeStrings = memberTypes | boost::adaptors::transformed([&](Type const* _t) -> string
+		auto memberTypeStrings = memberTypes | ranges::views::transform([&](Type const* _t) -> string
 		{
 			solAssert(_t, "Parameter should have external type.");
 			auto t = _t->interfaceType(_structsByName);
@@ -3439,7 +3439,7 @@ string FunctionType::externalSignature() const
 
 	solAssert(extParams.message().empty(), extParams.message());
 
-	auto typeStrings = extParams.get() | boost::adaptors::transformed([&](Type const* _t) -> string
+	auto typeStrings = extParams.get() | ranges::views::transform([&](Type const* _t) -> string
 	{
 		string typeName = _t->signatureInExternalFunction(inLibrary);
 

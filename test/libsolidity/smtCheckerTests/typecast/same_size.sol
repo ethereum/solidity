@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {}
 
 enum E {A, B}
@@ -70,4 +68,6 @@ contract C {
 		assert(y == -10);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

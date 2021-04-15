@@ -8,7 +8,7 @@ Transaction trace:
 test.constructor()
 State: arr = []
 test.f(0, 1)
-  --> model_checker_targets_assert_chc/input.sol:12:3:
+  --> model_checker_targets_assert_chc/input.sol:11:3:
    |
-12 | 		assert(x > 0);
+11 | 		assert(x > 0);
    | 		^^^^^^^^^^^^^

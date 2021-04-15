@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
     struct S {
         uint x;
@@ -9,6 +8,8 @@ contract C {
         assert(s.x > 0);
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (157-172): CHC: Assertion violation might happen here.
-// Warning 7812: (157-172): BMC: Assertion violation might happen here.
+// Warning 6328: (125-140): CHC: Assertion violation might happen here.
+// Warning 7812: (125-140): BMC: Assertion violation might happen here.

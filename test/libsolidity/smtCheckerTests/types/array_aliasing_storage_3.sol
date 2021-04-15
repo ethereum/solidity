@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[][] array2d;
@@ -33,10 +31,11 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (417-432): Unused local variable.
-// Warning 6368: (522-526): CHC: Out of bounds access happens here.
-// Warning 6368: (988-992): CHC: Out of bounds access happens here.
-// Warning 6328: (981-998): CHC: Assertion violation happens here.
-// Warning 6368: (1009-1013): CHC: Out of bounds access happens here.
+// Warning 2072: (384-399): Unused local variable.
+// Warning 6368: (489-493): CHC: Out of bounds access happens here.
+// Warning 6368: (955-959): CHC: Out of bounds access happens here.
+// Warning 6328: (948-965): CHC: Assertion violation happens here.
+// Warning 6368: (976-980): CHC: Out of bounds access happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] arr;
 
@@ -27,3 +25,5 @@ contract C {
 		assert(arr[5].length == t);
 	}
 }
+// ====
+// SMTEngine: all

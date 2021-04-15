@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[][] c;
@@ -16,4 +14,6 @@ contract C
 		*/
 	}
 }
+// ====
+// SMTEngine: all
 // ----

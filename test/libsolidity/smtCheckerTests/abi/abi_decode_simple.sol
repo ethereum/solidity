@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiDecodeSimple(bytes memory b1, bytes memory b2) public pure {
 		(uint x, uint y) = abi.decode(b1, (uint, uint));
@@ -19,12 +18,13 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (241-255): CHC: Assertion violation happens here.
-// Warning 6328: (292-306): CHC: Assertion violation happens here.
-// Warning 6328: (391-405): CHC: Assertion violation happens here.
-// Warning 6328: (424-438): CHC: Assertion violation happens here.
-// Warning 6328: (457-466): CHC: Assertion violation happens here.
-// Warning 6328: (537-551): CHC: Assertion violation happens here.
-// Warning 6328: (570-584): CHC: Assertion violation happens here.
+// Warning 6328: (209-223): CHC: Assertion violation happens here.
+// Warning 6328: (260-274): CHC: Assertion violation happens here.
+// Warning 6328: (359-373): CHC: Assertion violation happens here.
+// Warning 6328: (392-406): CHC: Assertion violation happens here.
+// Warning 6328: (425-434): CHC: Assertion violation happens here.
+// Warning 6328: (505-519): CHC: Assertion violation happens here.
+// Warning 6328: (538-552): CHC: Assertion violation happens here.

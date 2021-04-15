@@ -162,7 +162,7 @@ function test_solc_behaviour()
         sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         sed -i.bak -e 's/\(Unimplemented feature error.* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
-        sed -i.bak -e 's/"version": "[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
+        sed -i.bak -e 's/"version":[ ]*"[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
 
         # Remove bytecode (but not linker references). Since non-JSON output is unstructured,
         # use metadata markers for detection to have some confidence that it's actually bytecode
@@ -190,7 +190,7 @@ function test_solc_behaviour()
     then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
 
-        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exit_code_expected" "$exit_code_expectation_file"
+        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exitCode" "$exit_code_expectation_file"
         [[ $exit_code_expectation_file == "" ]] && exit 1
     fi
 

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[] array;
@@ -29,6 +27,7 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2018: (519-698): Function state mutability can be restricted to view
+// Warning 2018: (486-665): Function state mutability can be restricted to view

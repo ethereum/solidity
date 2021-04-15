@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function r(bytes32 x, uint y) public pure {
 		require(y <= 31);
@@ -7,3 +5,5 @@ contract C {
 		x[y]; // safe access
 	}
 }
+// ====
+// SMTEngine: all

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct S {
 		uint[][] arr;
@@ -20,3 +18,5 @@ contract C {
 		assert(s1.arr[0].length == s2.arr[0].length);
 	}
 }
+// ====
+// SMTEngine: all

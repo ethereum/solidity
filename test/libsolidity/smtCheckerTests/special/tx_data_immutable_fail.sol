@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	bytes32 bhash;
 	address coin;
@@ -60,29 +58,30 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (545-576): CHC: Assertion violation happens here.
-// Warning 6328: (580-610): CHC: Assertion violation happens here.
-// Warning 6328: (614-645): CHC: Assertion violation happens here.
-// Warning 6328: (649-681): CHC: Assertion violation happens here.
-// Warning 6328: (685-715): CHC: Assertion violation happens here.
-// Warning 6328: (719-752): CHC: Assertion violation happens here.
-// Warning 6328: (756-795): CHC: Assertion violation happens here.
-// Warning 6328: (799-827): CHC: Assertion violation happens here.
-// Warning 6328: (831-853): CHC: Assertion violation happens here.
-// Warning 6328: (857-883): CHC: Assertion violation happens here.
-// Warning 6328: (887-916): CHC: Assertion violation happens here.
-// Warning 6328: (920-947): CHC: Assertion violation happens here.
-// Warning 6328: (986-1017): CHC: Assertion violation happens here.
-// Warning 6328: (1021-1051): CHC: Assertion violation happens here.
-// Warning 6328: (1055-1086): CHC: Assertion violation happens here.
-// Warning 6328: (1090-1122): CHC: Assertion violation happens here.
-// Warning 6328: (1126-1156): CHC: Assertion violation happens here.
-// Warning 6328: (1160-1193): CHC: Assertion violation happens here.
-// Warning 6328: (1197-1236): CHC: Assertion violation happens here.
-// Warning 6328: (1240-1268): CHC: Assertion violation happens here.
-// Warning 6328: (1272-1294): CHC: Assertion violation happens here.
-// Warning 6328: (1298-1324): CHC: Assertion violation happens here.
-// Warning 6328: (1328-1357): CHC: Assertion violation happens here.
-// Warning 6328: (1361-1388): CHC: Assertion violation happens here.
+// Warning 6328: (512-543): CHC: Assertion violation happens here.
+// Warning 6328: (547-577): CHC: Assertion violation happens here.
+// Warning 6328: (581-612): CHC: Assertion violation happens here.
+// Warning 6328: (616-648): CHC: Assertion violation happens here.
+// Warning 6328: (652-682): CHC: Assertion violation happens here.
+// Warning 6328: (686-719): CHC: Assertion violation happens here.
+// Warning 6328: (723-762): CHC: Assertion violation happens here.
+// Warning 6328: (766-794): CHC: Assertion violation happens here.
+// Warning 6328: (798-820): CHC: Assertion violation happens here.
+// Warning 6328: (824-850): CHC: Assertion violation happens here.
+// Warning 6328: (854-883): CHC: Assertion violation happens here.
+// Warning 6328: (887-914): CHC: Assertion violation happens here.
+// Warning 6328: (953-984): CHC: Assertion violation happens here.
+// Warning 6328: (988-1018): CHC: Assertion violation happens here.
+// Warning 6328: (1022-1053): CHC: Assertion violation happens here.
+// Warning 6328: (1057-1089): CHC: Assertion violation happens here.
+// Warning 6328: (1093-1123): CHC: Assertion violation happens here.
+// Warning 6328: (1127-1160): CHC: Assertion violation happens here.
+// Warning 6328: (1164-1203): CHC: Assertion violation happens here.
+// Warning 6328: (1207-1235): CHC: Assertion violation happens here.
+// Warning 6328: (1239-1261): CHC: Assertion violation happens here.
+// Warning 6328: (1265-1291): CHC: Assertion violation happens here.
+// Warning 6328: (1295-1324): CHC: Assertion violation happens here.
+// Warning 6328: (1328-1355): CHC: Assertion violation happens here.

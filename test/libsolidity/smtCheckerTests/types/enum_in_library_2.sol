@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library L
 {
 	enum D { Left, Right }
@@ -13,5 +11,7 @@ contract C
 		assert(_d == E.Left);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (159-179): CHC: Assertion violation happens here.\nCounterexample:\n\n_d = 1\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 6328: (126-146): CHC: Assertion violation happens here.\nCounterexample:\n\n_d = 1\n\nTransaction trace:\nC.constructor()\nC.f(0)

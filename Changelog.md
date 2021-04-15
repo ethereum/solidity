@@ -1,6 +1,11 @@
 ### 0.8.4 (unreleased)
 
+Important Bugfixes:
+ * ABI Decoder V2: For two-dimensional arrays and specially crafted data in memory, the result of ``abi.decode`` can depend on data elsewhere in memory. Calldata decoding is not affected.
+
+
 Language Features:
+ * Assembly / Yul: Allow hex string literals.
  * Possibility to use ``bytes.concat`` with variable number of ``bytes`` and ``bytesNN`` arguments which behaves as a restricted version of `abi.encodePacked` with a more descriptive name.
  * Support custom errors via the ``error`` keyword and introduce the ``revert`` statement.
 
@@ -9,19 +14,24 @@ Compiler Features:
  * Analysis: Properly detect circular references to the bytecode of other contracts across all function calls.
  * Commandline Interface: Model checker option ``--model-checker-targets`` also accepts ``outOfBounds``.
  * Low-Level Inliner: Inline ordinary jumps to small blocks and jumps to small blocks that terminate.
+ * SMTChecker: Deprecate ``pragma experimental SMTChecker;`` and set default model checker engine to ``none``.
  * SMTChecker: Report local variables in CHC counterexamples.
  * SMTChecker: Report out of bounds index access for arrays and fixed bytes.
  * Standard JSON: Model checker option ``settings.modelChecker.targets`` also accepts ``outOfBounds``.
  * Yul Optimizer: Added a new step FunctionSpecializer, that specializes a function with its literal arguments.
  * Yul EVM Code Transform: Stack Optimization: Reuse slots of unused function arguments and defer allocating stack slots for return variables until after expression statements and assignments that do not reference them.
+ * NatSpec: Allow ``@notice`` tag on non-public state variables and local variable declarations. The documentation will only be part of the AST, under the field ``documentation``.
 
 
 Bugfixes:
+ * Antlr Grammar: Fix parsing of import paths involving properly distinguishing between empty and non-empty string literals in general.
  * AST Output: Fix ``kind`` field of ``ModifierInvocation`` for base constructor calls.
  * SMTChecker: Fix false positive and false negative on ``push`` as LHS of a compound assignment.
  * SMTChecker: Fix false positive in contracts that cannot be deployed.
  * SMTChecker: Fix internal error on public getter returning dynamic data on older EVM versions where these are not available.
  * SMTChecker: Fix internal error on try-catch with function call in catch block.
+ * Type Checker: Fix missing error when events are used without an emit statement.
+ * Commandline interface: Fix internal error when printing AST and using ``--base-path`` or ``file://`` prefix in imports.
 
 
 AST Changes:

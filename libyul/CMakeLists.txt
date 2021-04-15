@@ -65,6 +65,8 @@ add_library(yul
 	backends/evm/EVMMetrics.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
+	backends/evm/VariableReferenceCounter.h
+	backends/evm/VariableReferenceCounter.cpp
 	backends/wasm/EVMToEwasmTranslator.cpp
 	backends/wasm/EVMToEwasmTranslator.h
 	backends/wasm/BinaryTransform.cpp

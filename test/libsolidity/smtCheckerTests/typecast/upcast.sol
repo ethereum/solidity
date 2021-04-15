@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {}
 
 contract C {
@@ -66,4 +64,6 @@ contract C {
 		assert(b5 == 0xcafe0000);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

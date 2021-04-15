@@ -9,7 +9,6 @@ contract Base {
 	}
 }
 ==== Source: der ====
-pragma experimental SMTChecker;
 import "base";
 contract Der is Base {
 	function g(uint y) public {
@@ -18,5 +17,7 @@ contract Der is Base {
 		assert(y > x);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (der:205-218): CHC: Assertion violation happens here.\nCounterexample:\nx = 3, a = 0\ny = 0\n\nTransaction trace:\nDer.constructor()\nState: x = 0, a = 0\nDer.g(0)\n    Base.f() -- internal call
+// Warning 6328: (der:173-186): CHC: Assertion violation happens here.\nCounterexample:\nx = 3, a = 0\ny = 0\n\nTransaction trace:\nDer.constructor()\nState: x = 0, a = 0\nDer.g(0)\n    Base.f() -- internal call

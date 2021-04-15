@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
+ * Code generator for translating Yul / inline assembly to EVM.
  */
 
 #pragma once
@@ -24,6 +24,7 @@
 #include <libyul/backends/evm/EVMAssembly.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/VariableReferenceCounter.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/AST.h>
 #include <libyul/Scope.h>
@@ -40,23 +41,6 @@ namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 class EVMAssembly;
-
-struct StackTooDeepError: virtual YulException
-{
-	StackTooDeepError(YulString _variable, int _depth, std::string const& _message):
-		variable(_variable), depth(_depth)
-	{
-		*this << util::errinfo_comment(_message);
-	}
-	StackTooDeepError(YulString _functionName, YulString _variable, int _depth, std::string const& _message):
-		functionName(_functionName), variable(_variable), depth(_depth)
-	{
-		*this << util::errinfo_comment(_message);
-	}
-	YulString functionName;
-	YulString variable;
-	int depth;
-};
 
 struct CodeTransformContext
 {
@@ -77,38 +61,6 @@ struct CodeTransformContext
 	};
 
 	std::stack<ForLoopLabels> forLoopStack;
-};
-
-/**
- * Counts the number of references to a variable. This includes actual (read) references
- * but also assignments to the variable. It does not include the declaration itself or
- * function parameters, but it does include function return parameters.
- *
- * This component can handle multiple variables of the same name.
- *
- * Can only be applied to strict assembly.
- */
-class VariableReferenceCounter: public yul::ASTWalker
-{
-public:
-	explicit VariableReferenceCounter(
-		CodeTransformContext& _context,
-		AsmAnalysisInfo const& _assemblyInfo
-	): m_context(_context), m_info(_assemblyInfo)
-	{}
-
-public:
-	void operator()(Identifier const& _identifier) override;
-	void operator()(FunctionDefinition const&) override;
-	void operator()(ForLoop const&) override;
-	void operator()(Block const& _block) override;
-
-private:
-	void increaseRefIfFound(YulString _variableName);
-
-	CodeTransformContext& m_context;
-	AsmAnalysisInfo const& m_info;
-	Scope* m_scope = nullptr;
 };
 
 class CodeTransform

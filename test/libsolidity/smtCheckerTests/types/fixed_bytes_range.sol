@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 
 	function f(bytes1 b) public pure {
@@ -8,3 +6,5 @@ contract C {
 		assert(uint8(b) > 127); // should hold
 	}
 }
+// ====
+// SMTEngine: all

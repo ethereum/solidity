@@ -1,6 +1,4 @@
 pragma abicoder v1;
-pragma experimental SMTChecker;
-
 struct Item {
 	uint x;
 	uint y;
@@ -14,3 +12,5 @@ contract D {
 		return a + b;
 	}
 }
+// ====
+// SMTEngine: all

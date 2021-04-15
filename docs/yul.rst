@@ -174,7 +174,10 @@ whitespace, i.e. there is no terminating ``;`` or newline required.
 Literals
 --------
 
-You can use integer constants in decimal or hexadecimal notation.
+As literals, you can use integer constants in decimal or hexadecimal notation
+or strings as ASCII (`"abc"`) or HEX strings (`hex"616263"`) of up to
+32 bytes length.
+
 When compiling for the EVM, this will be translated into an
 appropriate ``PUSHi`` instruction. In the following example,
 ``3`` and ``2`` are added resulting in 5 and then the

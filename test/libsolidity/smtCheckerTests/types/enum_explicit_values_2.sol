@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	enum D { Left, Right }
@@ -10,5 +8,7 @@ contract C
 		assert(d != _a);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (144-159): CHC: Assertion violation happens here.\nCounterexample:\nd = 0\n_a = 0\n\nTransaction trace:\nC.constructor()\nState: d = 0\nC.f(0)
+// Warning 6328: (111-126): CHC: Assertion violation happens here.\nCounterexample:\nd = 0\n_a = 0\n\nTransaction trace:\nC.constructor()\nState: d = 0\nC.f(0)

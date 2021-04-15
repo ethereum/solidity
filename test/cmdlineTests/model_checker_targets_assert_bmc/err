@@ -1,7 +1,7 @@
 Warning: BMC: Assertion violation happens here.
-  --> model_checker_targets_assert_bmc/input.sol:12:3:
+  --> model_checker_targets_assert_bmc/input.sol:11:3:
    |
-12 | 		assert(x > 0);
+11 | 		assert(x > 0);
    | 		^^^^^^^^^^^^^
 Note: Counterexample:
   a = 0

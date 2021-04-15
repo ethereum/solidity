@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[10][20] array;
@@ -11,3 +9,5 @@ contract C
 		assert(array[z][t] > 100);
 	}
 }
+// ====
+// SMTEngine: all

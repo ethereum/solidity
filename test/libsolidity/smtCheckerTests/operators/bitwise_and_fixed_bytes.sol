@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f() public pure {
 		assert(bytes1("") & ("") == bytes1(0)); // should hold
@@ -7,5 +6,7 @@ contract C {
 		assert(bytes1(0xFF) & bytes1(0xAA) == bytes1(0)); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (269-317): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (237-285): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()

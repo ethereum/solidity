@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function i() public pure returns (uint d) {
 		if (0==0)
@@ -6,5 +5,7 @@ contract C {
 		assert(d == 13);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6838: (96-100): BMC: Condition is always true.
+// Warning 6838: (64-68): BMC: Condition is always true.

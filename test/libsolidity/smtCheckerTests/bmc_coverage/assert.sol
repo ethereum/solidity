@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f(uint x) public pure {
 		assert(x > 0);
@@ -20,7 +19,7 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (81-94): BMC: Assertion violation happens here.
-// Warning 6838: (143-149): BMC: Condition is always true.
-// Warning 6838: (218-224): BMC: Condition is always false.
-// Warning 2512: (286-292): BMC: Condition unreachable.
+// Warning 4661: (49-62): BMC: Assertion violation happens here.
+// Warning 6838: (111-117): BMC: Condition is always true.
+// Warning 6838: (186-192): BMC: Condition is always false.
+// Warning 2512: (254-260): BMC: Condition unreachable.

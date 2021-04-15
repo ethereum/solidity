@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	struct S { uint[][][] a; }
@@ -22,5 +20,7 @@ contract C
 		*/
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 5667: (86-92): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 5667: (53-59): Unused function parameter. Remove or comment out the variable name to silence this warning.

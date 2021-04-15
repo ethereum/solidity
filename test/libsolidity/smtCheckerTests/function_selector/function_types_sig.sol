@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     uint256 public x;
 
@@ -23,9 +21,11 @@ contract C {
         assert(i() == 0x26121ff0);
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 7650: (284-296): Assertion checker does not yet support this expression.
-// Warning 6328: (470-495): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.check()\n    C.f() -- internal call\n    C.g() -- internal call
-// Warning 6328: (540-565): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.check()\n    C.f() -- internal call\n    C.g() -- internal call\n    C.i() -- internal call\n    C.i() -- internal call
-// Warning 7650: (284-296): Assertion checker does not yet support this expression.
-// Warning 7650: (284-296): Assertion checker does not yet support this expression.
+// Warning 7650: (251-263): Assertion checker does not yet support this expression.
+// Warning 6328: (437-462): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.check()\n    C.f() -- internal call\n    C.g() -- internal call
+// Warning 6328: (507-532): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0\nC.check()\n    C.f() -- internal call\n    C.g() -- internal call\n    C.i() -- internal call\n    C.i() -- internal call
+// Warning 7650: (251-263): Assertion checker does not yet support this expression.
+// Warning 7650: (251-263): Assertion checker does not yet support this expression.

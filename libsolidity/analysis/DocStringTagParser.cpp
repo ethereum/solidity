@@ -71,7 +71,7 @@ bool DocStringTagParser::visit(VariableDeclaration const& _variable)
 		if (_variable.isPublic())
 			parseDocStrings(_variable, _variable.annotation(), {"dev", "notice", "return", "inheritdoc"}, "public state variables");
 		else
-			parseDocStrings(_variable, _variable.annotation(), {"dev", "inheritdoc"}, "non-public state variables");
+			parseDocStrings(_variable, _variable.annotation(), {"dev", "notice", "inheritdoc"}, "non-public state variables");
 	}
 	else if (_variable.isFileLevelVariable())
 		parseDocStrings(_variable, _variable.annotation(), {"dev"}, "file-level variables");

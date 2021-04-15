@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     function leftU(uint8 x, uint8 y) internal pure returns (uint8) {
         return x << y;
@@ -31,9 +29,11 @@ contract C {
 		assert(leftS(1, 6) == -64);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (340-366): CHC: Assertion violation happens here.
-// Warning 6328: (441-469): CHC: Assertion violation happens here.
-// Warning 6328: (544-570): CHC: Assertion violation happens here.
-// Warning 6328: (644-670): CHC: Assertion violation happens here.
-// Warning 6328: (742-768): CHC: Assertion violation happens here.
+// Warning 6328: (307-333): CHC: Assertion violation happens here.
+// Warning 6328: (408-436): CHC: Assertion violation happens here.
+// Warning 6328: (511-537): CHC: Assertion violation happens here.
+// Warning 6328: (611-637): CHC: Assertion violation happens here.
+// Warning 6328: (709-735): CHC: Assertion violation happens here.

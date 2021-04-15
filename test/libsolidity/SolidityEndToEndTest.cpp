@@ -35,8 +35,9 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/ErrorCodes.h>
 
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 #include <functional>
 #include <numeric>
@@ -3143,11 +3144,11 @@ BOOST_AUTO_TEST_CASE(calldata_array_dynamic_three_dimensional)
 		bytes encoding = encodeArray(
 			outerDynamicallySized,
 			middleDynamicallySized || innerDynamicallySized,
-			data | boost::adaptors::transformed([&](auto const& _middleData) {
+			data | ranges::views::transform([&](auto const& _middleData) {
 				return encodeArray(
 					middleDynamicallySized,
 					innerDynamicallySized,
-					_middleData | boost::adaptors::transformed([&](auto const& _values) {
+					_middleData | ranges::views::transform([&](auto const& _values) {
 						return encodeArray(innerDynamicallySized, false, _values);
 					})
 				);

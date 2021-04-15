@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	address thisAddr;
@@ -9,3 +7,5 @@ contract C
 		assert(thisAddr == address(this));
 	}
 }
+// ====
+// SMTEngine: all

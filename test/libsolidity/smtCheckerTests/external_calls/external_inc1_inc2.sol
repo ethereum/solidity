@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {
 	function d() external virtual;
 }
@@ -25,5 +23,7 @@ contract C {
 		assert(oldX == x);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2018: (236-355): Function state mutability can be restricted to view
+// Warning 2018: (203-322): Function state mutability can be restricted to view

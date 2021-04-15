@@ -33,6 +33,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/StringUtils.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>

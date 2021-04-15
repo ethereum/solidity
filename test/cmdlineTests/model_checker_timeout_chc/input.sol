@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.0;
-pragma experimental SMTChecker;
 contract test {
 	function f(uint x, uint y, uint k) public pure {
 		require(k > 0);

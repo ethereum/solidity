@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D {
 	function d() virtual public;
 }
@@ -25,9 +23,11 @@ contract C {
 		d.d();
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (335-366): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (335-366): CHC: Assertion violation might happen here.
-// Warning 1218: (335-366): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (335-366): CHC: Assertion violation might happen here.
-// Warning 4661: (335-366): BMC: Assertion violation happens here.
+// Warning 1218: (302-333): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (302-333): CHC: Assertion violation might happen here.
+// Warning 1218: (302-333): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (302-333): CHC: Assertion violation might happen here.
+// Warning 4661: (302-333): BMC: Assertion violation happens here.
