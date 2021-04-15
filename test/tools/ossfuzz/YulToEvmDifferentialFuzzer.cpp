@@ -202,7 +202,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 	evmc::result callResultOpt = hostContext.call(callMessageOpt);
 	// Bail out if we ran out of gas.
 	if (callResultOpt.status_code == EVMC_OUT_OF_GAS)
-		return 0;
+		return;
 	bool noRevertInSource = yulSubObject.find("revert") == string::npos;
 	bool noInvalidInSource = yulSubObject.find("invalid") == string::npos;
 	if (noRevertInSource)
