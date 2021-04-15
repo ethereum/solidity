@@ -129,12 +129,9 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		EVMDialect::strictAssemblyForEVMObjects(version)
 	);
 	// Run circular references pruner and then stack limit evader.
-	string step = "circularReferencesPruner";
+	string step = "stackLimitEvader";
 	optimizerTest.setStep(step);
 	shared_ptr<solidity::yul::Block> astBlock = optimizerTest.run();
-	step = "stackLimitEvader";
-	optimizerTest.setStep(step);
-	astBlock = optimizerTest.run();
 	string optimisedProgram = Whiskers(R"(
 	object "main" {
 		code {
