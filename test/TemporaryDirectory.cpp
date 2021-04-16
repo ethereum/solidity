@@ -56,3 +56,14 @@ TemporaryDirectory::~TemporaryDirectory()
 		cerr << "Reason: " << errorCode.message() << endl;
 	}
 }
+
+TemporaryWorkingDirectory::TemporaryWorkingDirectory(fs::path const& _newDirectory):
+	m_originalWorkingDirectory(fs::current_path())
+{
+	fs::current_path(_newDirectory);
+}
+
+TemporaryWorkingDirectory::~TemporaryWorkingDirectory()
+{
+	fs::current_path(m_originalWorkingDirectory);
+}
