@@ -66,30 +66,6 @@ BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_
 	BOOST_TEST(!fs::exists(dirPath / "test-file.txt"));
 }
 
-BOOST_AUTO_TEST_CASE(TemporaryDirectory_memberPath_should_construct_paths_relative_to_the_temporary_directory)
-{
-	TemporaryDirectory tempDir("temporary-directory-test-");
-
-	BOOST_TEST(fs::equivalent(tempDir.memberPath(""), tempDir.path()));
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("."), tempDir.path() / fs::path(".")));
-	BOOST_TEST(fs::equivalent(tempDir.memberPath(".."), tempDir.path() / fs::path("..")));
-
-	// NOTE: fs::equivalent() only works with paths that actually exist
-	{
-		ofstream file;
-		file.open(tempDir.memberPath("file.txt"), ios::out);
-	}
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("file.txt"), tempDir.path() / fs::path("file.txt")));
-
-	{
-		fs::create_directories(tempDir.memberPath("a/b/"));
-
-		ofstream file;
-		file.open(tempDir.memberPath("a/b/file.txt"), ios::out);
-	}
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("a/b/file.txt"), tempDir.path() / fs::path("a") / fs::path("b") / fs::path("file.txt")));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }

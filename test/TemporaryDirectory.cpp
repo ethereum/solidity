@@ -31,7 +31,7 @@ using namespace solidity::test;
 namespace fs = boost::filesystem;
 
 TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
-	m_path((fs::temp_directory_path() / fs::unique_path(_prefix + "%%%%-%%%%-%%%%-%%%%")).string())
+	m_path(fs::temp_directory_path() / fs::unique_path(_prefix + "%%%%-%%%%-%%%%-%%%%"))
 {
 	// Prefix should just be a file name and not contain anything that would make us step out of /tmp.
 	assert(fs::path(_prefix) == fs::path(_prefix).stem());
@@ -42,10 +42,10 @@ TemporaryDirectory::TemporaryDirectory(std::string const& _prefix):
 TemporaryDirectory::~TemporaryDirectory()
 {
 	// A few paranoid sanity checks just to be extra sure we're not deleting someone's homework.
-	assert(m_path.find(fs::temp_directory_path().string()) == 0);
-	assert(fs::path(m_path) != fs::temp_directory_path());
-	assert(fs::path(m_path) != fs::path(m_path).root_path());
-	assert(!fs::path(m_path).empty());
+	assert(m_path.string().find(fs::temp_directory_path().string()) == 0);
+	assert(m_path != fs::temp_directory_path());
+	assert(m_path != m_path.root_path());
+	assert(!m_path.empty());
 
 	boost::system::error_code errorCode;
 	uintmax_t numRemoved = fs::remove_all(m_path, errorCode);
@@ -55,11 +55,4 @@ TemporaryDirectory::~TemporaryDirectory()
 		cerr << "Only " << numRemoved << " files were actually removed." << endl;
 		cerr << "Reason: " << errorCode.message() << endl;
 	}
-}
-
-string TemporaryDirectory::memberPath(string const& _relativePath) const
-{
-	assert(fs::path(_relativePath).is_relative());
-
-	return (fs::path(m_path) / _relativePath).string();
 }

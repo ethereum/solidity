@@ -120,7 +120,7 @@ public:
 
 protected:
 	TemporaryDirectory m_tempDir;
-	string const m_autosavePath = m_tempDir.memberPath("population-autosave.txt");
+	string const m_autosavePath = (m_tempDir.path() / "population-autosave.txt").string();
 	RandomisingAlgorithm m_algorithm;
 };
 

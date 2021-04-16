@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 
 namespace solidity::test
@@ -40,13 +42,10 @@ public:
 	TemporaryDirectory(std::string const& _prefix = "solidity-test-");
 	~TemporaryDirectory();
 
-	std::string const& path() const { return m_path; }
-
-	/// Converts a path relative to the directory held by the object into an absolute one.
-	std::string memberPath(std::string const& _relativePath) const;
+	boost::filesystem::path const& path() const { return m_path; }
 
 private:
-	std::string m_path;
+	boost::filesystem::path m_path;
 };
 
 }

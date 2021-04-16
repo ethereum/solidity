@@ -328,11 +328,11 @@ BOOST_FIXTURE_TEST_CASE(build_should_respect_population_from_file_option, Poulat
 	TemporaryDirectory tempDir;
 	for (auto const& [fileName, chromosomes]: fileContent)
 	{
-		ofstream tmpFile(tempDir.memberPath(fileName));
+		ofstream tmpFile((tempDir.path() / fileName).string());
 		for (auto const& chromosome: chromosomes)
 			tmpFile << chromosome << endl;
 
-		m_options.populationFromFile.push_back(tempDir.memberPath(fileName));
+		m_options.populationFromFile.push_back((tempDir.path() / fileName).string());
 	}
 
 	BOOST_TEST(
@@ -361,13 +361,13 @@ BOOST_FIXTURE_TEST_CASE(build_should_combine_populations_from_all_sources, Poula
 {
 	TemporaryDirectory tempDir;
 	{
-		ofstream tmpFile(tempDir.memberPath("population.txt"));
+		ofstream tmpFile((tempDir.path() / "population.txt").string());
 		tmpFile << "axc" << endl << "fcL" << endl;
 	}
 
 	m_options.population = {"axc", "fcL"};
 	m_options.randomPopulation = {2};
-	m_options.populationFromFile = {tempDir.memberPath("population.txt")};
+	m_options.populationFromFile = {(tempDir.path() / "population.txt").string()};
 	m_options.minChromosomeLength = 3;
 	m_options.maxChromosomeLength = 3;
 
@@ -419,9 +419,9 @@ BOOST_AUTO_TEST_CASE(build_should_load_programs_from_files)
 	vector<string> sources{"{}", "{{}}", "{{{}}}"};
 	ProgramFactory::Options options{
 		/* inputFiles = */ {
-			tempDir.memberPath("program1.yul"),
-			tempDir.memberPath("program2.yul"),
-			tempDir.memberPath("program3.yul"),
+			(tempDir.path() / "program1.yul").string(),
+			(tempDir.path() / "program2.yul").string(),
+			(tempDir.path() / "program3.yul").string(),
 		},
 		/* prefix = */ "",
 	};
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(build_should_apply_prefix)
 {
 	TemporaryDirectory tempDir;
 	ProgramFactory::Options options{
-		/* inputFiles = */ {tempDir.memberPath("program1.yul")},
+		/* inputFiles = */ {(tempDir.path() / "program1.yul").string()},
 		/* prefix = */ "f",
 	};
 
