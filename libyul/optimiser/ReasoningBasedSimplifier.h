@@ -67,7 +67,8 @@ private:
 		Expression const& _expression
 	);
 
-	virtual smtutil::Expression encodeEVMBuiltin(
+	void handleDeclaration(
+		YulString _varName,
 		evmasm::Instruction _instruction,
 		std::vector<Expression> const& _arguments
 	);
@@ -75,22 +76,27 @@ private:
 	smtutil::Expression int2bv(smtutil::Expression _arg) const;
 	smtutil::Expression bv2int(smtutil::Expression _arg) const;
 
-	smtutil::Expression newVariable();
-	virtual smtutil::Expression newRestrictedVariable();
+	smtutil::Expression newRestrictedVariable(std::string const& _name = {}, bool _boolean = false);
 	std::string uniqueName();
+
+	bool makesInfeasible(smtutil::Expression _constraint);
+	bool feasible();
+	bool infeasible();
+
+	YulString localVariableFromExpression(std::string const& _expressionName);
+
+	bool isBoolean(Expression const& _expression) const;
 
 	virtual std::shared_ptr<smtutil::Sort> defaultSort() const;
 	virtual smtutil::Expression booleanValue(smtutil::Expression _value) const;
 	virtual smtutil::Expression constantValue(size_t _value) const;
 	virtual smtutil::Expression literalValue(Literal const& _literal) const;
-	virtual smtutil::Expression unsignedToSigned(smtutil::Expression _value);
-	virtual smtutil::Expression signedToUnsigned(smtutil::Expression _value);
-	virtual smtutil::Expression wrap(smtutil::Expression _value);
 
 	Dialect const& m_dialect;
 	std::set<YulString> const& m_ssaVariables;
 	std::unique_ptr<smtutil::SolverInterface> m_solver;
 	std::map<YulString, smtutil::Expression> m_variables;
+	std::set<std::string> m_booleanVariables;
 
 	size_t m_varCounter = 0;
 };

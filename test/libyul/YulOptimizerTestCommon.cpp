@@ -277,8 +277,17 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"reasoningBasedSimplifier", [&]() {
 			disambiguate();
+			ExpressionSplitter::run(*m_context, *m_ast);
+			SSATransform::run(*m_context, *m_ast);
+			RedundantAssignEliminator::run(*m_context, *m_ast);
+
 			ReasoningBasedSimplifier::run(*m_context, *m_object->code);
-		}},
+
+			SSAReverser::run(*m_context, *m_ast);
+			UnusedPruner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
+		 }},
 		{"equivalentFunctionCombiner", [&]() {
 			disambiguate();
 			ForLoopInitRewriter::run(*m_context, *m_ast);
