@@ -37,6 +37,7 @@ struct LineColumn
 
 	LineColumn() = default;
 	LineColumn(std::tuple<int, int> const& _t): line{std::get<0>(_t)}, column{std::get<1>(_t)} {}
+	LineColumn(int _line, int _column): line{_line}, column{_column} {}
 };
 
 struct SourceReference
