@@ -38,7 +38,7 @@ object "Arraysum_34" {
                         }
                         {
                             mstore(_1, _1)
-                            let _3 := sload(add(keccak256(_1, 0x20), var_i))
+                            let _3 := sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i))
                             if gt(var_sum, not(_3)) { panic_error_0x11() }
                             var_sum := add(var_sum, _3)
                         }
