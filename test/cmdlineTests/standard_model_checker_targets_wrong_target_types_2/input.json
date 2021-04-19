@@ -24,7 +24,7 @@
 		"modelChecker":
 		{
 			"engine": "all",
-			"targets": "aaa,bbb"
+			"targets": "assert"
 		}
 	}
 }

@@ -23,7 +23,8 @@
 	{
 		"modelChecker":
 		{
-			"engine": "all"
+			"engine": "all",
+			"targets": []
 		}
 	}
 }

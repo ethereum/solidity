@@ -448,10 +448,13 @@ the JSON option ``settings.modelChecker.timeout=<time>``, where 0 means no timeo
 Verification Targets
 ====================
 
-The types of verification targets created by the SMTChecker can also be customized via
-the CLI option ``--model-checker-target <targets>`` or the JSON option
-``settings.modelChecker.targets=<targets>``, where ``<targets>`` is a no-space-comma-separated
-list of one or more verification targets. The keywords that represent the targets are:
+The types of verification targets created by the SMTChecker can also be
+customized via the CLI option ``--model-checker-target <targets>`` or the JSON
+option ``settings.modelChecker.targets=<targets>``.
+In the CLI case, ``<targets>`` is a no-space-comma-separated list of one or
+more verification targets, and an array of one or more targets as strings in
+the JSON input.
+The keywords that represent the targets are:
 
 - Assertions: ``assert``.
 - Arithmetic underflow: ``underflow``.
@@ -461,8 +464,7 @@ list of one or more verification targets. The keywords that represent the target
 - Popping an empty array: ``popEmptyArray``.
 - Out of bounds array/fixed bytes index access: ``outOfBounds``.
 - Insufficient funds for a transfer: ``balance``.
-- All of the above: ``all``.
-- None of the above: ``none``.
+- All of the above: ``default`` (CLI only).
 
 A common subset of targets might be, for example:
 ``--model-checker-targets assert,overflow``.

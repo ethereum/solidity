@@ -23,8 +23,7 @@
 	{
 		"modelChecker":
 		{
-			"engine": "bmc",
-			"targets": "all"
+			"engine": "bmc"
 		}
 	}
 }

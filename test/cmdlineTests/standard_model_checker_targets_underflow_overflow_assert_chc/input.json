@@ -24,7 +24,7 @@
 		"modelChecker":
 		{
 			"engine": "chc",
-			"targets": "underflow,overflow,assert"
+			"targets": ["underflow", "overflow", "assert"]
 		}
 	}
 }
