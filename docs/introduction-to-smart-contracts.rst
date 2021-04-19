@@ -206,7 +206,7 @@ The functions that make up the contract, and that users and contracts can call a
 
 The ``mint`` function sends an amount of newly created coins to another address.
 The :ref:`require <assert-and-require>` function call defines conditions that reverts all changes if not met.
-In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``. Note that because of the default :ref:`Checked arithmetic <unchecked>`, the transaction would revert if the expression ``balances[receiver] += amount;`` overflows, i.e., when ``balances[receiver] + amount`` in arbitrary precision arithmetic is larger than the maximum value of ``uint`` (``2**256 - 1``).
+In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``. Note that because of the default :ref:`Checked arithmetic <unchecked>`, the transaction would revert if the expression ``balances[receiver] += amount;`` overflows, i.e., when ``balances[receiver] + amount`` in arbitrary precision arithmetic is larger than the maximum value of ``uint`` (``2**256 - 1``). This is also true for the statement ``balances[receiver] += amount;`` in the function ``send``.
 
 :ref:`Errors <errors>` allow you to provide more information to the caller about
 why a condition or operation failed. Errors are used together with the
