@@ -26,6 +26,7 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 	ostream& _os,
 	shared_ptr<yul::Block> _ast,
 	Dialect const& _dialect,
+	bool _outputStorageOnly,
 	size_t _maxSteps,
 	size_t _maxTraceSize,
 	size_t _maxExprNesting
@@ -70,7 +71,10 @@ yulFuzzerUtil::TerminationReason yulFuzzerUtil::interpret(
 		reason = TerminationReason::ExplicitlyTerminated;
 	}
 
-	state.dumpTraceAndState(_os);
+	if (_outputStorageOnly)
+		state.dumpStorage(_os);
+	else
+		state.dumpTraceAndState(_os);
 	return reason;
 }
 

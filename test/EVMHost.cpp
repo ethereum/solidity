@@ -794,7 +794,8 @@ void EVMHostPrinter::storage()
 {
 	for (auto const& [slot, value]: m_host.get_address_storage(m_account))
 		if (m_host.get_storage(m_account, slot))
-			m_stateStream << m_host.convertFromEVMC(slot)
+			m_stateStream << "  "
+				<< m_host.convertFromEVMC(slot)
 				<< ": "
 				<< m_host.convertFromEVMC(value.value)
 				<< endl;
