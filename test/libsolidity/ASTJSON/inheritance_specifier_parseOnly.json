@@ -14,7 +14,8 @@
       "nameLocation": "9:2:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "0:14:1"
+      "src": "0:14:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -40,7 +41,8 @@
       "nameLocation": "24:2:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "15:20:1"
+      "src": "15:20:1",
+      "usedErrors": []
     }
   ],
   "src": "0:36:1"

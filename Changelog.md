@@ -35,6 +35,7 @@ Bugfixes:
 
 
 AST Changes:
+ * New property for ContractDefinition nodes: ``usedErrors`` lists AST IDs of all errors used by the contract (even if defined outside).
 
 
 

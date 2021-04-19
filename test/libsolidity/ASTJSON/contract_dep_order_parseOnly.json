@@ -14,7 +14,8 @@
       "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "0:14:1"
+      "src": "0:14:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -40,7 +41,8 @@
       "nameLocation": "24:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "15:19:1"
+      "src": "15:19:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -66,7 +68,8 @@
       "nameLocation": "44:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "35:19:1"
+      "src": "35:19:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -92,7 +95,8 @@
       "nameLocation": "64:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "55:19:1"
+      "src": "55:19:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -118,7 +122,8 @@
       "nameLocation": "84:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "75:19:1"
+      "src": "75:19:1",
+      "usedErrors": []
     }
   ],
   "src": "0:95:1"

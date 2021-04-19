@@ -28,7 +28,8 @@
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 2,
-      "src": "36:13:1"
+      "src": "36:13:1",
+      "usedErrors": []
     }
   ],
   "src": "36:14:1"
