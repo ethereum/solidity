@@ -58,7 +58,7 @@ public:
 	struct Representation
 	{
 		std::unique_ptr<Expression> expression;
-		size_t cost = size_t(-1);
+		bigint cost;
 	};
 
 private:
