@@ -585,15 +585,15 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 			if (eq != path.end())
 			{
 				if (auto r = ImportRemapper::parseRemapping(path))
-				{
 					m_remappings.emplace_back(std::move(*r));
-					path = string(eq + 1, path.end());
-				}
 				else
 				{
 					serr() << "Invalid remapping: \"" << path << "\"." << endl;
 					return false;
 				}
+
+				string remappingTarget(eq + 1, path.end());
+				m_fileReader.allowDirectory(boost::filesystem::path(remappingTarget).remove_filename());
 			}
 			else if (path == "-")
 				addStdin = true;
@@ -628,9 +628,8 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 
 				// NOTE: we ignore the FileNotFound exception as we manually check above
 				m_fileReader.setSource(infile, readFileAsString(infile.string()));
-				path = boost::filesystem::canonical(infile).string();
+				m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(infile).string()).remove_filename());
 			}
-			m_fileReader.allowDirectory(boost::filesystem::path(path).remove_filename());
 		}
 
 	if (addStdin)
