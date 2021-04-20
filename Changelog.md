@@ -26,6 +26,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Natspec: Fix internal error related to the `@returns` documentation for a public state variable overriding a function.
  * Antlr Grammar: Fix parsing of import paths involving properly distinguishing between empty and non-empty string literals in general.
  * AST Output: Fix ``kind`` field of ``ModifierInvocation`` for base constructor calls.
  * Commandline interface: Fix standard input bypassing allowed path checks.
