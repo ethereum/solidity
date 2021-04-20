@@ -19,7 +19,7 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/FileReader.h>
-#include <libsolidity/interface/FileRemapper.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/lsp/LSPTypes.h>
 #include <libsolidity/lsp/ReferenceCollector.h>
 #include <libsolidity/lsp/Transport.h>
@@ -153,7 +153,7 @@ protected:
 	// }}}
 
 	/// FileReader is used for reading files during comilation phase but is also used as VFS for the LSP.
-	std::unique_ptr<FileReader> m_fileReader;
+	std::unique_ptr<frontend::FileReader> m_fileReader;
 
 	/// Workspace root directory
 	boost::filesystem::path m_basePath;
@@ -164,10 +164,13 @@ protected:
 	// TODO (dead) std::map<std::string, std::string> m_sourceCodes;
 
 	std::unique_ptr<frontend::CompilerStack> m_compilerStack;
-	std::vector<FileRemapper::Remapping> m_remappings;
+	std::vector<frontend::ImportRemapper::Remapping> m_remappings;
 
 	/// Configured EVM version that is being used in compilations.
 	langutil::EVMVersion m_evmVersion = langutil::EVMVersion::berlin();
+
+	/// Maps source paths names to fully qualified local path names.
+	std::map<std::string, std::string> m_pathMappings;
 };
 
 } // namespace solidity

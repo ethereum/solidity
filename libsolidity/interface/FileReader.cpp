@@ -73,7 +73,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			return ReadCallback::Result{false, "File outside of allowed directories."};
 
 		if (!boost::filesystem::exists(canonicalPath))
-			return ReadCallback::Result{false, "File not found."};
+			return ReadCallback::Result{false, "File not found: " + canonicalPath.generic_string()};
 
 		if (!boost::filesystem::is_regular_file(canonicalPath))
 			return ReadCallback::Result{false, "Not a valid file."};

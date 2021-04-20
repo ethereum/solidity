@@ -176,7 +176,7 @@ void LanguageServer::changeConfiguration(Json::Value const& _settings)
 		{
 			if (element.isString())
 			{
-				if (auto remappingOpt = FileRemapper::parseRemapping(element.asString()); remappingOpt.has_value())
+				if (auto remappingOpt = ImportRemapper::parseRemapping(element.asString()); remappingOpt.has_value())
 					m_remappings.emplace_back(move(remappingOpt.value()));
 				else
 					trace("Failed to parse remapping: '"s + element.asString() + "'");
@@ -202,6 +202,7 @@ void LanguageServer::documentContentUpdated(string const& _path, LineColumnRange
 	buffer.replace(start, end - start, _replacementText);
 
 	m_fileReader->setSource(_path, buffer);
+	m_pathMappings[_path] = _path;
 }
 
 void LanguageServer::documentContentUpdated(string const& _path, string const& _replacementText)
@@ -214,12 +215,14 @@ void LanguageServer::documentContentUpdated(string const& _path, string const& _
 	}
 
 	m_fileReader->setSource(_path, _replacementText);
+	m_pathMappings[_path] = _path;
 
 	compileSource(_path);
 }
 
 frontend::ReadCallback::Result LanguageServer::readFile(string const& _kind, string const& _path)
 {
+	log("readFile: " + _path);
 	return m_fileReader->readFile(_kind, _path);
 }
 
@@ -245,6 +248,7 @@ constexpr DiagnosticSeverity toDiagnosticSeverity(Error::Type _errorType)
 
 bool LanguageServer::compile(std::string const& _path)
 {
+	log("compile: " + _path);
 	// TODO: optimize! do not recompile if nothing has changed (file(s) not flagged dirty).
 
 	auto const i = m_fileReader->sourceCodes().find(_path);
@@ -622,6 +626,7 @@ void LanguageServer::handle_initialize(MessageId _id, Json::Value const& _args)
 	auto const fspath = boost::filesystem::path(rootPath);
 
 	m_basePath = fspath;
+	log("basepath: " + m_basePath.generic_string());
 	m_fileReader = make_unique<FileReader>(m_basePath, FileReader::FileSystemPathSet{fspath});
 
 	if (_args["initializationOptions"].isObject())
@@ -667,15 +672,18 @@ void LanguageServer::handle_textDocument_didOpen(MessageId /*_id*/, Json::Value 
 	if (!_args["textDocument"])
 		return;
 
-	auto const path = extractPathFromFileURI(_args["textDocument"]["uri"].asString()).value();
+	auto path = extractPathFromFileURI(_args["textDocument"]["uri"].asString()).value();
+	if (boost::algorithm::starts_with(path, m_basePath.generic_string()))
+		path = path.substr(m_basePath.generic_string().size());
+
 	auto const text = _args["textDocument"]["text"].asString();
 	// auto const version = _args["textDocument"]["version"].asInt();
 	// auto const languageId = _args["textDocument"]["languageId"].asString();
 
 	log("LanguageServer: Opening document: " + path);
 
-	//m_vfs[path] = text;
-	m_fileReader->setSource(path, nullopt, text);
+	m_fileReader->setSource(path, text);
+	m_pathMappings[path] = path;
 
 	compileSource(path);
 
@@ -728,6 +736,8 @@ void LanguageServer::handle_textDocument_definition(MessageId _id, Json::Value c
 	// source should be compiled already
 	solAssert(m_compilerStack.get() != nullptr, "");
 
+	log("definition: dpos.path: " + dpos.path);
+
 	auto const file = m_fileReader->sourceCodes().find(dpos.path);
 	if (file == m_fileReader->sourceCodes().end())
 	{
@@ -751,9 +761,9 @@ void LanguageServer::handle_textDocument_definition(MessageId _id, Json::Value c
 	{
 		// When cursor is on an import directive, then we want to jump to the actual file that
 		// is being imported.
-		auto const fpm = m_fileReader->pathMappings().find(importDirective->path());
-		if (fpm != m_fileReader->pathMappings().end())
-			locations.emplace_back(SourceLocation{0, 0, make_shared<CharStream>("", fpm->second.generic_string())});
+		auto const fpm = m_pathMappings.find(importDirective->path());
+		if (fpm != m_pathMappings.end())
+			locations.emplace_back(SourceLocation{0, 0, make_shared<CharStream>("", fpm->second)});
 		else
 			trace("gotoDefinition: (importDirective) full path mapping not found\n");
 	}
@@ -919,8 +929,8 @@ void LanguageServer::log(string const& _message)
 
 void LanguageServer::trace(string const& _message)
 {
-	if (m_trace < Trace::Verbose)
-		return;
+	// if (m_trace < Trace::Verbose)
+	// 	return;
 
 	Json::Value json = Json::objectValue;
 	json["type"] = static_cast<int>(Trace::Verbose);
