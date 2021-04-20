@@ -1348,6 +1348,24 @@ string YulUtilFunctions::shortByteArrayEncodeUsedAreaSetLengthFunction()
 	});
 }
 
+string YulUtilFunctions::longByteArrayStorageIndexAccessNoCheckFunction()
+{
+	return m_functionCollector.createFunction(
+		"long_byte_array_index_access_no_checks",
+		[&](vector<string>& _args, vector<string>& _returnParams) {
+			_args = {"array", "index"};
+			_returnParams = {"slot", "offset"};
+			return Whiskers(R"(
+				offset := sub(31, mod(index, 0x20))
+				let dataArea := <dataAreaFunc>(array)
+				slot := add(dataArea, div(index, 0x20))
+			)")
+			("dataAreaFunc", arrayDataAreaFunction(*TypeProvider::bytesStorage()))
+			.render();
+		}
+	);
+}
+
 string YulUtilFunctions::storageArrayPopFunction(ArrayType const& _type)
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
@@ -1406,7 +1424,7 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 						sstore(array, <encodeUsedSetLen>(data, newLen))
 					}
 					default {
-						let slot, offset := <indexAccess>(array, newLen)
+						let slot, offset := <indexAccessNoChecks>(array, newLen)
 						<setToZero>(slot, offset)
 						sstore(array, sub(data, 2))
 					}
@@ -1417,7 +1435,7 @@ string YulUtilFunctions::storageByteArrayPopFunction(ArrayType const& _type)
 			("extractByteArrayLength", extractByteArrayLengthFunction())
 			("transitLongToShort", byteArrayTransitLongToShortFunction(_type))
 			("encodeUsedSetLen", shortByteArrayEncodeUsedAreaSetLengthFunction())
-			("indexAccess", storageArrayIndexAccessFunction(_type))
+			("indexAccessNoChecks", longByteArrayStorageIndexAccessNoCheckFunction())
 			("setToZero", storageSetToZeroFunction(*_type.baseType()))
 			.render();
 	});
@@ -2112,13 +2130,12 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 
 				<?multipleItemsPerSlot>
 					<?isBytesArray>
-						offset := sub(31, mod(index, 0x20))
 						switch lt(arrayLength, 0x20)
 						case 0 {
-							let dataArea := <dataAreaFunc>(array)
-							slot := add(dataArea, div(index, 0x20))
+							slot, offset := <indexAccessNoChecks>(array, index)
 						}
 						default {
+							offset := sub(31, mod(index, 0x20))
 							slot := array
 						}
 					<!isBytesArray>
@@ -2137,6 +2154,7 @@ string YulUtilFunctions::storageArrayIndexAccessFunction(ArrayType const& _type)
 		("panic", panicFunction(PanicCode::ArrayOutOfBounds))
 		("arrayLen", arrayLengthFunction(_type))
 		("dataAreaFunc", arrayDataAreaFunction(_type))
+		("indexAccessNoChecks", longByteArrayStorageIndexAccessNoCheckFunction())
 		("multipleItemsPerSlot", _type.baseType()->storageBytes() <= 16)
 		("isBytesArray", _type.isByteArray())
 		("storageSize", _type.baseType()->storageSize().str())
