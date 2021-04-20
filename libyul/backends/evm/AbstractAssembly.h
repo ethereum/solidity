@@ -78,7 +78,7 @@ public:
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;
 
 	/// Append raw bytes that stay untouched by the optimizer.
-	virtual void appendVerbatim(bytes const& _data, int _stackDifference) = 0;
+	virtual void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) = 0;
 
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.

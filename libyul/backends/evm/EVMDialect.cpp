@@ -382,8 +382,11 @@ BuiltinFunctionForEVM const* EVMDialect::verbatimFunction(size_t _arguments, siz
 				for (Expression const& arg: _call.arguments | ranges::views::tail | ranges::views::reverse)
 					_visitExpression(arg);
 				Expression const& bytecode = _call.arguments.front();
-				int diff = static_cast<int>(_returnVariables) - static_cast<int>(_arguments);
-				_assembly.appendVerbatim(asBytes(std::get<Literal>(bytecode).value.str()), diff);
+				_assembly.appendVerbatim(
+					asBytes(std::get<Literal>(bytecode).value.str()),
+					_arguments,
+					_returnVariables
+				);
 			}
 		).second;
 		builtinFunction.isMSize = true;

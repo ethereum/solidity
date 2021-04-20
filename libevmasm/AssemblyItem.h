@@ -77,10 +77,10 @@ public:
 		else
 			m_data = std::make_shared<u256>(std::move(_data));
 	}
-	explicit AssemblyItem(bytes const& _verbatimData, int _deposit):
+	explicit AssemblyItem(bytes _verbatimData, size_t _arguments, size_t _returnVariables):
 		m_type(VerbatimBytecode),
 		m_instruction{},
-		m_verbatimBytecode{{_deposit, _verbatimData}}
+		m_verbatimBytecode{{_arguments, _returnVariables, std::move(_verbatimData)}}
 	{}
 
 	AssemblyItem(AssemblyItem const&) = default;
@@ -103,7 +103,7 @@ public:
 	u256 const& data() const { assertThrow(m_type != Operation, util::Exception, ""); return *m_data; }
 	void setData(u256 const& _data) { assertThrow(m_type != Operation, util::Exception, ""); m_data = std::make_shared<u256>(_data); }
 
-	bytes const& verbatimData() const { assertThrow(m_type == VerbatimBytecode, util::Exception, ""); return m_verbatimBytecode->second; }
+	bytes const& verbatimData() const { assertThrow(m_type == VerbatimBytecode, util::Exception, ""); return std::get<2>(*m_verbatimBytecode); }
 
 	/// @returns the instruction of this item (only valid if type() == Operation)
 	Instruction instruction() const { assertThrow(m_type == Operation, util::Exception, ""); return m_instruction; }
@@ -151,7 +151,7 @@ public:
 	size_t bytesRequired(size_t _addressLength) const;
 	size_t arguments() const;
 	size_t returnValues() const;
-	size_t deposit() const { return m_type == VerbatimBytecode ? static_cast<size_t>(m_verbatimBytecode->first) : returnValues() - arguments(); }
+	size_t deposit() const { return returnValues() - arguments(); }
 
 	/// @returns true if the assembly item can be used in a functional context.
 	bool canBeFunctional() const;
@@ -176,8 +176,9 @@ private:
 	AssemblyItemType m_type;
 	Instruction m_instruction; ///< Only valid if m_type == Operation
 	std::shared_ptr<u256> m_data; ///< Only valid if m_type != Operation
-	/// If m_type == VerbatimBytecode, this holds stack difference and verbatim bytecode.
-	std::optional<std::pair<int, bytes>> m_verbatimBytecode;
+	/// If m_type == VerbatimBytecode, this holds number of arguments, number of
+	/// return variables and verbatim bytecode.
+	std::optional<std::tuple<size_t, size_t, bytes>> m_verbatimBytecode;
 	langutil::SourceLocation m_location;
 	JumpType m_jumpType = JumpType::Ordinary;
 	/// Pushed value for operations with data to be determined during assembly stage,
