@@ -41,6 +41,7 @@ include(EthCcache)
 
 # Let's find our dependencies
 include(EthDependencies)
+include(fmtlib)
 include(jsoncpp)
 include(range-v3)
 include_directories(SYSTEM ${JSONCPP_INCLUDE_DIR})
