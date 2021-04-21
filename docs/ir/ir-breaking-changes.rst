@@ -138,30 +138,33 @@ The function ``preincr_u8(1)`` returns the following values:
 
 .. index:: ! evaluation order; function arguments
 
-This behavior is also true for function argument expressions.
+On the other hand, function argument expressions are evaluated in the same order by both code generators.
 For example:
 
 ::
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;
     contract C {
-        function identity(uint8 _a) public pure returns (uint8) {
-            return _a;
+        function add(uint8 _a, uint8 _b) public pure returns (uint8) {
+            return _a + _b;
         }
-        function g(uint8 _b) public pure returns (uint8) {
-            return identity(++_b + _b);
+        function g(uint8 _a, uint8 _b) public pure returns (uint8) {
+            return add(++_a + ++_b, _a + _b);
         }
     }
 
-The function ``g(1)`` returns the following values:
-- Old code generator: 3 (``1 + 2``) but the return value is unspecified in general
-- New code generator: 4 (``2 + 2``) but the return value is not guaranteed
+The function ``g(1, 2)`` returns the following values:
+- Old code generator: ``10`` (``add(2 + 3, 2 + 3)``) but the return value is unspecified in general
+- New code generator: ``10`` but the return value is not guaranteed
 
 
 Internals
 =========
 
-Internal function pointers:
+Internal function pointers
+--------------------------
+
+.. index:: function pointers
 
 The old code generator uses code offsets or tags for values of internal function pointers. This is especially complicated since
 these offsets are different at construction time and after deployment and the values can cross this border via storage.
@@ -177,11 +180,11 @@ In the old code generator, internal function pointers are initialized with a spe
 This causes a storage write at construction time for internal function pointers in storage.
 
 Cleanup
---------
+-------
 
 .. index:: cleanup, dirty bits
 
-The old code generator only performs cleanup before an operation whose result could be affected by the the values of the dirty bits.
+The old code generator only performs cleanup before an operation whose result could be affected by the values of the dirty bits.
 The new code generator performs cleanup after any operation that can result in dirty bits.
 
 For example:
@@ -189,7 +192,7 @@ For example:
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;
     contract C {
-        function f(uint8 _a) public returns(uint _r1, uint _r2)
+        function f(uint8 _a) public pure returns (uint _r1, uint _r2)
         {
             _a = ~_a;
             assembly {
