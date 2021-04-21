@@ -85,14 +85,14 @@ void JSONTransport::notify(string const& _method, Json::Value const& _message)
 	send(json);
 }
 
-void JSONTransport::reply(MessageId const& _id, Json::Value const& _message)
+void JSONTransport::reply(MessageID _id, Json::Value const& _message)
 {
 	Json::Value json;
 	json["result"] = _message;
 	send(json, _id);
 }
 
-void JSONTransport::error(MessageId _id, ErrorCode _code, string const& _message)
+void JSONTransport::error(MessageID _id, ErrorCode _code, string const& _message)
 {
 	Json::Value json;
 	json["error"]["code"] = static_cast<int>(_code);
@@ -100,7 +100,7 @@ void JSONTransport::error(MessageId _id, ErrorCode _code, string const& _message
 	send(json, _id);
 }
 
-void JSONTransport::send(Json::Value _json, MessageId _id)
+void JSONTransport::send(Json::Value _json, MessageID _id)
 {
 	_json["jsonrpc"] = "2.0";
 	if (!_id.isNull())

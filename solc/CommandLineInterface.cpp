@@ -1794,7 +1794,8 @@ bool CommandLineInterface::serveLSP()
 			*traceLog << _msg << endl;
 	};
 
-	lsp::LanguageServer languageServer(traceLogger);
+	std::unique_ptr<lsp::Transport> transport = make_unique<lsp::JSONTransport>(traceLogger);
+	lsp::LanguageServer languageServer(traceLogger, move(transport));
 	return languageServer.run();
 }
 

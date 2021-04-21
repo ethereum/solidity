@@ -28,6 +28,8 @@
 
 #include <liblangutil/SourceReferenceExtractor.h>
 
+#include <fmt/format.h>
+
 #include <json/value.h>
 
 #include <boost/filesystem/path.hpp>
@@ -63,8 +65,11 @@ public:
 	using Logger = std::function<void(std::string_view)>;
 
 	/// @param _logger special logger used for debugging the LSP.
-	LanguageServer(Logger _logger, std::istream& _in, std::ostream& _out);
-	explicit LanguageServer(Logger _logger): LanguageServer(std::move(_logger), std::cin, std::cout) {}
+	explicit LanguageServer(Logger _logger);
+
+	/// @param _logger special logger used for debugging the LSP.
+	/// @param _transport Customizable transport layer.
+	LanguageServer(Logger _logger, std::unique_ptr<Transport> _transport);
 
 	/// Compiles the source behind path @p _file and updates the diagnostics pushed to the client.
 	///
@@ -86,15 +91,15 @@ public:
 	void handleMessage(Json::Value const& _jsonMessage);
 
 protected:
-	void handle_initialize(MessageId _id, Json::Value const& _args);
-	void handle_exit(MessageId _id, Json::Value const& _args);
-	void handle_workspace_didChangeConfiguration(MessageId _id, Json::Value const& _args);
-	void handle_textDocument_didOpen(MessageId _id, Json::Value const& _args);
-	void handle_textDocument_didChange(MessageId _id, Json::Value const& _args);
-	void handle_textDocument_definition(MessageId _id, Json::Value const& _args);
-	void handle_textDocument_hover(MessageId _id, Json::Value const& _args);
-	void handle_textDocument_highlight(MessageId _id, Json::Value const& _args);
-	void handle_textDocument_references(MessageId _id, Json::Value const& _args);
+	void handle_initialize(MessageID _id, Json::Value const& _args);
+	void handle_exit(MessageID _id, Json::Value const& _args);
+	void handle_workspace_didChangeConfiguration(MessageID _id, Json::Value const& _args);
+	void handle_textDocument_didOpen(MessageID _id, Json::Value const& _args);
+	void handle_textDocument_didChange(MessageID _id, Json::Value const& _args);
+	void handle_textDocument_definition(MessageID _id, Json::Value const& _args);
+	void handle_textDocument_hover(MessageID _id, Json::Value const& _args);
+	void handle_textDocument_highlight(MessageID _id, Json::Value const& _args);
+	void handle_textDocument_references(MessageID _id, Json::Value const& _args);
 
 	// {{{ Client-to-Server messages
 	/// Invoked when the server user-supplied configuration changes (initiated by the client).
@@ -114,7 +119,13 @@ protected:
 	// }}}
 
 	/// Logs a message (should be used for logging messages that are informationally useful to the client).
-	void log(std::string const& _message);
+	void log(std::string _message);
+
+	template <typename... Args>
+	void log(std::string_view _msg, Args... _args)
+	{
+		log(fmt::format(_msg, std::forward<Args>(_args)...));
+	}
 
 	/// Logs a verbose trace message (should used for logging messages that are helpful to the client).
 	void trace(std::string const& _message);
@@ -140,11 +151,13 @@ protected:
 		std::vector<langutil::SourceLocation>& _output
 	);
 
+	DocumentPosition extractDocumentPosition(Json::Value const& _json);
+
 	// {{{ LSP related member fields
-	using Handler = std::function<void(MessageId, Json::Value const&)>;
+	using Handler = std::function<void(MessageID, Json::Value const&)>;
 	using HandlerMap = std::unordered_map<std::string, Handler>;
 
-	std::unique_ptr<JSONTransport> m_client;
+	std::unique_ptr<Transport> m_client;
 	HandlerMap m_handlers;
 	bool m_shutdownRequested = false;
 	bool m_exitRequested = false;

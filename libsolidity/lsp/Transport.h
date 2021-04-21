@@ -29,7 +29,7 @@
 
 namespace solidity::lsp {
 
-using MessageId = Json::Value;
+using MessageID = Json::Value;
 
 enum class ErrorCode
 {
@@ -53,7 +53,20 @@ enum class ErrorCode
 ///
 /// The transport layer API is abstracted so it users become more testable as well as
 /// this way it could be possible to support other transports (HTTP for example) easily.
-class JSONTransport
+class Transport
+{
+public:
+	virtual ~Transport() = default;
+
+	virtual bool closed() const noexcept = 0;
+	virtual std::optional<Json::Value> receive() = 0;
+	virtual void notify(std::string const& _method, Json::Value const& _params) = 0;
+	virtual void reply(MessageID _id, Json::Value const& _result) = 0;
+	virtual void error(MessageID _id, ErrorCode _code, std::string const& _message) = 0;
+};
+
+/// LSP Transport using JSON-RPC over iostreams.
+class JSONTransport : public Transport
 {
 public:
 	/// Constructs a standard stream transport layer.
@@ -66,11 +79,11 @@ public:
 	// Constructs a JSON transport using standard I/O streams.
 	explicit JSONTransport(std::function<void(std::string_view)> _trace);
 
-	bool closed() const noexcept;
-	std::optional<Json::Value> receive();
-	void notify(std::string const& _method, Json::Value const& _params);
-	void reply(MessageId const& _id, Json::Value const& _result);
-	void error(MessageId _id, ErrorCode _code, std::string const& _message);
+	virtual bool closed() const noexcept;
+	virtual std::optional<Json::Value> receive();
+	virtual void notify(std::string const& _method, Json::Value const& _params);
+	virtual void reply(MessageID _id, Json::Value const& _result);
+	virtual void error(MessageID _id, ErrorCode _code, std::string const& _message);
 
 protected:
 	using HeaderMap = std::map<std::string, std::string>;
@@ -81,7 +94,7 @@ protected:
 	/// Sends an arbitrary raw message to the client.
 	///
 	/// Used by the notify/reply/error function family.
-	virtual void send(Json::Value _message, MessageId _id = Json::nullValue);
+	virtual void send(Json::Value _message, MessageID _id = Json::nullValue);
 
 	/// Parses a single text line from the client ending with CRLF (or just LF).
 	std::string readLine();

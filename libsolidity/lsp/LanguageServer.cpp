@@ -30,6 +30,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <fmt/format.h>
+
 #include <ostream>
 
 #include <iostream>
@@ -46,9 +48,9 @@ namespace solidity::lsp {
 namespace // {{{ helpers
 {
 
-string toFileURI(std::string const& _path)
+string toFileURI(boost::filesystem::path const& _path)
 {
-	return "file://" + _path;
+	return "file://" + _path.generic_string();
 }
 
 class ASTNodeLocator: public ASTConstVisitor
@@ -86,15 +88,6 @@ optional<string> extractPathFromFileURI(std::string const& _uri)
 	return _uri.substr(7);
 }
 
-DocumentPosition extractDocumentPosition(Json::Value const& _json)
-{
-	DocumentPosition dpos{};
-	dpos.path = extractPathFromFileURI(_json["textDocument"]["uri"].asString()).value();
-	dpos.position.line = _json["position"]["line"].asInt();
-	dpos.position.column = _json["position"]["character"].asInt();
-	return dpos;
-}
-
 Json::Value toJson(LineColumn _pos)
 {
 	Json::Value json = Json::objectValue;
@@ -124,10 +117,7 @@ Json::Value toJson(boost::filesystem::path const& _basePath, SourceLocation cons
 {
 	solAssert(_location.source.get() != nullptr, "");
 	Json::Value item = Json::objectValue;
-	if (_location.source->name().front() == '/')
-		item["uri"] = toFileURI(_location.source->name());
-	else
-		item["uri"] = toFileURI((_basePath / boost::filesystem::path(_location.source->name())).generic_string());
+	item["uri"] = toFileURI(_basePath / boost::filesystem::path(_location.source->name()));
 	item["range"] = toJsonRange(_location);
 	return item;
 }
@@ -143,8 +133,16 @@ std::pair<size_t, size_t> offsetsOf(std::string const& _text, LineColumnRange _r
 
 } // }}} end helpers
 
-LanguageServer::LanguageServer(Logger _logger, istream& _in, ostream& _out):
-	m_client{make_unique<JSONTransport>(_in, _out, _logger)},
+LanguageServer::LanguageServer(Logger _logger):
+	LanguageServer(
+		_logger,
+		make_unique<JSONTransport>(std::cin, std::cout, std::move(_logger))
+	)
+{
+}
+
+LanguageServer::LanguageServer(Logger _logger, std::unique_ptr<Transport> _transport):
+	m_client{std::move(_transport)},
 	m_handlers{
 		{"cancelRequest", [](auto, auto) {/*don't do anything for now, as we're synchronous*/}},
 		{"$/cancelRequest", [](auto, auto) {/*don't do anything for now, as we're synchronous*/}},
@@ -162,6 +160,21 @@ LanguageServer::LanguageServer(Logger _logger, istream& _in, ostream& _out):
 	},
 	m_logger{std::move(_logger)}
 {
+}
+
+DocumentPosition LanguageServer::extractDocumentPosition(Json::Value const& _json)
+{
+	DocumentPosition dpos{};
+
+	dpos.path = extractPathFromFileURI(_json["textDocument"]["uri"].asString()).value();
+
+	if (boost::algorithm::starts_with(dpos.path, m_basePath.generic_string()))
+		dpos.path = dpos.path.substr(m_basePath.generic_string().size());
+
+	dpos.position.line = _json["position"]["line"].asInt();
+	dpos.position.column = _json["position"]["character"].asInt();
+
+	return dpos;
 }
 
 void LanguageServer::changeConfiguration(Json::Value const& _settings)
@@ -192,7 +205,7 @@ void LanguageServer::documentContentUpdated(string const& _path, LineColumnRange
 	auto file = m_fileReader->sourceCodes().find(_path);
 	if (file == m_fileReader->sourceCodes().end())
 	{
-		log("LanguageServer: File to be modified not opened \"" + _path + "\"");
+		log("LanguageServer: File to be modified not opened \"{}\"", _path);
 		return;
 	}
 
@@ -248,12 +261,15 @@ constexpr DiagnosticSeverity toDiagnosticSeverity(Error::Type _errorType)
 
 bool LanguageServer::compile(std::string const& _path)
 {
-	log("compile: " + _path);
 	// TODO: optimize! do not recompile if nothing has changed (file(s) not flagged dirty).
 
 	auto const i = m_fileReader->sourceCodes().find(_path);
 	if (i == m_fileReader->sourceCodes().end())
+	{
+		log("source code not found for path: " + _path);
 		return false;
+	}
+	log("compile: " + _path + " (" + i->second + ")");
 
 	m_compilerStack.reset();
 	m_compilerStack = make_unique<CompilerStack>(bind(&FileReader::readFile, ref(*m_fileReader), _1, _2));
@@ -279,7 +295,7 @@ void LanguageServer::compileSource(std::string const& _path)
 	compile(_path);
 
 	Json::Value params;
-	params["uri"] = toFileURI(_path);
+	params["uri"] = toFileURI(m_basePath / _path);
 
 	params["diagnostics"] = Json::arrayValue;
 	for (shared_ptr<Error const> const& error: m_compilerStack->errors())
@@ -303,7 +319,7 @@ void LanguageServer::compileSource(std::string const& _path)
 		{
 			Json::Value jsonRelated;
 			jsonRelated["message"] = secondary.message;
-			jsonRelated["location"]["uri"] = toFileURI((m_basePath / boost::filesystem::path(secondary.sourceName)).generic_string());
+			jsonRelated["location"]["uri"] = toFileURI(m_basePath / boost::filesystem::path(secondary.sourceName));
 			jsonRelated["location"]["range"] = toJsonRange(
 				secondary.position.line, secondary.startColumn,
 				secondary.position.line, secondary.endColumn
@@ -320,12 +336,19 @@ void LanguageServer::compileSource(std::string const& _path)
 frontend::ASTNode const* LanguageServer::findASTNode(LineColumn _position, std::string const& _fileName)
 {
 	if (!m_compilerStack)
+	{
+		log("findASTNode: {}:{}:{}: No compiler stack.", _fileName, _position.line, _position.column);
 		return nullptr;
+	}
 
-	// TODO: calling ast(...) throws if no AST is present (build failed),
-	// so catch this in at least document updates, so errors can be sent out properly
+	if (m_compilerStack->state() < frontend::CompilerStack::AnalysisPerformed)
+	{
+		log("findASTNode: {}:{}:{}: Compilation failed.", _fileName, _position.line, _position.column);
+		return nullptr;
+	}
+
 	frontend::SourceUnit const& sourceUnit = m_compilerStack->ast(_fileName);
-	trace("findASTNode: "s + to_string(_position.line) + ":" + to_string(_position.column));
+	log("findASTNode: {}:{}:{}", _fileName, _position.line, _position.column);
 	auto const sourcePos = sourceUnit.location().source->translateLineColumnToPosition(_position.line, _position.column);
 
 	if (!sourcePos.has_value())
@@ -418,7 +441,7 @@ vector<SourceLocation> LanguageServer::references(DocumentPosition _documentPosi
 	ASTNode const* sourceNode = findASTNode(_documentPosition.position, sourceName);
 	if (!sourceNode)
 	{
-		trace("AST node not found");
+		trace("references: AST node not found");
 		return {};
 	}
 
@@ -474,6 +497,13 @@ vector<SourceLocation> LanguageServer::references(DocumentPosition _documentPosi
 vector<DocumentHighlight> LanguageServer::semanticHighlight(DocumentPosition _documentPosition)
 {
 	solAssert(m_compilerStack.get() != nullptr, "");
+	log("highlight: {}", _documentPosition.path);
+
+	if (m_compilerStack->state() < frontend::CompilerStack::AnalysisPerformed)
+	{
+		log("semanticHighlight: no compiler stack.");
+		return {};
+	}
 
 	frontend::SourceUnit const& sourceUnit = m_compilerStack->ast(_documentPosition.path);
 	ASTNode const* sourceNode = findASTNode(_documentPosition.position, _documentPosition.path);
@@ -585,7 +615,7 @@ bool LanguageServer::run()
 }
 
 #define MYDEBUG 0
-void LanguageServer::handle_initialize(MessageId _id, Json::Value const& _args)
+void LanguageServer::handle_initialize(MessageID _id, Json::Value const& _args)
 {
 	string rootPath;
 	if (Json::Value uri = _args["rootUri"])
@@ -649,13 +679,13 @@ void LanguageServer::handle_initialize(MessageId _id, Json::Value const& _args)
 	// }}}
 }
 
-void LanguageServer::handle_workspace_didChangeConfiguration(MessageId, Json::Value const& _args)
+void LanguageServer::handle_workspace_didChangeConfiguration(MessageID, Json::Value const& _args)
 {
 	if (_args["settings"].isObject())
 		changeConfiguration(_args["settings"]);
 }
 
-void LanguageServer::handle_exit(MessageId _id, Json::Value const& /*_args*/)
+void LanguageServer::handle_exit(MessageID _id, Json::Value const& /*_args*/)
 {
 	m_exitRequested = true;
 	auto const exitCode = m_shutdownRequested ? 0 : 1;
@@ -666,13 +696,14 @@ void LanguageServer::handle_exit(MessageId _id, Json::Value const& /*_args*/)
 	m_client->reply(_id, replyArgs);
 }
 
-void LanguageServer::handle_textDocument_didOpen(MessageId /*_id*/, Json::Value const& _args)
+void LanguageServer::handle_textDocument_didOpen(MessageID /*_id*/, Json::Value const& _args)
 {
 	// decoding
 	if (!_args["textDocument"])
 		return;
 
-	auto path = extractPathFromFileURI(_args["textDocument"]["uri"].asString()).value();
+	auto const fullPath = extractPathFromFileURI(_args["textDocument"]["uri"].asString()).value();
+	auto path = fullPath;
 	if (boost::algorithm::starts_with(path, m_basePath.generic_string()))
 		path = path.substr(m_basePath.generic_string().size());
 
@@ -683,14 +714,14 @@ void LanguageServer::handle_textDocument_didOpen(MessageId /*_id*/, Json::Value 
 	log("LanguageServer: Opening document: " + path);
 
 	m_fileReader->setSource(path, text);
-	m_pathMappings[path] = path;
+	m_pathMappings[fullPath] = path;
 
 	compileSource(path);
 
 	// no encoding
 }
 
-void LanguageServer::handle_textDocument_didChange(MessageId /*_id*/, Json::Value const& _args)
+void LanguageServer::handle_textDocument_didChange(MessageID /*_id*/, Json::Value const& _args)
 {
 	//auto const version = _args["textDocument"]["version"].asInt();
 	auto const path = extractPathFromFileURI(_args["textDocument"]["uri"].asString()).value();
@@ -729,7 +760,7 @@ void LanguageServer::handle_textDocument_didChange(MessageId /*_id*/, Json::Valu
 		compileSource(path);
 }
 
-void LanguageServer::handle_textDocument_definition(MessageId _id, Json::Value const& _args)
+void LanguageServer::handle_textDocument_definition(MessageID _id, Json::Value const& _args)
 {
 	DocumentPosition const dpos = extractDocumentPosition(_args);
 
@@ -799,7 +830,7 @@ void LanguageServer::handle_textDocument_definition(MessageId _id, Json::Value c
 	m_client->reply(_id, reply);
 }
 
-void LanguageServer::handle_textDocument_hover(MessageId _id, Json::Value const& _args)
+void LanguageServer::handle_textDocument_hover(MessageID _id, Json::Value const& _args)
 {
 	auto const dpos = extractDocumentPosition(_args);
 
@@ -820,9 +851,13 @@ void LanguageServer::handle_textDocument_hover(MessageId _id, Json::Value const&
 	m_client->reply(_id, reply);
 }
 
-void LanguageServer::handle_textDocument_highlight(MessageId _id, Json::Value const& _args)
+void LanguageServer::handle_textDocument_highlight(MessageID _id, Json::Value const& _args)
 {
 	auto const dpos = extractDocumentPosition(_args);
+	log("highlight: {}:{}:{}", dpos.path, dpos.position.line, dpos.position.column);
+
+	if (!m_compilerStack)
+		compile(dpos.path);
 
 	Json::Value jsonReply = Json::arrayValue;
 	for (DocumentHighlight const& highlight: semanticHighlight(dpos))
@@ -837,7 +872,7 @@ void LanguageServer::handle_textDocument_highlight(MessageId _id, Json::Value co
 	m_client->reply(_id, jsonReply);
 }
 
-void LanguageServer::handle_textDocument_references(MessageId _id, Json::Value const& _args)
+void LanguageServer::handle_textDocument_references(MessageID _id, Json::Value const& _args)
 {
 	auto const dpos = extractDocumentPosition(_args);
 
@@ -912,19 +947,18 @@ void LanguageServer::handle_textDocument_references(MessageId _id, Json::Value c
 	m_client->reply(_id, jsonReply);
 }
 
-void LanguageServer::log(string const& _message)
+void LanguageServer::log(string _message)
 {
 	if (m_trace < Trace::Messages)
 		return;
 
-	Json::Value json = Json::objectValue;
-	json["type"] = static_cast<int>(Trace::Messages);
-	json["message"] = _message;
-
-	m_client->notify("window/logMessage", json);
-
 	if (m_logger)
 		m_logger(_message);
+
+	// Json::Value json = Json::objectValue;
+	// json["type"] = static_cast<int>(Trace::Messages);
+	// json["message"] = move(_message);
+	// m_client->notify("window/logMessage", json);
 }
 
 void LanguageServer::trace(string const& _message)
@@ -946,11 +980,11 @@ void LanguageServer::handleMessage(Json::Value const& _jsonMessage)
 {
 	string const methodName = _jsonMessage["method"].asString();
 
-	MessageId const id = _jsonMessage["id"].isInt()
-		? MessageId{to_string(_jsonMessage["id"].asInt())}
+	MessageID const id = _jsonMessage["id"].isInt()
+		? MessageID{to_string(_jsonMessage["id"].asInt())}
 		: _jsonMessage["id"].isString()
-			? MessageId{_jsonMessage["id"].asString()}
-			: MessageId{};
+			? MessageID{_jsonMessage["id"].asString()}
+			: MessageID{};
 
 	auto const handler = m_handlers.find(methodName);
 	if (handler == m_handlers.end())
