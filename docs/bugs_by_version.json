@@ -1539,5 +1539,9 @@
             "ABIDecodeTwoDimensionalArrayMemory"
         ],
         "released": "2021-03-23"
+    },
+    "0.8.4": {
+        "bugs": [],
+        "released": "2021-04-21"
     }
 }
