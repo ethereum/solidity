@@ -27,7 +27,7 @@
  * @def EVMC_NOEXCEPT
  * Safe way of marking a function with `noexcept` C++ specifier.
  */
-#if __cplusplus
+#ifdef __cplusplus
 #define EVMC_NOEXCEPT noexcept
 #else
 #define EVMC_NOEXCEPT
