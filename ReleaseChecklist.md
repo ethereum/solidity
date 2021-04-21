@@ -20,25 +20,29 @@
 
 ### Create the Release
  - [ ] Create Github release page: https://github.com/ethereum/solidity/releases/new
- - [ ] On the release page, select the ``develop`` branch as new target and set tag to the new version (e.g. `v0.5.4`) (make sure you only `SAVE DRAFT` instead of `PUBLISH RELEASE` before the actual release)
+ - [ ] On the release page, select the ``develop`` branch as new target and set tag to the new version (e.g. `v0.8.5`) (make sure you only `SAVE DRAFT` instead of `PUBLISH RELEASE` before the actual release)
  - [ ] Thank voluntary contributors in the Github release page (use ``git shortlog -s -n -e v0.5.3..origin/develop``).
- - [ ] Make a final check that there are no platform-dependency issues in the ``solidity-test-bytecode`` repository.
  - [ ] Check that all tests on the latest commit in ``develop`` are green.
  - [ ] Click the `PUBLISH RELEASE` button on the release page, creating the tag.
- - [ ] Wait for the CI runs on the tag itself (travis will push the source archive and the static linux binary onto the Github release page).
+ - [ ] Wait for the CI runs on the tag itself.
 
 ### Download Binaries
  - [ ] Take the ``solc.exe`` binary from the ``b_win_release`` run of the released commit in circle-ci and add it to the release page as ``solc-windows.exe``.
  - [ ] Take the ``solc`` binary from the ``b_osx`` run of the released commit in circle-ci and add it to the release page as ``solc-macos``.
- - [ ] If not done by travis: Take the ``soljson.js`` binary from the ``b_ems`` run of the released commit in circle-ci and add it to the release page as ``soljson.js``.
+ - [ ] Take the ``solc`` binary from the ``b_ubu_static`` run of the released commit in circle-ci and add it to the release page as ``solc-static-linux``.
+ - [ ] Take the ``soljson.js`` binary from the ``b_ems`` run of the released commit in circle-ci and add it to the release page as ``soljson.js``.
 
 ### Update [solc-bin](https://github.com/ethereum/solc-bin/)
- - [ ] Copy ``soljson.js`` to ``solc-bin/bin/soljson-v$VERSION+commit.$COMMIT.js``
- - [ ] Copy ``solc-static-linux`` from the release page to ``solc-bin/linux-amd64/solc-linux-amd64-v$VERSION+commit.$COMMIT``
- - [ ] Make it executable.
- - [ ] Copy ``solc-macos`` from the release page to ``solc-bin/macosx-amd64/solc-macosx-amd64-v$VERSION+commit.$COMMIT``
- - [ ] Make it executable.
- - [ ] Copy ``solc-windows.exe`` from the release page to ``solc-bin/windows-amd64/solc-windows-amd64-v$VERSION+commit.$COMMIT.exe``
+ - [ ] Copy files to solc-bin:
+     ```bash
+     VERSION=0.8.4
+     COMMIT="c7e474f2"
+     SOLC_BIN="/home/me/solc-bin"
+     chmod +x solc-static-linux solc-macos
+     cp soljson.js $SOLC_BIN/bin/soljson-v$VERSION+commit.$COMMIT.js
+     cp solc-static-linux $SOLC_BIN/linux-amd64/solc-linux-amd64-v$VERSION+commit.$COMMIT
+     cp solc-macos $SOLC_BIN/macosx-amd64/solc-macosx-amd64-v$VERSION+commit.$COMMIT
+     cp solc-windows.exe $SOLC_BIN/windows-amd64/solc-windows-amd64-v$VERSION+commit.$COMMIT.exe
  - [ ] Run ``./update --reuse-hashes`` in ``solc-bin`` and verify that the script has updated ``list.js``, ``list.txt`` and ``list.json`` files correctly and that symlinks to the new release have been added in ``solc-bin/wasm/`` and ``solc-bin/emscripten-wasm32/``.
  - [ ] Create a pull request and merge.
 
