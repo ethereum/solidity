@@ -6,7 +6,7 @@ contract Scope {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // getStateVar() -> 42

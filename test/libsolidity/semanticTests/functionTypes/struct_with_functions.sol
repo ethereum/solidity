@@ -29,7 +29,7 @@ contract Flow {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 1, 2

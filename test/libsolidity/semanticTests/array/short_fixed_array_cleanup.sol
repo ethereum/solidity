@@ -8,8 +8,8 @@ contract c {
     function clear() public { delete data; }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // storage: empty
 // fill() ->

@@ -35,8 +35,8 @@ contract Child is Base {
 	}
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // x() -> 0
 // y() -> 0

@@ -6,3 +6,4 @@ import "s2.sol" as M;
 contract C {
   function f() public pure returns (int) { return M.e; }
 }
+// ----

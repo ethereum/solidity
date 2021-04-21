@@ -19,8 +19,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // short_dyn() -> 0x20, 3, "abc"
 // long_dyn() -> 0x20, 80, "12345678901234567890123456789012", "34567890123456789012345678901234", "5678901234567890"

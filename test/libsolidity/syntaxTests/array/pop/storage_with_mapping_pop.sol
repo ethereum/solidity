@@ -5,3 +5,4 @@ contract C {
         array.pop();
     }
 }
+// ----

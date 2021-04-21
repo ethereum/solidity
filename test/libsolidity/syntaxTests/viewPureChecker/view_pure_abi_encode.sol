@@ -6,3 +6,4 @@ contract C {
         r = abi.encodeWithSignature("f(uint256)", 4);
     }
 }
+// ----

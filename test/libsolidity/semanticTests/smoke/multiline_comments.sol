@@ -4,8 +4,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(uint256,uint256,uint256,uint256,uint256): 1, 1, 1, 1, 1
 // # A comment on the function parameters. #

@@ -7,7 +7,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // f() -> 0x20, 40, "12345678901234567890123456789012", "34567890"

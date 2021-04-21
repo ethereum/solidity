@@ -5,3 +5,4 @@ contract B is A {
     function f() public override pure {
     }
 }
+// ----

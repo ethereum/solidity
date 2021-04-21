@@ -14,9 +14,9 @@ contract C {
     }
 }
 // ====
-// compileToEwasm: also
 // EVMVersion: >homestead
 // allowNonExistingFunctions: true
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // _() -> FAILURE

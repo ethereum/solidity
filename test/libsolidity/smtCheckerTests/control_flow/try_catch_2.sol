@@ -7,6 +7,6 @@ contract C {
 	}
 }
 // ====
-// SMTEngine: all
 // EVMVersion: >=byzantium
+// SMTEngine: all
 // ----

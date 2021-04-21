@@ -3,3 +3,4 @@ contract C {
         return payable(address(x));
     }
 }
+// ----

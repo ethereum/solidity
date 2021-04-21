@@ -17,3 +17,4 @@ contract C {
 }
 // ====
 // EVMVersion: >=istanbul
+// ----

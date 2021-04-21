@@ -11,3 +11,4 @@ contract B is A {
     function h(uint[] memory) public override { dummy = 42; }
     function i(uint[] memory) public override payable {}
 }
+// ----

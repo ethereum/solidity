@@ -8,8 +8,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
 // compileToEwasm: also
+// compileViaYul: true
 // ----
 // constructor() ->
 // f() -> 0x0a, 0x0a

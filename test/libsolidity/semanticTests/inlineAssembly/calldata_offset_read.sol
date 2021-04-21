@@ -11,8 +11,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(bytes): 0x20, 0, 0 -> 0x44
 // f(bytes): 0x22, 0, 0, 0 -> 0x46

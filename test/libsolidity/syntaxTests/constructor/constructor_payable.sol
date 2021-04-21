@@ -8,3 +8,4 @@ contract D {
        return c;
     }
 }
+// ----

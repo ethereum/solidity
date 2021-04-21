@@ -6,7 +6,7 @@ contract A {
 	}
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 2

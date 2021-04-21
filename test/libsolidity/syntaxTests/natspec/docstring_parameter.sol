@@ -9,3 +9,4 @@ contract C {
     function f(address _from, address _5to, uint256 value) internal {
     }
 }
+// ----

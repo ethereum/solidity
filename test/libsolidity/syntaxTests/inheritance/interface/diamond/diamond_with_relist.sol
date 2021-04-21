@@ -13,3 +13,4 @@ interface SubB is Parent {
 contract C is SubA, SubB {
     function test() external pure override(SubA, SubB) returns (uint256) { return 42; }
 }
+// ----

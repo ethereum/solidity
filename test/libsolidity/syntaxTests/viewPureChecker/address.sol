@@ -6,3 +6,4 @@ contract C {
         return address(0).balance;
     }
 }
+// ----

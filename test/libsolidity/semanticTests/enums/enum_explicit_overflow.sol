@@ -22,8 +22,8 @@ contract test {
 }
 
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // ----
 // getChoiceExp(uint256): 2 -> 2
 // getChoiceExp(uint256): 3 -> FAILURE, hex"4e487b71", 33 # These should throw #

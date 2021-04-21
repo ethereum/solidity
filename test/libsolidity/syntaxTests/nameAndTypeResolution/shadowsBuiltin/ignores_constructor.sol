@@ -1,3 +1,4 @@
 contract C {
     constructor() {}
 }
+// ----

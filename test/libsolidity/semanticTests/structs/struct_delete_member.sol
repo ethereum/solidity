@@ -17,7 +17,7 @@ contract test {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // deleteMember() -> 0

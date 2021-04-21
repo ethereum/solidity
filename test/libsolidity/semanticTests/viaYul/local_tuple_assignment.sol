@@ -22,8 +22,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // x() -> 17
 // f(uint256,uint256): 23, 42 -> 23, 42

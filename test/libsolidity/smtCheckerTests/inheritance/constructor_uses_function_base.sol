@@ -17,3 +17,4 @@ contract C is B {
 }
 // ====
 // SMTEngine: all
+// ----

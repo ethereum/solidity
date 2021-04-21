@@ -10,3 +10,4 @@ abstract contract B is I {
 }
 contract C is A, B {
 }
+// ----

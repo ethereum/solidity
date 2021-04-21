@@ -31,8 +31,8 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // eq() -> true
 // neq() -> false

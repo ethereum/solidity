@@ -4,3 +4,4 @@ contract C {
 		emit Test(this.f);
 	}
 }
+// ----

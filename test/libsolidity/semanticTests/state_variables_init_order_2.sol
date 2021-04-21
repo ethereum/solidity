@@ -13,7 +13,7 @@ contract B is A {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // z() -> 1

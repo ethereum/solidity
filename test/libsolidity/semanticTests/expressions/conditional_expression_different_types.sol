@@ -6,8 +6,8 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(bool): true -> 0xcd
 // f(bool): false -> 0xabab

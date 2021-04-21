@@ -6,3 +6,4 @@ contract C {
 function f() {}
 // ====
 // SMTEngine: all
+// ----

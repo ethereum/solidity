@@ -8,3 +8,4 @@ object "outer" {
                 data "innery" "def"
         }
 }
+// ----

@@ -6,3 +6,4 @@ contract C {
   }
   int constant c = 1;
 }
+// ----

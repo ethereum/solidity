@@ -5,3 +5,4 @@ contract A{
 }
 // ====
 // SMTEngine: all
+// ----

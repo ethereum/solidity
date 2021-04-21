@@ -3,3 +3,4 @@
 // NOTE: The text above is reversed using Unicode directional marks. In raw form it would look like this:
 // <LRO>0.3-LPG :reifitnedI-esneciL-XDPS<PDF>
 contract C {}
+// ----

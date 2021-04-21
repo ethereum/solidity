@@ -7,3 +7,4 @@ contract B {
 contract C is A, B {
     modifier f() override(A,B) { _; }
 }
+// ----

@@ -22,3 +22,4 @@ contract C {
 }
 // ====
 // SMTEngine: all
+// ----

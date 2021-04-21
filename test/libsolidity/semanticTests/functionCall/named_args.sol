@@ -4,8 +4,8 @@ contract test {
     function c() public returns (uint r) { r = a({b: 2, c: 3, a: 1}); }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // b() -> 123
 // c() -> 123

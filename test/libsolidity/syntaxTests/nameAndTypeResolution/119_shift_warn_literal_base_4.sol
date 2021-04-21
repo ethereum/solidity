@@ -4,3 +4,4 @@ contract test {
          return 10 >> x;
     }
 }
+// ----
