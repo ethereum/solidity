@@ -13,6 +13,7 @@ Language Features:
 Compiler Features:
  * Analysis: Properly detect circular references to the bytecode of other contracts across all function calls.
  * Commandline Interface: Model checker option ``--model-checker-targets`` also accepts ``outOfBounds``.
+ * Commandline Interface: New model checker option ``--model-checker-contracts`` allows users to select which contracts should be analyzed as the most derived.
  * Low-Level Inliner: Inline ordinary jumps to small blocks and jumps to small blocks that terminate.
  * SMTChecker: Deprecate ``pragma experimental SMTChecker;`` and set default model checker engine to ``none``.
  * SMTChecker: Report local variables in CHC counterexamples.
@@ -20,6 +21,7 @@ Compiler Features:
  * SMTChecker: Support file level functions and constants.
  * Standard JSON: Model checker option ``settings.modelChecker.targets`` also accepts ``outOfBounds``.
  * Standard JSON: Model checker option ``settings.modelChecker.targets`` takes an array of string targets instead of string of comma separated targets.
+ * Standard JSON: New model checker option ``settings.modelChecker.contracts`` allows users to select which contracts should be analyzed as the most derived.
  * Yul Optimizer: Added a new step FunctionSpecializer, that specializes a function with its literal arguments.
  * Yul EVM Code Transform: Stack Optimization: Reuse slots of unused function arguments and defer allocating stack slots for return variables until after expression statements and assignments that do not reference them.
  * NatSpec: Allow ``@notice`` tag on non-public state variables and local variable declarations. The documentation will only be part of the AST, under the field ``documentation``.

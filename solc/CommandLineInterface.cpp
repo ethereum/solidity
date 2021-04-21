@@ -155,6 +155,7 @@ static string const g_strMachine = "machine";
 static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
+static string const g_strModelCheckerContracts = "model-checker-contracts";
 static string const g_strModelCheckerEngine = "model-checker-engine";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
@@ -226,6 +227,7 @@ static string const g_argMachine = g_strMachine;
 static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
+static string const g_argModelCheckerContracts = g_strModelCheckerContracts;
 static string const g_argModelCheckerEngine = g_strModelCheckerEngine;
 static string const g_argModelCheckerTargets = g_strModelCheckerTargets;
 static string const g_argModelCheckerTimeout = g_strModelCheckerTimeout;
@@ -1053,6 +1055,13 @@ General Information)").c_str(),
 	po::options_description smtCheckerOptions("Model Checker Options");
 	smtCheckerOptions.add_options()
 		(
+			g_strModelCheckerContracts.c_str(),
+			po::value<string>()->value_name("default,<source>:<contract>")->default_value("default"),
+			"Select which contracts should be analyzed using the form <source>:<contract>."
+			"Multiple pairs <source>:<contract> can be selected at the same time, separated by a comma "
+			"and no spaces."
+		)
+		(
 			g_strModelCheckerEngine.c_str(),
 			po::value<string>()->value_name("all,bmc,chc,none")->default_value("none"),
 			"Select model checker engine."
@@ -1415,6 +1424,19 @@ bool CommandLineInterface::processInput()
 		}
 	}
 
+	if (m_args.count(g_argModelCheckerContracts))
+	{
+		string contractsStr = m_args[g_argModelCheckerContracts].as<string>();
+		optional<ModelCheckerContracts> contracts = ModelCheckerContracts::fromString(contractsStr);
+		if (!contracts)
+		{
+			serr() << "Invalid option for --" << g_argModelCheckerContracts << ": " << contractsStr << endl;
+			return false;
+		}
+		m_modelCheckerSettings.contracts = move(*contracts);
+	}
+
+
 	if (m_args.count(g_argModelCheckerEngine))
 	{
 		string engineStr = m_args[g_argModelCheckerEngine].as<string>();
@@ -1452,7 +1474,12 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argMetadataHash))
 			m_compiler->setMetadataHash(m_metadataHash);
-		if (m_args.count(g_argModelCheckerEngine) || m_args.count(g_argModelCheckerTimeout))
+		if (
+			m_args.count(g_argModelCheckerContracts) ||
+			m_args.count(g_argModelCheckerEngine) ||
+			m_args.count(g_argModelCheckerTargets) ||
+			m_args.count(g_argModelCheckerTimeout)
+		)
 			m_compiler->setModelCheckerSettings(m_modelCheckerSettings);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);

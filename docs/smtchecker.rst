@@ -472,6 +472,35 @@ A common subset of targets might be, for example:
 There is no precise heuristic on how and when to split verification targets,
 but it can be useful especially when dealing with large contracts.
 
+Verified Contracts
+==================
+
+By default all the deployable contracts in the given sources are analyzed separately as
+the one that will be deployed. This means that if a contract has many direct
+and indirect inheritance parents, all of them will be analyzed on their own,
+even though only the most derived will be accessed directly on the blockchain.
+This causes an unnecessary burden on the SMTChecker and the solver.  To aid
+cases like this, users can specify which contracts should be analyzed as the
+deployed one. The parent contracts are of course still analyzed, but only in
+the context of the most derived contract, reducing the complexity of the
+encoding and generated queries. Note that abstract contracts are by default
+not analyzed as the most derived by the SMTChecker.
+
+The chosen contracts can be given via a comma-separated list (whitespace is not
+allowed) of <source>:<contract> pairs in the CLI:
+``--model-checker-contracts "<source1.sol:contract1>,<source2.sol:contract2>,<source2.sol:contract3>"``,
+and via the object ``settings.modelChecker.contracts`` in the :ref:`JSON input<compiler-api>`,
+which has the following form:
+
+.. code-block:: none
+
+  contracts
+  {
+      "source1.sol": ["contract1"],
+      "source2.sol": ["contract2", "contract3"]
+  }
+
+
 .. _smtchecker_engines:
 
 Model Checking Engines

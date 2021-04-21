@@ -26,6 +26,33 @@
 namespace solidity::frontend
 {
 
+struct ModelCheckerContracts
+{
+	/// By default all contracts are analyzed.
+	static ModelCheckerContracts Default() { return {}; }
+
+	/// Parses a string of the form <path>:<contract>,<path>:contract,...
+	/// and returns nullopt if a path or contract name is empty.
+	static std::optional<ModelCheckerContracts> fromString(std::string const& _contracts);
+
+	/// @returns true if all contracts should be analyzed.
+	bool isDefault() const { return contracts.empty(); }
+
+	bool has(std::string const& _source) const { return contracts.count(_source); }
+	bool has(std::string const& _source, std::string const& _contract) const
+	{
+		return has(_source) && contracts.at(_source).count(_contract);
+	}
+
+	/// Represents which contracts should be analyzed by the SMTChecker
+	/// as the most derived.
+	/// The key is the source file. If the map is empty, all sources must be analyzed.
+	/// For each source, contracts[source] represents the contracts in that source
+	/// that should be analyzed.
+	/// If the set of contracts is empty, all contracts in that source should be analyzed.
+	std::map<std::string, std::set<std::string>> contracts;
+};
+
 struct ModelCheckerEngine
 {
 	bool bmc = false;
@@ -58,7 +85,7 @@ enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, Unde
 
 struct ModelCheckerTargets
 {
-	static ModelCheckerTargets All() { return *fromString("default"); }
+	static ModelCheckerTargets Default() { return *fromString("default"); }
 
 	static std::optional<ModelCheckerTargets> fromString(std::string const& _targets);
 
@@ -75,8 +102,9 @@ struct ModelCheckerTargets
 
 struct ModelCheckerSettings
 {
+	ModelCheckerContracts contracts = ModelCheckerContracts::Default();
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
-	ModelCheckerTargets targets = ModelCheckerTargets::All();
+	ModelCheckerTargets targets = ModelCheckerTargets::Default();
 	std::optional<unsigned> timeout;
 };
 
