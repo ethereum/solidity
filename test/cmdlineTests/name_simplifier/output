@@ -139,14 +139,14 @@ object "C_59" {
             }
             function storage_array_index_access_struct_S_1252() -> slot, offset
             {
-                if iszero(lt(slot, 0x02)) { panic_error_0x32() }
-                slot := add(slot, slot)
+                if iszero(lt(offset, 0x02)) { panic_error_0x32() }
+                slot := add(offset, offset)
                 offset := offset
             }
             function storage_array_index_access_struct_S() -> slot, offset
             {
-                if iszero(lt(slot, 0x02)) { panic_error_0x32() }
-                slot := add(0x02, slot)
+                if iszero(lt(offset, 0x02)) { panic_error_0x32() }
+                slot := add(0x02, offset)
                 offset := offset
             }
         }
