@@ -38,7 +38,9 @@ object "Arraysum_34" {
                         }
                         {
                             mstore(_1, _1)
-                            var_sum := checked_add_uint256(var_sum, sload(add(keccak256(_1, 0x20), var_i)))
+                            let _3 := sload(add(keccak256(_1, 0x20), var_i))
+                            if gt(var_sum, not(_3)) { panic_error_0x11() }
+                            var_sum := add(var_sum, _3)
                         }
                         let memPos := mload(64)
                         return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
@@ -50,11 +52,6 @@ object "Arraysum_34" {
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
-            }
-            function checked_add_uint256(x, y) -> sum
-            {
-                if gt(x, not(y)) { panic_error_0x11() }
-                sum := add(x, y)
             }
             function panic_error_0x11()
             {

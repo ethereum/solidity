@@ -36,12 +36,13 @@ struct EVMDialect;
  * The default values are meant to reflect specifically the number of AST nodes.
  *
  * The following AST elements have a default cost of zero (because the cleanup phase would
- * remove them anyway or they are just wrappers around something else will be counted instead):
+ * remove them anyway or they are just wrappers around something else that will be counted instead):
  *  - expression statement (only the expression inside has a cost)
  *  - block (only the statements inside have a cost)
  *  - variable references
  *  - variable declarations (only the right hand side has a cost)
  *  - assignments (only the value has a cost)
+ *  - literal zeros (we optimistically assume they can be copied from somewhere else)
  *
  * Each statement incurs and additional cost of one
  * per jump/branch. This means if, break and continue statements have a cost of 2,
@@ -68,6 +69,7 @@ struct CodeWeights
 	size_t functionCallCost = 1;
 	size_t identifierCost = 0;
 	size_t literalCost = 1;
+	size_t literalZeroCost = 0;
 
 	size_t costOf(Statement const& _statement) const;
 	size_t costOf(Expression const& _expression) const;
