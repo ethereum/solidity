@@ -47,9 +47,9 @@
 //     }
 //     function abi_decode_bytes_calldata(offset, end) -> arrayPos, length
 //     {
-//         if iszero(slt(add(offset, 0x1f), end)) { revert(arrayPos, arrayPos) }
+//         if iszero(slt(add(offset, 0x1f), end)) { revert(0, 0) }
 //         length := calldataload(offset)
-//         if gt(length, 0xffffffffffffffff) { revert(arrayPos, arrayPos) }
+//         if gt(length, 0xffffffffffffffff) { revert(0, 0) }
 //         arrayPos := add(offset, 0x20)
 //         if gt(add(add(offset, length), 0x20), end) { revert(0, 0) }
 //     }

@@ -10,5 +10,5 @@
 // {
 //     sstore(sub(f(), f()), 8)
 //     function f() -> a
-//     { mstore(a, 1) }
+//     { mstore(0, 1) }
 // }

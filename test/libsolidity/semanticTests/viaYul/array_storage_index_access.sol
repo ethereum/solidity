@@ -18,7 +18,7 @@ contract C {
 // ----
 // test_indices(uint256): 1 ->
 // test_indices(uint256): 129 ->
-// gas irOptimized: 3456682
+// gas irOptimized: 3457322
 // gas legacy: 3340105
 // gas legacyOptimized: 3280773
 // test_indices(uint256): 5 ->
@@ -27,13 +27,13 @@ contract C {
 // gas legacyOptimized: 455849
 // test_indices(uint256): 10 ->
 // test_indices(uint256): 15 ->
-// gas irOptimized: 110410
+// gas irOptimized: 110435
 // test_indices(uint256): 0xFF ->
-// gas irOptimized: 4336990
+// gas irOptimized: 4338190
 // gas legacy: 4107867
 // gas legacyOptimized: 3991807
 // test_indices(uint256): 1000 ->
-// gas irOptimized: 21236892
+// gas irOptimized: 21240617
 // gas legacy: 20360399
 // gas legacyOptimized: 19921344
 // test_indices(uint256): 129 ->
