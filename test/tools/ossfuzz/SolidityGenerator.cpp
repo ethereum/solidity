@@ -134,7 +134,8 @@ void SourceUnitGenerator::setup()
 {
 	addGenerators({
 		{mutator->generator<ImportGenerator>(), s_maxImports},
-		{mutator->generator<PragmaGenerator>(), 1}
+		{mutator->generator<PragmaGenerator>(), 1},
+		{mutator->generator<ContractGenerator>(), 1}
 	});
 }
 
@@ -182,6 +183,11 @@ string ImportGenerator::visit()
 		state->sourceUnitState[state->currentPath()]->addImportedSourcePath(importPath);
 	}
 	return os.str();
+}
+
+string ContractGenerator::visit()
+{
+	return "contract C {}\n";
 }
 
 template <typename T>
