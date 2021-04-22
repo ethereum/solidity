@@ -19,11 +19,11 @@
 */
 
 #include <libyul/optimiser/Metrics.h>
+#include <libyul/optimiser/OptimizerUtilities.h>
 
 #include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Utilities.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
@@ -139,13 +139,11 @@ void CodeCost::operator()(FunctionCall const& _funCall)
 {
 	ASTWalker::operator()(_funCall);
 
-	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-		if (BuiltinFunctionForEVM const* f = dialect->builtin(_funCall.functionName.name))
-			if (f->instruction)
-			{
-				addInstructionCost(*f->instruction);
-				return;
-			}
+	if (auto instruction = toEVMInstruction(m_dialect, _funCall.functionName.name))
+	{
+		addInstructionCost(*instruction);
+		return;
+	}
 
 	m_cost += 49;
 }

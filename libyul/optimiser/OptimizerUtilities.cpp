@@ -21,6 +21,8 @@
 
 #include <libyul/optimiser/OptimizerUtilities.h>
 
+#include <libyul/backends/evm/EVMDialect.h>
+
 #include <libyul/Dialect.h>
 #include <libyul/AST.h>
 
@@ -46,4 +48,12 @@ void yul::removeEmptyBlocks(Block& _block)
 bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulString const& _identifier)
 {
 	return _identifier.empty() || TokenTraits::isYulKeyword(_identifier.str()) || _dialect.reservedIdentifier(_identifier);
+}
+
+optional<evmasm::Instruction> yul::toEVMInstruction(Dialect const& _dialect, YulString const& _name)
+{
+	if (auto const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
+		if (BuiltinFunctionForEVM const* builtin = dialect->builtin(_name))
+			return builtin->instruction;
+	return nullopt;
 }
