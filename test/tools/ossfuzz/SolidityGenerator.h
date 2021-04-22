@@ -335,6 +335,16 @@ public:
 	std::string name() override { return "Import generator"; }
 };
 
+class ContractGenerator: public GeneratorBase
+{
+public:
+	explicit ContractGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override { return "Contract generator"; }
+};
+
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
 {
 public:
