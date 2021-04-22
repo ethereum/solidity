@@ -46,8 +46,8 @@ We have the same behavior for implicit delete, for example when array of structs
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0;
     contract C {
-        function f(uint a) public pure mod() returns (uint r) {
-            r = a++;
+        function f(uint _a) public pure mod() returns (uint _r) {
+            _r = _a++;
         }
         modifier mod() { _; _; }
     }
@@ -91,35 +91,80 @@ This causes differences in some contracts, for example:
 Previously, ``y`` would be set to 0. This is due to the fact that we would first initialize state variables: First, ``x`` is set to 0, and when initializing ``y``, ``f()`` would return 0 causing ``y`` to be 0 as well.
 With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, then call A's constructor which sets ``x`` to 42. Finally, when initializing ``y``, ``f()`` returns 42 causing ``y`` to be 42.
 
- * Copying `bytes` arrays from memory to storage is implemented in a different way. The old code generator always copies full words, while the new one cuts the byte array after its end. The old behaviour can lead to dirty data being copied after the end of the array (but still in the same storage slot).
+ * Copying ``bytes`` arrays from memory to storage is implemented in a different way. The old code generator always copies full words, while the new one cuts the byte array after its end. The old behaviour can lead to dirty data being copied after the end of the array (but still in the same storage slot).
 This causes differences in some contracts, for example:
 ::
-     // SPDX-License-Identifier: GPL-3.0
-     pragma solidity >0.8.0;
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.8.0;
 
-     contract C {
-         bytes x;
-         function f() public returns (uint r) {
-             bytes memory m = "tmp";
-             assembly {
-                 mstore(m, 8)
-                 mstore(add(m, 32), "deadbeef15dead")
-             }
-             x = m;
-             assembly {
-                 r := sload(x.slot)
-             }
-         }
-     }
+    contract C {
+        bytes x;
+        function f() public returns (uint _r) {
+            bytes memory m = "tmp";
+            assembly {
+                mstore(m, 8)
+                mstore(add(m, 32), "deadbeef15dead")
+            }
+            x = m;
+            assembly {
+                _r := sload(x.slot)
+            }
+        }
+    }
 
-Previously `f()` would return `0x6465616462656566313564656164000000000000000000000000000000000010` (it has correct length, and correct first 8 elements, but than it contains dirty data which was set via assembly).
-Now it is returning `0x6465616462656566000000000000000000000000000000000000000000000010` (it has correct length, and correct elements, but doesn't contain dirty data).
+Previously ``f()`` would return ``0x6465616462656566313564656164000000000000000000000000000000000010`` (it has correct length, and correct first 8 elements, but then it contains dirty data which was set via assembly).
+Now it is returning ``0x6465616462656566000000000000000000000000000000000000000000000010`` (it has correct length, and correct elements, but does not contain superfluous data).
+
+.. index:: ! evaluation order; expression
+
+* For the old code generator, the evaluation order of expressions is unspecified.
+  For the new code generator, we try to evaluate in source order (left to right), but do not guarantee it.
+  This can lead to semantic differences.
+
+For example:
+
+::
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.8.0;
+    contract C {
+        function preincr_u8(uint8 _a) public pure returns (uint8) {
+            return ++_a + _a;
+        }
+    }
+
+The function ``preincr_u8(1)`` returns the following values:
+- Old code generator: 3 (``1 + 2``) but the return value is unspecified in general
+- New code generator: 4 (``2 + 2``) but the return value is not guaranteed
+
+.. index:: ! evaluation order; function arguments
+
+On the other hand, function argument expressions are evaluated in the same order by both code generators.
+For example:
+
+::
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.8.0;
+    contract C {
+        function add(uint8 _a, uint8 _b) public pure returns (uint8) {
+            return _a + _b;
+        }
+        function g(uint8 _a, uint8 _b) public pure returns (uint8) {
+            return add(++_a + ++_b, _a + _b);
+        }
+    }
+
+The function ``g(1, 2)`` returns the following values:
+- Old code generator: ``10`` (``add(2 + 3, 2 + 3)``) but the return value is unspecified in general
+- New code generator: ``10`` but the return value is not guaranteed
 
 
 Internals
 =========
 
-Internal function pointers:
+Internal function pointers
+--------------------------
+
+.. index:: function pointers
 
 The old code generator uses code offsets or tags for values of internal function pointers. This is especially complicated since
 these offsets are different at construction time and after deployment and the values can cross this border via storage.
@@ -133,3 +178,34 @@ The ID ``0`` is reserved for uninitialized function pointers which then cause a 
 
 In the old code generator, internal function pointers are initialized with a special function that always causes a panic.
 This causes a storage write at construction time for internal function pointers in storage.
+
+Cleanup
+-------
+
+.. index:: cleanup, dirty bits
+
+The old code generator only performs cleanup before an operation whose result could be affected by the values of the dirty bits.
+The new code generator performs cleanup after any operation that can result in dirty bits.
+
+For example:
+::
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.8.0;
+    contract C {
+        function f(uint8 _a) public pure returns (uint _r1, uint _r2)
+        {
+            _a = ~_a;
+            assembly {
+                _r1 := _a
+            }
+            _r2 = _a;
+        }
+    }
+
+The function ``f(1)`` returns the following values:
+- Old code generator: (``fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
+- New code generator: (``00000000000000000000000000000000000000000000000000000000000000fe``, ``00000000000000000000000000000000000000000000000000000000000000fe``)
+
+Note that, unlike the new code generator, the old code generator does not perform a cleanup after the bit-not assignment (``_a = ~_a``).
+This results in different values being assigned (within the inline assembly block) to return value ``_r1`` between the old and new code generators.
+However, both code generators perform a cleanup before the new value of ``_a`` is assigned to ``_r2``.
