@@ -1419,7 +1419,7 @@ ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& 
 	expectToken(Token::For);
 	expectToken(Token::LParen);
 
-	// LTODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RParen?
+	// TODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RParen?
 	if (m_scanner->currentToken() != Token::Semicolon)
 		initExpression = parseSimpleStatement(ASTPointer<ASTString>());
 	expectToken(Token::Semicolon);
