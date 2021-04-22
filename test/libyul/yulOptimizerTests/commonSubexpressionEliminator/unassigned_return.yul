@@ -18,7 +18,7 @@
 //     sstore(a, a)
 //     function f() -> x
 //     {
-//         let y := x
-//         mstore(x, 7)
+//         let y := 0
+//         mstore(y, 7)
 //     }
 // }

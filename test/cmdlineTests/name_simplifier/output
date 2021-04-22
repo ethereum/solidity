@@ -45,7 +45,7 @@ object "C_59" {
                         for { } lt(i, _4) { i := add(i, 1) }
                         {
                             if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
-                            let value := allocate_memory_1245()
+                            let value := allocate_memory_1238()
                             mstore(value, calldataload(src))
                             mstore(dst, value)
                             dst := add(dst, _2)
@@ -65,18 +65,18 @@ object "C_59" {
                 mstore(add(headStart, _1), 64)
                 let length := mload(value1)
                 mstore(add(headStart, 64), length)
-                let i := tail
+                let i := 0
                 for { } lt(i, length) { i := add(i, _1) }
                 {
                     mstore(add(add(headStart, i), 96), mload(add(add(value1, i), _1)))
                 }
                 if gt(i, length)
                 {
-                    mstore(add(add(headStart, length), 96), tail)
+                    mstore(add(add(headStart, length), 96), 0)
                 }
                 tail := add(add(headStart, and(add(length, 31), not(31))), 96)
             }
-            function allocate_memory_1245() -> memPtr
+            function allocate_memory_1238() -> memPtr
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, 32)
@@ -90,40 +90,24 @@ object "C_59" {
                 if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
                 mstore(64, newFreePtr)
             }
-            function copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927() -> memPtr
-            {
-                let memPtr_1 := mload(64)
-                let newFreePtr := add(memPtr_1, 160)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr_1)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-                mstore(memPtr_1, 100)
-                memPtr := memPtr_1
-                mstore(add(memPtr_1, 0x20), "longstringlongstringlongstringlo")
-                mstore(add(memPtr_1, 64), "ngstringlongstringlongstringlong")
-                mstore(add(memPtr_1, 96), "stringlongstringlongstringlongst")
-                mstore(add(memPtr_1, 128), "ring")
-            }
-            function extract_from_storage_value_dynamict_uint256(slot_value, offset) -> value
-            {
-                value := shr(shl(3, offset), slot_value)
-            }
             function fun_sumArray(var_s_mpos) -> var, var_mpos
             {
-                if iszero(lt(var_mpos, mload(var_s_mpos))) { panic_error_0x32() }
-                let _1 := mload(mload(add(add(var_s_mpos, shl(5, var_mpos)), 32)))
-                let _2, _3 := storage_array_index_access_struct_S_1252()
-                sstore(_2, _1)
-                if iszero(lt(0x01, mload(var_s_mpos))) { panic_error_0x32() }
-                let _4 := mload(mload(add(var_s_mpos, 64)))
-                if iszero(lt(var_mpos, 0x02)) { panic_error_0x32() }
-                let slot := add(0x02, var_mpos)
-                let _5 := sload(slot)
-                let shiftBits := shl(3, var_mpos)
-                let mask := shl(shiftBits, not(0))
-                sstore(slot, or(and(_5, not(mask)), and(shl(shiftBits, _4), mask)))
-                let _6, _7 := storage_array_index_access_struct_S()
-                var := extract_from_storage_value_dynamict_uint256(sload(_6), _7)
-                var_mpos := copy_literal_to_memory_64902fd228f7ef267f3b474dd6ef84bae434cf5546eee948e7ca26df3eda1927()
+                if iszero(mload(var_s_mpos)) { panic_error_0x32() }
+                sstore(0x00, mload(mload(add(var_s_mpos, 32))))
+                if iszero(lt(1, mload(var_s_mpos))) { panic_error_0x32() }
+                let _1 := mload(mload(add(var_s_mpos, 64)))
+                sstore(0x02, _1)
+                var := _1
+                let memPtr := mload(64)
+                let newFreePtr := add(memPtr, 160)
+                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                mstore(64, newFreePtr)
+                mstore(memPtr, 100)
+                mstore(add(memPtr, 32), "longstringlongstringlongstringlo")
+                mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
+                mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
+                mstore(add(memPtr, 128), "ring")
+                var_mpos := memPtr
             }
             function panic_error_0x32()
             {
@@ -136,18 +120,6 @@ object "C_59" {
                 mstore(0, shl(224, 0x4e487b71))
                 mstore(4, 0x41)
                 revert(0, 0x24)
-            }
-            function storage_array_index_access_struct_S_1252() -> slot, offset
-            {
-                if iszero(lt(offset, 0x02)) { panic_error_0x32() }
-                slot := add(offset, offset)
-                offset := offset
-            }
-            function storage_array_index_access_struct_S() -> slot, offset
-            {
-                if iszero(lt(offset, 0x02)) { panic_error_0x32() }
-                slot := add(0x02, offset)
-                offset := offset
             }
         }
     }

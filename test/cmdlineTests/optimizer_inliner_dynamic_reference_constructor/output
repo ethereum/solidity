@@ -153,7 +153,7 @@ sub_0: assembly {
       mstore(0x00, shl(0xe0, 0x4e487b71))
       mstore(0x04, 0x51)
       revert(0x00, 0x24)
-        /* "#utility.yul":196:425   */
+        /* "#utility.yul":196:421   */
     tag_19:
         /* "#utility.yul":236:239   */
       0x00
@@ -169,29 +169,35 @@ sub_0: assembly {
       iszero
       tag_24
       jumpi
-      shl(0xe0, 0x4e487b71)
-        /* "#utility.yul":293:326   */
-      dup2
+        /* "#utility.yul":312:322   */
+      0x4e487b71
+        /* "#utility.yul":307:310   */
+      0xe0
+        /* "#utility.yul":303:323   */
+      shl
+        /* "#utility.yul":300:301   */
+      0x00
+        /* "#utility.yul":293:324   */
       mstore
-        /* "#utility.yul":349:353   */
+        /* "#utility.yul":347:351   */
       0x11
-        /* "#utility.yul":346:347   */
+        /* "#utility.yul":344:345   */
       0x04
-        /* "#utility.yul":339:354   */
+        /* "#utility.yul":337:352   */
       mstore
-        /* "#utility.yul":379:383   */
+        /* "#utility.yul":375:379   */
       0x24
-        /* "#utility.yul":300:303   */
-      dup2
-        /* "#utility.yul":367:384   */
+        /* "#utility.yul":372:373   */
+      0x00
+        /* "#utility.yul":365:380   */
       revert
         /* "#utility.yul":254:256   */
     tag_24:
       pop
-        /* "#utility.yul":410:419   */
+        /* "#utility.yul":406:415   */
       add
       swap1
-        /* "#utility.yul":244:425   */
+        /* "#utility.yul":244:421   */
       jump	// out
 
     auxdata: <AUXDATA REMOVED>
