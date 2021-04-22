@@ -79,6 +79,7 @@ struct Dialect: boost::noncopyable
 	virtual BuiltinFunction const* memoryLoadFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* storageStoreFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* storageLoadFunction(YulString /* _type */) const { return nullptr; }
+	virtual YulString hashFunction(YulString /* _type */ ) const { return YulString{}; }
 
 	/// Check whether the given type is legal for the given literal value.
 	/// Should only be called if the type exists in the dialect at all.

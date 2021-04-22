@@ -29,6 +29,8 @@
 #include <libyul/AST.h> // Needed for m_zero below.
 #include <libyul/SideEffects.h>
 
+#include <libsolutil/Common.h>
+
 #include <map>
 #include <set>
 
@@ -133,6 +135,9 @@ protected:
 
 	/// Returns true iff the variable is in scope.
 	bool inScope(YulString _variableName) const;
+
+	/// Returns the literal value of the identifier, if it exists.
+	std::optional<u256> valueOfIdentifier(YulString const& _name);
 
 	enum class StoreLoadLocation {
 		Memory = 0,

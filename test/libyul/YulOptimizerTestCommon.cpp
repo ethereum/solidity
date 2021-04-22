@@ -317,7 +317,14 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 		}},
 		{"fullSuite", [&]() {
 			GasMeter meter(dynamic_cast<EVMDialect const&>(*m_dialect), false, 200);
-			OptimiserSuite::run(*m_dialect, &meter, *m_object, true, solidity::frontend::OptimiserSettings::DefaultYulOptimiserSteps);
+			OptimiserSuite::run(
+				*m_dialect,
+				&meter,
+				*m_object,
+				true,
+				frontend::OptimiserSettings::DefaultYulOptimiserSteps,
+				frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+			);
 		}},
 		{"stackLimitEvader", [&]() {
 			disambiguate();
@@ -434,6 +441,7 @@ void YulOptimizerTestCommon::updateContext()
 	m_context = make_unique<OptimiserStepContext>(OptimiserStepContext{
 		*m_dialect,
 		*m_nameDispenser,
-		m_reservedIdentifiers
+		m_reservedIdentifiers,
+		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
 	});
 }
