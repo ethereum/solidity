@@ -103,6 +103,15 @@ struct UniformRandomDistribution
 	std::unique_ptr<RandomEngine> randomEngine;
 };
 
+struct ContractState
+{
+	explicit ContractState(std::shared_ptr<UniformRandomDistribution> _urd):
+		uRandDist(std::move(_urd))
+	{}
+
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
+};
+
 struct SourceState
 {
 	explicit SourceState(std::shared_ptr<UniformRandomDistribution> _urd):
@@ -131,9 +140,11 @@ struct TestState
 {
 	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
 		sourceUnitState({}),
+		contractState({}),
 		currentSourceUnitPath({}),
 		uRandDist(std::move(_urd)),
-		numSourceUnits(0)
+		numSourceUnits(0),
+		numContracts(0)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -141,6 +152,13 @@ struct TestState
 	{
 		sourceUnitState.emplace(_path, std::make_shared<SourceState>(uRandDist));
 		currentSourceUnitPath = _path;
+	}
+	/// Adds @param _name to @name contractState updates
+	/// @name currentContract.
+	void addContract(std::string const& _name)
+	{
+		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist));
+		currentContract = _name;
 	}
 	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
@@ -161,6 +179,10 @@ struct TestState
 	{
 		return sourceUnitNamePrefix + std::to_string(numSourceUnits) + ".sol";
 	}
+	[[nodiscard]] std::string newContract() const
+	{
+		return contractPrefix + std::to_string(numContracts);
+	}
 	[[nodiscard]] std::string currentPath() const
 	{
 		solAssert(numSourceUnits > 0, "");
@@ -173,7 +195,13 @@ struct TestState
 		addSourceUnit(_path);
 		numSourceUnits++;
 	}
-	/// Adds a new source unit to test case.
+	/// Adds @param _contract to list of contracts in global test state and
+	/// increments @name numContracts
+	void updateContract(std::string const& _name)
+	{
+		addContract(_name);
+		numContracts++;
+	}
 	void addSource()
 	{
 		updateSourcePath(newPath());
@@ -181,6 +209,7 @@ struct TestState
 	~TestState()
 	{
 		sourceUnitState.clear();
+		contractState.clear();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
@@ -191,16 +220,24 @@ struct TestState
 	[[nodiscard]] std::string randomPath() const;
 	/// Returns a randomly chosen non current source unit path.
 	[[nodiscard]] std::string randomNonCurrentPath() const;
-	/// List of source paths in test input.
+	/// Map of source name -> state
 	std::map<std::string, std::shared_ptr<SourceState>> sourceUnitState;
+	/// Map of contract name -> state
+	std::map<std::string, std::shared_ptr<ContractState>> contractState;
 	/// Source path being currently visited.
 	std::string currentSourceUnitPath;
+	/// Current contract
+	std::string currentContract;
 	/// Uniform random distribution.
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	/// Number of source units in test input
 	size_t numSourceUnits;
-	/// String prefix of source unit names
+	/// Number of contracts in test input
+	size_t numContracts;
+	/// Source name prefix
 	std::string const sourceUnitNamePrefix = "su";
+	/// Contract name prefix
+	std::string const contractPrefix = "C";
 };
 
 struct GeneratorBase

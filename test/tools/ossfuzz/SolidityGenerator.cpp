@@ -187,7 +187,9 @@ string ImportGenerator::visit()
 
 string ContractGenerator::visit()
 {
-	return "contract C {}\n";
+	string name = state->newContract();
+	state->updateContract(name);
+	return "contract " + name + " {}\n";
 }
 
 template <typename T>
