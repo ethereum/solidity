@@ -25,7 +25,7 @@
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
-#include <stack>
+#include <set>
 
 namespace solidity::yul
 {
