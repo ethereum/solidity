@@ -30,6 +30,7 @@
 #include <random>
 #include <set>
 #include <variant>
+#include <range/v3/view/filter.hpp>
 
 namespace solidity::test::fuzzer::mutator
 {
@@ -112,20 +113,26 @@ struct ContractState
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
+struct Type {};
+struct FunctionType: Type
+{
+	std::vector<Type> inputs;
+	std::vector<Type> outputs;
+};
+
 struct SourceState
 {
 	explicit SourceState(std::shared_ptr<UniformRandomDistribution> _urd):
 		uRandDist(std::move(_urd)),
-		importedSources({}),
-		freeFunctions({})
+		importedSources({})
 	{}
 	void addFreeFunction(std::string& _functionName)
 	{
-		freeFunctions.emplace(_functionName);
+		exports[std::make_shared<FunctionType>()] = _functionName;
 	}
 	bool freeFunction(std::string const& _functionName)
 	{
-		return freeFunctions.count(_functionName);
+		return !(exports | ranges::views::filter([&_functionName](auto& _p) { return _p.second == _functionName; })).empty();
 	}
 	void addImportedSourcePath(std::string& _sourcePath)
 	{
@@ -143,7 +150,7 @@ struct SourceState
 	void print(std::ostream& _os) const;
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	std::set<std::string> importedSources;
-	std::set<std::string> freeFunctions;
+	std::map<std::shared_ptr<Type>, std::string> exports;
 };
 
 struct FunctionState {};
