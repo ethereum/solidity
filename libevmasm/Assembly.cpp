@@ -539,13 +539,27 @@ LinkerObject const& Assembly::assemble() const
 	unsigned bytesPerTag = numberEncodingSize(bytesRequiredForCode);
 	uint8_t tagPush = static_cast<uint8_t>(pushInstruction(bytesPerTag));
 
-	unsigned bytesRequiredIncludingData = bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
+	unsigned bytesRequiredIncludingData = /*eof1*/10 + bytesRequiredForCode + 1 + static_cast<unsigned>(m_auxiliaryData.size());
 	for (auto const& sub: m_subs)
 		bytesRequiredIncludingData += static_cast<unsigned>(sub->assemble().bytecode.size());
 
 	unsigned bytesPerDataRef = numberEncodingSize(bytesRequiredIncludingData);
 	uint8_t dataRefPush = static_cast<uint8_t>(pushInstruction(bytesPerDataRef));
 	ret.bytecode.reserve(bytesRequiredIncludingData);
+
+	// Insert EOF1 header.
+	ret.bytecode.push_back(0xef);
+	ret.bytecode.push_back(0x00);
+	ret.bytecode.push_back(0x01); // version 1
+	ret.bytecode.push_back(0x01); // kind=code
+	auto eofCodeLength = ret.bytecode.size();
+	ret.bytecode.push_back(0x00); // length of code
+	ret.bytecode.push_back(0x00);
+	ret.bytecode.push_back(0x02); // kind=data
+	auto eofDataLength = ret.bytecode.size();
+	ret.bytecode.push_back(0x00); // length of data
+	ret.bytecode.push_back(0x00);
+	ret.bytecode.push_back(0x00); // terminator
 
 	for (AssemblyItem const& i: m_items)
 	{
@@ -679,6 +693,14 @@ LinkerObject const& Assembly::assemble() const
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
+	auto const dataStart = ret.bytecode.size();
+	auto const codeLength = dataStart - /*eof1*/10;
+
+	ret.bytecode[eofCodeLength] = (codeLength >> 8) & 0xff;
+	ret.bytecode[eofCodeLength + 1] = codeLength & 0xff;
+
+	//-- Data section --
+
 	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
 		bytesRef r(ret.bytecode.data() + bytecodeOffset, bytesPerDataRef);
@@ -742,6 +764,12 @@ LinkerObject const& Assembly::assemble() const
 		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
 		toBigEndian(ret.bytecode.size(), r);
 	}
+
+	auto const dataLength = ret.bytecode.size() - dataStart;
+
+	ret.bytecode[eofDataLength] = (dataLength >> 8) & 0xff;
+	ret.bytecode[eofDataLength + 1] = dataLength & 0xff;
+
 	return ret;
 }
 
