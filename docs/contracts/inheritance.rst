@@ -388,7 +388,7 @@ which is executed upon contract creation, and where you can run contract
 initialisation code.
 
 Before the constructor code is executed, state variables are initialised to
-their specified value if you initialise them inline, or zero if you do not.
+their specified value if you initialise them inline, or their :ref:`default value<default-value>` if you do not.
 
 After the constructor has run, the final code of the contract is deployed
 to the blockchain. The deployment of
