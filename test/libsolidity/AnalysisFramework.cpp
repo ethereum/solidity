@@ -105,8 +105,8 @@ ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _inc
 				newError = make_shared<Error>(
 					currentError->errorId(),
 					currentError->type(),
-					location ? *location : SourceLocation(),
-					messagePrefix + " ...."
+					messagePrefix + " ....",
+					location ? *location : SourceLocation()
 				);
 				break;
 			}
