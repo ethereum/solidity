@@ -548,18 +548,21 @@ LinkerObject const& Assembly::assemble() const
 	ret.bytecode.reserve(bytesRequiredIncludingData);
 
 	// Insert EOF1 header.
+	// TODO: empty data is disallowed
 	ret.bytecode.push_back(0xef);
 	ret.bytecode.push_back(0x00);
 	ret.bytecode.push_back(0x01); // version 1
 	ret.bytecode.push_back(0x01); // kind=code
-	auto eofCodeLength = ret.bytecode.size();
 	ret.bytecode.push_back(0x00); // length of code
 	ret.bytecode.push_back(0x00);
+	bytesRef eofCodeLength(&ret.bytecode.back() + 1 - 2, 2);
 	ret.bytecode.push_back(0x02); // kind=data
-	auto eofDataLength = ret.bytecode.size();
 	ret.bytecode.push_back(0x00); // length of data
 	ret.bytecode.push_back(0x00);
+	bytesRef eofDataLength(&ret.bytecode.back() + 1 - 2, 2);
 	ret.bytecode.push_back(0x00); // terminator
+
+	auto const codeStart = ret.bytecode.size();
 
 	for (AssemblyItem const& i: m_items)
 	{
@@ -693,13 +696,11 @@ LinkerObject const& Assembly::assemble() const
 		// Append an INVALID here to help tests find miscompilation.
 		ret.bytecode.push_back(static_cast<uint8_t>(Instruction::INVALID));
 
+	auto const codeLength = ret.bytecode.size() - codeStart;
+	assertThrow(codeLength > 0 && codeLength <= 0xffff, AssemblyException, "Invalid code section size.");
+	toBigEndian(uint16_t(codeLength), eofCodeLength);
+
 	auto const dataStart = ret.bytecode.size();
-	auto const codeLength = dataStart - /*eof1*/10;
-
-	ret.bytecode[eofCodeLength] = (codeLength >> 8) & 0xff;
-	ret.bytecode[eofCodeLength + 1] = codeLength & 0xff;
-
-	//-- Data section --
 
 	for (auto const& [subIdPath, bytecodeOffset]: subRef)
 	{
@@ -766,9 +767,8 @@ LinkerObject const& Assembly::assemble() const
 	}
 
 	auto const dataLength = ret.bytecode.size() - dataStart;
-
-	ret.bytecode[eofDataLength] = (dataLength >> 8) & 0xff;
-	ret.bytecode[eofDataLength + 1] = dataLength & 0xff;
+	assertThrow(dataLength >= 0 && dataLength <= 0xffff, AssemblyException, "Invalid data section size.");
+	toBigEndian(uint16_t(dataLength), eofDataLength);
 
 	return ret;
 }
