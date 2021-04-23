@@ -28,6 +28,7 @@ contract A {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> 0x10, 0x20, 0x40
 // x() -> 1

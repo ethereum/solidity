@@ -26,5 +26,6 @@ contract Test {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // withinArray() -> FAILURE

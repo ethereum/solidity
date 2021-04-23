@@ -11,6 +11,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // test() -> left(0x01), left(0x02)
 // gas legacy: 154001

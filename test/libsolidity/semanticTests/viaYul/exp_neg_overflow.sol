@@ -8,6 +8,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(int8,uint256): 2, 6 -> 64
 // f(int8,uint256): 2, 7 -> FAILURE, hex"4e487b71", 0x11

@@ -14,6 +14,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // constructor() ->
 // initCode() -> 0x20, 0

@@ -5,6 +5,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> 200000000
 // f() -> 200000000
