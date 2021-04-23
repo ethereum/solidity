@@ -135,7 +135,8 @@ void SourceUnitGenerator::setup()
 	addGenerators({
 		{mutator->generator<ImportGenerator>(), s_maxImports},
 		{mutator->generator<PragmaGenerator>(), 1},
-		{mutator->generator<ContractGenerator>(), 1}
+		{mutator->generator<ContractGenerator>(), 1},
+		{mutator->generator<FunctionGenerator>(), s_maxFreeFunctions}
 	});
 }
 
@@ -185,11 +186,43 @@ string ImportGenerator::visit()
 	return os.str();
 }
 
+void ContractGenerator::setup()
+{
+	addGenerators({
+		{mutator->generator<FunctionGenerator>(), s_maxFunctions}
+	});
+}
+
 string ContractGenerator::visit()
 {
+	ScopeGuard reset([&]() {
+		mutator->generator<FunctionGenerator>()->scope(true);
+		state->unindent();
+	});
+	auto set = [&]() {
+		state->indent();
+		mutator->generator<FunctionGenerator>()->scope(false);
+	};
+	ostringstream os;
 	string name = state->newContract();
 	state->updateContract(name);
-	return "contract " + name + " {}\n";
+	os << "contract " << name << " {" << endl;
+	set();
+	os << visitChildren();
+	os << "}" << endl;
+	return os.str();
+}
+
+string FunctionGenerator::visit()
+{
+	string visibility;
+	string name = state->newFunction();
+	state->updateFunction(name);
+	if (!m_freeFunction)
+		visibility = "public";
+
+	return indentation(state->indentationLevel) +
+		"function " + name + "() " + visibility + " pure {}\n";
 }
 
 template <typename T>

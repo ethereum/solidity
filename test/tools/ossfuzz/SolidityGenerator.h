@@ -116,8 +116,17 @@ struct SourceState
 {
 	explicit SourceState(std::shared_ptr<UniformRandomDistribution> _urd):
 		uRandDist(std::move(_urd)),
-		importedSources({})
+		importedSources({}),
+		freeFunctions({})
 	{}
+	void addFreeFunction(std::string& _functionName)
+	{
+		freeFunctions.emplace(_functionName);
+	}
+	bool freeFunction(std::string const& _functionName)
+	{
+		return freeFunctions.count(_functionName);
+	}
 	void addImportedSourcePath(std::string& _sourcePath)
 	{
 		importedSources.emplace(_sourcePath);
@@ -134,7 +143,10 @@ struct SourceState
 	void print(std::ostream& _os) const;
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	std::set<std::string> importedSources;
+	std::set<std::string> freeFunctions;
 };
+
+struct FunctionState {};
 
 struct TestState
 {
@@ -142,9 +154,13 @@ struct TestState
 		sourceUnitState({}),
 		contractState({}),
 		currentSourceUnitPath({}),
+		currentContract({}),
+		currentFunction({}),
 		uRandDist(std::move(_urd)),
 		numSourceUnits(0),
-		numContracts(0)
+		numContracts(0),
+		numFunctions(0),
+		indentationLevel(0)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -159,6 +175,11 @@ struct TestState
 	{
 		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist));
 		currentContract = _name;
+	}
+	void addFunction(std::string const& _name)
+	{
+		functionState.emplace(_name, std::make_shared<FunctionState>());
+		currentFunction = _name;
 	}
 	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
@@ -183,6 +204,10 @@ struct TestState
 	{
 		return contractPrefix + std::to_string(numContracts);
 	}
+	[[nodiscard]] std::string newFunction() const
+	{
+		return functionPrefix + std::to_string(numFunctions);
+	}
 	[[nodiscard]] std::string currentPath() const
 	{
 		solAssert(numSourceUnits > 0, "");
@@ -202,9 +227,24 @@ struct TestState
 		addContract(_name);
 		numContracts++;
 	}
+	void updateFunction(std::string const& _name)
+	{
+		addFunction(_name);
+		numFunctions++;
+	}
 	void addSource()
 	{
 		updateSourcePath(newPath());
+	}
+	/// Increments indentation level globally.
+	void indent()
+	{
+		++indentationLevel;
+	}
+	/// Decrements indentation level globally.
+	void unindent()
+	{
+		--indentationLevel;
 	}
 	~TestState()
 	{
@@ -224,20 +264,30 @@ struct TestState
 	std::map<std::string, std::shared_ptr<SourceState>> sourceUnitState;
 	/// Map of contract name -> state
 	std::map<std::string, std::shared_ptr<ContractState>> contractState;
+	/// Map of function name -> state
+	std::map<std::string, std::shared_ptr<FunctionState>> functionState;
 	/// Source path being currently visited.
 	std::string currentSourceUnitPath;
 	/// Current contract
 	std::string currentContract;
+	/// Current function
+	std::string currentFunction;
 	/// Uniform random distribution.
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	/// Number of source units in test input
 	size_t numSourceUnits;
 	/// Number of contracts in test input
 	size_t numContracts;
+	/// Number of functions in test input
+	size_t numFunctions;
+	/// Indentation level
+	unsigned indentationLevel;
 	/// Source name prefix
 	std::string const sourceUnitNamePrefix = "su";
 	/// Contract name prefix
 	std::string const contractPrefix = "C";
+	/// Function name prefix
+	std::string const functionPrefix = "f";
 };
 
 struct GeneratorBase
@@ -257,6 +307,12 @@ struct GeneratorBase
 		std::string generatedCode = visit();
 		endVisit();
 		return generatedCode;
+	}
+	/// @returns indentation as string. Each indentation level comprises two
+	/// whitespace characters.
+	std::string indentation(unsigned _indentationLevel)
+	{
+		return std::string(_indentationLevel * 2, ' ');
 	}
 	/// @returns a string representing the generation of
 	/// the Solidity grammar element.
@@ -341,6 +397,7 @@ public:
 	std::string name() override { return "Source unit generator"; }
 private:
 	static unsigned constexpr s_maxImports = 2;
+	static unsigned constexpr s_maxFreeFunctions = 2;
 };
 
 class PragmaGenerator: public GeneratorBase
@@ -378,8 +435,30 @@ public:
 	explicit ContractGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
+	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Contract generator"; }
+private:
+	static unsigned constexpr s_maxFunctions = 4;
+};
+
+class FunctionGenerator: public GeneratorBase
+{
+public:
+	explicit FunctionGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator)),
+		m_freeFunction(true)
+	{}
+	std::string visit() override;
+	std::string name() override { return "Function generator"; }
+	/// Sets @name m_freeFunction to @param _freeFunction.
+	void scope(bool _freeFunction)
+	{
+		m_freeFunction = _freeFunction;
+	}
+private:
+	bool m_freeFunction;
+
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
