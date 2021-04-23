@@ -9,5 +9,6 @@ contract B is A {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // constructor() ->

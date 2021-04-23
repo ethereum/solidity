@@ -6,5 +6,6 @@ contract B {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(uint8): 5 -> 0x00

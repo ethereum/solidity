@@ -8,6 +8,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f((function)): "01234567890123456789abcd" -> 1
 // f((function)): "01234567890123456789abcdX" -> FAILURE

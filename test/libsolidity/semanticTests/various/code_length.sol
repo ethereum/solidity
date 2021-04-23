@@ -59,6 +59,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // constructor()
 // f(): true, true -> true, true

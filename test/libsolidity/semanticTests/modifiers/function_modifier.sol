@@ -10,6 +10,7 @@ contract C {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // getOne() -> 0
 // getOne(), 1 wei -> 1
