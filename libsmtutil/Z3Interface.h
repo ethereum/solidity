@@ -19,15 +19,18 @@
 #pragma once
 
 #include <libsmtutil/SolverInterface.h>
-#include <boost/noncopyable.hpp>
 #include <z3++.h>
 
 namespace solidity::smtutil
 {
 
-class Z3Interface: public SolverInterface, public boost::noncopyable
+class Z3Interface: public SolverInterface
 {
 public:
+	/// Noncopyable.
+	Z3Interface(Z3Interface const&) = delete;
+	Z3Interface& operator=(Z3Interface const&) = delete;
+
 	Z3Interface(std::optional<unsigned> _queryTimeout = {});
 
 	static bool available();

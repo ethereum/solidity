@@ -22,7 +22,6 @@
 #include <libsolidity/ast/ASTAnnotations.h>
 #include <liblangutil/EVMVersion.h>
 
-#include <boost/noncopyable.hpp>
 #include <list>
 #include <map>
 

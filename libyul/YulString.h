@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <boost/noncopyable.hpp>
-
 #include <unordered_map>
 #include <memory>
 #include <vector>

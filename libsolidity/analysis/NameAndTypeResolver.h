@@ -31,8 +31,6 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <list>
 #include <map>
 
@@ -48,9 +46,13 @@ namespace solidity::frontend
  * Resolves name references, typenames and sets the (explicitly given) types for all variable
  * declarations.
  */
-class NameAndTypeResolver: private boost::noncopyable
+class NameAndTypeResolver
 {
 public:
+	/// Noncopyable.
+	NameAndTypeResolver(NameAndTypeResolver const&) = delete;
+	NameAndTypeResolver& operator=(NameAndTypeResolver const&) = delete;
+
 	/// Creates the resolver with the given declarations added to the global scope.
 	/// @param _scopes mapping of scopes to be used (usually default constructed), these
 	/// are filled during the lifetime of this object.

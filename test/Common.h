@@ -24,7 +24,6 @@
 #include <test/evmc/evmc.h>
 
 #include <boost/filesystem/path.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/program_options.hpp>
 
 namespace solidity::test
@@ -49,8 +48,12 @@ static constexpr auto heraDownloadLink = "https://github.com/ewasm/hera/releases
 
 struct ConfigException : public util::Exception {};
 
-struct CommonOptions: boost::noncopyable
+struct CommonOptions
 {
+	/// Noncopyable.
+	CommonOptions(CommonOptions const&) = delete;
+	CommonOptions& operator=(CommonOptions const&) = delete;
+
 	std::vector<boost::filesystem::path> vmPaths;
 	boost::filesystem::path testPath;
 	bool ewasm = false;
