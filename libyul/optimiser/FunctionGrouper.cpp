@@ -24,8 +24,6 @@
 
 #include <libyul/AST.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
