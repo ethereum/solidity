@@ -8,6 +8,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Parser: Properly reject misformatted version pragmas (e.g. ``^0^1`` was misparsed).
 
 
 ### 0.8.4 (2021-04-21)
