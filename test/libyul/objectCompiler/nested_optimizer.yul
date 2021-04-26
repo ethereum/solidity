@@ -15,7 +15,7 @@ object "a" {
   }
 }
 // ====
-// optimize: true
+// optimizationPreset: full
 // ----
 // Assembly:
 //     /* "source":48:49   */
