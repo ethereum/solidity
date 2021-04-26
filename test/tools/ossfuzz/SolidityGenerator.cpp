@@ -182,6 +182,9 @@ string ImportGenerator::visit()
 		   << importPath
 		   << "\";\n";
 		state->sourceUnitState[state->currentPath()]->addImportedSourcePath(importPath);
+		state->sourceUnitState[state->currentPath()]->resolveImports(
+			state->sourceUnitState[importPath]->exports
+		);
 	}
 	return os.str();
 }
@@ -204,9 +207,15 @@ string ContractGenerator::visit()
 		mutator->generator<FunctionGenerator>()->scope(false);
 	};
 	ostringstream os;
+	string inheritance;
+	if (state->sourceUnitState[state->currentPath()]->contractType())
+		inheritance = state->sourceUnitState[state->currentPath()]->randomContract();
 	string name = state->newContract();
 	state->updateContract(name);
-	os << "contract " << name << " {" << endl;
+	os << "contract " << name;
+	if (!inheritance.empty())
+		os << " is " << inheritance;
+	os << " {" << endl;
 	set();
 	os << visitChildren();
 	os << "}" << endl;

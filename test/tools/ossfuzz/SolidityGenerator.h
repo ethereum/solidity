@@ -30,7 +30,11 @@
 #include <random>
 #include <set>
 #include <variant>
+
+#include <range/v3/action/transform.hpp>
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view/filter.hpp>
+#include <range/v3/view/transform.hpp>
 
 namespace solidity::test::fuzzer::mutator
 {
@@ -113,12 +117,16 @@ struct ContractState
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
-struct Type {};
+struct Type
+{
+	virtual ~Type() {}
+};
 struct FunctionType: Type
 {
 	std::vector<Type> inputs;
 	std::vector<Type> outputs;
 };
+struct ContractType: Type {};
 
 struct SourceState
 {
@@ -134,9 +142,31 @@ struct SourceState
 	{
 		return !(exports | ranges::views::filter([&_functionName](auto& _p) { return _p.second == _functionName; })).empty();
 	}
+	bool contractType()
+	{
+		return !(exports | ranges::views::filter([](auto& _i) {
+			return bool(std::dynamic_pointer_cast<ContractType>(_i.first));
+		})).empty();
+	}
+	std::string randomContract()
+	{
+		auto contracts = exports |
+			ranges::views::filter([](auto& _item) -> bool {
+				return bool(std::dynamic_pointer_cast<ContractType>(_item.first));
+			}) |
+			ranges::views::transform([](auto& _item) -> std::string {
+				return _item.second;
+			}) | ranges::to<std::vector<std::string>>;
+		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
+	}
 	void addImportedSourcePath(std::string& _sourcePath)
 	{
 		importedSources.emplace(_sourcePath);
+	}
+	void resolveImports(std::map<std::shared_ptr<Type>, std::string> _imports)
+	{
+		for (auto const& item: _imports)
+			exports.emplace(item);
 	}
 	[[nodiscard]] bool sourcePathImported(std::string const& _sourcePath) const
 	{
@@ -181,6 +211,7 @@ struct TestState
 	void addContract(std::string const& _name)
 	{
 		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist));
+		sourceUnitState[currentSourceUnitPath]->exports[std::make_shared<ContractType>()] = _name;
 		currentContract = _name;
 	}
 	void addFunction(std::string const& _name)
