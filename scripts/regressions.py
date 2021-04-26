@@ -67,13 +67,13 @@ class regressor():
         if not env:
             env = os.environ.copy()
 
-        logfh = open(logfile, 'w')
-        proc = subprocess.Popen(command, shell=True, executable='/bin/bash',
-                                env=env, stdout=logfh,
-                                stderr=subprocess.STDOUT)
-        ret = proc.wait()
-        logfh.close()
-        return ret
+        with open(logfile, 'w') as logfh:
+            with subprocess.Popen(command, shell=True, executable='/bin/bash',
+                                    env=env, stdout=logfh,
+                                    stderr=subprocess.STDOUT) as proc:
+                ret = proc.wait()
+                logfh.close()
+                return ret
 
     def process_log(self, logfile):
         """
