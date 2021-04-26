@@ -411,6 +411,10 @@ public:
 	/// This is used for data being encoded or general type conversions in the code.
 	std::string conversionFunction(Type const& _from, Type const& _to);
 
+	/// @returns the name of a function that converts bytes array to fixed bytes type
+	/// signature: (array) -> value
+	std::string bytesToFixedBytesConversionFunction(ArrayType const& _from, FixedBytesType const& _to);
+
 	/// @returns the name of the cleanup function for the given type and
 	/// adds its implementation to the requested functions.
 	/// The cleanup function defers to the validator function with "assert"

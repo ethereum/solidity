@@ -1,6 +1,7 @@
 ### 0.8.5 (unreleased)
 
 Language Features:
+* Allowing conversion from ``bytes`` and ``bytes`` slices to ``bytes1``/.../``bytes32``.
 
 
 Compiler Features:

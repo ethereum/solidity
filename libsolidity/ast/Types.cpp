@@ -1570,9 +1570,9 @@ BoolResult ArrayType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (isImplicitlyConvertibleTo(_convertTo))
 		return true;
-	// allow conversion bytes <-> string
+	// allow conversion bytes <-> string and bytes -> bytesNN
 	if (_convertTo.category() != category())
-		return false;
+		return isByteArray() && !isString() && _convertTo.category() == Type::Category::FixedBytes;
 	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
 	if (convertTo.location() != location())
 		return false;
@@ -1927,6 +1927,13 @@ BoolResult ArraySliceType::isImplicitlyConvertibleTo(Type const& _other) const
 			m_arrayType.isDynamicallySized() &&
 			m_arrayType.isImplicitlyConvertibleTo(_other)
 		);
+}
+
+BoolResult ArraySliceType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	return
+		isImplicitlyConvertibleTo(_convertTo) ||
+		m_arrayType.isExplicitlyConvertibleTo(_convertTo);
 }
 
 string ArraySliceType::richIdentifier() const

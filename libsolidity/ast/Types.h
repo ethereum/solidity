@@ -889,6 +889,7 @@ public:
 	Category category() const override { return Category::ArraySlice; }
 
 	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
+	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }

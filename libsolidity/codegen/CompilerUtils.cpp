@@ -961,8 +961,31 @@ void CompilerUtils::convertType(
 	}
 	case Type::Category::Array:
 	{
-		solAssert(targetTypeCategory == stackTypeCategory, "");
 		auto const& typeOnStack = dynamic_cast<ArrayType const&>(_typeOnStack);
+		if (_targetType.category() == Type::Category::FixedBytes)
+		{
+			solAssert(
+				typeOnStack.isByteArray() && !typeOnStack.isString(),
+				"Array types other than bytes not convertible to bytesNN."
+			);
+			solAssert(typeOnStack.isDynamicallySized(), "");
+
+			bool fromCalldata = typeOnStack.dataStoredIn(DataLocation::CallData);
+			solAssert(typeOnStack.sizeOnStack() == (fromCalldata ? 2 : 1), "");
+			if (fromCalldata)
+				m_context << Instruction::SWAP1;
+
+			m_context.callYulFunction(
+				m_context.utilFunctions().bytesToFixedBytesConversionFunction(
+					typeOnStack,
+					dynamic_cast<FixedBytesType const &>(_targetType)
+				),
+				typeOnStack.sizeOnStack(),
+				1
+			);
+			break;
+		}
+		solAssert(targetTypeCategory == stackTypeCategory, "");
 		auto const& targetType = dynamic_cast<ArrayType const&>(_targetType);
 		switch (targetType.location())
 		{
@@ -1066,8 +1089,30 @@ void CompilerUtils::convertType(
 	}
 	case Type::Category::ArraySlice:
 	{
-		solAssert(_targetType.category() == Type::Category::Array, "");
 		auto& typeOnStack = dynamic_cast<ArraySliceType const&>(_typeOnStack);
+		if (_targetType.category() == Type::Category::FixedBytes)
+		{
+			solAssert(
+				typeOnStack.arrayType().isByteArray() && !typeOnStack.arrayType().isString(),
+				"Array types other than bytes not convertible to bytesNN."
+			);
+			solAssert(typeOnStack.isDynamicallySized(), "");
+			solAssert(typeOnStack.dataStoredIn(DataLocation::CallData), "");
+			solAssert(typeOnStack.sizeOnStack() == 2, "");
+
+			m_context << Instruction::SWAP1;
+			m_context.callYulFunction(
+				m_context.utilFunctions().bytesToFixedBytesConversionFunction(
+					typeOnStack.arrayType(),
+					dynamic_cast<FixedBytesType const &>(_targetType)
+				),
+				2,
+				1
+			);
+			break;
+		}
+
+		solAssert(_targetType.category() == Type::Category::Array, "");
 		auto const& targetArrayType = dynamic_cast<ArrayType const&>(_targetType);
 		solAssert(typeOnStack.arrayType().isImplicitlyConvertibleTo(targetArrayType), "");
 		solAssert(

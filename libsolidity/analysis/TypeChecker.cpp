@@ -1710,19 +1710,23 @@ Type const* TypeChecker::typeCheckTypeConversionAndRetrieveReturnType(
 		{
 			if (auto argArrayType = dynamic_cast<ArrayType const*>(argType))
 			{
-				auto resultArrayType = dynamic_cast<ArrayType const*>(resultType);
-				solAssert(!!resultArrayType, "");
-				solAssert(
-					argArrayType->location() != DataLocation::Storage ||
-					(
+				if (auto resultArrayType = dynamic_cast<ArrayType const*>(resultType))
+					solAssert(
+						argArrayType->location() != DataLocation::Storage ||
 						(
-							resultArrayType->isPointer() ||
-							(argArrayType->isByteArray() && resultArrayType->isByteArray())
-						) &&
-						resultArrayType->location() == DataLocation::Storage
-					),
-					"Invalid explicit conversion to storage type."
-				);
+							(
+								resultArrayType->isPointer() ||
+								(argArrayType->isByteArray() && resultArrayType->isByteArray())
+							) &&
+							resultArrayType->location() == DataLocation::Storage
+						),
+						"Invalid explicit conversion to storage type."
+					);
+				else
+					solAssert(
+						argArrayType->isByteArray() && !argArrayType->isString() && resultType->category() == Type::Category::FixedBytes,
+						""
+					);
 			}
 		}
 		else
