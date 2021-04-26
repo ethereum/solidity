@@ -17,13 +17,12 @@
 
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
-
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
@@ -123,10 +122,8 @@ smtutil::Expression ReasoningBasedSimplifier::encodeExpression(yul::Expression c
 	return std::visit(GenericVisitor{
 		[&](FunctionCall const& _functionCall)
 		{
-			if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-				if (auto const* builtin = dialect->builtin(_functionCall.functionName.name))
-					if (builtin->instruction)
-						return encodeEVMBuiltin(*builtin->instruction, _functionCall.arguments);
+			if (auto instruction = toEVMInstruction(m_dialect, _functionCall.functionName.name))
+				return encodeEVMBuiltin(*instruction, _functionCall.arguments);
 			return newRestrictedVariable();
 		},
 		[&](Identifier const& _identifier)

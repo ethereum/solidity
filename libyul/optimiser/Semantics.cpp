@@ -21,10 +21,10 @@
 
 #include <libyul/optimiser/Semantics.h>
 
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libevmasm/SemanticInformation.h>
 
@@ -197,9 +197,7 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
 	if (holds_alternative<FunctionCall>(_exprStmnt.expression))
-		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
-				if (builtin->instruction)
-					return evmasm::SemanticInformation::terminatesControlFlow(*builtin->instruction);
+		if (auto instruction = toEVMInstruction(m_dialect, std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
+			return evmasm::SemanticInformation::terminatesControlFlow(*instruction);
 	return false;
 }
