@@ -58,6 +58,7 @@ public:
 	LabelID newLabelId() override;
 	LabelID namedLabel(std::string const& _name) override;
 	void appendLinkerSymbol(std::string const& _name) override;
+	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) override;
 
 	void appendJump(int _stackDiffAfter, JumpType _jumpType) override;
 	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;

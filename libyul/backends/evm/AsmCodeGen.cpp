@@ -99,6 +99,11 @@ void EthAssemblyAdapter::appendLinkerSymbol(std::string const& _linkerSymbol)
 	m_assembly.appendLibraryAddress(_linkerSymbol);
 }
 
+void EthAssemblyAdapter::appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables)
+{
+	m_assembly.appendVerbatim(move(_data), _arguments, _returnVariables);
+}
+
 void EthAssemblyAdapter::appendJump(int _stackDiffAfter, JumpType _jumpType)
 {
 	appendJumpInstruction(evmasm::Instruction::JUMP, _jumpType);

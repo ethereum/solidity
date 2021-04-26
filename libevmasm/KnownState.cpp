@@ -100,6 +100,24 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 		feedItem(AssemblyItem(Instruction::POP), _copyItem);
 		return feedItem(AssemblyItem(Instruction::POP), _copyItem);
 	}
+	else if (_item.type() == VerbatimBytecode)
+	{
+		m_sequenceNumber += 2;
+		resetMemory();
+		resetKnownKeccak256Hashes();
+		resetStorage();
+		// Consume all arguments and place unknown return values on the stack.
+		m_stackElements.erase(
+			m_stackElements.upper_bound(m_stackHeight - static_cast<int>(_item.arguments())),
+			m_stackElements.end()
+		);
+		m_stackHeight += static_cast<int>(_item.deposit());
+		for (size_t i = 0; i < _item.returnValues(); ++i)
+			setStackElement(
+				m_stackHeight - static_cast<int>(i),
+				m_expressionClasses->newClass(_item.location())
+			);
+	}
 	else if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");

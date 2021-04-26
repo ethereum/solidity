@@ -1,7 +1,8 @@
 ### 0.8.5 (unreleased)
 
 Language Features:
-* Allowing conversion from ``bytes`` and ``bytes`` slices to ``bytes1``/.../``bytes32``.
+ * Allowing conversion from ``bytes`` and ``bytes`` slices to ``bytes1``/.../``bytes32``.
+ * Yul: Add ``verbatim`` builtin function to inject arbitrary bytecode.
 
 
 Compiler Features:

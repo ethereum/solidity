@@ -38,6 +38,7 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item, bool
 	case Tag:
 	case PushDeployTimeAddress:
 	case AssignImmutable:
+	case VerbatimBytecode:
 		return true;
 	case Push:
 	case PushString:
@@ -164,6 +165,8 @@ bool SemanticInformation::reverts(Instruction _instruction)
 
 bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {
+	assertThrow(_item.type() != VerbatimBytecode, AssemblyException, "");
+
 	if (_item.type() != Operation)
 		return true;
 

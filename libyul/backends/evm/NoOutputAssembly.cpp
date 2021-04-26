@@ -69,6 +69,11 @@ void NoOutputAssembly::appendLinkerSymbol(string const&)
 	yulAssert(false, "Linker symbols not yet implemented.");
 }
 
+void NoOutputAssembly::appendVerbatim(bytes, size_t _arguments, size_t _returnVariables)
+{
+	m_stackHeight += static_cast<int>(_returnVariables - _arguments);
+}
+
 void NoOutputAssembly::appendJump(int _stackDiffAfter, JumpType)
 {
 	appendInstruction(evmasm::Instruction::JUMP);
