@@ -73,10 +73,10 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <libyul/CompilabilityChecker.h>
 
 #include <range/v3/view/map.hpp>
+#include <range/v3/action/remove.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -312,8 +312,8 @@ void OptimiserSuite::runSequence(string const& _stepAbbreviations, Block& _ast)
 	validateSequence(_stepAbbreviations);
 
 	string input = _stepAbbreviations;
-	boost::remove_erase(input, ' ');
-	boost::remove_erase(input, '\n');
+	ranges::actions::remove(input, ' ');
+	ranges::actions::remove(input, '\n');
 
 	auto abbreviationsToSteps = [](string const& _sequence) -> vector<string>
 	{

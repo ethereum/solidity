@@ -29,7 +29,7 @@
 #include <liblangutil/Token.h>
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
+#include <range/v3/action/remove_if.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -42,7 +42,7 @@ void yul::removeEmptyBlocks(Block& _block)
 	auto isEmptyBlock = [](Statement const& _st) -> bool {
 		return holds_alternative<Block>(_st) && std::get<Block>(_st).statements.empty();
 	};
-	boost::range::remove_erase_if(_block.statements, isEmptyBlock);
+	ranges::actions::remove_if(_block.statements, isEmptyBlock);
 }
 
 bool yul::isRestrictedIdentifier(Dialect const& _dialect, YulString const& _identifier)

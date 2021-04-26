@@ -27,7 +27,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
+
+#include <range/v3/action/remove_if.hpp>
 
 #include <algorithm>
 
@@ -61,7 +62,7 @@ string ProtoConverter::createHex(string const& _hexBytes)
 	string tmp{_hexBytes};
 	if (!tmp.empty())
 	{
-		boost::range::remove_erase_if(tmp, [=](char c) -> bool {
+		ranges::actions::remove_if(tmp, [=](char c) -> bool {
 			return !std::isxdigit(c);
 		});
 		tmp = tmp.substr(0, 64);
@@ -83,7 +84,7 @@ string ProtoConverter::createAlphaNum(string const& _strBytes)
 	string tmp{_strBytes};
 	if (!tmp.empty())
 	{
-		boost::range::remove_erase_if(tmp, [=](char c) -> bool {
+		ranges::actions::remove_if(tmp, [=](char c) -> bool {
 			return !(std::isalpha(c) || std::isdigit(c));
 		});
 		tmp = tmp.substr(0, 32);

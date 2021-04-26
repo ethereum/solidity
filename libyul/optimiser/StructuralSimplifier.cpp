@@ -22,8 +22,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;

@@ -27,7 +27,7 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
+#include <range/v3/action/remove_if.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -307,7 +307,7 @@ void RedundantAssignEliminator::finalize(YulString _variable, RedundantAssignEli
 
 void AssignmentRemover::operator()(Block& _block)
 {
-	boost::range::remove_erase_if(_block.statements, [&](Statement const& _statement) -> bool {
+	ranges::actions::remove_if(_block.statements, [&](Statement const& _statement) -> bool {
 		return holds_alternative<Assignment>(_statement) && m_toRemove.count(&std::get<Assignment>(_statement));
 	});
 

@@ -32,7 +32,6 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/cxx20.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <variant>
 
 #include <range/v3/view/reverse.hpp>

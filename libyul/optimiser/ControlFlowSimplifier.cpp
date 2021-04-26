@@ -25,7 +25,7 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/Visitor.h>
 
-#include <boost/range/algorithm_ext/erase.hpp>
+#include <range/v3/action/remove_if.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -52,7 +52,7 @@ ExpressionStatement makeDiscardCall(
 
 void removeEmptyDefaultFromSwitch(Switch& _switchStmt)
 {
-	boost::remove_erase_if(
+	ranges::actions::remove_if(
 		_switchStmt.cases,
 		[](Case const& _case) { return !_case.value && _case.body.statements.empty(); }
 	);
@@ -69,7 +69,7 @@ void removeEmptyCasesFromSwitch(Switch& _switchStmt)
 	if (hasDefault)
 		return;
 
-	boost::remove_erase_if(
+	ranges::actions::remove_if(
 		_switchStmt.cases,
 		[](Case const& _case) { return _case.body.statements.empty(); }
 	);
