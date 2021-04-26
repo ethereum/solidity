@@ -1,0 +1,14 @@
+User-Agent: *
+Sitemap: http://docs.soliditylang.org/sitemap.xml
+
+Allow: /en/latest/
+Allow: /en/v0.7.6/
+Allow: /en/v{{ LATEST_VERSION }}/
+Allow: /_/downloads/en/latest/
+Allow: /_/downloads/en/0.7.6/
+Allow: /_/downloads/en/{{ LATEST_VERSION }}/
+
+# Prevent documentation for the development branches and older Solidity
+# versions from showing up in search results.
+Disallow: /en/*
+Disallow: /_/downloads/en/*
