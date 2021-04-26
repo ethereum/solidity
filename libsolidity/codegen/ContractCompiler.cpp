@@ -855,12 +855,6 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 				);
 				solAssert(variable->type()->sizeOnStack() == 1, "");
 				solAssert(suffix == "slot", "");
-				if (stackDiff > 16 || stackDiff < 1)
-					BOOST_THROW_EXCEPTION(
-						StackTooDeepError() <<
-						errinfo_sourceLocation(_inlineAssembly.location()) <<
-						errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
-					);
 			}
 			else if (variable->type()->dataStoredIn(DataLocation::CallData))
 			{
@@ -877,6 +871,12 @@ bool ContractCompiler::visit(InlineAssembly const& _inlineAssembly)
 			else
 				solAssert(suffix.empty(), "");
 
+			if (stackDiff > 16 || stackDiff < 1)
+				BOOST_THROW_EXCEPTION(
+					StackTooDeepError() <<
+					errinfo_sourceLocation(_inlineAssembly.location()) <<
+					errinfo_comment("Stack too deep(" + to_string(stackDiff) + "), try removing local variables.")
+				);
 			_assembly.appendInstruction(swapInstruction(stackDiff));
 			_assembly.appendInstruction(Instruction::POP);
 		}
