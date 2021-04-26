@@ -125,12 +125,6 @@ BOOST_AUTO_TEST_CASE(test_format_number_readable)
 	BOOST_CHECK_EQUAL(formatNumberReadable(u256(0x100000000)), "2**32");
 	BOOST_CHECK_EQUAL(formatNumberReadable(u256(0xFFFFffff)), "2**32 - 1");
 
-	u160 a = 0;
-	for (int i = 0; i < 20; i++)
-	{
-		a <<= 8;
-		a |= 0x55;
-	}
 	u256 b = 0;
 	for (int i = 0; i < 32; i++)
 	{
@@ -144,7 +138,6 @@ BOOST_AUTO_TEST_CASE(test_format_number_readable)
 		u256(0xFFFFffffFFFFffff) << 128 |
 		u256(0xFFFFffffFFFFffff) << 64 |
 		u256(0xFFFFffffFFFFffff);
-	BOOST_CHECK_EQUAL(formatNumberReadable(a, true), "0x5555...{+32 more}...5555");
 	BOOST_CHECK_EQUAL(formatNumberReadable(b, true), "0x5555...{+56 more}...5555");
 	BOOST_CHECK_EQUAL(formatNumberReadable(c, true), "0xABCD...{+56 more}...6789");
 	BOOST_CHECK_EQUAL(formatNumberReadable(d, true), "0xAAAAaaaaAAAAaaab * 2**192 - 1");
