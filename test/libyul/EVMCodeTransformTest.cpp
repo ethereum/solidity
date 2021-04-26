@@ -44,7 +44,7 @@ EVMCodeTransformTest::EVMCodeTransformTest(string const& _filename):
 
 TestCase::TestResult EVMCodeTransformTest::run(ostream& _stream, string const& _linePrefix, bool const _formatted)
 {
-	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::full();
+	solidity::frontend::OptimiserSettings settings = solidity::frontend::OptimiserSettings::none();
 	settings.runYulOptimiser = false;
 	settings.optimizeStackAllocation = m_stackOpt;
 	AssemblyStack stack(EVMVersion{}, AssemblyStack::Language::StrictAssembly, settings);
