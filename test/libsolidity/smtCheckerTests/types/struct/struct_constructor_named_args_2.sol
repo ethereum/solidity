@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 
 	struct S {
@@ -16,5 +14,7 @@ contract C {
 		assert(s.x == 0 || s.y == 0 || s.z == 0); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (224-264): CHC: Assertion violation happens here.\nCounterexample:\n\ns = {x: 3, y: 2, z: 1}\n\nTransaction trace:\nC.constructor()\nC.test()
+// Warning 6328: (191-231): CHC: Assertion violation happens here.\nCounterexample:\n\ns = {x: 3, y: 2, z: 1}\n\nTransaction trace:\nC.constructor()\nC.test()

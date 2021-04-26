@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract ContractWithFunctionCalled {
     function funcCalled() external  {
         uint256 i = 0;
@@ -72,21 +70,23 @@ contract InternalCall {
     }
 
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 9302: (760-815): Return value of low-level calls not used.
-// Warning 2072: (117-126): Unused local variable.
-// Warning 2072: (260-269): Unused local variable.
-// Warning 2072: (667-676): Unused local variable.
-// Warning 2018: (75-137): Function state mutability can be restricted to pure
-// Warning 2018: (218-280): Function state mutability can be restricted to pure
-// Warning 2018: (470-539): Function state mutability can be restricted to pure
-// Warning 2018: (1144-1206): Function state mutability can be restricted to pure
-// Warning 2018: (1212-1274): Function state mutability can be restricted to pure
-// Warning 2018: (1280-1342): Function state mutability can be restricted to pure
-// Warning 4588: (714-749): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (760-815): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (887-919): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (714-749): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (760-815): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (887-919): Assertion checker does not yet implement this type of function call.
-// Warning 5729: (1403-1408): BMC does not yet implement this type of function call.
+// Warning 9302: (727-782): Return value of low-level calls not used.
+// Warning 2072: (84-93): Unused local variable.
+// Warning 2072: (227-236): Unused local variable.
+// Warning 2072: (634-643): Unused local variable.
+// Warning 2018: (42-104): Function state mutability can be restricted to pure
+// Warning 2018: (185-247): Function state mutability can be restricted to pure
+// Warning 2018: (437-506): Function state mutability can be restricted to pure
+// Warning 2018: (1111-1173): Function state mutability can be restricted to pure
+// Warning 2018: (1179-1241): Function state mutability can be restricted to pure
+// Warning 2018: (1247-1309): Function state mutability can be restricted to pure
+// Warning 4588: (681-716): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (727-782): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (854-886): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (681-716): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (727-782): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (854-886): Assertion checker does not yet implement this type of function call.
+// Warning 5729: (1370-1375): BMC does not yet implement this type of function call.

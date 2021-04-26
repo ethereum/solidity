@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[][][] c;
@@ -15,10 +13,12 @@ contract C
 		assert(c[0][0][0] < 2);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (157-164): CHC: Out of bounds access might happen here.
-// Warning 6368: (157-167): CHC: Out of bounds access might happen here.
-// Warning 6368: (185-192): CHC: Out of bounds access might happen here.
-// Warning 6368: (185-195): CHC: Out of bounds access might happen here.
-// Warning 6368: (210-217): CHC: Out of bounds access might happen here.
-// Warning 6368: (210-220): CHC: Out of bounds access might happen here.
+// Warning 6368: (124-131): CHC: Out of bounds access might happen here.
+// Warning 6368: (124-134): CHC: Out of bounds access might happen here.
+// Warning 6368: (152-159): CHC: Out of bounds access might happen here.
+// Warning 6368: (152-162): CHC: Out of bounds access might happen here.
+// Warning 6368: (177-184): CHC: Out of bounds access might happen here.
+// Warning 6368: (177-187): CHC: Out of bounds access might happen here.

@@ -18,8 +18,8 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // revertStrings: debug
 // ----
 // (), 10 wei ->

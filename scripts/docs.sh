@@ -31,3 +31,5 @@ cd docs
 pip3 install -r requirements.txt
 sphinx-build -nW -b html -d _build/doctrees . _build/html
 cd ..
+chmod +x scripts/update_robots.sh
+scripts/update_robots.sh

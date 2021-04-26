@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint t;
 	constructor() {
@@ -17,4 +15,6 @@ contract C {
 		//assert(address(this).balance == t);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

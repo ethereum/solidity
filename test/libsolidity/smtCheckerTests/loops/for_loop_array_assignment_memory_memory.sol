@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract LoopFor2 {
 	function testUnboundedForLoop(uint n, uint[] memory b, uint[] memory c) public pure {
 		require(n < b.length);
@@ -21,9 +19,10 @@ contract LoopFor2 {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 2072: (235-250): Unused local variable.
-// Warning 6368: (387-391): CHC: Out of bounds access happens here.
-// Warning 6368: (411-415): CHC: Out of bounds access happens here.
-// Warning 6368: (404-408): CHC: Out of bounds access happens here.
+// Warning 2072: (202-217): Unused local variable.
+// Warning 6368: (354-358): CHC: Out of bounds access happens here.
+// Warning 6368: (378-382): CHC: Out of bounds access happens here.
+// Warning 6368: (371-375): CHC: Out of bounds access happens here.

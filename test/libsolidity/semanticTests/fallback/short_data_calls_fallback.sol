@@ -5,8 +5,8 @@ contract A {
     fallback () external { x = 2; }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // (): hex"d88e0b"
 // x() -> 2

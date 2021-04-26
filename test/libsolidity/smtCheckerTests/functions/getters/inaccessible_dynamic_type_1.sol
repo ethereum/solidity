@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	struct S {
 		string a;
@@ -10,6 +9,7 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // EVMVersion: <=spuriousDragon
 // ----
-// Warning 6321: (133-140): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (101-108): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.

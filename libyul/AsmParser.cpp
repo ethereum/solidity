@@ -285,6 +285,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		return identifier;
 	}
 	case Token::StringLiteral:
+	case Token::HexStringLiteral:
 	case Token::Number:
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
@@ -293,6 +294,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		switch (currentToken())
 		{
 		case Token::StringLiteral:
+		case Token::HexStringLiteral:
 			kind = LiteralKind::String;
 			break;
 		case Token::Number:
@@ -324,9 +326,6 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 
 		return literal;
 	}
-	case Token::HexStringLiteral:
-		fatalParserError(3772_error, "Hex literals are not valid in this context.");
-		break;
 	case Token::Illegal:
 		fatalParserError(1465_error, "Illegal token: " + to_string(m_scanner->currentError()));
 		break;

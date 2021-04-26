@@ -3,7 +3,7 @@ contract test {
     function b() public returns (uint r) { r = a({c: 3, a: 1, b: 2}); }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // b() -> 123

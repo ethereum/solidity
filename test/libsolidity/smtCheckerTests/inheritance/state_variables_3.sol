@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract Base {
 	uint x;
 	uint private t;
@@ -15,4 +13,6 @@ contract C is Base {
 		assert(z < 150);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

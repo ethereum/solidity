@@ -3,3 +3,4 @@ contract C {
 		c = abi.decode(x, (C[]));
 	}
 }
+// ----

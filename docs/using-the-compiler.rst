@@ -374,16 +374,22 @@ Input Description
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           }
         },
+        // The modelChecker object is experimental and subject to changes.
         "modelChecker":
         {
+          // Chose which contracts should be analyzed as the deployed one.
+          contracts:
+          {
+            "source1.sol": ["contract1"],
+            "source2.sol": ["contract2", "contract3"]
+          },
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
-          // Choose which targets should be checked: all (default), constantCondition,
+          // Choose which targets should be checked: constantCondition,
           // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
+          // If the option is not given all targets are checked by default.
           // See the Formal Verification section for the targets description.
-          // Multiple targets can be selected at the same time, separated by a comma
-          // without spaces:
-          "targets": "underflow,overflow,assert",
+          "targets": ["underflow", "overflow", "assert"],
           // Timeout for each SMT query in milliseconds.
           // If this option is not given, the SMTChecker will use a deterministic
           // resource limit by default.

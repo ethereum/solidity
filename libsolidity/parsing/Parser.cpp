@@ -721,9 +721,6 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	ASTPointer<TypeName> type = _lookAheadArrayType ? _lookAheadArrayType : parseTypeName();
 	nodeFactory.setEndPositionFromNode(type);
 
-	if (_options.kind == VarDeclKind::Other && documentation != nullptr)
-		parserError(2837_error, "Only state variables or file-level variables can have a docstring.");
-
 	if (dynamic_cast<FunctionTypeName*>(type.get()) && _options.kind == VarDeclKind::State && m_scanner->currentToken() == Token::LBrace)
 		fatalParserError(
 			2915_error,
@@ -1422,7 +1419,7 @@ ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& 
 	expectToken(Token::For);
 	expectToken(Token::LParen);
 
-	// LTODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RParen?
+	// TODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RParen?
 	if (m_scanner->currentToken() != Token::Semicolon)
 		initExpression = parseSimpleStatement(ASTPointer<ASTString>());
 	expectToken(Token::Semicolon);

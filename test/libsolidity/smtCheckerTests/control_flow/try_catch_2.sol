@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f() public {
 		try this.f() {}
@@ -9,4 +8,5 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// SMTEngine: all
 // ----

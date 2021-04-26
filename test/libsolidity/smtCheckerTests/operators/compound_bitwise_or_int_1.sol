@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
     int[1][20] c;
     function f(bool b) public {
@@ -8,13 +7,15 @@ contract C {
         assert(c[10][0] == 0 || c[10][0] == 1);
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (108-113): CHC: Out of bounds access might happen here.
-// Warning 6368: (108-116): CHC: Out of bounds access might happen here.
-// Warning 6368: (151-156): CHC: Out of bounds access might happen here.
-// Warning 6368: (151-159): CHC: Out of bounds access might happen here.
-// Warning 6368: (181-186): CHC: Out of bounds access might happen here.
-// Warning 6368: (181-189): CHC: Out of bounds access might happen here.
-// Warning 6368: (198-203): CHC: Out of bounds access might happen here.
-// Warning 6368: (198-206): CHC: Out of bounds access might happen here.
-// Warning 6328: (174-212): CHC: Assertion violation might happen here.
+// Warning 6368: (76-81): CHC: Out of bounds access might happen here.
+// Warning 6368: (76-84): CHC: Out of bounds access might happen here.
+// Warning 6368: (119-124): CHC: Out of bounds access might happen here.
+// Warning 6368: (119-127): CHC: Out of bounds access might happen here.
+// Warning 6368: (149-154): CHC: Out of bounds access might happen here.
+// Warning 6368: (149-157): CHC: Out of bounds access might happen here.
+// Warning 6368: (166-171): CHC: Out of bounds access might happen here.
+// Warning 6368: (166-174): CHC: Out of bounds access might happen here.
+// Warning 6328: (142-180): CHC: Assertion violation might happen here.

@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiencodePackedStringLiteral() public pure {
 		bytes memory b1 = abi.encodePacked("");
@@ -20,17 +19,19 @@ contract C {
 		assert(b1.length == b6.length); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (258-288): CHC: Assertion violation happens here.
-// Warning 1218: (342-372): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (342-372): CHC: Assertion violation might happen here.
-// Warning 1218: (515-545): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (515-545): CHC: Assertion violation might happen here.
-// Warning 1218: (600-630): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (600-630): CHC: Assertion violation might happen here.
-// Warning 1218: (686-716): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (686-716): CHC: Assertion violation might happen here.
-// Warning 4661: (342-372): BMC: Assertion violation happens here.
-// Warning 4661: (515-545): BMC: Assertion violation happens here.
-// Warning 4661: (600-630): BMC: Assertion violation happens here.
-// Warning 4661: (686-716): BMC: Assertion violation happens here.
+// Warning 6328: (226-256): CHC: Assertion violation happens here.
+// Warning 1218: (310-340): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (310-340): CHC: Assertion violation might happen here.
+// Warning 1218: (483-513): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (483-513): CHC: Assertion violation might happen here.
+// Warning 1218: (568-598): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (568-598): CHC: Assertion violation might happen here.
+// Warning 1218: (654-684): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (654-684): CHC: Assertion violation might happen here.
+// Warning 4661: (310-340): BMC: Assertion violation happens here.
+// Warning 4661: (483-513): BMC: Assertion violation happens here.
+// Warning 4661: (568-598): BMC: Assertion violation happens here.
+// Warning 4661: (654-684): BMC: Assertion violation happens here.

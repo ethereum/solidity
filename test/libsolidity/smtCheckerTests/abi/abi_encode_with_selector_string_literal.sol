@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiEncodeStringLiteral(bytes4 sel) public pure {
 		bytes memory b1 = abi.encodeWithSelector(sel, "");
@@ -20,17 +19,19 @@ contract C {
 		assert(b4.length == b6.length); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (284-314): CHC: Assertion violation happens here.
-// Warning 1218: (379-409): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (379-409): CHC: Assertion violation might happen here.
-// Warning 1218: (563-593): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (563-593): CHC: Assertion violation might happen here.
-// Warning 1218: (659-689): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (659-689): CHC: Assertion violation might happen here.
-// Warning 1218: (778-808): CHC: Error trying to invoke SMT solver.
-// Warning 6328: (778-808): CHC: Assertion violation might happen here.
-// Warning 4661: (379-409): BMC: Assertion violation happens here.
-// Warning 4661: (563-593): BMC: Assertion violation happens here.
-// Warning 4661: (659-689): BMC: Assertion violation happens here.
-// Warning 4661: (778-808): BMC: Assertion violation happens here.
+// Warning 6328: (252-282): CHC: Assertion violation happens here.
+// Warning 1218: (347-377): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (347-377): CHC: Assertion violation might happen here.
+// Warning 1218: (531-561): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (531-561): CHC: Assertion violation might happen here.
+// Warning 1218: (627-657): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (627-657): CHC: Assertion violation might happen here.
+// Warning 1218: (746-776): CHC: Error trying to invoke SMT solver.
+// Warning 6328: (746-776): CHC: Assertion violation might happen here.
+// Warning 4661: (347-377): BMC: Assertion violation happens here.
+// Warning 4661: (531-561): BMC: Assertion violation happens here.
+// Warning 4661: (627-657): BMC: Assertion violation happens here.
+// Warning 4661: (746-776): BMC: Assertion violation happens here.

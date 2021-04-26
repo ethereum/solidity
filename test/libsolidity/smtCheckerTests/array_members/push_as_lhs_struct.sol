@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	struct S {
 		int[] b;
@@ -13,3 +12,6 @@ contract C {
 		assert(s.b[s.b.length -1] == t.s.b[t.s.b.length - 1]);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

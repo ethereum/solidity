@@ -27,3 +27,4 @@ contract C {
         assembly { pop(extcodesize(0)) }
     }
 }
+// ----

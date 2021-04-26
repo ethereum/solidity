@@ -12,7 +12,7 @@ Creating and verifying signatures
 =================================
 
 Imagine Alice wants to send a quantity of Ether to Bob, i.e.
-Alice is the sender and the Bob is the recipient.
+Alice is the sender and Bob is the recipient.
 
 Alice only needs to send cryptographically signed messages off-chain
 (e.g. via email) to Bob and it is similar to writing checks.

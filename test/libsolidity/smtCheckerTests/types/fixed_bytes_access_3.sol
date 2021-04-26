@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	bytes16[][] a;
 	constructor() {
@@ -29,5 +28,7 @@ contract C {
 		h()[5];
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (488-494): CHC: Out of bounds access happens here.
+// Warning 6368: (456-462): CHC: Out of bounds access happens here.

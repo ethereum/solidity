@@ -5,9 +5,9 @@ contract test {
     function f() public returns(uint n) { return 3; }
 }
 // ====
-// compileViaYul: also
-// compileToEwasm: also
 // allowNonExistingFunctions: true
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // a() -> 0
 // b() -> 1

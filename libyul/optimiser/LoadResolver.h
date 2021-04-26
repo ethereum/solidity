@@ -32,6 +32,9 @@ namespace solidity::yul
  * Optimisation stage that replaces expressions of type ``sload(x)`` and ``mload(x)`` by the value
  * currently stored in storage resp. memory, if known.
  *
+ * Also evaluates simple ``keccak256(a, c)`` when the value at memory location `a` is known and `c`
+ * is a constant `<= 32`.
+ *
  * Works best if the code is in SSA form.
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter.
@@ -47,10 +50,12 @@ private:
 	LoadResolver(
 		Dialect const& _dialect,
 		std::map<YulString, SideEffects> _functionSideEffects,
-		bool _optimizeMLoad
+		bool _containsMSize,
+		std::optional<size_t> _expectedExecutionsPerDeployment
 	):
 		DataFlowAnalyzer(_dialect, std::move(_functionSideEffects)),
-		m_optimizeMLoad(_optimizeMLoad)
+		m_containsMSize(_containsMSize),
+		m_expectedExecutionsPerDeployment(std::move(_expectedExecutionsPerDeployment))
 	{}
 
 protected:
@@ -63,7 +68,17 @@ protected:
 		std::vector<Expression> const& _arguments
 	);
 
-	bool m_optimizeMLoad = false;
+	/// Evaluates simple ``keccak256(a, c)`` when the value at memory location ``a`` is known and
+	/// `c` is a constant `<= 32`.
+	void tryEvaluateKeccak(
+		Expression& _e,
+		std::vector<Expression> const& _arguments
+	);
+
+	/// If the AST contains `msize`, then we skip resolving `mload` and `keccak256`.
+	bool m_containsMSize = false;
+	/// The --optimize-runs parameter. Value `nullopt` represents creation code.
+	std::optional<size_t> m_expectedExecutionsPerDeployment;
 };
 
 }

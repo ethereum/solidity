@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	mapping (uint => uint) singleMap;
@@ -26,9 +24,10 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6368: (386-402): CHC: Out of bounds access happens here.
-// Warning 6368: (386-405): CHC: Out of bounds access happens here.
-// Warning 6368: (496-510): CHC: Out of bounds access happens here.
-// Warning 6328: (489-520): CHC: Assertion violation happens here.
+// Warning 6368: (353-369): CHC: Out of bounds access happens here.
+// Warning 6368: (353-372): CHC: Out of bounds access happens here.
+// Warning 6368: (463-477): CHC: Out of bounds access happens here.
+// Warning 6328: (456-487): CHC: Assertion violation happens here.

@@ -21,6 +21,9 @@
 #include <libsmtutil/Z3Interface.h>
 #endif
 
+#include <range/v3/algorithm/any_of.hpp>
+#include <range/v3/view.hpp>
+
 using namespace std;
 using namespace solidity;
 using namespace solidity::util;
@@ -34,6 +37,7 @@ ModelChecker::ModelChecker(
 	ReadCallback::Callback const& _smtCallback,
 	smtutil::SMTSolverChoice _enabledSolvers
 ):
+	m_errorReporter(_errorReporter),
 	m_settings(_settings),
 	m_context(),
 	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings),
@@ -41,9 +45,75 @@ ModelChecker::ModelChecker(
 {
 }
 
+// TODO This should be removed for 0.9.0.
+void ModelChecker::enableAllEnginesIfPragmaPresent(vector<shared_ptr<SourceUnit>> const& _sources)
+{
+	bool hasPragma = ranges::any_of(_sources, [](auto _source) {
+		return _source && _source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker);
+	});
+	if (hasPragma)
+		m_settings.engine = ModelCheckerEngine::All();
+}
+
+void ModelChecker::checkRequestedSourcesAndContracts(vector<shared_ptr<SourceUnit>> const& _sources)
+{
+	map<string, set<string>> exist;
+	for (auto const& source: _sources)
+		for (auto node: source->nodes())
+			if (auto contract = dynamic_pointer_cast<ContractDefinition>(node))
+				exist[contract->sourceUnitName()].insert(contract->name());
+
+	// Requested sources
+	for (auto const& sourceName: m_settings.contracts.contracts | ranges::views::keys)
+	{
+		if (!exist.count(sourceName))
+		{
+			m_errorReporter.warning(
+				9134_error,
+				SourceLocation(),
+				"Requested source \"" + sourceName + "\" does not exist."
+			);
+			continue;
+		}
+		auto const& source = exist.at(sourceName);
+		// Requested contracts in source `s`.
+		for (auto const& contract: m_settings.contracts.contracts.at(sourceName))
+			if (!source.count(contract))
+				m_errorReporter.warning(
+					7400_error,
+					SourceLocation(),
+					"Requested contract \"" + contract + "\" does not exist in source \"" + sourceName + "\"."
+				);
+	}
+}
+
 void ModelChecker::analyze(SourceUnit const& _source)
 {
-	if (!_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+	// TODO This should be removed for 0.9.0.
+	if (_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+	{
+		PragmaDirective const* smtPragma = nullptr;
+		for (auto node: _source.nodes())
+			if (auto pragma = dynamic_pointer_cast<PragmaDirective>(node))
+				if (
+					pragma->literals().size() >= 2 &&
+					pragma->literals().at(1) == "SMTChecker"
+				)
+				{
+					smtPragma = pragma.get();
+					break;
+				}
+		solAssert(smtPragma, "");
+		m_errorReporter.warning(
+			5523_error,
+			smtPragma->location(),
+			"The SMTChecker pragma has been deprecated and will be removed in the future. "
+			"Please use the \"model checker engine\" compiler setting to activate the SMTChecker instead. "
+			"If the pragma is enabled, all engines will be used."
+		);
+	}
+
+	if (m_settings.engine.none())
 		return;
 
 	if (m_settings.engine.chc)

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	int x;
 	constructor (int a) { x = a;}
@@ -34,8 +32,10 @@ contract C is B {
 		}
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (330-344): CHC: Assertion violation happens here.\nCounterexample:\ny = 2, x = (- 1)\na = 1\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (422-445): CHC: Assertion violation happens here.\nCounterexample:\ny = 2, x = (- 1)\na = 1\n\nTransaction trace:\nC.constructor(1)
-// Warning 6328: (522-546): CHC: Assertion violation happens here.\nCounterexample:\ny = 4, x = 0\na = 0\n\nTransaction trace:\nC.constructor(0)
-// Warning 6328: (566-579): CHC: Assertion violation happens here.\nCounterexample:\ny = 4, x = 0\na = 0\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (297-311): CHC: Assertion violation happens here.\nCounterexample:\ny = 2, x = (- 1)\na = 1\n\nTransaction trace:\nC.constructor(1)
+// Warning 6328: (389-412): CHC: Assertion violation happens here.\nCounterexample:\ny = 2, x = (- 1)\na = 1\n\nTransaction trace:\nC.constructor(1)
+// Warning 6328: (489-513): CHC: Assertion violation happens here.\nCounterexample:\ny = 4, x = 0\na = 0\n\nTransaction trace:\nC.constructor(0)
+// Warning 6328: (533-546): CHC: Assertion violation happens here.\nCounterexample:\ny = 4, x = 0\na = 0\n\nTransaction trace:\nC.constructor(0)

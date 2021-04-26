@@ -39,8 +39,17 @@ The potential warnings that the SMTChecker reports are:
 - ``<failing  property> happens here.``. This means that the SMTChecker proved that a certain property fails. A counterexample may be given, however in complex situations it may also not show a counterexample. This result may also be a false positive in certain cases, when the SMT encoding adds abstractions for Solidity code that is either hard or impossible to express.
 - ``<failing property> might happen here``. This means that the solver could not prove either case within the given timeout. Since the result is unknown, the SMTChecker reports the potential failure for soundness. This may be solved by increasing the query timeout, but the problem might also simply be too hard for the engine to solve.
 
-It is currently an experimental feature, therefore in order to use it you need
-to enable it via :ref:`a pragma directive<smt_checker>`.
+To enable the SMTChecker, you must select :ref:`which engine should run<smtchecker_engines>`,
+where the default is no engine. Selecting the engine enables the SMTChecker on all files.
+
+.. note::
+
+  Prior to Solidity 0.8.4, the default way to enable the SMTChecker was via
+  ``pragma experimental SMTChecker;`` and only the contracts containing the
+  pragma would be analyzed. That pragma has been deprecated, and although it
+  still enables the SMTChecker for backwards compatibility, it will be removed
+  in Solidity 0.9.0. Note also that now using the pragma even in a single file
+  enables the SMTChecker for all files.
 
 .. note::
   The lack of warnings for a verification target represents an undisputed
@@ -62,9 +71,8 @@ Overflow
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     contract Overflow {
         uint immutable x;
@@ -110,9 +118,8 @@ the SMTChecker proves that no overflow is reachable (by not reporting warnings):
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     contract Overflow {
         uint immutable x;
@@ -149,9 +156,8 @@ definition to see what results come out!
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     contract Monotonic {
         function f(uint _x) internal pure returns (uint) {
@@ -172,9 +178,8 @@ equal every element in the array.
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     contract Max {
         function max(uint[] memory _a) public pure returns (uint) {
@@ -206,9 +211,8 @@ For example, changing the code to
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     contract Max {
         function max(uint[] memory _a) public pure returns (uint) {
@@ -259,10 +263,8 @@ below.
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
-
 
     contract Robot {
         int x = 0;
@@ -361,9 +363,8 @@ anything, including reenter the caller contract.
 
 .. code-block:: Solidity
 
+    // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     interface Unknown {
     	function run() external;
@@ -447,10 +448,13 @@ the JSON option ``settings.modelChecker.timeout=<time>``, where 0 means no timeo
 Verification Targets
 ====================
 
-The types of verification targets created by the SMTChecker can also be customized via
-the CLI option ``--model-checker-target <targets>`` or the JSON option
-``settings.modelChecker.targets=<targets>``, where ``<targets>`` is a no-space-comma-separated
-list of one or more verification targets. The keywords that represent the targets are:
+The types of verification targets created by the SMTChecker can also be
+customized via the CLI option ``--model-checker-target <targets>`` or the JSON
+option ``settings.modelChecker.targets=<targets>``.
+In the CLI case, ``<targets>`` is a no-space-comma-separated list of one or
+more verification targets, and an array of one or more targets as strings in
+the JSON input.
+The keywords that represent the targets are:
 
 - Assertions: ``assert``.
 - Arithmetic underflow: ``underflow``.
@@ -460,14 +464,44 @@ list of one or more verification targets. The keywords that represent the target
 - Popping an empty array: ``popEmptyArray``.
 - Out of bounds array/fixed bytes index access: ``outOfBounds``.
 - Insufficient funds for a transfer: ``balance``.
-- All of the above: ``all``.
-- None of the above: ``none``.
+- All of the above: ``default`` (CLI only).
 
 A common subset of targets might be, for example:
 ``--model-checker-targets assert,overflow``.
 
 There is no precise heuristic on how and when to split verification targets,
 but it can be useful especially when dealing with large contracts.
+
+Verified Contracts
+==================
+
+By default all the deployable contracts in the given sources are analyzed separately as
+the one that will be deployed. This means that if a contract has many direct
+and indirect inheritance parents, all of them will be analyzed on their own,
+even though only the most derived will be accessed directly on the blockchain.
+This causes an unnecessary burden on the SMTChecker and the solver.  To aid
+cases like this, users can specify which contracts should be analyzed as the
+deployed one. The parent contracts are of course still analyzed, but only in
+the context of the most derived contract, reducing the complexity of the
+encoding and generated queries. Note that abstract contracts are by default
+not analyzed as the most derived by the SMTChecker.
+
+The chosen contracts can be given via a comma-separated list (whitespace is not
+allowed) of <source>:<contract> pairs in the CLI:
+``--model-checker-contracts "<source1.sol:contract1>,<source2.sol:contract2>,<source2.sol:contract3>"``,
+and via the object ``settings.modelChecker.contracts`` in the :ref:`JSON input<compiler-api>`,
+which has the following form:
+
+.. code-block:: none
+
+  contracts
+  {
+      "source1.sol": ["contract1"],
+      "source2.sol": ["contract2", "contract3"]
+  }
+
+
+.. _smtchecker_engines:
 
 Model Checking Engines
 ======================
@@ -624,8 +658,6 @@ not mean loss of proving power.
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This may report a warning if no SMT solver is available.
 
     contract Recover
     {
@@ -673,8 +705,6 @@ types.
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
-    pragma experimental SMTChecker;
-    // This will report a warning
 
     contract Aliasing
     {

@@ -28,7 +28,6 @@
 #include <liblangutil/EVMVersion.h>
 #include <libyul/optimiser/ASTWalker.h>
 
-#include <boost/noncopyable.hpp>
 #include <list>
 #include <map>
 

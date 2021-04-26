@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[] arr;
 	function f(uint[] memory marr) public {
@@ -7,3 +5,6 @@ contract C {
 		assert(marr.length == arr.length);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

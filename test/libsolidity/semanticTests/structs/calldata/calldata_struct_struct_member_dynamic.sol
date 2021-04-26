@@ -25,4 +25,4 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f((uint256,(uint64, bytes),uint256)): 0x20, 42, 0x60, 23, 1, 0x40, 2, "ab" -> 42, 1, "a", 23
+// f((uint256,(uint64,bytes),uint256)): 0x20, 42, 0x60, 23, 1, 0x40, 2, "ab" -> 42, 1, "a", 23

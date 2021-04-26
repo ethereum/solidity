@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function test(uint256 a, uint256 b) public pure returns (uint256) {
 		if (a == 0) {

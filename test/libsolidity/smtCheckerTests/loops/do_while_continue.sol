@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() public pure {
 		uint x;
@@ -11,6 +9,7 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
 // ----
-// Warning 5740: (107-112): Unreachable code.
+// Warning 5740: (74-79): Unreachable code.

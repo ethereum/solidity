@@ -6,3 +6,4 @@
     { switch mul(1, 2) case 1 {} case 2 {} default {} }
     { function f() -> x {} switch f() case 1 {} case 2 {} default {} }
 }
+// ----

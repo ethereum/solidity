@@ -15,6 +15,7 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // to_little_endian_64(uint64): 0 -> 0x20, 8, 0x00
 // to_little_endian_64(uint64): 0x0102030405060708 -> 0x20, 8, 0x0807060504030201000000000000000000000000000000000000000000000000

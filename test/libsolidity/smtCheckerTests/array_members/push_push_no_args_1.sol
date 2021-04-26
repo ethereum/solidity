@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	int[][] array2d;
 	function l() public {
@@ -7,3 +6,6 @@ contract C {
 		assert(array2d[array2d.length - 1].length > 0);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

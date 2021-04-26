@@ -23,8 +23,8 @@ contract C is A, B {
 }
 
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // g() -> 10
 // h() -> 2

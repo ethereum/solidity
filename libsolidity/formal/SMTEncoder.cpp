@@ -43,44 +43,18 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
-SMTEncoder::SMTEncoder(smt::EncodingContext& _context):
+SMTEncoder::SMTEncoder(
+	smt::EncodingContext& _context,
+	ModelCheckerSettings const& _settings
+):
 	m_errorReporter(m_smtErrors),
-	m_context(_context)
+	m_context(_context),
+	m_settings(_settings)
 {
 }
 
 bool SMTEncoder::analyze(SourceUnit const& _source)
 {
-	set<SourceUnit const*, smt::EncodingContext::IdCompare> sources;
-	sources.insert(&_source);
-	for (auto const& source: _source.referencedSourceUnits(true))
-		sources.insert(source);
-
-	bool analysis = true;
-	for (auto source: sources)
-		for (auto node: source->nodes())
-			if (auto function = dynamic_pointer_cast<FunctionDefinition>(node))
-			{
-				m_errorReporter.warning(
-					6660_error,
-					function->location(),
-					"Model checker analysis was not possible because file level functions are not supported."
-				);
-				analysis = false;
-			}
-			else if (auto var = dynamic_pointer_cast<VariableDeclaration>(node))
-			{
-				m_errorReporter.warning(
-					8195_error,
-					var->location(),
-					"Model checker analysis was not possible because file level constants are not supported."
-				);
-				analysis = false;
-			}
-
-	if (!analysis)
-		return false;
-
 	state().prepareForSourceUnit(_source);
 
 	return true;
@@ -116,7 +90,7 @@ bool SMTEncoder::visit(ContractDefinition const& _contract)
 	// the constructor.
 	// Constructors are visited as part of the constructor
 	// hierarchy inlining.
-	for (auto const* function: contractFunctionsWithoutVirtual(_contract))
+	for (auto const* function: contractFunctionsWithoutVirtual(_contract) + allFreeFunctions())
 		if (!function->isConstructor())
 			function->accept(*this);
 
@@ -152,6 +126,8 @@ bool SMTEncoder::visit(ModifierDefinition const&)
 
 bool SMTEncoder::visit(FunctionDefinition const& _function)
 {
+	solAssert(m_currentContract, "");
+
 	m_modifierDepthStack.push_back(-1);
 
 	initializeLocalVariables(_function);
@@ -288,6 +264,8 @@ bool SMTEncoder::visit(PlaceholderStatement const&)
 
 void SMTEncoder::endVisit(FunctionDefinition const&)
 {
+	solAssert(m_currentContract, "");
+
 	popCallStack();
 	solAssert(m_modifierDepthStack.back() == -1, "");
 	m_modifierDepthStack.pop_back();
@@ -442,14 +420,9 @@ void SMTEncoder::endVisit(TupleExpression const& _tuple)
 		auto values = applyMap(_tuple.components(), [this](auto const& component) -> optional<smtutil::Expression> {
 			if (component)
 			{
-				if (auto varDecl = identifierToVariable(*component))
-					return currentValue(*varDecl);
-				else
-				{
-					if (!m_context.knownExpression(*component))
+				if (!m_context.knownExpression(*component))
 						createExpr(*component);
-					return expr(*component);
-				}
+				return expr(*component);
 			}
 			return {};
 		});
@@ -1023,6 +996,15 @@ void SMTEncoder::visitPublicGetter(FunctionCall const& _funCall)
 	}
 }
 
+bool SMTEncoder::shouldAnalyze(ContractDefinition const& _contract) const
+{
+	if (!_contract.canBeDeployed())
+		return false;
+
+	return m_settings.contracts.isDefault() ||
+		m_settings.contracts.has(_contract.sourceUnitName(), _contract.name());
+}
+
 void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 {
 	solAssert(*_funCall.annotation().kind == FunctionCallKind::TypeConversion, "");
@@ -1400,6 +1382,9 @@ void SMTEncoder::endVisit(IndexAccess const& _indexAccess)
 		auto varDecl = identifierToVariable(*id);
 		solAssert(varDecl, "");
 		array = m_context.variable(*varDecl);
+
+		if (varDecl && varDecl->isConstant())
+			m_context.addAssertion(currentValue(*varDecl) == expr(*id));
 	}
 	else
 	{
@@ -2604,6 +2589,7 @@ VariableDeclaration const* SMTEncoder::identifierToVariable(Expression const& _e
 				solAssert(m_context.knownVariable(*varDecl), "");
 				return varDecl;
 			}
+
 	return nullptr;
 }
 
@@ -2918,6 +2904,15 @@ set<FunctionCall const*> SMTEncoder::collectABICalls(ASTNode const* _node)
 	return ABIFunctions(_node).abiCalls;
 }
 
+set<SourceUnit const*, ASTNode::CompareByID> SMTEncoder::sourceDependencies(SourceUnit const& _source)
+{
+	set<SourceUnit const*, ASTNode::CompareByID> sources;
+	sources.insert(&_source);
+	for (auto const& source: _source.referencedSourceUnits(true))
+		sources.insert(source);
+	return sources;
+}
+
 void SMTEncoder::createReturnedExpressions(FunctionCall const& _funCall, ContractDefinition const* _contextContract)
 {
 	auto funDef = functionCallToDefinition(_funCall, currentScopeContract(), _contextContract);
@@ -2961,6 +2956,34 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 		args.push_back(expr(*arguments.at(i), functionParams.at(i + firstParam)->type()));
 
 	return args;
+}
+
+void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)
+{
+	if (!m_freeFunctions.empty())
+		return;
+
+	for (auto source: _sources)
+		for (auto node: source->nodes())
+			if (auto function = dynamic_cast<FunctionDefinition const*>(node.get()))
+				m_freeFunctions.insert(function);
+			else if (
+				auto contract = dynamic_cast<ContractDefinition const*>(node.get());
+				contract && contract->isLibrary()
+			)
+			{
+				for (auto function: contract->definedFunctions())
+					if (!function->isPublic())
+						m_freeFunctions.insert(function);
+			}
+}
+
+void SMTEncoder::createFreeConstants(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)
+{
+	for (auto source: _sources)
+		for (auto node: source->nodes())
+			if (auto var = dynamic_cast<VariableDeclaration const*>(node.get()))
+				createVariable(*var);
 }
 
 smt::SymbolicState& SMTEncoder::state()

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function test_addmod(uint x, uint y) public pure {
 		require(x % 13 == 0);
@@ -16,4 +14,6 @@ contract C {
 		assert(z == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

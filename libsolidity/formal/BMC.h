@@ -193,8 +193,6 @@ private:
 
 	/// Targets that were already proven.
 	std::map<ASTNode const*, std::set<VerificationTargetType>> m_solvedTargets;
-
-	ModelCheckerSettings const& m_settings;
 };
 
 }

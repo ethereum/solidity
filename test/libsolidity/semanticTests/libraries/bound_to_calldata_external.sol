@@ -14,8 +14,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // library: D
 // f(bytes): 0x20, 4, "abcd" -> 0x6100000000000000000000000000000000000000000000000000000000000000, 0x6100000000000000000000000000000000000000000000000000000000000000

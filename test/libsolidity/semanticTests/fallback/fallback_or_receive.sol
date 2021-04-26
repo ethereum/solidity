@@ -6,8 +6,8 @@ contract C {
     function f() external returns (uint, uint) { return (x, y); }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 0, 0
 // () ->

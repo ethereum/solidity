@@ -374,8 +374,6 @@ private:
 
 	/// SMT solvers that are chosen at runtime.
 	smtutil::SMTSolverChoice m_enabledSolvers;
-
-	ModelCheckerSettings const& m_settings;
 };
 
 }

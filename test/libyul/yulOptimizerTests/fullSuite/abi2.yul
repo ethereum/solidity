@@ -1089,21 +1089,21 @@
 //     }
 //     function abi_decode_addresst_uint256t_bytes_calldatat_enum_Operation(headStart, dataEnd) -> value0, value1, value2, value3, value4
 //     {
-//         if slt(sub(dataEnd, headStart), 128) { revert(value4, value4) }
+//         if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }
 //         value0 := and(calldataload(headStart), sub(shl(160, 1), 1))
 //         value1 := calldataload(add(headStart, 32))
 //         let offset := calldataload(add(headStart, 64))
 //         let _1 := 0xffffffffffffffff
-//         if gt(offset, _1) { revert(value4, value4) }
+//         if gt(offset, _1) { revert(0, 0) }
 //         let _2 := add(headStart, offset)
-//         if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(value4, value4) }
+//         if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }
 //         let length := calldataload(_2)
-//         if gt(length, _1) { revert(value4, value4) }
-//         if gt(add(add(_2, length), 32), dataEnd) { revert(value4, value4) }
+//         if gt(length, _1) { revert(0, 0) }
+//         if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }
 //         value2 := add(_2, 32)
 //         value3 := length
 //         let _3 := calldataload(add(headStart, 96))
-//         if iszero(lt(_3, 3)) { revert(value4, value4) }
+//         if iszero(lt(_3, 3)) { revert(0, 0) }
 //         value4 := _3
 //     }
 //     function abi_encode_bytes32_address_uint256_bytes32_enum_Operation_uint256_uint256_uint256_address_address_uint256(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail

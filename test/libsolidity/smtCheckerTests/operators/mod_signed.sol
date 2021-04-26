@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f(int x, int y) public pure {
 		require(y != 0);
@@ -9,5 +8,7 @@ contract C {
 		assert((x >= 0 && z1 >=0) || (x <= 0 && z1 <= 0));
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (163-180): CHC: Assertion violation might happen here.
+// Warning 6328: (131-148): CHC: Assertion violation might happen here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	uint[] a;
@@ -16,5 +14,7 @@ contract C
 		assert(a.length == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6838: (154-155): BMC: Condition is always true.
+// Warning 6838: (121-122): BMC: Condition is always true.

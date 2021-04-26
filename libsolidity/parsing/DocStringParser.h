@@ -35,7 +35,7 @@ class ErrorReporter;
 namespace solidity::frontend
 {
 
-class StructurallyDocumented;
+class StructuredDocumentation;
 
 class DocStringParser
 {
@@ -49,13 +49,10 @@ public:
 
 private:
 	using iter = std::string::const_iterator;
-	void resetUser();
-	void resetDev();
 
 	iter parseDocTagLine(iter _pos, iter _end, bool _appending);
 	iter parseDocTagParam(iter _pos, iter _end);
-	iter appendDocTagParam(iter _pos, iter _end);
-	void parseDocString(std::string const& _string);
+
 	/// Parses the doc tag named @a _tag, adds it to m_docTags and returns the position
 	/// after the tag.
 	iter parseDocTag(iter _pos, iter _end, std::string const& _tag);

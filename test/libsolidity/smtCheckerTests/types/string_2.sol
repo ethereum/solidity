@@ -1,10 +1,10 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public pure {
 		string memory s = "Hello World";
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2072: (76-91): Unused local variable.
+// Warning 2072: (43-58): Unused local variable.

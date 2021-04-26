@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract State {
 	uint x;
 	C c;
@@ -40,3 +38,6 @@ contract C {
 		return y;
 	}
 }
+// ====
+// SMTEngine: all
+// ----

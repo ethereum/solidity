@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiEncodeSimple(bytes4 sel, bool t, uint x, uint y, uint z, uint[] memory a, uint[] memory b) public pure {
 		require(x == y);
@@ -22,9 +21,11 @@ contract C {
 		assert(b1.length == b6.length); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 5667: (132-147): Unused function parameter. Remove or comment out the variable name to silence this warning.
-// Warning 6328: (603-633): CHC: Assertion violation happens here.
-// Warning 6328: (723-753): CHC: Assertion violation happens here.
-// Warning 6328: (772-802): CHC: Assertion violation happens here.
-// Warning 6328: (887-917): CHC: Assertion violation happens here.
+// Warning 5667: (100-115): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 6328: (571-601): CHC: Assertion violation happens here.
+// Warning 6328: (691-721): CHC: Assertion violation happens here.
+// Warning 6328: (740-770): CHC: Assertion violation happens here.
+// Warning 6328: (855-885): CHC: Assertion violation happens here.

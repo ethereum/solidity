@@ -12,6 +12,8 @@ within the Ethereum state.
 
 Solidity is a `curly-bracket language <https://en.wikipedia.org/wiki/List_of_programming_languages_by_type#Curly-bracket_languages>`_.
 It is influenced by C++, Python and JavaScript, and is designed to target the Ethereum Virtual Machine (EVM).
+You can find more details about which languages Solidity has been inspired by in
+the :doc:`language influences <language-influences>` section.
 
 Solidity is statically typed, supports inheritance, libraries and complex
 user-defined types among other features.
@@ -127,6 +129,13 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: Compiler
+
+   using-the-compiler.rst
+   analysing-compilation-output.rst
+
+.. toctree::
+   :maxdepth: 2
    :caption: Internals
 
    internals/layout_in_storage.rst
@@ -150,10 +159,10 @@ Contents
    security-considerations.rst
    smtchecker.rst
    resources.rst
-   using-the-compiler.rst
    yul.rst
    style-guide.rst
    common-patterns.rst
    bugs.rst
    contributing.rst
    brand-guide.rst
+   language-influences.rst

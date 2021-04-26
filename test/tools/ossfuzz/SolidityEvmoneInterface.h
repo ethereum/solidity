@@ -42,24 +42,26 @@ struct CompilerInput
 {
 	CompilerInput(
 		langutil::EVMVersion _evmVersion,
-		std::string const& _sourceCode,
+		StringMap const& _sourceCode,
 		std::string const& _contractName,
 		frontend::OptimiserSettings _optimiserSettings,
 		std::map<std::string, solidity::util::h160> _libraryAddresses,
-		bool _debugFailure
+		bool _debugFailure = false,
+		bool _viaIR = false
 	):
 		evmVersion(_evmVersion),
 		sourceCode(_sourceCode),
 		contractName(_contractName),
 		optimiserSettings(_optimiserSettings),
 		libraryAddresses(_libraryAddresses),
-		debugFailure(_debugFailure)
+		debugFailure(_debugFailure),
+		viaIR(_viaIR)
 	{}
 	/// EVM target version
 	langutil::EVMVersion evmVersion;
 	/// Source code to be compiled
-	std::string const& sourceCode;
-	/// Contract name
+	StringMap const& sourceCode;
+	/// Contract name without a colon prefix
 	std::string contractName;
 	/// Optimiser setting to be used during compilation
 	frontend::OptimiserSettings optimiserSettings;
@@ -67,6 +69,8 @@ struct CompilerInput
 	std::map<std::string, solidity::util::h160> libraryAddresses;
 	/// Flag used for debugging
 	bool debugFailure;
+	/// Flag to enable new code generator.
+	bool viaIR;
 };
 
 class SolidityCompilationFramework

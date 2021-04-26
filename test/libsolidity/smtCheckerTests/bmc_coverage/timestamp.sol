@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     function f() public view returns (uint) {
         uint b = block.timestamp;
@@ -9,3 +7,4 @@ contract C {
 }
 // ====
 // SMTEngine: bmc
+// ----

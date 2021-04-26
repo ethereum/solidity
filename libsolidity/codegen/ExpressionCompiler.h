@@ -31,7 +31,6 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 
-#include <boost/noncopyable.hpp>
 #include <functional>
 #include <memory>
 

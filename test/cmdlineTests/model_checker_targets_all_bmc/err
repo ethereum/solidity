@@ -1,14 +1,14 @@
 Warning: BMC: Condition is always true.
- --> model_checker_targets_all_bmc/input.sol:7:11:
+ --> model_checker_targets_all_bmc/input.sol:6:11:
   |
-7 | 		require(x >= 0);
+6 | 		require(x >= 0);
   | 		        ^^^^^^
 Note: Callstack:
 
 Warning: BMC: Underflow (resulting value less than 0) happens here.
- --> model_checker_targets_all_bmc/input.sol:8:3:
+ --> model_checker_targets_all_bmc/input.sol:7:3:
   |
-8 | 		--x;
+7 | 		--x;
   | 		^^^
 Note: Counterexample:
   <result> = (- 1)
@@ -19,9 +19,9 @@ Note: Callstack:
 Note:
 
 Warning: BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
- --> model_checker_targets_all_bmc/input.sol:9:3:
+ --> model_checker_targets_all_bmc/input.sol:8:3:
   |
-9 | 		x + type(uint).max;
+8 | 		x + type(uint).max;
   | 		^^^^^^^^^^^^^^^^^^
 Note: Counterexample:
   <result> = 2**256
@@ -32,10 +32,10 @@ Note: Callstack:
 Note:
 
 Warning: BMC: Division by zero happens here.
-  --> model_checker_targets_all_bmc/input.sol:10:3:
-   |
-10 | 		2 / x;
-   | 		^^^^^
+ --> model_checker_targets_all_bmc/input.sol:9:3:
+  |
+9 | 		2 / x;
+  | 		^^^^^
 Note: Counterexample:
   <result> = 0
   a = 0
@@ -45,9 +45,9 @@ Note: Callstack:
 Note:
 
 Warning: BMC: Insufficient funds happens here.
-  --> model_checker_targets_all_bmc/input.sol:11:3:
+  --> model_checker_targets_all_bmc/input.sol:10:3:
    |
-11 | 		a.transfer(x);
+10 | 		a.transfer(x);
    | 		^^^^^^^^^^^^^
 Note: Counterexample:
   a = 0
@@ -57,9 +57,9 @@ Note: Callstack:
 Note:
 
 Warning: BMC: Assertion violation happens here.
-  --> model_checker_targets_all_bmc/input.sol:12:3:
+  --> model_checker_targets_all_bmc/input.sol:11:3:
    |
-12 | 		assert(x > 0);
+11 | 		assert(x > 0);
    | 		^^^^^^^^^^^^^
 Note: Counterexample:
   a = 0

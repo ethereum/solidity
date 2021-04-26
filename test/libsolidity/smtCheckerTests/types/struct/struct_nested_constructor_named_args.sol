@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct B { uint b1; }
 	struct A { uint a1; B a2; }
@@ -8,3 +6,6 @@ contract C {
 		assert(a.a1 == 1 && a.a2.b1 == 2);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

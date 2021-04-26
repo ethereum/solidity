@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract c {
 	uint x;
 	function f() internal returns (uint) {
@@ -14,4 +12,6 @@ contract c {
 		return b;
 	}
 }
+// ====
+// SMTEngine: all
 // ----

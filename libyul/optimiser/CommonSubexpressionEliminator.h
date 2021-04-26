@@ -25,6 +25,8 @@
 #include <libyul/optimiser/DataFlowAnalyzer.h>
 #include <libyul/optimiser/OptimiserStep.h>
 
+#include <set>
+
 namespace solidity::yul
 {
 
@@ -43,6 +45,9 @@ public:
 	static constexpr char const* name{"CommonSubexpressionEliminator"};
 	static void run(OptimiserStepContext&, Block& _ast);
 
+	using DataFlowAnalyzer::operator();
+	void operator()(FunctionDefinition&) override;
+
 private:
 	CommonSubexpressionEliminator(
 		Dialect const& _dialect,
@@ -52,6 +57,9 @@ private:
 protected:
 	using ASTModifier::visit;
 	void visit(Expression& _e) override;
+
+private:
+	std::set<YulString> m_returnVariables;
 };
 
 }

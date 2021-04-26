@@ -26,22 +26,22 @@ using namespace ranges;
 using namespace solidity;
 using namespace solidity::frontend;
 
+using TargetType = VerificationTargetType;
+map<string, TargetType> const ModelCheckerTargets::targetStrings{
+	{"constantCondition", TargetType::ConstantCondition},
+	{"underflow", TargetType::Underflow},
+	{"overflow", TargetType::Overflow},
+	{"divByZero", TargetType::DivByZero},
+	{"balance", TargetType::Balance},
+	{"assert", TargetType::Assert},
+	{"popEmptyArray", TargetType::PopEmptyArray},
+	{"outOfBounds", TargetType::OutOfBounds}
+};
+
 std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const& _targets)
 {
-	using TargetType = VerificationTargetType;
-	static map<string, TargetType> const targetStrings{
-		{"constantCondition", TargetType::ConstantCondition},
-		{"underflow", TargetType::Underflow},
-		{"overflow", TargetType::Overflow},
-		{"divByZero", TargetType::DivByZero},
-		{"balance", TargetType::Balance},
-		{"assert", TargetType::Assert},
-		{"popEmptyArray", TargetType::PopEmptyArray},
-		{"outOfBounds", TargetType::OutOfBounds}
-	};
-
 	set<TargetType> chosenTargets;
-	if (_targets == "all")
+	if (_targets == "default")
 		for (auto&& v: targetStrings | views::values)
 			chosenTargets.insert(v);
 	else
@@ -53,4 +53,29 @@ std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const&
 		}
 
 	return ModelCheckerTargets{chosenTargets};
+}
+
+bool ModelCheckerTargets::setFromString(string const& _target)
+{
+	if (!targetStrings.count(_target))
+		return false;
+	targets.insert(targetStrings.at(_target));
+	return true;
+}
+
+std::optional<ModelCheckerContracts> ModelCheckerContracts::fromString(string const& _contracts)
+{
+	map<string, set<string>> chosen;
+	if (_contracts == "default")
+		return ModelCheckerContracts::Default();
+
+	for (auto&& sourceContract: _contracts | views::split(',') | ranges::to<vector<string>>())
+	{
+		auto&& names = sourceContract | views::split(':') | ranges::to<vector<string>>();
+		if (names.size() != 2 || names.at(0).empty() || names.at(1).empty())
+			return {};
+		chosen[names.at(0)].insert(names.at(1));
+	}
+
+	return ModelCheckerContracts{chosen};
 }

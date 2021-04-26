@@ -10,3 +10,4 @@ abstract contract C {
 contract D is C {
 	mapping(address => S) public override f;
 }
+// ----

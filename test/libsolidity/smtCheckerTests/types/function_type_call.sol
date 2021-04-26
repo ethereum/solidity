@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function(uint) m_g;
     function f(function(uint) internal g) internal {
@@ -8,6 +7,8 @@ contract C {
 		f(m_g);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 5729: (121-125): BMC does not yet implement this type of function call.
-// Warning 5729: (121-125): BMC does not yet implement this type of function call.
+// Warning 5729: (89-93): BMC does not yet implement this type of function call.
+// Warning 5729: (89-93): BMC does not yet implement this type of function call.

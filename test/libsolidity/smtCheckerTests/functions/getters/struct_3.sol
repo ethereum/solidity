@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct S {
 		string s;
@@ -20,5 +18,7 @@ contract C {
 		assert(b[0] == "t"); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (340-359): CHC: Assertion violation happens here.
+// Warning 6328: (307-326): CHC: Assertion violation happens here.

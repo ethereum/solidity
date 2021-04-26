@@ -4,8 +4,8 @@ contract test {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f(bool,uint256): true, 20 -> 20, 0
 // f(bool,uint256): false, 20 -> 0, 20

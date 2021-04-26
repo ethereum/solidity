@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] public a;
 	constructor() {
@@ -18,6 +16,7 @@ contract C {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (275-289): CHC: Assertion violation happens here.
+// Warning 6328: (242-256): CHC: Assertion violation happens here.

@@ -7,8 +7,8 @@
 // PUSH1 0x8
 // JUMP
 // JUMPDEST
+// POP
+// POP
 // JUMPDEST
-// POP
-// POP
 // JUMP
 // JUMPDEST

@@ -43,6 +43,8 @@
 
 #include <libsolutil/JSON.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
@@ -191,7 +193,12 @@ public:
 			char option = static_cast<char>(readStandardInputChar());
 			cout << ' ' << option << endl;
 
-			OptimiserStepContext context{m_dialect, *m_nameDispenser, reservedIdentifiers};
+			OptimiserStepContext context{
+				m_dialect,
+				*m_nameDispenser,
+				reservedIdentifiers,
+				solidity::frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+			};
 
 			auto abbreviationAndName = abbreviationMap.find(option);
 			if (abbreviationAndName != abbreviationMap.end())

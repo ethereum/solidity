@@ -8,7 +8,7 @@ contract A {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // ----
 // f() -> 0x01, 0x40, 0x03, 0x6162630000000000000000000000000000000000000000000000000000000000

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint256[] x;
 	constructor() { x.push(42); }
@@ -8,3 +6,6 @@ contract C {
 		assert(x[0] == 42 || x[0] == 23);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

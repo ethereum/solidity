@@ -33,8 +33,11 @@
 # - /usr/local/Cellar
 # - /usr/local/Homebrew
 
+set -eu
+
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
+  brew update
   brew unlink python
   brew install boost
   brew install cmake

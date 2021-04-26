@@ -870,7 +870,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 				<callValueCheck>
 				<?+params>let <params> := </+params> <abiDecode>(4, calldatasize())
 				<?+retParams>let <retParams> := </+retParams> <function>(<params>)
-				let memPos := <allocate>(0)
+				let memPos := <allocateUnbounded>()
 				let memEnd := <abiEncode>(memPos <?+retParams>,</+retParams> <retParams>)
 				return(memPos, sub(memEnd, memPos))
 			}
@@ -919,7 +919,7 @@ string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)
 		else
 			solAssert(false, "Unexpected declaration for function!");
 
-		templ["allocate"] = m_utils.allocationFunction();
+		templ["allocateUnbounded"] = m_utils.allocateUnboundedFunction();
 		templ["abiEncode"] = abiFunctions.tupleEncoder(type->returnParameterTypes(), type->returnParameterTypes(), _contract.isLibrary());
 	}
 	t("cases", functions);

@@ -6,3 +6,4 @@ contract test {
     }
     ActionChoices choices;
 }
+// ----

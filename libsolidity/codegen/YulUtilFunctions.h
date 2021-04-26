@@ -552,6 +552,11 @@ private:
 	/// signature: (data, len) -> data
 	std::string shortByteArrayEncodeUsedAreaSetLengthFunction();
 
+	/// @returns the name of a function that calculates slot and offset for index
+	/// Doesn't perform length checks, assumes that index is in bounds
+	/// signature: (array, index)
+	std::string longByteArrayStorageIndexAccessNoCheckFunction();
+
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;
 	MultiUseYulFunctionCollector& m_functionCollector;

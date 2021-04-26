@@ -27,7 +27,6 @@ object "D_8" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        mstore(64, 128)
                         return(128, _1)
                     }
                 }

@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
     function f(uint x) public pure {
         for (; x == 2; ) {
@@ -7,4 +6,6 @@ contract C {
     }
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
+// ----

@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(regular_for_loop)
 {
 	BOOST_CHECK_EQUAL(codeSize(
 		"{ for { let x := 0 } lt(x, 10) { x := add(x, 1) } { mstore(x, 1) } }"
-	), 10);
+	), 9);
 }
 
 BOOST_FIXTURE_TEST_CASE(regular_for_loop_custom_weights, CustomWeightFixture)
@@ -307,7 +307,8 @@ BOOST_FIXTURE_TEST_CASE(regular_for_loop_custom_weights, CustomWeightFixture)
 		1 * m_weights.variableDeclarationCost +
 		1 * m_weights.assignmentCost +
 		3 * m_weights.functionCallCost +
-		4 * m_weights.literalCost +
+		3 * m_weights.literalCost +
+		1 * m_weights.literalZeroCost +
 		3 * m_weights.identifierCost +
 		1 * m_weights.expressionStatementCost
 	);

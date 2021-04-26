@@ -5,3 +5,4 @@ contract C {
         return d;
     }
 }
+// ----

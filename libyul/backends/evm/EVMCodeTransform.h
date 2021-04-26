@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Common code generator for translating Yul / inline assembly to EVM and EVM1.5.
+ * Code generator for translating Yul / inline assembly to EVM.
  */
 
 #pragma once
@@ -24,8 +24,9 @@
 #include <libyul/backends/evm/EVMAssembly.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/VariableReferenceCounter.h>
 #include <libyul/optimiser/ASTWalker.h>
-#include <libyul/ASTForward.h>
+#include <libyul/AST.h>
 #include <libyul/Scope.h>
 
 #include <optional>
@@ -40,23 +41,6 @@ namespace solidity::yul
 {
 struct AsmAnalysisInfo;
 class EVMAssembly;
-
-struct StackTooDeepError: virtual YulException
-{
-	StackTooDeepError(YulString _variable, int _depth, std::string const& _message):
-		variable(_variable), depth(_depth)
-	{
-		*this << util::errinfo_comment(_message);
-	}
-	StackTooDeepError(YulString _functionName, YulString _variable, int _depth, std::string const& _message):
-		functionName(_functionName), variable(_variable), depth(_depth)
-	{
-		*this << util::errinfo_comment(_message);
-	}
-	YulString functionName;
-	YulString variable;
-	int depth;
-};
 
 struct CodeTransformContext
 {
@@ -77,39 +61,6 @@ struct CodeTransformContext
 	};
 
 	std::stack<ForLoopLabels> forLoopStack;
-	std::stack<JumpInfo> functionExitPoints;
-};
-
-/**
- * Counts the number of references to a variable. This includes actual (read) references
- * but also assignments to the variable. It does not include the declaration itself or
- * function parameters, but it does include function return parameters.
- *
- * This component can handle multiple variables of the same name.
- *
- * Can only be applied to strict assembly.
- */
-class VariableReferenceCounter: public yul::ASTWalker
-{
-public:
-	explicit VariableReferenceCounter(
-		CodeTransformContext& _context,
-		AsmAnalysisInfo const& _assemblyInfo
-	): m_context(_context), m_info(_assemblyInfo)
-	{}
-
-public:
-	void operator()(Identifier const& _identifier) override;
-	void operator()(FunctionDefinition const&) override;
-	void operator()(ForLoop const&) override;
-	void operator()(Block const& _block) override;
-
-private:
-	void increaseRefIfFound(YulString _variableName);
-
-	CodeTransformContext& m_context;
-	AsmAnalysisInfo const& m_info;
-	Scope* m_scope = nullptr;
 };
 
 class CodeTransform
@@ -139,7 +90,9 @@ public:
 		_builtinContext,
 		_identifierAccess,
 		_useNamedLabelsForFunctions,
-		nullptr
+		nullptr,
+		{},
+		std::nullopt
 	)
 	{
 	}
@@ -158,7 +111,9 @@ protected:
 		BuiltinContext& _builtinContext,
 		ExternalIdentifierAccess _identifierAccess,
 		bool _useNamedLabelsForFunctions,
-		std::shared_ptr<Context> _context
+		std::shared_ptr<Context> _context,
+		std::vector<TypedName> _delayedReturnVariables,
+		std::optional<AbstractAssembly::LabelID> _functionExitLabel
 	);
 
 	void decreaseReference(YulString _name, Scope::Variable const& _var);
@@ -197,7 +152,7 @@ private:
 
 	/// Pops all variables declared in the block and checks that the stack height is equal
 	/// to @a _blockStartStackHeight.
-	void finalizeBlock(Block const& _block, int _blockStartStackHeight);
+	void finalizeBlock(Block const& _block, std::optional<int> _blockStartStackHeight);
 
 	void generateMultiAssignment(std::vector<Identifier> const& _variableNames);
 	void generateAssignment(Identifier const& _variableName);
@@ -209,6 +164,9 @@ private:
 	///                 opcode, otherwise checks for validity for a dup opcode.
 	size_t variableHeightDiff(Scope::Variable const& _var, YulString _name, bool _forSwap);
 
+	/// Determines the stack height of the given variable. Throws if the variable is not in scope.
+	int variableStackHeight(YulString _name) const;
+
 	void expectDeposit(int _deposit, int _oldHeight) const;
 
 	/// Stores the stack error in the list of errors, appends an invalid opcode
@@ -218,6 +176,13 @@ private:
 	/// Ensures stack height is down to @p _targetDepth by appending POP instructions to the output assembly.
 	/// Returns the number of POP statements that have been appended.
 	int appendPopUntil(int _targetDepth);
+
+	/// Allocates stack slots for remaining delayed return values and sets the function exit stack height.
+	void setupReturnVariablesAndFunctionExit();
+	bool returnVariablesAndFunctionExitAreSetup() const
+	{
+		return m_functionExitStackHeight.has_value();
+	}
 
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;
@@ -234,6 +199,16 @@ private:
 	/// statement level in the scope where the variable was defined.
 	std::set<Scope::Variable const*> m_variablesScheduledForDeletion;
 	std::set<int> m_unusedStackSlots;
+
+	/// A list of return variables for which no stack slots have been assigned yet.
+	std::vector<TypedName> m_delayedReturnVariables;
+
+	/// Function exit label. Used as jump target for ``leave``.
+	std::optional<AbstractAssembly::LabelID> m_functionExitLabel;
+	/// The required stack height at the function exit label.
+	/// This is the minimal stack height covering all return variables. Only set after all
+	/// return variables were assigned slots.
+	std::optional<int> m_functionExitStackHeight;
 
 	std::vector<StackTooDeepError> m_stackErrors;
 };

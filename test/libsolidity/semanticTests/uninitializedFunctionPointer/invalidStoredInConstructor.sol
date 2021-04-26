@@ -20,7 +20,7 @@ contract Test {
   }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> FAILURE, hex"4e487b71", 0x51

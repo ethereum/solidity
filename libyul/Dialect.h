@@ -25,8 +25,6 @@
 #include <libyul/SideEffects.h>
 #include <libyul/ControlFlowSideEffects.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <vector>
 #include <set>
 #include <optional>
@@ -57,8 +55,12 @@ struct BuiltinFunction
 	}
 };
 
-struct Dialect: boost::noncopyable
+struct Dialect
 {
+	/// Noncopiable.
+	Dialect(Dialect const&) = delete;
+	Dialect& operator=(Dialect const&) = delete;
+
 	/// Default type, can be omitted.
 	YulString defaultType;
 	/// Type used for the literals "true" and "false".
@@ -79,6 +81,7 @@ struct Dialect: boost::noncopyable
 	virtual BuiltinFunction const* memoryLoadFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* storageStoreFunction(YulString /* _type */) const { return nullptr; }
 	virtual BuiltinFunction const* storageLoadFunction(YulString /* _type */) const { return nullptr; }
+	virtual YulString hashFunction(YulString /* _type */ ) const { return YulString{}; }
 
 	/// Check whether the given type is legal for the given literal value.
 	/// Should only be called if the type exists in the dialect at all.

@@ -39,7 +39,7 @@ object "C_81" {
                     if callvalue() { revert(0, 0) }
                     let param_0, param_1, param_2, param_3 :=  abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(4, calldatasize())
                     let ret_0, ret_1, ret_2, ret_3 :=  fun_f_80(param_0, param_1, param_2, param_3)
-                    let memPos := allocate_memory(0)
+                    let memPos := allocate_unbounded()
                     let memEnd := abi_encode_tuple_t_uint256_t_int256_t_uint256_t_uint256__to_t_uint256_t_int256_t_uint256_t_uint256__fromStack(memPos , ret_0, ret_1, ret_2, ret_3)
                     return(memPos, sub(memEnd, memPos))
                 }
@@ -106,11 +106,6 @@ object "C_81" {
 
                 abi_encode_t_uint256_to_t_uint256_fromStack(value3,  add(headStart, 96))
 
-            }
-
-            function allocate_memory(size) -> memPtr {
-                memPtr := allocate_unbounded()
-                finalize_allocation(memPtr, size)
             }
 
             function allocate_unbounded() -> memPtr {
@@ -203,13 +198,6 @@ object "C_81" {
                 converted := cleanup_t_int256(value)
             }
 
-            function finalize_allocation(memPtr, size) {
-                let newFreePtr := add(memPtr, round_up_to_mul_of_32(size))
-                // protect against overflow
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-            }
-
             function fun_f_80(var_a_4, var_b_6, var_c_8, var_d_10) -> var__13, var__15, var__17, var__19 {
                 let zero_t_uint256_1 := zero_value_for_split_t_uint256()
                 var__13 := zero_t_uint256_1
@@ -295,16 +283,6 @@ object "C_81" {
                 mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
                 mstore(4, 0x11)
                 revert(0, 0x24)
-            }
-
-            function panic_error_0x41() {
-                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
-                mstore(4, 0x41)
-                revert(0, 0x24)
-            }
-
-            function round_up_to_mul_of_32(value) -> result {
-                result := and(add(value, 31), not(31))
             }
 
             function shift_right_224_unsigned(value) -> newValue {

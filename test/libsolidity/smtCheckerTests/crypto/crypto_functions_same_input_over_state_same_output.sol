@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	bytes data;
 	bytes32 h;
@@ -36,3 +34,6 @@ contract C {
 		assert(_erc == erc);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

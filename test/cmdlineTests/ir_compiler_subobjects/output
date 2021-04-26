@@ -57,29 +57,22 @@ object "D_16" {
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
                         let _2 := datasize("C_3")
                         let _3 := add(128, _2)
-                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128)) { panic_error_0x41() }
+                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128))
+                        {
+                            mstore(_1, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_1, 0x24)
+                        }
                         datacopy(128, dataoffset("C_3"), _2)
                         if iszero(create(_1, 128, _2))
                         {
                             returndatacopy(_1, _1, returndatasize())
                             revert(_1, returndatasize())
                         }
-                        return(allocate_memory(), _1)
+                        return(mload(64), _1)
                     }
                 }
                 revert(0, 0)
-            }
-            function allocate_memory() -> memPtr
-            {
-                memPtr := mload(64)
-                if gt(memPtr, 0xffffffffffffffff) { panic_error_0x41() }
-                mstore(64, memPtr)
-            }
-            function panic_error_0x41()
-            {
-                mstore(0, shl(224, 0x4e487b71))
-                mstore(4, 0x41)
-                revert(0, 0x24)
             }
         }
         object "C_3" {

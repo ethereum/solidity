@@ -51,7 +51,10 @@ namespace solidity::frontend
 class SMTEncoder: public ASTConstVisitor
 {
 public:
-	SMTEncoder(smt::EncodingContext& _context);
+	SMTEncoder(
+		smt::EncodingContext& _context,
+		ModelCheckerSettings const& _settings
+	);
 
 	/// @returns true if engine should proceed with analysis.
 	bool analyze(SourceUnit const& _sources);
@@ -111,6 +114,10 @@ public:
 	static RationalNumberType const* isConstant(Expression const& _expr);
 
 	static std::set<FunctionCall const*> collectABICalls(ASTNode const* _node);
+
+	/// @returns all the sources that @param _source depends on,
+	/// including itself.
+	static std::set<SourceUnit const*, ASTNode::CompareByID> sourceDependencies(SourceUnit const& _source);
 
 protected:
 	// TODO: Check that we do not have concurrent reads and writes to a variable,
@@ -198,6 +205,10 @@ protected:
 	void visitStructConstructorCall(FunctionCall const& _funCall);
 	void visitFunctionIdentifier(Identifier const& _identifier);
 	void visitPublicGetter(FunctionCall const& _funCall);
+
+	/// @returns true if @param _contract is set for analysis in the settings
+	/// and it is not abstract.
+	bool shouldAnalyze(ContractDefinition const& _contract) const;
 
 	bool isPublicGetter(Expression const& _expr);
 
@@ -369,6 +380,13 @@ protected:
 	/// type conversion.
 	std::vector<smtutil::Expression> symbolicArguments(FunctionCall const& _funCall, ContractDefinition const* _contextContract);
 
+	/// Traverses all source units available collecting free functions
+	/// and internal library functions in m_freeFunctions.
+	void collectFreeFunctions(std::set<SourceUnit const*, ASTNode::CompareByID> const& _sources);
+	std::set<FunctionDefinition const*, ASTNode::CompareByID> const& allFreeFunctions() const { return m_freeFunctions; }
+	/// Create symbolic variables for the free constants in all @param _sources.
+	void createFreeConstants(std::set<SourceUnit const*, ASTNode::CompareByID> const& _sources);
+
 	/// @returns a note to be added to warnings.
 	std::string extraComment();
 
@@ -437,8 +455,14 @@ protected:
 
 	ContractDefinition const* m_currentContract = nullptr;
 
+	/// Stores the free functions and internal library functions.
+	/// Those need to be encoded repeatedely for every analyzed contract.
+	std::set<FunctionDefinition const*, ASTNode::CompareByID> m_freeFunctions;
+
 	/// Stores the context of the encoding.
 	smt::EncodingContext& m_context;
+
+	ModelCheckerSettings const& m_settings;
 
 	smt::SymbolicState& state();
 };

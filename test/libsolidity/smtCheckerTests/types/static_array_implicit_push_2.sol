@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	uint[][] a;
 	function f(uint[1][] memory x) public {
@@ -6,3 +5,6 @@ contract C {
 		a.push(x[2]);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

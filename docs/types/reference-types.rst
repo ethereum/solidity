@@ -136,8 +136,8 @@ a reference to it.
 
 .. _bytes:
 
-``bytes`` and ``strings`` as Arrays
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``bytes`` and ``string`` as Arrays
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
 but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow

@@ -107,9 +107,7 @@ template <typename T>
 T YPM::EnumTypeConverter<T>::validEnum(unsigned _seed)
 {
 	auto ret = static_cast<T>(_seed % (enumMax() - enumMin() + 1) + enumMin());
-	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-		yulAssert(FunctionCall_Returns_IsValid(ret), "Yul proto mutator: Invalid enum");
-	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+	if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		yulAssert(StoreFunc_Storage_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
 		yulAssert(NullaryOp_NOp_IsValid(ret), "Yul proto mutator: Invalid enum");
@@ -131,9 +129,7 @@ T YPM::EnumTypeConverter<T>::validEnum(unsigned _seed)
 template <typename T>
 unsigned YPM::EnumTypeConverter<T>::enumMax()
 {
-	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-		return FunctionCall_Returns_Returns_MAX;
-	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+	if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		return StoreFunc_Storage_Storage_MAX;
 	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
 		return NullaryOp_NOp_NOp_MAX;
@@ -154,9 +150,7 @@ unsigned YPM::EnumTypeConverter<T>::enumMax()
 template <typename T>
 unsigned YPM::EnumTypeConverter<T>::enumMin()
 {
-	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-		return FunctionCall_Returns_Returns_MIN;
-	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+	if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		return StoreFunc_Storage_Storage_MIN;
 	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
 		return NullaryOp_NOp_NOp_MIN;

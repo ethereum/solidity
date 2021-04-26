@@ -38,7 +38,7 @@ object \"C_11\" {
                     if callvalue() { revert(0, 0) }
                     abi_decode_tuple_(4, calldatasize())
                     let ret_0 :=  fun_f_10()
-                    let memPos := allocate_memory(0)
+                    let memPos := allocate_unbounded()
                     let memEnd := abi_encode_tuple_t_string_memory_ptr__to_t_string_memory_ptr__fromStack(memPos , ret_0)
                     return(memPos, sub(memEnd, memPos))
                 }

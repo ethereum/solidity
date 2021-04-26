@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract Reverts {
     constructor(uint) { revert("test message."); }
 }
@@ -27,8 +25,10 @@ contract C {
         }
     }
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 4588: (264-278): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (525-540): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (264-278): Assertion checker does not yet implement this type of function call.
-// Warning 4588: (525-540): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (231-245): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (492-507): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (231-245): Assertion checker does not yet implement this type of function call.
+// Warning 4588: (492-507): Assertion checker does not yet implement this type of function call.

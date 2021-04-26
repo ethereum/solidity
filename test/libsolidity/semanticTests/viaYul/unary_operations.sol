@@ -84,6 +84,7 @@ contract C {
 }
 // ====
 // compileViaYul: true
+// compileToEwasm: also
 // ----
 // preincr_s8(int8): 128 -> FAILURE
 // postincr_s8(int8): 128 -> FAILURE

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint8 x) public pure returns (uint8) {
@@ -14,5 +12,7 @@ contract C
 		return y;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 4984: (218-225): CHC: Overflow (resulting value larger than 255) happens here.\nCounterexample:\n\nx = 255\n = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)
+// Warning 4984: (185-192): CHC: Overflow (resulting value larger than 255) happens here.\nCounterexample:\n\nx = 255\n = 0\ny = 0\n\nTransaction trace:\nC.constructor()\nC.f(0)

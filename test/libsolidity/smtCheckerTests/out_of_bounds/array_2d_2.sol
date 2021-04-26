@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] a;
 	function p() public { a.push(); }
@@ -12,5 +10,7 @@ contract C {
 		return a[i][j]; // unsafe access
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6368: (257-264): CHC: Out of bounds access happens here.\nCounterexample:\na = [[]]\ni = 0\nj = 0\n = 0\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.p()\nState: a = [[]]\nC.r(0, 0)
+// Warning 6368: (224-231): CHC: Out of bounds access happens here.\nCounterexample:\na = [[]]\ni = 0\nj = 0\n = 0\n\nTransaction trace:\nC.constructor()\nState: a = []\nC.p()\nState: a = [[]]\nC.r(0, 0)

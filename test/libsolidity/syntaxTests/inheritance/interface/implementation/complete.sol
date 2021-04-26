@@ -15,3 +15,4 @@ contract SubImpl is Sub {
     function testB() external pure override(ParentB) returns (uint256) { return 42; }
     function testSub() external pure override returns (uint256) { return 99; }
 }
+// ----

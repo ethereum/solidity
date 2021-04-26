@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	uint x;
 	function h() public view {
@@ -19,4 +17,6 @@ contract C is B {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
+// ----

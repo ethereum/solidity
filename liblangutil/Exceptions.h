@@ -122,16 +122,6 @@ public:
 		Warning
 	};
 
-	// TODO: remove this
-	Error(
-		ErrorId _errorId,
-		Type _type,
-		SourceLocation const& _location = SourceLocation(),
-		std::string const& _description = std::string()
-	):
-		Error(_errorId, _type, _description, _location)
-	{}
-
 	Error(
 		ErrorId _errorId,
 		Type _type,

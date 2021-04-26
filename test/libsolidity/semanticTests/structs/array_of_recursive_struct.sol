@@ -9,7 +9,7 @@ contract Test {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // func() ->

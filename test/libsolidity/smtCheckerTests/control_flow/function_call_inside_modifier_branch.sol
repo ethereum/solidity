@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	modifier m(address a) {
@@ -18,4 +16,6 @@ contract C
 		return a;
 	}
 }
+// ====
+// SMTEngine: all
 // ----

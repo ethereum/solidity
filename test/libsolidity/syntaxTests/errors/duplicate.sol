@@ -19,3 +19,4 @@ contract Test {
         revert B.E();
     }
 }
+// ----

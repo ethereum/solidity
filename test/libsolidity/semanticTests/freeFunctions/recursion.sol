@@ -13,8 +13,8 @@ contract C {
   }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // g(uint256,uint256): 0, 0 -> 1
 // g(uint256,uint256): 0, 1 -> 0x00

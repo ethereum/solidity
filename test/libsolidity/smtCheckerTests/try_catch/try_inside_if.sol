@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
   function g(bool b) public {}
   function f(bool b) public returns (bytes memory txt) {
@@ -10,5 +9,7 @@ contract C {
   }
 }
 
+// ====
+// SMTEngine: all
 // ----
-// Warning 6838: (141-145): BMC: Condition is always false.
+// Warning 6838: (109-113): BMC: Condition is always false.

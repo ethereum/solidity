@@ -7,5 +7,6 @@ contract C is B {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> 0xe2179b8e00000000000000000000000000000000000000000000000000000000

@@ -82,7 +82,12 @@ bool Inliner::isInlineCandidate(size_t _tag, ranges::span<AssemblyItem const> _i
 {
 	assertThrow(_items.size() > 0, OptimizerException, "");
 
-	if (_items.back() != Instruction::JUMP && !SemanticInformation::terminatesControlFlow(_items.back()))
+	if (_items.back().type() != Operation)
+		return false;
+	if (
+		_items.back() != Instruction::JUMP &&
+		!SemanticInformation::terminatesControlFlow(_items.back().instruction())
+	)
 		return false;
 
 	// Never inline tags that reference themselves.
@@ -213,7 +218,7 @@ optional<AssemblyItem> Inliner::shouldInline(size_t _tag, AssemblyItem const& _j
 	// Inline small blocks, if the jump to it is ordinary or the blockExit is a terminating instruction.
 	if (
 		_jump.getJumpType() == AssemblyItem::JumpType::Ordinary ||
-		SemanticInformation::terminatesControlFlow(blockExit)
+		SemanticInformation::terminatesControlFlow(blockExit.instruction())
 	)
 	{
 		static AssemblyItems const jumpPattern = {

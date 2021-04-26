@@ -23,7 +23,6 @@
 
 #include <libsolutil/Common.h>
 
-#include <boost/noncopyable.hpp>
 #include <cstdio>
 #include <map>
 #include <memory>

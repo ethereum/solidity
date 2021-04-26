@@ -29,6 +29,7 @@
 #include <libyul/Exceptions.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include <libyul/Utilities.h>
 
 using namespace std;
 using namespace solidity;
@@ -50,6 +51,16 @@ CommonSubexpressionEliminator::CommonSubexpressionEliminator(
 ):
 	DataFlowAnalyzer(_dialect, std::move(_functionSideEffects))
 {
+}
+
+void CommonSubexpressionEliminator::operator()(FunctionDefinition& _fun)
+{
+	ScopedSaveAndRestore returnVariables(m_returnVariables, {});
+
+	for (auto const& v: _fun.returnVariables)
+		m_returnVariables.insert(v.name);
+
+	DataFlowAnalyzer::operator()(_fun);
 }
 
 void CommonSubexpressionEliminator::visit(Expression& _e)
@@ -82,10 +93,9 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 	if (descend)
 		DataFlowAnalyzer::visit(_e);
 
-	if (holds_alternative<Identifier>(_e))
+	if (Identifier const* identifier = get_if<Identifier>(&_e))
 	{
-		Identifier& identifier = std::get<Identifier>(_e);
-		YulString name = identifier.name;
+		YulString name = identifier->name;
 		if (m_value.count(name))
 		{
 			assertThrow(m_value.at(name).value, OptimizerException, "");
@@ -100,6 +110,14 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 		for (auto const& [variable, value]: m_value)
 		{
 			assertThrow(value.value, OptimizerException, "");
+			// Prevent using the default value of return variables
+			// instead of literal zeros.
+			if (
+				m_returnVariables.count(variable) &&
+				holds_alternative<Literal>(*value.value) &&
+				valueOfLiteral(get<Literal>(*value.value)) == 0
+			)
+				continue;
 			if (SyntacticallyEqual{}(_e, *value.value) && inScope(variable))
 			{
 				_e = Identifier{locationOf(_e), variable};

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint[][] b;
 	function f() public {
@@ -13,3 +11,6 @@ contract C {
 		assert(b[length - 1][length1 - 1] == 0);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

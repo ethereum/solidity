@@ -24,8 +24,8 @@ contract C is X {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 3
 // f1() -> 3

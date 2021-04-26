@@ -38,9 +38,11 @@ object "Arraysum_34" {
                         }
                         {
                             mstore(_1, _1)
-                            var_sum := checked_add_uint256(var_sum, sload(add(keccak256(_1, 0x20), var_i)))
+                            let _3 := sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i))
+                            if gt(var_sum, not(_3)) { panic_error_0x11() }
+                            var_sum := add(var_sum, _3)
                         }
-                        let memPos := allocate_memory()
+                        let memPos := mload(64)
                         return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
                     }
                 }
@@ -50,22 +52,6 @@ object "Arraysum_34" {
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
-            }
-            function allocate_memory() -> memPtr
-            {
-                memPtr := mload(64)
-                if gt(memPtr, 0xffffffffffffffff)
-                {
-                    mstore(0, shl(224, 0x4e487b71))
-                    mstore(4, 0x41)
-                    revert(0, 0x24)
-                }
-                mstore(64, memPtr)
-            }
-            function checked_add_uint256(x, y) -> sum
-            {
-                if gt(x, not(y)) { panic_error_0x11() }
-                sum := add(x, y)
             }
             function panic_error_0x11()
             {

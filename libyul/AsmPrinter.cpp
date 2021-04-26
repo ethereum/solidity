@@ -30,7 +30,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 #include <memory>
 #include <functional>
@@ -83,7 +84,7 @@ string AsmPrinter::operator()(VariableDeclaration const& _variableDeclaration) c
 {
 	string out = "let ";
 	out += boost::algorithm::join(
-		_variableDeclaration.variables | boost::adaptors::transformed(
+		_variableDeclaration.variables | ranges::views::transform(
 			[this](TypedName argument) { return formatTypedName(argument); }
 		),
 		", "
@@ -101,7 +102,7 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition) con
 	yulAssert(!_functionDefinition.name.empty(), "Invalid function name.");
 	string out = "function " + _functionDefinition.name.str() + "(";
 	out += boost::algorithm::join(
-		_functionDefinition.parameters | boost::adaptors::transformed(
+		_functionDefinition.parameters | ranges::views::transform(
 			[this](TypedName argument) { return formatTypedName(argument); }
 		),
 		", "
@@ -111,7 +112,7 @@ string AsmPrinter::operator()(FunctionDefinition const& _functionDefinition) con
 	{
 		out += " -> ";
 		out += boost::algorithm::join(
-			_functionDefinition.returnVariables | boost::adaptors::transformed(
+			_functionDefinition.returnVariables | ranges::views::transform(
 				[this](TypedName argument) { return formatTypedName(argument); }
 			),
 			", "
@@ -126,7 +127,7 @@ string AsmPrinter::operator()(FunctionCall const& _functionCall) const
 	return
 		(*this)(_functionCall.functionName) + "(" +
 		boost::algorithm::join(
-			_functionCall.arguments | boost::adaptors::transformed([&](auto&& _node) { return std::visit(*this, _node); }),
+			_functionCall.arguments | ranges::views::transform([&](auto&& _node) { return std::visit(*this, _node); }),
 			", " ) +
 		")";
 }
@@ -194,7 +195,7 @@ string AsmPrinter::operator()(Block const& _block) const
 	if (_block.statements.empty())
 		return "{ }";
 	string body = boost::algorithm::join(
-		_block.statements | boost::adaptors::transformed([&](auto&& _node) { return std::visit(*this, _node); }),
+		_block.statements | ranges::views::transform([&](auto&& _node) { return std::visit(*this, _node); }),
 		"\n"
 	);
 	if (body.size() < 30 && body.find('\n') == string::npos)

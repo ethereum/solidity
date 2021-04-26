@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint x) internal pure returns (uint, bool, uint) {
@@ -14,4 +12,6 @@ contract C
 		assert(y == 999);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

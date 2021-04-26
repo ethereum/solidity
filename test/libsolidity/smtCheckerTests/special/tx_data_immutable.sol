@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	bytes32 bhash;
 	address coin;
@@ -59,3 +57,6 @@ contract C {
 		assert(origin == tx.origin);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

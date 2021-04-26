@@ -1,1 +1,1 @@
---model-checker-targets aaa,bbb
+--model-checker-engine all --model-checker-targets aaa,bbb

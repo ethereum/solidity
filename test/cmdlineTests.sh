@@ -131,9 +131,11 @@ function test_solc_behaviour()
 
     if [[ "$exit_code_expected" = "" ]]; then exit_code_expected="0"; fi
 
-    local solc_command="$SOLC ${filename} ${solc_args[*]} <$solc_stdin"
+    [[ $filename == "" ]] || solc_args+=("$filename")
+
+    local solc_command="$SOLC ${solc_args[*]} <$solc_stdin"
     set +e
-    "$SOLC" "${filename}" "${solc_args[@]}" <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
+    "$SOLC" "${solc_args[@]}" <"$solc_stdin" >"$stdout_path" 2>"$stderr_path"
     exitCode=$?
     set -e
 
@@ -162,7 +164,7 @@ function test_solc_behaviour()
         sed -i.bak -e 's/\(^[ ]*auxdata: \)0x[0-9a-f]*$/\1<AUXDATA REMOVED>/' "$stdout_path"
         sed -i.bak -e 's/ Consider adding "pragma .*$//' "$stderr_path"
         sed -i.bak -e 's/\(Unimplemented feature error.* in \).*$/\1<FILENAME REMOVED>/' "$stderr_path"
-        sed -i.bak -e 's/"version": "[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
+        sed -i.bak -e 's/"version":[ ]*"[^"]*"/"version": "<VERSION REMOVED>"/' "$stdout_path"
 
         # Remove bytecode (but not linker references). Since non-JSON output is unstructured,
         # use metadata markers for detection to have some confidence that it's actually bytecode
@@ -190,7 +192,7 @@ function test_solc_behaviour()
     then
         printError "Incorrect exit code. Expected $exit_code_expected but got $exitCode."
 
-        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exit_code_expected" "$exit_code_expectation_file"
+        [[ $exit_code_expectation_file != "" ]] && ask_expectation_update "$exitCode" "$exit_code_expectation_file"
         [[ $exit_code_expectation_file == "" ]] && exit 1
     fi
 
@@ -300,20 +302,24 @@ printTask "Running general commandline tests..."
         # Use printf to get rid of the trailing newline
         inputFile=$(printf "%s" "${inputFiles}")
 
-        # If no files specified, assume input.sol as the default
-        if [ -z "${inputFile}" ]; then
-            inputFile="${tdir}/input.sol"
-        fi
-
         if [ "${inputFile}" = "${tdir}/input.json" ]
         then
+            ! [ -e "${tdir}/stdin" ] || { printError "Found a file called 'stdin' but redirecting standard input in JSON mode is not allowed."; exit 1; }
+
             stdin="${inputFile}"
             inputFile=""
             stdout="$(cat "${tdir}/output.json" 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output.json"
             command_args="--standard-json "$(cat "${tdir}/args" 2>/dev/null || true)
         else
-            stdin=""
+            if [ -e "${tdir}/stdin" ]
+            then
+                stdin="${tdir}/stdin"
+                [ -f "${tdir}/stdin" ] || { printError "'stdin' is not a regular file."; exit 1; }
+            else
+                stdin=""
+            fi
+
             stdout="$(cat "${tdir}/output" 2>/dev/null || true)"
             stdoutExpectationFile="${tdir}/output"
             command_args=$(cat "${tdir}/args" 2>/dev/null || true)

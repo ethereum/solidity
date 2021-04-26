@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract A {
 	function f() public virtual returns (uint256 r) {
 		return 1;
@@ -28,6 +27,8 @@ contract D is B, C {
 		assert(r == 18); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (475-490): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
-// Warning 6328: (509-524): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
+// Warning 6328: (443-458): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
+// Warning 6328: (477-492): CHC: Assertion violation happens here.\nCounterexample:\n\nr = 22\n\nTransaction trace:\nD.constructor()\nD.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call

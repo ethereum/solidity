@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(uint a) public pure {
 		assert(a <= type(uint).max);
@@ -80,5 +78,7 @@ contract C {
 		assert(uint256_max == 2**256-1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (211-240): CHC: Assertion violation happens here.\nCounterexample:\n\na = 4294967296\n\nTransaction trace:\nC.constructor()\nC.f(4294967296)
+// Warning 6328: (178-207): CHC: Assertion violation happens here.\nCounterexample:\n\na = 4294967296\n\nTransaction trace:\nC.constructor()\nC.f(4294967296)

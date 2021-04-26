@@ -1,8 +1,8 @@
 Warning: BMC: Division by zero happens here.
-  --> model_checker_targets_div_by_zero_bmc/input.sol:10:3:
-   |
-10 | 		2 / x;
-   | 		^^^^^
+ --> model_checker_targets_div_by_zero_bmc/input.sol:9:3:
+  |
+9 | 		2 / x;
+  | 		^^^^^
 Note: Counterexample:
   <result> = 0
   a = 0

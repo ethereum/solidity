@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library L {
 	struct S {
 		uint256[] data;
@@ -18,4 +16,6 @@ contract C {
 		assert(y == 42); // should hold
 	}
 }
+// ====
+// SMTEngine: all
 // ----

@@ -9,3 +9,4 @@ contract C is B {
     function f() override internal {}
     function i() pure internal { f; }
 }
+// ----

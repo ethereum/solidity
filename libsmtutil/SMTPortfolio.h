@@ -23,7 +23,6 @@
 #include <libsolidity/interface/ReadFile.h>
 #include <libsolutil/FixedHash.h>
 
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <vector>
 
@@ -36,9 +35,13 @@ namespace solidity::smtutil
  * It also checks whether different solvers give conflicting answers
  * to SMT queries.
  */
-class SMTPortfolio: public SolverInterface, public boost::noncopyable
+class SMTPortfolio: public SolverInterface
 {
 public:
+	/// Noncopyable.
+	SMTPortfolio(SMTPortfolio const&) = delete;
+	SMTPortfolio& operator=(SMTPortfolio const&) = delete;
+
 	SMTPortfolio(
 		std::map<util::h256, std::string> _smtlib2Responses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},

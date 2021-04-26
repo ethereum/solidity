@@ -5,3 +5,4 @@ contract Y is X {
 contract T {
     constructor() { new Y(); }
 }
+// ----

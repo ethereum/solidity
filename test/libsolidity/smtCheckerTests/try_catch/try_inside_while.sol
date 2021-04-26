@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f() public returns (uint) {
 		while(1==1)
@@ -8,6 +7,8 @@ contract C {
 			}
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6321: (75-79): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6838: (91-95): BMC: Condition is always true.
+// Warning 6321: (43-47): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6838: (59-63): BMC: Condition is always true.

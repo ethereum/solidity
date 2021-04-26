@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	event Nudge();
 	event SomeArgs(uint, uint);
@@ -24,7 +22,9 @@ contract C {
 		emit SomeArgs(h_data(), h_data());
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6321: (280-284): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6321: (430-434): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
-// Warning 6328: (440-449): CHC: Assertion violation happens here.\nCounterexample:\nx = false\n\nTransaction trace:\nC.constructor()\nState: x = true\nC.h()\n    C.h_data() -- internal call\n    C.h_data() -- internal call
+// Warning 6321: (247-251): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6321: (397-401): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6328: (407-416): CHC: Assertion violation happens here.\nCounterexample:\nx = false\n\nTransaction trace:\nC.constructor()\nState: x = true\nC.h()\n    C.h_data() -- internal call\n    C.h_data() -- internal call

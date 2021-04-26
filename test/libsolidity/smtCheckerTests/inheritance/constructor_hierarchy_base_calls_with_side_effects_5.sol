@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	uint public x;
 	constructor(uint a) { x = a; }
@@ -35,7 +33,8 @@ contract C is Z, B {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 4984: (138-145): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 6328: (456-470): CHC: Assertion violation happens here.
+// Warning 4984: (105-112): CHC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (423-437): CHC: Assertion violation happens here.

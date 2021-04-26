@@ -44,6 +44,7 @@
 
 #include <libevmasm/Assembly.h>
 #include <liblangutil/Scanner.h>
+#include <optional>
 
 using namespace std;
 using namespace solidity;
@@ -185,7 +186,9 @@ void AssemblyStack::optimize(Object& _object, bool _isCreation)
 		meter.get(),
 		_object,
 		m_optimiserSettings.optimizeStackAllocation,
-		m_optimiserSettings.yulOptimiserSteps
+		m_optimiserSettings.yulOptimiserSteps,
+		_isCreation ? nullopt : make_optional(m_optimiserSettings.expectedExecutionsPerDeployment),
+		{}
 	);
 }
 

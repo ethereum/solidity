@@ -59,10 +59,9 @@ CHC::CHC(
 	SMTSolverChoice _enabledSolvers,
 	ModelCheckerSettings const& _settings
 ):
-	SMTEncoder(_context),
+	SMTEncoder(_context, _settings),
 	m_outerErrorReporter(_errorReporter),
-	m_enabledSolvers(_enabledSolvers),
-	m_settings(_settings)
+	m_enabledSolvers(_enabledSolvers)
 {
 	bool usesZ3 = _enabledSolvers.z3;
 #ifdef HAVE_Z3
@@ -76,18 +75,13 @@ CHC::CHC(
 
 void CHC::analyze(SourceUnit const& _source)
 {
-	solAssert(_source.annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker), "");
-
-	/// This is currently used to abort analysis of SourceUnits
-	/// containing file level functions or constants.
 	if (SMTEncoder::analyze(_source))
 	{
 		resetSourceAnalysis();
 
-		set<SourceUnit const*, EncodingContext::IdCompare> sources;
-		sources.insert(&_source);
-		for (auto const& source: _source.referencedSourceUnits(true))
-			sources.insert(source);
+		auto sources = sourceDependencies(_source);
+		collectFreeFunctions(sources);
+		createFreeConstants(sources);
 		for (auto const* source: sources)
 			defineInterfacesAndSummaries(*source);
 		for (auto const* source: sources)
@@ -203,7 +197,7 @@ void CHC::endVisit(ContractDefinition const& _contract)
 	setCurrentBlock(*m_constructorSummaries.at(&_contract));
 
 	solAssert(&_contract == m_currentContract, "");
-	if (_contract.canBeDeployed())
+	if (shouldAnalyze(_contract))
 	{
 		auto constructor = _contract.constructor();
 		auto txConstraints = state().txTypeConstraints();
@@ -221,6 +215,10 @@ void CHC::endVisit(ContractDefinition const& _contract)
 
 bool CHC::visit(FunctionDefinition const& _function)
 {
+	// Free functions need to be visited in the context of a contract.
+	if (!m_currentContract)
+		return false;
+
 	if (!_function.isImplemented())
 	{
 		addRule(summary(_function), "summary_function_" + to_string(_function.id()));
@@ -260,6 +258,10 @@ bool CHC::visit(FunctionDefinition const& _function)
 
 void CHC::endVisit(FunctionDefinition const& _function)
 {
+	// Free functions need to be visited in the context of a contract.
+	if (!m_currentContract)
+		return;
+
 	if (!_function.isImplemented())
 		return;
 
@@ -280,7 +282,7 @@ void CHC::endVisit(FunctionDefinition const& _function)
 		!_function.isConstructor() &&
 		_function.isPublic() &&
 		contractFunctions(*m_currentContract).count(&_function) &&
-		m_currentContract->canBeDeployed()
+		shouldAnalyze(*m_currentContract)
 	)
 	{
 		auto sum = summary(_function);
@@ -679,19 +681,13 @@ void CHC::internalFunctionCall(FunctionCall const& _funCall)
 {
 	solAssert(m_currentContract, "");
 
-	auto scopeContract = currentScopeContract();
-	auto function = functionCallToDefinition(_funCall, scopeContract, m_currentContract);
+	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	if (function)
 	{
 		if (m_currentFunction && !m_currentFunction->isConstructor())
 			m_callGraph[m_currentFunction].insert(function);
 		else
 			m_callGraph[m_currentContract].insert(function);
-
-		// Libraries can have constants as their "state" variables,
-		// so we need to ensure they were constructed correctly.
-		if (function->annotation().contract->isLibrary())
-			m_context.addAssertion(interface(*scopeContract));
 	}
 
 	m_context.addAssertion(predicate(_funCall));
@@ -1047,7 +1043,7 @@ void CHC::defineInterfacesAndSummaries(SourceUnit const& _source)
 			addRule(smtutil::Expression::implies(errorFlag().currentValue() == 0, smt::nondetInterface(iface, *contract, m_context, 0, 0)), "base_nondet");
 
 			auto const& resolved = contractFunctions(*contract);
-			for (auto const* function: contractFunctionsWithoutVirtual(*contract))
+			for (auto const* function: contractFunctionsWithoutVirtual(*contract) + allFreeFunctions())
 			{
 				for (auto var: function->parameters())
 					createVariable(*var);
@@ -1312,8 +1308,7 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 	solAssert(kind == FunctionType::Kind::Internal || kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
 
 	solAssert(m_currentContract, "");
-	auto scopeContract = currentScopeContract();
-	auto function = functionCallToDefinition(_funCall, scopeContract, m_currentContract);
+	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	if (!function)
 		return smtutil::Expression(true);
 
@@ -1330,27 +1325,20 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 
 	auto const* contract = function->annotation().contract;
 	auto const& hierarchy = m_currentContract->annotation().linearizedBaseContracts;
-	solAssert(kind != FunctionType::Kind::Internal || contract->isLibrary() || contains(hierarchy, contract), "");
-
-	/// If the call is to a library, we use that library as the called contract.
-	/// If the call is to a contract not in the inheritance hierarchy, we also use that as the called contract.
-	/// Otherwise, the call is to some contract in the inheritance hierarchy of the current contract.
-	/// In this case we use current contract as the called one since the interfaces/predicates are different.
-	auto const* calledContract = contains(hierarchy, contract) ? m_currentContract : contract;
-	solAssert(calledContract, "");
+	solAssert(kind != FunctionType::Kind::Internal || function->isFree() || (contract && contract->isLibrary()) || contains(hierarchy, contract), "");
 
 	bool usesStaticCall = function->stateMutability() == StateMutability::Pure || function->stateMutability() == StateMutability::View;
 
-	args += currentStateVariables(*calledContract);
+	args += currentStateVariables(*m_currentContract);
 	args += symbolicArguments(_funCall, m_currentContract);
-	if (!calledContract->isLibrary() && !usesStaticCall)
+	if (!m_currentContract->isLibrary() && !usesStaticCall)
 	{
 		state().newState();
 		for (auto const& var: m_stateVariables)
 			m_context.variable(*var)->increaseIndex();
 	}
 	args += vector<smtutil::Expression>{state().state()};
-	args += currentStateVariables(*calledContract);
+	args += currentStateVariables(*m_currentContract);
 
 	for (auto var: function->parameters() + function->returnParameters())
 	{
@@ -1361,14 +1349,14 @@ smtutil::Expression CHC::predicate(FunctionCall const& _funCall)
 		args.push_back(currentValue(*var));
 	}
 
-	Predicate const& summary = *m_summaries.at(calledContract).at(function);
-	auto from = smt::function(summary, calledContract, m_context);
+	Predicate const& summary = *m_summaries.at(m_currentContract).at(function);
+	auto from = smt::function(summary, m_currentContract, m_context);
 	Predicate const& callPredicate = *createSummaryBlock(
 		*function,
-		*calledContract,
+		*m_currentContract,
 		kind == FunctionType::Kind::Internal ? PredicateType::InternalCall : PredicateType::ExternalCallTrusted
 	);
-	auto to = smt::function(callPredicate, calledContract, m_context);
+	auto to = smt::function(callPredicate, m_currentContract, m_context);
 	addRule(smtutil::Expression::implies(from, to), to.name);
 
 	return callPredicate(args);
@@ -1429,10 +1417,7 @@ void CHC::verificationTargetEncountered(
 	if (!m_settings.targets.has(_type))
 		return;
 
-	solAssert(m_currentContract || m_currentFunction, "");
-	SourceUnit const* source = m_currentContract ? sourceUnitContaining(*m_currentContract) : sourceUnitContaining(*m_currentFunction);
-	solAssert(source, "");
-	if (!source->annotation().experimentalFeatures.count(ExperimentalFeature::SMTChecker))
+	if (!(m_currentContract || m_currentFunction))
 		return;
 
 	bool scopeIsFunction = m_currentFunction && !m_currentFunction->isConstructor();

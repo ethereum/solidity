@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f(bytes calldata b) external pure {
 		require(b.length > 10);
@@ -11,4 +9,6 @@ contract C {
 		//assert(bytes(b[10:20])[5] == 0xff);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

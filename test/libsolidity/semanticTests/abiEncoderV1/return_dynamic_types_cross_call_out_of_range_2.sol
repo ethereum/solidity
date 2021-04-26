@@ -12,8 +12,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // f(uint256): 0x60 -> FAILURE
 // f(uint256): 0x61 -> true

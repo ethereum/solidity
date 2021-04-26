@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library l1 {
 
 	uint private constant TON = 1000;
@@ -7,3 +5,6 @@ library l1 {
 		assert(TON == 1000);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

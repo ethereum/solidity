@@ -55,6 +55,13 @@ public:
 		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
 	);
 
+	// TODO This should be removed for 0.9.0.
+	void enableAllEnginesIfPragmaPresent(std::vector<std::shared_ptr<SourceUnit>> const& _sources);
+
+	/// Generates error messages if the requested sources and contracts
+	/// do not exist.
+	void checkRequestedSourcesAndContracts(std::vector<std::shared_ptr<SourceUnit>> const& _sources);
+
 	void analyze(SourceUnit const& _sources);
 
 	/// This is used if the SMT solver is not directly linked into this binary.
@@ -66,6 +73,8 @@ public:
 	static smtutil::SMTSolverChoice availableSolvers();
 
 private:
+	langutil::ErrorReporter& m_errorReporter;
+
 	ModelCheckerSettings m_settings;
 
 	/// Stores the context of the encoding.

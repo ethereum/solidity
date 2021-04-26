@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function k(bytes memory b0) public pure {
 		bytes memory b1 = b0;
@@ -26,3 +24,6 @@ contract C {
 		assert(a0 == a1);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

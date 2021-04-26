@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
     function f(int8 a, uint8 b) internal pure returns (int256) {
         return a >> b;
@@ -30,10 +28,12 @@ contract C {
 		assert(f(-66, 17) == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (236-259): CHC: Assertion violation happens here.
-// Warning 6328: (330-353): CHC: Assertion violation happens here.
-// Warning 6328: (423-446): CHC: Assertion violation happens here.
-// Warning 6328: (516-539): CHC: Assertion violation happens here.
-// Warning 6328: (610-633): CHC: Assertion violation happens here.
-// Warning 6328: (704-727): CHC: Assertion violation happens here.
+// Warning 6328: (203-226): CHC: Assertion violation happens here.
+// Warning 6328: (297-320): CHC: Assertion violation happens here.
+// Warning 6328: (390-413): CHC: Assertion violation happens here.
+// Warning 6328: (483-506): CHC: Assertion violation happens here.
+// Warning 6328: (577-600): CHC: Assertion violation happens here.
+// Warning 6328: (671-694): CHC: Assertion violation happens here.

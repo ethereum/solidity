@@ -6,6 +6,7 @@ contract C {
 
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(int16,uint16): -4266, 0 -> -4266
 // f(int16,uint16): -4266, 1 -> -2133

@@ -26,7 +26,6 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceLocation.h>
-#include <boost/noncopyable.hpp>
 
 namespace solidity::frontend
 {

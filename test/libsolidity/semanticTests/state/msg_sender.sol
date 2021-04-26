@@ -4,7 +4,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 0x1212121212121212121212121212120000000012

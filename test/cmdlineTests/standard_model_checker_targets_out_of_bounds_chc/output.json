@@ -22,4 +22,4 @@ x = 0
 Transaction trace:
 test.constructor()
 State: arr = []
-test.f(0, 1)","severity":"warning","sourceLocation":{"end":320,"file":"A","start":314},"type":"Warning"}],"sources":{"A":{"id":0}}}
+test.f(0, 1)","severity":"warning","sourceLocation":{"end":289,"file":"A","start":283},"type":"Warning"}],"sources":{"A":{"id":0}}}

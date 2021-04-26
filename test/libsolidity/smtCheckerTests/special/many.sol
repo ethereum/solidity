@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public payable {
@@ -16,13 +14,14 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (79-115): CHC: Assertion violation happens here.
-// Warning 6328: (119-161): CHC: Assertion violation happens here.
-// Warning 6328: (165-204): CHC: Assertion violation happens here.
-// Warning 6328: (208-240): CHC: Assertion violation happens here.
-// Warning 6328: (244-275): CHC: Assertion violation happens here.
-// Warning 6328: (328-352): CHC: Assertion violation happens here.
-// Warning 6328: (356-384): CHC: Assertion violation happens here.
-// Warning 6328: (388-411): CHC: Assertion violation happens here.
+// Warning 6328: (46-82): CHC: Assertion violation happens here.
+// Warning 6328: (86-128): CHC: Assertion violation happens here.
+// Warning 6328: (132-171): CHC: Assertion violation happens here.
+// Warning 6328: (175-207): CHC: Assertion violation happens here.
+// Warning 6328: (211-242): CHC: Assertion violation happens here.
+// Warning 6328: (295-319): CHC: Assertion violation happens here.
+// Warning 6328: (323-351): CHC: Assertion violation happens here.
+// Warning 6328: (355-378): CHC: Assertion violation happens here.

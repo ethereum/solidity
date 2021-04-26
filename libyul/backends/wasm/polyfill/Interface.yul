@@ -52,7 +52,8 @@ function caller() -> z1, z2, z3, z4 {
 
 function callvalue() -> z1, z2, z3, z4 {
 	eth.getCallValue(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	z3 := i64.load(8:i32)
+	z4 := i64.load(0:i32)
 }
 
 function calldataload(x1, x2, x3, x4) -> z1, z2, z3, z4 {
@@ -112,7 +113,8 @@ function datacopy(x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4) {
 
 function gasprice() -> z1, z2, z3, z4 {
 	eth.getTxGasPrice(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	z3 := i64.load(8:i32)
+	z4 := i64.load(0:i32)
 }
 
 function extcodesize_internal(x1, x2, x3, x4) -> r:i32 {
@@ -170,7 +172,10 @@ function number() -> z1, z2, z3, z4 {
 
 function difficulty() -> z1, z2, z3, z4 {
 	eth.getBlockDifficulty(0:i32)
-	z1, z2, z3, z4 := mload_internal(0:i32)
+	z1 := i64.load(24:i32)
+	z2 := i64.load(16:i32)
+	z3 := i64.load(8:i32)
+	z4 := i64.load(0:i32)
 }
 
 function gaslimit() -> z1, z2, z3, z4 {

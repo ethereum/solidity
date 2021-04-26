@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 
 	function g() public pure {}
@@ -21,4 +20,4 @@ contract C {
 // ====
 // SMTEngine: bmc
 // ----
-// Warning 4661: (338-352): BMC: Assertion violation happens here.
+// Warning 4661: (306-320): BMC: Assertion violation happens here.

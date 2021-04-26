@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	uint8 x = 254;
 
@@ -12,5 +10,7 @@ contract C {
 		assert(y < 256);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 4984: (94-97): CHC: Overflow (resulting value larger than 255) happens here.
+// Warning 4984: (61-64): CHC: Overflow (resulting value larger than 255) happens here.

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	mapping (bool => bool) map;
@@ -9,4 +7,6 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
+// ----

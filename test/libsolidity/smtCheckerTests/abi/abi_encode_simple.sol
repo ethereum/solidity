@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function abiEncodeSimple(bool t, uint x, uint y, uint z, uint[] memory a, uint[] memory b) public pure {
 		require(x == y);
@@ -18,7 +17,9 @@ contract C {
 		//assert(b1.length == b5.length); // should fail
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (330-360): CHC: Assertion violation happens here.
-// Warning 6328: (421-451): CHC: Assertion violation happens here.
-// Warning 6328: (524-554): CHC: Assertion violation happens here.
+// Warning 6328: (298-328): CHC: Assertion violation happens here.
+// Warning 6328: (389-419): CHC: Assertion violation happens here.
+// Warning 6328: (492-522): CHC: Assertion violation happens here.

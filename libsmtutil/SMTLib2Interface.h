@@ -25,7 +25,6 @@
 #include <libsolutil/Common.h>
 #include <libsolutil/FixedHash.h>
 
-#include <boost/noncopyable.hpp>
 #include <cstdio>
 #include <map>
 #include <set>
@@ -35,9 +34,13 @@
 namespace solidity::smtutil
 {
 
-class SMTLib2Interface: public SolverInterface, public boost::noncopyable
+class SMTLib2Interface: public SolverInterface
 {
 public:
+	/// Noncopyable.
+	SMTLib2Interface(SMTLib2Interface const&) = delete;
+	SMTLib2Interface& operator=(SMTLib2Interface const&) = delete;
+
 	explicit SMTLib2Interface(
 		std::map<util::h256, std::string> _queryResponses = {},
 		frontend::ReadCallback::Callback _smtCallback = {},

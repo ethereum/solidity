@@ -41,6 +41,8 @@
 
 #include <libsolutil/JSON.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <cassert>
 #include <memory>
 
@@ -201,7 +203,12 @@ unique_ptr<Block> Program::applyOptimisationSteps(
 	// An empty set of reserved identifiers. It could be a constructor parameter but I don't
 	// think it would be useful in this tool. Other tools (like yulopti) have it empty too.
 	set<YulString> const externallyUsedIdentifiers = {};
-	OptimiserStepContext context{_dialect, _nameDispenser, externallyUsedIdentifiers};
+	OptimiserStepContext context{
+		_dialect,
+		_nameDispenser,
+		externallyUsedIdentifiers,
+		frontend::OptimiserSettings::standard().expectedExecutionsPerDeployment
+	};
 
 	for (string const& step: _optimisationSteps)
 		OptimiserSuite::allSteps().at(step)->run(context, *_ast);

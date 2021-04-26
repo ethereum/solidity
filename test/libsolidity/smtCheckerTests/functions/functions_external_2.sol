@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D
 {
 	function g(uint x) public virtual;
@@ -22,6 +20,7 @@ contract C
 	}
 }
 // ====
+// SMTEngine: all
 // SMTIgnoreCex: yes
 // ----
-// Warning 6328: (267-286): CHC: Assertion violation happens here.
+// Warning 6328: (234-253): CHC: Assertion violation happens here.

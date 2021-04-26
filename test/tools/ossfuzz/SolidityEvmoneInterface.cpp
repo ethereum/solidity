@@ -32,10 +32,11 @@ using namespace std;
 
 optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 {
-	m_compiler.setSources({{"", m_compilerInput.sourceCode}});
+	m_compiler.setSources(m_compilerInput.sourceCode);
 	m_compiler.setLibraries(m_compilerInput.libraryAddresses);
 	m_compiler.setEVMVersion(m_compilerInput.evmVersion);
 	m_compiler.setOptimiserSettings(m_compilerInput.optimiserSettings);
+	m_compiler.setViaIR(m_compilerInput.viaIR);
 	if (!m_compiler.compile())
 	{
 		if (m_compilerInput.debugFailure)
@@ -68,7 +69,7 @@ bool EvmoneUtility::zeroWord(uint8_t const* _result, size_t _length)
 {
 	return _length == 32 &&
 		ranges::all_of(
-			ranges::span(_result, _length),
+			ranges::span(_result, static_cast<long>(_length)),
 			[](uint8_t _v) { return _v == 0; });
 }
 

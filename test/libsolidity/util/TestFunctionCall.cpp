@@ -83,12 +83,17 @@ string TestFunctionCall::format(
 		stream << _linePrefix << newline << ws << m_call.signature;
 		if (m_call.value.value > u256(0))
 		{
-			if (m_call.value.unit == FunctionValueUnit::Ether)
+			switch (m_call.value.unit)
+			{
+			case FunctionValueUnit::Ether:
 				stream << comma << ws << (m_call.value.value / exp256(10, 18)) << ws << ether;
-			else if (m_call.value.unit == FunctionValueUnit::Wei)
+				break;
+			case FunctionValueUnit::Wei:
 				stream << comma << ws << m_call.value.value << ws << wei;
-			else
+				break;
+			default:
 				soltestAssert(false, "");
+			}
 		}
 		if (!m_call.arguments.rawBytes().empty())
 		{
@@ -360,6 +365,7 @@ void TestFunctionCall::reset()
 {
 	m_rawBytes = bytes{};
 	m_failure = true;
+	m_contractABI = Json::Value{};
 	m_calledNonExistingFunction = false;
 }
 

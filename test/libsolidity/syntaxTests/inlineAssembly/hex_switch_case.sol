@@ -8,4 +8,3 @@ contract C {
   }
 }
 // ----
-// ParserError 3772: (92-99): Hex literals are not valid in this context.
