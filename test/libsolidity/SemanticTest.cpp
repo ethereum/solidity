@@ -61,6 +61,8 @@ SemanticTest::SemanticTest(
 	m_enforceGasCost(_enforceGasCost),
 	m_enforceGasCostMinValue(_enforceGasCostMinValue)
 {
+	initializeBuiltins();
+
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
 	{
@@ -120,6 +122,15 @@ SemanticTest::SemanticTest(
 		m_compiler.setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 		m_compiler.setMetadataHash(CompilerStack::MetadataHash::None);
 	}
+}
+
+void SemanticTest::initializeBuiltins()
+{
+	solAssert(m_builtins.count("smokeTest") == 0, "");
+	m_builtins["smokeTest"] = [](FunctionCall const&) -> std::optional<bytes>
+	{
+		return util::toBigEndian(u256(0x1234));
+	};
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
