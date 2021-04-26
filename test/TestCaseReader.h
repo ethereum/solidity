@@ -16,12 +16,20 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#pragma once
+
+#include <test/libsolidity/util/SoltestErrors.h>
+
+#include <libsolutil/StringUtils.h>
+
+#include <range/v3/view/map.hpp>
+
 #include <boost/filesystem.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <fstream>
 #include <map>
 #include <string>
-
-#pragma once
 
 namespace solidity::frontend::test
 {
@@ -58,6 +66,9 @@ public:
 	size_t sizetSetting(std::string const& _name, size_t _defaultValue);
 	std::string stringSetting(std::string const& _name, std::string const& _defaultValue);
 
+	template <typename E>
+	E enumSetting(std::string const& _name, std::map<std::string, E> const& _choices, std::string const& _defaultChoice);
+
 	void ensureAllSettingsRead() const;
 
 private:
@@ -71,4 +82,20 @@ private:
 	std::map<std::string, std::string> m_settings;
 	std::map<std::string, std::string> m_unreadSettings; ///< tracks which settings are left unread
 };
+
+template <typename E>
+E TestCaseReader::enumSetting(std::string const& _name, std::map<std::string, E> const& _choices, std::string const& _defaultChoice)
+{
+	soltestAssert(_choices.count(_defaultChoice) > 0, "");
+
+	std::string value = stringSetting(_name, _defaultChoice);
+
+	if (_choices.count(value) == 0)
+		BOOST_THROW_EXCEPTION(std::runtime_error(
+			"Invalid Enum value: " + value + ". Available choices: " + util::joinHumanReadable(_choices | ranges::views::keys) + "."
+		));
+
+	return _choices.at(value);
+}
+
 }
