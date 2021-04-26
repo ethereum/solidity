@@ -61,51 +61,51 @@ def get_checks(content, sol_file_path):
             constructors.append(line)
         if line.startswith("ABI_CHECK") or line.startswith("BOOST_REQUIRE"):
             checks.append(line)
-    sol_file = open(sol_file_path, "r")
-    sol_constructors = []
-    sol_checks = []
-    inside_expectations = False
-    for line in sol_file.readlines():
-        if line.startswith("// constructor()"):
-            sol_constructors.append(line)
-        elif inside_expectations and line.startswith("// "):
-            sol_checks.append(line)
-        if line.startswith("// ----"):
-            inside_expectations = True
-    sol_file.close()
-    if len(constructors) == len(sol_constructors) == 1:
-        checks.insert(0, constructors[0])
-        sol_checks.insert(0, sol_constructors[0])
-    return checks, sol_checks
+    with open(sol_file_path, "r") as sol_file:
+        sol_constructors = []
+        sol_checks = []
+        inside_expectations = False
+        for line in sol_file.readlines():
+            if line.startswith("// constructor()"):
+                sol_constructors.append(line)
+            elif inside_expectations and line.startswith("// "):
+                sol_checks.append(line)
+            if line.startswith("// ----"):
+                inside_expectations = True
+        sol_file.close()
+        if len(constructors) == len(sol_constructors) == 1:
+            checks.insert(0, constructors[0])
+            sol_checks.insert(0, sol_constructors[0])
+        return checks, sol_checks
 
 
 def show_test(name, content, sol_file_path, current_test, test_count):
-    cpp_file = tempfile.NamedTemporaryFile(delete=False)
-    cpp_file.write(content.encode())
-    cpp_file.close()
+    with tempfile.NamedTemporaryFile(delete=False) as cpp_file:
+        cpp_file.write(content.encode())
+        cpp_file.close()
 
-    os.system("clear")
-    print(str(current_test) + " / " + str(test_count) + " - " + name + "\n")
-    diff_env = os.getenv('DIFF', "/usr/local/bin/colordiff -a -d -w -y -W 200 ")
-    os.system(diff_env + " " + cpp_file.name + " " + sol_file_path)
-    os.unlink(cpp_file.name)
-    print("\n")
+        os.system("clear")
+        print(str(current_test) + " / " + str(test_count) + " - " + name + "\n")
+        diff_env = os.getenv('DIFF', "/usr/local/bin/colordiff -a -d -w -y -W 200 ")
+        os.system(diff_env + " " + cpp_file.name + " " + sol_file_path)
+        os.unlink(cpp_file.name)
+        print("\n")
 
-    checks, sol_checks = get_checks(content, sol_file_path)
+        checks, sol_checks = get_checks(content, sol_file_path)
 
-    if len(checks) == len(sol_checks):
-        for i in range(0, len(checks)):
-            print(colorize(checks[i].strip(), sol_checks[i].strip(), i))
-    else:
-        print("warning: check count not matching. this should not happen!")
+        if len(checks) == len(sol_checks):
+            for i in range(0, len(checks)):
+                print(colorize(checks[i].strip(), sol_checks[i].strip(), i))
+        else:
+            print("warning: check count not matching. this should not happen!")
 
-    what = ""
-    print("\nContinue? (ENTER) Abort? (ANY OTHER KEY)")
-    while what != '\n':
-        what = getkey()
-        if what != '\n':
-            sys.exit(0)
-    print()
+        what = ""
+        print("\nContinue? (ENTER) Abort? (ANY OTHER KEY)")
+        while what != '\n':
+            what = getkey()
+            if what != '\n':
+                sys.exit(0)
+        print()
 
 
 def get_tests(e2e_path):
@@ -118,40 +118,40 @@ def get_tests(e2e_path):
 
 def process_input_file(e2e_path, input_file, interactive):
     tests = get_tests(e2e_path)
-    cpp_file = open(input_file, "r")
-    inside_test = False
-    test_name = ""
-    inside_extracted_test = False
-    new_lines = 0
-    count = 0
-    test_content = ""
-    for line in cpp_file.readlines():
-        test = re.search(r'BOOST_AUTO_TEST_CASE\((.*)\)', line, re.M | re.I)
-        if test:
-            test_name = test.group(1)
-            inside_test = True
-            inside_extracted_test = inside_test & (test_name in tests)
-            if inside_extracted_test:
-                count = count + 1
+    with open(input_file, "r") as cpp_file:
+        inside_test = False
+        test_name = ""
+        inside_extracted_test = False
+        new_lines = 0
+        count = 0
+        test_content = ""
+        for line in cpp_file.readlines():
+            test = re.search(r'BOOST_AUTO_TEST_CASE\((.*)\)', line, re.M | re.I)
+            if test:
+                test_name = test.group(1)
+                inside_test = True
+                inside_extracted_test = inside_test & (test_name in tests)
+                if inside_extracted_test:
+                    count = count + 1
 
-        if interactive and inside_extracted_test:
-            test_content = test_content + line
-
-        if not inside_extracted_test:
-            if line == "\n":
-                new_lines = new_lines + 1
-            else:
-                new_lines = 0
-            if not interactive and new_lines <= 1:
-                sys.stdout.write(line)
-
-        if line == "}\n":
             if interactive and inside_extracted_test:
-                show_test(test_name, test_content.strip(), e2e_path + "/" + test_name + ".sol", count, len(tests))
-                test_content = ""
-            inside_test = False
-    cpp_file.close()
-    sys.stdout.flush()
+                test_content = test_content + line
+
+            if not inside_extracted_test:
+                if line == "\n":
+                    new_lines = new_lines + 1
+                else:
+                    new_lines = 0
+                if not interactive and new_lines <= 1:
+                    sys.stdout.write(line)
+
+            if line == "}\n":
+                if interactive and inside_extracted_test:
+                    show_test(test_name, test_content.strip(), e2e_path + "/" + test_name + ".sol", count, len(tests))
+                    test_content = ""
+                inside_test = False
+        cpp_file.close()
+        sys.stdout.flush()
 
 
 def main(argv):
