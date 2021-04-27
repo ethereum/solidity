@@ -104,7 +104,7 @@ FunctionDefinition FunctionSpecializer::specialize(
 		if (argument)
 			missingVariableDeclarations.emplace_back(
 				VariableDeclaration{
-					_f.location,
+					_f.debugData,
 					vector<TypedName>{newFunction.parameters[index]},
 					make_unique<Expression>(move(*argument))
 				}

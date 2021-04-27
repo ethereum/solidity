@@ -61,8 +61,8 @@
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AssemblyStack.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AST.h>
+#include <libyul/AsmParser.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>

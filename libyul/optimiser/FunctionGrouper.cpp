@@ -35,7 +35,7 @@ void FunctionGrouper::operator()(Block& _block)
 		return;
 
 	vector<Statement> reordered;
-	reordered.emplace_back(Block{_block.location, {}});
+	reordered.emplace_back(Block{_block.debugData, {}});
 
 	for (auto&& statement: _block.statements)
 	{

@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <libyul/ASTForward.h>
+
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 

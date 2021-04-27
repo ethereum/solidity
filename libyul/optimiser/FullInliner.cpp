@@ -268,7 +268,7 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 	auto newVariable = [&](TypedName const& _existingVariable, Expression* _value) {
 		YulString newName = m_nameDispenser.newName(_existingVariable.name);
 		variableReplacements[_existingVariable.name] = newName;
-		VariableDeclaration varDecl{_funCall.location, {{_funCall.location, newName, _existingVariable.type}}, {}};
+		VariableDeclaration varDecl{_funCall.debugData, {{_funCall.debugData, newName, _existingVariable.type}}, {}};
 		if (_value)
 			varDecl.value = make_unique<Expression>(std::move(*_value));
 		else
@@ -290,10 +290,10 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		{
 			for (size_t i = 0; i < _assignment.variableNames.size(); ++i)
 				newStatements.emplace_back(Assignment{
-					_assignment.location,
+					_assignment.debugData,
 					{_assignment.variableNames[i]},
 					make_unique<Expression>(Identifier{
-						_assignment.location,
+						_assignment.debugData,
 						variableReplacements.at(function->returnVariables[i].name)
 					})
 				});
@@ -302,10 +302,10 @@ vector<Statement> InlineModifier::performInline(Statement& _statement, FunctionC
 		{
 			for (size_t i = 0; i < _varDecl.variables.size(); ++i)
 				newStatements.emplace_back(VariableDeclaration{
-					_varDecl.location,
+					_varDecl.debugData,
 					{std::move(_varDecl.variables[i])},
 					make_unique<Expression>(Identifier{
-						_varDecl.location,
+						_varDecl.debugData,
 						variableReplacements.at(function->returnVariables[i].name)
 					})
 				});

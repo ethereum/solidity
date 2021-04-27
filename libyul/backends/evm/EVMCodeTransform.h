@@ -39,6 +39,7 @@ class ErrorReporter;
 
 namespace solidity::yul
 {
+
 struct AsmAnalysisInfo;
 class EVMAssembly;
 

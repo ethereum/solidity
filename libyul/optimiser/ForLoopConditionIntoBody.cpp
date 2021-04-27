@@ -39,25 +39,25 @@ void ForLoopConditionIntoBody::operator()(ForLoop& _forLoop)
 		!holds_alternative<Identifier>(*_forLoop.condition)
 	)
 	{
-		langutil::SourceLocation const loc = locationOf(*_forLoop.condition);
+		shared_ptr<DebugData const> debugData = debugDataOf(*_forLoop.condition);
 
 		_forLoop.body.statements.emplace(
 			begin(_forLoop.body.statements),
 			If {
-				loc,
+				debugData,
 				make_unique<Expression>(
 					FunctionCall {
-						loc,
-						{loc, m_dialect.booleanNegationFunction()->name},
+						debugData,
+						{debugData, m_dialect.booleanNegationFunction()->name},
 						util::make_vector<Expression>(std::move(*_forLoop.condition))
 					}
 				),
-				Block {loc, util::make_vector<Statement>(Break{{}})}
+				Block {debugData, util::make_vector<Statement>(Break{{}})}
 			}
 		);
 		_forLoop.condition = make_unique<Expression>(
 			Literal {
-				loc,
+				debugData,
 				LiteralKind::Boolean,
 				"true"_yulstring,
 				m_dialect.boolType

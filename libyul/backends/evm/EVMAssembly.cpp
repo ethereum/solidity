@@ -39,7 +39,7 @@ size_t constexpr assemblySizeReferenceSize = 4;
 }
 
 
-void EVMAssembly::setSourceLocation(SourceLocation const&)
+void EVMAssembly::setSourceLocation(langutil::SourceLocation const&)
 {
 	// Ignored for now;
 }

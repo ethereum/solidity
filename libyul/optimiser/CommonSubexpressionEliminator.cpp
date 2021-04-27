@@ -95,13 +95,13 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 
 	if (Identifier const* identifier = get_if<Identifier>(&_e))
 	{
-		YulString name = identifier->name;
-		if (m_value.count(name))
+		YulString identifierName = identifier->name;
+		if (m_value.count(identifierName))
 		{
-			assertThrow(m_value.at(name).value, OptimizerException, "");
-			if (Identifier const* value = get_if<Identifier>(m_value.at(name).value))
+			assertThrow(m_value.at(identifierName).value, OptimizerException, "");
+			if (Identifier const* value = get_if<Identifier>(m_value.at(identifierName).value))
 				if (inScope(value->name))
-					_e = Identifier{locationOf(_e), value->name};
+					_e = Identifier{debugDataOf(_e), value->name};
 		}
 	}
 	else
@@ -120,7 +120,7 @@ void CommonSubexpressionEliminator::visit(Expression& _e)
 				continue;
 			if (SyntacticallyEqual{}(_e, *value.value) && inScope(variable))
 			{
-				_e = Identifier{locationOf(_e), variable};
+				_e = Identifier{debugDataOf(_e), variable};
 				break;
 			}
 		}

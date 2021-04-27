@@ -70,7 +70,7 @@ protected:
 	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.location = currentLocation();
+		r.debugData = DebugData::create(currentLocation());
 		return r;
 	}
 

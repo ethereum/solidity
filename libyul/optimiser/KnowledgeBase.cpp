@@ -84,7 +84,7 @@ Expression KnowledgeBase::simplify(Expression _expression)
 			arg = simplify(arg);
 
 	if (auto match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_variableValues))
-		return simplify(match->action().toExpression(locationOf(_expression)));
+		return simplify(match->action().toExpression(debugDataOf(_expression)));
 
 	return _expression;
 }

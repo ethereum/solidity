@@ -24,11 +24,11 @@
 #include <test/libsolidity/ErrorCheck.h>
 #include <test/libyul/Common.h>
 
+#include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>

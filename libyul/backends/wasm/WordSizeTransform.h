@@ -87,7 +87,7 @@ private:
 
 	std::vector<Statement> handleSwitch(Switch& _switch);
 	std::vector<Statement> handleSwitchInternal(
-		langutil::SourceLocation const& _location,
+		std::shared_ptr<DebugData const> const& _debugData,
 		std::vector<YulString> const& _splitExpressions,
 		std::vector<Case> _cases,
 		YulString _runDefaultFlag,

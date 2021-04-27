@@ -192,9 +192,9 @@ private:
 			solAssert(false, "");
 
 		if (isdigit(value.front()))
-			return yul::Literal{_identifier.location, yul::LiteralKind::Number, yul::YulString{value}, {}};
+			return yul::Literal{_identifier.debugData, yul::LiteralKind::Number, yul::YulString{value}, {}};
 		else
-			return yul::Identifier{_identifier.location, yul::YulString{value}};
+			return yul::Identifier{_identifier.debugData, yul::YulString{value}};
 	}
 
 

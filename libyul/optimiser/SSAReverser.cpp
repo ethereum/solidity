@@ -66,12 +66,12 @@ void SSAReverser::operator()(Block& _block)
 					else
 						return util::make_vector<Statement>(
 							Assignment{
-								std::move(assignment->location),
+								std::move(assignment->debugData),
 								assignment->variableNames,
 								std::move(varDecl->value)
 							},
 							VariableDeclaration{
-								std::move(varDecl->location),
+								std::move(varDecl->debugData),
 								std::move(varDecl->variables),
 								std::make_unique<Expression>(assignment->variableNames.front())
 							}
@@ -97,17 +97,17 @@ void SSAReverser::operator()(Block& _block)
 				)
 				{
 					auto varIdentifier2 = std::make_unique<Expression>(Identifier{
-						varDecl2->variables.front().location,
+						varDecl2->variables.front().debugData,
 						varDecl2->variables.front().name
 					});
 					return util::make_vector<Statement>(
 						VariableDeclaration{
-							std::move(varDecl2->location),
+							std::move(varDecl2->debugData),
 							std::move(varDecl2->variables),
 							std::move(varDecl->value)
 						},
 						VariableDeclaration{
-							std::move(varDecl->location),
+							std::move(varDecl->debugData),
 							std::move(varDecl->variables),
 							std::move(varIdentifier2)
 						}

@@ -85,12 +85,12 @@ void LoadResolver::tryResolve(
 	{
 		if (auto value = util::valueOrNullptr(m_storage, key))
 			if (inScope(*value))
-				_e = Identifier{locationOf(_e), *value};
+				_e = Identifier{debugDataOf(_e), *value};
 	}
 	else if (!m_containsMSize && _location == StoreLoadLocation::Memory)
 		if (auto value = util::valueOrNullptr(m_memory, key))
 			if (inScope(*value))
-				_e = Identifier{locationOf(_e), *value};
+				_e = Identifier{debugDataOf(_e), *value};
 }
 
 void LoadResolver::tryEvaluateKeccak(
@@ -140,7 +140,7 @@ void LoadResolver::tryEvaluateKeccak(
 			bytes contentAsBytes = toBigEndian(*memoryContent);
 			contentAsBytes.resize(static_cast<size_t>(*byteLength));
 			_e = Literal{
-				locationOf(_e),
+				debugDataOf(_e),
 				LiteralKind::Number,
 				YulString{u256(keccak256(contentAsBytes)).str()},
 				m_dialect.defaultType

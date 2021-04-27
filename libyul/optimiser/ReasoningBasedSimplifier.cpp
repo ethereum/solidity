@@ -79,7 +79,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	if (result == CheckResult::UNSATISFIABLE)
 	{
 		Literal trueCondition = m_dialect.trueLiteral();
-		trueCondition.location = locationOf(*_if.condition);
+		trueCondition.debugData = debugDataOf(*_if.condition);
 		_if.condition = make_unique<yul::Expression>(move(trueCondition));
 	}
 	else
@@ -91,7 +91,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 		if (result2 == CheckResult::UNSATISFIABLE)
 		{
 			Literal falseCondition = m_dialect.zeroLiteralForType(m_dialect.boolType);
-			falseCondition.location = locationOf(*_if.condition);
+			falseCondition.debugData = debugDataOf(*_if.condition);
 			_if.condition = make_unique<yul::Expression>(move(falseCondition));
 			_if.body = yul::Block{};
 			// Nothing left to be done.
