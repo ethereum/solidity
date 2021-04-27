@@ -31,7 +31,6 @@
 #include <set>
 #include <variant>
 
-#include <range/v3/action/transform.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/transform.hpp>
@@ -117,16 +116,189 @@ struct ContractState
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
-struct Type
+struct SolidityType
 {
-	virtual ~Type() {}
+	virtual ~SolidityType() = default;
+	virtual std::string toString() = 0;
 };
-struct FunctionType: Type
+
+struct IntegerType: SolidityType
 {
-	std::vector<Type> inputs;
-	std::vector<Type> outputs;
+	enum class Bits: size_t
+	{
+		B8 = 1,
+		B16,
+		B24,
+		B32,
+		B40,
+		B48,
+		B56,
+		B64,
+		B72,
+		B80,
+		B88,
+		B96,
+		B104,
+		B112,
+		B120,
+		B128,
+		B136,
+		B144,
+		B152,
+		B160,
+		B168,
+		B176,
+		B184,
+		B192,
+		B200,
+		B208,
+		B216,
+		B224,
+		B232,
+		B240,
+		B248,
+		B256
+	};
+
+	IntegerType(
+		Bits _bits,
+		bool _signed
+	):
+		signedType(_signed),
+		numBits(static_cast<size_t>(_bits) * 8)
+	{}
+	std::string toString() override
+	{
+		return (signedType ? "int" : "uint") + std::to_string(numBits);
+	}
+	bool signedType;
+	size_t numBits;
 };
-struct ContractType: Type {};
+
+struct BoolType: SolidityType
+{
+	std::string toString() override
+	{
+		return "bool";
+	}
+};
+
+struct AddressType: SolidityType
+{
+	// TODO: Implement address payable
+	std::string toString() override
+	{
+		return "address";
+	}
+};
+
+struct FixedBytesType: SolidityType
+{
+	enum class Bytes: size_t
+	{
+		W1 = 1,
+		W2,
+		W3,
+		W4,
+		W5,
+		W6,
+		W7,
+		W8,
+		W9,
+		W10,
+		W11,
+		W12,
+		W13,
+		W14,
+		W15,
+		W16,
+		W17,
+		W18,
+		W19,
+		W20,
+		W21,
+		W22,
+		W23,
+		W24,
+		W25,
+		W26,
+		W27,
+		W28,
+		W29,
+		W30,
+		W31,
+		W32
+	};
+	FixedBytesType(Bytes _width): numBytes(static_cast<size_t>(_width))
+	{}
+
+	std::string toString() override
+	{
+		return "bytes" + std::to_string(numBytes);
+	}
+	size_t numBytes;
+};
+
+struct BytesType: SolidityType
+{
+	std::string toString() override
+	{
+		return "bytes";
+	}
+};
+
+struct ContractType: SolidityType
+{
+	ContractType(std::string _name): contractName(_name)
+	{}
+	std::string toString() override
+	{
+		return "type(" + contractName + ")";
+	}
+	std::string name()
+	{
+		return contractName;
+	}
+	std::string contractName;
+};
+
+struct FunctionType: SolidityType
+{
+	FunctionType() = default;
+	~FunctionType()
+	{
+		inputs.clear();
+		outputs.clear();
+	}
+
+	std::string toString()
+	{
+		auto typeString = [](std::vector<std::shared_ptr<SolidityType>>& _types)
+		{
+			std::string sep;
+			std::string typeStr;
+			for (auto const& i: _types)
+			{
+				typeStr += sep + i->toString();
+				if (sep.empty())
+					sep = ",";
+			}
+			return typeStr;
+		};
+
+		if (outputs.empty())
+			return std::string("function (") + typeString(inputs) + ") public pure {}";
+		else
+			return std::string("function (") +
+				typeString(inputs) +
+				") public pure returns (" +
+				typeString(outputs) +
+				") {}";
+	}
+
+	std::vector<std::shared_ptr<SolidityType>> inputs;
+	std::vector<std::shared_ptr<SolidityType>> outputs;
+};
 
 struct SourceState
 {
@@ -163,7 +335,7 @@ struct SourceState
 	{
 		importedSources.emplace(_sourcePath);
 	}
-	void resolveImports(std::map<std::shared_ptr<Type>, std::string> _imports)
+	void resolveImports(std::map<std::shared_ptr<SolidityType>, std::string> _imports)
 	{
 		for (auto const& item: _imports)
 			exports.emplace(item);
@@ -180,7 +352,7 @@ struct SourceState
 	void print(std::ostream& _os) const;
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	std::set<std::string> importedSources;
-	std::map<std::shared_ptr<Type>, std::string> exports;
+	std::map<std::shared_ptr<SolidityType>, std::string> exports;
 };
 
 struct FunctionState {};
@@ -211,7 +383,9 @@ struct TestState
 	void addContract(std::string const& _name)
 	{
 		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist));
-		sourceUnitState[currentSourceUnitPath]->exports[std::make_shared<ContractType>()] = _name;
+		sourceUnitState[currentSourceUnitPath]->exports[
+			std::make_shared<ContractType>(_name)
+	    ] = _name;
 		currentContract = _name;
 	}
 	void addFunction(std::string const& _name)
