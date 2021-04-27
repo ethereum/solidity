@@ -13,6 +13,7 @@ sourceUnit: (
 	pragmaDirective
 	| importDirective
 	| contractDefinition
+	| errorDefinition
 	| interfaceDefinition
 	| libraryDefinition
 	| functionDefinition
@@ -379,9 +380,9 @@ tupleExpression: LParen (expression? ( Comma expression?)* ) RParen;
 inlineArrayExpression: LBrack (expression ( Comma expression)* ) RBrack;
 
 /**
- * Besides regular non-keyword Identifiers, some keywords like 'from' and 'error' can also be used as identifiers.
+ * Besides regular non-keyword Identifiers, some keywords like 'from' can also be used as identifiers.
  */
-identifier: Identifier | From | Error | Revert;
+identifier: Identifier | From | Revert;
 
 literal: stringLiteral | numberLiteral | booleanLiteral | hexStringLiteral | unicodeStringLiteral;
 booleanLiteral: True | False;
