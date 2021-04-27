@@ -52,8 +52,15 @@ library strings {
             src += 32;
         }
 
+        // The following masking would overflow in the case of len=0
+        // and the code path in that case is useless, albeit correct.
+        // This shortcut avoids it and saves gas.
+        if (len == 0)
+            return;
+
         // Copy remaining bytes
-        uint mask = 256 ** (32 - len) - 1;
+        uint mask;
+        unchecked { mask = 256 ** (32 - len) - 1; }
         assembly {
             let srcpart := and(mload(src), not(mask))
             let destpart := and(mload(dest), mask)
@@ -215,7 +222,9 @@ library strings {
                 if(shortest < 32) {
                   mask = ~(2 ** (8 * (32 - shortest + idx)) - 1);
                 }
-                uint256 diff = (a & mask) - (b & mask);
+                uint256 diff;
+                // This depends on potential underflow.
+                unchecked { diff = (a & mask) - (b & mask); }
                 if (diff != 0)
                     return int(diff);
             }
