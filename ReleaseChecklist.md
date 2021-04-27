@@ -61,7 +61,6 @@
 ### Documentation
  - [ ] Build the new version on https://readthedocs.org/projects/solidity/ (select `latest` at the bottom of the page and click `BUILD`).
  - [ ] In the admin panel, select `Versions` in the menu and set the default version to the released one.
- - [ ] If it is a non-breaking release, block indexing of previous release version in the ``robots.txt`` file.
 
 ### Release solc-js
  - [ ] Wait until solc-bin was properly deployed. You can test this via remix - a test run through remix is advisable anyway.
