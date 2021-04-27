@@ -29,7 +29,7 @@ Do: 'do';
 Else: 'else';
 Emit: 'emit';
 Enum: 'enum';
-Error: 'error'; // not a real keyword
+Error: 'error';
 Event: 'event';
 External: 'external';
 Fallback: 'fallback';
