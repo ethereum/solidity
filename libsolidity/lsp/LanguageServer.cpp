@@ -215,7 +215,6 @@ void LanguageServer::documentContentUpdated(string const& _path, LineColumnRange
 	buffer.replace(start, end - start, _replacementText);
 
 	m_fileReader->setSource(_path, buffer);
-	m_pathMappings[_path] = _path;
 }
 
 void LanguageServer::documentContentUpdated(string const& _path, string const& _replacementText)
@@ -228,7 +227,6 @@ void LanguageServer::documentContentUpdated(string const& _path, string const& _
 	}
 
 	m_fileReader->setSource(_path, _replacementText);
-	m_pathMappings[_path] = _path;
 
 	compileSource(_path);
 }
@@ -714,7 +712,6 @@ void LanguageServer::handle_textDocument_didOpen(MessageID /*_id*/, Json::Value 
 	log("LanguageServer: Opening document: " + path);
 
 	m_fileReader->setSource(path, text);
-	m_pathMappings[fullPath] = path;
 
 	compileSource(path);
 
@@ -790,13 +787,13 @@ void LanguageServer::handle_textDocument_definition(MessageID _id, Json::Value c
 	vector<SourceLocation> locations;
 	if (auto const importDirective = dynamic_cast<ImportDirective const*>(sourceNode))
 	{
-		// When cursor is on an import directive, then we want to jump to the actual file that
-		// is being imported.
-		auto const fpm = m_pathMappings.find(importDirective->path());
-		if (fpm != m_pathMappings.end())
-			locations.emplace_back(SourceLocation{0, 0, make_shared<CharStream>("", fpm->second)});
+		auto const& path = *importDirective->annotation().absolutePath;
+
+		auto const i = m_fileReader->sourceCodes().find(path);
+		if (i != m_fileReader->sourceCodes().end())
+			locations.emplace_back(SourceLocation{0, 0, make_shared<CharStream>("", path)});
 		else
-			trace("gotoDefinition: (importDirective) full path mapping not found\n");
+			trace(fmt::format("gotoDefinition: (importDirective) full path mapping not found for {}: {}\n", importDirective->path(), path));
 	}
 	else if (auto const n = dynamic_cast<frontend::MemberAccess const*>(sourceNode))
 	{
@@ -954,23 +951,12 @@ void LanguageServer::log(string _message)
 
 	if (m_logger)
 		m_logger(_message);
-
-	// Json::Value json = Json::objectValue;
-	// json["type"] = static_cast<int>(Trace::Messages);
-	// json["message"] = move(_message);
-	// m_client->notify("window/logMessage", json);
 }
 
 void LanguageServer::trace(string const& _message)
 {
-	// if (m_trace < Trace::Verbose)
-	// 	return;
-
-	Json::Value json = Json::objectValue;
-	json["type"] = static_cast<int>(Trace::Verbose);
-	json["message"] = _message;
-
-	m_client->notify("window/logMessage", json);
+	if (m_trace < Trace::Verbose)
+		return;
 
 	if (m_logger)
 		m_logger(_message);

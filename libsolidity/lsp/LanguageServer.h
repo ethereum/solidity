@@ -171,19 +171,11 @@ protected:
 	/// Workspace root directory
 	boost::filesystem::path m_basePath;
 
-	/// map of input files to source code strings
-	///
-	/// The key must be a fully qualified path to the file.
-	// TODO (dead) std::map<std::string, std::string> m_sourceCodes;
-
 	std::unique_ptr<frontend::CompilerStack> m_compilerStack;
 	std::vector<frontend::ImportRemapper::Remapping> m_remappings;
 
 	/// Configured EVM version that is being used in compilations.
 	langutil::EVMVersion m_evmVersion = langutil::EVMVersion::berlin();
-
-	/// Maps source paths names to fully qualified local path names.
-	std::map<std::string, std::string> m_pathMappings;
 };
 
 } // namespace solidity

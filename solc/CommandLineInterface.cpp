@@ -23,6 +23,10 @@
  */
 #include <solc/CommandLineInterface.h>
 
+#if defined(SOLC_LSP_TCP)
+#include <solc/LSPTCPTransport.h>
+#endif
+
 #include "solidity/BuildInfo.h"
 #include "license.h"
 
@@ -934,6 +938,13 @@ General Information)").c_str(),
 			"Enables Language Server (LSP) mode. "
 			"This won't compile input but serves as language server to to clients."
 		)
+#if defined(SOLC_LSP_TCP)
+		(
+			"lsp-port",
+			po::value<string>()->value_name("PORT"),
+			"TCP listening port an LCP client can connect to instead of using stdio."
+		)
+#endif
 		(
 			"lsp-trace",
 			po::value<string>()->value_name("path"),
@@ -1125,9 +1136,13 @@ General Information)").c_str(),
 		// LSP related arguments.
 		"lsp",
 		"lsp-trace",
+#if defined(SOLC_LSP_TCP)
+		"lsp-port",
+#endif
 		// Defaulted arguments must be listed.
 		g_argModelCheckerEngine,
 		g_argModelCheckerTargets,
+		g_strModelCheckerContracts,
 		g_argOptimizeRuns
 	};
 
@@ -1795,6 +1810,11 @@ bool CommandLineInterface::serveLSP()
 	};
 
 	std::unique_ptr<lsp::Transport> transport = make_unique<lsp::JSONTransport>(traceLogger);
+#if defined(SOLC_LSP_TCP)
+	if (m_args.count("lsp-port"))
+		transport = make_unique<LSPTCPTransport>(stoi(m_args.at("lsp-port").as<string>()), traceLogger);
+#endif
+
 	lsp::LanguageServer languageServer(traceLogger, move(transport));
 	return languageServer.run();
 }
