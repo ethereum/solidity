@@ -7,7 +7,7 @@ object "t" {
 	}
 }
 // ====
-// optimize: true
+// optimizationPreset: full
 // ----
 // Assembly:
 //     /* "source":23:147   */
