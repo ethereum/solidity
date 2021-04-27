@@ -21,6 +21,7 @@
 #include <test/Common.h>
 
 #include <libsolutil/Assertions.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -221,5 +222,20 @@ void CommonOptions::setSingleton(std::unique_ptr<CommonOptions const>&& _instanc
 }
 
 std::unique_ptr<CommonOptions const> CommonOptions::m_singleton = nullptr;
+
+bool isValidSemanticTestPath(boost::filesystem::path const& _testPath)
+{
+	bool insideSemanticTests = false;
+	fs::path testPathPrefix;
+	for (auto const& element: _testPath)
+	{
+		testPathPrefix /= element;
+		if (boost::ends_with(canonical(testPathPrefix).generic_string(), "/test/libsolidity/semanticTests"))
+			insideSemanticTests = true;
+		if (insideSemanticTests && boost::starts_with(element.string(), "_"))
+			return false;
+	}
+	return true;
+}
 
 }

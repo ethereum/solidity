@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <map>
 #include <string>
@@ -31,6 +32,7 @@ namespace solidity::frontend::test
 struct SourceMap
 {
 	std::map<std::string, std::string> sources;
+	std::map<std::string, boost::filesystem::path> externalSources;
 	std::string mainSourceFile;
 };
 
@@ -48,7 +50,7 @@ public:
 	std::string const& source() const;
 	std::size_t lineNumber() const { return m_lineNumber; }
 	std::map<std::string, std::string> const& settings() const { return m_settings; }
-	std::ifstream& stream() { return m_file; }
+	std::ifstream& stream() { return m_fileStream; }
 
 	std::string simpleExpectations();
 
@@ -62,7 +64,8 @@ private:
 	std::pair<SourceMap, std::size_t> parseSourcesAndSettingsWithLineNumber(std::istream& _file);
 	static std::string parseSimpleExpectations(std::istream& _file);
 
-	std::ifstream m_file;
+	std::ifstream m_fileStream;
+	boost::filesystem::path m_fileName;
 	SourceMap m_sources;
 	std::size_t m_lineNumber = 0;
 	std::map<std::string, std::string> m_settings;

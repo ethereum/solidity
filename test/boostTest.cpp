@@ -86,7 +86,10 @@ int registerTests(
 			fs::directory_iterator(fullpath),
 			fs::directory_iterator()
 		))
-			if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
+			if (
+				solidity::test::isValidSemanticTestPath(entry) &&
+				(fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
+			)
 				numTestsAdded += registerTests(
 					*sub_suite,
 					_basepath, _path / entry.path().filename(),

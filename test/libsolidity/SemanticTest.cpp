@@ -256,7 +256,7 @@ TestCase::TestResult SemanticTest::runTest(
 			{
 				soltestAssert(
 					m_allowNonExistingFunctions ||
-					m_compiler.methodIdentifiers(m_compiler.lastContractName()).isMember(test.call().signature),
+					m_compiler.methodIdentifiers(m_compiler.lastContractName(m_sources.mainSourceFile)).isMember(test.call().signature),
 					"The function " + test.call().signature + " is not known to the compiler"
 				);
 
@@ -283,7 +283,7 @@ TestCase::TestResult SemanticTest::runTest(
 
 			test.setFailure(!m_transactionSuccessful);
 			test.setRawBytes(std::move(output));
-			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName()));
+			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
 		}
 	}
 
@@ -379,42 +379,62 @@ void SemanticTest::printSource(ostream& _stream, string const& _linePrefix, bool
 	if (m_sources.sources.empty())
 		return;
 
-	bool outputNames = (m_sources.sources.size() != 1 || !m_sources.sources.begin()->first.empty());
+	bool outputNames = (m_sources.sources.size() - m_sources.externalSources.size() != 1 || !m_sources.sources.begin()->first.empty());
+
+	set<string> externals;
+	for (auto const& [name, path]: m_sources.externalSources)
+	{
+		externals.insert(name);
+		string externalSource;
+		if (name == path)
+			externalSource = name;
+		else
+			externalSource = name + "=" + path.generic_string();
+
+		if (_formatted)
+			_stream << _linePrefix  << formatting::CYAN << "==== ExternalSource: " << externalSource << " ===="s << formatting::RESET << endl;
+		else
+			_stream << _linePrefix << "==== ExternalSource: " << externalSource << " ===="s << endl;
+	}
 
 	for (auto const& [name, source]: m_sources.sources)
-		if (_formatted)
+		if (externals.find(name) == externals.end())
 		{
-			if (source.empty())
-				continue;
-
-			if (outputNames)
-				_stream << _linePrefix << formatting::CYAN << "==== Source: " << name << " ====" << formatting::RESET << endl;
-			vector<char const*> sourceFormatting(source.length(), formatting::RESET);
-
-			_stream << _linePrefix << sourceFormatting.front() << source.front();
-			for (size_t i = 1; i < source.length(); i++)
+			if (_formatted)
 			{
-				if (sourceFormatting[i] != sourceFormatting[i - 1])
-					_stream << sourceFormatting[i];
-				if (source[i] != '\n')
-					_stream << source[i];
-				else
+				if (source.empty())
+					continue;
+
+				if (outputNames)
+					_stream << _linePrefix << formatting::CYAN << "==== Source: " << name
+							<< " ====" << formatting::RESET << endl;
+
+				vector<char const*> sourceFormatting(source.length(), formatting::RESET);
+				_stream << _linePrefix << sourceFormatting.front() << source.front();
+				for (size_t i = 1; i < source.length(); i++)
 				{
-					_stream << formatting::RESET << endl;
-					if (i + 1 < source.length())
-						_stream << _linePrefix << sourceFormatting[i];
+					if (sourceFormatting[i] != sourceFormatting[i - 1])
+						_stream << sourceFormatting[i];
+					if (source[i] != '\n')
+						_stream << source[i];
+					else
+					{
+						_stream << formatting::RESET << endl;
+						if (i + 1 < source.length())
+							_stream << _linePrefix << sourceFormatting[i];
+					}
 				}
+				_stream << formatting::RESET;
 			}
-			_stream << formatting::RESET;
-		}
-		else
-		{
-			if (outputNames)
-				_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
-			stringstream stream(source);
-			string line;
-			while (getline(stream, line))
-				_stream << _linePrefix << line << endl;
+			else
+			{
+				if (outputNames)
+					_stream << _linePrefix << "==== Source: " + name << " ====" << endl;
+				stringstream stream(source);
+				string line;
+				while (getline(stream, line))
+					_stream << _linePrefix << line << endl;
+			}
 		}
 }
 
@@ -455,6 +475,6 @@ bool SemanticTest::deploy(
 	map<string, solidity::test::Address> const& _libraries
 )
 {
-	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
+	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries, m_sources.mainSourceFile);
 	return !output.empty() && m_transactionSuccessful;
 }
