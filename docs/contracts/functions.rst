@@ -389,16 +389,18 @@ operations as long as there is enough gas passed on to it.
     pragma solidity >=0.6.2 <0.9.0;
 
     contract Test {
+        uint x;
         // This function is called for all messages sent to
         // this contract (there is no other function).
         // Sending Ether to this contract will cause an exception,
         // because the fallback function does not have the `payable`
         // modifier.
         fallback() external { x = 1; }
-        uint x;
     }
 
     contract TestPayable {
+        uint x;
+        uint y;
         // This function is called for all messages sent to
         // this contract, except plain Ether transfers
         // (there is no other function except the receive function).
@@ -409,8 +411,6 @@ operations as long as there is enough gas passed on to it.
         // This function is called for plain Ether transfers, i.e.
         // for every call with empty calldata.
         receive() external payable { x = 2; y = msg.value; }
-        uint x;
-        uint y;
     }
 
     contract Caller {
