@@ -228,7 +228,7 @@ string FunctionGenerator::visit()
 	string name = state->newFunction();
 	state->updateFunction(name);
 	if (!m_freeFunction)
-		visibility = "public";
+		visibility = "external";
 
 	auto inputType = TypeGenerator{state}.type();
 	state->currentFunctionState()->addInput(pair<string, shared_ptr<SolidityType>>("i1", inputType));
