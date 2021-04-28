@@ -1,15 +1,9 @@
+### 0.9.0 (unreleased)
+
+Breaking changes:
+ * `error` is now a keyword that can only be used for defining errors.
+
 ### 0.8.5 (unreleased)
-
-Language Features:
- * Allowing conversion from ``bytes`` and ``bytes`` slices to ``bytes1``/.../``bytes32``.
- * Yul: Add ``verbatim`` builtin function to inject arbitrary bytecode.
-
-
-Compiler Features:
- * Yul Optimizer: Evaluate ``keccak256(a, c)``, when the value at memory location ``a`` is known at compile time and ``c`` is a constant ``<= 32``.
-
-
-Bugfixes:
 
 
 ### 0.8.4 (2021-04-21)
