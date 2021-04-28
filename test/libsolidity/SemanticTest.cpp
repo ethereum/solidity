@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -123,6 +124,12 @@ void SemanticTest::initializeBuiltins()
 	m_builtins["smokeTest"] = [](FunctionCall const&) -> std::optional<bytes>
 	{
 		return util::toBigEndian(u256(0x1234));
+	};
+	soltestAssert(m_builtins.count("storageEmpty") == 0, "");
+	m_builtins["storageEmpty"] = [this](FunctionCall const& _call) -> std::optional<bytes>
+	{
+		soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
+		return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
 	};
 }
 
@@ -222,16 +229,7 @@ TestCase::TestResult SemanticTest::runTest(
 			constructed = true;
 		}
 
-		if (test.call().kind == FunctionCall::Kind::Storage)
-		{
-			test.setFailure(false);
-			bytes result(1, !storageEmpty(m_contractAddress));
-			test.setRawBytes(result);
-			soltestAssert(test.call().expectations.rawBytes().size() == 1, "");
-			if (test.call().expectations.rawBytes() != result)
-				success = false;
-		}
-		else if (test.call().kind == FunctionCall::Kind::Constructor)
+		if (test.call().kind == FunctionCall::Kind::Constructor)
 		{
 			if (m_transactionSuccessful == test.call().expectations.failure)
 				success = false;
@@ -385,12 +383,14 @@ bool SemanticTest::checkGasCostExpectation(TestFunctionCall& io_test, bool _comp
 	// or test is run with abi encoder v1 only
 	// or gas used less than threshold for enforcing feature
 	// or setting is "ir" and it's not included in expectations
+	// or if the called function is an isoltest builtin e.g. `smokeTest` or `storageEmpty`
 	if (
 		!m_enforceGasCost ||
 		(
 			(setting == "ir" || m_gasUsed < m_enforceGasCostMinValue || m_gasUsed >= m_gas) &&
 			io_test.call().expectations.gasUsed.count(setting) == 0
-		)
+		) ||
+		io_test.call().kind == FunctionCall::Kind::Builtin
 	)
 		return true;
 

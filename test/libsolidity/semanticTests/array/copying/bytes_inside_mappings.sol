@@ -14,10 +14,10 @@ contract c {
 // gas irOptimized: 163929
 // gas legacy: 164121
 // gas legacyOptimized: 163766
-// storage: nonempty
+// storageEmpty -> 0
 // copy(uint256,uint256): 1, 2 -> true
-// storage: nonempty
+// storageEmpty -> 0
 // copy(uint256,uint256): 99, 1 -> true
-// storage: nonempty
+// storageEmpty -> 0
 // copy(uint256,uint256): 99, 2 -> true
-// storage: empty
+// storageEmpty -> 1

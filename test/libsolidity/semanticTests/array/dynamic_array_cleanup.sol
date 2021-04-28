@@ -14,13 +14,13 @@ contract c {
 // ====
 // compileViaYul: also
 // ----
-// storage: empty
+// storageEmpty -> 1
 // fill() ->
 // gas irOptimized: 535098
 // gas legacy: 504373
 // gas legacyOptimized: 499648
-// storage: nonempty
+// storageEmpty -> 0
 // halfClear() ->
-// storage: nonempty
+// storageEmpty -> 0
 // fullClear() ->
-// storage: empty
+// storageEmpty -> 1

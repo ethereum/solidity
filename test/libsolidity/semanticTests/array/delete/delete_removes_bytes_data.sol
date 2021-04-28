@@ -7,6 +7,6 @@ contract c {
 // compileViaYul: also
 // ----
 // (): 7 ->
-// storage: nonempty
+// storageEmpty -> 0
 // del(): 7 -> true
-// storage: empty
+// storageEmpty -> 1
