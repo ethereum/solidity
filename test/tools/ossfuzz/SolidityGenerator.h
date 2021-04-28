@@ -243,7 +243,7 @@ struct BytesType: SolidityType
 {
 	std::string toString() override
 	{
-		return "bytes";
+		return "bytes memory";
 	}
 };
 
@@ -253,7 +253,7 @@ struct ContractType: SolidityType
 	{}
 	std::string toString() override
 	{
-		return "type(" + contractName + ")";
+		return name();
 	}
 	std::string name()
 	{
@@ -265,13 +265,23 @@ struct ContractType: SolidityType
 struct FunctionType: SolidityType
 {
 	FunctionType() = default;
-	~FunctionType()
+	~FunctionType() override
 	{
 		inputs.clear();
 		outputs.clear();
 	}
 
-	std::string toString()
+	void addInput(std::shared_ptr<SolidityType> _input)
+	{
+		inputs.emplace_back(_input);
+	}
+
+	void addOutput(std::shared_ptr<SolidityType> _output)
+	{
+		outputs.emplace_back(_output);
+	}
+
+	std::string toString() override
 	{
 		auto typeString = [](std::vector<std::shared_ptr<SolidityType>>& _types)
 		{
@@ -286,19 +296,19 @@ struct FunctionType: SolidityType
 			return typeStr;
 		};
 
+		std::string retString = std::string("function ") + "(" + typeString(inputs) + ")";
 		if (outputs.empty())
-			return std::string("function (") + typeString(inputs) + ") public pure {}";
+			return retString + " public pure";
 		else
-			return std::string("function (") +
-				typeString(inputs) +
-				") public pure returns (" +
-				typeString(outputs) +
-				") {}";
+			return retString + " public pure returns (" + typeString(outputs) +	")";
 	}
 
 	std::vector<std::shared_ptr<SolidityType>> inputs;
 	std::vector<std::shared_ptr<SolidityType>> outputs;
 };
+
+/// Forward declaration
+struct TestState;
 
 struct SourceState
 {
@@ -308,7 +318,7 @@ struct SourceState
 	{}
 	void addFreeFunction(std::string& _functionName)
 	{
-		exports[std::make_shared<FunctionType>()] = _functionName;
+		exports[std::dynamic_pointer_cast<SolidityType>(std::make_shared<FunctionType>())] = _functionName;
 	}
 	bool freeFunction(std::string const& _functionName)
 	{
@@ -329,6 +339,18 @@ struct SourceState
 			ranges::views::transform([](auto& _item) -> std::string {
 				return _item.second;
 			}) | ranges::to<std::vector<std::string>>;
+		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
+	}
+	std::shared_ptr<SolidityType> randomContractType()
+	{
+		auto contracts = exports |
+			ranges::views::filter([](auto& _item) -> bool {
+				return bool(std::dynamic_pointer_cast<ContractType>(_item.first));
+			}) |
+			ranges::views::transform([](auto& _item) -> std::shared_ptr<SolidityType> {
+				return _item.first;
+			}) |
+			ranges::to<std::vector<std::shared_ptr<SolidityType>>>;
 		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
 	}
 	void addImportedSourcePath(std::string& _sourcePath)
@@ -355,7 +377,26 @@ struct SourceState
 	std::map<std::shared_ptr<SolidityType>, std::string> exports;
 };
 
-struct FunctionState {};
+struct FunctionState
+{
+	FunctionState() = default;
+	~FunctionState()
+	{
+		inputs.clear();
+		outputs.clear();
+	}
+	void addInput(std::pair<std::string, std::shared_ptr<SolidityType>> _input)
+	{
+		inputs.emplace(_input);
+	}
+	void addOutput(std::pair<std::string, std::shared_ptr<SolidityType>> _output)
+	{
+		outputs.emplace(_output);
+	}
+
+	std::map<std::string, std::shared_ptr<SolidityType>> inputs;
+	std::map<std::string, std::shared_ptr<SolidityType>> outputs;
+};
 
 struct TestState
 {
@@ -392,6 +433,10 @@ struct TestState
 	{
 		functionState.emplace(_name, std::make_shared<FunctionState>());
 		currentFunction = _name;
+	}
+	std::shared_ptr<FunctionState> currentFunctionState()
+	{
+		return functionState[currentFunction];
 	}
 	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
@@ -500,6 +545,33 @@ struct TestState
 	std::string const contractPrefix = "C";
 	/// Function name prefix
 	std::string const functionPrefix = "f";
+};
+
+struct TypeGenerator
+{
+	TypeGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	{}
+
+	enum class Type: size_t
+	{
+		INTEGER = 1,
+		BOOL,
+		FIXEDBYTES,
+		BYTES,
+		ADDRESS,
+		FUNCTION,
+		CONTRACT,
+		TYPEMAX
+	};
+
+	std::shared_ptr<SolidityType> type();
+
+	Type typeCategory()
+	{
+		return static_cast<Type>(state->uRandDist->distributionOneToN(static_cast<size_t>(Type::TYPEMAX) - 1));
+	}
+
+	std::shared_ptr<TestState> state;
 };
 
 struct GeneratorBase

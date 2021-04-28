@@ -230,8 +230,52 @@ string FunctionGenerator::visit()
 	if (!m_freeFunction)
 		visibility = "public";
 
+	auto inputType = TypeGenerator{state}.type();
+	state->currentFunctionState()->addInput(pair<string, shared_ptr<SolidityType>>("i1", inputType));
+	string inputParams = inputType->toString() + " i1";
 	return indentation(state->indentationLevel) +
-		"function " + name + "() " + visibility + " pure {}\n";
+		"function " + name + "(" + inputParams + ") " + visibility + " pure {}\n";
+}
+
+shared_ptr<SolidityType> TypeGenerator::type()
+{
+	switch (typeCategory())
+	{
+	case Type::INTEGER:
+	{
+		IntegerType::Bits b = static_cast<IntegerType::Bits>(
+			state->uRandDist->distributionOneToN(
+				static_cast<size_t>(IntegerType::Bits::B256)
+			)
+		);
+		// Choose signed/unsigned type with probability of 1/2 = 0.5
+		bool signedType = state->uRandDist->probable(2);
+		return dynamic_pointer_cast<SolidityType>(make_shared<IntegerType>(b, signedType));
+	}
+	case Type::BOOL:
+		return dynamic_pointer_cast<SolidityType>(make_shared<BoolType>());
+	case Type::FIXEDBYTES:
+	{
+		FixedBytesType::Bytes w = static_cast<FixedBytesType::Bytes>(
+			state->uRandDist->distributionOneToN(
+				static_cast<size_t>(FixedBytesType::Bytes::W32)
+			)
+		);
+		return dynamic_pointer_cast<SolidityType>(make_shared<FixedBytesType>(w));
+	}
+	case Type::BYTES:
+		return dynamic_pointer_cast<SolidityType>(make_shared<BytesType>());
+	case Type::ADDRESS:
+		return dynamic_pointer_cast<SolidityType>(make_shared<AddressType>());
+	case Type::FUNCTION:
+		return dynamic_pointer_cast<SolidityType>(make_shared<FunctionType>());
+	case Type::CONTRACT:
+		if (state->sourceUnitState[state->currentPath()]->contractType())
+			return state->sourceUnitState[state->currentPath()]->randomContractType();
+		return dynamic_pointer_cast<SolidityType>(make_shared<BoolType>());
+	default:
+		solAssert(false, "");
+	}
 }
 
 template <typename T>
