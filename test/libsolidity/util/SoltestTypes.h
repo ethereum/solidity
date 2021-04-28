@@ -38,6 +38,7 @@ namespace solidity::frontend::test
 	T(LBrace, "{", 0)                  \
 	T(RBrace, "}", 0)                  \
 	T(Sub,    "-", 0)                  \
+	T(Tilde,  "~", 0)                  \
 	T(Colon,  ":", 0)                  \
 	T(Comma,  ",", 0)                  \
 	T(Period, ".", 0)                  \
@@ -302,8 +303,13 @@ struct FunctionCall
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
+	/// A textual representation of the expected side-effect of the function call.
+	std::vector<std::string> expectedSideEffects{};
+	/// A textual representation of the actual side-effect of the function call.
+	std::vector<std::string> actualSideEffects{};
 };
 
 using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;
+using SideEffectHook = std::function<std::vector<std::string>(FunctionCall const&)>;
 
 }

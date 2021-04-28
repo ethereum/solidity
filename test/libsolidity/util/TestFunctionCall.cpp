@@ -197,6 +197,23 @@ string TestFunctionCall::format(
 		}
 
 		stream << formatGasExpectations(_linePrefix, _renderMode == RenderMode::ExpectedValuesActualGas, _interactivePrint);
+
+		vector<string> sideEffects;
+		if (_renderMode == RenderMode::ExpectedValuesExpectedGas || _renderMode == RenderMode::ExpectedValuesActualGas)
+			sideEffects = m_call.expectedSideEffects;
+		else
+			sideEffects = m_call.actualSideEffects;
+
+		if (!sideEffects.empty())
+		{
+			stream << std::endl;
+			for (string const& effect: sideEffects)
+			{
+				stream << _linePrefix << "// ~ " << effect;
+				if (effect != *sideEffects.rbegin())
+					stream << std::endl;
+			}
+		}
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
