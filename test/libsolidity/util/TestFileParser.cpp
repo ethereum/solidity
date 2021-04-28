@@ -204,7 +204,7 @@ pair<string, bool> TestFileParser::parseFunctionSignature()
 		expect(Token::Identifier);
 	}
 
-	if (isBuiltinFunction(signature))
+	if (isBuiltinFunction(signature) && m_scanner.currentToken() != Token::LParen)
 		return {signature, false};
 
 	signature += formatToken(Token::LParen);
