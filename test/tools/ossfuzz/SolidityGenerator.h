@@ -298,9 +298,9 @@ struct FunctionType: SolidityType
 
 		std::string retString = std::string("function ") + "(" + typeString(inputs) + ")";
 		if (outputs.empty())
-			return retString + " public pure";
+			return retString + " external pure";
 		else
-			return retString + " public pure returns (" + typeString(outputs) +	")";
+			return retString + " external pure returns (" + typeString(outputs) +	")";
 	}
 
 	std::vector<std::shared_ptr<SolidityType>> inputs;
