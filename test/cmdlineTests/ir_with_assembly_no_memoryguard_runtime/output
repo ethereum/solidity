@@ -12,8 +12,8 @@ object "D_8" {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_8_deployed")
-            codecopy(0, dataoffset("D_8_deployed"), _1)
-            return(0, _1)
+            codecopy(128, dataoffset("D_8_deployed"), _1)
+            return(128, _1)
         }
     }
     object "D_8_deployed" {

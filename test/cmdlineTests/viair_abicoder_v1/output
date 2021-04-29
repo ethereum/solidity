@@ -14,9 +14,14 @@ object "test_11" {
 
         constructor_test_11()
 
-        codecopy(0, dataoffset("test_11_deployed"), datasize("test_11_deployed"))
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset("test_11_deployed"), datasize("test_11_deployed"))
 
-        return(0, datasize("test_11_deployed"))
+        return(_1, datasize("test_11_deployed"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
 
         function constructor_test_11() {
 
