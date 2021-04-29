@@ -196,8 +196,6 @@ string TestFunctionCall::format(
 			}
 		}
 
-		stream << formatGasExpectations(_linePrefix, _renderMode == RenderMode::ExpectedValuesActualGas, _interactivePrint);
-
 		vector<string> sideEffects;
 		if (_renderMode == RenderMode::ExpectedValuesExpectedGas || _renderMode == RenderMode::ExpectedValuesActualGas)
 			sideEffects = m_call.expectedSideEffects;
@@ -214,6 +212,8 @@ string TestFunctionCall::format(
 					stream << std::endl;
 			}
 		}
+
+		stream << formatGasExpectations(_linePrefix, _renderMode == RenderMode::ExpectedValuesActualGas, _interactivePrint);
 	};
 
 	formatOutput(m_call.displayMode == FunctionCall::DisplayMode::SingleLine);
