@@ -2960,9 +2960,6 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 
 void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)
 {
-	if (!m_freeFunctions.empty())
-		return;
-
 	for (auto source: _sources)
 		for (auto node: source->nodes())
 			if (auto function = dynamic_cast<FunctionDefinition const*>(node.get()))
