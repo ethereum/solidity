@@ -43,7 +43,8 @@ using solidity::util::h256;
 using solidity::util::toCompactHexWithPrefix;
 
 unsigned const CompilerUtils::dataStartOffset = 4;
-size_t const CompilerUtils::freeMemoryPointer = 64;
+/// A temporary increase to check if `mstore(x, ...)` for `64 <= x <= old_free_mem_ptr` is feasible
+size_t const CompilerUtils::freeMemoryPointer = 256;
 size_t const CompilerUtils::zeroPointer = CompilerUtils::freeMemoryPointer + 32;
 size_t const CompilerUtils::generalPurposeMemoryStart = CompilerUtils::zeroPointer + 32;
 
