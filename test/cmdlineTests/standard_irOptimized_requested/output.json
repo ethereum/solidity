@@ -10,8 +10,11 @@ object \"C_7\" {
         mstore(64, 128)
         if callvalue() { revert(0, 0) }
         constructor_C_7()
-        codecopy(0, dataoffset(\"C_7_deployed\"), datasize(\"C_7_deployed\"))
-        return(0, datasize(\"C_7_deployed\"))
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"C_7_deployed\"), datasize(\"C_7_deployed\"))
+        return(_1, datasize(\"C_7_deployed\"))
+        function allocate_unbounded() -> memPtr
+        { memPtr := mload(64) }
         function constructor_C_7()
         { }
     }
