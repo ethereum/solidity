@@ -222,6 +222,47 @@ string ContractGenerator::visit()
 	return os.str();
 }
 
+string FunctionType::toString()
+{
+	auto typeString = [](std::vector<SolidityTypePtr>& _types)
+	{
+		std::string sep;
+		std::string typeStr;
+		for (auto const& i: _types)
+		{
+			typeStr += sep + std::visit(GenericVisitor{
+						[&](auto const& _item) { return _item->toString(); }
+					}, i);
+			if (sep.empty())
+				sep = ",";
+		}
+		return typeStr;
+	};
+
+	std::string retString = std::string("function ") + "(" + typeString(inputs) + ")";
+	if (outputs.empty())
+		return retString + " external pure";
+	else
+		return retString + " external pure returns (" + typeString(outputs) +	")";
+}
+
+string FunctionState::params(Params _p)
+{
+	vector<string> params = (_p == Params::INPUT ? inputs : outputs) |
+		ranges::views::transform(
+		[](auto& _item) -> string
+		{
+			return visit(
+				GenericVisitor{[](auto const& _item) {
+					return _item->toString();
+				}}, _item.first) +
+				" " +
+				_item.second;
+		}) |
+		ranges::to<vector<string>>();
+	return "(" + boost::algorithm::join(params, ",") + ")";
+}
+
 string FunctionGenerator::visit()
 {
 	string visibility;
@@ -230,16 +271,47 @@ string FunctionGenerator::visit()
 	if (!m_freeFunction)
 		visibility = "external";
 
-	auto inputType = TypeGenerator{state}.type();
-	state->currentFunctionState()->addInput(pair<string, shared_ptr<SolidityType>>("i1", inputType));
-	string inputParams = inputType->toString() + " i1";
-	return indentation(state->indentationLevel) +
-		"function " + name + "(" + inputParams + ") " + visibility + " pure {}\n";
+	// Add I/O
+	if (uRandDist->likely(s_maxInputs + 1))
+		for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxInputs); i++)
+			state->currentFunctionState()->addInput(TypeProvider{state}.type());
+
+	if (uRandDist->likely(s_maxOutputs + 1))
+		for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxOutputs); i++)
+			state->currentFunctionState()->addOutput(TypeProvider{state}.type());
+
+	ostringstream function;
+	function << indentation(state->indentationLevel)
+		<< "function "
+		<< name
+		<< state->currentFunctionState()->params(FunctionState::Params::INPUT)
+		<< " "
+		<< visibility
+		<< " pure"
+		<< " returns"
+		<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT)
+		<< " {}\n";
+	return function.str();
 }
 
-shared_ptr<SolidityType> TypeGenerator::type()
+optional<SolidityTypePtr> TypeProvider::type(SolidityTypePtr _type)
 {
-	switch (typeCategory())
+	vector<SolidityTypePtr> matchingTypes = state->currentFunctionState()->inputs |
+		ranges::views::filter([&_type](auto& _item) {
+			return _item.first == _type;
+		}) |
+		ranges::views::transform([](auto& _item) { return _item.first; }) |
+		ranges::to<vector<SolidityTypePtr>>();
+
+	if (matchingTypes.empty())
+		return nullopt;
+	else
+		return matchingTypes[state->uRandDist->distributionOneToN(matchingTypes.size()) - 1];
+}
+
+SolidityTypePtr TypeProvider::type()
+{
+	switch (randomTypeCategory())
 	{
 	case Type::INTEGER:
 	{
@@ -250,10 +322,10 @@ shared_ptr<SolidityType> TypeGenerator::type()
 		);
 		// Choose signed/unsigned type with probability of 1/2 = 0.5
 		bool signedType = state->uRandDist->probable(2);
-		return dynamic_pointer_cast<SolidityType>(make_shared<IntegerType>(b, signedType));
+		return make_shared<IntegerType>(b, signedType);
 	}
 	case Type::BOOL:
-		return dynamic_pointer_cast<SolidityType>(make_shared<BoolType>());
+		return make_shared<BoolType>();
 	case Type::FIXEDBYTES:
 	{
 		FixedBytesType::Bytes w = static_cast<FixedBytesType::Bytes>(
@@ -261,18 +333,18 @@ shared_ptr<SolidityType> TypeGenerator::type()
 				static_cast<size_t>(FixedBytesType::Bytes::W32)
 			)
 		);
-		return dynamic_pointer_cast<SolidityType>(make_shared<FixedBytesType>(w));
+		return make_shared<FixedBytesType>(w);
 	}
 	case Type::BYTES:
-		return dynamic_pointer_cast<SolidityType>(make_shared<BytesType>());
+		return make_shared<BytesType>();
 	case Type::ADDRESS:
-		return dynamic_pointer_cast<SolidityType>(make_shared<AddressType>());
+		return make_shared<AddressType>();
 	case Type::FUNCTION:
-		return dynamic_pointer_cast<SolidityType>(make_shared<FunctionType>());
+		return make_shared<FunctionType>();
 	case Type::CONTRACT:
 		if (state->sourceUnitState[state->currentPath()]->contractType())
 			return state->sourceUnitState[state->currentPath()]->randomContractType();
-		return dynamic_pointer_cast<SolidityType>(make_shared<BoolType>());
+		return make_shared<BoolType>();
 	default:
 		solAssert(false, "");
 	}
