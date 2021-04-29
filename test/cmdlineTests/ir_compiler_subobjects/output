@@ -66,8 +66,9 @@ object "D_16" {
                         datacopy(128, dataoffset("C_3"), _2)
                         if iszero(create(_1, 128, _2))
                         {
-                            returndatacopy(_1, _1, returndatasize())
-                            revert(_1, returndatasize())
+                            let pos := mload(64)
+                            returndatacopy(pos, _1, returndatasize())
+                            revert(pos, returndatasize())
                         }
                         return(mload(64), _1)
                     }

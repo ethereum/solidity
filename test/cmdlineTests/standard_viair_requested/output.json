@@ -136,8 +136,9 @@ object \"D_16\" {
             }
 
             function revert_forward_1() {
-                returndatacopy(0, 0, returndatasize())
-                revert(0, returndatasize())
+                let pos := allocate_unbounded()
+                returndatacopy(pos, 0, returndatasize())
+                revert(pos, returndatasize())
             }
 
             function shift_right_224_unsigned(value) -> newValue {
