@@ -23,6 +23,7 @@
 #pragma once
 
 #include <test/tools/ossfuzz/Generators.h>
+#include <test/tools/ossfuzz/Types.h>
 
 #include <liblangutil/Exceptions.h>
 
@@ -31,6 +32,7 @@
 #include <set>
 #include <variant>
 
+#include <range/v3/algorithm/all_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/transform.hpp>
@@ -42,22 +44,25 @@ class SolidityGenerator;
 
 /// Type declarations
 #define SEMICOLON() ;
-#define FORWARDDECLAREGENERATORS(G) class G
-GENERATORLIST(FORWARDDECLAREGENERATORS, SEMICOLON(), SEMICOLON())
-#undef FORWARDDECLAREGENERATORS
+#define FORWARDDECLARE(G) class G
+GENERATORLIST(FORWARDDECLARE, SEMICOLON(), SEMICOLON())
+TYPELIST(FORWARDDECLARE, SEMICOLON(), SEMICOLON())
+#undef FORWARDDECLARE
 #undef SEMICOLON
 
 #define COMMA() ,
-using GeneratorPtr = std::variant<
-#define VARIANTOFSHARED(G) std::shared_ptr<G>
-GENERATORLIST(VARIANTOFSHARED, COMMA(), )
->;
-#undef VARIANTOFSHARED
 using Generator = std::variant<
 #define VARIANTOFGENERATOR(G) G
 GENERATORLIST(VARIANTOFGENERATOR, COMMA(), )
 >;
-#undef VARIANTOFGENERATOR
+using GeneratorPtr = std::variant<
+#define VARIANTOFSHARED(G) std::shared_ptr<G>
+GENERATORLIST(VARIANTOFSHARED, COMMA(), )
+>;
+using SolidityTypePtr = std::variant<
+TYPELIST(VARIANTOFSHARED, COMMA(), )
+>;
+#undef VARIANTOFSHARED
 #undef COMMA
 using RandomEngine = std::mt19937_64;
 using Distribution = std::uniform_int_distribution<size_t>;
@@ -116,14 +121,16 @@ struct ContractState
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
-struct SolidityType
+class SolType
 {
-	virtual ~SolidityType() = default;
+public:
+	virtual ~SolType() = default;
 	virtual std::string toString() = 0;
 };
 
-struct IntegerType: SolidityType
+class IntegerType: public SolType
 {
+public:
 	enum class Bits: size_t
 	{
 		B8 = 1,
@@ -167,6 +174,11 @@ struct IntegerType: SolidityType
 		signedType(_signed),
 		numBits(static_cast<size_t>(_bits) * 8)
 	{}
+	bool operator==(IntegerType const& _rhs)
+	{
+		return this->signedType == _rhs.signedType &&
+			this->numBits == _rhs.numBits;
+	}
 	std::string toString() override
 	{
 		return (signedType ? "int" : "uint") + std::to_string(numBits);
@@ -175,25 +187,36 @@ struct IntegerType: SolidityType
 	size_t numBits;
 };
 
-struct BoolType: SolidityType
+class BoolType: public SolType
 {
+public:
 	std::string toString() override
 	{
 		return "bool";
 	}
+	bool operator==(BoolType const&)
+	{
+		return true;
+	}
 };
 
-struct AddressType: SolidityType
+class AddressType: public SolType
 {
+public:
 	// TODO: Implement address payable
 	std::string toString() override
 	{
 		return "address";
 	}
+	bool operator==(AddressType const&)
+	{
+		return true;
+	}
 };
 
-struct FixedBytesType: SolidityType
+class FixedBytesType: public SolType
 {
+public:
 	enum class Bytes: size_t
 	{
 		W1 = 1,
@@ -232,6 +255,10 @@ struct FixedBytesType: SolidityType
 	FixedBytesType(Bytes _width): numBytes(static_cast<size_t>(_width))
 	{}
 
+	bool operator==(FixedBytesType const& _rhs)
+	{
+		return this->numBytes == _rhs.numBytes;
+	}
 	std::string toString() override
 	{
 		return "bytes" + std::to_string(numBytes);
@@ -239,16 +266,22 @@ struct FixedBytesType: SolidityType
 	size_t numBytes;
 };
 
-struct BytesType: SolidityType
+class BytesType: public SolType
 {
+public:
 	std::string toString() override
 	{
 		return "bytes memory";
 	}
+	bool operator==(BytesType const&)
+	{
+		return true;
+	}
 };
 
-struct ContractType: SolidityType
+class ContractType: public SolType
 {
+public:
 	ContractType(std::string _name): contractName(_name)
 	{}
 	std::string toString() override
@@ -259,11 +292,16 @@ struct ContractType: SolidityType
 	{
 		return contractName;
 	}
+	bool operator==(ContractType const&)
+	{
+		return true;
+	}
 	std::string contractName;
 };
 
-struct FunctionType: SolidityType
+class FunctionType: public SolType
 {
+public:
 	FunctionType() = default;
 	~FunctionType() override
 	{
@@ -271,40 +309,30 @@ struct FunctionType: SolidityType
 		outputs.clear();
 	}
 
-	void addInput(std::shared_ptr<SolidityType> _input)
+	void addInput(SolidityTypePtr _input)
 	{
 		inputs.emplace_back(_input);
 	}
 
-	void addOutput(std::shared_ptr<SolidityType> _output)
+	void addOutput(SolidityTypePtr _output)
 	{
 		outputs.emplace_back(_output);
 	}
 
-	std::string toString() override
+	std::string toString() override;
+	bool operator==(FunctionType const& _rhs)
 	{
-		auto typeString = [](std::vector<std::shared_ptr<SolidityType>>& _types)
-		{
-			std::string sep;
-			std::string typeStr;
-			for (auto const& i: _types)
-			{
-				typeStr += sep + i->toString();
-				if (sep.empty())
-					sep = ",";
-			}
-			return typeStr;
-		};
-
-		std::string retString = std::string("function ") + "(" + typeString(inputs) + ")";
-		if (outputs.empty())
-			return retString + " external pure";
-		else
-			return retString + " external pure returns (" + typeString(outputs) +	")";
+		if (_rhs.inputs.size() != this->inputs.size() || _rhs.outputs.size() != this->outputs.size())
+			return false;
+		if (!std::equal(_rhs.inputs.begin(), _rhs.inputs.end(), this->inputs.begin()) ||
+			!std::equal(_rhs.outputs.begin(), _rhs.outputs.end(), this->outputs.begin())
+		)
+			return false;
+		return true;
 	}
 
-	std::vector<std::shared_ptr<SolidityType>> inputs;
-	std::vector<std::shared_ptr<SolidityType>> outputs;
+	std::vector<SolidityTypePtr> inputs;
+	std::vector<SolidityTypePtr> outputs;
 };
 
 /// Forward declaration
@@ -318,7 +346,7 @@ struct SourceState
 	{}
 	void addFreeFunction(std::string& _functionName)
 	{
-		exports[std::dynamic_pointer_cast<SolidityType>(std::make_shared<FunctionType>())] = _functionName;
+		exports[std::make_shared<FunctionType>()] = _functionName;
 	}
 	bool freeFunction(std::string const& _functionName)
 	{
@@ -327,37 +355,39 @@ struct SourceState
 	bool contractType()
 	{
 		return !(exports | ranges::views::filter([](auto& _i) {
-			return bool(std::dynamic_pointer_cast<ContractType>(_i.first));
+			return std::holds_alternative<std::shared_ptr<ContractType>>(_i.first);
 		})).empty();
 	}
 	std::string randomContract()
 	{
 		auto contracts = exports |
 			ranges::views::filter([](auto& _item) -> bool {
-				return bool(std::dynamic_pointer_cast<ContractType>(_item.first));
+				return std::holds_alternative<std::shared_ptr<ContractType>>(
+					_item.first
+				);
 			}) |
 			ranges::views::transform([](auto& _item) -> std::string {
 				return _item.second;
 			}) | ranges::to<std::vector<std::string>>;
 		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
 	}
-	std::shared_ptr<SolidityType> randomContractType()
+	std::shared_ptr<ContractType> randomContractType()
 	{
 		auto contracts = exports |
 			ranges::views::filter([](auto& _item) -> bool {
-				return bool(std::dynamic_pointer_cast<ContractType>(_item.first));
+				return std::holds_alternative<std::shared_ptr<ContractType>>(_item.first);
 			}) |
-			ranges::views::transform([](auto& _item) -> std::shared_ptr<SolidityType> {
-				return _item.first;
+			ranges::views::transform([](auto& _item) -> std::shared_ptr<ContractType> {
+				return std::get<std::shared_ptr<ContractType>>(_item.first);
 			}) |
-			ranges::to<std::vector<std::shared_ptr<SolidityType>>>;
+			ranges::to<std::vector<std::shared_ptr<ContractType>>>;
 		return contracts[uRandDist->distributionOneToN(contracts.size()) - 1];
 	}
 	void addImportedSourcePath(std::string& _sourcePath)
 	{
 		importedSources.emplace(_sourcePath);
 	}
-	void resolveImports(std::map<std::shared_ptr<SolidityType>, std::string> _imports)
+	void resolveImports(std::map<SolidityTypePtr, std::string> _imports)
 	{
 		for (auto const& item: _imports)
 			exports.emplace(item);
@@ -374,28 +404,37 @@ struct SourceState
 	void print(std::ostream& _os) const;
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	std::set<std::string> importedSources;
-	std::map<std::shared_ptr<SolidityType>, std::string> exports;
+	std::map<SolidityTypePtr, std::string> exports;
 };
 
 struct FunctionState
 {
+	enum class Params
+	{
+		INPUT,
+		OUTPUT
+	};
 	FunctionState() = default;
 	~FunctionState()
 	{
 		inputs.clear();
 		outputs.clear();
 	}
-	void addInput(std::pair<std::string, std::shared_ptr<SolidityType>> _input)
+	using TypeId = std::pair<SolidityTypePtr, std::string>;
+	void addInput(SolidityTypePtr _input)
 	{
-		inputs.emplace(_input);
+		inputs.emplace(_input, "i" + std::to_string(numInputs++));
 	}
-	void addOutput(std::pair<std::string, std::shared_ptr<SolidityType>> _output)
+	void addOutput(SolidityTypePtr _output)
 	{
-		outputs.emplace(_output);
+		outputs.emplace(_output, "o" + std::to_string(numOutpus++));
 	}
+	std::string params(Params _p);
 
-	std::map<std::string, std::shared_ptr<SolidityType>> inputs;
-	std::map<std::string, std::shared_ptr<SolidityType>> outputs;
+	std::map<SolidityTypePtr, std::string> inputs;
+	std::map<SolidityTypePtr, std::string> outputs;
+	unsigned numInputs = 0;
+	unsigned numOutpus = 0;
 };
 
 struct TestState
@@ -547,9 +586,9 @@ struct TestState
 	std::string const functionPrefix = "f";
 };
 
-struct TypeGenerator
+struct TypeProvider
 {
-	TypeGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	TypeProvider(std::shared_ptr<TestState> _state): state(std::move(_state))
 	{}
 
 	enum class Type: size_t
@@ -564,12 +603,29 @@ struct TypeGenerator
 		TYPEMAX
 	};
 
-	std::shared_ptr<SolidityType> type();
+	SolidityTypePtr type();
+	std::optional<SolidityTypePtr> type(SolidityTypePtr _typePtr);
 
-	Type typeCategory()
+	Type randomTypeCategory()
 	{
 		return static_cast<Type>(state->uRandDist->distributionOneToN(static_cast<size_t>(Type::TYPEMAX) - 1));
 	}
+
+	std::shared_ptr<TestState> state;
+};
+
+struct ExpressionGenerator
+{
+	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	{}
+
+	enum class Expr: size_t
+	{
+		VARREF = 1,
+		TYPEMAX
+	};
+
+	std::string expression(SolidityTypePtr _type);
 
 	std::shared_ptr<TestState> state;
 };
@@ -742,7 +798,8 @@ public:
 	}
 private:
 	bool m_freeFunction;
-
+	static constexpr unsigned s_maxInputs = 4;
+	static constexpr unsigned s_maxOutputs = 4;
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
