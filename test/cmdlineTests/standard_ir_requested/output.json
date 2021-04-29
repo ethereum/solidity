@@ -9,7 +9,7 @@
 object \"C_7\" {
     code {
         mstore(64, 128)
-        if callvalue() { revert(0, 0) }
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_C_7()
 
@@ -26,6 +26,10 @@ object \"C_7\" {
 
         }
 
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
     }
     object \"C_7_deployed\" {
         code {
@@ -40,7 +44,7 @@ object \"C_7\" {
                 {
                     // f()
 
-                    if callvalue() { revert(0, 0) }
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
                     abi_decode_tuple_(4, calldatasize())
                     fun_f_6()
                     let memPos := allocate_unbounded()
@@ -51,10 +55,10 @@ object \"C_7\" {
                 default {}
             }
             if iszero(calldatasize()) {  }
-            revert(0, 0)
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function abi_decode_tuple_(headStart, dataEnd)   {
-                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+                if slt(sub(dataEnd, headStart), 0) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
 
             }
 
@@ -69,6 +73,18 @@ object \"C_7\" {
 
             function fun_f_6() {
 
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
             }
 
             function shift_right_224_unsigned(value) -> newValue {

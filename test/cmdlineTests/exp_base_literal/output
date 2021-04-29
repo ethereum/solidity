@@ -10,7 +10,7 @@ IR:
 object "C_81" {
     code {
         mstore(64, 128)
-        if callvalue() { revert(0, 0) }
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_C_81()
 
@@ -27,6 +27,10 @@ object "C_81" {
 
         }
 
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
     }
     object "C_81_deployed" {
         code {
@@ -41,7 +45,7 @@ object "C_81" {
                 {
                     // f(uint256,uint256,uint256,uint256)
 
-                    if callvalue() { revert(0, 0) }
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
                     let param_0, param_1, param_2, param_3 :=  abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(4, calldatasize())
                     let ret_0, ret_1, ret_2, ret_3 :=  fun_f_80(param_0, param_1, param_2, param_3)
                     let memPos := allocate_unbounded()
@@ -52,7 +56,7 @@ object "C_81" {
                 default {}
             }
             if iszero(calldatasize()) {  }
-            revert(0, 0)
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function abi_decode_t_uint256(offset, end) -> value {
                 value := calldataload(offset)
@@ -60,7 +64,7 @@ object "C_81" {
             }
 
             function abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(headStart, dataEnd) -> value0, value1, value2, value3 {
-                if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }
+                if slt(sub(dataEnd, headStart), 128) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
 
                 {
 
@@ -288,6 +292,22 @@ object "C_81" {
                 mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
                 mstore(4, 0x11)
                 revert(0, 0x24)
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
             }
 
             function shift_right_224_unsigned(value) -> newValue {
