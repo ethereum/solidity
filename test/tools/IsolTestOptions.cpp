@@ -77,7 +77,7 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		return false;
 	}
 	enforceViaYul = true;
-	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
+	enforceGasTest = false;
 	enforceGasTestMinValue = 100000;
 
 	return res;

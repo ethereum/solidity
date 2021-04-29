@@ -56,7 +56,7 @@ do
         EWASM_ARGS=""
         [ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
         ENFORCE_GAS_ARGS=""
-        [ "${EVM}" = "istanbul" ] && ENFORCE_GAS_ARGS="--enforce-gas-cost"
+        [ "${EVM}" = "istanbul" ] && ENFORCE_GAS_ARGS=""
         # Run SMTChecker tests only when OPTIMIZE == 0
         DISABLE_SMTCHECKER=""
         [ "${OPTIMIZE}" != "0" ] && DISABLE_SMTCHECKER="-t !smtCheckerTests"
