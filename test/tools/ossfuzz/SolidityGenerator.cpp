@@ -287,10 +287,11 @@ string FunctionGenerator::visit()
 		<< state->currentFunctionState()->params(FunctionState::Params::INPUT)
 		<< " "
 		<< visibility
-		<< " pure"
-		<< " returns"
-		<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT)
-		<< " {}\n";
+		<< " pure";
+	if (!state->currentFunctionState()->outputs.empty())
+		function << " returns"
+			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
+	function << " {}\n";
 	return function.str();
 }
 
