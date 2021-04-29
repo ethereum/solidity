@@ -3792,11 +3792,13 @@ string YulUtilFunctions::forwardingRevertFunction()
 		if (forward)
 			return Whiskers(R"(
 				function <functionName>() {
-					returndatacopy(0, 0, returndatasize())
-					revert(0, returndatasize())
+					let pos := <allocateUnbounded>()
+					returndatacopy(pos, 0, returndatasize())
+					revert(pos, returndatasize())
 				}
 			)")
 			("functionName", functionName)
+			("allocateUnbounded", allocateUnboundedFunction())
 			.render();
 		else
 			return Whiskers(R"(
