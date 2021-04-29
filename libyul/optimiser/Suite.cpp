@@ -25,6 +25,7 @@
 #include <libyul/optimiser/VarDeclInitializer.h>
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
+#include <libyul/optimiser/CatchMemoryViolators.h>
 #include <libyul/optimiser/CircularReferencesPruner.h>
 #include <libyul/optimiser/ControlFlowSimplifier.h>
 #include <libyul/optimiser/ConditionalSimplifier.h>
@@ -178,6 +179,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 	if (instance.empty())
 		instance = optimiserStepCollection<
 			BlockFlattener,
+			CatchMemoryViolators,
 			CircularReferencesPruner,
 			CommonSubexpressionEliminator,
 			ConditionalSimplifier,
@@ -218,6 +220,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 {
 	static map<string, char> lookupTable{
 		{BlockFlattener::name,                'f'},
+		{CatchMemoryViolators::name,          'X'},
 		{CircularReferencesPruner::name,      'l'},
 		{CommonSubexpressionEliminator::name, 'c'},
 		{ConditionalSimplifier::name,         'C'},

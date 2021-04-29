@@ -58,7 +58,7 @@ protected:
 		std::vector<Expression> const& _arguments
 	) = 0;
 
-	smtutil::Expression encodeExpression(
+	virtual smtutil::Expression encodeExpression(
 		Expression const& _expression
 	);
 

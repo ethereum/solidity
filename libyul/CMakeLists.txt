@@ -93,6 +93,8 @@ add_library(yul
 	optimiser/BlockHasher.h
 	optimiser/CallGraphGenerator.cpp
 	optimiser/CallGraphGenerator.h
+	optimiser/CatchMemoryViolators.cpp
+	optimiser/CatchMemoryViolators.h
 	optimiser/CircularReferencesPruner.cpp
 	optimiser/CircularReferencesPruner.h
 	optimiser/CommonSubexpressionEliminator.cpp
