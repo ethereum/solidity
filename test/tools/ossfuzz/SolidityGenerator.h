@@ -614,6 +614,22 @@ struct TypeProvider
 	std::shared_ptr<TestState> state;
 };
 
+struct TypeComparator
+{
+	template <typename T>
+	bool operator()(T _i1, T _i2)
+	{
+		return *_i1 == *_i2;
+	}
+	template <typename T1, typename T2>
+	bool operator()(T1 _i1, T2 _i2)
+	{
+		if (std::is_same_v<T1, T2>)
+			return this->template operator()(_i1, _i2);
+		return false;
+	}
+};
+
 struct ExpressionGenerator
 {
 	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
