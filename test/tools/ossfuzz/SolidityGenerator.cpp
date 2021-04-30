@@ -155,7 +155,9 @@ string SourceUnitGenerator::visit()
 
 string PragmaGenerator::visit()
 {
-	set<string> pragmas = uRandDist->subset(s_genericPragmas);
+	set<string> pragmas;
+	// Add preamble
+	pragmas.insert(string(s_preamble));
 	// Choose either abicoder v1 or v2 but not both.
 	pragmas.insert(s_abiPragmas[uRandDist->distributionOneToN(s_abiPragmas.size()) - 1]);
 	return boost::algorithm::join(pragmas, "\n") + "\n";

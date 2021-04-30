@@ -749,10 +749,7 @@ public:
 	std::string visit() override;
 	std::string name() override { return "Pragma generator"; }
 private:
-	std::set<std::string> const s_genericPragmas = {
-		R"(pragma solidity >= 0.0.0;)",
-		R"(pragma experimental SMTChecker;)",
-	};
+	static constexpr char const* s_preamble = R"(pragma solidity >= 0.0.0;)";
 	std::vector<std::string> const s_abiPragmas = {
 		R"(pragma abicoder v1;)",
 		R"(pragma abicoder v2;)"
