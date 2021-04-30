@@ -265,9 +265,51 @@ string FunctionState::params(Params _p)
 	return "(" + boost::algorithm::join(params, ",") + ")";
 }
 
+string AssignmentStmtGenerator::visit()
+{
+	ExpressionGenerator exprGen{state};
+	auto lhs = exprGen.expression();
+	if (!lhs.has_value())
+		return "\n";
+	auto rhs = exprGen.expression(lhs.value().first);
+	if (!rhs.has_value())
+		return "\n";
+	return lhs.value().second + " = " + rhs.value().second + ";\n";
+}
+
+void StatementGenerator::setup()
+{
+	addGenerators({
+		{mutator->generator<BlockStmtGenerator>(), 1},
+		{mutator->generator<AssignmentStmtGenerator>(), 1}
+	});
+}
+
+string StatementGenerator::visit()
+{
+	return visitChildren();
+}
+
+void BlockStmtGenerator::setup()
+{
+	addGenerators({
+		{mutator->generator<StatementGenerator>(), s_maxStatements},
+	});
+}
+
 string BlockStmtGenerator::visit()
 {
-	return "\n" + indentation() + "{}\n";
+	if (nestingTooDeep())
+		return "\n";
+
+	incrementNestingDepth();
+	ostringstream block;
+	block << indentation() + "{\n";
+	state->indent();
+	block << visitChildren();
+	state->unindent();
+	block << indentation() << "}\n";
+	return block.str();
 }
 
 void FunctionGenerator::setup()
@@ -303,8 +345,52 @@ string FunctionGenerator::visit()
 	if (!state->currentFunctionState()->outputs.empty())
 		function << " returns"
 			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
-	function << generator<BlockStmtGenerator>()->visit();
+	function << "\n" << generator<BlockStmtGenerator>()->visit();
 	return function.str();
+}
+
+pair<SolidityTypePtr, string> ExpressionGenerator::randomLValueExpression()
+{
+	LValueExpr exprType = static_cast<LValueExpr>(
+		state->uRandDist->distributionOneToN(static_cast<size_t>(LValueExpr::TYPEMAX) - 1)
+	);
+	switch (exprType)
+	{
+	case LValueExpr::VARREF:
+	{
+		auto liveVariables = state->currentFunctionState()->inputs |
+			ranges::views::transform([](auto& _item) { return _item; }) |
+			ranges::to<vector<pair<SolidityTypePtr, string>>>();
+		liveVariables += state->currentFunctionState()->outputs |
+			ranges::views::transform([](auto& _item) { return _item; }) |
+			ranges::to<vector<pair<SolidityTypePtr, string>>>();
+		return liveVariables[state->uRandDist->distributionOneToN(liveVariables.size()) - 1];
+	}
+	default:
+		solAssert(false, "");
+	}
+}
+
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression()
+{
+	auto currentFunctionState = state->currentFunctionState();
+	// TODO: Remove this barrier once we support more expression types.
+	if (currentFunctionState->inputs.empty() && currentFunctionState->outputs.empty())
+		return nullopt;
+	return randomLValueExpression();
+}
+
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(SolidityTypePtr _type)
+{
+	auto liveTypedVariables = state->currentFunctionState()->inputs |
+		ranges::views::filter([&_type](auto& _item) { return _item.first == _type; }) |
+		ranges::to<vector<pair<SolidityTypePtr, string>>>();
+	liveTypedVariables += state->currentFunctionState()->outputs |
+		ranges::views::filter([&_type](auto& _item) { return _item.first == _type; }) |
+		ranges::to<vector<pair<SolidityTypePtr, string>>>();
+	if (liveTypedVariables.empty())
+		return nullopt;
+	return liveTypedVariables[state->uRandDist->distributionOneToN(liveTypedVariables.size()) - 1];
 }
 
 optional<SolidityTypePtr> TypeProvider::type(SolidityTypePtr _type)
