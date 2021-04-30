@@ -648,11 +648,11 @@ struct GeneratorBase
 		endVisit();
 		return generatedCode;
 	}
-	/// @returns indentation as string. Each indentation level comprises two
-	/// whitespace characters.
-	std::string indentation(unsigned _indentationLevel)
+	/// @returns current indentation as string. Each indentation level comprises
+	/// two whitespace characters.
+	std::string indentation()
 	{
-		return std::string(_indentationLevel * 2, ' ');
+		return std::string(state->indentationLevel * 2, ' ');
 	}
 	/// @returns a string representing the generation of
 	/// the Solidity grammar element.
@@ -791,6 +791,7 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Function generator"; }
+	void setup() override;
 	/// Sets @name m_freeFunction to @param _freeFunction.
 	void scope(bool _freeFunction)
 	{
@@ -800,6 +801,28 @@ private:
 	bool m_freeFunction;
 	static constexpr unsigned s_maxInputs = 4;
 	static constexpr unsigned s_maxOutputs = 4;
+	static constexpr unsigned s_maxStatements = 5;
+};
+
+class StatementGenerator: public GeneratorBase
+{
+public:
+	explicit StatementGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	void setup() override {}
+	std::string visit() override { return {}; }
+	std::string name() override { return "Statement generator"; }
+};
+
+class BlockStmtGenerator: public GeneratorBase
+{
+public:
+	explicit BlockStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override { return "Block statement generator"; }
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
