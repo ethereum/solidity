@@ -41,9 +41,11 @@
  *
  */
 #define GENERATORLIST(MACRO, SEP, ENDSEP) \
+	MACRO(BlockStmtGenerator) SEP \
 	MACRO(ContractGenerator) SEP \
 	MACRO(FunctionGenerator) SEP \
 	MACRO(ImportGenerator) SEP \
 	MACRO(PragmaGenerator) SEP \
 	MACRO(SourceUnitGenerator) SEP \
+	MACRO(StatementGenerator) SEP \
 	MACRO(TestCaseGenerator) ENDSEP

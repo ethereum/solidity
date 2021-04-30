@@ -263,6 +263,16 @@ string FunctionState::params(Params _p)
 	return "(" + boost::algorithm::join(params, ",") + ")";
 }
 
+string BlockStmtGenerator::visit()
+{
+	return "\n" + indentation() + "{}\n";
+}
+
+void FunctionGenerator::setup()
+{
+	addGenerators({{mutator->generator<BlockStmtGenerator>(), 1}});
+}
+
 string FunctionGenerator::visit()
 {
 	string visibility;
@@ -281,7 +291,7 @@ string FunctionGenerator::visit()
 			state->currentFunctionState()->addOutput(TypeProvider{state}.type());
 
 	ostringstream function;
-	function << indentation(state->indentationLevel)
+	function << indentation()
 		<< "function "
 		<< name
 		<< state->currentFunctionState()->params(FunctionState::Params::INPUT)
@@ -291,7 +301,7 @@ string FunctionGenerator::visit()
 	if (!state->currentFunctionState()->outputs.empty())
 		function << " returns"
 			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
-	function << " {}\n";
+	function << generator<BlockStmtGenerator>()->visit();
 	return function.str();
 }
 
