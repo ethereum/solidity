@@ -503,6 +503,18 @@ which has the following form:
 
 .. _smtchecker_engines:
 
+Natspec Function Abstraction
+============================
+
+Certain functions including common math methods such as ``pow``
+and ``sqrt`` may be too complex to be analyzed in a fully automated way.
+These functions can be annotated with Natspec tags that indicate to the
+SMTChecker that these functions should be abstracted. This means that the
+body of the function is not used, and when called, the function will:
+
+- Return a nondeterministic value, and either keep the state variables unchanged if the abstracted function is view/pure, or also set the state variables to nondeterministic values otherwise. This can be used via the annotation ``/// @custom:smtchecker abstract-function-nondet``.
+- Act as an uninterpreted function. This means that the semantics of the function (given by the body) are ignored, and the only property this function has is that given the same input it guarantees the same output. This is currently under development and will be available via the annotation ``/// @custom:smtchecker abstract-function-uf``.
+
 Model Checking Engines
 ======================
 
