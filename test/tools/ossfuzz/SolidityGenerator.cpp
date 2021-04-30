@@ -274,7 +274,7 @@ string AssignmentStmtGenerator::visit()
 	auto rhs = exprGen.expression(lhs.value().first);
 	if (!rhs.has_value())
 		return "\n";
-	return lhs.value().second + " = " + rhs.value().second + ";\n";
+	return indentation() + lhs.value().second + " = " + rhs.value().second + ";\n";
 }
 
 void StatementGenerator::setup()
@@ -346,6 +346,7 @@ string FunctionGenerator::visit()
 		function << " returns"
 			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
 	function << "\n" << generator<BlockStmtGenerator>()->visit();
+	generator<BlockStmtGenerator>()->endVisit();
 	return function.str();
 }
 
@@ -383,10 +384,14 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression()
 optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(SolidityTypePtr _type)
 {
 	auto liveTypedVariables = state->currentFunctionState()->inputs |
-		ranges::views::filter([&_type](auto& _item) { return _item.first == _type; }) |
+		ranges::views::filter([&_type](auto& _item) {
+			return _item.first.index() == _type.index() && visit(TypeComparator{}, _item.first, _type);
+		}) |
 		ranges::to<vector<pair<SolidityTypePtr, string>>>();
 	liveTypedVariables += state->currentFunctionState()->outputs |
-		ranges::views::filter([&_type](auto& _item) { return _item.first == _type; }) |
+		ranges::views::filter([&_type](auto& _item) {
+			return _item.first.index() == _type.index() && visit(TypeComparator{}, _item.first, _type);
+		}) |
 		ranges::to<vector<pair<SolidityTypePtr, string>>>();
 	if (liveTypedVariables.empty())
 		return nullopt;
