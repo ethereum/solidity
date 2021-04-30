@@ -69,6 +69,27 @@ function memset(ptr:i32, value:i32, length:i32) {
 	}
 }
 
+function memcpy(dst:i32, src:i32, length:i32) {
+	for { let i:i32 := 0:i32 } i32.lt_u(i, length) { i := i32.add(i, 1:i32) }
+	{
+		i32.store8(i32.add(dst, i), i8_load32(i32.add(src, i)))
+	}
+}
+
+function i8_store(ptr:i32, v:i64)
+{
+	let tmp := i64.and(i64.load(ptr), 0x00ffffffffffffff)
+	tmp := i64.or(tmp, i64.shl(i64.and(v, 0xff), 56))
+	i64.store(ptr, bswap64(tmp))
+}
+function i8_load32(ptr:i32) -> v:i32
+{
+	v := i32.and(i32.load(ptr), 0x000000ff:i32)
+}
+function i8_load(ptr:i32) -> v:i64
+{
+	v := i64.and(i64.load(ptr), 0x00000000000000ff)
+}
 // Writes 256-bits from `pos`, but only set the bottom 160-bits.
 function mstore_address(pos:i32, a1, a2, a3, a4) {
 	a1, a2, a3 := u256_to_address(a1, a2, a3, a4)
