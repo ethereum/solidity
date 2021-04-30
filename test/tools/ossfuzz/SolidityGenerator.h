@@ -619,13 +619,15 @@ struct ExpressionGenerator
 	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
 	{}
 
-	enum class Expr: size_t
+	enum class LValueExpr: size_t
 	{
 		VARREF = 1,
 		TYPEMAX
 	};
 
-	std::string expression(SolidityTypePtr _type);
+	std::optional<std::pair<SolidityTypePtr, std::string>> expression(SolidityTypePtr _type);
+	std::optional<std::pair<SolidityTypePtr, std::string>> expression();
+	std::pair<SolidityTypePtr, std::string> randomLValueExpression();
 
 	std::shared_ptr<TestState> state;
 };
@@ -807,19 +809,47 @@ public:
 	explicit StatementGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
-	void setup() override {}
-	std::string visit() override { return {}; }
+	void setup() override;
+	std::string visit() override;
 	std::string name() override { return "Statement generator"; }
+};
+
+class AssignmentStmtGenerator: public GeneratorBase
+{
+public:
+	explicit AssignmentStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override { return "Assignment statement generator"; }
 };
 
 class BlockStmtGenerator: public GeneratorBase
 {
 public:
 	explicit BlockStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
-		GeneratorBase(std::move(_mutator))
+		GeneratorBase(std::move(_mutator)),
+		m_nestingDepth(0)
 	{}
+	void endVisit() override
+	{
+		m_nestingDepth = 0;
+	}
+	void incrementNestingDepth()
+	{
+		++m_nestingDepth;
+	}
+	bool nestingTooDeep()
+	{
+		return m_nestingDepth > s_maxNestingDepth;
+	}
+	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Block statement generator"; }
+private:
+	size_t m_nestingDepth;
+	static constexpr unsigned s_maxStatements = 4;
+	static constexpr unsigned s_maxNestingDepth = 3;
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
