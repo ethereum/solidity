@@ -301,7 +301,6 @@ string BlockStmtGenerator::visit()
 {
 	if (nestingTooDeep())
 		return "\n";
-
 	incrementNestingDepth();
 	ostringstream block;
 	block << indentation() + "{\n";
@@ -345,9 +344,19 @@ string FunctionGenerator::visit()
 	if (!state->currentFunctionState()->outputs.empty())
 		function << " returns"
 			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
-	function << "\n" << generator<BlockStmtGenerator>()->visit();
-	generator<BlockStmtGenerator>()->endVisit();
+	ostringstream block;
+	// Since visitChildren() may not visit block stmt, we default to an empty
+	// block.
+	block << visitChildren();
+	if (block.str().empty())
+		block << indentation() << "{ }\n";
+	function << "\n" << block.str();
 	return function.str();
+}
+
+void FunctionGenerator::endVisit()
+{
+	mutator->generator<BlockStmtGenerator>()->resetNestingDepth();
 }
 
 pair<SolidityTypePtr, string> ExpressionGenerator::randomLValueExpression()
