@@ -288,13 +288,13 @@ public:
 	{
 		return name();
 	}
-	std::string name()
+	std::string name() const
 	{
 		return contractName;
 	}
-	bool operator==(ContractType const&)
+	bool operator==(ContractType const& _rhs)
 	{
-		return true;
+		return _rhs.name() == this->name();
 	}
 	std::string contractName;
 };
@@ -530,7 +530,8 @@ struct TestState
 	}
 	void addSource()
 	{
-		updateSourcePath(newPath());
+		std::string path = newPath();
+		updateSourcePath(path);
 	}
 	/// Increments indentation level globally.
 	void indent()
@@ -806,6 +807,7 @@ public:
 	{}
 	std::string visit() override;
 	std::string name() override { return "Function generator"; }
+	void endVisit() override;
 	void setup() override;
 	/// Sets @name m_freeFunction to @param _freeFunction.
 	void scope(bool _freeFunction)
@@ -849,11 +851,19 @@ public:
 	{}
 	void endVisit() override
 	{
-		m_nestingDepth = 0;
+		decrementNestingDepth();
 	}
 	void incrementNestingDepth()
 	{
 		++m_nestingDepth;
+	}
+	void decrementNestingDepth()
+	{
+		--m_nestingDepth;
+	}
+	void resetNestingDepth()
+	{
+		m_nestingDepth = 0;
 	}
 	bool nestingTooDeep()
 	{
