@@ -268,9 +268,9 @@ protected:
 	/// @returns the (potentially newly created) _ith address.
 	util::h160 account(size_t _i);
 
-	u256 balanceAt(util::h160 const& _addr);
-	bool storageEmpty(util::h160 const& _addr);
-	bool addressHasCode(util::h160 const& _addr);
+	u256 balanceAt(util::h160 const& _addr) const;
+	bool storageEmpty(util::h160 const& _addr) const;
+	bool addressHasCode(util::h160 const& _addr) const;
 
 	size_t numLogs() const;
 	size_t numLogTopics(size_t _logIdx) const;

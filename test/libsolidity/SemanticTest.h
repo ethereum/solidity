@@ -80,10 +80,11 @@ public:
 private:
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
-	void initializeBuiltins();
+	std::map<std::string, Builtin> makeBuiltins() const;
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
+	std::map<std::string, Builtin> const m_builtins;
 	bool m_testCaseWantsYulRun = false;
 	bool m_testCaseWantsEwasmRun = false;
 	bool m_testCaseWantsLegacyRun = true;
@@ -93,8 +94,6 @@ private:
 	bool m_allowNonExistingFunctions = false;
 	bool m_canEnableYulRun = false;
 	bool m_canEnableEwasmRun = false;
-	std::map<std::string, Builtin> m_builtins{};
-
 	bool m_gasCostFailure = false;
 	bool m_enforceGasCost = false;
 	u256 m_enforceGasCostMinValue;
