@@ -71,5 +71,7 @@
 ### Post-release
  - [ ] Publish the blog post.
  - [ ] Create a commit to increase the version number on ``develop`` in ``CMakeLists.txt`` and add a new skeleton changelog entry.
- - [ ] Announce on Twitter and Reddit.
+ - [ ] Announce on Twitter, including links to the release and the blog post.
+ - [ ] Share announcement on Reddit and Solidity forum.
+ - [ ] Update the release information section on [soliditylang.org](https://github.com/ethereum/solidity-portal).
  - [ ] Lean back, wait for bug reports and repeat from step 1 :)
