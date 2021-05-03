@@ -475,7 +475,13 @@ struct TestState
 	}
 	std::shared_ptr<FunctionState> currentFunctionState()
 	{
-		return functionState[currentFunction];
+		std::string function = currentFunctionName();
+		return functionState[function];
+	}
+	std::shared_ptr<SourceState> currentSourceState()
+	{
+		std::string currentSource = currentPath();
+		return sourceUnitState[currentSource];
 	}
 	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
@@ -508,6 +514,11 @@ struct TestState
 	{
 		solAssert(numSourceUnits > 0, "");
 		return currentSourceUnitPath;
+	}
+	std::string currentFunctionName() const
+	{
+		solAssert(numFunctions > 0, "");
+		return currentFunction;
 	}
 	/// Adds @param _path to list of source paths in global test
 	/// state and increments @name m_numSourceUnits.
@@ -631,6 +642,21 @@ struct TypeComparator
 	}
 };
 
+struct LiteralGenerator
+{
+	explicit LiteralGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	{}
+	std::string operator()(std::shared_ptr<AddressType> const& _type);
+	std::string operator()(std::shared_ptr<BoolType> const& _type);
+	std::string operator()(std::shared_ptr<BytesType> const& _type);
+	std::string operator()(std::shared_ptr<ContractType> const& _type);
+	std::string operator()(std::shared_ptr<FixedBytesType> const& _type);
+	std::string operator()(std::shared_ptr<FunctionType> const& _type);
+	std::string operator()(std::shared_ptr<IntegerType> const& _type);
+
+	std::shared_ptr<TestState> state;
+};
+
 struct ExpressionGenerator
 {
 	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
@@ -642,7 +668,8 @@ struct ExpressionGenerator
 		TYPEMAX
 	};
 
-	std::optional<std::pair<SolidityTypePtr, std::string>> expression(SolidityTypePtr _type);
+	std::optional<std::pair<SolidityTypePtr, std::string>> expression(std::pair<SolidityTypePtr, std::string> _typeName);
+	std::pair<SolidityTypePtr, std::string> literal(SolidityTypePtr _type);
 	std::optional<std::pair<SolidityTypePtr, std::string>> expression();
 	std::pair<SolidityTypePtr, std::string> randomLValueExpression();
 
@@ -830,6 +857,8 @@ public:
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Statement generator"; }
+private:
+	static constexpr unsigned s_uncheckedBlockInvProb = 37;
 };
 
 class AssignmentStmtGenerator: public GeneratorBase
@@ -847,7 +876,9 @@ class BlockStmtGenerator: public GeneratorBase
 public:
 	explicit BlockStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator)),
-		m_nestingDepth(0)
+		m_nestingDepth(0),
+		m_unchecked(false),
+		m_inUnchecked(false)
 	{}
 	void endVisit() override
 	{
@@ -872,8 +903,22 @@ public:
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "Block statement generator"; }
+	void unchecked(bool _unchecked)
+	{
+		m_unchecked = _unchecked;
+	}
+	bool unchecked()
+	{
+		return m_unchecked;
+	}
+	void resetInUnchecked()
+	{
+		m_inUnchecked = false;
+	}
 private:
 	size_t m_nestingDepth;
+	bool m_unchecked;
+	bool m_inUnchecked;
 	static constexpr unsigned s_maxStatements = 4;
 	static constexpr unsigned s_maxNestingDepth = 3;
 	static constexpr size_t s_uncheckedInvProb = 13;

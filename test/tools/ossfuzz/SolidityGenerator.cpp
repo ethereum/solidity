@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/tools/ossfuzz/SolidityGenerator.h>
+#include <test/tools/ossfuzz/LiteralGeneratorUtil.h>
 
 #include <libsolutil/Whiskers.h>
 #include <libsolutil/Visitor.h>
@@ -24,6 +25,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm/copy.hpp>
+
 
 
 using namespace solidity::test::fuzzer;
@@ -242,10 +244,13 @@ string FunctionType::toString()
 	};
 
 	std::string retString = std::string("function ") + "(" + typeString(inputs) + ")";
+
+	// TODO: Detect function state mutability instead of generating blanket
+	// impure functions.
 	if (outputs.empty())
-		return retString + " external pure";
+		return retString + " external";
 	else
-		return retString + " external pure returns (" + typeString(outputs) +	")";
+		return retString + " external returns (" + typeString(outputs) +	")";
 }
 
 string FunctionState::params(Params _p)
@@ -271,7 +276,7 @@ string AssignmentStmtGenerator::visit()
 	auto lhs = exprGen.expression();
 	if (!lhs.has_value())
 		return "\n";
-	auto rhs = exprGen.expression(lhs.value().first);
+	auto rhs = exprGen.expression(lhs.value());
 	if (!rhs.has_value())
 		return "\n";
 	return indentation() + lhs.value().second + " = " + rhs.value().second + ";\n";
@@ -287,7 +292,34 @@ void StatementGenerator::setup()
 
 string StatementGenerator::visit()
 {
-	return visitChildren();
+	bool unchecked = uRandDist->probable(s_uncheckedBlockInvProb);
+	bool inUnchecked = mutator->generator<BlockStmtGenerator>()->unchecked();
+	// Do not generate nested unchecked blocks.
+	bool generateUncheckedBlock = unchecked && !inUnchecked;
+	if (generateUncheckedBlock)
+		mutator->generator<BlockStmtGenerator>()->unchecked(true);
+
+	ostringstream os;
+	// Randomise visit order
+	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
+	for (auto const& child: generators)
+		randomisedChildren.push_back(child);
+	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
+	for (auto const& child: randomisedChildren)
+		if (uRandDist->likely(child.second + 1))
+		{
+			os << std::visit(GenericVisitor{
+				[&](auto const& _item) { return _item->generate(); }
+			}, child.first);
+			if (holds_alternative<shared_ptr<BlockStmtGenerator>>(child.first) &&
+				generateUncheckedBlock
+			)
+			{
+				get<shared_ptr<BlockStmtGenerator>>(child.first)->unchecked(false);
+				get<shared_ptr<BlockStmtGenerator>>(child.first)->resetInUnchecked();
+			}
+		}
+	return os.str();
 }
 
 void BlockStmtGenerator::setup()
@@ -303,9 +335,13 @@ string BlockStmtGenerator::visit()
 		return "\n";
 	incrementNestingDepth();
 	ostringstream block;
-	// Make block unchecked with a small probability
-	bool unchecked = uRandDist->probable(s_uncheckedInvProb);
-	block << indentation() + (unchecked ? "unchecked " : "") + "{\n";
+	if (unchecked() && !m_inUnchecked)
+	{
+		block << indentation() + "unchecked " + "{\n";
+		m_inUnchecked = true;
+	}
+	else
+		block << indentation() + "{\n";
 	state->indent();
 	block << visitChildren();
 	state->unindent();
@@ -341,15 +377,16 @@ string FunctionGenerator::visit()
 		<< name
 		<< state->currentFunctionState()->params(FunctionState::Params::INPUT)
 		<< " "
-		<< visibility
-		<< " pure";
+		<< visibility;
 	if (!state->currentFunctionState()->outputs.empty())
 		function << " returns"
 			<< state->currentFunctionState()->params(FunctionState::Params::OUTPUT);
 	ostringstream block;
+	// Make sure block stmt generator does not output an unchecked block
+	mutator->generator<BlockStmtGenerator>()->unchecked(false);
+	block << visitChildren();
 	// Since visitChildren() may not visit block stmt, we default to an empty
 	// block.
-	block << visitChildren();
 	if (block.str().empty())
 		block << indentation() << "{ }\n";
 	function << "\n" << block.str();
@@ -392,21 +429,103 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression()
 	return randomLValueExpression();
 }
 
-optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(SolidityTypePtr _type)
+pair<SolidityTypePtr, string> ExpressionGenerator::literal(SolidityTypePtr _type)
 {
+	string literalValue = visit(LiteralGenerator{state}, _type);
+	return pair(_type, literalValue);
+}
+
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(pair<SolidityTypePtr, string> _typeName)
+{
+	// Filter non-identical variables of the same type.
 	auto liveTypedVariables = state->currentFunctionState()->inputs |
-		ranges::views::filter([&_type](auto& _item) {
-			return _item.first.index() == _type.index() && visit(TypeComparator{}, _item.first, _type);
+		ranges::views::filter([&_typeName](auto& _item) {
+			return _item.first.index() == _typeName.first.index() &&
+				_item.second != _typeName.second &&
+				visit(TypeComparator{}, _item.first, _typeName.first);
 		}) |
 		ranges::to<vector<pair<SolidityTypePtr, string>>>();
 	liveTypedVariables += state->currentFunctionState()->outputs |
-		ranges::views::filter([&_type](auto& _item) {
-			return _item.first.index() == _type.index() && visit(TypeComparator{}, _item.first, _type);
+		ranges::views::filter([&_typeName](auto& _item) {
+			return _item.first.index() == _typeName.first.index() &&
+				_item.second != _typeName.second &&
+				visit(TypeComparator{}, _item.first, _typeName.first);
 		}) |
 		ranges::to<vector<pair<SolidityTypePtr, string>>>();
 	if (liveTypedVariables.empty())
-		return nullopt;
+	{
+		// TODO: Generate literals for contract and function types.
+		if (!(holds_alternative<shared_ptr<FunctionType>>(_typeName.first) || holds_alternative<shared_ptr<ContractType>>(_typeName.first)))
+			return literal(_typeName.first);
+		else
+			return nullopt;
+	}
 	return liveTypedVariables[state->uRandDist->distributionOneToN(liveTypedVariables.size()) - 1];
+}
+
+string LiteralGenerator::operator()(shared_ptr<AddressType> const&)
+{
+	string preChecksumAddress = LiteralGeneratorUtil{}.fixedBytes(
+		20,
+		(*state->uRandDist->randomEngine)(),
+		true
+	);
+	return string("address(") +
+		solidity::util::getChecksummedAddress(preChecksumAddress) +
+		")";
+}
+
+string LiteralGenerator::operator()(shared_ptr<BoolType> const&)
+{
+	if (state->uRandDist->probable(2))
+		return "true";
+	else
+		return "false";
+}
+
+string LiteralGenerator::operator()(shared_ptr<BytesType> const&)
+{
+	return "\"" +
+		LiteralGeneratorUtil{}.fixedBytes(
+			state->uRandDist->distributionOneToN(32),
+			(*state->uRandDist->randomEngine)(),
+			true
+		) +
+		"\"";
+}
+
+string LiteralGenerator::operator()(shared_ptr<FixedBytesType> const& _type)
+{
+	bool bytes20 = _type->numBytes == 20;
+	string literalString = "0x" +
+		LiteralGeneratorUtil{}.fixedBytes(
+		_type->numBytes,
+		(*state->uRandDist->randomEngine)(),
+		true
+		);
+	if (bytes20)
+		return "bytes20(address(" + solidity::util::getChecksummedAddress(literalString) + "))";
+	else
+		return literalString;
+}
+
+string LiteralGenerator::operator()(shared_ptr<ContractType> const&)
+{
+	solAssert(false, "");
+}
+
+string LiteralGenerator::operator()(shared_ptr<FunctionType> const&)
+{
+	solAssert(false, "");
+}
+
+string LiteralGenerator::operator()(shared_ptr<IntegerType> const& _type)
+{
+	return LiteralGeneratorUtil{}.integerValue(
+		(*state->uRandDist->randomEngine)(),
+		_type->numBits,
+		_type->signedType
+	);
 }
 
 optional<SolidityTypePtr> TypeProvider::type(SolidityTypePtr _type)
