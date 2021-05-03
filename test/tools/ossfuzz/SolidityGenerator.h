@@ -876,6 +876,7 @@ private:
 	size_t m_nestingDepth;
 	static constexpr unsigned s_maxStatements = 4;
 	static constexpr unsigned s_maxNestingDepth = 3;
+	static constexpr size_t s_uncheckedInvProb = 13;
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>

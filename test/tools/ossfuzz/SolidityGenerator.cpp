@@ -303,7 +303,9 @@ string BlockStmtGenerator::visit()
 		return "\n";
 	incrementNestingDepth();
 	ostringstream block;
-	block << indentation() + "{\n";
+	// Make block unchecked with a small probability
+	bool unchecked = uRandDist->probable(s_uncheckedInvProb);
+	block << indentation() + (unchecked ? "unchecked " : "") + "{\n";
 	state->indent();
 	block << visitChildren();
 	state->unindent();
