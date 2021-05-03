@@ -571,7 +571,9 @@ jobs:
 
   b_archlinux:
     docker:
-      - image: archlinux/base
+      # FIXME: Newer releases won't work until CircleCI updates its host machines.
+      # See https://github.com/ethereum/solidity/pull/11332
+      - image: archlinux:base-20210131.0.14634
     environment:
       TERM: xterm
       MAKEFLAGS: -j 3
@@ -710,7 +712,9 @@ jobs:
 
   t_archlinux_soltest: &t_archlinux_soltest
       docker:
-        - image: archlinux/base
+        # FIXME: Newer releases won't work until CircleCI updates its host machines.
+        # See https://github.com/ethereum/solidity/pull/11332
+        - image: archlinux:base-20210131.0.14634
       environment:
         EVM: constantinople
         OPTIMIZE: 0
