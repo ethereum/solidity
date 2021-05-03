@@ -32,6 +32,8 @@
 
 #include <boost/range/adaptor/filtered.hpp>
 
+#include <fmt/format.h>
+
 namespace solidity::langutil
 {
 
@@ -95,6 +97,17 @@ public:
 	);
 
 	void typeError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+
+	template <typename... Args>
+	void typeError(ErrorId _error, SourceLocation const& _location, std::string const& _descriptionFmt, Args... _args)
+	{
+		error(
+			_error,
+			Error::Type::TypeError,
+			_location,
+			fmt::format(_descriptionFmt, std::forward<Args>(_args)...)
+		);
+	}
 
 	template <typename... Strings>
 	void typeErrorConcatenateDescriptions(ErrorId _error, SourceLocation const& _location, Strings const&... _descriptions)

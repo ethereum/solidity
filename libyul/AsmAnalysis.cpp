@@ -38,6 +38,8 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <fmt/format.h>
+
 #include <memory>
 #include <functional>
 #include <utility>
@@ -103,10 +105,11 @@ vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 		m_errorReporter.typeError(
 			3069_error,
 			_literal.location,
-			"String literal too long (" + to_string(_literal.value.str().size()) + " > 32)"
+			"String literal too long ({} > 32).",
+			_literal.value.str().size()
 		);
 	else if (_literal.kind == LiteralKind::Number && bigint(_literal.value.str()) > u256(-1))
-		m_errorReporter.typeError(6708_error, _literal.location, "Number literal too large (> 256 bits)");
+		m_errorReporter.typeError(6708_error, _literal.location, "Number literal too large (> 256 bits).");
 	else if (_literal.kind == LiteralKind::Boolean)
 		yulAssert(_literal.value == "true"_yulstring || _literal.value == "false"_yulstring, "");
 
@@ -114,7 +117,9 @@ vector<YulString> AsmAnalyzer::operator()(Literal const& _literal)
 		m_errorReporter.typeError(
 			5170_error,
 			_literal.location,
-			"Invalid type \"" + _literal.type.str() + "\" for literal \"" + _literal.value.str() + "\"."
+			"Invalid type {:q} for literal {:q}.",
+			_literal.type,
+			_literal.value
 		);
 
 
@@ -143,7 +148,8 @@ vector<YulString> AsmAnalyzer::operator()(Identifier const& _identifier)
 			m_errorReporter.typeError(
 				6041_error,
 				_identifier.location,
-				"Function " + _identifier.name.str() + " used without being called."
+				"Function {} used without being called.",
+				_identifier.name
 			);
 		}
 	}))
@@ -177,11 +183,9 @@ void AsmAnalyzer::operator()(ExpressionStatement const& _statement)
 		m_errorReporter.typeError(
 			3083_error,
 			_statement.location,
-			"Top-level expressions are not supposed to return values (this expression returns " +
-			to_string(types.size()) +
-			" value" +
-			(types.size() == 1 ? "" : "s") +
-			"). Use ``pop()`` or assign them."
+			"Top-level expressions are not supposed to return values (this expression returns {} value{}). Use ``pop()`` or assign them.",
+			types.size(),
+			(types.size() == 1 ? "" : "s")
 		);
 }
 
@@ -265,7 +269,9 @@ void AsmAnalyzer::operator()(VariableDeclaration const& _varDecl)
 				m_errorReporter.typeError(
 					3947_error,
 					variable.location,
-					"Assigning value of type \"" + givenType.str() + "\" to variable of type \"" + variable.type.str() + "\"."
+					"Assigning value of type {:q} to variable of type {:q}.",
+					givenType,
+					variable.type
 				);
 		}
 	}
@@ -339,10 +345,10 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 		m_errorReporter.typeError(
 			7000_error,
 			_funCall.functionName.location,
-			"Function \"" + _funCall.functionName.name.str() + "\" expects " +
-			to_string(parameterTypes->size()) +
-			" arguments but got " +
-			to_string(_funCall.arguments.size()) + "."
+			"Function {:q} expects {} arguments but got {}.",
+			_funCall.functionName.name,
+			parameterTypes->size(),
+			_funCall.arguments.size()
 		);
 
 	vector<YulString> argTypes;
@@ -376,7 +382,8 @@ vector<YulString> AsmAnalyzer::operator()(FunctionCall const& _funCall)
 						m_errorReporter.typeError(
 							3517_error,
 							get<Literal>(arg).location,
-							"Unknown data object \"" + std::get<Literal>(arg).value.str() + "\"."
+							"Unknown data object {:q}.",
+							std::get<Literal>(arg).value
 						);
 				}
 				else if (functionName.substr(0, "verbatim_"s.size()) == "verbatim_")
@@ -503,9 +510,8 @@ YulString AsmAnalyzer::expectExpression(Expression const& _expr)
 		m_errorReporter.typeError(
 			3950_error,
 			locationOf(_expr),
-			"Expected expression to evaluate to one value, but got " +
-			to_string(types.size()) +
-			" values instead."
+			"Expected expression to evaluate to one value, but got {} values instead.",
+			types.size()
 		);
 	return types.empty() ? m_dialect.defaultType : types.front();
 }
@@ -525,11 +531,9 @@ void AsmAnalyzer::expectBoolExpression(Expression const& _expr)
 		m_errorReporter.typeError(
 			1733_error,
 			locationOf(_expr),
-			"Expected a value of boolean type \"" +
-			m_dialect.boolType.str() +
-			"\" but got \"" +
-			type.str() +
-			"\""
+			"Expected a value of boolean type {:q} but got {:q}",
+			m_dialect.boolType,
+			type
 		);
 }
 
@@ -570,11 +574,9 @@ void AsmAnalyzer::checkAssignment(Identifier const& _variable, YulString _valueT
 		m_errorReporter.typeError(
 			9547_error,
 			_variable.location,
-			"Assigning a value of type \"" +
-			_valueType.str() +
-			"\" to a variable of type \"" +
-			variableType->str() +
-			"\"."
+			"Assigning a value of type {:q} to a variable of type {:q}.",
+			_valueType,
+			*variableType
 		);
 
 	yulAssert(!watcher.ok() || variableType, "");
@@ -620,7 +622,8 @@ void AsmAnalyzer::expectValidType(YulString _type, SourceLocation const& _locati
 		m_errorReporter.typeError(
 			5473_error,
 			_location,
-			"\"" + _type.str() + "\" is not a valid type (user defined types are not yet supported)."
+			"{:q} is not a valid type (user defined types are not yet supported).",
+			_type
 		);
 }
 
@@ -630,11 +633,9 @@ void AsmAnalyzer::expectType(YulString _expectedType, YulString _givenType, Sour
 		m_errorReporter.typeError(
 			3781_error,
 			_location,
-			"Expected a value of type \"" +
-			_expectedType.str() +
-			"\" but got \"" +
-			_givenType.str() +
-			"\""
+			"Expected a value of type {:q} but got {:q}.",
+			_expectedType,
+			_givenType
 		);
 }
 
@@ -666,14 +667,12 @@ bool AsmAnalyzer::validateInstructions(evmasm::Instruction _instr, SourceLocatio
 		m_errorReporter.typeError(
 			_errorId,
 			_location,
-			"The \"" +
-			boost::to_lower_copy(instructionInfo(_instr).name)
-			+ "\" instruction is " +
-			vmKindMessage +
-			" VMs " +
-			"(you are currently compiling for \"" +
-			m_evmVersion.name() +
-			"\")."
+			fmt::format(
+				"The \"{}\" instruction is {} VMs (you are currently compiling for {:q}).",
+				boost::to_lower_copy(instructionInfo(_instr).name),
+				vmKindMessage,
+				m_evmVersion.name()
+			)
 		);
 	};
 

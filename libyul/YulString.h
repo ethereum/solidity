@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <fmt/format.h>
+
 #include <unordered_map>
 #include <memory>
 #include <vector>
@@ -166,6 +168,42 @@ inline YulString operator "" _yulstring(char const* _string, std::size_t _size)
 }
 
 }
+
+namespace fmt
+{
+template <>
+struct formatter<solidity::yul::YulString>
+{
+	bool quoted = false;
+
+	// Adds custom format parameter `q` to add double quotes
+	// around string when formatting.
+	template <typename ParseContext>
+	constexpr auto parse(ParseContext& ctx)
+	{
+		auto it = ctx.begin();
+		auto end = ctx.end();
+		if (it == end)
+			return it;
+		if (*it == 'q')
+		{
+			quoted = true;
+			it++;
+		}
+		return it;
+	}
+
+	template <typename FormatContext>
+	auto format(solidity::yul::YulString _value, FormatContext& _ctx)
+	{
+		if (quoted)
+			return format_to(_ctx.out(), "\"{}\"", _value.str());
+		else
+			return format_to(_ctx.out(), "{}", _value.str());
+	}
+};
+}
+
 namespace std
 {
 template<> struct hash<solidity::yul::YulString>
