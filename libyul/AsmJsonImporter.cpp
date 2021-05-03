@@ -158,7 +158,12 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	auto lit = createAsmNode<Literal>(_node);
 	string kind = member(_node, "kind").asString();
 
-	lit.value = YulString{member(_node, "value").asString()};
+	solAssert(member(_node, "hexValue").isString() || member(_node, "value").isString(), "");
+	if (_node.isMember("hexValue"))
+		lit.value = YulString{util::asString(util::fromHex(member(_node, "hexValue").asString()))};
+	else
+		lit.value = YulString{member(_node, "value").asString()};
+
 	lit.type= YulString{member(_node, "type").asString()};
 
 	if (kind == "number")
