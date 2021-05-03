@@ -3093,7 +3093,7 @@ void IRGeneratorForStatements::handleCatch(TryStatement const& _tryStatement)
 	if (_tryStatement.fallbackClause())
 		handleCatchFallback(*_tryStatement.fallbackClause());
 	else
-		rethrow();
+		m_code << m_utils.forwardingRevertFunction() << "()\n";
 	m_code << "}\n";
 }
 
@@ -3113,17 +3113,6 @@ void IRGeneratorForStatements::handleCatchFallback(TryCatchClause const& _fallba
 		define(m_context.addLocalVariable(paramDecl)) << m_utils.extractReturndataFunction() << "()\n";
 	}
 	_fallback.accept(*this);
-}
-
-void IRGeneratorForStatements::rethrow()
-{
-	if (m_context.evmVersion().supportsReturndata())
-		m_code << R"(
-			returndatacopy(0, 0, returndatasize())
-			revert(0, returndatasize())
-		)"s;
-	else
-		m_code << "revert(0, 0) // rethrow\n"s;
 }
 
 void IRGeneratorForStatements::revertWithError(

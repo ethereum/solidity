@@ -103,9 +103,6 @@ private:
 	void handleCatch(TryStatement const& _tryStatement);
 	void handleCatchFallback(TryCatchClause const& _fallback);
 
-	/// Generates code to rethrow an exception.
-	void rethrow();
-
 	/// Generates code to revert with an error. The error arguments are assumed to
 	/// be already evaluated and available in local IRVariables, but not yet
 	/// converted.
