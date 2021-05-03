@@ -170,35 +170,7 @@ bool FullInliner::shallInline(FunctionCall const& _funCall, YulString _callSite)
 	if (m_noInlineFunctions.count(_funCall.functionName.name) || recursive(*calledFunction))
 		return false;
 
-	// Inline really, really tiny functions
-	size_t size = m_functionSizes.at(calledFunction->name);
-	if (size <= 1)
-		return true;
-
-	// In the first pass, only inline tiny functions.
-	if (m_pass == Pass::InlineTiny)
-		return false;
-
-	// Do not inline into already big functions.
-	if (m_functionSizes.at(_callSite) > 45)
-		return false;
-
-	if (m_singleUse.count(calledFunction->name))
-		return true;
-
-	// Constant arguments might provide a means for further optimization, so they cause a bonus.
-	bool constantArg = false;
-	for (auto const& argument: _funCall.arguments)
-		if (holds_alternative<Literal>(argument) || (
-			holds_alternative<Identifier>(argument) &&
-			m_constants.count(std::get<Identifier>(argument).name)
-		))
-		{
-			constantArg = true;
-			break;
-		}
-
-	return (size < 6 || (constantArg && size < 12));
+	return true;
 }
 
 void FullInliner::tentativelyUpdateCodeSize(YulString _function, YulString _callSite)
