@@ -40,11 +40,9 @@ using namespace solidity::langutil;
 using namespace solidity::util;
 using namespace solidity::util::formatting;
 using namespace solidity::frontend::test;
-using namespace boost;
 using namespace boost::algorithm;
 using namespace boost::unit_test;
 namespace fs = boost::filesystem;
-
 
 SemanticTest::SemanticTest(
 	string const& _filename,
@@ -59,13 +57,12 @@ SemanticTest::SemanticTest(
 	EVMVersionRestrictedTestCase(_filename),
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
+	m_builtins(makeBuiltins()),
 	m_enforceViaYul(_enforceViaYul),
 	m_enforceCompileToEwasm(_enforceCompileToEwasm),
 	m_enforceGasCost(_enforceGasCost),
-	m_enforceGasCostMinValue(std::move(_enforceGasCostMinValue))
+	m_enforceGasCostMinValue(move(_enforceGasCostMinValue))
 {
-	initializeBuiltins();
-
 	static set<string> const compileViaYulAllowedValues{"also", "true", "false", "default"};
 	static set<string> const yulRunTriggers{"also", "true"};
 	static set<string> const legacyRunTriggers{"also", "false", "default"};
@@ -118,29 +115,37 @@ SemanticTest::SemanticTest(
 	}
 }
 
-void SemanticTest::initializeBuiltins()
+map<string, Builtin> SemanticTest::makeBuiltins() const
 {
-	solAssert(m_builtins.count("smokeTest") == 0, "");
-	m_builtins["smokeTest"] = [](FunctionCall const&) -> std::optional<bytes>
-	{
-		return util::toBigEndian(u256(0x1234));
-	};
-	soltestAssert(m_builtins.count("balance") == 0, "");
-	m_builtins["balance"] = [this](FunctionCall const& _call) -> std::optional<bytes>
-	{
-		soltestAssert(_call.arguments.parameters.size() <= 1, "Account address expected.");
-		h160 address;
-		if (_call.arguments.parameters.size() == 1)
-			address = h160(_call.arguments.parameters.at(0).rawString);
-		else
-			address = m_contractAddress;
-		return util::toBigEndian(SolidityExecutionFramework::balanceAt(address));
-	};
-	soltestAssert(m_builtins.count("storageEmpty") == 0, "");
-	m_builtins["storageEmpty"] = [this](FunctionCall const& _call) -> std::optional<bytes>
-	{
-		soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
-		return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
+	return {
+		{
+			"smokeTest",
+			[](FunctionCall const&) -> optional<bytes>
+			{
+				return util::toBigEndian(u256(0x1234));
+			}
+		},
+		{
+			"balance",
+			[this](FunctionCall const& _call) -> optional<bytes>
+			{
+				soltestAssert(_call.arguments.parameters.size() <= 1, "Account address expected.");
+				h160 address;
+				if (_call.arguments.parameters.size() == 1)
+					address = h160(_call.arguments.parameters.at(0).rawString);
+				else
+					address = m_contractAddress;
+				return util::toBigEndian(balanceAt(address));
+			}
+		},
+		{
+			"storageEmpty",
+			[this](FunctionCall const& _call) -> optional<bytes>
+			{
+				soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
+				  return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
+		 	}
+		}
 	};
 }
 
@@ -257,7 +262,7 @@ TestCase::TestResult SemanticTest::runTest(
 				output = callLowLevel(test.call().arguments.rawBytes(), test.call().value.value);
 			else if (test.call().kind == FunctionCall::Kind::Builtin)
 			{
-				std::optional<bytes> builtinOutput = m_builtins.at(test.call().signature)(test.call());
+				optional<bytes> builtinOutput = m_builtins.at(test.call().signature)(test.call());
 				if (builtinOutput.has_value())
 				{
 					m_transactionSuccessful = true;
@@ -296,7 +301,7 @@ TestCase::TestResult SemanticTest::runTest(
 				success = false;
 
 			test.setFailure(!m_transactionSuccessful);
-			test.setRawBytes(std::move(output));
+			test.setRawBytes(move(output));
 			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
 		}
 	}
