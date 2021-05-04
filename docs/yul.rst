@@ -1155,9 +1155,8 @@ Yul Optimizer
 The Yul optimizer operates on Yul code and uses the same language for input, output and
 intermediate states. This allows for easy debugging and verification of the optimizer.
 
-Please see the
-`documentation in the source code <https://github.com/ethereum/solidity/blob/develop/libyul/optimiser/README.md>`_
-for more details about its internals.
+Please refer to the general :ref:`optimizer documentation <optimizer>`
+for more details about the different optimization stages and how to use the optimizer.
 
 If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
 
@@ -1167,7 +1166,7 @@ If you want to use Solidity in stand-alone Yul mode, you activate the optimizer 
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 
-Optimization step sequence
+Optimization Step Sequence
 --------------------------
 
 By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.
