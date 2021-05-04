@@ -85,19 +85,19 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "let a := v" by "let a_1 := v  let a := a_1"
 				// Replace "let a, b := v" by "let a_1, b_1 := v  let a := a_1 let b := b_2"
-				auto loc = varDecl.location;
+				shared_ptr<DebugData const> debugData = varDecl.debugData;
 				vector<Statement> statements;
-				statements.emplace_back(VariableDeclaration{loc, {}, std::move(varDecl.value)});
+				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(varDecl.value)});
 				TypedNameList newVariables;
 				for (auto const& var: varDecl.variables)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{loc, newName, var.type});
+					newVariables.emplace_back(TypedName{debugData, newName, var.type});
 					statements.emplace_back(VariableDeclaration{
-						loc,
-						{TypedName{loc, oldName, var.type}},
-						make_unique<Expression>(Identifier{loc, newName})
+						debugData,
+						{TypedName{debugData, oldName, var.type}},
+						make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
@@ -112,23 +112,22 @@ void IntroduceSSA::operator()(Block& _block)
 
 				// Replace "a := v" by "let a_1 := v  a := v"
 				// Replace "a, b := v" by "let a_1, b_1 := v  a := a_1 b := b_2"
-				auto loc = assignment.location;
+				std::shared_ptr<DebugData const> debugData = assignment.debugData;
 				vector<Statement> statements;
-				statements.emplace_back(VariableDeclaration{loc, {}, std::move(assignment.value)});
+				statements.emplace_back(VariableDeclaration{debugData, {}, std::move(assignment.value)});
 				TypedNameList newVariables;
 				for (auto const& var: assignment.variableNames)
 				{
 					YulString oldName = var.name;
 					YulString newName = m_nameDispenser.newName(oldName);
-					newVariables.emplace_back(TypedName{
-						loc,
+					newVariables.emplace_back(TypedName{debugData,
 						newName,
 						m_typeInfo.typeOfVariable(oldName)
 					});
 					statements.emplace_back(Assignment{
-						loc,
-						{Identifier{loc, oldName}},
-						make_unique<Expression>(Identifier{loc, newName})
+						debugData,
+						{Identifier{debugData, oldName}},
+						make_unique<Expression>(Identifier{debugData, newName})
 					});
 				}
 				std::get<VariableDeclaration>(statements.front()).variables = std::move(newVariables);
@@ -238,9 +237,9 @@ void IntroduceControlFlowSSA::operator()(Block& _block)
 			{
 				YulString newName = m_nameDispenser.newName(toReassign);
 				toPrepend.emplace_back(VariableDeclaration{
-					locationOf(_s),
-					{TypedName{locationOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
-					make_unique<Expression>(Identifier{locationOf(_s), toReassign})
+					debugDataOf(_s),
+					{TypedName{debugDataOf(_s), newName, m_typeInfo.typeOfVariable(toReassign)}},
+					make_unique<Expression>(Identifier{debugDataOf(_s), toReassign})
 				});
 				assignedVariables.insert(toReassign);
 			}

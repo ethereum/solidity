@@ -482,7 +482,7 @@ void ControlFlowBuilder::operator()(yul::Identifier const& _identifier)
 			m_currentNode->variableOccurrences.emplace_back(
 				*declaration,
 				VariableOccurrence::Kind::Access,
-				_identifier.location
+				_identifier.debugData->location
 			);
 	}
 }
@@ -498,7 +498,7 @@ void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
 				m_currentNode->variableOccurrences.emplace_back(
 					*declaration,
 					VariableOccurrence::Kind::Assignment,
-					variable.location
+					variable.debugData->location
 				);
 }
 

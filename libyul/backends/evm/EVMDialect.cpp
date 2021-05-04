@@ -55,7 +55,7 @@ void visitArguments(
 	for (auto const& arg: _call.arguments | ranges::views::reverse)
 		_visitExpression(arg);
 
-	_assembly.setSourceLocation(_call.location);
+	_assembly.setSourceLocation(_call.debugData->location);
 }
 
 
@@ -259,7 +259,7 @@ map<YulString, BuiltinFunctionForEVM> createBuiltins(langutil::EVMVersion _evmVe
 				_visitExpression(_call.arguments[2]);
 				YulString identifier = std::get<Literal>(_call.arguments[1]).value;
 				_visitExpression(_call.arguments[0]);
-				_assembly.setSourceLocation(_call.location);
+				_assembly.setSourceLocation(_call.debugData->location);
 				_assembly.appendImmutableAssignment(identifier.str());
 			}
 		));

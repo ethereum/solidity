@@ -18,7 +18,6 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>

@@ -28,11 +28,11 @@
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/interface/Version.h>
 
+#include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AST.h>
 #include <libyul/backends/evm/AsmCodeGen.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMMetrics.h>
@@ -426,7 +426,7 @@ void CompilerContext::appendInlineAssembly(
 		if (stackDiff < 1 || stackDiff > 16)
 			BOOST_THROW_EXCEPTION(
 				StackTooDeepError() <<
-				errinfo_sourceLocation(_identifier.location) <<
+				errinfo_sourceLocation(_identifier.debugData->location) <<
 				util::errinfo_comment("Stack too deep (" + to_string(stackDiff) + "), try removing local variables.")
 			);
 		if (_context == yul::IdentifierContext::RValue)

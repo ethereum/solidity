@@ -23,7 +23,6 @@
 #include <test/Common.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AssemblyStack.h>
 #include <libyul/AsmAnalysisInfo.h>
 

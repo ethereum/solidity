@@ -24,8 +24,8 @@
 #include <libsolidity/parsing/Parser.h>
 
 #include <libsolidity/interface/Version.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AST.h>
+#include <libyul/AsmParser.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Scanner.h>
@@ -1299,7 +1299,7 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 	if (block == nullptr)
 		BOOST_THROW_EXCEPTION(FatalError());
 
-	location.end = block->location.end;
+	location.end = block->debugData->location.end;
 	return make_shared<InlineAssembly>(nextID(), location, _docString, dialect, block);
 }
 

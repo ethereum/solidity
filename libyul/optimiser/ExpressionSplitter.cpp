@@ -101,15 +101,15 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 
 	visit(_expr);
 
-	SourceLocation location = locationOf(_expr);
+	shared_ptr<DebugData const> debugData = debugDataOf(_expr);
 	YulString var = m_nameDispenser.newName({});
 	YulString type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
-		location,
-		{{TypedName{location, var, type}}},
+		debugData,
+		{{TypedName{debugData, var, type}}},
 		make_unique<Expression>(std::move(_expr))
 	});
-	_expr = Identifier{location, var};
+	_expr = Identifier{debugData, var};
 	m_typeInfo.setVariableType(var, type);
 }
 
