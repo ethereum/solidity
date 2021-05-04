@@ -91,6 +91,12 @@ Community volunteers help translate this documentation into several languages.
 They have varying degrees of completeness and up-to-dateness. The English
 version stands as a reference.
 
+.. note::
+
+   We recently set up a new GitHub organization and translation workflow to help streamline the
+   community efforts. Please refer to the `translation guide <https://github.com/solidity-docs/translation-guide>`_
+   for information on how to contribute to the community translations moving forward.
+
 * `French <https://solidity-fr.readthedocs.io>`_ (in progress)
 * `Italian <https://github.com/damianoazzolini/solidity>`_ (in progress)
 * `Japanese <https://solidity-jp.readthedocs.io>`_

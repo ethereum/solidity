@@ -388,7 +388,8 @@ local slang and references, making your language as clear to all readers as poss
 .. note::
 
     While the official Solidity documentation is written in English, there are community contributed :ref:`translations`
-    in other languages available.
+    in other languages available. Please refer to the `translation guide <https://github.com/solidity-docs/translation-guide>`_
+    for information on how to contribute to the community translations.
 
 Title Case for Headings
 -----------------------
