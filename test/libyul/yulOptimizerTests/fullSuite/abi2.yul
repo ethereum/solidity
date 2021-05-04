@@ -1078,49 +1078,50 @@
 // {
 //     {
 //         let _1 := mload(1)
-//         let _2 := mload(0)
-//         if slt(sub(_1, _2), 64) { revert(0, 0) }
-//         sstore(0, and(calldataload(_2), sub(shl(160, 1), 1)))
-//         let x0, x1, x2, x3, x4 := abi_decode_addresst_uint256t_bytes_calldatat_enum_Operation(mload(7), mload(8))
-//         sstore(x1, x0)
-//         sstore(x3, x2)
-//         sstore(1, x4)
-//         pop(abi_encode_bytes32_address_uint256_bytes32_enum_Operation_uint256_uint256_uint256_address_address_uint256(mload(30), mload(31), mload(32), mload(33), mload(34), mload(35), mload(36), mload(37), mload(38), mload(39), mload(40), mload(41)))
-//     }
-//     function abi_decode_addresst_uint256t_bytes_calldatat_enum_Operation(headStart, dataEnd) -> value0, value1, value2, value3, value4
-//     {
-//         if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }
-//         value0 := and(calldataload(headStart), sub(shl(160, 1), 1))
-//         value1 := calldataload(add(headStart, 32))
-//         let offset := calldataload(add(headStart, 64))
-//         let _1 := 0xffffffffffffffff
-//         if gt(offset, _1) { revert(0, 0) }
-//         let _2 := add(headStart, offset)
-//         if iszero(slt(add(_2, 0x1f), dataEnd)) { revert(0, 0) }
-//         let length := calldataload(_2)
-//         if gt(length, _1) { revert(0, 0) }
-//         if gt(add(add(_2, length), 32), dataEnd) { revert(0, 0) }
-//         value2 := add(_2, 32)
-//         value3 := length
-//         let _3 := calldataload(add(headStart, 96))
-//         if iszero(lt(_3, 3)) { revert(0, 0) }
-//         value4 := _3
-//     }
-//     function abi_encode_bytes32_address_uint256_bytes32_enum_Operation_uint256_uint256_uint256_address_address_uint256(headStart, value10, value9, value8, value7, value6, value5, value4, value3, value2, value1, value0) -> tail
-//     {
-//         tail := add(headStart, 352)
-//         mstore(headStart, value0)
-//         let _1 := sub(shl(160, 1), 1)
-//         mstore(add(headStart, 32), and(value1, _1))
-//         mstore(add(headStart, 64), value2)
-//         mstore(add(headStart, 96), value3)
-//         if iszero(lt(value4, 3)) { invalid() }
-//         mstore(add(headStart, 128), value4)
-//         mstore(add(headStart, 160), value5)
-//         mstore(add(headStart, 192), value6)
-//         mstore(add(headStart, 224), value7)
-//         mstore(add(headStart, 256), and(value8, _1))
-//         mstore(add(headStart, 288), and(value9, _1))
-//         mstore(add(headStart, 320), value10)
+//         let _2 := 0
+//         let _3 := mload(_2)
+//         if slt(sub(_1, _3), 64) { revert(_2, _2) }
+//         let _4 := sub(shl(160, 1), 1)
+//         sstore(_2, and(calldataload(_3), _4))
+//         let _5 := mload(8)
+//         let _6 := mload(7)
+//         if slt(sub(_5, _6), 128) { revert(_2, _2) }
+//         let offset := calldataload(add(_6, 64))
+//         let _7 := 0xffffffffffffffff
+//         if gt(offset, _7) { revert(_2, _2) }
+//         let _8 := add(_6, offset)
+//         if iszero(slt(add(_8, 0x1f), _5)) { revert(_2, _2) }
+//         let length := calldataload(_8)
+//         if gt(length, _7) { revert(_2, _2) }
+//         if gt(add(add(_8, length), 32), _5) { revert(_2, _2) }
+//         let _9 := calldataload(add(_6, 96))
+//         if iszero(lt(_9, 3)) { revert(_2, _2) }
+//         sstore(calldataload(add(_6, 32)), and(calldataload(_6), _4))
+//         sstore(length, add(_8, 32))
+//         sstore(1, _9)
+//         let _10 := mload(41)
+//         let _11 := mload(40)
+//         let _12 := mload(39)
+//         let _13 := mload(38)
+//         let _14 := mload(37)
+//         let _15 := mload(36)
+//         let _16 := mload(35)
+//         let _17 := mload(34)
+//         let _18 := mload(33)
+//         let _19 := mload(32)
+//         let _20 := mload(0x1f)
+//         let _21 := mload(30)
+//         mstore(_21, _10)
+//         mstore(add(_21, 32), and(_11, _4))
+//         mstore(add(_21, 64), _12)
+//         mstore(add(_21, 96), _13)
+//         if iszero(lt(_14, 3)) { invalid() }
+//         mstore(add(_21, 128), _14)
+//         mstore(add(_21, 160), _15)
+//         mstore(add(_21, 192), _16)
+//         mstore(add(_21, 224), _17)
+//         mstore(add(_21, 256), and(_18, _4))
+//         mstore(add(_21, 288), and(_19, _4))
+//         mstore(add(_21, 320), _20)
 //     }
 // }

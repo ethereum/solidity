@@ -23,8 +23,8 @@ contract D {
 // compileViaYul: also
 // ----
 // f() -> 1
-// gas irOptimized: 85304
+// gas irOptimized: 78517
 // gas legacy: 115012
 // g() -> 5
-// gas irOptimized: 85400
+// gas irOptimized: 78547
 // gas legacy: 115472

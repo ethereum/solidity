@@ -19,95 +19,80 @@ object "C_59" {
     object "C_59_deployed" {
         code {
             {
-                mstore(64, 128)
+                let _1 := 64
+                mstore(_1, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _1 := 0
-                    if eq(0xf8eddcc6, shr(224, calldataload(_1)))
+                    let _2 := 0
+                    if eq(0xf8eddcc6, shr(224, calldataload(_2)))
                     {
-                        if callvalue() { revert(_1, _1) }
-                        let _2 := 32
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_1, _1) }
+                        if callvalue() { revert(_2, _2) }
+                        let _3 := 32
+                        if slt(add(calldatasize(), not(3)), _3) { revert(_2, _2) }
                         let offset := calldataload(4)
-                        let _3 := 0xffffffffffffffff
-                        if gt(offset, _3) { revert(_1, _1) }
-                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_1, _1) }
-                        let _4 := calldataload(add(4, offset))
-                        if gt(_4, _3) { panic_error_0x41() }
-                        let _5 := shl(5, _4)
-                        let dst := allocate_memory(add(_5, _2))
+                        let _4 := 0xffffffffffffffff
+                        if gt(offset, _4) { revert(_2, _2) }
+                        if iszero(slt(add(offset, 35), calldatasize())) { revert(_2, _2) }
+                        let _5 := calldataload(add(4, offset))
+                        if gt(_5, _4) { panic_error_0x41() }
+                        let _6 := shl(5, _5)
+                        let memPtr := mload(_1)
+                        let _7 := not(31)
+                        let newFreePtr := add(memPtr, and(add(_6, 63), _7))
+                        if or(gt(newFreePtr, _4), lt(newFreePtr, memPtr)) { panic_error_0x41() }
+                        mstore(_1, newFreePtr)
+                        let dst := memPtr
+                        mstore(memPtr, _5)
+                        dst := add(memPtr, _3)
                         let dst_1 := dst
-                        mstore(dst, _4)
-                        dst := add(dst, _2)
                         let src := add(offset, 36)
-                        if gt(add(add(offset, _5), 36), calldatasize()) { revert(_1, _1) }
-                        let i := _1
-                        for { } lt(i, _4) { i := add(i, 1) }
+                        if gt(add(add(offset, _6), 36), calldatasize()) { revert(_2, _2) }
+                        let i := _2
+                        for { } lt(i, _5) { i := add(i, 1) }
                         {
-                            if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
-                            let value := allocate_memory_1228()
-                            mstore(value, calldataload(src))
-                            mstore(dst, value)
-                            dst := add(dst, _2)
-                            src := add(src, _2)
+                            if slt(sub(calldatasize(), src), _3) { revert(_2, _2) }
+                            let memPtr_1 := mload(_1)
+                            let newFreePtr_1 := add(memPtr_1, _3)
+                            if or(gt(newFreePtr_1, _4), lt(newFreePtr_1, memPtr_1)) { panic_error_0x41() }
+                            mstore(_1, newFreePtr_1)
+                            mstore(memPtr_1, calldataload(src))
+                            mstore(dst, memPtr_1)
+                            dst := add(dst, _3)
+                            src := add(src, _3)
                         }
-                        let ret, ret_1 := fun_sumArray(dst_1)
-                        let memPos := mload(64)
-                        return(memPos, sub(abi_encode_uint256_string(memPos, ret, ret_1), memPos))
+                        if iszero(mload(memPtr)) { panic_error_0x32() }
+                        sstore(_2, mload(mload(dst_1)))
+                        if iszero(lt(1, mload(memPtr))) { panic_error_0x32() }
+                        let _8 := mload(mload(add(memPtr, _1)))
+                        sstore(0x02, _8)
+                        let memPtr_2 := mload(_1)
+                        let newFreePtr_2 := add(memPtr_2, 160)
+                        if or(gt(newFreePtr_2, _4), lt(newFreePtr_2, memPtr_2)) { panic_error_0x41() }
+                        mstore(_1, newFreePtr_2)
+                        mstore(memPtr_2, 100)
+                        mstore(add(memPtr_2, _3), "longstringlongstringlongstringlo")
+                        mstore(add(memPtr_2, _1), "ngstringlongstringlongstringlong")
+                        let _9 := 96
+                        mstore(add(memPtr_2, _9), "stringlongstringlongstringlongst")
+                        mstore(add(memPtr_2, 128), "ring")
+                        let memPos := mload(_1)
+                        mstore(memPos, _8)
+                        mstore(add(memPos, _3), _1)
+                        let length := mload(memPtr_2)
+                        mstore(add(memPos, _1), length)
+                        let i_1 := _2
+                        for { } lt(i_1, length) { i_1 := add(i_1, _3) }
+                        {
+                            mstore(add(add(memPos, i_1), _9), mload(add(add(memPtr_2, i_1), _3)))
+                        }
+                        if gt(i_1, length)
+                        {
+                            mstore(add(add(memPos, length), _9), _2)
+                        }
+                        return(memPos, add(sub(add(memPos, and(add(length, 31), _7)), memPos), _9))
                     }
                 }
                 revert(0, 0)
-            }
-            function abi_encode_uint256_string(headStart, value0, value1) -> tail
-            {
-                mstore(headStart, value0)
-                let _1 := 32
-                mstore(add(headStart, _1), 64)
-                let length := mload(value1)
-                mstore(add(headStart, 64), length)
-                let i := 0
-                for { } lt(i, length) { i := add(i, _1) }
-                {
-                    mstore(add(add(headStart, i), 96), mload(add(add(value1, i), _1)))
-                }
-                if gt(i, length)
-                {
-                    mstore(add(add(headStart, length), 96), 0)
-                }
-                tail := add(add(headStart, and(add(length, 31), not(31))), 96)
-            }
-            function allocate_memory_1228() -> memPtr
-            {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, 32)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-            }
-            function allocate_memory(size) -> memPtr
-            {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, and(add(size, 31), not(31)))
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-            }
-            function fun_sumArray(var_s_mpos) -> var, var_mpos
-            {
-                if iszero(mload(var_s_mpos)) { panic_error_0x32() }
-                sstore(0x00, mload(mload(add(var_s_mpos, 32))))
-                if iszero(lt(1, mload(var_s_mpos))) { panic_error_0x32() }
-                let _1 := mload(mload(add(var_s_mpos, 64)))
-                sstore(0x02, _1)
-                var := _1
-                let memPtr := mload(64)
-                let newFreePtr := add(memPtr, 160)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { panic_error_0x41() }
-                mstore(64, newFreePtr)
-                mstore(memPtr, 100)
-                mstore(add(memPtr, 32), "longstringlongstringlongstringlo")
-                mstore(add(memPtr, 64), "ngstringlongstringlongstringlong")
-                mstore(add(memPtr, 96), "stringlongstringlongstringlongst")
-                mstore(add(memPtr, 128), "ring")
-                var_mpos := memPtr
             }
             function panic_error_0x32()
             {

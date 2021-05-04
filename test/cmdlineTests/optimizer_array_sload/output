@@ -43,15 +43,11 @@ object "Arraysum_34" {
                             var_sum := add(var_sum, _3)
                         }
                         let memPos := mload(64)
-                        return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
+                        mstore(memPos, var_sum)
+                        return(memPos, 32)
                     }
                 }
                 revert(0, 0)
-            }
-            function abi_encode_uint256(headStart, value0) -> tail
-            {
-                tail := add(headStart, 32)
-                mstore(headStart, value0)
             }
             function panic_error_0x11()
             {

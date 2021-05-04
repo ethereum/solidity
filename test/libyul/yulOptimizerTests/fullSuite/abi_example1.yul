@@ -486,80 +486,65 @@
 //             srcPtr := add(srcPtr, 0x20)
 //             pos := add(pos, 0x60)
 //         }
-//         let a, b, c, d := abi_decode_uint256t_uint256t_array_uint256_dynt_array_array_uint256_memory_dyn(mload(0x20), mload(64))
-//         sstore(a, b)
-//         sstore(c, d)
-//         sstore(_1, pos)
-//     }
-//     function abi_decode_array_array_uint256_memory_dyn(offset, end) -> array
-//     {
-//         let _1 := 0x1f
-//         if iszero(slt(add(offset, _1), end)) { revert(0, 0) }
-//         let length := calldataload(offset)
-//         array := allocateMemory(array_allocation_size_array_address_dyn_memory(length))
-//         let dst := array
-//         mstore(array, length)
-//         let _2 := 0x20
-//         dst := add(array, _2)
-//         let src := add(offset, _2)
-//         if gt(add(add(offset, shl(6, length)), _2), end) { revert(0, 0) }
-//         let i := 0
-//         for { } lt(i, length) { i := add(i, 1) }
-//         {
-//             if iszero(slt(add(src, _1), end)) { revert(0, 0) }
-//             let dst_1 := allocateMemory_967()
-//             let dst_2 := dst_1
-//             let src_1 := src
-//             let _3 := add(src, 64)
-//             if gt(_3, end) { revert(0, 0) }
-//             let i_1 := 0
-//             for { } lt(i_1, 0x2) { i_1 := add(i_1, 1) }
-//             {
-//                 mstore(dst_1, calldataload(src_1))
-//                 dst_1 := add(dst_1, _2)
-//                 src_1 := add(src_1, _2)
-//             }
-//             mstore(dst, dst_2)
-//             dst := add(dst, _2)
-//             src := _3
-//         }
-//     }
-//     function abi_decode_uint256t_uint256t_array_uint256_dynt_array_array_uint256_memory_dyn(headStart, dataEnd) -> value0, value1, value2, value3
-//     {
-//         if slt(sub(dataEnd, headStart), 128) { revert(0, 0) }
-//         value0 := calldataload(headStart)
-//         let _1 := 32
-//         value1 := calldataload(add(headStart, _1))
-//         let offset := calldataload(add(headStart, 64))
-//         let _2 := 0xffffffffffffffff
-//         if gt(offset, _2) { revert(0, 0) }
-//         let _3 := add(headStart, offset)
-//         if iszero(slt(add(_3, 0x1f), dataEnd)) { revert(0, 0) }
-//         let length := calldataload(_3)
-//         let dst := allocateMemory(array_allocation_size_array_address_dyn_memory(length))
+//         let _4 := mload(64)
+//         let _5 := mload(0x20)
+//         if slt(sub(_4, _5), 128) { revert(_1, _1) }
+//         let offset := calldataload(add(_5, 64))
+//         let _6 := 0xffffffffffffffff
+//         if gt(offset, _6) { revert(_1, _1) }
+//         let _7 := add(_5, offset)
+//         if iszero(slt(add(_7, 0x1f), _4)) { revert(_1, _1) }
+//         let length_1 := calldataload(_7)
+//         let dst := allocateMemory(array_allocation_size_array_address_dyn_memory(length_1))
 //         let dst_1 := dst
-//         mstore(dst, length)
-//         dst := add(dst, _1)
-//         let src := add(_3, _1)
-//         if gt(add(add(_3, shl(5, length)), _1), dataEnd) { revert(0, 0) }
-//         let i := 0
-//         for { } lt(i, length) { i := add(i, 1) }
+//         mstore(dst, length_1)
+//         dst := add(dst, 0x20)
+//         let src := add(_7, 0x20)
+//         if gt(add(add(_7, shl(5, length_1)), 0x20), _4) { revert(_1, _1) }
+//         let i_2 := _1
+//         for { } lt(i_2, length_1) { i_2 := add(i_2, 1) }
 //         {
 //             mstore(dst, calldataload(src))
-//             dst := add(dst, _1)
-//             src := add(src, _1)
+//             dst := add(dst, 0x20)
+//             src := add(src, 0x20)
 //         }
-//         value2 := dst_1
-//         let offset_1 := calldataload(add(headStart, 96))
-//         if gt(offset_1, _2) { revert(0, 0) }
-//         value3 := abi_decode_array_array_uint256_memory_dyn(add(headStart, offset_1), dataEnd)
-//     }
-//     function allocateMemory_967() -> memPtr
-//     {
-//         memPtr := mload(64)
-//         let newFreePtr := add(memPtr, 64)
-//         if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { revert(0, 0) }
-//         mstore(64, newFreePtr)
+//         let offset_1 := calldataload(add(_5, 0x60))
+//         if gt(offset_1, _6) { revert(_1, _1) }
+//         let _8 := add(_5, offset_1)
+//         if iszero(slt(add(_8, 0x1f), _4)) { revert(_1, _1) }
+//         let length_2 := calldataload(_8)
+//         let dst_2 := allocateMemory(array_allocation_size_array_address_dyn_memory(length_2))
+//         let dst_3 := dst_2
+//         mstore(dst_2, length_2)
+//         dst_2 := add(dst_2, 0x20)
+//         let src_1 := add(_8, 0x20)
+//         if gt(add(add(_8, shl(6, length_2)), 0x20), _4) { revert(_1, _1) }
+//         let i_3 := _1
+//         for { } lt(i_3, length_2) { i_3 := add(i_3, 1) }
+//         {
+//             if iszero(slt(add(src_1, 0x1f), _4)) { revert(_1, _1) }
+//             let memPtr := mload(64)
+//             let newFreePtr := add(memPtr, 64)
+//             if or(gt(newFreePtr, _6), lt(newFreePtr, memPtr)) { revert(_1, _1) }
+//             mstore(64, newFreePtr)
+//             let dst_4 := memPtr
+//             let src_2 := src_1
+//             let _9 := add(src_1, 64)
+//             if gt(_9, _4) { revert(_1, _1) }
+//             let i_4 := _1
+//             for { } lt(i_4, 0x2) { i_4 := add(i_4, 1) }
+//             {
+//                 mstore(dst_4, calldataload(src_2))
+//                 dst_4 := add(dst_4, 0x20)
+//                 src_2 := add(src_2, 0x20)
+//             }
+//             mstore(dst_2, memPtr)
+//             dst_2 := add(dst_2, 0x20)
+//             src_1 := _9
+//         }
+//         sstore(calldataload(_5), calldataload(add(_5, 0x20)))
+//         sstore(dst_1, dst_3)
+//         sstore(_1, pos)
 //     }
 //     function allocateMemory(size) -> memPtr
 //     {

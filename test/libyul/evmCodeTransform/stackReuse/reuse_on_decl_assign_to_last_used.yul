@@ -6,11 +6,9 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x5
-// DUP1
-// SWAP1
-// POP
-// DUP1
-// DUP2
-// SSTORE
-// POP
+//     /* "":15:16   */
+//   0x05
+//   dup1
+//     /* "":74:86   */
+//   sstore
+//   stop
