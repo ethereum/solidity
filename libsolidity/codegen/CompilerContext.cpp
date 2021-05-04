@@ -560,7 +560,11 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 
 string CompilerContext::revertReasonIfDebug(string const& _message)
 {
-	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
+	return YulUtilFunctions::revertReasonIfDebugBody(
+		m_revertStrings,
+		"mload(" + to_string(CompilerUtils::freeMemoryPointer) + ")",
+		_message
+	);
 }
 
 void CompilerContext::updateSourceLocation()
