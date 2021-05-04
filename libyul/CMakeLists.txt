@@ -147,6 +147,8 @@ add_library(yul
 	optimiser/LoopInvariantCodeMotion.h
 	optimiser/MainFunction.cpp
 	optimiser/MainFunction.h
+	optimiser/MemoryStoreRemover.cpp
+	optimiser/MemoryStoreRemover.h
 	optimiser/Metrics.cpp
 	optimiser/Metrics.h
 	optimiser/NameCollector.cpp
@@ -166,6 +168,8 @@ add_library(yul
 	optimiser/RedundantAssignEliminator.h
 	optimiser/Rematerialiser.cpp
 	optimiser/Rematerialiser.h
+	optimiser/Solver.cpp
+	optimiser/Solver.h
 	optimiser/SSAReverser.cpp
 	optimiser/SSAReverser.h
 	optimiser/SSATransform.cpp
