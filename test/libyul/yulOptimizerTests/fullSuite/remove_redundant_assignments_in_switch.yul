@@ -15,6 +15,5 @@
 //         case 0 { }
 //         case 1 { }
 //         default { invalid() }
-//         mstore(1, 1)
 //     }
 // }
