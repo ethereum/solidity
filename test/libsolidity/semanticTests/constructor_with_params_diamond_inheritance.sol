@@ -23,7 +23,7 @@ contract D is B, C {
 // compileViaYul: also
 // ----
 // constructor(): 2, 0 ->
-// gas irOptimized: 160166
+// gas irOptimized: 160093
 // gas legacy: 170665
 // gas legacyOptimized: 145396
 // i() -> 2

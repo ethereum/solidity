@@ -121,7 +121,9 @@ vector<SemanticInformation::Operation> SemanticInformation::readWriteOperations(
 			Location::Memory,
 			Effect::Write,
 			paramCount - 2,
-			paramCount - 1,
+			// Length is in paramCount - 1, but it is only a max length,
+			// there is no guarantee that the full area is written to.
+			{},
 			{}
 		});
 		return operations;

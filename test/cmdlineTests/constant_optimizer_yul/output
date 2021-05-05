@@ -27,7 +27,6 @@ object "C_12" {
         code {
             {
                 /// @src 0:61:418  "contract C {..."
-                mstore(64, memoryguard(0x80))
                 if callvalue() { revert(0, 0) }
                 /// @src 0:279:410  "assembly {..."
                 sstore(0, 0x1000000000000000000000000000000000000000000000)
