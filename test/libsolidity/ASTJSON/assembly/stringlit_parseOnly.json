@@ -35,6 +35,7 @@
                       "src": "58:14:1",
                       "value":
                       {
+                        "hexValue": "616263",
                         "kind": "string",
                         "nodeType": "YulLiteral",
                         "src": "67:5:1",
