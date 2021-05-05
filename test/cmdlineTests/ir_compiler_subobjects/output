@@ -24,7 +24,6 @@ object "C_3" {
         code {
             {
                 /// @src 0:82:95  "contract C {}"
-                mstore(64, memoryguard(0x80))
                 revert(0, 0)
             }
         }
@@ -110,7 +109,6 @@ object "D_16" {
                 code {
                     {
                         /// @src 0:82:95  "contract C {}"
-                        mstore(64, memoryguard(0x80))
                         revert(0, 0)
                     }
                 }
