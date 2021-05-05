@@ -359,9 +359,15 @@ string BlockStmtGenerator::visit()
 	}
 	else
 		block << indentation() + "{\n";
+
+	// Create blockscope inside current function state
+	state->currentFunctionState()->scopes.push_back(
+		make_shared<BlockScope>()
+	);
 	state->indent();
 	block << visitChildren();
 	state->unindent();
+	state->currentFunctionState()->scopes.pop_back();
 	block << indentation() << "}\n";
 	return block.str();
 }
@@ -434,6 +440,10 @@ pair<SolidityTypePtr, string> ExpressionGenerator::randomLValueExpression()
 		liveVariables += state->currentFunctionState()->outputs |
 			ranges::views::transform([](auto& _item) { return _item; }) |
 			ranges::to<vector<pair<SolidityTypePtr, string>>>();
+		for (auto const& scope: state->currentFunctionState()->scopes)
+			liveVariables += scope->variables |
+				ranges::views::transform([](auto& _item) { return _item; }) |
+				ranges::to<vector<pair<SolidityTypePtr, string>>>();
 		return liveVariables[state->uRandDist->distributionOneToN(liveVariables.size()) - 1];
 	}
 	default:
@@ -638,18 +648,18 @@ string FunctionCallGenerator::lhs(vector<pair<SolidityTypePtr, string>> _functio
 	if (useExistingVars)
 	{
 		auto vars = assignToVars |
-		            ranges::views::transform([](auto const& _item) { return _item.second.value().second; }) |
-		            ranges::to<vector<string>>();
+			ranges::views::transform([](auto const& _item) { return _item.second.value().second; }) |
+			ranges::to<vector<string>>();
 		callStmtLhs << "("
-		            << boost::algorithm::join(vars, ",")
-		            << ") = ";
+			<< boost::algorithm::join(vars, ",")
+			<< ") = ";
 	}
 	else
 	{
 		auto newVars = _functionReturnTypeNames |
 			ranges::views::transform([&](auto const& _item) -> string {
 				state->currentFunctionState()->addLocal(_item.first);
-				string varName = state->currentFunctionState()->locals.back().second;
+				string varName = state->currentFunctionState()->scopes.back()->variables.back().second;
 				return std::visit(
 						GenericVisitor{[](auto const& _it) { return _it->toString(); }},
 						_item.first
