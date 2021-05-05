@@ -715,10 +715,6 @@ string FunctionCallGenerator::callStmt(shared_ptr<FunctionState> _callee)
 	string rhsExpr;
 	bool callValid = true;
 
-	// Create lhs expression only if function outputs non-zero return values.
-	if (!_callee->outputs.empty())
-		lhsExpr = lhs(_callee->outputs);
-
 	// Create arguments only if function contains non-zero input parameters.
 	if (!_callee->inputs.empty())
 	{
@@ -734,9 +730,15 @@ string FunctionCallGenerator::callStmt(shared_ptr<FunctionState> _callee)
 		rhsExpr = (_callee->type->functionScope() ? "" : "this.") + _callee->name + "();";
 
 	if (callValid)
+	{
+		// Create lhs expression only if function outputs non-zero return values.
+		if (!_callee->outputs.empty())
+			lhsExpr = lhs(_callee->outputs);
 		callStmtStream << indentation()
-		               << lhsExpr
-		               << rhsExpr;
+			<< lhsExpr
+			<< rhsExpr;
+	}
+
 	callStmtStream << "\n";
 	return callStmtStream.str();
 }
