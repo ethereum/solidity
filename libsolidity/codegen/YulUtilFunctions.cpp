@@ -541,6 +541,18 @@ string YulUtilFunctions::roundUpFunction()
 	});
 }
 
+string YulUtilFunctions::divide32CeilFunction()
+{
+	return m_functionCollector.createFunction(
+		"divide_by_32_ceil",
+		[&](vector<string>& _args, vector<string>& _ret) {
+			_args = {"value"};
+			_ret = {"result"};
+			return "result := div(add(value, 31), 32)";
+		}
+	);
+}
+
 string YulUtilFunctions::overflowCheckedIntAddFunction(IntegerType const& _type)
 {
 	string functionName = "checked_add_" + _type.identifier();
@@ -1257,14 +1269,14 @@ string YulUtilFunctions::cleanUpDynamicByteArrayEndSlotsFunction(ArrayType const
 		return Whiskers(R"(
 			if gt(len, 31) {
 				let dataArea := <dataLocation>(array)
-				let deleteStart := add(dataArea, div(<roundUp>(startIndex), 32))
+				let deleteStart := add(dataArea, <div32Ceil>(startIndex))
 				// If we are clearing array to be short byte array, we want to clear only data starting from array data area.
 				if lt(startIndex, 32) { deleteStart := dataArea }
-				<clearStorageRange>(deleteStart, add(dataArea, div(add(len, 31), 32)))
+				<clearStorageRange>(deleteStart, add(dataArea, <div32Ceil>(len)))
 			}
 		)")
 		("dataLocation", arrayDataAreaFunction(_type))
-		("roundUp", roundUpFunction())
+		("div32Ceil", divide32CeilFunction())
 		("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
 		.render();
 	});
@@ -1279,13 +1291,13 @@ string YulUtilFunctions::decreaseByteArraySizeFunction(ArrayType const& _type)
 				switch lt(newLen, 32)
 				case  0 {
 					let arrayDataStart := <dataPosition>(array)
-					let deleteStart := add(arrayDataStart, div(add(newLen, 31), 32))
+					let deleteStart := add(arrayDataStart, <div32Ceil>(newLen))
 
 					// we have to partially clear last slot that is still used
 					let offset := and(newLen, 0x1f)
 					if offset { <partialClearStorageSlot>(sub(deleteStart, 1), offset) }
 
-					<clearStorageRange>(deleteStart, add(arrayDataStart, div(add(oldLen, 31), 32)))
+					<clearStorageRange>(deleteStart, add(arrayDataStart, <div32Ceil>(oldLen)))
 
 					sstore(array, or(mul(2, newLen), 1))
 				}
@@ -1294,7 +1306,7 @@ string YulUtilFunctions::decreaseByteArraySizeFunction(ArrayType const& _type)
 					case 1 {
 						let arrayDataStart := <dataPosition>(array)
 						// clear whole old array, as we are transforming to short bytes array
-						<clearStorageRange>(add(arrayDataStart, 1), add(arrayDataStart, div(add(oldLen, 31), 32)))
+						<clearStorageRange>(add(arrayDataStart, 1), add(arrayDataStart, <div32Ceil>(oldLen)))
 						<transitLongToShort>(array, newLen)
 					}
 					default {
@@ -1307,6 +1319,7 @@ string YulUtilFunctions::decreaseByteArraySizeFunction(ArrayType const& _type)
 			("partialClearStorageSlot", partialClearStorageSlotFunction())
 			("clearStorageRange", clearStorageRangeFunction(*_type.baseType()))
 			("transitLongToShort", byteArrayTransitLongToShortFunction(_type))
+			("div32Ceil", divide32CeilFunction())
 			("encodeUsedSetLen", shortByteArrayEncodeUsedAreaSetLengthFunction())
 			.render();
 	});
