@@ -112,15 +112,6 @@ struct UniformRandomDistribution
 	std::unique_ptr<RandomEngine> randomEngine;
 };
 
-struct ContractState
-{
-	explicit ContractState(std::shared_ptr<UniformRandomDistribution> _urd):
-		uRandDist(std::move(_urd))
-	{}
-
-	std::shared_ptr<UniformRandomDistribution> uRandDist;
-};
-
 class SolType
 {
 public:
@@ -302,7 +293,10 @@ public:
 class FunctionType: public SolType
 {
 public:
-	FunctionType() = default;
+	FunctionType(bool _freeFunction)
+	{
+		freeFunction = _freeFunction;
+	}
 	~FunctionType() override
 	{
 		inputs.clear();
@@ -319,6 +313,11 @@ public:
 		outputs.emplace_back(_output);
 	}
 
+	bool functionScope()
+	{
+		return freeFunction;
+	}
+
 	std::string toString() override;
 	bool operator==(FunctionType const& _rhs)
 	{
@@ -333,20 +332,30 @@ public:
 
 	std::vector<SolidityTypePtr> inputs;
 	std::vector<SolidityTypePtr> outputs;
+	bool freeFunction;
 };
 
 /// Forward declaration
 struct TestState;
+struct FunctionState;
 
 struct SourceState
 {
-	explicit SourceState(std::shared_ptr<UniformRandomDistribution> _urd):
+	explicit SourceState(
+		std::shared_ptr<UniformRandomDistribution> _urd,
+		std::string _sourceName
+	):
 		uRandDist(std::move(_urd)),
-		importedSources({})
+		importedSources({}),
+		sourceName(_sourceName)
 	{}
 	void addFreeFunction(std::string& _functionName)
 	{
-		exports[std::make_shared<FunctionType>()] = _functionName;
+		exports[std::make_shared<FunctionType>(true)] = _functionName;
+	}
+	void addFreeFunction(std::shared_ptr<FunctionState> _state)
+	{
+		freeFunctions.emplace(_state);
 	}
 	bool freeFunction(std::string const& _functionName)
 	{
@@ -387,11 +396,9 @@ struct SourceState
 	{
 		importedSources.emplace(_sourcePath);
 	}
-	void resolveImports(std::map<SolidityTypePtr, std::string> _imports)
-	{
-		for (auto const& item: _imports)
-			exports.emplace(item);
-	}
+	void resolveImports(std::map<SolidityTypePtr, std::string> _importedSymbols);
+	void mergeFunctionState(std::set<std::shared_ptr<FunctionState>> _importedFreeFunctions);
+
 	[[nodiscard]] bool sourcePathImported(std::string const& _sourcePath) const
 	{
 		return importedSources.count(_sourcePath);
@@ -399,12 +406,16 @@ struct SourceState
 	~SourceState()
 	{
 		importedSources.clear();
+		freeFunctions.clear();
+		exports.clear();
 	}
 	/// Prints source state to @param _os.
 	void print(std::ostream& _os) const;
 	std::shared_ptr<UniformRandomDistribution> uRandDist;
 	std::set<std::string> importedSources;
 	std::map<SolidityTypePtr, std::string> exports;
+	std::set<std::shared_ptr<FunctionState>> freeFunctions;
+	std::string sourceName;
 };
 
 struct FunctionState
@@ -414,27 +425,63 @@ struct FunctionState
 		INPUT,
 		OUTPUT
 	};
-	FunctionState() = default;
+	FunctionState(std::string _functionName, bool _freeFunction):
+		numInputs(0),
+		numOutpus(0),
+		numLocals(0),
+		name(_functionName)
+	{
+		type = std::make_shared<FunctionType>(_freeFunction);
+	}
 	~FunctionState()
 	{
 		inputs.clear();
 		outputs.clear();
+		locals.clear();
 	}
-	using TypeId = std::pair<SolidityTypePtr, std::string>;
 	void addInput(SolidityTypePtr _input)
 	{
-		inputs.emplace(_input, "i" + std::to_string(numInputs++));
+		inputs.emplace_back(_input, "i" + std::to_string(numInputs++));
+		type->addInput(_input);
 	}
 	void addOutput(SolidityTypePtr _output)
 	{
-		outputs.emplace(_output, "o" + std::to_string(numOutpus++));
+		outputs.emplace_back(_output, "o" + std::to_string(numOutpus++));
+		type->addOutput(_output);
+	}
+	void addLocal(SolidityTypePtr _local)
+	{
+		locals.emplace_back(_local, "l" + std::to_string(numLocals++));
 	}
 	std::string params(Params _p);
 
-	std::map<SolidityTypePtr, std::string> inputs;
-	std::map<SolidityTypePtr, std::string> outputs;
-	unsigned numInputs = 0;
-	unsigned numOutpus = 0;
+	std::vector<std::pair<SolidityTypePtr, std::string>> inputs;
+	std::vector<std::pair<SolidityTypePtr, std::string>> outputs;
+	std::vector<std::pair<SolidityTypePtr, std::string>> locals;
+	std::shared_ptr<FunctionType> type;
+	unsigned numInputs;
+	unsigned numOutpus;
+	unsigned numLocals;
+	std::string name;
+};
+
+struct ContractState
+{
+	explicit ContractState(
+		std::shared_ptr<UniformRandomDistribution> _urd,
+		std::string _contractName
+	):
+		uRandDist(std::move(_urd)),
+		name(_contractName)
+	{}
+	void addFunction(std::shared_ptr<FunctionState> _function)
+	{
+		functions.emplace(_function);
+	}
+
+	std::set<std::shared_ptr<FunctionState>> functions;
+	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::string name;
 };
 
 struct TestState
@@ -449,28 +496,29 @@ struct TestState
 		numSourceUnits(0),
 		numContracts(0),
 		numFunctions(0),
-		indentationLevel(0)
+		indentationLevel(0),
+		insideContract(false)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
 	void addSourceUnit(std::string const& _path)
 	{
-		sourceUnitState.emplace(_path, std::make_shared<SourceState>(uRandDist));
+		sourceUnitState.emplace(_path, std::make_shared<SourceState>(uRandDist, _path));
 		currentSourceUnitPath = _path;
 	}
 	/// Adds @param _name to @name contractState updates
 	/// @name currentContract.
 	void addContract(std::string const& _name)
 	{
-		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist));
+		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist, _name));
 		sourceUnitState[currentSourceUnitPath]->exports[
 			std::make_shared<ContractType>(_name)
 	    ] = _name;
 		currentContract = _name;
 	}
-	void addFunction(std::string const& _name)
+	void addFunction(std::string const& _name, bool _freeFunction)
 	{
-		functionState.emplace(_name, std::make_shared<FunctionState>());
+		functionState.emplace(_name, std::make_shared<FunctionState>(_name, _freeFunction));
 		currentFunction = _name;
 	}
 	std::shared_ptr<FunctionState> currentFunctionState()
@@ -482,6 +530,11 @@ struct TestState
 	{
 		std::string currentSource = currentPath();
 		return sourceUnitState[currentSource];
+	}
+	std::shared_ptr<ContractState> currentContractState()
+	{
+		std::string contract = currentContractName();
+		return contractState[contract];
 	}
 	/// Returns true if @name sourceUnitPaths is empty,
 	/// false otherwise.
@@ -520,6 +573,11 @@ struct TestState
 		solAssert(numFunctions > 0, "");
 		return currentFunction;
 	}
+	std::string currentContractName() const
+	{
+		solAssert(numContracts > 0, "");
+		return currentContract;
+	}
 	/// Adds @param _path to list of source paths in global test
 	/// state and increments @name m_numSourceUnits.
 	void updateSourcePath(std::string const& _path)
@@ -534,9 +592,9 @@ struct TestState
 		addContract(_name);
 		numContracts++;
 	}
-	void updateFunction(std::string const& _name)
+	void updateFunction(std::string const& _name, bool _freeFunction)
 	{
-		addFunction(_name);
+		addFunction(_name, _freeFunction);
 		numFunctions++;
 	}
 	void addSource()
@@ -553,6 +611,14 @@ struct TestState
 	void unindent()
 	{
 		--indentationLevel;
+	}
+	void enterContract()
+	{
+		insideContract = true;
+	}
+	void exitContract()
+	{
+		insideContract = false;
 	}
 	~TestState()
 	{
@@ -590,6 +656,8 @@ struct TestState
 	size_t numFunctions;
 	/// Indentation level
 	unsigned indentationLevel;
+	/// Contract scope
+	bool insideContract;
 	/// Source name prefix
 	std::string const sourceUnitNamePrefix = "su";
 	/// Contract name prefix
@@ -668,10 +736,15 @@ struct ExpressionGenerator
 		TYPEMAX
 	};
 
-	std::optional<std::pair<SolidityTypePtr, std::string>> expression(std::pair<SolidityTypePtr, std::string> _typeName);
+	std::optional<std::pair<SolidityTypePtr, std::string>> expression(
+		std::pair<SolidityTypePtr, std::string> _typeName
+	);
 	std::pair<SolidityTypePtr, std::string> literal(SolidityTypePtr _type);
 	std::optional<std::pair<SolidityTypePtr, std::string>> expression();
 	std::pair<SolidityTypePtr, std::string> randomLValueExpression();
+	std::optional<std::pair<SolidityTypePtr, std::string>> lValueExpression(
+		std::pair<SolidityTypePtr, std::string> _typeName
+	);
 
 	std::shared_ptr<TestState> state;
 };
@@ -922,6 +995,23 @@ private:
 	static constexpr unsigned s_maxStatements = 4;
 	static constexpr unsigned s_maxNestingDepth = 3;
 	static constexpr size_t s_uncheckedInvProb = 13;
+};
+
+class FunctionCallGenerator: public GeneratorBase
+{
+public:
+	FunctionCallGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override
+	{
+		return "Function call generator";
+	}
+private:
+	std::string lhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionReturnTypeNames);
+	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionInputTypeNames);
+	std::string callStmt(std::shared_ptr<FunctionState> _callee);
 };
 
 class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
