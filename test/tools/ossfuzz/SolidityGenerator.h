@@ -418,6 +418,11 @@ struct SourceState
 	std::string sourceName;
 };
 
+struct BlockScope
+{
+	std::vector<std::pair<SolidityTypePtr, std::string>> variables;
+};
+
 struct FunctionState
 {
 	enum class Params
@@ -437,7 +442,7 @@ struct FunctionState
 	{
 		inputs.clear();
 		outputs.clear();
-		locals.clear();
+		scopes.clear();
 	}
 	void addInput(SolidityTypePtr _input)
 	{
@@ -451,13 +456,13 @@ struct FunctionState
 	}
 	void addLocal(SolidityTypePtr _local)
 	{
-		locals.emplace_back(_local, "l" + std::to_string(numLocals++));
+		scopes.back()->variables.emplace_back(_local, "l" + std::to_string(numLocals++));
 	}
 	std::string params(Params _p);
 
 	std::vector<std::pair<SolidityTypePtr, std::string>> inputs;
 	std::vector<std::pair<SolidityTypePtr, std::string>> outputs;
-	std::vector<std::pair<SolidityTypePtr, std::string>> locals;
+	std::vector<std::shared_ptr<BlockScope>> scopes;
 	std::shared_ptr<FunctionType> type;
 	unsigned numInputs;
 	unsigned numOutpus;
