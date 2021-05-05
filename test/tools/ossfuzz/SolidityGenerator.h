@@ -420,6 +420,11 @@ struct SourceState
 
 struct BlockScope
 {
+	BlockScope() = default;
+	~BlockScope()
+	{
+		variables.clear();
+	}
 	std::vector<std::pair<SolidityTypePtr, std::string>> variables;
 };
 
@@ -479,6 +484,10 @@ struct ContractState
 		uRandDist(std::move(_urd)),
 		name(_contractName)
 	{}
+	~ContractState()
+	{
+		functions.clear();
+	}
 	void addFunction(std::shared_ptr<FunctionState> _function)
 	{
 		functions.emplace(_function);
@@ -629,6 +638,7 @@ struct TestState
 	{
 		sourceUnitState.clear();
 		contractState.clear();
+		functionState.clear();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
