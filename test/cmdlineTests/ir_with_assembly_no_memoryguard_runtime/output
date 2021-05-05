@@ -24,7 +24,6 @@ object "D_8" {
         code {
             {
                 /// @src 0:82:153  "contract D {..."
-                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0
