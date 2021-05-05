@@ -207,6 +207,11 @@ public:
 	/// signature: (array, newLen)
 	std::string resizeArrayFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that zeroes all storage array elements from `startIndex` to `len` (excluding).
+	/// Assumes that `len` is the array length. Does nothing if `startIndex >= len`. Does not modify the stored length.
+	/// signature: (array, len, startIndex)
+	std::string cleanUpStorageArrayEndFunction(ArrayType const& _type);
+
 	/// @returns the name of a function that reduces the size of a storage array by one element
 	/// signature: (array)
 	std::string storageArrayPopFunction(ArrayType const& _type);
@@ -542,6 +547,14 @@ private:
 	/// @returns the name of a function that resizes a storage byte array
 	/// signature: (array, newLen)
 	std::string resizeDynamicByteArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that cleans up elements of a storage byte array starting from startIndex.
+	/// It will not copy elements in case of transformation to short byte array, and will not change array length.
+	/// In case of startIndex is greater than len, doesn't do anything.
+	/// In case of short byte array (< 32 bytes) doesn't do anything.
+	/// If the first slot to be cleaned up is partially occupied, does not touch it. Cleans up only completely unused slots.
+	/// signature: (array, len, startIndex)
+	std::string cleanUpDynamicByteArrayEndSlotsFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that increases size of byte array
 	/// when we resize byte array frextractUsedSetLenom < 32 elements to >= 32 elements or we push to byte array of size 31 copying of data will  occur
