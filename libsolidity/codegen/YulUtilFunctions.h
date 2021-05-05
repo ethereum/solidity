@@ -126,8 +126,15 @@ public:
 
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
+	/// Ignores overflow.
 	/// signature: (value) -> result
 	std::string roundUpFunction();
+
+	/// @returns the name of a function that divides by 32 and rounds up during the division.
+	/// In other words, on input x it returns the smallest y such that y * 32 >= x.
+	/// Ignores overflow.
+	/// signature: (x) -> y
+	std::string divide32CeilFunction();
 
 	/// signature: (x, y) -> sum
 	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
