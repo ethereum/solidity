@@ -165,6 +165,17 @@ string PragmaGenerator::visit()
 	return boost::algorithm::join(pragmas, "\n") + "\n";
 }
 
+void SourceState::resolveImports(map<SolidityTypePtr, string> _importedSymbols)
+{
+	for (auto const& item: _importedSymbols)
+		exports.emplace(item);
+}
+
+void SourceState::mergeFunctionState(set<shared_ptr<FunctionState>> _importedFreeFunctions)
+{
+	freeFunctions += _importedFreeFunctions;
+}
+
 string ImportGenerator::visit()
 {
 	/*
@@ -189,6 +200,9 @@ string ImportGenerator::visit()
 		state->sourceUnitState[state->currentPath()]->resolveImports(
 			state->sourceUnitState[importPath]->exports
 		);
+		state->sourceUnitState[state->currentPath()]->mergeFunctionState(
+			state->sourceUnitState[importPath]->freeFunctions
+		);
 	}
 	return os.str();
 }
@@ -205,10 +219,12 @@ string ContractGenerator::visit()
 	ScopeGuard reset([&]() {
 		mutator->generator<FunctionGenerator>()->scope(true);
 		state->unindent();
+		state->exitContract();
 	});
 	auto set = [&]() {
 		state->indent();
 		mutator->generator<FunctionGenerator>()->scope(false);
+		state->enterContract();
 	};
 	ostringstream os;
 	string inheritance;
@@ -286,7 +302,8 @@ void StatementGenerator::setup()
 {
 	addGenerators({
 		{mutator->generator<BlockStmtGenerator>(), 1},
-		{mutator->generator<AssignmentStmtGenerator>(), 1}
+		{mutator->generator<AssignmentStmtGenerator>(), 1},
+		{mutator->generator<FunctionCallGenerator>(), 1}
 	});
 }
 
@@ -309,7 +326,7 @@ string StatementGenerator::visit()
 		if (uRandDist->likely(child.second + 1))
 		{
 			os << std::visit(GenericVisitor{
-				[&](auto const& _item) { return _item->generate(); }
+				[](auto const& _item) { return _item->generate(); }
 			}, child.first);
 			if (holds_alternative<shared_ptr<BlockStmtGenerator>>(child.first) &&
 				generateUncheckedBlock
@@ -358,7 +375,7 @@ string FunctionGenerator::visit()
 {
 	string visibility;
 	string name = state->newFunction();
-	state->updateFunction(name);
+	state->updateFunction(name, m_freeFunction);
 	if (!m_freeFunction)
 		visibility = "external";
 
@@ -385,6 +402,10 @@ string FunctionGenerator::visit()
 	// Make sure block stmt generator does not output an unchecked block
 	mutator->generator<BlockStmtGenerator>()->unchecked(false);
 	block << visitChildren();
+	if (m_freeFunction)
+		state->currentSourceState()->addFreeFunction(state->currentFunctionState());
+	else
+		state->currentContractState()->addFunction(state->currentFunctionState());
 	// Since visitChildren() may not visit block stmt, we default to an empty
 	// block.
 	if (block.str().empty())
@@ -420,22 +441,9 @@ pair<SolidityTypePtr, string> ExpressionGenerator::randomLValueExpression()
 	}
 }
 
-optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression()
-{
-	auto currentFunctionState = state->currentFunctionState();
-	// TODO: Remove this barrier once we support more expression types.
-	if (currentFunctionState->inputs.empty() && currentFunctionState->outputs.empty())
-		return nullopt;
-	return randomLValueExpression();
-}
-
-pair<SolidityTypePtr, string> ExpressionGenerator::literal(SolidityTypePtr _type)
-{
-	string literalValue = visit(LiteralGenerator{state}, _type);
-	return pair(_type, literalValue);
-}
-
-optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(pair<SolidityTypePtr, string> _typeName)
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::lValueExpression(
+	pair<SolidityTypePtr, string> _typeName
+)
 {
 	// Filter non-identical variables of the same type.
 	auto liveTypedVariables = state->currentFunctionState()->inputs |
@@ -453,6 +461,30 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(pair<Sol
 		}) |
 		ranges::to<vector<pair<SolidityTypePtr, string>>>();
 	if (liveTypedVariables.empty())
+		return nullopt;
+	else
+		return liveTypedVariables[state->uRandDist->distributionOneToN(liveTypedVariables.size()) - 1];
+}
+
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression()
+{
+	auto currentFunctionState = state->currentFunctionState();
+	// TODO: Remove this barrier once we support more expression types.
+	if (currentFunctionState->inputs.empty() && currentFunctionState->outputs.empty())
+		return nullopt;
+	return randomLValueExpression();
+}
+
+pair<SolidityTypePtr, string> ExpressionGenerator::literal(SolidityTypePtr _type)
+{
+	string literalValue = visit(LiteralGenerator{state}, _type);
+	return pair(_type, literalValue);
+}
+
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(pair<SolidityTypePtr, string> _typeName)
+{
+	auto varRef = lValueExpression(_typeName);
+	if (!varRef.has_value())
 	{
 		// TODO: Generate literals for contract and function types.
 		if (!(holds_alternative<shared_ptr<FunctionType>>(_typeName.first) || holds_alternative<shared_ptr<ContractType>>(_typeName.first)))
@@ -460,7 +492,8 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression(pair<Sol
 		else
 			return nullopt;
 	}
-	return liveTypedVariables[state->uRandDist->distributionOneToN(liveTypedVariables.size()) - 1];
+	else
+		return varRef.value();
 }
 
 string LiteralGenerator::operator()(shared_ptr<AddressType> const&)
@@ -574,7 +607,7 @@ SolidityTypePtr TypeProvider::type()
 	case Type::ADDRESS:
 		return make_shared<AddressType>();
 	case Type::FUNCTION:
-		return make_shared<FunctionType>();
+		return make_shared<FunctionType>(false);
 	case Type::CONTRACT:
 		if (state->sourceUnitState[state->currentPath()]->contractType())
 			return state->sourceUnitState[state->currentPath()]->randomContractType();
@@ -582,6 +615,150 @@ SolidityTypePtr TypeProvider::type()
 	default:
 		solAssert(false, "");
 	}
+}
+
+string FunctionCallGenerator::lhs(vector<pair<SolidityTypePtr, string>> _functionReturnTypeNames)
+{
+	ExpressionGenerator exprGen{state};
+	ostringstream callStmtLhs;
+
+	auto assignToVars = _functionReturnTypeNames |
+		ranges::views::transform([&exprGen](auto const& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>> {
+			auto e = exprGen.lValueExpression(_item);
+			if (e.has_value())
+				return {true, e.value()};
+			else
+				return {false, nullopt};
+		});
+	bool useExistingVars = ranges::all_of(
+		assignToVars,
+		[](auto const& _item) -> bool { return _item.first; }
+	);
+
+	if (useExistingVars)
+	{
+		auto vars = assignToVars |
+		            ranges::views::transform([](auto const& _item) { return _item.second.value().second; }) |
+		            ranges::to<vector<string>>();
+		callStmtLhs << "("
+		            << boost::algorithm::join(vars, ",")
+		            << ") = ";
+	}
+	else
+	{
+		auto newVars = _functionReturnTypeNames |
+			ranges::views::transform([&](auto const& _item) -> string {
+				state->currentFunctionState()->addLocal(_item.first);
+				string varName = state->currentFunctionState()->locals.back().second;
+				return std::visit(
+						GenericVisitor{[](auto const& _it) { return _it->toString(); }},
+						_item.first
+					) +
+					" " +
+					varName;
+			}) |
+			ranges::to<vector<string>>();
+		callStmtLhs << "("
+			<< boost::algorithm::join(newVars, ", ")
+			<< ") = ";
+	}
+	return callStmtLhs.str();
+}
+
+optional<string> FunctionCallGenerator::rhs(vector<pair<SolidityTypePtr, string>> _functionInputTypeNames)
+{
+	ExpressionGenerator exprGen{state};
+	ostringstream callStmtRhs;
+
+	auto inputArguments = _functionInputTypeNames |
+		ranges::views::transform([&exprGen](auto const& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>>
+		{
+			auto e = exprGen.expression(_item);
+			if (e.has_value())
+				return {true, e.value()};
+			else
+				return {false, nullopt};
+		});
+	bool inputArgsValid = ranges::all_of(
+		inputArguments,
+		[](auto const& _item) -> bool { return _item.first; }
+	);
+
+	if (inputArgsValid)
+	{
+		auto vars = inputArguments |
+			ranges::views::transform([](auto const& _item) { return _item.second.value().second; }) |
+			ranges::to<vector<string>>();
+		callStmtRhs << boost::algorithm::join(vars, ",");
+		return callStmtRhs.str();
+	}
+	else
+	{
+		return nullopt;
+	}
+}
+
+string FunctionCallGenerator::callStmt(shared_ptr<FunctionState> _callee)
+{
+	ostringstream callStmtStream;
+	string lhsExpr;
+	string rhsExpr;
+	bool callValid = true;
+
+	// Create lhs expression only if function outputs non-zero return values.
+	if (!_callee->outputs.empty())
+		lhsExpr = lhs(_callee->outputs);
+
+	// Create arguments only if function contains non-zero input parameters.
+	if (!_callee->inputs.empty())
+	{
+		auto callRhs = rhs(_callee->inputs);
+		// Arguments may not be found for function and contract types. In this
+		// case, do not make the call.
+		if (callRhs.has_value())
+			rhsExpr = (_callee->type->functionScope() ? "" : "this.") + _callee->name + "(" + callRhs.value() + ");";
+		else
+			callValid = false;
+	}
+	else
+		rhsExpr = (_callee->type->functionScope() ? "" : "this.") + _callee->name + "();";
+
+	if (callValid)
+		callStmtStream << indentation()
+		               << lhsExpr
+		               << rhsExpr;
+	callStmtStream << "\n";
+	return callStmtStream.str();
+}
+
+string FunctionCallGenerator::visit()
+{
+//	// TODO: Generalise call to varargs function
+//	for (auto const& f: state->currentFunctionState()->inputs)
+//		if (holds_alternative<shared_ptr<FunctionType>>(f.first))
+//			return indentation() + f.second + "();\n";
+
+	// Consolidate available functions
+	auto availableFunctions = state->currentSourceState()->freeFunctions;
+	if (state->insideContract)
+		availableFunctions += state->currentContractState()->functions;
+	if (availableFunctions.empty())
+		return "\n";
+
+	shared_ptr<FunctionState> callee;
+	if (availableFunctions.size() > 1)
+	{
+		for (auto const& i: availableFunctions)
+			if (uRandDist->probable(availableFunctions.size()))
+				callee = i;
+	}
+	else
+		callee = *availableFunctions.begin();
+
+	if (callee)
+		return callStmt(callee);
+	else
+		return "\n";
 }
 
 template <typename T>
