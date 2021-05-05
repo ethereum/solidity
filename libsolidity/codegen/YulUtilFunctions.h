@@ -81,6 +81,10 @@ public:
 	/// signature: (memPtr) ->
 	std::string storeLiteralInMemoryFunction(std::string const& _literal);
 
+	/// @returns the name of a function that stores a string literal at a specific location in storage
+	/// signature: (slot) ->
+	std::string copyLiteralToStorageFunction(std::string const& _literal);
+
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
 	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);

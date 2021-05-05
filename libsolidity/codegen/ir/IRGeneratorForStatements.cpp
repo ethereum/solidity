@@ -238,9 +238,6 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 
 		_varDecl.value()->accept(*this);
 
-		Type const* rightIntermediateType = _varDecl.value()->annotation().type->closestTemporaryType(_varDecl.type());
-		solAssert(rightIntermediateType, "");
-		IRVariable value = convert(*_varDecl.value(), *rightIntermediateType);
 		writeToLValue(
 			_varDecl.immutable() ?
 			IRLValue{*_varDecl.annotation().type, IRLValue::Immutable{&_varDecl}} :
@@ -248,7 +245,7 @@ void IRGeneratorForStatements::initializeStateVar(VariableDeclaration const& _va
 				util::toCompactHexWithPrefix(m_context.storageLocationOfStateVariable(_varDecl).first),
 				m_context.storageLocationOfStateVariable(_varDecl).second
 			}},
-			value
+			*_varDecl.value()
 		);
 	}
 	catch (langutil::UnimplementedFeatureError const& _error)
@@ -407,55 +404,49 @@ bool IRGeneratorForStatements::visit(Assignment const& _assignment)
 		assignmentOperator :
 		TokenTraits::AssignmentToBinaryOp(assignmentOperator);
 
-	Type const* rightIntermediateType =
-		TokenTraits::isShiftOp(binaryOperator) ?
-		type(_assignment.rightHandSide()).mobileType() :
-		type(_assignment.rightHandSide()).closestTemporaryType(
-			&type(_assignment.leftHandSide())
-		);
-	solAssert(rightIntermediateType, "");
-	IRVariable value = convert(_assignment.rightHandSide(), *rightIntermediateType);
+	if (TokenTraits::isShiftOp(binaryOperator))
+		solAssert(type(_assignment.rightHandSide()).mobileType(), "");
+	IRVariable value =
+		type(_assignment.leftHandSide()).isValueType() ?
+		convert(
+			_assignment.rightHandSide(),
+			TokenTraits::isShiftOp(binaryOperator) ? *type(_assignment.rightHandSide()).mobileType() : type(_assignment)
+		) :
+		_assignment.rightHandSide();
+
 	_assignment.leftHandSide().accept(*this);
+
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 	setLocation(_assignment);
 
 	if (assignmentOperator != Token::Assign)
 	{
 		solAssert(type(_assignment.leftHandSide()).isValueType(), "Compound operators only available for value types.");
-		solAssert(rightIntermediateType->isValueType(), "Compound operators only available for value types.");
-		IRVariable leftIntermediate = readFromLValue(*m_currentLValue);
 		solAssert(binaryOperator != Token::Exp, "");
-		if (TokenTraits::isShiftOp(binaryOperator))
-		{
-			solAssert(type(_assignment) == leftIntermediate.type(), "");
-			solAssert(type(_assignment) == type(_assignment.leftHandSide()), "");
-			define(_assignment) << shiftOperation(binaryOperator, leftIntermediate, value) << "\n";
+		solAssert(type(_assignment) == type(_assignment.leftHandSide()), "");
 
-			writeToLValue(*m_currentLValue, IRVariable(_assignment));
-			m_currentLValue.reset();
-			return false;
-		}
-		else
-		{
-			solAssert(type(_assignment.leftHandSide()) == *rightIntermediateType, "");
-			m_code << value.name() << " := " << binaryOperation(
-				binaryOperator,
-				*rightIntermediateType,
-				leftIntermediate.name(),
-				value.name()
-			);
-		}
+		IRVariable leftIntermediate = readFromLValue(*m_currentLValue);
+		solAssert(type(_assignment) == leftIntermediate.type(), "");
+
+		define(_assignment) << (
+			TokenTraits::isShiftOp(binaryOperator) ?
+			shiftOperation(binaryOperator, leftIntermediate, value) :
+			binaryOperation(binaryOperator, type(_assignment), leftIntermediate.name(), value.name())
+		) << "\n";
+
+		writeToLValue(*m_currentLValue, IRVariable(_assignment));
+	}
+	else
+	{
+		writeToLValue(*m_currentLValue, value);
+
+		if (dynamic_cast<ReferenceType const*>(&m_currentLValue->type))
+			define(_assignment, readFromLValue(*m_currentLValue));
+		else if (*_assignment.annotation().type != *TypeProvider::emptyTuple())
+			define(_assignment, value);
 	}
 
-	writeToLValue(*m_currentLValue, value);
-
-	if (dynamic_cast<ReferenceType const*>(&m_currentLValue->type))
-		define(_assignment, readFromLValue(*m_currentLValue));
-	else if (*_assignment.annotation().type != *TypeProvider::emptyTuple())
-		define(_assignment, value);
-
 	m_currentLValue.reset();
-
 	return false;
 }
 
@@ -2857,10 +2848,17 @@ void IRGeneratorForStatements::writeToLValue(IRLValue const& _lvalue, IRVariable
 							prepared.commaSeparatedList() <<
 							")\n";
 				}
+				else if (auto const* literalType = dynamic_cast<StringLiteralType const*>(&_value.type()))
+					m_code <<
+						m_utils.writeToMemoryFunction(*TypeProvider::uint256()) <<
+						"(" <<
+						_memory.address <<
+						", " <<
+						m_utils.copyLiteralToMemoryFunction(literalType->value()) + "()" <<
+						")\n";
 				else
 				{
 					solAssert(_lvalue.type.sizeOnStack() == 1, "");
-					solAssert(dynamic_cast<ReferenceType const*>(&_lvalue.type), "");
 					auto const* valueReferenceType = dynamic_cast<ReferenceType const*>(&_value.type());
 					solAssert(valueReferenceType && valueReferenceType->dataStoredIn(DataLocation::Memory), "");
 					m_code << "mstore(" + _memory.address + ", " + _value.part("mpos").name() + ")\n";

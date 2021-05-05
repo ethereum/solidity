@@ -324,13 +324,6 @@ public:
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
 	virtual bool dataStoredIn(DataLocation) const { return false; }
-	/// @returns the type of a temporary during assignment to a variable of the given type.
-	/// Specifically, returns the requested itself if it can be dynamically allocated (or is a value type)
-	/// and the mobile type otherwise.
-	virtual Type const* closestTemporaryType(Type const* _targetType) const
-	{
-		return _targetType->dataStoredIn(DataLocation::Storage) ? mobileType() : _targetType;
-	}
 
 	/// Returns the list of all members of this type. Default implementation: no members apart from bound.
 	/// @param _currentScope scope in which the members are accessed.
@@ -1103,8 +1096,6 @@ public:
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	Type const* mobileType() const override;
-	/// Converts components to their temporary types and performs some wildcard matching.
-	Type const* closestTemporaryType(Type const* _targetType) const override;
 
 	std::vector<Type const*> const& components() const { return m_components; }
 
