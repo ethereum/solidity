@@ -84,9 +84,9 @@ size_t EthAssemblyAdapter::newLabelId()
 	return assemblyTagToIdentifier(m_assembly.newTag());
 }
 
-size_t EthAssemblyAdapter::namedLabel(std::string const& _name)
+size_t EthAssemblyAdapter::namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID)
 {
-	return assemblyTagToIdentifier(m_assembly.namedTag(_name));
+	return assemblyTagToIdentifier(m_assembly.namedTag(_name, _params, _returns, _sourceID));
 }
 
 void EthAssemblyAdapter::appendLinkerSymbol(std::string const& _linkerSymbol)

@@ -344,6 +344,7 @@ Input Description
         //   storageLayout - Slots, offsets and types of the contract's state variables.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
+        //   evm.bytecode.functionDebugData - Debugging information at function level
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
         //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
@@ -476,6 +477,17 @@ Output Description
               "legacyAssembly": {},
               // Bytecode and related details.
               "bytecode": {
+                // Debugging data at the level of functions.
+                "functionDebugData": {
+                  // Now follows a set of functions including compiler-internal and
+                  // user-defined function. The set does not have to be complete.
+                  "@mint_13": { // Internal name of the function
+                    "entryPoint": 128, // Byte offset into the bytecode where the function starts (optional)
+                    "id": 13, // AST ID of the function definition or null for compiler-internal functions (optional)
+                    "parameterSlots": 2, // Number of EVM stack slots for the function parameters (optional)
+                    "returnSlots": 1 // Number of EVM stack slots for the return values (optional)
+                  }
+                },
                 // The bytecode as a hex string.
                 "object": "00fe",
                 // Opcodes list (string)

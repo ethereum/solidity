@@ -1,0 +1,11 @@
+{
+  "contracts":
+  {
+    "function_debug_info_via_yul/input.sol:C":
+    {
+      "function-debug": {},
+      "function-debug-runtime": {}
+    }
+  },
+  "version": "<VERSION REMOVED>"
+}

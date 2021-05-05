@@ -148,7 +148,7 @@ void CompilerContext::callYulFunction(
 	m_externallyUsedYulFunctions.insert(_name);
 	auto const retTag = pushNewTag();
 	CompilerUtils(*this).moveIntoStack(_inArgs);
-	appendJumpTo(namedTag(_name), evmasm::AssemblyItem::JumpType::IntoFunction);
+	appendJumpTo(namedTag(_name, _inArgs, _outArgs, {}), evmasm::AssemblyItem::JumpType::IntoFunction);
 	adjustStackOffset(static_cast<int>(_outArgs) - 1 - static_cast<int>(_inArgs));
 	*this << retTag.tag();
 }
@@ -596,7 +596,23 @@ evmasm::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
 	auto res = m_entryLabels.find(&_declaration);
 	if (res == m_entryLabels.end())
 	{
-		evmasm::AssemblyItem tag(_context.newTag());
+		size_t params = 0;
+		size_t returns = 0;
+		if (auto const* function = dynamic_cast<FunctionDefinition const*>(&_declaration))
+		{
+			FunctionType functionType(*function, FunctionType::Kind::Internal);
+			params = CompilerUtils::sizeOnStack(functionType.parameterTypes());
+			returns = CompilerUtils::sizeOnStack(functionType.returnParameterTypes());
+		}
+
+		// some name that cannot clash with yul function names.
+		string labelName = "@" + _declaration.name() + "_" + to_string(_declaration.id());
+		evmasm::AssemblyItem tag = _context.namedTag(
+			labelName,
+			params,
+			returns,
+			_declaration.id()
+		);
 		m_entryLabels.insert(make_pair(&_declaration, tag));
 		m_functionsToCompile.push(&_declaration);
 		return tag.tag();

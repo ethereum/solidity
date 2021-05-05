@@ -30,6 +30,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace solidity::langutil
 {
@@ -74,7 +75,7 @@ public:
 	/// Generate a new unique label.
 	virtual LabelID newLabelId() = 0;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.
-	virtual LabelID namedLabel(std::string const& _name) = 0;
+	virtual LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) = 0;
 	/// Append a reference to a to-be-linked symbol.
 	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;

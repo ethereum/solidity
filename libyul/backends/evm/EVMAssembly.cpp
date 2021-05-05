@@ -78,7 +78,7 @@ EVMAssembly::LabelID EVMAssembly::newLabelId()
 	return m_nextLabelId++;
 }
 
-AbstractAssembly::LabelID EVMAssembly::namedLabel(string const& _name)
+AbstractAssembly::LabelID EVMAssembly::namedLabel(string const& _name, size_t, size_t, std::optional<size_t>)
 {
 	yulAssert(!_name.empty(), "");
 	if (!m_namedLabels.count(_name))
