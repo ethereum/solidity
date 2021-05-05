@@ -1,3 +1,5 @@
+ * Yul Optimizer: Remove redundant calls to ``mstore`` and ``sstore``.
+
 ### 0.8.12 (unreleased)
 
 Language Features:
