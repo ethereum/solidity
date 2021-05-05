@@ -64,7 +64,13 @@ size_t SolidityCustomMutatorInterface::generate()
 		data,
 		"Solc custom mutator: Invalid mutant or memory pointer"
 	);
-	size_t mutantSize = min(testCase.size(), maxMutantSize - 1);
-	mempcpy(data, testCase.data(), mutantSize);
-	return mutantSize;
+	// Do not apply the mutation if mutant is greater in size than maximum
+	// permissible. libFuzzer's default max permissible is around 4 KB.
+	if (testCase.size() > (maxMutantSize - 1))
+		return size;
+	else
+	{
+		mempcpy(data, testCase.data(), testCase.size());
+		return testCase.size();
+	}
 }
