@@ -286,16 +286,128 @@ string FunctionState::params(Params _p)
 	return "(" + boost::algorithm::join(params, ",") + ")";
 }
 
+AssignmentStmtGenerator::AssignOp AssignmentStmtGenerator::assignOp(SolidityTypePtr _type)
+{
+	enum Type
+	{
+		SIGNEDINTEGER = 1,
+		UNSIGNEDINTEGER,
+		BOOL,
+		FIXEDBYTES,
+		BYTES,
+		FUNCTION,
+		CONTRACT,
+		ADDRESS
+	};
+	static map<Type, vector<AssignOp>> assignOpLookUp = {
+		{SIGNEDINTEGER, {
+			AssignOp::ASSIGN,
+			AssignOp::ASSIGNBITOR,
+			AssignOp::ASSIGNBITXOR,
+			AssignOp::ASSIGNBITAND,
+			AssignOp::ASSIGNADD,
+			AssignOp::ASSIGNSUB,
+			AssignOp::ASSIGNMUL,
+			AssignOp::ASSIGNDIV,
+			AssignOp::ASSIGNMOD
+		}},
+		{UNSIGNEDINTEGER, {
+			AssignOp::ASSIGN,
+			AssignOp::ASSIGNBITOR,
+			AssignOp::ASSIGNBITXOR,
+			AssignOp::ASSIGNBITAND,
+			AssignOp::ASSIGNSHL,
+			AssignOp::ASSIGNSAR,
+			AssignOp::ASSIGNSHR,
+			AssignOp::ASSIGNADD,
+			AssignOp::ASSIGNSUB,
+			AssignOp::ASSIGNMUL,
+			AssignOp::ASSIGNDIV,
+			AssignOp::ASSIGNMOD
+		}},
+		{FIXEDBYTES, {
+			AssignOp::ASSIGN,
+			AssignOp::ASSIGNBITOR,
+			AssignOp::ASSIGNBITXOR,
+			AssignOp::ASSIGNBITAND
+		}},
+		{BOOL, {AssignOp::ASSIGN}},
+		{BYTES, {AssignOp::ASSIGN}},
+		{FUNCTION, {AssignOp::ASSIGN}},
+		{CONTRACT, {AssignOp::ASSIGN}},
+		{ADDRESS, {AssignOp::ASSIGN}}
+	};
+	vector<AssignOp> possibleOps;
+	if (holds_alternative<shared_ptr<IntegerType>>(_type))
+	{
+		auto t = get<shared_ptr<IntegerType>>(_type);
+		if (t->signedType)
+			possibleOps = assignOpLookUp[SIGNEDINTEGER];
+		else
+			possibleOps = assignOpLookUp[UNSIGNEDINTEGER];
+	}
+	else if (holds_alternative<shared_ptr<FixedBytesType>>(_type))
+	{
+		possibleOps = assignOpLookUp[FIXEDBYTES];
+	}
+	else if (holds_alternative<shared_ptr<BoolType>>(_type) ||
+		holds_alternative<shared_ptr<BytesType>>(_type) ||
+		holds_alternative<shared_ptr<FunctionType>>(_type) ||
+		holds_alternative<shared_ptr<ContractType>>(_type) ||
+		holds_alternative<shared_ptr<AddressType>>(_type)
+	)
+	{
+		return AssignOp::ASSIGN;
+	}
+	else
+		solAssert(false, "");
+
+	return possibleOps[uRandDist->distributionOneToN(possibleOps.size()) - 1];
+}
+
+string AssignmentStmtGenerator::assignOp(AssignOp _op)
+{
+	switch (_op)
+	{
+	case AssignOp::ASSIGN:
+		return " = ";
+	case AssignOp::ASSIGNBITOR:
+		return " |= ";
+	case AssignOp::ASSIGNBITXOR:
+		return " ^= ";
+	case AssignOp::ASSIGNBITAND:
+		return " &= ";
+	case AssignOp::ASSIGNSHL:
+		return " <<= ";
+	case AssignOp::ASSIGNSAR:
+	case AssignOp::ASSIGNSHR:
+		return " >>= ";
+	case AssignOp::ASSIGNADD:
+		return " += ";
+	case AssignOp::ASSIGNSUB:
+		return " -= ";
+	case AssignOp::ASSIGNMUL:
+		return " *= ";
+	case AssignOp::ASSIGNDIV:
+		return " /= ";
+	case AssignOp::ASSIGNMOD:
+		return " %= ";
+	default:
+		solAssert(false, "");
+	}
+}
+
 string AssignmentStmtGenerator::visit()
 {
 	ExpressionGenerator exprGen{state};
-	auto lhs = exprGen.expression();
+	auto lhs = exprGen.randomLValueExpression();
 	if (!lhs.has_value())
 		return "\n";
 	auto rhs = exprGen.expression(lhs.value());
 	if (!rhs.has_value())
 		return "\n";
-	return indentation() + lhs.value().second + " = " + rhs.value().second + ";\n";
+	auto operation = assignOp(lhs.value().first);
+	return indentation() + lhs.value().second + assignOp(operation) + rhs.value().second + ";\n";
 }
 
 void StatementGenerator::setup()
@@ -425,7 +537,7 @@ void FunctionGenerator::endVisit()
 	mutator->generator<BlockStmtGenerator>()->resetNestingDepth();
 }
 
-pair<SolidityTypePtr, string> ExpressionGenerator::randomLValueExpression()
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::randomLValueExpression()
 {
 	LValueExpr exprType = static_cast<LValueExpr>(
 		state->uRandDist->distributionOneToN(static_cast<size_t>(LValueExpr::TYPEMAX) - 1)
@@ -444,7 +556,10 @@ pair<SolidityTypePtr, string> ExpressionGenerator::randomLValueExpression()
 			liveVariables += scope->variables |
 				ranges::views::transform([](auto& _item) { return _item; }) |
 				ranges::to<vector<pair<SolidityTypePtr, string>>>();
-		return liveVariables[state->uRandDist->distributionOneToN(liveVariables.size()) - 1];
+		if (liveVariables.empty())
+			return nullopt;
+		else
+			return liveVariables[state->uRandDist->distributionOneToN(liveVariables.size()) - 1];
 	}
 	default:
 		solAssert(false, "");
@@ -474,15 +589,6 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::lValueExpression(
 		return nullopt;
 	else
 		return liveTypedVariables[state->uRandDist->distributionOneToN(liveTypedVariables.size()) - 1];
-}
-
-optional<pair<SolidityTypePtr, string>> ExpressionGenerator::expression()
-{
-	auto currentFunctionState = state->currentFunctionState();
-	// TODO: Remove this barrier once we support more expression types.
-	if (currentFunctionState->inputs.empty() && currentFunctionState->outputs.empty())
-		return nullopt;
-	return randomLValueExpression();
 }
 
 pair<SolidityTypePtr, string> ExpressionGenerator::literal(SolidityTypePtr _type)
