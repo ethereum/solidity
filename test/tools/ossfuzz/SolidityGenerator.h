@@ -755,8 +755,7 @@ struct ExpressionGenerator
 		std::pair<SolidityTypePtr, std::string> _typeName
 	);
 	std::pair<SolidityTypePtr, std::string> literal(SolidityTypePtr _type);
-	std::optional<std::pair<SolidityTypePtr, std::string>> expression();
-	std::pair<SolidityTypePtr, std::string> randomLValueExpression();
+	std::optional<std::pair<SolidityTypePtr, std::string>> randomLValueExpression();
 	std::optional<std::pair<SolidityTypePtr, std::string>> lValueExpression(
 		std::pair<SolidityTypePtr, std::string> _typeName
 	);
@@ -952,11 +951,30 @@ private:
 class AssignmentStmtGenerator: public GeneratorBase
 {
 public:
+	enum class AssignOp: size_t
+	{
+		ASSIGN = 1,
+		ASSIGNBITOR,
+		ASSIGNBITXOR,
+		ASSIGNBITAND,
+		ASSIGNSHL,
+		ASSIGNSAR,
+		ASSIGNSHR,
+		ASSIGNADD,
+		ASSIGNSUB,
+		ASSIGNMUL,
+		ASSIGNDIV,
+		ASSIGNMOD,
+		ASSIGNMAX
+	};
 	explicit AssignmentStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	std::string visit() override;
 	std::string name() override { return "Assignment statement generator"; }
+private:
+	AssignOp assignOp(SolidityTypePtr _type);
+	std::string assignOp(AssignOp _op);
 };
 
 class BlockStmtGenerator: public GeneratorBase
@@ -1008,7 +1026,7 @@ private:
 	bool m_unchecked;
 	bool m_inUnchecked;
 	static constexpr unsigned s_maxStatements = 4;
-	static constexpr unsigned s_maxNestingDepth = 3;
+	static constexpr unsigned s_maxNestingDepth = 1;
 	static constexpr size_t s_uncheckedInvProb = 13;
 };
 
