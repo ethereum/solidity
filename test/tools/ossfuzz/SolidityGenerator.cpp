@@ -229,12 +229,15 @@ string ContractGenerator::visit()
 	ostringstream os;
 	string inheritance;
 	if (state->sourceUnitState[state->currentPath()]->contractType())
-		inheritance = state->sourceUnitState[state->currentPath()]->randomContract();
+		inheritance = state->currentSourceState()->randomContract();
 	string name = state->newContract();
 	state->updateContract(name);
 	os << "contract " << name;
 	if (!inheritance.empty())
+	{
 		os << " is " << inheritance;
+		state->currentContractState()->functions += state->contractState[inheritance]->functions;
+	}
 	os << " {" << endl;
 	set();
 	os << visitChildren();
@@ -723,7 +726,7 @@ SolidityTypePtr TypeProvider::type()
 	case Type::ADDRESS:
 		return make_shared<AddressType>();
 	case Type::FUNCTION:
-		return make_shared<FunctionType>(false);
+		return make_shared<FunctionType>(true);
 	case Type::CONTRACT:
 		if (state->sourceUnitState[state->currentPath()]->contractType())
 			return state->sourceUnitState[state->currentPath()]->randomContractType();
@@ -840,6 +843,7 @@ string FunctionCallGenerator::callStmt(shared_ptr<FunctionState> _callee)
 		// Create lhs expression only if function outputs non-zero return values.
 		if (!_callee->outputs.empty())
 			lhsExpr = lhs(_callee->outputs);
+
 		callStmtStream << indentation()
 			<< lhsExpr
 			<< rhsExpr;
