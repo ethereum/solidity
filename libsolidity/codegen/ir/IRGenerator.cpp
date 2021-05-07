@@ -46,7 +46,6 @@
 #include <variant>
 
 using namespace std;
-using namespace ranges;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::frontend;
@@ -80,7 +79,7 @@ set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCallables(
 )
 {
 	set<CallableDeclaration const*, ASTNode::CompareByID> reachableCallables;
-	for (CallGraph::Node const& reachableNode: _graph.edges | views::keys)
+	for (CallGraph::Node const& reachableNode: _graph.edges | ranges::views::keys)
 		if (holds_alternative<CallableDeclaration const*>(reachableNode))
 			reachableCallables.emplace(get<CallableDeclaration const*>(reachableNode));
 
