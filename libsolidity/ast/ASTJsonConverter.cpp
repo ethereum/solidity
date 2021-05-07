@@ -43,7 +43,6 @@
 #include <type_traits>
 #include <range/v3/view/map.hpp>
 
-using namespace ranges;
 using namespace std;
 using namespace solidity::langutil;
 
@@ -271,7 +270,7 @@ bool ASTJsonConverter::visit(ContractDefinition const& _node)
 		make_pair("contractKind", contractKind(_node.contractKind())),
 		make_pair("abstract", _node.abstract()),
 		make_pair("baseContracts", toJson(_node.baseContracts())),
-		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies | views::keys)),
+		make_pair("contractDependencies", getContainerIds(_node.annotation().contractDependencies | ranges::views::keys)),
 		make_pair("usedErrors", getContainerIds(_node.interfaceErrors(false))),
 		make_pair("nodes", toJson(_node.subNodes())),
 		make_pair("scope", idOrNull(_node.scope()))

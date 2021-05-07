@@ -22,7 +22,6 @@
 #include <range/v3/view.hpp>
 
 using namespace std;
-using namespace ranges;
 using namespace solidity;
 using namespace solidity::frontend;
 
@@ -42,10 +41,10 @@ std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const&
 {
 	set<TargetType> chosenTargets;
 	if (_targets == "default")
-		for (auto&& v: targetStrings | views::values)
+		for (auto&& v: targetStrings | ranges::views::values)
 			chosenTargets.insert(v);
 	else
-		for (auto&& t: _targets | views::split(',') | ranges::to<vector<string>>())
+		for (auto&& t: _targets | ranges::views::split(',') | ranges::to<vector<string>>())
 		{
 			if (!targetStrings.count(t))
 				return {};
@@ -69,9 +68,9 @@ std::optional<ModelCheckerContracts> ModelCheckerContracts::fromString(string co
 	if (_contracts == "default")
 		return ModelCheckerContracts::Default();
 
-	for (auto&& sourceContract: _contracts | views::split(',') | ranges::to<vector<string>>())
+	for (auto&& sourceContract: _contracts | ranges::views::split(',') | ranges::to<vector<string>>())
 	{
-		auto&& names = sourceContract | views::split(':') | ranges::to<vector<string>>();
+		auto&& names = sourceContract | ranges::views::split(':') | ranges::to<vector<string>>();
 		if (names.size() != 2 || names.at(0).empty() || names.at(1).empty())
 			return {};
 		chosen[names.at(0)].insert(names.at(1));
