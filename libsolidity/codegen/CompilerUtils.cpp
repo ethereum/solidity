@@ -776,15 +776,11 @@ void CompilerUtils::convertType(
 		solAssert(!contrType->isSuper(), "Cannot convert magic variable \"super\"");
 
 	bool enumOverflowCheckPending = (targetTypeCategory == Type::Category::Enum || stackTypeCategory == Type::Category::Enum);
-	bool chopSignBitsPending = _chopSignBits && targetTypeCategory == Type::Category::Integer;
-	if (chopSignBitsPending)
-	{
-		IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-		chopSignBitsPending = targetIntegerType.isSigned();
-	}
-
-	if (targetTypeCategory == Type::Category::FixedPoint)
-		solUnimplemented("Not yet implemented - FixedPointType.");
+	bool chopSignBitsPending = false;
+	if (_chopSignBits && targetTypeCategory == Type::Category::Integer)
+		chopSignBitsPending = dynamic_cast<IntegerType const&>(_targetType).isSigned();
+	else if (_chopSignBits && targetTypeCategory == Type::Category::FixedPoint)
+		chopSignBitsPending = dynamic_cast<FixedPointType const&>(_targetType).isSigned();
 
 	switch (stackTypeCategory)
 	{
@@ -800,6 +796,7 @@ void CompilerUtils::convertType(
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
+		// TODO FIxed?
 		else if (targetTypeCategory == Type::Category::Address)
 		{
 			solAssert(typeOnStack.numBytes() * 8 == 160, "");
@@ -836,6 +833,7 @@ void CompilerUtils::convertType(
 		}
 		break;
 	case Type::Category::FixedPoint:
+		// TODO
 		solUnimplemented("Not yet implemented - FixedPointType.");
 	case Type::Category::Address:
 	case Type::Category::Integer:
@@ -883,10 +881,37 @@ void CompilerUtils::convertType(
 			);
 			//shift all integer bits onto the left side of the fixed type
 			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
-			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
+			unsigned fractionalDigitsOnStack = 0;
+			if (auto const* typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
+			{
+				// TODO do we have to subtract the fractional digits?
 				if (targetFixedPointType.numBits() > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
-			solUnimplemented("Not yet implemented - FixedPointType.");
+			}
+			else if (auto const* typeOnStack = dynamic_cast<FixedPointType const*>(&_typeOnStack))
+			{
+				solUnimplementedAssert(typeOnStack->isSigned() == targetFixedPointType.isSigned(), "");
+				fractionalDigitsOnStack = typeOnStack->fractionalDigits();
+				// TODO cleanup?
+			}
+			else if (auto const* typeOnStack = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
+			{
+				if (typeOnStack->isFractional())
+					fractionalDigitsOnStack = typeOnStack->fixedPointType()->fractionalDigits();
+			}
+			else
+			{
+				 //TODO allow fixed bytes
+				solAssert(false, "");
+			}
+			if (fractionalDigitsOnStack < targetFixedPointType.fractionalDigits())
+				m_context <<
+					pow(u256(10), targetFixedPointType.fractionalDigits() - fractionalDigitsOnStack) <<
+					Instruction::MUL;
+			else if (fractionalDigitsOnStack > targetFixedPointType.fractionalDigits())
+				m_context <<
+					pow(u256(10), fractionalDigitsOnStack - targetFixedPointType.fractionalDigits()) <<
+					Instruction::DIV;
 		}
 		else
 		{

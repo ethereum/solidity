@@ -1139,6 +1139,108 @@ string YulUtilFunctions::wrappingIntExpFunction(
 	});
 }
 
+string YulUtilFunctions::fixedAddFunction(FixedPointType const& _type, bool _checked)
+{
+	return
+		_checked ?
+		overflowCheckedIntAddFunction(*_type.asIntegerType()) :
+		wrappingIntAddFunction(*_type.asIntegerType());
+}
+
+string YulUtilFunctions::fixedSubFunction(FixedPointType const& _type, bool _checked)
+{
+	return
+		_checked ?
+		overflowCheckedIntSubFunction(*_type.asIntegerType()) :
+		wrappingIntSubFunction(*_type.asIntegerType());
+}
+
+string YulUtilFunctions::fixedMulFunction(FixedPointType const& _type, bool _checked)
+{
+	// TODO how does truncation behave for negative numbers?
+	solUnimplementedAssert(_type.numBits() <= 128, "Multiplication only implemented for up to 128 bits.");
+
+	// TODO This is exactly the same as integer mul, but with maxValue being
+	// maxValue * mulitplier and re-scaling at the end
+	// This only works for up to 128 bits.
+	string functionName = "fixed_mul_" + _type.identifier() + (_checked ? "_checked" : "");
+	return m_functionCollector.createFunction(functionName, [&]() {
+		u256 multiplier = pow(u256(10), _type.fractionalDigits());
+		return
+			// Multiplication by zero could be treated separately and directly return zero.
+			Whiskers(R"(
+			function <functionName>(x, y) -> product {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
+				<?signed>
+					// overflow, if x > 0, y > 0 and x > (maxValue / y)
+					if and(and(sgt(x, 0), sgt(y, 0)), gt(x, div(<maxValue>, y))) { <panic>() }
+					// underflow, if x > 0, y < 0 and y < (minValue / x)
+					if and(and(sgt(x, 0), slt(y, 0)), slt(y, sdiv(<minValue>, x))) { <panic>() }
+					// underflow, if x < 0, y > 0 and x < (minValue / y)
+					if and(and(slt(x, 0), sgt(y, 0)), slt(x, sdiv(<minValue>, y))) { <panic>() }
+					// overflow, if x < 0, y < 0 and x < (maxValue / y)
+					if and(and(slt(x, 0), slt(y, 0)), slt(x, sdiv(<maxValue>, y))) { <panic>() }
+				<!signed>
+					// overflow, if x != 0 and y > (maxValue / x)
+					if and(iszero(iszero(x)), gt(y, div(<maxValue>, x))) { <panic>() }
+				</signed>
+				product := mul(x, y)
+				product := <?signed>sdiv<!signed>div</signed>(product, <multiplier>)
+			}
+			)")
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("maxValue", formatNumber(u256(_type.asIntegerType()->maxValue()) * multiplier))
+			("minValue", formatNumber(u256(_type.asIntegerType()->minValue()) * multiplier))
+			("cleanupFunction", cleanupFunction(_type))
+			("panic", panicFunction(PanicCode::UnderOverflow))
+			("multiplier", formatNumber(multiplier))
+			.render();
+	});
+}
+
+string YulUtilFunctions::fixedDivFunction(FixedPointType const& _type, bool _checked)
+{
+	// TODO how does truncation behave for negative numbers?
+	solUnimplementedAssert(_type.numBits() <= 128, "Division only implemented for up to 128 bits.");
+
+	// TODO this is similar to int div in the same way as fixed mul is similar to int mul.
+	// TODO There more overflow cases than just `<min> / -1`
+	string functionName = "fixed_div_" + _type.identifier() + (_checked ? "_checked" : "");
+	return m_functionCollector.createFunction(functionName, [&]() {
+		u256 multiplier = pow(u256(10), _type.fractionalDigits());
+		return
+			Whiskers(R"(
+			function <functionName>(x, y) -> r {
+				x := <cleanupFunction>(x)
+				y := <cleanupFunction>(y)
+				if iszero(y) { <panicDivZero>() }
+				<?signed>
+				<?checked>
+				// overflow for minVal / -1
+				if and(
+					eq(x, <minVal>),
+					eq(y, mul(sub(0, 1), <multiplier>))
+				) { <panicOverflow>() }
+				</checked>
+				</signed>
+				r := <?signed>sdiv<!signed>div</signed>(mul(x, <multiplier>), y)
+			}
+			)")
+			("functionName", functionName)
+			("signed", _type.isSigned())
+			("checked", _checked)
+			("minValue", formatNumber(u256(_type.asIntegerType()->minValue())))
+			("cleanupFunction", cleanupFunction(_type))
+			("panicDivZero", panicFunction(PanicCode::DivisionByZero))
+			("panicOverflow", panicFunction(PanicCode::UnderOverflow))
+			("multiplier", formatNumber(multiplier))
+			.render();
+	});
+
+}
+
 string YulUtilFunctions::arrayLengthFunction(ArrayType const& _type)
 {
 	string functionName = "array_length_" + _type.identifier();
@@ -3265,9 +3367,11 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 		case Type::Category::Integer:
 		case Type::Category::RationalNumber:
 		case Type::Category::Contract:
+			// TODO add FixedPoint to the mix
 		{
 			if (RationalNumberType const* rational = dynamic_cast<RationalNumberType const*>(&_from))
-				solUnimplementedAssert(!rational->isFractional(), "Not yet implemented - FixedPointType.");
+				if (rational->isFractional())
+					solAssert(toCategory == Type::Category::FixedPoint, "");
 			if (toCategory == Type::Category::FixedBytes)
 			{
 				solAssert(
@@ -3292,7 +3396,43 @@ string YulUtilFunctions::conversionFunction(Type const& _from, Type const& _to)
 					.render();
 			}
 			else if (toCategory == Type::Category::FixedPoint)
-				solUnimplemented("Not yet implemented - FixedPointType.");
+			{
+				FixedPointType const& toFixedType = dynamic_cast<FixedPointType const&>(_to);
+				int digitDifference = static_cast<int>(toFixedType.fractionalDigits());
+				bool isSigned = false;
+				if (auto const* fromIntegerType = dynamic_cast<IntegerType const*>(&_from))
+				{
+					// TODO assert that the scaled value still fits
+					isSigned = fromIntegerType->isSigned();
+				}
+				else if (auto const* fromFixedType = dynamic_cast<FixedPointType const*>(&_from))
+				{
+					// TODO clean source or target?
+					solUnimplementedAssert(fromFixedType->isSigned() == toFixedType.isSigned(), "");
+					isSigned = fromFixedType->isSigned();
+					digitDifference -= static_cast<int>(fromFixedType->fractionalDigits());
+				}
+				else if (auto const* fromRationalType = dynamic_cast<RationalNumberType const*>(&_from))
+				{
+					if (fromRationalType->isFractional())
+						digitDifference -= static_cast<int>(fromRationalType->fixedPointType()->fractionalDigits());
+					isSigned = fromRationalType->isNegative();
+				}
+				else
+				{
+					 //TODO allow fixed bytes
+					solAssert(false, "");
+				}
+				// TODO cleanup?
+				if (digitDifference > 0)
+					body = "converted := mul(value, 1" + string(static_cast<unsigned>(digitDifference), '0') + ")";
+				else if (digitDifference < 0)
+				{
+					body = "converted := " + (isSigned ? string("s") : string()) + "div(value, 1" + string(static_cast<unsigned>(-digitDifference), '0') + ")";
+				}
+				else
+					body = "converted := value\n";
+			}
 			else if (toCategory == Type::Category::Address)
 				body =
 					Whiskers("converted := <convert>(value)")
@@ -3733,14 +3873,14 @@ string YulUtilFunctions::cleanupFunction(Type const& _type)
 				templ("body", "cleaned := and(value, " + toCompactHexWithPrefix((u256(1) << type.numBits()) - 1) + ")");
 			break;
 		}
+		case Type::Category::FixedPoint:
+			templ("body", "cleaned := " + cleanupFunction(*dynamic_cast<FixedPointType const&>(_type).asIntegerType()) + "(value)");
+			break;
 		case Type::Category::RationalNumber:
 			templ("body", "cleaned := value");
 			break;
 		case Type::Category::Bool:
 			templ("body", "cleaned := iszero(iszero(value))");
-			break;
-		case Type::Category::FixedPoint:
-			solUnimplemented("Fixed point types not implemented.");
 			break;
 		case Type::Category::Function:
 			switch (dynamic_cast<FunctionType const&>(_type).kind())
