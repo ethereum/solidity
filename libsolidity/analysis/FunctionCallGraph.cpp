@@ -25,7 +25,6 @@
 #include <range/v3/view/transform.hpp>
 
 using namespace std;
-using namespace ranges;
 using namespace solidity::frontend;
 using namespace solidity::util;
 
@@ -35,7 +34,7 @@ CallGraph FunctionCallGraphBuilder::buildCreationGraph(ContractDefinition const&
 	solAssert(builder.m_currentNode == CallGraph::Node(CallGraph::SpecialNode::Entry), "");
 
 	// Create graph for constructor, state vars, etc
-	for (ContractDefinition const* base: _contract.annotation().linearizedBaseContracts | views::reverse)
+	for (ContractDefinition const* base: _contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 	{
 		// The constructor and functions called in state variable initial assignments should have
 		// an edge from Entry
@@ -76,7 +75,7 @@ CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	auto getSecondElement = [](auto const& _tuple){ return get<1>(_tuple); };
 
 	// Create graph for all publicly reachable functions
-	for (FunctionTypePointer functionType: _contract.interfaceFunctionList() | views::transform(getSecondElement))
+	for (FunctionTypePointer functionType: _contract.interfaceFunctionList() | ranges::views::transform(getSecondElement))
 	{
 		auto const* function = dynamic_cast<FunctionDefinition const*>(&functionType->declaration());
 		auto const* variable = dynamic_cast<VariableDeclaration const*>(&functionType->declaration());
@@ -305,7 +304,7 @@ ostream& solidity::frontend::operator<<(ostream& _out, CallGraph::Node const& _n
 		auto const* modifier = dynamic_cast<ModifierDefinition const *>(callableDeclaration);
 
 		auto typeToString = [](auto const& _var) -> string { return _var->type()->toString(true); };
-		vector<string> parameters = callableDeclaration->parameters() | views::transform(typeToString) | to<vector<string>>();
+		vector<string> parameters = callableDeclaration->parameters() | ranges::views::transform(typeToString) | ranges::to<vector<string>>();
 
 		string scopeName;
 		if (!function || !function->isFree())
