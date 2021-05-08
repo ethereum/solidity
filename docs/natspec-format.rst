@@ -72,7 +72,7 @@ The following example shows a contract and a function using all available tags.
         /// @notice Calculate tree age in years, rounded up, for live trees
         /// @dev The Alexandr N. Tetearing algorithm could increase precision
         /// @param rings The number of rings from dendrochronological sample
-        /// @return age in years, rounded up for partial years
+        /// @return Age in years, rounded up for partial years
         function age(uint256 rings) external virtual pure returns (uint256) {
             return rings + 1;
         }
