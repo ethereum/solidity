@@ -3,3 +3,4 @@ contract C {
     bytes constant b = hex"000102";
     string constant c = "hello";
 }
+// ----

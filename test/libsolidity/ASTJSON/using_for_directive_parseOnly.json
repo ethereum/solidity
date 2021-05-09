@@ -11,9 +11,11 @@
       "contractKind": "library",
       "id": 1,
       "name": "L",
+      "nameLocation": "8:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
-      "src": "0:12:1"
+      "src": "0:12:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -22,6 +24,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "C",
+      "nameLocation": "22:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -31,9 +34,8 @@
           {
             "id": 2,
             "name": "L",
-            "nodeType": "UserDefinedTypeName",
-            "src": "32:1:1",
-            "typeDescriptions": {}
+            "nodeType": "IdentifierPath",
+            "src": "32:1:1"
           },
           "nodeType": "UsingForDirective",
           "src": "26:17:1",
@@ -47,7 +49,8 @@
           }
         }
       ],
-      "src": "13:32:1"
+      "src": "13:32:1",
+      "usedErrors": []
     }
   ],
   "src": "0:46:1"

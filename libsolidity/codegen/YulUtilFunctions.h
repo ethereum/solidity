@@ -28,6 +28,8 @@
 
 #include <libsolidity/interface/DebugSettings.h>
 
+#include <libsolutil/ErrorCodes.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -70,6 +72,19 @@ public:
 	/// Pads with zeros and might write more than exactly length.
 	std::string copyToMemoryFunction(bool _fromCalldata);
 
+	/// @returns the name of a function that copies a string literal to memory
+	/// and returns a pointer to the memory area containing the string literal.
+	/// signature: () -> memPtr
+	std::string copyLiteralToMemoryFunction(std::string const& _literal);
+
+	/// @returns the name of a function that stores a string literal at a specific location in memory
+	/// signature: (memPtr) ->
+	std::string storeLiteralInMemoryFunction(std::string const& _literal);
+
+	/// @returns the name of a function that stores a string literal at a specific location in storage
+	/// signature: (slot) ->
+	std::string copyLiteralToStorageFunction(std::string const& _literal);
+
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
 	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);
@@ -86,7 +101,6 @@ public:
 
 	/// @returns the name of a function that performs a left shift and subsequent cleanup
 	/// and, if needed, prior cleanup.
-	/// If the amount to shift by is signed, a check for negativeness is performed.
 	/// signature: (value, amountToShift) -> result
 	std::string typedShiftLeftFunction(Type const& _type, Type const& _amountType);
 	std::string typedShiftRightFunction(Type const& _type, Type const& _amountType);
@@ -100,34 +114,74 @@ public:
 	/// signature: (value, shiftBytes, toInsert) -> result
 	std::string updateByteSliceFunctionDynamic(size_t _numBytes);
 
+	/// Function that sets all but the first ``bytes`` bytes of ``value`` to zero.
+	/// @note ``bytes`` has to be small enough not to overflow ``8 * bytes``.
+	/// signature: (value, bytes) -> result
+	std::string maskBytesFunctionDynamic();
+
+	/// Zeroes out all bytes above the first ``_bytes`` lower order bytes.
+	/// signature: (value) -> result
+	std::string maskLowerOrderBytesFunction(size_t _bytes);
+
+	/// Zeroes out all bytes above the first ``bytes`` lower order bytes.
+	/// @note ``bytes`` has to be small enough not to overflow ``8 * bytes``.
+	/// signature: (value, bytes) -> result
+	std::string maskLowerOrderBytesFunctionDynamic();
+
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
+	/// Ignores overflow.
 	/// signature: (value) -> result
 	std::string roundUpFunction();
 
+	/// @returns the name of a function that divides by 32 and rounds up during the division.
+	/// In other words, on input x it returns the smallest y such that y * 32 >= x.
+	/// Ignores overflow.
+	/// signature: (x) -> y
+	std::string divide32CeilFunction();
+
 	/// signature: (x, y) -> sum
 	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
+	/// signature: (x, y) -> sum
+	std::string wrappingIntAddFunction(IntegerType const& _type);
 
 	/// signature: (x, y) -> product
 	std::string overflowCheckedIntMulFunction(IntegerType const& _type);
+	/// signature: (x, y) -> product
+	std::string wrappingIntMulFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform division on integers.
 	/// Checks for division by zero and the special case of
 	/// signed division of the smallest number by -1.
 	std::string overflowCheckedIntDivFunction(IntegerType const& _type);
+	/// @returns name of function to perform division on integers.
+	/// Checks for division by zero.
+	std::string wrappingIntDivFunction(IntegerType const& _type);
 
 	/// @returns name of function to perform modulo on integers.
 	/// Reverts for modulo by zero.
-	std::string checkedIntModFunction(IntegerType const& _type);
+	std::string intModFunction(IntegerType const& _type);
 
 	/// @returns computes the difference between two values.
 	/// Assumes the input to be in range for the type.
 	/// signature: (x, y) -> diff
 	std::string overflowCheckedIntSubFunction(IntegerType const& _type);
 
+	/// @returns computes the difference between two values.
+	/// signature: (x, y) -> diff
+	std::string wrappingIntSubFunction(IntegerType const& _type);
+
 	/// @returns the name of the exponentiation function.
 	/// signature: (base, exponent) -> power
 	std::string overflowCheckedIntExpFunction(IntegerType const& _type, IntegerType const& _exponentType);
+
+	/// @returns the name of the exponentiation function, specialized for literal base.
+	/// signature: exponent -> power
+	std::string overflowCheckedIntLiteralExpFunction(
+		RationalNumberType const& _baseType,
+		IntegerType const& _exponentType,
+		IntegerType const& _commonType
+	);
 
 	/// Generic unsigned checked exponentiation function.
 	/// Reverts if the result is larger than max.
@@ -144,22 +198,40 @@ public:
 	/// signature: (power, base, exponent, max) -> power
 	std::string overflowCheckedExpLoopFunction();
 
+	/// @returns the name of the exponentiation function.
+	/// signature: (base, exponent) -> power
+	std::string wrappingIntExpFunction(IntegerType const& _type, IntegerType const& _exponentType);
+
 	/// @returns the name of a function that fetches the length of the given
 	/// array
 	/// signature: (array) -> length
 	std::string arrayLengthFunction(ArrayType const& _type);
 
+	/// @returns function name that extracts and returns byte array length from the value
+	/// stored at the slot.
+	/// Causes a Panic if the length encoding is wrong.
+	/// signature: (data) -> length
+	std::string extractByteArrayLengthFunction();
+
 	/// @returns the name of a function that resizes a storage array
+	/// for statically sized arrays, it will just clean-up elements of array starting from newLen until the end
 	/// signature: (array, newLen)
-	std::string resizeDynamicArrayFunction(ArrayType const& _type);
+	std::string resizeArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that zeroes all storage array elements from `startIndex` to `len` (excluding).
+	/// Assumes that `len` is the array length. Does nothing if `startIndex >= len`. Does not modify the stored length.
+	/// signature: (array, len, startIndex)
+	std::string cleanUpStorageArrayEndFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that reduces the size of a storage array by one element
 	/// signature: (array)
 	std::string storageArrayPopFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that pushes an element to a storage array
+/// @param _fromType represents the type of the element being pushed.
+/// If _fromType is ReferenceType the function will perform deep copy.
 	/// signature: (array, value)
-	std::string storageArrayPushFunction(ArrayType const& _type);
+	std::string storageArrayPushFunction(ArrayType const& _type, Type const* _fromType = nullptr);
 
 	/// @returns the name of a function that pushes the base type's zero element to a storage array and returns storage slot and offset of the added element.
 	/// signature: (array) -> slot, offset
@@ -173,6 +245,18 @@ public:
 	/// @returns the name of a function that will clear the given storage array
 	/// signature: (slot) ->
 	std::string clearStorageArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that will copy an array to storage
+	/// signature (to_slot, from_ptr) ->
+	std::string copyArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
+
+	/// @returns the name of a function that will copy a byte array to storage
+	/// signature (to_slot, from_ptr) ->
+	std::string copyByteArrayToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
+
+	/// @returns the name of a function that will copy an array of value types from storage to storage.
+	/// signature (to_slot, from_slot) ->
+	std::string copyValueArrayStorageToStorageFunction(ArrayType const& _fromType, ArrayType const& _toType);
 
 	/// Returns the name of a function that will convert a given length to the
 	/// size in memory (number of storage slots or calldata/memory bytes) it
@@ -220,6 +304,14 @@ public:
 	/// Only works for memory arrays, calldata arrays and storage arrays that every item occupies one or multiple full slots.
 	std::string nextArrayElementFunction(ArrayType const& _type);
 
+	/// @returns the name of a function that allocates a memory array and copies the contents
+	/// of the storage array into it.
+	std::string copyArrayFromStorageToMemoryFunction(ArrayType const& _from, ArrayType const& _to);
+
+	/// @returns the name of a function that does concatenation of variadic number of bytes
+	/// or fixed bytes
+	std::string bytesConcatFunction(std::vector<Type const*> const& _argumentTypes);
+
 	/// @returns the name of a function that performs index access for mappings.
 	/// @param _mappingType the type of the mapping
 	/// @param _keyType the type of the value provided
@@ -242,14 +334,15 @@ public:
 	/// @returns a function that extracts a value type from storage slot that has been
 	/// retrieved already.
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string extractFromStorageValue(Type const& _type, size_t _offset, bool _splitFunctionTypes);
-	std::string extractFromStorageValueDynamic(Type const& _type, bool _splitFunctionTypes);
+	///
+	/// For external function types, input and output is in "compressed"/"unsplit" form.
+	std::string extractFromStorageValue(Type const& _type, size_t _offset);
+	std::string extractFromStorageValueDynamic(Type const& _type);
 
 	/// Returns the name of a function will write the given value to
 	/// the specified slot and offset. If offset is not given, it is expected as
 	/// runtime parameter.
+	/// For reference types, offset is checked to be zero at runtime.
 	/// signature: (slot, [offset,] value)
 	std::string updateStorageValueFunction(
 		Type const& _fromType,
@@ -268,9 +361,8 @@ public:
 	/// higher order bytes or left-aligns (in case of bytesNN).
 	/// The storage cleanup expects the value to be right-aligned with potentially
 	/// dirty higher order bytes.
-	/// @param _splitFunctionTypes if false, returns the address and function signature in a
-	/// single variable.
-	std::string cleanupFromStorageFunction(Type const& _type, bool _splitFunctionTypes);
+	/// For external functions, input and output is in "compressed"/"unsplit" form.
+	std::string cleanupFromStorageFunction(Type const& _type);
 
 	/// @returns the name of a function that prepares a value of the given type
 	/// for being stored in storage. This usually includes cleanup and right-alignment
@@ -280,16 +372,20 @@ public:
 
 	/// @returns the name of a function that allocates memory.
 	/// Modifies the "free memory pointer"
-	/// Arguments: size
-	/// Return value: pointer
+	/// signature: (size) -> memPtr
 	std::string allocationFunction();
 
-	/// @returns the name of the function that allocates temporary memory with predefined size
-	/// Return value: pointer
-	std::string allocationTemporaryMemoryFunction();
+	/// @returns the name of the function that allocates memory whose size might be defined later.
+	/// The allocation can be finalized using finalizeAllocationFunction.
+	/// Any other allocation will invalidate the memory pointer unless finalizeAllocationFunction
+	/// is called.
+	/// signature: () -> memPtr
+	std::string allocateUnboundedFunction();
 
-	/// @returns the name of the function that releases previously allocated temporary memory
-	std::string releaseTemporaryMemoryFunction();
+	/// @returns the name of the function that finalizes an unbounded memory allocation,
+	/// i.e. sets its size and makes the allocation permanent.
+	/// signature: (memPtr, size) ->
+	std::string finalizeAllocationFunction();
 
 	/// @returns the name of a function that zeroes an array.
 	/// signature: (dataStart, dataSizeInBytes) ->
@@ -331,6 +427,10 @@ public:
 	/// This is used for data being encoded or general type conversions in the code.
 	std::string conversionFunction(Type const& _from, Type const& _to);
 
+	/// @returns the name of a function that converts bytes array to fixed bytes type
+	/// signature: (array) -> value
+	std::string bytesToFixedBytesConversionFunction(ArrayType const& _from, FixedBytesType const& _to);
+
 	/// @returns the name of the cleanup function for the given type and
 	/// adds its implementation to the requested functions.
 	/// The cleanup function defers to the validator function with "assert"
@@ -343,7 +443,7 @@ public:
 	/// otherwise an assertion failure.
 	///
 	/// This is used for data decoded from external sources.
-	std::string validatorFunction(Type const& _type, bool _revertOnFailure = false);
+	std::string validatorFunction(Type const& _type, bool _revertOnFailure);
 
 	std::string packedHashFunction(std::vector<Type const*> const& _givenTypes, std::vector<Type const*> const& _targetTypes);
 
@@ -352,9 +452,12 @@ public:
 	std::string forwardingRevertFunction();
 
 	std::string incrementCheckedFunction(Type const& _type);
+	std::string incrementWrappingFunction(Type const& _type);
 	std::string decrementCheckedFunction(Type const& _type);
+	std::string decrementWrappingFunction(Type const& _type);
 
 	std::string negateNumberCheckedFunction(Type const& _type);
+	std::string negateNumberWrappingFunction(Type const& _type);
 
 	/// @returns the name of a function that returns the zero value for the
 	/// provided type.
@@ -366,24 +469,37 @@ public:
 	/// signature: (slot, offset) ->
 	std::string storageSetToZeroFunction(Type const& _type);
 
-	/// If revertStrings is debug, @returns inline assembly code that
+	/// If revertStrings is debug, @returns the name of a function that
 	/// stores @param _message in memory position 0 and reverts.
-	/// Otherwise returns "revert(0, 0)".
-	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
+	/// Otherwise returns the name of a function that uses "revert(0, 0)".
+	std::string revertReasonIfDebugFunction(std::string const& _message = "");
 
-	std::string revertReasonIfDebug(std::string const& _message = "");
+	/// @returns the function body of ``revertReasonIfDebug``.
+	/// Should only be used internally and by the old code generator.
+	static std::string revertReasonIfDebugBody(
+		RevertStrings _revertStrings,
+		std::string const& _allocation,
+		std::string const& _message
+	);
 
-	/// Executes the invalid opcode.
-	/// Might use revert with special error code in the future.
-	std::string panicFunction();
+	/// Reverts with ``Panic(uint256)`` and the given code.
+	std::string panicFunction(util::PanicCode _code);
 
-	/// Returns the name of a function that decodes an error message.
-	/// signature: () -> arrayPtr
-	///
-	/// Returns a newly allocated `bytes memory` array containing the decoded error message
-	/// or 0 on failure.
+	/// @returns the name of a function that returns the return data selector.
+	/// Returns zero if return data is too short.
+	std::string returnDataSelectorFunction();
+
+	/// @returns the name of a function that tries to abi-decode a string from offset 4 in the
+	/// return data. On failure, returns 0, otherwise a pointer to the newly allocated string.
+	/// Does not check the return data signature.
+	/// signature: () -> ptr
 	std::string tryDecodeErrorMessageFunction();
 
+	/// @returns the name of a function that tries to abi-decode a uint256 value from offset 4 in the
+	/// return data.
+	/// Does not check the return data signature.
+	/// signature: () -> success, value
+	std::string tryDecodePanicDataFunction();
 
 	/// Returns a function name that returns a newly allocated `bytes` array that contains the return data.
 	///
@@ -397,14 +513,22 @@ public:
 		std::string const& _creationObjectName
 	);
 
+	/// @returns the name of a function that copies code from a given address to a newly
+	/// allocated byte array in memory.
+	/// Signature: (address) -> mpos
+	std::string externalCodeFunction();
+
 private:
+/// @returns the name of a function that copies a struct from calldata or memory to storage
+	/// signature: (slot, value) ->
+	std::string copyStructToStorageFunction(StructType const& _from, StructType const& _to);
+
+	/// Special case of conversion functions - handles all array conversions.
+	std::string arrayConversionFunction(ArrayType const& _from, ArrayType const& _to);
+
 	/// Special case of conversionFunction - handles everything that does not
 	/// use exactly one variable to hold the value.
 	std::string conversionFunctionSpecial(Type const& _from, Type const& _to);
-
-	/// @returns function name that extracts and returns byte array length
-	/// signature: (data) -> length
-	std::string extractByteArrayLengthFunction();
 
 	/// @returns the name of a function that reduces the size of a storage byte array by one element
 	/// signature: (byteArray)
@@ -416,8 +540,8 @@ private:
 	/// Performs bit mask/sign extend cleanup and appropriate left / right shift, but not validation.
 	/// @param _splitFunctionTypes if false, returns the address and function signature in a
 	/// single variable.
-	std::string readFromStorageValueType(Type const& _type, size_t _offset, bool _splitFunctionTypes);
-	std::string readFromStorageValueTypeDynamic(Type const& _type, bool _splitFunctionTypes);
+	/// @param _offset if provided, read from static offset, otherwise offset is a parameter of the Yul function.
+	std::string readFromStorageValueType(Type const& _type, std::optional<size_t> _offset, bool _splitFunctionTypes);
 
 	/// @returns a function that reads a reference type from storage to memory (performing a deep copy).
 	std::string readFromStorageReferenceType(Type const& _type);
@@ -426,6 +550,46 @@ private:
 	/// starting with given offset until the end of the slot
 	/// signature: (slot, offset)
 	std::string partialClearStorageSlotFunction();
+
+	/// @returns the name of a function that will clear the given storage struct
+	/// signature: (slot) ->
+	std::string clearStorageStructFunction(StructType const& _type);
+
+	/// @returns the name of a function that resizes a storage byte array
+	/// signature: (array, newLen)
+	std::string resizeDynamicByteArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that cleans up elements of a storage byte array starting from startIndex.
+	/// It will not copy elements in case of transformation to short byte array, and will not change array length.
+	/// In case of startIndex is greater than len, doesn't do anything.
+	/// In case of short byte array (< 32 bytes) doesn't do anything.
+	/// If the first slot to be cleaned up is partially occupied, does not touch it. Cleans up only completely unused slots.
+	/// signature: (array, len, startIndex)
+	std::string cleanUpDynamicByteArrayEndSlotsFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that increases size of byte array
+	/// when we resize byte array frextractUsedSetLenom < 32 elements to >= 32 elements or we push to byte array of size 31 copying of data will  occur
+	/// signature: (array, data, oldLen, newLen)
+	std::string increaseByteArraySizeFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that decreases size of byte array
+	/// when we resize byte array from >= 32 elements to < 32 elements or we pop from byte array of size 32 copying of data will  occur
+	/// signature: (array, data, oldLen, newLen)
+	std::string decreaseByteArraySizeFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that sets size of short byte array while copying data
+	/// should be called when we resize from long byte array (more than 32 elements) to short byte array
+	/// signature: (array, data, len)
+	std::string byteArrayTransitLongToShortFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that extracts only used part of slot that represents short byte array
+	/// signature: (data, len) -> data
+	std::string shortByteArrayEncodeUsedAreaSetLengthFunction();
+
+	/// @returns the name of a function that calculates slot and offset for index
+	/// Doesn't perform length checks, assumes that index is in bounds
+	/// signature: (array, index)
+	std::string longByteArrayStorageIndexAccessNoCheckFunction();
 
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings m_revertStrings;

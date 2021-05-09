@@ -1,6 +1,6 @@
 contract C {
   function f() public view {
-    address payable a = address(this);
+    address payable a = payable(this);
     a;
   }
   fallback() external payable {

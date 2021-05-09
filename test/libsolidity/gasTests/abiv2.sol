@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     uint public a;
@@ -14,9 +14,9 @@ contract C {
 }
 // ----
 // creation:
-//   codeDepositCost: 1106800
-//   executionCost: 1147
-//   totalCost: 1107947
+//   codeDepositCost: 1259800
+//   executionCost: 1308
+//   totalCost: 1261108
 // external:
 //   a(): 1130
 //   b(uint256): infinite

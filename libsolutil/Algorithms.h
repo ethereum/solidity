@@ -19,6 +19,7 @@
 
 
 #include <functional>
+#include <list>
 #include <set>
 
 namespace solidity::util
@@ -79,8 +80,7 @@ private:
 /**
  * Generic breadth first search.
  *
- * Note that V needs to be a comparable value type. If it is not, use a pointer type,
- * but note that this might lead to non-deterministic traversal.
+ * Note that V needs to be a comparable value type or a pointer.
  *
  * Example: Gather all (recursive) children in a graph starting at (and including) ``root``:
  *
@@ -104,13 +104,14 @@ struct BreadthFirstSearch
 	{
 		while (!verticesToTraverse.empty())
 		{
-			V v = *verticesToTraverse.begin();
-			verticesToTraverse.erase(verticesToTraverse.begin());
-			visited.insert(v);
+			V v = std::move(verticesToTraverse.front());
+			verticesToTraverse.pop_front();
+
+			if (!visited.insert(v).second)
+				continue;
 
 			_forEachChild(v, [this](V _vertex) {
-				if (!visited.count(_vertex))
-					verticesToTraverse.emplace(std::move(_vertex));
+				verticesToTraverse.emplace_back(std::move(_vertex));
 			});
 		}
 		return *this;
@@ -120,7 +121,7 @@ struct BreadthFirstSearch
 		verticesToTraverse.clear();
 	}
 
-	std::set<V> verticesToTraverse;
+	std::list<V> verticesToTraverse;
 	std::set<V> visited{};
 };
 

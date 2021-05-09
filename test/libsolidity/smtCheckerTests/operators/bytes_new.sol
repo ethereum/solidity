@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() public pure {
 		bytes memory x = new bytes(0);
@@ -33,4 +31,8 @@ contract C {
 		assert(x[1] == 0x34);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
+// Warning 6368: (468-472): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [18, 52, 0]\n\nTransaction trace:\nC.constructor()\nC.h()
+// Warning 6368: (490-494): CHC: Out of bounds access happens here.\nCounterexample:\n\nx = [18, 52, 0]\n\nTransaction trace:\nC.constructor()\nC.h()

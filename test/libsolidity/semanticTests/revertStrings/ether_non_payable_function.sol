@@ -3,6 +3,7 @@ contract C {
 }
 // ====
 // EVMVersion: >=byzantium
+// compileViaYul: also
 // revertStrings: debug
 // ----
 // f(), 1 ether -> FAILURE, hex"08c379a0", 0x20, 34, "Ether sent to non-payable functi", "on"

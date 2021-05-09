@@ -6,20 +6,20 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "C_2" {
+object "C_3" {
     code {
         {
-            mstore(64, memoryguard(0x80))
+            mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("C_2_deployed")
-            codecopy(0, dataoffset("C_2_deployed"), _1)
-            return(0, _1)
+            let _1 := datasize("C_3_deployed")
+            codecopy(128, dataoffset("C_3_deployed"), _1)
+            return(128, _1)
         }
     }
-    object "C_2_deployed" {
+    object "C_3_deployed" {
         code {
             {
-                mstore(64, memoryguard(0x80))
+                mstore(64, 128)
                 revert(0, 0)
             }
         }
@@ -34,60 +34,62 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "D_13" {
+object "D_16" {
     code {
         {
-            mstore(64, memoryguard(0x80))
+            mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("D_13_deployed")
-            codecopy(0, dataoffset("D_13_deployed"), _1)
-            return(0, _1)
+            let _1 := datasize("D_16_deployed")
+            codecopy(128, dataoffset("D_16_deployed"), _1)
+            return(128, _1)
         }
     }
-    object "D_13_deployed" {
+    object "D_16_deployed" {
         code {
             {
-                let _1 := memoryguard(0x80)
-                mstore(64, _1)
+                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
-                    let _2 := 0
-                    if eq(0x26121ff0, shr(224, calldataload(_2)))
+                    let _1 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
-                        if callvalue() { revert(_2, _2) }
-                        if slt(add(calldatasize(), not(3)), _2) { revert(_2, _2) }
-                        let _3 := datasize("C_2")
-                        let _4 := add(_1, _3)
-                        if or(gt(_4, 0xffffffffffffffff), lt(_4, _1)) { invalid() }
-                        datacopy(_1, dataoffset("C_2"), _3)
-                        pop(create(_2, _1, sub(_4, _1)))
-                        return(allocateMemory(_2), _2)
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        let _2 := datasize("C_3")
+                        let _3 := add(128, _2)
+                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128))
+                        {
+                            mstore(_1, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_1, 0x24)
+                        }
+                        datacopy(128, dataoffset("C_3"), _2)
+                        if iszero(create(_1, 128, _2))
+                        {
+                            let pos := mload(64)
+                            returndatacopy(pos, _1, returndatasize())
+                            revert(pos, returndatasize())
+                        }
+                        return(mload(64), _1)
                     }
                 }
                 revert(0, 0)
             }
-            function allocateMemory(size) -> memPtr
-            {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
-                mstore(64, newFreePtr)
-            }
         }
-        object "C_2" {
+        object "C_3" {
             code {
                 {
-                    mstore(64, memoryguard(0x80))
+                    mstore(64, 128)
                     if callvalue() { revert(0, 0) }
-                    let _1 := datasize("C_2_deployed")
-                    codecopy(0, dataoffset("C_2_deployed"), _1)
-                    return(0, _1)
+                    let _1 := datasize("C_3_deployed")
+                    codecopy(128, dataoffset("C_3_deployed"), _1)
+                    return(128, _1)
                 }
             }
-            object "C_2_deployed" {
+            object "C_3_deployed" {
                 code {
                     {
-                        mstore(64, memoryguard(0x80))
+                        mstore(64, 128)
                         revert(0, 0)
                     }
                 }

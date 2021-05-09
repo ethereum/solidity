@@ -5,7 +5,8 @@ Layout of a Solidity Source File
 Source files can contain an arbitrary number of
 :ref:`contract definitions<contract_structure>`, import_ directives,
 :ref:`pragma directives<pragma>` and
-:ref:`struct<structs>`, :ref:`enum<enums>` and :ref:`function<functions>` definitions.
+:ref:`struct<structs>`, :ref:`enum<enums>`, :ref:`function<functions>`, :ref:`error<errors>`
+and :ref:`constant variable<constants>` definitions.
 
 .. index:: ! license, spdx
 
@@ -48,7 +49,7 @@ Pragmas
 
 The ``pragma`` keyword is used to enable certain compiler features
 or checks. A pragma directive is always local to a source file, so
-you have to add the pragma to all your files if you want enable it
+you have to add the pragma to all your files if you want to enable it
 in your whole project. If you :ref:`import<import>` another file, the pragma
 from that file does *not* automatically apply to the importing file.
 
@@ -78,7 +79,7 @@ be sure that your code compiles the way you intended. The exact version of the
 compiler is not fixed, so that bugfix releases are still possible.
 
 It is possible to specify more complex rules for the compiler version,
-these follow the same syntax used by `npm <https://docs.npmjs.com/misc/semver>`_.
+these follow the same syntax used by `npm <https://docs.npmjs.com/cli/v6/using-npm/semver>`_.
 
 .. note::
   Using the version pragma *does not* change the version of the compiler.
@@ -86,6 +87,41 @@ these follow the same syntax used by `npm <https://docs.npmjs.com/misc/semver>`_
   instructs the compiler to check whether its version matches the one
   required by the pragma. If it does not match, the compiler issues
   an error.
+
+ABI Coder Pragma
+----------------
+
+By using ``pragma abicoder v1`` or ``pragma abicoder v2`` you can
+select between the two implementations of the ABI encoder and decoder.
+
+The new ABI coder (v2) is able to encode and decode arbitrarily nested
+arrays and structs. It might produce less optimal code and has not
+received as much testing as the old encoder, but is considered
+non-experimental as of Solidity 0.6.0. You still have to explicitly
+activate it using ``pragma abicoder v2;``. Since it will be
+activated by default starting from Solidity 0.8.0, there is the option to select
+the old coder using ``pragma abicoder v1;``.
+
+The set of types supported by the new encoder is a strict superset of
+the ones supported by the old one. Contracts that use it can interact with ones
+that do not without limitations. The reverse is possible only as long as the
+non-``abicoder v2`` contract does not try to make calls that would require
+decoding types only supported by the new encoder. The compiler can detect this
+and will issue an error. Simply enabling ``abicoder v2`` for your contract is
+enough to make the error go away.
+
+.. note::
+  This pragma applies to all the code defined in the file where it is activated,
+  regardless of where that code ends up eventually. This means that a contract
+  whose source file is selected to compile with ABI coder v1
+  can still contain code that uses the new encoder
+  by inheriting it from another contract. This is allowed if the new types are only
+  used internally and not in external function signatures.
+
+.. note::
+  Up to Solidity 0.7.4, it was possible to select the ABI coder v2
+  by using ``pragma experimental ABIEncoderV2``, but it was not possible
+  to explicitly select coder v1 because it was the default.
 
 .. index:: ! pragma, experimental
 
@@ -102,13 +138,9 @@ The following experimental pragmas are currently supported:
 ABIEncoderV2
 ~~~~~~~~~~~~
 
-The new ABI encoder is able to encode and decode arbitrarily nested
-arrays and structs. It might produce less optimal code and has not
-received as much testing as the old encoder, but is considered
-non-experimental as of Solidity 0.6.0. You still have to explicitly
-activate it using ``pragma experimental ABIEncoderV2;`` - we kept
-the same pragma, even though it is not considered experimental
-anymore.
+Because the ABI coder v2 is not considered experimental anymore,
+it can be selected via ``pragma abicoder v2`` (please see above)
+since Solidity 0.7.4.
 
 .. _smt_checker:
 
@@ -298,36 +330,11 @@ Single-line comments (``//``) and multi-line comments (``/*...*/``) are possible
 
 .. note::
   A single-line comment is terminated by any unicode line terminator
-  (LF, VF, FF, CR, NEL, LS or PS) in utf8 encoding. The terminator is still part of
-  the source code after the comment, so if it is not an ascii symbol
+  (LF, VF, FF, CR, NEL, LS or PS) in UTF-8 encoding. The terminator is still part of
+  the source code after the comment, so if it is not an ASCII symbol
   (these are NEL, LS and PS), it will lead to a parser error.
 
-Additionally, there is another type of comment called a natspec comment,
-which is detailed in the :ref:`style guide<natspec>`. They are written with a
-triple slash (``///``) or a double asterisk block(``/** ... */``) and
+Additionally, there is another type of comment called a NatSpec comment,
+which is detailed in the :ref:`style guide<style_guide_natspec>`. They are written with a
+triple slash (``///``) or a double asterisk block (``/** ... */``) and
 they should be used directly above function declarations or statements.
-You can use `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_-style tags inside these comments to document
-functions, annotate conditions for formal verification, and provide a
-**confirmation text** which is shown to users when they attempt to invoke a
-function.
-
-In the following example we document the title of the contract, the explanation
-for the two function parameters and two return variables.
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.21 <0.8.0;
-
-    /** @title Shape calculator. */
-    contract ShapeCalculator {
-        /// @dev Calculates a rectangle's surface and perimeter.
-        /// @param w Width of the rectangle.
-        /// @param h Height of the rectangle.
-        /// @return s The calculated surface.
-        /// @return p The calculated perimeter.
-        function rectangle(uint w, uint h) public pure returns (uint s, uint p) {
-            s = w * h;
-            p = 2 * (w + h);
-        }
-    }

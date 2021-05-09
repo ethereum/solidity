@@ -36,14 +36,44 @@ namespace solidity::frontend::test
 
 namespace
 {
-map<string, string> requireParsedCBORMetadata(bytes const& _bytecode)
+
+map<string, string> requireParsedCBORMetadata(bytes const& _bytecode, CompilerStack::MetadataFormat _metadataFormat)
 {
 	bytes cborMetadata = solidity::test::onlyMetadata(_bytecode);
-	BOOST_REQUIRE(!cborMetadata.empty());
-	std::optional<map<string, string>> tmp = solidity::test::parseCBORMetadata(cborMetadata);
-	BOOST_REQUIRE(tmp);
-	return *tmp;
+	if (_metadataFormat != CompilerStack::MetadataFormat::NoMetadata)
+	{
+		BOOST_REQUIRE(!cborMetadata.empty());
+		std::optional<map<string, string>> tmp = solidity::test::parseCBORMetadata(cborMetadata);
+		BOOST_REQUIRE(tmp);
+		return *tmp;
+	}
+	BOOST_REQUIRE(cborMetadata.empty());
+	return {};
 }
+
+optional<string> compileAndCheckLicenseMetadata(string const& _contractName, char const* _sourceCode)
+{
+	CompilerStack compilerStack;
+	compilerStack.setSources({{"A.sol", std::string(_sourceCode)}});
+	BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+
+	std::string const& serialisedMetadata = compilerStack.metadata(_contractName);
+	BOOST_CHECK(solidity::test::isValidMetadata(serialisedMetadata));
+	Json::Value metadata;
+	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
+
+	BOOST_CHECK_EQUAL(metadata["sources"].size(), 1);
+	BOOST_REQUIRE(metadata["sources"].isMember("A.sol"));
+
+	if (metadata["sources"]["A.sol"].isMember("license"))
+	{
+		BOOST_REQUIRE(metadata["sources"]["A.sol"]["license"].isString());
+		return metadata["sources"]["A.sol"]["license"].asString();
+	}
+	else
+		return nullopt;
+}
+
 }
 
 BOOST_AUTO_TEST_SUITE(Metadata)
@@ -58,7 +88,11 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	for (auto release: std::set<bool>{true, VersionIsRelease})
+	for (auto metadataFormat: std::set<CompilerStack::MetadataFormat>{
+		CompilerStack::MetadataFormat::NoMetadata,
+		CompilerStack::MetadataFormat::WithReleaseVersionTag,
+		CompilerStack::MetadataFormat::WithPrereleaseVersionTag
+	})
 		for (auto metadataHash: set<CompilerStack::MetadataHash>{
 			CompilerStack::MetadataHash::IPFS,
 			CompilerStack::MetadataHash::Bzzr1,
@@ -66,7 +100,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 		})
 		{
 			CompilerStack compilerStack;
-			compilerStack.overwriteReleaseFlag(release);
+			compilerStack.setMetadataFormat(metadataFormat);
 			compilerStack.setSources({{"", std::string(sourceCode)}});
 			compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 			compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
@@ -76,9 +110,9 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 			std::string const& metadata = compilerStack.metadata("test");
 			BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
-			auto const cborMetadata = requireParsedCBORMetadata(bytecode);
+			auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
 			if (metadataHash == CompilerStack::MetadataHash::None)
-				BOOST_CHECK(cborMetadata.size() == 1);
+				BOOST_CHECK(cborMetadata.size() == (metadataFormat == CompilerStack::MetadataFormat::NoMetadata ? 0 : 1));
 			else
 			{
 				bytes hash;
@@ -96,16 +130,24 @@ BOOST_AUTO_TEST_CASE(metadata_stamp)
 					hashMethod = "bzzr1";
 				}
 
-				BOOST_CHECK(cborMetadata.size() == 2);
-				BOOST_CHECK(cborMetadata.count(hashMethod) == 1);
-				BOOST_CHECK(cborMetadata.at(hashMethod) == util::toHex(hash));
+				if (metadataFormat != CompilerStack::MetadataFormat::NoMetadata)
+				{
+					BOOST_CHECK(cborMetadata.size() == 2);
+					BOOST_CHECK(cborMetadata.count(hashMethod) == 1);
+					BOOST_CHECK(cborMetadata.at(hashMethod) == util::toHex(hash));
+				}
 			}
 
-			BOOST_CHECK(cborMetadata.count("solc") == 1);
-			if (release)
-				BOOST_CHECK(cborMetadata.at("solc") == util::toHex(VersionCompactBytes));
+			if (metadataFormat == CompilerStack::MetadataFormat::NoMetadata)
+				BOOST_CHECK(cborMetadata.count("solc") == 0);
 			else
-				BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
+			{
+				BOOST_CHECK(cborMetadata.count("solc") == 1);
+				if (metadataFormat == CompilerStack::MetadataFormat::WithReleaseVersionTag)
+					BOOST_CHECK(cborMetadata.at("solc") == util::toHex(VersionCompactBytes));
+				else
+					BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
+			}
 		}
 }
 
@@ -119,7 +161,11 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			function g(function(uint) external returns (uint) x) public {}
 		}
 	)";
-	for (auto release: set<bool>{true, VersionIsRelease})
+	for (auto metadataFormat: std::set<CompilerStack::MetadataFormat>{
+			CompilerStack::MetadataFormat::NoMetadata,
+			CompilerStack::MetadataFormat::WithReleaseVersionTag,
+			CompilerStack::MetadataFormat::WithPrereleaseVersionTag
+	})
 		for (auto metadataHash: set<CompilerStack::MetadataHash>{
 			CompilerStack::MetadataHash::IPFS,
 			CompilerStack::MetadataHash::Bzzr1,
@@ -127,7 +173,7 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 		})
 		{
 			CompilerStack compilerStack;
-			compilerStack.overwriteReleaseFlag(release);
+			compilerStack.setMetadataFormat(metadataFormat);
 			compilerStack.setSources({{"", std::string(sourceCode)}});
 			compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
 			compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
@@ -137,9 +183,9 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 			std::string const& metadata = compilerStack.metadata("test");
 			BOOST_CHECK(solidity::test::isValidMetadata(metadata));
 
-			auto const cborMetadata = requireParsedCBORMetadata(bytecode);
+			auto const cborMetadata = requireParsedCBORMetadata(bytecode, metadataFormat);
 			if (metadataHash == CompilerStack::MetadataHash::None)
-				BOOST_CHECK(cborMetadata.size() == 2);
+				BOOST_CHECK(cborMetadata.size() == (metadataFormat == CompilerStack::MetadataFormat::NoMetadata ? 0 : 2));
 			else
 			{
 				bytes hash;
@@ -157,18 +203,26 @@ BOOST_AUTO_TEST_CASE(metadata_stamp_experimental)
 					hashMethod = "bzzr1";
 				}
 
-				BOOST_CHECK(cborMetadata.size() == 3);
-				BOOST_CHECK(cborMetadata.count(hashMethod) == 1);
-				BOOST_CHECK(cborMetadata.at(hashMethod) == util::toHex(hash));
+				if (metadataFormat != CompilerStack::MetadataFormat::NoMetadata)
+				{
+					BOOST_CHECK(cborMetadata.size() == 3);
+					BOOST_CHECK(cborMetadata.count(hashMethod) == 1);
+					BOOST_CHECK(cborMetadata.at(hashMethod) == util::toHex(hash));
+				}
 			}
 
-			BOOST_CHECK(cborMetadata.count("solc") == 1);
-			if (release)
-				BOOST_CHECK(cborMetadata.at("solc") == util::toHex(VersionCompactBytes));
+			if (metadataFormat == CompilerStack::MetadataFormat::NoMetadata)
+				BOOST_CHECK(cborMetadata.count("solc") == 0);
 			else
-				BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
-			BOOST_CHECK(cborMetadata.count("experimental") == 1);
-			BOOST_CHECK(cborMetadata.at("experimental") == "true");
+			{
+				BOOST_CHECK(cborMetadata.count("solc") == 1);
+				if (metadataFormat == CompilerStack::MetadataFormat::WithReleaseVersionTag)
+					BOOST_CHECK(cborMetadata.at("solc") == util::toHex(VersionCompactBytes));
+				else
+					BOOST_CHECK(cborMetadata.at("solc") == VersionStringStrict);
+				BOOST_CHECK(cborMetadata.count("experimental") == 1);
+				BOOST_CHECK(cborMetadata.at("experimental") == "true");
+			}
 		}
 }
 
@@ -282,6 +336,38 @@ BOOST_AUTO_TEST_CASE(metadata_useLiteralContent)
 	check(sourceCode, false);
 }
 
+BOOST_AUTO_TEST_CASE(metadata_viair)
+{
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract test {
+		}
+	)";
+
+	auto check = [](char const* _src, bool _viair)
+	{
+		CompilerStack compilerStack;
+		compilerStack.setSources({{"", std::string(_src)}});
+		compilerStack.setEVMVersion(solidity::test::CommonOptions::get().evmVersion());
+		compilerStack.setOptimiserSettings(solidity::test::CommonOptions::get().optimize);
+		compilerStack.setViaIR(_viair);
+		BOOST_REQUIRE_MESSAGE(compilerStack.compile(), "Compiling contract failed");
+		string metadata_str = compilerStack.metadata("test");
+		Json::Value metadata;
+		util::jsonParseStrict(metadata_str, metadata);
+		BOOST_CHECK(solidity::test::isValidMetadata(metadata_str));
+		BOOST_CHECK(metadata.isMember("settings"));
+		if (_viair)
+		{
+			BOOST_CHECK(metadata["settings"].isMember("viaIR"));
+			BOOST_CHECK(metadata["settings"]["viaIR"].asBool());
+		}
+	};
+
+	check(sourceCode, true);
+	check(sourceCode, false);
+}
+
 BOOST_AUTO_TEST_CASE(metadata_revert_strings)
 {
 	CompilerStack compilerStack;
@@ -300,6 +386,197 @@ BOOST_AUTO_TEST_CASE(metadata_revert_strings)
 	BOOST_REQUIRE(util::jsonParseStrict(serialisedMetadata, metadata));
 
 	BOOST_CHECK_EQUAL(metadata["settings"]["debug"]["revertStrings"], "strip");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_missing)
+{
+	char const* sourceCode = R"(
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_gpl3)
+{
+	// Can't use a raw string here due to the stylechecker.
+	char const* sourceCode =
+		"// NOTE: we also add trailing whitespace after the license, to see it is trimmed.\n"
+		"// SPDX-License-Identifier: GPL-3.0    \n"
+		"pragma solidity >=0.0;\n"
+		"contract C {\n"
+		"}\n";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_whitespace_before_spdx)
+{
+	char const* sourceCode = R"(
+		//     SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_whitespace_after_colon)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier:    GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_gpl3_or_apache2)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier: GPL-3.0 OR Apache-2.0
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0 OR Apache-2.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_ignored_unicode)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier: ⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_ignored_stray_unicode)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier: GPL-3.0 ⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒
+		pragma solidity >=0.0;
+		contract C {
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_bidi_marks)
+{
+	char const* sourceCode =
+		"// \xE2\x80\xAE""0.3-LPG :reifitnedI-esneciL-XDPS\xE2\x80\xAC\n"
+		"// NOTE: The text above is reversed using Unicode directional marks. In raw form it would look like this:\n"
+		"// <LRO>0.3-LPG :reifitnedI-esneciL-XDPS<PDF>\n"
+		"contract C {}\n";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_bottom)
+{
+	char const* sourceCode = R"(
+		contract C {}
+		// SPDX-License-Identifier: GPL-3.0
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_cr_endings)
+{
+	char const* sourceCode =
+		"// SPDX-License-Identifier: GPL-3.0\r"
+		"contract C {}\r";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_crlf_endings)
+{
+	char const* sourceCode =
+		"// SPDX-License-Identifier: GPL-3.0\r\n"
+		"contract C {}\r\n";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_in_string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			bytes license = "// SPDX-License-Identifier: GPL-3.0";
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_in_contract)
+{
+	char const* sourceCode = R"(
+		contract C {
+		// SPDX-License-Identifier: GPL-3.0
+		}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_missing_colon)
+{
+	char const* sourceCode = R"(
+		// SPDX-License-Identifier GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == nullopt);
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_multiline)
+{
+	char const* sourceCode = R"(
+		/* SPDX-License-Identifier: GPL-3.0 */
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_natspec)
+{
+	char const* sourceCode = R"(
+		/// SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_natspec_multiline)
+{
+	char const* sourceCode = R"(
+		/** SPDX-License-Identifier: GPL-3.0 */
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace)
+{
+	char const* sourceCode = R"(
+		//SPDX-License-Identifier:GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_no_whitespace_multiline)
+{
+	char const* sourceCode = R"(
+		/*SPDX-License-Identifier:GPL-3.0*/
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
+}
+
+BOOST_AUTO_TEST_CASE(metadata_license_nonempty_line)
+{
+	char const* sourceCode = R"(
+		pragma solidity >= 0.0; // SPDX-License-Identifier: GPL-3.0
+		contract C {}
+	)";
+	BOOST_CHECK(compileAndCheckLicenseMetadata("C", sourceCode) == "GPL-3.0");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

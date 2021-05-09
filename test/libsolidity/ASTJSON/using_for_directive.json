@@ -27,10 +27,12 @@
         1
       ],
       "name": "L",
+      "nameLocation": "8:1:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 6,
-      "src": "0:12:1"
+      "src": "0:12:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -44,6 +46,7 @@
         5
       ],
       "name": "C",
+      "nameLocation": "22:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -53,14 +56,9 @@
           {
             "id": 2,
             "name": "L",
-            "nodeType": "UserDefinedTypeName",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 1,
-            "src": "32:1:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_L_$1",
-              "typeString": "library L"
-            }
+            "src": "32:1:1"
           },
           "nodeType": "UsingForDirective",
           "src": "26:17:1",
@@ -79,7 +77,8 @@
         }
       ],
       "scope": 6,
-      "src": "13:32:1"
+      "src": "13:32:1",
+      "usedErrors": []
     }
   ],
   "src": "0:46:1"

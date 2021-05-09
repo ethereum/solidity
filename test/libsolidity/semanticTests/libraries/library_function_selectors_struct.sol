@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 library L {
     struct S { uint256 a; }
     function f(S storage s) external returns (uint) { return s.a; }
@@ -21,6 +21,7 @@ contract C {
 }
 // ====
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // library: L
 // f() -> true, true, 42

@@ -1,5 +1,4 @@
-pragma experimental SMTChecker;
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
 	struct S {
@@ -14,5 +13,8 @@ contract C {
 		assert(s1.x == s2.x);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (225-245): CHC: Assertion violation happens here.
+// Warning 6328: (193-213): CHC: Assertion violation happens here.

@@ -24,7 +24,7 @@
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <set>
 
@@ -131,7 +131,8 @@ public:
 };
 
 /**
- * Class that can be used to find out if certain code contains the MSize instruction.
+ * Class that can be used to find out if certain code contains the MSize instruction
+ * or a verbatim bytecode builtin (which is always assumed that it could contain MSize).
  *
  * Note that this is a purely syntactic property meaning that even if this is false,
  * the code can still contain calls to functions that contain the msize instruction.

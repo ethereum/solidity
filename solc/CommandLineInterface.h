@@ -24,6 +24,8 @@
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/interface/FileReader.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -67,7 +69,7 @@ private:
 	void outputCompilationResults();
 
 	void handleCombinedJSON();
-	void handleAst(std::string const& _argStr);
+	void handleAst();
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
 	void handleIR(std::string const& _contract);
@@ -79,7 +81,6 @@ private:
 	void handleABI(std::string const& _contract);
 	void handleNatspec(bool _natspecDev, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
-	void handleFormal();
 	void handleStorageLayout(std::string const& _contract);
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
@@ -113,16 +114,12 @@ private:
 
 	bool m_onlyLink = false;
 
+	FileReader m_fileReader;
+
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
-	/// map of input files to source code strings
-	std::map<std::string, std::string> m_sourceCodes;
 	/// list of remappings
-	std::vector<frontend::CompilerStack::Remapping> m_remappings;
-	/// list of allowed directories to read files from
-	std::vector<boost::filesystem::path> m_allowedDirectories;
-	/// Base path, used for resolving relative paths in imports.
-	boost::filesystem::path m_basePath;
+	std::vector<ImportRemapper::Remapping> m_remappings;
 	/// map of library names to addresses
 	std::map<std::string, util::h160> m_libraries;
 	/// Solidity compiler stack
@@ -134,6 +131,8 @@ private:
 	RevertStrings m_revertStrings = RevertStrings::Default;
 	/// Chosen hash method for the bytecode metadata.
 	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
+	/// Model checker settings.
+	ModelCheckerSettings m_modelCheckerSettings;
 	/// Whether or not to colorize diagnostics output.
 	bool m_coloredOutput = true;
 	/// Whether or not to output error IDs.

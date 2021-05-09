@@ -38,6 +38,9 @@ namespace solidity::frontend::test
 
 BOOST_AUTO_TEST_SUITE(SemVerMatcher)
 
+namespace
+{
+
 SemVerMatchExpression parseExpression(string const& _input)
 {
 	Scanner scanner{CharStream(_input, "")};
@@ -55,11 +58,14 @@ SemVerMatchExpression parseExpression(string const& _input)
 	}
 
 	auto expression = SemVerMatchExpressionParser(tokens, literals).parse();
+	BOOST_REQUIRE(expression.has_value());
 	BOOST_CHECK_MESSAGE(
-		expression.isValid(),
+		expression->isValid(),
 		"Expression \"" + _input + "\" did not parse properly."
 	);
-	return expression;
+	return *expression;
+}
+
 }
 
 BOOST_AUTO_TEST_CASE(positive_range)

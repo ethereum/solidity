@@ -24,7 +24,7 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <libyul/backends/evm/EVMDialect.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libevmasm/Instruction.h>
 
@@ -35,6 +35,7 @@ using namespace solidity;
 using namespace solidity::yul;
 using namespace solidity::yul::test;
 
+using solidity::util::h160;
 using solidity::util::h256;
 using solidity::util::keccak256;
 
@@ -95,7 +96,7 @@ u256 EVMInstructionInterpreter::eval(
 	switch (_instruction)
 	{
 	case Instruction::STOP:
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	// --------------- arithmetic ---------------
 	case Instruction::ADD:
 		return arg[0] + arg[1];
@@ -181,18 +182,18 @@ u256 EVMInstructionInterpreter::eval(
 		return u256(keccak256(readMemory(offset, size)));
 	}
 	case Instruction::ADDRESS:
-		return m_state.address;
+		return h256(m_state.address, h256::AlignRight);
 	case Instruction::BALANCE:
-		if (arg[0] == m_state.address)
+		if (arg[0] == h256(m_state.address, h256::AlignRight))
 			return m_state.selfbalance;
 		else
 			return m_state.balance;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
 	case Instruction::ORIGIN:
-		return m_state.origin;
+		return h256(m_state.origin, h256::AlignRight);
 	case Instruction::CALLER:
-		return m_state.caller;
+		return h256(m_state.caller, h256::AlignRight);
 	case Instruction::CALLVALUE:
 		return m_state.callvalue;
 	case Instruction::CALLDATALOAD:
@@ -248,7 +249,7 @@ u256 EVMInstructionInterpreter::eval(
 		else
 			return 0xaaaaaaaa + (arg[0] - m_state.blockNumber - 256);
 	case Instruction::COINBASE:
-		return m_state.coinbase;
+		return h256(m_state.coinbase, h256::AlignRight);
 	case Instruction::TIMESTAMP:
 		return m_state.timestamp;
 	case Instruction::NUMBER:
@@ -304,11 +305,11 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::CREATE:
 		accessMemory(arg[1], arg[2]);
 		logTrace(_instruction, arg);
-		return u160(0xcccccc + arg[1]);
+		return (0xcccccc + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CREATE2:
 		accessMemory(arg[2], arg[3]);
 		logTrace(_instruction, arg);
-		return u160(0xdddddd + arg[1]);
+		return (0xdddddd + arg[1]) & u256("0xffffffffffffffffffffffffffffffffffffffff");
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
 		// TODO assign returndata
@@ -328,18 +329,18 @@ u256 EVMInstructionInterpreter::eval(
 		if (accessMemory(arg[0], arg[1]))
 			data = readMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg, data);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	}
 	case Instruction::REVERT:
 		accessMemory(arg[0], arg[1]);
 		logTrace(_instruction, arg);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::INVALID:
 		logTrace(_instruction);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::SELFDESTRUCT:
 		logTrace(_instruction, arg);
-		throw ExplicitlyTerminated();
+		BOOST_THROW_EXCEPTION(ExplicitlyTerminated());
 	case Instruction::POP:
 		break;
 	// --------------- invalid in strict assembly ---------------
@@ -410,17 +411,6 @@ u256 EVMInstructionInterpreter::eval(
 	case Instruction::SWAP14:
 	case Instruction::SWAP15:
 	case Instruction::SWAP16:
-	// --------------- EIP-615 ---------------
-	case Instruction::EIP615_JUMPTO:
-	case Instruction::EIP615_JUMPIF:
-	case Instruction::EIP615_JUMPV:
-	case Instruction::EIP615_JUMPSUB:
-	case Instruction::EIP615_JUMPSUBV:
-	case Instruction::EIP615_BEGINSUB:
-	case Instruction::EIP615_BEGINDATA:
-	case Instruction::EIP615_RETURNSUB:
-	case Instruction::EIP615_PUTLOCAL:
-	case Instruction::EIP615_GETLOCAL:
 	{
 		yulAssert(false, "");
 		return 0;
@@ -451,7 +441,8 @@ u256 EVMInstructionInterpreter::evalBuiltin(
 		else
 		{
 			// Force different value than for datasize
-			arg[31] += 2;
+			arg[31]++;
+			arg[31]++;
 			return u256(keccak256(arg)) & 0xfff;
 		}
 	}
@@ -526,6 +517,6 @@ void EVMInstructionInterpreter::logTrace(std::string const& _pseudoInstruction, 
 	if (m_state.maxTraceSize > 0 && m_state.trace.size() >= m_state.maxTraceSize)
 	{
 		m_state.trace.emplace_back("Trace size limit reached.");
-		throw TraceLimitReached();
+		BOOST_THROW_EXCEPTION(TraceLimitReached());
 	}
 }

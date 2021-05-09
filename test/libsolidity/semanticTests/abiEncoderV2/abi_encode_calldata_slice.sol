@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
 	function enc_packed_bytes(bytes calldata data, uint256 start, uint256 end) external returns (bytes memory) {
 		return abi.encodePacked(data[start:end]);
@@ -57,8 +57,14 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // test_bytes() ->
+// gas irOptimized: 508617
+// gas legacy: 466763
+// gas legacyOptimized: 374591
 // test_uint256() ->
+// gas irOptimized: 704259
+// gas legacy: 634592
+// gas legacyOptimized: 499337

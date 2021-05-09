@@ -46,6 +46,34 @@ static LPMPostProcessor<Block> addStoreToZero(
 	}
 );
 
+
+namespace
+{
+template <typename T>
+struct addControlFlow
+{
+	addControlFlow()
+	{
+		function = [](T* _message, unsigned)
+		{
+			MutationInfo m{_message, "Added control flow."};
+			YPM::addControlFlow(_message);
+		};
+		/// Unused variable registers callback.
+		LPMPostProcessor<T> callback(function);
+	}
+	function<void(T*, unsigned)> function;
+};
+}
+
+static addControlFlow<ForStmt> c1;
+static addControlFlow<BoundedForStmt> c2;
+static addControlFlow<IfStmt> c3;
+static addControlFlow<SwitchStmt> c4;
+static addControlFlow<FunctionDef> c5;
+static addControlFlow<CaseStmt> c6;
+static addControlFlow<Code> c7;
+
 Literal* YPM::intLiteral(unsigned _value)
 {
 	auto lit = new Literal();
@@ -79,9 +107,7 @@ template <typename T>
 T YPM::EnumTypeConverter<T>::validEnum(unsigned _seed)
 {
 	auto ret = static_cast<T>(_seed % (enumMax() - enumMin() + 1) + enumMin());
-	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-		yulAssert(FunctionCall_Returns_IsValid(ret), "Yul proto mutator: Invalid enum");
-	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+	if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		yulAssert(StoreFunc_Storage_IsValid(ret), "Yul proto mutator: Invalid enum");
 	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
 		yulAssert(NullaryOp_NOp_IsValid(ret), "Yul proto mutator: Invalid enum");
@@ -103,9 +129,7 @@ T YPM::EnumTypeConverter<T>::validEnum(unsigned _seed)
 template <typename T>
 unsigned YPM::EnumTypeConverter<T>::enumMax()
 {
-	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-		return FunctionCall_Returns_Returns_MAX;
-	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+	if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		return StoreFunc_Storage_Storage_MAX;
 	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
 		return NullaryOp_NOp_NOp_MAX;
@@ -126,9 +150,7 @@ unsigned YPM::EnumTypeConverter<T>::enumMax()
 template <typename T>
 unsigned YPM::EnumTypeConverter<T>::enumMin()
 {
-	if constexpr (std::is_same_v<std::decay_t<T>, FunctionCall_Returns>)
-		return FunctionCall_Returns_Returns_MIN;
-	else if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
+	if constexpr (std::is_same_v<std::decay_t<T>, StoreFunc_Storage>)
 		return StoreFunc_Storage_Storage_MIN;
 	else if constexpr (std::is_same_v<std::decay_t<T>, NullaryOp_NOp>)
 		return NullaryOp_NOp_NOp_MIN;
@@ -142,6 +164,103 @@ unsigned YPM::EnumTypeConverter<T>::enumMin()
 		return Create_Type_Type_MIN;
 	else if constexpr (std::is_same_v<std::decay_t<T>, UnaryOpData_UOpData>)
 		return UnaryOpData_UOpData_UOpData_MIN;
+	else
+		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
+}
+
+template <typename T>
+void YPM::addControlFlow(T* _msg)
+{
+	enum class ControlFlowStmt: unsigned
+	{
+		For = 0,
+		BoundedFor,
+		If,
+		Switch,
+		FunctionCall,
+		Break,
+		Continue,
+		Leave,
+		Termination
+	};
+	uniform_int_distribution<unsigned> d(
+		static_cast<unsigned>(ControlFlowStmt::For),
+		static_cast<unsigned>(ControlFlowStmt::Termination)
+	);
+	auto random = static_cast<ControlFlowStmt>(d(s_rand.m_random));
+	Statement* s = basicBlock(_msg)->add_statements();
+	switch (random)
+	{
+	case ControlFlowStmt::For:
+		s->set_allocated_forstmt(new ForStmt());
+		break;
+	case ControlFlowStmt::BoundedFor:
+		s->set_allocated_boundedforstmt(new BoundedForStmt());
+		break;
+	case ControlFlowStmt::If:
+		s->set_allocated_ifstmt(new IfStmt());
+		break;
+	case ControlFlowStmt::Switch:
+		s->set_allocated_switchstmt(new SwitchStmt());
+		break;
+	case ControlFlowStmt::FunctionCall:
+		s->set_allocated_functioncall(new FunctionCall());
+		break;
+	case ControlFlowStmt::Break:
+		s->set_allocated_breakstmt(new BreakStmt());
+		break;
+	case ControlFlowStmt::Continue:
+		s->set_allocated_contstmt(new ContinueStmt());
+		break;
+	case ControlFlowStmt::Leave:
+		s->set_allocated_leave(new LeaveStmt());
+		break;
+	case ControlFlowStmt::Termination:
+		s->set_allocated_terminatestmt(new TerminatingStmt());
+		break;
+	}
+}
+
+Block* YPM::randomBlock(ForStmt* _stmt)
+{
+	enum class ForBlocks: unsigned
+	{
+		Init = 0,
+		Post = 1,
+		Body = 2
+	};
+	uniform_int_distribution<unsigned> d(
+		static_cast<unsigned>(ForBlocks::Init),
+		static_cast<unsigned>(ForBlocks::Body)
+	);
+	switch (static_cast<ForBlocks>(d(s_rand.m_random)))
+	{
+	case ForBlocks::Init:
+		return _stmt->mutable_for_init();
+	case ForBlocks::Post:
+		return _stmt->mutable_for_post();
+	case ForBlocks::Body:
+		return _stmt->mutable_for_body();
+	}
+}
+
+template <typename T>
+Block* YPM::basicBlock(T* _msg)
+{
+	if constexpr (std::is_same_v<T, ForStmt>)
+		return randomBlock(_msg);
+	else if constexpr (std::is_same_v<T, BoundedForStmt>)
+		return _msg->mutable_for_body();
+	else if constexpr (std::is_same_v<T, SwitchStmt>)
+		return _msg->mutable_default_block();
+	else if constexpr (std::is_same_v<T, FunctionDef>)
+		return _msg->mutable_block();
+	else if constexpr (std::is_same_v<T, IfStmt>)
+		return _msg->mutable_if_body();
+	else if constexpr (std::is_same_v<T, CaseStmt>)
+		return _msg->mutable_case_block();
+	else if constexpr (std::is_same_v<T, Code>)
+		return _msg->mutable_block();
 	else
 		static_assert(AlwaysFalse<T>::value, "Yul proto mutator: non-exhaustive visitor.");
 }

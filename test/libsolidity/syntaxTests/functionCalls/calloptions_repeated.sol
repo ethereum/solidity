@@ -11,9 +11,8 @@ contract C {
 // ====
 // EVMVersion: >=constantinople
 // ----
-// TypeError 9886: (78-110): Option "gas" has already been set.
-// TypeError 9886: (120-154): Option "gas" has already been set.
-// TypeError 9886: (164-198): Option "value" has already been set.
-// TypeError 9886: (208-249): Option "value" has already been set.
-// TypeError 9886: (208-249): Option "gas" has already been set.
-// TypeError 9886: (259-286): Option "salt" has already been set.
+// TypeError 1645: (78-110): Function call options have already been set, you have to combine them into a single {...}-option.
+// TypeError 1645: (120-154): Function call options have already been set, you have to combine them into a single {...}-option.
+// TypeError 1645: (164-198): Function call options have already been set, you have to combine them into a single {...}-option.
+// TypeError 1645: (208-249): Function call options have already been set, you have to combine them into a single {...}-option.
+// TypeError 1645: (259-286): Function call options have already been set, you have to combine them into a single {...}-option.

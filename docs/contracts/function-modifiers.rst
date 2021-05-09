@@ -18,10 +18,10 @@ if they are marked ``virtual``. For details, please see
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.7.0 <0.8.0;
+    pragma solidity >0.7.0 <0.9.0;
 
     contract owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
 
         // This contract only defines a modifier but does not use
@@ -100,16 +100,32 @@ if they are marked ``virtual``. For details, please see
         }
     }
 
+If you want to access a modifier ``m`` defined in a contract ``C``, you can use ``C.m`` to
+reference it without virtual lookup. It is only possible to use modifiers defined in the current
+contract or its base contracts. Modifiers can also be defined in libraries but their use is
+limited to functions of the same library.
+
 Multiple modifiers are applied to a function by specifying them in a
 whitespace-separated list and are evaluated in the order presented.
+
+Modifiers cannot implicitly access or change the arguments and return values of functions they modify.
+Their values can only be passed to them explicitly at the point of invocation.
+
+Explicit returns from a modifier or function body only leave the current
+modifier or function body. Return variables are assigned and
+control flow continues after the ``_`` in the preceding modifier.
 
 .. warning::
     In an earlier version of Solidity, ``return`` statements in functions
     having modifiers behaved differently.
 
-Explicit returns from a modifier or function body only leave the current
-modifier or function body. Return variables are assigned and
-control flow continues after the "_" in the preceding modifier.
+An explicit return from a modifier with ``return;`` does not affect the values returned by the function.
+The modifier can, however, choose not to execute the function body at all and in that case the return
+variables are set to their :ref:`default values<default-value>` just as if the function had an empty
+body.
+
+The ``_`` symbol can appear in the modifier multiple times. Each occurrence is replaced with
+the function body.
 
 Arbitrary expressions are allowed for modifier arguments and in this context,
 all symbols visible from the function are visible in the modifier. Symbols

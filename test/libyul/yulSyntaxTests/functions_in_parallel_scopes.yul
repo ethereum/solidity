@@ -1,0 +1,5 @@
+{
+    { function g() {} }
+    { function g() {} }
+}
+// ----

@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f() public pure {
@@ -11,7 +9,7 @@ contract C
 		assert(a == b);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (207-230): CHC: Assertion violation happens here.
-// Warning 6328: (273-287): CHC: Assertion violation happens here.
-// Warning 5084: (108-117): Type conversion is not yet fully supported and might yield false positives.
+// Warning 6328: (240-254): CHC: Assertion violation happens here.\nCounterexample:\n\na = 4660\nb = 305397760\n\nTransaction trace:\nC.constructor()\nC.f()

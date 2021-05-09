@@ -21,7 +21,7 @@
 
 #include <libyul/optimiser/Substitution.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;

@@ -23,6 +23,7 @@
         6
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -46,6 +47,7 @@
                       "src": "58:14:1",
                       "value":
                       {
+                        "hexValue": "616263",
                         "kind": "string",
                         "nodeType": "YulLiteral",
                         "src": "67:5:1",
@@ -78,6 +80,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "m",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -101,7 +104,8 @@
         }
       ],
       "scope": 7,
-      "src": "0:82:1"
+      "src": "0:82:1",
+      "usedErrors": []
     }
   ],
   "src": "0:83:1"

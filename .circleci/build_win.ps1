@@ -2,9 +2,17 @@ $ErrorActionPreference = "Stop"
 
 cd "$PSScriptRoot\.."
 
-if ("$Env:FORCE_RELEASE") {
+if ("$Env:FORCE_RELEASE" -Or "$Env:CIRCLE_TAG") {
 	New-Item prerelease.txt -type file
 	Write-Host "Building release version."
+}
+else {
+	# Use last commit date rather than build date to avoid ending up with builds for
+	# different platforms having different version strings (and therefore producing different bytecode)
+	# if the CI is triggered just before midnight.
+	$last_commit_timestamp = git log -1 --date=unix --format=%cd HEAD
+	$last_commit_date = (Get-Date -Date "1970-01-01 00:00:00Z").toUniversalTime().addSeconds($last_commit_timestamp).ToString("yyyy.M.d")
+	-join("ci.", $last_commit_date) | out-file -encoding ascii prerelease.txt
 }
 
 mkdir build

@@ -21,9 +21,6 @@ For state variables, ``external`` is not possible.
     which means they can be called from other contracts and
     via transactions. An external function ``f`` cannot be called
     internally (i.e. ``f()`` does not work, but ``this.f()`` works).
-    External functions are sometimes more efficient when
-    they receive large arrays of data, because the data
-    is not copied from calldata to memory.
 
 ``public``
     Public functions are part of the contract interface
@@ -35,6 +32,7 @@ For state variables, ``external`` is not possible.
     Those functions and state variables can only be
     accessed internally (i.e. from within the current contract
     or contracts deriving from it), without using ``this``.
+    This is the default visibility level for state variables.
 
 ``private``
     Private functions and state variables are only
@@ -55,7 +53,7 @@ return parameter list for functions.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract C {
         function f(uint a) private pure returns (uint b) { return a + 1; }
@@ -70,7 +68,7 @@ In the following example, ``D``, can call ``c.getData()`` to retrieve the value 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract C {
         uint private data;
@@ -115,7 +113,7 @@ when they are declared.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract C {
         uint public data = 42;
@@ -136,7 +134,7 @@ it evaluates to a state variable.  If it is accessed externally
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract C {
         uint public data;
@@ -156,7 +154,7 @@ to write a function, for example:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract arrayExample {
         // public state variable
@@ -183,7 +181,7 @@ The next example is more complex:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract Complex {
         struct Data {

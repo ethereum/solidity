@@ -11,5 +11,8 @@ contract D {
     return test();
   }
 }
+// ====
+// compileViaYul: also
 // ----
 // f() -> 2
+// gas legacy: 101554

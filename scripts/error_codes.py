@@ -188,14 +188,14 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
     # Warning (1878): SPDX license identifier not provided in source file. ....
     # Warning (3420): Source file does not specify required compiler version!
     test_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "error_codes", "err"))
-    test_ids |= find_ids_in_cmdline_test_err(path.join(top_dir, "test", "cmdlineTests", "yul_unimplemented", "err"))
 
     # white list of ids which are not covered by tests
     white_ids = {
         "3805", # "This is a pre-release compiler version, please do not use it in production."
                 # The warning may or may not exist in a compiler build.
-        "4591"  # "There are more than 256 warnings. Ignoring the rest."
+        "4591", # "There are more than 256 warnings. Ignoring the rest."
                 # Due to 3805, the warning lists look different for different compiler builds.
+        "1834"  # Unimplemented feature error, as we do not test it anymore via cmdLineTests
     }
     assert len(test_ids & white_ids) == 0, "The sets are not supposed to intersect"
     test_ids |= white_ids
@@ -220,16 +220,14 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
             return False
 
     old_source_only_ids = {
-        "1123", "1133", "1220", "1584", "1823", "1950",
-        "1988", "2418", "2461", "2512", "2592", "2657", "2800", "2842", "2856",
-        "3263", "3356", "3441", "3682", "3876",
-        "3893", "4010", "4281", "4802", "4805", "4828",
-        "4904", "4990", "5052", "5073", "5170", "5188", "5272", "5347", "5473",
-        "5622", "6041", "6052", "6272", "6708", "6792", "6931", "7110", "7128", "7186",
-        "7589", "7593", "7653", "7812", "7885", "8065", "8084", "8140",
-        "8261", "8312", "8592", "8758", "9011",
-        "9085", "9390", "9440", "9547", "9551", "9615", "9980"
+        "1584", "1823",
+        "1988", "2066", "3356",
+        "3893", "3996", "4010", "4802",
+        "5272", "5622", "7128", "7400",
+        "7589", "7593", "8065", "8084", "8140",
+        "8312", "8592", "9134", "9609",
     }
+
     new_source_only_ids = source_only_ids - old_source_only_ids
     if len(new_source_only_ids) != 0:
         print("The following new error code(s), not covered by tests, found:")

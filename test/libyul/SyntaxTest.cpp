@@ -18,13 +18,13 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/Exceptions.h>
 
 #include <test/libyul/Common.h>
 #include <test/libyul/SyntaxTest.h>
+#include <test/TestCaseReader.h>
 
 #include <test/libsolidity/util/SoltestErrors.h>
 
@@ -35,14 +35,15 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul::test;
+using namespace solidity::frontend::test;
 
 void SyntaxTest::parseAndAnalyze()
 {
-	if (m_sources.size() != 1)
+	if (m_sources.sources.size() != 1)
 		BOOST_THROW_EXCEPTION(runtime_error{"Expected only one source for yul test."});
 
-	string const& name = m_sources.begin()->first;
-	string const& source = m_sources.begin()->second;
+	string const& name = m_sources.sources.begin()->first;
+	string const& source = m_sources.sources.begin()->second;
 
 	ErrorList errorList{};
 	soltestAssert(m_dialect, "");

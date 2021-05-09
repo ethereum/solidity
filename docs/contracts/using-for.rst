@@ -30,7 +30,7 @@ Let us rewrite the set example from the
 :ref:`libraries` in this way::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
 
     // This is the same code as before, just without comments
@@ -83,7 +83,7 @@ Let us rewrite the set example from the
 It is also possible to extend elementary types in that way::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.6.8 <0.9.0;
 
     library Search {
         function indexOf(uint[] storage self, uint value)
@@ -93,7 +93,7 @@ It is also possible to extend elementary types in that way::
         {
             for (uint i = 0; i < self.length; i++)
                 if (self[i] == value) return i;
-            return uint(-1);
+            return type(uint).max;
         }
     }
 
@@ -108,7 +108,7 @@ It is also possible to extend elementary types in that way::
         function replace(uint _old, uint _new) public {
             // This performs the library function call
             uint index = data.indexOf(_old);
-            if (index == uint(-1))
+            if (index == type(uint).max)
                 data.push(_new);
             else
                 data[index] = _new;

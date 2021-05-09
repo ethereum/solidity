@@ -11,7 +11,7 @@ REPO_ROOT="$(dirname "$0")"/..
     commitdate=$(git show --format=%ci HEAD | head -n 1 | cut - -b1-10 | sed -e 's/-0?/./' | sed -e 's/-0?/./')
 
     # file exists and has zero size -> not a prerelease
-    if [ -e prerelease.txt -a ! -s prerelease.txt ]
+    if [ -e prerelease.txt ] && [ ! -s prerelease.txt ]
     then
         versionstring="$version"
     else
@@ -25,7 +25,7 @@ REPO_ROOT="$(dirname "$0")"/..
     git checkout-index -a --prefix="$SOLDIR"
     # Store the commit hash
     echo "$commithash" > "$SOLDIR/commit_hash.txt"
-    if [ -e prerelease.txt -a ! -s prerelease.txt ]
+    if [ -e prerelease.txt ] && [ ! -s prerelease.txt ]
     then
         cp prerelease.txt "$SOLDIR/"
     fi

@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/OptimiserStep.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;
@@ -39,5 +39,5 @@ void ExpressionSimplifier::visit(Expression& _expression)
 	ASTModifier::visit(_expression);
 
 	while (auto const* match = SimplificationRules::findFirstMatch(_expression, m_dialect, m_value))
-		_expression = match->action().toExpression(locationOf(_expression));
+		_expression = match->action().toExpression(debugDataOf(_expression));
 }

@@ -38,7 +38,7 @@ namespace solidity::yul
 class EVMAssembly: public AbstractAssembly
 {
 public:
-	explicit EVMAssembly(bool _evm15 = false): m_evm15(_evm15) { }
+	explicit EVMAssembly() { }
 	~EVMAssembly() override = default;
 
 	/// Set a new source location valid starting from the next instruction.
@@ -58,7 +58,7 @@ public:
 	/// Generate a new unique label.
 	LabelID newLabelId() override;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.
-	LabelID namedLabel(std::string const& _name) override;
+	LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) override;
 	/// Append a reference to a to-be-linked symbol.
 	/// Currently, we assume that the value is always a 20 byte number.
 	void appendLinkerSymbol(std::string const& _name) override;
@@ -70,16 +70,10 @@ public:
 	void appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType) override;
 	/// Append a jump-to-if-immediate operation.
 	void appendJumpToIf(LabelID _labelId, JumpType _jumpType) override;
-	/// Start a subroutine.
-	void appendBeginsub(LabelID _labelId, int _arguments) override;
-	/// Call a subroutine.
-	void appendJumpsub(LabelID _labelId, int _arguments, int _returns) override;
-	/// Return from a subroutine.
-	void appendReturnsub(int _returns, int _stackDiffAfter) override;
 
 	/// Append the assembled size as a constant.
 	void appendAssemblySize() override;
-	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() override;
+	std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(std::string _name = "") override;
 	void appendDataOffset(std::vector<SubID> const& _subPath) override;
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
@@ -97,7 +91,6 @@ private:
 	void appendLabelReferenceInternal(AbstractAssembly::LabelID _labelId);
 	void updateReference(size_t pos, size_t size, u256 value);
 
-	bool m_evm15 = false; ///< if true, switch to evm1.5 mode
 	LabelID m_nextLabelId = 0;
 	int m_stackHeight = 0;
 	bytes m_bytecode;

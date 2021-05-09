@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
     struct S { uint x; }
     S s;
@@ -11,7 +12,7 @@ contract C {
     }
 }
 // ----
-// TypeError 2056: (131-132): This type cannot be encoded.
-// TypeError 2056: (134-135): This type cannot be encoded.
-// TypeError 9578: (200-201): Type not supported in packed mode.
-// TypeError 9578: (203-204): Type not supported in packed mode.
+// TypeError 2056: (151-152): This type cannot be encoded.
+// TypeError 2056: (154-155): This type cannot be encoded.
+// TypeError 9578: (220-221): Type not supported in packed mode.
+// TypeError 9578: (223-224): Type not supported in packed mode.

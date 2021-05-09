@@ -391,7 +391,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
 
     receive() external payable override(DAOInterface, TokenCreation) {
         if (block.timestamp < closingTime + creationGracePeriod && msg.sender != address(extraBalance))
-            createTokenProxy(msg.sender);
+            createTokenProxy(payable(msg.sender));
         else
             receiveEther();
     }
@@ -459,7 +459,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         p.newCurator = _newCurator;
         if (_newCurator)
             p.splitData.push();
-        p.creator = msg.sender;
+        p.creator = payable(msg.sender);
         p.proposalDeposit = msg.value;
 
         sumOfProposalDeposits += msg.value;
@@ -663,7 +663,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
         uint fundsToBeMoved =
             (balances[msg.sender] * p.splitData[0].splitBalance) /
             p.splitData[0].totalSupply;
-        if (p.splitData[0].newDAO.createTokenProxy{value: fundsToBeMoved}(msg.sender) == false)
+        if (p.splitData[0].newDAO.createTokenProxy{value: fundsToBeMoved}(payable(msg.sender)) == false)
             revert();
 
 
@@ -687,7 +687,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
 
         // Burn DAO Tokens
         emit Transfer(msg.sender, 0x0000000000000000000000000000000000000000, balances[msg.sender]);
-        withdrawRewardFor(msg.sender); // be nice, and get his rewards
+        withdrawRewardFor(payable(msg.sender)); // be nice, and get his rewards
         totalSupply -= balances[msg.sender];
         balances[msg.sender] = 0;
         paidOut[msg.sender] = 0;
@@ -711,7 +711,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
 
 
     function retrieveDAOReward(bool _toMembers) external override returns (bool _success) {
-        DAO dao = DAO(msg.sender);
+        DAO dao = DAO(payable(msg.sender));
 
         if ((rewardToken[msg.sender] * DAOrewardAccount.accumulatedInput()) /
             totalRewardToken < DAOpaidOut[msg.sender])
@@ -724,11 +724,11 @@ contract DAO is DAOInterface, Token, TokenCreation {
         reward = address(DAOrewardAccount).balance < reward ? address(DAOrewardAccount).balance : reward;
 
         if(_toMembers) {
-            if (!DAOrewardAccount.payOut(address(dao.rewardAccount()), reward))
+            if (!DAOrewardAccount.payOut(payable(dao.rewardAccount()), reward))
                 revert();
             }
         else {
-            if (!DAOrewardAccount.payOut(address(dao), reward))
+            if (!DAOrewardAccount.payOut(payable(dao), reward))
                 revert();
         }
         DAOpaidOut[msg.sender] += reward;
@@ -736,7 +736,7 @@ contract DAO is DAOInterface, Token, TokenCreation {
     }
 
     function getMyReward() public override returns (bool _success) {
-        return withdrawRewardFor(msg.sender);
+        return withdrawRewardFor(payable(msg.sender));
     }
 
 

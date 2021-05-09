@@ -4,3 +4,4 @@ import "./dir/b"; contract A is B {}
 contract B {}
 ==== Source: dir/c ====
 import "../a"; contract C is A {}
+// ----

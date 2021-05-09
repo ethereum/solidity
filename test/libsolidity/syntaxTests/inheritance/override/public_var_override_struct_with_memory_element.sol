@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 abstract contract C {
 	struct S {
@@ -11,3 +11,4 @@ abstract contract C {
 contract D is C {
 	S public override f;
 }
+// ----

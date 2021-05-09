@@ -36,15 +36,15 @@ contract C {
         // real is not there yet.
 
         // array
-        byte[2] memory a;
-        byte[2] memory b;
-        byte[2] memory k = true ? a : b;
-        k[0] = byte(0); //Avoid unused var warning
+        bytes1[2] memory a;
+        bytes1[2] memory b;
+        bytes1[2] memory k = true ? a : b;
+        k[0] = bytes1(0); //Avoid unused var warning
 
         bytes memory e;
         bytes memory f;
         bytes memory l = true ? e : f;
-        l[0] = byte(0); // Avoid unused var warning
+        l[0] = bytes1(0); // Avoid unused var warning
 
         // fixed bytes
         bytes2 c;
@@ -84,6 +84,6 @@ contract C {
     }
 }
 // ----
-// Warning 2519: (1005-1019): This declaration shadows an existing declaration.
+// Warning 2519: (1013-1027): This declaration shadows an existing declaration.
 // Warning 2018: (257-642): Function state mutability can be restricted to pure
-// Warning 2018: (647-1227): Function state mutability can be restricted to pure
+// Warning 2018: (647-1237): Function state mutability can be restricted to pure

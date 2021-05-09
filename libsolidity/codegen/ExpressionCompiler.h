@@ -31,7 +31,6 @@
 #include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 
-#include <boost/noncopyable.hpp>
 #include <functional>
 #include <memory>
 
@@ -132,7 +131,7 @@ private:
 
 	/// @returns true if the operator applied to the given type requires a cleanup prior to the
 	/// operation.
-	static bool cleanupNeededForOp(Type::Category _type, Token _op);
+	static bool cleanupNeededForOp(Type::Category _type, Token _op, Arithmetic _arithmetic);
 
 	void acceptAndConvert(Expression const& _expression, Type const& _type, bool _cleanupNeeded = false);
 

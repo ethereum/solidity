@@ -16,5 +16,8 @@ contract Sample {
         p[0] = m;
     }
 }
+// ====
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // p(uint256): 0x0 -> 0xbbbb, 0xcccc, 0x80, 0xc0, 0x05, "hello", 0x05, "world"

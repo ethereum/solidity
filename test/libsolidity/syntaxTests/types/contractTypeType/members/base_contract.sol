@@ -9,3 +9,4 @@ contract C is B {
         B.g();
     }
 }
+// ----

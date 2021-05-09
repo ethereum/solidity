@@ -41,6 +41,11 @@ public:
 	/// cases.
 	std::string createFunction(std::string const& _name, std::function<std::string()> const& _creator);
 
+	std::string createFunction(
+		std::string const& _name,
+		std::function<std::string(std::vector<std::string>&, std::vector<std::string>&)> const& _creator
+	);
+
 	/// @returns concatenation of all generated functions.
 	/// Guarantees that the order of functions in the generated code is deterministic and
 	/// platform-independent.

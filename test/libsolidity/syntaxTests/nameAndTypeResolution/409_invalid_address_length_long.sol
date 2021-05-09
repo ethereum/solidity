@@ -5,4 +5,4 @@ contract C {
     }
 }
 // ----
-// SyntaxError 9429: (64-107): This looks like an address but is not exactly 40 hex digits. It is 41 hex digits. If this is not used as an address, please prepend '00'. For more information please see https://solidity.readthedocs.io/en/develop/types.html#address-literals
+// SyntaxError 9429: (64-107): This looks like an address but is not exactly 40 hex digits. It is 41 hex digits. If this is not used as an address, please prepend '00'. For more information please see https://docs.soliditylang.org/en/develop/types.html#address-literals

@@ -20,7 +20,7 @@
 
 #include <libsolidity/analysis/OverrideChecker.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <regex>
 

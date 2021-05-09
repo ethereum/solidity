@@ -17,13 +17,12 @@
 
 #include <libyul/optimiser/ReasoningBasedSimplifier.h>
 
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
-
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
@@ -80,7 +79,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 	if (result == CheckResult::UNSATISFIABLE)
 	{
 		Literal trueCondition = m_dialect.trueLiteral();
-		trueCondition.location = locationOf(*_if.condition);
+		trueCondition.debugData = debugDataOf(*_if.condition);
 		_if.condition = make_unique<yul::Expression>(move(trueCondition));
 	}
 	else
@@ -92,7 +91,7 @@ void ReasoningBasedSimplifier::operator()(If& _if)
 		if (result2 == CheckResult::UNSATISFIABLE)
 		{
 			Literal falseCondition = m_dialect.zeroLiteralForType(m_dialect.boolType);
-			falseCondition.location = locationOf(*_if.condition);
+			falseCondition.debugData = debugDataOf(*_if.condition);
 			_if.condition = make_unique<yul::Expression>(move(falseCondition));
 			_if.body = yul::Block{};
 			// Nothing left to be done.
@@ -123,10 +122,8 @@ smtutil::Expression ReasoningBasedSimplifier::encodeExpression(yul::Expression c
 	return std::visit(GenericVisitor{
 		[&](FunctionCall const& _functionCall)
 		{
-			if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-				if (auto const* builtin = dialect->builtin(_functionCall.functionName.name))
-					if (builtin->instruction)
-						return encodeEVMBuiltin(*builtin->instruction, _functionCall.arguments);
+			if (auto instruction = toEVMInstruction(m_dialect, _functionCall.functionName.name))
+				return encodeEVMBuiltin(*instruction, _functionCall.arguments);
 			return newRestrictedVariable();
 		},
 		[&](Identifier const& _identifier)

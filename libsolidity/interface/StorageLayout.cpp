@@ -48,7 +48,7 @@ Json::Value StorageLayout::generate(ContractDefinition const& _contractDef)
 Json::Value StorageLayout::generate(VariableDeclaration const& _var, u256 const& _slot, unsigned _offset)
 {
 	Json::Value varEntry;
-	TypePointer varType = _var.type();
+	Type const* varType = _var.type();
 
 	varEntry["label"] = _var.name();
 	varEntry["astId"] = static_cast<int>(_var.id());
@@ -62,7 +62,7 @@ Json::Value StorageLayout::generate(VariableDeclaration const& _var, u256 const&
 	return varEntry;
 }
 
-void StorageLayout::generate(TypePointer _type)
+void StorageLayout::generate(Type const* _type)
 {
 	if (m_types.isMember(typeKeyName(_type)))
 		return;
@@ -112,7 +112,7 @@ void StorageLayout::generate(TypePointer _type)
 	solAssert(typeInfo.isMember("encoding"), "");
 }
 
-string StorageLayout::typeKeyName(TypePointer _type)
+string StorageLayout::typeKeyName(Type const* _type)
 {
 	if (auto refType = dynamic_cast<ReferenceType const*>(_type))
 		return TypeProvider::withLocationIfReference(refType->location(), _type)->richIdentifier();

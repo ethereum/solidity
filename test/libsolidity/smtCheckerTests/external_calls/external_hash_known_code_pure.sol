@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract Crypto {
 	function hash(bytes32) external pure returns (bytes32) {
 		return bytes32(0);
@@ -27,5 +25,8 @@ contract C {
 		assert(sig_1 == sig_2);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (431-453): CHC: Assertion violation happens here.
+// Warning 6328: (398-420): CHC: Assertion violation happens here.

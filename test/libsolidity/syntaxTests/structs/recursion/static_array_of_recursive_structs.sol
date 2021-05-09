@@ -8,3 +8,4 @@ contract Test {
         val;
     }
 }
+// ----

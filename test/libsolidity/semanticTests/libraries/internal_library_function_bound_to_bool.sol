@@ -14,7 +14,7 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// foo(bool, bool): true, true -> false
-// foo(bool, bool): true, false -> true
-// foo(bool, bool): false, true -> true
-// foo(bool, bool): false, false -> false
+// foo(bool,bool): true, true -> false
+// foo(bool,bool): true, false -> true
+// foo(bool,bool): false, true -> true
+// foo(bool,bool): false, false -> false

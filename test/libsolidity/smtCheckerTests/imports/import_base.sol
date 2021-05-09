@@ -9,16 +9,15 @@ contract Base {
 	}
 }
 ==== Source: der ====
-pragma experimental SMTChecker;
 import "base";
 contract Der is Base {
 	function g(uint y) public {
+		require(x < 10); // added to restrict the search space and avoid non-determinsm in Spacer
 		x += f();
 		assert(y > x);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (der:113-126): CHC: Assertion violation happens here.
-// Warning 2661: (base:100-103): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (der:101-109): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
-// Warning 2661: (base:100-103): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.
+// Warning 6328: (der:173-186): CHC: Assertion violation happens here.\nCounterexample:\nx = 3, a = 0\ny = 0\n\nTransaction trace:\nDer.constructor()\nState: x = 0, a = 0\nDer.g(0)\n    Base.f() -- internal call

@@ -11,6 +11,11 @@ contract C {
             ret := create2(0, 0, 0, 0)
         }
     }
+    function h() view external returns (bytes32 ret) {
+        assembly {
+            ret := extcodehash(address())
+        }
+    }
 }
 // ====
 // EVMVersion: >=constantinople

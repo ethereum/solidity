@@ -1,0 +1,2 @@
+pragma abicoder "v2";
+// ----

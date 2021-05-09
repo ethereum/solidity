@@ -21,11 +21,13 @@
  * Solidity inline assembly parser.
  */
 
+#include <libyul/AST.h>
 #include <libyul/AsmParser.h>
 #include <libyul/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/ErrorReporter.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -37,6 +39,21 @@ using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
+
+namespace {
+
+[[nodiscard]]
+shared_ptr<DebugData const> updateLocationEndFrom(
+	shared_ptr<DebugData const> const& _debugData,
+	langutil::SourceLocation const& _location
+)
+{
+	SourceLocation updatedLocation = _debugData->location;
+	updatedLocation.end = _location.end;
+	return make_shared<DebugData const>(updatedLocation);
+}
+
+}
 
 unique_ptr<Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner, bool _reuseScanner)
 {
@@ -68,7 +85,7 @@ Block Parser::parseBlock()
 	expectToken(Token::LBrace);
 	while (currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
-	block.location.end = currentLocation().end;
+	block.debugData = updateLocationEndFrom(block.debugData, currentLocation());
 	advance();
 	return block;
 }
@@ -107,7 +124,7 @@ Statement Parser::parseStatement()
 			fatalParserError(4904_error, "Case not allowed after default case.");
 		if (_switch.cases.empty())
 			fatalParserError(2418_error, "Switch statement without any cases.");
-		_switch.location.end = _switch.cases.back().body.location.end;
+		_switch.debugData = updateLocationEndFrom(_switch.debugData, _switch.cases.back().body.debugData->location);
 		return Statement{move(_switch)};
 	}
 	case Token::For:
@@ -137,24 +154,24 @@ Statement Parser::parseStatement()
 	default:
 		break;
 	}
+
 	// Options left:
-	// Simple instruction (might turn into functional),
-	// literal,
-	// identifier (might turn into label or functional assignment)
-	ElementaryOperation elementary(parseElementaryOperation());
+	// Expression/FunctionCall
+	// Assignment
+	variant<Literal, Identifier> elementary(parseLiteralOrIdentifier());
 
 	switch (currentToken())
 	{
 	case Token::LParen:
 	{
 		Expression expr = parseCall(std::move(elementary));
-		return ExpressionStatement{locationOf(expr), expr};
+		return ExpressionStatement{debugDataOf(expr), move(expr)};
 	}
 	case Token::Comma:
 	case Token::AssemblyAssign:
 	{
 		Assignment assignment;
-		assignment.location = locationOf(elementary);
+		assignment.debugData = debugDataOf(elementary);
 
 		while (true)
 		{
@@ -183,36 +200,23 @@ Statement Parser::parseStatement()
 
 			expectToken(Token::Comma);
 
-			elementary = parseElementaryOperation();
+			elementary = parseLiteralOrIdentifier();
 		}
 
 		expectToken(Token::AssemblyAssign);
 
 		assignment.value = make_unique<Expression>(parseExpression());
-		assignment.location.end = locationOf(*assignment.value).end;
+		assignment.debugData = updateLocationEndFrom(assignment.debugData, locationOf(*assignment.value));
 
-		return Statement{std::move(assignment)};
+		return Statement{move(assignment)};
 	}
 	default:
 		fatalParserError(6913_error, "Call or assignment expected.");
 		break;
 	}
 
-	if (holds_alternative<Identifier>(elementary))
-	{
-		Identifier& identifier = std::get<Identifier>(elementary);
-		return ExpressionStatement{identifier.location, { move(identifier) }};
-	}
-	else if (holds_alternative<Literal>(elementary))
-	{
-		Expression expr = std::get<Literal>(elementary);
-		return ExpressionStatement{locationOf(expr), expr};
-	}
-	else
-	{
-		yulAssert(false, "Invalid elementary operation.");
-		return {};
-	}
+	yulAssert(false, "");
+	return {};
 }
 
 Case Parser::parseCase()
@@ -224,7 +228,7 @@ Case Parser::parseCase()
 	else if (currentToken() == Token::Case)
 	{
 		advance();
-		ElementaryOperation literal = parseElementaryOperation();
+		variant<Literal, Identifier> literal = parseLiteralOrIdentifier();
 		if (!holds_alternative<Literal>(literal))
 			fatalParserError(4805_error, "Literal expected.");
 		_case.value = make_unique<Literal>(std::get<Literal>(std::move(literal)));
@@ -232,7 +236,7 @@ Case Parser::parseCase()
 	else
 		yulAssert(false, "Case or default case expected.");
 	_case.body = parseBlock();
-	_case.location.end = _case.body.location.end;
+	_case.debugData = updateLocationEndFrom(_case.debugData, _case.body.debugData->location);
 	return _case;
 }
 
@@ -252,7 +256,7 @@ ForLoop Parser::parseForLoop()
 	forLoop.post = parseBlock();
 	m_currentForLoopComponent = ForLoopComponent::ForLoopBody;
 	forLoop.body = parseBlock();
-	forLoop.location.end = forLoop.body.location.end;
+	forLoop.debugData = updateLocationEndFrom(forLoop.debugData, forLoop.body.debugData->location);
 
 	m_currentForLoopComponent = outerForLoopComponent;
 
@@ -263,40 +267,40 @@ Expression Parser::parseExpression()
 {
 	RecursionGuard recursionGuard(*this);
 
-	ElementaryOperation operation = parseElementaryOperation();
-	if (holds_alternative<FunctionCall>(operation) || currentToken() == Token::LParen)
-		return parseCall(std::move(operation));
-	else if (holds_alternative<Identifier>(operation))
-		return std::get<Identifier>(operation);
-	else
-	{
-		yulAssert(holds_alternative<Literal>(operation), "");
-		return std::get<Literal>(operation);
-	}
+	variant<Literal, Identifier> operation = parseLiteralOrIdentifier();
+	return visit(GenericVisitor{
+		[&](Identifier& _identifier) -> Expression
+		{
+			if (currentToken() == Token::LParen)
+				return parseCall(std::move(operation));
+			if (m_dialect.builtin(_identifier.name))
+				fatalParserError(
+					7104_error,
+					_identifier.debugData->location,
+					"Builtin function \"" + _identifier.name.str() + "\" must be called."
+				);
+			return move(_identifier);
+		},
+		[&](Literal& _literal) -> Expression
+		{
+			return move(_literal);
+		}
+	}, operation);
 }
 
-Parser::ElementaryOperation Parser::parseElementaryOperation()
+variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 {
 	RecursionGuard recursionGuard(*this);
-	ElementaryOperation ret;
 	switch (currentToken())
 	{
 	case Token::Identifier:
 	{
-		YulString literal{currentLiteral()};
-		if (m_dialect.builtin(literal))
-		{
-			Identifier identifier{currentLocation(), literal};
-			advance();
-			expectToken(Token::LParen, false);
-			return FunctionCall{identifier.location, identifier, {}};
-		}
-		else
-			ret = Identifier{currentLocation(), literal};
+		Identifier identifier{DebugData::create(currentLocation()), YulString{currentLiteral()}};
 		advance();
-		break;
+		return identifier;
 	}
 	case Token::StringLiteral:
+	case Token::HexStringLiteral:
 	case Token::Number:
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
@@ -305,6 +309,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		switch (currentToken())
 		{
 		case Token::StringLiteral:
+		case Token::HexStringLiteral:
 			kind = LiteralKind::String;
 			break;
 		case Token::Number:
@@ -321,7 +326,7 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		}
 
 		Literal literal{
-			currentLocation(),
+			DebugData::create(currentLocation()),
 			kind,
 			YulString{currentLiteral()},
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType
@@ -330,20 +335,19 @@ Parser::ElementaryOperation Parser::parseElementaryOperation()
 		if (currentToken() == Token::Colon)
 		{
 			expectToken(Token::Colon);
-			literal.location.end = currentLocation().end;
+			literal.debugData = updateLocationEndFrom(literal.debugData, currentLocation());
 			literal.type = expectAsmIdentifier();
 		}
 
-		ret = std::move(literal);
-		break;
+		return literal;
 	}
-	case Token::HexStringLiteral:
-		fatalParserError(3772_error, "Hex literals are not valid in this context.");
+	case Token::Illegal:
+		fatalParserError(1465_error, "Illegal token: " + to_string(m_scanner->currentError()));
 		break;
 	default:
 		fatalParserError(1856_error, "Literal or identifier expected.");
 	}
-	return ret;
+	return {};
 }
 
 VariableDeclaration Parser::parseVariableDeclaration()
@@ -363,10 +367,11 @@ VariableDeclaration Parser::parseVariableDeclaration()
 	{
 		expectToken(Token::AssemblyAssign);
 		varDecl.value = make_unique<Expression>(parseExpression());
-		varDecl.location.end = locationOf(*varDecl.value).end;
+		varDecl.debugData = updateLocationEndFrom(varDecl.debugData, locationOf(*varDecl.value));
 	}
 	else
-		varDecl.location.end = varDecl.variables.back().location.end;
+		varDecl.debugData = updateLocationEndFrom(varDecl.debugData, varDecl.variables.back().debugData->location);
+
 	return varDecl;
 }
 
@@ -411,26 +416,22 @@ FunctionDefinition Parser::parseFunctionDefinition()
 	m_insideFunction = true;
 	funDef.body = parseBlock();
 	m_insideFunction = preInsideFunction;
-	funDef.location.end = funDef.body.location.end;
+	funDef.debugData = updateLocationEndFrom(funDef.debugData, funDef.body.debugData->location);
 
 	m_currentForLoopComponent = outerForLoopComponent;
 	return funDef;
 }
 
-Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
+FunctionCall Parser::parseCall(variant<Literal, Identifier>&& _initialOp)
 {
 	RecursionGuard recursionGuard(*this);
 
-	FunctionCall ret;
-	if (holds_alternative<Identifier>(_initialOp))
-	{
-		ret.functionName = std::move(std::get<Identifier>(_initialOp));
-		ret.location = ret.functionName.location;
-	}
-	else if (holds_alternative<FunctionCall>(_initialOp))
-		ret = std::move(std::get<FunctionCall>(_initialOp));
-	else
+	if (!holds_alternative<Identifier>(_initialOp))
 		fatalParserError(9980_error, "Function name expected.");
+
+	FunctionCall ret;
+	ret.functionName = std::move(std::get<Identifier>(_initialOp));
+	ret.debugData = ret.functionName.debugData;
 
 	expectToken(Token::LParen);
 	if (currentToken() != Token::RParen)
@@ -442,7 +443,7 @@ Expression Parser::parseCall(Parser::ElementaryOperation&& _initialOp)
 			ret.arguments.emplace_back(parseExpression());
 		}
 	}
-	ret.location.end = currentLocation().end;
+	ret.debugData = updateLocationEndFrom(ret.debugData, currentLocation());
 	expectToken(Token::RParen);
 	return ret;
 }
@@ -455,7 +456,7 @@ TypedName Parser::parseTypedName()
 	if (currentToken() == Token::Colon)
 	{
 		expectToken(Token::Colon);
-		typedName.location.end = currentLocation().end;
+		typedName.debugData = updateLocationEndFrom(typedName.debugData, currentLocation());
 		typedName.type = expectAsmIdentifier();
 	}
 	else

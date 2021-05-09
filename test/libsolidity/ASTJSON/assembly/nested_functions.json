@@ -22,6 +22,7 @@
         8
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -99,6 +100,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "24:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -118,6 +120,7 @@
                 "id": 3,
                 "mutability": "mutable",
                 "name": "x",
+                "nameLocation": "54:1:1",
                 "nodeType": "VariableDeclaration",
                 "scope": 7,
                 "src": "49:6:1",
@@ -145,7 +148,8 @@
         }
       ],
       "scope": 9,
-      "src": "0:156:1"
+      "src": "0:156:1",
+      "usedErrors": []
     }
   ],
   "src": "0:157:1"

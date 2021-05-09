@@ -5,6 +5,7 @@ contract A {
     fallback () external { x = 2; }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // (): hex"d88e0b"

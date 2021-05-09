@@ -1,10 +1,15 @@
 contract test {
     function f(uint x) public pure returns (uint, int) {
-        uint a = 2 ** x;
-        int b = -2 ** x;
-        return (a, b);
+        unchecked {
+            uint a = 2 ** x;
+            int b = -2 ** x;
+            return (a, b);
+        }
     }
 }
+// ====
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // f(uint256): 0 -> 1, 1
 // f(uint256): 1 -> 2, -2

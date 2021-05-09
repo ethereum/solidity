@@ -175,17 +175,6 @@ enum class Instruction: uint8_t
 	LOG3,				///< Makes a log entry; 3 topics.
 	LOG4,				///< Makes a log entry; 4 topics.
 
-	EIP615_JUMPTO = 0xb0,      ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
-	EIP615_JUMPIF,             ///< conditionally alter the program counter -- not part of Instructions.cpp
-	EIP615_JUMPV,              ///< alter the program counter to a jumpdest -- not part of Instructions.cpp
-	EIP615_JUMPSUB,            ///< alter the program counter to a beginsub -- not part of Instructions.cpp
-	EIP615_JUMPSUBV,           ///< alter the program counter to a beginsub -- not part of Instructions.cpp
-	EIP615_BEGINSUB,           ///< set a potential jumpsub destination -- not part of Instructions.cpp
-	EIP615_BEGINDATA,          ///< begin the data section -- not part of Instructions.cpp
-	EIP615_RETURNSUB,          ///< return to subroutine jumped from -- not part of Instructions.cpp
-	EIP615_PUTLOCAL,           ///< pop top of stack to local variable -- not part of Instructions.cpp
-	EIP615_GETLOCAL,           ///< push local variable to top of stack -- not part of Instructions.cpp
-
 	CREATE = 0xf0,		///< create a new account with associated code
 	CALL,				///< message-call into an account
 	CALLCODE,			///< message-call with another account's code only
@@ -314,6 +303,6 @@ extern const std::map<std::string, Instruction> c_instructions;
 void eachInstruction(bytes const& _mem, std::function<void(Instruction,u256 const&)> const& _onInstruction);
 
 /// Convert from EVM code to simple EVM assembly language.
-std::string disassemble(bytes const& _mem);
+std::string disassemble(bytes const& _mem, std::string const& _delimiter = " ");
 
 }

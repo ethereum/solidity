@@ -16,7 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Utilities to handle the Contract ABI (https://solidity.readthedocs.io/en/develop/abi-spec.html)
+ * Utilities to handle the Contract ABI (https://docs.soliditylang.org/en/develop/abi-spec.html)
  */
 
 #include <libsolidity/interface/ABI.h>
@@ -31,7 +31,7 @@ namespace
 {
 bool anyDataStoredInStorage(TypePointers const& _pointers)
 {
-	for (TypePointer const& pointer: _pointers)
+	for (Type const* pointer: _pointers)
 		if (pointer->dataStoredIn(DataLocation::Storage))
 			return true;
 
@@ -121,6 +121,23 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 		abi.emplace(std::move(event));
 	}
 
+	for (ErrorDefinition const* error: _contractDef.interfaceErrors())
+	{
+		Json::Value errorJson;
+		errorJson["type"] = "error";
+		errorJson["name"] = error->name();
+		errorJson["inputs"] = Json::arrayValue;
+		for (auto const& p: error->parameters())
+		{
+			Type const* type = p->annotation().type->interfaceType(false);
+			solAssert(type, "");
+			errorJson["inputs"].append(
+				formatType(p->name(), *type, *p->annotation().type, false)
+			);
+		}
+		abi.emplace(move(errorJson));
+	}
+
 	Json::Value abiJson{Json::arrayValue};
 	for (auto& f: abi)
 		abiJson.append(std::move(f));
@@ -129,8 +146,8 @@ Json::Value ABI::generate(ContractDefinition const& _contractDef)
 
 Json::Value ABI::formatTypeList(
 	vector<string> const& _names,
-	vector<TypePointer> const& _encodingTypes,
-	vector<TypePointer> const& _solidityTypes,
+	vector<Type const*> const& _encodingTypes,
+	vector<Type const*> const& _solidityTypes,
 	bool _forLibrary
 )
 {

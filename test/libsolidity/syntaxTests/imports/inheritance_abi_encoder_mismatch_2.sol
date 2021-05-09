@@ -1,5 +1,5 @@
 ==== Source: A.sol ====
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract A
 {
@@ -8,10 +8,12 @@ contract A
     function f(S memory _s) public returns (S memory,S memory) { }
 }
 ==== Source: B.sol ====
+pragma abicoder v1;
 import "./A.sol";
 contract B is A { }
 ==== Source: C.sol ====
+pragma abicoder v1;
 import "./B.sol";
 contract C is B { }
 // ----
-// TypeError 6594: (B.sol:18-37): Contract "B" does not use ABIEncoderV2 but wants to inherit from a contract which uses types that require it. Use "pragma experimental ABIEncoderV2;" for the inheriting contract as well to enable the feature.
+// TypeError 6594: (B.sol:38-57): Contract "B" does not use ABI coder v2 but wants to inherit from a contract which uses types that require it. Use "pragma abicoder v2;" for the inheriting contract as well to enable the feature.

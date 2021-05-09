@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f(int x, int y) public pure returns (int) {
 		require(y != 0);
@@ -6,5 +5,6 @@ contract C {
 		return x / y;
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (147-152): CHC: Error trying to invoke SMT solver.

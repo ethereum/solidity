@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libyul/backends/wasm/WasmAST.h>
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 #include <libyul/optimiser/NameDispenser.h>
 #include <libyul/optimiser/TypeInfo.h>
@@ -84,6 +84,13 @@ private:
 	);
 
 	wasm::FunctionDefinition translateFunction(yul::FunctionDefinition const& _funDef);
+
+	/// Imports an external function into the current module.
+	/// @param _builtin _builtin the builtin that will be imported into the current module.
+	/// @param _module _module the module name under which the external function can be found.
+	/// @param _externalName the name of the external function within the module _module.
+	/// @param _internalName the name of the internal function under that the external function is accessible.
+	void importBuiltinFunction(BuiltinFunction const* _builtin, std::string const& _module, std::string const& _externalName, std::string const& _internalName);
 
 	std::string newLabel();
 	/// Selects a subset of global variables matching specified sequence of variable types.

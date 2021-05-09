@@ -23,6 +23,7 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/AST_accept.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -42,6 +43,18 @@ ASTNode::ASTNode(int64_t _id, SourceLocation _location):
 	m_id(static_cast<size_t>(_id)),
 	m_location(std::move(_location))
 {
+}
+
+Declaration const* ASTNode::referencedDeclaration(Expression const& _expression)
+{
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_expression))
+		return memberAccess->annotation().referencedDeclaration;
+	else if (auto const* identifierPath = dynamic_cast<IdentifierPath const*>(&_expression))
+		return identifierPath->annotation().referencedDeclaration;
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(&_expression))
+		return identifier->annotation().referencedDeclaration;
+	else
+		return nullptr;
 }
 
 ASTAnnotation& ASTNode::annotation() const
@@ -78,20 +91,10 @@ ImportAnnotation& ImportDirective::annotation() const
 	return initAnnotation<ImportAnnotation>();
 }
 
-TypePointer ImportDirective::type() const
+Type const* ImportDirective::type() const
 {
 	solAssert(!!annotation().sourceUnit, "");
 	return TypeProvider::module(*annotation().sourceUnit);
-}
-
-vector<VariableDeclaration const*> ContractDefinition::stateVariablesIncludingInherited() const
-{
-	vector<VariableDeclaration const*> stateVars;
-	for (auto const& contract: annotation().linearizedBaseContracts)
-		for (auto var: contract->stateVariables())
-			if (*contract == *this || var->isVisibleInDerivedContracts())
-				stateVars.push_back(var);
-	return stateVars;
 }
 
 bool ContractDefinition::derivesFrom(ContractDefinition const& _base) const
@@ -172,6 +175,22 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	});
 }
 
+vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
+{
+	set<ErrorDefinition const*, CompareByID> result;
+	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
+		result += filteredNodes<ErrorDefinition>(contract->m_subNodes);
+	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set(), "");
+	if (_requireCallGraph)
+		solAssert(annotation().creationCallGraph.set(), "");
+	if (annotation().creationCallGraph.set())
+	{
+		result += (*annotation().creationCallGraph)->usedErrors;
+		result += (*annotation().deployedCallGraph)->usedErrors;
+	}
+	return convertContainer<vector<ErrorDefinition const*>>(move(result));
+}
+
 vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::interfaceFunctionList(bool _includeInheritedFunctions) const
 {
 	return m_interfaceFunctionList[_includeInheritedFunctions].init([&]{
@@ -208,15 +227,15 @@ vector<pair<util::FixedHash<4>, FunctionTypePointer>> const& ContractDefinition:
 	});
 }
 
-uint64_t ContractDefinition::interfaceId() const
+uint32_t ContractDefinition::interfaceId() const
 {
-	uint64_t result{0};
+	uint32_t result{0};
 	for (auto const& function: interfaceFunctionList(false))
-		result ^= util::fromBigEndian<uint64_t>(function.first.ref());
+		result ^= util::fromBigEndian<uint32_t>(function.first.ref());
 	return result;
 }
 
-TypePointer ContractDefinition::type() const
+Type const* ContractDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::contract(*this));
 }
@@ -262,7 +281,7 @@ TypeNameAnnotation& TypeName::annotation() const
 	return initAnnotation<TypeNameAnnotation>();
 }
 
-TypePointer StructDefinition::type() const
+Type const* StructDefinition::type() const
 {
 	solAssert(annotation().recursive.has_value(), "Requested struct type before DeclarationTypeChecker.");
 	return TypeProvider::typeType(TypeProvider::structType(*this, DataLocation::Storage));
@@ -273,14 +292,14 @@ StructDeclarationAnnotation& StructDefinition::annotation() const
 	return initAnnotation<StructDeclarationAnnotation>();
 }
 
-TypePointer EnumValue::type() const
+Type const* EnumValue::type() const
 {
 	auto parentDef = dynamic_cast<EnumDefinition const*>(scope());
 	solAssert(parentDef, "Enclosing Scope of EnumValue was not set");
 	return TypeProvider::enumType(*parentDef);
 }
 
-TypePointer EnumDefinition::type() const
+Type const* EnumDefinition::type() const
 {
 	return TypeProvider::typeType(TypeProvider::enumType(*this));
 }
@@ -338,13 +357,13 @@ FunctionTypePointer FunctionDefinition::functionType(bool _internal) const
 	return {};
 }
 
-TypePointer FunctionDefinition::type() const
+Type const* FunctionDefinition::type() const
 {
 	solAssert(visibility() != Visibility::External, "");
 	return TypeProvider::function(*this, FunctionType::Kind::Internal);
 }
 
-TypePointer FunctionDefinition::typeViaContractName() const
+Type const* FunctionDefinition::typeViaContractName() const
 {
 	if (libraryFunction())
 	{
@@ -405,7 +424,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 	return *this; // not reached
 }
 
-TypePointer ModifierDefinition::type() const
+Type const* ModifierDefinition::type() const
 {
 	return TypeProvider::modifier(*this);
 }
@@ -442,7 +461,7 @@ ModifierDefinition const& ModifierDefinition::resolveVirtual(
 }
 
 
-TypePointer EventDefinition::type() const
+Type const* EventDefinition::type() const
 {
 	return TypeProvider::function(*this);
 }
@@ -460,9 +479,22 @@ EventDefinitionAnnotation& EventDefinition::annotation() const
 	return initAnnotation<EventDefinitionAnnotation>();
 }
 
-UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
+Type const* ErrorDefinition::type() const
 {
-	return initAnnotation<UserDefinedTypeNameAnnotation>();
+	return TypeProvider::function(*this);
+}
+
+FunctionTypePointer ErrorDefinition::functionType(bool _internal) const
+{
+	if (_internal)
+		return TypeProvider::function(*this);
+	else
+		return nullptr;
+}
+
+ErrorDefinitionAnnotation& ErrorDefinition::annotation() const
+{
+	return initAnnotation<ErrorDefinitionAnnotation>();
 }
 
 SourceUnit const& Scopable::sourceUnit() const
@@ -507,10 +539,10 @@ bool Declaration::isStructMember() const
 	return dynamic_cast<StructDefinition const*>(scope());
 }
 
-bool Declaration::isEventParameter() const
+bool Declaration::isEventOrErrorParameter() const
 {
 	solAssert(scope(), "");
-	return dynamic_cast<EventDefinition const*>(scope());
+	return dynamic_cast<EventDefinition const*>(scope()) || dynamic_cast<ErrorDefinition const*>(scope());
 }
 
 DeclarationAnnotation& Declaration::annotation() const
@@ -647,11 +679,16 @@ bool VariableDeclaration::isStateVariable() const
 	return dynamic_cast<ContractDefinition const*>(scope());
 }
 
+bool VariableDeclaration::isFileLevelVariable() const
+{
+	return dynamic_cast<SourceUnit const*>(scope());
+}
+
 set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() const
 {
 	using Location = VariableDeclaration::Location;
 
-	if (!hasReferenceOrMappingType() || isStateVariable() || isEventParameter())
+	if (!hasReferenceOrMappingType() || isStateVariable() || isEventOrErrorParameter())
 		return set<Location>{ Location::Unspecified };
 	else if (isCallableOrCatchParameter())
 	{
@@ -682,7 +719,7 @@ string VariableDeclaration::externalIdentifierHex() const
 	return TypeProvider::function(*this)->externalIdentifierHex();
 }
 
-TypePointer VariableDeclaration::type() const
+Type const* VariableDeclaration::type() const
 {
 	return annotation().type;
 }
@@ -762,6 +799,44 @@ FunctionCallAnnotation& FunctionCall::annotation() const
 	return initAnnotation<FunctionCallAnnotation>();
 }
 
+vector<ASTPointer<Expression const>> FunctionCall::sortedArguments() const
+{
+	// normal arguments
+	if (m_names.empty())
+		return arguments();
+
+	// named arguments
+	FunctionTypePointer functionType;
+	if (*annotation().kind == FunctionCallKind::StructConstructorCall)
+	{
+		auto const& type = dynamic_cast<TypeType const&>(*m_expression->annotation().type);
+		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
+		functionType = structType.constructorType();
+	}
+	else
+		functionType = dynamic_cast<FunctionType const*>(m_expression->annotation().type);
+
+	vector<ASTPointer<Expression const>> sorted;
+	for (auto const& parameterName: functionType->parameterNames())
+	{
+		bool found = false;
+		for (size_t j = 0; j < m_names.size() && !found; j++)
+			if ((found = (parameterName == *m_names.at(j))))
+				// we found the actual parameter position
+				sorted.push_back(m_arguments.at(j));
+		solAssert(found, "");
+	}
+
+	if (!functionType->takesArbitraryParameters())
+	{
+		solAssert(m_arguments.size() == functionType->parameterTypes().size(), "");
+		solAssert(m_arguments.size() == m_names.size(), "");
+		solAssert(m_arguments.size() == sorted.size(), "");
+	}
+
+	return sorted;
+}
+
 IdentifierAnnotation& Identifier::annotation() const
 {
 	return initAnnotation<IdentifierAnnotation>();
@@ -813,7 +888,15 @@ TryCatchClause const* TryStatement::successClause() const
 	return m_clauses[0].get();
 }
 
-TryCatchClause const* TryStatement::structuredClause() const
+TryCatchClause const* TryStatement::panicClause() const
+{
+	for (size_t i = 1; i < m_clauses.size(); ++i)
+		if (m_clauses[i]->errorName() == "Panic")
+			return m_clauses[i].get();
+	return nullptr;
+}
+
+TryCatchClause const* TryStatement::errorClause() const
 {
 	for (size_t i = 1; i < m_clauses.size(); ++i)
 		if (m_clauses[i]->errorName() == "Error")

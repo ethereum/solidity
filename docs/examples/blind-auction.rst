@@ -18,15 +18,14 @@ Simple Open Auction
 The general idea of the following simple auction contract is that everyone can
 send their bids during a bidding period. The bids already include sending money
 / Ether in order to bind the bidders to their bid. If the highest bid is
-raised, the previously highest bidder gets their money back.  After the end of
+raised, the previous highest bidder gets their money back.  After the end of
 the bidding period, the contract has to be called manually for the beneficiary
 to receive their money - contracts cannot activate themselves.
 
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
-
+    pragma solidity ^0.8.4;
     contract SimpleAuction {
         // Parameters of the auction. Times are either
         // absolute unix timestamps (seconds since 1970-01-01)
@@ -49,10 +48,21 @@ to receive their money - contracts cannot activate themselves.
         event HighestBidIncreased(address bidder, uint amount);
         event AuctionEnded(address winner, uint amount);
 
-        // The following is a so-called natspec comment,
-        // recognizable by the three slashes.
-        // It will be shown when the user is asked to
-        // confirm a transaction.
+        // Errors that describe failures.
+
+        // The triple-slash comments are so-called natspec
+        // comments. They will be shown when the user
+        // is asked to confirm a transaction or
+        // when an error is displayed.
+
+        /// The auction has already ended.
+        error AuctionAlreadyEnded();
+        /// There is already a higher or equal bid.
+        error BidNotHighEnough(uint highestBid);
+        /// The auction has not ended yet.
+        error AuctionNotYetEnded();
+        /// The function auctionEnd has already been called.
+        error AuctionEndAlreadyCalled();
 
         /// Create a simple auction with `_biddingTime`
         /// seconds bidding time on behalf of the
@@ -78,20 +88,16 @@ to receive their money - contracts cannot activate themselves.
 
             // Revert the call if the bidding
             // period is over.
-            require(
-                block.timestamp <= auctionEndTime,
-                "Auction already ended."
-            );
+            if (block.timestamp > auctionEndTime)
+                revert AuctionAlreadyEnded();
 
             // If the bid is not higher, send the
-            // money back (the failing require
+            // money back (the revert statement
             // will revert all changes in this
             // function execution including
             // it having received the money).
-            require(
-                msg.value > highestBid,
-                "There already is a higher bid."
-            );
+            if (msg.value <= highestBid)
+                revert BidNotHighEnough(highestBid);
 
             if (highestBid != 0) {
                 // Sending back the money by simply using
@@ -115,7 +121,7 @@ to receive their money - contracts cannot activate themselves.
                 // before `send` returns.
                 pendingReturns[msg.sender] = 0;
 
-                if (!msg.sender.send(amount)) {
+                if (!payable(msg.sender).send(amount)) {
                     // No need to call throw here, just reset the amount owing
                     pendingReturns[msg.sender] = amount;
                     return false;
@@ -141,8 +147,10 @@ to receive their money - contracts cannot activate themselves.
             // external contracts.
 
             // 1. Conditions
-            require(block.timestamp >= auctionEndTime, "Auction not yet ended.");
-            require(!ended, "auctionEnd has already been called.");
+            if (block.timestamp < auctionEndTime)
+                revert AuctionNotYetEnded();
+            if (ended)
+                revert AuctionEndAlreadyCalled();
 
             // 2. Effects
             ended = true;
@@ -186,8 +194,7 @@ invalid bids.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
-
+    pragma solidity ^0.8.4;
     contract BlindAuction {
         struct Bid {
             bytes32 blindedBid;
@@ -209,12 +216,29 @@ invalid bids.
 
         event AuctionEnded(address winner, uint highestBid);
 
-        /// Modifiers are a convenient way to validate inputs to
-        /// functions. `onlyBefore` is applied to `bid` below:
-        /// The new function body is the modifier's body where
-        /// `_` is replaced by the old function body.
-        modifier onlyBefore(uint _time) { require(block.timestamp < _time); _; }
-        modifier onlyAfter(uint _time) { require(block.timestamp > _time); _; }
+        // Errors that describe failures.
+
+        /// The function has been called too early.
+        /// Try again at `time`.
+        error TooEarly(uint time);
+        /// The function has been called too late.
+        /// It cannot be called after `time`.
+        error TooLate(uint time);
+        /// The function auctionEnd has already been called.
+        error AuctionEndAlreadyCalled();
+
+        // Modifiers are a convenient way to validate inputs to
+        // functions. `onlyBefore` is applied to `bid` below:
+        // The new function body is the modifier's body where
+        // `_` is replaced by the old function body.
+        modifier onlyBefore(uint _time) {
+            if (block.timestamp >= _time) revert TooLate(_time);
+            _;
+        }
+        modifier onlyAfter(uint _time) {
+            if (block.timestamp <= _time) revert TooEarly(_time);
+            _;
+        }
 
         constructor(
             uint _biddingTime,
@@ -282,7 +306,7 @@ invalid bids.
                 // the same deposit.
                 bidToCheck.blindedBid = bytes32(0);
             }
-            msg.sender.transfer(refund);
+            payable(msg.sender).transfer(refund);
         }
 
         /// Withdraw a bid that was overbid.
@@ -295,7 +319,7 @@ invalid bids.
                 // conditions -> effects -> interaction).
                 pendingReturns[msg.sender] = 0;
 
-                msg.sender.transfer(amount);
+                payable(msg.sender).transfer(amount);
             }
         }
 
@@ -305,7 +329,7 @@ invalid bids.
             public
             onlyAfter(revealEnd)
         {
-            require(!ended);
+            if (ended) revert AuctionEndAlreadyCalled();
             emit AuctionEnded(highestBidder, highestBid);
             ended = true;
             beneficiary.transfer(highestBid);

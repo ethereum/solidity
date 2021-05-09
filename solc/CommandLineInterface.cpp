@@ -26,6 +26,7 @@
 #include "solidity/BuildInfo.h"
 #include "license.h"
 
+#include <libsolidity/interface/FileReader.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTJsonConverter.h>
@@ -35,6 +36,7 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/GasEstimator.h>
 #include <libsolidity/interface/DebugSettings.h>
+#include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/StorageLayout.h>
 
 #include <libyul/AssemblyStack.h>
@@ -46,7 +48,6 @@
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
 
 #include <libsmtutil/Exceptions.h>
 
@@ -55,13 +56,17 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
 
+#include <algorithm>
 #include <memory>
+
+#include <range/v3/view/map.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 #ifdef _WIN32 // windows
 	#include <io.h>
@@ -91,6 +96,9 @@ namespace solidity::frontend
 
 bool g_hasOutput = false;
 
+namespace
+{
+
 std::ostream& sout()
 {
 	g_hasOutput = true;
@@ -104,6 +112,8 @@ std::ostream& serr(bool _used = true)
 	return cerr;
 }
 
+}
+
 #define cout
 #define cerr
 
@@ -115,7 +125,6 @@ static string const g_strAsm = "asm";
 static string const g_strAsmJson = "asm-json";
 static string const g_strAssemble = "assemble";
 static string const g_strAst = "ast";
-static string const g_strAstJson = "ast-json";
 static string const g_strAstCompactJson = "ast-compact-json";
 static string const g_strBinary = "bin";
 static string const g_strBinaryRuntime = "bin-runtime";
@@ -124,9 +133,9 @@ static string const g_strCompactJSON = "compact-format";
 static string const g_strContracts = "contracts";
 static string const g_strErrorRecovery = "error-recovery";
 static string const g_strEVM = "evm";
-static string const g_strEVM15 = "evm15";
 static string const g_strEVMVersion = "evm-version";
 static string const g_strEwasm = "ewasm";
+static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGeneratedSources = "generated-sources";
 static string const g_strGeneratedSourcesRuntime = "generated-sources-runtime";
 static string const g_strGas = "gas";
@@ -146,6 +155,10 @@ static string const g_strMachine = "machine";
 static string const g_strMetadata = "metadata";
 static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
+static string const g_strModelCheckerContracts = "model-checker-contracts";
+static string const g_strModelCheckerEngine = "model-checker-engine";
+static string const g_strModelCheckerTargets = "model-checker-targets";
+static string const g_strModelCheckerTimeout = "model-checker-timeout";
 static string const g_strNatspecDev = "devdoc";
 static string const g_strNatspecUser = "userdoc";
 static string const g_strNone = "none";
@@ -176,6 +189,8 @@ static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
+static string const g_strFunDebug = "function-debug";
+static string const g_strFunDebugRuntime = "function-debug-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
@@ -185,7 +200,6 @@ static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
 static string const g_strNoColor = "no-color";
 static string const g_strErrorIds = "error-codes";
-static string const g_strOldReporter = "old-reporter";
 
 static string const g_argAbi = g_strAbi;
 static string const g_argPrettyJson = g_strPrettyJson;
@@ -195,7 +209,6 @@ static string const g_argAsm = g_strAsm;
 static string const g_argAsmJson = g_strAsmJson;
 static string const g_argAssemble = g_strAssemble;
 static string const g_argAstCompactJson = g_strAstCompactJson;
-static string const g_argAstJson = g_strAstJson;
 static string const g_argBinary = g_strBinary;
 static string const g_argBinaryRuntime = g_strBinaryRuntime;
 static string const g_argCombinedJson = g_strCombinedJson;
@@ -209,12 +222,17 @@ static string const g_argYul = g_strYul;
 static string const g_argIR = g_strIR;
 static string const g_argIROptimized = g_strIROptimized;
 static string const g_argEwasm = g_strEwasm;
+static string const g_argExperimentalViaIR = g_strExperimentalViaIR;
 static string const g_argLibraries = g_strLibraries;
 static string const g_argLink = g_strLink;
 static string const g_argMachine = g_strMachine;
 static string const g_argMetadata = g_strMetadata;
 static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
+static string const g_argModelCheckerContracts = g_strModelCheckerContracts;
+static string const g_argModelCheckerEngine = g_strModelCheckerEngine;
+static string const g_argModelCheckerTargets = g_strModelCheckerTargets;
+static string const g_argModelCheckerTimeout = g_strModelCheckerTimeout;
 static string const g_argNatspecDev = g_strNatspecDev;
 static string const g_argNatspecUser = g_strNatspecUser;
 static string const g_argOpcodes = g_strOpcodes;
@@ -231,7 +249,6 @@ static string const g_argIgnoreMissingFiles = g_strIgnoreMissingFiles;
 static string const g_argColor = g_strColor;
 static string const g_argNoColor = g_strNoColor;
 static string const g_argErrorIds = g_strErrorIds;
-static string const g_argOldReporter = g_strOldReporter;
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs
@@ -242,6 +259,8 @@ static set<string> const g_combinedJsonArgs
 	g_strBinary,
 	g_strBinaryRuntime,
 	g_strCompactJSON,
+	g_strFunDebug,
+	g_strFunDebugRuntime,
 	g_strGeneratedSources,
 	g_strGeneratedSourcesRuntime,
 	g_strInterface,
@@ -259,7 +278,6 @@ static set<string> const g_combinedJsonArgs
 static set<string> const g_machineArgs
 {
 	g_strEVM,
-	g_strEVM15,
 	g_strEwasm
 };
 
@@ -307,7 +325,6 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argAbi,
 		g_argAsm,
 		g_argAsmJson,
-		g_argAstJson,
 		g_argBinary,
 		g_argBinaryRuntime,
 		g_argMetadata,
@@ -322,6 +339,9 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return false;
 }
 
+namespace
+{
+
 bool checkMutuallyExclusive(boost::program_options::variables_map const& args, std::string const& _optionA, std::string const& _optionB)
 {
 	if (args.count(_optionA) && args.count(_optionB))
@@ -331,6 +351,8 @@ bool checkMutuallyExclusive(boost::program_options::variables_map const& args, s
 	}
 
 	return true;
+}
+
 }
 
 void CommandLineInterface::handleBinary(string const& _contract)
@@ -568,16 +590,16 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
 			{
-				if (auto r = CompilerStack::parseRemapping(path))
-				{
+				if (auto r = ImportRemapper::parseRemapping(path))
 					m_remappings.emplace_back(std::move(*r));
-					path = string(eq + 1, path.end());
-				}
 				else
 				{
 					serr() << "Invalid remapping: \"" << path << "\"." << endl;
 					return false;
 				}
+
+				string remappingTarget(eq + 1, path.end());
+				m_fileReader.allowDirectory(boost::filesystem::path(remappingTarget).remove_filename());
 			}
 			else if (path == "-")
 				addStdin = true;
@@ -610,14 +632,16 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile.generic_string()] = readFileAsString(infile.string());
-				path = boost::filesystem::canonical(infile).string();
+				// NOTE: we ignore the FileNotFound exception as we manually check above
+				m_fileReader.setSource(infile, readFileAsString(infile.string()));
+				m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(infile).string()).remove_filename());
 			}
-			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
+
 	if (addStdin)
-		m_sourceCodes[g_stdinFileName] = readStandardInput();
-	if (m_sourceCodes.size() == 0)
+		m_fileReader.setSource(g_stdinFileName, readStandardInput());
+
+	if (m_fileReader.sourceCodes().size() == 0)
 	{
 		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
 		return false;
@@ -639,33 +663,65 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	{
 		// Thrown e.g. if path is too long.
 	}
+	catch (FileNotFound const&)
+	{
+		// Should not happen if `fs::is_regular_file` is correct.
+	}
 
 	vector<string> libraries;
 	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);
 	for (string const& lib: libraries)
 		if (!lib.empty())
 		{
-			//search for last colon in string as our binaries output placeholders in the form of file:Name
-			//so we need to search for the second `:` in the string
-			auto colon = lib.rfind(':');
-			if (colon == string::npos)
+			//search for equal sign or last colon in string as our binaries output placeholders in the form of file=Name or file:Name
+			//so we need to search for `=` or `:` in the string
+			auto separator = lib.rfind('=');
+			bool isSeparatorEqualSign = true;
+			if (separator == string::npos)
 			{
-				serr() << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
+				separator = lib.rfind(':');
+				if (separator == string::npos)
+				{
+					serr() << "Equal sign separator missing in library address specifier \"" << lib << "\"" << endl;
+					return false;
+				}
+				else
+					isSeparatorEqualSign = false; // separator is colon
+			}
+			else
+				if (lib.rfind('=') != lib.find('='))
+				{
+					serr() << "Only one equal sign \"=\" is allowed in the address string \"" << lib << "\"." << endl;
+					return false;
+				}
+
+			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(separator));
+			boost::trim(libName);
+			if (m_libraries.count(libName))
+			{
+				serr() << "Address specified more than once for library \"" << libName << "\"." << endl;
 				return false;
 			}
-			string libName(lib.begin(), lib.begin() + static_cast<ptrdiff_t>(colon));
-			string addrString(lib.begin() + static_cast<ptrdiff_t>(colon) + 1, lib.end());
-			boost::trim(libName);
+
+			string addrString(lib.begin() + static_cast<ptrdiff_t>(separator) + 1, lib.end());
 			boost::trim(addrString);
-			if (addrString.substr(0, 2) == "0x")
-				addrString = addrString.substr(2);
 			if (addrString.empty())
 			{
-				serr() << "Empty address provided for library \"" << libName << "\":" << endl;
-				serr() << "Note that there should not be any whitespace after the colon." << endl;
+				serr() << "Empty address provided for library \"" << libName << "\"." << endl;
+				serr() << "Note that there should not be any whitespace after the " << (isSeparatorEqualSign ? "equal sign" : "colon") << "." << endl;
 				return false;
 			}
-			else if (addrString.length() != 40)
+
+			if (addrString.substr(0, 2) == "0x")
+				addrString = addrString.substr(2);
+			else
+			{
+				serr() << "The address " << addrString << " is not prefixed with \"0x\"." << endl;
+				serr() << "Note that the address must be prefixed with \"0x\"." << endl;
+				return false;
+			}
+
+			if (addrString.length() != 40)
 			{
 				serr() << "Invalid length for address for library \"" << libName << "\": " << addrString.length() << " instead of 40 characters." << endl;
 				return false;
@@ -694,10 +750,10 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 	map<string, Json::Value> sourceJsons;
 	map<string, string> tmpSources;
 
-	for (auto const& srcPair: m_sourceCodes)
+	for (SourceCode const& sourceCode: m_fileReader.sourceCodes() | ranges::views::values)
 	{
 		Json::Value ast;
-		astAssert(jsonParseStrict(srcPair.second, ast), "Input file could not be parsed to JSON");
+		astAssert(jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");
 		astAssert(ast.isMember("sources"), "Invalid Format for import-JSON: Must have 'sources'-object");
 
 		for (auto& src: ast["sources"].getMemberNames())
@@ -712,19 +768,23 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 		}
 	}
 
-	m_sourceCodes = std::move(tmpSources);
+	m_fileReader.setSources(tmpSources);
+
 	return sourceJsons;
 }
 
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
-	// create directory if not existent
-	fs::path p(m_args.at(g_argOutputDir).as<string>());
-	// Do not try creating the directory if the first item is . or ..
-	if (p.filename() != "." && p.filename() != "..")
-		fs::create_directories(p);
-	string pathName = (p / _fileName).string();
+
+	fs::path outputDir(m_args.at(g_argOutputDir).as<string>());
+
+	// NOTE: create_directories() raises an exception if the path consists solely of '.' or '..'
+	// (or equivalent such as './././.'). Paths like 'a/b/.' and 'a/b/..' are fine though.
+	// The simplest workaround is to use an absolute path.
+	fs::create_directories(fs::absolute(outputDir));
+
+	string pathName = (outputDir / _fileName).string();
 	if (fs::exists(pathName) && !m_args.count(g_strOverwrite))
 	{
 		serr() << "Refusing to overwrite existing file \"" << pathName << "\" (use --" << g_strOverwrite << " to force)." << endl;
@@ -734,7 +794,11 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
+	{
+		serr() << "Could not write to file \"" << pathName << "\"." << endl;
+		m_error = true;
+		return;
+	}
 }
 
 void CommandLineInterface::createJson(string const& _fileName, string const& _json)
@@ -813,6 +877,10 @@ General Information)").c_str(),
 			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
 		)
 		(
+			g_strExperimentalViaIR.c_str(),
+			"Turn on experimental compilation mode via the IR (EXPERIMENTAL)."
+		)
+		(
 			g_strRevertStrings.c_str(),
 			po::value<string>()->value_name(boost::join(g_revertStringsArgs, ",")),
 			"Strip revert (and require) reason strings or add additional debugging information."
@@ -885,8 +953,8 @@ General Information)").c_str(),
 			g_argLibraries.c_str(),
 			po::value<vector<string>>()->value_name("libs"),
 			"Direct string or file containing library addresses. Syntax: "
-			"<libraryName>:<address> [, or whitespace] ...\n"
-			"Address is interpreted as a hex string optionally prefixed by 0x."
+			"<libraryName>=<address> [, or whitespace] ...\n"
+			"Address is interpreted as a hex string prefixed by 0x."
 		)
 	;
 	desc.add(linkerModeOptions);
@@ -909,16 +977,11 @@ General Information)").c_str(),
 			g_argErrorIds.c_str(),
 			"Output error codes."
 		)
-		(
-			g_argOldReporter.c_str(),
-			"Enables old diagnostics reporter (legacy option, will be removed)."
-		)
 	;
 	desc.add(outputFormatting);
 
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
-		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
 		(g_argAstCompactJson.c_str(), "AST of all source files in a compact JSON format.")
 		(g_argAsm.c_str(), "EVM assembly of the contracts.")
 		(g_argAsmJson.c_str(), "EVM assembly of the contracts in JSON format.")
@@ -992,6 +1055,37 @@ General Information)").c_str(),
 		)
 	;
 	desc.add(optimizerOptions);
+
+	po::options_description smtCheckerOptions("Model Checker Options");
+	smtCheckerOptions.add_options()
+		(
+			g_strModelCheckerContracts.c_str(),
+			po::value<string>()->value_name("default,<source>:<contract>")->default_value("default"),
+			"Select which contracts should be analyzed using the form <source>:<contract>."
+			"Multiple pairs <source>:<contract> can be selected at the same time, separated by a comma "
+			"and no spaces."
+		)
+		(
+			g_strModelCheckerEngine.c_str(),
+			po::value<string>()->value_name("all,bmc,chc,none")->default_value("none"),
+			"Select model checker engine."
+		)
+		(
+			g_strModelCheckerTargets.c_str(),
+			po::value<string>()->value_name("default,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
+			"Select model checker verification targets. "
+			"Multiple targets can be selected at the same time, separated by a comma "
+			"and no spaces."
+		)
+		(
+			g_strModelCheckerTimeout.c_str(),
+			po::value<unsigned>()->value_name("ms"),
+			"Set model checker timeout per query in milliseconds. "
+			"The default is a deterministic resource limit. "
+			"A timeout of 0 means no resource/time restrictions for any query."
+		)
+	;
+	desc.add(smtCheckerOptions);
 
 	po::options_description allOptions = desc;
 	allOptions.add_options()(g_argInputFile.c_str(), po::value<vector<string>>(), "input file");
@@ -1088,57 +1182,6 @@ General Information)").c_str(),
 
 bool CommandLineInterface::processInput()
 {
-	ReadCallback::Callback fileReader = [this](string const& _kind, string const& _path)
-	{
-		try
-		{
-			if (_kind != ReadCallback::kindString(ReadCallback::Kind::ReadFile))
-				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-					"ReadFile callback used as callback kind " +
-					_kind
-				));
-			string validPath = _path;
-			if (validPath.find("file://") == 0)
-				validPath.erase(0, 7);
-
-			auto const path = m_basePath / validPath;
-			auto canonicalPath = boost::filesystem::weakly_canonical(path);
-			bool isAllowed = false;
-			for (auto const& allowedDir: m_allowedDirectories)
-			{
-				// If dir is a prefix of boostPath, we are fine.
-				if (
-					std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-					std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
-				)
-				{
-					isAllowed = true;
-					break;
-				}
-			}
-			if (!isAllowed)
-				return ReadCallback::Result{false, "File outside of allowed directories."};
-
-			if (!boost::filesystem::exists(canonicalPath))
-				return ReadCallback::Result{false, "File not found."};
-
-			if (!boost::filesystem::is_regular_file(canonicalPath))
-				return ReadCallback::Result{false, "Not a valid file."};
-
-			auto contents = readFileAsString(canonicalPath.string());
-			m_sourceCodes[path.generic_string()] = contents;
-			return ReadCallback::Result{true, contents};
-		}
-		catch (Exception const& _exception)
-		{
-			return ReadCallback::Result{false, "Exception in read callback: " + boost::diagnostic_information(_exception)};
-		}
-		catch (...)
-		{
-			return ReadCallback::Result{false, "Unknown exception in read callback."};
-		}
-	};
-
 	if (m_args.count(g_argBasePath))
 	{
 		boost::filesystem::path const fspath{m_args[g_argBasePath].as<string>()};
@@ -1147,9 +1190,7 @@ bool CommandLineInterface::processInput()
 			serr() << "Base path must be a directory: \"" << fspath << "\"\n";
 			return false;
 		}
-		m_basePath = fspath;
-		if (!contains(m_allowedDirectories, fspath))
-			m_allowedDirectories.push_back(fspath);
+		m_fileReader.setBasePath(fspath);
 	}
 
 	if (m_args.count(g_argAllowPaths))
@@ -1164,7 +1205,7 @@ bool CommandLineInterface::processInput()
 			// it.
 			if (filesystem_path.filename() == ".")
 				filesystem_path.remove_filename();
-			m_allowedDirectories.push_back(filesystem_path);
+			m_fileReader.allowDirectory(filesystem_path);
 		}
 	}
 
@@ -1211,8 +1252,18 @@ bool CommandLineInterface::processInput()
 		if (jsonFile.empty())
 			input = readStandardInput();
 		else
-			input = readFileAsString(jsonFile);
-		StandardCompiler compiler(fileReader);
+		{
+			try
+			{
+				input = readFileAsString(jsonFile);
+			}
+			catch (FileNotFound const&)
+			{
+				serr() << "File not found: " << jsonFile << endl;
+				return false;
+			}
+		}
+		StandardCompiler compiler(m_fileReader.reader());
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
 	}
@@ -1295,8 +1346,6 @@ bool CommandLineInterface::processInput()
 			string machine = m_args[g_argMachine].as<string>();
 			if (machine == g_strEVM)
 				targetMachine = Machine::EVM;
-			else if (machine == g_strEVM15)
-				targetMachine = Machine::EVM15;
 			else if (machine == g_strEwasm)
 				targetMachine = Machine::Ewasm;
 			else
@@ -1379,13 +1428,49 @@ bool CommandLineInterface::processInput()
 		}
 	}
 
-	m_compiler = make_unique<CompilerStack>(fileReader);
+	if (m_args.count(g_argModelCheckerContracts))
+	{
+		string contractsStr = m_args[g_argModelCheckerContracts].as<string>();
+		optional<ModelCheckerContracts> contracts = ModelCheckerContracts::fromString(contractsStr);
+		if (!contracts)
+		{
+			serr() << "Invalid option for --" << g_argModelCheckerContracts << ": " << contractsStr << endl;
+			return false;
+		}
+		m_modelCheckerSettings.contracts = move(*contracts);
+	}
 
-	unique_ptr<SourceReferenceFormatter> formatter;
-	if (m_args.count(g_argOldReporter))
-		formatter = make_unique<SourceReferenceFormatter>(serr(false));
-	else
-		formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
+
+	if (m_args.count(g_argModelCheckerEngine))
+	{
+		string engineStr = m_args[g_argModelCheckerEngine].as<string>();
+		optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(engineStr);
+		if (!engine)
+		{
+			serr() << "Invalid option for --" << g_argModelCheckerEngine << ": " << engineStr << endl;
+			return false;
+		}
+		m_modelCheckerSettings.engine = *engine;
+	}
+
+	if (m_args.count(g_argModelCheckerTargets))
+	{
+		string targetsStr = m_args[g_argModelCheckerTargets].as<string>();
+		optional<ModelCheckerTargets> targets = ModelCheckerTargets::fromString(targetsStr);
+		if (!targets)
+		{
+			serr() << "Invalid option for --" << g_argModelCheckerTargets << ": " << targetsStr << endl;
+			return false;
+		}
+		m_modelCheckerSettings.targets = *targets;
+	}
+
+	if (m_args.count(g_argModelCheckerTimeout))
+		m_modelCheckerSettings.timeout = m_args[g_argModelCheckerTimeout].as<unsigned>();
+
+	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
+
+	SourceReferenceFormatter formatter(serr(false), m_coloredOutput, m_withErrorIds);
 
 	try
 	{
@@ -1393,11 +1478,20 @@ bool CommandLineInterface::processInput()
 			m_compiler->useMetadataLiteralSources(true);
 		if (m_args.count(g_argMetadataHash))
 			m_compiler->setMetadataHash(m_metadataHash);
+		if (
+			m_args.count(g_argModelCheckerContracts) ||
+			m_args.count(g_argModelCheckerEngine) ||
+			m_args.count(g_argModelCheckerTargets) ||
+			m_args.count(g_argModelCheckerTimeout)
+		)
+			m_compiler->setModelCheckerSettings(m_modelCheckerSettings);
 		if (m_args.count(g_argInputFile))
 			m_compiler->setRemappings(m_remappings);
 
 		if (m_args.count(g_argLibraries))
 			m_compiler->setLibraries(m_libraries);
+		if (m_args.count(g_argExperimentalViaIR))
+			m_compiler->setViaIR(true);
 		m_compiler->setEVMVersion(m_evmVersion);
 		m_compiler->setRevertStringBehaviour(m_revertStrings);
 		// TODO: Perhaps we should not compile unless requested
@@ -1441,7 +1535,7 @@ bool CommandLineInterface::processInput()
 				if (!m_compiler->analyze())
 				{
 					for (auto const& error: m_compiler->errors())
-						formatter->printErrorInformation(*error);
+						formatter.printErrorInformation(*error);
 					astAssert(false, "Analysis of the AST failed");
 				}
 			}
@@ -1453,7 +1547,7 @@ bool CommandLineInterface::processInput()
 		}
 		else
 		{
-			m_compiler->setSources(m_sourceCodes);
+			m_compiler->setSources(m_fileReader.sourceCodes());
 			if (m_args.count(g_argErrorRecovery))
 				m_compiler->setParserErrorRecovery(true);
 		}
@@ -1463,7 +1557,7 @@ bool CommandLineInterface::processInput()
 		for (auto const& error: m_compiler->errors())
 		{
 			g_hasOutput = true;
-			formatter->printErrorInformation(*error);
+			formatter.printErrorInformation(*error);
 		}
 
 		if (!successful)
@@ -1477,7 +1571,7 @@ bool CommandLineInterface::processInput()
 	catch (CompilerError const& _exception)
 	{
 		g_hasOutput = true;
-		formatter->printExceptionInformation(_exception, "Compiler error");
+		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -1511,7 +1605,7 @@ bool CommandLineInterface::processInput()
 		else
 		{
 			g_hasOutput = true;
-			formatter->printExceptionInformation(_error, _error.typeName());
+			formatter.printExceptionInformation(_error, _error.typeName());
 		}
 
 		return false;
@@ -1555,7 +1649,7 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value& contractData = output[g_strContracts][contractName] = Json::objectValue;
 		if (requests.count(g_strAbi))
-			contractData[g_strAbi] = jsonCompactPrint(m_compiler->contractABI(contractName));
+			contractData[g_strAbi] = m_compiler->contractABI(contractName);
 		if (requests.count("metadata"))
 			contractData["metadata"] = m_compiler->metadata(contractName);
 		if (requests.count(g_strBinary) && m_compiler->compilationSuccessful())
@@ -1567,7 +1661,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count(g_strAsm) && m_compiler->compilationSuccessful())
 			contractData[g_strAsm] = m_compiler->assemblyJSON(contractName);
 		if (requests.count(g_strStorageLayout) && m_compiler->compilationSuccessful())
-			contractData[g_strStorageLayout] = jsonCompactPrint(m_compiler->storageLayout(contractName));
+			contractData[g_strStorageLayout] = m_compiler->storageLayout(contractName);
 		if (requests.count(g_strGeneratedSources) && m_compiler->compilationSuccessful())
 			contractData[g_strGeneratedSources] = m_compiler->generatedSources(contractName, false);
 		if (requests.count(g_strGeneratedSourcesRuntime) && m_compiler->compilationSuccessful())
@@ -1582,12 +1676,20 @@ void CommandLineInterface::handleCombinedJSON()
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
+		if (requests.count(g_strFunDebug) && m_compiler->compilationSuccessful())
+			contractData[g_strFunDebug] = StandardCompiler::formatFunctionDebugData(
+				m_compiler->object(contractName).functionDebugData
+			);
+		if (requests.count(g_strFunDebugRuntime) && m_compiler->compilationSuccessful())
+			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
+				m_compiler->runtimeObject(contractName).functionDebugData
+			);
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))
-			contractData[g_strNatspecDev] = jsonCompactPrint(m_compiler->natspecDev(contractName));
+			contractData[g_strNatspecDev] = m_compiler->natspecDev(contractName);
 		if (requests.count(g_strNatspecUser))
-			contractData[g_strNatspecUser] = jsonCompactPrint(m_compiler->natspecUser(contractName));
+			contractData[g_strNatspecUser] = m_compiler->natspecUser(contractName);
 	}
 
 	bool needsSourceList = requests.count(g_strAst) || requests.count(g_strSrcMap) || requests.count(g_strSrcMapRuntime);
@@ -1602,11 +1704,10 @@ void CommandLineInterface::handleCombinedJSON()
 
 	if (requests.count(g_strAst))
 	{
-		bool legacyFormat = !requests.count(g_strCompactJSON);
 		output[g_strSources] = Json::Value(Json::objectValue);
-		for (auto const& sourceCode: m_sourceCodes)
+		for (auto const& sourceCode: m_fileReader.sourceCodes())
 		{
-			ASTJsonConverter converter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices());
+			ASTJsonConverter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
 			output[g_strSources][sourceCode.first]["AST"] = converter.toJson(m_compiler->ast(sourceCode.first));
 		}
@@ -1621,57 +1722,34 @@ void CommandLineInterface::handleCombinedJSON()
 		sout() << json << endl;
 }
 
-void CommandLineInterface::handleAst(string const& _argStr)
+void CommandLineInterface::handleAst()
 {
-	string title;
+	if (!m_args.count(g_argAstCompactJson))
+		return;
 
-	if (_argStr == g_argAstJson)
-		title = "JSON AST:";
-	else if (_argStr == g_argAstCompactJson)
-		title = "JSON AST (compact format):";
-	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal argStr for AST"));
+	vector<ASTNode const*> asts;
+	for (auto const& sourceCode: m_fileReader.sourceCodes())
+		asts.push_back(&m_compiler->ast(sourceCode.first));
 
-	// do we need AST output?
-	if (m_args.count(_argStr))
+	if (m_args.count(g_argOutputDir))
 	{
-		vector<ASTNode const*> asts;
-		for (auto const& sourceCode: m_sourceCodes)
-			asts.push_back(&m_compiler->ast(sourceCode.first));
-		map<ASTNode const*, evmasm::GasMeter::GasConsumption> gasCosts;
-		for (auto const& contract: m_compiler->contractNames())
-			if (m_compiler->compilationSuccessful())
-				if (auto const* assemblyItems = m_compiler->runtimeAssemblyItems(contract))
-				{
-					auto ret = GasEstimator::breakToStatementLevel(
-						GasEstimator(m_evmVersion).structuralEstimation(*assemblyItems, asts),
-						asts
-					);
-					for (auto const& it: ret)
-						gasCosts[it.first] += it.second;
-				}
-
-		bool legacyFormat = !m_args.count(g_argAstCompactJson);
-		if (m_args.count(g_argOutputDir))
+		for (auto const& sourceCode: m_fileReader.sourceCodes())
 		{
-			for (auto const& sourceCode: m_sourceCodes)
-			{
-				stringstream data;
-				string postfix = "";
-				ASTJsonConverter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
-				postfix += "_json";
-				boost::filesystem::path path(sourceCode.first);
-				createFile(path.filename().string() + postfix + ".ast", data.str());
-			}
+			stringstream data;
+			string postfix = "";
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(data, m_compiler->ast(sourceCode.first));
+			postfix += "_json";
+			boost::filesystem::path path(sourceCode.first);
+			createFile(path.filename().string() + postfix + ".ast", data.str());
 		}
-		else
+	}
+	else
+	{
+		sout() << "JSON AST (compact format):" << endl << endl;
+		for (auto const& sourceCode: m_fileReader.sourceCodes())
 		{
-			sout() << title << endl << endl;
-			for (auto const& sourceCode: m_sourceCodes)
-			{
-				sout() << endl << "======= " << sourceCode.first << " =======" << endl;
-				ASTJsonConverter(legacyFormat, m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
-			}
+			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
+			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 		}
 	}
 }
@@ -1709,27 +1787,35 @@ bool CommandLineInterface::link()
 		replacement += "__";
 		librariesReplacements[replacement] = library.second;
 	}
-	for (auto& src: m_sourceCodes)
+
+	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
+	for (auto& src: sourceCodes)
 	{
 		auto end = src.second.end();
 		for (auto it = src.second.begin(); it != end;)
 		{
 			while (it != end && *it != '_') ++it;
 			if (it == end) break;
-			if (end - it < placeholderSize)
+			if (
+				end - it < placeholderSize ||
+				*(it + 1) != '_' ||
+				*(it + placeholderSize - 2) != '_' ||
+				*(it + placeholderSize - 1) != '_'
+			)
 			{
-				serr() << "Error in binary object file " << src.first << " at position " << (end - src.second.begin()) << endl;
+				serr() << "Error in binary object file " << src.first << " at position " << (it - src.second.begin()) << endl;
+				serr() << '"' << string(it, it + min(placeholderSize, static_cast<int>(end - it))) << "\" is not a valid link reference." << endl;
 				return false;
 			}
 
-			string name(it, it + placeholderSize);
-			if (librariesReplacements.count(name))
+			string foundPlaceholder(it, it + placeholderSize);
+			if (librariesReplacements.count(foundPlaceholder))
 			{
-				string hexStr(toHex(librariesReplacements.at(name).asBytes()));
+				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
 				copy(hexStr.begin(), hexStr.end(), it);
 			}
 			else
-				serr() << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
+				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << endl;
 			it += placeholderSize;
 		}
 		// Remove hints for resolved libraries.
@@ -1738,12 +1824,14 @@ bool CommandLineInterface::link()
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
 			src.second.resize(src.second.size() - 1);
 	}
+	m_fileReader.setSources(move(sourceCodes));
+
 	return true;
 }
 
 void CommandLineInterface::writeLinkedFiles()
 {
-	for (auto const& src: m_sourceCodes)
+	for (auto const& src: m_fileReader.sourceCodes())
 		if (src.first == g_stdinFileName)
 			sout() << src.second << endl;
 		else
@@ -1787,7 +1875,7 @@ bool CommandLineInterface::assemble(
 
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;
-	for (auto const& src: m_sourceCodes)
+	for (auto const& src: m_fileReader.sourceCodes())
 	{
 		OptimiserSettings settings = _optimize ? OptimiserSettings::full() : OptimiserSettings::minimal();
 		if (_yulOptimiserSteps.has_value())
@@ -1824,16 +1912,12 @@ bool CommandLineInterface::assemble(
 	for (auto const& sourceAndStack: assemblyStacks)
 	{
 		auto const& stack = sourceAndStack.second;
-		unique_ptr<SourceReferenceFormatter> formatter;
-		if (m_args.count(g_argOldReporter))
-			formatter = make_unique<SourceReferenceFormatter>(serr(false));
-		else
-			formatter = make_unique<SourceReferenceFormatterHuman>(serr(false), m_coloredOutput, m_withErrorIds);
+		SourceReferenceFormatter formatter(serr(false), m_coloredOutput, m_withErrorIds);
 
 		for (auto const& error: stack.errors())
 		{
 			g_hasOutput = true;
-			formatter->printErrorInformation(*error);
+			formatter.printErrorInformation(*error);
 		}
 		if (!Error::containsOnlyWarnings(stack.errors()))
 			successful = false;
@@ -1842,11 +1926,10 @@ bool CommandLineInterface::assemble(
 	if (!successful)
 		return false;
 
-	for (auto const& src: m_sourceCodes)
+	for (auto const& src: m_fileReader.sourceCodes())
 	{
 		string machine =
 			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
-			_targetMachine == yul::AssemblyStack::Machine::EVM15 ? "EVM 1.5" :
 			"Ewasm";
 		sout() << endl << "======= " << src.first << " (" << machine << ") =======" << endl;
 
@@ -1857,8 +1940,29 @@ bool CommandLineInterface::assemble(
 
 		if (_language != yul::AssemblyStack::Language::Ewasm && _targetMachine == yul::AssemblyStack::Machine::Ewasm)
 		{
-			stack.translate(yul::AssemblyStack::Language::Ewasm);
-			stack.optimize();
+			try
+			{
+				stack.translate(yul::AssemblyStack::Language::Ewasm);
+				stack.optimize();
+			}
+			catch (Exception const& _exception)
+			{
+				serr() << "Exception in assembler: " << boost::diagnostic_information(_exception) << endl;
+				return false;
+			}
+			catch (std::exception const& _e)
+			{
+				serr() <<
+					"Unknown exception during compilation" <<
+					(_e.what() ? ": " + string(_e.what()) : ".") <<
+					endl;
+				return false;
+			}
+			catch (...)
+			{
+				serr() << "Unknown exception in assembler." << endl;
+				return false;
+			}
 
 			sout() << endl << "==========================" << endl;
 			sout() << endl << "Translated source:" << endl;
@@ -1869,6 +1973,7 @@ bool CommandLineInterface::assemble(
 		try
 		{
 			object = stack.assemble(_targetMachine);
+			object.bytecode->link(m_libraries);
 		}
 		catch (Exception const& _exception)
 		{
@@ -1909,8 +2014,7 @@ void CommandLineInterface::outputCompilationResults()
 	handleCombinedJSON();
 
 	// do we need AST output?
-	handleAst(g_argAstJson);
-	handleAst(g_argAstCompactJson);
+	handleAst();
 
 	if (
 		!m_compiler->compilationSuccessful() &&
@@ -1934,7 +2038,7 @@ void CommandLineInterface::outputCompilationResults()
 			if (m_args.count(g_argAsmJson))
 				ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
 			else
-				ret = m_compiler->assemblyString(contract, m_sourceCodes);
+				ret = m_compiler->assemblyString(contract, m_fileReader.sourceCodes());
 
 			if (m_args.count(g_argOutputDir))
 			{
@@ -1982,7 +2086,7 @@ size_t CommandLineInterface::countEnabledOptions(vector<string> const& _optionNa
 string CommandLineInterface::joinOptionNames(vector<string> const& _optionNames, string _separator)
 {
 	return boost::algorithm::join(
-		_optionNames | boost::adaptors::transformed([](string const& _option){ return "--" + _option; }),
+		_optionNames | ranges::views::transform([](string const& _option){ return "--" + _option; }),
 		_separator
 	);
 }

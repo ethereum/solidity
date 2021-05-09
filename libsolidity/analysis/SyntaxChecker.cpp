@@ -23,7 +23,7 @@
 #include <libsolidity/interface/Version.h>
 
 #include <libyul/optimiser/Semantics.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/SemVerHandler.h>
@@ -73,6 +73,8 @@ void SyntaxChecker::endVisit(SourceUnit const& _sourceUnit)
 		// when reporting the warning, print the source name only
 		m_errorReporter.warning(3420_error, {-1, -1, _sourceUnit.location().source}, errorString);
 	}
+	if (!m_sourceUnit->annotation().useABICoderV2.set())
+		m_sourceUnit->annotation().useABICoderV2 = true;
 	m_sourceUnit = nullptr;
 }
 
@@ -113,8 +115,44 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 				m_sourceUnit->annotation().experimentalFeatures.insert(feature);
 				if (!ExperimentalFeatureWithoutWarning.count(feature))
 					m_errorReporter.warning(2264_error, _pragma.location(), "Experimental features are turned on. Do not use experimental features on live deployments.");
+
+				if (feature == ExperimentalFeature::ABIEncoderV2)
+				{
+					if (m_sourceUnit->annotation().useABICoderV2.set())
+					{
+						if (!*m_sourceUnit->annotation().useABICoderV2)
+							m_errorReporter.syntaxError(
+								8273_error,
+								_pragma.location(),
+								"ABI coder v1 has already been selected through \"pragma abicoder v1\"."
+							);
+					}
+					else
+						m_sourceUnit->annotation().useABICoderV2 = true;
+				}
 			}
 		}
+	}
+	else if (_pragma.literals()[0] == "abicoder")
+	{
+		solAssert(m_sourceUnit, "");
+		if (
+			_pragma.literals().size() != 2 ||
+			!set<string>{"v1", "v2"}.count(_pragma.literals()[1])
+		)
+			m_errorReporter.syntaxError(
+				2745_error,
+				_pragma.location(),
+				"Expected either \"pragma abicoder v1\" or \"pragma abicoder v2\"."
+			);
+		else if (m_sourceUnit->annotation().useABICoderV2.set())
+			m_errorReporter.syntaxError(
+				3845_error,
+				_pragma.location(),
+				"ABI coder has already been selected for this source unit."
+			);
+		else
+			m_sourceUnit->annotation().useABICoderV2 = (_pragma.literals()[1] == "v2");
 	}
 	else if (_pragma.literals()[0] == "solidity")
 	{
@@ -122,8 +160,10 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 		vector<string> literals(_pragma.literals().begin() + 1, _pragma.literals().end());
 		SemVerMatchExpressionParser parser(tokens, literals);
 		auto matchExpression = parser.parse();
+		// An unparsable version pragma is an unrecoverable fatal error in the parser.
+		solAssert(matchExpression.has_value(), "");
 		static SemVerVersion const currentVersion{string(VersionString)};
-		if (!matchExpression.matches(currentVersion))
+		if (!matchExpression->matches(currentVersion))
 			m_errorReporter.syntaxError(
 				3997_error,
 				_pragma.location(),
@@ -135,6 +175,7 @@ bool SyntaxChecker::visit(PragmaDirective const& _pragma)
 	}
 	else
 		m_errorReporter.syntaxError(4936_error, _pragma.location(), "Unknown pragma \"" + _pragma.literals()[0] + "\"");
+
 	return true;
 }
 
@@ -188,6 +229,28 @@ bool SyntaxChecker::visit(ForStatement const& _forStatement)
 void SyntaxChecker::endVisit(ForStatement const&)
 {
 	m_inLoopDepth--;
+}
+
+bool SyntaxChecker::visit(Block const& _block)
+{
+	if (_block.unchecked())
+	{
+		if (m_uncheckedArithmetic)
+			m_errorReporter.syntaxError(
+				1941_error,
+				_block.location(),
+				"\"unchecked\" blocks cannot be nested."
+			);
+
+		m_uncheckedArithmetic = true;
+	}
+	return true;
+}
+
+void SyntaxChecker::endVisit(Block const& _block)
+{
+	if (_block.unchecked())
+		m_uncheckedArithmetic = false;
 }
 
 bool SyntaxChecker::visit(Continue const& _continueStatement)
@@ -288,8 +351,15 @@ bool SyntaxChecker::visit(InlineAssembly const& _inlineAssembly)
 	return false;
 }
 
-bool SyntaxChecker::visit(PlaceholderStatement const&)
+bool SyntaxChecker::visit(PlaceholderStatement const& _placeholder)
 {
+	if (m_uncheckedArithmetic)
+		m_errorReporter.syntaxError(
+			2573_error,
+			_placeholder.location(),
+			"The placeholder statement \"_\" cannot be used inside an \"unchecked\" block."
+		);
+
 	m_placeholderFound = true;
 	return true;
 }

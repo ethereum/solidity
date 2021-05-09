@@ -25,4 +25,4 @@ if [ ! -d "${OUTPUTDIR}" ]; then
 fi
 OUTPUTDIR=$(realpath "${OUTPUTDIR}")
 
-docker run --rm -v "${OUTPUTDIR}":/tmp/output -v "${SCRIPTDIR}":/tmp/scripts:ro -it trzeci/emscripten:sdk-tag-1.39.3-64bit /tmp/scripts/docker-scripts/rebuild_tags.sh "${TAGS}" /tmp/output $@
+docker run --rm -v "${OUTPUTDIR}":/tmp/output -v "${SCRIPTDIR}":/tmp/scripts:ro -it trzeci/emscripten:sdk-tag-1.39.3-64bit /tmp/scripts/docker-scripts/rebuild_tags.sh "${TAGS}" /tmp/output "$@"

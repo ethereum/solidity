@@ -20,6 +20,7 @@
 
 #include <test/libsolidity/AnalysisFramework.h>
 #include <test/TestCase.h>
+#include <test/TestCaseReader.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/AnsiColorized.h>
 
@@ -81,7 +82,7 @@ protected:
 
 	static std::vector<SyntaxTestError> parseExpectations(std::istream& _stream);
 
-	std::map<std::string, std::string> m_sources;
+	frontend::test::SourceMap m_sources;
 	std::vector<SyntaxTestError> m_expectations;
 	std::vector<SyntaxTestError> m_errorList;
 	langutil::EVMVersion const m_evmVersion;

@@ -3,3 +3,4 @@ contract C {
     /// @dev example of dev
     uint public state;
 }
+// ----

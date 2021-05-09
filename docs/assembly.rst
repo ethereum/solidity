@@ -42,7 +42,7 @@ without a compiler change.
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     library GetCode {
         function at(address _addr) public view returns (bytes memory o_code) {
@@ -68,7 +68,7 @@ efficient code, for example:
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
 
     library VectorSum {
@@ -135,12 +135,16 @@ inside that slot. To retrieve the slot pointed to by the variable ``x``, you
 use ``x.slot``, and to retrieve the byte-offset you use ``x.offset``.
 Using ``x`` itself will result in an error.
 
+For dynamic calldata arrays, you can access
+their calldata offset (in bytes) and length (number of elements) using ``x.offset`` and ``x.length``.
+Both expressions can also be assigned to.
+
 Local Solidity variables are available for assignments, for example:
 
 .. code::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract C {
         uint b;
@@ -155,7 +159,7 @@ Local Solidity variables are available for assignments, for example:
 
 .. warning::
     If you access variables of a type that spans less than 256 bits
-    (for example ``uint64``, ``address``, ``bytes16`` or ``byte``),
+    (for example ``uint64``, ``address``, or ``bytes16``),
     you cannot make any assumptions about bits not part of the
     encoding of the type. Especially, do not assume them to be zero.
     To be safe, always clear the data properly before you use it

@@ -5,10 +5,19 @@ ROOTDIR="$(dirname "$0")/../.."
 cd "${ROOTDIR}"
 
 # shellcheck disable=SC2166
-if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]; then echo -n >prerelease.txt; else date -u +"nightly.%Y.%-m.%-d" >prerelease.txt; fi
+if [ "$CIRCLE_BRANCH" = release -o -n "$CIRCLE_TAG" -o -n "$FORCE_RELEASE" ]
+then
+    echo -n "" >prerelease.txt
+else
+    # Use last commit date rather than build date to avoid ending up with builds for
+    # different platforms having different version strings (and therefore producing different bytecode)
+    # if the CI is triggered just before midnight.
+    TZ=UTC git show --quiet --date="format-local:%Y.%-m.%-d" --format="ci.%cd" >prerelease.txt
+fi
+
 if [ -n "$CIRCLE_SHA1" ]
 then
-  echo -n "$CIRCLE_SHA1" >commit_hash.txt
+    echo -n "$CIRCLE_SHA1" >commit_hash.txt
 fi
 
 mkdir -p build

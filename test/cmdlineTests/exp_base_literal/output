@@ -1,0 +1,336 @@
+IR:
+/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+
+object "C_81" {
+    code {
+        mstore(64, 128)
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+
+        constructor_C_81()
+
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset("C_81_deployed"), datasize("C_81_deployed"))
+
+        return(_1, datasize("C_81_deployed"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
+
+        function constructor_C_81() {
+
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
+        }
+
+    }
+    object "C_81_deployed" {
+        code {
+            mstore(64, 128)
+
+            if iszero(lt(calldatasize(), 4))
+            {
+                let selector := shift_right_224_unsigned(calldataload(0))
+                switch selector
+
+                case 0x70cb9605
+                {
+                    // f(uint256,uint256,uint256,uint256)
+
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    let param_0, param_1, param_2, param_3 :=  abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(4, calldatasize())
+                    let ret_0, ret_1, ret_2, ret_3 :=  fun_f_80(param_0, param_1, param_2, param_3)
+                    let memPos := allocate_unbounded()
+                    let memEnd := abi_encode_tuple_t_uint256_t_int256_t_uint256_t_uint256__to_t_uint256_t_int256_t_uint256_t_uint256__fromStack(memPos , ret_0, ret_1, ret_2, ret_3)
+                    return(memPos, sub(memEnd, memPos))
+                }
+
+                default {}
+            }
+            if iszero(calldatasize()) {  }
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function abi_decode_t_uint256(offset, end) -> value {
+                value := calldataload(offset)
+                validator_revert_t_uint256(value)
+            }
+
+            function abi_decode_tuple_t_uint256t_uint256t_uint256t_uint256(headStart, dataEnd) -> value0, value1, value2, value3 {
+                if slt(sub(dataEnd, headStart), 128) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
+
+                {
+
+                    let offset := 0
+
+                    value0 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+                {
+
+                    let offset := 32
+
+                    value1 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+                {
+
+                    let offset := 64
+
+                    value2 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+                {
+
+                    let offset := 96
+
+                    value3 := abi_decode_t_uint256(add(headStart, offset), dataEnd)
+                }
+
+            }
+
+            function abi_encode_t_int256_to_t_int256_fromStack(value, pos) {
+                mstore(pos, cleanup_t_int256(value))
+            }
+
+            function abi_encode_t_uint256_to_t_uint256_fromStack(value, pos) {
+                mstore(pos, cleanup_t_uint256(value))
+            }
+
+            function abi_encode_tuple_t_uint256_t_int256_t_uint256_t_uint256__to_t_uint256_t_int256_t_uint256_t_uint256__fromStack(headStart , value0, value1, value2, value3) -> tail {
+                tail := add(headStart, 128)
+
+                abi_encode_t_uint256_to_t_uint256_fromStack(value0,  add(headStart, 0))
+
+                abi_encode_t_int256_to_t_int256_fromStack(value1,  add(headStart, 32))
+
+                abi_encode_t_uint256_to_t_uint256_fromStack(value2,  add(headStart, 64))
+
+                abi_encode_t_uint256_to_t_uint256_fromStack(value3,  add(headStart, 96))
+
+            }
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function checked_exp_t_rational_0_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                power := exp(0, exponent)
+            }
+
+            function checked_exp_t_rational_10_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                if gt(exponent, 77) { panic_error_0x11() }
+
+                power := exp(10, exponent)
+            }
+
+            function checked_exp_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                if gt(exponent, 1) { panic_error_0x11() }
+
+                power := exp(115792089237316195423570985008687907853269984665640564039457584007913129639935, exponent)
+            }
+
+            function checked_exp_t_rational_1_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                power := exp(1, exponent)
+            }
+
+            function checked_exp_t_rational_2_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                if gt(exponent, 255) { panic_error_0x11() }
+
+                power := exp(2, exponent)
+            }
+
+            function checked_exp_t_rational_minus_1_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                power := exp(115792089237316195423570985008687907853269984665640564039457584007913129639935, exponent)
+            }
+
+            function checked_exp_t_rational_minus_2_by_1_t_uint256(exponent) -> power {
+                exponent := cleanup_t_uint256(exponent)
+
+                if gt(exponent, 255) { panic_error_0x11() }
+
+                power := exp(115792089237316195423570985008687907853269984665640564039457584007913129639934, exponent)
+            }
+
+            function cleanup_t_int256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function cleanup_t_uint256(value) -> cleaned {
+                cleaned := value
+            }
+
+            function convert_t_rational_0_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(value)
+            }
+
+            function convert_t_rational_10_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(value)
+            }
+
+            function convert_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(value)
+            }
+
+            function convert_t_rational_1_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(value)
+            }
+
+            function convert_t_rational_2_by_1_to_t_uint256(value) -> converted {
+                converted := cleanup_t_uint256(value)
+            }
+
+            function convert_t_rational_minus_1_by_1_to_t_int256(value) -> converted {
+                converted := cleanup_t_int256(value)
+            }
+
+            function convert_t_rational_minus_2_by_1_to_t_int256(value) -> converted {
+                converted := cleanup_t_int256(value)
+            }
+
+            function fun_f_80(var_a_4, var_b_6, var_c_8, var_d_10) -> var__13, var__15, var__17, var__19 {
+                let zero_t_uint256_1 := zero_value_for_split_t_uint256()
+                var__13 := zero_t_uint256_1
+                let zero_t_int256_2 := zero_value_for_split_t_int256()
+                var__15 := zero_t_int256_2
+                let zero_t_uint256_3 := zero_value_for_split_t_uint256()
+                var__17 := zero_t_uint256_3
+                let zero_t_uint256_4 := zero_value_for_split_t_uint256()
+                var__19 := zero_t_uint256_4
+
+                let expr_23 := 0x02
+                let _5 := var_a_4
+                let expr_24 := _5
+                let _6 := convert_t_rational_2_by_1_to_t_uint256(expr_23)
+                let expr_25 := checked_exp_t_rational_2_by_1_t_uint256(expr_24)
+                let var_w_22 := expr_25
+                let expr_29 := 0x02
+                let expr_30 := 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
+                let expr_31 := expr_30
+                let _7 := var_b_6
+                let expr_32 := _7
+                let _8 := convert_t_rational_minus_2_by_1_to_t_int256(expr_31)
+                let expr_33 := checked_exp_t_rational_minus_2_by_1_t_uint256(expr_32)
+                let var_x_28 := expr_33
+                let expr_37 := 0x0a
+                let _9 := var_c_8
+                let expr_38 := _9
+                let _10 := convert_t_rational_10_by_1_to_t_uint256(expr_37)
+                let expr_39 := checked_exp_t_rational_10_by_1_t_uint256(expr_38)
+                let var_y_36 := expr_39
+                let expr_47 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                let expr_48 := expr_47
+                let _11 := var_d_10
+                let expr_49 := _11
+                let _12 := convert_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_to_t_uint256(expr_48)
+                let expr_50 := checked_exp_t_rational_115792089237316195423570985008687907853269984665640564039457584007913129639935_by_1_t_uint256(expr_49)
+                let var_z_42 := expr_50
+                let expr_53 := 0x00
+                let expr_54 := expr_53
+                let _13 := var_a_4
+                let expr_55 := _13
+                let _14 := convert_t_rational_0_by_1_to_t_uint256(expr_54)
+                let expr_56 := checked_exp_t_rational_0_by_1_t_uint256(expr_55)
+                var_w_22 := expr_56
+                let expr_57 := expr_56
+                let expr_60 := 0x01
+                let expr_61 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                let expr_62 := expr_61
+                let _15 := var_b_6
+                let expr_63 := _15
+                let _16 := convert_t_rational_minus_1_by_1_to_t_int256(expr_62)
+                let expr_64 := checked_exp_t_rational_minus_1_by_1_t_uint256(expr_63)
+                var_x_28 := expr_64
+                let expr_65 := expr_64
+                let expr_68 := 0x01
+                let _17 := var_c_8
+                let expr_69 := _17
+                let _18 := convert_t_rational_1_by_1_to_t_uint256(expr_68)
+                let expr_70 := checked_exp_t_rational_1_by_1_t_uint256(expr_69)
+                var_y_36 := expr_70
+                let expr_71 := expr_70
+                let _19 := var_w_22
+                let expr_73 := _19
+                let expr_77_component_1 := expr_73
+                let _20 := var_x_28
+                let expr_74 := _20
+                let expr_77_component_2 := expr_74
+                let _21 := var_y_36
+                let expr_75 := _21
+                let expr_77_component_3 := expr_75
+                let _22 := var_z_42
+                let expr_76 := _22
+                let expr_77_component_4 := expr_76
+                var__13 := expr_77_component_1
+                var__15 := expr_77_component_2
+                var__17 := expr_77_component_3
+                var__19 := expr_77_component_4
+                leave
+
+            }
+
+            function panic_error_0x11() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x11)
+                revert(0, 0x24)
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function revert_error_c1322bf8034eace5e0b5c7295db60986aa89aae5e0ea0873e4689e076861a5db() {
+                revert(0, 0)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
+            function shift_right_224_unsigned(value) -> newValue {
+                newValue :=
+
+                shr(224, value)
+
+            }
+
+            function validator_revert_t_uint256(value) {
+                if iszero(eq(value, cleanup_t_uint256(value))) { revert(0, 0) }
+            }
+
+            function zero_value_for_split_t_int256() -> ret {
+                ret := 0
+            }
+
+            function zero_value_for_split_t_uint256() -> ret {
+                ret := 0
+            }
+
+        }
+
+    }
+
+}

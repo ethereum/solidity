@@ -60,7 +60,7 @@ class AssemblyStack
 {
 public:
 	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
-	enum class Machine { EVM, EVM15, Ewasm };
+	enum class Machine { EVM, Ewasm };
 
 	AssemblyStack():
 		AssemblyStack(langutil::EVMVersion{}, Language::Assembly, solidity::frontend::OptimiserSettings::none())
@@ -95,6 +95,12 @@ public:
 	/// Only available for EVM.
 	std::pair<MachineAssemblyObject, MachineAssemblyObject> assembleAndGuessRuntime() const;
 
+	/// Run the assembly step (should only be called after parseAndAnalyze).
+	/// In addition to the value returned by @a assemble, returns
+	/// a second object that is the runtime code.
+	/// Only available for EVM.
+	std::pair<MachineAssemblyObject, MachineAssemblyObject> assembleWithDeployed(std::optional<std::string_view> _deployeName = {}) const;
+
 	/// @returns the errors generated during parsing, analysis (and potentially assembly).
 	langutil::ErrorList const& errors() const { return m_errors; }
 
@@ -108,7 +114,7 @@ private:
 	bool analyzeParsed();
 	bool analyzeParsed(yul::Object& _object);
 
-	void compileEVM(yul::AbstractAssembly& _assembly, bool _evm15, bool _optimize) const;
+	void compileEVM(yul::AbstractAssembly& _assembly, bool _optimize) const;
 
 	void optimize(yul::Object& _object, bool _isCreation);
 

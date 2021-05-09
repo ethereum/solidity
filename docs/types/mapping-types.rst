@@ -43,7 +43,7 @@ contract that returns the value at the specified address.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract MappingExample {
         mapping(address => uint) public balances;
@@ -69,7 +69,7 @@ The example below uses ``_allowances`` to record the amount someone else is allo
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity >=0.4.22 <0.9.0;
 
     contract MappingExample {
 
@@ -124,7 +124,7 @@ the ``sum`` function iterates over to sum all the values.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.8 <0.9.0;
 
     struct IndexValue { uint keyIndex; uint value; }
     struct KeyFlag { uint key; bool deleted; }
@@ -165,7 +165,7 @@ the ``sum`` function iterates over to sum all the values.
         }
 
         function iterate_start(itmap storage self) internal view returns (uint keyIndex) {
-            return iterate_next(self, uint(-1));
+            return iterate_next(self, type(uint).max);
         }
 
         function iterate_valid(itmap storage self, uint keyIndex) internal view returns (bool) {

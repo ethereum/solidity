@@ -23,18 +23,23 @@
 #include <libsolidity/codegen/MultiUseYulFunctionCollector.h>
 
 #include <liblangutil/Exceptions.h>
-
+#include <libsolutil/Whiskers.h>
+#include <libsolutil/StringUtils.h>
 
 using namespace std;
 using namespace solidity;
 using namespace solidity::frontend;
+using namespace solidity::util;
 
 string MultiUseYulFunctionCollector::requestedFunctions()
 {
 	string result;
-	for (auto const& f: m_requestedFunctions)
+	for (auto const& [name, code]: m_requestedFunctions)
+	{
+		solAssert(code != "<<STUB<<", "");
 		// std::map guarantees ascending order when iterating through its keys.
-		result += f.second;
+		result += code;
+	}
 	m_requestedFunctions.clear();
 	return result;
 }
@@ -43,10 +48,39 @@ string MultiUseYulFunctionCollector::createFunction(string const& _name, functio
 {
 	if (!m_requestedFunctions.count(_name))
 	{
+		m_requestedFunctions[_name] = "<<STUB<<";
 		string fun = _creator();
 		solAssert(!fun.empty(), "");
-		solAssert(fun.find("function " + _name) != string::npos, "Function not properly named.");
+		solAssert(fun.find("function " + _name + "(") != string::npos, "Function not properly named.");
 		m_requestedFunctions[_name] = std::move(fun);
+	}
+	return _name;
+}
+
+string MultiUseYulFunctionCollector::createFunction(
+	string const& _name,
+	function<string(vector<string>&, vector<string>&)> const& _creator
+)
+{
+	solAssert(!_name.empty(), "");
+	if (!m_requestedFunctions.count(_name))
+	{
+		m_requestedFunctions[_name] = "<<STUB<<";
+		vector<string> arguments;
+		vector<string> returnParameters;
+		string body = _creator(arguments, returnParameters);
+		solAssert(!body.empty(), "");
+
+		m_requestedFunctions[_name] = Whiskers(R"(
+			function <functionName>(<args>)<?+retParams> -> <retParams></+retParams> {
+				<body>
+			}
+		)")
+		("functionName", _name)
+		("args", joinHumanReadable(arguments))
+		("retParams", joinHumanReadable(returnParameters))
+		("body", body)
+		.render();;
 	}
 	return _name;
 }

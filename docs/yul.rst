@@ -9,7 +9,7 @@ Yul
 Yul (previously also called JULIA or IULIA) is an intermediate language that can be
 compiled to bytecode for different backends.
 
-Support for EVM 1.0, EVM 1.5 and eWASM is planned, and it is designed to
+Support for EVM 1.0, EVM 1.5 and Ewasm is planned, and it is designed to
 be a usable common denominator of all three
 platforms. It can already be used in stand-alone mode and
 for "inline assembly" inside Solidity
@@ -54,7 +54,7 @@ be omitted to help readability.
 To keep the language simple and flexible, Yul does not have
 any built-in operations, functions or types in its pure form.
 These are added together with their semantics when specifying a dialect of Yul,
-which allows to specialize Yul to the requirements of different
+which allows specializing Yul to the requirements of different
 target platforms and feature sets.
 
 Currently, there is only one specified dialect of Yul. This dialect uses
@@ -174,7 +174,10 @@ whitespace, i.e. there is no terminating ``;`` or newline required.
 Literals
 --------
 
-You can use integer constants in decimal or hexadecimal notation.
+As literals, you can use integer constants in decimal or hexadecimal notation
+or strings as ASCII (`"abc"`) or HEX strings (`hex"616263"`) of up to
+32 bytes length.
+
 When compiling for the EVM, this will be translated into an
 appropriate ``PUSHi`` instruction. In the following example,
 ``3`` and ``2`` are added resulting in 5 and then the
@@ -526,7 +529,7 @@ The ``leave`` statement can only be used inside a function.
 
 Functions cannot be defined anywhere inside for loop init blocks.
 
-Literals cannot be larger than the their type. The largest type defined is 256-bit wide.
+Literals cannot be larger than their type. The largest type defined is 256-bit wide.
 
 During assignments and function calls, the types of the respective values have to match.
 There is no implicit type conversion. Type conversion in general can only be achieved
@@ -688,7 +691,7 @@ We will use a destructuring notation for the AST nodes.
         Let G'', L'', mode = E(Gn, L', block)
         G'', Ln, L''[$ret1], ..., L''[$retm]
     E(G, L, l: StringLiteral) = G, L, utf8EncodeLeftAligned(l),
-        where utf8EncodeLeftAligned performs a utf8 encoding of l
+        where utf8EncodeLeftAligned performs a UTF-8 encoding of l
         and aligns it left into 32 bytes
     E(G, L, n: HexNumber) = G, L, hex(n)
         where hex is the hexadecimal decoding function
@@ -828,13 +831,14 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | extcodehash(a)          |     | C | code hash of address a                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create(v, p, n)         |     | F | create new contract with code mem[p...(p+n)) and send v wei     |
-|                         |     |   | and return the new address                                      |
+|                         |     |   | and return the new address; returns 0 on error                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create2(v, p, n, s)     |     | C | create new contract with code mem[p...(p+n)) at address         |
 |                         |     |   | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
 |                         |     |   | and send v wei and return the new address, where ``0xff`` is a  |
 |                         |     |   | 1 byte value, ``this`` is the current contract's address        |
-|                         |     |   | as a 20 byte value and ``s`` is a big-endian 256-bit value      |
+|                         |     |   | as a 20 byte value and ``s`` is a big-endian 256-bit value;     |
+|                         |     |   | returns 0 on error                                              |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | call(g, a, v, in,       |     | F | call contract at address a with input mem[in...(in+insize))     |
 | insize, out, outsize)   |     |   | providing g gas and v wei and output area                       |
@@ -896,12 +900,11 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 
 .. note::
   The ``call*`` instructions use the ``out`` and ``outsize`` parameters to define an area in memory where
-  the return data is placed. This area is written to depending on how many bytes the called contract returns.
+  the return or failure data is placed. This area is written to depending on how many bytes the called contract returns.
   If it returns more data, only the first ``outsize`` bytes are written. You can access the rest of the data
   using the ``returndatacopy`` opcode. If it returns less data, then the remaining bytes are not touched at all.
   You need to use the ``returndatasize`` opcode to check which part of this memory area contains the return data.
-  The remaining bytes will retain their values as of before the call. If the call fails (it returns ``0``),
-  nothing is written to that area, but you can still retrieve the failure data using ``returndatacopy``.
+  The remaining bytes will retain their values as of before the call.
 
 
 In some internal dialects, there are additional functions:
@@ -920,12 +923,12 @@ For the EVM, the ``datacopy`` function is equivalent to ``codecopy``.
 setimmutable, loadimmutable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The functions ``setimmutable("name", value)`` and ``loadimmutable("name")`` are
+The functions ``setimmutable(offset, "name", value)`` and ``loadimmutable("name")`` are
 used for the immutable mechanism in Solidity and do not nicely map to pure Yul.
-The function ``setimmutable`` assumes that the runtime code of a contract
-is currently copied to memory at offset zero. The call to ``setimmutable("name", value)``
-will store ``value`` at all points in memory that contain a call to
-``loadimmutable("name")``.
+The call to ``setimmutable(offset, "name", value)`` assumes that the runtime code of the contract
+containing the given named immutable was copied to memory at offset ``offset`` and will write ``value`` to all
+positions in memory (relative to ``offset``) that contain the placeholder that was generated for calls
+to ``loadimmutable("name")`` in the runtime code.
 
 
 linkersymbol
@@ -947,7 +950,7 @@ is equivalent to
 
     let a := 0x1234567890123456789012345678901234567890
 
-when the linker is invoked with ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890``
+when the linker is invoked with ``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890``
 option.
 
 See :ref:`Using the Commandline Compiler <commandline-compiler>` for details about the Solidity linker.
@@ -972,6 +975,84 @@ If the optimizer does not need to reserve any memory, it holds that ``ptr == siz
 within one Yul subobject. If at least one ``memoryguard`` call is found in a subobject,
 the additional optimiser steps will be run on it.
 
+
+verbatim
+^^^^^^^^
+
+The set of ``verbatim...`` builtin functions lets you create bytecode for opcodes
+that are not known to the Yul compiler. It also allows you to create
+bytecode sequences that will not be modified by the optimizer.
+
+The functions are ``verbatim_<n>i_<m>o("<data>", ...)``, where
+ - ``n`` is a decimal between 0 and 99 that specifies the number of input stack slots / variables
+ - ``m`` is a decimal between 0 and 99 that specifies the number of output stack slots / variables
+ - ``data`` is a string literal that contains the sequence of bytes
+
+If you for example want to define a function that multiplies the input
+by two, without the optimizer touching the constant two, you can use
+
+.. code-block:: yul
+
+    let x := calldataload(0)
+    let double := verbatim_1i_1o(hex"600202", x)
+
+This code will result in a ``dup1`` opcode to retrieve ``x``
+(the optimizer might directly re-use result of the
+``calldataload`` opcode, though)
+directly followed by ``600202``. The code is assumed to
+consume the copied value of ``x`` and produce the result
+on the top of the stack. The compiler then generates code
+to allocate a stack slot for ``double`` and store the result there.
+
+As with all opcodes, the arguments are arranged on the stack
+with the leftmost argument on the top, while the return values
+are assumed to be laid out such that the rightmost variable is
+at the top of the stack.
+
+Since ``verbatim`` can be used to generate arbitrary opcodes
+or even opcodes unknown to the Solidity compiler, care has to be taken
+when using ``verbatim`` together with the optimizer. Even when the
+optimizer is switched off, the code generator has to determine
+the stack layout, which means that e.g. using ``verbatim`` to modify
+the stack height can lead to undefined behaviour.
+
+The following is a non-exhaustive list of restrictions on
+verbatim bytecode that are not checked by
+the compiler. Violations of these restrictions can result in
+undefined behaviour.
+
+ - Control-flow should not jump into or out of verbatim blocks,
+   but it can jump within the same verbatim block.
+ - Stack contents apart from the input and output parameters
+   should not be accessed.
+ - The stack height difference should be exactly ``m - n``
+   (output slots minus input slots).
+ - Verbatim bytecode cannot make any assumptions about the
+   surrounding bytecode. All required parameters have to be
+   passed in as stack variables.
+
+The optimizer does not analyze verbatim bytecode and always
+assumes that it modifies all aspects of state and thus can only
+do very few optimizations across ``verbatim`` function calls.
+
+The optimizer treats verbatim bytecode as an opaque block of code.
+It will not split it but might move, duplicate
+or combine it with identical verbatim bytecode blocks.
+If a verbatim bytecode block is unreachable by the control-flow,
+it can be removed.
+
+
+.. warning::
+
+    During discussions about whether or not EVM improvements
+    might break existing smart contracts, features inside ``verbatim``
+    cannot receive the same consideration as those used by the Solidity
+    compiler itself.
+
+.. note::
+
+    To avoid confusion, all identifiers starting with the string ``verbatim`` are reserved
+    and cannot be used for user-defined identifiers.
 
 .. _yul-object:
 
@@ -1028,7 +1109,7 @@ An example Yul Object is shown below:
             // executing code is the constructor code)
             size := datasize("runtime")
             offset := allocate(size)
-            // This will turn into a memory->memory copy for eWASM and
+            // This will turn into a memory->memory copy for Ewasm and
             // a codecopy for EVM
             datacopy(offset, dataoffset("runtime"), size)
             return(offset, size)
@@ -1074,9 +1155,8 @@ Yul Optimizer
 The Yul optimizer operates on Yul code and uses the same language for input, output and
 intermediate states. This allows for easy debugging and verification of the optimizer.
 
-Please see the
-`documentation in the source code <https://github.com/ethereum/solidity/blob/develop/libyul/optimiser/README.md>`_
-for more details about its internals.
+Please refer to the general :ref:`optimizer documentation <optimizer>`
+for more details about the different optimization stages and how to use the optimizer.
 
 If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
 
@@ -1086,7 +1166,7 @@ If you want to use Solidity in stand-alone Yul mode, you activate the optimizer 
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 
-Optimization step sequence
+Optimization Step Sequence
 --------------------------
 
 By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.
@@ -1126,6 +1206,7 @@ Abbreviation Full name
 ``i``        ``FullInliner``
 ``g``        ``FunctionGrouper``
 ``h``        ``FunctionHoister``
+``F``        ``FunctionSpecializer``
 ``T``        ``LiteralRematerialiser``
 ``L``        ``LoadResolver``
 ``M``        ``LoopInvariantCodeMotion``

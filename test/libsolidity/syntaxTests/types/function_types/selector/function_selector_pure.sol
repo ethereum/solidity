@@ -12,3 +12,4 @@ contract C is B {
     bytes4 constant s3 = this.h.selector;
     bytes4 constant s4 = super.g.selector;
 }
+// ----

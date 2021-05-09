@@ -90,7 +90,7 @@ public:
 	static void run(
 		OptimiserStepContext& _context,
 		u256 _reservedMemory,
-		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
+		std::map<YulString, uint64_t> const& _memorySlots,
 		uint64_t _numRequiredSlots,
 		Block& _block
 	);
@@ -100,22 +100,33 @@ public:
 	void operator()(Block& _block) override;
 	void visit(Expression& _expression) override;
 private:
+	class VariableMemoryOffsetTracker
+	{
+	public:
+		VariableMemoryOffsetTracker(
+			u256 _reservedMemory,
+			std::map<YulString, uint64_t> const& _memorySlots,
+			uint64_t _numRequiredSlots
+		): m_reservedMemory(_reservedMemory), m_memorySlots(_memorySlots), m_numRequiredSlots(_numRequiredSlots)
+		{}
+
+		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
+		/// or std::nullopt if the variable should not be moved.
+		std::optional<YulString> operator()(YulString _variable) const;
+	private:
+		u256 m_reservedMemory;
+		std::map<YulString, uint64_t> const& m_memorySlots;
+		uint64_t m_numRequiredSlots = 0;
+	};
+
 	StackToMemoryMover(
 		OptimiserStepContext& _context,
-		u256 _reservedMemory,
-		std::map<YulString, std::map<YulString, uint64_t>> const& _memorySlots,
-		uint64_t _numRequiredSlots
+		VariableMemoryOffsetTracker const& _memoryOffsetTracker
 	);
 
-	/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal.
-	YulString memoryOffset(YulString _variable);
-
 	OptimiserStepContext& m_context;
-	u256 m_reservedMemory;
-	std::map<YulString, std::map<YulString, uint64_t>> const& m_memorySlots;
-	uint64_t m_numRequiredSlots = 0;
+	VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
 	NameDispenser& m_nameDispenser;
-	std::map<YulString, uint64_t> const* m_currentFunctionMemorySlots = nullptr;
 };
 
 }

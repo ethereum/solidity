@@ -39,7 +39,7 @@ size_t constexpr assemblySizeReferenceSize = 4;
 }
 
 
-void EVMAssembly::setSourceLocation(SourceLocation const&)
+void EVMAssembly::setSourceLocation(langutil::SourceLocation const&)
 {
 	// Ignored for now;
 }
@@ -53,7 +53,7 @@ void EVMAssembly::appendInstruction(evmasm::Instruction _instr)
 void EVMAssembly::appendConstant(u256 const& _constant)
 {
 	bytes data = toCompactBigEndian(_constant, 1);
-	appendInstruction(evmasm::pushInstruction(data.size()));
+	appendInstruction(evmasm::pushInstruction(static_cast<unsigned>(data.size())));
 	m_bytecode += data;
 }
 
@@ -65,7 +65,6 @@ void EVMAssembly::appendLabel(LabelID _labelId)
 
 void EVMAssembly::appendLabelReference(LabelID _labelId)
 {
-	yulAssert(!m_evm15, "Cannot use plain label references in EMV1.5 mode.");
 	// @TODO we now always use labelReferenceSize for all labels, it could be shortened
 	// for some of them.
 	appendInstruction(evmasm::pushInstruction(labelReferenceSize));
@@ -79,7 +78,7 @@ EVMAssembly::LabelID EVMAssembly::newLabelId()
 	return m_nextLabelId++;
 }
 
-AbstractAssembly::LabelID EVMAssembly::namedLabel(string const& _name)
+AbstractAssembly::LabelID EVMAssembly::namedLabel(string const& _name, size_t, size_t, std::optional<size_t>)
 {
 	yulAssert(!_name.empty(), "");
 	if (!m_namedLabels.count(_name))
@@ -94,65 +93,20 @@ void EVMAssembly::appendLinkerSymbol(string const&)
 
 void EVMAssembly::appendJump(int _stackDiffAfter, JumpType)
 {
-	yulAssert(!m_evm15, "Plain JUMP used for EVM 1.5");
 	appendInstruction(evmasm::Instruction::JUMP);
 	m_stackHeight += _stackDiffAfter;
 }
 
 void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter, JumpType _jumpType)
 {
-	if (m_evm15)
-	{
-		m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_JUMPTO));
-		appendLabelReferenceInternal(_labelId);
-		m_stackHeight += _stackDiffAfter;
-	}
-	else
-	{
-		appendLabelReference(_labelId);
-		appendJump(_stackDiffAfter, _jumpType);
-	}
+	appendLabelReference(_labelId);
+	appendJump(_stackDiffAfter, _jumpType);
 }
 
 void EVMAssembly::appendJumpToIf(LabelID _labelId, JumpType)
 {
-	if (m_evm15)
-	{
-		m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_JUMPIF));
-		appendLabelReferenceInternal(_labelId);
-		m_stackHeight--;
-	}
-	else
-	{
-		appendLabelReference(_labelId);
-		appendInstruction(evmasm::Instruction::JUMPI);
-	}
-}
-
-void EVMAssembly::appendBeginsub(LabelID _labelId, int _arguments)
-{
-	yulAssert(m_evm15, "BEGINSUB used for EVM 1.0");
-	yulAssert(_arguments >= 0, "");
-	setLabelToCurrentPosition(_labelId);
-	m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_BEGINSUB));
-	m_stackHeight += _arguments;
-}
-
-void EVMAssembly::appendJumpsub(LabelID _labelId, int _arguments, int _returns)
-{
-	yulAssert(m_evm15, "JUMPSUB used for EVM 1.0");
-	yulAssert(_arguments >= 0 && _returns >= 0, "");
-	m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_JUMPSUB));
-	appendLabelReferenceInternal(_labelId);
-	m_stackHeight += _returns - _arguments;
-}
-
-void EVMAssembly::appendReturnsub(int _returns, int _stackDiffAfter)
-{
-	yulAssert(m_evm15, "RETURNSUB used for EVM 1.0");
-	yulAssert(_returns >= 0, "");
-	m_bytecode.push_back(uint8_t(evmasm::Instruction::EIP615_RETURNSUB));
-	m_stackHeight += _stackDiffAfter - _returns;
+	appendLabelReference(_labelId);
+	appendInstruction(evmasm::Instruction::JUMPI);
 }
 
 evmasm::LinkerObject EVMAssembly::finalize()
@@ -196,7 +150,7 @@ void EVMAssembly::appendAssemblySize()
 	m_bytecode += bytes(assemblySizeReferenceSize);
 }
 
-pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EVMAssembly::createSubAssembly()
+pair<shared_ptr<AbstractAssembly>, AbstractAssembly::SubID> EVMAssembly::createSubAssembly(string)
 {
 	yulAssert(false, "Sub assemblies not implemented.");
 	return {};

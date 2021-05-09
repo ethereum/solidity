@@ -1,12 +1,12 @@
 contract C {
     function f() view public {
-        address(this).transfer(1);
+        payable(this).transfer(1);
     }
     function g() view public {
-        require(address(this).send(2));
+        require(payable(this).send(2));
     }
     function h() view public {
-        selfdestruct(address(this));
+        selfdestruct(payable(this));
     }
     function i() view public {
         (bool success,) = address(this).delegatecall("");

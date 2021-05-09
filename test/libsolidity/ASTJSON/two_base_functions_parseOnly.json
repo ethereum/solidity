@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "A",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -27,6 +28,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -48,7 +50,8 @@
           "visibility": "public"
         }
       ],
-      "src": "0:49:1"
+      "src": "0:49:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -57,6 +60,7 @@
       "contractKind": "contract",
       "id": 10,
       "name": "B",
+      "nameLocation": "59:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -73,6 +77,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "76:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -94,7 +99,8 @@
           "visibility": "public"
         }
       ],
-      "src": "50:49:1"
+      "src": "50:49:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -105,9 +111,8 @@
           {
             "id": 11,
             "name": "A",
-            "nodeType": "UserDefinedTypeName",
-            "src": "114:1:1",
-            "typeDescriptions": {}
+            "nodeType": "IdentifierPath",
+            "src": "114:1:1"
           },
           "id": 12,
           "nodeType": "InheritanceSpecifier",
@@ -118,9 +123,8 @@
           {
             "id": 13,
             "name": "B",
-            "nodeType": "UserDefinedTypeName",
-            "src": "117:1:1",
-            "typeDescriptions": {}
+            "nodeType": "IdentifierPath",
+            "src": "117:1:1"
           },
           "id": 14,
           "nodeType": "InheritanceSpecifier",
@@ -131,6 +135,7 @@
       "contractKind": "contract",
       "id": 22,
       "name": "C",
+      "nameLocation": "109:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -147,6 +152,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "134:1:1",
           "nodeType": "FunctionDefinition",
           "overrides":
           {
@@ -157,16 +163,14 @@
               {
                 "id": 16,
                 "name": "A",
-                "nodeType": "UserDefinedTypeName",
-                "src": "154:1:1",
-                "typeDescriptions": {}
+                "nodeType": "IdentifierPath",
+                "src": "154:1:1"
               },
               {
                 "id": 17,
                 "name": "B",
-                "nodeType": "UserDefinedTypeName",
-                "src": "157:1:1",
-                "typeDescriptions": {}
+                "nodeType": "IdentifierPath",
+                "src": "157:1:1"
               }
             ],
             "src": "145:14:1"
@@ -191,7 +195,8 @@
           "visibility": "public"
         }
       ],
-      "src": "100:64:1"
+      "src": "100:64:1",
+      "usedErrors": []
     }
   ],
   "src": "0:165:1"

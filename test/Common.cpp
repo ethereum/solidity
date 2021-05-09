@@ -21,6 +21,7 @@
 #include <test/Common.h>
 
 #include <libsolutil/Assertions.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
@@ -28,6 +29,9 @@ namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 namespace solidity::test
+{
+
+namespace
 {
 
 /// If non-empty returns the value of the env. variable ETH_TEST_PATH, otherwise
@@ -84,6 +88,8 @@ std::string envOrDefaultPath(std::string const& env_name, std::string const& lib
 	return {};
 }
 
+}
+
 CommonOptions::CommonOptions(std::string _caption):
 	options(_caption,
 		po::options_description::m_default_line_length,
@@ -98,7 +104,10 @@ CommonOptions::CommonOptions(std::string _caption):
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
-		("abiencoderv2", po::bool_switch(&useABIEncoderV2), "enables abi encoder v2")
+		("enforce-compile-to-ewasm", po::bool_switch(&enforceCompileToEwasm), "Enforce compiling all tests to Ewasm to see if additional tests can be activated.")
+		("enforce-gas-cost", po::bool_switch(&enforceGasTest), "Enforce checking gas cost in semantic tests.")
+		("enforce-gas-cost-min-value", po::value(&enforceGasTestMinValue), "Threshold value to enforce adding gas checks to a test.")
+		("abiencoderv1", po::bool_switch(&useABIEncoderV1), "enables abi encoder v1")
 		("show-messages", po::bool_switch(&showMessages), "enables message output")
 		("show-metadata", po::bool_switch(&showMetadata), "enables metadata output");
 }
@@ -115,7 +124,19 @@ void CommonOptions::validate() const
 		ConfigException,
 		"Invalid test path specified."
 	);
-
+	if (enforceGasTest)
+	{
+		assertThrow(
+			evmVersion() == langutil::EVMVersion{},
+			ConfigException,
+			"Gas costs can only be enforced on latest evm version."
+		);
+		assertThrow(
+			useABIEncoderV1 == false,
+			ConfigException,
+			"Gas costs can only be enforced on abi encoder v2."
+		);
+	}
 }
 
 bool CommonOptions::parse(int argc, char const* const* argv)
@@ -140,7 +161,7 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 			errorMessage << "Unrecognized option: ";
 			for (auto const& token: parsedOption.original_tokens)
 				errorMessage << token;
-			throw std::runtime_error(errorMessage.str());
+			BOOST_THROW_EXCEPTION(std::runtime_error(errorMessage.str()));
 		}
 
 	if (vmPaths.empty())
@@ -180,7 +201,7 @@ langutil::EVMVersion CommonOptions::evmVersion() const
 	{
 		auto version = langutil::EVMVersion::fromString(evmVersionString);
 		if (!version)
-			throw std::runtime_error("Invalid EVM version: " + evmVersionString);
+			BOOST_THROW_EXCEPTION(std::runtime_error("Invalid EVM version: " + evmVersionString));
 		return *version;
 	}
 	else
@@ -191,7 +212,7 @@ langutil::EVMVersion CommonOptions::evmVersion() const
 CommonOptions const& CommonOptions::get()
 {
 	if (!m_singleton)
-		throw std::runtime_error("Options not yet constructed!");
+		BOOST_THROW_EXCEPTION(std::runtime_error("Options not yet constructed!"));
 
 	return *m_singleton;
 }
@@ -202,5 +223,20 @@ void CommonOptions::setSingleton(std::unique_ptr<CommonOptions const>&& _instanc
 }
 
 std::unique_ptr<CommonOptions const> CommonOptions::m_singleton = nullptr;
+
+bool isValidSemanticTestPath(boost::filesystem::path const& _testPath)
+{
+	bool insideSemanticTests = false;
+	fs::path testPathPrefix;
+	for (auto const& element: _testPath)
+	{
+		testPathPrefix /= element;
+		if (boost::ends_with(canonical(testPathPrefix).generic_string(), "/test/libsolidity/semanticTests"))
+			insideSemanticTests = true;
+		if (insideSemanticTests && boost::starts_with(element.string(), "_"))
+			return false;
+	}
+	return true;
+}
 
 }

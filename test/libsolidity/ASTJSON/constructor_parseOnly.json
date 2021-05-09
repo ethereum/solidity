@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -27,6 +28,7 @@
           "kind": "constructor",
           "modifiers": [],
           "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -47,7 +49,8 @@
           "virtual": false
         }
       ],
-      "src": "0:34:1"
+      "src": "0:34:1",
+      "usedErrors": []
     }
   ],
   "src": "0:35:1"

@@ -18,6 +18,8 @@
 
 #include <libsolidity/parsing/DocStringParser.h>
 
+#include <libsolidity/ast/AST.h>
+
 #include <liblangutil/Common.h>
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
@@ -78,25 +80,26 @@ string::const_iterator skipWhitespace(
 
 }
 
-void DocStringParser::parse(string const& _docString, ErrorReporter& _errorReporter)
+multimap<string, DocTag> DocStringParser::parse()
 {
-	m_errorReporter = &_errorReporter;
 	m_lastTag = nullptr;
+	m_docTags = {};
 
-	auto currPos = _docString.begin();
-	auto end = _docString.end();
+	solAssert(m_node.text(), "");
+	iter currPos = m_node.text()->begin();
+	iter end = m_node.text()->end();
 
 	while (currPos != end)
 	{
-		auto tagPos = find(currPos, end, '@');
-		auto nlPos = find(currPos, end, '\n');
+		iter tagPos = find(currPos, end, '@');
+		iter nlPos = find(currPos, end, '\n');
 
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
-			auto tagName = string(tagPos + 1, tagNameEndPos);
-			auto tagDataPos = (tagNameEndPos != end) ? tagNameEndPos + 1 : tagNameEndPos;
+			iter tagNameEndPos = firstWhitespaceOrNewline(tagPos, end);
+			string tagName{tagPos + 1, tagNameEndPos};
+			iter tagDataPos = (tagNameEndPos != end) ? tagNameEndPos + 1 : tagNameEndPos;
 			currPos = parseDocTag(tagDataPos, end, tagName);
 		}
 		else if (!!m_lastTag) // continuation of the previous tag
@@ -104,7 +107,7 @@ void DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 		else if (currPos != end)
 		{
 			// if it begins without a tag then consider it as @notice
-			if (currPos == _docString.begin())
+			if (currPos == m_node.text()->begin())
 			{
 				currPos = parseDocTag(currPos, end, "notice");
 				continue;
@@ -115,6 +118,7 @@ void DocStringParser::parse(string const& _docString, ErrorReporter& _errorRepor
 			currPos = nlPos + 1;
 		}
 	}
+	return move(m_docTags);
 }
 
 DocStringParser::iter DocStringParser::parseDocTagLine(iter _pos, iter _end, bool _appending)
@@ -135,7 +139,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 	auto nameStartPos = skipWhitespace(_pos, _end);
 	if (nameStartPos == _end)
 	{
-		m_errorReporter->docstringParsingError(3335_error, "No param name given");
+		m_errorReporter.docstringParsingError(3335_error, m_node.location(), "No param name given");
 		return _end;
 	}
 	auto nameEndPos = firstNonIdentifier(nameStartPos, _end);
@@ -146,7 +150,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 	if (descStartPos == nlPos)
 	{
-		m_errorReporter->docstringParsingError(9942_error, "No description given for param " + paramName);
+		m_errorReporter.docstringParsingError(9942_error, m_node.location(), "No description given for param " + paramName);
 		return _end;
 	}
 
@@ -160,7 +164,7 @@ DocStringParser::iter DocStringParser::parseDocTagParam(iter _pos, iter _end)
 
 DocStringParser::iter DocStringParser::parseDocTag(iter _pos, iter _end, string const& _tag)
 {
-	// LTODO: need to check for @(start of a tag) between here and the end of line
+	// TODO: need to check for @(start of a tag) between here and the end of line
 	// for all cases.
 	if (!m_lastTag || _tag != "")
 	{

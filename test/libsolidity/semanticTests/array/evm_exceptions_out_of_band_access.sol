@@ -16,5 +16,5 @@ contract A {
 // compileViaYul: also
 // ----
 // test() -> false
-// testIt() -> FAILURE
+// testIt() -> FAILURE, hex"4e487b71", 0x32
 // test() -> false

@@ -24,10 +24,11 @@
 #include <libyul/Dialect.h>
 
 #include <libyul/backends/evm/AbstractAssembly.h>
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <map>
+#include <set>
 
 namespace solidity::yul
 {
@@ -70,11 +71,17 @@ struct EVMDialect: public Dialect
 	/// @returns the builtin function of the given name or a nullptr if it is not a builtin function.
 	BuiltinFunctionForEVM const* builtin(YulString _name) const override;
 
+	/// @returns true if the identifier is reserved. This includes the builtins too.
+	bool reservedIdentifier(YulString _name) const override;
+
 	BuiltinFunctionForEVM const* discardFunction(YulString /*_type*/) const override { return builtin("pop"_yulstring); }
 	BuiltinFunctionForEVM const* equalityFunction(YulString /*_type*/) const override { return builtin("eq"_yulstring); }
 	BuiltinFunctionForEVM const* booleanNegationFunction() const override { return builtin("iszero"_yulstring); }
 	BuiltinFunctionForEVM const* memoryStoreFunction(YulString /*_type*/) const override { return builtin("mstore"_yulstring); }
 	BuiltinFunctionForEVM const* memoryLoadFunction(YulString /*_type*/) const override { return builtin("mload"_yulstring); }
+	BuiltinFunctionForEVM const* storageStoreFunction(YulString /*_type*/) const override { return builtin("sstore"_yulstring); }
+	BuiltinFunctionForEVM const* storageLoadFunction(YulString /*_type*/) const override { return builtin("sload"_yulstring); }
+	YulString hashFunction(YulString /*_type*/) const override { return "keccak256"_yulstring; }
 
 	static EVMDialect const& strictAssemblyForEVM(langutil::EVMVersion _version);
 	static EVMDialect const& strictAssemblyForEVMObjects(langutil::EVMVersion _version);
@@ -86,9 +93,13 @@ struct EVMDialect: public Dialect
 	static SideEffects sideEffectsOfInstruction(evmasm::Instruction _instruction);
 
 protected:
+	BuiltinFunctionForEVM const* verbatimFunction(size_t _arguments, size_t _returnVariables) const;
+
 	bool const m_objectAccess;
 	langutil::EVMVersion const m_evmVersion;
 	std::map<YulString, BuiltinFunctionForEVM> m_functions;
+	std::map<std::pair<size_t, size_t>, std::shared_ptr<BuiltinFunctionForEVM const>> mutable m_verbatimFunctions;
+	std::set<YulString> m_reserved;
 };
 
 /**

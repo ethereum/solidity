@@ -58,23 +58,10 @@ message Create {
 }
 
 message FunctionCall {
-  enum Returns {
-    ZERO = 1;
-    SINGLE = 2;
-    MULTIDECL = 3;
-    MULTIASSIGN = 4;
-  }
-  required Returns ret = 1;
-  // Indexes an existing function
-  required uint32 func_index = 2;
-  required Expression in_param1 = 3;
-  required Expression in_param2 = 4;
-  required Expression in_param3 = 5;
-  required Expression in_param4 = 6;
-  required VarRef out_param1 = 7;
-  required VarRef out_param2 = 8;
-  required VarRef out_param3 = 9;
-  required VarRef out_param4 = 10;
+  required Expression in_param1 = 1;
+  required Expression in_param2 = 2;
+  required Expression in_param3 = 3;
+  required Expression in_param4 = 4;
 }
 
 message TypedVarDecl {
@@ -415,6 +402,7 @@ message Program {
     Object obj = 2;
   }
   required Version ver = 3;
+  required uint32 step = 4;
 }
 
 package solidity.yul.test.yul_fuzzer;

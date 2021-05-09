@@ -23,6 +23,7 @@
         12
       ],
       "name": "c",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -46,6 +47,7 @@
                     "id": 8,
                     "mutability": "mutable",
                     "name": "rows",
+                    "nameLocation": "51:4:1",
                     "nodeType": "VariableDeclaration",
                     "scope": 10,
                     "src": "35:20:1",
@@ -105,6 +107,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "22:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -128,7 +131,8 @@
         }
       ],
       "scope": 13,
-      "src": "0:60:1"
+      "src": "0:60:1",
+      "usedErrors": []
     }
   ],
   "src": "0:61:1"

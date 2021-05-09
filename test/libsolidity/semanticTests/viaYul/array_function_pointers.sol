@@ -23,7 +23,7 @@ contract C {
 // ====
 // compileViaYul: also
 // ----
-// f(uint256,uint256): 1823621, 12323 -> FAILURE
-// f2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE
-// g(uint256,uint256): 1823621, 12323 -> FAILURE
-// g2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE
+// f(uint256,uint256): 1823621, 12323 -> FAILURE # Out of gas #
+// f2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE # Out of gas #
+// g(uint256,uint256): 1823621, 12323 -> FAILURE # Out of gas #
+// g2(uint256,uint256,uint256,uint256): 18723921, 1823621, 123, 12323 -> FAILURE # Out of gas #

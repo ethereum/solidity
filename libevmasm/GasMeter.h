@@ -125,6 +125,12 @@ public:
 		static GasConsumption infinite() { return GasConsumption(0, true); }
 
 		GasConsumption& operator+=(GasConsumption const& _other);
+		GasConsumption operator+(GasConsumption const& _other) const
+		{
+			GasConsumption result = *this;
+			result += _other;
+			return result;
+		}
 		bool operator<(GasConsumption const& _other) const
 		{
 			return std::make_pair(isInfinite, value) < std::make_pair(_other.isInfinite, _other.value);
@@ -153,6 +159,11 @@ public:
 	/// In case of @a _inCreation, the data is only sent as a transaction and is not stored, whereas
 	/// otherwise code will be stored and have to pay "createDataGas" cost.
 	static u256 dataGas(bytes const& _data, bool _inCreation, langutil::EVMVersion _evmVersion);
+
+	/// @returns the gas cost of non-zero data of the supplied length, depending whether it is in creation code, or not.
+	/// In case of @a _inCreation, the data is only sent as a transaction and is not stored, whereas
+	/// otherwise code will be stored and have to pay "createDataGas" cost.
+	static u256 dataGas(uint64_t _length, bool _inCreation, langutil::EVMVersion _evmVersion);
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.

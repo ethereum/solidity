@@ -1,0 +1,1 @@
+--optimize --ir-optimized --optimize-runs 1000000

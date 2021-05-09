@@ -9,6 +9,6 @@ contract Y {
 	}
 }
 // ----
-// TypeError 1273: (29-34): The type of a variable cannot be a library.
-// TypeError 1273: (50-57): The type of a variable cannot be a library.
-// TypeError 1273: (77-82): The type of a variable cannot be a library.
+// TypeError 1130: (29-30): Invalid use of a library name.
+// TypeError 1130: (50-51): Invalid use of a library name.
+// TypeError 1130: (77-78): Invalid use of a library name.

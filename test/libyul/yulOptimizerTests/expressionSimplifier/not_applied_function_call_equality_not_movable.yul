@@ -8,7 +8,7 @@
 // step: expressionSimplifier
 //
 // {
-//     function f() -> a
-//     { mstore(a, 1) }
 //     sstore(sub(f(), f()), 8)
+//     function f() -> a
+//     { mstore(0, 1) }
 // }

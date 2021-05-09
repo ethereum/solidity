@@ -14,9 +14,8 @@
 
 #pragma once
 
-#include <libsolutil/CommonData.h>
-#include <libsolidity/ast/Types.h>
 #include <liblangutil/Exceptions.h>
+#include <libsolutil/CommonData.h>
 #include <test/libsolidity/util/SoltestTypes.h>
 
 #include <iosfwd>
@@ -44,7 +43,8 @@ namespace solidity::frontend::test
  * // h(uint256), 1 ether: 42
  * // -> FAILURE                # If REVERT or other EVM failure was detected #
  * // ()                        # Call fallback function #
- * // (), 1 ether               # Call ether function #
+ * // (), 1 ether               # Call receive ether function #
+ * // EMPTY_STORAGE             # Check that storage is empty
  * ...
  */
 class TestFileParser
@@ -52,7 +52,7 @@ class TestFileParser
 public:
 	/// Constructor that takes an input stream \param _stream to operate on
 	/// and creates the internal scanner.
-	TestFileParser(std::istream& _stream): m_scanner(_stream) {}
+	explicit TestFileParser(std::istream& _stream, std::map<std::string, Builtin> const& _builtins): m_scanner(_stream), m_builtins(_builtins) {}
 
 	/// Parses function calls blockwise and returns a list of function calls found.
 	/// Throws an exception if a function call cannot be parsed because of its
@@ -63,7 +63,6 @@ public:
 	std::vector<FunctionCall> parseFunctionCalls(std::size_t _lineOffset);
 
 private:
-	using Token = soltest::Token;
 	/**
 	 * Token scanner that is used internally to abstract away character traversal.
 	 */
@@ -80,8 +79,8 @@ private:
 		/// Reads character stream and creates token.
 		void scanNextToken();
 
-		soltest::Token currentToken() { return m_currentToken.first; }
-		std::string currentLiteral() { return m_currentToken.second; }
+		soltest::Token currentToken() { return m_currentToken; }
+		std::string currentLiteral() { return m_currentLiteral; }
 
 		std::string scanComment();
 		std::string scanIdentifierOrKeyword();
@@ -91,8 +90,6 @@ private:
 		char scanHexPart();
 
 	private:
-		using TokenDesc = std::pair<Token, std::string>;
-
 		/// Advances current position in the input stream.
 		void advance(unsigned n = 1)
 		{
@@ -120,8 +117,7 @@ private:
 		std::string::const_iterator m_char;
 
 		std::string m_currentLiteral;
-
-		TokenDesc m_currentToken;
+		soltest::Token m_currentToken = soltest::Token::Unknown;
 	};
 
 	bool accept(soltest::Token _token, bool const _expect = false);
@@ -181,12 +177,18 @@ private:
 	/// Parses the current string literal.
 	std::string parseString();
 
+	/// Checks whether a builtin function with the given signature exist.
+	/// @returns true, if builtin found, false otherwise
+	bool isBuiltinFunction(std::string const& signature);
+
 	/// A scanner instance
 	Scanner m_scanner;
 
 	/// The current line number. Incremented when Token::Newline (//) is found and
 	/// used to enhance parser error messages.
 	size_t m_lineNumber = 0;
+
+	std::map<std::string, Builtin> const& m_builtins;
 };
 
 }

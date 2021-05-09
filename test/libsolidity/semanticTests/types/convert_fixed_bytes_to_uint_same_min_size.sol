@@ -4,6 +4,7 @@ contract Test {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // bytesToUint(bytes1): "a" -> 0x61

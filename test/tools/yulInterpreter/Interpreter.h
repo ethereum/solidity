@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 
 #include <libsolutil/FixedHash.h>
@@ -55,6 +55,10 @@ class TraceLimitReached: public InterpreterTerminatedGeneric
 {
 };
 
+class ExpressionNestingLimitReached: public InterpreterTerminatedGeneric
+{
+};
+
 enum class ControlFlowState
 {
 	Default,
@@ -71,16 +75,16 @@ struct InterpreterState
 	/// This is different than memory.size() because we ignore gas.
 	u256 msize;
 	std::map<util::h256, util::h256> storage;
-	u160 address = 0x11111111;
+	util::h160 address = util::h160("0x0000000000000000000000000000000011111111");
 	u256 balance = 0x22222222;
 	u256 selfbalance = 0x22223333;
-	u160 origin = 0x33333333;
-	u160 caller = 0x44444444;
+	util::h160 origin = util::h160("0x0000000000000000000000000000000033333333");
+	util::h160 caller = util::h160("0x0000000000000000000000000000000044444444");
 	u256 callvalue = 0x55555555;
 	/// Deployed code
 	bytes code = util::asBytes("codecodecodecodecode");
 	u256 gasprice = 0x66666666;
-	u160 coinbase = 0x77777777;
+	util::h160 coinbase = util::h160("0x0000000000000000000000000000000077777777");
 	u256 timestamp = 0x88888888;
 	u256 blockNumber = 1024;
 	u256 difficulty = 0x9999999;
@@ -92,9 +96,13 @@ struct InterpreterState
 	size_t maxTraceSize = 0;
 	size_t maxSteps = 0;
 	size_t numSteps = 0;
+	size_t maxExprNesting = 0;
 	ControlFlowState controlFlowState = ControlFlowState::Default;
 
+	/// Prints execution trace and non-zero storage to @param _out.
 	void dumpTraceAndState(std::ostream& _out) const;
+	/// Prints non-zero storage to @param _out.
+	void dumpStorage(std::ostream& _out) const;
 };
 
 /**
@@ -202,6 +210,11 @@ private:
 		std::vector<std::optional<LiteralKind>> const* _literalArguments
 	);
 
+	/// Increment evaluation count, throwing exception if the
+	/// nesting level is beyond the upper bound configured in
+	/// the interpreter state.
+	void incrementStep();
+
 	InterpreterState& m_state;
 	Dialect const& m_dialect;
 	/// Values of variables.
@@ -209,6 +222,8 @@ private:
 	Scope& m_scope;
 	/// Current value of the expression
 	std::vector<u256> m_values;
+	/// Current expression nesting level
+	unsigned m_nestingLevel = 0;
 };
 
 }

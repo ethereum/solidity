@@ -23,6 +23,7 @@
         6
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -137,6 +138,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "g",
+          "nameLocation": "26:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -160,7 +162,8 @@
         }
       ],
       "scope": 7,
-      "src": "0:118:1"
+      "src": "0:118:1",
+      "usedErrors": []
     }
   ],
   "src": "0:119:1"

@@ -4,7 +4,7 @@ set -e
 
 ## GLOBAL VARIABLES
 
-REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 
 ## FUNCTIONS
 

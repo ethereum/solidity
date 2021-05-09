@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 5,
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -27,6 +28,7 @@
           "kind": "fallback",
           "modifiers": [],
           "name": "",
+          "nameLocation": "-1:-1:-1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -48,7 +50,8 @@
           "visibility": "external"
         }
       ],
-      "src": "0:38:1"
+      "src": "0:38:1",
+      "usedErrors": []
     }
   ],
   "src": "0:39:1"

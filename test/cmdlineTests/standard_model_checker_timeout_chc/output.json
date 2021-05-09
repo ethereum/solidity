@@ -1,0 +1,7 @@
+{"errors":[{"component":"general","errorCode":"6328","formattedMessage":"Warning: CHC: Assertion violation might happen here.
+ --> A:6:85:
+  |
+6 | require(k > 0); require(x % k == 0); require(y % k == 0); uint r = mulmod(x, y, k); assert(r % k == 0);}}
+  |                                                                                     ^^^^^^^^^^^^^^^^^^
+
+","message":"CHC: Assertion violation might happen here.","severity":"warning","sourceLocation":{"end":227,"file":"A","start":209},"type":"Warning"}],"sources":{"A":{"id":0}}}

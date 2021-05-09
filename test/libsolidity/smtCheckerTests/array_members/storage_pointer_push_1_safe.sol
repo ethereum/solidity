@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	int[][] array2d;
 	function l() public {
@@ -13,3 +12,6 @@ contract C {
 		return array2d[2];
 	}
 }
+// ====
+// SMTEngine: all
+// ----

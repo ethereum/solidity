@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/YulString.h>
 #include <libyul/optimiser/OptimiserStep.h>
@@ -57,19 +57,15 @@ public:
 	void operator()(FunctionDefinition& _funDef) override;
 
 private:
-	NameSimplifier(
-		OptimiserStepContext& _context,
-		Block const& _ast
-	);
+	NameSimplifier(OptimiserStepContext& _context, Block const& _ast);
 
 	/// Tries to rename a list of variables.
 	void renameVariables(std::vector<TypedName>& _variables);
 
-	void findSimplification(YulString _name);
+	void findSimplification(YulString const& _name);
 	void translate(YulString& _name);
 
 	OptimiserStepContext& m_context;
-	std::set<YulString> m_usedNames;
 	std::map<YulString, YulString> m_translations;
 };
 

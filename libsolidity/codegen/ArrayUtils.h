@@ -31,7 +31,6 @@ namespace solidity::frontend
 class CompilerContext;
 class Type;
 class ArrayType;
-using TypePointer = Type const*;
 
 /**
  * Class that provides code generation for handling arrays.
@@ -72,7 +71,7 @@ public:
 	/// Stack pre: reference (excludes byte offset)
 	/// Stack post: new_length
 	void incrementDynamicArraySize(ArrayType const& _type) const;
-	/// Decrements the size of a dynamic array by one if length is nonzero. Causes an invalid instruction otherwise.
+	/// Decrements the size of a dynamic array by one if length is nonzero. Causes a Panic otherwise.
 	/// Clears the removed data element. In case of a byte array, this might move the data.
 	/// Stack pre: reference
 	/// Stack post:
@@ -80,7 +79,7 @@ public:
 	/// Appends a loop that clears a sequence of storage slots of the given type (excluding end).
 	/// Stack pre: end_ref start_ref
 	/// Stack post: end_ref
-	void clearStorageLoop(TypePointer _type) const;
+	void clearStorageLoop(Type const* _type) const;
 	/// Converts length to size (number of storage slots or calldata/memory bytes).
 	/// if @a _pad then add padding to multiples of 32 bytes for calldata/memory.
 	/// Stack pre: length

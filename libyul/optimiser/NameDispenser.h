@@ -20,7 +20,7 @@
  */
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 #include <libyul/YulString.h>
 
@@ -51,11 +51,19 @@ public:
 	/// return it.
 	void markUsed(YulString _name) { m_usedNames.insert(_name); }
 
-private:
+	std::set<YulString> const& usedNames() { return m_usedNames; }
+
+	/// Returns true if `_name` is either used or is a restricted identifier.
 	bool illegalName(YulString _name);
 
+	/// Resets `m_usedNames` with *only* the names that are used in the AST. Also resets value of
+	/// `m_counter` to zero.
+	void reset(Block const& _ast);
+
+private:
 	Dialect const& m_dialect;
 	std::set<YulString> m_usedNames;
+	std::set<YulString> m_reservedNames;
 	size_t m_counter = 0;
 };
 

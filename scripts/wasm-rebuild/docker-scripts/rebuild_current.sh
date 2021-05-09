@@ -36,12 +36,19 @@ if [ -d jsoncpp ]; then
     set -e
     cd jsoncpp
     # Checkout the latest commit at the time of our release.
-    git checkout $(git rev-list -1 --before=$COMMIT_DATE master)
+    git checkout "$(git rev-list -1 --before="$COMMIT_DATE" master)"
   )
 fi
 
 set +e
-scripts/travis-emscripten/build_emscripten.sh
+
+if [ -e scripts/ci/build_emscripten.sh ]; then
+  scripts/ci/build_emscripten.sh
+else
+  # The script used to be in scripts/ci/ in earlier versions.
+  scripts/travis-emscripten/build_emscripten.sh
+fi
+
 set -e
 
 mkdir -p upload

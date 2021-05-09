@@ -26,10 +26,10 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/Disambiguator.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AssemblyStack.h>
+#include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 
@@ -55,7 +55,7 @@ Dialect const& defaultDialect(bool _yul)
 
 void yul::test::printErrors(ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(cout);
+	SourceReferenceFormatter formatter(cout, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

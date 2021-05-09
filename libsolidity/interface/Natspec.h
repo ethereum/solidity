@@ -19,7 +19,7 @@
  * @author Lefteris <lefteris@ethdev.com>
  * @date 2014
  * Takes the parsed AST and produces the Natspec documentation:
- * https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
+ * https://docs.soliditylang.org/en/develop/natspec-format.html
  *
  * Can generally deal with JSON files
  */
@@ -57,6 +57,9 @@ private:
 	/// @returns concatenation of all content under the given tag name.
 	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
 
+	/// Extract all custom tags from @a _tags.
+	static Json::Value extractCustomDoc(std::multimap<std::string, DocTag> const& _tags);
+
 	/// Helper-function that will create a json object with dev specific annotations, if present.
 	/// @param _tags docTags that are used.
 	/// @return      A JSON representation
@@ -65,10 +68,10 @@ private:
 
 	/// Helper-function that will create a json object for the "returns" field for a given function definition.
 	/// @param _tags docTags that are used.
-	/// @param _functionDef functionDefinition that is used to determine which return parameters are named.
+	/// @param _returnParameterNames names of the return parameters
 	/// @return      A JSON representation
 	///              of a method's return notice documentation
-	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef);
+	static Json::Value extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, std::vector<std::string> const& _returnParameterNames);
 };
 
 }

@@ -61,5 +61,5 @@ docker push "${DOCKER_IMAGE_ID}-${VERSION}"
 
 REPO_DIGEST=$(docker inspect --format='{{.RepoDigests}}' "${DOCKER_IMAGE_ID}-${VERSION}")
 
-echo "::set-env name=DOCKER_IMAGE::${DOCKER_IMAGE_ID}-${VERSION}"
-echo "::set-env name=DOCKER_REPO_DIGEST::${REPO_DIGEST}"
+echo "DOCKER_IMAGE=${DOCKER_IMAGE_ID}-${VERSION}" >> "$GITHUB_ENV"
+echo "DOCKER_REPO_DIGEST=${REPO_DIGEST}" >> "$GITHUB_ENV"

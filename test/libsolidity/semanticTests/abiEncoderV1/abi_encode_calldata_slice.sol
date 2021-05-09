@@ -56,8 +56,14 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: also
 // EVMVersion: >homestead
+// compileViaYul: also
 // ----
 // test_bytes() ->
+// gas irOptimized: 508617
+// gas legacy: 466763
+// gas legacyOptimized: 374591
 // test_uint256() ->
+// gas irOptimized: 704259
+// gas legacy: 634592
+// gas legacyOptimized: 499337

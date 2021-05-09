@@ -14,7 +14,7 @@ contract publisher is announcementTypes, module, safeMath {
             Transaction completed. This function is available only for moduleHandler
             If a transaction is carried out from or to an address which participated in the objection of an announcement, its objection purport is automatically set
         */
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         uint256 announcementID;
 		uint256 a;
 		// need reverse lookup

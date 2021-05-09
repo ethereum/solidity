@@ -224,6 +224,17 @@ bool StaticAnalyzer::visit(MemberAccess const& _memberAccess)
 					"Because of that, it might be that the deployed bytecode is different from type(...).runtimeCode."
 				);
 		}
+		else if (
+			m_currentFunction &&
+			m_currentFunction->isReceive() &&
+			type->kind() == MagicType::Kind::Message &&
+			_memberAccess.memberName() == "data"
+		)
+			m_errorReporter.typeError(
+				7139_error,
+				_memberAccess.location(),
+				R"("msg.data" cannot be used inside of "receive" function.)"
+			);
 	}
 
 	if (_memberAccess.memberName() == "callcode")
@@ -290,10 +301,8 @@ bool StaticAnalyzer::visit(BinaryOperation const& _operation)
 		*_operation.rightExpression().annotation().isPure &&
 		(_operation.getOperator() == Token::Div || _operation.getOperator() == Token::Mod)
 	)
-		if (auto rhs = dynamic_cast<RationalNumberType const*>(
-			ConstantEvaluator(m_errorReporter).evaluate(_operation.rightExpression())
-		))
-			if (rhs->isZero())
+		if (auto rhs = ConstantEvaluator::evaluate(m_errorReporter, _operation.rightExpression()))
+			if (rhs->value == 0)
 				m_errorReporter.typeError(
 					1211_error,
 					_operation.location(),
@@ -313,10 +322,8 @@ bool StaticAnalyzer::visit(FunctionCall const& _functionCall)
 		{
 			solAssert(_functionCall.arguments().size() == 3, "");
 			if (*_functionCall.arguments()[2]->annotation().isPure)
-				if (auto lastArg = dynamic_cast<RationalNumberType const*>(
-					ConstantEvaluator(m_errorReporter).evaluate(*(_functionCall.arguments())[2])
-				))
-					if (lastArg->isZero())
+				if (auto lastArg = ConstantEvaluator::evaluate(m_errorReporter, *(_functionCall.arguments())[2]))
+					if (lastArg->value == 0)
 						m_errorReporter.typeError(
 							4195_error,
 							_functionCall.location(),

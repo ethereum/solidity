@@ -28,8 +28,8 @@ using namespace solidity::phaser;
 
 vector<size_t> RangeSelection::materialise(size_t _poolSize) const
 {
-	size_t beginIndex = static_cast<size_t>(round(_poolSize * m_startPercent));
-	size_t endIndex = static_cast<size_t>(round(_poolSize * m_endPercent));
+	size_t beginIndex = static_cast<size_t>(round(double(_poolSize) * m_startPercent));
+	size_t endIndex = static_cast<size_t>(round(double(_poolSize) * m_endPercent));
 	vector<size_t> selection;
 
 	for (size_t i = beginIndex; i < endIndex; ++i)
@@ -40,7 +40,7 @@ vector<size_t> RangeSelection::materialise(size_t _poolSize) const
 
 vector<size_t> MosaicSelection::materialise(size_t _poolSize) const
 {
-	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+	size_t count = static_cast<size_t>(round(double(_poolSize) * m_selectionSize));
 
 	vector<size_t> selection;
 	for (size_t i = 0; i < count; ++i)
@@ -51,7 +51,7 @@ vector<size_t> MosaicSelection::materialise(size_t _poolSize) const
 
 vector<size_t> RandomSelection::materialise(size_t _poolSize) const
 {
-	size_t count = static_cast<size_t>(round(_poolSize * m_selectionSize));
+	size_t count = static_cast<size_t>(round(double(_poolSize) * m_selectionSize));
 
 	vector<size_t> selection;
 	for (size_t i = 0; i < count; ++i)

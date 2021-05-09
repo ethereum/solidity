@@ -311,7 +311,7 @@ This will no longer compile with Solidity v0.5.0. However, you can define a comp
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >=0.5.0 <0.9.0;
     interface OldContract {
         function someOldFunction(uint8 a) external;
         function anotherOldFunction() external returns (bool);
@@ -329,7 +329,7 @@ Given the interface defined above, you can now easily use the already deployed p
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.8.0;
+    pragma solidity >=0.5.0 <0.9.0;
 
     interface OldContract {
         function someOldFunction(uint8 a) external;
@@ -351,7 +351,7 @@ commandline compiler for linking):
 
     // This will not compile after 0.6.0
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.5.99;
+    pragma solidity ^0.5.0;
 
     library OldLibrary {
         function someFunction(uint8 a) public returns(bool);
@@ -438,7 +438,7 @@ New version:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.5.0 <0.5.99;
+    pragma solidity ^0.5.0;
     // This will not compile after 0.6.0
 
     contract OtherContract {

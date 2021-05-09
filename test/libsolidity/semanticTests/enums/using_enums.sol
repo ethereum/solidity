@@ -13,6 +13,7 @@ contract test {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // getChoice() -> 2

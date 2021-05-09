@@ -31,8 +31,6 @@
 
 #include <liblangutil/EVMVersion.h>
 
-#include <boost/noncopyable.hpp>
-
 #include <list>
 #include <map>
 
@@ -48,9 +46,13 @@ namespace solidity::frontend
  * Resolves name references, typenames and sets the (explicitly given) types for all variable
  * declarations.
  */
-class NameAndTypeResolver: private boost::noncopyable
+class NameAndTypeResolver
 {
 public:
+	/// Noncopyable.
+	NameAndTypeResolver(NameAndTypeResolver const&) = delete;
+	NameAndTypeResolver& operator=(NameAndTypeResolver const&) = delete;
+
 	/// Creates the resolver with the given declarations added to the global scope.
 	/// @param _scopes mapping of scopes to be used (usually default constructed), these
 	/// are filled during the lifetime of this object.
@@ -92,8 +94,8 @@ public:
 	/// @note Returns a null pointer if any component in the path was not unique or not found.
 	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path) const;
 
-	/// Generate and store warnings about variables that are named like instructions.
-	void warnVariablesNamedLikeInstructions();
+	/// Generate and store warnings about declarations with the same name.
+	void warnHomonymDeclarations() const;
 
 	/// @returns a list of similar identifiers in the current and enclosing scopes. May return empty string if no suggestions.
 	std::string similarNameSuggestions(ASTString const& _name) const;

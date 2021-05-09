@@ -36,40 +36,42 @@ struct EVMDialect;
  *
  * Assumes that EXP is not used with exponents larger than a single byte.
  * Is not particularly exact for anything apart from arithmetic.
+ *
+ * Assumes that Keccak-256 is computed on a single word (rounded up).
  */
 class GasMeter
 {
 public:
-	GasMeter(EVMDialect const& _dialect, bool _isCreation, size_t _runs):
+	GasMeter(EVMDialect const& _dialect, bool _isCreation, bigint _runs):
 		m_dialect(_dialect),
 		m_isCreation{_isCreation},
-		m_runs(_runs)
+		m_runs(_isCreation? 1 : _runs)
 	{}
 
 	/// @returns the full combined costs of deploying and evaluating the expression.
-	size_t costs(Expression const& _expression) const;
+	bigint costs(Expression const& _expression) const;
 	/// @returns the combined costs of deploying and running the instruction, not including
 	/// the costs for its arguments.
-	size_t instructionCosts(evmasm::Instruction _instruction) const;
+	bigint instructionCosts(evmasm::Instruction _instruction) const;
 
 private:
-	size_t combineCosts(std::pair<size_t, size_t> _costs) const;
+	bigint combineCosts(std::pair<bigint, bigint> _costs) const;
 
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;
-	size_t m_runs;
+	bigint m_runs;
 };
 
 class GasMeterVisitor: public ASTWalker
 {
 public:
-	static std::pair<size_t, size_t> costs(
+	static std::pair<bigint, bigint> costs(
 		Expression const& _expression,
 		EVMDialect const& _dialect,
 		bool _isCreation
 	);
 
-	static std::pair<size_t, size_t> instructionCosts(
+	static std::pair<bigint, bigint> instructionCosts(
 		evmasm::Instruction _instruction,
 		EVMDialect const& _dialect,
 		bool _isCreation = false
@@ -86,7 +88,7 @@ public:
 	void operator()(Identifier const& _identifier) override;
 
 private:
-	size_t singleByteDataGas() const;
+	bigint singleByteDataGas() const;
 	/// Computes the cost of storing and executing the single instruction (excluding its arguments).
 	/// For EXP, it assumes that the exponent is at most 255.
 	/// Does not work particularly exact for anything apart from arithmetic.
@@ -94,8 +96,8 @@ private:
 
 	EVMDialect const& m_dialect;
 	bool m_isCreation = false;
-	size_t m_runGas = 0;
-	size_t m_dataGas = 0;
+	bigint m_runGas = 0;
+	bigint m_dataGas = 0;
 };
 
 }

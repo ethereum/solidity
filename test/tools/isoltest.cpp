@@ -79,9 +79,9 @@ public:
 		m_filterExpression = regex{"(" + filter + "(\\.sol|\\.yul))"};
 	}
 
-	bool matches(string const& _name) const
+	bool matches(fs::path const& _path, string const& _name) const
 	{
-		return regex_match(_name, m_filterExpression);
+		return regex_match(_name, m_filterExpression) && solidity::test::isValidSemanticTestPath(_path);
 	}
 
 private:
@@ -131,6 +131,7 @@ private:
 		Quit
 	};
 
+	void updateTestCase();
 	Request handleResponse(bool _exception);
 
 	TestCreator m_testCaseCreator;
@@ -150,11 +151,10 @@ bool TestTool::m_exitRequested = false;
 TestTool::Result TestTool::process()
 {
 	bool formatted{!m_options.noColor};
-	std::stringstream outputMessages;
 
 	try
 	{
-		if (m_filter.matches(m_name))
+		if (m_filter.matches(m_path, m_name))
 		{
 			(AnsiColorized(cout, formatted, {BOLD}) << m_name << ": ").flush();
 
@@ -162,9 +162,14 @@ TestTool::Result TestTool::process()
 				m_path.string(),
 				m_options.evmVersion(),
 				m_options.vmPaths,
-				m_options.enforceViaYul
+				m_options.enforceViaYul,
+				m_options.enforceCompileToEwasm,
+				m_options.enforceGasTest,
+				m_options.enforceGasTestMinValue
 			});
 			if (m_test->shouldRun())
+			{
+				std::stringstream outputMessages;
 				switch (TestCase::TestResult result = m_test->run(outputMessages, "  ", formatted))
 				{
 					case TestCase::TestResult::Success:
@@ -180,6 +185,7 @@ TestTool::Result TestTool::process()
 						cout << endl << outputMessages.str() << endl;
 						return result == TestCase::TestResult::FatalError ? Result::Exception : Result::Failure;
 				}
+			}
 			else
 			{
 				AnsiColorized(cout, formatted, {BOLD, YELLOW}) << "NOT RUN" << endl;
@@ -211,8 +217,23 @@ TestTool::Result TestTool::process()
 	}
 }
 
+void TestTool::updateTestCase()
+{
+	ofstream file(m_path.string(), ios::trunc);
+	m_test->printSource(file);
+	m_test->printUpdatedSettings(file);
+	file << "// ----" << endl;
+	m_test->printUpdatedExpectations(file, "// ");
+}
+
 TestTool::Request TestTool::handleResponse(bool _exception)
 {
+	if (!_exception && m_options.acceptUpdates)
+	{
+		updateTestCase();
+		return Request::Rerun;
+	}
+
 	if (_exception)
 		cout << "(e)dit/(s)kip/(q)uit? ";
 	else
@@ -232,11 +253,7 @@ TestTool::Request TestTool::handleResponse(bool _exception)
 			else
 			{
 				cout << endl;
-				ofstream file(m_path.string(), ios::trunc);
-				m_test->printSource(file);
-				m_test->printUpdatedSettings(file);
-				file << "// ----" << endl;
-				m_test->printUpdatedExpectations(file, "// ");
+				updateTestCase();
 				return Request::Rerun;
 			}
 		case 'e':

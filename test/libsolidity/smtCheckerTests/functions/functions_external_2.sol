@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 abstract contract D
 {
 	function g(uint x) public virtual;
@@ -12,9 +10,17 @@ contract C
 		require(map[0] == map[1]);
 		assert(map[0] == map[1]);
 		d.g(y);
-		// Storage knowledge is cleared after an external call.
 		assert(map[0] == map[1]);
+		assert(map[0] == 0); // should fail
+	}
+
+	function set(uint x) public {
+		map[0] = x;
+		map[1] = x;
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 4661: (297-321): BMC: Assertion violation happens here.
+// Warning 6328: (234-253): CHC: Assertion violation happens here.

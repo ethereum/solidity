@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function sub(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -8,3 +6,6 @@ contract C
 		return c;
 	}
 }
+// ====
+// SMTEngine: all
+// ----

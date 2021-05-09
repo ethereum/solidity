@@ -26,7 +26,7 @@
 
 #include <libsolutil/Algorithms.h>
 
-#include <boost/range/adaptor/transformed.hpp>
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -60,6 +60,18 @@ bool DeclarationTypeChecker::visit(ElementaryTypeName const& _typeName)
 		}
 	}
 	return true;
+}
+
+bool DeclarationTypeChecker::visit(EnumDefinition const& _enum)
+{
+	if (_enum.members().size() > 256)
+		m_errorReporter.declarationError(
+			1611_error,
+			_enum.location(),
+			"Enum with more than 256 members is not allowed."
+		);
+
+	return false;
 }
 
 bool DeclarationTypeChecker::visit(StructDefinition const& _struct)
@@ -133,7 +145,7 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 	if (_typeName.annotation().type)
 		return;
 
-	Declaration const* declaration = _typeName.annotation().referencedDeclaration;
+	Declaration const* declaration = _typeName.pathNode().annotation().referencedDeclaration;
 	solAssert(declaration, "");
 
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
@@ -155,6 +167,16 @@ void DeclarationTypeChecker::endVisit(UserDefinedTypeName const& _typeName)
 			"Name has to refer to a struct, enum or contract."
 		);
 	}
+}
+
+void DeclarationTypeChecker::endVisit(IdentifierPath const& _path)
+{
+	Declaration const* declaration = _path.annotation().referencedDeclaration;
+	solAssert(declaration, "");
+
+	if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
+		if (contract->isLibrary())
+			m_errorReporter.typeError(1130_error, _path.location(), "Invalid use of a library name.");
 }
 
 bool DeclarationTypeChecker::visit(FunctionTypeName const& _typeName)
@@ -201,28 +223,24 @@ void DeclarationTypeChecker::endVisit(Mapping const& _mapping)
 		return;
 
 	if (auto const* typeName = dynamic_cast<UserDefinedTypeName const*>(&_mapping.keyType()))
-	{
-		if (auto const* contractType = dynamic_cast<ContractType const*>(typeName->annotation().type))
+		switch (typeName->annotation().type->category())
 		{
-			if (contractType->contractDefinition().isLibrary())
+			case Type::Category::Enum:
+			case Type::Category::Contract:
+				break;
+			default:
 				m_errorReporter.fatalTypeError(
-					1665_error,
+					7804_error,
 					typeName->location(),
-					"Library types cannot be used as mapping keys."
+					"Only elementary types, contract types or enums are allowed as mapping keys."
 				);
+				break;
 		}
-		else if (typeName->annotation().type->category() != Type::Category::Enum)
-			m_errorReporter.fatalTypeError(
-				7804_error,
-				typeName->location(),
-				"Only elementary types, contract types or enums are allowed as mapping keys."
-			);
-	}
 	else
 		solAssert(dynamic_cast<ElementaryTypeName const*>(&_mapping.keyType()), "");
 
-	TypePointer keyType = _mapping.keyType().annotation().type;
-	TypePointer valueType = _mapping.valueType().annotation().type;
+	Type const* keyType = _mapping.keyType().annotation().type;
+	Type const* valueType = _mapping.valueType().annotation().type;
 
 	// Convert key type to memory.
 	keyType = TypeProvider::withLocationIfReference(DataLocation::Memory, keyType);
@@ -237,35 +255,40 @@ void DeclarationTypeChecker::endVisit(ArrayTypeName const& _typeName)
 	if (_typeName.annotation().type)
 		return;
 
-	TypePointer baseType = _typeName.baseType().annotation().type;
+	Type const* baseType = _typeName.baseType().annotation().type;
 	if (!baseType)
 	{
 		solAssert(!m_errorReporter.errors().empty(), "");
 		return;
 	}
+
 	solAssert(baseType->storageBytes() != 0, "Illegal base type of storage size zero for array.");
 	if (Expression const* length = _typeName.length())
 	{
-		TypePointer& lengthTypeGeneric = length->annotation().type;
-		if (!lengthTypeGeneric)
-			lengthTypeGeneric = ConstantEvaluator(m_errorReporter).evaluate(*length);
-		RationalNumberType const* lengthType = dynamic_cast<RationalNumberType const*>(lengthTypeGeneric);
-		u256 lengthValue = 0;
-		if (!lengthType || !lengthType->mobileType())
+		optional<rational> lengthValue;
+		if (length->annotation().type && length->annotation().type->category() == Type::Category::RationalNumber)
+			lengthValue = dynamic_cast<RationalNumberType const&>(*length->annotation().type).value();
+		else if (optional<ConstantEvaluator::TypedRational> value = ConstantEvaluator::evaluate(m_errorReporter, *length))
+			lengthValue = value->value;
+
+		if (!lengthValue || lengthValue > TypeProvider::uint256()->max())
 			m_errorReporter.typeError(
 				5462_error,
 				length->location(),
 				"Invalid array length, expected integer literal or constant expression."
 			);
-		else if (lengthType->isZero())
+		else if (*lengthValue == 0)
 			m_errorReporter.typeError(1406_error, length->location(), "Array with zero length specified.");
-		else if (lengthType->isFractional())
+		else if (lengthValue->denominator() != 1)
 			m_errorReporter.typeError(3208_error, length->location(), "Array with fractional length specified.");
-		else if (lengthType->isNegative())
+		else if (*lengthValue < 0)
 			m_errorReporter.typeError(3658_error, length->location(), "Array with negative length specified.");
-		else
-			lengthValue = lengthType->literalValue(nullptr);
-		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType, lengthValue);
+
+		_typeName.annotation().type = TypeProvider::array(
+			DataLocation::Storage,
+			baseType,
+			lengthValue ? u256(lengthValue->numerator()) : u256(0)
+		);
 	}
 	else
 		_typeName.annotation().type = TypeProvider::array(DataLocation::Storage, baseType);
@@ -276,11 +299,17 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	if (_variable.annotation().type)
 		return;
 
-	if (_variable.isConstant() && !_variable.isStateVariable())
+	if (_variable.isFileLevelVariable() && !_variable.isConstant())
+		m_errorReporter.declarationError(
+			8342_error,
+			_variable.location(),
+			"Only constant variables are allowed at file level."
+		);
+	if (_variable.isConstant() && (!_variable.isStateVariable() && !_variable.isFileLevelVariable()))
 		m_errorReporter.declarationError(
 			1788_error,
 			_variable.location(),
-			"The \"constant\" keyword can only be used for state variables."
+			"The \"constant\" keyword can only be used for state variables or variables at file level."
 		);
 	if (_variable.immutable() && !_variable.isStateVariable())
 		m_errorReporter.declarationError(
@@ -315,7 +344,7 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 		{
 			errorString = "Data location must be " +
 				util::joinHumanReadable(
-					allowedDataLocations | boost::adaptors::transformed(locationToString),
+					allowedDataLocations | ranges::views::transform(locationToString),
 					", ",
 					" or "
 				);
@@ -339,7 +368,12 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 	}
 
 	// Find correct data location.
-	if (_variable.isEventParameter())
+	if (_variable.isEventOrErrorParameter())
+	{
+		solAssert(varLoc == Location::Unspecified, "");
+		typeLoc = DataLocation::Memory;
+	}
+	else if (_variable.isFileLevelVariable())
 	{
 		solAssert(varLoc == Location::Unspecified, "");
 		typeLoc = DataLocation::Memory;
@@ -371,24 +405,54 @@ void DeclarationTypeChecker::endVisit(VariableDeclaration const& _variable)
 				solAssert(!_variable.hasReferenceOrMappingType(), "Data location not properly set.");
 		}
 
-	TypePointer type = _variable.typeName().annotation().type;
+	Type const* type = _variable.typeName().annotation().type;
 	if (auto ref = dynamic_cast<ReferenceType const*>(type))
 	{
 		bool isPointer = !_variable.isStateVariable();
 		type = TypeProvider::withLocation(ref, typeLoc, isPointer);
 	}
 
-	_variable.annotation().type = type;
+	if (_variable.isConstant() && !type->isValueType())
+	{
+		bool allowed = false;
+		if (auto arrayType = dynamic_cast<ArrayType const*>(type))
+			allowed = arrayType->isByteArray();
+		if (!allowed)
+			m_errorReporter.fatalDeclarationError(9259_error, _variable.location(), "Constants of non-value type not yet implemented.");
+	}
 
+	_variable.annotation().type = type;
 }
 
-void DeclarationTypeChecker::endVisit(UsingForDirective const& _usingFor)
+bool DeclarationTypeChecker::visit(UsingForDirective const& _usingFor)
 {
 	ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
 		_usingFor.libraryName().annotation().referencedDeclaration
 	);
+
 	if (!library || !library->isLibrary())
 		m_errorReporter.fatalTypeError(4357_error, _usingFor.libraryName().location(), "Library name expected.");
+
+	if (_usingFor.typeName())
+		_usingFor.typeName()->accept(*this);
+
+	return false;
+}
+
+bool DeclarationTypeChecker::visit(InheritanceSpecifier const& _inheritanceSpecifier)
+{
+	auto const* contract = dynamic_cast<ContractDefinition const*>(_inheritanceSpecifier.name().annotation().referencedDeclaration);
+	solAssert(contract, "");
+	if (contract->isLibrary())
+	{
+		m_errorReporter.typeError(
+			2571_error,
+			_inheritanceSpecifier.name().location(),
+			"Libraries cannot be inherited from."
+		);
+		return false;
+	}
+	return true;
 }
 
 bool DeclarationTypeChecker::check(ASTNode const& _node)

@@ -18,6 +18,8 @@ set(sources
 	analysis/DocStringAnalyser.h
 	analysis/DocStringTagParser.cpp
 	analysis/DocStringTagParser.h
+	analysis/FunctionCallGraph.cpp
+	analysis/FunctionCallGraph.h
 	analysis/ImmutableValidator.cpp
 	analysis/ImmutableValidator.h
 	analysis/GlobalContext.cpp
@@ -28,6 +30,8 @@ set(sources
 	analysis/OverrideChecker.h
 	analysis/PostTypeChecker.cpp
 	analysis/PostTypeChecker.h
+	analysis/PostTypeContractLevelChecker.cpp
+	analysis/PostTypeContractLevelChecker.h
 	analysis/ReferencesResolver.cpp
 	analysis/ReferencesResolver.h
 	analysis/Scoper.cpp
@@ -47,8 +51,6 @@ set(sources
 	ast/ASTAnnotations.h
 	ast/ASTEnums.h
 	ast/ASTForward.h
-	ast/AsmJsonImporter.cpp
-	ast/AsmJsonImporter.h
 	ast/ASTJsonConverter.cpp
 	ast/ASTJsonConverter.h
 	ast/ASTUtils.cpp
@@ -56,6 +58,8 @@ set(sources
 	ast/ASTJsonImporter.cpp
 	ast/ASTJsonImporter.h
 	ast/ASTVisitor.h
+	ast/CallGraph.cpp
+	ast/CallGraph.h
 	ast/ExperimentalFeatures.h
 	ast/Types.cpp
 	ast/Types.h
@@ -104,6 +108,8 @@ set(sources
 	formal/EncodingContext.h
 	formal/ModelChecker.cpp
 	formal/ModelChecker.h
+	formal/ModelCheckerSettings.cpp
+	formal/ModelCheckerSettings.h
 	formal/Predicate.cpp
 	formal/Predicate.h
 	formal/PredicateInstance.cpp
@@ -127,6 +133,10 @@ set(sources
 	interface/CompilerStack.cpp
 	interface/CompilerStack.h
 	interface/DebugSettings.h
+	interface/FileReader.cpp
+	interface/FileReader.h
+	interface/ImportRemapper.cpp
+	interface/ImportRemapper.h
 	interface/GasEstimator.cpp
 	interface/GasEstimator.h
 	interface/Natspec.cpp
@@ -148,4 +158,3 @@ set(sources
 
 add_library(solidity ${sources})
 target_link_libraries(solidity PUBLIC yul evmasm langutil smtutil solutil Boost::boost)
-

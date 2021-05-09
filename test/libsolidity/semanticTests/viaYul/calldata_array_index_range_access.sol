@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 contract C {
     function f(uint256[] calldata x, uint256 s, uint256 e) external returns (uint256) {
         return uint256[](x[s:e]).length;
@@ -26,6 +26,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(uint256[],uint256,uint256): 0x60, 2, 4, 5, 1, 2, 3, 4, 5 -> 2
@@ -40,6 +41,6 @@ contract C {
 // f_e_only(uint256[],uint256): 0x40, 3, 5, 1, 2, 3, 4, 5 -> 3
 // f_e_only(uint256[],uint256): 0x40, 6, 5, 1, 2, 3, 4, 5 -> FAILURE
 // g(uint256[],uint256,uint256,uint256): 0x80, 2, 4, 1, 5, 1, 2, 3, 4, 5 -> 4
-// g(uint256[],uint256,uint256,uint256): 0x80, 2, 4, 3, 5, 1, 2, 3, 4, 5 -> FAILURE
+// g(uint256[],uint256,uint256,uint256): 0x80, 2, 4, 3, 5, 1, 2, 3, 4, 5 -> FAILURE, hex"4e487b71", 0x32
 // gg(uint256[],uint256,uint256,uint256): 0x80, 2, 4, 1, 5, 1, 2, 3, 4, 5 -> 4
-// gg(uint256[],uint256,uint256,uint256): 0x80, 2, 4, 3, 5, 1, 2, 3, 4, 5 -> FAILURE
+// gg(uint256[],uint256,uint256,uint256): 0x80, 2, 4, 3, 5, 1, 2, 3, 4, 5 -> FAILURE, hex"4e487b71", 0x32

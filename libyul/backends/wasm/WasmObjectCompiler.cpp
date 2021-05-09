@@ -51,8 +51,10 @@ wasm::Module WasmObjectCompiler::run(Object& _object)
 	for (auto& subNode: _object.subObjects)
 		if (Object* subObject = dynamic_cast<Object*>(subNode.get()))
 			module.subModules[subObject->name.str()] = run(*subObject);
+		else if (Data* subObject = dynamic_cast<Data*>(subNode.get()))
+			module.customSections[subObject->name.str()] = subObject->data;
 		else
-			yulAssert(false, "Data is not yet supported for Wasm.");
+			yulAssert(false, "");
 
 	return module;
 }

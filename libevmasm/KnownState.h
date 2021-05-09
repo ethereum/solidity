@@ -37,7 +37,17 @@
 #pragma clang diagnostic ignored "-Wredeclared-class-member"
 #endif // defined(__clang__)
 
+// Disable warning about nodiscard. Could be a compiler bug, might be removed in the future.
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable: 4834)
+#endif
+
 #include <boost/bimap.hpp>
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
@@ -100,10 +110,12 @@ public:
 	void resetStorage() { m_storageContent.clear(); }
 	/// Resets any knowledge about storage.
 	void resetMemory() { m_memoryContent.clear(); }
+	/// Resets known Keccak-256 hashes
+	void resetKnownKeccak256Hashes() { m_knownKeccak256Hashes.clear(); }
 	/// Resets any knowledge about the current stack.
 	void resetStack() { m_stackElements.clear(); m_stackHeight = 0; }
 	/// Resets any knowledge.
-	void reset() { resetStorage(); resetMemory(); resetStack(); }
+	void reset() { resetStorage(); resetMemory(); resetKnownKeccak256Hashes(); resetStack(); }
 
 	unsigned sequenceNumber() const { return m_sequenceNumber; }
 
@@ -173,8 +185,10 @@ private:
 	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
 	/// and are not contained here if they are not completely known.
 	std::map<Id, Id> m_memoryContent;
-	/// Keeps record of all Keccak-256 hashes that are computed.
-	std::map<std::vector<Id>, Id> m_knownKeccak256Hashes;
+	/// Keeps record of all Keccak-256 hashes that are computed. The first parameter in the
+	/// std::pair corresponds to memory content and the second parameter corresponds to the length
+	/// that is accessed.
+	std::map<std::pair<std::vector<Id>, unsigned>, Id> m_knownKeccak256Hashes;
 	/// Structure containing the classes of equivalent expressions.
 	std::shared_ptr<ExpressionClasses> m_expressionClasses;
 	/// Container for unions of tags stored on the stack.

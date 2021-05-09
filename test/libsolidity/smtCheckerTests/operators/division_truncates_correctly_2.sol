@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	function f(int x, int y) public pure {
 		x = 7;
@@ -6,6 +5,6 @@ contract C {
 		assert(x / y == 3);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (112-117): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (105-123): CHC: Error trying to invoke SMT solver.

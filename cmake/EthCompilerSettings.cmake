@@ -48,9 +48,22 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	add_compile_options(-Wextra)
 	add_compile_options(-Werror)
 	add_compile_options(-pedantic)
+	add_compile_options(-Wmissing-declarations)
 	add_compile_options(-Wno-unknown-pragmas)
 	add_compile_options(-Wimplicit-fallthrough)
 	add_compile_options(-Wsign-conversion)
+	add_compile_options(-Wconversion)
+
+	eth_add_cxx_compiler_flag_if_supported(
+		$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>
+	)
+	eth_add_cxx_compiler_flag_if_supported(-Wfinal-dtor-non-final-class)
+	eth_add_cxx_compiler_flag_if_supported(-Wnewline-eof)
+	eth_add_cxx_compiler_flag_if_supported(-Wsuggest-destructor-override)
+	eth_add_cxx_compiler_flag_if_supported(-Wduplicated-cond)
+	eth_add_cxx_compiler_flag_if_supported(-Wduplicate-enum)
+	eth_add_cxx_compiler_flag_if_supported(-Wlogical-op)
+	eth_add_cxx_compiler_flag_if_supported(-Wno-unknown-attributes)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
@@ -60,12 +73,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-
-		# Check that we've got GCC 5.0 or newer.
-		execute_process(
-			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-		if (NOT (GCC_VERSION VERSION_GREATER 5.0 OR GCC_VERSION VERSION_EQUAL 5.0))
-			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 5.0 or greater.")
+		# Check that we've got GCC 8.0 or newer.
+		if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8.0))
+			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 8.0 or greater.")
 		endif ()
 
 		# Use fancy colors in the compiler diagnostics
@@ -73,6 +83,11 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+		# Check that we've got clang 7.0 or newer.
+		if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 7.0))
+			message(FATAL_ERROR "${PROJECT_NAME} requires clang++ 7.0 or greater.")
+		endif ()
+
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Darwin")
 			# Set stack size to 32MB - by default Apple's clang defines a stack size of 8MB.
 			# Normally 16MB is enough to run all tests, but it will exceed the stack, if -DSANITIZE=address is used.
@@ -135,7 +150,8 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s WASM_ASYNC_COMPILATION=0")
 			# Output a single js file with the wasm binary embedded as base64 string.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s SINGLE_FILE=1")
-
+			# Allow new functions to be added to the wasm module via addFunction.
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_TABLE_GROWTH=1")
 			# Disable warnings about not being pure asm.js due to memory growth.
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-almost-asm")
 		endif()
@@ -204,6 +220,9 @@ endif()
 
 # SMT Solvers integration
 option(USE_Z3 "Allow compiling with Z3 SMT solver integration" ON)
+if(UNIX AND NOT APPLE)
+	option(USE_Z3_DLOPEN "Dynamically load the Z3 SMT solver instead of linking against it." OFF)
+endif()
 option(USE_CVC4 "Allow compiling with CVC4 SMT solver integration" ON)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))

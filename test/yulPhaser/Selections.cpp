@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(materialise_should_return_random_values_with_equal_probabil
 
 	vector<double> bernoulliTrials(collectionSize);
 	for (size_t i = 0; i < collectionSize; ++i)
-		bernoulliTrials[i] = indices.count(i);
+		bernoulliTrials[i] = double(indices.count(i));
 
 	BOOST_TEST(abs(mean(bernoulliTrials) - expectedValue) < expectedValue * relativeTolerance);
 	BOOST_TEST(abs(meanSquaredError(bernoulliTrials, expectedValue) - variance) < variance * relativeTolerance);

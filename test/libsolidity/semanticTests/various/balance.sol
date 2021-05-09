@@ -7,6 +7,7 @@ contract test {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // constructor(), 23 wei ->

@@ -39,11 +39,11 @@ Details are given in the following example.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
 
     contract Owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
     }
 
@@ -127,10 +127,10 @@ destruction request. The way this is done is problematic, as
 seen in the following example::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
     }
 
@@ -157,10 +157,10 @@ explicitly in the final override, but this function will bypass
 ``Base1.destroy``. The way around this is to use ``super``::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract owned {
-        constructor() { owner = msg.sender; }
+        constructor() { owner = payable(msg.sender); }
         address payable owner;
     }
 
@@ -214,7 +214,7 @@ The following example demonstrates changing mutability and visibility:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract Base
     {
@@ -238,7 +238,7 @@ bases, it has to explicitly override it:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract Base1
     {
@@ -265,7 +265,7 @@ that already overrides all other functions.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract A { function f() public pure{} }
     contract B is A {}
@@ -306,7 +306,7 @@ of the variable:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract A
     {
@@ -338,7 +338,7 @@ and the ``override`` keyword must be used in the overriding modifier:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract Base
     {
@@ -357,7 +357,7 @@ explicitly:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     contract Base1
     {
@@ -388,7 +388,7 @@ which is executed upon contract creation, and where you can run contract
 initialisation code.
 
 Before the constructor code is executed, state variables are initialised to
-their specified value if you initialise them inline, or zero if you do not.
+their specified value if you initialise them inline, or their :ref:`default value<default-value>` if you do not.
 
 After the constructor has run, the final code of the contract is deployed
 to the blockchain. The deployment of
@@ -405,7 +405,7 @@ equivalent to ``constructor() {}``. For example:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     abstract contract A {
         uint public a;
@@ -442,7 +442,7 @@ linearization rules explained below. If the base constructors have arguments,
 derived contracts need to specify all of them. This can be done in two ways::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract Base {
         uint x;
@@ -502,7 +502,7 @@ error "Linearization of inheritance graph impossible".
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.0 <0.8.0;
+    pragma solidity >=0.4.0 <0.9.0;
 
     contract X {}
     contract A is X {}
@@ -523,7 +523,7 @@ One area where inheritance linearization is especially important and perhaps not
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity >=0.7.0 <0.9.0;
 
     contract Base1 {
         constructor() {}

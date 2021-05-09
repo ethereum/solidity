@@ -5,3 +5,4 @@ contract c {
     }
     uint256 a;
 }
+// ----

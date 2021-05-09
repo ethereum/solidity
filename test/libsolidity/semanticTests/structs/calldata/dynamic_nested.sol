@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
 	struct S2 { uint256 b; }
@@ -8,6 +8,7 @@ contract C {
 	}
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f((uint256,(uint256)[])): 32, 17, 64, 2, 23, 42 -> 2, 17, 23, 42

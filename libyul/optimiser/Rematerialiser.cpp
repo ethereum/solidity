@@ -24,7 +24,9 @@
 #include <libyul/optimiser/ASTCopier.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
+
+#include <range/v3/algorithm/all_of.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -86,13 +88,14 @@ void Rematerialiser::visit(Expression& _e)
 			)
 			{
 				assertThrow(m_referenceCounts[name] > 0, OptimizerException, "");
-				for (auto const& ref: m_references.forward[name])
-					assertThrow(inScope(ref), OptimizerException, "");
-				// update reference counts
-				m_referenceCounts[name]--;
-				for (auto const& ref: ReferencesCounter::countReferences(*value.value))
-					m_referenceCounts[ref.first] += ref.second;
-				_e = (ASTCopier{}).translate(*value.value);
+				if (ranges::all_of(m_references[name], [&](auto const& ref) { return inScope(ref); }))
+				{
+					// update reference counts
+					m_referenceCounts[name]--;
+					for (auto const& ref: ReferencesCounter::countReferences(*value.value))
+						m_referenceCounts[ref.first] += ref.second;
+					_e = (ASTCopier{}).translate(*value.value);
+				}
 			}
 		}
 	}

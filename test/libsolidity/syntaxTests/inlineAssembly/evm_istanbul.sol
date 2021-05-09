@@ -1,5 +1,5 @@
 contract C {
-    function f() pure external returns (uint id) {
+    function f() view external returns (uint id) {
         assembly {
             id := chainid()
         }

@@ -22,19 +22,18 @@
 #include <test/tools/yulInterpreter/Interpreter.h>
 
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 
 #include <boost/program_options.hpp>
 
@@ -57,7 +56,7 @@ namespace
 void printErrors(ErrorList const& _errors)
 {
 	for (auto const& error: _errors)
-		SourceReferenceFormatter(cout).printErrorInformation(*error);
+		SourceReferenceFormatter(cout, true, false).printErrorInformation(*error);
 }
 
 pair<shared_ptr<Block>, shared_ptr<AsmAnalysisInfo>> parse(string const& _source)
@@ -137,10 +136,19 @@ Allowed options)",
 	else
 	{
 		string input;
-
 		if (arguments.count("input-file"))
 			for (string path: arguments["input-file"].as<vector<string>>())
-				input += readFileAsString(path);
+			{
+				try
+				{
+					input += readFileAsString(path);
+				}
+				catch (FileNotFound const&)
+				{
+					cerr << "File not found: " << path << endl;
+					return 1;
+				}
+			}
 		else
 			input = readStandardInput();
 

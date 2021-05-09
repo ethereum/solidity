@@ -5,7 +5,7 @@
   sstore(add(x, 0), z)
 }
 // ====
-// optimize: true
+// optimizationPreset: full
 // ----
 // Assembly:
 //     /* "source":26:27   */

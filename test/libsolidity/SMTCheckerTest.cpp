@@ -19,8 +19,6 @@
 #include <test/libsolidity/SMTCheckerTest.h>
 #include <test/Common.h>
 
-#include <libsolidity/formal/ModelChecker.h>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::langutil;
@@ -47,16 +45,48 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	if (!available.cvc4)
 		m_enabledSolvers.cvc4 = false;
 
-	if (m_enabledSolvers.none())
+	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
+	if (engine)
+		m_modelCheckerSettings.engine = *engine;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT engine choice."));
+
+	if (m_enabledSolvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
+
+	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "no");
+	if (ignoreCex == "no")
+		m_ignoreCex = false;
+	else if (ignoreCex == "yes")
+		m_ignoreCex = true;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT counterexample choice."));
 }
 
 TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	setupCompiler();
 	compiler().setSMTSolverChoice(m_enabledSolvers);
+	compiler().setModelCheckerSettings(m_modelCheckerSettings);
 	parseAndAnalyze();
 	filterObtainedErrors();
 
 	return conclude(_stream, _linePrefix, _formatted);
+}
+
+void SMTCheckerTest::filterObtainedErrors()
+{
+	SyntaxTest::filterObtainedErrors();
+
+	static auto removeCex = [](vector<SyntaxTestError>& errors) {
+		for (auto& e: errors)
+			if (
+				auto cexPos = e.message.find("\\nCounterexample");
+				cexPos != string::npos
+			)
+				e.message = e.message.substr(0, cexPos);
+	};
+
+	if (m_ignoreCex)
+		removeCex(m_errorList);
 }

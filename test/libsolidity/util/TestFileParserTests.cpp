@@ -39,10 +39,13 @@ namespace solidity::frontend::test
 using fmt = ExecutionFramework;
 using Mode = FunctionCall::DisplayMode;
 
+namespace
+{
+
 vector<FunctionCall> parse(string const& _source)
 {
 	istringstream stream{_source, ios_base::out};
-	TestFileParser parser{stream};
+	TestFileParser parser{stream, {}};
 	return parser.parseFunctionCalls(0);
 }
 
@@ -82,8 +85,10 @@ void testFunctionCall(
 		}
 	}
 
-	BOOST_REQUIRE_EQUAL(_call.isConstructor, _isConstructor);
-	BOOST_REQUIRE_EQUAL(_call.isLibrary, _isLibrary);
+	BOOST_REQUIRE_EQUAL(_call.kind == FunctionCall::Kind::Constructor, _isConstructor);
+	BOOST_REQUIRE_EQUAL(_call.kind == FunctionCall::Kind::Library, _isLibrary);
+}
+
 }
 
 BOOST_AUTO_TEST_SUITE(TestFileParserTest)

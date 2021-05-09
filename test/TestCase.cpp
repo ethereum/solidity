@@ -65,7 +65,7 @@ bool TestCase::shouldRun()
 void TestCase::expect(string::iterator& _it, string::iterator _end, string::value_type _c)
 {
 	if (_it == _end || *_it != _c)
-		throw runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\".");
+		BOOST_THROW_EXCEPTION(runtime_error(string("Invalid test expectation. Expected: \"") + _c + "\"."));
 	++_it;
 }
 

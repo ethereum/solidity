@@ -33,10 +33,10 @@ function zeppelin_test
     OPTIMIZER_LEVEL=1
     CONFIG="truffle-config.js"
 
-    truffle_setup https://github.com/solidity-external-tests/openzeppelin-contracts.git upgrade-0.7.0
-    run_install install_fn
+    truffle_setup "$SOLJSON" https://github.com/solidity-external-tests/openzeppelin-contracts.git master_080
+    run_install "$SOLJSON" install_fn
 
-    truffle_run_test compile_fn test_fn
+    truffle_run_test "$SOLJSON" compile_fn test_fn
 }
 
 external_test Zeppelin zeppelin_test

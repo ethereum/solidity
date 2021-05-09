@@ -1,5 +1,5 @@
 ******************
-Using the compiler
+Using the Compiler
 ******************
 
 .. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
@@ -12,9 +12,15 @@ Using the Commandline Compiler
 .. note::
     This section does not apply to :ref:`solcjs <solcjs>`, not even if it is used in commandline mode.
 
+Basic Usage
+-----------
+
 One of the build targets of the Solidity repository is ``solc``, the solidity commandline compiler.
 Using ``solc --help`` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
-If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast-json --asm sourceFile.sol``.
+If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast-compact-json --asm sourceFile.sol``.
+
+Optimizer Options
+-----------------
 
 Before you deploy your contract, activate the optimizer when compiling using ``solc --optimize --bin sourceFile.sol``.
 By default, the optimizer will optimize the contract assuming it is called 200 times across its lifetime
@@ -26,6 +32,9 @@ This parameter has effects on the following (this might change in the future):
 
  - the size of the binary search in the function dispatch routine
  - the way constants like large numbers or strings are stored
+
+Path Remapping
+--------------
 
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide path redirects using ``prefix=path`` in the following way:
@@ -53,6 +62,11 @@ For security reasons the compiler has restrictions what directories it can acces
 
 Everything inside the path specified via ``--base-path`` is always allowed.
 
+.. _library-linking:
+
+Library Linking
+---------------
+
 If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form ``__$53aea86b7d70b31448b230b20ae141a537$__``. These are placeholders for the actual library addresses.
 The placeholder is a 34 character prefix of the hex encoding of the keccak256 hash of the fully qualified library name.
 The bytecode file will also contain lines of the form ``// <placeholder> -> <fq library name>`` at the end to help
@@ -60,12 +74,25 @@ identify which libraries the placeholders represent. Note that the fully qualifi
 is the path of its source file and the library name separated by ``:``.
 You can use ``solc`` as a linker meaning that it will insert the library addresses for you at those points:
 
-Either add ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` to your command to provide an address for each library or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
+Either add ``--libraries "file.sol:Math=0x1234567890123456789012345678901234567890 file.sol:Heap=0xabCD567890123456789012345678901234567890"`` to your command to provide an address for each library (use commas or spaces as separators) or store the string in a file (one library per line) and run ``solc`` using ``--libraries fileName``.
 
-If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
+.. note::
+    Starting Solidity 0.8.1 accepts ``=`` as separator between library and address, and ``:`` as a separator is deprecated. It will be removed in the future. Currently ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` will work too.
 
 If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
 The option ``--base-path`` is also processed in standard-json mode.
+
+If ``solc`` is called with the option ``--link``, all input files are interpreted to be unlinked binaries (hex-encoded) in the ``__$53aea86b7d70b31448b230b20ae141a537$__``-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except ``--libraries`` are ignored (including ``-o``) in this case.
+
+.. warning::
+    Manually linking libraries on the generated bytecode is discouraged because it does not update
+    contract metadata. Since metadata contains a list of libraries specified at the time of
+    compilation and bytecode contains a metadata hash, you will get different binaries, depending
+    on when linking is performed.
+
+    You should ask the compiler to link the libraries at the time a contract is compiled by either
+    using the ``--libraries`` option of ``solc`` or the ``libraries`` key if you use the
+    standard-JSON interface to the compiler.
 
 .. note::
     The library placeholder used to be the fully qualified name of the library itself
@@ -77,7 +104,7 @@ The option ``--base-path`` is also processed in standard-json mode.
 .. _evm-version:
 .. index:: ! EVM version, compile target
 
-Setting the EVM version to target
+Setting the EVM Version to Target
 *********************************
 
 When you compile your contract code you can specify the Ethereum virtual machine
@@ -108,7 +135,7 @@ key in the ``"settings"`` field:
     }
   }
 
-Target options
+Target Options
 --------------
 
 Below is a list of target EVM versions and the compiler-relevant changes introduced
@@ -219,6 +246,9 @@ Input Description
             // The peephole optimizer is always on if no details are given,
             // use details to switch it off.
             "peephole": true,
+            // The inliner is always on if no details are given,
+            // use details to switch it off.
+            "inliner": true,
             // The unused jumpdest remover is always on if no details are given,
             // use details to switch it off.
             "jumpdestRemover": true,
@@ -231,7 +261,7 @@ Input Description
             "cse": false,
             // Optimize representation of literal numbers and strings in code.
             "constantOptimizer": false,
-            // The new Yul optimizer. Mostly operates on the code of ABIEncoderV2
+            // The new Yul optimizer. Mostly operates on the code of ABI coder v2
             // and inline assembly.
             // It is activated together with the global optimizer setting
             // and can be deactivated here.
@@ -252,6 +282,9 @@ Input Description
         // Affects type checking and code generation. Can be homestead,
         // tangerineWhistle, spuriousDragon, byzantium, constantinople, petersburg, istanbul or berlin
         "evmVersion": "byzantium",
+        // Optional: Change compilation pipeline to go through the Yul intermediate representation.
+        // This is a highly EXPERIMENTAL feature, not to be used for production. This is false by default.
+        "viaIR": true,
         // Optional: Debugging settings
         "debug": {
           // How to treat revert (and require) reason strings. Settings are
@@ -300,7 +333,6 @@ Input Description
         //
         // File level (needs empty string as contract name):
         //   ast - AST of all source files
-        //   legacyAST - legacy AST of all source files
         //
         // Contract level (needs the contract name or "*"):
         //   abi - ABI
@@ -312,6 +344,7 @@ Input Description
         //   storageLayout - Slots, offsets and types of the contract's state variables.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
+        //   evm.bytecode.functionDebugData - Debugging information at function level
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
         //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
@@ -321,8 +354,8 @@ Input Description
         //   evm.deployedBytecode.immutableReferences - Map from AST ids to bytecode ranges that reference immutables
         //   evm.methodIdentifiers - The list of function hashes
         //   evm.gasEstimates - Function gas estimates
-        //   ewasm.wast - eWASM S-expressions format (not supported at the moment)
-        //   ewasm.wasm - eWASM binary format (not supported at the moment)
+        //   ewasm.wast - Ewasm in WebAssembly S-expressions format
+        //   ewasm.wasm - Ewasm in WebAssembly binary format
         //
         // Note that using a using `evm`, `evm.bytecode`, `ewasm`, etc. will select every
         // target part of that output. Additionally, `*` can be used as a wildcard to request everything.
@@ -341,6 +374,28 @@ Input Description
           "def": {
             "MyContract": [ "abi", "evm.bytecode.opcodes" ]
           }
+        },
+        // The modelChecker object is experimental and subject to changes.
+        "modelChecker":
+        {
+          // Chose which contracts should be analyzed as the deployed one.
+          contracts:
+          {
+            "source1.sol": ["contract1"],
+            "source2.sol": ["contract2", "contract3"]
+          },
+          // Choose which model checker engine to use: all (default), bmc, chc, none.
+          "engine": "chc",
+          // Choose which targets should be checked: constantCondition,
+          // underflow, overflow, divByZero, balance, assert, popEmptyArray, outOfBounds.
+          // If the option is not given all targets are checked by default.
+          // See the Formal Verification section for the targets description.
+          "targets": ["underflow", "overflow", "assert"],
+          // Timeout for each SMT query in milliseconds.
+          // If this option is not given, the SMTChecker will use a deterministic
+          // resource limit by default.
+          // A given timeout of 0 means no resource/time restrictions for any query.
+          "timeout": 20000
         }
       }
     }
@@ -393,8 +448,6 @@ Output Description
           "id": 1,
           // The AST object
           "ast": {},
-          // The legacy AST object
-          "legacyAST": {}
         }
       },
       // This contains the contract-level outputs.
@@ -404,7 +457,7 @@ Output Description
           // If the language used has no contract names, this field should equal to an empty string.
           "ContractName": {
             // The Ethereum Contract ABI. If empty, it is represented as an empty array.
-            // See https://solidity.readthedocs.io/en/develop/abi-spec.html
+            // See https://docs.soliditylang.org/en/develop/abi-spec.html
             "abi": [],
             // See the Metadata Output documentation (serialised JSON string)
             "metadata": "{...}",
@@ -424,6 +477,17 @@ Output Description
               "legacyAssembly": {},
               // Bytecode and related details.
               "bytecode": {
+                // Debugging data at the level of functions.
+                "functionDebugData": {
+                  // Now follows a set of functions including compiler-internal and
+                  // user-defined function. The set does not have to be complete.
+                  "@mint_13": { // Internal name of the function
+                    "entryPoint": 128, // Byte offset into the bytecode where the function starts (optional)
+                    "id": 13, // AST ID of the function definition or null for compiler-internal functions (optional)
+                    "parameterSlots": 2, // Number of EVM stack slots for the function parameters (optional)
+                    "returnSlots": 1 // Number of EVM stack slots for the return values (optional)
+                  }
+                },
                 // The bytecode as a hex string.
                 "object": "00fe",
                 // Opcodes list (string)
@@ -481,7 +545,7 @@ Output Description
                 }
               }
             },
-            // eWASM related outputs
+            // Ewasm related outputs
             "ewasm": {
               // S-expressions format
               "wast": "",
@@ -494,7 +558,7 @@ Output Description
     }
 
 
-Error types
+Error Types
 ~~~~~~~~~~~
 
 1. ``JSONError``: JSON input doesn't conform to the required format, e.g. input is not a JSON object, the language is not supported, etc.
@@ -514,7 +578,7 @@ Error types
 
 .. _compiler-tools:
 
-Compiler tools
+Compiler Tools
 **************
 
 solidity-upgrade
@@ -537,7 +601,7 @@ would need plenty of repetitive manual adjustments otherwise.
     ``solidity-upgrade`` is not considered to be complete or free from bugs, so
     please use with care.
 
-How it works
+How it Works
 ~~~~~~~~~~~~
 
 You can pass (a) Solidity source file(s) to ``solidity-upgrade [files]``. If
@@ -578,7 +642,7 @@ the latest version of the compiler.
 
 .. _upgrade-modules:
 
-Available upgrade modules
+Available Upgrade Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +----------------------------+---------+--------------------------------------------------+
@@ -613,8 +677,8 @@ Available upgrade modules
 +----------------------------+---------+--------------------------------------------------+
 
 Please read :doc:`0.5.0 release notes <050-breaking-changes>`,
-:doc:`0.6.0 release notes <060-breaking-changes>` and
-:doc:`0.7.0 release notes <070-breaking-changes>` for further details.
+:doc:`0.6.0 release notes <060-breaking-changes>`,
+:doc:`0.7.0 release notes <070-breaking-changes>` and :doc:`0.8.0 release notes <080-breaking-changes>` for further details.
 
 Synopsis
 ~~~~~~~~
@@ -640,7 +704,7 @@ Synopsis
 
 
 
-Bug Reports / Feature requests
+Bug Reports / Feature Requests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you found a bug or if you have a feature request, please
@@ -685,7 +749,7 @@ Assume that you have the following contract in ``Source.sol``:
 
 
 
-Required changes
+Required Changes
 ^^^^^^^^^^^^^^^^
 
 The above contract will not compile starting from 0.7.0. To bring the contract up to date with the
@@ -694,7 +758,7 @@ current Solidity version, the following upgrade modules have to be executed:
 :ref:`available modules <upgrade-modules>` for further details.
 
 
-Running the upgrade
+Running the Upgrade
 ^^^^^^^^^^^^^^^^^^^
 
 It is recommended to explicitly specify the upgrade modules by using ``--modules`` argument.
@@ -708,8 +772,8 @@ have to be updated manually.)
 
 .. code-block:: Solidity
 
-    pragma solidity ^0.7.0;
     // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >=0.7.0 <0.9.0;
     abstract contract C {
         // FIXME: remove constructor visibility and make the contract abstract
         constructor() {}

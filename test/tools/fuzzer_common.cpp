@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include "libsolidity/formal/ModelCheckerSettings.h"
 #include <test/tools/fuzzer_common.h>
 
 #include <libsolidity/interface/CompilerStack.h>
@@ -72,7 +73,22 @@ void FuzzerUtil::testCompilerJsonInterface(string const& _input, bool _optimize,
 	runCompiler(jsonCompactPrint(config), _quiet);
 }
 
-void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned _rand)
+void FuzzerUtil::forceSMT(StringMap& _input)
+{
+	// Add SMT checker pragma if not already present in source
+	static const char* smtPragma = "pragma experimental SMTChecker;";
+	for (auto &sourceUnit: _input)
+		if (sourceUnit.second.find(smtPragma) == string::npos)
+			sourceUnit.second += smtPragma;
+}
+
+void FuzzerUtil::testCompiler(
+	StringMap& _input,
+	bool _optimize,
+	unsigned _rand,
+	bool _forceSMT,
+	bool _compileViaYul
+)
 {
 	frontend::CompilerStack compiler;
 	EVMVersion evmVersion = s_evmVersions[_rand % s_evmVersions.size()];
@@ -81,9 +97,20 @@ void FuzzerUtil::testCompiler(StringMap const& _input, bool _optimize, unsigned 
 		optimiserSettings = frontend::OptimiserSettings::standard();
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
+	if (_forceSMT)
+	{
+		forceSMT(_input);
+		compiler.setModelCheckerSettings({
+			frontend::ModelCheckerContracts::Default(),
+			frontend::ModelCheckerEngine::All(),
+			frontend::ModelCheckerTargets::Default(),
+			/*timeout=*/1
+		});
+	}
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
+	compiler.enableIRGeneration(_compileViaYul);
 	try
 	{
 		compiler.compile();
@@ -118,7 +145,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 	{
 		string msg{"Compiler produced invalid JSON output."};
 		cout << msg << endl;
-		throw std::runtime_error(std::move(msg));
+		BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 	}
 	if (output.isMember("errors"))
 		for (auto const& error: output["errors"])
@@ -131,7 +158,7 @@ void FuzzerUtil::runCompiler(string const& _input, bool _quiet)
 			{
 				string msg = "Invalid error: \"" + error["type"].asString() + "\"";
 				cout << msg << endl;
-				throw std::runtime_error(std::move(msg));
+				BOOST_THROW_EXCEPTION(std::runtime_error(std::move(msg)));
 			}
 		}
 }

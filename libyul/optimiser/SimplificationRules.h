@@ -23,14 +23,13 @@
 
 #include <libevmasm/SimplificationRule.h>
 
-#include <libyul/AsmDataForward.h>
-#include <libyul/AsmData.h>
+#include <libyul/ASTForward.h>
+#include <libyul/YulString.h>
 
 #include <libsolutil/CommonData.h>
 
 #include <liblangutil/EVMVersion.h>
-
-#include <boost/noncopyable.hpp>
+#include <liblangutil/SourceLocation.h>
 
 #include <functional>
 #include <optional>
@@ -45,9 +44,13 @@ class Pattern;
 /**
  * Container for all simplification rules.
  */
-class SimplificationRules: public boost::noncopyable
+class SimplificationRules
 {
 public:
+	/// Noncopiable.
+	SimplificationRules(SimplificationRules const&) = delete;
+	SimplificationRules& operator=(SimplificationRules const&) = delete;
+
 	using Rule = evmasm::SimplificationRule<Pattern>;
 
 	explicit SimplificationRules(std::optional<langutil::EVMVersion> _evmVersion = std::nullopt);
@@ -127,7 +130,7 @@ public:
 
 	/// Turns this pattern into an actual expression. Should only be called
 	/// for patterns resulting from an action, i.e. with match groups assigned.
-	Expression toExpression(langutil::SourceLocation const& _location) const;
+	Expression toExpression(std::shared_ptr<DebugData const> const& _debugData) const;
 
 private:
 	Expression const& matchGroupValue() const;

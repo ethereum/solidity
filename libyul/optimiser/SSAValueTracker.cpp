@@ -22,7 +22,7 @@
 
 #include <libyul/optimiser/SSAValueTracker.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;

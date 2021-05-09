@@ -6,3 +6,4 @@ contract ERC20 {
 contract C is ERC20 {
   mapping(address => uint) public override balanceOf;
 }
+// ----

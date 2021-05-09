@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <boost/noncopyable.hpp>
-
 #include <unordered_map>
 #include <memory>
 #include <vector>
@@ -167,4 +165,14 @@ inline YulString operator "" _yulstring(char const* _string, std::size_t _size)
 	return YulString(std::string(_string, _size));
 }
 
+}
+namespace std
+{
+template<> struct hash<solidity::yul::YulString>
+{
+	size_t operator()(solidity::yul::YulString const& x) const
+	{
+		return static_cast<size_t>(x.hash());
+	}
+};
 }

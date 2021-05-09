@@ -1,0 +1,22 @@
+
+======= linking_strict_assembly_same_library_name_different_files_in_link_references/input.yul (EVM) =======
+
+Pretty printed source:
+object "a" {
+    code {
+        let addr1 := linkersymbol("library1.sol:L")
+        let addr2 := linkersymbol("library2.sol:L")
+    }
+}
+
+
+Binary representation:
+73123456789012345678901234567890123456789073__$c3523432985587641d17c68161d2f700c5$__5050
+
+Text representation:
+  linkerSymbol("f3ffc10c396a7cc41ae954b050792839d20947bf73497d30c49a9fda1ea477ec")
+    /* "linking_strict_assembly_same_library_name_different_files_in_link_references/input.yul":32:75   */
+  linkerSymbol("c3523432985587641d17c68161d2f700c57aaf4ed21cda4f25d76193c831f97f")
+    /* "linking_strict_assembly_same_library_name_different_files_in_link_references/input.yul":22:133   */
+  pop
+  pop

@@ -44,7 +44,7 @@ namespace
 int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 {
 	if (_it == _end || !isdigit(*_it))
-		throw runtime_error("Invalid test expectation. Source location expected.");
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid test expectation. Source location expected."));
 	int result = 0;
 	while (_it != _end && isdigit(*_it))
 	{
@@ -59,7 +59,7 @@ int parseUnsignedInteger(string::iterator& _it, string::iterator _end)
 
 CommonSyntaxTest::CommonSyntaxTest(string const& _filename, langutil::EVMVersion _evmVersion):
 	EVMVersionRestrictedTestCase(_filename),
-	m_sources(m_reader.sources().sources),
+	m_sources(m_reader.sources()),
 	m_expectations(parseExpectations(m_reader.stream())),
 	m_evmVersion(_evmVersion)
 {
@@ -92,12 +92,13 @@ void CommonSyntaxTest::printExpectationAndError(ostream& _stream, string const& 
 
 void CommonSyntaxTest::printSource(ostream& _stream, string const& _linePrefix, bool _formatted) const
 {
-	if (m_sources.empty())
+	if (m_sources.sources.empty())
 		return;
 
-	bool outputSourceNames = (m_sources.size() != 1 || !m_sources.begin()->first.empty());
+	assert(m_sources.externalSources.empty());
+	bool outputSourceNames = (m_sources.sources.size() != 1 || !m_sources.sources.begin()->first.empty());
 
-	for (auto const& [name, source]: m_sources)
+	for (auto const& [name, source]: m_sources.sources)
 		if (_formatted)
 		{
 			if (source.empty())

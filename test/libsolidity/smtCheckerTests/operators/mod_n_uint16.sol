@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	function f(uint16 x, uint16 y) public pure {
@@ -8,5 +6,6 @@ contract C
 		assert(z < 100_000);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (130-149): CHC: Error trying to invoke SMT solver.

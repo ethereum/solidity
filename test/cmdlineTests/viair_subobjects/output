@@ -1,0 +1,111 @@
+
+======= viair_subobjects/input.sol:C =======
+Binary:
+60806040523415600f5760006000fd5b600a80601e608039806080f350fe608060405260006000fd
+Binary of the runtime part:
+608060405260006000fd
+Optimized IR:
+/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+object "C_3" {
+    code {
+        {
+            mstore(64, 128)
+            if callvalue() { revert(0, 0) }
+            let _1 := datasize("C_3_deployed")
+            codecopy(128, dataoffset("C_3_deployed"), _1)
+            return(128, _1)
+        }
+    }
+    object "C_3_deployed" {
+        code {
+            {
+                mstore(64, 128)
+                revert(0, 0)
+            }
+        }
+    }
+}
+
+
+======= viair_subobjects/input.sol:D =======
+Binary:
+608060405234156100105760006000fd5b60ba80610020608039806080f350fe6080604052600436101515608b576000803560e01c6326121ff0141560895734156027578081fd5b80600319360112156036578081fd5b6028806080016080811067ffffffffffffffff82111715606457634e487b7160e01b83526041600452602483fd5b508061009260803980608083f015156082576040513d83823e3d81fd505b5080604051f35b505b60006000fdfe60806040523415600f5760006000fd5b600a80601e608039806080f350fe608060405260006000fd
+Binary of the runtime part:
+6080604052600436101515608b576000803560e01c6326121ff0141560895734156027578081fd5b80600319360112156036578081fd5b6028806080016080811067ffffffffffffffff82111715606457634e487b7160e01b83526041600452602483fd5b508061009260803980608083f015156082576040513d83823e3d81fd505b5080604051f35b505b60006000fdfe60806040523415600f5760006000fd5b600a80601e608039806080f350fe608060405260006000fd
+Optimized IR:
+/*******************************************************
+ *                       WARNING                       *
+ *  Solidity to Yul compilation is still EXPERIMENTAL  *
+ *       It can result in LOSS OF FUNDS or worse       *
+ *                !USE AT YOUR OWN RISK!               *
+ *******************************************************/
+
+object "D_16" {
+    code {
+        {
+            mstore(64, 128)
+            if callvalue() { revert(0, 0) }
+            let _1 := datasize("D_16_deployed")
+            codecopy(128, dataoffset("D_16_deployed"), _1)
+            return(128, _1)
+        }
+    }
+    object "D_16_deployed" {
+        code {
+            {
+                mstore(64, 128)
+                if iszero(lt(calldatasize(), 4))
+                {
+                    let _1 := 0
+                    if eq(0x26121ff0, shr(224, calldataload(_1)))
+                    {
+                        if callvalue() { revert(_1, _1) }
+                        if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
+                        let _2 := datasize("C_3")
+                        let _3 := add(128, _2)
+                        if or(gt(_3, 0xffffffffffffffff), lt(_3, 128))
+                        {
+                            mstore(_1, shl(224, 0x4e487b71))
+                            mstore(4, 0x41)
+                            revert(_1, 0x24)
+                        }
+                        datacopy(128, dataoffset("C_3"), _2)
+                        if iszero(create(_1, 128, _2))
+                        {
+                            let pos := mload(64)
+                            returndatacopy(pos, _1, returndatasize())
+                            revert(pos, returndatasize())
+                        }
+                        return(mload(64), _1)
+                    }
+                }
+                revert(0, 0)
+            }
+        }
+        object "C_3" {
+            code {
+                {
+                    mstore(64, 128)
+                    if callvalue() { revert(0, 0) }
+                    let _1 := datasize("C_3_deployed")
+                    codecopy(128, dataoffset("C_3_deployed"), _1)
+                    return(128, _1)
+                }
+            }
+            object "C_3_deployed" {
+                code {
+                    {
+                        mstore(64, 128)
+                        revert(0, 0)
+                    }
+                }
+            }
+        }
+    }
+}

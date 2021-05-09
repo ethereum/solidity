@@ -8,6 +8,13 @@ Solidity contracts can use a special form of comments to provide rich
 documentation for functions, return variables and more. This special form is
 named the Ethereum Natural Language Specification Format (NatSpec).
 
+.. note::
+
+  NatSpec was inspired by `Doxygen <https://en.wikipedia.org/wiki/Doxygen>`_.
+  While it uses Doxygen-style comments and tags, there is no intention to keep
+  strict compatibility with Doxygen. Please carefully examine the supported tags
+  listed below.
+
 This documentation is segmented into developer-focused messages and end-user-facing
 messages. These messages may be shown to the end user (the human) at the
 time that they will interact with the contract (i.e. sign a transaction).
@@ -20,22 +27,25 @@ use, and which are understood by the Solidity compiler. Also detailed below is
 output of the Solidity compiler, which extracts these comments into a machine-readable
 format.
 
+NatSpec may also include annotations used by third-party tools. These are most likely
+accomplished via the ``@custom:<name>`` tag, and a good use case is analysis and verification
+tools.
+
 .. _header-doc-example:
 
 Documentation Example
 =====================
 
-Documentation is inserted above each ``class``, ``interface`` and
-``function`` using the doxygen notation format.
-
-Note: a ``public`` state variable is equivalent to a ``function``
+Documentation is inserted above each ``contract``, ``interface``,
+``function``, and ``event`` using the Doxygen notation format.
+A ``public`` state variable is equivalent to a ``function``
 for the purposes of NatSpec.
 
 -  For Solidity you may choose ``///`` for single or multi-line
    comments, or ``/**`` and ending with ``*/``.
 
 -  For Vyper, use ``"""`` indented to the inner contents with bare
-   comments. See `Vyper
+   comments. See the `Vyper
    documentation <https://vyper.readthedocs.io/en/latest/natspec.html>`__.
 
 The following example shows a contract and a function using all available tags.
@@ -46,15 +56,18 @@ The following example shows a contract and a function using all available tags.
   public. You are welcome to use similar comments for your internal and
   private functions, but those will not be parsed.
 
+  This may change in the future.
+
 .. code:: Solidity
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.6.10 <0.8.0;
+    pragma solidity >=0.8.2 < 0.9.0;
 
     /// @title A simulator for trees
     /// @author Larry A. Gardner
     /// @notice You can use this contract for only the most basic simulation
     /// @dev All function calls are currently implemented without side effects
+    /// @custom:experimental This is an experimental contract.
     contract Tree {
         /// @notice Calculate tree age in years, rounded up, for live trees
         /// @dev The Alexandr N. Tetearing algorithm could increase precision
@@ -106,14 +119,17 @@ Tag                                                                             
 ``@author``     The name of the author                                                                 contract, interface
 ``@notice``     Explain to an end user what this does                                                  contract, interface, function, public state variable, event
 ``@dev``        Explain to a developer any extra details                                               contract, interface, function, state variable, event
-``@param``      Documents a parameter just like in doxygen (must be followed by parameter name)        function, event
+``@param``      Documents a parameter just like in Doxygen (must be followed by parameter name)        function, event
 ``@return``     Documents the return variables of a contract's function                                function, public state variable
 ``@inheritdoc`` Copies all missing tags from the base function (must be followed by the contract name) function, public state variable
+``@custom:...`` Custom tag, semantics is application-defined                                           everywhere
 =============== ====================================================================================== =============================
 
 If your function returns multiple values, like ``(int quotient, int remainder)``
-then use multiple ``@return`` statements in the same format as the
-``@param`` statements.
+then use multiple ``@return`` statements in the same format as the ``@param`` statements.
+
+Custom tags start with ``@custom:`` and must be followed by one or more lowercase letters or hyphens.
+It cannot start with a hyphen however. They can be used everywhere and are part of the developer documentation.
 
 .. _header-dynamic:
 
@@ -173,6 +189,11 @@ documentation using:
 
 And the output is below.
 
+.. note::
+    Starting Solidity version 0.6.11 the NatSpec output also contains a ``version`` and a ``kind`` field.
+    Currently the ``version`` is set to ``1`` and ``kind`` must be one of ``user`` or ``dev``.
+    In the future it is possible that new versions will be introduced, deprecating older ones.
+
 .. _header-user-doc:
 
 User Documentation
@@ -184,6 +205,8 @@ JSON file as output:
 .. code::
 
     {
+      "version" : 1,
+      "kind" : "user",
       "methods" :
       {
         "age(uint256)" :
@@ -210,8 +233,11 @@ file should also be produced and should look like this:
 .. code::
 
     {
+      "version" : 1,
+      "kind" : "dev",
       "author" : "Larry A. Gardner",
       "details" : "All function calls are currently implemented without side effects",
+      "custom:experimental" : "This is an experimental contract.",
       "methods" :
       {
         "age(uint256)" :

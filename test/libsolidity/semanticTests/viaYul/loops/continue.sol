@@ -30,7 +30,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileToEwasm: also
+// compileViaYul: also
 // ----
 // f() -> 11
 // g() -> 11

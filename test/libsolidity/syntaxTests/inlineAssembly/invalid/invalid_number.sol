@@ -6,4 +6,4 @@ contract C {
   }
 }
 // ----
-// ParserError 1856: (72-73): Literal or identifier expected.
+// ParserError 1465: (72-73): Illegal token: Octal numbers not allowed.

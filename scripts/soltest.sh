@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-set -e
+set -eu
 
 REPO_ROOT="$(dirname "$0")"/..
 USE_DEBUGGER=0
 DEBUGGER="gdb --args"
-BOOST_OPTIONS=
-SOLTEST_OPTIONS=
+BOOST_OPTIONS=()
+SOLTEST_OPTIONS=()
 SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR:-${REPO_ROOT}/build}
 
 usage() {
@@ -41,27 +41,31 @@ do
 			;;
 		--boost-options)
 			shift
-			BOOST_OPTIONS="${BOOST_OPTIONS} $1"
+			BOOST_OPTIONS+=("$1")
 			;;
 		--help)
-		        usage
+			usage
 			exit 0
 			;;
 		--run_test | -t )
 			shift
-			BOOST_OPTIONS="${BOOST_OPTIONS} -t $1"
+			BOOST_OPTIONS+=(-t "$1")
 			;;
 		--show-progress | -p)
-			BOOST_OPTIONS="${BOOST_OPTIONS} $1"
+			BOOST_OPTIONS+=("$1")
 			;;
 		*)
-			SOLTEST_OPTIONS="${SOLTEST_OPTIONS} $1"
+			SOLTEST_OPTIONS+=("$1")
 			;;
 	esac
 	shift
 done
-if [ "$USE_DEBUGGER" -ne "0" ]; then
-	DEBUG_PREFIX=${DEBUGGER}
-fi
 
-exec ${DEBUG_PREFIX} ${SOLIDITY_BUILD_DIR}/test/soltest ${BOOST_OPTIONS} -- --testpath ${REPO_ROOT}/test ${SOLTEST_OPTIONS}
+SOLTEST_COMMAND=("${SOLIDITY_BUILD_DIR}/test/soltest" "${BOOST_OPTIONS[@]}" -- --testpath "${REPO_ROOT}/test" "${SOLTEST_OPTIONS[@]}")
+
+if [ "$USE_DEBUGGER" -ne "0" ]; then
+	# shellcheck disable=SC2086
+	exec ${DEBUGGER} "${SOLTEST_COMMAND[@]}"
+else
+	exec "${SOLTEST_COMMAND[@]}"
+fi

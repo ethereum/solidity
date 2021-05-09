@@ -18,7 +18,7 @@ Storage Example
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.16 <0.8.0;
+    pragma solidity >=0.4.16 <0.9.0;
 
     contract SimpleStorage {
         uint storedData;
@@ -37,7 +37,7 @@ GPL version 3.0. Machine-readable license specifiers are important
 in a setting where publishing the source code is the default.
 
 The next line specifies that the source code is written for
-Solidity version 0.4.16, or a newer version of the language up to, but not including version 0.8.0.
+Solidity version 0.4.16, or a newer version of the language up to, but not including version 0.9.0.
 This is to ensure that the contract is not compilable with a new (breaking) compiler version, where it could behave differently.
 :ref:`Pragmas<pragma>` are common instructions for compilers about how to treat the
 source code (e.g. `pragma once <https://en.wikipedia.org/wiki/Pragma_once>`_).
@@ -83,7 +83,7 @@ registering with a username and password, all you need is an Ethereum keypair.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >0.5.99 <0.8.0;
+    pragma solidity ^0.8.4;
 
     contract Coin {
         // The keyword "public" makes variables
@@ -105,14 +105,23 @@ registering with a username and password, all you need is an Ethereum keypair.
         // Can only be called by the contract creator
         function mint(address receiver, uint amount) public {
             require(msg.sender == minter);
-            require(amount < 1e60);
             balances[receiver] += amount;
         }
+
+        // Errors allow you to provide information about
+        // why an operation failed. They are returned
+        // to the caller of the function.
+        error InsufficientBalance(uint requested, uint available);
 
         // Sends an amount of existing coins
         // from any caller to an address
         function send(address receiver, uint amount) public {
-            require(amount <= balances[msg.sender], "Insufficient balance.");
+            if (amount > balances[msg.sender])
+                revert InsufficientBalance({
+                    requested: amount,
+                    available: balances[msg.sender]
+                });
+
             balances[msg.sender] -= amount;
             balances[receiver] += amount;
             emit Sent(msg.sender, receiver, amount);
@@ -195,10 +204,23 @@ always the address where the current (external) function call came from.
 
 The functions that make up the contract, and that users and contracts can call are ``mint`` and ``send``.
 
-The ``mint`` function sends an amount of newly created coins to another address.
-The :ref:`require <assert-and-require>` function call defines conditions that reverts all changes if not met.
-In this example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call ``mint``,
-and ``require(amount < 1e60);`` ensures a maximum amount of tokens. This ensures that there are no overflow errors in the future.
+The ``mint`` function sends an amount of newly created coins to another address. The :ref:`require
+<assert-and-require>` function call defines conditions that reverts all changes if not met. In this
+example, ``require(msg.sender == minter);`` ensures that only the creator of the contract can call
+``mint``. In general, the creator can mint as many tokens as they like, but at some point, this will
+lead to a phenomenon called "overflow". Note that because of the default :ref:`Checked arithmetic
+<unchecked>`, the transaction would revert if the expression ``balances[receiver] += amount;``
+overflows, i.e., when ``balances[receiver] + amount`` in arbitrary precision arithmetic is larger
+than the maximum value of ``uint`` (``2**256 - 1``). This is also true for the statement
+``balances[receiver] += amount;`` in the function ``send``.
+
+:ref:`Errors <errors>` allow you to provide more information to the caller about
+why a condition or operation failed. Errors are used together with the
+:ref:`revert statement <revert-statement>`. The revert statement unconditionally
+aborts and reverts all changes similar to the ``require`` function, but it also
+allows you to provide the name of an error and additional data which will be supplied to the caller
+(and eventually to the front-end application or block explorer) so that
+a failure can more easily be debugged or reacted upon.
 
 The ``send`` function can be used by anyone (who already
 has some of these coins) to send coins to anyone else. If the sender does not have

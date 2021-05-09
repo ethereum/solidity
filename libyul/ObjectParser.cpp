@@ -19,6 +19,7 @@
  * Parser for Yul code and data object container.
  */
 
+#include <libyul/AST.h>
 #include <libyul/ObjectParser.h>
 
 #include <libyul/AsmParser.h>

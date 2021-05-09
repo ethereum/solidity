@@ -22,6 +22,8 @@ contract C is A {
         _;
     }
 }
-
+// ====
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // getData() -> 6

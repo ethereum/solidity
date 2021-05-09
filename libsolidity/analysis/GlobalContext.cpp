@@ -34,6 +34,8 @@ using namespace std;
 namespace solidity::frontend
 {
 
+namespace
+{
 /// Magic variables get negative ids for easy differentiation
 int magicVariableToID(std::string const& _name)
 {
@@ -45,11 +47,6 @@ int magicVariableToID(std::string const& _name)
 	else if (_name == "ecrecover") return -6;
 	else if (_name == "gasleft") return -7;
 	else if (_name == "keccak256") return -8;
-	else if (_name == "log0") return -10;
-	else if (_name == "log1") return -11;
-	else if (_name == "log2") return -12;
-	else if (_name == "log3") return -13;
-	else if (_name == "log4") return -14;
 	else if (_name == "msg") return -15;
 	else if (_name == "mulmod") return -16;
 	else if (_name == "now") return -17;
@@ -83,11 +80,6 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 		magicVarDecl("ecrecover", TypeProvider::function(strings{"bytes32", "uint8", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Kind::ECRecover, false, StateMutability::Pure)),
 		magicVarDecl("gasleft", TypeProvider::function(strings(), strings{"uint256"}, FunctionType::Kind::GasLeft, false, StateMutability::View)),
 		magicVarDecl("keccak256", TypeProvider::function(strings{"bytes memory"}, strings{"bytes32"}, FunctionType::Kind::KECCAK256, false, StateMutability::Pure)),
-		magicVarDecl("log0", TypeProvider::function(strings{"bytes32"}, strings{}, FunctionType::Kind::Log0)),
-		magicVarDecl("log1", TypeProvider::function(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log1)),
-		magicVarDecl("log2", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log2)),
-		magicVarDecl("log3", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log3)),
-		magicVarDecl("log4", TypeProvider::function(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Kind::Log4)),
 		magicVarDecl("msg", TypeProvider::magic(MagicType::Kind::Message)),
 		magicVarDecl("mulmod", TypeProvider::function(strings{"uint256", "uint256", "uint256"}, strings{"uint256"}, FunctionType::Kind::MulMod, false, StateMutability::Pure)),
 		magicVarDecl("now", TypeProvider::uint256()),
@@ -111,6 +103,8 @@ inline vector<shared_ptr<MagicVariableDeclaration const>> constructMagicVariable
 			StateMutability::Pure
 		)),
 	};
+}
+
 }
 
 GlobalContext::GlobalContext(): m_magicVariables{constructMagicVariables()}
@@ -150,7 +144,7 @@ MagicVariableDeclaration const* GlobalContext::currentSuper() const
 	{
 		Type const* type = TypeProvider::emptyTuple();
 		if (m_currentContract)
-			type = TypeProvider::contract(*m_currentContract, true);
+			type = TypeProvider::typeType(TypeProvider::contract(*m_currentContract, true));
 		m_superPointer[m_currentContract] =
 			make_shared<MagicVariableDeclaration>(magicVariableToID("super"), "super", type);
 	}

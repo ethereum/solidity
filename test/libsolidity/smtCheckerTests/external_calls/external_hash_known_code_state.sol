@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract State {
 	uint x;
 	function f() public returns (uint) {
@@ -33,5 +31,8 @@ contract C {
 		assert(owner == address(0) || y != z);
 	}
 }
+// ====
+// SMTEngine: all
+// SMTIgnoreCex: yes
 // ----
-// Warning 6328: (528-565): CHC: Assertion violation happens here.
+// Warning 6328: (495-532): CHC: Assertion violation happens here.

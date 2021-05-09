@@ -14,6 +14,7 @@ contract test {
 }
 // ====
 // allowNonExistingFunctions: true
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // data() -> 8

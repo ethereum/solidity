@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 
 // Checks that address types are properly cleaned before they are compared.
@@ -14,6 +14,7 @@ contract C {
     }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f(address): 0xffff1234567890123456789012345678901234567890 -> FAILURE # We input longer data on purpose.#

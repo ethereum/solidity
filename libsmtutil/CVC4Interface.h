@@ -19,7 +19,6 @@
 #pragma once
 
 #include <libsmtutil/SolverInterface.h>
-#include <boost/noncopyable.hpp>
 
 #if defined(__GLIBC__)
 // The CVC4 headers includes the deprecated system headers <ext/hash_map>
@@ -37,10 +36,14 @@
 namespace solidity::smtutil
 {
 
-class CVC4Interface: public SolverInterface, public boost::noncopyable
+class CVC4Interface: public SolverInterface
 {
 public:
-	CVC4Interface();
+	/// Noncopyable.
+	CVC4Interface(CVC4Interface const&) = delete;
+	CVC4Interface& operator=(CVC4Interface const&) = delete;
+
+	CVC4Interface(std::optional<unsigned> _queryTimeout = {});
 
 	void reset() override;
 

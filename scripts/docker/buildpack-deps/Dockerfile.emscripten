@@ -26,21 +26,21 @@
 # contains a Makefile in the docker/ subdirectory that can be used to create the
 # required base image using:
 #
-#   make version=1.39.15 build
+#   make version=2.0.12 build
 #
-FROM emscripten/emsdk:1.39.15 AS base
-LABEL version="2"
+FROM emscripten/emsdk:2.0.12 AS base
+LABEL version="4"
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
 	cd /usr/src; \
-	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.9 --depth 1 ; \
+	git clone https://github.com/Z3Prover/z3.git -b z3-4.8.10 --depth 1 ; \
 	cd z3; \
 	mkdir build; \
 	cd build; \
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=MinSizeRel \
-		-DCMAKE_INSTALL_PREFIX=/emsdk/emscripten/sdk/system/ \
+		-DCMAKE_INSTALL_PREFIX=/emsdk/upstream/emscripten/system \
 		-DZ3_BUILD_LIBZ3_SHARED=OFF \
 		-DZ3_ENABLE_EXAMPLE_TARGETS=OFF \
 		-DZ3_BUILD_TEST_EXECUTABLES=OFF \
@@ -48,20 +48,19 @@ RUN set -ex; \
 		-DZ3_SINGLE_THREADED=ON \
 		-DCMAKE_CXX_FLAGS="-s DISABLE_EXCEPTION_CATCHING=0" \
 		..; \
-	make; make install; \
+	make ; make install; \
 	rm -r /usr/src/z3; \
 	cd /usr/src; \
-	wget -q 'https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.bz2' -O boost.tar.bz2; \
-	test "$(sha256sum boost.tar.bz2)" = "4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402  boost.tar.bz2"; \
+	wget -q 'https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_75_0.tar.bz2' -O boost.tar.bz2; \
+	test "$(sha256sum boost.tar.bz2)" = "953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb  boost.tar.bz2"; \
 	tar -xf boost.tar.bz2; \
 	rm boost.tar.bz2; \
-	cd boost_1_73_0; \
+	cd boost_1_75_0; \
 	mv ../emscripten.jam .; \
 	./bootstrap.sh; \
 	echo "using emscripten : : em++ ;" >> project-config.jam ; \
 	./b2 toolset=emscripten link=static variant=release threading=single runtime-link=static \
 		--with-system --with-filesystem --with-test --with-program_options \
 		cxxflags="-s DISABLE_EXCEPTION_CATCHING=0 -Wno-unused-local-typedef -Wno-variadic-macros -Wno-c99-extensions -Wno-all" \
-	       --prefix=/emsdk/emscripten/sdk/system install; \
-	rm -r /usr/src/boost_1_73_0
-
+	       --prefix=/emsdk/upstream/emscripten/system install; \
+	rm -r /usr/src/boost_1_75_0

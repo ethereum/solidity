@@ -1,17 +1,17 @@
-#! /bin/bash
+#!/usr/bin/env bash
 #------------------------------------------------------------------------------
 # Bash script to execute the Solidity tests by CircleCI.
 #
 # The documentation for solidity is hosted at:
 #
-#     https://solidity.readthedocs.org
+#     https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # Configuration Environment Variables:
 #
 #     EVM=version_string      Specifies EVM version to compile for (such as homestead, etc)
 #     OPTIMIZE=1              Enables backend optimizer
-#     ABI_ENCODER_V2=1        Enables ABI encoder version 2
+#     ABI_ENCODER_V1=1        Forcibly enables ABI coder version 1
 #     SOLTEST_FLAGS=<flags>   Appends <flags> to default SOLTEST_ARGS
 #
 # ------------------------------------------------------------------------------
@@ -36,9 +36,12 @@ set -e
 
 OPTIMIZE=${OPTIMIZE:-"0"}
 EVM=${EVM:-"invalid"}
-WORKDIR=${CIRCLE_WORKING_DIRECTORY:-.}
-REPODIR="$(realpath $(dirname $0)/..)"
+REPODIR="$(realpath "$(dirname "$0")/..")"
 
+IFS=" " read -r -a BOOST_TEST_ARGS <<< "$BOOST_TEST_ARGS"
+IFS=" " read -r -a SOLTEST_FLAGS <<< "$SOLTEST_FLAGS"
+
+# shellcheck source=scripts/common.sh
 source "${REPODIR}/scripts/common.sh"
 # Test result output directory (CircleCI is reading test results from here)
 mkdir -p test_results
@@ -49,16 +52,17 @@ ulimit -s 16384
 get_logfile_basename() {
     local filename="${EVM}"
     test "${OPTIMIZE}" = "1" && filename="${filename}_opt"
-    test "${ABI_ENCODER_V2}" = "1" && filename="${filename}_abiv2"
+    test "${ABI_ENCODER_V1}" = "1" && filename="${filename}_abiv1"
 
     echo -ne "${filename}"
 }
 
-BOOST_TEST_ARGS="--color_output=no --show_progress=yes --logger=JUNIT,error,test_results/`get_logfile_basename`.xml ${BOOST_TEST_ARGS}"
-SOLTEST_ARGS="--evm-version=$EVM $SOLTEST_FLAGS"
-test "${OPTIMIZE}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --optimize"
-test "${ABI_ENCODER_V2}" = "1" && SOLTEST_ARGS="${SOLTEST_ARGS} --abiencoderv2"
+BOOST_TEST_ARGS=("--color_output=no" "--show_progress=yes" "--logger=JUNIT,error,test_results/$(get_logfile_basename).xml" "${BOOST_TEST_ARGS[@]}")
+SOLTEST_ARGS=("--evm-version=$EVM" "${SOLTEST_FLAGS[@]}")
 
-echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}"
+test "${OPTIMIZE}" = "1" && SOLTEST_ARGS+=(--optimize)
+test "${ABI_ENCODER_V1}" = "1" && SOLTEST_ARGS+=(--abiencoderv1)
 
-${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS} -- ${SOLTEST_ARGS}
+echo "Running ${REPODIR}/build/test/soltest ${BOOST_TEST_ARGS[*]} -- ${SOLTEST_ARGS[*]}"
+
+"${REPODIR}/build/test/soltest" "${BOOST_TEST_ARGS[@]}" -- "${SOLTEST_ARGS[@]}"

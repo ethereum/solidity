@@ -1,8 +1,7 @@
-pragma experimental SMTChecker;
-
 contract C
 {
-	function f(bool b, uint[] memory c) public {
+	function f(bool b, uint[] memory c) public pure {
+		require(c.length > 0);
 		c[0] = 0;
 		if (b)
 			c[0] = 1;
@@ -11,5 +10,6 @@ contract C
 		assert(c[0] > 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 2018: (47-168): Function state mutability can be restricted to pure

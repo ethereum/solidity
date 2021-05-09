@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract Simple {
 	function f() public pure {
 		uint x = 10;
@@ -12,7 +10,10 @@ contract Simple {
 				++x;
 			assert(x == 10);
 		}
-		assert(y == x);
+		// Removed because of Spacer nondeterminism.
+		//assert(y == x);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

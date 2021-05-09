@@ -27,10 +27,12 @@
         1
       ],
       "name": "C1",
+      "nameLocation": "9:2:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 5,
-      "src": "0:14:1"
+      "src": "0:14:1",
+      "usedErrors": []
     },
     {
       "abstract": false,
@@ -41,24 +43,16 @@
           {
             "id": 2,
             "name": "C1",
-            "nodeType": "UserDefinedTypeName",
+            "nodeType": "IdentifierPath",
             "referencedDeclaration": 1,
-            "src": "30:2:1",
-            "typeDescriptions":
-            {
-              "typeIdentifier": "t_contract$_C1_$1",
-              "typeString": "contract C1"
-            }
+            "src": "30:2:1"
           },
           "id": 3,
           "nodeType": "InheritanceSpecifier",
           "src": "30:2:1"
         }
       ],
-      "contractDependencies":
-      [
-        1
-      ],
+      "contractDependencies": [],
       "contractKind": "contract",
       "fullyImplemented": true,
       "id": 4,
@@ -68,10 +62,12 @@
         1
       ],
       "name": "C2",
+      "nameLocation": "24:2:1",
       "nodeType": "ContractDefinition",
       "nodes": [],
       "scope": 5,
-      "src": "15:20:1"
+      "src": "15:20:1",
+      "usedErrors": []
     }
   ],
   "src": "0:36:1"

@@ -41,16 +41,17 @@ ReturnInfo::ReturnInfo(EVMVersion const& _evmVersion, FunctionType const& _funct
 			returnTypes = _functionType.returnParameterTypesWithoutDynamicTypes();
 
 		for (auto const& retType: returnTypes)
-			if (retType->isDynamicallyEncoded())
+		{
+			solAssert(retType->decodingType(), "");
+			if (retType->decodingType()->isDynamicallyEncoded())
 			{
 				solAssert(haveReturndatacopy, "");
 				dynamicReturnSize = true;
 				estimatedReturnSize = 0;
 				break;
 			}
-			else if (retType->decodingType())
-				estimatedReturnSize += retType->decodingType()->calldataEncodedSize();
 			else
-				estimatedReturnSize += retType->calldataEncodedSize();
+				estimatedReturnSize += retType->decodingType()->calldataEncodedSize();
+		}
 	}
 }

@@ -14,10 +14,10 @@ indent_size = 4
 indent_style = space
 indent_size = 4
 
-[std/**.sol]
+[*.{sol,yul}]
 indent_style = space
 indent_size = 4
 
-[*.{txt,cmake}]
+[*.{txt,cmake,json}]
 indent_style = tab
 indent_size = 4

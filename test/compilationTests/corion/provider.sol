@@ -10,7 +10,7 @@ contract provider is module, safeMath, announcementTypes {
         module callbacks
     */
     function connectModule() external override returns (bool success) {
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         super._connectModule();
         (bool _success, uint256 currentSchellingRound) = moduleHandler(moduleHandlerAddress).getCurrentSchellingRoundID();
         require( _success );
@@ -26,7 +26,7 @@ contract provider is module, safeMath, announcementTypes {
             @value      amount
             @bool       Was the function successful?
         */
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         transferEvent_(from, value, true);
         transferEvent_(to, value, false);
         return true;
@@ -41,7 +41,7 @@ contract provider is module, safeMath, announcementTypes {
             @reward         token emission
             @bool           Was the function successful?
         */
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         globalFunds[roundID].reward = reward;
         globalFunds[roundID].supply = globalFunds[roundID-1].supply;
         currentSchellingRound = roundID;
@@ -133,7 +133,7 @@ contract provider is module, safeMath, announcementTypes {
             @a      Type of the setting
             @b      value
         */
-        require( super.isModuleHandler(msg.sender) );
+        require( super.isModuleHandler(payable(msg.sender)) );
         if      ( a == announcementType.providerPublicFunds )          { minFundsForPublic = b; }
         else if ( a == announcementType.providerPrivateFunds )         { minFundsForPrivate = b; }
         else if ( a == announcementType.providerPrivateClientLimit )   { privateProviderLimit = b; }

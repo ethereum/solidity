@@ -36,6 +36,7 @@
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 #include <libsolutil/Common.h>
+#include <libsolutil/ErrorCodes.h>
 
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/backends/evm/EVMDialect.h>
@@ -76,10 +77,8 @@ public:
 
 	langutil::EVMVersion const& evmVersion() const { return m_evmVersion; }
 
-	/// Update currently enabled set of experimental features.
-	void setExperimentalFeatures(std::set<ExperimentalFeature> const& _features) { m_experimentalFeatures = _features; }
-	/// @returns true if the given feature is enabled.
-	bool experimentalFeatureActive(ExperimentalFeature _feature) const { return m_experimentalFeatures.count(_feature); }
+	void setUseABICoderV2(bool _value) { m_useABICoderV2 = _value; }
+	bool useABICoderV2() const { return m_useABICoderV2; }
 
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addImmutable(VariableDeclaration const& _declaration);
@@ -121,6 +120,9 @@ public:
 	/// Sets the contract currently being compiled - the most derived one.
 	void setMostDerivedContract(ContractDefinition const& _contract) { m_mostDerivedContract = &_contract; }
 	ContractDefinition const& mostDerivedContract() const;
+
+	void setArithmetic(Arithmetic _value) { m_arithmetic = _value; }
+	Arithmetic arithmetic() const { return m_arithmetic; }
 
 	/// @returns the next function in the queue of functions that are still to be compiled
 	/// (i.e. that were referenced during compilation but where we did not yet generate code for).
@@ -191,10 +193,10 @@ public:
 	evmasm::AssemblyItem appendJumpToNew() { return m_asm->appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
 	CompilerContext& appendJump(evmasm::AssemblyItem::JumpType _jumpType = evmasm::AssemblyItem::JumpType::Ordinary);
-	/// Appends an INVALID instruction
-	CompilerContext& appendInvalid();
-	/// Appends a conditional INVALID instruction
-	CompilerContext& appendConditionalInvalid();
+	/// Appends code to revert with a Panic(uint256) error.
+	CompilerContext& appendPanic(util::PanicCode _code);
+	/// Appends code to revert with a Panic(uint256) error if the topmost stack element is nonzero.
+	CompilerContext& appendConditionalPanic(util::PanicCode _code);
 	/// Appends a REVERT(0, 0) call
 	/// @param _message is an optional revert message used in debug mode
 	CompilerContext& appendRevert(std::string const& _message = "");
@@ -214,7 +216,10 @@ public:
 	/// @returns a new tag without pushing any opcodes or data
 	evmasm::AssemblyItem newTag() { return m_asm->newTag(); }
 	/// @returns a new tag identified by name.
-	evmasm::AssemblyItem namedTag(std::string const& _name) { return m_asm->namedTag(_name); }
+	evmasm::AssemblyItem namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID)
+	{
+		return m_asm->namedTag(_name, _params, _returns, _sourceID);
+	}
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the pushsub assembly item.
 	evmasm::AssemblyItem addSubroutine(evmasm::AssemblyPointer const& _assembly) { return m_asm->appendSubroutine(_assembly); }
@@ -266,7 +271,7 @@ public:
 	);
 
 	/// If m_revertStrings is debug, @returns inline assembly code that
-	/// stores @param _message in memory position 0 and reverts.
+	/// stores @param _message at the free memory pointer and reverts.
 	/// Otherwise returns "revert(0, 0)".
 	std::string revertReasonIfDebug(std::string const& _message = "");
 
@@ -288,21 +293,6 @@ public:
 	/// @returns a shared pointer to the assembly.
 	/// Should be avoided except when adding sub-assemblies.
 	std::shared_ptr<evmasm::Assembly> assemblyPtr() const { return m_asm; }
-
-	/// @arg _sourceCodes is the map of input files to source code strings
-	std::string assemblyString(StringMap const& _sourceCodes = StringMap()) const
-	{
-		return m_asm->assemblyString(_sourceCodes);
-	}
-
-	/// @arg _sourceCodes is the map of input files to source code strings
-	Json::Value assemblyJSON(std::map<std::string, unsigned> const& _indicies = std::map<std::string, unsigned>()) const
-	{
-		return m_asm->assemblyJSON(_indicies);
-	}
-
-	evmasm::LinkerObject const& assembledObject() const;
-	evmasm::LinkerObject const& assembledRuntimeObject(size_t _subIndex) const { return m_asm->sub(_subIndex).assemble(); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -360,8 +350,7 @@ private:
 	/// Version of the EVM to compile against.
 	langutil::EVMVersion m_evmVersion;
 	RevertStrings const m_revertStrings;
-	/// Activated experimental features.
-	std::set<ExperimentalFeature> m_experimentalFeatures;
+	bool m_useABICoderV2 = false;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, std::shared_ptr<Compiler const>> m_otherCompilers;
 	/// Storage offsets of state variables
@@ -379,6 +368,8 @@ private:
 	std::map<Declaration const*, std::vector<unsigned>> m_localVariables;
 	/// The contract currently being compiled. Virtual function lookup starts from this contarct.
 	ContractDefinition const* m_mostDerivedContract = nullptr;
+	/// Whether to use checked arithmetic.
+	Arithmetic m_arithmetic = Arithmetic::Checked;
 	/// Stack of current visited AST nodes, used for location attachment
 	std::stack<ASTNode const*> m_visitedNodes;
 	/// The runtime context if in Creation mode, this is used for generating tags that would be stored into the storage and then used at runtime.

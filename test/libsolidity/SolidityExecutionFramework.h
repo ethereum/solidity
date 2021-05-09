@@ -32,9 +32,6 @@
 
 #include <libyul/AssemblyStack.h>
 
-#include <liblangutil/Exceptions.h>
-#include <liblangutil/SourceReferenceFormatter.h>
-
 namespace solidity::frontend::test
 {
 
@@ -52,10 +49,11 @@ public:
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
 		bytes const& _arguments = {},
-		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
+		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {},
+		std::optional<std::string> const& _sourceName = std::nullopt
 	) override
 	{
-		bytes bytecode = multiSourceCompileContract(_sourceCode, _contractName, _libraryAddresses);
+		bytes bytecode = multiSourceCompileContract(_sourceCode, _sourceName, _contractName, _libraryAddresses);
 		sendMessage(bytecode + _arguments, true, _value);
 		return m_output;
 	}
@@ -68,12 +66,13 @@ public:
 
 	bytes multiSourceCompileContract(
 		std::map<std::string, std::string> const& _sources,
+		std::optional<std::string> const& _mainSourceName = std::nullopt,
 		std::string const& _contractName = "",
 		std::map<std::string, solidity::test::Address> const& _libraryAddresses = {}
 	);
 
-	/// Returns @param _sourceCode prefixed with the version pragma and the ABIEncoderV2 pragma,
-	/// the latter only if it is required.
+	/// Returns @param _sourceCode prefixed with the version pragma and the abi coder v1 pragma,
+	/// the latter only if it is forced.
 	static std::string addPreamble(std::string const& _sourceCode);
 protected:
 

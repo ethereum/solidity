@@ -21,9 +21,10 @@
 
 #pragma once
 
-#include <libyul/AsmDataForward.h>
+#include <libyul/ASTForward.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/FixedHash.h>
 
 #include <vector>
 
@@ -61,6 +62,8 @@ struct InterpreterState;
  *
  * The main focus is that the generated execution trace is the same for equivalent executions
  * and likely to be different for non-equivalent executions.
+ *
+ * The type names are following the Ewasm specification (https://github.com/ewasm/design/blob/master/eth_interface.md).
  */
 class EwasmBuiltinInterpreter
 {
@@ -88,8 +91,7 @@ private:
 
 	/// Checks if the memory access is not too large for the interpreter and adjusts
 	/// msize accordingly.
-	/// @returns false if the amount of bytes read is lager than 0xffff
-	bool accessMemory(u256 const& _offset, u256 const& _size = 32);
+	void accessMemory(u256 const& _offset, u256 const& _size = 32);
 	/// @returns the memory contents at the provided address.
 	/// Does not adjust msize, use @a accessMemory for that
 	bytes readMemory(uint64_t _offset, uint64_t _size = 32);
@@ -99,6 +101,9 @@ private:
 	/// @returns the memory contents (4 bytes) at the provided address (little-endian).
 	/// Does not adjust msize, use @a accessMemory for that
 	uint32_t readMemoryHalfWord(uint64_t _offset);
+	/// Writes bytes to memory.
+	/// Does not adjust msize, use @a accessMemory for that
+	void writeMemory(uint64_t _offset, bytes const& _value);
 	/// Writes a word to memory (little-endian)
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryWord(uint64_t _offset, uint64_t _value);
@@ -109,14 +114,18 @@ private:
 	/// Does not adjust msize, use @a accessMemory for that
 	void writeMemoryByte(uint64_t _offset, uint8_t _value);
 
-	/// Helper for eth.* builtins. Writes to memory (big-endian) and always returns zero.
+	/// Helper for eth.* builtins. Writes to memory (little-endian) and always returns zero.
 	void writeU256(uint64_t _offset, u256 _value, size_t _croppedTo = 32);
 	void writeU128(uint64_t _offset, u256 _value) { writeU256(_offset, std::move(_value), 16); }
-	void writeAddress(uint64_t _offset, u256 _value) { writeU256(_offset, std::move(_value), 20); }
-	/// Helper for eth.* builtins. Reads from memory (big-endian) and returns the value;
+	/// Helper for eth.* builtins. Writes to memory (as a byte string).
+	void writeBytes32(uint64_t _offset, util::h256 _value) { accessMemory(_offset, 32); writeMemory(_offset, _value.asBytes()); }
+	void writeAddress(uint64_t _offset, util::h160 _value) { accessMemory(_offset, 20); writeMemory(_offset, _value.asBytes()); }
+	/// Helper for eth.* builtins. Reads from memory (little-endian) and returns the value.
 	u256 readU256(uint64_t _offset, size_t _croppedTo = 32);
 	u256 readU128(uint64_t _offset) { return readU256(_offset, 16); }
-	u256 readAddress(uint64_t _offset) { return readU256(_offset, 20); }
+	/// Helper for eth.* builtins. Reads from memory (as a byte string).
+	util::h256 readBytes32(uint64_t _offset) { accessMemory(_offset, 32); return util::h256(readMemory(_offset, 32)); }
+	util::h160 readAddress(uint64_t _offset) { accessMemory(_offset, 20); return util::h160(readMemory(_offset, 20)); }
 
 	void logTrace(evmasm::Instruction _instruction, std::vector<u256> const& _arguments = {}, bytes const& _data = {});
 	/// Appends a log to the trace representing an instruction or similar operation by string,

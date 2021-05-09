@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract Other {
 	C c;
 	function h(bool b) public {
@@ -12,4 +11,6 @@ contract C {
 		owner = _owner;
 	}
 }
+// ====
+// SMTEngine: all
 // ----

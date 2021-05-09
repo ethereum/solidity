@@ -27,6 +27,13 @@
 #include <libsolidity/parsing/DocStringParser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/Common.h>
+
+#include <range/v3/algorithm/any_of.hpp>
+
+#include <boost/algorithm/string.hpp>
+
+#include <regex>
 
 using namespace std;
 using namespace solidity;
@@ -61,13 +68,13 @@ bool DocStringTagParser::visit(VariableDeclaration const& _variable)
 {
 	if (_variable.isStateVariable())
 	{
-		static set<string> const validPublicTags = set<string>{"dev", "notice", "return", "inheritdoc"};
-		static set<string> const validNonPublicTags = set<string>{"dev", "inheritdoc"};
 		if (_variable.isPublic())
-			parseDocStrings(_variable, _variable.annotation(), validPublicTags, "public state variables");
+			parseDocStrings(_variable, _variable.annotation(), {"dev", "notice", "return", "inheritdoc"}, "public state variables");
 		else
-			parseDocStrings(_variable, _variable.annotation(), validNonPublicTags, "non-public state variables");
+			parseDocStrings(_variable, _variable.annotation(), {"dev", "notice", "inheritdoc"}, "non-public state variables");
 	}
+	else if (_variable.isFileLevelVariable())
+		parseDocStrings(_variable, _variable.annotation(), {"dev"}, "file-level variables");
 	return false;
 }
 
@@ -81,6 +88,13 @@ bool DocStringTagParser::visit(ModifierDefinition const& _modifier)
 bool DocStringTagParser::visit(EventDefinition const& _event)
 {
 	handleCallable(_event, _event, _event.annotation());
+
+	return true;
+}
+
+bool DocStringTagParser::visit(ErrorDefinition const& _error)
+{
+	handleCallable(_error, _error, _error.annotation());
 
 	return true;
 }
@@ -127,10 +141,16 @@ void DocStringTagParser::handleCallable(
 )
 {
 	static set<string> const validEventTags = set<string>{"dev", "notice", "return", "param"};
+	static set<string> const validErrorTags = set<string>{"dev", "notice", "param"};
+	static set<string> const validModifierTags = set<string>{"dev", "notice", "param", "inheritdoc"};
 	static set<string> const validTags = set<string>{"dev", "notice", "return", "param", "inheritdoc"};
 
 	if (dynamic_cast<EventDefinition const*>(&_callable))
 		parseDocStrings(_node, _annotation, validEventTags, "events");
+	else if (dynamic_cast<ErrorDefinition const*>(&_callable))
+		parseDocStrings(_node, _annotation, validErrorTags, "errors");
+	else if (dynamic_cast<ModifierDefinition const*>(&_callable))
+		parseDocStrings(_node, _annotation, validModifierTags, "modifiers");
 	else
 		parseDocStrings(_node, _annotation, validTags, "functions");
 
@@ -144,23 +164,39 @@ void DocStringTagParser::parseDocStrings(
 	string const& _nodeName
 )
 {
-	DocStringParser parser;
-	if (_node.documentation() && !_node.documentation()->text()->empty())
-	{
-		parser.parse(*_node.documentation()->text(), m_errorReporter);
-		_annotation.docTags = parser.tags();
-	}
+	if (!_node.documentation())
+		return;
+
+	_annotation.docTags = DocStringParser{*_node.documentation(), m_errorReporter}.parse();
 
 	size_t returnTagsVisited = 0;
-	for (auto const& docTag: _annotation.docTags)
+	for (auto const& [tagName, tagValue]: _annotation.docTags)
 	{
-		if (!_validTags.count(docTag.first))
+		string static const customPrefix("custom:");
+		if (tagName == "custom" || tagName == "custom:")
+			m_errorReporter.docstringParsingError(
+				6564_error,
+				_node.documentation()->location(),
+				"Custom documentation tag must contain a chosen name, i.e. @custom:mytag."
+			);
+		else if (boost::starts_with(tagName, customPrefix) && tagName.size() > customPrefix.size())
+		{
+			regex static const customRegex("^custom:[a-z][a-z-]*$");
+			if (!regex_match(tagName, customRegex))
+				m_errorReporter.docstringParsingError(
+					2968_error,
+					_node.documentation()->location(),
+					"Invalid character in custom tag @" + tagName + ". Only lowercase letters and \"-\" are permitted."
+				);
+			continue;
+		}
+		else if (!_validTags.count(tagName))
 			m_errorReporter.docstringParsingError(
 				6546_error,
 				_node.documentation()->location(),
-				"Documentation tag @" + docTag.first + " not valid for " + _nodeName + "."
+				"Documentation tag @" + tagName + " not valid for " + _nodeName + "."
 			);
-		else if (docTag.first == "return")
+		else if (tagName == "return")
 		{
 			returnTagsVisited++;
 			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
@@ -170,19 +206,19 @@ void DocStringTagParser::parseDocStrings(
 					m_errorReporter.docstringParsingError(
 						5256_error,
 						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + "\" is only allowed once on state-variables."
+						"Documentation tag \"@" + tagName + "\" is only allowed once on state-variables."
 					);
 			}
 			else if (auto const* function = dynamic_cast<FunctionDefinition const*>(&_node))
 			{
-				string content = docTag.second.content;
+				string content = tagValue.content;
 				string firstWord = content.substr(0, content.find_first_of(" \t"));
 
 				if (returnTagsVisited > function->returnParameters().size())
 					m_errorReporter.docstringParsingError(
 						2604_error,
 						_node.documentation()->location(),
-						"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+						"Documentation tag \"@" + tagName + " " + tagValue.content + "\"" +
 						" exceeds the number of return parameters."
 					);
 				else
@@ -192,7 +228,7 @@ void DocStringTagParser::parseDocStrings(
 						m_errorReporter.docstringParsingError(
 							5856_error,
 							_node.documentation()->location(),
-							"Documentation tag \"@" + docTag.first + " " + docTag.second.content + "\"" +
+							"Documentation tag \"@" + tagName + " " + tagValue.content + "\"" +
 							" does not contain the name of its return parameter."
 						);
 				}

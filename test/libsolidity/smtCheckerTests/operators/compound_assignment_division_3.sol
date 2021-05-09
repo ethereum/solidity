@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract C {
 	mapping (uint => uint) map;
 	function f(uint x, uint p) public {
@@ -9,7 +8,7 @@ contract C {
 		assert(map[p] == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (171-190): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (194-213): CHC: Error trying to invoke SMT solver.
-// Warning 4661: (194-213): BMC: Assertion violation happens here.
+// Warning 6328: (162-181): CHC: Assertion violation happens here.\nCounterexample:\n\nx = 2\np = 0\n\nTransaction trace:\nC.constructor()\nC.f(2, 0)

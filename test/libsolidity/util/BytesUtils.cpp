@@ -36,11 +36,9 @@
 
 using namespace solidity;
 using namespace solidity::util;
-using namespace solidity::langutil;
 using namespace solidity::frontend;
 using namespace solidity::frontend::test;
 using namespace std;
-using namespace soltest;
 
 bytes BytesUtils::alignLeft(bytes _bytes)
 {
@@ -83,7 +81,7 @@ bytes BytesUtils::convertBoolean(string const& _literal)
 	else if (_literal == "false")
 		return bytes{false};
 	else
-		throw TestParserError("Boolean literal invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("Boolean literal invalid."));
 }
 
 bytes BytesUtils::convertNumber(string const& _literal)
@@ -94,7 +92,7 @@ bytes BytesUtils::convertNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw TestParserError("Number encoding invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("Number encoding invalid."));
 	}
 }
 
@@ -106,7 +104,7 @@ bytes BytesUtils::convertHexNumber(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw TestParserError("Hex number encoding invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("Hex number encoding invalid."));
 	}
 }
 
@@ -118,7 +116,7 @@ bytes BytesUtils::convertString(string const& _literal)
 	}
 	catch (std::exception const&)
 	{
-		throw TestParserError("String encoding invalid.");
+		BOOST_THROW_EXCEPTION(TestParserError("String encoding invalid."));
 	}
 }
 
@@ -218,7 +216,7 @@ string BytesUtils::formatRawBytes(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
 
@@ -266,13 +264,13 @@ string BytesUtils::formatBytes(
 			{
 				auto entropy = [](std::string const& str) -> double {
 					double result = 0;
-					map<char, int> frequencies;
+					map<char, double> frequencies;
 					for (char c: str)
 						frequencies[c]++;
 					for (auto p: frequencies)
 					{
-						double freq = static_cast<double>(p.second) / str.length();
-						result -= freq * (log(freq) / log(2));
+						double freq = p.second / double(str.length());
+						result -= freq * (log(freq) / log(2.0));
 					}
 					return result;
 				};
@@ -320,7 +318,7 @@ string BytesUtils::formatBytesRange(
 	auto it = _bytes.begin();
 
 	if (_bytes.size() != ContractABIUtils::encodingSize(_parameters))
-		parameters = ContractABIUtils::defaultParameters(ceil(_bytes.size() / 32));
+		parameters = ContractABIUtils::defaultParameters((_bytes.size() + 31) / 32);
 	else
 		parameters = _parameters;
 

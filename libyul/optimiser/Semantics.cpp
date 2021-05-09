@@ -21,10 +21,10 @@
 
 #include <libyul/optimiser/Semantics.h>
 
+#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/Exceptions.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Dialect.h>
-#include <libyul/backends/evm/EVMDialect.h>
 
 #include <libevmasm/SemanticInformation.h>
 
@@ -125,21 +125,23 @@ map<YulString, SideEffects> SideEffectsPropagator::sideEffects(
 	{
 		YulString funName = call.first;
 		SideEffects sideEffects;
-		util::BreadthFirstSearch<YulString>{call.second, {funName}}.run(
-			[&](YulString _function, auto&& _addChild) {
-				if (sideEffects == SideEffects::worst())
-					return;
-				if (BuiltinFunction const* f = _dialect.builtin(_function))
-					sideEffects += f->sideEffects;
-				else
-				{
-					if (ret.count(_function))
-						sideEffects += ret[_function];
-					for (YulString callee: _directCallGraph.functionCalls.at(_function))
-						_addChild(callee);
-				}
+		auto _visit = [&, visited = std::set<YulString>{}](YulString _function, auto&& _recurse) mutable {
+			if (!visited.insert(_function).second)
+				return;
+			if (sideEffects == SideEffects::worst())
+				return;
+			if (BuiltinFunction const* f = _dialect.builtin(_function))
+				sideEffects += f->sideEffects;
+			else
+			{
+				if (ret.count(_function))
+					sideEffects += ret[_function];
+				for (YulString callee: _directCallGraph.functionCalls.at(_function))
+					_recurse(callee, _recurse);
 			}
-		);
+		};
+		for (auto const& _v: call.second)
+			_visit(_v, _visit);
 		ret[funName] += sideEffects;
 	}
 	return ret;
@@ -195,9 +197,7 @@ TerminationFinder::ControlFlow TerminationFinder::controlFlowKind(Statement cons
 bool TerminationFinder::isTerminatingBuiltin(ExpressionStatement const& _exprStmnt)
 {
 	if (holds_alternative<FunctionCall>(_exprStmnt.expression))
-		if (auto const* dialect = dynamic_cast<EVMDialect const*>(&m_dialect))
-			if (auto const* builtin = dialect->builtin(std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
-				if (builtin->instruction)
-					return evmasm::SemanticInformation::terminatesControlFlow(*builtin->instruction);
+		if (auto instruction = toEVMInstruction(m_dialect, std::get<FunctionCall>(_exprStmnt.expression).functionName.name))
+			return evmasm::SemanticInformation::terminatesControlFlow(*instruction);
 	return false;
 }

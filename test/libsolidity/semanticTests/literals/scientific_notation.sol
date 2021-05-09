@@ -25,6 +25,7 @@ contract C {
 }
 
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // f() -> 20000000000
@@ -33,4 +34,3 @@ contract C {
 // i() -> -20000000000
 // j() -> -2
 // k() -> -25
-

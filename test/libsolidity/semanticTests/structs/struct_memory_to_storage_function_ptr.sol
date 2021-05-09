@@ -1,4 +1,4 @@
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C {
     struct S {
@@ -28,6 +28,10 @@ contract C {
 }
 
 // ====
-// compileViaYul: false
+// compileViaYul: also
+// compileToEwasm: also
 // ----
 // f() -> 42, 23, 34, 42, 42
+// gas irOptimized: 108610
+// gas legacy: 110821
+// gas legacyOptimized: 105148

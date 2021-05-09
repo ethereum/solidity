@@ -17,7 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
 using namespace solidity;
@@ -236,6 +236,16 @@ bool ControlFlowBuilder::visit(Throw const& _throw)
 	return false;
 }
 
+bool ControlFlowBuilder::visit(RevertStatement const& _revert)
+{
+	solAssert(!!m_currentNode, "");
+	solAssert(!!m_revertNode, "");
+	visitNode(_revert);
+	connect(m_currentNode, m_revertNode);
+	m_currentNode = newLabel();
+	return false;
+}
+
 bool ControlFlowBuilder::visit(PlaceholderStatement const&)
 {
 	solAssert(!!m_currentNode, "");
@@ -290,7 +300,7 @@ bool ControlFlowBuilder::visit(ModifierInvocation const& _modifierInvocation)
 			appendControlFlow(*argument);
 
 	auto modifierDefinition = dynamic_cast<ModifierDefinition const*>(
-		_modifierInvocation.name()->annotation().referencedDeclaration
+		_modifierInvocation.name().annotation().referencedDeclaration
 	);
 	if (!modifierDefinition) return false;
 	solAssert(!!modifierDefinition, "");
@@ -472,7 +482,7 @@ void ControlFlowBuilder::operator()(yul::Identifier const& _identifier)
 			m_currentNode->variableOccurrences.emplace_back(
 				*declaration,
 				VariableOccurrence::Kind::Access,
-				_identifier.location
+				_identifier.debugData->location
 			);
 	}
 }
@@ -488,7 +498,7 @@ void ControlFlowBuilder::operator()(yul::Assignment const& _assignment)
 				m_currentNode->variableOccurrences.emplace_back(
 					*declaration,
 					VariableOccurrence::Kind::Assignment,
-					variable.location
+					variable.debugData->location
 				);
 }
 

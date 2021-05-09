@@ -25,7 +25,7 @@ namespace solidity::frontend::test
 	do \
 	{ \
 		if (!(CONDITION)) \
-			BOOST_THROW_EXCEPTION(runtime_error(DESCRIPTION)); \
+			BOOST_THROW_EXCEPTION(std::runtime_error(DESCRIPTION)); \
 	} \
 	while (false)
 

@@ -10,3 +10,4 @@ contract C
     function f() m public payable {
     }
 }
+// ----

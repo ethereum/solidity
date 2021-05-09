@@ -28,7 +28,7 @@ you receive the funds of the person who is now the richest.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity ^0.8.4;
 
     contract WithdrawalContract {
         address public richest;
@@ -36,13 +36,17 @@ you receive the funds of the person who is now the richest.
 
         mapping (address => uint) pendingWithdrawals;
 
+        /// The amount of Ether sent was not higher than
+        /// the currently highest amount.
+        error NotEnoughEther();
+
         constructor() payable {
             richest = msg.sender;
             mostSent = msg.value;
         }
 
         function becomeRichest() public payable {
-            require(msg.value > mostSent, "Not enough money sent.");
+            if (msg.value <= mostSent) revert NotEnoughEther();
             pendingWithdrawals[richest] += msg.value;
             richest = msg.sender;
             mostSent = msg.value;
@@ -53,7 +57,7 @@ you receive the funds of the person who is now the richest.
             // Remember to zero the pending refund before
             // sending to prevent re-entrancy attacks
             pendingWithdrawals[msg.sender] = 0;
-            msg.sender.transfer(amount);
+            payable(msg.sender).transfer(amount);
         }
     }
 
@@ -62,22 +66,26 @@ This is as opposed to the more intuitive sending pattern:
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity ^0.7.0;
+    pragma solidity ^0.8.4;
 
     contract SendContract {
         address payable public richest;
         uint public mostSent;
 
+        /// The amount of Ether sent was not higher than
+        /// the currently highest amount.
+        error NotEnoughEther();
+
         constructor() payable {
-            richest = msg.sender;
+            richest = payable(msg.sender);
             mostSent = msg.value;
         }
 
         function becomeRichest() public payable {
-            require(msg.value > mostSent, "Not enough money sent.");
+            if (msg.value <= mostSent) revert NotEnoughEther();
             // This line can cause problems (explained below).
             richest.transfer(msg.value);
-            richest = msg.sender;
+            richest = payable(msg.sender);
             mostSent = msg.value;
         }
     }
@@ -124,7 +132,7 @@ restrictions highly readable.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity ^0.8.4;
 
     contract AccessRestriction {
         // These will be assigned at the construction
@@ -132,6 +140,21 @@ restrictions highly readable.
         // creating this contract.
         address public owner = msg.sender;
         uint public creationTime = block.timestamp;
+
+        // Now follows a list of errors that
+        // this contract can generate together
+        // with a textual explanation in special
+        // comments.
+
+        /// Sender not authorized for this
+        /// operation.
+        error Unauthorized();
+
+        /// Function called too early.
+        error TooEarly();
+
+        /// Not enough Ether sent with function call.
+        error NotEnoughEther();
 
         // Modifiers can be used to change
         // the body of a function.
@@ -141,10 +164,8 @@ restrictions highly readable.
         // a certain address.
         modifier onlyBy(address _account)
         {
-            require(
-                msg.sender == _account,
-                "Sender not authorized."
-            );
+            if (msg.sender != _account)
+                revert Unauthorized();
             // Do not forget the "_;"! It will
             // be replaced by the actual function
             // body when the modifier is used.
@@ -161,10 +182,8 @@ restrictions highly readable.
         }
 
         modifier onlyAfter(uint _time) {
-            require(
-                block.timestamp >= _time,
-                "Function called too early."
-            );
+            if (block.timestamp < _time)
+                revert TooEarly();
             _;
         }
 
@@ -186,13 +205,12 @@ restrictions highly readable.
         // This was dangerous before Solidity version 0.4.0,
         // where it was possible to skip the part after `_;`.
         modifier costs(uint _amount) {
-            require(
-                msg.value >= _amount,
-                "Not enough Ether provided."
-            );
+            if (msg.value < _amount)
+                revert NotEnoughEther();
+
             _;
             if (msg.value > _amount)
-                msg.sender.transfer(msg.value - _amount);
+                payable(msg.sender).transfer(msg.value - _amount);
         }
 
         function forceOwnerChange(address _newOwner)
@@ -202,7 +220,7 @@ restrictions highly readable.
         {
             owner = _newOwner;
             // just some example condition
-            if (uint(owner) & 0 == 1)
+            if (uint160(owner) & 0 == 1)
                 // This did not refund for Solidity
                 // before version 0.4.0.
                 return;
@@ -248,7 +266,7 @@ the modifier ``atStage`` ensures that the function can
 only be called at a certain stage.
 
 Automatic timed transitions
-are handled by the modifier ``timeTransitions``, which
+are handled by the modifier ``timedTransitions``, which
 should be used for all functions.
 
 .. note::
@@ -277,7 +295,7 @@ function finishes.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.22 <0.8.0;
+    pragma solidity ^0.8.4;
 
     contract StateMachine {
         enum Stages {
@@ -287,6 +305,8 @@ function finishes.
             AreWeDoneYet,
             Finished
         }
+        /// Function cannot be called at this time.
+        error FunctionInvalidAtThisStage();
 
         // This is the current stage.
         Stages public stage = Stages.AcceptingBlindedBids;
@@ -294,10 +314,8 @@ function finishes.
         uint public creationTime = block.timestamp;
 
         modifier atStage(Stages _stage) {
-            require(
-                stage == _stage,
-                "Function cannot be called at this time."
-            );
+            if (stage != _stage)
+                revert FunctionInvalidAtThisStage();
             _;
         }
 

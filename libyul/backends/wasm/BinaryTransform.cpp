@@ -26,9 +26,8 @@
 #include <libsolutil/Visitor.h>
 #include <libsolutil/LEB128.h>
 
-#include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/adaptor/map.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+#include <range/v3/view/map.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -107,33 +106,24 @@ bytes toBytes(Export _export)
 	return toBytes(uint8_t(_export));
 }
 
+// NOTE: This is a subset of WebAssembly opcodes.
+//       Those available as a builtin are listed further down.
 enum class Opcode: uint8_t
 {
-	Unreachable = 0x00,
-	Nop = 0x01,
 	Block = 0x02,
 	Loop = 0x03,
 	If = 0x04,
 	Else = 0x05,
-	Try = 0x06,
-	Catch = 0x07,
-	Throw = 0x08,
-	Rethrow = 0x09,
-	BrOnExn = 0x0a,
 	End = 0x0b,
 	Br = 0x0c,
 	BrIf = 0x0d,
-	BrTable = 0x0e,
+	BrTable = 0x0e, // Not used yet.
 	Return = 0x0f,
 	Call = 0x10,
-	CallIndirect = 0x11,
-	ReturnCall = 0x12,
-	ReturnCallIndirect = 0x13,
-	Drop = 0x1a,
-	Select = 0x1b,
+	CallIndirect = 0x11, // Not used yet.
 	LocalGet = 0x20,
 	LocalSet = 0x21,
-	LocalTee = 0x22,
+	LocalTee = 0x22, // Not used yet.
 	GlobalGet = 0x23,
 	GlobalSet = 0x24,
 	I32Const = 0x41,
@@ -156,6 +146,12 @@ Opcode constOpcodeFor(ValueType _type)
 }
 
 static map<string, uint8_t> const builtins = {
+	{"unreachable", 0x00},
+	{"nop", 0x01},
+	{"i32.drop", 0x1a},
+	{"i64.drop", 0x1a},
+	{"i32.select", 0x1b},
+	{"i64.select", 0x1b},
 	{"i32.load", 0x28},
 	{"i64.load", 0x29},
 	{"i32.load8_s", 0x2c},
@@ -305,13 +301,23 @@ bytes BinaryTransform::run(Module const& _module)
 	ret += exportSection(functionIDs);
 
 	map<string, pair<size_t, size_t>> subModulePosAndSize;
-	for (auto const& sub: _module.subModules)
+	for (auto const& [name, module]: _module.subModules)
 	{
 		// TODO should we prefix and / or shorten the name?
-		bytes data = BinaryTransform::run(sub.second);
-		size_t length = data.size();
-		ret += customSection(sub.first, move(data));
-		subModulePosAndSize[sub.first] = {ret.size() - length, length};
+		bytes data = BinaryTransform::run(module);
+		size_t const length = data.size();
+		ret += customSection(name, move(data));
+		// Skip all the previous sections and the size field of this current custom section.
+		size_t const offset = ret.size() - length;
+		subModulePosAndSize[name] = {offset, length};
+	}
+	for (auto const& [name, data]: _module.customSections)
+	{
+		size_t const length = data.size();
+		ret += customSection(name, data);
+		// Skip all the previous sections and the size field of this current custom section.
+		size_t const offset = ret.size() - length;
+		subModulePosAndSize[name] = {offset, length};
 	}
 
 	BinaryTransform bt(
@@ -335,8 +341,9 @@ bytes BinaryTransform::operator()(Literal const& _literal)
 
 bytes BinaryTransform::operator()(StringLiteral const&)
 {
-	// TODO is this used?
-	yulAssert(false, "String literals not yet implemented");
+	// StringLiteral is a special AST element used for certain builtins.
+	// It is not mapped to actual WebAssembly, and should be processed in visit(BuiltinCall).
+	yulAssert(false, "");
 }
 
 bytes BinaryTransform::operator()(LocalVariable const& _variable)
@@ -356,38 +363,33 @@ bytes BinaryTransform::operator()(BuiltinCall const& _call)
 	if (_call.functionName == "dataoffset")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
+		// TODO: support the case where name refers to the current object
+		yulAssert(m_subModulePosAndSize.count(name), "");
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).first));
 	}
 	else if (_call.functionName == "datasize")
 	{
 		string name = get<StringLiteral>(_call.arguments.at(0)).value;
+		// TODO: support the case where name refers to the current object
+		yulAssert(m_subModulePosAndSize.count(name), "");
 		return toBytes(Opcode::I64Const) + lebEncodeSigned(static_cast<int64_t>(m_subModulePosAndSize.at(name).second));
 	}
 
+	yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
+	// NOTE: the dialect ensures we have the right amount of arguments
 	bytes args = visit(_call.arguments);
+	bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
+	if (
+		_call.functionName.find(".load") != string::npos ||
+		_call.functionName.find(".store") != string::npos
+	)
+		// Alignment hint and offset. Interpreters ignore the alignment. JITs/AOTs can take it
+		// into account to generate more efficient code but if the hint is invalid it could
+		// actually be more expensive. It's best to hint at 1-byte alignment if we don't plan
+		// to control the memory layout accordingly.
+		ret += bytes{{0, 0}}; // 2^0 == 1-byte alignment
 
-	if (_call.functionName == "unreachable")
-		return toBytes(Opcode::Unreachable);
-	else if (_call.functionName == "nop")
-		return toBytes(Opcode::Nop);
-	else if (_call.functionName == "i32.drop" || _call.functionName == "i64.drop")
-		return toBytes(Opcode::Drop);
-	else
-	{
-		yulAssert(builtins.count(_call.functionName), "Builtin " + _call.functionName + " not found");
-		bytes ret = move(args) + toBytes(builtins.at(_call.functionName));
-		if (
-			_call.functionName.find(".load") != string::npos ||
-			_call.functionName.find(".store") != string::npos
-		)
-			// Alignment hint and offset. Interpreters ignore the alignment. JITs/AOTs can take it
-			// into account to generate more efficient code but if the hint is invalid it could
-			// actually be more expensive. It's best to hint at 1-byte alignment if we don't plan
-			// to control the memory layout accordingly.
-			ret += bytes{{0, 0}}; // 2^0 == 1-byte alignment
-
-		return ret;
-	}
+	return ret;
 }
 
 bytes BinaryTransform::operator()(FunctionCall const& _call)
@@ -577,7 +579,7 @@ map<string, size_t> BinaryTransform::enumerateFunctionTypes(map<Type, vector<str
 {
 	map<string, size_t> functionTypes;
 	size_t typeID = 0;
-	for (vector<string> const& funNames: _typeToFunctionMap | boost::adaptors::map_values)
+	for (vector<string> const& funNames: _typeToFunctionMap | ranges::views::values)
 	{
 		for (string const& name: funNames)
 			functionTypes[name] = typeID;
@@ -591,7 +593,7 @@ bytes BinaryTransform::typeSection(map<BinaryTransform::Type, vector<string>> co
 {
 	bytes result;
 	size_t index = 0;
-	for (Type const& type: _typeToFunctionMap | boost::adaptors::map_keys)
+	for (Type const& type: _typeToFunctionMap | ranges::views::keys)
 	{
 		result += toBytes(ValueType::Function);
 		result += lebEncode(type.first.size()) + type.first;
@@ -659,9 +661,11 @@ bytes BinaryTransform::globalSection(vector<wasm::GlobalVariableDeclaration> con
 
 bytes BinaryTransform::exportSection(map<string, size_t> const& _functionIDs)
 {
-	bytes result = lebEncode(2);
+	bool hasMain = _functionIDs.count("main");
+	bytes result = lebEncode(hasMain ? 2 : 1);
 	result += encodeName("memory") + toBytes(Export::Memory) + lebEncode(0);
-	result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
+	if (hasMain)
+		result += encodeName("main") + toBytes(Export::Function) + lebEncode(_functionIDs.at("main"));
 	return makeSection(Section::EXPORT, move(result));
 }
 
@@ -690,7 +694,7 @@ bytes BinaryTransform::visit(vector<Expression> const& _expressions)
 bytes BinaryTransform::visitReversed(vector<Expression> const& _expressions)
 {
 	bytes result;
-	for (auto const& expr: _expressions | boost::adaptors::reversed)
+	for (auto const& expr: _expressions | ranges::views::reverse)
 		result += std::visit(*this, expr);
 	return result;
 }
@@ -699,7 +703,7 @@ bytes BinaryTransform::encodeLabelIdx(string const& _label) const
 {
 	yulAssert(!_label.empty(), "Empty label.");
 	size_t depth = 0;
-	for (string const& label: m_labels | boost::adaptors::reversed)
+	for (string const& label: m_labels | ranges::views::reverse)
 		if (label == _label)
 			return lebEncode(depth);
 		else

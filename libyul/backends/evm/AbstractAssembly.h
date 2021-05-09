@@ -23,11 +23,14 @@
 
 #pragma once
 
+#include <libyul/ASTForward.h>
+
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace solidity::langutil
 {
@@ -72,10 +75,13 @@ public:
 	/// Generate a new unique label.
 	virtual LabelID newLabelId() = 0;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.
-	virtual LabelID namedLabel(std::string const& _name) = 0;
+	virtual LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) = 0;
 	/// Append a reference to a to-be-linked symbol.
 	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;
+
+	/// Append raw bytes that stay untouched by the optimizer.
+	virtual void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) = 0;
 
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
@@ -87,20 +93,11 @@ public:
 	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0, JumpType _jumpType = JumpType::Ordinary) = 0;
 	/// Append a jump-to-if-immediate operation.
 	virtual void appendJumpToIf(LabelID _labelId, JumpType _jumpType = JumpType::Ordinary) = 0;
-	/// Start a subroutine identified by @a _labelId that takes @a _arguments
-	/// stack slots as arguments.
-	virtual void appendBeginsub(LabelID _labelId, int _arguments) = 0;
-	/// Call a subroutine identified by @a _labelId, taking @a _arguments from the
-	/// stack upon call and putting @a _returns arguments onto the stack upon return.
-	virtual void appendJumpsub(LabelID _labelId, int _arguments, int _returns) = 0;
-	/// Return from a subroutine.
-	/// @param _stackDiffAfter the stack adjustment after this instruction.
-	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
 
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;
 	/// Creates a new sub-assembly, which can be referenced using dataSize and dataOffset.
-	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly() = 0;
+	virtual std::pair<std::shared_ptr<AbstractAssembly>, SubID> createSubAssembly(std::string _name = "") = 0;
 	/// Appends the offset of the given sub-assembly or data.
 	virtual void appendDataOffset(std::vector<SubID> const& _subPath) = 0;
 	/// Appends the size of the given sub-assembly or data.

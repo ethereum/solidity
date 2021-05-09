@@ -65,13 +65,22 @@ int registerTests(
 	boost::filesystem::path const& _basepath,
 	boost::filesystem::path const& _path,
 	bool _enforceViaYul,
+	bool _enforceCompileToEwasm,
 	vector<string> const& _labels,
 	TestCase::TestCaseCreator _testCaseCreator
 )
 {
 	int numTestsAdded = 0;
 	fs::path fullpath = _basepath / _path;
-	TestCase::Config config{fullpath.string(), solidity::test::CommonOptions::get().evmVersion(), solidity::test::CommonOptions::get().vmPaths, _enforceViaYul};
+	TestCase::Config config{
+		fullpath.string(),
+		solidity::test::CommonOptions::get().evmVersion(),
+		solidity::test::CommonOptions::get().vmPaths,
+		_enforceViaYul,
+		_enforceCompileToEwasm,
+		solidity::test::CommonOptions::get().enforceGasTest,
+		solidity::test::CommonOptions::get().enforceGasTestMinValue,
+	};
 	if (fs::is_directory(fullpath))
 	{
 		test_suite* sub_suite = BOOST_TEST_SUITE(_path.filename().string());
@@ -79,11 +88,15 @@ int registerTests(
 			fs::directory_iterator(fullpath),
 			fs::directory_iterator()
 		))
-			if (fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
+			if (
+				solidity::test::isValidSemanticTestPath(entry) &&
+				(fs::is_directory(entry.path()) || TestCase::isTestFilename(entry.path().filename()))
+			)
 				numTestsAdded += registerTests(
 					*sub_suite,
 					_basepath, _path / entry.path().filename(),
 					_enforceViaYul,
+					_enforceCompileToEwasm,
 					_labels,
 					_testCaseCreator
 				);
@@ -148,6 +161,10 @@ void initializeOptions()
 }
 }
 
+// TODO: Prototype -- why isn't this declared in the boost headers?
+// TODO: replace this with a (global) fixture.
+test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] );
+
 test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 {
 	master_test_suite_t& master = framework::master_test_suite();
@@ -184,6 +201,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 			options.testPath / ts.path,
 			ts.subpath,
 			options.enforceViaYul,
+			options.enforceCompileToEwasm,
 			ts.labels,
 			ts.testCaseCreator
 		) > 0, std::string("no ") + ts.title + " tests found");

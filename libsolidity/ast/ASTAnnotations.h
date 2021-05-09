@@ -46,8 +46,10 @@ namespace solidity::frontend
 {
 
 class Type;
-using TypePointer = Type const*;
+class ArrayType;
 using namespace util;
+
+struct CallGraph;
 
 struct ASTAnnotation
 {
@@ -94,6 +96,8 @@ struct SourceUnitAnnotation: ASTAnnotation
 	SetOnce<std::map<ASTString, std::vector<Declaration const*>>> exportedSymbols;
 	/// Experimental features.
 	std::set<ExperimentalFeature> experimentalFeatures;
+	/// Using the new ABI coder. Set to `false` if using ABI coder v1.
+	SetOnce<bool> useABICoderV2;
 };
 
 struct ScopableAnnotation
@@ -154,12 +158,17 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, StructurallyDocu
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;
-	/// List of contracts this contract creates, i.e. which need to be compiled first.
-	/// Also includes all contracts from @a linearizedBaseContracts.
-	std::set<ContractDefinition const*> contractDependencies;
 	/// Mapping containing the nodes that define the arguments for base constructors.
 	/// These can either be inheritance specifiers or modifier invocations.
 	std::map<FunctionDefinition const*, ASTNode const*> baseConstructorArguments;
+	/// A graph with edges representing calls between functions that may happen during contract construction.
+	SetOnce<std::shared_ptr<CallGraph const>> creationCallGraph;
+	/// A graph with edges representing calls between functions that may happen in a deployed contract.
+	SetOnce<std::shared_ptr<CallGraph const>> deployedCallGraph;
+
+	/// List of contracts whose bytecode is referenced by this contract, e.g. through "new".
+	/// The Value represents the ast node that referenced the contract.
+	std::map<ContractDefinition const*, ASTNode const*, ASTCompareByID<ContractDefinition>> contractDependencies;
 };
 
 struct CallableDeclarationAnnotation: DeclarationAnnotation
@@ -176,6 +185,11 @@ struct EventDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDoc
 {
 };
 
+struct ErrorDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
+{
+};
+
+
 struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 };
@@ -183,7 +197,7 @@ struct ModifierDefinitionAnnotation: CallableDeclarationAnnotation, Structurally
 struct VariableDeclarationAnnotation: DeclarationAnnotation, StructurallyDocumentedAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
-	TypePointer type = nullptr;
+	Type const* type = nullptr;
 	/// The set of functions this (public state) variable overrides.
 	std::set<CallableDeclaration const*> baseFunctions;
 };
@@ -197,8 +211,8 @@ struct InlineAssemblyAnnotation: StatementAnnotation
 	struct ExternalIdentifierInfo
 	{
 		Declaration const* declaration = nullptr;
-		bool isSlot = false; ///< Whether the storage slot of a variable is queried.
-		bool isOffset = false; ///< Whether the intra-slot offset of a storage variable is queried.
+		/// Suffix used, one of "slot", "offset", "length" or empty.
+		std::string suffix;
 		size_t valueSize = size_t(-1);
 	};
 
@@ -230,19 +244,21 @@ struct TypeNameAnnotation: ASTAnnotation
 {
 	/// Type declared by this type name, i.e. type of a variable where this type name is used.
 	/// Set during reference resolution stage.
-	TypePointer type = nullptr;
+	Type const* type = nullptr;
 };
 
-struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
+struct IdentifierPathAnnotation: ASTAnnotation
 {
 	/// Referenced declaration, set during reference resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
+	/// What kind of lookup needs to be done (static, virtual, super) find the declaration.
+	SetOnce<VirtualLookup> requiredLookup;
 };
 
 struct ExpressionAnnotation: ASTAnnotation
 {
 	/// Inferred type of the expression.
-	TypePointer type = nullptr;
+	Type const* type = nullptr;
 	/// Whether the expression is a constant variable
 	SetOnce<bool> isConstant;
 	/// Whether the expression is pure, i.e. compile-time constant.
@@ -253,11 +269,21 @@ struct ExpressionAnnotation: ASTAnnotation
 	bool willBeWrittenTo = false;
 	/// Whether the expression is an lvalue that is only assigned.
 	/// Would be false for --, ++, delete, +=, -=, ....
-	SetOnce<bool> lValueOfOrdinaryAssignment;
+	/// Only relevant if isLvalue == true
+	bool lValueOfOrdinaryAssignment = false;
 
 	/// Types and - if given - names of arguments if the expr. is a function
 	/// that is called, used for overload resolution
 	std::optional<FuncCallArguments> arguments;
+
+	/// True if the expression consists solely of the name of the function and the function is called immediately
+	/// instead of being stored or processed. The name may be qualified with the name of a contract, library
+	/// module, etc., that clarifies the scope. For example: `m.L.f()`, where `m` is a module, `L` is a library
+	/// and `f` is a function is a direct call. This means that the function to be called is known at compilation
+	/// time and it's not necessary to rely on any runtime dispatch mechanism to resolve it.
+	/// Note that even the simplest expressions, like `(f)()`, result in an indirect call even if they consist of
+	/// values known at compilation time.
+	bool calledDirectly = false;
 };
 
 struct IdentifierAnnotation: ExpressionAnnotation
@@ -284,7 +310,7 @@ struct BinaryOperationAnnotation: ExpressionAnnotation
 {
 	/// The common type that is used for the operation, not necessarily the result type (which
 	/// e.g. for comparisons is bool).
-	TypePointer commonType = nullptr;
+	Type const* commonType = nullptr;
 };
 
 enum class FunctionCallKind

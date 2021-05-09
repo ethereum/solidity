@@ -30,7 +30,7 @@
 
 #include <libyul/CompilabilityChecker.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 using namespace std;
 using namespace solidity;
@@ -57,7 +57,7 @@ public:
 		for (auto const& codeCost: m_expressionCodeCost)
 		{
 			size_t numRef = m_numReferences[codeCost.first];
-			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references.forward[codeCost.first]));
+			cand.emplace(make_tuple(codeCost.second * numRef, codeCost.first, m_references[codeCost.first]));
 		}
 		return cand;
 	}

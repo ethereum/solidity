@@ -28,7 +28,7 @@ In the example below, ``y`` and ``z``, the operands of the addition,
 do not have the same type, but ``uint8`` can
 be implicitly converted to ``uint16`` and not vice-versa. Because of that,
 ``y`` is converted to the type of ``z`` before the addition is performed
-in the ``uint16`` type. The resulting type of the expression ``y + z`` is ``uint16`.
+in the ``uint16`` type. The resulting type of the expression ``y + z`` is ``uint16``.
 Because it is assigned to a variable of type ``uint32`` another implicit conversion
 is performed after the addition.
 
@@ -99,6 +99,27 @@ rules explicit::
     uint8 d = uint8(uint16(a)); // d will be 0x34
     uint8 e = uint8(bytes1(a)); // e will be 0x12
 
+``bytes`` arrays and ``bytes`` calldata slices can be converted explicitly to fixed bytes types (``bytes1``/.../``bytes32``).
+In case the array is longer than the target fixed bytes type, truncation at the end will happen.
+If the array is shorter than the target type, it will be padded with zeros at the end.
+
+::
+
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity ^0.8.5;
+
+    contract C {
+        bytes s = "abcdefgh";
+        function f(bytes calldata c, bytes memory m) public view returns (bytes16, bytes3) {
+            require(c.length == 16, "");
+            bytes16 b = bytes16(m);  // if length of m is greater than 16, truncation will happen
+            b = bytes16(s);  // padded on the right, so result is "abcdefgh\0\0\0\0\0\0\0\0"
+            bytes3 b1 = bytes3(s); // truncated, b1 equals to "abc"
+            b = bytes16(c[:8]);  // also padded with zeros
+            return (b, b1);
+        }
+    }
+
 .. _types-conversion-literals:
 
 Conversions between Literals and Elementary Types
@@ -113,6 +134,11 @@ that is large enough to represent it without truncation::
     uint8 a = 12; // fine
     uint32 b = 1234; // fine
     uint16 c = 0x123456; // fails, since it would have to truncate to 0x3456
+
+.. note::
+    Prior to version 0.8.0, any decimal or hexadecimal number literals could be explicitly
+    converted to an integer type. From 0.8.0, such explicit conversions are as strict as implicit
+    conversions, i.e., they are only allowed if the literal fits in the resulting range.
 
 Fixed-Size Byte Arrays
 ----------------------

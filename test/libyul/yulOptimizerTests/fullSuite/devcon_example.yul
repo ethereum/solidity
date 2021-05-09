@@ -14,6 +14,8 @@
         v := calldataload(add(data, mul(i, 0x20)))
     }
 }
+// ====
+// EVMVersion: >=istanbul
 // ----
 // step: fullSuite
 //
@@ -25,8 +27,7 @@
 //         let i := sum
 //         for { } lt(i, length) { i := add(i, 1) }
 //         {
-//             let _2 := 0x20
-//             sum := add(sum, calldataload(add(add(_1, mul(i, _2)), _2)))
+//             sum := add(sum, calldataload(add(add(_1, shl(5, i)), 0x20)))
 //         }
 //         sstore(0, sum)
 //     }

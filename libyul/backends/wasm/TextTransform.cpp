@@ -19,16 +19,20 @@
  * Component that transforms internal Wasm representation to text.
  */
 
+#include <libyul/backends/wasm/BinaryTransform.h>
 #include <libyul/backends/wasm/TextTransform.h>
 
 #include <libyul/Exceptions.h>
 
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
 #include <libsolutil/StringUtils.h>
 #include <libsolutil/Visitor.h>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/range/adaptor/transformed.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -39,16 +43,32 @@ using namespace solidity::util;
 string TextTransform::run(wasm::Module const& _module)
 {
 	string ret = "(module\n";
-	for (auto const& sub: _module.subModules)
+	for (auto const& [name, module]: _module.subModules)
 		ret +=
-			"    ;; sub-module \"" +
-			sub.first +
-			"\" will be encoded as custom section in binary here, but is skipped in text mode.\n";
+			"    ;; custom section for sub-module\n"
+			"    ;; The Keccak-256 hash of the text representation of \"" +
+			name +
+			"\": " +
+			toHex(keccak256(run(module))) +
+			"\n"
+			"    ;; (@custom \"" +
+			name +
+			"\" \"" +
+			toHex(BinaryTransform::run(module)) +
+			"\")\n";
+	for (auto const& [name, data]: _module.customSections)
+		ret +=
+			"    ;; custom section for data\n"
+			"    ;; (@custom \"" +
+			name +
+			"\" \"" +
+			toHex(data) +
+			"\")\n";
 	for (wasm::FunctionImport const& imp: _module.imports)
 	{
 		ret += "    (import \"" + imp.module + "\" \"" + imp.externalName + "\" (func $" + imp.internalName;
 		if (!imp.paramTypes.empty())
-			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | boost::adaptors::transformed(encodeType), " ", " ") + ")";
+			ret += " (param" + joinHumanReadablePrefixed(imp.paramTypes | ranges::views::transform(encodeType), " ", " ") + ")";
 		if (imp.returnType)
 			ret += " (result " + encodeType(*imp.returnType) + ")";
 		ret += "))\n";
@@ -56,8 +76,13 @@ string TextTransform::run(wasm::Module const& _module)
 
 	// allocate one 64k page of memory and make it available to the Ethereum client
 	ret += "    (memory $memory (export \"memory\") 1)\n";
-	// export the main function
-	ret += "    (export \"main\" (func $main))\n";
+	for (auto const& f: _module.functions)
+		if (f.name == "main")
+		{
+			// export the main function
+			ret += "    (export \"main\" (func $main))\n";
+			break;
+		}
 
 	for (auto const& g: _module.globals)
 		ret += "    (global $" + g.variableName + " (mut " + encodeType(g.type) + ") (" + encodeType(g.type) + ".const 0))\n";
@@ -77,6 +102,8 @@ string TextTransform::operator()(wasm::Literal const& _literal)
 
 string TextTransform::operator()(wasm::StringLiteral const& _literal)
 {
+	// StringLiteral is a special AST element used for certain builtins.
+	// The output of this will not be valid WebAssembly.
 	string quoted = boost::replace_all_copy(_literal.value, "\\", "\\\\");
 	boost::replace_all(quoted, "\"", "\\\"");
 	return "\"" + quoted + "\"";
@@ -96,8 +123,11 @@ string TextTransform::operator()(wasm::BuiltinCall const& _builtinCall)
 {
 	string args = joinTransformed(_builtinCall.arguments);
 	string funcName = _builtinCall.functionName;
+	// These are prefixed in the dialect, but are actually overloaded instructions in WebAssembly.
 	if (funcName == "i32.drop" || funcName == "i64.drop")
 		funcName = "drop";
+	else if (funcName == "i32.select" || funcName == "i64.select")
+		funcName = "select";
 	return "(" + funcName + (args.empty() ? "" : " " + args) + ")";
 }
 

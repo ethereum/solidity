@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract F {
 	uint a;
 	constructor() {
@@ -22,3 +21,6 @@ contract B is C {
 
 contract A is B {
 }
+// ====
+// SMTEngine: all
+// ----

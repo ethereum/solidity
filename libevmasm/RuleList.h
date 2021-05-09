@@ -57,6 +57,15 @@ template <class S> S shlWorkaround(S const& _x, unsigned _amount)
 	return u256((bigint(_x) << _amount) & u256(-1));
 }
 
+/// @returns k if _x == 2**k, nullopt otherwise
+inline std::optional<size_t> binaryLogarithm(u256 const& _x)
+{
+	if (_x == 0)
+		return std::nullopt;
+	size_t msb = boost::multiprecision::msb(_x);
+	return (u256(1) << msb) == _x ? std::make_optional(msb) : std::nullopt;
+}
+
 // simplificationRuleList below was split up into parts to prevent
 // stack overflows in the JavaScript optimizer for emscripten builds
 // that affected certain browser versions.
@@ -365,6 +374,11 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart6(
 		[=]() -> Pattern { return Builtins::EQ(X, Y); }
 	});
 
+	rules.push_back({
+		Builtins::ISZERO(Builtins::SUB(X, Y)),
+		[=]() -> Pattern { return Builtins::EQ(X, Y); }
+	});
+
 	return rules;
 }
 
@@ -502,6 +516,23 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart7(
 		});
 	}
 
+	// Combine alternating AND/OR/AND with constant,
+	// AND(OR(AND(X, A), Y), B) -> OR(AND(X, A & B), AND(Y, B))
+	// Many versions due to commutativity.
+	for (auto const& inner: {Builtins::AND(X, A), Builtins::AND(A, X)})
+		for (auto const& second: {Builtins::OR(inner, Y), Builtins::OR(Y, inner)})
+		{
+			// We might swap X and Y but this is not an issue anymore.
+			rules.push_back({
+				Builtins::AND(second, B),
+				[=]() -> Pattern { return Builtins::OR(Builtins::AND(X, A.d() & B.d()), Builtins::AND(Y, B)); }
+			});
+			rules.push_back({
+				Builtins::AND(B, second),
+				[=]() -> Pattern { return Builtins::OR(Builtins::AND(X, A.d() & B.d()), Builtins::AND(Y, B)); }
+			});
+		}
+
 	rules.push_back({
 		// MUL(X, SHL(Y, 1)) -> SHL(Y, X)
 		Builtins::MUL(X, Builtins::SHL(Y, Word(1))),
@@ -611,7 +642,7 @@ std::vector<SimplificationRule<Pattern>> simplificationRuleListPart8(
 template<class Pattern>
 std::vector<SimplificationRule<Pattern>> evmRuleList(
 	langutil::EVMVersion _evmVersion,
-	Pattern,
+	Pattern A,
 	Pattern,
 	Pattern,
 	Pattern,
@@ -639,10 +670,27 @@ std::vector<SimplificationRule<Pattern>> evmRuleList(
 		[=]() -> Pattern { return Word(1); }
 	);
 	if (_evmVersion.hasBitwiseShifting())
+	{
 		rules.emplace_back(
 			Builtins::EXP(2, X),
 			[=]() -> Pattern { return Builtins::SHL(X, 1); }
 		);
+		rules.emplace_back(
+			Builtins::MUL(A, X),
+			[=]() -> Pattern { return Builtins::SHL(u256(*binaryLogarithm(A.d())), X); },
+			[=] { return binaryLogarithm(A.d()).has_value(); }
+		);
+		rules.emplace_back(
+			Builtins::MUL(X, A),
+			[=]() -> Pattern { return Builtins::SHL(u256(*binaryLogarithm(A.d())), X); },
+			[=] { return binaryLogarithm(A.d()).has_value(); }
+		);
+		rules.emplace_back(
+			Builtins::DIV(X, A),
+			[=]() -> Pattern { return Builtins::SHR(u256(*binaryLogarithm(A.d())), X); },
+			[=] { return binaryLogarithm(A.d()).has_value(); }
+		);
+	}
 	rules.emplace_back(
 		Builtins::EXP(Word(-1), X),
 		[=]() -> Pattern

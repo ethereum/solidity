@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	enum D { Left, Right }
@@ -10,3 +8,6 @@ contract C
 		assert(d != _a);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

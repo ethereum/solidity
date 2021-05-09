@@ -35,7 +35,7 @@ struct ReturnInfo
 {
 	ReturnInfo(langutil::EVMVersion const& _evmVersion, FunctionType const& _functionType);
 
-	/// Vector of TypePointer, for each return variable. Dynamic types are already replaced if required.
+	/// Vector of Type const*, for each return variable. Dynamic types are already replaced if required.
 	TypePointers returnTypes = {};
 
 	/// Boolean, indicating whether or not return size is only known at runtime.

@@ -23,6 +23,7 @@
         17
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -40,6 +41,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "22:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -52,6 +54,7 @@
                 "id": 6,
                 "mutability": "mutable",
                 "name": "x",
+                "nameLocation": "67:1:1",
                 "nodeType": "VariableDeclaration",
                 "scope": 16,
                 "src": "24:44:1",
@@ -84,6 +87,7 @@
                         "id": 3,
                         "mutability": "mutable",
                         "name": "",
+                        "nameLocation": "-1:-1:-1",
                         "nodeType": "VariableDeclaration",
                         "scope": 5,
                         "src": "61:4:1",
@@ -136,6 +140,7 @@
                 "id": 13,
                 "mutability": "mutable",
                 "name": "",
+                "nameLocation": "-1:-1:-1",
                 "nodeType": "VariableDeclaration",
                 "scope": 16,
                 "src": "79:40:1",
@@ -168,6 +173,7 @@
                         "id": 10,
                         "mutability": "mutable",
                         "name": "",
+                        "nameLocation": "-1:-1:-1",
                         "nodeType": "VariableDeclaration",
                         "scope": 12,
                         "src": "113:4:1",
@@ -217,7 +223,8 @@
         }
       ],
       "scope": 18,
-      "src": "0:124:1"
+      "src": "0:124:1",
+      "usedErrors": []
     }
   ],
   "src": "0:125:1"

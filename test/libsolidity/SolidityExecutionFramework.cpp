@@ -25,6 +25,8 @@
 #include <iostream>
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <liblangutil/Exceptions.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 
 using namespace solidity;
 using namespace solidity::test;
@@ -34,10 +36,13 @@ using namespace std;
 
 bytes SolidityExecutionFramework::multiSourceCompileContract(
 	map<string, string> const& _sourceCode,
+	optional<string> const& _mainSourceName,
 	string const& _contractName,
 	map<string, Address> const& _libraryAddresses
 )
 {
+	if (_mainSourceName.has_value())
+		solAssert(_sourceCode.find(_mainSourceName.value()) != _sourceCode.end(), "");
 	map<string, string> sourcesWithPreamble = _sourceCode;
 	for (auto& entry: sourcesWithPreamble)
 		entry.second = addPreamble(entry.second);
@@ -60,13 +65,13 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			for (auto const& error: m_compiler.errors())
 				if (error->type() == langutil::Error::Type::CodeGenerationError)
 					BOOST_THROW_EXCEPTION(*error);
-		langutil::SourceReferenceFormatter formatter(std::cerr);
+		langutil::SourceReferenceFormatter formatter(std::cerr, true, false);
 
 		for (auto const& error: m_compiler.errors())
 			formatter.printErrorInformation(*error);
 		BOOST_ERROR("Compiling contract failed");
 	}
-	std::string contractName(_contractName.empty() ? m_compiler.lastContractName() : _contractName);
+	string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);
 	evmasm::LinkerObject obj;
 	if (m_compileViaYul)
 	{
@@ -96,7 +101,8 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 				try
 				{
 					asmStack.optimize();
-					obj = std::move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+					obj = move(*asmStack.assemble(yul::AssemblyStack::Machine::EVM).bytecode);
+					obj.link(_libraryAddresses);
 					break;
 				}
 				catch (...)
@@ -123,6 +129,7 @@ bytes SolidityExecutionFramework::compileContract(
 {
 	return multiSourceCompileContract(
 		{{"", _sourceCode}},
+		nullopt,
 		_contractName,
 		_libraryAddresses
 	);
@@ -132,10 +139,13 @@ string SolidityExecutionFramework::addPreamble(string const& _sourceCode)
 {
 	// Silence compiler version warning
 	string preamble = "pragma solidity >=0.0;\n";
+	if (_sourceCode.find("// SPDX-License-Identifier:") == string::npos)
+		preamble += "// SPDX-License-Identifier: unlicensed\n";
 	if (
-		solidity::test::CommonOptions::get().useABIEncoderV2 &&
-		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos
+		solidity::test::CommonOptions::get().useABIEncoderV1 &&
+		_sourceCode.find("pragma experimental ABIEncoderV2;") == string::npos &&
+		_sourceCode.find("pragma abicoder") == string::npos
 	)
-		preamble += "pragma experimental ABIEncoderV2;\n";
+		preamble += "pragma abicoder v1;\n";
 	return preamble + _sourceCode;
 }

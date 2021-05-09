@@ -6,20 +6,20 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *******************************************************/
 
-object "Arraysum_33" {
+object "Arraysum_34" {
     code {
         {
-            mstore(64, memoryguard(0x80))
+            mstore(64, 128)
             if callvalue() { revert(0, 0) }
-            let _1 := datasize("Arraysum_33_deployed")
-            codecopy(0, dataoffset("Arraysum_33_deployed"), _1)
-            return(0, _1)
+            let _1 := datasize("Arraysum_34_deployed")
+            codecopy(128, dataoffset("Arraysum_34_deployed"), _1)
+            return(128, _1)
         }
     }
-    object "Arraysum_33_deployed" {
+    object "Arraysum_34_deployed" {
         code {
             {
-                mstore(64, memoryguard(0x80))
+                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0
@@ -27,38 +27,37 @@ object "Arraysum_33" {
                     {
                         if callvalue() { revert(_1, _1) }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
-                        let vloc_sum := _1
-                        let vloc_i := _1
+                        let var_sum := _1
+                        let var_i := _1
                         let _2 := sload(_1)
                         for { }
-                        lt(vloc_i, _2)
+                        lt(var_i, _2)
                         {
-                            if gt(vloc_i, not(1)) { invalid() }
-                            vloc_i := add(vloc_i, 1)
+                            if eq(var_i, not(0)) { panic_error_0x11() }
+                            var_i := add(var_i, 1)
                         }
                         {
                             mstore(_1, _1)
-                            let _3 := sload(add(keccak256(_1, 0x20), vloc_i))
-                            if gt(vloc_sum, not(_3)) { invalid() }
-                            vloc_sum := add(vloc_sum, _3)
+                            let _3 := sload(add(18569430475105882587588266137607568536673111973893317399460219858819262702947, var_i))
+                            if gt(var_sum, not(_3)) { panic_error_0x11() }
+                            var_sum := add(var_sum, _3)
                         }
-                        let memPos := allocateMemory(_1)
-                        return(memPos, sub(abi_encode_uint(memPos, _1), memPos))
+                        let memPos := mload(64)
+                        return(memPos, sub(abi_encode_uint256(memPos, var_sum), memPos))
                     }
                 }
                 revert(0, 0)
             }
-            function abi_encode_uint(headStart, value0) -> tail
+            function abi_encode_uint256(headStart, value0) -> tail
             {
                 tail := add(headStart, 32)
                 mstore(headStart, value0)
             }
-            function allocateMemory(size) -> memPtr
+            function panic_error_0x11()
             {
-                memPtr := mload(64)
-                let newFreePtr := add(memPtr, size)
-                if or(gt(newFreePtr, 0xffffffffffffffff), lt(newFreePtr, memPtr)) { invalid() }
-                mstore(64, newFreePtr)
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x11)
+                revert(0, 0x24)
             }
         }
     }

@@ -35,6 +35,7 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <map>
 
 namespace solidity::evmasm
 {
@@ -44,10 +45,12 @@ using AssemblyPointer = std::shared_ptr<Assembly>;
 class Assembly
 {
 public:
+	explicit Assembly(std::string _name = std::string()):m_name(std::move(_name)) { }
+
 	AssemblyItem newTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { assertThrow(m_usedTags < 0xffffffff, AssemblyException, ""); return AssemblyItem(PushTag, m_usedTags++); }
 	/// Returns a tag identified by the given name. Creates it if it does not yet exist.
-	AssemblyItem namedTag(std::string const& _name);
+	AssemblyItem namedTag(std::string const& _name, size_t _params, size_t _returns, std::optional<uint64_t> _sourceID);
 	AssemblyItem newData(bytes const& _data) { util::h256 h(util::keccak256(util::asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	bytes const& data(util::h256 const& _i) const { return m_data.at(_i); }
 	AssemblyItem newSub(AssemblyPointer const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
@@ -70,6 +73,11 @@ public:
 	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
 	void appendImmutable(std::string const& _identifier) { append(newPushImmutable(_identifier)); }
 	void appendImmutableAssignment(std::string const& _identifier) { append(newImmutableAssignment(_identifier)); }
+
+	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables)
+	{
+		append(AssemblyItem(std::move(_data), _arguments, _returnVariables));
+	}
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
@@ -95,6 +103,7 @@ public:
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; assertThrow(m_deposit >= 0, InvalidDeposit, ""); }
+	std::string const& name() const { return m_name; }
 
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(langutil::SourceLocation const& _location) { m_currentSourceLocation = _location; }
@@ -106,6 +115,7 @@ public:
 	struct OptimiserSettings
 	{
 		bool isCreation = false;
+		bool runInliner = false;
 		bool runJumpdestRemover = false;
 		bool runPeephole = false;
 		bool runDeduplicate = false;
@@ -175,7 +185,16 @@ private:
 protected:
 	/// 0 is reserved for exception
 	unsigned m_usedTags = 1;
-	std::map<std::string, size_t> m_namedTags;
+
+	struct NamedTagInfo
+	{
+		size_t id;
+		std::optional<size_t> sourceID;
+		size_t params;
+		size_t returns;
+	};
+
+	std::map<std::string, NamedTagInfo> m_namedTags;
 	AssemblyItems m_items;
 	std::map<util::h256, bytes> m_data;
 	/// Data that is appended to the very end of the contract.
@@ -193,6 +212,9 @@ protected:
 	mutable std::vector<size_t> m_tagPositionsInBytecode;
 
 	int m_deposit = 0;
+	/// Internal name of the assembly object, only used with the Yul backend
+	/// currently
+	std::string m_name;
 
 	langutil::SourceLocation m_currentSourceLocation;
 public:

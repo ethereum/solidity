@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function test_addmod(uint x, uint y) public pure {
 		require(x % 13 == 0);
@@ -16,9 +14,6 @@ contract C {
 		assert(z == 0);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (158-174): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (178-192): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (309-325): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (329-343): CHC: Error trying to invoke SMT solver.
-// Warning 7812: (329-343): BMC: Assertion violation might happen here.

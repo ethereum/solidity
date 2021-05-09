@@ -31,6 +31,7 @@ struct IsolTestOptions: CommonOptions
 {
 	bool showHelp = false;
 	bool noColor = false;
+	bool acceptUpdates = false;
 	std::string testFilter = std::string{};
 
 	IsolTestOptions(std::string* _editor);

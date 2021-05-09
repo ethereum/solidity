@@ -16,6 +16,8 @@ contract C {
     return fu();
   }
 }
+// ====
+// compileViaYul: also
 // ----
 // library: L
 // f() -> 7, 8

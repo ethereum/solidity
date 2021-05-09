@@ -1,4 +1,4 @@
-pragma solidity >=0.4.0 <0.8.0;
+pragma solidity >=0.4.0 <0.9.0;
 
 contract ERC20 {
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -99,6 +99,6 @@ contract ERC20 {
 // totalSupply() -> 20
 // transfer(address,uint256): 2, 5 -> true
 // decreaseAllowance(address,uint256): 2, 0 -> true
-// decreaseAllowance(address,uint256): 2, 1 -> FAILURE
+// decreaseAllowance(address,uint256): 2, 1 -> FAILURE, hex"4e487b71", 0x11
 // transfer(address,uint256): 2, 14 -> true
-// transfer(address,uint256): 2, 2 -> FAILURE
+// transfer(address,uint256): 2, 2 -> FAILURE, hex"4e487b71", 0x11

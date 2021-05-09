@@ -25,7 +25,7 @@
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/Exceptions.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -44,7 +44,7 @@ void MainFunction::operator()(Block& _block)
 
 	Block& block = std::get<Block>(_block.statements[0]);
 	FunctionDefinition main{
-		block.location,
+		block.debugData,
 		"main"_yulstring,
 		{},
 		{},

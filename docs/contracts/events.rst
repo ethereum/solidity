@@ -66,7 +66,7 @@ is that they are cheaper to deploy and call.
 ::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.21 <0.8.0;
+    pragma solidity >=0.4.21 <0.9.0;
 
     contract ClientReceipt {
         event Deposit(
@@ -93,10 +93,10 @@ The use in the JavaScript API is as follows:
     var ClientReceipt = web3.eth.contract(abi);
     var clientReceipt = ClientReceipt.at("0x1234...ab67" /* address */);
 
-    var event = clientReceipt.Deposit();
+    var depositEvent = clientReceipt.Deposit();
 
     // watch for changes
-    event.watch(function(error, result){
+    depositEvent.watch(function(error, result){
         // result contains non-indexed arguments and topics
         // given to the `Deposit` call.
         if (!error)
@@ -105,7 +105,7 @@ The use in the JavaScript API is as follows:
 
 
     // Or pass a callback to start watching immediately
-    var event = clientReceipt.Deposit(function(error, result) {
+    var depositEvent = clientReceipt.Deposit(function(error, result) {
         if (!error)
             console.log(result);
     });
@@ -125,37 +125,6 @@ The output of the above looks like the following (trimmed):
          "topics": ["0xfd4…b4ead7", "0x7f…1a91385"]
      }
   }
-
-.. index:: ! log
-
-Low-Level Interface to Logs
-===========================
-
-It is also possible to access the low-level interface to the logging
-mechanism via the functions ``log0``, ``log1``, ``log2``, ``log3`` and ``log4``.
-Each function ``logi`` takes ``i + 1`` parameter of type ``bytes32``, where the first
-argument will be used for the data part of the log and the others
-as topics. The event call above can be performed in the same way as
-
-::
-
-    // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.4.10 <0.8.0;
-
-    contract C {
-        function f() public payable {
-            uint256 _id = 0x420042;
-            log3(
-                bytes32(msg.value),
-                bytes32(0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20),
-                bytes32(uint256(msg.sender)),
-                bytes32(_id)
-            );
-        }
-    }
-
-where the long hexadecimal number is equal to
-``keccak256("Deposit(address,bytes32,uint256)")``, the signature of the event.
 
 Additional Resources for Understanding Events
 ==============================================

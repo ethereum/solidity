@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	uint x;
 	function f() internal {
@@ -16,9 +14,9 @@ contract C is A {
 		assert(x == 1);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (82-96): CHC: Assertion violation happens here.
-// Warning 6328: (148-162): CHC: Assertion violation happens here.
-// Warning 6328: (180-194): CHC: Assertion violation happens here.
-// Warning 4144: (100-103): BMC: Underflow (resulting value less than 0) happens here.
-// Warning 4144: (100-103): BMC: Underflow (resulting value less than 0) happens here.
+// Warning 6328: (49-63): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (115-129): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()
+// Warning 6328: (147-161): CHC: Assertion violation happens here.\nCounterexample:\nx = 0\n\nTransaction trace:\nC.constructor()

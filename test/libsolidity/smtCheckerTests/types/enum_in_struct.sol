@@ -1,5 +1,4 @@
-pragma experimental SMTChecker;
-pragma experimental ABIEncoderV2;
+pragma abicoder               v2;
 
 contract C
 {
@@ -10,4 +9,6 @@ contract C
 		assert(s.d == D.Left);
 	}
 }
+// ====
+// SMTEngine: all
 // ----

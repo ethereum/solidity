@@ -18,6 +18,8 @@
 
 #include <test/libyul/ObjectCompilerTest.h>
 
+#include <test/libsolidity/util/SoltestErrors.h>
+
 #include <libsolutil/AnsiColorized.h>
 
 #include <libyul/AssemblyStack.h>
@@ -43,7 +45,17 @@ ObjectCompilerTest::ObjectCompilerTest(string const& _filename):
 	TestCase(_filename)
 {
 	m_source = m_reader.source();
-	m_optimize = m_reader.boolSetting("optimize", false);
+	m_optimisationPreset = m_reader.enumSetting<OptimisationPreset>(
+		"optimizationPreset",
+		{
+			{"none", OptimisationPreset::None},
+			{"minimal", OptimisationPreset::Minimal},
+			{"standard", OptimisationPreset::Standard},
+			{"full", OptimisationPreset::Full},
+		},
+		"minimal"
+	);
+	m_wasm = m_reader.boolSetting("wasm", false);
 	m_expectation = m_reader.simpleExpectations();
 }
 
@@ -51,8 +63,8 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 {
 	AssemblyStack stack(
 		EVMVersion(),
-		AssemblyStack::Language::StrictAssembly,
-		m_optimize ? OptimiserSettings::full() : OptimiserSettings::minimal()
+		m_wasm ? AssemblyStack::Language::Ewasm : AssemblyStack::Language::StrictAssembly,
+		OptimiserSettings::preset(m_optimisationPreset)
 	);
 	if (!stack.parseAndAnalyze("source", m_source))
 	{
@@ -62,29 +74,40 @@ TestCase::TestResult ObjectCompilerTest::run(ostream& _stream, string const& _li
 	}
 	stack.optimize();
 
-	MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
-	solAssert(obj.bytecode, "");
-	solAssert(obj.sourceMappings, "");
+	if (m_wasm)
+	{
+		MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::Ewasm);
+		solAssert(obj.bytecode, "");
 
-	m_obtainedResult = "Assembly:\n" + obj.assembly;
-	if (obj.bytecode->bytecode.empty())
-		m_obtainedResult += "-- empty bytecode --\n";
+		m_obtainedResult = "Text:\n" + obj.assembly + "\n";
+		m_obtainedResult += "Binary:\n" + toHex(obj.bytecode->bytecode) + "\n";
+	}
 	else
-		m_obtainedResult +=
-			"Bytecode: " +
-			toHex(obj.bytecode->bytecode) +
-			"\nOpcodes: " +
-			boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode)) +
-			"\nSourceMappings:" +
-			(obj.sourceMappings->empty() ? "" : " " + *obj.sourceMappings) +
-			"\n";
+	{
+		MachineAssemblyObject obj = stack.assemble(AssemblyStack::Machine::EVM);
+		solAssert(obj.bytecode, "");
+		solAssert(obj.sourceMappings, "");
+
+		m_obtainedResult = "Assembly:\n" + obj.assembly;
+		if (obj.bytecode->bytecode.empty())
+			m_obtainedResult += "-- empty bytecode --\n";
+		else
+			m_obtainedResult +=
+				"Bytecode: " +
+				toHex(obj.bytecode->bytecode) +
+				"\nOpcodes: " +
+				boost::trim_copy(evmasm::disassemble(obj.bytecode->bytecode)) +
+				"\nSourceMappings:" +
+				(obj.sourceMappings->empty() ? "" : " " + *obj.sourceMappings) +
+				"\n";
+	}
 
 	return checkResult(_stream, _linePrefix, _formatted);
 }
 
 void ObjectCompilerTest::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(_stream);
+	SourceReferenceFormatter formatter(_stream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);

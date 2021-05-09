@@ -8,3 +8,4 @@ contract C {
     return f();
   }
 }
+// ----

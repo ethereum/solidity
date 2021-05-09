@@ -18,6 +18,8 @@ contract C {
         n[1][1].b = 10;
     }
 }
+// ====
+// compileViaYul: also
 // ----
 // m(uint256,uint256): 0, 0 -> 0x00, 0x00
 // m(uint256,uint256): 1, 0 -> 1, 2

@@ -48,11 +48,10 @@ namespace solidity::frontend
 class TypeProvider;
 class Type; // forward
 class FunctionType; // forward
-using TypePointer = Type const*;
 using FunctionTypePointer = FunctionType const*;
-using TypePointers = std::vector<TypePointer>;
+using TypePointers = std::vector<Type const*>;
 using rational = boost::rational<bigint>;
-using TypeResult = util::Result<TypePointer>;
+using TypeResult = util::Result<Type const*>;
 using BoolResult = util::Result<bool>;
 
 }
@@ -100,15 +99,20 @@ class MemberList
 public:
 	struct Member
 	{
-		Member(std::string _name, Type const* _type, Declaration const* _declaration = nullptr):
-			name(std::move(_name)),
+		/// Manual constructor for members that are not taken from a declaration.
+		Member(char const* _name, Type const* _type):
+			name(_name),
 			type(_type),
-			declaration(_declaration)
+			declaration(nullptr)
 		{
 		}
 
+		/// Constructs a Member with the name extracted from @p _declaration's name.
+		Member(Declaration const* _declaration, Type const* _type);
+		Member(Declaration const* _declaration, Type const* _type, std::string _name);
+
 		std::string name;
-		Type const* type;
+		Type const* type = nullptr;
 		Declaration const* declaration = nullptr;
 	};
 
@@ -117,9 +121,9 @@ public:
 	explicit MemberList(MemberMap _members): m_memberTypes(std::move(_members)) {}
 
 	void combine(MemberList const& _other);
-	TypePointer memberType(std::string const& _name) const
+	Type const* memberType(std::string const& _name) const
 	{
-		TypePointer type = nullptr;
+		Type const* type = nullptr;
 		for (auto const& it: m_memberTypes)
 			if (it.name == _name)
 			{
@@ -176,7 +180,7 @@ public:
 	};
 
 	/// @returns a pointer to _a or _b if the other is implicitly convertible to it or nullptr otherwise
-	static TypePointer commonType(Type const* _a, Type const* _b);
+	static Type const* commonType(Type const* _a, Type const* _b);
 
 	virtual Category category() const = 0;
 	/// @returns a valid solidity identifier such that two types should compare equal if and
@@ -287,13 +291,14 @@ public:
 	/// The complete layout of a type on the stack can be obtained from its stack items recursively as follows:
 	/// - Each unnamed stack item is untyped (its type is ``nullptr``) and contributes exactly one stack slot.
 	/// - Each named stack item is typed and contributes the stack slots given by the stack items of its type.
-	std::vector<std::tuple<std::string, TypePointer>> const& stackItems() const
+	std::vector<std::tuple<std::string, Type const*>> const& stackItems() const
 	{
 		if (!m_stackItems)
 			m_stackItems = makeStackItems();
 		return *m_stackItems;
 	}
 	/// Total number of stack slots occupied by this type. This is the sum of ``sizeOnStack`` of all ``stackItems()``.
+	// TODO: consider changing the return type to be size_t
 	unsigned sizeOnStack() const
 	{
 		if (!m_stackSize)
@@ -306,7 +311,7 @@ public:
 					++sizeOnStack;
 			m_stackSize = sizeOnStack;
 		}
-		return *m_stackSize;
+		return static_cast<unsigned>(*m_stackSize);
 	}
 	/// If it is possible to initialize such a value in memory by just writing zeros
 	/// of the size memoryHeadSize().
@@ -315,23 +320,16 @@ public:
 	/// This returns the corresponding IntegerType or FixedPointType for RationalNumberType
 	/// and the pointer type for storage reference types.
 	/// Might return a null pointer if there is no fitting type.
-	virtual TypePointer mobileType() const { return this; }
+	virtual Type const* mobileType() const { return this; }
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
 	virtual bool dataStoredIn(DataLocation) const { return false; }
-	/// @returns the type of a temporary during assignment to a variable of the given type.
-	/// Specifically, returns the requested itself if it can be dynamically allocated (or is a value type)
-	/// and the mobile type otherwise.
-	virtual TypePointer closestTemporaryType(Type const* _targetType) const
-	{
-		return _targetType->dataStoredIn(DataLocation::Storage) ? mobileType() : _targetType;
-	}
 
 	/// Returns the list of all members of this type. Default implementation: no members apart from bound.
 	/// @param _currentScope scope in which the members are accessed.
 	MemberList const& members(ASTNode const* _currentScope) const;
 	/// Convenience method, returns the type of the given named member or an empty pointer if no such member exists.
-	TypePointer memberType(std::string const& _name, ASTNode const* _currentScope = nullptr) const
+	Type const* memberType(std::string const& _name, ASTNode const* _currentScope = nullptr) const
 	{
 		return members(_currentScope).memberType(_name);
 	}
@@ -355,14 +353,14 @@ public:
 	/// @returns a (simpler) type that is encoded in the same way for external function calls.
 	/// This for example returns address for contract types.
 	/// If there is no such type, returns an empty shared pointer.
-	virtual TypePointer encodingType() const { return nullptr; }
+	virtual Type const* encodingType() const { return nullptr; }
 	/// @returns the encoding type used under the given circumstances for the type of an expression
 	/// when used for e.g. abi.encode(...) or the empty pointer if the object
 	/// cannot be encoded.
 	/// This is different from encodingType since it takes implicit conversions into account.
-	TypePointer fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const;
+	Type const* fullEncodingType(bool _inLibraryCall, bool _encoderV2, bool _packed) const;
 	/// @returns a (simpler) type that is used when decoding this type in calldata.
-	virtual TypePointer decodingType() const { return encodingType(); }
+	virtual Type const* decodingType() const { return encodingType(); }
 	/// @returns a type that will be used outside of Solidity for e.g. function signatures.
 	/// This for example returns address for contract types.
 	/// If there is no such type, returns an empty shared pointer.
@@ -386,7 +384,7 @@ protected:
 	}
 	/// Generates the stack items to be returned by ``stackItems()``. Defaults
 	/// to exactly one unnamed and untyped stack item referring to a single stack slot.
-	virtual std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const
+	virtual std::vector<std::tuple<std::string, Type const*>> makeStackItems() const
 	{
 		return {std::make_tuple(std::string(), nullptr)};
 	}
@@ -394,7 +392,7 @@ protected:
 
 	/// List of member types (parameterised by scape), will be lazy-initialized.
 	mutable std::map<ASTNode const*, std::unique_ptr<MemberList>> m_members;
-	mutable std::optional<std::vector<std::tuple<std::string, TypePointer>>> m_stackItems;
+	mutable std::optional<std::vector<std::tuple<std::string, Type const*>>> m_stackItems;
 	mutable std::optional<size_t> m_stackSize;
 };
 
@@ -429,7 +427,7 @@ public:
 
 	u256 literalValue(Literal const* _literal) const override;
 
-	TypePointer encodingType() const override { return this; }
+	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
 
 	StateMutability stateMutability(void) const { return m_stateMutability; }
@@ -469,7 +467,7 @@ public:
 
 	std::string toString(bool _short) const override;
 
-	TypePointer encodingType() const override { return this; }
+	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
 
 	unsigned numBits() const { return m_bits; }
@@ -516,7 +514,7 @@ public:
 
 	std::string toString(bool _short) const override;
 
-	TypePointer encodingType() const override { return this; }
+	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
 
 	/// Number of bits used for this type in total.
@@ -566,7 +564,12 @@ public:
 
 	std::string toString(bool _short) const override;
 	u256 literalValue(Literal const* _literal) const override;
-	TypePointer mobileType() const override;
+	Type const* mobileType() const override;
+
+	/// @returns the underlying raw literal value.
+	///
+	/// @see literalValue(Literal const*))
+	rational const& value() const noexcept { return m_value; }
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	IntegerType const* integerType() const;
@@ -592,7 +595,7 @@ private:
 
 	/// Bytes type to which the rational can be explicitly converted.
 	/// Empty for all rationals that are not directly parsed from hex literals.
-	TypePointer m_compatibleBytesType;
+	Type const* m_compatibleBytesType;
 
 	/// @returns true if the literal is a valid rational number.
 	static std::tuple<bool, rational> parseRational(std::string const& _value);
@@ -625,12 +628,12 @@ public:
 	bool canBeStored() const override { return false; }
 
 	std::string toString(bool) const override;
-	TypePointer mobileType() const override;
+	Type const* mobileType() const override;
 
 	std::string const& value() const { return m_value; }
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override { return {}; }
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
 private:
 	std::string m_value;
 };
@@ -660,7 +663,7 @@ public:
 
 	std::string toString(bool) const override { return "bytes" + util::toString(m_bytes); }
 	MemberList::MemberMap nativeMembers(ASTNode const*) const override;
-	TypePointer encodingType() const override { return this; }
+	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
 
 	unsigned numBytes() const { return m_bytes; }
@@ -688,7 +691,7 @@ public:
 
 	std::string toString(bool) const override { return "bool"; }
 	u256 literalValue(Literal const* _literal) const override;
-	TypePointer encodingType() const override { return this; }
+	Type const* encodingType() const override { return this; }
 	TypeResult interfaceType(bool) const override { return this; }
 };
 
@@ -745,7 +748,7 @@ public:
 	/// whereas isPointer is only shallowly changed - the deep copy is always a bound reference.
 	virtual std::unique_ptr<ReferenceType> copyForLocation(DataLocation _location, bool _isPointer) const = 0;
 
-	TypePointer mobileType() const override { return withLocation(m_location, true); }
+	Type const* mobileType() const override { return withLocation(m_location, true); }
 	bool dataStoredIn(DataLocation _location) const override { return m_location == _location; }
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 
@@ -758,6 +761,8 @@ public:
 	bool isPointer() const;
 
 	/// @returns true if this is valid to be stored in data location _loc
+	/// The function mostly checks sizes. For calldata, this should only be called
+	/// if the type has an interfaceType.
 	virtual BoolResult validForLocation(DataLocation _loc) const = 0;
 
 	bool operator==(ReferenceType const& _other) const
@@ -825,8 +830,8 @@ public:
 	std::string canonicalName() const override;
 	std::string signatureInExternalFunction(bool _structsByName) const override;
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
-	TypePointer encodingType() const override;
-	TypePointer decodingType() const override;
+	Type const* encodingType() const override;
+	Type const* decodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
 
 	BoolResult validForLocation(DataLocation _loc) const override;
@@ -852,7 +857,7 @@ public:
 	void clearCache() const override;
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 	std::vector<Type const*> decomposition() const override { return {m_baseType}; }
 
 private:
@@ -877,6 +882,7 @@ public:
 	Category category() const override { return Category::ArraySlice; }
 
 	BoolResult isImplicitlyConvertibleTo(Type const& _other) const override;
+	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	std::string richIdentifier() const override;
 	bool operator==(Type const& _other) const override;
 	unsigned calldataEncodedSize(bool) const override { solAssert(false, ""); }
@@ -884,7 +890,7 @@ public:
 	bool isDynamicallySized() const override { return true; }
 	bool isDynamicallyEncoded() const override { return true; }
 	std::string toString(bool _short) const override;
-	TypePointer mobileType() const override;
+	Type const* mobileType() const override;
 
 	BoolResult validForLocation(DataLocation _loc) const override { return m_arrayType.validForLocation(_loc); }
 
@@ -894,7 +900,7 @@ public:
 	std::unique_ptr<ReferenceType> copyForLocation(DataLocation, bool) const override { solAssert(false, ""); }
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 	std::vector<Type const*> decomposition() const override { return {m_arrayType.baseType()}; }
 
 private:
@@ -959,7 +965,7 @@ public:
 	/// @returns a list of all immutable variables (including inherited) of the contract.
 	std::vector<VariableDeclaration const*> immutableVariables() const;
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 private:
 	ContractDefinition const& m_contract;
 	/// If true, this is a special "super" type of m_contract containing only members that m_contract inherited
@@ -1021,7 +1027,7 @@ public:
 	void clearCache() const override;
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 	std::vector<Type const*> decomposition() const override;
 
 private:
@@ -1055,7 +1061,7 @@ public:
 	bool nameable() const override { return true; }
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
-	TypePointer encodingType() const override;
+	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override
 	{
 		return _inLibrary ? this : encodingType();
@@ -1077,7 +1083,7 @@ private:
 class TupleType: public CompositeType
 {
 public:
-	explicit TupleType(std::vector<TypePointer> _types = {}): m_components(std::move(_types)) {}
+	explicit TupleType(std::vector<Type const*> _types = {}): m_components(std::move(_types)) {}
 
 	Category category() const override { return Category::Tuple; }
 
@@ -1089,14 +1095,12 @@ public:
 	bool canBeStored() const override { return false; }
 	u256 storageSize() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }
-	TypePointer mobileType() const override;
-	/// Converts components to their temporary types and performs some wildcard matching.
-	TypePointer closestTemporaryType(Type const* _targetType) const override;
+	Type const* mobileType() const override;
 
-	std::vector<TypePointer> const& components() const { return m_components; }
+	std::vector<Type const*> const& components() const { return m_components; }
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 	std::vector<Type const*> decomposition() const override
 	{
 		// Currently calling TupleType::decomposition() is not expected, because we cannot declare a variable of a tuple type.
@@ -1108,7 +1112,7 @@ protected:
 	}
 
 private:
-	std::vector<TypePointer> const m_components;
+	std::vector<Type const*> const m_components;
 };
 
 /**
@@ -1138,12 +1142,8 @@ public:
 		ECRecover, ///< CALL to special contract for ecrecover
 		SHA256, ///< CALL to special contract for sha256
 		RIPEMD160, ///< CALL to special contract for ripemd160
-		Log0,
-		Log1,
-		Log2,
-		Log3,
-		Log4,
 		Event, ///< syntactic sugar for LOG*
+		Error, ///< creating an error instance in revert or require
 		SetGas, ///< modify the default gas value for the function call
 		SetValue, ///< modify the default value transfer for the function call
 		BlockHash, ///< BLOCKHASH
@@ -1151,7 +1151,7 @@ public:
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
 		ArrayPop, ///< .pop() from a dynamically sized array in storage
-		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
+		BytesConcat, ///< .concat() on bytes (type type)
 		ObjectCreation, ///< array creation using new
 		Assert, ///< assert()
 		Require, ///< require()
@@ -1175,6 +1175,7 @@ public:
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
+	explicit FunctionType(ErrorDefinition const& _error);
 	/// Creates the type of a function type name.
 	explicit FunctionType(FunctionTypeName const& _typeName);
 	/// Function type constructor to be used for a plain type (not derived from a declaration).
@@ -1244,6 +1245,7 @@ public:
 	static FunctionTypePointer newExpressionType(ContractDefinition const& _contract);
 
 	TypePointers parameterTypes() const;
+	TypePointers const& parameterTypesIncludingSelf() const;
 	std::vector<std::string> parameterNames() const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	/// @returns the list of return parameter types. All dynamically-sized types (this excludes
@@ -1270,11 +1272,11 @@ public:
 	bool nameable() const override;
 	bool hasSimpleZeroValueInMemory() const override { return false; }
 	MemberList::MemberMap nativeMembers(ASTNode const* _currentScope) const override;
-	TypePointer encodingType() const override;
+	Type const* encodingType() const override;
 	TypeResult interfaceType(bool _inLibrary) const override;
-	TypePointer mobileType() const override;
+	Type const* mobileType() const override;
 
-	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
+	/// @returns Type const* of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
 	/// current function.
 	/// @returns an empty shared pointer if one of the input/return parameters does not have an
@@ -1352,7 +1354,7 @@ public:
 
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
 	/// of the parameters to false.
-	TypePointer copyAndSetCallOptions(bool _setGas, bool _setValue, bool _setSalt) const;
+	Type const* copyAndSetCallOptions(bool _setGas, bool _setValue, bool _setSalt) const;
 
 	/// @returns a copy of this function type with the `bound` flag set to true.
 	/// Should only be called on library functions.
@@ -1366,7 +1368,7 @@ public:
 	FunctionTypePointer asExternallyCallableFunction(bool _inLibrary) const;
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
 
@@ -1419,8 +1421,8 @@ protected:
 	std::vector<Type const*> decomposition() const override { return {m_valueType}; }
 
 private:
-	TypePointer m_keyType;
-	TypePointer m_valueType;
+	Type const* m_keyType;
+	Type const* m_valueType;
 };
 
 /**
@@ -1447,9 +1449,9 @@ public:
 
 	BoolResult isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override;
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override;
 private:
-	TypePointer m_actualType;
+	Type const* m_actualType;
 };
 
 
@@ -1471,7 +1473,7 @@ public:
 	bool operator==(Type const& _other) const override;
 	std::string toString(bool _short) const override;
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override { return {}; }
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
 private:
 	TypePointers m_parameterTypes;
 };
@@ -1498,7 +1500,7 @@ public:
 	std::string toString(bool _short) const override;
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override { return {}; }
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
 private:
 	SourceUnit const& m_sourceUnit;
 };
@@ -1538,14 +1540,14 @@ public:
 
 	Kind kind() const { return m_kind; }
 
-	TypePointer typeArgument() const;
+	Type const* typeArgument() const;
 
 protected:
-	std::vector<std::tuple<std::string, TypePointer>> makeStackItems() const override { return {}; }
+	std::vector<std::tuple<std::string, Type const*>> makeStackItems() const override { return {}; }
 private:
 	Kind m_kind;
 	/// Contract type used for contract metadata magic.
-	TypePointer m_typeArgument;
+	Type const* m_typeArgument;
 };
 
 /**
@@ -1566,7 +1568,7 @@ public:
 	bool isValueType() const override { return true; }
 	bool hasSimpleZeroValueInMemory() const override { solAssert(false, ""); }
 	std::string toString(bool) const override { return "inaccessible dynamic type"; }
-	TypePointer decodingType() const override;
+	Type const* decodingType() const override;
 };
 
 }

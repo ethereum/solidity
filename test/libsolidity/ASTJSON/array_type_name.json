@@ -23,6 +23,7 @@
         4
       ],
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -31,6 +32,7 @@
           "id": 3,
           "mutability": "mutable",
           "name": "i",
+          "nameLocation": "20:1:1",
           "nodeType": "VariableDeclaration",
           "scope": 4,
           "src": "13:8:1",
@@ -68,7 +70,8 @@
         }
       ],
       "scope": 5,
-      "src": "0:24:1"
+      "src": "0:24:1",
+      "usedErrors": []
     }
   ],
   "src": "0:25:1"

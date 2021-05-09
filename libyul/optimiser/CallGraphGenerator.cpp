@@ -19,7 +19,7 @@
  * Specific AST walker that generates the call graph.
  */
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 
 #include <stack>

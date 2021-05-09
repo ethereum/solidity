@@ -32,11 +32,13 @@ add_executable(isoltest
 	../libsolidity/ASTJSONTest.cpp
 	../libsolidity/SMTCheckerTest.cpp
 	../libyul/Common.cpp
+	../libyul/EVMCodeTransformTest.cpp
 	../libyul/EwasmTranslationTest.cpp
 	../libyul/FunctionSideEffects.cpp
 	../libyul/ObjectCompilerTest.cpp
 	../libyul/SyntaxTest.cpp
 	../libyul/YulOptimizerTest.cpp
+	../libyul/YulOptimizerTestCommon.cpp
 	../libyul/YulInterpreterTest.cpp
 )
 target_link_libraries(isoltest PRIVATE evmc libsolc solidity yulInterpreter evmasm Boost::boost Boost::program_options Boost::unit_test_framework)

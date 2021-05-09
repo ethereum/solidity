@@ -1,9 +1,98 @@
 #include <test/tools/ossfuzz/protoToAbiV2.h>
 
+#include <boost/preprocessor.hpp>
+#include <regex>
+
+/// Convenience macros
+/// Returns a valid Solidity integer width w such that 8 <= w <= 256.
+#define INTWIDTH(z, n, _ununsed) BOOST_PP_MUL(BOOST_PP_ADD(n, 1), 8)
+/// Using declaration that aliases long boost multiprecision types with
+/// s(u)<width> where <width> is a valid Solidity integer width and "s"
+/// stands for "signed" and "u" for "unsigned".
+#define USINGDECL(z, n, sign) \
+	using BOOST_PP_CAT(BOOST_PP_IF(sign, s, u), INTWIDTH(z, n,)) =             \
+	boost::multiprecision::number<                                             \
+		boost::multiprecision::cpp_int_backend<                                \
+			INTWIDTH(z, n,),                                                   \
+			INTWIDTH(z, n,),                                                   \
+			BOOST_PP_IF(                                                       \
+				sign,                                                          \
+				boost::multiprecision::signed_magnitude,                       \
+				boost::multiprecision::unsigned_magnitude                      \
+			),                                                                 \
+			boost::multiprecision::unchecked,                                  \
+			void                                                               \
+		>                                                                      \
+	>;
+/// Instantiate the using declarations for signed and unsigned integer types.
+BOOST_PP_REPEAT(32, USINGDECL, 1)
+BOOST_PP_REPEAT(32, USINGDECL, 0)
+/// Case implementation that returns an integer value of the specified type.
+/// For signed integers, we divide by two because the range for boost multiprecision
+/// types is double that of Solidity integer types. Example, 8-bit signed boost
+/// number range is [-255, 255] but Solidity `int8` range is [-128, 127]
+#define CASEIMPL(z, n, sign)                                                   \
+	case INTWIDTH(z, n,):                                                      \
+		stream << BOOST_PP_IF(                                                 \
+			sign,                                                              \
+			integerValue<                                                      \
+				BOOST_PP_CAT(                                                  \
+					BOOST_PP_IF(sign, s, u),                                   \
+					INTWIDTH(z, n,)                                            \
+                )>(_counter) / 2,                                              \
+			integerValue<                                                      \
+				BOOST_PP_CAT(                                                  \
+					BOOST_PP_IF(sign, s, u),                                   \
+					INTWIDTH(z, n,)                                            \
+                )>(_counter)                                                   \
+        );                                                                     \
+		break;
+/// Switch implementation that instantiates case statements for (un)signed
+/// Solidity integer types.
+#define SWITCHIMPL(sign)                                                       \
+	ostringstream stream;                                                      \
+	switch (_intWidth)                                                         \
+	{                                                                          \
+	BOOST_PP_REPEAT(32, CASEIMPL, sign)	                                       \
+	}	                                                                       \
+	return stream.str();
+
 using namespace std;
-using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::test::abiv2fuzzer;
+
+namespace
+{
+template <typename V>
+static V integerValue(unsigned _counter)
+{
+	V value = V(
+		u256(solidity::util::keccak256(solidity::util::h256(_counter))) % u256(boost::math::tools::max_value<V>())
+	);
+	if (boost::multiprecision::is_signed_number<V>::value && value % 2 == 0)
+		return value * (-1);
+	else
+		return value;
+}
+
+static string signedIntegerValue(unsigned _counter, unsigned _intWidth)
+{
+	SWITCHIMPL(1)
+}
+
+static string unsignedIntegerValue(unsigned _counter, unsigned _intWidth)
+{
+	SWITCHIMPL(0)
+}
+
+static string integerValue(unsigned _counter, unsigned _intWidth, bool _signed)
+{
+	if (_signed)
+		return signedIntegerValue(_counter, _intWidth);
+	else
+		return unsignedIntegerValue(_counter, _intWidth);
+}
+}
 
 string ProtoConverter::getVarDecl(
 	string const& _type,
@@ -195,7 +284,10 @@ pair<string, string> ProtoConverter::varDecl(
 		typeStr,
 		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
 	);
-
+	appendToIsabelleTypeString(
+		tVisitor.isabelleTypeString(),
+		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
+	);
 	// Update dyn param only if necessary
 	if (tVisitor.isLastDynParamRightPadded())
 		m_isLastDynParamRightPadded = true;
@@ -224,6 +316,10 @@ pair<string, string> ProtoConverter::assignChecker(
 	m_counter += acVisitor.counted();
 
 	m_checks << assignCheckStrPair.second;
+	appendToIsabelleValueString(
+		acVisitor.isabelleValueString(),
+		((m_varCounter == 1) ? Delimiter::SKIP : Delimiter::ADD)
+	);
 
 	// State variables cannot be assigned in contract-scope
 	// Therefore, we buffer their assignments and
@@ -242,12 +338,12 @@ std::string ProtoConverter::equalityChecksAsString()
 	return m_checks.str();
 }
 
-std::string ProtoConverter::delimiterToString(Delimiter _delimiter)
+std::string ProtoConverter::delimiterToString(Delimiter _delimiter, bool _space)
 {
 	switch (_delimiter)
 	{
 	case Delimiter::ADD:
-		return ", ";
+		return _space ? ", " : ",";
 	case Delimiter::SKIP:
 		return "";
 	}
@@ -352,6 +448,22 @@ void ProtoConverter::appendTypedParamsPublic(
 		.render();
 }
 
+void ProtoConverter::appendToIsabelleTypeString(
+	std::string const& _typeString,
+	Delimiter _delimiter
+)
+{
+	m_isabelleTypeString << delimiterToString(_delimiter, false) << _typeString;
+}
+
+void ProtoConverter::appendToIsabelleValueString(
+	std::string const& _valueString,
+	Delimiter _delimiter
+)
+{
+	m_isabelleValueString << delimiterToString(_delimiter, false) << _valueString;
+}
+
 std::string ProtoConverter::typedParametersAsString(CalleeType _calleeType)
 {
 	switch (_calleeType)
@@ -418,7 +530,7 @@ string ProtoConverter::visit(TestFunction const& _x, string const& _storageVarDe
 		("functionDeclReturndata", functionDeclReturndata)
 		("storageVarDefs", _storageVarDefs)
 		("localVarDefs", localVarDefs)
-		("calldataTestCode", testCallDataFunction(_x.invalid_encoding_length()))
+		("calldataTestCode", testCallDataFunction(static_cast<unsigned>(_x.invalid_encoding_length())))
 		("returndataTestCode", testReturnDataFunction())
 		("return_types", m_types.str())
 		("return_values", m_argsCoder.str())
@@ -628,6 +740,24 @@ pragma experimental ABIEncoderV2;)";
 		.render();
 }
 
+string ProtoConverter::isabelleTypeString() const
+{
+	string typeString = m_isabelleTypeString.str();
+	if (!typeString.empty())
+		return "(" + typeString + ")";
+	else
+		return typeString;
+}
+
+string ProtoConverter::isabelleValueString() const
+{
+	string valueString = m_isabelleValueString.str();
+	if (!valueString.empty())
+		return "(" + valueString + ")";
+	else
+		return valueString;
+}
+
 string ProtoConverter::contractToString(Contract const& _input)
 {
 	visit(_input);
@@ -635,27 +765,44 @@ string ProtoConverter::contractToString(Contract const& _input)
 }
 
 /// Type visitor
+void TypeVisitor::StructTupleString::addTypeStringToTuple(string& _typeString)
+{
+	index++;
+	if (index > 1)
+		stream << ",";
+	stream << _typeString;
+}
+
+void TypeVisitor::StructTupleString::addArrayBracketToType(string& _arrayBracket)
+{
+	stream << _arrayBracket;
+}
+
 string TypeVisitor::visit(BoolType const&)
 {
 	m_baseType = "bool";
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
 string TypeVisitor::visit(IntegerType const& _type)
 {
 	m_baseType = getIntTypeAsString(_type);
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
 string TypeVisitor::visit(FixedByteType const& _type)
 {
 	m_baseType = getFixedByteTypeAsString(_type);
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
-string TypeVisitor::visit(AddressType const& _type)
+string TypeVisitor::visit(AddressType const&)
 {
-	m_baseType = getAddressTypeAsString(_type);
+	m_baseType = "address";
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
@@ -666,12 +813,13 @@ string TypeVisitor::visit(ArrayType const& _type)
 
 	string baseType = visit(_type.t());
 	solAssert(!baseType.empty(), "");
-	string arrayBraces = _type.is_static() ?
+	string arrayBracket = _type.is_static() ?
 	                     string("[") +
 	                     to_string(getStaticArrayLengthFromFuzz(_type.length())) +
 	                     string("]") :
 	                     string("[]");
-	m_baseType += arrayBraces;
+	m_baseType += arrayBracket;
+	m_structTupleString.addArrayBracketToType(arrayBracket);
 
 	// If we don't know yet if the array will be dynamically encoded,
 	// check again. If we already know that it will be, there's no
@@ -679,13 +827,14 @@ string TypeVisitor::visit(ArrayType const& _type)
 	if (!m_isLastDynParamRightPadded)
 		m_isLastDynParamRightPadded = DynParamVisitor().visit(_type);
 
-	return baseType + arrayBraces;
+	return baseType + arrayBracket;
 }
 
-string TypeVisitor::visit(DynamicByteArrayType const& _type)
+string TypeVisitor::visit(DynamicByteArrayType const&)
 {
 	m_isLastDynParamRightPadded = true;
-	m_baseType = bytesArrayTypeAsString(_type);
+	m_baseType = "bytes";
+	m_structTupleString.addTypeStringToTuple(m_baseType);
 	return m_baseType;
 }
 
@@ -708,7 +857,8 @@ void TypeVisitor::structDefinition(StructType const& _type)
 		to_string(m_structCounter) +
 		" {"
 	);
-
+	// Start tuple of types with parenthesis
+	m_structTupleString.start();
 	// Increase indentation for struct fields
 	m_indentation++;
 	for (auto const& t: _type.t())
@@ -731,9 +881,13 @@ void TypeVisitor::structDefinition(StructType const& _type)
 				("member", "m" + to_string(m_structFieldCounter++))
 				.render()
 		);
+		string isabelleTypeStr = tVisitor.isabelleTypeString();
+		m_structTupleString.addTypeStringToTuple(isabelleTypeStr);
 	}
 	m_indentation--;
 	structDef += lineString("}");
+	// End tuple of types with parenthesis
+	m_structTupleString.end();
 	m_structCounter++;
 	m_structDef << structDef;
 	m_indentation = wasIndentation;
@@ -758,34 +912,62 @@ string TypeVisitor::visit(StructType const& _type)
 }
 
 /// AssignCheckVisitor implementation
+void AssignCheckVisitor::ValueStream::appendValue(string& _value)
+{
+	solAssert(!_value.empty(), "Abiv2 fuzzer: Empty value");
+	index++;
+	if (index > 1)
+		stream << ",";
+	stream << _value;
+}
+
 pair<string, string> AssignCheckVisitor::visit(BoolType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+		m_valueStream.appendValue(value);
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(IntegerType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+		m_valueStream.appendValue(value);
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(FixedByteType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(AddressType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleAddressValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, DataType::VALUE);
 }
 
 pair<string, string> AssignCheckVisitor::visit(DynamicByteArrayType const& _type)
 {
 	string value = ValueGetterVisitor(counter()).visit(_type);
-	DataType dataType = _type.type() == DynamicByteArrayType::BYTES ? DataType::BYTES :	DataType::STRING;
+	if (!m_forcedVisit)
+	{
+		string isabelleValue = ValueGetterVisitor{}.isabelleBytesValueAsString(value);
+		m_valueStream.appendValue(isabelleValue);
+	}
+	DataType dataType = DataType::BYTES;
 	return assignAndCheckStringPair(m_varName, m_paramName, value, value, dataType);
 }
 
@@ -849,6 +1031,8 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 	pair<string, string> assignCheckBuffer;
 	string wasVarName = m_varName;
 	string wasParamName = m_paramName;
+	if (!m_forcedVisit)
+		m_valueStream.startArray();
 	for (unsigned i = 0; i < length; i++)
 	{
 		m_varName = wasVarName + "[" + to_string(i) + "]";
@@ -859,12 +1043,18 @@ pair<string, string> AssignCheckVisitor::visit(ArrayType const& _type)
 		if (i < length - 1)
 			m_structCounter = wasStructCounter;
 	}
-
 	// Since struct visitor won't be called for zero-length
 	// arrays, struct counter will not get incremented. Therefore,
 	// we need to manually force a recursive struct visit.
 	if (length == 0 && TypeVisitor().arrayOfStruct(_type))
+	{
+		bool previousState = m_forcedVisit;
+		m_forcedVisit = true;
 		visit(_type.t());
+		m_forcedVisit = previousState;
+	}
+	if (!m_forcedVisit)
+		m_valueStream.endArray();
 
 	m_varName = wasVarName;
 	m_paramName = wasParamName;
@@ -890,6 +1080,8 @@ pair<string, string> AssignCheckVisitor::visit(StructType const& _type)
 	string wasVarName = m_varName;
 	string wasParamName = m_paramName;
 
+	if (!m_forcedVisit)
+		m_valueStream.startStruct();
 	for (auto const& t: _type.t())
 	{
 		m_varName = wasVarName + ".m" + to_string(i);
@@ -903,6 +1095,8 @@ pair<string, string> AssignCheckVisitor::visit(StructType const& _type)
 		assignCheckBuffer.second += assign.second;
 		i++;
 	}
+	if (!m_forcedVisit)
+		m_valueStream.endStruct();
 	m_varName = wasVarName;
 	m_paramName = wasParamName;
 	return assignCheckBuffer;
@@ -933,12 +1127,6 @@ string AssignCheckVisitor::checkString(string const& _ref, string const& _value,
 	string checkPred;
 	switch (_type)
 	{
-	case DataType::STRING:
-		checkPred = Whiskers(R"(!bytesCompare(bytes(<varName>), <value>))")
-			("varName", _ref)
-			("value", _value)
-			.render();
-		break;
 	case DataType::BYTES:
 		checkPred = Whiskers(R"(!bytesCompare(<varName>, <value>))")
 			("varName", _ref)
@@ -969,11 +1157,7 @@ string ValueGetterVisitor::visit(BoolType const&)
 
 string ValueGetterVisitor::visit(IntegerType const& _type)
 {
-	return integerValueAsString(
-		_type.is_signed(),
-		getIntWidth(_type),
-		counter()
-	);
+	return integerValue(counter(), getIntWidth(_type), _type.is_signed());
 }
 
 string ValueGetterVisitor::visit(FixedByteType const& _type)
@@ -989,54 +1173,12 @@ string ValueGetterVisitor::visit(AddressType const&)
 	return addressValueAsString(counter());
 }
 
-string ValueGetterVisitor::visit(DynamicByteArrayType const& _type)
+string ValueGetterVisitor::visit(DynamicByteArrayType const&)
 {
 	return bytesArrayValueAsString(
 		counter(),
-		getDataTypeOfDynBytesType(_type) == DataType::BYTES
+		true
 	);
-}
-
-std::string ValueGetterVisitor::integerValueAsString(bool _sign, unsigned _width, unsigned _counter)
-{
-	if (_sign)
-		return intValueAsString(_width, _counter);
-	else
-		return uintValueAsString(_width, _counter);
-}
-
-/* Input(s)
- *   - Unsigned integer to be hashed
- *   - Width of desired uint value
- * Processing
- *   - Take hash of first parameter and mask it with the max unsigned value for given bit width
- * Output
- *   - string representation of uint value
- */
-std::string ValueGetterVisitor::uintValueAsString(unsigned _width, unsigned _counter)
-{
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Unsigned integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, _width/4);
-}
-
-/* Input(s)
- *   - counter to be hashed to derive a value for Integer type
- *   - Width of desired int value
- * Processing
- *   - Take hash of first parameter and mask it with the max signed value for given bit width
- * Output
- *   - string representation of int value
- */
-std::string ValueGetterVisitor::intValueAsString(unsigned _width, unsigned _counter)
-{
-	solAssert(
-		(_width % 8 == 0),
-		"Proto ABIv2 Fuzzer: Signed integer width is not a multiple of 8"
-	);
-	return maskUnsignedIntToHex(_counter, ((_width/4) - 1));
 }
 
 std::string ValueGetterVisitor::croppedString(
@@ -1109,9 +1251,29 @@ std::string ValueGetterVisitor::fixedByteValueAsString(unsigned _width, unsigned
 
 std::string ValueGetterVisitor::addressValueAsString(unsigned _counter)
 {
-	return Whiskers(R"(address(<value>))")
-		("value", uintValueAsString(160, _counter))
-		.render();
+	return "address(" + maskUnsignedIntToHex(_counter, 40) + ")";
+}
+
+std::string ValueGetterVisitor::isabelleAddressValueAsString(std::string& _solAddressString)
+{
+	// Isabelle encoder expects address literal to be exactly
+	// 20 bytes and a hex string.
+	// Example: 0x0102030405060708090a0102030405060708090a
+	std::regex const addressPattern("address\\((.*)\\)");
+	std::smatch match;
+	solAssert(std::regex_match(_solAddressString, match, addressPattern), "Abiv2 fuzzer: Invalid address string");
+	std::string addressHex = match[1].str();
+	addressHex.erase(2, 24);
+	return addressHex;
+}
+
+std::string ValueGetterVisitor::isabelleBytesValueAsString(std::string& _solBytesString)
+{
+	std::regex const bytesPattern("hex\"(.*)\"");
+	std::smatch match;
+	solAssert(std::regex_match(_solBytesString, match, bytesPattern), "Abiv2 fuzzer: Invalid bytes string");
+	std::string bytesHex = match[1].str();
+	return "0x" + bytesHex;
 }
 
 std::string ValueGetterVisitor::variableLengthValueAsString(
@@ -1120,10 +1282,6 @@ std::string ValueGetterVisitor::variableLengthValueAsString(
 	bool _isHexLiteral
 )
 {
-	// TODO: Move this to caller
-//	solAssert(_numBytes >= 0 && _numBytes <= s_maxDynArrayLength,
-//	          "Proto ABIv2 fuzzer: Invalid hex length"
-//	);
 	if (_numBytes == 0)
 		return Whiskers(R"(<?isHex>hex</isHex>"")")
 			("isHex", _isHexLiteral)

@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 14,
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -31,6 +32,7 @@
           },
           "id": 6,
           "name": "M",
+          "nameLocation": "22:1:1",
           "nodeType": "ModifierDefinition",
           "parameters":
           {
@@ -43,6 +45,7 @@
                 "id": 2,
                 "mutability": "mutable",
                 "name": "i",
+                "nameLocation": "29:1:1",
                 "nodeType": "VariableDeclaration",
                 "src": "24:6:1",
                 "stateVariable": false,
@@ -96,16 +99,15 @@
               {
                 "id": 8,
                 "name": "M",
-                "nodeType": "Identifier",
-                "overloadedDeclarations": [],
-                "src": "52:1:1",
-                "typeDescriptions": {}
+                "nodeType": "IdentifierPath",
+                "src": "52:1:1"
               },
               "nodeType": "ModifierInvocation",
               "src": "52:4:1"
             }
           ],
           "name": "F",
+          "nameLocation": "48:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -127,7 +129,8 @@
           "visibility": "public"
         }
       ],
-      "src": "0:68:1"
+      "src": "0:68:1",
+      "usedErrors": []
     }
   ],
   "src": "0:69:1"

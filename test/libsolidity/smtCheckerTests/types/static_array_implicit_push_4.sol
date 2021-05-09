@@ -1,4 +1,3 @@
-pragma experimental SMTChecker;
 contract D {
 	int16[] inner;
 	int[][] data;
@@ -7,3 +6,6 @@ contract D {
 	}
 }
 
+// ====
+// SMTEngine: all
+// ----

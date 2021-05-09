@@ -62,6 +62,9 @@ public:
 		recorded_logs.clear();
 	}
 
+	/// @returns contents of storage at @param _addr.
+	std::map<evmc::bytes32, evmc::storage_value> const& get_address_storage(evmc::address const& _addr);
+
 	bool account_exists(evmc::address const& _addr) const noexcept final
 	{
 		return evmc::MockedHost::account_exists(_addr);
@@ -87,6 +90,9 @@ public:
 private:
 	evmc::address m_currentAddress = {};
 
+	/// Records calls made via @param _message.
+	void recordCalls(evmc_message const& _message) noexcept;
+
 	static evmc::result precompileECRecover(evmc_message const& _message) noexcept;
 	static evmc::result precompileSha256(evmc_message const& _message) noexcept;
 	static evmc::result precompileRipeMD160(evmc_message const& _message) noexcept;
@@ -107,5 +113,29 @@ private:
 	evmc_revision m_evmRevision;
 };
 
+class EVMHostPrinter
+{
+public:
+	/// Constructs a host printer object for state at @param _address.
+	explicit EVMHostPrinter(EVMHost& _host, evmc::address _address):
+		m_host(_host),
+		m_account(_address)
+	{}
+	/// @returns state at account maintained by host.
+	std::string state();
+private:
+	/// Outputs storage at account to stateStream.
+	void storage();
+	/// Outputs call records for account to stateStream.
+	void callRecords();
+	/// Outputs balance of account to stateStream.
+	void balance();
+	/// Outputs self-destruct record for account to stateStream.
+	void selfdestructRecords();
+
+	std::ostringstream m_stateStream;
+	EVMHost& m_host;
+	evmc::address m_account;
+};
 
 }

@@ -6,4 +6,3 @@ contract C {
   }
 }
 // ----
-// ParserError 3772: (67-76): Hex literals are not valid in this context.

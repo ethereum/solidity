@@ -6,4 +6,4 @@ contract C {
     }
 }
 // ----
-// TypeError 2370: (111-126): Call data elements cannot be accessed directly. Copy to a local variable first or use "calldataload" or "calldatacopy" with manually determined offsets and sizes.
+// TypeError 1397: (111-126): Call data elements cannot be accessed directly. Use ".offset" and ".length" to access the calldata offset and length of this array and then use "calldatacopy".

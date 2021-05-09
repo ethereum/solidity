@@ -11,6 +11,7 @@
       "contractKind": "contract",
       "id": 39,
       "name": "C",
+      "nameLocation": "9:1:1",
       "nodeType": "ContractDefinition",
       "nodes":
       [
@@ -19,6 +20,7 @@
           "id": 4,
           "mutability": "mutable",
           "name": "m",
+          "nameLocation": "60:1:1",
           "nodeType": "VariableDeclaration",
           "src": "17:44:1",
           "stateVariable": false,
@@ -70,6 +72,7 @@
                     "id": 12,
                     "mutability": "mutable",
                     "name": "a",
+                    "nameLocation": "160:1:1",
                     "nodeType": "VariableDeclaration",
                     "src": "144:17:1",
                     "stateVariable": false,
@@ -159,6 +162,7 @@
                     "id": 22,
                     "mutability": "mutable",
                     "name": "c",
+                    "nameLocation": "205:1:1",
                     "nodeType": "VariableDeclaration",
                     "src": "197:9:1",
                     "stateVariable": false,
@@ -296,6 +300,7 @@
           "kind": "function",
           "modifiers": [],
           "name": "f",
+          "nameLocation": "76:1:1",
           "nodeType": "FunctionDefinition",
           "parameters":
           {
@@ -308,6 +313,7 @@
                 "id": 6,
                 "mutability": "mutable",
                 "name": "arg",
+                "nameLocation": "94:3:1",
                 "nodeType": "VariableDeclaration",
                 "src": "78:19:1",
                 "stateVariable": false,
@@ -338,6 +344,7 @@
                 "id": 9,
                 "mutability": "mutable",
                 "name": "r",
+                "nameLocation": "131:1:1",
                 "nodeType": "VariableDeclaration",
                 "src": "115:17:1",
                 "stateVariable": false,
@@ -363,7 +370,8 @@
           "visibility": "public"
         }
       ],
-      "src": "0:258:1"
+      "src": "0:258:1",
+      "usedErrors": []
     }
   ],
   "src": "0:259:1"

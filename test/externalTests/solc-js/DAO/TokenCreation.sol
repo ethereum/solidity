@@ -124,7 +124,7 @@ override returns (bool success) {
         if (block.timestamp > closingTime && !isFueled) {
             // Get extraBalance - will only succeed when called for the first time
             if (address(extraBalance).balance >= extraBalance.accumulatedInput())
-                extraBalance.payOut(address(this), extraBalance.accumulatedInput());
+                extraBalance.payOut(payable(this), extraBalance.accumulatedInput());
 
             // Execute refund
             (bool success,) = msg.sender.call{value: weiGiven[msg.sender]}("");

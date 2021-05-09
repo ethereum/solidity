@@ -67,7 +67,7 @@ The following is the order of precedence for operators, listed in order of evalu
 | *15*       | Comma operator                      | ``,``                                      |
 +------------+-------------------------------------+--------------------------------------------+
 
-.. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
+.. index:: assert, block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, gas price, origin, revert, require, keccak256, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, codehash, send
 
 Global Variables
 ================
@@ -82,6 +82,9 @@ Global Variables
   the given arguments starting from the second and prepends the given four-byte selector
 - ``abi.encodeWithSignature(string memory signature, ...) returns (bytes memory)``: Equivalent
   to ``abi.encodeWithSelector(bytes4(keccak256(bytes(signature)), ...)```
+- ``bytes.concat(...) returns (bytes memory)``: :ref:`Concatenates variable number of
+  arguments to one byte array<bytes-concat>`
+- ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
@@ -89,10 +92,10 @@ Global Variables
 - ``block.timestamp`` (``uint``): current block timestamp
 - ``gasleft() returns (uint256)``: remaining gas
 - ``msg.data`` (``bytes``): complete calldata
-- ``msg.sender`` (``address payable``): sender of the message (current call)
+- ``msg.sender`` (``address``): sender of the message (current call)
 - ``msg.value`` (``uint``): number of wei sent with the message
 - ``tx.gasprice`` (``uint``): gas price of the transaction
-- ``tx.origin`` (``address payable``): sender of the transaction (full call chain)
+- ``tx.origin`` (``address``): sender of the transaction (full call chain)
 - ``assert(bool condition)``: abort execution and revert state changes if condition is ``false`` (use for internal error)
 - ``require(bool condition)``: abort execution and revert state changes if condition is ``false`` (use
   for malformed input or error in external component)
@@ -114,6 +117,8 @@ Global Variables
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address payable recipient)``: destroy the current contract, sending its funds to the given address
 - ``<address>.balance`` (``uint256``): balance of the :ref:`address` in Wei
+- ``<address>.code`` (``bytes memory``): code at the :ref:`address` (can be empty)
+- ``<address>.codehash`` (``bytes32``): the codehash of the :ref:`address`
 - ``<address payable>.send(uint256 amount) returns (bool)``: send given amount of Wei to :ref:`address`,
   returns ``false`` on failure
 - ``<address payable>.transfer(uint256 amount)``: send given amount of Wei to :ref:`address`, throws on failure

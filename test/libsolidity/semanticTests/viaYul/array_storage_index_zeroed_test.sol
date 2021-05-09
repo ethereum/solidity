@@ -50,10 +50,22 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // test_zeroed_indicies(uint256): 1 ->
 // test_zeroed_indicies(uint256): 5 ->
+// gas irOptimized: 196818
+// gas legacy: 191267
+// gas legacyOptimized: 188486
 // test_zeroed_indicies(uint256): 10 ->
+// gas irOptimized: 286446
+// gas legacy: 276129
+// gas legacyOptimized: 271024
 // test_zeroed_indicies(uint256): 15 ->
+// gas irOptimized: 354256
+// gas legacy: 339254
+// gas legacyOptimized: 331904
 // test_zeroed_indicies(uint256): 0xFF ->
+// gas irOptimized: 8736366
+// gas legacy: 8477449
+// gas legacyOptimized: 8343774

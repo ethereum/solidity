@@ -65,7 +65,7 @@ contract ico is safeMath {
         icoExchangeRate = exchangeRate;
         icoExchangeRateSetBlock = block.number + exchangeRateDelay;
         icoEtcPriceAddr = priceSet;
-        owner = msg.sender;
+        owner = payable(msg.sender);
         if ( startBlockNum > 0 ) {
             require( startBlockNum >= block.number );
             startBlock = startBlockNum;
@@ -272,7 +272,7 @@ contract ico is safeMath {
         require( brought[msg.sender].eth > 0 );
         uint256 _val = brought[msg.sender].eth * 90 / 100;
         delete brought[msg.sender];
-        require( msg.sender.send(_val) );
+        require( payable(msg.sender).send(_val) );
     }
 
     receive () external payable {
@@ -281,7 +281,7 @@ contract ico is safeMath {
             If they call the contract without any function then this process will be taken place.
         */
         require( isICO() );
-        require( buy(msg.sender, address(0x00)) );
+        require( buy(payable(msg.sender), address(0x00)) );
     }
 
     function buy(address payable beneficiaryAddress, address affilateAddress) public payable returns (bool success) {
@@ -300,7 +300,7 @@ contract ico is safeMath {
             @affilateAddress        The address of the person who offered who will get the referral reward. It can not be equal with the beneficiaryAddress.
         */
         require( isICO() );
-        if ( beneficiaryAddress == address(0x00)) { beneficiaryAddress = msg.sender; }
+        if ( beneficiaryAddress == address(0x00)) { beneficiaryAddress = payable(msg.sender); }
         if ( beneficiaryAddress == affilateAddress ) {
             affilateAddress = address(0x00);
         }

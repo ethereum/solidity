@@ -16,45 +16,49 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
  * Formatting functions for errors referencing positions and locations in the source.
  */
 
 #pragma once
 
-#include <ostream>
-#include <sstream>
-#include <functional>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/SourceReferenceExtractor.h>
 
-namespace solidity::util
-{
-struct Exception; // forward
-}
+#include <libsolutil/AnsiColorized.h>
+
+#include <ostream>
+#include <sstream>
+#include <functional>
 
 namespace solidity::langutil
 {
 struct SourceLocation;
-class Scanner;
 
 class SourceReferenceFormatter
 {
 public:
-	explicit SourceReferenceFormatter(std::ostream& _stream):
-		m_stream(_stream)
+	SourceReferenceFormatter(std::ostream& _stream, bool _colored, bool _withErrorIds):
+		m_stream(_stream), m_colored(_colored), m_withErrorIds(_withErrorIds)
 	{}
 
-	virtual ~SourceReferenceFormatter() = default;
-
 	/// Prints source location if it is given.
-	virtual void printSourceLocation(SourceReference const& _ref);
-	virtual void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
+	void printSourceLocation(SourceReference const& _ref);
+	void printExceptionInformation(SourceReferenceExtractor::Message const& _msg);
+	void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
+	void printErrorInformation(Error const& _error);
 
-	virtual void printSourceLocation(SourceLocation const* _location);
-	virtual void printExceptionInformation(util::Exception const& _exception, std::string const& _category);
-	virtual void printErrorInformation(Error const& _error);
+	static std::string formatExceptionInformation(
+		util::Exception const& _exception,
+		std::string const& _name,
+		bool _colored = false,
+		bool _withErrorIds = false
+	)
+	{
+		std::ostringstream errorOutput;
+		SourceReferenceFormatter formatter(errorOutput, _colored, _withErrorIds);
+		formatter.printExceptionInformation(_exception, _name);
+		return errorOutput.str();
+	}
 
 	static std::string formatErrorInformation(Error const& _error)
 	{
@@ -64,23 +68,19 @@ public:
 		);
 	}
 
-	static std::string formatExceptionInformation(
-		util::Exception const& _exception,
-		std::string const& _name
-	)
-	{
-		std::ostringstream errorOutput;
+private:
+	util::AnsiColorized normalColored() const;
+	util::AnsiColorized frameColored() const;
+	util::AnsiColorized errorColored() const;
+	util::AnsiColorized messageColored() const;
+	util::AnsiColorized secondaryColored() const;
+	util::AnsiColorized highlightColored() const;
+	util::AnsiColorized diagColored() const;
 
-		SourceReferenceFormatter formatter(errorOutput);
-		formatter.printExceptionInformation(_exception, _name);
-		return errorOutput.str();
-	}
-
-protected:
-	/// Prints source name if location is given.
-	void printSourceName(SourceReference const& _ref);
-
+private:
 	std::ostream& m_stream;
+	bool m_colored;
+	bool m_withErrorIds;
 };
 
 }

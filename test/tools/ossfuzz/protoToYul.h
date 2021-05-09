@@ -39,7 +39,10 @@ namespace solidity::yul::test::yul_fuzzer
 class ProtoConverter
 {
 public:
-	ProtoConverter()
+	ProtoConverter(
+		bool _filterStatefulInstructions = false,
+		bool _filterUnboundedLoops = false
+	)
 	{
 		m_funcVars = std::vector<std::vector<std::vector<std::string>>>{};
 		m_globalVars = std::vector<std::vector<std::string>>{};
@@ -54,6 +57,8 @@ public:
 		m_objectId = 0;
 		m_isObject = false;
 		m_forInitScopeExtEnabled = true;
+		m_filterStatefulInstructions = _filterStatefulInstructions;
+		m_filterUnboundedLoops = _filterUnboundedLoops;
 	}
 	ProtoConverter(ProtoConverter const&) = delete;
 	ProtoConverter(ProtoConverter&&) = delete;
@@ -64,7 +69,6 @@ public:
 	{
 		return m_evmVersion;
 	}
-
 private:
 	void visit(BinaryOp const&);
 
@@ -98,7 +102,15 @@ private:
 	void visit(RetRevStmt const&);
 	void visit(SelfDestructStmt const&);
 	void visit(TerminatingStmt const&);
-	void visit(FunctionCall const&);
+	/// @param _f is the function call to be visited.
+	/// @param _name is the name of the function called.
+	/// @param _expression is a flag that is true if the function is called
+	/// as a single-value expression, false otherwise.
+	void visit(
+		FunctionCall const& _f,
+		std::string const& _name,
+		bool _expression = false
+	);
 	void visit(FunctionDef const&);
 	void visit(PopStmt const&);
 	void visit(LeaveStmt const&);
@@ -121,8 +133,6 @@ private:
 	void closeFunctionScope();
 	/// Adds @a _vars to current scope
 	void addVarsToScope(std::vector<std::string> const& _vars);
-	/// @returns number of variables that are in scope
-	unsigned numVarsInScope();
 
 	std::string createHex(std::string const& _hexBytes);
 
@@ -134,11 +144,11 @@ private:
 
 	/// Accepts an arbitrary string, removes all characters that are neither
 	/// alphabets nor digits from it and returns the said string.
-	std::string createAlphaNum(std::string const& _strBytes);
+	static std::string createAlphaNum(std::string const& _strBytes);
 
-	enum class NumFunctionReturns
+	enum class NumFunctionReturns: unsigned
 	{
-		None,
+		None = 0,
 		Single,
 		Multiple
 	};
@@ -154,7 +164,7 @@ private:
 	/// None -> "n"
 	/// Single -> "s"
 	/// Multiple -> "m"
-	std::string functionTypeToString(NumFunctionReturns _type);
+	static std::string functionTypeToString(NumFunctionReturns _type);
 
 	/// Builds a single vector containing variables declared in
 	/// function scope.
@@ -172,34 +182,6 @@ private:
 	/// in scope
 	bool varDeclAvailable();
 
-	/// Return true if a function call cannot be made, false otherwise.
-	/// @param _type is an enum denoting the type of function call. It
-	/// can be one of NONE, SINGLE, MULTIDECL, MULTIASSIGN.
-	///		NONE -> Function call does not return a value
-	///		SINGLE -> Function call returns a single value
-	///		MULTIDECL -> Function call returns more than one value
-	///		and it is used to create a multi declaration
-	///		statement
-	///		MULTIASSIGN -> Function call returns more than one value
-	///		and it is used to create a multi assignment
-	///		statement
-	/// @return True if the function call cannot be created for one of the
-	/// following reasons
-	//   - It is a SINGLE function call (we reserve SINGLE functions for
-	//   expressions)
-	//   - It is a MULTIASSIGN function call and we do not have any
-	//   variables available for assignment.
-	bool functionCallNotPossible(FunctionCall_Returns _type);
-
-	/// Checks if function call of type @a _type returns the correct number
-	/// of values.
-	/// @param _type Function call type of the function being checked
-	/// @param _numOutParams Number of values returned by the function
-	/// being checked
-	/// @return true if the function returns the correct number of values,
-	/// false otherwise
-	bool functionValid(FunctionCall_Returns _type, unsigned _numOutParams);
-
 	/// Converts protobuf function call to a Yul function call and appends
 	/// it to output stream.
 	/// @param _x Protobuf function call
@@ -209,7 +191,7 @@ private:
 	/// true. Default value for the flag is true.
 	void convertFunctionCall(
 		FunctionCall const& _x,
-		std::string _name,
+		std::string const& _name,
 		unsigned _numInParams,
 		bool _newLine = true
 	);
@@ -249,7 +231,7 @@ private:
 	/// @param _funcName Name of the function to be called
 	/// @param _numInParams Number of input parameters in function signature
 	/// @param _numOutParams Number of output parameters in function signature
-	void createFunctionCall(std::string _funcName, unsigned _numInParams, unsigned _numOutParams);
+	void createFunctionCall(std::string const& _funcName, unsigned _numInParams, unsigned _numOutParams);
 
 	/// Print the Yul syntax to pass input arguments to a function that has
 	/// @a _numInParams number of input parameters to the output stream.
@@ -289,7 +271,10 @@ private:
 
 	/// Returns an EVMVersion object corresponding to the protobuf
 	/// enum of type Program_Version
-	solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+	static solidity::langutil::EVMVersion evmVersionMapping(Program_Version const& _x);
+
+	/// @returns name of Yul function with return type of @param _numReturns.
+	std::optional<std::string> functionExists(NumFunctionReturns _numReturns);
 
 	/// Returns a monotonically increasing counter that starts from zero.
 	unsigned counter()
@@ -324,7 +309,7 @@ private:
 
 	/// Returns the object counter value corresponding to the object
 	/// being visited.
-	unsigned currentObjectId()
+	unsigned currentObjectId() const
 	{
 		return m_objectId - 1;
 	}
@@ -390,5 +375,11 @@ private:
 	bool m_forInitScopeExtEnabled;
 	/// Object that holds the targeted evm version specified by protobuf input
 	solidity::langutil::EVMVersion m_evmVersion;
+	/// Flag that, if set, stops the converter from generating state changing
+	/// opcodes.
+	bool m_filterStatefulInstructions;
+	/// Flat that, if set, stops the converter from generating potentially
+	/// unbounded loops.
+	bool m_filterUnboundedLoops;
 };
 }

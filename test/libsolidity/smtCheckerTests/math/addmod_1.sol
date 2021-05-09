@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() public pure {
 		assert(addmod(2**256 - 1, 10, 9) == 7);
@@ -11,11 +9,9 @@ contract C {
 		return addmod(x, y, k);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 1218: (83-108): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (141-166): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (76-114): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (170-184): CHC: Error trying to invoke SMT solver.
-// Warning 1218: (263-278): CHC: Error trying to invoke SMT solver.
-// Warning 3046: (141-166): BMC: Division by zero happens here.
-// Warning 3046: (263-278): BMC: Division by zero happens here.
+// Warning 4281: (108-133): CHC: Division by zero happens here.\nCounterexample:\n\ny = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (137-151): CHC: Assertion violation happens here.\nCounterexample:\n\ny = 0\nx = 0\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 4281: (230-245): CHC: Division by zero happens here.\nCounterexample:\n\nx = 0\ny = 0\nk = 0\n = 0\n\nTransaction trace:\nC.constructor()\nC.g(0, 0, 0)

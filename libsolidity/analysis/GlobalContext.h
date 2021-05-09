@@ -24,7 +24,6 @@
 #pragma once
 
 #include <libsolidity/ast/ASTForward.h>
-#include <boost/noncopyable.hpp>
 #include <map>
 #include <memory>
 #include <string>
@@ -41,9 +40,13 @@ class Type; // forward
  * @note must not be destroyed or moved during compilation as its objects can be referenced from
  * other objects.
  */
-class GlobalContext: private boost::noncopyable
+class GlobalContext
 {
 public:
+	/// Noncopyable.
+	GlobalContext(GlobalContext const&) = delete;
+	GlobalContext& operator=(GlobalContext const&) = delete;
+
 	GlobalContext();
 	void setCurrentContract(ContractDefinition const& _contract);
 	void resetCurrentContract() { m_currentContract = nullptr; }

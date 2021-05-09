@@ -35,6 +35,9 @@ namespace po = boost::program_options;
 namespace solidity::test
 {
 
+namespace
+{
+
 auto const description = R"(isoltest, tool for interactively managing test contracts.
 Usage: isoltest [Options]
 Interactively validates test contracts.
@@ -51,6 +54,8 @@ std::string editorPath()
 	return std::string{};
 }
 
+}
+
 IsolTestOptions::IsolTestOptions(std::string* _editor):
 	CommonOptions(description)
 {
@@ -58,6 +63,7 @@ IsolTestOptions::IsolTestOptions(std::string* _editor):
 		("editor", po::value<std::string>(_editor)->default_value(editorPath()), "Path to editor for opening test files.")
 		("help", po::bool_switch(&showHelp), "Show this help screen.")
 		("no-color", po::bool_switch(&noColor), "Don't use colors.")
+		("accept-updates", po::bool_switch(&acceptUpdates), "Automatically accept expectation updates.")
 		("test,t", po::value<std::string>(&testFilter)->default_value("*/*"), "Filters which test units to include.");
 }
 
@@ -71,6 +77,8 @@ bool IsolTestOptions::parse(int _argc, char const* const* _argv)
 		return false;
 	}
 	enforceViaYul = true;
+	enforceGasTest = (evmVersion() == langutil::EVMVersion{});
+	enforceGasTestMinValue = 100000;
 
 	return res;
 }

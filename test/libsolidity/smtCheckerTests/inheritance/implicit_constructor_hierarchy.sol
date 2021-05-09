@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract A {
 	uint x;
 	constructor (uint y) { assert(x == 0); x = y; }
@@ -15,4 +13,6 @@ contract C is B {
 	}
 }
 // ====
+// SMTEngine: all
 // SMTSolvers: z3
+// ----

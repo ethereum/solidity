@@ -1,0 +1,18 @@
+
+======= linking_strict_assembly/input.yul (EVM) =======
+
+Pretty printed source:
+object "a" {
+    code {
+        let addr := linkersymbol("contract/test.sol:L")
+    }
+}
+
+
+Binary representation:
+73123456789012345678901234567890123456789050
+
+Text representation:
+  linkerSymbol("f919ba91ac99f96129544b80b9516b27a80e376b9dc693819d0b18b7e0395612")
+    /* "linking_strict_assembly/input.yul":22:85   */
+  pop

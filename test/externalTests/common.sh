@@ -40,9 +40,10 @@ function verify_version_input
 
 function setup
 {
-    local branch="$1"
+    local soljson="$1"
+    local branch="$2"
 
-    setup_solcjs "$DIR" "$SOLJSON" "$branch" "solc"
+    setup_solcjs "$DIR" "$soljson" "$branch" "solc"
     cd solc
 }
 
@@ -80,22 +81,23 @@ function download_project
     printLog "Cloning $branch of $repo..."
     git clone --depth 1 "$repo" -b "$branch" "$dir/ext"
     cd ext
-    echo "Current commit hash: `git rev-parse HEAD`"
+    echo "Current commit hash: $(git rev-parse HEAD)"
 }
 
 function force_truffle_version
 {
-    local repo="$1"
+    local version="$1"
 
-    sed -i 's/"truffle":\s*".*"/"truffle": "^5.0.42"/g' package.json
+    sed -i 's/"truffle":\s*".*"/"truffle": "'"$version"'"/g' package.json
 }
 
 function truffle_setup
 {
-    local repo="$1"
-    local branch="$2"
+    local soljson="$1"
+    local repo="$2"
+    local branch="$3"
 
-    setup_solcjs "$DIR" "$SOLJSON" "master" "solc"
+    setup_solcjs "$DIR" "$soljson" "master" "solc"
     download_project "$repo" "$branch" "$DIR"
 }
 
@@ -104,32 +106,13 @@ function replace_version_pragmas
     # Replace fixed-version pragmas (part of Consensys best practice).
     # Include all directories to also cover node dependencies.
     printLog "Replacing fixed-version pragmas..."
-    find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -e 's/pragma solidity [\^0-9\.]*/pragma solidity >=0.0/'
+    find . test -name '*.sol' -type f -print0 | xargs -0 sed -i -E -e 's/pragma solidity [^;]+;/pragma solidity >=0.0;/'
 }
 
-function replace_libsolc_call
+function force_truffle_solc_modules
 {
-    # Change "compileStandard" to "compile" (needed for pre-5.x Truffle)
-    printLog "Replacing libsolc compile call in Truffle..."
-    sed -i s/solc.compileStandard/solc.compile/ "node_modules/truffle/build/cli.bundled.js"
-}
+    local soljson="$1"
 
-function find_truffle_config
-{
-    local config_file="truffle.js"
-    local alt_config_file="truffle-config.js"
-
-    if [ ! -f "$config_file" ] && [ ! -f "$alt_config_file" ]; then
-        printError "No matching Truffle config found."
-    fi
-    if [ ! -f "$config_file" ]; then
-        config_file=alt_config_file
-    fi
-    echo "$config_file"
-}
-
-function force_solc_truffle_modules
-{
     # Replace solc package by v0.5.0 and then overwrite with current version.
     printLog "Forcing solc version for all Truffle modules..."
     for d in node_modules node_modules/truffle/node_modules
@@ -139,57 +122,34 @@ function force_solc_truffle_modules
             cd $d
             rm -rf solc
             git clone --depth 1 -b master https://github.com/ethereum/solc-js.git solc
-            cp "$1" solc/soljson.js
+            cp "$soljson" solc/soljson.js
+
+            cd solc
+            npm install
         fi
     )
     done
 }
 
-function force_solc
+function force_truffle_compiler_settings
 {
     local config_file="$1"
-    local dir="$2"
-    local soljson="$3"
+    local solc_path="$2"
+    local level="$3"
+    local evm_version="$4"
 
-    force_solc_truffle_modules "$soljson"
-
-    printLog "Forcing solc version..."
-    cat >> "$config_file" <<EOF
-module.exports['compilers'] = {solc: {version: "$dir/solc"} };
-EOF
-}
-
-function force_solc_settings
-{
-    local config_file="$1"
-    local settings="$2"
-    local evmVersion="$3"
-
-    printLog "Forcing solc settings..."
+    printLog "Forcing Truffle compiler settings..."
     echo "-------------------------------------"
     echo "Config file: $config_file"
-    echo "Optimizer settings: $settings"
-    echo "EVM version: $evmVersion"
+    echo "Compiler path: $solc_path"
+    echo "Optimization level: $level"
+    echo "Optimizer settings: $(optimizer_settings_for_level "$level")"
+    echo "EVM version: $evm_version"
     echo "-------------------------------------"
 
     # Forcing the settings should always work by just overwriting the solc object. Forcing them by using a
     # dedicated settings objects should only be the fallback.
-    echo "module.exports['solc'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
-    echo "module.exports['compilers']['solc']['settings'] = { optimizer: $settings, evmVersion: \"$evmVersion\" };" >> "$config_file"
-}
-
-function force_abi_v2
-{
-    # Add "pragma experimental ABIEncoderV2" to all files.
-    printLog "Forcibly enabling ABIEncoderV2..."
-    find contracts test -name '*.sol' -type f -print0 | \
-    while IFS= read -r -d '' file
-    do
-        # Only add the pragma if it is not already there.
-        if grep -q -v 'pragma experimental ABIEncoderV2' "$file"; then
-            sed -i -e '1 i pragma experimental ABIEncoderV2;' "$file"
-        fi
-    done
+    echo "module.exports['compilers'] = $(truffle_compiler_settings "$solc_path" "$level" "$evm_version");" >> "$config_file"
 }
 
 function verify_compiler_version
@@ -207,11 +167,13 @@ function clean
 
 function run_install
 {
-    local init_fn="$1"
+    local soljson="$1"
+    local init_fn="$2"
     printLog "Running install function..."
 
     replace_version_pragmas
-    force_solc "$CONFIG" "$DIR" "$SOLJSON"
+    force_truffle_solc_modules "$soljson"
+    force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$OPTIMIZER_LEVEL" istanbul
 
     $init_fn
 }
@@ -230,37 +192,49 @@ function run_test
     $test_fn
 }
 
+function optimizer_settings_for_level {
+    local level="$1"
+
+    case "$level" in
+        1) echo "{enabled: false}" ;;
+        2) echo "{enabled: true}" ;;
+        3) echo "{enabled: true, details: {yul: true}}" ;;
+        *)
+            printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
+            exit 1
+            ;;
+    esac
+}
+
+function truffle_compiler_settings {
+    local solc_path="$1"
+    local level="$2"
+    local evm_version="$3"
+
+    echo "{"
+    echo "    solc: {"
+    echo "        version: \"${solc_path}\","
+    echo "        settings: {"
+    echo "            optimizer: $(optimizer_settings_for_level "$level"),"
+    echo "            evmVersion: \"${evm_version}\""
+    echo "        }"
+    echo "    }"
+    echo "}"
+}
+
 function truffle_run_test
 {
-    local compile_fn="$1"
-    local test_fn="$2"
+    local soljson="$1"
+    local compile_fn="$2"
+    local test_fn="$3"
 
     replace_version_pragmas
-    force_solc "$CONFIG" "$DIR" "$SOLJSON"
+    force_truffle_solc_modules "$soljson"
 
-    printLog "Checking optimizer level..."
-    if [ -z "$OPTIMIZER_LEVEL" ]; then
-        printError "Optimizer level not found. Please define OPTIMIZER_LEVEL=[1, 2, 3]"
-        exit 1
-    fi
-    if [[ "$OPTIMIZER_LEVEL" == 1 ]]; then
-        declare -a optimizer_settings=("{ enabled: false }" "{ enabled: true }" "{ enabled: true, details: { yul: true } }")
-    fi
-    if [[ "$OPTIMIZER_LEVEL" == 2 ]]; then
-        declare -a optimizer_settings=("{ enabled: true }" "{ enabled: true, details: { yul: true } }")
-    fi
-    if [[ "$OPTIMIZER_LEVEL" == 3 ]]; then
-        declare -a optimizer_settings=("{ enabled: true, details: { yul: true } }")
-    fi
-
-    for optimize in "${optimizer_settings[@]}"
+    for level in $(seq "$OPTIMIZER_LEVEL" 3)
     do
         clean
-        force_solc_settings "$CONFIG" "$optimize" "istanbul"
-        # Force ABIEncoderV2 in the last step. Has to be the last because code is modified.
-        if [ "$FORCE_ABIv2" = true ]; then
-            [[ "$optimize" =~ yul ]] && force_abi_v2
-        fi
+        force_truffle_compiler_settings "$CONFIG" "${DIR}/solc" "$level" istanbul
 
         printLog "Running compile function..."
         $compile_fn

@@ -21,7 +21,7 @@
 
 #include <libyul/Utilities.h>
 
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
@@ -49,7 +49,7 @@ string solidity::yul::reindent(string const& _code)
 		auto const e = i == _s.npos ? end(_s) : next(begin(_s), static_cast<ptrdiff_t>(i));
 		auto const opening = count_if(begin(_s), e, [](auto ch) { return ch == '{' || ch == '('; });
 		auto const closing = count_if(begin(_s), e, [](auto ch) { return ch == '}' || ch == ')'; });
-		return opening - closing;
+		return int(opening - closing);
 	};
 
 	vector<string> lines;

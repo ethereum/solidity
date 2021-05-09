@@ -25,9 +25,10 @@
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolutil/FunctionSelector.h>
 #include <liblangutil/ErrorReporter.h>
-#include <boost/range/adaptor/reversed.hpp>
 
+#include <range/v3/view/reverse.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -238,7 +239,7 @@ void ContractLevelChecker::checkAbstractDefinitions(ContractDefinition const& _c
 
 	// Search from base to derived, collect all functions and modifiers and
 	// update proxies.
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 	{
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
@@ -301,7 +302,7 @@ void ContractLevelChecker::checkBaseConstructorArguments(ContractDefinition cons
 		if (FunctionDefinition const* constructor = contract->constructor())
 			for (auto const& modifier: constructor->modifiers())
 				if (auto baseContract = dynamic_cast<ContractDefinition const*>(
-					modifier->name()->annotation().referencedDeclaration
+					modifier->name().annotation().referencedDeclaration
 				))
 				{
 					if (modifier->arguments())
@@ -426,7 +427,7 @@ void ContractLevelChecker::checkHashCollisions(ContractDefinition const& _contra
 	{
 		util::FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
-			m_errorReporter.typeError(
+			m_errorReporter.fatalTypeError(
 				1860_error,
 				_contract.location(),
 				string("Function signature hash collision for ") + it.second->externalSignature()
@@ -450,7 +451,7 @@ void ContractLevelChecker::checkLibraryRequirements(ContractDefinition const& _c
 
 void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _contract)
 {
-	if (_contract.sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+	if (*_contract.sourceUnit().annotation().useABICoderV2)
 		return;
 
 	if (_contract.isLibrary())
@@ -469,12 +470,12 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 	{
 		solAssert(func.second->hasDeclaration(), "Function has no declaration?!");
 
-		if (!func.second->declaration().sourceUnit().annotation().experimentalFeatures.count(ExperimentalFeature::ABIEncoderV2))
+		if (!*func.second->declaration().sourceUnit().annotation().useABICoderV2)
 			continue;
 
 		auto const& currentLoc = func.second->declaration().location();
 
-		for (TypePointer const& paramType: func.second->parameterTypes() + func.second->parameterTypes())
+		for (Type const* paramType: func.second->parameterTypes() + func.second->returnParameterTypes())
 			if (!TypeChecker::typeSupportedByOldABIEncoder(*paramType, false))
 			{
 				errors.append("Type only supported by ABIEncoderV2", currentLoc);
@@ -489,9 +490,9 @@ void ContractLevelChecker::checkBaseABICompatibility(ContractDefinition const& _
 			errors,
 			std::string("Contract \"") +
 			_contract.name() +
-			"\" does not use ABIEncoderV2 but wants to inherit from a contract " +
+			"\" does not use ABI coder v2 but wants to inherit from a contract " +
 			"which uses types that require it. " +
-			"Use \"pragma experimental ABIEncoderV2;\" for the inheriting contract as well to enable the feature."
+			"Use \"pragma abicoder v2;\" for the inheriting contract as well to enable the feature."
 		);
 
 }
@@ -511,7 +512,7 @@ void ContractLevelChecker::checkPayableFallbackWithoutReceive(ContractDefinition
 void ContractLevelChecker::checkStorageSize(ContractDefinition const& _contract)
 {
 	bigint size = 0;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
+	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts | ranges::views::reverse)
 		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!(variable->isConstant() || variable->immutable()))
 			{

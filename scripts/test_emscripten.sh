@@ -5,7 +5,7 @@
 #
 # The documentation for solidity is hosted at:
 #
-#     https://solidity.readthedocs.org
+#     https://docs.soliditylang.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of solidity.
@@ -34,7 +34,7 @@ else
 	BUILD_DIR="$1"
 fi
 
-REPO_ROOT=$(cd $(dirname "$0")/.. && pwd)
+REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOLJSON="$REPO_ROOT/$BUILD_DIR/libsolc/soljson.js"
 VERSION=$("$REPO_ROOT"/scripts/get_version.sh)
 

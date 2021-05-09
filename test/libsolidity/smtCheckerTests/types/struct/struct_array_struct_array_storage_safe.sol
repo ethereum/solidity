@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	struct T {
 		uint y;
@@ -17,11 +15,28 @@ contract C {
 		assert(s1.x == 2);
 		s1.t.y = 3;
 		assert(s1.t.y == 3);
+		s1.a.push();
+		s1.a.push();
+		s1.a.push();
 		s1.a[2] = 4;
 		assert(s1.a[2] == 4);
+		s1.ts.push();
+		s1.ts.push();
+		s1.ts.push();
+		s1.ts.push();
+		s1.ts.push();
 		s1.ts[3].y = 5;
 		assert(s1.ts[3].y == 5);
+		s1.ts[4].a.push();
+		s1.ts[4].a.push();
+		s1.ts[4].a.push();
+		s1.ts[4].a.push();
+		s1.ts[4].a.push();
+		s1.ts[4].a.push();
 		s1.ts[4].a[5] = 6;
 		assert(s1.ts[4].a[5] == 6);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

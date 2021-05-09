@@ -20,7 +20,7 @@
 
 #include <libsolutil/CommonData.h>
 
-#include <boost/range/adaptor/reversed.hpp>
+#include <range/v3/view/reverse.hpp>
 
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -29,7 +29,7 @@ void ImmutableValidator::analyze()
 {
 	m_inConstructionContext = true;
 
-	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | boost::adaptors::reversed;
+	auto linearizedContracts = m_currentContract.annotation().linearizedBaseContracts | ranges::views::reverse;
 
 	for (ContractDefinition const* contract: linearizedContracts)
 		for (VariableDeclaration const* stateVar: contract->stateVariables())
@@ -122,6 +122,18 @@ bool ImmutableValidator::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
+void ImmutableValidator::endVisit(IdentifierPath const& _identifierPath)
+{
+	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifierPath.annotation().referencedDeclaration))
+		visitCallableIfNew(
+			*_identifierPath.annotation().requiredLookup == VirtualLookup::Virtual ?
+			callableDef->resolveVirtual(m_currentContract) :
+			*callableDef
+		);
+
+	solAssert(!dynamic_cast<VariableDeclaration const*>(_identifierPath.annotation().referencedDeclaration), "");
+}
+
 void ImmutableValidator::endVisit(Identifier const& _identifier)
 {
 	if (auto const callableDef = dynamic_cast<CallableDeclaration const*>(_identifier.annotation().referencedDeclaration))
@@ -167,7 +179,7 @@ void ImmutableValidator::analyseVariableReference(VariableDeclaration const& _va
 
 	// If this is not an ordinary assignment, we write and read at the same time.
 	bool write = _expression.annotation().willBeWrittenTo;
-	bool read = !_expression.annotation().willBeWrittenTo || !*_expression.annotation().lValueOfOrdinaryAssignment;
+	bool read = !_expression.annotation().willBeWrittenTo || !_expression.annotation().lValueOfOrdinaryAssignment;
 	if (write)
 	{
 		if (!m_currentConstructor)

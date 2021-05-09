@@ -18,7 +18,6 @@
 #include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRVariable.h>
 #include <libsolidity/ast/AST.h>
-#include <boost/range/adaptor/transformed.hpp>
 #include <libsolutil/StringUtils.h>
 
 using namespace std;

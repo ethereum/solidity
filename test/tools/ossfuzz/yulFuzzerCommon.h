@@ -28,6 +28,7 @@ struct yulFuzzerUtil
 		ExplicitlyTerminated,
 		StepLimitReached,
 		TraceLimitReached,
+		ExpresionNestingLimitReached,
 		None
 	};
 
@@ -35,11 +36,19 @@ struct yulFuzzerUtil
 		std::ostream& _os,
 		std::shared_ptr<yul::Block> _ast,
 		Dialect const& _dialect,
+		bool _outputStorageOnly = false,
 		size_t _maxSteps = maxSteps,
-		size_t _maxTraceSize = maxTraceSize
+		size_t _maxTraceSize = maxTraceSize,
+		size_t _maxExprNesting = maxExprNesting
 	);
+
+	/// @returns true if @param _reason for Yul interpreter terminating is
+	/// resource exhaustion of some form e.g., exceeded maximum time-out
+	/// threshold, number of nested expressions etc.
+	static bool resourceLimitsExceeded(TerminationReason _reason);
 	static size_t constexpr maxSteps = 100;
 	static size_t constexpr maxTraceSize = 75;
+	static size_t constexpr maxExprNesting = 64;
 };
 
 }

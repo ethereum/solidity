@@ -18,6 +18,8 @@
 
 #include <libsolidity/formal/SymbolicTypes.h>
 
+#include <libsolidity/formal/EncodingContext.h>
+
 #include <libsolidity/ast/TypeProvider.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/CommonData.h>
@@ -91,14 +93,14 @@ SortPointer smtSort(frontend::Type const& _type)
 		}
 
 		string tupleName;
+		auto sliceArrayType = dynamic_cast<ArraySliceType const*>(&_type);
+		ArrayType const* arrayType = sliceArrayType ? &sliceArrayType->arrayType() : dynamic_cast<ArrayType const*>(&_type);
 		if (
-			auto arrayType = dynamic_cast<ArrayType const*>(&_type);
 			(arrayType && (arrayType->isString() || arrayType->isByteArray())) ||
-			_type.category() == frontend::Type::Category::ArraySlice ||
 			_type.category() == frontend::Type::Category::StringLiteral
 		)
 			tupleName = "bytes";
-		else if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
+		else if (arrayType)
 		{
 			auto baseType = arrayType->baseType();
 			// Solidity allows implicit conversion also when assigning arrays.
@@ -164,7 +166,7 @@ SortPointer smtSort(frontend::Type const& _type)
 	}
 }
 
-vector<SortPointer> smtSort(vector<frontend::TypePointer> const& _types)
+vector<SortPointer> smtSort(vector<frontend::Type const*> const& _types)
 {
 	vector<SortPointer> sorts;
 	for (auto const& type: _types)
@@ -179,7 +181,7 @@ SortPointer smtSortAbstractFunction(frontend::Type const& _type)
 	return smtSort(_type);
 }
 
-vector<SortPointer> smtSortAbstractFunction(vector<frontend::TypePointer> const& _types)
+vector<SortPointer> smtSortAbstractFunction(vector<frontend::Type const*> const& _types)
 {
 	vector<SortPointer> sorts;
 	for (auto const& type: _types)
@@ -230,7 +232,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 {
 	bool abstract = false;
 	shared_ptr<SymbolicVariable> var;
-	frontend::TypePointer type = &_type;
+	frontend::Type const* type = &_type;
 	if (!isSupportedTypeDeclaration(_type))
 	{
 		abstract = true;
@@ -247,7 +249,7 @@ pair<bool, shared_ptr<SymbolicVariable>> newSymbolicVariable(
 			return find_if(
 				begin(params),
 				end(params),
-				[&](TypePointer _paramType) { return _paramType->category() == frontend::Type::Category::Function; }
+				[&](frontend::Type const* _paramType) { return _paramType->category() == frontend::Type::Category::Function; }
 			);
 		};
 		if (
@@ -384,9 +386,31 @@ bool isNonRecursiveStruct(frontend::Type const& _type)
 	return structType && !structType->recursive();
 }
 
+bool isInaccessibleDynamic(frontend::Type const& _type)
+{
+	return _type.category() == frontend::Type::Category::InaccessibleDynamic;
+}
+
 smtutil::Expression minValue(frontend::IntegerType const& _type)
 {
 	return smtutil::Expression(_type.minValue());
+}
+
+smtutil::Expression minValue(frontend::Type const* _type)
+{
+	solAssert(isNumber(*_type), "");
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		return intType->minValue();
+	if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		return fixedType->minIntegerValue();
+	if (
+		dynamic_cast<AddressType const*>(_type) ||
+		dynamic_cast<ContractType const*>(_type) ||
+		dynamic_cast<EnumType const*>(_type) ||
+		dynamic_cast<FixedBytesType const*>(_type)
+	)
+		return 0;
+	solAssert(false, "");
 }
 
 smtutil::Expression maxValue(frontend::IntegerType const& _type)
@@ -394,18 +418,37 @@ smtutil::Expression maxValue(frontend::IntegerType const& _type)
 	return smtutil::Expression(_type.maxValue());
 }
 
+smtutil::Expression maxValue(frontend::Type const* _type)
+{
+	solAssert(isNumber(*_type), "");
+	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		return intType->maxValue();
+	if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		return fixedType->maxIntegerValue();
+	if (
+		dynamic_cast<AddressType const*>(_type) ||
+		dynamic_cast<ContractType const*>(_type)
+	)
+		return TypeProvider::uint(160)->maxValue();
+	if (auto const* enumType = dynamic_cast<EnumType const*>(_type))
+		return enumType->numberOfMembers() - 1;
+	if (auto const* bytesType = dynamic_cast<FixedBytesType const*>(_type))
+		return TypeProvider::uint(bytesType->numBytes() * 8)->maxValue();
+	solAssert(false, "");
+}
+
 void setSymbolicZeroValue(SymbolicVariable const& _variable, EncodingContext& _context)
 {
 	setSymbolicZeroValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicZeroValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicZeroValue(smtutil::Expression _expr, frontend::Type const* _type, EncodingContext& _context)
 {
 	solAssert(_type, "");
 	_context.addAssertion(_expr == zeroValue(_type));
 }
 
-smtutil::Expression zeroValue(frontend::TypePointer const& _type)
+smtutil::Expression zeroValue(frontend::Type const* _type)
 {
 	solAssert(_type, "");
 	if (isSupportedType(*_type))
@@ -458,7 +501,30 @@ smtutil::Expression zeroValue(frontend::TypePointer const& _type)
 	return 0;
 }
 
-pair<unsigned, bool> typeBvSizeAndSignedness(frontend::TypePointer const& _type)
+bool isSigned(frontend::Type const* _type)
+{
+	solAssert(smt::isNumber(*_type), "");
+	bool isSigned = false;
+	if (auto const* numberType = dynamic_cast<RationalNumberType const*>(_type))
+		isSigned |= numberType->isNegative();
+	else if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
+		isSigned |= intType->isSigned();
+	else if (auto const* fixedType = dynamic_cast<FixedPointType const*>(_type))
+		isSigned |= fixedType->isSigned();
+	else if (
+		dynamic_cast<AddressType const*>(_type) ||
+		dynamic_cast<ContractType const*>(_type) ||
+		dynamic_cast<EnumType const*>(_type) ||
+		dynamic_cast<FixedBytesType const*>(_type)
+	)
+		return false;
+	else
+		solAssert(false, "");
+
+	return isSigned;
+}
+
+pair<unsigned, bool> typeBvSizeAndSignedness(frontend::Type const* _type)
 {
 	if (auto const* intType = dynamic_cast<IntegerType const*>(_type))
 		return {intType->numBits(), intType->isSigned()};
@@ -475,37 +541,37 @@ void setSymbolicUnknownValue(SymbolicVariable const& _variable, EncodingContext&
 	setSymbolicUnknownValue(_variable.currentValue(), _variable.type(), _context);
 }
 
-void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::TypePointer const& _type, EncodingContext& _context)
+void setSymbolicUnknownValue(smtutil::Expression _expr, frontend::Type const* _type, EncodingContext& _context)
 {
-	solAssert(_type, "");
-	if (isEnum(*_type))
-	{
-		auto enumType = dynamic_cast<frontend::EnumType const*>(_type);
-		solAssert(enumType, "");
-		_context.addAssertion(_expr >= 0);
-		_context.addAssertion(_expr < enumType->numberOfMembers());
-	}
-	else if (isInteger(*_type))
-	{
-		auto intType = dynamic_cast<frontend::IntegerType const*>(_type);
-		solAssert(intType, "");
-		_context.addAssertion(_expr >= minValue(*intType));
-		_context.addAssertion(_expr <= maxValue(*intType));
-	}
+	_context.addAssertion(symbolicUnknownConstraints(_expr, _type));
 }
 
-optional<smtutil::Expression> symbolicTypeConversion(TypePointer _from, TypePointer _to)
+smtutil::Expression symbolicUnknownConstraints(smtutil::Expression _expr, frontend::Type const* _type)
+{
+	solAssert(_type, "");
+	if (isEnum(*_type) || isInteger(*_type) || isAddress(*_type) || isFixedBytes(*_type))
+		return _expr >= minValue(_type) && _expr <= maxValue(_type);
+	else if (isArray(*_type) || isMapping(*_type))
+		/// Length cannot be negative.
+		return smtutil::Expression::tuple_get(_expr, 1) >= 0;
+
+	return smtutil::Expression(true);
+}
+
+optional<smtutil::Expression> symbolicTypeConversion(frontend::Type const* _from, frontend::Type const* _to)
 {
 	if (_to && _from)
 		// StringLiterals are encoded as SMT arrays in the generic case,
 		// but they can also be compared/assigned to fixed bytes, in which
 		// case they'd need to be encoded as numbers.
 		if (auto strType = dynamic_cast<StringLiteralType const*>(_from))
-			if (_to->category() == frontend::Type::Category::FixedBytes)
+			if (auto fixedBytesType = dynamic_cast<FixedBytesType const*>(_to))
 			{
 				if (strType->value().empty())
 					return smtutil::Expression(size_t(0));
-				return smtutil::Expression(u256(toHex(util::asBytes(strType->value()), util::HexPrefix::Add)));
+				auto bytesVec = util::asBytes(strType->value());
+				bytesVec.resize(fixedBytesType->numBytes(), 0);
+				return smtutil::Expression(u256(toHex(bytesVec, util::HexPrefix::Add)));
 			}
 
 	return std::nullopt;

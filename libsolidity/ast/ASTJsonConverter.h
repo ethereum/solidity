@@ -51,11 +51,9 @@ class ASTJsonConverter: public ASTConstVisitor
 {
 public:
 	/// Create a converter to JSON for the given abstract syntax tree.
-	/// @a _legacy if true, use legacy format
 	/// @a _stackState state of the compiler stack to avoid outputting incomplete data
 	/// @a _sourceIndices is used to abbreviate source names in source locations.
 	explicit ASTJsonConverter(
-		bool _legacy,
 		CompilerStack::State _stackState,
 		std::map<std::string, unsigned> _sourceIndices = std::map<std::string, unsigned>()
 	);
@@ -77,6 +75,7 @@ public:
 	bool visit(PragmaDirective const& _node) override;
 	bool visit(ImportDirective const& _node) override;
 	bool visit(ContractDefinition const& _node) override;
+	bool visit(IdentifierPath const& _node) override;
 	bool visit(InheritanceSpecifier const& _node) override;
 	bool visit(UsingForDirective const& _node) override;
 	bool visit(StructDefinition const& _node) override;
@@ -89,6 +88,7 @@ public:
 	bool visit(ModifierDefinition const& _node) override;
 	bool visit(ModifierInvocation const& _node) override;
 	bool visit(EventDefinition const& _node) override;
+	bool visit(ErrorDefinition const& _node) override;
 	bool visit(ElementaryTypeName const& _node) override;
 	bool visit(UserDefinedTypeName const& _node) override;
 	bool visit(FunctionTypeName const& _node) override;
@@ -107,6 +107,7 @@ public:
 	bool visit(Return const& _node) override;
 	bool visit(Throw const& _node) override;
 	bool visit(EmitStatement const& _node) override;
+	bool visit(RevertStatement const& _node) override;
 	bool visit(VariableDeclarationStatement const& _node) override;
 	bool visit(ExpressionStatement const& _node) override;
 	bool visit(Conditional const& _node) override;
@@ -138,7 +139,8 @@ private:
 		std::string const& _nodeName,
 		std::vector<std::pair<std::string, Json::Value>>&& _attributes
 	);
-	size_t sourceIndexFromLocation(langutil::SourceLocation const& _location) const;
+	/// Maps source location to an index, if source is valid and a mapping does exist, otherwise returns std::nullopt.
+	std::optional<size_t> sourceIndexFromLocation(langutil::SourceLocation const& _location) const;
 	std::string sourceLocationToString(langutil::SourceLocation const& _location) const;
 	static std::string namePathToString(std::vector<ASTString> const& _namePath);
 	static Json::Value idOrNull(ASTNode const* _pt)
@@ -156,14 +158,14 @@ private:
 	static std::string literalTokenKind(Token _token);
 	static std::string type(Expression const& _expression);
 	static std::string type(VariableDeclaration const& _varDecl);
-	static int nodeId(ASTNode const& _node)
+	static int64_t nodeId(ASTNode const& _node)
 	{
 		return _node.id();
 	}
 	template<class Container>
 	static Json::Value getContainerIds(Container const& _container, bool _order = false)
 	{
-		std::vector<int> tmp;
+		std::vector<int64_t> tmp;
 
 		for (auto const& element: _container)
 		{
@@ -174,12 +176,12 @@ private:
 			std::sort(tmp.begin(), tmp.end());
 		Json::Value json(Json::arrayValue);
 
-		for (int val: tmp)
+		for (int64_t val: tmp)
 			json.append(val);
 
 		return json;
 	}
-	static Json::Value typePointerToJson(TypePointer _tp, bool _short = false);
+	static Json::Value typePointerToJson(Type const* _tp, bool _short = false);
 	static Json::Value typePointerToJson(std::optional<FuncCallArguments> const& _tps);
 	void appendExpressionAttributes(
 		std::vector<std::pair<std::string, Json::Value>> &_attributes,
@@ -191,7 +193,6 @@ private:
 		_array.append(std::move(_value));
 	}
 
-	bool m_legacy = false; ///< if true, use legacy format
 	CompilerStack::State m_stackState = CompilerStack::State::Empty; ///< Used to only access information that already exists
 	bool m_inEvent = false; ///< whether we are currently inside an event or not
 	Json::Value m_currentValue;

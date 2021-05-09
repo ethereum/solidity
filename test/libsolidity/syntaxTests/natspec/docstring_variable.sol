@@ -11,4 +11,3 @@ contract C {
     }
 }
 // ----
-// ParserError 2837: (290-295): Only state variables can have a docstring.

@@ -33,8 +33,9 @@ class CHCSmtLib2Interface: public CHCSolverInterface
 {
 public:
 	explicit CHCSmtLib2Interface(
-		std::map<util::h256, std::string> const& _queryResponses,
-		frontend::ReadCallback::Callback const& _smtCallback
+		std::map<util::h256, std::string> const& _queryResponses = {},
+		frontend::ReadCallback::Callback _smtCallback = {},
+		std::optional<unsigned> _queryTimeout = {}
 	);
 
 	void reset();

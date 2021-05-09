@@ -194,8 +194,8 @@ BOOST_FIXTURE_TEST_CASE(makeRandom_should_return_population_with_random_chromoso
 		for (auto& step: individual.chromosome.optimisationSteps())
 			samples.push_back(stepIndices.at(step));
 
-	const double expectedValue = (stepIndices.size() - 1) / 2.0;
-	const double variance = (stepIndices.size() * stepIndices.size() - 1) / 12.0;
+	const double expectedValue = double(stepIndices.size() - 1) / 2.0;
+	const double variance = double(stepIndices.size() * stepIndices.size() - 1) / 12.0;
 
 	BOOST_TEST(abs(mean(samples) - expectedValue) < expectedValue * relativeTolerance);
 	BOOST_TEST(abs(meanSquaredError(samples, expectedValue) - variance) < variance * relativeTolerance);

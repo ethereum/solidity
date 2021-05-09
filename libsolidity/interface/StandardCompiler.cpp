@@ -22,6 +22,7 @@
  */
 
 #include <libsolidity/interface/StandardCompiler.h>
+#include <libsolidity/interface/ImportRemapper.h>
 
 #include <libsolidity/ast/ASTJsonConverter.h>
 #include <libyul/AssemblyStack.h>
@@ -117,6 +118,7 @@ Json::Value formatErrorWithException(
 )
 {
 	string message;
+	// TODO: consider enabling color
 	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
 
 	if (string const* description = boost::get_error_info<util::errinfo_comment>(_exception))
@@ -171,16 +173,21 @@ bool hashMatchesContent(string const& _hash, string const& _content)
 bool isArtifactRequested(Json::Value const& _outputSelection, string const& _artifact, bool _wildcardMatchesExperimental)
 {
 	static set<string> experimental{"ir", "irOptimized", "wast", "ewasm", "ewasm.wast"};
-	for (auto const& artifact: _outputSelection)
-		/// @TODO support sub-matching, e.g "evm" matches "evm.assembly"
-		if (artifact == _artifact)
+	for (auto const& selectedArtifactJson: _outputSelection)
+	{
+		string const& selectedArtifact = selectedArtifactJson.asString();
+		if (
+			_artifact == selectedArtifact ||
+			boost::algorithm::starts_with(_artifact, selectedArtifact + ".")
+		)
 			return true;
-		else if (artifact == "*")
+		else if (selectedArtifact == "*")
 		{
 			// "ir", "irOptimized", "wast" and "ewasm.wast" can only be matched by "*" if activated.
 			if (experimental.count(_artifact) == 0 || _wildcardMatchesExperimental)
 				return true;
 		}
+	}
 	return false;
 }
 
@@ -234,7 +241,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 vector<string> evmObjectComponents(string const& _objectKind)
 {
 	solAssert(_objectKind == "bytecode" || _objectKind == "deployedBytecode", "");
-	vector<string> components{"", ".object", ".opcodes", ".sourceMap", ".generatedSources", ".linkReferences"};
+	vector<string> components{"", ".object", ".opcodes", ".sourceMap", ".functionDebugData", ".generatedSources", ".linkReferences"};
 	if (_objectKind == "deployedBytecode")
 		components.push_back(".immutableReferences");
 	return util::applyMap(components, [&](auto const& _s) { return "evm." + _objectKind + _s; });
@@ -323,10 +330,12 @@ Json::Value formatLinkReferences(std::map<size_t, std::string> const& linkRefere
 	for (auto const& ref: linkReferences)
 	{
 		string const& fullname = ref.second;
+
+		// If the link reference does not contain a colon, assume that the file name is missing and
+		// the whole string represents the library name.
 		size_t colon = fullname.rfind(':');
-		solAssert(colon != string::npos, "");
-		string file = fullname.substr(0, colon);
-		string name = fullname.substr(colon + 1);
+		string file = (colon != string::npos ? fullname.substr(0, colon) : "");
+		string name = (colon != string::npos ? fullname.substr(colon + 1) : fullname);
 
 		Json::Value fileObject = ret.get(file, Json::objectValue);
 		Json::Value libraryArray = fileObject.get(name, Json::arrayValue);
@@ -368,17 +377,25 @@ Json::Value collectEVMObject(
 	evmasm::LinkerObject const& _object,
 	string const* _sourceMap,
 	Json::Value _generatedSources,
-	bool _runtimeObject
+	bool _runtimeObject,
+	function<bool(string)> const& _artifactRequested
 )
 {
 	Json::Value output = Json::objectValue;
-	output["object"] = _object.toHex();
-	output["opcodes"] = evmasm::disassemble(_object.bytecode);
-	output["sourceMap"] = _sourceMap ? *_sourceMap : "";
-	output["linkReferences"] = formatLinkReferences(_object.linkReferences);
-	if (_runtimeObject)
+	if (_artifactRequested("object"))
+		output["object"] = _object.toHex();
+	if (_artifactRequested("opcodes"))
+		output["opcodes"] = evmasm::disassemble(_object.bytecode);
+	if (_artifactRequested("sourceMap"))
+		output["sourceMap"] = _sourceMap ? *_sourceMap : "";
+	if (_artifactRequested("functionDebugData"))
+		output["functionDebugData"] = StandardCompiler::formatFunctionDebugData(_object.functionDebugData);
+	if (_artifactRequested("linkReferences"))
+		output["linkReferences"] = formatLinkReferences(_object.linkReferences);
+	if (_runtimeObject && _artifactRequested("immutableReferences"))
 		output["immutableReferences"] = formatImmutableReferences(_object.immutableReferences);
-	output["generatedSources"] = move(_generatedSources);
+	if (_artifactRequested("generatedSources"))
+		output["generatedSources"] = move(_generatedSources);
 	return output;
 }
 
@@ -414,8 +431,14 @@ std::optional<Json::Value> checkAuxiliaryInputKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "optimizer", "outputSelection", "remappings", "stopAfter"};
+	static set<string> keys{"parserErrorRecovery", "debug", "evmVersion", "libraries", "metadata", "modelChecker", "optimizer", "outputSelection", "remappings", "stopAfter", "viaIR"};
 	return checkKeys(_input, keys, "settings");
+}
+
+std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
+{
+	static set<string> keys{"contracts", "engine", "targets", "timeout"};
+	return checkKeys(_input, keys, "modelChecker");
 }
 
 std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
@@ -527,6 +550,7 @@ std::optional<Json::Value> checkOutputSelection(Json::Value const& _outputSelect
 
 	return std::nullopt;
 }
+
 /// Validates the optimizer settings and returns them in a parsed object.
 /// On error returns the json-formatted error message.
 std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value const& _jsonInput)
@@ -559,6 +583,8 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 
 		if (auto error = checkOptimizerDetail(details, "peephole", settings.runPeephole))
 			return *error;
+		if (auto error = checkOptimizerDetail(details, "inliner", settings.runInliner))
+			return *error;
 		if (auto error = checkOptimizerDetail(details, "jumpdestRemover", settings.runJumpdestRemover))
 			return *error;
 		if (auto error = checkOptimizerDetail(details, "orderLiterals", settings.runOrderLiterals))
@@ -589,6 +615,7 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 }
 
 }
+
 
 std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
 {
@@ -742,6 +769,13 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.parserErrorRecovery = settings["parserErrorRecovery"].asBool();
 	}
 
+	if (settings.isMember("viaIR"))
+	{
+		if (!settings["viaIR"].isBool())
+			return formatFatalError("JSONError", "\"settings.viaIR\" must be a Boolean.");
+		ret.viaIR = settings["viaIR"].asBool();
+	}
+
 	if (settings.isMember("evmVersion"))
 	{
 		if (!settings["evmVersion"].isString())
@@ -780,7 +814,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	{
 		if (!remapping.isString())
 			return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings");
-		if (auto r = CompilerStack::parseRemapping(remapping.asString()))
+		if (auto r = ImportRemapper::parseRemapping(remapping.asString()))
 			ret.remappings.emplace_back(std::move(*r));
 		else
 			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
@@ -823,8 +857,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 
 			try
 			{
-				// @TODO use libraries only for the given source
-				ret.libraries[library] = util::h160(address);
+				ret.libraries[sourceName + ":" + library] = util::h160(address);
 			}
 			catch (util::BadHexCharacter const&)
 			{
@@ -866,6 +899,80 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			"Requested output selection conflicts with \"settings.stopAfter\"."
 		);
 
+	Json::Value const& modelCheckerSettings = settings.get("modelChecker", Json::Value());
+
+	if (auto result = checkModelCheckerSettingsKeys(modelCheckerSettings))
+		return *result;
+
+	if (modelCheckerSettings.isMember("contracts"))
+	{
+		auto const& sources = modelCheckerSettings["contracts"];
+		if (!sources.isObject() && !sources.isNull())
+			return formatFatalError("JSONError", "settings.modelChecker.contracts is not a JSON object.");
+
+		map<string, set<string>> sourceContracts;
+		for (auto const& source: sources.getMemberNames())
+		{
+			if (source.empty())
+				return formatFatalError("JSONError", "Source name cannot be empty.");
+
+			auto const& contracts = sources[source];
+			if (!contracts.isArray())
+				return formatFatalError("JSONError", "Source contracts must be an array.");
+
+			for (auto const& contract: contracts)
+			{
+				if (!contract.isString())
+					return formatFatalError("JSONError", "Every contract in settings.modelChecker.contracts must be a string.");
+				if (contract.asString().empty())
+					return formatFatalError("JSONError", "Contract name cannot be empty.");
+				sourceContracts[source].insert(contract.asString());
+			}
+
+			if (sourceContracts[source].empty())
+				return formatFatalError("JSONError", "Source contracts must be a non-empty array.");
+		}
+		ret.modelCheckerSettings.contracts = {move(sourceContracts)};
+	}
+
+	if (modelCheckerSettings.isMember("engine"))
+	{
+		if (!modelCheckerSettings["engine"].isString())
+			return formatFatalError("JSONError", "settings.modelChecker.engine must be a string.");
+		std::optional<ModelCheckerEngine> engine = ModelCheckerEngine::fromString(modelCheckerSettings["engine"].asString());
+		if (!engine)
+			return formatFatalError("JSONError", "Invalid model checker engine requested.");
+		ret.modelCheckerSettings.engine = *engine;
+	}
+
+	if (modelCheckerSettings.isMember("targets"))
+	{
+		auto const& targetsArray = modelCheckerSettings["targets"];
+		if (!targetsArray.isArray())
+			return formatFatalError("JSONError", "settings.modelChecker.targets must be an array.");
+
+		ModelCheckerTargets targets;
+		for (auto const& t: targetsArray)
+		{
+			if (!t.isString())
+				return formatFatalError("JSONError", "Every target in settings.modelChecker.targets must be a string.");
+			if (!targets.setFromString(t.asString()))
+				return formatFatalError("JSONError", "Invalid model checker targets requested.");
+		}
+
+		if (targets.targets.empty())
+			return formatFatalError("JSONError", "settings.modelChecker.targets must be a non-empty array.");
+
+		ret.modelCheckerSettings.targets = targets;
+	}
+
+	if (modelCheckerSettings.isMember("timeout"))
+	{
+		if (!modelCheckerSettings["timeout"].isUInt())
+			return formatFatalError("JSONError", "settings.modelChecker.timeout must be an unsigned integer.");
+		ret.modelCheckerSettings.timeout = modelCheckerSettings["timeout"].asUInt();
+	}
+
 	return { std::move(ret) };
 }
 
@@ -877,15 +984,17 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	compilerStack.setSources(sourceList);
 	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
 		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
+	compilerStack.setViaIR(_inputsAndSettings.viaIR);
 	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
 	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
-	compilerStack.setRemappings(_inputsAndSettings.remappings);
+	compilerStack.setRemappings(move(_inputsAndSettings.remappings));
 	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
 	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
 	compilerStack.setLibraries(_inputsAndSettings.libraries);
 	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
 	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
 	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
+	compilerStack.setModelCheckerSettings(_inputsAndSettings.modelCheckerSettings);
 
 	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
 	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
@@ -1047,9 +1156,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			Json::Value sourceResult = Json::objectValue;
 			sourceResult["id"] = sourceIndex++;
 			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "ast", wildcardMatchesExperimental))
-				sourceResult["ast"] = ASTJsonConverter(false, compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
-			if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, "", "legacyAST", wildcardMatchesExperimental))
-				sourceResult["legacyAST"] = ASTJsonConverter(true, compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
+				sourceResult["ast"] = ASTJsonConverter(compilerStack.state(), compilerStack.sourceIndices()).toJson(compilerStack.ast(sourceName));
 			output["sources"][sourceName] = sourceResult;
 		}
 
@@ -1108,7 +1215,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				compilerStack.object(contractName),
 				compilerStack.sourceMapping(contractName),
 				compilerStack.generatedSources(contractName),
-				false
+				false,
+				[&](string const& _element) { return isArtifactRequested(
+					_inputsAndSettings.outputSelection,
+					file,
+					name,
+					"evm.bytecode." + _element,
+					wildcardMatchesExperimental
+				); }
 			);
 
 		if (compilationSuccess && isArtifactRequested(
@@ -1122,7 +1236,14 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 				compilerStack.runtimeObject(contractName),
 				compilerStack.runtimeSourceMapping(contractName),
 				compilerStack.generatedSources(contractName, true),
-				true
+				true,
+				[&](string const& _element) { return isArtifactRequested(
+					_inputsAndSettings.outputSelection,
+					file,
+					name,
+					"evm.deployedBytecode." + _element,
+					wildcardMatchesExperimental
+				); }
 			);
 
 		if (!evmData.empty())
@@ -1150,8 +1271,6 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 		return formatFatalError("JSONError", "Yul mode does not support smtlib2responses.");
 	if (!_inputsAndSettings.remappings.empty())
 		return formatFatalError("JSONError", "Field \"settings.remappings\" cannot be used for Yul.");
-	if (!_inputsAndSettings.libraries.empty())
-		return formatFatalError("JSONError", "Field \"settings.libraries\" cannot be used for Yul.");
 	if (_inputsAndSettings.revertStrings != RevertStrings::Default)
 		return formatFatalError("JSONError", "Field \"settings.debug.revertStrings\" cannot be used for Yul.");
 
@@ -1202,7 +1321,12 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	MachineAssemblyObject object;
 	MachineAssemblyObject runtimeObject;
-	tie(object, runtimeObject) = stack.assembleAndGuessRuntime();
+	tie(object, runtimeObject) = stack.assembleWithDeployed();
+
+	if (object.bytecode)
+		object.bytecode->link(_inputsAndSettings.libraries);
+	if (runtimeObject.bytecode)
+		runtimeObject.bytecode->link(_inputsAndSettings.libraries);
 
 	for (string const& objectKind: vector<string>{"bytecode", "deployedBytecode"})
 		if (isArtifactRequested(
@@ -1216,7 +1340,19 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 			MachineAssemblyObject const& o = objectKind == "bytecode" ? object : runtimeObject;
 			if (o.bytecode)
 				output["contracts"][sourceName][contractName]["evm"][objectKind] =
-					collectEVMObject(*o.bytecode, o.sourceMappings.get(), Json::arrayValue, false);
+					collectEVMObject(
+						*o.bytecode,
+						o.sourceMappings.get(),
+						Json::arrayValue,
+						false,
+						[&](string const& _element) { return isArtifactRequested(
+							_inputsAndSettings.outputSelection,
+							sourceName,
+							contractName,
+							"evm." + objectKind + "." + _element,
+							wildcardMatchesExperimental
+						); }
+					);
 		}
 
 	if (isArtifactRequested(_inputsAndSettings.outputSelection, sourceName, contractName, "irOptimized", wildcardMatchesExperimental))
@@ -1289,4 +1425,28 @@ string StandardCompiler::compile(string const& _input) noexcept
 	{
 		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}
+}
+
+Json::Value StandardCompiler::formatFunctionDebugData(
+	map<string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
+)
+{
+	Json::Value ret(Json::objectValue);
+	for (auto const& [name, info]: _debugInfo)
+	{
+		Json::Value fun;
+		if (info.sourceID)
+			fun["id"] = Json::UInt64(*info.sourceID);
+		else
+			fun["id"] = Json::nullValue;
+		if (info.bytecodeOffset)
+			fun["entryPoint"] = Json::UInt64(*info.bytecodeOffset);
+		else
+			fun["entryPoint"] = Json::nullValue;
+		fun["parameterSlots"] = Json::UInt64(info.params);
+		fun["returnSlots"] = Json::UInt64(info.returns);
+		ret[name] = move(fun);
+	}
+
+	return ret;
 }

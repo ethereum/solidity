@@ -1,4 +1,4 @@
-pragma solidity >=0.4.0 <0.8.0;
+pragma solidity >=0.4.0 <0.9.0;
 
 contract InvalidTest {
 
@@ -35,5 +35,8 @@ contract InvalidTest {
       x++;
   }
 }
+// ====
+// compileToEwasm: also
+// compileViaYul: also
 // ----
-// run() -> FAILURE
+// run() -> FAILURE, hex"4e487b71", 0x51

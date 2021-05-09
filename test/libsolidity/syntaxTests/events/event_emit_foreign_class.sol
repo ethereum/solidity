@@ -5,3 +5,4 @@ contract C is A {
         emit A.e({b: "abc", a: 8});
     }
 }
+// ----

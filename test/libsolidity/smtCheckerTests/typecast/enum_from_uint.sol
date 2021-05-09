@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C
 {
 	enum D { Left, Right }
@@ -9,7 +7,6 @@ contract C
 		assert(_a == D.Left);
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (140-160): CHC: Assertion violation happens here.
-// Warning 8364: (132-133): Assertion checker does not yet implement type type(enum C.D)
-// Warning 5084: (132-136): Type conversion is not yet fully supported and might yield false positives.

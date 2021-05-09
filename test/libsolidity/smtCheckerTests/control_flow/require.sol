@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 contract C {
 	function f() pure public {
 		require(false);
@@ -29,5 +27,8 @@ contract C {
 		require(false, m());
 	}
 }
+// ====
+// SMTEngine: all
 // ----
-// Warning 6328: (448-465): CHC: Assertion violation happens here.
+// Warning 6321: (396-409): Unnamed return variable can remain unassigned. Add an explicit return with value to all non-reverting code paths or name the variable.
+// Warning 6328: (415-432): CHC: Assertion violation happens here.\nCounterexample:\nx = true\n\nTransaction trace:\nC.constructor()\nState: x = false\nC.i()\n    C.m() -- internal call

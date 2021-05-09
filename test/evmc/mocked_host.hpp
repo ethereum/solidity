@@ -6,6 +6,7 @@
 #include <evmc/evmc.hpp>
 #include <algorithm>
 #include <string>
+#include <map>
 #include <unordered_map>
 #include <vector>
 
@@ -48,7 +49,7 @@ struct MockedAccount
     uint256be balance;
 
     /// The account storage map.
-    std::unordered_map<bytes32, storage_value> storage;
+    std::map<bytes32, storage_value> storage;
 
     /// Helper method for setting balance by numeric type.
     void set_balance(uint64_t x) noexcept

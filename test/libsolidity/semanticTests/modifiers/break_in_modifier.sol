@@ -3,7 +3,8 @@ contract C {
     modifier run() {
         for (uint256 i = 0; i < 10; i++) {
             _;
-            break;
+            if (i == 1)
+                break;
         }
     }
 
@@ -15,7 +16,8 @@ contract C {
 }
 // ====
 // compileViaYul: also
+// compileToEwasm: also
 // ----
 // x() -> 0
 // f() ->
-// x() -> 1
+// x() -> 2

@@ -6,8 +6,8 @@ contract C {
     function test_simple(uint _off) public returns (uint _a, uint _b, uint _c) {
         simple[_off + 2] = 3;
         simple[_off + 3] = 4;
-        simple[uint(-1)] = 5;
-        _c = simple[uint(-1)];
+        simple[type(uint256).max] = 5;
+        _c = simple[type(uint256).max];
         _b = simple[3 + _off];
         _a = simple[2 + _off];
     }
@@ -29,7 +29,7 @@ contract C {
     }
 }
 // ====
-// compileViaYul: true
+// compileViaYul: also
 // ----
 // test_simple(uint256): 0 -> 3, 4, 5
 // test_simple(uint256): 1 -> 3, 4, 5

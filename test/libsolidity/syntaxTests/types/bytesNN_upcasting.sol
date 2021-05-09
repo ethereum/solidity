@@ -1,6 +1,5 @@
 contract C {
-  byte b = byte(0x01);
-  bytes1 b1 = b;
+  bytes1 b1 = bytes1(0x01);
   bytes2 b2 = b1;
   bytes3 b3 = b2;
   bytes4 b4 = b3;

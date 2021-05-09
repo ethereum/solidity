@@ -23,7 +23,7 @@
 
 #include <libyul/optimiser/FunctionHoister.h>
 #include <libyul/optimiser/OptimizerUtilities.h>
-#include <libyul/AsmData.h>
+#include <libyul/AST.h>
 
 #include <libsolutil/CommonData.h>
 
@@ -41,7 +41,7 @@ void FunctionHoister::operator()(Block& _block)
 		if (holds_alternative<FunctionDefinition>(statement))
 		{
 			m_functions.emplace_back(std::move(statement));
-			statement = Block{_block.location, {}};
+			statement = Block{_block.debugData, {}};
 		}
 	}
 	removeEmptyBlocks(_block);

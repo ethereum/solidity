@@ -20,7 +20,7 @@
 #include <test/Common.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
-#include <liblangutil/SourceReferenceFormatterHuman.h>
+#include <liblangutil/SourceReferenceFormatter.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -106,7 +106,7 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 	// Prerelease CBOR metadata varies in size due to changing version numbers and build dates.
 	// This leads to volatile creation cost estimates. Therefore we force the compiler to
 	// release mode for testing gas estimates.
-	compiler().overwriteReleaseFlag(true);
+	compiler().setMetadataFormat(CompilerStack::MetadataFormat::NoMetadata);
 	OptimiserSettings settings = m_optimise ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	if (m_optimiseYul)
 	{
@@ -119,7 +119,7 @@ TestCase::TestResult GasTest::run(ostream& _stream, string const& _linePrefix, b
 
 	if (!compiler().parseAndAnalyze() || !compiler().compile())
 	{
-		SourceReferenceFormatterHuman formatter(_stream, _formatted, false);
+		SourceReferenceFormatter formatter(_stream, _formatted, false);
 		for (auto const& error: compiler().errors())
 			formatter.printErrorInformation(*error);
 		return TestResult::FatalError;

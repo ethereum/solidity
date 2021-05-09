@@ -3,6 +3,7 @@ contract A {
     receive () external payable { ++x; }
 }
 // ====
+// compileToEwasm: also
 // compileViaYul: also
 // ----
 // x() -> 0

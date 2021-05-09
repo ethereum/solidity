@@ -1,5 +1,3 @@
-pragma experimental SMTChecker;
-
 library L
 {
 	enum D { Left, Right }
@@ -13,3 +11,6 @@ contract C
 		assert(_d == E.Left);
 	}
 }
+// ====
+// SMTEngine: all
+// ----

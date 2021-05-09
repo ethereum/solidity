@@ -14,7 +14,7 @@ defined as abstract, because the function ``utterance()`` was defined, but no im
 provided (no implementation body ``{ }`` was given).::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     abstract contract Feline {
         function utterance() public virtual returns (bytes32);
@@ -24,7 +24,7 @@ Such abstract contracts can not be instantiated directly. This is also true, if 
 all defined functions. The usage of an abstract contract as a base class is shown in the following example::
 
     // SPDX-License-Identifier: GPL-3.0
-    pragma solidity >=0.6.0 <0.8.0;
+    pragma solidity >=0.6.0 <0.9.0;
 
     abstract contract Feline {
         function utterance() public pure virtual returns (bytes32);

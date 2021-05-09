@@ -34,11 +34,13 @@ enum class PredicateType
 {
 	Interface,
 	NondetInterface,
-	ImplicitConstructor,
 	ConstructorSummary,
-	FunctionEntry,
 	FunctionSummary,
 	FunctionBlock,
+	FunctionErrorBlock,
+	InternalCall,
+	ExternalCallTrusted,
+	ExternalCallUntrusted,
 	Error,
 	Custom
 };
@@ -54,13 +56,17 @@ public:
 		std::string _name,
 		PredicateType _type,
 		smt::EncodingContext& _context,
-		ASTNode const* _node = nullptr
+		ASTNode const* _node = nullptr,
+		ContractDefinition const* _contractContext = nullptr,
+		std::vector<ScopeOpener const*> _scopeStack = {}
 	);
 
 	Predicate(
 		smt::SymbolicFunctionVariable&& _predicate,
 		PredicateType _type,
-		ASTNode const* _node = nullptr
+		ASTNode const* _node = nullptr,
+		ContractDefinition const* _contractContext = nullptr,
+		std::vector<ScopeOpener const*> _scopeStack = {}
 	);
 
 	/// Predicate should not be copiable.
@@ -86,6 +92,10 @@ public:
 	/// @returns the program node this predicate represents.
 	ASTNode const* programNode() const;
 
+	/// @returns the ContractDefinition of the most derived contract
+	/// being analyzed.
+	ContractDefinition const* contextContract() const;
+
 	/// @returns the ContractDefinition that this predicate represents
 	/// or nullptr otherwise.
 	ContractDefinition const* programContract() const;
@@ -94,11 +104,36 @@ public:
 	/// or nullptr otherwise.
 	FunctionDefinition const* programFunction() const;
 
+	/// @returns the FunctionCall that this predicate represents
+	/// or nullptr otherwise.
+	FunctionCall const* programFunctionCall() const;
+
 	/// @returns the program state variables in the scope of this predicate.
 	std::optional<std::vector<VariableDeclaration const*>> stateVariables() const;
 
 	/// @returns true if this predicate represents a summary.
 	bool isSummary() const;
+
+	/// @returns true if this predicate represents a function summary.
+	bool isFunctionSummary() const;
+
+	/// @returns true if this predicate represents a function block.
+	bool isFunctionBlock() const;
+
+	/// @returns true if this predicate represents a function error block.
+	bool isFunctionErrorBlock() const;
+
+	/// @returns true if this predicate represents an internal function call.
+	bool isInternalCall() const;
+
+	/// @returns true if this predicate represents a trusted external function call.
+	bool isExternalCallTrusted() const;
+
+	/// @returns true if this predicate represents an untrusted external function call.
+	bool isExternalCallUntrusted() const;
+
+	/// @returns true if this predicate represents a constructor summary.
+	bool isConstructorSummary() const;
 
 	/// @returns true if this predicate represents an interface.
 	bool isInterface() const;
@@ -107,21 +142,38 @@ public:
 
 	/// @returns a formatted string representing a call to this predicate
 	/// with _args.
-	std::string formatSummaryCall(std::vector<std::string> const& _args) const;
+	std::string formatSummaryCall(std::vector<smtutil::Expression> const& _args) const;
 
 	/// @returns the values of the state variables from _args at the point
 	/// where this summary was reached.
-	std::vector<std::string> summaryStateValues(std::vector<std::string> const& _args) const;
+	std::vector<std::optional<std::string>> summaryStateValues(std::vector<smtutil::Expression> const& _args) const;
 
 	/// @returns the values of the function input variables from _args at the point
 	/// where this summary was reached.
-	std::vector<std::string> summaryPostInputValues(std::vector<std::string> const& _args) const;
+	std::vector<std::optional<std::string>> summaryPostInputValues(std::vector<smtutil::Expression> const& _args) const;
 
 	/// @returns the values of the function output variables from _args at the point
 	/// where this summary was reached.
-	std::vector<std::string> summaryPostOutputValues(std::vector<std::string> const& _args) const;
+	std::vector<std::optional<std::string>> summaryPostOutputValues(std::vector<smtutil::Expression> const& _args) const;
+
+	/// @returns the values of the local variables used by this predicate.
+	std::pair<std::vector<std::optional<std::string>>, std::vector<VariableDeclaration const*>> localVariableValues(std::vector<smtutil::Expression> const& _args) const;
 
 private:
+	/// @returns the formatted version of the given SMT expressions. Those expressions must be SMT constants.
+	std::vector<std::optional<std::string>> formatExpressions(std::vector<smtutil::Expression> const& _exprs, std::vector<Type const*> const& _types) const;
+
+	/// @returns a string representation of the SMT expression based on a Solidity type.
+	std::optional<std::string> expressionToString(smtutil::Expression const& _expr, Type const* _type) const;
+
+	/// Recursively fills _array from _expr.
+	/// _expr should have the form `store(store(...(const_array(x_0), i_0, e_0), i_m, e_m), i_k, e_k)`.
+	/// @returns true if the construction worked,
+	/// and false if at least one element could not be built.
+	bool fillArray(smtutil::Expression const& _expr, std::vector<std::string>& _array, ArrayType const& _type) const;
+
+	std::map<std::string, std::optional<std::string>> readTxVars(smtutil::Expression const& _tx) const;
+
 	/// The actual SMT expression.
 	smt::SymbolicFunctionVariable m_predicate;
 
@@ -132,9 +184,19 @@ private:
 	/// nullptr if this predicate is not associated with a specific program AST node.
 	ASTNode const* m_node = nullptr;
 
+	/// The ContractDefinition that contains this predicate.
+	/// nullptr if this predicate is not associated with a specific contract.
+	/// This is unfortunately necessary because of virtual resolution for
+	/// function nodes.
+	ContractDefinition const* m_contractContext = nullptr;
+
 	/// Maps the name of the predicate to the actual Predicate.
 	/// Used in counterexample generation.
 	static std::map<std::string, Predicate> m_predicates;
+
+	/// The scope stack when the predicate was created.
+	/// Used to identify the subset of variables in scope.
+	std::vector<ScopeOpener const*> const m_scopeStack;
 };
 
 }
