@@ -96,7 +96,8 @@ CallGraph FunctionCallGraphBuilder::buildDeployedGraph(
 	// All functions present in internal dispatch at creation time could potentially be pointers
 	// assigned to state variables and as such may be reachable after deployment as well.
 	builder.m_currentNode = CallGraph::SpecialNode::InternalDispatch;
-	for (CallGraph::Node const& dispatchTarget: valueOrDefault(_creationGraph.edges, CallGraph::SpecialNode::InternalDispatch, {}))
+	set<CallGraph::Node, CallGraph::CompareByID> defaultNode;
+	for (CallGraph::Node const& dispatchTarget: valueOrDefault(_creationGraph.edges, CallGraph::SpecialNode::InternalDispatch, defaultNode))
 	{
 		solAssert(!holds_alternative<CallGraph::SpecialNode>(dispatchTarget), "");
 		solAssert(get<CallableDeclaration const*>(dispatchTarget) != nullptr, "");
