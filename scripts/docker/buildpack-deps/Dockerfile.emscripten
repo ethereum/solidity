@@ -29,7 +29,7 @@
 #   make version=2.0.12 build
 #
 FROM emscripten/emsdk:2.0.12 AS base
-LABEL version="4"
+LABEL version="5"
 
 ADD emscripten.jam /usr/src
 RUN set -ex; \
@@ -51,7 +51,8 @@ RUN set -ex; \
 	make ; make install; \
 	rm -r /usr/src/z3; \
 	cd /usr/src; \
-	wget -q 'https://dl.bintray.com/boostorg/release/1.75.0/source/boost_1_75_0.tar.bz2' -O boost.tar.bz2; \
+
+	wget -q 'https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.bz2' -O boost.tar.bz2; \
 	test "$(sha256sum boost.tar.bz2)" = "953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb  boost.tar.bz2"; \
 	tar -xf boost.tar.bz2; \
 	rm boost.tar.bz2; \
