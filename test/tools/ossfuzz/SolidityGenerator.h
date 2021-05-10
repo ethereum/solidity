@@ -165,10 +165,10 @@ public:
 		signedType(_signed),
 		numBits(static_cast<size_t>(_bits) * 8)
 	{}
-	bool operator==(IntegerType const& _rhs)
+	bool operator>=(IntegerType const& _rhs)
 	{
 		return this->signedType == _rhs.signedType &&
-			this->numBits == _rhs.numBits;
+			this->numBits >= _rhs.numBits;
 	}
 	std::string toString() override
 	{
@@ -185,7 +185,7 @@ public:
 	{
 		return "bool";
 	}
-	bool operator==(BoolType const&)
+	bool operator>=(BoolType const&)
 	{
 		return true;
 	}
@@ -199,7 +199,7 @@ public:
 	{
 		return "address";
 	}
-	bool operator==(AddressType const&)
+	bool operator>=(AddressType const&)
 	{
 		return true;
 	}
@@ -246,7 +246,7 @@ public:
 	FixedBytesType(Bytes _width): numBytes(static_cast<size_t>(_width))
 	{}
 
-	bool operator==(FixedBytesType const& _rhs)
+	bool operator>=(FixedBytesType const& _rhs)
 	{
 		return this->numBytes == _rhs.numBytes;
 	}
@@ -264,7 +264,7 @@ public:
 	{
 		return "bytes memory";
 	}
-	bool operator==(BytesType const&)
+	bool operator>=(BytesType const&)
 	{
 		return true;
 	}
@@ -283,7 +283,7 @@ public:
 	{
 		return contractName;
 	}
-	bool operator==(ContractType const& _rhs)
+	bool operator>=(ContractType const& _rhs)
 	{
 		return _rhs.name() == this->name();
 	}
@@ -319,7 +319,7 @@ public:
 	}
 
 	std::string toString() override;
-	bool operator==(FunctionType const& _rhs)
+	bool operator>=(FunctionType const& _rhs)
 	{
 		if (_rhs.inputs.size() != this->inputs.size() || _rhs.outputs.size() != this->outputs.size())
 			return false;
@@ -451,13 +451,13 @@ struct FunctionState
 	}
 	void addInput(SolidityTypePtr _input)
 	{
-		inputs.emplace_back(_input, "i" + std::to_string(numInputs++));
 		type->addInput(_input);
+		inputs.emplace_back(_input, "i" + std::to_string(numInputs++));
 	}
 	void addOutput(SolidityTypePtr _output)
 	{
-		outputs.emplace_back(_output, "o" + std::to_string(numOutpus++));
 		type->addOutput(_output);
+		outputs.emplace_back(_output, "o" + std::to_string(numOutpus++));
 	}
 	void addLocal(SolidityTypePtr _local)
 	{
@@ -714,7 +714,7 @@ struct TypeComparator
 	template <typename T>
 	bool operator()(T _i1, T _i2)
 	{
-		return *_i1 == *_i2;
+		return *_i1 >= *_i2;
 	}
 	template <typename T1, typename T2>
 	bool operator()(T1 _i1, T2 _i2)
@@ -745,22 +745,84 @@ struct ExpressionGenerator
 	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
 	{}
 
-	enum class LValueExpr: size_t
+	enum class RLValueExpr: size_t
 	{
 		VARREF = 1,
-		TYPEMAX
+		PINC,
+		PDEC,
+		SINC,
+		SDEC,
+		NOT,
+		BITNOT,
+		USUB,
+		EXP,
+		MUL,
+		DIV,
+		MOD,
+		ADD,
+		BSUB,
+		SHL,
+		SHR,
+		BITAND,
+		BITXOR,
+		BITOR,
+		LT,
+		GT,
+		LTE,
+		GTE,
+		EQ,
+		NEQ,
+		AND,
+		OR,
+		LIT,
+		RLMAX
 	};
 
-	std::optional<std::pair<SolidityTypePtr, std::string>> expression(
+	std::optional<std::pair<SolidityTypePtr, std::string>> rOrLValueExpression(
 		std::pair<SolidityTypePtr, std::string> _typeName
 	);
-	std::pair<SolidityTypePtr, std::string> literal(SolidityTypePtr _type);
+	std::optional<std::pair<SolidityTypePtr, std::string>> literal(SolidityTypePtr _type);
 	std::optional<std::pair<SolidityTypePtr, std::string>> randomLValueExpression();
 	std::optional<std::pair<SolidityTypePtr, std::string>> lValueExpression(
 		std::pair<SolidityTypePtr, std::string> _typeName
 	);
+	std::vector<std::pair<SolidityTypePtr, std::string>> liveVariables();
+	std::vector<std::pair<SolidityTypePtr, std::string>> liveVariables(
+		std::pair<SolidityTypePtr, std::string> _typeName
+	);
+	std::optional<std::pair<SolidityTypePtr, std::string>> unaryExpression(
+		std::pair<SolidityTypePtr, std::string>& _typeName,
+		std::string const& _op
+	);
+	std::optional<std::pair<SolidityTypePtr, std::string>> binaryExpression(
+		std::pair<SolidityTypePtr, std::string>& _typeName,
+		std::string const& _op
+	);
+	std::optional<std::pair<SolidityTypePtr, std::string>> incDecOperation(
+		std::pair<SolidityTypePtr, std::string>& _typeName,
+		std::string const& _op,
+		bool _prefixOp
+	);
+	std::optional<std::pair<SolidityTypePtr, std::string>> rLValueOrLiteral(
+		std::pair<SolidityTypePtr, std::string>& _typeName
+	);
 
+
+	void incrementNestingDepth()
+	{
+		nestingDepth++;
+	}
+	void resetNestingDepth()
+	{
+		nestingDepth = 0;
+	}
+	bool deeplyNested()
+	{
+		return nestingDepth > s_maxNestingDepth;
+	}
 	std::shared_ptr<TestState> state;
+	unsigned nestingDepth;
+	static constexpr unsigned s_maxNestingDepth = 30;
 };
 
 struct GeneratorBase
