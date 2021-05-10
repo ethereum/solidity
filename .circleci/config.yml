@@ -719,6 +719,9 @@ jobs:
         EVM: constantinople
         OPTIMIZE: 0
         TERM: xterm
+        # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
+        # thus we forgo semantics tests to speed things up.
+        SOLTEST_FLAGS: --no-semantic-tests
       steps:
         - run:
             name: Install runtime dependencies

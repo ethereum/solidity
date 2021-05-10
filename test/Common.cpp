@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <test/Common.h>
+#include <test/EVMHost.h>
 
 #include <libsolutil/Assertions.h>
 #include <boost/algorithm/string.hpp>
@@ -62,15 +63,10 @@ boost::filesystem::path testPath()
 	return {};
 }
 
-std::string envOrDefaultPath(std::string const& env_name, std::string const& lib_name)
+std::optional<fs::path> findInDefaultPath(std::string const& lib_name)
 {
-	if (auto path = getenv(env_name.c_str()))
-		return path;
-
 	auto const searchPath =
 	{
-		fs::path("/usr/local/lib"),
-		fs::path("/usr/lib"),
 		fs::current_path() / "deps",
 		fs::current_path() / "deps" / "lib",
 		fs::current_path() / ".." / "deps",
@@ -83,9 +79,9 @@ std::string envOrDefaultPath(std::string const& env_name, std::string const& lib
 	{
 		fs::path p = basePath / lib_name;
 		if (fs::exists(p))
-			return p.string();
+			return p;
 	}
-	return {};
+	return std::nullopt;
 }
 
 }
@@ -101,6 +97,7 @@ CommonOptions::CommonOptions(std::string _caption):
 		("testpath", po::value<fs::path>(&this->testPath)->default_value(solidity::test::testPath()), "path to test files")
 		("vm", po::value<std::vector<fs::path>>(&vmPaths), "path to evmc library, can be supplied multiple times.")
 		("ewasm", po::bool_switch(&ewasm), "tries to automatically find an ewasm vm and enable ewasm test-execution.")
+		("no-semantic-tests", po::bool_switch(&disableSemanticTests), "disable semantic tests")
 		("no-smt", po::bool_switch(&disableSMT), "disable SMT checker")
 		("optimize", po::bool_switch(&optimize), "enables optimization")
 		("enforce-via-yul", po::bool_switch(&enforceViaYul), "Enforce compiling all tests via yul to see if additional tests can be activated.")
@@ -166,28 +163,19 @@ bool CommonOptions::parse(int argc, char const* const* argv)
 
 	if (vmPaths.empty())
 	{
-		std::string evmone = envOrDefaultPath("ETH_EVMONE", evmoneFilename);
-		if (!evmone.empty())
-			vmPaths.emplace_back(evmone);
+		if (auto envPath = getenv("ETH_EVMONE"))
+			vmPaths.emplace_back(envPath);
+		else if (auto repoPath = findInDefaultPath(evmoneFilename))
+			vmPaths.emplace_back(*repoPath);
 		else
-		{
-			std::cout << "Unable to find " << solidity::test::evmoneFilename
-				 << ". Please provide the path using --vm <path>." << std::endl;
-			std::cout << "You can download it at" << std::endl;
-			std::cout << solidity::test::evmoneDownloadLink << std::endl;
-		}
-	}
-
-	if (ewasm) {
-		std::string hera = envOrDefaultPath("ETH_HERA", heraFilename);
-		if (!hera.empty())
-			vmPaths.emplace_back(hera);
-		else {
-			std::cout << "Unable to find " << solidity::test::heraFilename
-					  << ". Please provide the path using --vm <path>." << std::endl;
-			std::cout << "You can download it at" << std::endl;
-			std::cout << solidity::test::heraDownloadLink << std::endl;
-			std::cout << "Ewasm tests disabled." << std::endl;
+			vmPaths.emplace_back(evmoneFilename);
+		if (ewasm) {
+			if (auto envPath = getenv("ETH_HERA"))
+				vmPaths.emplace_back(envPath);
+			else if (auto repoPath = findInDefaultPath(heraFilename))
+				vmPaths.emplace_back(*repoPath);
+			else
+				vmPaths.emplace_back(heraFilename);
 		}
 	}
 
@@ -235,6 +223,31 @@ bool isValidSemanticTestPath(boost::filesystem::path const& _testPath)
 			insideSemanticTests = true;
 		if (insideSemanticTests && boost::starts_with(element.string(), "_"))
 			return false;
+	}
+	return true;
+}
+
+bool loadVMs(CommonOptions const& _options)
+{
+	if (_options.disableSemanticTests && !_options.ewasm)
+		return true;
+
+	auto [evmSupported, ewasmSupported] = solidity::test::EVMHost::checkVmPaths(_options.vmPaths);
+	if (!_options.disableSemanticTests && !evmSupported)
+	{
+		std::cerr << "Unable to find " << solidity::test::evmoneFilename;
+		std::cerr << ". Please disable semantics tests with --no-semantic-tests or provide a path using --vm <path>." << std::endl;
+		std::cerr << "You can download it at" << std::endl;
+		std::cerr << solidity::test::evmoneDownloadLink << std::endl;
+		return false;
+	}
+	if (_options.ewasm && !ewasmSupported)
+	{
+		std::cerr << "Unable to find " << solidity::test::heraFilename;
+		std::cerr << ". To be able to enable ewasm tests, please provide the path using --vm <path>." << std::endl;
+		std::cerr << "You can download it at" << std::endl;
+		std::cerr << solidity::test::heraDownloadLink << std::endl;
+		return false;
 	}
 	return true;
 }

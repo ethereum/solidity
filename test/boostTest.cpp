@@ -172,17 +172,10 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 
 	initializeOptions();
 
-	bool disableSemantics = true;
-	try
-	{
-		disableSemantics = !solidity::test::EVMHost::checkVmPaths(solidity::test::CommonOptions::get().vmPaths);
-	}
-	catch (std::runtime_error const& _exception)
-	{
-		cerr << "Error: " << _exception.what() << endl;
+	if (!solidity::test::loadVMs(solidity::test::CommonOptions::get()))
 		exit(1);
-	}
-	if (disableSemantics)
+
+	if (solidity::test::CommonOptions::get().disableSemanticTests)
 		cout << endl << "--- SKIPPING ALL SEMANTICS TESTS ---" << endl << endl;
 
 	// Include the interactive tests in the automatic tests as well
@@ -193,7 +186,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		if (ts.smt && options.disableSMT)
 			continue;
 
-		if (ts.needsVM && disableSemantics)
+		if (ts.needsVM && solidity::test::CommonOptions::get().disableSemanticTests)
 			continue;
 
 		solAssert(registerTests(
@@ -207,7 +200,7 @@ test_suite* init_unit_test_suite( int /*argc*/, char* /*argv*/[] )
 		) > 0, std::string("no ") + ts.title + " tests found");
 	}
 
-	if (disableSemantics)
+	if (solidity::test::CommonOptions::get().disableSemanticTests)
 	{
 		for (auto suite: {
 			"ABIDecoderTest",
