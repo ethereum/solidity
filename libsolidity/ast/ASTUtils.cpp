@@ -17,12 +17,47 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/ASTUtils.h>
 
 #include <libsolutil/Algorithms.h>
 
 namespace solidity::frontend
 {
+
+namespace
+{
+
+class ASTNodeLocator: public ASTConstVisitor
+{
+public:
+	explicit ASTNodeLocator(int _pos): m_offsetInFile{_pos}, m_innermostMatch{nullptr} {}
+
+	bool visitNode(ASTNode const& _node) override
+	{
+		// In the AST parent location always covers the whole child location.
+		// The parent is visited first so to get the innermost node we simply
+		// take the last one that still contains the offset.
+
+		if (!_node.location().containsOffset(m_offsetInFile))
+			return false;
+
+		m_innermostMatch = &_node;
+		return true;
+	}
+
+	int const m_offsetInFile;
+	ASTNode const* m_innermostMatch;
+};
+
+}
+
+ASTNode const* locateInnermostASTNode(int _pos, SourceUnit const& _sourceUnit)
+{
+	ASTNodeLocator locator{_pos};
+	_sourceUnit.accept(locator);
+	return locator.m_innermostMatch;
+}
 
 bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
 {
