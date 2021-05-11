@@ -1113,6 +1113,14 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	{
 		solAssert(smt::isNumber(*funCallType), "");
 
+		RationalNumberType const* rationalType = isConstant(*argument);
+		if (rationalType)
+		{
+			// The TypeChecker guarantees that a constant fits in the cast size.
+			defineExpr(_funCall, symbArg);
+			return;
+		}
+
 		auto const* fixedCast = dynamic_cast<FixedBytesType const*>(funCallType);
 		auto const* fixedArg = dynamic_cast<FixedBytesType const*>(argType);
 		if (fixedCast && fixedArg)
