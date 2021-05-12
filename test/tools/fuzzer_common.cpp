@@ -86,7 +86,7 @@ void FuzzerUtil::testCompiler(
 	StringMap& _input,
 	bool _optimize,
 	unsigned _rand,
-	bool _forceSMT,
+	bool ,
 	bool _compileViaYul
 )
 {
@@ -97,16 +97,16 @@ void FuzzerUtil::testCompiler(
 		optimiserSettings = frontend::OptimiserSettings::standard();
 	else
 		optimiserSettings = frontend::OptimiserSettings::minimal();
-	if (_forceSMT)
-	{
-		forceSMT(_input);
-		compiler.setModelCheckerSettings({
-			frontend::ModelCheckerContracts::Default(),
-			frontend::ModelCheckerEngine::All(),
-			frontend::ModelCheckerTargets::Default(),
-			/*timeout=*/1
-		});
-	}
+//	if (_forceSMT)
+//	{
+//		forceSMT(_input);
+//		compiler.setModelCheckerSettings({
+//			frontend::ModelCheckerContracts::Default(),
+//			frontend::ModelCheckerEngine::All(),
+//			frontend::ModelCheckerTargets::Default(),
+//			/*timeout=*/1
+//		});
+//	}
 	compiler.setSources(_input);
 	compiler.setEVMVersion(evmVersion);
 	compiler.setOptimiserSettings(optimiserSettings);
