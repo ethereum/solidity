@@ -2307,13 +2307,13 @@ void SMTEncoder::mergeVariables(smtutil::Expression const& _condition, VariableI
 	}
 }
 
-smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
+smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl) const
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->currentValue();
 }
 
-smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, unsigned _index)
+smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, unsigned _index) const
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->valueAtIndex(_index);

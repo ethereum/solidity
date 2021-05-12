@@ -314,10 +314,10 @@ protected:
 
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
-	smtutil::Expression currentValue(VariableDeclaration const& _decl);
+	smtutil::Expression currentValue(VariableDeclaration const& _decl) const;
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
-	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, unsigned _index);
+	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, unsigned _index) const;
 	/// Returns the expression corresponding to the AST node.
 	/// If _targetType is not null apply conversion.
 	/// Throws if the expression does not exist.
