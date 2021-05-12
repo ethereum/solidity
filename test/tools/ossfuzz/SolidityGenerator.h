@@ -64,7 +64,7 @@ TYPELIST(VARIANTOFSHARED, COMMA(), )
 >;
 #undef VARIANTOFSHARED
 #undef COMMA
-using RandomEngine = std::mt19937_64;
+using RandomEngine = std::minstd_rand;
 using Distribution = std::uniform_int_distribution<size_t>;
 
 struct UniformRandomDistribution
@@ -72,6 +72,11 @@ struct UniformRandomDistribution
 	explicit UniformRandomDistribution(std::unique_ptr<RandomEngine> _randomEngine):
 		randomEngine(std::move(_randomEngine))
 	{}
+
+	~UniformRandomDistribution()
+	{
+		randomEngine.reset();
+	}
 
 	/// @returns an unsigned integer in the range [1, @param _n] chosen
 	/// uniformly at random.
@@ -408,6 +413,7 @@ struct SourceState
 		importedSources.clear();
 		freeFunctions.clear();
 		exports.clear();
+		uRandDist.reset();
 	}
 	/// Prints source state to @param _os.
 	void print(std::ostream& _os) const;
@@ -448,20 +454,21 @@ struct FunctionState
 		inputs.clear();
 		outputs.clear();
 		scopes.clear();
+		type.reset();
 	}
 	void addInput(SolidityTypePtr _input)
 	{
 		type->addInput(_input);
-		inputs.emplace_back(_input, "i" + std::to_string(numInputs++));
+		inputs.emplace_back(std::move(_input), "i" + std::to_string(numInputs++));
 	}
 	void addOutput(SolidityTypePtr _output)
 	{
 		type->addOutput(_output);
-		outputs.emplace_back(_output, "o" + std::to_string(numOutpus++));
+		outputs.emplace_back(std::move(_output), "o" + std::to_string(numOutpus++));
 	}
 	void addLocal(SolidityTypePtr _local)
 	{
-		scopes.back()->variables.emplace_back(_local, "l" + std::to_string(numLocals++));
+		scopes.back()->variables.emplace_back(std::move(_local), "l" + std::to_string(numLocals++));
 	}
 	std::string params(Params _p);
 
@@ -487,6 +494,7 @@ struct ContractState
 	~ContractState()
 	{
 		functions.clear();
+		uRandDist.reset();
 	}
 	void addFunction(std::shared_ptr<FunctionState> _function)
 	{
@@ -517,22 +525,24 @@ struct TestState
 	/// @name currentSourceUnitPath.
 	void addSourceUnit(std::string const& _path)
 	{
-		sourceUnitState.emplace(_path, std::make_shared<SourceState>(uRandDist, _path));
+		auto sourceState = std::make_shared<SourceState>(uRandDist, _path);
+		sourceUnitState.emplace(_path, std::move(sourceState));
 		currentSourceUnitPath = _path;
 	}
 	/// Adds @param _name to @name contractState updates
 	/// @name currentContract.
 	void addContract(std::string const& _name)
 	{
-		contractState.emplace(_name, std::make_shared<ContractState>(uRandDist, _name));
-		sourceUnitState[currentSourceUnitPath]->exports[
-			std::make_shared<ContractType>(_name)
-	    ] = _name;
+		auto newContractState = std::make_shared<ContractState>(uRandDist, _name);
+		contractState.emplace(_name, std::move(newContractState));
+		auto newContractType = std::make_shared<ContractType>(_name);
+		sourceUnitState[currentSourceUnitPath]->exports[std::move(newContractType)] = _name;
 		currentContract = _name;
 	}
 	void addFunction(std::string const& _name, bool _freeFunction)
 	{
-		functionState.emplace(_name, std::make_shared<FunctionState>(_name, _freeFunction));
+		auto fState = std::make_shared<FunctionState>(_name, _freeFunction);
+		functionState.emplace(_name, std::move(fState));
 		currentFunction = _name;
 	}
 	std::shared_ptr<FunctionState> currentFunctionState()
@@ -639,6 +649,7 @@ struct TestState
 		sourceUnitState.clear();
 		contractState.clear();
 		functionState.clear();
+		uRandDist.reset();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
@@ -686,6 +697,11 @@ struct TypeProvider
 	TypeProvider(std::shared_ptr<TestState> _state): state(std::move(_state))
 	{}
 
+	~TypeProvider()
+	{
+		state.reset();
+	}
+
 	enum class Type: size_t
 	{
 		INTEGER = 1,
@@ -729,6 +745,12 @@ struct LiteralGenerator
 {
 	explicit LiteralGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
 	{}
+
+	~LiteralGenerator()
+	{
+		state.reset();
+	}
+
 	std::string operator()(std::shared_ptr<AddressType> const& _type);
 	std::string operator()(std::shared_ptr<BoolType> const& _type);
 	std::string operator()(std::shared_ptr<BytesType> const& _type);
@@ -744,6 +766,11 @@ struct ExpressionGenerator
 {
 	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
 	{}
+
+	~ExpressionGenerator()
+	{
+		state.reset();
+	}
 
 	enum class RLValueExpr: size_t
 	{
@@ -825,9 +852,54 @@ struct ExpressionGenerator
 	static constexpr unsigned s_maxNestingDepth = 30;
 };
 
+class SolidityGenerator
+{
+public:
+	explicit SolidityGenerator(unsigned _seed);
+
+	~SolidityGenerator()
+	{
+		m_generators.clear();
+		m_urd.reset();
+		m_state.reset();
+	}
+
+	/// @returns the generator of type @param T.
+	template <typename T>
+	std::shared_ptr<T> generator();
+	/// @returns a shared ptr to underlying random
+	/// number distribution.
+	std::shared_ptr<UniformRandomDistribution> uniformRandomDist()
+	{
+		return m_urd;
+	}
+	/// @returns a pseudo randomly generated test case.
+	std::string generateTestProgram();
+	/// @returns shared ptr to global test state.
+	std::shared_ptr<TestState> testState()
+	{
+		return m_state;
+	}
+private:
+	template <typename T>
+	void createGenerator()
+	{
+		auto generator = std::make_shared<T>(this);
+		m_generators.insert(std::move(generator));
+	}
+	template <std::size_t I = 0>
+	void createGenerators();
+	/// Sub generators
+	std::set<GeneratorPtr> m_generators;
+	/// Shared global test state
+	std::shared_ptr<TestState> m_state;
+	/// Uniform random distribution
+	std::shared_ptr<UniformRandomDistribution> m_urd;
+};
+
 struct GeneratorBase
 {
-	explicit GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator);
+	explicit GeneratorBase(SolidityGenerator* _mutator);
 	template <typename T>
 	std::shared_ptr<T> generator()
 	{
@@ -863,7 +935,7 @@ struct GeneratorBase
 	/// this grammar element.
 	void addGenerators(std::set<std::pair<GeneratorPtr, unsigned>> _generators)
 	{
-		generators += _generators;
+		generators += std::move(_generators);
 	}
 	/// Virtual method to obtain string name of generator.
 	virtual std::string name() = 0;
@@ -874,21 +946,25 @@ struct GeneratorBase
 	virtual ~GeneratorBase()
 	{
 		generators.clear();
+		state.reset();
 	}
+	std::shared_ptr<UniformRandomDistribution> uRandDist()
+	{
+		return mutator->uniformRandomDist();
+	}
+
 	/// Shared pointer to the mutator instance
-	std::shared_ptr<SolidityGenerator> mutator;
+	SolidityGenerator* mutator;
 	/// Set of generators used by this generator.
 	std::set<std::pair<GeneratorPtr, unsigned>> generators;
 	/// Shared ptr to global test state.
 	std::shared_ptr<TestState> state;
-	/// Uniform random distribution
-	std::shared_ptr<UniformRandomDistribution> uRandDist;
 };
 
 class TestCaseGenerator: public GeneratorBase
 {
 public:
-	explicit TestCaseGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit TestCaseGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
@@ -924,7 +1000,7 @@ private:
 class SourceUnitGenerator: public GeneratorBase
 {
 public:
-	explicit SourceUnitGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit SourceUnitGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
@@ -938,7 +1014,7 @@ private:
 class PragmaGenerator: public GeneratorBase
 {
 public:
-	explicit PragmaGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit PragmaGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	std::string visit() override;
@@ -954,7 +1030,7 @@ private:
 class ImportGenerator: public GeneratorBase
 {
 public:
-	explicit ImportGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit ImportGenerator(SolidityGenerator* _mutator):
 	       GeneratorBase(std::move(_mutator))
 	{}
 	std::string visit() override;
@@ -964,7 +1040,7 @@ public:
 class ContractGenerator: public GeneratorBase
 {
 public:
-	explicit ContractGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit ContractGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
@@ -977,7 +1053,7 @@ private:
 class FunctionGenerator: public GeneratorBase
 {
 public:
-	explicit FunctionGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit FunctionGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator)),
 		m_freeFunction(true)
 	{}
@@ -1000,7 +1076,7 @@ private:
 class StatementGenerator: public GeneratorBase
 {
 public:
-	explicit StatementGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit StatementGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
@@ -1029,7 +1105,7 @@ public:
 		ASSIGNMOD,
 		ASSIGNMAX
 	};
-	explicit AssignmentStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit AssignmentStmtGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	std::string visit() override;
@@ -1042,7 +1118,7 @@ private:
 class BlockStmtGenerator: public GeneratorBase
 {
 public:
-	explicit BlockStmtGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	explicit BlockStmtGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator)),
 		m_nestingDepth(0),
 		m_unchecked(false),
@@ -1095,7 +1171,7 @@ private:
 class FunctionCallGenerator: public GeneratorBase
 {
 public:
-	FunctionCallGenerator(std::shared_ptr<SolidityGenerator> _mutator):
+	FunctionCallGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	std::string visit() override;
@@ -1107,48 +1183,5 @@ private:
 	std::string lhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionReturnTypeNames);
 	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionInputTypeNames);
 	std::string callStmt(std::shared_ptr<FunctionState> _callee);
-};
-
-class SolidityGenerator: public std::enable_shared_from_this<SolidityGenerator>
-{
-public:
-	explicit SolidityGenerator(unsigned _seed);
-
-	/// @returns the generator of type @param T.
-	template <typename T>
-	std::shared_ptr<T> generator();
-	/// @returns a shared ptr to underlying random
-	/// number distribution.
-	std::shared_ptr<UniformRandomDistribution> uniformRandomDist()
-	{
-		return m_urd;
-	}
-	/// @returns a pseudo randomly generated test case.
-	std::string generateTestProgram();
-	/// @returns shared ptr to global test state.
-	std::shared_ptr<TestState> testState()
-	{
-		return m_state;
-	}
-private:
-	template <typename T>
-	void createGenerator()
-	{
-		m_generators.insert(
-			std::make_shared<T>(shared_from_this())
-		);
-	}
-	template <std::size_t I = 0>
-	void createGenerators();
-	void destroyGenerators()
-	{
-		m_generators.clear();
-	}
-	/// Sub generators
-	std::set<GeneratorPtr> m_generators;
-	/// Shared global test state
-	std::shared_ptr<TestState> m_state;
-	/// Uniform random distribution
-	std::shared_ptr<UniformRandomDistribution> m_urd;
 };
 }
