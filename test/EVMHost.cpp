@@ -69,7 +69,7 @@ evmc::VM& EVMHost::getVM(string const& _path)
 	return NullVM;
 }
 
-bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
+std::tuple<bool, bool> EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 {
 	bool evmVmFound = false;
 	bool ewasmVmFound = false;
@@ -77,7 +77,7 @@ bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 	{
 		evmc::VM& vm = EVMHost::getVM(path.string());
 		if (!vm)
-			return false;
+			continue;
 
 		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
 		{
@@ -93,7 +93,7 @@ bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 			ewasmVmFound = true;
 		}
 	}
-	return evmVmFound;
+	return {evmVmFound, ewasmVmFound};
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):

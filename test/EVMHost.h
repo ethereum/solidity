@@ -49,8 +49,9 @@ public:
 	/// Tries to load all defined evmc vm shared libraries.
 	/// @param _vmPaths paths to multiple evmc shared libraries.
 	/// @throw Exception if multiple evm1 or multiple ewasm evmc vms where loaded.
-	/// @returns true, if an evmc vm was supporting evm1 loaded properly.
-	static bool checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths);
+	/// @returns A pair of booleans, the first element being true, if an evmc vm supporting evm1 was loaded properly,
+	///          the second being true, if an evmc vm supporting ewasm was loaded properly.
+	static std::tuple<bool, bool> checkVmPaths(std::vector<boost::filesystem::path> const& _vmPaths);
 
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm);
 

@@ -62,6 +62,7 @@ struct CommonOptions
 	bool enforceCompileToEwasm = false;
 	bool enforceGasTest = false;
 	u256 enforceGasTestMinValue = 100000;
+	bool disableSemanticTests = false;
 	bool disableSMT = false;
 	bool useABIEncoderV1 = false;
 	bool showMessages = false;
@@ -91,5 +92,7 @@ private:
 /// I.e. if the test is located in the semantic test directory and is not excluded due to being a part of external sources.
 /// Note: @p _testPath can be relative but must include at least the `/test/libsolidity/semanticTests/` part
 bool isValidSemanticTestPath(boost::filesystem::path const& _testPath);
+
+bool loadVMs(CommonOptions const& _options);
 
 }
