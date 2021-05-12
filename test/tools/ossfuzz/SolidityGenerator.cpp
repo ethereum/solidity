@@ -33,11 +33,10 @@ using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
 using namespace std;
 
-GeneratorBase::GeneratorBase(std::shared_ptr<SolidityGenerator> _mutator)
+GeneratorBase::GeneratorBase(SolidityGenerator* _mutator)
 {
-	mutator = std::move(_mutator);
+	mutator = _mutator;
 	state = mutator->testState();
-	uRandDist = mutator->uniformRandomDist();
 }
 
 string GeneratorBase::visitChildren()
@@ -47,10 +46,10 @@ string GeneratorBase::visitChildren()
 	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
 	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
-	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
+	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist()->randomEngine);
 	for (auto const& child: randomisedChildren)
-		if (uRandDist->likely(child.second + 1))
-			for (unsigned i = 0; i < uRandDist->distributionOneToN(child.second); i++)
+		if (uRandDist()->likely(child.second + 1))
+			for (unsigned i = 0; i < uRandDist()->distributionOneToN(child.second); i++)
 				os << std::visit(GenericVisitor{
 					[&](auto const& _item) { return _item->generate(); }
 				}, child.first);
@@ -161,7 +160,7 @@ string PragmaGenerator::visit()
 	// Add preamble
 	pragmas.insert(string(s_preamble));
 	// Choose either abicoder v1 or v2 but not both.
-	pragmas.insert(s_abiPragmas[uRandDist->distributionOneToN(s_abiPragmas.size()) - 1]);
+	pragmas.insert(s_abiPragmas[uRandDist()->distributionOneToN(s_abiPragmas.size()) - 1]);
 	return boost::algorithm::join(pragmas, "\n") + "\n";
 }
 
@@ -365,7 +364,7 @@ AssignmentStmtGenerator::AssignOp AssignmentStmtGenerator::assignOp(SolidityType
 	else
 		solAssert(false, "");
 
-	return possibleOps[uRandDist->distributionOneToN(possibleOps.size()) - 1];
+	return possibleOps[uRandDist()->distributionOneToN(possibleOps.size()) - 1];
 }
 
 string AssignmentStmtGenerator::assignOp(AssignOp _op)
@@ -426,7 +425,7 @@ void StatementGenerator::setup()
 
 string StatementGenerator::visit()
 {
-	bool unchecked = uRandDist->probable(s_uncheckedBlockInvProb);
+	bool unchecked = uRandDist()->probable(s_uncheckedBlockInvProb);
 	bool inUnchecked = mutator->generator<BlockStmtGenerator>()->unchecked();
 	// Do not generate nested unchecked blocks.
 	bool generateUncheckedBlock = unchecked && !inUnchecked;
@@ -438,9 +437,9 @@ string StatementGenerator::visit()
 	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
 	for (auto const& child: generators)
 		randomisedChildren.push_back(child);
-	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist->randomEngine);
+	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist()->randomEngine);
 	for (auto const& child: randomisedChildren)
-		if (uRandDist->likely(child.second + 1))
+		if (uRandDist()->likely(child.second + 1))
 		{
 			os << std::visit(GenericVisitor{
 				[](auto const& _item) { return _item->generate(); }
@@ -478,8 +477,9 @@ string BlockStmtGenerator::visit()
 		block << indentation() + "{\n";
 
 	// Create blockscope inside current function state
+	auto newBlockScope = make_shared<BlockScope>();
 	state->currentFunctionState()->scopes.push_back(
-		make_shared<BlockScope>()
+		std::move(newBlockScope)
 	);
 	state->indent();
 	block << visitChildren();
@@ -503,12 +503,12 @@ string FunctionGenerator::visit()
 		visibility = "external";
 
 	// Add I/O
-	if (uRandDist->likely(s_maxInputs + 1))
-		for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxInputs); i++)
+	if (uRandDist()->likely(s_maxInputs + 1))
+		for (unsigned i = 0; i < uRandDist()->distributionOneToN(s_maxInputs); i++)
 			state->currentFunctionState()->addInput(TypeProvider{state}.type());
 
-	if (uRandDist->likely(s_maxOutputs + 1))
-		for (unsigned i = 0; i < uRandDist->distributionOneToN(s_maxOutputs); i++)
+	if (uRandDist()->likely(s_maxOutputs + 1))
+		for (unsigned i = 0; i < uRandDist()->distributionOneToN(s_maxOutputs); i++)
 			state->currentFunctionState()->addOutput(TypeProvider{state}.type());
 
 	ostringstream function;
@@ -1253,7 +1253,7 @@ string FunctionCallGenerator::visit()
 	if (availableFunctions.size() > 1)
 	{
 		for (auto const& i: availableFunctions)
-			if (uRandDist->probable(availableFunctions.size()))
+			if (uRandDist()->probable(availableFunctions.size()))
 				callee = i;
 	}
 	else
@@ -1277,7 +1277,8 @@ shared_ptr<T> SolidityGenerator::generator()
 SolidityGenerator::SolidityGenerator(unsigned _seed)
 {
 	m_generators = {};
-	m_urd = make_shared<UniformRandomDistribution>(make_unique<RandomEngine>(_seed));
+	auto engine = make_unique<RandomEngine>(_seed);
+	m_urd = make_shared<UniformRandomDistribution>(std::move(engine));
 	m_state = make_shared<TestState>(m_urd);
 }
 
@@ -1299,6 +1300,5 @@ string SolidityGenerator::generateTestProgram()
 			[&](auto const& _item) { return _item->setup(); }
 		}, g);
 	string program = generator<TestCaseGenerator>()->generate();
-	destroyGenerators();
 	return program;
 }

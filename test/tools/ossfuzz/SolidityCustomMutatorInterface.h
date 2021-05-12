@@ -30,6 +30,12 @@ namespace solidity::test::fuzzer::mutator
 struct SolidityCustomMutatorInterface
 {
 	SolidityCustomMutatorInterface(uint8_t* _data, size_t _size, size_t _maxSize, unsigned _seed);
+
+	~SolidityCustomMutatorInterface()
+	{
+		generator.reset();
+	}
+
 	/// Generates Solidity test program, copies it into buffer
 	/// provided by libFuzzer and @returns size of the test program.
 	size_t generate();
