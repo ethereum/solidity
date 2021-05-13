@@ -60,7 +60,7 @@ then
   rm -f evmone-0.7.0-darwin-x86_64.tar.gz
 
   # hera
-  wget https://github.com/ewasm/hera/releases/download/v0.3.2/hera-0.3.2-darwin-x86_64.tar.gz
-  tar xzpf hera-0.3.2-darwin-x86_64.tar.gz -C /usr/local
-  rm -f hera-0.3.2-darwin-x86_64.tar.gz
+  wget https://github.com/ewasm/hera/releases/download/v0.3.2-evmc8/hera-0.3.2+commit.dc886eb7-darwin-x86_64.tar.gz
+  tar xzpf hera-0.3.2+commit.dc886eb7-darwin-x86_64.tar.gz -C /usr/local
+  rm -f hera-0.3.2+commit.dc886eb7-darwin-x86_64.tar.gz
 fi
