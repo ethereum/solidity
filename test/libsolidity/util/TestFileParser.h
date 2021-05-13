@@ -95,7 +95,7 @@ private:
 		/// Advances current position by 1 in the input stream.
 		void advance()
 		{
-			solAssert(m_char != m_source.end(), "Cannot advance beyond end.");
+			solAssert(!eof(), "Cannot advance beyond end.");
 			m_char = std::next(m_char, 1);
 		}
 
