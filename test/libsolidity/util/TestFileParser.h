@@ -92,11 +92,11 @@ private:
 		char scanHexPart();
 
 	private:
-		/// Advances current position in the input stream.
-		void advance(unsigned n = 1)
+		/// Advances current position by 1 in the input stream.
+		void advance()
 		{
 			solAssert(m_char != m_source.end(), "Cannot advance beyond end.");
-			m_char = std::next(m_char, n);
+			m_char = std::next(m_char, 1);
 		}
 
 		/// Returns the current character or '\0' if at end of input.
@@ -111,9 +111,6 @@ private:
 		/// Retrieves the next character ('\0' if that would be at (or beyond) the end of input)
 		/// without advancing the input stream iterator.
 		char peek() const noexcept;
-
-		/// Returns true if the end of a line is reached, false otherwise.
-		bool isEndOfLine() const { return m_char == m_source.end(); }
 
 		std::string m_source;
 		std::string::const_iterator m_char;
