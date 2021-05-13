@@ -148,6 +148,8 @@ void EVMHost::reset()
 	recorded_selfdestructs.clear();
 	// Clear call records
 	recorded_calls.clear();
+	// Clear EIP-2929 account access indicator
+	recorded_account_accesses.clear();
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -273,6 +275,14 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 		destination.balance = convertToEVMC(u256(convertFromEVMC(destination.balance)) + value);
 	}
 
+	// Populate the access access list.
+	// Note, this will also properly touch the created address.
+	// TODO: support a user supplied access list too
+	if (m_evmRevision >= EVMC_BERLIN)
+	{
+		access_account(message.sender);
+		access_account(message.destination);
+	}
 	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
 	evmc::result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());

@@ -465,6 +465,12 @@ public:
                           size_t data_size,
                           const bytes32 topics[],
                           size_t num_topics) noexcept = 0;
+
+    /// @copydoc evmc_host_interface::access_account
+    virtual evmc_access_status access_account(const address& addr) noexcept = 0;
+
+    /// @copydoc evmc_host_interface::access_storage
+    virtual evmc_access_status access_storage(const address& addr, const bytes32& key) noexcept = 0;
 };
 
 
@@ -563,6 +569,16 @@ public:
                   size_t topics_count) noexcept final
     {
         host->emit_log(context, &addr, data, data_size, topics, topics_count);
+    }
+
+    evmc_access_status access_account(const address& address) noexcept final
+    {
+        return host->access_account(context, &address);
+    }
+
+    evmc_access_status access_storage(const address& address, const bytes32& key) noexcept final
+    {
+        return host->access_storage(context, &address, &key);
     }
 };
 
@@ -805,6 +821,18 @@ inline void emit_log(evmc_host_context* h,
     Host::from_context(h)->emit_log(*addr, data, data_size, static_cast<const bytes32*>(topics),
                                     num_topics);
 }
+
+inline evmc_access_status access_account(evmc_host_context* h, const evmc_address* addr) noexcept
+{
+    return Host::from_context(h)->access_account(*addr);
+}
+
+inline evmc_access_status access_storage(evmc_host_context* h,
+                                         const evmc_address* addr,
+                                         const evmc_bytes32* key) noexcept
+{
+    return Host::from_context(h)->access_storage(*addr, *key);
+}
 }  // namespace internal
 
 inline const evmc_host_interface& Host::get_interface() noexcept
@@ -815,7 +843,9 @@ inline const evmc_host_interface& Host::get_interface() noexcept
         ::evmc::internal::get_code_size,  ::evmc::internal::get_code_hash,
         ::evmc::internal::copy_code,      ::evmc::internal::selfdestruct,
         ::evmc::internal::call,           ::evmc::internal::get_tx_context,
-        ::evmc::internal::get_block_hash, ::evmc::internal::emit_log};
+        ::evmc::internal::get_block_hash, ::evmc::internal::emit_log,
+        ::evmc::internal::access_account, ::evmc::internal::access_storage,
+    };
     return interface;
 }
 }  // namespace evmc

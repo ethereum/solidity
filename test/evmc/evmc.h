@@ -44,7 +44,7 @@ enum
      *
      * @see @ref versioning
      */
-    EVMC_ABI_VERSION = 7
+    EVMC_ABI_VERSION = 8
 };
 
 
@@ -604,6 +604,52 @@ typedef void (*evmc_emit_log_fn)(struct evmc_host_context* context,
                                  size_t topics_count);
 
 /**
+ * Access status per EIP-2929: Gas cost increases for state access opcodes.
+ */
+enum evmc_access_status
+{
+    /**
+     * The entry hasn't been accessed before – it's the first access.
+     */
+    EVMC_ACCESS_COLD = 0,
+
+    /**
+     * The entry is already in accessed_addresses or accessed_storage_keys.
+     */
+    EVMC_ACCESS_WARM = 1
+};
+
+/**
+ * Access account callback function.
+ *
+ * This callback function is used by a VM to add the given address
+ * to accessed_addresses substate (EIP-2929).
+ *
+ * @param context  The Host execution context.
+ * @param address  The address of the account.
+ * @return         EVMC_ACCESS_WARM if accessed_addresses already contained the address
+ *                 or EVMC_ACCESS_COLD otherwise.
+ */
+typedef enum evmc_access_status (*evmc_access_account_fn)(struct evmc_host_context* context,
+                                                          const evmc_address* address);
+
+/**
+ * Access storage callback function.
+ *
+ * This callback function is used by a VM to add the given account storage entry
+ * to accessed_storage_keys substate (EIP-2929).
+ *
+ * @param context  The Host execution context.
+ * @param address  The address of the account.
+ * @param key      The index of the account's storage entry.
+ * @return         EVMC_ACCESS_WARM if accessed_storage_keys already contained the key
+ *                 or EVMC_ACCESS_COLD otherwise.
+ */
+typedef enum evmc_access_status (*evmc_access_storage_fn)(struct evmc_host_context* context,
+                                                          const evmc_address* address,
+                                                          const evmc_bytes32* key);
+
+/**
  * Pointer to the callback function supporting EVM calls.
  *
  * @param context  The pointer to the Host execution context.
@@ -658,6 +704,12 @@ struct evmc_host_interface
 
     /** Emit log callback function. */
     evmc_emit_log_fn emit_log;
+
+    /** Access account callback function. */
+    evmc_access_account_fn access_account;
+
+    /** Access storage callback function. */
+    evmc_access_storage_fn access_storage;
 };
 
 

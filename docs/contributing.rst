@@ -112,7 +112,7 @@ starting from the current directory. The required file is called ``libevmone.so`
 ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
 use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
 ``libsolidity/SolidityEndToEndTest``, part of the soltest suite. To run all tests, download the library from
-`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.4.1>`_
+`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.7.0>`_
 and place it in the project root path or inside the ``deps`` folder.
 
 If the ``libz3`` library is not installed on your system, you should disable the
