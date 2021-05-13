@@ -489,11 +489,25 @@ string TestFileParser::parseString()
 	return literal;
 }
 
+namespace {
+string _readStream(istream& _stream)
+{
+        string ret;
+        while (!_stream.eof())
+        {
+                string tmp;
+                // NOTE: this will read until EOF or NL
+                getline(_stream, tmp);
+                ret.append(tmp);
+                ret.append("\n");
+        }
+        return ret;
+}
+}
+
 void TestFileParser::Scanner::readStream(istream& _stream)
 {
-	std::string line;
-	while (std::getline(_stream, line))
-		m_line += line;
+	m_line = _readStream(_stream);
 	m_char = m_line.begin();
 }
 
@@ -529,12 +543,8 @@ void TestFileParser::Scanner::scanNextToken()
 	{
 		switch(current())
 		{
-		case '/':
-			advance();
-			if (current() == '/')
-				selectToken(Token::Newline);
-			else
-				selectToken(Token::Invalid);
+		case '\n':
+			selectToken(Token::Newline);
 			break;
 		case '-':
 			if (peek() == '>')
