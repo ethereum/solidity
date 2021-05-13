@@ -40,15 +40,6 @@ using namespace std;
 
 using Token = soltest::Token;
 
-char TestFileParser::Scanner::peek() const noexcept
-{
-	if (std::distance(m_char, m_source.end()) < 2)
-		return '\0';
-
-	auto next = m_char;
-	std::advance(next, 1);
-	return *next;
-}
 
 vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCalls(size_t _lineOffset)
 {
@@ -487,6 +478,16 @@ string TestFileParser::parseString()
 	string literal = m_scanner.currentLiteral();
 	expect(Token::String);
 	return literal;
+}
+
+char TestFileParser::Scanner::peek() const noexcept
+{
+	if (std::distance(m_char, m_source.end()) < 2)
+		return '\0';
+
+	auto next = m_char;
+	std::advance(next, 1);
+	return *next;
 }
 
 void TestFileParser::Scanner::scanNextToken()
