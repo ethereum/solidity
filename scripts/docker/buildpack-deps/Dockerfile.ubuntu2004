@@ -60,7 +60,7 @@ RUN set -ex; \
 # HERA
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.3.2" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
+	git clone --branch="v0.3.2-evmc8" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
 	cd hera; \
 	mkdir build; \
 	cd build; \
