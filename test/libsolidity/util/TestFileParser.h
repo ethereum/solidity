@@ -73,7 +73,7 @@ private:
 		/// Constructor that takes an input stream \param _stream to operate on.
 		/// It reads all lines into one single line, keeping the newlines.
 		Scanner(std::istream& _stream):
-			m_source(readStream(_stream))
+			m_source(solidity::util::readStream(_stream))
 		{
 			m_char = m_source.begin();
 		}
