@@ -489,28 +489,6 @@ string TestFileParser::parseString()
 	return literal;
 }
 
-namespace {
-string _readStream(istream& _stream)
-{
-        string ret;
-        while (!_stream.eof())
-        {
-                string tmp;
-                // NOTE: this will read until EOF or NL
-                getline(_stream, tmp);
-                ret.append(tmp);
-                ret.append("\n");
-        }
-        return ret;
-}
-}
-
-void TestFileParser::Scanner::readStream(istream& _stream)
-{
-	m_line = _readStream(_stream);
-	m_char = m_line.begin();
-}
-
 void TestFileParser::Scanner::scanNextToken()
 {
 	// Make code coverage happy.

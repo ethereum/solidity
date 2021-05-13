@@ -16,6 +16,7 @@
 
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/CommonIO.h>
 #include <test/libsolidity/util/SoltestTypes.h>
 
 #include <iosfwd>
@@ -71,10 +72,11 @@ private:
 	public:
 		/// Constructor that takes an input stream \param _stream to operate on.
 		/// It reads all lines into one single line, keeping the newlines.
-		Scanner(std::istream& _stream) { readStream(_stream); }
-
-		/// Reads input stream into a single line and resets the current iterator.
-		void readStream(std::istream& _stream);
+		Scanner(std::istream& _stream):
+			m_line(readStream(_stream))
+		{
+			m_char = m_line.begin();
+		}
 
 		/// Reads character stream and creates token.
 		void scanNextToken();
