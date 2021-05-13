@@ -577,7 +577,7 @@ void TestFileParser::Scanner::scanNextToken()
 			}
 			else if (langutil::isWhiteSpace(current()))
 				selectToken(Token::Whitespace);
-			else if (isEndOfLine())
+			else if (eof())
 			{
 				m_currentToken = Token::EOS;
 				m_currentLiteral = "";

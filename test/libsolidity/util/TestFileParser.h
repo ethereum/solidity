@@ -112,6 +112,9 @@ private:
 		/// without advancing the input stream iterator.
 		char peek() const noexcept;
 
+		/// Returns true if the end of a line is reached, false otherwise.
+		bool eof() const { return m_char == m_source.end(); }
+
 		std::string m_source;
 		std::string::const_iterator m_char;
 
