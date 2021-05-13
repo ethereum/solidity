@@ -36,8 +36,11 @@ namespace solidity::util
 /// If the file is empty, returns an empty string.
 std::string readFileAsString(std::string const& _file);
 
+/// Returns the contents of the stream (until EOF).
+std::string readStream(std::istream& _stream);
+
 /// Retrieve and returns the contents of standard input (until EOF).
-std::string readStandardInput();
+inline std::string readStandardInput() { return readStream(std::cin); }
 
 /// Retrieve and returns a character from standard input (without waiting for EOL).
 int readStandardInputChar();

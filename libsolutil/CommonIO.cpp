@@ -68,14 +68,14 @@ string solidity::util::readFileAsString(string const& _file)
 	return readFile<string>(_file);
 }
 
-string solidity::util::readStandardInput()
+string solidity::util::readStream(istream& _stream)
 {
 	string ret;
-	while (!cin.eof())
+	while (!_stream.eof())
 	{
 		string tmp;
 		// NOTE: this will read until EOF or NL
-		getline(cin, tmp);
+		getline(_stream, tmp);
 		ret.append(tmp);
 		ret.append("\n");
 	}
