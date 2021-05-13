@@ -73,9 +73,9 @@ private:
 		/// Constructor that takes an input stream \param _stream to operate on.
 		/// It reads all lines into one single line, keeping the newlines.
 		Scanner(std::istream& _stream):
-			m_line(readStream(_stream))
+			m_source(readStream(_stream))
 		{
-			m_char = m_line.begin();
+			m_char = m_source.begin();
 		}
 
 		/// Reads character stream and creates token.
@@ -95,14 +95,14 @@ private:
 		/// Advances current position in the input stream.
 		void advance(unsigned n = 1)
 		{
-			solAssert(m_char != m_line.end(), "Cannot advance beyond end.");
+			solAssert(m_char != m_source.end(), "Cannot advance beyond end.");
 			m_char = std::next(m_char, n);
 		}
 
 		/// Returns the current character or '\0' if at end of input.
 		char current() const noexcept
 		{
-			if (m_char == m_line.end())
+			if (m_char == m_source.end())
 				return '\0';
 
 			return *m_char;
@@ -113,9 +113,9 @@ private:
 		char peek() const noexcept;
 
 		/// Returns true if the end of a line is reached, false otherwise.
-		bool isEndOfLine() const { return m_char == m_line.end(); }
+		bool isEndOfLine() const { return m_char == m_source.end(); }
 
-		std::string m_line;
+		std::string m_source;
 		std::string::const_iterator m_char;
 
 		std::string m_currentLiteral;

@@ -42,7 +42,7 @@ using Token = soltest::Token;
 
 char TestFileParser::Scanner::peek() const noexcept
 {
-	if (std::distance(m_char, m_line.end()) < 2)
+	if (std::distance(m_char, m_source.end()) < 2)
 		return '\0';
 
 	auto next = m_char;
