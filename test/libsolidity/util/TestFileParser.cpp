@@ -595,7 +595,7 @@ string TestFileParser::Scanner::scanComment()
 	string comment;
 	advance();
 
-	while (current() != '#')
+	while (!eof() && current() != '#')
 	{
 		comment += current();
 		advance();
@@ -607,7 +607,7 @@ string TestFileParser::Scanner::scanIdentifierOrKeyword()
 {
 	string identifier;
 	identifier += current();
-	while (langutil::isIdentifierPart(peek()))
+	while (!eof() && langutil::isIdentifierPart(peek()))
 	{
 		advance();
 		identifier += current();
@@ -619,7 +619,7 @@ string TestFileParser::Scanner::scanDecimalNumber()
 {
 	string number;
 	number += current();
-	while (langutil::isDecimalDigit(peek()))
+	while (!eof() && langutil::isDecimalDigit(peek()))
 	{
 		advance();
 		number += current();
@@ -631,7 +631,7 @@ string TestFileParser::Scanner::scanHexNumber()
 {
 	string number;
 	number += current();
-	while (langutil::isHexDigit(peek()))
+	while (!eof() && langutil::isHexDigit(peek()))
 	{
 		advance();
 		number += current();
@@ -644,7 +644,7 @@ string TestFileParser::Scanner::scanString()
 	string str;
 	advance();
 
-	while (current() != '\"')
+	while (!eof() && current() != '\"')
 	{
 		if (current() == '\\')
 		{
