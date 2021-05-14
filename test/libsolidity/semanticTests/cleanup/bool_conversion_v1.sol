@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
     function f(bool _b) public returns (uint256) {
         if (_b) return 1;

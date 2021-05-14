@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
 	function dyn(uint ptr, uint start, uint x) public returns (bytes memory a) {
 		assembly {
