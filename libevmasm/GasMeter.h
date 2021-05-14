@@ -107,6 +107,11 @@ namespace GasCosts
 		return _evmVersion >= langutil::EVMVersion::istanbul() ? 16 : 68;
 	}
 	static unsigned const copyGas = 3;
+	static unsigned const precompileIdentityBaseGas = 15;
+	static unsigned const precompileIdentityPerWordGas = 3;
+	static unsigned const precompileSha256BaseGas = 60;
+	static unsigned const precompileSha256PerWordGas = 12;
+	static unsigned const precompileEcrecoverGas = 3000;
 }
 
 /**
