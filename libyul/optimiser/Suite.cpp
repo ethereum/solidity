@@ -48,6 +48,7 @@
 #include <libyul/optimiser/UnusedPruner.h>
 #include <libyul/optimiser/ExpressionSimplifier.h>
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
+#include <libyul/optimiser/CommonSwitchCasePrefixMover.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/SSAReverser.h>
 #include <libyul/optimiser/SSATransform.h>
@@ -180,6 +181,7 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			BlockFlattener,
 			CircularReferencesPruner,
 			CommonSubexpressionEliminator,
+			CommonSwitchCasePrefixMover,
 			ConditionalSimplifier,
 			ConditionalUnsimplifier,
 			ControlFlowSimplifier,
@@ -220,6 +222,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{BlockFlattener::name,                'f'},
 		{CircularReferencesPruner::name,      'l'},
 		{CommonSubexpressionEliminator::name, 'c'},
+		{CommonSwitchCasePrefixMover::name,   'S'},
 		{ConditionalSimplifier::name,         'C'},
 		{ConditionalUnsimplifier::name,       'U'},
 		{ControlFlowSimplifier::name,         'n'},

@@ -97,6 +97,8 @@ add_library(yul
 	optimiser/CircularReferencesPruner.h
 	optimiser/CommonSubexpressionEliminator.cpp
 	optimiser/CommonSubexpressionEliminator.h
+	optimiser/CommonSwitchCasePrefixMover.cpp
+	optimiser/CommonSwitchCasePrefixMover.h
 	optimiser/ConditionalSimplifier.cpp
 	optimiser/ConditionalSimplifier.h
 	optimiser/ConditionalUnsimplifier.cpp
