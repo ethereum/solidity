@@ -10,7 +10,7 @@ contract test {
         ret = x.div(y);
     }
     function exp(int256 x) external pure returns (int256 ret) {
-        ret = x.log10();
+        ret = x.exp();
     }
     function exp2(int256 x) external pure returns (int256 ret) {
         ret = x.exp2();
@@ -50,17 +50,17 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 2149588
-// gas legacy: 2561184
-// gas legacyOptimized: 1874610
+// gas irOptimized: 2171167
+// gas legacy: 2602700
+// gas legacyOptimized: 1900162
 // div(int256,int256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
 // gas irOptimized: 22303
 // gas legacy: 22767
 // gas legacyOptimized: 22282
-// exp(int256): 3141592653589793238 -> 4971498726941338506
-// gas irOptimized: 31438
-// gas legacy: 32933
-// gas legacyOptimized: 30322
+// exp(int256): 3141592653589793238 -> 23140692632779268978
+// gas irOptimized: 25094
+// gas legacy: 25203
+// gas legacyOptimized: 24357
 // exp2(int256): 3141592653589793238 -> 8824977827076287620
 // gas irOptimized: 24808
 // gas legacy: 24864
