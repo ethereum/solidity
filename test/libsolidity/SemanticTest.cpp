@@ -99,6 +99,14 @@ SemanticTest::SemanticTest(
 	if (m_runWithABIEncoderV1Only && !solidity::test::CommonOptions::get().useABIEncoderV1)
 		m_shouldRun = false;
 
+	// Sanity check
+	if (m_runWithABIEncoderV1Only && (compileViaYul == "true" || compileViaYul == "also"))
+		BOOST_THROW_EXCEPTION(runtime_error(
+			"ABIEncoderV1Only can not be used with compileViaYul=" + compileViaYul +
+			", set it to false or omit the flag. The compileViaYul setting ignores the abicoder pragma"
+			" and runs everything with ABICoder V2."
+		));
+
 	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
 	soltestAssert(revertStrings, "Invalid revertStrings setting.");
 	m_revertStrings = revertStrings.value();
