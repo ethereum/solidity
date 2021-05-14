@@ -97,12 +97,9 @@ SemanticTest::SemanticTest(
 
 	if (!solidity::test::CommonOptions::get().useABIEncoderV1)
 	{
-		for (auto const& [filename,source]: m_reader.sources().sources)
-			if (source.find("pragma abicoder v1;") != string::npos)
-			{
-				m_shouldRun = false;
-				break;
-			}
+		// If the top level sources requires ABICoder v1 we can not run it.
+		if (m_sources.sources[m_sources.mainSourceFile].find("pragma abicoder v1;") != string::npos)
+			m_shouldRun = false;
 	}
 
 	auto revertStrings = revertStringsFromString(m_reader.stringSetting("revertStrings", "default"));
