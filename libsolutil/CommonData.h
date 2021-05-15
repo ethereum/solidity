@@ -404,7 +404,8 @@ inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
 	return (prefix == HexPrefix::Add) ? "0x" + str : str;
 }
 
-inline std::string toCompactHexWithPrefix(u256 const& _value)
+template <class T>
+inline std::string toCompactHexWithPrefix(T _value)
 {
 	return toHex(toCompactBigEndian(_value, 1), HexPrefix::Add);
 }
