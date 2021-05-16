@@ -1158,7 +1158,15 @@ void SMTEncoder::visitStructConstructorCall(FunctionCall const& _funCall)
 	if (smt::isNonRecursiveStruct(*_funCall.annotation().type))
 	{
 		auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
-		structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
+		auto structType = dynamic_cast<StructType const*>(structSymbolicVar.type());
+		solAssert(structType, "");
+		auto const& structMembers = structType->structDefinition().members();
+		solAssert(structMembers.size() == _funCall.sortedArguments().size(), "");
+		auto args = _funCall.sortedArguments();
+		structSymbolicVar.assignAllMembers(applyMap(
+			ranges::views::zip(args, structMembers),
+			[this] (auto const& argMemberPair) { return expr(*argMemberPair.first, argMemberPair.second->type()); }
+		));
 	}
 
 }
