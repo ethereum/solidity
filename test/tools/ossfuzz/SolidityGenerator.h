@@ -347,10 +347,10 @@ struct FunctionState;
 struct SourceState
 {
 	explicit SourceState(
-		std::shared_ptr<UniformRandomDistribution> _urd,
+		std::shared_ptr<UniformRandomDistribution>& _urd,
 		std::string _sourceName
 	):
-		uRandDist(std::move(_urd)),
+		uRandDist(_urd),
 		importedSources({}),
 		sourceName(_sourceName)
 	{}
@@ -417,7 +417,7 @@ struct SourceState
 	}
 	/// Prints source state to @param _os.
 	void print(std::ostream& _os) const;
-	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::shared_ptr<UniformRandomDistribution>& uRandDist;
 	std::set<std::string> importedSources;
 	std::map<SolidityTypePtr, std::string> exports;
 	std::set<std::shared_ptr<FunctionState>> freeFunctions;
@@ -485,10 +485,10 @@ struct FunctionState
 struct ContractState
 {
 	explicit ContractState(
-		std::shared_ptr<UniformRandomDistribution> _urd,
+		std::shared_ptr<UniformRandomDistribution>& _urd,
 		std::string _contractName
 	):
-		uRandDist(std::move(_urd)),
+		uRandDist(_urd),
 		name(_contractName)
 	{}
 	~ContractState()
@@ -502,19 +502,19 @@ struct ContractState
 	}
 
 	std::set<std::shared_ptr<FunctionState>> functions;
-	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::shared_ptr<UniformRandomDistribution>& uRandDist;
 	std::string name;
 };
 
 struct TestState
 {
-	explicit TestState(std::shared_ptr<UniformRandomDistribution> _urd):
+	explicit TestState(std::shared_ptr<UniformRandomDistribution>& _urd):
 		sourceUnitState({}),
 		contractState({}),
 		currentSourceUnitPath({}),
 		currentContract({}),
 		currentFunction({}),
-		uRandDist(std::move(_urd)),
+		uRandDist(_urd),
 		numSourceUnits(0),
 		numContracts(0),
 		numFunctions(0),
@@ -673,7 +673,7 @@ struct TestState
 	/// Current function
 	std::string currentFunction;
 	/// Uniform random distribution.
-	std::shared_ptr<UniformRandomDistribution> uRandDist;
+	std::shared_ptr<UniformRandomDistribution>& uRandDist;
 	/// Number of source units in test input
 	size_t numSourceUnits;
 	/// Number of contracts in test input
@@ -694,13 +694,8 @@ struct TestState
 
 struct TypeProvider
 {
-	TypeProvider(std::shared_ptr<TestState> _state): state(std::move(_state))
+	TypeProvider(std::shared_ptr<TestState>& _state): state(_state)
 	{}
-
-	~TypeProvider()
-	{
-		state.reset();
-	}
 
 	enum class Type: size_t
 	{
@@ -722,7 +717,7 @@ struct TypeProvider
 		return static_cast<Type>(state->uRandDist->distributionOneToN(static_cast<size_t>(Type::TYPEMAX) - 1));
 	}
 
-	std::shared_ptr<TestState> state;
+	std::shared_ptr<TestState>& state;
 };
 
 struct TypeComparator
@@ -743,13 +738,8 @@ struct TypeComparator
 
 struct LiteralGenerator
 {
-	explicit LiteralGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	explicit LiteralGenerator(std::shared_ptr<TestState>& _state): state(_state)
 	{}
-
-	~LiteralGenerator()
-	{
-		state.reset();
-	}
 
 	std::string operator()(std::shared_ptr<AddressType> const& _type);
 	std::string operator()(std::shared_ptr<BoolType> const& _type);
@@ -759,18 +749,13 @@ struct LiteralGenerator
 	std::string operator()(std::shared_ptr<FunctionType> const& _type);
 	std::string operator()(std::shared_ptr<IntegerType> const& _type);
 
-	std::shared_ptr<TestState> state;
+	std::shared_ptr<TestState>& state;
 };
 
 struct ExpressionGenerator
 {
-	ExpressionGenerator(std::shared_ptr<TestState> _state): state(std::move(_state))
+	ExpressionGenerator(std::shared_ptr<TestState>& _state): state(_state)
 	{}
-
-	~ExpressionGenerator()
-	{
-		state.reset();
-	}
 
 	enum class RLValueExpr: size_t
 	{
@@ -847,7 +832,7 @@ struct ExpressionGenerator
 	{
 		return nestingDepth > s_maxNestingDepth;
 	}
-	std::shared_ptr<TestState> state;
+	std::shared_ptr<TestState>& state;
 	unsigned nestingDepth;
 	static constexpr unsigned s_maxNestingDepth = 30;
 };
@@ -869,14 +854,14 @@ public:
 	std::shared_ptr<T> generator();
 	/// @returns a shared ptr to underlying random
 	/// number distribution.
-	std::shared_ptr<UniformRandomDistribution> uniformRandomDist()
+	std::shared_ptr<UniformRandomDistribution>& uniformRandomDist()
 	{
 		return m_urd;
 	}
 	/// @returns a pseudo randomly generated test case.
 	std::string generateTestProgram();
 	/// @returns shared ptr to global test state.
-	std::shared_ptr<TestState> testState()
+	std::shared_ptr<TestState>& testState()
 	{
 		return m_state;
 	}
@@ -946,9 +931,8 @@ struct GeneratorBase
 	virtual ~GeneratorBase()
 	{
 		generators.clear();
-		state.reset();
 	}
-	std::shared_ptr<UniformRandomDistribution> uRandDist()
+	std::shared_ptr<UniformRandomDistribution>& uRandDist()
 	{
 		return mutator->uniformRandomDist();
 	}
@@ -958,7 +942,7 @@ struct GeneratorBase
 	/// Set of generators used by this generator.
 	std::set<std::pair<GeneratorPtr, unsigned>> generators;
 	/// Shared ptr to global test state.
-	std::shared_ptr<TestState> state;
+	std::shared_ptr<TestState>& state;
 };
 
 class TestCaseGenerator: public GeneratorBase
