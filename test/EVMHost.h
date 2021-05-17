@@ -91,6 +91,8 @@ public:
 private:
 	evmc::address m_currentAddress = {};
 
+	void transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept;
+
 	/// Records calls made via @param _message.
 	void recordCalls(evmc_message const& _message) noexcept;
 
