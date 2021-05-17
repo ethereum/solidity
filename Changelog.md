@@ -13,6 +13,7 @@ Compiler Features:
 
 Bugfixes:
  * AST: Do not output value of Yul literal if it is not a valid UTF-8 string.
+ * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
 
 
 AST Changes:
