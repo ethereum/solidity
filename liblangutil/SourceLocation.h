@@ -28,6 +28,7 @@
 
 #include <liblangutil/CharStream.h>
 
+#include <limits>
 #include <memory>
 #include <string>
 

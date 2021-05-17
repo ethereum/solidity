@@ -25,6 +25,7 @@
 #include <tools/yulPhaser/Population.h>
 #include <tools/yulPhaser/ProgramCache.h>
 
+#include <cstddef>
 #include <ctime>
 #include <optional>
 #include <ostream>
