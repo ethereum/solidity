@@ -614,8 +614,135 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 	return { std::move(settings) };
 }
 
+/// Only parses the input settings and fills the InputsAndSettings with it.
+/// If this fails, it does return a JSON error response, otherwise nullopt on success.
+optional<Json::Value> parseInputSettings(Json::Value _settings, StandardCompiler::InputsAndSettings& _output)
+{
+	if (auto result = checkSettingsKeys(_settings))
+		return *result;
+
+	if (_settings.isMember("stopAfter"))
+	{
+		if (!_settings["stopAfter"].isString())
+			return formatFatalError("JSONError", "\"settings.stopAfter\" must be a string.");
+
+		if (_settings["stopAfter"].asString() != "parsing")
+			return formatFatalError("JSONError", "Invalid value for \"settings.stopAfter\". Only valid value is \"parsing\".");
+
+		_output.stopAfter = CompilerStack::State::Parsed;
+	}
+
+	if (_settings.isMember("parserErrorRecovery"))
+	{
+		if (!_settings["parserErrorRecovery"].isBool())
+			return formatFatalError("JSONError", "\"settings.parserErrorRecovery\" must be a Boolean.");
+		_output.parserErrorRecovery = _settings["parserErrorRecovery"].asBool();
+	}
+
+	if (_settings.isMember("viaIR"))
+	{
+		if (!_settings["viaIR"].isBool())
+			return formatFatalError("JSONError", "\"settings.viaIR\" must be a Boolean.");
+		_output.viaIR = _settings["viaIR"].asBool();
+	}
+
+	if (_settings.isMember("evmVersion"))
+	{
+		if (!_settings["evmVersion"].isString())
+			return formatFatalError("JSONError", "evmVersion must be a string.");
+		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(_settings["evmVersion"].asString());
+		if (!version)
+			return formatFatalError("JSONError", "Invalid EVM version requested.");
+		_output.evmVersion = *version;
+	}
+
+	if (_settings.isMember("debug"))
+	{
+		if (auto result = checkKeys(_settings["debug"], {"revertStrings"}, "settings.debug"))
+			return *result;
+
+		if (_settings["debug"].isMember("revertStrings"))
+		{
+			if (!_settings["debug"]["revertStrings"].isString())
+				return formatFatalError("JSONError", "settings.debug.revertStrings must be a string.");
+			std::optional<RevertStrings> revertStrings = revertStringsFromString(_settings["debug"]["revertStrings"].asString());
+			if (!revertStrings)
+				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
+			if (*revertStrings == RevertStrings::VerboseDebug)
+				return formatFatalError(
+					"UnimplementedFeatureError",
+					"Only \"default\", \"strip\" and \"debug\" are implemented for settings.debug.revertStrings for now."
+				);
+			_output.revertStrings = *revertStrings;
+		}
+	}
+
+	if (_settings.isMember("remappings") && !_settings["remappings"].isArray())
+		return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings.");
+
+	for (auto const& remapping: _settings.get("remappings", Json::Value()))
+	{
+		if (!remapping.isString())
+			return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings");
+		if (auto r = ImportRemapper::parseRemapping(remapping.asString()))
+			_output.remappings.emplace_back(std::move(*r));
+		else
+			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
+	}
+
+	if (_settings.isMember("optimizer"))
+	{
+		auto optimiserSettings = parseOptimizerSettings(_settings["optimizer"]);
+		if (std::holds_alternative<Json::Value>(optimiserSettings))
+			return std::get<Json::Value>(std::move(optimiserSettings)); // was an error
+		else
+			_output.optimiserSettings = std::get<OptimiserSettings>(std::move(optimiserSettings));
+	}
+
+	Json::Value jsonLibraries = _settings.get("libraries", Json::Value(Json::objectValue));
+	if (!jsonLibraries.isObject())
+		return formatFatalError("JSONError", "\"libraries\" is not a JSON object.");
+	for (auto const& sourceName: jsonLibraries.getMemberNames())
+	{
+		auto const& jsonSourceName = jsonLibraries[sourceName];
+		if (!jsonSourceName.isObject())
+			return formatFatalError("JSONError", "Library entry is not a JSON object.");
+		for (auto const& library: jsonSourceName.getMemberNames())
+		{
+			if (!jsonSourceName[library].isString())
+				return formatFatalError("JSONError", "Library address must be a string.");
+			string address = jsonSourceName[library].asString();
+
+			if (!boost::starts_with(address, "0x"))
+				return formatFatalError(
+					"JSONError",
+					"Library address is not prefixed with \"0x\"."
+				);
+
+			if (address.length() != 42)
+				return formatFatalError(
+					"JSONError",
+					"Library address is of invalid length."
+				);
+
+			try
+			{
+				_output.libraries[sourceName + ":" + library] = util::h160(address);
+			}
+			catch (util::BadHexCharacter const&)
+			{
+				return formatFatalError(
+					"JSONError",
+					"Invalid library address (\"" + address + "\") supplied."
+				);
+			}
+		}
+	}
+
+	return nullopt;
 }
 
+}
 
 std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
 {
@@ -747,127 +874,8 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	}
 
 	Json::Value const& settings = _input.get("settings", Json::Value());
-
-	if (auto result = checkSettingsKeys(settings))
+	if (auto result = parseInputSettings(settings, ret))
 		return *result;
-
-	if (settings.isMember("stopAfter"))
-	{
-		if (!settings["stopAfter"].isString())
-			return formatFatalError("JSONError", "\"settings.stopAfter\" must be a string.");
-
-		if (settings["stopAfter"].asString() != "parsing")
-			return formatFatalError("JSONError", "Invalid value for \"settings.stopAfter\". Only valid value is \"parsing\".");
-
-		ret.stopAfter = CompilerStack::State::Parsed;
-	}
-
-	if (settings.isMember("parserErrorRecovery"))
-	{
-		if (!settings["parserErrorRecovery"].isBool())
-			return formatFatalError("JSONError", "\"settings.parserErrorRecovery\" must be a Boolean.");
-		ret.parserErrorRecovery = settings["parserErrorRecovery"].asBool();
-	}
-
-	if (settings.isMember("viaIR"))
-	{
-		if (!settings["viaIR"].isBool())
-			return formatFatalError("JSONError", "\"settings.viaIR\" must be a Boolean.");
-		ret.viaIR = settings["viaIR"].asBool();
-	}
-
-	if (settings.isMember("evmVersion"))
-	{
-		if (!settings["evmVersion"].isString())
-			return formatFatalError("JSONError", "evmVersion must be a string.");
-		std::optional<langutil::EVMVersion> version = langutil::EVMVersion::fromString(settings["evmVersion"].asString());
-		if (!version)
-			return formatFatalError("JSONError", "Invalid EVM version requested.");
-		ret.evmVersion = *version;
-	}
-
-	if (settings.isMember("debug"))
-	{
-		if (auto result = checkKeys(settings["debug"], {"revertStrings"}, "settings.debug"))
-			return *result;
-
-		if (settings["debug"].isMember("revertStrings"))
-		{
-			if (!settings["debug"]["revertStrings"].isString())
-				return formatFatalError("JSONError", "settings.debug.revertStrings must be a string.");
-			std::optional<RevertStrings> revertStrings = revertStringsFromString(settings["debug"]["revertStrings"].asString());
-			if (!revertStrings)
-				return formatFatalError("JSONError", "Invalid value for settings.debug.revertStrings.");
-			if (*revertStrings == RevertStrings::VerboseDebug)
-				return formatFatalError(
-					"UnimplementedFeatureError",
-					"Only \"default\", \"strip\" and \"debug\" are implemented for settings.debug.revertStrings for now."
-				);
-			ret.revertStrings = *revertStrings;
-		}
-	}
-
-	if (settings.isMember("remappings") && !settings["remappings"].isArray())
-		return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings.");
-
-	for (auto const& remapping: settings.get("remappings", Json::Value()))
-	{
-		if (!remapping.isString())
-			return formatFatalError("JSONError", "\"settings.remappings\" must be an array of strings");
-		if (auto r = ImportRemapper::parseRemapping(remapping.asString()))
-			ret.remappings.emplace_back(std::move(*r));
-		else
-			return formatFatalError("JSONError", "Invalid remapping: \"" + remapping.asString() + "\"");
-	}
-
-	if (settings.isMember("optimizer"))
-	{
-		auto optimiserSettings = parseOptimizerSettings(settings["optimizer"]);
-		if (std::holds_alternative<Json::Value>(optimiserSettings))
-			return std::get<Json::Value>(std::move(optimiserSettings)); // was an error
-		else
-			ret.optimiserSettings = std::get<OptimiserSettings>(std::move(optimiserSettings));
-	}
-
-	Json::Value jsonLibraries = settings.get("libraries", Json::Value(Json::objectValue));
-	if (!jsonLibraries.isObject())
-		return formatFatalError("JSONError", "\"libraries\" is not a JSON object.");
-	for (auto const& sourceName: jsonLibraries.getMemberNames())
-	{
-		auto const& jsonSourceName = jsonLibraries[sourceName];
-		if (!jsonSourceName.isObject())
-			return formatFatalError("JSONError", "Library entry is not a JSON object.");
-		for (auto const& library: jsonSourceName.getMemberNames())
-		{
-			if (!jsonSourceName[library].isString())
-				return formatFatalError("JSONError", "Library address must be a string.");
-			string address = jsonSourceName[library].asString();
-
-			if (!boost::starts_with(address, "0x"))
-				return formatFatalError(
-					"JSONError",
-					"Library address is not prefixed with \"0x\"."
-				);
-
-			if (address.length() != 42)
-				return formatFatalError(
-					"JSONError",
-					"Library address is of invalid length."
-				);
-
-			try
-			{
-				ret.libraries[sourceName + ":" + library] = util::h160(address);
-			}
-			catch (util::BadHexCharacter const&)
-			{
-				return formatFatalError(
-					"JSONError",
-					"Invalid library address (\"" + address + "\") supplied."
-				);
-			}
-		}
-	}
 
 	Json::Value metadataSettings = settings.get("metadata", Json::Value());
 
@@ -976,29 +984,33 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 	return { std::move(ret) };
 }
 
+void StandardCompiler::configure(InputsAndSettings const& _inputsAndSettings, CompilerStack& _compilerStack)
+{
+	_compilerStack.setSources(_inputsAndSettings.sources);
+	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
+		_compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
+	_compilerStack.setViaIR(_inputsAndSettings.viaIR);
+	_compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
+	_compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
+	_compilerStack.setRemappings(move(_inputsAndSettings.remappings));
+	_compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
+	_compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
+	_compilerStack.setLibraries(_inputsAndSettings.libraries);
+	_compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
+	_compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
+	_compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
+	_compilerStack.setModelCheckerSettings(_inputsAndSettings.modelCheckerSettings);
+
+	_compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
+	_compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
+	_compilerStack.enableEwasmGeneration(isEwasmRequested(_inputsAndSettings.outputSelection));
+}
+
 Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSettings _inputsAndSettings)
 {
 	CompilerStack compilerStack(m_readFile);
 
-	StringMap sourceList = std::move(_inputsAndSettings.sources);
-	compilerStack.setSources(sourceList);
-	for (auto const& smtLib2Response: _inputsAndSettings.smtLib2Responses)
-		compilerStack.addSMTLib2Response(smtLib2Response.first, smtLib2Response.second);
-	compilerStack.setViaIR(_inputsAndSettings.viaIR);
-	compilerStack.setEVMVersion(_inputsAndSettings.evmVersion);
-	compilerStack.setParserErrorRecovery(_inputsAndSettings.parserErrorRecovery);
-	compilerStack.setRemappings(move(_inputsAndSettings.remappings));
-	compilerStack.setOptimiserSettings(std::move(_inputsAndSettings.optimiserSettings));
-	compilerStack.setRevertStringBehaviour(_inputsAndSettings.revertStrings);
-	compilerStack.setLibraries(_inputsAndSettings.libraries);
-	compilerStack.useMetadataLiteralSources(_inputsAndSettings.metadataLiteralSources);
-	compilerStack.setMetadataHash(_inputsAndSettings.metadataHash);
-	compilerStack.setRequestedContractNames(requestedContractNames(_inputsAndSettings.outputSelection));
-	compilerStack.setModelCheckerSettings(_inputsAndSettings.modelCheckerSettings);
-
-	compilerStack.enableEvmBytecodeGeneration(isEvmBytecodeRequested(_inputsAndSettings.outputSelection));
-	compilerStack.enableIRGeneration(isIRRequested(_inputsAndSettings.outputSelection));
-	compilerStack.enableEwasmGeneration(isEwasmRequested(_inputsAndSettings.outputSelection));
+	configure(_inputsAndSettings, compilerStack);
 
 	Json::Value errors = std::move(_inputsAndSettings.errors);
 
@@ -1196,7 +1208,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		// EVM
 		Json::Value evmData(Json::objectValue);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.assembly", wildcardMatchesExperimental))
-			evmData["assembly"] = compilerStack.assemblyString(contractName, sourceList);
+			evmData["assembly"] = compilerStack.assemblyString(contractName, _inputsAndSettings.sources);
 		if (compilationSuccess && isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.legacyAssembly", wildcardMatchesExperimental))
 			evmData["legacyAssembly"] = compilerStack.assemblyJSON(contractName);
 		if (isArtifactRequested(_inputsAndSettings.outputSelection, file, name, "evm.methodIdentifiers", wildcardMatchesExperimental))
