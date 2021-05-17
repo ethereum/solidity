@@ -3,8 +3,24 @@ set(libsolcli_sources
 	CommandLineParser.cpp CommandLineParser.h
 )
 
+set(libsolcli_libs solidity Boost::boost Boost::program_options)
+
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+	# Since we do not want to depend on networking code on production binaries,
+	# this feature is only available when creating a debug build.
+	# the LSP's TCP listener is exclusively used more convenient debugging.
+	option(SOLC_LSP_TCP "Solidity LSP: Enables TCP listener support (should only be eanbled for debugging purposes)." OFF)
+	if(SOLC_LSP_TCP)
+		set(libsolcli_defines SOLC_LSP_TCP=1)
+		list(APPEND libsolcli_sources LSPTCPTransport.cpp LSPTCPTransport.h)
+		find_package(Threads REQUIRED)
+		list(APPEND libsolcli_libs Threads::Threads)
+	endif()
+endif()
+
 add_library(solcli ${libsolcli_sources})
-target_link_libraries(solcli PUBLIC solidity Boost::boost Boost::program_options)
+target_compile_definitions(solcli PUBLIC ${libsolcli_defines})
+target_link_libraries(solcli PUBLIC ${libsolcli_libs})
 
 set(sources main.cpp)
 

@@ -56,6 +56,7 @@ enum class InputMode
 	StandardJson,
 	Linker,
 	Assembler,
+	LanguageServer
 };
 
 struct CompilerOutputs
@@ -225,6 +226,14 @@ struct CommandLineOptions
 		bool noOptimizeYul = false;
 		std::optional<std::string> yulSteps;
 	} optimizer;
+
+	struct
+	{
+		boost::filesystem::path trace;
+#if defined(SOLC_LSP_TCP)
+		std::optional<unsigned> port;
+#endif
+	} lsp;
 
 	struct
 	{

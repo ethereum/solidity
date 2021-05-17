@@ -463,6 +463,8 @@ int main(int argc, char const *argv[])
 				return 1;
 		}
 
+		// TODO(pr): Iterate here also through all LSP test cases
+
 		cout << endl << "Summary: ";
 		AnsiColorized(cout, !options.noColor, {BOLD, global_stats ? GREEN : RED}) <<
 			 global_stats.successCount << "/" << global_stats.testCount;

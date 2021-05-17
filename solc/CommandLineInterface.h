@@ -66,6 +66,7 @@ private:
 	void printVersion();
 	void printLicense();
 	bool compile();
+	void serveLSP();
 	bool link();
 	void writeLinkedFiles();
 	/// @returns the ``// <identifier> -> name`` hint for library placeholders.

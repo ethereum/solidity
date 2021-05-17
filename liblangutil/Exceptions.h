@@ -206,7 +206,7 @@ public:
 		return nullptr;
 	}
 
-	static Severity errorSeverity(Type _type)
+	static constexpr Severity errorSeverity(Type _type)
 	{
 		if (_type == Type::Info)
 			return Severity::Info;

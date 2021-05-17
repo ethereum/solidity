@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(multiple_input_modes)
 	};
 	string expectedMessage =
 		"The following options are mutually exclusive: "
-		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast. "
+		"--help, --license, --version, --standard-json, --link, --assemble, --strict-assembly, --yul, --import-ast, --lsp. "
 		"Select at most one.\n";
 
 	for (string const& mode1: inputModeOptions)

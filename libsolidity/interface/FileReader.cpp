@@ -45,7 +45,7 @@ namespace solidity::frontend
 
 FileReader::FileReader(
 	boost::filesystem::path _basePath,
-	vector<boost::filesystem::path> const& _includePaths,
+	vector<boost::filesystem::path> _includePaths,
 	FileSystemPathSet _allowedDirectories
 ):
 	m_allowedDirectories(std::move(_allowedDirectories)),
@@ -172,7 +172,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
-string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath)
+string FileReader::cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const
 {
 	vector<boost::filesystem::path> prefixes = {m_basePath.empty() ? normalizeCLIPathForVFS(".") : m_basePath};
 	prefixes += m_includePaths;

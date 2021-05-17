@@ -48,7 +48,7 @@ public:
 	/// that will be used when requesting files from this file reader instance.
 	explicit FileReader(
 		boost::filesystem::path _basePath = {},
-		std::vector<boost::filesystem::path> const& _includePaths = {},
+		std::vector<boost::filesystem::path> _includePaths = {},
 		FileSystemPathSet _allowedDirectories = {}
 	);
 
@@ -94,7 +94,7 @@ public:
 
 	/// Creates a source unit name by normalizing a path given on the command line and, if possible,
 	/// making it relative to base path or one of the include directories.
-	std::string cliPathToSourceUnitName(boost::filesystem::path const& _cliPath);
+	std::string cliPathToSourceUnitName(boost::filesystem::path const& _cliPath) const;
 
 	/// Checks if a set contains any paths that lead to different files but would receive identical
 	/// source unit names. Files are considered the same if their paths are exactly the same after

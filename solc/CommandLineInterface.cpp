@@ -24,6 +24,11 @@
 #include <solc/CommandLineInterface.h>
 
 #include "license.h"
+
+#if defined(SOLC_LSP_TCP)
+#include <solc/LSPTCPTransport.h>
+#endif
+
 #include "solidity/BuildInfo.h"
 
 #include <libsolidity/interface/Version.h>
@@ -36,6 +41,8 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/StorageLayout.h>
+#include <libsolidity/lsp/LanguageServer.h>
+#include <libsolidity/lsp/Transport.h>
 
 #include <libyul/AssemblyStack.h>
 
@@ -53,7 +60,10 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
 
+#include <range/v3/all.hpp>
+
 #include <algorithm>
+#include <fstream>
 #include <memory>
 
 #include <range/v3/view/map.hpp>
@@ -507,7 +517,11 @@ bool CommandLineInterface::readInputFiles()
 			m_fileReader.setStdin(readUntilEnd(m_sin));
 	}
 
-	if (m_fileReader.sourceCodes().empty() && !m_standardJsonInput.has_value())
+	if (
+		m_options.input.mode != InputMode::LanguageServer &&
+		m_fileReader.sourceCodes().empty() &&
+		!m_standardJsonInput.has_value()
+	)
 	{
 		serr() << "All specified input files either do not exist or are not regular files." << endl;
 		return false;
@@ -623,6 +637,9 @@ bool CommandLineInterface::processInput()
 		m_standardJsonInput.reset();
 		break;
 	}
+	case InputMode::LanguageServer:
+		serveLSP();
+		break;
 	case InputMode::Assembler:
 		if (!assemble(m_options.assembly.inputLanguage, m_options.assembly.targetMachine))
 			return false;
@@ -885,6 +902,21 @@ void CommandLineInterface::handleAst()
 			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
 		}
 	}
+}
+
+void CommandLineInterface::serveLSP()
+{
+	std::unique_ptr<lsp::Transport> transport = make_unique<lsp::JSONTransport>();
+#if defined(SOLC_LSP_TCP)
+	if (m_options.lsp.port.has_value())
+	{
+		unsigned const port = m_options.lsp.port.value();
+		transport = make_unique<lsp::LSPTCPTransport>(static_cast<unsigned short>(port), traceLevel, traceLogger);
+	}
+#endif
+
+	lsp::LanguageServer languageServer(move(transport));
+	languageServer.run();
 }
 
 bool CommandLineInterface::link()
