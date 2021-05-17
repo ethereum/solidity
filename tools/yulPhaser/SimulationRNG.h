@@ -20,6 +20,7 @@
 
 #include <boost/random/mersenne_twister.hpp>
 
+#include <cstddef>
 #include <cstdint>
 
 namespace solidity::phaser
