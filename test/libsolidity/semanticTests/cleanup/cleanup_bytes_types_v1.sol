@@ -1,3 +1,4 @@
+pragma abicoder v1;
 // Checks that bytesXX types are properly cleaned before they are compared.
 contract C {
     function f(bytes2 a, uint16 x) public returns (uint256) {

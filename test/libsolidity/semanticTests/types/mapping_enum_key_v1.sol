@@ -1,3 +1,4 @@
+pragma abicoder v1;
 enum E { A, B, C }
 contract test {
     mapping(E => uint8) table;

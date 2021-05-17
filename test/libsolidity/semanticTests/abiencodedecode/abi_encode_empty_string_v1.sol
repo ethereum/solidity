@@ -1,3 +1,4 @@
+pragma abicoder v1;
 // Tests that this will not end up using a "bytes0" type
 // (which would assert)
 contract C {

@@ -1,5 +1,5 @@
 ==== Source: A ====
-pragma abicoder               v2;
+pragma abicoder v2;
 
 struct Data {
     uint a;
@@ -19,6 +19,8 @@ contract B {
     }
 }
 ==== Source: B ====
+pragma abicoder v1;
+
 import "A";
 
 contract C is B {
@@ -31,5 +33,5 @@ contract C is B {
 // ----
 // test() -> 77
 // gas irOptimized: 133635
-// gas legacy: 156573
-// gas legacyOptimized: 112940
+// gas legacy: 156449
+// gas legacyOptimized: 112943

@@ -1,3 +1,4 @@
+pragma abicoder v1;
 // Checks that address types are properly cleaned before they are compared.
 contract C {
     function f(address a) public returns (uint256) {
