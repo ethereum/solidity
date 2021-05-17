@@ -33,10 +33,9 @@ using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
 using namespace std;
 
-GeneratorBase::GeneratorBase(SolidityGenerator* _mutator)
+GeneratorBase::GeneratorBase(SolidityGenerator* _mutator): state(_mutator->testState())
 {
 	mutator = _mutator;
-	state = mutator->testState();
 }
 
 string GeneratorBase::visitChildren()

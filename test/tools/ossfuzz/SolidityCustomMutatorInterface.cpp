@@ -53,9 +53,10 @@ SolidityCustomMutatorInterface::SolidityCustomMutatorInterface(
 	):
 	data(_data),
 	size(_size),
-	maxMutantSize(_maxSize),
-	generator(make_shared<SolidityGenerator>(_seed))
-{}
+	maxMutantSize(_maxSize)
+{
+	generator = make_shared<SolidityGenerator>(_seed);
+}
 
 size_t SolidityCustomMutatorInterface::generate()
 {
