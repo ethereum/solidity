@@ -16,6 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
+#include <test/TemporaryDirectory.h>
 #include <test/yulPhaser/TestHelpers.h>
 
 #include <tools/yulPhaser/AlgorithmRunner.h>
@@ -37,6 +38,7 @@ using namespace std;
 using namespace boost::unit_test::framework;
 using namespace boost::test_tools;
 using namespace solidity::langutil;
+using namespace solidity::test;
 using namespace solidity::util;
 using namespace solidity::yul;
 
@@ -118,7 +120,7 @@ public:
 
 protected:
 	TemporaryDirectory m_tempDir;
-	string const m_autosavePath = m_tempDir.memberPath("population-autosave.txt");
+	string const m_autosavePath = (m_tempDir.path() / "population-autosave.txt").string();
 	RandomisingAlgorithm m_algorithm;
 };
 

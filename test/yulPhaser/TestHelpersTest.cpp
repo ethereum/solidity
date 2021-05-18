@@ -20,17 +20,13 @@
 
 #include <libyul/optimiser/Suite.h>
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <fstream>
 #include <set>
 
 using namespace std;
 using namespace solidity::yul;
 using namespace boost::test_tools;
-
-namespace fs = boost::filesystem;
 
 namespace solidity::phaser::test
 {
@@ -117,63 +113,6 @@ BOOST_AUTO_TEST_CASE(enumerateOptimisationSteps_should_assing_indices_to_all_ava
 
 		stepsSoFar.insert(name);
 	}
-}
-
-BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_create_and_delete_a_unique_and_empty_directory)
-{
-	fs::path dirPath;
-	{
-		TemporaryDirectory tempDir("temporary-directory-test-");
-		dirPath = tempDir.path();
-
-		BOOST_TEST(dirPath.stem().string().find("temporary-directory-test-") == 0);
-		BOOST_TEST(fs::equivalent(dirPath.parent_path(), fs::temp_directory_path()));
-		BOOST_TEST(fs::is_directory(dirPath));
-		BOOST_TEST(fs::is_empty(dirPath));
-	}
-	BOOST_TEST(!fs::exists(dirPath));
-}
-
-BOOST_AUTO_TEST_CASE(TemporaryDirectory_should_delete_its_directory_even_if_not_empty)
-{
-	fs::path dirPath;
-	{
-		TemporaryDirectory tempDir("temporary-directory-test-");
-		dirPath = tempDir.path();
-
-		BOOST_TEST(fs::is_directory(dirPath));
-
-		{
-			ofstream tmpFile((dirPath / "test-file.txt").string());
-			tmpFile << "Delete me!" << endl;
-		}
-		assert(fs::is_regular_file(dirPath / "test-file.txt"));
-	}
-	BOOST_TEST(!fs::exists(dirPath / "test-file.txt"));
-}
-
-BOOST_AUTO_TEST_CASE(TemporaryDirectory_memberPath_should_construct_paths_relative_to_the_temporary_directory)
-{
-	TemporaryDirectory tempDir("temporary-directory-test-");
-
-	BOOST_TEST(fs::equivalent(tempDir.memberPath(""), tempDir.path()));
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("."), tempDir.path() / fs::path(".")));
-	BOOST_TEST(fs::equivalent(tempDir.memberPath(".."), tempDir.path() / fs::path("..")));
-
-	// NOTE: fs::equivalent() only works with paths that actually exist
-	{
-		ofstream file;
-		file.open(tempDir.memberPath("file.txt"), ios::out);
-	}
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("file.txt"), tempDir.path() / fs::path("file.txt")));
-
-	{
-		fs::create_directories(tempDir.memberPath("a/b/"));
-
-		ofstream file;
-		file.open(tempDir.memberPath("a/b/file.txt"), ios::out);
-	}
-	BOOST_TEST(fs::equivalent(tempDir.memberPath("a/b/file.txt"), tempDir.path() / fs::path("a") / fs::path("b") / fs::path("file.txt")));
 }
 
 BOOST_AUTO_TEST_CASE(stripWhitespace_should_remove_all_whitespace_characters_from_a_string)

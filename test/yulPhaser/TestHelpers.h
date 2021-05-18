@@ -107,31 +107,6 @@ size_t countDifferences(Chromosome const& _chromosome1, Chromosome const& _chrom
 /// integers.
 std::map<std::string, size_t> enumerateOptmisationSteps();
 
-// FILESYSTEM UTILITIES
-
-/**
- * An object that creates a unique temporary directory and automatically deletes it and its
- * content upon being destroyed.
- *
- * The directory is guaranteed to be newly created and empty. Directory names are generated
- * randomly. If a directory with the same name already exists (very unlikely but possible) the
- * object won't reuse it and will fail with an exception instead.
- */
-class TemporaryDirectory
-{
-public:
-	TemporaryDirectory(std::string const& _prefix = "yul-phaser-test-");
-	~TemporaryDirectory();
-
-	std::string const& path() const { return m_path; }
-
-	/// Converts a path relative to the directory held by the object into an absolute one.
-	std::string memberPath(std::string const& _relativePath) const;
-
-private:
-	std::string m_path;
-};
-
 // STRING UTILITIES
 
 /// Returns the input string with all the whitespace characters (spaces, line endings, etc.) removed.
