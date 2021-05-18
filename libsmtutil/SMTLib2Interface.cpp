@@ -175,7 +175,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		sexpr += string("ite ") +
 			"(= ((_ extract " + pos + " " + pos + ")" + arg + ") #b0) " +
 			nat + " " +
-			"(- (bvneg " + arg + "))";
+			"(- (bv2nat (bvneg " + arg + ")))";
 	}
 	else if (_expr.name == "const_array")
 	{
