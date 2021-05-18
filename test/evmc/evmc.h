@@ -768,9 +768,10 @@ enum evmc_revision
      * The spec draft: https://eips.ethereum.org/EIPS/eip-2070.
      */
     EVMC_BERLIN = 8,
+    EVMC_LONDON = 9,
 
     /** The maximum EVM revision supported. */
-    EVMC_MAX_REVISION = EVMC_BERLIN
+    EVMC_MAX_REVISION = EVMC_LONDON
 };
 
 

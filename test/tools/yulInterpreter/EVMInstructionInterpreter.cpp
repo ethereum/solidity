@@ -182,6 +182,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.balance;
 	case Instruction::SELFBALANCE:
 		return m_state.selfbalance;
+	case Instruction::BASEFEE:
+		return m_state.basefee;
 	case Instruction::ORIGIN:
 		return m_state.origin;
 	case Instruction::CALLER:

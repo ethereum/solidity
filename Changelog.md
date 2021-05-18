@@ -1,4 +1,7 @@
-### 0.5.14 (unreleased)
+### 0.5.15w
+ * Assembly: Add ``BASEFEE`` (EIP3198) instructions.
+
+### 0.5.14
 
 Language Features:
  * Allow to obtain the selector of public or external library functions via a member ``.selector``.

@@ -71,6 +71,7 @@ struct InterpreterState
 	dev::u160 address = 0x11111111;
 	dev::u256 balance = 0x22222222;
 	dev::u256 selfbalance = 0x22223333;
+	dev::u256 basefee = 0x111223333;
 	dev::u160 origin = 0x33333333;
 	dev::u160 caller = 0x44444444;
 	dev::u256 callvalue = 0x55555555;

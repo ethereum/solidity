@@ -740,6 +740,10 @@ void AsmAnalyzer::warnOnInstructions(dev::eth::Instruction _instr, SourceLocatio
 	{
 		errorForVM("only available for Istanbul-compatible");
 	}
+	else if (_instr == dev::eth::Instruction::BASEFEE && !m_evmVersion.hasBasefee())
+	{
+		errorForVM("only available for London-compatible");
+	}
 	else if (
 		_instr == dev::eth::Instruction::JUMP ||
 		_instr == dev::eth::Instruction::JUMPI ||
