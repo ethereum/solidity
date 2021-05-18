@@ -189,7 +189,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return arguments[0] && arguments[1];
 		else if (n == "or")
 			return arguments[0] || arguments[1];
-		else if (n == "implies")
+		else if (n == "=>")
 			return z3::implies(arguments[0], arguments[1]);
 		else if (n == "=")
 			return arguments[0] == arguments[1];
