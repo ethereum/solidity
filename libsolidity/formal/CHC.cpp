@@ -946,7 +946,6 @@ void CHC::resetSourceAnalysis()
 	if (!usesZ3)
 	{
 		auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
-		smtlib2Interface->reset();
 		solAssert(smtlib2Interface, "");
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
 	}
