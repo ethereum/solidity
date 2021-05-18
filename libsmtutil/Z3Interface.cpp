@@ -207,7 +207,7 @@ z3::expr Z3Interface::toZ3Expr(Expression const& _expr)
 			return arguments[0] - arguments[1];
 		else if (n == "*")
 			return arguments[0] * arguments[1];
-		else if (n == "/")
+		else if (n == "div")
 			return arguments[0] / arguments[1];
 		else if (n == "mod")
 			return z3::mod(arguments[0], arguments[1]);

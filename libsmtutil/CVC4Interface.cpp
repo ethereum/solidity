@@ -188,7 +188,7 @@ CVC4::Expr CVC4Interface::toCVC4Expr(Expression const& _expr)
 			return m_context.mkExpr(CVC4::kind::MINUS, arguments[0], arguments[1]);
 		else if (n == "*")
 			return m_context.mkExpr(CVC4::kind::MULT, arguments[0], arguments[1]);
-		else if (n == "/")
+		else if (n == "div")
 			return m_context.mkExpr(CVC4::kind::INTS_DIVISION_TOTAL, arguments[0], arguments[1]);
 		else if (n == "mod")
 			return m_context.mkExpr(CVC4::kind::INTS_MODULUS, arguments[0], arguments[1]);

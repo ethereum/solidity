@@ -95,7 +95,7 @@ public:
 			{"+", 2},
 			{"-", 2},
 			{"*", 2},
-			{"/", 2},
+			{"div", 2},
 			{"mod", 2},
 			{"bvnot", 1},
 			{"bvand", 2},
@@ -300,7 +300,7 @@ public:
 	friend Expression operator/(Expression _a, Expression _b)
 	{
 		auto intSort = _a.sort;
-		return Expression("/", {std::move(_a), std::move(_b)}, intSort);
+		return Expression("div", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator%(Expression _a, Expression _b)
 	{
