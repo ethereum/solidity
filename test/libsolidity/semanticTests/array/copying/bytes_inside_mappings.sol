@@ -7,13 +7,13 @@ contract c {
 // compileViaYul: also
 // ----
 // set(uint256): 1, 2 -> true
-// gas irOptimized: 103224
-// gas legacy: 103491
-// gas legacyOptimized: 103136
+// gas irOptimized: 110824
+// gas legacy: 111091
+// gas legacyOptimized: 110736
 // set(uint256): 2, 2, 3, 4, 5 -> true
-// gas irOptimized: 163911
-// gas legacy: 164121
-// gas legacyOptimized: 163766
+// gas irOptimized: 177811
+// gas legacy: 178021
+// gas legacyOptimized: 177666
 // storageEmpty -> 0
 // copy(uint256,uint256): 1, 2 -> true
 // storageEmpty -> 0

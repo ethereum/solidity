@@ -44,9 +44,9 @@ contract c {
 // ----
 // getLengths() -> 0, 0
 // setLengths(uint256,uint256): 48, 49 ->
-// gas irOptimized: 273726
-// gas legacy: 308271
-// gas legacyOptimized: 300117
+// gas irOptimized: 108326
+// gas legacy: 108571
+// gas legacyOptimized: 100417
 // getLengths() -> 48, 49
 // setIDStatic(uint256): 11 ->
 // getID(uint256): 2 -> 11
