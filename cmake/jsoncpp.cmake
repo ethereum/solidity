@@ -7,7 +7,7 @@ else()
 endif()
 
 set(prefix "${CMAKE_BINARY_DIR}/deps")
-set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp${CMAKE_STATIC_LIBRARY_SUFFIX}")
+set(JSONCPP_LIBRARY "${prefix}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}jsoncpp_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
 set(JSONCPP_INCLUDE_DIR "${prefix}/include")
 
 # TODO: Investigate why this breaks some emscripten builds and
@@ -43,9 +43,9 @@ endif()
 ExternalProject_Add(jsoncpp-project
     PREFIX "${prefix}"
     DOWNLOAD_DIR "${CMAKE_SOURCE_DIR}/deps/downloads"
-    DOWNLOAD_NAME jsoncpp-1.9.3.tar.gz
-    URL https://github.com/open-source-parsers/jsoncpp/archive/1.9.3.tar.gz
-    URL_HASH SHA256=8593c1d69e703563d94d8c12244e2e18893eeb9a8a9f8aa3d09a327aa45c8f7d
+    DOWNLOAD_NAME jsoncpp-1.9.4.tar.gz
+    URL https://github.com/open-source-parsers/jsoncpp/archive/1.9.4.tar.gz
+    URL_HASH SHA256=e34a628a8142643b976c7233ef381457efad79468c67cb1ae0b83a33d7493999
     CMAKE_COMMAND ${JSONCPP_CMAKE_COMMAND}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}

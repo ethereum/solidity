@@ -32,9 +32,12 @@
 
 using namespace std;
 
+// This check is not very useful now, since 1.9.4 had a bug where the STRING was updated, but not the PATCH.
+// The release version: https://github.com/open-source-parsers/jsoncpp/blob/1.9.4/include/json/version.h
+// The fix post-release: https://github.com/open-source-parsers/jsoncpp/issues/1224
 static_assert(
 	(JSONCPP_VERSION_MAJOR == 1) && (JSONCPP_VERSION_MINOR == 9) && (JSONCPP_VERSION_PATCH == 3),
-	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.3."
+	"Unexpected jsoncpp version: " JSONCPP_VERSION_STRING ". Expecting 1.9.4."
 );
 
 namespace solidity::util
