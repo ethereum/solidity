@@ -15,13 +15,9 @@
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
 include(CableCompileOptions)
-include(EthCheckCXXCompilerFlag)
 
 if(NOT EMSCRIPTEN)
-	eth_add_cxx_compiler_flag_if_supported(-fstack-protector-strong have_stack_protector_strong_support)
-	if(NOT have_stack_protector_strong_support)
-		eth_add_cxx_compiler_flag_if_supported(-fstack-protector)
-	endif()
+	cable_add_compile_options(IF_SUPPORTED -fstack-protector -fstack-protector-strong)
 endif()
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
