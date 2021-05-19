@@ -442,7 +442,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"contracts", "engine", "targets", "timeout"};
+	static set<string> keys{"contracts", "engine", "solvers", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -949,6 +949,24 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		if (!engine)
 			return formatFatalError("JSONError", "Invalid model checker engine requested.");
 		ret.modelCheckerSettings.engine = *engine;
+	}
+
+	if (modelCheckerSettings.isMember("solvers"))
+	{
+		auto const& solversArray = modelCheckerSettings["solvers"];
+		if (!solversArray.isArray())
+			return formatFatalError("JSONError", "settings.modelChecker.solvers must be an array.");
+
+		smtutil::SMTSolverChoice solvers;
+		for (auto const& s: solversArray)
+		{
+			if (!s.isString())
+				return formatFatalError("JSONError", "Every target in settings.modelChecker.solvers must be a string.");
+			if (!solvers.setSolver(s.asString()))
+				return formatFatalError("JSONError", "Invalid model checker solvers requested.");
+		}
+
+		ret.modelCheckerSettings.solvers = solvers;
 	}
 
 	if (modelCheckerSettings.isMember("targets"))

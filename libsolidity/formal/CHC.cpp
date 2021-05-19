@@ -56,26 +56,38 @@ CHC::CHC(
 	ErrorReporter& _errorReporter,
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
-	SMTSolverChoice _enabledSolvers,
 	ModelCheckerSettings const& _settings,
 	CharStreamProvider const& _charStreamProvider
 ):
 	SMTEncoder(_context, _settings, _charStreamProvider),
-	m_outerErrorReporter(_errorReporter),
-	m_enabledSolvers(_enabledSolvers)
+	m_outerErrorReporter(_errorReporter)
 {
-	bool usesZ3 = _enabledSolvers.z3;
+	bool usesZ3 = m_settings.solvers.z3;
 #ifdef HAVE_Z3
 	usesZ3 = usesZ3 && Z3Interface::available();
 #else
 	usesZ3 = false;
 #endif
-	if (!usesZ3)
+	if (!usesZ3 && m_settings.solvers.smtlib2)
 		m_interface = make_unique<CHCSmtLib2Interface>(_smtlib2Responses, _smtCallback, m_settings.timeout);
 }
 
 void CHC::analyze(SourceUnit const& _source)
 {
+	if (!m_settings.solvers.z3 && !m_settings.solvers.smtlib2)
+	{
+		if (!m_noSolverWarning)
+		{
+			m_noSolverWarning = true;
+			m_outerErrorReporter.warning(
+				7649_error,
+				SourceLocation(),
+				"CHC analysis was not possible since no Horn solver was enabled."
+			);
+		}
+		return;
+	}
+
 	if (SMTEncoder::analyze(_source))
 	{
 		resetSourceAnalysis();
@@ -92,6 +104,8 @@ void CHC::analyze(SourceUnit const& _source)
 	}
 
 	bool ranSolver = true;
+	// If ranSolver is true here it's because an SMT solver callback was
+	// actually given and the queries were solved.
 	if (auto const* smtLibInterface = dynamic_cast<CHCSmtLib2Interface const*>(m_interface.get()))
 		ranSolver = smtLibInterface->unhandledQueries().empty();
 	if (!ranSolver && !m_noSolverWarning)
@@ -103,7 +117,8 @@ void CHC::analyze(SourceUnit const& _source)
 #ifdef HAVE_Z3_DLOPEN
 			"CHC analysis was not possible since libz3.so." + to_string(Z3_MAJOR_VERSION) + "." + to_string(Z3_MINOR_VERSION) + " was not found."
 #else
-			"CHC analysis was not possible since no integrated z3 SMT solver was found."
+			"CHC analysis was not possible. No Horn solver was available."
+			" None of the installed solvers was enabled."
 #endif
 		);
 	}
@@ -933,7 +948,7 @@ void CHC::resetSourceAnalysis()
 
 	bool usesZ3 = false;
 #ifdef HAVE_Z3
-	usesZ3 = m_enabledSolvers.z3 && Z3Interface::available();
+	usesZ3 = m_settings.solvers.z3 && Z3Interface::available();
 	if (usesZ3)
 	{
 		/// z3::fixedpoint does not have a reset mechanism, so we need to create another.
@@ -1427,20 +1442,23 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHC::query(smtutil::Expression c
 	case CheckResult::SATISFIABLE:
 	{
 #ifdef HAVE_Z3
-		// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
-		// We now disable those optimizations and check whether we can still solve the problem.
-		auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
-		solAssert(spacer, "");
-		spacer->setSpacerOptions(false);
+		if (m_settings.solvers.z3)
+		{
+			// Even though the problem is SAT, Spacer's pre processing makes counterexamples incomplete.
+			// We now disable those optimizations and check whether we can still solve the problem.
+			auto* spacer = dynamic_cast<Z3CHCInterface*>(m_interface.get());
+			solAssert(spacer, "");
+			spacer->setSpacerOptions(false);
 
-		CheckResult resultNoOpt;
-		CHCSolverInterface::CexGraph cexNoOpt;
-		tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
+			CheckResult resultNoOpt;
+			CHCSolverInterface::CexGraph cexNoOpt;
+			tie(resultNoOpt, cexNoOpt) = m_interface->query(_query);
 
-		if (resultNoOpt == CheckResult::SATISFIABLE)
-			cex = move(cexNoOpt);
+			if (resultNoOpt == CheckResult::SATISFIABLE)
+				cex = move(cexNoOpt);
 
-		spacer->setSpacerOptions(true);
+			spacer->setSpacerOptions(true);
+		}
 #endif
 		break;
 	}

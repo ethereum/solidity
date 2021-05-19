@@ -95,7 +95,6 @@ static int g_compilerStackCounts = 0;
 
 CompilerStack::CompilerStack(ReadCallback::Callback _readFile):
 	m_readFile{std::move(_readFile)},
-	m_enabledSMTSolvers{smtutil::SMTSolverChoice::All()},
 	m_errorReporter{m_errorList}
 {
 	// Because TypeProvider is currently a singleton API, we must ensure that
@@ -228,13 +227,6 @@ void CompilerStack::setModelCheckerSettings(ModelCheckerSettings _settings)
 	m_modelCheckerSettings = _settings;
 }
 
-void CompilerStack::setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSMTSolvers)
-{
-	if (m_stackState >= ParsedAndImported)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set enabled SMT solvers before parsing."));
-	m_enabledSMTSolvers = _enabledSMTSolvers;
-}
-
 void CompilerStack::setLibraries(std::map<std::string, util::h160> const& _libraries)
 {
 	if (m_stackState >= ParsedAndImported)
@@ -299,7 +291,6 @@ void CompilerStack::reset(bool _keepSettings)
 		m_viaIR = false;
 		m_evmVersion = langutil::EVMVersion();
 		m_modelCheckerSettings = ModelCheckerSettings{};
-		m_enabledSMTSolvers = smtutil::SMTSolverChoice::All();
 		m_generateIR = false;
 		m_generateEwasm = false;
 		m_revertStrings = RevertStrings::Default;
@@ -555,7 +546,7 @@ bool CompilerStack::analyze()
 
 		if (noErrors)
 		{
-			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile, m_enabledSMTSolvers);
+			ModelChecker modelChecker(m_errorReporter, *this, m_smtlib2Responses, m_modelCheckerSettings, m_readFile);
 			auto allSources = applyMap(m_sourceOrder, [](Source const* _source) { return _source->ast; });
 			modelChecker.enableAllEnginesIfPragmaPresent(allSources);
 			modelChecker.checkRequestedSourcesAndContracts(allSources);

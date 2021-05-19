@@ -176,8 +176,6 @@ public:
 
 	/// Set model checker settings.
 	void setModelCheckerSettings(ModelCheckerSettings _settings);
-	/// Set which SMT solvers should be enabled.
-	void setSMTSolverChoice(smtutil::SMTSolverChoice _enabledSolvers);
 
 	/// Sets the requested contract names by source.
 	/// If empty, no filtering is performed and every contract
@@ -480,7 +478,6 @@ private:
 	bool m_viaIR = false;
 	langutil::EVMVersion m_evmVersion;
 	ModelCheckerSettings m_modelCheckerSettings;
-	smtutil::SMTSolverChoice m_enabledSMTSolvers;
 	std::map<std::string, std::set<std::string>> m_requestedContractNames;
 	bool m_generateEvmBytecode = true;
 	bool m_generateIR = false;

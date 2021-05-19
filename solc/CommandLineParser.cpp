@@ -87,6 +87,7 @@ static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
 static string const g_strModelCheckerEngine = "model-checker-engine";
+static string const g_strModelCheckerSolvers = "model-checker-solvers";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
 static string const g_strNatspecDev = "devdoc";
@@ -724,6 +725,11 @@ General Information)").c_str(),
 			"Select model checker engine."
 		)
 		(
+			g_strModelCheckerSolvers.c_str(),
+			po::value<string>()->value_name("all,cvc4,z3,smtlib2")->default_value("all"),
+			"Select model checker solvers."
+		)
+		(
 			g_strModelCheckerTargets.c_str(),
 			po::value<string>()->value_name("default,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
 			"Select model checker verification targets. "
@@ -1089,6 +1095,18 @@ General Information)").c_str(),
 		m_options.modelChecker.settings.engine = *engine;
 	}
 
+	if (m_args.count(g_strModelCheckerSolvers))
+	{
+		string solversStr = m_args[g_strModelCheckerSolvers].as<string>();
+		optional<smtutil::SMTSolverChoice> solvers = smtutil::SMTSolverChoice::fromString(solversStr);
+		if (!solvers)
+		{
+			serr() << "Invalid option for --" << g_strModelCheckerSolvers << ": " << solversStr << endl;
+			return false;
+		}
+		m_options.modelChecker.settings.solvers = *solvers;
+	}
+
 	if (m_args.count(g_strModelCheckerTargets))
 	{
 		string targetsStr = m_args[g_strModelCheckerTargets].as<string>();
@@ -1108,6 +1126,7 @@ General Information)").c_str(),
 	m_options.modelChecker.initialize =
 		m_args.count(g_strModelCheckerContracts) ||
 		m_args.count(g_strModelCheckerEngine) ||
+		m_args.count(g_strModelCheckerSolvers) ||
 		m_args.count(g_strModelCheckerTargets) ||
 		m_args.count(g_strModelCheckerTimeout);
 	m_options.output.experimentalViaIR = (m_args.count(g_strExperimentalViaIR) > 0);
