@@ -45,8 +45,7 @@ namespace
 vector<FunctionCall> parse(string const& _source)
 {
 	istringstream stream{_source, ios_base::out};
-	TestFileParser parser{stream, {}};
-	return parser.parseFunctionCalls(0);
+	return TestFileParser{stream, {}}.parseFunctionCalls(0);
 }
 
 void testFunctionCall(
@@ -99,7 +98,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_REQUIRE_EQUAL(parse(source).size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(call_succees)
+BOOST_AUTO_TEST_CASE(call_success)
 {
 	char const* source = R"(
 		// success() ->
