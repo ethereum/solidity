@@ -14,6 +14,7 @@
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
 
+include(CableCompileOptions)
 include(EthCheckCXXCompilerFlag)
 
 if(NOT EMSCRIPTEN)
@@ -23,47 +24,47 @@ if(NOT EMSCRIPTEN)
 	endif()
 endif()
 
-eth_add_cxx_compiler_flag_if_supported(-Wimplicit-fallthrough)
-
-# Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
-eth_add_cxx_compiler_flag_if_supported("-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity")
-
-# -Wpessimizing-move warns when a call to std::move would prevent copy elision
-# if the argument was not wrapped in a call.  This happens when moving a local
-# variable in a return statement when the variable is the same type as the
-# return type or using a move to create a new object from a temporary object.
-eth_add_cxx_compiler_flag_if_supported(-Wpessimizing-move)
-
-# -Wredundant-move warns when an implicit move would already be made, so the
-# std::move call is not needed, such as when moving a local variable in a return
-# that is different from the return type.
-eth_add_cxx_compiler_flag_if_supported(-Wredundant-move)
+cable_add_compile_options(
+	IF_SUPPORTED
+	-Wimplicit-fallthrough
+	# Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
+	-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity
+	# -Wpessimizing-move warns when a call to std::move would prevent copy elision
+	# if the argument was not wrapped in a call.  This happens when moving a local
+	# variable in a return statement when the variable is the same type as the
+	# return type or using a move to create a new object from a temporary object.
+	-Wpessimizing-move
+	# -Wredundant-move warns when an implicit move would already be made, so the
+	# std::move call is not needed, such as when moving a local variable in a return
+	# that is different from the return type.
+	-Wredundant-move
+)
 
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 	# Enables all the warnings about constructions that some users consider questionable,
 	# and that are easy to avoid.  Also enable some extra warning flags that are not
 	# enabled by -Wall.   Finally, treat at warnings-as-errors, which forces developers
 	# to fix warnings as they arise, so they don't accumulate "to be fixed later".
-	add_compile_options(-Wall)
-	add_compile_options(-Wextra)
-	add_compile_options(-Werror)
-	add_compile_options(-pedantic)
-	add_compile_options(-Wmissing-declarations)
-	add_compile_options(-Wno-unknown-pragmas)
-	add_compile_options(-Wimplicit-fallthrough)
-	add_compile_options(-Wsign-conversion)
-	add_compile_options(-Wconversion)
-
-	eth_add_cxx_compiler_flag_if_supported(
-		$<$<COMPILE_LANGUAGE:CXX>:-Wextra-semi>
+	cable_add_compile_options(
+		-Wall
+		-Wextra
+		-Werror
+		-pedantic
+		-Wmissing-declarations
+		-Wno-unknown-pragmas
+		-Wimplicit-fallthrough
+		-Wsign-conversion
+		-Wconversion
+		IF_SUPPORTED
+		-Wextra-semi
+		-Wfinal-dtor-non-final-class
+		-Wnewline-eof
+		-Wsuggest-destructor-override
+		-Wduplicated-cond
+		-Wduplicate-enum
+		-Wlogical-op
+		-Wno-unknown-attributes
 	)
-	eth_add_cxx_compiler_flag_if_supported(-Wfinal-dtor-non-final-class)
-	eth_add_cxx_compiler_flag_if_supported(-Wnewline-eof)
-	eth_add_cxx_compiler_flag_if_supported(-Wsuggest-destructor-override)
-	eth_add_cxx_compiler_flag_if_supported(-Wduplicated-cond)
-	eth_add_cxx_compiler_flag_if_supported(-Wduplicate-enum)
-	eth_add_cxx_compiler_flag_if_supported(-Wlogical-op)
-	eth_add_cxx_compiler_flag_if_supported(-Wno-unknown-attributes)
 
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g3 -DETH_DEBUG")
