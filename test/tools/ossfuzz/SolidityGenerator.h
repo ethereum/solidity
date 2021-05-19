@@ -413,7 +413,6 @@ struct SourceState
 		importedSources.clear();
 		freeFunctions.clear();
 		exports.clear();
-		uRandDist.reset();
 	}
 	/// Prints source state to @param _os.
 	void print(std::ostream& _os) const;
@@ -494,7 +493,6 @@ struct ContractState
 	~ContractState()
 	{
 		functions.clear();
-		uRandDist.reset();
 	}
 	void addFunction(std::shared_ptr<FunctionState> _function)
 	{
@@ -649,7 +647,6 @@ struct TestState
 		sourceUnitState.clear();
 		contractState.clear();
 		functionState.clear();
-		uRandDist.reset();
 	}
 	/// Prints test state to @param _os.
 	void print(std::ostream& _os) const;
@@ -842,12 +839,7 @@ class SolidityGenerator
 public:
 	explicit SolidityGenerator(unsigned _seed);
 
-	~SolidityGenerator()
-	{
-		m_generators.clear();
-		m_urd.reset();
-		m_state.reset();
-	}
+	~SolidityGenerator();
 
 	/// @returns the generator of type @param T.
 	template <typename T>
@@ -869,8 +861,7 @@ private:
 	template <typename T>
 	void createGenerator()
 	{
-		auto generator = std::make_shared<T>(this);
-		m_generators.insert(std::move(generator));
+		m_generators.emplace(std::make_shared<T>(this));
 	}
 	template <std::size_t I = 0>
 	void createGenerators();
@@ -886,13 +877,8 @@ struct GeneratorBase
 {
 	explicit GeneratorBase(SolidityGenerator* _mutator);
 	template <typename T>
-	std::shared_ptr<T> generator()
-	{
-		for (auto& g: generators)
-			if (std::holds_alternative<std::shared_ptr<T>>(g.first))
-				return std::get<std::shared_ptr<T>>(g.first);
-		solAssert(false, "");
-	}
+	std::shared_ptr<T> generator();
+
 	/// @returns test fragment created by this generator.
 	std::string generate()
 	{
@@ -918,20 +904,20 @@ struct GeneratorBase
 	std::string visitChildren();
 	/// Adds generators for child grammar elements of
 	/// this grammar element.
-	void addGenerators(std::set<std::pair<GeneratorPtr, unsigned>> _generators)
-	{
-		generators += std::move(_generators);
-	}
+	void addGenerators(std::set<std::pair<GeneratorPtr, unsigned>>&& _generators);
+
 	/// Virtual method to obtain string name of generator.
-	virtual std::string name() = 0;
+	virtual std::string name() { return {}; }
 	/// Virtual method to add generators that this grammar
 	/// element depends on. If not overridden, there are
 	/// no dependencies.
 	virtual void setup() {}
-	virtual ~GeneratorBase()
+	/// Remove generators.
+	void teardown()
 	{
 		generators.clear();
 	}
+	virtual ~GeneratorBase() {}
 	std::shared_ptr<UniformRandomDistribution>& uRandDist()
 	{
 		return mutator->uniformRandomDist();

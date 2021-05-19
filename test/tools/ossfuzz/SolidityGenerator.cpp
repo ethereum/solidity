@@ -27,7 +27,6 @@
 #include <boost/range/algorithm/copy.hpp>
 
 
-
 using namespace solidity::test::fuzzer;
 using namespace solidity::test::fuzzer::mutator;
 using namespace solidity::util;
@@ -36,6 +35,20 @@ using namespace std;
 GeneratorBase::GeneratorBase(SolidityGenerator* _mutator): state(_mutator->testState())
 {
 	mutator = _mutator;
+}
+
+template <typename T>
+std::shared_ptr<T> GeneratorBase::generator()
+{
+	for (auto& g: generators)
+		if (std::holds_alternative<std::shared_ptr<T>>(g.first))
+			return std::get<std::shared_ptr<T>>(g.first);
+	solAssert(false, "");
+}
+
+void GeneratorBase::addGenerators(set<pair<GeneratorPtr, unsigned>>&& _generators)
+{
+	generators = std::move(_generators);
 }
 
 string GeneratorBase::visitChildren()
@@ -120,9 +133,8 @@ string TestState::randomNonCurrentPath() const
 
 void TestCaseGenerator::setup()
 {
-	addGenerators({
-		{mutator->generator<SourceUnitGenerator>(), s_maxSourceUnits}
-	});
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {{mutator->generator<SourceUnitGenerator>(), s_maxSourceUnits}};
+	addGenerators(std::move(dependsOn));
 }
 
 string TestCaseGenerator::visit()
@@ -132,12 +144,13 @@ string TestCaseGenerator::visit()
 
 void SourceUnitGenerator::setup()
 {
-	addGenerators({
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {
 		{mutator->generator<ImportGenerator>(), s_maxImports},
 		{mutator->generator<PragmaGenerator>(), 1},
 		{mutator->generator<ContractGenerator>(), 1},
 		{mutator->generator<FunctionGenerator>(), s_maxFreeFunctions}
-	});
+	};
+	addGenerators(std::move(dependsOn));
 }
 
 string SourceUnitGenerator::visit()
@@ -207,9 +220,8 @@ string ImportGenerator::visit()
 
 void ContractGenerator::setup()
 {
-	addGenerators({
-		{mutator->generator<FunctionGenerator>(), s_maxFunctions}
-	});
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {{mutator->generator<FunctionGenerator>(), s_maxFunctions}};
+	addGenerators(std::move(dependsOn));
 }
 
 string ContractGenerator::visit()
@@ -415,11 +427,12 @@ string AssignmentStmtGenerator::visit()
 
 void StatementGenerator::setup()
 {
-	addGenerators({
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {
 		{mutator->generator<BlockStmtGenerator>(), 1},
 		{mutator->generator<AssignmentStmtGenerator>(), 1},
 		{mutator->generator<FunctionCallGenerator>(), 1}
-	});
+	};
+	addGenerators(std::move(dependsOn));
 }
 
 string StatementGenerator::visit()
@@ -456,9 +469,8 @@ string StatementGenerator::visit()
 
 void BlockStmtGenerator::setup()
 {
-	addGenerators({
-		{mutator->generator<StatementGenerator>(), s_maxStatements},
-	});
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {{mutator->generator<StatementGenerator>(), s_maxStatements}};
+	addGenerators(std::move(dependsOn));
 }
 
 string BlockStmtGenerator::visit()
@@ -490,7 +502,8 @@ string BlockStmtGenerator::visit()
 
 void FunctionGenerator::setup()
 {
-	addGenerators({{mutator->generator<BlockStmtGenerator>(), 1}});
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {{mutator->generator<BlockStmtGenerator>(), 1}};
+	addGenerators(std::move(dependsOn));
 }
 
 string FunctionGenerator::visit()
@@ -1279,6 +1292,17 @@ SolidityGenerator::SolidityGenerator(unsigned _seed)
 	auto engine = make_unique<RandomEngine>(_seed);
 	m_urd = make_shared<UniformRandomDistribution>(std::move(engine));
 	m_state = make_shared<TestState>(m_urd);
+}
+
+SolidityGenerator::~SolidityGenerator()
+{
+	for (auto& g: m_generators)
+		std::visit(GenericVisitor{
+			[&](auto const& _item) { return _item->teardown(); }
+		}, g);
+	m_generators.clear();
+	m_urd.reset();
+	m_state.reset();
 }
 
 template <size_t I>
