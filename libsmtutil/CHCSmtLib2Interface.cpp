@@ -23,6 +23,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <range/v3/view.hpp>
+
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -91,7 +93,7 @@ pair<CheckResult, CHCSolverInterface::CexGraph> CHCSmtLib2Interface::query(Expre
 	swap(m_accumulatedOutput, accumulated);
 	solAssert(m_smtlib2, "");
 	writeHeader();
-	for (auto const& [type, decl]: m_smtlib2->userSorts())
+	for (auto const& decl: m_smtlib2->userSorts() | ranges::views::values)
 		write(decl);
 	m_accumulatedOutput += accumulated;
 

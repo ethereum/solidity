@@ -66,7 +66,7 @@ public:
 
 	std::map<std::string, SortPointer> variables() { return m_variables; }
 
-	std::vector<std::pair<std::string, std::string>>const& userSorts() const { return m_userSorts; }
+	std::vector<std::pair<std::string, std::string>> const& userSorts() const { return m_userSorts; }
 
 private:
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
@@ -81,6 +81,11 @@ private:
 
 	std::vector<std::string> m_accumulatedOutput;
 	std::map<std::string, SortPointer> m_variables;
+
+	/// Each pair in this vector represents an SMTChecker created
+	/// sort (a user sort), and the smtlib2 declaration of that sort.
+	/// It needs to be a vector so that the declaration order is kept,
+	/// otherwise solvers cannot parse the queries.
 	std::vector<std::pair<std::string, std::string>> m_userSorts;
 
 	std::map<util::h256, std::string> m_queryResponses;

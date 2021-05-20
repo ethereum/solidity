@@ -64,8 +64,20 @@ public:
 		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
 	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
-	Expression(s256 const& _number): Expression(_number.sign() >= 0 ? _number.str() : "-", _number.sign() >= 0 ? std::vector<Expression>{} : std::vector<Expression>{Expression(size_t(0)), u256(-_number)}, SortProvider::sintSort) {}
-	Expression(bigint const& _number): Expression(_number.sign() >= 0 ? _number.str() : "-", _number.sign() >= 0 ? std::vector<Expression>{} : std::vector<Expression>{Expression(size_t(0)), u256(-_number)}, SortProvider::sintSort) {}
+	Expression(s256 const& _number): Expression(
+		_number >= 0 ? _number.str() : "-",
+		_number >= 0 ?
+			std::vector<Expression>{} :
+			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+		SortProvider::sintSort
+	) {}
+	Expression(bigint const& _number): Expression(
+		_number >= 0 ? _number.str() : "-",
+		_number >= 0 ?
+			std::vector<Expression>{} :
+			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+		SortProvider::sintSort
+	) {}
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
