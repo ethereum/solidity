@@ -80,7 +80,7 @@ public:
 private:
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
-	std::map<std::string, Builtin> makeBuiltins() const;
+	std::map<std::string, Builtin> makeBuiltins();
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;

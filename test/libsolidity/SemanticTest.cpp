@@ -123,7 +123,7 @@ SemanticTest::SemanticTest(
 	}
 }
 
-map<string, Builtin> SemanticTest::makeBuiltins() const
+map<string, Builtin> SemanticTest::makeBuiltins()
 {
 	return {
 		{
@@ -151,9 +151,19 @@ map<string, Builtin> SemanticTest::makeBuiltins() const
 			[this](FunctionCall const& _call) -> optional<bytes>
 			{
 				soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
-				  return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
+				return toBigEndian(u256(storageEmpty(m_contractAddress) ? 1 : 0));
 		 	}
-		}
+		},
+		{
+			"account",
+			[this](FunctionCall const& _call) -> optional<bytes>
+			{
+				soltestAssert(_call.arguments.parameters.size() == 1, "Account number expected.");
+				size_t accountNumber = static_cast<size_t>(stoi(_call.arguments.parameters.at(0).rawString));
+				// Need to pad it to 32-bytes to workaround limitations in BytesUtils::formatHex.
+				return toBigEndian(h256(ExecutionFramework::setAccount(accountNumber).asBytes(), h256::AlignRight));
+			}
+		},
 	};
 }
 

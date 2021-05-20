@@ -241,6 +241,12 @@ public:
 		return result;
 	}
 
+	util::h160 setAccount(size_t _accountNumber)
+	{
+		m_sender = account(_accountNumber);
+		return m_sender;
+	}
+
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
