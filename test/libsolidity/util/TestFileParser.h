@@ -52,7 +52,10 @@ class TestFileParser
 public:
 	/// Constructor that takes an input stream \param _stream to operate on
 	/// and creates the internal scanner.
-	explicit TestFileParser(std::istream& _stream, std::map<std::string, Builtin> const& _builtins): m_scanner(_stream), m_builtins(_builtins) {}
+	explicit TestFileParser(std::istream& _stream, std::map<std::string, Builtin> const& _builtins):
+		m_scanner(_stream),
+		m_builtins(_builtins)
+	{}
 
 	/// Parses function calls blockwise and returns a list of function calls found.
 	/// Throws an exception if a function call cannot be parsed because of its
@@ -179,7 +182,7 @@ private:
 
 	/// Checks whether a builtin function with the given signature exist.
 	/// @returns true, if builtin found, false otherwise
-	bool isBuiltinFunction(std::string const& signature);
+	bool isBuiltinFunction(std::string const& _signature);
 
 	/// A scanner instance
 	Scanner m_scanner;

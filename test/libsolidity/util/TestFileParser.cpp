@@ -726,7 +726,7 @@ char TestFileParser::Scanner::scanHexPart()
 	return static_cast<char>(value);
 }
 
-bool TestFileParser::isBuiltinFunction(std::string const& signature)
+bool TestFileParser::isBuiltinFunction(std::string const& _signature)
 {
-	return m_builtins.count(signature) > 0;
+	return m_builtins.count(_signature) > 0;
 }
