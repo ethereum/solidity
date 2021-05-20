@@ -263,7 +263,7 @@ We mainly use `AFL <https://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to
 install the AFL packages from your repositories (afl, afl-clang) or build them manually.
 Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
 
-::
+.. code-block:: shell
 
     cd build
     # if needed
@@ -273,7 +273,7 @@ Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compile
 
 At this stage you should be able to see a message similar to the following:
 
-::
+.. code-block:: text
 
     Scanning dependencies of target solfuzzer
     [ 98%] Building CXX object test/tools/CMakeFiles/solfuzzer.dir/fuzzer.cpp.o
@@ -284,7 +284,7 @@ At this stage you should be able to see a message similar to the following:
 
 If the instrumentation messages did not appear, try switching the cmake flags pointing to AFL's clang binaries:
 
-::
+.. code-block:: shell
 
     # if previously failed
     make clean
@@ -293,7 +293,7 @@ If the instrumentation messages did not appear, try switching the cmake flags po
 
 Otherwise, upon execution the fuzzer halts with an error saying binary is not instrumented:
 
-::
+.. code-block:: text
 
     afl-fuzz 2.52b by <lcamtuf@google.com>
     ... (truncated messages)
@@ -317,7 +317,7 @@ Next, you need some example source files. This makes it much easier for the fuzz
 to find errors. You can either copy some files from the syntax tests or extract test files
 from the documentation or the other tests:
 
-::
+.. code-block:: shell
 
     mkdir /tmp/test_cases
     cd /tmp/test_cases
@@ -334,7 +334,7 @@ that result in similar behaviour of the binary.
 
 Now run the fuzzer (the ``-m`` extends the size of memory to 60 MB):
 
-::
+.. code-block:: shell
 
     afl-fuzz -m 60 -i /tmp/test_cases -o /tmp/fuzzer_reports -- /path/to/solfuzzer
 
