@@ -425,12 +425,24 @@ string AssignmentStmtGenerator::visit()
 	return indentation() + lhs.value().second + assignOp(operation) + rhs.value().second + ";\n";
 }
 
+string ExpressionStmtGenerator::visit()
+{
+	ExpressionGenerator exprGen{state};
+	auto randomType = TypeProvider{state}.type();
+	auto expression = exprGen.rOrLValueExpression({randomType, {}});
+	if (expression.has_value())
+		return indentation() + expression.value().second + ";\n";
+	else
+		return "\n";
+}
+
 void StatementGenerator::setup()
 {
 	set<pair<GeneratorPtr, unsigned>> dependsOn = {
 		{mutator->generator<BlockStmtGenerator>(), 1},
 		{mutator->generator<AssignmentStmtGenerator>(), 1},
-		{mutator->generator<FunctionCallGenerator>(), 1}
+		{mutator->generator<FunctionCallGenerator>(), 1},
+		{mutator->generator<ExpressionStmtGenerator>(), 1}
 	};
 	addGenerators(std::move(dependsOn));
 }

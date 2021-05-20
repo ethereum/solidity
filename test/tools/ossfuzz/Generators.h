@@ -44,6 +44,7 @@
 	MACRO(AssignmentStmtGenerator) SEP \
 	MACRO(BlockStmtGenerator) SEP \
 	MACRO(ContractGenerator) SEP \
+	MACRO(ExpressionStmtGenerator) SEP \
 	MACRO(FunctionCallGenerator) SEP \
 	MACRO(FunctionGenerator) SEP \
 	MACRO(ImportGenerator) SEP \
