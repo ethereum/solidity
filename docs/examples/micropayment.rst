@@ -139,7 +139,8 @@ The functions ``prefixed`` and ``recoverSigner`` do this in the ``claimPayment``
 The full contract
 -----------------
 
-::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
@@ -335,7 +336,8 @@ so it is important that Bob closes the channel before the expiration is reached.
 The full contract
 -----------------
 
-::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
