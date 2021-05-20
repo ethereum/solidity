@@ -816,7 +816,6 @@ struct ExpressionGenerator
 		std::pair<SolidityTypePtr, std::string>& _typeName
 	);
 
-
 	void incrementNestingDepth()
 	{
 		nestingDepth++;
@@ -1054,6 +1053,19 @@ public:
 	std::string name() override { return "Statement generator"; }
 private:
 	static constexpr unsigned s_uncheckedBlockInvProb = 37;
+};
+
+class ExpressionStmtGenerator: public GeneratorBase
+{
+public:
+	explicit ExpressionStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override
+	{
+		return "Expression statement generator";
+	}
 };
 
 class AssignmentStmtGenerator: public GeneratorBase
