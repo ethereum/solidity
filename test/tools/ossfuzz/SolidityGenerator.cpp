@@ -436,13 +436,45 @@ string ExpressionStmtGenerator::visit()
 		return "\n";
 }
 
+void IfStmtGenerator::setup()
+{
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {
+		{mutator->generator<BlockStmtGenerator>(), 1},
+	};
+	addGenerators(std::move(dependsOn));
+}
+
+string IfStmtGenerator::visit()
+{
+	ostringstream ifStmt;
+	ExpressionGenerator exprGen{state};
+	auto boolType = make_shared<BoolType>();
+	auto expression = exprGen.rOrLValueExpression({boolType, {}});
+	if (expression.has_value())
+		ifStmt << indentation()
+		       << "if ("
+		       << expression.value().second
+		       << ")\n";
+	else
+		return "\n";
+	// Make sure block stmt generator does not output an unchecked block
+	mutator->generator<BlockStmtGenerator>()->unchecked(false);
+	ostringstream ifBlock;
+	ifBlock << visitChildren();
+	if (ifBlock.str().empty())
+		ifBlock << indentation() << "{ }\n";
+	ifStmt << ifBlock.str();
+	return ifStmt.str();
+}
+
 void StatementGenerator::setup()
 {
 	set<pair<GeneratorPtr, unsigned>> dependsOn = {
 		{mutator->generator<BlockStmtGenerator>(), 1},
 		{mutator->generator<AssignmentStmtGenerator>(), 1},
 		{mutator->generator<FunctionCallGenerator>(), 1},
-		{mutator->generator<ExpressionStmtGenerator>(), 1}
+		{mutator->generator<ExpressionStmtGenerator>(), 1},
+		{mutator->generator<IfStmtGenerator>(), 2},
 	};
 	addGenerators(std::move(dependsOn));
 }
@@ -488,7 +520,7 @@ void BlockStmtGenerator::setup()
 string BlockStmtGenerator::visit()
 {
 	if (nestingTooDeep())
-		return "\n";
+		return indentation() + "{ }\n";
 	incrementNestingDepth();
 	ostringstream block;
 	if (unchecked() && !m_inUnchecked)

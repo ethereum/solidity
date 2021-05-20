@@ -1068,6 +1068,17 @@ public:
 	}
 };
 
+class IfStmtGenerator: public GeneratorBase
+{
+public:
+	explicit IfStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	void setup() override;
+	std::string visit() override;
+	std::string name() override { return "If statement generator"; }
+};
+
 class AssignmentStmtGenerator: public GeneratorBase
 {
 public:
