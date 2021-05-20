@@ -751,7 +751,9 @@ struct LiteralGenerator
 
 struct ExpressionGenerator
 {
-	ExpressionGenerator(std::shared_ptr<TestState>& _state): state(_state)
+	ExpressionGenerator(std::shared_ptr<TestState>& _state):
+		state(_state),
+		nestingDepth(0)
 	{}
 
 	enum class RLValueExpr: size_t
@@ -788,16 +790,16 @@ struct ExpressionGenerator
 	};
 
 	std::optional<std::pair<SolidityTypePtr, std::string>> rOrLValueExpression(
-		std::pair<SolidityTypePtr, std::string> _typeName
+		std::pair<SolidityTypePtr, std::string>& _typeName
 	);
 	std::optional<std::pair<SolidityTypePtr, std::string>> literal(SolidityTypePtr _type);
 	std::optional<std::pair<SolidityTypePtr, std::string>> randomLValueExpression();
 	std::optional<std::pair<SolidityTypePtr, std::string>> lValueExpression(
-		std::pair<SolidityTypePtr, std::string> _typeName
+		std::pair<SolidityTypePtr, std::string>& _typeName
 	);
 	std::vector<std::pair<SolidityTypePtr, std::string>> liveVariables();
 	std::vector<std::pair<SolidityTypePtr, std::string>> liveVariables(
-		std::pair<SolidityTypePtr, std::string> _typeName
+		std::pair<SolidityTypePtr, std::string>& _typeName
 	);
 	std::optional<std::pair<SolidityTypePtr, std::string>> unaryExpression(
 		std::pair<SolidityTypePtr, std::string>& _typeName,
@@ -815,6 +817,7 @@ struct ExpressionGenerator
 	std::optional<std::pair<SolidityTypePtr, std::string>> rLValueOrLiteral(
 		std::pair<SolidityTypePtr, std::string>& _typeName
 	);
+	RLValueExpr expressionType(SolidityTypePtr& _typePtr);
 
 	void incrementNestingDepth()
 	{
@@ -1173,8 +1176,8 @@ public:
 		return "Function call generator";
 	}
 private:
-	std::string lhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionReturnTypeNames);
-	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>> _functionInputTypeNames);
+	std::string lhs(std::vector<std::pair<SolidityTypePtr, std::string>>& _functionReturnTypeNames);
+	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>>& _functionInputTypeNames);
 	std::string callStmt(std::shared_ptr<FunctionState> _callee);
 };
 }

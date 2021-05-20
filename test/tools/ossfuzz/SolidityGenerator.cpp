@@ -429,7 +429,8 @@ string ExpressionStmtGenerator::visit()
 {
 	ExpressionGenerator exprGen{state};
 	auto randomType = TypeProvider{state}.type();
-	auto expression = exprGen.rOrLValueExpression({randomType, {}});
+	pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
+	auto expression = exprGen.rOrLValueExpression(randomTypeName);
 	if (expression.has_value())
 		return indentation() + expression.value().second + ";\n";
 	else
@@ -449,7 +450,8 @@ string IfStmtGenerator::visit()
 	ostringstream ifStmt;
 	ExpressionGenerator exprGen{state};
 	auto boolType = make_shared<BoolType>();
-	auto expression = exprGen.rOrLValueExpression({boolType, {}});
+	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
+	auto expression = exprGen.rLValueOrLiteral(boolTypeName);
 	if (expression.has_value())
 		ifStmt << indentation()
 		       << "if ("
@@ -614,7 +616,7 @@ vector<pair<SolidityTypePtr, string>> ExpressionGenerator::liveVariables()
 }
 
 vector<pair<SolidityTypePtr, string>> ExpressionGenerator::liveVariables(
-	pair<SolidityTypePtr, string> _typeName
+	pair<SolidityTypePtr, string>& _typeName
 )
 {
 	auto liveTypedVariables = state->currentFunctionState()->inputs |
@@ -652,7 +654,7 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::randomLValueExpress
 }
 
 optional<pair<SolidityTypePtr, string>> ExpressionGenerator::lValueExpression(
-	pair<SolidityTypePtr, string> _typeName
+	pair<SolidityTypePtr, string>& _typeName
 )
 {
 	// Filter non-identical variables of the same type.
@@ -737,8 +739,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::incDecOperation(
 	bool _prefixOp
 )
 {
-	if (!holds_alternative<shared_ptr<IntegerType>>(_typeName.first))
-		return nullopt;
+	solAssert(
+		holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+		"Invalid inc/dec op"
+	);
 
 	auto lValue = lValueExpression(_typeName);
 	if (!lValue.has_value())
@@ -752,11 +756,90 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::incDecOperation(
 	return lResult;
 }
 
-optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression(pair<SolidityTypePtr, string> _typeName)
+ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTypePtr& _typePtr)
 {
-	RLValueExpr exprType = static_cast<RLValueExpr>(
-		state->uRandDist->distributionOneToN(static_cast<size_t>(RLValueExpr::RLMAX) - 1)
-	);
+	vector<RLValueExpr> permittedTypes;
+
+	if (holds_alternative<shared_ptr<BoolType>>(_typePtr))
+	{
+		permittedTypes = {
+			RLValueExpr::VARREF,
+			RLValueExpr::LIT,
+			RLValueExpr::NOT,
+			RLValueExpr::LT,
+			RLValueExpr::GT,
+			RLValueExpr::LTE,
+			RLValueExpr::GTE,
+			RLValueExpr::EQ,
+			RLValueExpr::NEQ,
+			RLValueExpr::AND,
+			RLValueExpr::OR
+		};
+	}
+	else if (holds_alternative<shared_ptr<FixedBytesType>>(_typePtr))
+	{
+		permittedTypes = {
+			RLValueExpr::VARREF,
+			RLValueExpr::LIT,
+			RLValueExpr::BITAND,
+			RLValueExpr::BITXOR,
+			RLValueExpr::BITOR,
+		};
+	}
+	else if (holds_alternative<shared_ptr<IntegerType>>(_typePtr))
+	{
+		bool signedType = get<shared_ptr<IntegerType>>(_typePtr)->signedType;
+		if (signedType)
+			permittedTypes = {
+				RLValueExpr::VARREF,
+				RLValueExpr::LIT,
+				RLValueExpr::PINC,
+				RLValueExpr::PDEC,
+				RLValueExpr::SINC,
+				RLValueExpr::SDEC,
+				RLValueExpr::BITNOT,
+				RLValueExpr::USUB,
+				RLValueExpr::MUL,
+				RLValueExpr::DIV,
+				RLValueExpr::MOD,
+				RLValueExpr::ADD,
+				RLValueExpr::BSUB,
+				RLValueExpr::BITAND,
+				RLValueExpr::BITXOR,
+				RLValueExpr::BITOR
+			};
+		else
+			permittedTypes = {
+				RLValueExpr::VARREF,
+				RLValueExpr::LIT,
+				RLValueExpr::PINC,
+				RLValueExpr::PDEC,
+				RLValueExpr::SINC,
+				RLValueExpr::SDEC,
+				RLValueExpr::BITNOT,
+				RLValueExpr::EXP,
+				RLValueExpr::MUL,
+				RLValueExpr::DIV,
+				RLValueExpr::MOD,
+				RLValueExpr::ADD,
+				RLValueExpr::BSUB,
+				RLValueExpr::SHL,
+				RLValueExpr::SHR,
+				RLValueExpr::BITAND,
+				RLValueExpr::BITXOR,
+				RLValueExpr::BITOR
+			};
+	}
+	else
+	{
+		permittedTypes = {RLValueExpr::VARREF, RLValueExpr::LIT};
+	}
+	return permittedTypes[state->uRandDist->distributionOneToN(permittedTypes.size()) - 1];
+}
+
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression(pair<SolidityTypePtr, string>& _typeName)
+{
+	RLValueExpr exprType = expressionType(_typeName.first);
 
 	if (deeplyNested())
 		return literal(_typeName.first);
@@ -779,145 +862,153 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::NOT:
 	{
 		// Logical not may only be applied to expressions of boolean type.
-		if (!holds_alternative<shared_ptr<BoolType>>(_typeName.first))
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid not op"
+		);
 		op = "!";
 		return unaryExpression(_typeName, op);
 	}
 	case RLValueExpr::BITNOT:
 	{
 		// Bitwise not may only be applied to integer types.
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+			"Invalid bitnot op"
+		);
 		op = "~";
 		return unaryExpression(_typeName, op);
 	}
 	case RLValueExpr::USUB:
 	{
 		// Unary sub may only be applied to signed integer types
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
-		bool signedType = get<shared_ptr<IntegerType>>(_typeName.first)->signedType;
-		if (!signedType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) &&
+			get<shared_ptr<IntegerType>>(_typeName.first)->signedType,
+			"Invalid unary sub op"
+		);
 		op = "-";
 		return unaryExpression(_typeName, op);
 	}
 	case RLValueExpr::EXP:
 	{
 		// Exponentiation may only be applied to unsigned integer types
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
-		bool signedType = get<shared_ptr<IntegerType>>(_typeName.first)->signedType;
-		if (signedType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) &&
+			!get<shared_ptr<IntegerType>>(_typeName.first)->signedType,
+			"Invalid exp op"
+		);
 		op = "**";
 		return binaryExpression(_typeName, op);
 	}
 	// Arithmetic ops only be applied to integer types
 	case RLValueExpr::MUL:
 	{
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+			"Invalid mul op"
+		);
 		op = "*";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::DIV:
 	{
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+			"Invalid div op"
+		);
 		op = "/";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::MOD:
 	{
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+			"Invalid mod op"
+		);
 		op = "%";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::ADD:
 	{
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+			"Invalid add op"
+		);
 		op = "+";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::BSUB:
 	{
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first),
+			"Invalid sub op"
+		);
 		op = "-";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::SHL:
 	{
 		// Left shift may only be applied to unsigned integer types.
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
-		bool signedType = get<shared_ptr<IntegerType>>(_typeName.first)->signedType;
-		if (signedType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) &&
+			!get<shared_ptr<IntegerType>>(_typeName.first)->signedType,
+			"Invalid shl op"
+		);
 		op = "<<";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::SHR:
 	{
 		// Left shift may only be applied to unsigned integer types.
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		if (!integerType)
-			return nullopt;
-		bool signedType = get<shared_ptr<IntegerType>>(_typeName.first)->signedType;
-		if (signedType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) &&
+			!get<shared_ptr<IntegerType>>(_typeName.first)->signedType,
+			"Invalid shr op"
+		);
 		op = ">>";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::BITAND:
 	{
 		// Bitwise ops may only be applied to integer and fixed bytes types.
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		bool fixedBytesType = holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first);
-		if (!(integerType || fixedBytesType))
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) ||
+			holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first),
+			"Invalid bitand op"
+		);
 		op = "&";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::BITOR:
 	{
 		// Bitwise ops may only be applied to integer and fixed bytes types.
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		bool fixedBytesType = holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first);
-		if (!(integerType || fixedBytesType))
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) ||
+			holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first),
+			"Invalid bitand op"
+		);
 		op = "|";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::BITXOR:
 	{
 		// Bitwise ops may only be applied to integer and fixed bytes types.
-		bool integerType = holds_alternative<shared_ptr<IntegerType>>(_typeName.first);
-		bool fixedBytesType = holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first);
-		if (!(integerType || fixedBytesType))
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<IntegerType>>(_typeName.first) ||
+			holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first),
+			"Invalid bitand op"
+		);
 		op = "^";
 		return binaryExpression(_typeName, op);
 	}
 	case RLValueExpr::LT:
 	{
 		// Comparison ops may be applied only if LHS type is boolean.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid lt op"
+		);
 
 		// Types being compared could be integer, fixed bytes, address, or contract.
 		auto operandType = TypeProvider{state}.type();
@@ -933,9 +1024,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::GT:
 	{
 		// Comparison ops may be applied only if LHS type is boolean.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid gt op"
+		);
 
 		// Types being compared could be integer, fixed bytes, address, or contract.
 		auto operandType = TypeProvider{state}.type();
@@ -951,9 +1043,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::LTE:
 	{
 		// Comparison ops may be applied only if LHS type is boolean.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid lte op"
+		);
 
 		// Types being compared could be integer, fixed bytes, address, or contract.
 		auto operandType = TypeProvider{state}.type();
@@ -969,9 +1062,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::GTE:
 	{
 		// Comparison ops may be applied only if LHS type is boolean.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid gte op"
+		);
 
 		// Types being compared could be integer, fixed bytes, address, or contract.
 		auto operandType = TypeProvider{state}.type();
@@ -987,9 +1081,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::EQ:
 	{
 		// Comparison ops may be applied only if LHS type is boolean.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid eq op"
+		);
 
 		// Types being compared could be integer, fixed bytes, address, or contract.
 		auto operandType = TypeProvider{state}.type();
@@ -1005,9 +1100,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::NEQ:
 	{
 		// Comparison ops may be applied only if LHS type is boolean.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid neq op"
+		);
 
 		// Types being compared could be integer, fixed bytes, address, or contract.
 		auto operandType = TypeProvider{state}.type();
@@ -1023,9 +1119,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::AND:
 	{
 		// Logical ops may be applied only to boolean types.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid and op"
+		);
 
 		op = "&&";
 		return binaryExpression(_typeName, op);
@@ -1033,9 +1130,10 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::OR:
 	{
 		// Logical ops may be applied only to boolean types.
-		bool boolType = holds_alternative<shared_ptr<BoolType>>(_typeName.first);
-		if (!boolType)
-			return nullopt;
+		solAssert(
+			holds_alternative<shared_ptr<BoolType>>(_typeName.first),
+			"Invalid or op"
+		);
 
 		op = "||";
 		return binaryExpression(_typeName, op);
@@ -1168,13 +1266,13 @@ SolidityTypePtr TypeProvider::type()
 	}
 }
 
-string FunctionCallGenerator::lhs(vector<pair<SolidityTypePtr, string>> _functionReturnTypeNames)
+string FunctionCallGenerator::lhs(vector<pair<SolidityTypePtr, string>>& _functionReturnTypeNames)
 {
 	ExpressionGenerator exprGen{state};
 	ostringstream callStmtLhs;
 
 	auto assignToVars = _functionReturnTypeNames |
-		ranges::views::transform([&exprGen](auto const& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>> {
+		ranges::views::transform([&exprGen](auto& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>> {
 			auto e = exprGen.lValueExpression(_item);
 			exprGen.resetNestingDepth();
 			if (e.has_value())
@@ -1217,13 +1315,13 @@ string FunctionCallGenerator::lhs(vector<pair<SolidityTypePtr, string>> _functio
 	return callStmtLhs.str();
 }
 
-optional<string> FunctionCallGenerator::rhs(vector<pair<SolidityTypePtr, string>> _functionInputTypeNames)
+optional<string> FunctionCallGenerator::rhs(vector<pair<SolidityTypePtr, string>>& _functionInputTypeNames)
 {
 	ExpressionGenerator exprGen{state};
 	ostringstream callStmtRhs;
 
 	auto inputArguments = _functionInputTypeNames |
-		ranges::views::transform([&exprGen](auto const& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>>
+		ranges::views::transform([&exprGen](auto& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>>
 		{
 			auto e = exprGen.rOrLValueExpression(_item);
 			exprGen.resetNestingDepth();
