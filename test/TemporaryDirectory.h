@@ -16,7 +16,8 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Utility for creating temporary directories for use in tests.
+ * Utilities for creating temporary directories and temporarily changing the working directory
+ * for use in tests.
  */
 
 #pragma once
@@ -46,6 +47,21 @@ public:
 
 private:
 	boost::filesystem::path m_path;
+};
+
+/**
+ * An object that changes current working directory and restores it upon destruction.
+ */
+class TemporaryWorkingDirectory
+{
+public:
+	TemporaryWorkingDirectory(boost::filesystem::path const& _newDirectory);
+	~TemporaryWorkingDirectory();
+
+	boost::filesystem::path const& originalWorkingDirectory() const { return m_originalWorkingDirectory; }
+
+private:
+	boost::filesystem::path m_originalWorkingDirectory;
 };
 
 }

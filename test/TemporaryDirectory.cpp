@@ -43,8 +43,8 @@ TemporaryDirectory::~TemporaryDirectory()
 {
 	// A few paranoid sanity checks just to be extra sure we're not deleting someone's homework.
 	assert(m_path.string().find(fs::temp_directory_path().string()) == 0);
-	assert(m_path != fs::temp_directory_path());
-	assert(m_path != m_path.root_path());
+	assert(!fs::equivalent(m_path, fs::temp_directory_path()));
+	assert(!fs::equivalent(m_path, m_path.root_path()));
 	assert(!m_path.empty());
 
 	boost::system::error_code errorCode;
@@ -55,4 +55,15 @@ TemporaryDirectory::~TemporaryDirectory()
 		cerr << "Only " << numRemoved << " files were actually removed." << endl;
 		cerr << "Reason: " << errorCode.message() << endl;
 	}
+}
+
+TemporaryWorkingDirectory::TemporaryWorkingDirectory(fs::path const& _newDirectory):
+	m_originalWorkingDirectory(fs::current_path())
+{
+	fs::current_path(_newDirectory);
+}
+
+TemporaryWorkingDirectory::~TemporaryWorkingDirectory()
+{
+	fs::current_path(m_originalWorkingDirectory);
 }
