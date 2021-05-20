@@ -34,6 +34,7 @@ prerelease.txt
 /build*
 emscripten_build/
 docs/_build
+docs/_static/robots.txt
 __pycache__
 docs/utils/*.pyc
 /deps/downloads/
