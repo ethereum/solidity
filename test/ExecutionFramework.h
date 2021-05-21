@@ -247,6 +247,13 @@ public:
 		return m_sender;
 	}
 
+	bytes returndata() const
+	{
+		return m_output;
+	}
+
+	bool transactionSuccessful() const { return m_transactionSuccessful; }
+
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
