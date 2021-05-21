@@ -66,13 +66,25 @@ if (OSSFUZZ)
     set_target_properties(bytecode_optimizer_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(solc_mutator_ossfuzz
+            ValueGenerator.cpp
+            ../../EVMHost.cpp
+            SolidityEvmoneInterface.cpp
+            ../../libsolidity/util/ContractABIUtils.cpp
             solc_ossfuzz.cpp
             ../fuzzer_common.cpp
             ../../TestCaseReader.cpp
+            LiteralGeneratorUtil.cpp
             SolidityGenerator.cpp
             SolidityCustomMutatorInterface.cpp
     )
-    target_link_libraries(solc_mutator_ossfuzz PRIVATE libsolc evmasm)
+    target_link_libraries(solc_mutator_ossfuzz PRIVATE
+	   libsolc
+	   evmasm
+	   evmc
+	   evmone-standalone
+	   abicoder
+	   gmp.a
+    )
     set_target_properties(solc_mutator_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
     add_executable(const_opt_ossfuzz const_opt_ossfuzz.cpp ../fuzzer_common.cpp)
