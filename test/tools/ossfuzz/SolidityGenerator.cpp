@@ -417,7 +417,7 @@ string AssignmentStmtGenerator::visit()
 	exprGen.resetNestingDepth();
 	if (!lhs.has_value())
 		return "\n";
-	auto rhs = exprGen.rOrLValueExpression(lhs.value());
+	auto rhs = exprGen.rLValueOrLiteral(lhs.value());
 	exprGen.resetNestingDepth();
 	if (!rhs.has_value())
 		return "\n";
@@ -430,7 +430,7 @@ string ExpressionStmtGenerator::visit()
 	ExpressionGenerator exprGen{state};
 	auto randomType = TypeProvider{state}.type();
 	pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
-	auto expression = exprGen.rOrLValueExpression(randomTypeName);
+	auto expression = exprGen.rLValueOrLiteral(randomTypeName);
 	if (expression.has_value())
 		return indentation() + expression.value().second + ";\n";
 	else
@@ -1323,7 +1323,7 @@ optional<string> FunctionCallGenerator::rhs(vector<pair<SolidityTypePtr, string>
 	auto inputArguments = _functionInputTypeNames |
 		ranges::views::transform([&exprGen](auto& _item) -> pair<bool, optional<pair<SolidityTypePtr, string>>>
 		{
-			auto e = exprGen.rOrLValueExpression(_item);
+			auto e = exprGen.rLValueOrLiteral(_item);
 			exprGen.resetNestingDepth();
 			if (e.has_value())
 				return {true, e.value()};
