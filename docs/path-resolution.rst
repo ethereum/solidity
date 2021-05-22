@@ -10,55 +10,79 @@ Paths used in imports must work the same way everywhere while the command-line i
 able to work with platform-specific paths to provide good user experience.
 This section aims to explain in detail how Solidity reconciles these requirements.
 
-.. index:: ! virtual filesystem, ! source unit name
+.. index:: ! virtual filesystem, ! VFS, ! source unit name
 .. _virtual-filesystem:
 
 Virtual Filesystem
 ==================
 
-The compiler maintains an internal database (virtual filesystem) where each source unit is
-assigned a unique *source unit name* which is an opaque and unstructured identifier.
-When you use the :ref:`import statement <import>`, you specify the source unit name.
+The compiler maintains an internal database (*virtual filesystem* or *VFS* for short) where each
+source unit is assigned a unique *source unit name* which is an opaque and unstructured identifier.
+When you use the :ref:`import statement <import>`, you specify an *import path* that references a
+source unit name.
 
-Source files can be placed in the virtual filesystem directly, using :ref:`Standard JSON interface
-<compiler-api>` and in this case source unit names can be anything.
-In most cases, however, the project files reside in the local filesystem and it is desirable for
-the compiler to be able to locate and load them automatically.
-To support this, the compiler passes all source unit names not found in the virtual filesystem to
-the file loader.
-In case of the command-line compiler the file loader attempts to interpret them as local paths.
-The `JavaScript interface <https://github.com/ethereum/solc-js>`_ is a bit more flexible in that
-regard and allows the user to provide a callback, which can interpret the source unit name in an
-arbitrary way.
-For example load it from the network if it is a URL.
+.. index:: ! import callback, ! Host Filesystem Loader
+.. _import-callback:
 
-Source units can be loaded into the virtual system in the following ways:
+Import Callback
+---------------
+
+The VFS is initially populated only with files the compiler has received as input.
+Additional files can be loaded during compilation using an *import callback*.
+If the compiler does not find any source unit name matching the import path in the VFS, it invokes
+the callback, which is responsible for obtaining the source code to be placed under that name.
+An import callback is free to interpret source unit names in an arbitrary way, not just a paths.
+If there is no callback available when one is needed or if it fails to locate the source code,
+compilation fails.
+
+The command-line compiler provides *Host Filesystem Loader* - a rudimentary callback
+that interprets a source unit name as a path in the local filesystem.
+
+When using the `JavaScript interface <https://github.com/ethereum/solc-js>`_, on the other hand,
+there is no callback by default but one can be provided by the user.
+This mechanism can be used to obtain source code from locations other then the local filesystem
+(which may not even be accessible, e.g. when the compiler is running in a browser).
+For example the `Remix IDE <https://remix.ethereum.org/>`_ provides a versatile callback that
+lets you `import files from HTTP, IPFS and Swarm URLs or refer to NPM packages
+<https://remix-ide.readthedocs.io/en/latest/import.html>`_.
+
+.. note::
+
+    Host Filesystem Loader's file lookup is platform-dependent.
+    For example backslashes in source unit name can be interpreted as directory separators or not
+    and the lookup can be case-sensitive or not, depending on the underlying platform.
+
+    For portability it is recommended to avoid using import paths that will work correctly only
+    with a specific import callback or on a specific platform.
 
 .. index:: ! CLI path
 
+Populating the Virtual Filesystem
+---------------------------------
+
+The initial content of the VFS depends on how you invoke the compiler:
+
 #. **CLI**
 
-   To compile a file using the command-line interface of the compiler you need to provide one or
+   When you compile a file using the command-line interface of the compiler, you provide one or
    more *CLI paths* to files containing Solidity code:
 
    .. code-block:: bash
 
        solc contract.sol /usr/local/dapp-bin/token.sol
 
-   A file loaded this way is placed in the virtual filesystem under a source unit name that is
-   simply the path you specified but with platform-specific path separators replaced with forward
-   slashes to match the UNIX convention used in imports.
-
-   CLI paths do not get normalized in any way when they are converted into source unit names:
-   multiple slashes and ``./`` and ``../`` segments all remain intact.
+   The source unit name of a file loaded this way is simply the specified CLI path with
+   platform-specific separators converted to forward slashes.
+   There is no normalization beyond that.
+   Multiple slashes and ``./`` and ``../`` segments all remain intact.
    Relative paths are also **not** converted into absolute ones so ``solc /project/contract.sol``
    and ``solc contract.sol`` will result in two different source unit names even if you run the
    compiler from within ``/project``.
 
    .. note::
 
-       CLI paths are platform-specific.
-       The same path may be interpreted differently on different systems.
+       Because CLI paths are platform-specific, The same path may be interpreted differently on
+       different systems.
 
        .. code-block:: shell
            :caption: Windows
@@ -72,10 +96,16 @@ Source units can be loaded into the virtual system in the following ways:
            solc C:\project\token.sol # source unit name: C:projecttoken.sol
            solc /project/token.sol   # source unit name: /project/token.sol
 
+       For this reason it is recommended to use forward slashes on all platforms and refrain from
+       using absolute paths.
+
+   .. index:: standard JSON
+
 #. **Standard JSON (as content)**
 
-   An alternative way to compile your project is to use the ``--standard-json`` option and provide
-   a JSON file containing all of your source code:
+   When using the :ref:`Standard JSON <compiler-api>` API (via either the `JavaScript interface
+   <https://github.com/ethereum/solc-js>`_ or the ``--standard-json`` command-line option)
+   you provide input in JSON format, containing, among other things, all of your source code:
 
    .. code-block:: json
 
@@ -95,25 +125,16 @@ Source units can be loaded into the virtual system in the following ways:
            "settings": {"outputSelection": {"*": { "*": ["metadata", "evm.bytecode"]}}}
        }
 
-   The ``sources`` dictionary specifies the initial content of the virtual filesystem and you
-   can use source unit names directly there.
-   They do not undergo any extra translation or normalization.
+   The ``sources`` dictionary specifies the initial content of the virtual filesystem and its keys
+   become source unit names this content is associated with.
 
-   The path to the JSON file does not affect the path resolution in any way.
+   With ``--standard-json`` the path to the JSON file does not affect the path resolution in any way.
    In fact, it is common to supply it on the standard input in which case it does not have a path at all.
-
-   .. note::
-
-       When using ``--standard-json`` you cannot provide additional source files as command-line
-       arguments but it does not mean that the compiler will not load any extra files from disk.
-       If a contract imports a file that is not present in ``sources``, the compiler will use the
-       file loader as in any other situation, which may result in the source being read from disk
-       (or provided by the callback when using the JavaScript interface).
 
 #. **Standard JSON (as URL)**
 
-   When using :ref:`Standard JSON interface <compiler-api>` it is possible to tell the compiler to
-   use the file loader to obtain the content:
+   With Standard JSON it is also possible to tell the compiler to use the import callback to obtain
+   the source code:
 
    .. code-block:: json
 
@@ -121,56 +142,59 @@ Source units can be loaded into the virtual system in the following ways:
            "language": "Solidity",
            "sources": {
                "/usr/local/dapp-bin/token.sol": {
-                   "urls": ["/projects/mytoken.sol"]
+                   "urls": [
+                       "/projects/mytoken.sol",
+                       "https://example.com/projects/mytoken.sol"
+                   ]
                }
            },
            "settings": {"outputSelection": {"*": { "*": ["metadata", "evm.bytecode"]}}}
        }
 
-   The value specified in ``urls`` does not affect the source unit name and is not included in
-   contract metadata.
-   It is only passed to the file loader and used to locate the file.
+   If an import callback is available, the compiler will pass the source unit names specified in
+   ``urls`` one by one until either one is loaded successfully or it reaches the end of the list.
 
-   As the name of the attribute implies, the value could be a URL if supported by the loader.
-   This may only be the case when using the JavaScript interface with a callback that supports URLs.
-   The default loader only supports paths and will attempt to use the URL as a local path.
-   This will most likely fail and the loader will proceed to the next value on the list.
+   The source unit name for the loaded source code in the VFS is the key from ``sources`` and is
+   the same regardless of which item from ``urls`` was used in the end.
 
-   When using the default file loader, paths in ``urls`` are affected by :ref:`base path <base-path>`
-   and any other transformations performed by it.
+   .. note::
 
-   .. index:: ! import; path
-
-#. **import statement**
-
-   The ``import`` statement requests a module from the compiler and allows to access certain symbols
-   from that module.
-   We will refer to the path used in the statement as *import path*.
-
-   The import path is translated into a source unit name and then the compiler uses the name
-   to look up the file in its virtual filesystem.
-   If the file is not present there, the file loader is invoked and the returned content is added
-   to the virtual filesystem under the requested source unit name.
-   The are two types of imports, each with different rules for this translation:
-   :ref:`direct imports <direct-imports>` let you specify the full source unit name while in
-   :ref:`relative imports <relative-imports>` part of it comes from the source unit name of the
-   importing file.
+       When the Host Filesystem Loader is the callback, paths in ``urls`` are affected by
+       :ref:`base path <base-path>`, and any other transformations performed by it.
 
    .. index:: standard input, stdin, <stdin>
 
 #. **Standard input**
 
-   The last way to provide the source is by sending it to compiler's :ref:`standard input
-   <standard-input>`:
+   On the command line it is also possible to provide the source is by sending it to compiler's
+   :ref:`standard input <standard-input>`:
 
    .. code-block:: bash
 
        echo 'import "./util.sol"; contract C {}' | solc -
 
-   The content of the standard input is identified in the virtual filesystem by a special source unit name:
-   ``<stdin>``.
+   The content of the standard input is placed in the virtual filesystem under a special source
+   unit name: ``<stdin>``.
 
-   This method is available only for the command-line compiler.
+.. index:: ! import; path
+
+Imports
+=======
+
+The ``import`` statement requests a module from the compiler and allows to access certain symbols
+from that module.
+We will refer to the path used in the statement as *import path*.
+
+The import path is translated into a source unit name and then the compiler uses the name
+to look up the file in the VFS.
+If the file is not present there, the import callback is invoked and the returned content is added
+to the virtual filesystem under the requested source unit name.
+
+Based on how the translation is performed, we can divide imports into two categories:
+
+- :ref:`Direct imports <direct-imports>`, where you specify the full source unit name,
+- :ref:`Relative imports <relative-imports>`, where you specify a path which is combined with the
+  source unit name of the importing file to get the full source unit name.
 
 .. warning::
 
@@ -202,7 +226,7 @@ Source units can be loaded into the virtual system in the following ways:
 .. _direct-imports:
 
 Direct Imports
-==============
+--------------
 
 An import that does not start with ``./`` or ``../`` is a *direct import*.
 
@@ -228,8 +252,8 @@ When the source is provided via Standard JSON interface each of these names can 
 associated with different content.
 
 When the source is not available in the virtual filesystem, the compiler passes the source unit name
-to the file loader.
-The default loader will attempt to use it as a path and look up the file on disk.
+to the import callback.
+The Host Filesystem Loader will attempt to use it as a path and look up the file on disk.
 At this point the platform-specific normalization rules kick in and ``/project/lib/math.sol`` and
 ``/project/lib/../lib///math.sol`` may actually result in the same file being loaded.
 Note, however, that the compiler will still see them as separate source units that just happen to
@@ -238,7 +262,7 @@ have identical content.
 .. note::
 
     While the rules for translating import paths into source unit names are the same on every
-    platform, the default file loader uses platform-specific rules to locate files on disk.
+    platform, the Host Filesystem Loader uses platform-specific rules to locate files on disk.
     This means that for example this import might result in the file being successfully loaded from
     disk when compiling on Windows but not on other platforms:
 
@@ -248,13 +272,13 @@ have identical content.
 
     To compile such a project on a different platform you would have to use the Standard JSON
     interface and provide the source directly under the right source unit name.
-    For this reason relying on platform-specific behaviour of the file loader is highly discouraged.
+    For this reason relying on platform-specific behaviour of an import callback is highly discouraged.
 
 .. index:: ! relative import, ! import; relative
 .. _relative-imports:
 
 Relative Imports
-================
+----------------
 
 An import starting with ``./`` or ``../`` is a *relative import*.
 Such imports specify the path relative to the source unit name of the importing source unit:
@@ -296,8 +320,8 @@ Such imports specify the path relative to the source unit name of the importing 
     The entry with the source unit name of ``/project/lib/util.sol`` will not be used.
 
     Even if you run the compiler from within ``/project/lib/`` the relative ``util.sol`` will only
-    get resolved into ``/project/lib/util.sol`` by the file loader.
-    When the loader returns the source, the compiler will still place it under ``util.sol`` and not
+    get resolved into ``/project/lib/util.sol`` by the Host Filesystem Loader.
+    When the callback returns the source, the compiler will still place it under ``util.sol`` and not
     ``/project/lib/util.sol`` in the virtual filesystem.
 
 Unlike in direct imports, the paths used in relative imports do get normalized.
@@ -377,7 +401,7 @@ Example:
 Base Path
 =========
 
-Base path specifies the directory that the default file loader can load files from.
+Base path specifies the directory that the Host Filesystem Loader can load files from.
 It is simply prepended to a source unit name before the filesystem lookup is performed.
 
 By default base path is empty, which results in the files being looked up in the directory the
@@ -445,10 +469,9 @@ explicitly set the location of the project root:
 
     If you set base path to a relative path, it is interpreted as relative to the current working directory.
     Note that if you do this, all absolute paths will effectively be converted into relative ones
-    if they go through the default file loader.
+    by the Host Filesystem Loader.
     For example ``import "/project/contract.sol"`` with base path set to ``lib/token`` will result
-    in the file loader looking for ``lib/token/project/contract.sol`` in the current working
-    directory.
+    in the loader looking for ``lib/token/project/contract.sol`` in the current working directory.
 
 .. index:: ! remapping; import, ! import; remapping, ! remapping; context, ! remapping; prefix, ! remapping; target
 .. _import-remapping:
@@ -536,8 +559,8 @@ Here are the detailed rules governing the behaviour of remappings:
 
          import "./util.sol" as util; // source unit name: b/util.sol
 
-   - You cannot remap base path or any other part of the path that is only added when the file is
-     looked up in the underlying filesystem by the file loader:
+   - You cannot remap base path or any other part of the path that is only added internally by an
+     import callback:
 
      .. code-block:: bash
 
@@ -550,8 +573,8 @@ Here are the detailed rules governing the behaviour of remappings:
 
 #. **Target is inserted directly into the source unit name and does not necessarily have to be a valid path.**
 
-   - It can be anything as long as the file loader can handle it.
-     In case of the command-line interface this includes also relative paths.
+   - It can be anything as long as the import callback can handle it.
+     In case of the Host Filesystem Loader this includes also relative paths.
      When using the JavaScript interface you can even use URLs and abstract identifiers if
      your callback can handle them.
 
@@ -608,13 +631,13 @@ Using URLs in imports
 =====================
 
 Most URL prefixes such as ``https://`` or ``data://`` have no special meaning in import paths.
-The only exception is ``file://`` which is stripped from source unit names by the default file
-loader.
+The only exception is ``file://`` which is stripped from source unit names by the Host Filesystem
+Loader.
 
 This does not mean you cannot use URLs as import paths at all.
-While the command-line compiler will interpret a URL as a relative path (which will most likely fail),
-the `JavaScript interface <https://github.com/ethereum/solc-js>`_ allows you to provide a callback
-and implement your own, custom lookup rules, which may include supporting arbitrary URLs.
+While the Host Filesystem Loader will interpret a URL as a relative path (which will most likely fail),
+the `JavaScript interface <https://github.com/ethereum/solc-js>`_ allows you to provide a custom
+import callback and implement your own lookup rules, which may include supporting arbitrary URLs.
 `The Remix IDE <https://remix.ethereum.org/>`_ uses this mechanism to allow files to be imported
 directly from github:
 
@@ -645,8 +668,8 @@ Otherwise the ``https:`` part would be interpreted by the compiler as the contex
     normalization involved.
     The source unit name for ``EXAMPLE.COM/project///contract.sol`` is exactly
     ``EXAMPLE.COM/project///contract.sol`` and not ``https://example.com/project/contract.sol``.
-    It will only get normalized if the compiler passes the source unit name to the file loader but
-    then the normalization rules for paths, not URLs will be applied.
+    It would get normalized by the Host Filesystem Loader but only according to normalization rules for
+    paths, and would not be actually interpreted as a URL in that situation.
 
 .. note::
 
