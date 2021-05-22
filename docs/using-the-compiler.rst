@@ -2,7 +2,7 @@
 Using the Compiler
 ******************
 
-.. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
+.. index:: ! commandline compiler, compiler;commandline, ! solc
 
 .. _commandline-compiler:
 
@@ -67,6 +67,7 @@ The above is only a simplification of how the compiler handles import paths.
 For a detailed explanation with examples and discussion of corner cases please refer to the section on
 :ref:`path resolution <path-resolution>`.
 
+.. index:: ! linker, ! --link, ! --libraries
 .. _library-linking:
 
 Library Linking
@@ -83,6 +84,8 @@ Either add ``--libraries "file.sol:Math=0x12345678901234567890123456789012345678
 
 .. note::
     Starting Solidity 0.8.1 accepts ``=`` as separator between library and address, and ``:`` as a separator is deprecated. It will be removed in the future. Currently ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` will work too.
+
+.. index:: --standard-json, --base-path
 
 If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
 The option ``--base-path`` is also processed in standard-json mode.
@@ -168,6 +171,7 @@ at each version. Backward compatibility is not guaranteed between each version.
 - ``berlin`` (**experimental**)
 
 
+.. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
 
 Compiler Input and Output JSON Description
