@@ -148,7 +148,7 @@ If you have a ``public`` state variable of array type, then you can only retriev
 single elements of the array via the generated getter function. This mechanism
 exists to avoid high gas costs when returning an entire array. You can use
 arguments to specify which individual element to return, for example
-``data(0)``. If you want to return an entire array in one call, then you need
+``myArray(0)``. If you want to return an entire array in one call, then you need
 to write a function, for example:
 
 ::
