@@ -237,15 +237,18 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 			codecopy(codepos, subOffset, subSize)
 			// Check that the first opcode is a PUSH20
 			if iszero(eq(0x73, byte(0, mload(codepos)))) {
-				mstore(0, <panicSig>)
-				mstore(4, 0)
+				mstore(0, <panicSelector>)
+				mstore(4, <panicCode>)
 				revert(0, 0x24)
 			}
 			mstore(0, address())
 			mstore8(codepos, 0x73)
 			return(codepos, subSize)
 		}
-		)")("panicSig", util::selectorFromSignature("Panic(uint256)").str()).render(),
+		)")
+		("panicSelector", util::selectorFromSignature("Panic(uint256)").str())
+		("panicCode", "0")
+		.render(),
 		{"subSize", "subOffset"}
 	);
 
