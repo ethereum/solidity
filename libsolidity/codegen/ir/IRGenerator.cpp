@@ -837,7 +837,11 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 
 string IRGenerator::callValueCheck()
 {
-	return "if callvalue() { " + m_utils.revertReasonIfDebugFunction("Ether sent to non-payable function") + "() }";
+	Whiskers tmpl(R"({
+		if callvalue() { <panic>() }
+	})");
+	tmpl("panic", m_utils.panicFunction(PanicCode::EtherToNonPayable));
+	return tmpl.render();
 }
 
 string IRGenerator::dispatchRoutine(ContractDefinition const& _contract)

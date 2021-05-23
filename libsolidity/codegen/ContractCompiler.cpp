@@ -141,7 +141,7 @@ void ContractCompiler::appendCallValueCheck()
 {
 	// Throw if function is not payable but call contained ether.
 	m_context << Instruction::CALLVALUE;
-	m_context.appendConditionalRevert(false, "Ether sent to non-payable function");
+	m_context.appendConditionalPanic(PanicCode::EtherToNonPayable);
 }
 
 void ContractCompiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
