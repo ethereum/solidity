@@ -59,7 +59,6 @@ namespace solidity::frontend::test
 	K(Library, "library", 0)           \
 	K(Right, "right", 0)               \
 	K(Failure, "FAILURE", 0)           \
-	K(Storage, "storage", 0)           \
 	K(Gas, "gas", 0)                   \
 
 namespace soltest
