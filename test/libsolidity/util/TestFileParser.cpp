@@ -512,7 +512,6 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "right") return {Token::Right, ""};
 		if (_literal == "hex") return {Token::Hex, ""};
 		if (_literal == "FAILURE") return {Token::Failure, ""};
-		if (_literal == "storage") return {Token::Storage, ""};
 		if (_literal == "gas") return {Token::Gas, ""};
 		return {Token::Identifier, _literal};
 	};
