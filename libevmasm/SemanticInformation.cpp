@@ -196,6 +196,7 @@ bool SemanticInformation::movable(Instruction _instruction)
 	case Instruction::KECCAK256:
 	case Instruction::BALANCE:
 	case Instruction::SELFBALANCE:
+	case Instruction::BASEFEE:
 	case Instruction::EXTCODESIZE:
 	case Instruction::EXTCODEHASH:
 	case Instruction::RETURNDATASIZE:
@@ -278,6 +279,7 @@ bool SemanticInformation::invalidInPureFunctions(Instruction _instruction)
 	case Instruction::EXTCODECOPY:
 	case Instruction::EXTCODEHASH:
 	case Instruction::BLOCKHASH:
+	case Instruction::BASEFEE:
 	case Instruction::COINBASE:
 	case Instruction::TIMESTAMP:
 	case Instruction::NUMBER:

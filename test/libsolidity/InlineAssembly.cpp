@@ -850,6 +850,13 @@ BOOST_AUTO_TEST_CASE(selfbalance_instanbul_warning)
 	CHECK_PARSE_WARNING("{ pop(selfbalance()) }", TypeError, "The \"selfbalance\" instruction is only available for Istanbul-compatible VMs");
 }
 
+BOOST_AUTO_TEST_CASE(basefee_london_warning)
+{
+	if (dev::test::Options::get().evmVersion().hasBasefee())
+		return;
+	CHECK_PARSE_WARNING("{ pop(basefee()) }", TypeError, "The \"basefee\" instruction is only available for London-compatible VMs");
+}
+
 BOOST_AUTO_TEST_CASE(jump_warning)
 {
 	CHECK_PARSE_WARNING("{ 1 jump }", Warning, "Jump instructions");
