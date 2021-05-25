@@ -19,16 +19,16 @@ contract C {
 // set_get_length(uint256): 20 -> 20
 // set_get_length(uint256): 0 -> 0
 // gas irOptimized: 79199
-// gas legacy: 35730
+// gas legacy: 77730
 // gas legacyOptimized: 77162
 // set_get_length(uint256): 0xFF -> 0xFF
 // gas irOptimized: 155961
-// gas legacy: 636237
+// gas legacy: 678237
 // gas legacyOptimized: 115104
 // set_get_length(uint256): 0xFFF -> 0xFFF
 // gas irOptimized: 2013003
-// gas legacy: 9871774
+// gas legacy: 9873774
 // gas legacyOptimized: 1398546
-// set_get_length(uint256): 0xFFFF -> 0xffff # Out-of-gas #
-// gas irOptimized: 31849803
-// gas legacyOptimized: 22019346
+// set_get_length(uint256): 0xFFFFF -> FAILURE # Out-of-gas #
+// gas irOptimized: 100000000
+// gas legacyOptimized: 100000000
