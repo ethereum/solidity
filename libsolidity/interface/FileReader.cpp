@@ -52,7 +52,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 				_kind
 			));
 		string strippedSourceUnitName = _sourceUnitName;
-		if (strippedSourceUnitName.find("file://") == 0)
+		if (strippedSourceUnitName.starts_with("file://"))
 			strippedSourceUnitName.erase(0, 7);
 
 		auto canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
