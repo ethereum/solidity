@@ -58,6 +58,7 @@ SemanticTest::SemanticTest(
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
 	m_builtins(makeBuiltins()),
+	m_sideEffectHooks(makeSideEffectHooks()),
 	m_enforceViaYul(_enforceViaYul),
 	m_enforceCompileToEwasm(_enforceCompileToEwasm),
 	m_enforceGasCost(_enforceGasCost),
@@ -127,10 +128,20 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 {
 	return {
 		{
-			"smokeTest",
+			"isoltest_builtin_test",
 			[](FunctionCall const&) -> optional<bytes>
 			{
 				return util::toBigEndian(u256(0x1234));
+			}
+		},
+		{
+			"isoltest_side_effects_test",
+			[](FunctionCall const& _call) -> optional<bytes>
+			{
+				if (_call.arguments.parameters.empty())
+					return util::toBigEndian(0);
+				else
+					return _call.arguments.rawBytes();
 			}
 		},
 		{
@@ -165,6 +176,23 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 			}
 		},
 	};
+}
+
+
+vector<SideEffectHook> SemanticTest::makeSideEffectHooks() const
+{
+	return {
+		[](FunctionCall const& _call) -> vector<string>
+		{
+			if (_call.signature == "isoltest_side_effects_test")
+			{
+				vector<string> result;
+				for (auto const& argument: _call.arguments.parameters)
+					result.emplace_back(toHex(argument.rawBytes));
+				return result;
+			}
+			return {};
+		}};
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -322,6 +350,13 @@ TestCase::TestResult SemanticTest::runTest(
 			test.setRawBytes(move(output));
 			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
 		}
+
+		vector<string> effects;
+		for (SideEffectHook const& hook: m_sideEffectHooks)
+			effects += hook(test.call());
+		test.setSideEffects(move(effects));
+
+		success &= test.call().expectedSideEffects == test.call().actualSideEffects;
 	}
 
 	if (!m_testCaseWantsYulRun && _isYulRun)
@@ -538,8 +573,7 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 
 void SemanticTest::parseExpectations(istream& _stream)
 {
-	TestFileParser parser{_stream, m_builtins};
-	m_tests += parser.parseFunctionCalls(m_lineOffset);
+	m_tests += TestFileParser{_stream, m_builtins}.parseFunctionCalls(m_lineOffset);
 }
 
 bool SemanticTest::deploy(

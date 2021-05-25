@@ -93,6 +93,7 @@ public:
 	void setRawBytes(const bytes _rawBytes) { m_rawBytes = _rawBytes; }
 	void setGasCost(std::string const& _runType, u256 const& _gasCost) { m_gasCosts[_runType] = _gasCost; }
 	void setContractABI(Json::Value _contractABI) { m_contractABI = std::move(_contractABI); }
+	void setSideEffects(std::vector<std::string> _sideEffects) { m_call.actualSideEffects = _sideEffects; }
 
 private:
 	/// Tries to format the given `bytes`, applying the detected ABI types that have be set for each parameter.

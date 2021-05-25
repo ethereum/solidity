@@ -90,20 +90,21 @@ private:
 		std::string scanDecimalNumber();
 		std::string scanHexNumber();
 		std::string scanString();
+		std::string readLine();
 		char scanHexPart();
 
 	private:
 		/// Advances current position in the input stream.
 		void advance(unsigned n = 1)
 		{
-			solAssert(m_char != m_line.end(), "Cannot advance beyond end.");
+			solAssert(m_char != m_source.end(), "Cannot advance beyond end.");
 			m_char = std::next(m_char, n);
 		}
 
 		/// Returns the current character or '\0' if at end of input.
 		char current() const noexcept
 		{
-			if (m_char == m_line.end())
+			if (m_char == m_source.end())
 				return '\0';
 
 			return *m_char;
@@ -113,10 +114,10 @@ private:
 		/// without advancing the input stream iterator.
 		char peek() const noexcept;
 
-		/// Returns true if the end of a line is reached, false otherwise.
-		bool isEndOfLine() const { return m_char == m_line.end(); }
+		/// Returns true if the end of the file is reached, false otherwise.
+		bool isEndOfFile() const { return m_char == m_source.end(); }
 
-		std::string m_line;
+		std::string m_source;
 		std::string::const_iterator m_char;
 
 		std::string m_currentLiteral;
@@ -179,6 +180,9 @@ private:
 
 	/// Parses the current string literal.
 	std::string parseString();
+
+	/// Parses the expected side effects of a function call execution.
+	std::vector<std::string> parseFunctionCallSideEffects();
 
 	/// Checks whether a builtin function with the given signature exist.
 	/// @returns true, if builtin found, false otherwise
