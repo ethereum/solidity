@@ -56,11 +56,14 @@ public:
 	explicit EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm);
 
 	void reset();
+	/// Clears EIP-2929 account and storage access indicator
+	void resetWarmAccess();
 	void newBlock()
 	{
 		tx_context.block_number++;
 		tx_context.block_timestamp += 15;
 		recorded_logs.clear();
+		resetWarmAccess();
 	}
 
 	/// @returns contents of storage at @param _addr.
