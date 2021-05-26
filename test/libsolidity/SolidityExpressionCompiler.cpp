@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(selfbalance)
 
 	bytes code = compileFirstExpression(sourceCode, {}, {});
 
-	if (solidity::test::CommonOptions::get().evmVersion() == EVMVersion::istanbul())
+	if (solidity::test::CommonOptions::get().evmVersion().hasSelfBalance())
 	{
 		bytes expectation({uint8_t(Instruction::SELFBALANCE)});
 		BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());

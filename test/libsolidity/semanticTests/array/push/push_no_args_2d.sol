@@ -29,16 +29,16 @@ contract C {
 // ----
 // l() -> 0
 // f(uint256,uint256): 42, 64 ->
-// gas irOptimized: 202621
-// gas legacy: 163034
-// gas legacyOptimized: 157045
+// gas irOptimized: 116221
+// gas legacy: 108234
+// gas legacyOptimized: 102245
 // l() -> 1
 // ll(uint256): 0 -> 43
 // a(uint256,uint256): 0, 42 -> 64
 // f(uint256,uint256): 84, 128 ->
-// gas irOptimized: 298837
-// gas legacy: 222080
-// gas legacyOptimized: 210631
+// gas irOptimized: 123537
+// gas legacy: 107780
+// gas legacyOptimized: 96331
 // l() -> 2
 // ll(uint256): 1 -> 85
 // a(uint256,uint256): 0, 42 -> 64

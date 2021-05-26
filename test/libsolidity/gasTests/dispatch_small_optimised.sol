@@ -14,6 +14,6 @@ contract Small {
 //   totalCost: 62111
 // external:
 //   fallback: 118
-//   a(): 961
-//   b(uint256): 1985
-//   f1(uint256): 41220
+//   a(): 2261
+//   b(uint256): 4585
+//   f1(uint256): 46720

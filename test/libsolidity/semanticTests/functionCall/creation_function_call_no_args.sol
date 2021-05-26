@@ -13,4 +13,4 @@ contract D {
 // compileViaYul: also
 // ----
 // f() -> 2
-// gas legacy: 101527
+// gas legacy: 101727

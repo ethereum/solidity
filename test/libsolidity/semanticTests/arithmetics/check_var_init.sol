@@ -18,4 +18,4 @@ contract D {
 // ----
 // f() -> FAILURE, hex"4e487b71", 0x11
 // g(), 100 wei -> 1
-// gas legacy: 101718
+// gas legacy: 101918

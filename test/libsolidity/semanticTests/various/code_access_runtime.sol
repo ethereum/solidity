@@ -25,4 +25,4 @@ contract C {
 // compileViaYul: also
 // ----
 // test() -> 42
-// gas legacy: 100138
+// gas legacy: 101638
