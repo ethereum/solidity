@@ -6,4 +6,4 @@ contract test {
   uint public state;
 }
 // ----
-// DocstringParsingError 5256: (18-137): Documentation tag "@return" is only allowed once on state-variables.
+// DocstringParsingError 2604: (18-137): Documentation tag "@return returns something" exceeds the number of return parameters.

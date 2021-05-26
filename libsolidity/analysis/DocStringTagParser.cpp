@@ -49,7 +49,7 @@ bool DocStringTagParser::parseDocStrings(SourceUnit const& _sourceUnit)
 
 bool DocStringTagParser::validateDocStringsUsingTypes(SourceUnit const& _sourceUnit)
 {
-	auto errorWatcher = m_errorReporter.errorWatcher();
+	ErrorReporter::ErrorWatcher errorWatcher = m_errorReporter.errorWatcher();
 
 	SimpleASTVisitor visitReturns(
 		[](ASTNode const&) { return true; },
@@ -65,39 +65,41 @@ bool DocStringTagParser::validateDocStringsUsingTypes(SourceUnit const& _sourceU
 					if (tagName == "return")
 					{
 						returnTagsVisited++;
+						vector<string> returnParameterNames;
+
 						if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(&_node))
 						{
-							solAssert(varDecl->isPublic(), "@return is only allowed on public state-variables.");
-							if (returnTagsVisited > 1)
-								m_errorReporter.docstringParsingError(
-									5256_error,
-									documentationNode.documentation()->location(),
-									"Documentation tag \"@" + tagName + "\" is only allowed once on state-variables."
-								);
+							if (!varDecl->isPublic())
+								continue;
+
+							// FunctionType() requires the DeclarationTypeChecker to have run.
+							returnParameterNames = FunctionType(*varDecl).returnParameterNames();
 						}
 						else if (auto const* function = dynamic_cast<FunctionDefinition const*>(&_node))
-						{
-							string content = tagValue.content;
-							string firstWord = content.substr(0, content.find_first_of(" \t"));
+							returnParameterNames = FunctionType(*function).returnParameterNames();
+						else
+							continue;
 
-							if (returnTagsVisited > function->returnParameters().size())
+						string content = tagValue.content;
+						string firstWord = content.substr(0, content.find_first_of(" \t"));
+
+						if (returnTagsVisited > returnParameterNames.size())
+							m_errorReporter.docstringParsingError(
+								2604_error,
+								documentationNode.documentation()->location(),
+								"Documentation tag \"@" + tagName + " " + content + "\"" +
+								" exceeds the number of return parameters."
+							);
+						else
+						{
+							string const& parameter = returnParameterNames.at(returnTagsVisited - 1);
+							if (!parameter.empty() && parameter != firstWord)
 								m_errorReporter.docstringParsingError(
-									2604_error,
+									5856_error,
 									documentationNode.documentation()->location(),
-									"Documentation tag \"@" + tagName + " " + tagValue.content + "\"" +
-									" exceeds the number of return parameters."
+									"Documentation tag \"@" + tagName + " " + content + "\"" +
+									" does not contain the name of its return parameter."
 								);
-							else
-							{
-								auto parameter = function->returnParameters().at(returnTagsVisited - 1);
-								if (!parameter->name().empty() && parameter->name() != firstWord)
-									m_errorReporter.docstringParsingError(
-										5856_error,
-										documentationNode.documentation()->location(),
-										"Documentation tag \"@" + tagName + " " + tagValue.content + "\"" +
-										" does not contain the name of its return parameter."
-									);
-							}
 						}
 					}
 			}
