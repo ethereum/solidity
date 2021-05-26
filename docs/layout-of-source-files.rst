@@ -233,11 +233,12 @@ ignoring the actual filesystem.
 While this mechanism provides a lot of freedom, in most cases the source files do reside on disk
 and it is convenient if the compiler can find and load them automatically.
 For this reason, if the source unit name corresponding to the import path is not found in the
-virtual filesystem, the compiler invokes the file loader.
-If you are using the command-line interface, the file loader simply assumes that the source unit
-name passed to it is a path and tries to load the file from the actual filesystem.
+virtual filesystem, the compiler invokes an import callback.
+If you are using the command-line interface, the Host Filesystem Loader (which is the default
+callback in that situation) simply assumes that the source unit name passed to it is a path and
+tries to load the file from the local filesystem.
 The `JavaScript interface <https://github.com/ethereum/solc-js>`_ is a bit more flexible in that
-regard and allows the user to provide a callback to load the file.
+regard and allows the user to provide the callback.
 `The Remix IDE <https://remix.ethereum.org/>`_ uses this mechanism to allow files to be imported
 directly from github.
 
@@ -274,8 +275,8 @@ The compiler recognizes two kinds of imports, based on how the import path looks
       :ref:`base path <base-path>` and :ref:`import remapping <import-remapping>`.
 
 There are several compiler features that can affect import paths. Imports can be redirected using
-:ref:`import remapping <import-remapping>` while the way file loader resolves relative paths depends
-on :ref:`base path <base-path>`.
+:ref:`import remapping <import-remapping>` while the way Host Filesystem Loader resolves relative
+paths depends on :ref:`base path <base-path>`.
 For a complete description of the virtual filesystem and the path resolution logic used by the
 compiler see :ref:`Path Resolution <path-resolution>`.
 
