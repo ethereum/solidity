@@ -35,15 +35,14 @@ An import callback is free to interpret source unit names in an arbitrary way, n
 If there is no callback available when one is needed or if it fails to locate the source code,
 compilation fails.
 
-The command-line compiler provides *Host Filesystem Loader* - a rudimentary callback
+The command-line compiler provides the *Host Filesystem Loader* - a rudimentary callback
 that interprets a source unit name as a path in the local filesystem.
-
-When using the `JavaScript interface <https://github.com/ethereum/solc-js>`_, on the other hand,
-there is no callback by default but one can be provided by the user.
+The `JavaScript interface <https://github.com/ethereum/solc-js>`_ does not provide any by default,
+but one can be provided by the user.
 This mechanism can be used to obtain source code from locations other then the local filesystem
 (which may not even be accessible, e.g. when the compiler is running in a browser).
 For example the `Remix IDE <https://remix.ethereum.org/>`_ provides a versatile callback that
-lets you `import files from HTTP, IPFS and Swarm URLs or refer to NPM packages
+lets you `import files from HTTP, IPFS and Swarm URLs or refer directly to packages in NPM registry
 <https://remix-ide.readthedocs.io/en/latest/import.html>`_.
 
 .. note::
@@ -53,7 +52,7 @@ lets you `import files from HTTP, IPFS and Swarm URLs or refer to NPM packages
     and the lookup can be case-sensitive or not, depending on the underlying platform.
 
     For portability it is recommended to avoid using import paths that will work correctly only
-    with a specific import callback or on a specific platform.
+    with a specific import callback or only on one platform.
 
 .. index:: ! CLI path
 
@@ -101,11 +100,12 @@ The initial content of the VFS depends on how you invoke the compiler:
 
    .. index:: standard JSON
 
-#. **Standard JSON (as content)**
+#. **Standard JSON**
 
    When using the :ref:`Standard JSON <compiler-api>` API (via either the `JavaScript interface
    <https://github.com/ethereum/solc-js>`_ or the ``--standard-json`` command-line option)
-   you provide input in JSON format, containing, among other things, all of your source code:
+   you provide input in JSON format, containing, among other things, the content of all your source
+   files:
 
    .. code-block:: json
 
@@ -125,13 +125,13 @@ The initial content of the VFS depends on how you invoke the compiler:
            "settings": {"outputSelection": {"*": { "*": ["metadata", "evm.bytecode"]}}}
        }
 
-   The ``sources`` dictionary specifies the initial content of the virtual filesystem and its keys
-   become source unit names this content is associated with.
+   The ``sources`` dictionary becomes the initial content of the virtual filesystem and its keys
+   are used as source unit names.
 
    With ``--standard-json`` the path to the JSON file does not affect the path resolution in any way.
    In fact, it is common to supply it on the standard input in which case it does not have a path at all.
 
-#. **Standard JSON (as URL)**
+#. **Standard JSON (via import callback)**
 
    With Standard JSON it is also possible to tell the compiler to use the import callback to obtain
    the source code:
@@ -151,11 +151,11 @@ The initial content of the VFS depends on how you invoke the compiler:
            "settings": {"outputSelection": {"*": { "*": ["metadata", "evm.bytecode"]}}}
        }
 
-   If an import callback is available, the compiler will pass the source unit names specified in
-   ``urls`` one by one until either one is loaded successfully or it reaches the end of the list.
+   If an import callback is available, the compiler will pass it the source unit names specified in
+   ``urls`` one by one, until one is loaded successfully or the end of the list is reached.
 
-   The source unit name for the loaded source code in the VFS is the key from ``sources`` and is
-   the same regardless of which item from ``urls`` was used in the end.
+   The source unit names are determined the same way as when using ``content`` - they are keys of
+   the ``sources`` dictionary and the content of ``urls`` does not affect them in any way.
 
    .. note::
 
@@ -176,25 +176,21 @@ The initial content of the VFS depends on how you invoke the compiler:
    The content of the standard input is placed in the virtual filesystem under a special source
    unit name: ``<stdin>``.
 
+Once the VFS is initialized, additional files can still be added to it only through the import
+callback.
+
 .. index:: ! import; path
 
 Imports
 =======
 
-The ``import`` statement requests a module from the compiler and allows to access certain symbols
-from that module.
-We will refer to the path used in the statement as *import path*.
+The import statement specifies an *import path*, which, after being lightly processed, becomes a
+source unit name.
+Based on how the processing is performed, we can divide imports into two categories:
 
-The import path is translated into a source unit name and then the compiler uses the name
-to look up the file in the VFS.
-If the file is not present there, the import callback is invoked and the returned content is added
-to the virtual filesystem under the requested source unit name.
-
-Based on how the translation is performed, we can divide imports into two categories:
-
-- :ref:`Direct imports <direct-imports>`, where you specify the full source unit name,
-- :ref:`Relative imports <relative-imports>`, where you specify a path which is combined with the
-  source unit name of the importing file to get the full source unit name.
+- :ref:`Direct imports <direct-imports>`, where you specify the full source unit name.
+- :ref:`Relative imports <relative-imports>`, where you specify a path to be combined with the
+  source unit name of the importing file.
 
 .. warning::
 
@@ -281,7 +277,7 @@ Relative Imports
 ----------------
 
 An import starting with ``./`` or ``../`` is a *relative import*.
-Such imports specify the path relative to the source unit name of the importing source unit:
+Such imports specify a path relative to the source unit name of the importing source unit:
 
 .. code-block:: solidity
     :caption: /project/lib/math.sol
@@ -401,7 +397,7 @@ Example:
 Base Path
 =========
 
-Base path specifies the directory that the Host Filesystem Loader can load files from.
+Base path specifies the directory that the Host Filesystem Loader will load files from.
 It is simply prepended to a source unit name before the filesystem lookup is performed.
 
 By default base path is empty, which results in the files being looked up in the directory the
@@ -498,10 +494,9 @@ e.g. different versions of a library of the same name.
 
     Information about used remappings is stored in contract metadata so modifying them will result
     in a slightly different bytecode.
-
     This means that if you move your project files to different locations and use remappings to
-    avoid having to modify the source, your project will compile but will no longer produce the
-    exact same bytecode.
+    avoid having to adjust the source code, your project will compile but will no longer produce the
+    exact same bytecode as without the remappings.
 
 Import remappings have the form of ``context:prefix=target``.
 All files in or below the ``context`` directory that import a file that starts with ``prefix`` are
@@ -606,7 +601,7 @@ Here are the detailed rules governing the behaviour of remappings:
      ``/newProject/con:/new=old`` will match ``/newProject/contract.sol`` and remap it to
      ``oldProject/contract.sol``.
 
-#. **At most one remapping can be applied to a single import.**
+#. **At most one remapping is applied to a single import.**
 
    - If multiple remappings match the same source unit name, the one with the longest matching
      prefix is chosen.
