@@ -162,6 +162,12 @@ bytes compileFirstExpression(
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
 					resolveDeclaration(*sourceUnit, function, resolver)
 				));
+
+			context.appendMissingLowLevelFunctions();
+			// NOTE: We intentionally disable optimisations for utility functions to simplfy the tests
+			context.appendYulUtilityFunctions({});
+			BOOST_REQUIRE(context.appendYulUtilityFunctionsRan());
+
 			BOOST_REQUIRE(context.assemblyPtr());
 			LinkerObject const& object = context.assemblyPtr()->assemble();
 			BOOST_REQUIRE(object.immutableReferences.empty());
