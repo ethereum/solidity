@@ -17,6 +17,7 @@ Compiler Features:
 Bugfixes:
  * AST: Do not output value of Yul literal if it is not a valid UTF-8 string.
  * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
+ * Source Locations: Properly set source location of scoped blocks.
  * Standard JSON: Properly allow the ``inliner`` setting under ``settings.optimizer.details``.
  * Type Checker: Fix internal compiler error related to having mapping types in constructor parameter for abstract contracts.
 
