@@ -1274,7 +1274,7 @@ BOOST_AUTO_TEST_CASE(dev_default_inherit_variable)
 
 	char const *natspec1 = R"ABCDEF({
 		"methods" : {},
-			"stateVariables" :
+		"stateVariables" :
 		{
 			"x" :
 			{
@@ -1340,7 +1340,7 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_variable)
 
 	char const *natspec1 = R"ABCDEF({
 		"methods" : {},
-			"stateVariables" :
+		"stateVariables" :
 		{
 			"x" :
 			{
