@@ -6,9 +6,9 @@ contract Small {
 }
 // ----
 // creation:
-//   codeDepositCost: 114600
-//   executionCost: 159
-//   totalCost: 114759
+//   codeDepositCost: 108800
+//   executionCost: 153
+//   totalCost: 108953
 // external:
 //   fallback: 129
 //   a(): 2407
