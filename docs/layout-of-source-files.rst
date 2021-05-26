@@ -263,9 +263,15 @@ The compiler recognizes two kinds of imports, based on how the import path looks
      import "./contracts/lib/token.sol" as token1;
      import "../contracts/lib/token.sol" as token2;
 
-  Unlike in case of a direct import, the compiler does assume that the import path is actually a path.
+  Unlike in case of a direct import, the compiler does assume that the import path works like a path.
   The source unit name is a result of combining the source unit name of the importing file with
   the part of the path provided in the statement.
+
+  .. note::
+
+      The use of relative imports with leading ``../`` segments is not recommended.
+      The same effect can be achieved in a more reliable way by using direct imports with
+      :ref:`base path <base-path>` and :ref:`import remapping <import-remapping>`.
 
 There are several compiler features that can affect import paths. Imports can be redirected using
 :ref:`import remapping <import-remapping>` while the way file loader resolves relative paths depends
