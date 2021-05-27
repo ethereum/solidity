@@ -35,8 +35,8 @@ namespace solidity::frontend
 class FileReader
 {
 public:
-	using StringMap = std::map<SourceUnitName, SourceCode>;
-	using PathMap = std::map<SourceUnitName, boost::filesystem::path>;
+	using StringMap = std::map<std::string, std::string>;
+	using PathMap = std::map<std::string, boost::filesystem::path>;
 	using FileSystemPathSet = std::set<boost::filesystem::path>;
 
 	/// Constructs a FileReader with a base path and a set of allowed directories that
@@ -44,22 +44,19 @@ public:
 	explicit FileReader(
 		boost::filesystem::path _basePath = {},
 		FileSystemPathSet _allowedDirectories = {}
-	):
-		m_basePath(std::move(_basePath)),
-		m_allowedDirectories(std::move(_allowedDirectories)),
-		m_sourceCodes()
-	{}
+	);
 
-	void setBasePath(boost::filesystem::path _path) { m_basePath = std::move(_path); }
 	boost::filesystem::path const& basePath() const noexcept { return m_basePath; }
 
-	void allowDirectory(boost::filesystem::path _path) { m_allowedDirectories.insert(std::move(_path)); }
+	void allowDirectory(boost::filesystem::path _path);
+	void allowParentDirectory(boost::filesystem::path _file);
+	bool inAllowedDirectory(boost::filesystem::path const& _canonicalPath) const;
 	FileSystemPathSet const& allowedDirectories() const noexcept { return m_allowedDirectories; }
 
 	StringMap const& sourceCodes() const noexcept { return m_sourceCodes; }
 
 	/// Retrieves the source code for a given source unit ID.
-	SourceCode const& sourceCode(SourceUnitName const& _sourceUnitName) const { return m_sourceCodes.at(_sourceUnitName); }
+	std::string const& sourceCode(std::string const& _sourceUnitName) const { return m_sourceCodes.at(_sourceUnitName); }
 
 	/// Resets all sources to the given map of source unit ID to source codes.
 	/// Does not enforce @a allowedDirectories().
@@ -67,7 +64,7 @@ public:
 
 	/// Adds the source code for a given source unit ID.
 	/// Does not enforce @a allowedDirectories().
-	void setSource(boost::filesystem::path const& _path, SourceCode _source);
+	void setSource(boost::filesystem::path const& _path, std::string _source);
 
 	/// Receives a @p _sourceUnitName that refers to a source unit in compiler's virtual filesystem
 	/// and attempts to interpret it as a path and read the corresponding file from disk.
@@ -82,6 +79,9 @@ public:
 	{
 		return [this](std::string const& _kind, std::string const& _path) { return readFile(_kind, _path); };
 	}
+
+	std::string toSourceUnitName(boost::filesystem::path const& _cliPath) const;
+	boost::filesystem::path fromSourceUnitName(std::string _sourceUnitName) const;
 
 private:
 	/// Base path, used for resolving relative paths in imports.

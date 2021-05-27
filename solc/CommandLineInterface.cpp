@@ -583,6 +583,9 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 
 bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
+	solAssert(m_fileReader.has_value(), "");
+	solAssert(m_remappings.empty(), "");
+
 	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
 	if (m_args.count(g_argInputFile))
@@ -600,49 +603,50 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				}
 
 				string remappingTarget(eq + 1, path.end());
-				m_fileReader.allowDirectory(boost::filesystem::path(remappingTarget).remove_filename());
+				m_fileReader->allowParentDirectory(boost::filesystem::path(remappingTarget));
 			}
 			else if (path == "-")
 				addStdin = true;
 			else
 			{
-				auto infile = boost::filesystem::path(path);
-				if (!boost::filesystem::exists(infile))
+				boost::filesystem::path inputFilePath = path;
+				if (!boost::filesystem::exists(inputFilePath))
 				{
 					if (!ignoreMissing)
 					{
-						serr() << infile << " is not found." << endl;
+						serr() << inputFilePath << " is not found." << endl;
 						return false;
 					}
 					else
-						serr() << infile << " is not found. Skipping." << endl;
+						serr() << inputFilePath << " is not found. Skipping." << endl;
 
 					continue;
 				}
 
-				if (!boost::filesystem::is_regular_file(infile))
+				if (!boost::filesystem::is_regular_file(inputFilePath))
 				{
 					if (!ignoreMissing)
 					{
-						serr() << infile << " is not a valid file." << endl;
+						serr() << inputFilePath << " is not a valid file." << endl;
 						return false;
 					}
 					else
-						serr() << infile << " is not a valid file. Skipping." << endl;
+						serr() << inputFilePath << " is not a valid file. Skipping." << endl;
 
 					continue;
 				}
 
 				// NOTE: we ignore the FileNotFound exception as we manually check above
-				m_fileReader.setSource(infile, readFileAsString(infile.string()));
-				m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(infile).string()).remove_filename());
+				// TMP: canonical() should not be needed here
+				m_fileReader->allowParentDirectory(boost::filesystem::canonical(inputFilePath).string());
+				m_fileReader->setSource(inputFilePath, readFileAsString(inputFilePath.string()));
 			}
 		}
 
 	if (addStdin)
-		m_fileReader.setSource(g_stdinFileName, readStandardInput());
+		m_fileReader->setSource(g_stdinFileName, readStandardInput());
 
-	if (m_fileReader.sourceCodes().size() == 0)
+	if (m_fileReader->sourceCodes().size() == 0)
 	{
 		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
 		return false;
@@ -748,10 +752,12 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 
 map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 {
+	solAssert(m_fileReader.has_value(), "");
+
 	map<string, Json::Value> sourceJsons;
 	map<string, string> tmpSources;
 
-	for (SourceCode const& sourceCode: m_fileReader.sourceCodes() | ranges::views::values)
+	for (string const& sourceCode: m_fileReader->sourceCodes() | ranges::views::values)
 	{
 		Json::Value ast;
 		astAssert(jsonParseStrict(sourceCode, ast), "Input file could not be parsed to JSON");
@@ -769,7 +775,7 @@ map<string, Json::Value> CommandLineInterface::parseAstFromInput()
 		}
 	}
 
-	m_fileReader.setSources(tmpSources);
+	m_fileReader->setSources(tmpSources);
 
 	return sourceJsons;
 }
@@ -1185,29 +1191,22 @@ bool CommandLineInterface::processInput()
 {
 	if (m_args.count(g_argBasePath))
 	{
-		boost::filesystem::path const fspath{m_args[g_argBasePath].as<string>()};
-		if (!boost::filesystem::is_directory(fspath))
+		boost::filesystem::path basePath = m_args[g_argBasePath].as<string>();
+		if (!boost::filesystem::is_directory(basePath))
 		{
-			serr() << "Base path must be a directory: \"" << fspath << "\"\n";
+			serr() << "Base path must be a directory: \"" << basePath << "\"\n";
 			return false;
 		}
-		m_fileReader.setBasePath(fspath);
+		m_fileReader.emplace(basePath);
 	}
+	else
+		m_fileReader.emplace();
 
 	if (m_args.count(g_argAllowPaths))
 	{
-		vector<string> paths;
-		for (string const& path: boost::split(paths, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
-		{
-			auto filesystem_path = boost::filesystem::path(path);
-			// If the given path had a trailing slash, the Boost filesystem
-			// path will have it's last component set to '.'. This breaks
-			// path comparison in later parts of the code, so we need to strip
-			// it.
-			if (filesystem_path.filename() == ".")
-				filesystem_path.remove_filename();
-			m_fileReader.allowDirectory(filesystem_path);
-		}
+		vector<string> allowedDirectoriesAsStrings;
+		for (string const& path: boost::split(allowedDirectoriesAsStrings, m_args[g_argAllowPaths].as<string>(), boost::is_any_of(",")))
+			m_fileReader->allowDirectory(path);
 	}
 
 	if (m_args.count(g_strStopAfter))
@@ -1264,7 +1263,7 @@ bool CommandLineInterface::processInput()
 				return false;
 			}
 		}
-		StandardCompiler compiler(m_fileReader.reader());
+		StandardCompiler compiler(m_fileReader->reader());
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
 	}
@@ -1469,7 +1468,7 @@ bool CommandLineInterface::processInput()
 	if (m_args.count(g_argModelCheckerTimeout))
 		m_modelCheckerSettings.timeout = m_args[g_argModelCheckerTimeout].as<unsigned>();
 
-	m_compiler = make_unique<CompilerStack>(m_fileReader.reader());
+	m_compiler = make_unique<CompilerStack>(m_fileReader->reader());
 
 	SourceReferenceFormatter formatter(serr(false), m_coloredOutput, m_withErrorIds);
 
@@ -1548,7 +1547,7 @@ bool CommandLineInterface::processInput()
 		}
 		else
 		{
-			m_compiler->setSources(m_fileReader.sourceCodes());
+			m_compiler->setSources(m_fileReader->sourceCodes());
 			if (m_args.count(g_argErrorRecovery))
 				m_compiler->setParserErrorRecovery(true);
 		}
@@ -1706,7 +1705,7 @@ void CommandLineInterface::handleCombinedJSON()
 	if (requests.count(g_strAst))
 	{
 		output[g_strSources] = Json::Value(Json::objectValue);
-		for (auto const& sourceCode: m_fileReader.sourceCodes())
+		for (auto const& sourceCode: m_fileReader->sourceCodes())
 		{
 			ASTJsonConverter converter(m_compiler->state(), m_compiler->sourceIndices());
 			output[g_strSources][sourceCode.first] = Json::Value(Json::objectValue);
@@ -1725,16 +1724,18 @@ void CommandLineInterface::handleCombinedJSON()
 
 void CommandLineInterface::handleAst()
 {
+	solAssert(m_fileReader.has_value(), "");
+
 	if (!m_args.count(g_argAstCompactJson))
 		return;
 
 	vector<ASTNode const*> asts;
-	for (auto const& sourceCode: m_fileReader.sourceCodes())
+	for (auto const& sourceCode: m_fileReader->sourceCodes())
 		asts.push_back(&m_compiler->ast(sourceCode.first));
 
 	if (m_args.count(g_argOutputDir))
 	{
-		for (auto const& sourceCode: m_fileReader.sourceCodes())
+		for (auto const& sourceCode: m_fileReader->sourceCodes())
 		{
 			stringstream data;
 			string postfix = "";
@@ -1747,7 +1748,7 @@ void CommandLineInterface::handleAst()
 	else
 	{
 		sout() << "JSON AST (compact format):" << endl << endl;
-		for (auto const& sourceCode: m_fileReader.sourceCodes())
+		for (auto const& sourceCode: m_fileReader->sourceCodes())
 		{
 			sout() << endl << "======= " << sourceCode.first << " =======" << endl;
 			ASTJsonConverter(m_compiler->state(), m_compiler->sourceIndices()).print(sout(), m_compiler->ast(sourceCode.first));
@@ -1769,6 +1770,8 @@ bool CommandLineInterface::actOnInput()
 
 bool CommandLineInterface::link()
 {
+	solAssert(m_fileReader.has_value(), "");
+
 	// Map from how the libraries will be named inside the bytecode to their addresses.
 	map<string, h160> librariesReplacements;
 	int const placeholderSize = 40; // 20 bytes or 40 hex characters
@@ -1789,7 +1792,7 @@ bool CommandLineInterface::link()
 		librariesReplacements[replacement] = library.second;
 	}
 
-	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
+	FileReader::StringMap sourceCodes = m_fileReader->sourceCodes();
 	for (auto& src: sourceCodes)
 	{
 		auto end = src.second.end();
@@ -1825,14 +1828,16 @@ bool CommandLineInterface::link()
 		while (!src.second.empty() && *prev(src.second.end()) == '\n')
 			src.second.resize(src.second.size() - 1);
 	}
-	m_fileReader.setSources(move(sourceCodes));
+	m_fileReader->setSources(move(sourceCodes));
 
 	return true;
 }
 
 void CommandLineInterface::writeLinkedFiles()
 {
-	for (auto const& src: m_fileReader.sourceCodes())
+	solAssert(m_fileReader.has_value(), "");
+
+	for (auto const& src: m_fileReader->sourceCodes())
 		if (src.first == g_stdinFileName)
 			sout() << src.second << endl;
 		else
@@ -1873,10 +1878,11 @@ bool CommandLineInterface::assemble(
 )
 {
 	solAssert(_optimize || !_yulOptimiserSteps.has_value(), "");
+	solAssert(m_fileReader.has_value(), "");
 
 	bool successful = true;
 	map<string, yul::AssemblyStack> assemblyStacks;
-	for (auto const& src: m_fileReader.sourceCodes())
+	for (auto const& src: m_fileReader->sourceCodes())
 	{
 		OptimiserSettings settings = _optimize ? OptimiserSettings::full() : OptimiserSettings::minimal();
 		if (_yulOptimiserSteps.has_value())
@@ -1927,7 +1933,7 @@ bool CommandLineInterface::assemble(
 	if (!successful)
 		return false;
 
-	for (auto const& src: m_fileReader.sourceCodes())
+	for (auto const& src: m_fileReader->sourceCodes())
 	{
 		string machine =
 			_targetMachine == yul::AssemblyStack::Machine::EVM ? "EVM" :
@@ -2039,7 +2045,7 @@ void CommandLineInterface::outputCompilationResults()
 			if (m_args.count(g_argAsmJson))
 				ret = jsonPrettyPrint(removeNullMembers(m_compiler->assemblyJSON(contract)));
 			else
-				ret = m_compiler->assemblyString(contract, m_fileReader.sourceCodes());
+				ret = m_compiler->assemblyString(contract, m_fileReader->sourceCodes());
 
 			if (m_args.count(g_argOutputDir))
 			{

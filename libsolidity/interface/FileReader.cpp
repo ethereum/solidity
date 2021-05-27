@@ -25,21 +25,77 @@
 
 using solidity::frontend::ReadCallback;
 using solidity::langutil::InternalCompilerError;
+using solidity::util::contains;
 using solidity::util::errinfo_comment;
 using solidity::util::readFileAsString;
+using std::distance;
+using std::equal;
+using std::move;
 using std::string;
 
 namespace solidity::frontend
 {
 
-void FileReader::setSource(boost::filesystem::path const& _path, SourceCode _source)
+FileReader::FileReader(
+	boost::filesystem::path _basePath,
+	FileSystemPathSet _allowedDirectories
+):
+	m_basePath(move(_basePath)),
+	m_allowedDirectories(move(_allowedDirectories)),
+	m_sourceCodes()
 {
-	m_sourceCodes[_path.generic_string()] = std::move(_source);
+	solAssert(m_basePath.empty() || boost::filesystem::is_directory(m_basePath), "");
+
+	// TMP: Make sure this does not add "" to allowed directories with default base path
+	if (!contains(m_allowedDirectories, m_basePath))
+		// TMP: This might change the case with trailing /, see comment in allowDirectory()
+		allowDirectory(m_basePath);
+
+	for (boost::filesystem::path directory: _allowedDirectories)
+		allowDirectory(move(directory));
+}
+
+void FileReader::allowDirectory(boost::filesystem::path _directory)
+{
+	// If the given path had a trailing slash, the Boost filesystem path will have its last
+	// component set to '.'. This breaks path comparison in later parts of the code, so we need
+	// to strip it.
+	if (_directory.filename() == ".")
+		// TMP: Make sure this modifies the path in place
+		_directory.remove_filename();
+
+	m_allowedDirectories.insert(move(_directory));
+}
+
+void FileReader::allowParentDirectory(boost::filesystem::path _file)
+{
+	_file.remove_filename();
+	allowDirectory(_file);
+}
+
+bool FileReader::inAllowedDirectory(boost::filesystem::path const& _canonicalPath) const
+{
+	for (boost::filesystem::path const& allowedDir: m_allowedDirectories)
+	{
+		// If dir is a prefix of boostPath, we are fine.
+		if (
+			distance(allowedDir.begin(), allowedDir.end()) <= distance(_canonicalPath.begin(), _canonicalPath.end()) &&
+			equal(allowedDir.begin(), allowedDir.end(), _canonicalPath.begin())
+		)
+			return false;
+	}
+
+	return true;
+}
+
+void FileReader::setSource(boost::filesystem::path const& _path, string _source)
+{
+	m_sourceCodes[toSourceUnitName(_path)] = move(_source);
 }
 
 void FileReader::setSources(StringMap _sources)
 {
-	m_sourceCodes = std::move(_sources);
+	m_sourceCodes = move(_sources);
 }
 
 ReadCallback::Result FileReader::readFile(string const& _kind, string const& _sourceUnitName)
@@ -51,25 +107,10 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 				"ReadFile callback used as callback kind " +
 				_kind
 			));
-		string strippedSourceUnitName = _sourceUnitName;
-		if (strippedSourceUnitName.find("file://") == 0)
-			strippedSourceUnitName.erase(0, 7);
 
-		auto canonicalPath = boost::filesystem::weakly_canonical(m_basePath / strippedSourceUnitName);
-		bool isAllowed = false;
-		for (auto const& allowedDir: m_allowedDirectories)
-		{
-			// If dir is a prefix of boostPath, we are fine.
-			if (
-				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
-				std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
-			)
-			{
-				isAllowed = true;
-				break;
-			}
-		}
-		if (!isAllowed)
+		boost::filesystem::path canonicalPath = fromSourceUnitName(_sourceUnitName);
+
+		if (!inAllowedDirectory(canonicalPath))
 			return ReadCallback::Result{false, "File outside of allowed directories."};
 
 		if (!boost::filesystem::exists(canonicalPath))
@@ -79,9 +120,9 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			return ReadCallback::Result{false, "Not a valid file."};
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		auto contents = readFileAsString(canonicalPath.string());
+		string contents = readFileAsString(canonicalPath.string());
 		m_sourceCodes[_sourceUnitName] = contents;
-		return ReadCallback::Result{true, contents};
+		return ReadCallback::Result{true, move(contents)};
 	}
 	catch (util::Exception const& _exception)
 	{
@@ -93,5 +134,17 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 	}
 }
 
+string FileReader::toSourceUnitName(boost::filesystem::path const& _fsPath) const
+{
+	return _fsPath.generic_string();
 }
 
+boost::filesystem::path FileReader::fromSourceUnitName(string _sourceUnitName) const
+{
+	if (_sourceUnitName.find("file://") == 0)
+		_sourceUnitName.erase(0, 7);
+
+	return boost::filesystem::weakly_canonical(m_basePath / _sourceUnitName);
+}
+
+}
