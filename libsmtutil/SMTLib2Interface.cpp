@@ -23,6 +23,8 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <range/v3/algorithm/find_if.hpp>
+
 #include <array>
 #include <fstream>
 #include <iostream>
@@ -173,7 +175,7 @@ string SMTLib2Interface::toSExpr(Expression const& _expr)
 		sexpr += string("ite ") +
 			"(= ((_ extract " + pos + " " + pos + ")" + arg + ") #b0) " +
 			nat + " " +
-			"(- (bvneg " + arg + "))";
+			"(- (bv2nat (bvneg " + arg + ")))";
 	}
 	else if (_expr.name == "const_array")
 	{
@@ -231,14 +233,15 @@ string SMTLib2Interface::toSmtLibSort(Sort const& _sort)
 	{
 		auto const& tupleSort = dynamic_cast<TupleSort const&>(_sort);
 		string tupleName = "|" + tupleSort.name + "|";
-		if (!m_userSorts.count(tupleName))
+		auto isName = [&](auto entry) { return entry.first == tupleName; };
+		if (ranges::find_if(m_userSorts, isName) == m_userSorts.end())
 		{
-			m_userSorts.insert(tupleName);
 			string decl("(declare-datatypes ((" + tupleName + " 0)) (((" + tupleName);
 			smtAssert(tupleSort.members.size() == tupleSort.components.size(), "");
 			for (unsigned i = 0; i < tupleSort.members.size(); ++i)
 				decl += " (|" + tupleSort.members.at(i) + "| " + toSmtLibSort(*tupleSort.components.at(i)) + ")";
 			decl += "))))";
+			m_userSorts.emplace_back(tupleName, decl);
 			write(decl);
 		}
 
