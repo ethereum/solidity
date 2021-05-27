@@ -3,16 +3,35 @@
 EVM assembly:
     /* "dup_opt_peephole/input.sol":0:111  contract C {... */
   mstore(0x40, 0x80)
-  callvalue
-  dup1
-  iszero
-  tag_1
-  jumpi
-  0x00
-  dup1
-  revert
+  jumpi(tag_1, iszero(callvalue))
+  tag_2
+  tag_3
+  jump	// in
+tag_2:
 tag_1:
-  pop
+  jump(tag_4)
+    /* "#utility.yul":7:187   */
+tag_3:
+    /* "#utility.yul":55:132   */
+  0x4e487b7100000000000000000000000000000000000000000000000000000000
+    /* "#utility.yul":52:53   */
+  0x00
+    /* "#utility.yul":45:133   */
+  mstore
+    /* "#utility.yul":152:156   */
+  0x02
+    /* "#utility.yul":149:150   */
+  0x04
+    /* "#utility.yul":142:157   */
+  mstore
+    /* "#utility.yul":176:180   */
+  0x24
+    /* "#utility.yul":173:174   */
+  0x00
+    /* "#utility.yul":166:181   */
+  revert
+    /* "dup_opt_peephole/input.sol":0:111  contract C {... */
+tag_4:
   dataSize(sub_0)
   dup1
   dataOffset(sub_0)
@@ -25,16 +44,12 @@ stop
 sub_0: assembly {
         /* "dup_opt_peephole/input.sol":0:111  contract C {... */
       mstore(0x40, 0x80)
-      callvalue
-      dup1
-      iszero
-      tag_3
-      jumpi
-      0x00
-      dup1
-      revert
+      jumpi(tag_3, iszero(callvalue))
+      tag_4
+      tag_5
+      jump	// in
+    tag_4:
     tag_3:
-      pop
         /* "dup_opt_peephole/input.sol":74:75  0 */
       0x00
         /* "dup_opt_peephole/input.sol":61:76  calldataload(0) */
@@ -49,6 +64,26 @@ sub_0: assembly {
       pop
         /* "dup_opt_peephole/input.sol":0:111  contract C {... */
       stop
+        /* "#utility.yul":7:187   */
+    tag_5:
+        /* "#utility.yul":55:132   */
+      0x4e487b7100000000000000000000000000000000000000000000000000000000
+        /* "#utility.yul":52:53   */
+      0x00
+        /* "#utility.yul":45:133   */
+      mstore
+        /* "#utility.yul":152:156   */
+      0x02
+        /* "#utility.yul":149:150   */
+      0x04
+        /* "#utility.yul":142:157   */
+      mstore
+        /* "#utility.yul":176:180   */
+      0x24
+        /* "#utility.yul":173:174   */
+      0x00
+        /* "#utility.yul":166:181   */
+      revert
 
     auxdata: <AUXDATA REMOVED>
 }

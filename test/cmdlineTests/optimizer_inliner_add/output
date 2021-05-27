@@ -3,16 +3,39 @@
 EVM assembly:
     /* "optimizer_inliner_add/input.sol":165:305  contract C {... */
   mstore(0x40, 0x80)
-  callvalue
-  dup1
-  iszero
-  tag_1
-  jumpi
+  jumpi(tag_2, iszero(callvalue))
+  tag_2
+  tag_3
+  jump	// in
+tag_2:
+  jump(tag_5)
+    /* "#utility.yul":14:141   */
+tag_3:
+    /* "#utility.yul":75:85   */
+  0x4e487b71
+    /* "#utility.yul":70:73   */
+  0xe0
+    /* "#utility.yul":66:86   */
+  shl
+    /* "#utility.yul":63:64   */
   0x00
-  dup1
+    /* "#utility.yul":56:87   */
+  mstore
+    /* "#utility.yul":106:110   */
+  0x02
+    /* "#utility.yul":103:104   */
+  0x04
+    /* "#utility.yul":96:111   */
+  mstore
+    /* "#utility.yul":130:134   */
+  0x24
+    /* "#utility.yul":127:128   */
+  0x00
+    /* "#utility.yul":120:135   */
   revert
-tag_1:
-  pop
+    /* "#utility.yul":46:141   */
+tag_5:
+    /* "optimizer_inliner_add/input.sol":165:305  contract C {... */
   dataSize(sub_0)
   dup1
   dataOffset(sub_0)
@@ -25,39 +48,34 @@ stop
 sub_0: assembly {
         /* "optimizer_inliner_add/input.sol":165:305  contract C {... */
       mstore(0x40, 0x80)
-      callvalue
-      dup1
-      iszero
-      tag_1
-      jumpi
-      0x00
-      dup1
-      revert
-    tag_1:
-      pop
-      jumpi(tag_2, lt(calldatasize, 0x04))
+      jumpi(tag_2, iszero(callvalue))
+      tag_2
+      tag_3
+      jump	// in
+    tag_2:
+      jumpi(tag_4, lt(calldatasize, 0x04))
       shr(0xe0, calldataload(0x00))
       dup1
       0x26121ff0
       eq
-      tag_3
+      tag_5
       jumpi
-    tag_2:
+    tag_4:
       0x00
       dup1
       revert
         /* "optimizer_inliner_add/input.sol":182:303  function f() public pure {... */
-    tag_3:
-      tag_4
-      tag_5
-      jump	// in
-    tag_4:
-      stop
     tag_5:
+      tag_6
+      tag_7
+      jump	// in
+    tag_6:
+      stop
+    tag_7:
         /* "optimizer_inliner_add/input.sol":221:227  uint x */
       0x00
         /* "optimizer_inliner_add/input.sol":217:297  for(uint x = 0; x < 10; x = unsafe_add(x, unsafe_add(x, 1)))... */
-    tag_7:
+    tag_9:
         /* "optimizer_inliner_add/input.sol":237:239  10 */
       0x0a
         /* "optimizer_inliner_add/input.sol":233:234  x */
@@ -66,7 +84,7 @@ sub_0: assembly {
       lt
         /* "optimizer_inliner_add/input.sol":217:297  for(uint x = 0; x < 10; x = unsafe_add(x, unsafe_add(x, 1)))... */
       iszero
-      tag_8
+      tag_10
       jumpi
         /* "optimizer_inliner_add/input.sol":149:154  x + y */
       dup1
@@ -76,11 +94,35 @@ sub_0: assembly {
         /* "optimizer_inliner_add/input.sol":149:154  x + y */
       add
         /* "optimizer_inliner_add/input.sol":217:297  for(uint x = 0; x < 10; x = unsafe_add(x, unsafe_add(x, 1)))... */
-      jump(tag_7)
-    tag_8:
+      jump(tag_9)
+    tag_10:
       pop
         /* "optimizer_inliner_add/input.sol":182:303  function f() public pure {... */
       jump	// out
+        /* "#utility.yul":14:141   */
+    tag_3:
+        /* "#utility.yul":75:85   */
+      0x4e487b71
+        /* "#utility.yul":70:73   */
+      0xe0
+        /* "#utility.yul":66:86   */
+      shl
+        /* "#utility.yul":63:64   */
+      0x00
+        /* "#utility.yul":56:87   */
+      mstore
+        /* "#utility.yul":106:110   */
+      0x02
+        /* "#utility.yul":103:104   */
+      0x04
+        /* "#utility.yul":96:111   */
+      mstore
+        /* "#utility.yul":130:134   */
+      0x24
+        /* "#utility.yul":127:128   */
+      0x00
+        /* "#utility.yul":120:135   */
+      revert
 
     auxdata: <AUXDATA REMOVED>
 }

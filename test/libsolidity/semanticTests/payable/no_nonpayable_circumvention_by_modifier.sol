@@ -10,8 +10,8 @@ contract C {
     }
 }
 // ====
-// compileViaYul: also
 // compileToEwasm: also
+// compileViaYul: also
 // ----
-// f(), 27 wei -> FAILURE
+// f(), 27 wei -> FAILURE, hex"4e487b71", 0x02
 // balance -> 0

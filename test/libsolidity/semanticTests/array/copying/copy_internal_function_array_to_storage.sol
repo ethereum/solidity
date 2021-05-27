@@ -22,6 +22,6 @@ contract C {
 // compileViaYul: also
 // ----
 // one() -> 3
-// gas legacy: 140260
-// gas legacyOptimized: 140097
+// gas legacy: 140255
+// gas legacyOptimized: 140092
 // two() -> FAILURE, hex"4e487b71", 0x51

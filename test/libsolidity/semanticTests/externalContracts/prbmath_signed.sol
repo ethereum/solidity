@@ -50,46 +50,46 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 2171167
-// gas legacy: 2602700
-// gas legacyOptimized: 1900162
+// gas irOptimized: 2184349
+// gas legacy: 2491609
+// gas legacyOptimized: 1879872
 // div(int256,int256): 3141592653589793238, 88714123 -> 35412542528203691288251815328
-// gas irOptimized: 22303
-// gas legacy: 22767
-// gas legacyOptimized: 22282
+// gas irOptimized: 22324
+// gas legacy: 22762
+// gas legacyOptimized: 22277
 // exp(int256): 3141592653589793238 -> 23140692632779268978
-// gas irOptimized: 25094
-// gas legacy: 25203
-// gas legacyOptimized: 24357
+// gas irOptimized: 25091
+// gas legacy: 25198
+// gas legacyOptimized: 24352
 // exp2(int256): 3141592653589793238 -> 8824977827076287620
-// gas irOptimized: 24808
-// gas legacy: 24864
-// gas legacyOptimized: 24110
+// gas irOptimized: 24805
+// gas legacy: 24859
+// gas legacyOptimized: 24105
 // gm(int256,int256): 3141592653589793238, 88714123 -> 16694419339601
-// gas irOptimized: 23573
-// gas legacy: 23228
-// gas legacyOptimized: 22683
+// gas irOptimized: 23570
+// gas legacy: 23223
+// gas legacyOptimized: 22678
 // log10(int256): 3141592653589793238 -> 4971498726941338506
-// gas irOptimized: 31328
-// gas legacy: 32934
-// gas legacyOptimized: 30323
+// gas irOptimized: 31325
+// gas legacy: 32929
+// gas legacyOptimized: 30318
 // log2(int256): 3141592653589793238 -> 1651496129472318782
-// gas irOptimized: 29484
-// gas legacy: 31067
-// gas legacyOptimized: 28426
+// gas irOptimized: 29481
+// gas legacy: 31062
+// gas legacyOptimized: 28421
 // mul(int256,int256): 3141592653589793238, 88714123 -> 278703637
-// gas irOptimized: 22414
-// gas legacy: 22807
-// gas legacyOptimized: 22295
-// pow(int256,uint256): 3141592653589793238, 5 -> 306019684785281453040
-// gas irOptimized: 22974
-// gas legacy: 23508
-// gas legacyOptimized: 22921
-// sqrt(int256): 3141592653589793238 -> 1772453850905516027
-// gas irOptimized: 23246
+// gas irOptimized: 22411
 // gas legacy: 22802
-// gas legacyOptimized: 22422
+// gas legacyOptimized: 22290
+// pow(int256,uint256): 3141592653589793238, 5 -> 306019684785281453040
+// gas irOptimized: 22971
+// gas legacy: 23503
+// gas legacyOptimized: 22916
+// sqrt(int256): 3141592653589793238 -> 1772453850905516027
+// gas irOptimized: 23243
+// gas legacy: 22797
+// gas legacyOptimized: 22417
 // benchmark(int256): 3141592653589793238 -> 998882724338592125, 1000000000000000000, 1000000000000000000
-// gas irOptimized: 43323
-// gas legacy: 36673
-// gas legacyOptimized: 34729
+// gas irOptimized: 43320
+// gas legacy: 36668
+// gas legacyOptimized: 34724

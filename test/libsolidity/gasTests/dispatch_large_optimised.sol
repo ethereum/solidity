@@ -27,22 +27,22 @@ contract Large {
 // optimize-runs: 2
 // ----
 // creation:
-//   codeDepositCost: 232800
-//   executionCost: 275
-//   totalCost: 233075
+//   codeDepositCost: 211600
+//   executionCost: 264
+//   totalCost: 211864
 // external:
-//   a(): 2283
-//   b(uint256): 4937
-//   f0(uint256): 366
-//   f1(uint256): 47006
-//   f2(uint256): 24972
-//   f3(uint256): 25060
-//   f4(uint256): 25038
-//   f5(uint256): 25016
-//   f6(uint256): 24928
-//   f7(uint256): 24708
-//   f8(uint256): 24840
-//   f9(uint256): 24862
+//   a(): 2278
+//   b(uint256): 4932
+//   f0(uint256): 361
+//   f1(uint256): 47001
+//   f2(uint256): 24967
+//   f3(uint256): 25055
+//   f4(uint256): 25033
+//   f5(uint256): 25011
+//   f6(uint256): 24923
+//   f7(uint256): 24703
+//   f8(uint256): 24835
+//   f9(uint256): 24857
 //   g0(uint256): 606
 //   g1(uint256): 46718
 //   g2(uint256): 24706

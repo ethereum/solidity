@@ -14,5 +14,5 @@ contract C {
 // compileViaYul: also
 // ----
 // test() -> left(0x01), left(0x02)
-// gas legacy: 90001
-// gas legacyOptimized: 89085
+// gas legacy: 89996
+// gas legacyOptimized: 89080

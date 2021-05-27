@@ -24,5 +24,5 @@ contract C {
 // ----
 // f() -> true
 // gas irOptimized: 92958
-// gas legacy: 93035
-// gas legacyOptimized: 92257
+// gas legacy: 93030
+// gas legacyOptimized: 92252

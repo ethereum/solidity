@@ -36,12 +36,12 @@ contract D {
 // compileViaYul: also
 // ----
 // f() -> 0x1 # This should work, next should throw #
-// gas legacy: 103844
+// gas legacy: 113265
 // fview() -> FAILURE
-// gas irOptimized: 98438645
-// gas legacy: 98438803
-// gas legacyOptimized: 98438596
+// gas irOptimized: 98438695
+// gas legacy: 98438950
+// gas legacyOptimized: 98438662
 // fpure() -> FAILURE
-// gas irOptimized: 98438646
-// gas legacy: 98438803
-// gas legacyOptimized: 98438597
+// gas irOptimized: 98438696
+// gas legacy: 98438951
+// gas legacyOptimized: 98438663

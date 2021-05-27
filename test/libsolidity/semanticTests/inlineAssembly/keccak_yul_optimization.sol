@@ -26,10 +26,10 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 0xcdb56c384a9682c600315e3470157a4cf7638d0d33e9dae5c40ffd2644fc5a80
-// gas irOptimized: 22521
-// gas legacy: 23385
-// gas legacyOptimized: 23092
+// gas irOptimized: 22535
+// gas legacy: 23380
+// gas legacyOptimized: 23087
 // g() -> 0xcdb56c384a9682c600315e3470157a4cf7638d0d33e9dae5c40ffd2644fc5a80
 // gas irOptimized: 21391
-// gas legacy: 21462
-// gas legacyOptimized: 21256
+// gas legacy: 21457
+// gas legacyOptimized: 21251

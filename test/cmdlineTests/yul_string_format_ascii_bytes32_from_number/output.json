@@ -9,7 +9,9 @@
 object \"C_11\" {
     code {
         mstore(64, 128)
-        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+        {
+            if callvalue() { panic_error_0x02() }
+        }
 
         constructor_C_11()
 
@@ -26,8 +28,10 @@ object \"C_11\" {
 
         }
 
-        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
-            revert(0, 0)
+        function panic_error_0x02() {
+            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+            mstore(4, 0x02)
+            revert(0, 0x24)
         }
 
     }
@@ -44,7 +48,9 @@ object \"C_11\" {
                 {
                     // f()
 
-                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    {
+                        if callvalue() { panic_error_0x02() }
+                    }
                     abi_decode_tuple_(4, calldatasize())
                     let ret_0 :=  fun_f_10()
                     let memPos := allocate_unbounded()
@@ -99,11 +105,13 @@ object \"C_11\" {
 
             }
 
-            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
-                revert(0, 0)
+            function panic_error_0x02() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x02)
+                revert(0, 0x24)
             }
 
-            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
                 revert(0, 0)
             }
 

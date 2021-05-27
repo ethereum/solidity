@@ -10,7 +10,12 @@ object "C_59" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x02)
+                revert(0, 0x24)
+            }
             let _1 := datasize("C_59_deployed")
             codecopy(128, dataoffset("C_59_deployed"), _1)
             return(128, _1)
@@ -25,7 +30,12 @@ object "C_59" {
                     let _1 := 0
                     if eq(0xf8eddcc6, shr(224, calldataload(_1)))
                     {
-                        if callvalue() { revert(_1, _1) }
+                        if callvalue()
+                        {
+                            mstore(_1, shl(224, 0x4e487b71))
+                            mstore(4, 0x02)
+                            revert(_1, 0x24)
+                        }
                         let _2 := 32
                         if slt(add(calldatasize(), not(3)), _2) { revert(_1, _1) }
                         let offset := calldataload(4)
@@ -45,7 +55,7 @@ object "C_59" {
                         for { } lt(i, _4) { i := add(i, 1) }
                         {
                             if slt(sub(calldatasize(), src), _2) { revert(_1, _1) }
-                            let value := allocate_memory_1228()
+                            let value := allocate_memory_1244()
                             mstore(value, calldataload(src))
                             mstore(dst, value)
                             dst := add(dst, _2)
@@ -76,7 +86,7 @@ object "C_59" {
                 }
                 tail := add(add(headStart, and(add(length, 31), not(31))), 96)
             }
-            function allocate_memory_1228() -> memPtr
+            function allocate_memory_1244() -> memPtr
             {
                 memPtr := mload(64)
                 let newFreePtr := add(memPtr, 32)

@@ -4,16 +4,11 @@ EVM assembly:
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":60:361  contract C {... */
   mstore(0x40, 0x80)
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":77:101  constructor() { x = f; } */
-  callvalue
-  dup1
-  iszero
-  tag_1
-  jumpi
-  0x00
-  dup1
-  revert
-tag_1:
-  pop
+  jumpi(tag_2, iszero(callvalue))
+  tag_2
+  tag_3
+  jump	// in
+tag_2:
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":93:94  x */
   0x00
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":93:98  x = f */
@@ -22,7 +17,7 @@ tag_1:
   not(sub(shl(0x40, 0x01), 0x01))
   and
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":97:98  f */
-  or(tag_0_12, shl(0x20, tag_4))
+  or(tag_0_14, shl(0x20, tag_6))
   sub(shl(0x40, 0x01), 0x01)
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":93:98  x = f */
   and
@@ -30,16 +25,41 @@ tag_1:
   swap1
   sstore
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":60:361  contract C {... */
-  jump(tag_5)
+  jump(tag_9)
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":304:359  function f() internal pure returns (uint) { return 6; } */
-tag_4:
+tag_6:
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":355:356  6 */
   0x06
   swap1
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":304:359  function f() internal pure returns (uint) { return 6; } */
   jump	// out
+    /* "#utility.yul":14:141   */
+tag_3:
+    /* "#utility.yul":75:85   */
+  0x4e487b71
+    /* "#utility.yul":70:73   */
+  0xe0
+    /* "#utility.yul":66:86   */
+  shl
+    /* "#utility.yul":63:64   */
+  0x00
+    /* "#utility.yul":56:87   */
+  mstore
+    /* "#utility.yul":106:110   */
+  0x02
+    /* "#utility.yul":103:104   */
+  0x04
+    /* "#utility.yul":96:111   */
+  mstore
+    /* "#utility.yul":130:134   */
+  0x24
+    /* "#utility.yul":127:128   */
+  0x00
+    /* "#utility.yul":120:135   */
+  revert
+    /* "#utility.yul":46:141   */
+tag_9:
     /* "optimizer_inliner_dynamic_reference_constructor/input.sol":60:361  contract C {... */
-tag_5:
   dataSize(sub_0)
   dup1
   dataOffset(sub_0)
@@ -52,38 +72,33 @@ stop
 sub_0: assembly {
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":60:361  contract C {... */
       mstore(0x40, 0x80)
-      callvalue
-      dup1
-      iszero
-      tag_1
-      jumpi
-      0x00
-      dup1
-      revert
-    tag_1:
-      pop
-      jumpi(tag_2, lt(calldatasize, 0x04))
+      jumpi(tag_2, iszero(callvalue))
+      tag_2
+      tag_3
+      jump	// in
+    tag_2:
+      jumpi(tag_4, lt(calldatasize, 0x04))
       shr(0xe0, calldataload(0x00))
       dup1
       0x0dbe671f
       eq
-      tag_3
+      tag_5
       jumpi
       dup1
       0xb8c9d365
       eq
-      tag_4
+      tag_6
       jumpi
-    tag_2:
+    tag_4:
       0x00
       dup1
       revert
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":154:209  function a() public pure returns (uint) { return f(); } */
-    tag_3:
+    tag_5:
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":355:356  6 */
       0x06
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":154:209  function a() public pure returns (uint) { return f(); } */
-    tag_5:
+    tag_7:
       mload(0x40)
         /* "#utility.yul":160:185   */
       swap1
@@ -101,12 +116,12 @@ sub_0: assembly {
       swap1
       return
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":240:299  function h() public view returns (uint) { return x() + 1; } */
-    tag_4:
-      tag_5
-      tag_10
+    tag_6:
+      tag_7
+      tag_12
       jump	// in
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":203:206  f() */
-    tag_14:
+    tag_16:
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":196:206  return f() */
       swap1
       pop
@@ -114,49 +129,49 @@ sub_0: assembly {
       swap1
       jump	// out
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":240:299  function h() public view returns (uint) { return x() + 1; } */
-    tag_10:
+    tag_12:
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":274:278  uint */
       0x00
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":289:290  x */
       dup1
       sload
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":289:292  x() */
-      tag_16
+      tag_18
       swap1
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":289:290  x */
       dup1
       iszero
-      tag_17
+      tag_19
       mul
       or
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":289:292  x() */
       0xffffffff
       and
       jump	// in
-    tag_16:
+    tag_18:
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":289:296  x() + 1 */
-      tag_14
+      tag_16
       swap1
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":295:296  1 */
       0x01
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":289:296  x() + 1 */
-      tag_19
+      tag_21
       jump	// in
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":304:359  function f() internal pure returns (uint) { return 6; } */
-    tag_12:
+    tag_14:
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":355:356  6 */
       0x06
       swap1
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":304:359  function f() internal pure returns (uint) { return 6; } */
       jump	// out
-    tag_17:
-      tag_21
-      tag_22
+    tag_19:
+      tag_23
+      tag_24
       jump	// in
-    tag_21:
+    tag_23:
       jump	// out
         /* "#utility.yul":196:421   */
-    tag_19:
+    tag_21:
         /* "#utility.yul":236:239   */
       0x00
         /* "#utility.yul":267:268   */
@@ -169,7 +184,7 @@ sub_0: assembly {
       gt
         /* "#utility.yul":254:256   */
       iszero
-      tag_26
+      tag_28
       jumpi
         /* "#utility.yul":312:322   */
       0x4e487b71
@@ -194,7 +209,7 @@ sub_0: assembly {
         /* "#utility.yul":365:380   */
       revert
         /* "#utility.yul":254:256   */
-    tag_26:
+    tag_28:
       pop
         /* "#utility.yul":406:415   */
       add
@@ -202,7 +217,7 @@ sub_0: assembly {
         /* "#utility.yul":244:421   */
       jump	// out
         /* "#utility.yul":426:553   */
-    tag_22:
+    tag_3:
         /* "#utility.yul":487:497   */
       0x4e487b71
         /* "#utility.yul":482:485   */
@@ -214,7 +229,7 @@ sub_0: assembly {
         /* "#utility.yul":468:499   */
       mstore
         /* "#utility.yul":518:522   */
-      0x51
+      0x02
         /* "#utility.yul":515:516   */
       0x04
         /* "#utility.yul":508:523   */
@@ -224,6 +239,30 @@ sub_0: assembly {
         /* "#utility.yul":539:540   */
       0x00
         /* "#utility.yul":532:547   */
+      revert
+        /* "#utility.yul":558:685   */
+    tag_24:
+        /* "#utility.yul":619:629   */
+      0x4e487b71
+        /* "#utility.yul":614:617   */
+      0xe0
+        /* "#utility.yul":610:630   */
+      shl
+        /* "#utility.yul":607:608   */
+      0x00
+        /* "#utility.yul":600:631   */
+      mstore
+        /* "#utility.yul":650:654   */
+      0x51
+        /* "#utility.yul":647:648   */
+      0x04
+        /* "#utility.yul":640:655   */
+      mstore
+        /* "#utility.yul":674:678   */
+      0x24
+        /* "#utility.yul":671:672   */
+      0x00
+        /* "#utility.yul":664:679   */
       revert
 
     auxdata: <AUXDATA REMOVED>

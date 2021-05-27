@@ -10,7 +10,12 @@ object "C_12" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x02)
+                revert(0, 0x24)
+            }
             mstore(0, 100)
             sstore(0, keccak256(0, 32))
             let _1 := datasize("C_12_deployed")
@@ -22,7 +27,12 @@ object "C_12" {
         code {
             {
                 mstore(64, 128)
-                if callvalue() { revert(0, 0) }
+                if callvalue()
+                {
+                    mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                    mstore(4, 0x02)
+                    revert(0, 0x24)
+                }
                 mstore(0, 100)
                 sstore(0, 17385872270140913825666367956517731270094621555228275961425792378517567244498)
                 stop()

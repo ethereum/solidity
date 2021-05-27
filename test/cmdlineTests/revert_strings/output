@@ -10,7 +10,9 @@ IR:
 object "C_15" {
     code {
         mstore(64, 128)
-        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+        {
+            if callvalue() { panic_error_0x02() }
+        }
 
         constructor_C_15()
 
@@ -27,23 +29,10 @@ object "C_15" {
 
         }
 
-        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
-
-            let start := allocate_unbounded()
-            let pos := start
-            mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
-            pos := add(pos, 4)
-            mstore(pos, 0x20)
-            pos := add(pos, 0x20)
-            mstore(pos, 34)
-            pos := add(pos, 0x20)
-
-            mstore(add(pos, 0), "Ether sent to non-payable functi")
-
-            mstore(add(pos, 32), "on")
-
-            revert(start, 132)
-
+        function panic_error_0x02() {
+            mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+            mstore(4, 0x02)
+            revert(0, 0x24)
         }
 
     }
@@ -60,7 +49,9 @@ object "C_15" {
                 {
                     // f(uint256[][],uint8)
 
-                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
+                    {
+                        if callvalue() { panic_error_0x02() }
+                    }
                     let param_0, param_1 :=  abi_decode_tuple_t_array$_t_array$_t_uint256_$dyn_memory_ptr_$dyn_memory_ptrt_enum$_E_$3(4, calldatasize())
                     fun_f_14(param_0, param_1)
                     let memPos := allocate_unbounded()
@@ -216,6 +207,12 @@ object "C_15" {
 
             }
 
+            function panic_error_0x02() {
+                mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
+                mstore(4, 0x02)
+                revert(0, 0x24)
+            }
+
             function panic_error_0x41() {
                 mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
                 mstore(4, 0x41)
@@ -293,25 +290,6 @@ object "C_15" {
                 mstore(add(pos, 0), "ABI decoding: invalid tuple offs")
 
                 mstore(add(pos, 32), "et")
-
-                revert(start, 132)
-
-            }
-
-            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
-
-                let start := allocate_unbounded()
-                let pos := start
-                mstore(pos, 3963877391197344453575983046348115674221700746820753546331534351508065746944)
-                pos := add(pos, 4)
-                mstore(pos, 0x20)
-                pos := add(pos, 0x20)
-                mstore(pos, 34)
-                pos := add(pos, 0x20)
-
-                mstore(add(pos, 0), "Ether sent to non-payable functi")
-
-                mstore(add(pos, 32), "on")
 
                 revert(start, 132)
 

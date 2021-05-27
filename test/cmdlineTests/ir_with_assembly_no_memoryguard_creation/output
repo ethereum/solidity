@@ -10,7 +10,12 @@ object "D_12" {
     code {
         {
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                mstore(0, shl(224, 0x4e487b71))
+                mstore(4, 0x02)
+                revert(0, 0x24)
+            }
             let _1 := datasize("D_12_deployed")
             codecopy(128, dataoffset("D_12_deployed"), _1)
             return(128, _1)
@@ -25,7 +30,12 @@ object "D_12" {
                     let _1 := 0
                     if eq(0x26121ff0, shr(224, calldataload(_1)))
                     {
-                        if callvalue() { revert(_1, _1) }
+                        if callvalue()
+                        {
+                            mstore(_1, shl(224, 0x4e487b71))
+                            mstore(4, 0x02)
+                            revert(_1, 0x24)
+                        }
                         if slt(add(calldatasize(), not(3)), _1) { revert(_1, _1) }
                         return(128, _1)
                     }

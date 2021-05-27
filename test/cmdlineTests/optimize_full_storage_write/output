@@ -3,16 +3,39 @@
 EVM assembly:
     /* "optimize_full_storage_write/input.sol":60:213  contract OptimizeFullSlotWrite {... */
   mstore(0x40, 0x80)
-  callvalue
-  dup1
-  iszero
-  tag_1
-  jumpi
+  jumpi(tag_2, iszero(callvalue))
+  tag_2
+  tag_3
+  jump	// in
+tag_2:
+  jump(tag_5)
+    /* "#utility.yul":14:141   */
+tag_3:
+    /* "#utility.yul":75:85   */
+  0x4e487b71
+    /* "#utility.yul":70:73   */
+  0xe0
+    /* "#utility.yul":66:86   */
+  shl
+    /* "#utility.yul":63:64   */
   0x00
-  dup1
+    /* "#utility.yul":56:87   */
+  mstore
+    /* "#utility.yul":106:110   */
+  0x02
+    /* "#utility.yul":103:104   */
+  0x04
+    /* "#utility.yul":96:111   */
+  mstore
+    /* "#utility.yul":130:134   */
+  0x24
+    /* "#utility.yul":127:128   */
+  0x00
+    /* "#utility.yul":120:135   */
   revert
-tag_1:
-  pop
+    /* "#utility.yul":46:141   */
+tag_5:
+    /* "optimize_full_storage_write/input.sol":60:213  contract OptimizeFullSlotWrite {... */
   dataSize(sub_0)
   dup1
   dataOffset(sub_0)
@@ -25,30 +48,25 @@ stop
 sub_0: assembly {
         /* "optimize_full_storage_write/input.sol":60:213  contract OptimizeFullSlotWrite {... */
       mstore(0x40, 0x80)
-      callvalue
-      dup1
-      iszero
-      tag_1
-      jumpi
-      0x00
-      dup1
-      revert
-    tag_1:
-      pop
-      jumpi(tag_2, lt(calldatasize, 0x04))
+      jumpi(tag_2, iszero(callvalue))
+      tag_2
+      tag_3
+      jump	// in
+    tag_2:
+      jumpi(tag_4, lt(calldatasize, 0x04))
       shr(0xe0, calldataload(0x00))
       dup1
       0x26121ff0
       eq
-      tag_3
+      tag_5
       jumpi
-    tag_2:
+    tag_4:
       0x00
       dup1
       revert
         /* "optimize_full_storage_write/input.sol":111:211  function f() public {... */
-    tag_3:
-      tag_4
+    tag_5:
+      tag_6
         /* "optimize_full_storage_write/input.sol":192:207  nums[3] = 44444 */
       0xad9c000000000000823500000000000056ce0000000000002b67
         /* "optimize_full_storage_write/input.sol":135:139  nums */
@@ -57,8 +75,32 @@ sub_0: assembly {
       sstore
         /* "optimize_full_storage_write/input.sol":111:211  function f() public {... */
       jump
-    tag_4:
+    tag_6:
       stop
+        /* "#utility.yul":14:141   */
+    tag_3:
+        /* "#utility.yul":75:85   */
+      0x4e487b71
+        /* "#utility.yul":70:73   */
+      0xe0
+        /* "#utility.yul":66:86   */
+      shl
+        /* "#utility.yul":63:64   */
+      0x00
+        /* "#utility.yul":56:87   */
+      mstore
+        /* "#utility.yul":106:110   */
+      0x02
+        /* "#utility.yul":103:104   */
+      0x04
+        /* "#utility.yul":96:111   */
+      mstore
+        /* "#utility.yul":130:134   */
+      0x24
+        /* "#utility.yul":127:128   */
+      0x00
+        /* "#utility.yul":120:135   */
+      revert
 
     auxdata: <AUXDATA REMOVED>
 }

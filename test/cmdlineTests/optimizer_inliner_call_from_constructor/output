@@ -4,22 +4,45 @@ EVM assembly:
     /* "optimizer_inliner_call_from_constructor/input.sol":60:263  contract C {... */
   mstore(0x40, 0x80)
     /* "optimizer_inliner_call_from_constructor/input.sol":89:115  constructor() { x = a(); } */
-  callvalue
-  dup1
-  iszero
-  tag_1
-  jumpi
-  0x00
-  dup1
-  revert
-tag_1:
-  pop
+  jumpi(tag_2, iszero(callvalue))
+  tag_2
+  tag_3
+  jump	// in
+tag_2:
     /* "optimizer_inliner_call_from_constructor/input.sol":257:258  6 */
   0x06
     /* "optimizer_inliner_call_from_constructor/input.sol":105:106  x */
   0x00
     /* "optimizer_inliner_call_from_constructor/input.sol":105:112  x = a() */
   sstore
+    /* "optimizer_inliner_call_from_constructor/input.sol":60:263  contract C {... */
+  jump(tag_13)
+    /* "#utility.yul":14:141   */
+tag_3:
+    /* "#utility.yul":75:85   */
+  0x4e487b71
+    /* "#utility.yul":70:73   */
+  0xe0
+    /* "#utility.yul":66:86   */
+  shl
+    /* "#utility.yul":63:64   */
+  0x00
+    /* "#utility.yul":56:87   */
+  mstore
+    /* "#utility.yul":106:110   */
+  0x02
+    /* "#utility.yul":103:104   */
+  0x04
+    /* "#utility.yul":96:111   */
+  mstore
+    /* "#utility.yul":130:134   */
+  0x24
+    /* "#utility.yul":127:128   */
+  0x00
+    /* "#utility.yul":120:135   */
+  revert
+    /* "#utility.yul":46:141   */
+tag_13:
     /* "optimizer_inliner_call_from_constructor/input.sol":60:263  contract C {... */
   dataSize(sub_0)
   dup1
@@ -33,29 +56,24 @@ stop
 sub_0: assembly {
         /* "optimizer_inliner_call_from_constructor/input.sol":60:263  contract C {... */
       mstore(0x40, 0x80)
-      callvalue
-      dup1
-      iszero
-      tag_1
-      jumpi
-      0x00
-      dup1
-      revert
-    tag_1:
-      pop
-      jumpi(tag_2, lt(calldatasize, 0x04))
+      jumpi(tag_2, iszero(callvalue))
+      tag_2
+      tag_3
+      jump	// in
+    tag_2:
+      jumpi(tag_4, lt(calldatasize, 0x04))
       shr(0xe0, calldataload(0x00))
       dup1
       0x0dbe671f
       eq
-      tag_3
+      tag_5
       jumpi
-    tag_2:
+    tag_4:
       0x00
       dup1
       revert
         /* "optimizer_inliner_call_from_constructor/input.sol":120:175  function a() public pure returns (uint) { return f(); } */
-    tag_3:
+    tag_5:
         /* "optimizer_inliner_call_from_constructor/input.sol":257:258  6 */
       0x06
         /* "optimizer_inliner_call_from_constructor/input.sol":120:175  function a() public pure returns (uint) { return f(); } */
@@ -75,6 +93,30 @@ sub_0: assembly {
       sub
       swap1
       return
+        /* "#utility.yul":196:323   */
+    tag_3:
+        /* "#utility.yul":257:267   */
+      0x4e487b71
+        /* "#utility.yul":252:255   */
+      0xe0
+        /* "#utility.yul":248:268   */
+      shl
+        /* "#utility.yul":245:246   */
+      0x00
+        /* "#utility.yul":238:269   */
+      mstore
+        /* "#utility.yul":288:292   */
+      0x02
+        /* "#utility.yul":285:286   */
+      0x04
+        /* "#utility.yul":278:293   */
+      mstore
+        /* "#utility.yul":312:316   */
+      0x24
+        /* "#utility.yul":309:310   */
+      0x00
+        /* "#utility.yul":302:317   */
+      revert
 
     auxdata: <AUXDATA REMOVED>
 }
