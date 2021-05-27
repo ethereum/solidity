@@ -28,7 +28,8 @@ using namespace solidity::yul;
 
 using OptionalStatements = std::optional<vector<Statement>>;
 
-namespace {
+namespace
+{
 
 OptionalStatements replaceConstArgSwitch(Switch& _switchStmt, u256 const& _constExprVal)
 {

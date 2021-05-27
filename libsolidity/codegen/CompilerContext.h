@@ -47,7 +47,8 @@
 #include <queue>
 #include <utility>
 
-namespace solidity::frontend {
+namespace solidity::frontend
+{
 
 class Compiler;
 

@@ -29,7 +29,8 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerContext.h>
 
-namespace solidity::frontend {
+namespace solidity::frontend
+{
 
 class Type; // forward
 
