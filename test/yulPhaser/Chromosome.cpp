@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(output_operator_should_create_concise_and_unambiguous_strin
 
 	BOOST_TEST(chromosome.length() == allSteps.size());
 	BOOST_TEST(chromosome.optimisationSteps() == allSteps);
-	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighFTLMRrmVatpud");
+	BOOST_TEST(toString(chromosome) == "flcCUnDvejsxIOoighFTLMRrSmVatpud");
 }
 
 BOOST_AUTO_TEST_CASE(optimisationSteps_should_translate_chromosomes_genes_to_optimisation_step_names)

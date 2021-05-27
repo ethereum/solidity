@@ -9,7 +9,6 @@ Optimized IR:
 object "C_3" {
     code {
         {
-            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("C_3_deployed")
             codecopy(128, dataoffset("C_3_deployed"), _1)
@@ -17,12 +16,7 @@ object "C_3" {
         }
     }
     object "C_3_deployed" {
-        code {
-            {
-                mstore(64, 128)
-                revert(0, 0)
-            }
-        }
+        code { { revert(0, 0) } }
     }
 }
 
@@ -37,7 +31,6 @@ Optimized IR:
 object "D_16" {
     code {
         {
-            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_16_deployed")
             codecopy(128, dataoffset("D_16_deployed"), _1)
@@ -79,7 +72,6 @@ object "D_16" {
         object "C_3" {
             code {
                 {
-                    mstore(64, 128)
                     if callvalue() { revert(0, 0) }
                     let _1 := datasize("C_3_deployed")
                     codecopy(128, dataoffset("C_3_deployed"), _1)
@@ -87,12 +79,7 @@ object "D_16" {
                 }
             }
             object "C_3_deployed" {
-                code {
-                    {
-                        mstore(64, 128)
-                        revert(0, 0)
-                    }
-                }
+                code { { revert(0, 0) } }
             }
         }
     }

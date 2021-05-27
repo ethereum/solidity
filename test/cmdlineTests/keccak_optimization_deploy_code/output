@@ -9,7 +9,6 @@ Optimized IR:
 object "C_12" {
     code {
         {
-            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             mstore(0, 100)
             sstore(0, keccak256(0, 32))
@@ -21,9 +20,7 @@ object "C_12" {
     object "C_12_deployed" {
         code {
             {
-                mstore(64, 128)
                 if callvalue() { revert(0, 0) }
-                mstore(0, 100)
                 sstore(0, 17385872270140913825666367956517731270094621555228275961425792378517567244498)
                 stop()
             }

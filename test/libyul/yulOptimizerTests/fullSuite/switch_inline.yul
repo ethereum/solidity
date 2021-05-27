@@ -9,4 +9,4 @@
 // ----
 // step: fullSuite
 //
-// { { mstore(9, 0) } }
+// { { } }

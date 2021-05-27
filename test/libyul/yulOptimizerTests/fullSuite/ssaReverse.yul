@@ -43,7 +43,6 @@
 //         let a_4, b_4 := abi_decode_bytes_calldata(a_3, b_3)
 //         let a_5, b_5 := abi_decode_bytes_calldata(a_4, b_4)
 //         let a_6, b_6 := abi_decode_bytes_calldata(a_5, b_5)
-//         mstore(a_6, b_6)
 //     }
 //     function abi_decode_bytes_calldata(offset, end) -> arrayPos, length
 //     {

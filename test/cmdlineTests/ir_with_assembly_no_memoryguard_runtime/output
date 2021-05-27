@@ -9,7 +9,6 @@ Optimized IR:
 object "D_8" {
     code {
         {
-            mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_8_deployed")
             codecopy(128, dataoffset("D_8_deployed"), _1)
@@ -19,7 +18,6 @@ object "D_8" {
     object "D_8_deployed" {
         code {
             {
-                mstore(64, 128)
                 if iszero(lt(calldatasize(), 4))
                 {
                     let _1 := 0

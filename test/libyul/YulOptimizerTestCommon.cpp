@@ -53,6 +53,7 @@
 #include <libyul/optimiser/SSATransform.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/optimiser/RedundantAssignEliminator.h>
+#include <libyul/optimiser/RedundantStoreEliminator.h>
 #include <libyul/optimiser/StructuralSimplifier.h>
 #include <libyul/optimiser/StackCompressor.h>
 #include <libyul/optimiser/Suite.h>
@@ -236,6 +237,15 @@ YulOptimizerTestCommon::YulOptimizerTestCommon(
 			disambiguate();
 			ForLoopInitRewriter::run(*m_context, *m_ast);
 			RedundantAssignEliminator::run(*m_context, *m_ast);
+		}},
+		{"redundantStoreEliminator", [&]() {
+			disambiguate();
+			ForLoopInitRewriter::run(*m_context, *m_ast);
+			ExpressionSplitter::run(*m_context, *m_ast);
+			SSATransform::run(*m_context, *m_ast);
+			RedundantStoreEliminator::run(*m_context, *m_ast);
+			SSAReverser::run(*m_context, *m_ast);
+			ExpressionJoiner::run(*m_context, *m_ast);
 		}},
 		{"ssaPlusCleanup", [&]() {
 			disambiguate();
