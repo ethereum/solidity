@@ -66,15 +66,22 @@ Shifts
 ^^^^^^
 
 The result of a shift operation has the type of the left operand, truncating the result to match the type.
-Right operand must be unsigned type. Trying to shift by signed type will produce a compilation error.
+The right operand must be of unsigned type, trying to shift by an signed type will produce a compilation error.
 
-- For positive and negative ``x`` values, ``x << y`` is equivalent to ``x * 2**y``.
-- For positive ``x`` values,  ``x >> y`` is equivalent to ``x / 2**y``.
-- For negative ``x`` values, ``x >> y`` is equivalent to ``(x + 1) / 2**y - 1`` (which is the same as dividing ``x`` by ``2**y`` while rounding down towards negative infinity).
+Shifts can be "simulated" using multiplication by powers of two in the following way. Note that the truncation
+to the type of the left operand is always performed at the end, but not mentioned explicitly.
+
+- ``x << y`` is equivalent to the mathematical expression ``x * 2**y``.
+- ``x >> y`` is equivalent to the mathematical expression ``x / 2**y``, rounded towards negative infinity.
 
 .. warning::
-    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
+    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to
+    the mathematical expression ``x / 2**y`` rounded towards zero,
     i.e., right shifts used rounding up (towards zero) instead of rounding down (towards negative infinity).
+
+.. note::
+    Overflow checks are never performed for shift operations as they are done for arithmetic operations.
+    Instead, the result is always truncated.
 
 Addition, Subtraction and Multiplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
