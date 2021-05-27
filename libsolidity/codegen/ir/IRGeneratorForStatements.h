@@ -34,10 +34,32 @@ class IRGenerationContext;
 class YulUtilFunctions;
 
 /**
+ * Base class for the statement generator.
+ * Encapsulates access to the yul code stream and handles source code locations.
+ */
+class IRGeneratorForStatementsBase: public ASTConstVisitor
+{
+public:
+	IRGeneratorForStatementsBase(IRGenerationContext& _context):
+		m_context(_context)
+	{}
+
+	virtual std::string code() const;
+	std::ostringstream& appendCode(bool _addLocationComment = true);
+protected:
+	void setLocation(ASTNode const& _node);
+	langutil::SourceLocation m_currentLocation = {};
+	langutil::SourceLocation m_lastLocation = {};
+	IRGenerationContext& m_context;
+private:
+	std::ostringstream m_code;
+};
+
+/**
  * Component that translates Solidity's AST into Yul at statement level and below.
  * It is an AST visitor that appends to an internal string buffer.
  */
-class IRGeneratorForStatements: public ASTConstVisitor
+class IRGeneratorForStatements: public IRGeneratorForStatementsBase
 {
 public:
 	IRGeneratorForStatements(
@@ -45,12 +67,12 @@ public:
 		YulUtilFunctions& _utils,
 		std::function<std::string()> _placeholderCallback = {}
 	):
-		m_context(_context),
+		IRGeneratorForStatementsBase(_context),
 		m_placeholderCallback(std::move(_placeholderCallback)),
 		m_utils(_utils)
 	{}
 
-	std::string code() const;
+	std::string code() const override;
 
 	/// Generate the code for the statements in the block;
 	void generate(Block const& _block);
@@ -190,16 +212,11 @@ private:
 
 	static Type const& type(Expression const& _expression);
 
-	void setLocation(ASTNode const& _node);
-
 	std::string linkerSymbol(ContractDefinition const& _library) const;
 
-	std::ostringstream m_code;
-	IRGenerationContext& m_context;
 	std::function<std::string()> m_placeholderCallback;
 	YulUtilFunctions& m_utils;
 	std::optional<IRLValue> m_currentLValue;
-	langutil::SourceLocation m_currentLocation;
 };
 
 }
