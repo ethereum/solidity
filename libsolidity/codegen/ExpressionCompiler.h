@@ -39,7 +39,8 @@ namespace solidity::evmasm
 class AssemblyItem; // forward
 }
 
-namespace solidity::frontend {
+namespace solidity::frontend
+{
 
 // forward declarations
 class CompilerContext;

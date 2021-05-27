@@ -62,7 +62,8 @@
 
 using namespace std;
 
-namespace solidity::langutil {
+namespace solidity::langutil
+{
 
 string to_string(ScannerError _errorCode)
 {

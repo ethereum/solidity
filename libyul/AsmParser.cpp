@@ -40,7 +40,8 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 
-namespace {
+namespace
+{
 
 [[nodiscard]]
 shared_ptr<DebugData const> updateLocationEndFrom(
