@@ -305,8 +305,8 @@ Since byzantium ``staticcall`` can be used as well. This is basically the same a
 
 All three functions ``call``, ``delegatecall`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
-The ``gas`` option is available on all three methods, while the ``value`` option is not
-supported for ``delegatecall``.
+The ``gas`` option is available on all three methods, while the ``value`` option is only available
+on ``call``.
 
 .. note::
     It is best to avoid relying on hardcoded gas values in your smart contract code,
