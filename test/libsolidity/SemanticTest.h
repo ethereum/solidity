@@ -23,6 +23,7 @@
 #include <libsolutil/AnsiColorized.h>
 
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <vector>
 #include <utility>
@@ -81,7 +82,7 @@ private:
 	TestResult runTest(std::ostream& _stream, std::string const& _linePrefix, bool _formatted, bool _isYulRun, bool _isEwasmRun);
 	bool checkGasCostExpectation(TestFunctionCall& io_test, bool _compileViaYul) const;
 	std::map<std::string, Builtin> makeBuiltins();
-	std::vector<SideEffectHook> makeSideEffectHooks() const;
+	std::vector<SideEffectHook> makeSideEffectHooks();
 	SourceMap m_sources;
 	std::size_t m_lineOffset;
 	std::vector<TestFunctionCall> m_tests;
@@ -99,6 +100,7 @@ private:
 	bool m_gasCostFailure = false;
 	bool m_enforceGasCost = false;
 	u256 m_enforceGasCostMinValue;
+	std::optional<bytes> m_deployedBytecode{};
 };
 
 }

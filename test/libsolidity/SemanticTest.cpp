@@ -30,6 +30,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <regex>
 #include <stdexcept>
 #include <utility>
 
@@ -175,11 +176,43 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 				return toBigEndian(h256(ExecutionFramework::setAccount(accountNumber).asBytes(), h256::AlignRight));
 			}
 		},
+		{
+			"bytecode",
+			[this](FunctionCall const& _call) -> optional<bytes>
+			{
+				bool result = false;
+				optional<regex> regexPattern;
+				soltestAssert(m_deployedBytecode.has_value(), "No bytecode deployed.");
+				soltestAssert(_call.arguments.parameters.size() == 1, "Bytecode pattern string expected.");
+				string pattern = _call.arguments.parameters.at(0).rawString;
+				bytes bytecode = m_deployedBytecode.value();
+				if (pattern.length() >= 2 && boost::starts_with(pattern, "\"") && boost::ends_with(pattern, "\""))
+				{
+					pattern = pattern.substr(1, pattern.length() - 2);
+					try
+					{
+						regexPattern = regex(pattern);
+					}
+					catch (std::regex_error const&)
+					{
+					}
+				}
+				if (regexPattern.has_value())
+					result = regex_match(toHex(bytecode), regexPattern.value());
+				else
+				{
+					soltestAssert(isValidHex(pattern), "Must be a valid hex string or a regular expression.");
+					result = toHex(bytecode).find(pattern.substr(2)) != std::string::npos;
+				}
+
+				return toBigEndian(u256(result ? 1 : 0));
+			}
+		},
 	};
 }
 
 
-vector<SideEffectHook> SemanticTest::makeSideEffectHooks() const
+vector<SideEffectHook> SemanticTest::makeSideEffectHooks()
 {
 	return {
 		[](FunctionCall const& _call) -> vector<string>
@@ -192,7 +225,19 @@ vector<SideEffectHook> SemanticTest::makeSideEffectHooks() const
 				return result;
 			}
 			return {};
-		}};
+		},
+		[this](FunctionCall const& _call) -> vector<string>
+		{
+			if (boost::starts_with(_call.signature, "constructor("))
+			{
+				if (ExecutionFramework::transactionSuccessful())
+					m_deployedBytecode = ExecutionFramework::returndata();
+				else
+					m_deployedBytecode.reset();
+			}
+			return {};
+		},
+	};
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
