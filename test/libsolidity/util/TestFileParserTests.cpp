@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	BOOST_REQUIRE_EQUAL(parse(source).size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(call_succees)
+BOOST_AUTO_TEST_CASE(call_success)
 {
 	char const* source = R"(
 		// success() ->
