@@ -1758,6 +1758,43 @@ BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract_yul)
 	BOOST_REQUIRE(result["sources"].size() == 1);
 }
 
+BOOST_AUTO_TEST_CASE(source_location_of_bare_block)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"A.sol": {
+				"content": "contract A { constructor() { uint x = 2; { uint y = 3; } } }"
+			}
+		},
+		"settings": {
+			"outputSelection": {
+				"A.sol": {
+					"A": ["evm.bytecode.sourceMap"]
+				}
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(util::jsonParseStrict(input, parsedInput));
+
+	solidity::frontend::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	string sourceMap = result["contracts"]["A.sol"]["A"]["evm"]["bytecode"]["sourceMap"].asString();
+
+	// Check that the bare block's source location is referenced.
+	string sourceRef =
+		";" +
+		to_string(string{"contract A { constructor() { uint x = 2; "}.size()) +
+		":" +
+		to_string(string{"{ uint y = 3; }"}.size());
+	BOOST_REQUIRE(sourceMap.find(sourceRef) != string::npos);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces
