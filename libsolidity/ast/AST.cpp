@@ -696,8 +696,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		if (
 			isConstructorParameter() ||
 			isInternalCallableParameter() ||
-			isLibraryFunctionParameter() ||
-			isTryCatchParameter()
+			isLibraryFunctionParameter()
 		)
 			locations.insert(Location::Storage);
 		if (!isTryCatchParameter() && !isConstructorParameter())
