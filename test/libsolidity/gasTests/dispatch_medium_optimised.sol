@@ -14,9 +14,9 @@ contract Medium {
 // optimize-runs: 2
 // ----
 // creation:
-//   codeDepositCost: 146800
-//   executionCost: 190
-//   totalCost: 146990
+//   codeDepositCost: 131600
+//   executionCost: 177
+//   totalCost: 131777
 // external:
 //   a(): 2283
 //   b(uint256): 4695

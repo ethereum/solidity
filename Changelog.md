@@ -6,6 +6,8 @@ Language Features:
 
 
 Compiler Features:
+ * Code Generator: Insert helper functions for panic codes instead of inlining unconditionally. This can reduce costs if many panics (checks) are inserted,
+   but can increase costs where few panics are used.
  * EVM: Set the default EVM version to "Berlin".
  * SMTChecker: Function definitions can be annotated with the custom Natspec tag ``custom:smtchecker abstract-function-nondet`` to be abstracted by a nondeterministic value when called.
  * Standard JSON / combined JSON: New artifact "functionDebugData" that contains bytecode offsets of entry points of functions and potentially more information in the future.
