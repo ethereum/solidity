@@ -2718,7 +2718,8 @@ string IRGeneratorForStatements::binaryOperation(
 		solAssert(
 			_type.category() == Type::Category::Integer ||
 			_type.category() == Type::Category::FixedBytes,
-		"");
+			""
+		);
 		switch (_operator)
 		{
 		case Token::BitOr: fun = "or"; break;
@@ -2729,6 +2730,10 @@ string IRGeneratorForStatements::binaryOperation(
 	}
 	else if (TokenTraits::isArithmeticOp(_operator))
 	{
+		solUnimplementedAssert(
+			_type.category() != Type::Category::FixedPoint,
+			"Not yet implemented - FixedPointType."
+		);
 		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
 		solAssert(type, "");
 		bool checked = m_context.arithmetic() == Arithmetic::Checked;
@@ -2765,7 +2770,8 @@ std::string IRGeneratorForStatements::shiftOperation(
 )
 {
 	solUnimplementedAssert(
-		_amountToShift.type().category() != Type::Category::FixedPoint,
+		_amountToShift.type().category() != Type::Category::FixedPoint &&
+		_value.type().category() != Type::Category::FixedPoint,
 		"Not yet implemented - FixedPointType."
 	);
 	IntegerType const* amountType = dynamic_cast<IntegerType const*>(&_amountToShift.type());
