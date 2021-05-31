@@ -588,7 +588,12 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		if (result)
 		{
 			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
-			bool callDataCheckRequired = ((_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) && !isLibraryStorageParameter);
+			// We skip the calldata check for abstract contract constructors.
+			bool isAbstractConstructorParam = _variable.isConstructorParameter() && m_currentContract && m_currentContract->abstract();
+			bool callDataCheckRequired =
+				!isAbstractConstructorParam &&
+				(_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) &&
+				!isLibraryStorageParameter;
 			if (callDataCheckRequired)
 			{
 				if (!referenceType->interfaceType(false))
