@@ -27,6 +27,8 @@
 
 #include <test/evmc/evmc.hpp>
 
+#include <test/libsolidity/util/SoltestTypes.h>
+
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/FunctionSelector.h>
 
@@ -34,6 +36,8 @@
 
 #include <boost/test/framework.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <range/v3/range.hpp>
+#include <range/v3/view/transform.hpp>
 
 #include <cstdlib>
 
@@ -41,6 +45,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::test;
+using namespace solidity::frontend::test;
 
 ExecutionFramework::ExecutionFramework():
 	ExecutionFramework(solidity::test::CommonOptions::get().evmVersion(), solidity::test::CommonOptions::get().vmPaths)
@@ -281,4 +286,16 @@ bool ExecutionFramework::storageEmpty(h160 const& _addr) const
 				return false;
 	}
 	return true;
+}
+
+vector<solidity::frontend::test::LogRecord> ExecutionFramework::recordedLogs() const
+{
+	vector<LogRecord> logs;
+	for (evmc::MockedHost::log_record const& logRecord: m_evmcHost->recorded_logs)
+		logs.emplace_back(
+			EVMHost::convertFromEVMC(logRecord.creator),
+			bytes{logRecord.data.begin(), logRecord.data.end()},
+			logRecord.topics | ranges::views::transform([](evmc::bytes32 _bytes) { return EVMHost::convertFromEVMC(_bytes); }) | ranges::to<vector>
+		);
+	return logs;
 }
