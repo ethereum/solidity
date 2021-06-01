@@ -149,6 +149,14 @@ FunctionDefinition const* ContractDefinition::receiveFunction() const
 	return nullptr;
 }
 
+std::vector<FunctionDefinition const*> const& ContractDefinition::definedFunctions() const
+{
+	if (!m_cachedDefinedFunctions)
+		m_cachedDefinedFunctions = filteredNodes<FunctionDefinition>(m_subNodes);
+
+	return *m_cachedDefinedFunctions;
+}
+
 vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
 	return m_interfaceEvents.init([&]{
