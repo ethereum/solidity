@@ -276,6 +276,17 @@ FunctionDefinition const* ContractDefinition::nextConstructor(ContractDefinition
 	return nullptr;
 }
 
+multimap<std::string, FunctionDefinition const*> const& ContractDefinition::definedFunctionsByName() const
+{
+	return m_definedFunctionsByName.init([&]{
+		std::multimap<std::string, FunctionDefinition const*> result;
+		for (FunctionDefinition const* fun: filteredNodes<FunctionDefinition>(m_subNodes))
+			result.insert({fun->name(), fun});
+		return result;
+	});
+}
+
+
 TypeNameAnnotation& TypeName::annotation() const
 {
 	return initAnnotation<TypeNameAnnotation>();
@@ -397,6 +408,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 ) const
 {
 	solAssert(!isConstructor(), "");
+	solAssert(!name().empty(), "");
 
 	// If we are not doing super-lookup and the function is not virtual, we can stop here.
 	if (_searchStart == nullptr && !virtualSemantics())
@@ -416,10 +428,8 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 		else
 			foundSearchStart = true;
 
-		for (FunctionDefinition const* function: c->definedFunctions())
+		for (FunctionDefinition const* function: c->definedFunctions(name()))
 			if (
-				function->name() == name() &&
-				!function->isConstructor() &&
 				// With super lookup analysis guarantees that there is an implemented function in the chain.
 				// With virtual lookup there are valid cases where returning an unimplemented one is fine.
 				(function->isImplemented() || _searchStart == nullptr) &&
