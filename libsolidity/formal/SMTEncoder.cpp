@@ -1022,6 +1022,17 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 		return;
 	}
 
+	ArrayType const* arrayType = dynamic_cast<ArrayType const*>(argType);
+	if (auto sliceType = dynamic_cast<ArraySliceType const*>(argType))
+		arrayType = &sliceType->arrayType();
+
+	if (arrayType && arrayType->isByteArray() && smt::isFixedBytes(*funCallType))
+	{
+		auto array = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*argument));
+		bytesToFixedBytesAssertions(*array, _funCall);
+		return;
+	}
+
 	// TODO Simplify this whole thing for 0.8.0 where weird casts are disallowed.
 
 	unsigned argSize = argType->storageBytes();
@@ -1204,6 +1215,25 @@ void SMTEncoder::addArrayLiteralAssertions(
 	m_context.addAssertion(_symArray.length() == _elementValues.size());
 	for (size_t i = 0; i < _elementValues.size(); i++)
 		m_context.addAssertion(smtutil::Expression::select(_symArray.elements(), i) == _elementValues[i]);
+}
+
+void SMTEncoder::bytesToFixedBytesAssertions(
+	smt::SymbolicArrayVariable& _symArray,
+	Expression const& _fixedBytes
+)
+{
+	auto const& fixed = dynamic_cast<FixedBytesType const&>(*_fixedBytes.annotation().type);
+	auto intType = TypeProvider::uint256();
+	string suffix = to_string(_fixedBytes.id()) + "_" + to_string(m_context.newUniqueId());
+	smt::SymbolicIntVariable k(intType, intType, "k_" + suffix, m_context);
+	m_context.addAssertion(k.currentValue() == 0);
+	size_t n = fixed.numBytes();
+	for (size_t i = 0; i < n; i++)
+	{
+		auto kPrev = k.currentValue();
+		m_context.addAssertion((smtutil::Expression::select(_symArray.elements(), i) * (u256(1) << ((n - i - 1) * 8))) + kPrev == k.increaseIndex());
+	}
+	m_context.addAssertion(expr(_fixedBytes) == k.currentValue());
 }
 
 void SMTEncoder::endVisit(Return const& _return)

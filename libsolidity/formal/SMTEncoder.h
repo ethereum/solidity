@@ -245,6 +245,11 @@ protected:
 		std::vector<smtutil::Expression> const& _elementValues
 	);
 
+	void bytesToFixedBytesAssertions(
+		smt::SymbolicArrayVariable& _symArray,
+		Expression const& _fixedBytes
+	);
+
 	/// @returns a pair of expressions representing _left / _right and _left mod _right, respectively.
 	/// Uses slack variables and additional constraints to express the results using only operations
 	/// more friendly to the SMT solver (multiplication, addition, subtraction and comparison).
