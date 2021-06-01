@@ -16,6 +16,7 @@ Compiler Features:
 
 Bugfixes:
  * AST: Do not output value of Yul literal if it is not a valid UTF-8 string.
+ * Code Generator: Fix internal error when super would have to skip an unimplemented function in the virtual resolution order.
  * Control Flow Graph: Take internal calls to functions that always revert into account for reporting unused or unassigned variables.
  * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
  * SMTChecker: Fix internal error on external calls from the constructor.
