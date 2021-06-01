@@ -773,10 +773,10 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0);
 	// To capture the possibility of a reentrant call, we record in the call graph that the  current function
 	// can call any of the external methods of the current contract.
-	solAssert(m_currentContract && m_currentFunction, "");
-	for (auto const* definedFunction: contractFunctions(*m_currentContract))
-		if (!definedFunction->isConstructor() && definedFunction->isPublic())
-			m_callGraph[m_currentFunction].insert(definedFunction);
+	if (m_currentFunction)
+		for (auto const* definedFunction: contractFunctions(*m_currentContract))
+			if (!definedFunction->isConstructor() && definedFunction->isPublic())
+				m_callGraph[m_currentFunction].insert(definedFunction);
 
 	m_context.addAssertion(errorFlag().currentValue() == 0);
 }
@@ -788,7 +788,6 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 	auto kind = funType.kind();
 	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
 
-	solAssert(m_currentContract, "");
 	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	if (!function)
 		return;
