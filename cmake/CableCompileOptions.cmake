@@ -33,18 +33,12 @@ function(cable_add_compile_options)
     # CMake 3.19 additional -Werror flag must be added.
     list(GET languages 0 example_lang)
     set(compiler ${CMAKE_${example_lang}_COMPILER_ID})
-    message("compiler: ${compiler}")
     if(compiler MATCHES GNU OR compiler MATCHES Clang)
-        message("set -Werror")
         set(CMAKE_REQUIRED_FLAGS -Werror)
     endif()
 
-    message("languages: ${languages}")
-
     foreach(flag ${ARG_IF_SUPPORTED})
-        message("Checking ${flag}")
         string(MAKE_C_IDENTIFIER ${flag} flag_id)
-
         set(supported_in_all_languages TRUE)
 
         foreach(lang ${languages})
@@ -58,14 +52,10 @@ function(cable_add_compile_options)
                 check_c_compiler_flag(${flag} ${result_var})
             endif()
 
-            message(" - ${lang}: ${${result_var}}")
-
             if(NOT "${${result_var}}")
                 set(supported_in_all_languages FALSE)
             endif()
         endforeach()
-
-        message(" - all: ${supported_in_all_languages}")
 
         if(supported_in_all_languages)
             list(APPEND options ${flag})
@@ -79,6 +69,5 @@ function(cable_add_compile_options)
         endif()
     endforeach()
 
-    message("OPTIONS: ${options}")
     add_compile_options(${options})
 endfunction()
