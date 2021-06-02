@@ -489,8 +489,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 	if (_function.isFallback())
 		typeCheckFallbackFunction(_function);
-	else if (_function.isReceive())
-		typeCheckReceiveFunction(_function);
 	else if (_function.isConstructor())
 		typeCheckConstructor(_function);
 
@@ -1880,30 +1878,6 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 			);
 	}
 }
-
-void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
-{
-	solAssert(_function.isReceive(), "");
-
-	if (_function.libraryFunction())
-		m_errorReporter.typeError(4549_error, _function.location(), "Libraries cannot have receive ether functions.");
-
-	if (_function.stateMutability() != StateMutability::Payable)
-		m_errorReporter.typeError(
-			7793_error,
-			_function.location(),
-			"Receive ether function must be payable, but is \"" +
-			stateMutabilityToString(_function.stateMutability()) +
-			"\"."
-		);
-	if (_function.visibility() != Visibility::External)
-		m_errorReporter.typeError(4095_error, _function.location(), "Receive ether function must be defined as \"external\".");
-	if (!_function.returnParameters().empty())
-		m_errorReporter.typeError(6899_error, _function.returnParameterList()->location(), "Receive ether function cannot return values.");
-	if (!_function.parameters().empty())
-		m_errorReporter.typeError(6857_error, _function.parameterList().location(), "Receive ether function cannot take parameters.");
-}
-
 
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {

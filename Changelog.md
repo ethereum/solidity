@@ -27,6 +27,7 @@ Bugfixes:
  * Type Checker: Fix internal compiler error related to having mapping types in constructor parameter for abstract contracts.
  * Type Checker: Fix internal compiler error when attempting to use an invalid external function type on pre-byzantium EVMs.
  * Type Checker: Make errors about (nested) mapping type in event or error parameter into fatal type errors.
+ * Type Checker: Fix internal compiler error when overriding receive ether function with one having different parameters during inheritance.
 
 
 AST Changes:
