@@ -1576,19 +1576,6 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 	if (memberFunctionType && memberFunctionType->bound())
 	{
-		solAssert((set<Type::Category>{
-			Type::Category::Contract,
-			Type::Category::Bool,
-			Type::Category::Integer,
-			Type::Category::Address,
-			Type::Category::Function,
-			Type::Category::Struct,
-			Type::Category::Enum,
-			Type::Category::Mapping,
-			Type::Category::Array,
-			Type::Category::FixedBytes,
-		}).count(objectCategory) > 0, "");
-
 		define(IRVariable(_memberAccess).part("self"), _memberAccess.expression());
 		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 		if (memberFunctionType->kind() == FunctionType::Kind::Internal)
