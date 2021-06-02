@@ -47,7 +47,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		-Wpessimizing-move
 		-Wredundant-move
 		# Prevent the path of the source directory from ending up in the binary via __FILE__ macros.
-		-fmacro-prefix-map=${CMAKE_SOURCE_DIR}=/solidity
+		-fmacro-prefix-map="${CMAKE_SOURCE_DIR}=/solidity"
 	)
 
 	# Configuration-specific compiler settings.
