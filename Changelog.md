@@ -24,6 +24,7 @@ Bugfixes:
  * Source Locations: Properly set source location of scoped blocks.
  * Standard JSON: Properly allow the ``inliner`` setting under ``settings.optimizer.details``.
  * Type Checker: Fix internal compiler error related to having mapping types in constructor parameter for abstract contracts.
+ * Type Checker: Fix internal compiler error when attempting to use an invalid external function type on pre-byzantium EVMs.
 
 
 AST Changes:
