@@ -308,7 +308,7 @@ bool ControlFlowBuilder::visit(ModifierInvocation const& _modifierInvocation)
 		_modifierInvocation.name().annotation().referencedDeclaration
 	);
 	if (!modifierDefinition) return false;
-	solAssert(!!modifierDefinition, "");
+	if (!modifierDefinition->isImplemented()) return false;
 	solAssert(!!m_returnNode, "");
 
 	m_placeholderEntry = newLabel();
