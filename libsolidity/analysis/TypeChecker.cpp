@@ -3411,7 +3411,7 @@ void TypeChecker::checkErrorAndEventParameters(CallableDeclaration const& _calla
 	for (ASTPointer<VariableDeclaration> const& var: _callable.parameters())
 	{
 		if (type(*var)->containsNestedMapping())
-			m_errorReporter.typeError(
+			m_errorReporter.fatalTypeError(
 				3448_error,
 				var->location(),
 				"Type containing a (nested) mapping is not allowed as " + kind + " parameter type."
