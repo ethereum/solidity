@@ -29,9 +29,8 @@
 namespace solidity::frontend
 {
 
-/** Helper class that builds the control flow of a function or modifier.
- * Modifiers are not yet applied to the functions. This is done in a second
- * step in the CFG class.
+/**
+ * Helper class that builds the control flow of a function or modifier.
  */
 class ControlFlowBuilder: private ASTConstVisitor, private yul::ASTWalker
 {
