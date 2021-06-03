@@ -104,6 +104,8 @@ public:
 	/// Extracts the referenced declaration from all nodes whose annotations support
 	/// `referencedDeclaration`.
 	static Declaration const* referencedDeclaration(Expression const& _expression);
+	/// Performs potential super or virtual lookup for a function call based on the most derived contract.
+	static FunctionDefinition const* resolveFunctionCall(FunctionCall const& _functionCall, ContractDefinition const* _mostDerivedContract);
 
 	/// Returns the source code location of this node.
 	SourceLocation const& location() const { return m_location; }

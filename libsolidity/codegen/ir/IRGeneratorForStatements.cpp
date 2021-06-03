@@ -884,8 +884,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		return;
 	}
 
-	auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
-
 	switch (functionType->kind())
 	{
 	case FunctionType::Kind::Declaration:
@@ -893,39 +891,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		break;
 	case FunctionType::Kind::Internal:
 	{
-		auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression());
-		auto const* functionDef = dynamic_cast<FunctionDefinition const*>(
-			ASTNode::referencedDeclaration(_functionCall.expression())
-		);
-
-		if (functionDef)
-		{
-			solAssert(memberAccess || identifier, "");
-			solAssert(functionType->declaration() == *functionDef, "");
-
-			if (identifier)
-			{
-				solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
-				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
-			}
-			else if (auto typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
-				if (
-					auto contractType = dynamic_cast<ContractType const*>(typeType->actualType());
-					contractType->isSuper()
-				)
-				{
-					ContractDefinition const* super = contractType->contractDefinition().superContract(m_context.mostDerivedContract());
-					solAssert(super, "Super contract not available.");
-					solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Super, "");
-					functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract(), super);
-				}
-
-			solAssert(functionDef && functionDef->isImplemented(), "");
-			solAssert(
-				functionDef->parameters().size() == arguments.size() + (functionType->bound() ? 1 : 0),
-				""
-			);
-		}
+		FunctionDefinition const* functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
 
 		solAssert(!functionType->takesArbitraryParameters(), "");
 
@@ -937,11 +903,15 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
 
 		if (functionDef)
+		{
+			solAssert(functionDef->isImplemented(), "");
+
 			define(_functionCall) <<
 				m_context.enqueueFunctionForCodeGeneration(*functionDef) <<
 				"(" <<
 				joinHumanReadable(args) <<
 				")\n";
+		}
 		else
 		{
 			YulArity arity = YulArity::fromType(*functionType);

@@ -57,6 +57,50 @@ Declaration const* ASTNode::referencedDeclaration(Expression const& _expression)
 		return nullptr;
 }
 
+FunctionDefinition const* ASTNode::resolveFunctionCall(FunctionCall const& _functionCall, ContractDefinition const* _mostDerivedContract)
+{
+	auto const* functionDef = dynamic_cast<FunctionDefinition const*>(
+		ASTNode::referencedDeclaration(_functionCall.expression())
+	);
+
+	if (!functionDef)
+		return nullptr;
+
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+	{
+		if (*memberAccess->annotation().requiredLookup == VirtualLookup::Super)
+		{
+			if (auto const typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
+				if (auto const contractType = dynamic_cast<ContractType const*>(typeType->actualType()))
+				{
+					solAssert(_mostDerivedContract, "");
+					solAssert(contractType->isSuper(), "");
+					ContractDefinition const* superContract = contractType->contractDefinition().superContract(*_mostDerivedContract);
+
+					return &functionDef->resolveVirtual(
+						*_mostDerivedContract,
+						superContract
+					);
+				}
+		}
+		else
+			solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Static, "");
+	}
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+	{
+		solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
+		if (functionDef->virtualSemantics())
+		{
+			solAssert(_mostDerivedContract, "");
+			return &functionDef->resolveVirtual(*_mostDerivedContract);
+		}
+	}
+	else
+		solAssert(false, "");
+
+	return functionDef;
+}
+
 ASTAnnotation& ASTNode::annotation() const
 {
 	if (!m_annotation)
