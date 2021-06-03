@@ -286,7 +286,11 @@ FunctionDefinition const& CompilerContext::superFunction(FunctionDefinition cons
 	solAssert(m_mostDerivedContract, "No most derived contract set.");
 	ContractDefinition const* super = _base.superContract(mostDerivedContract());
 	solAssert(super, "Super contract not available.");
-	return _function.resolveVirtual(mostDerivedContract(), super);
+
+	FunctionDefinition const& resolvedFunction = _function.resolveVirtual(mostDerivedContract(), super);
+	solAssert(resolvedFunction.isImplemented(), "");
+
+	return resolvedFunction;
 }
 
 ContractDefinition const& CompilerContext::mostDerivedContract() const

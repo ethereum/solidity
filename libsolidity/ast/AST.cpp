@@ -397,6 +397,7 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 ) const
 {
 	solAssert(!isConstructor(), "");
+
 	// If we are not doing super-lookup and the function is not virtual, we can stop here.
 	if (_searchStart == nullptr && !virtualSemantics())
 		return *this;
@@ -407,19 +408,26 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 
 	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
+	bool foundSearchStart = (_searchStart == nullptr);
 	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
 	{
-		if (_searchStart != nullptr && c != _searchStart)
+		if (!foundSearchStart && c != _searchStart)
 			continue;
-		_searchStart = nullptr;
+		else
+			foundSearchStart = true;
+
 		for (FunctionDefinition const* function: c->definedFunctions())
 			if (
 				function->name() == name() &&
 				!function->isConstructor() &&
+				// With super lookup analysis guarantees that there is an implemented function in the chain.
+				// With virtual lookup there are valid cases where returning an unimplemented one is fine.
+				(function->isImplemented() || _searchStart == nullptr) &&
 				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*functionType)
 			)
 				return *function;
 	}
+
 	solAssert(false, "Virtual function " + name() + " not found.");
 	return *this; // not reached
 }
