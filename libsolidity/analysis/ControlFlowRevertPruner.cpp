@@ -20,6 +20,8 @@
 
 #include <libsolutil/Algorithms.h>
 
+#include <range/v3/algorithm/remove.hpp>
+
 
 namespace solidity::frontend
 {
@@ -192,7 +194,11 @@ void ControlFlowRevertPruner::modifyFunctionFlows()
 							// change anymore, we treat all "unknown" states as
 							// "reverting", since they can only be caused by
 							// recursion.
+							for (CFGNode * node: _node->exits)
+								ranges::remove(node->entries, _node);
+
 							_node->exits = {functionFlow.revert};
+							functionFlow.revert->entries.push_back(_node);
 							return;
 						default:
 							break;
