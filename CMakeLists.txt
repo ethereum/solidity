@@ -16,6 +16,8 @@ endif()
 
 include(EthToolchains)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Set cmake_policies
 include(EthPolicy)
 eth_policy()

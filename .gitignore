@@ -1,6 +1,10 @@
 commit_hash.txt
 prerelease.txt
 
+# ignore ccls files
+.ccls-cache/
+compile_commands.json
+
 # Compiled Object files
 *.slo
 *.lo
