@@ -26,7 +26,6 @@
 #include <boost/filesystem.hpp>
 
 #include <iostream>
-#include <cstdlib>
 #include <fstream>
 #if defined(_WIN32)
 #include <windows.h>

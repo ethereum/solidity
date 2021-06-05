@@ -23,8 +23,6 @@
 #include <libsolutil/Keccak256.h>
 
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
 
 using namespace std;

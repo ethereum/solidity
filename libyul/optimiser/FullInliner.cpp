@@ -22,9 +22,7 @@
 #include <libyul/optimiser/FullInliner.h>
 
 #include <libyul/optimiser/ASTCopier.h>
-#include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/NameCollector.h>
-#include <libyul/optimiser/OptimizerUtilities.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>

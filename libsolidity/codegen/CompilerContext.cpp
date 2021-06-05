@@ -48,10 +48,7 @@
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
-#include <boost/algorithm/string/replace.hpp>
-
 #include <utility>
-#include <numeric>
 
 // Change to "define" to output all intermediate code
 #undef SOL_OUTPUT_ASM

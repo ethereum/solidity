@@ -18,10 +18,8 @@
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
-#include <libyul/Utilities.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;
