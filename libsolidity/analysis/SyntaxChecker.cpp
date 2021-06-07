@@ -30,9 +30,6 @@
 
 #include <libsolutil/UTF8.h>
 
-#include <boost/algorithm/string.hpp>
-
-#include <memory>
 #include <string>
 
 using namespace std;

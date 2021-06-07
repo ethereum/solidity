@@ -21,7 +21,6 @@
 
 #include <libyul/optimiser/CommonSubexpressionEliminator.h>
 
-#include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/SyntacticalEquality.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/Semantics.h>

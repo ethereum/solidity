@@ -21,13 +21,11 @@
 #include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
-#include <libyul/Utilities.h>
 #include <libyul/Dialect.h>
 
 #include <libsmtutil/SMTPortfolio.h>
 #include <libsmtutil/Helpers.h>
 
-#include <libsolutil/Visitor.h>
 #include <libsolutil/CommonData.h>
 
 #include <utility>

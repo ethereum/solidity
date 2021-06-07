@@ -24,7 +24,6 @@
 #include <libsolidity/analysis/DeclarationContainer.h>
 
 #include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
 #include <libsolutil/StringUtils.h>
 
 using namespace std;

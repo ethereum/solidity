@@ -26,7 +26,6 @@
 
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
-#include <libevmasm/Assembly.h>
 
 using namespace solidity::yul;
 using namespace std;

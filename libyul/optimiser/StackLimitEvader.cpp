@@ -22,7 +22,6 @@
 #include <libyul/optimiser/StackToMemoryMover.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AST.h>
-#include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
 #include <libyul/Object.h>
 #include <libyul/Utilities.h>

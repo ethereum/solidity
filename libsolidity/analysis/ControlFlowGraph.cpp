@@ -19,7 +19,6 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
-#include <algorithm>
 
 using namespace std;
 using namespace solidity::langutil;

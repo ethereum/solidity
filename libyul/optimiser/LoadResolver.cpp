@@ -30,7 +30,6 @@
 #include <libyul/AST.h>
 #include <libyul/Utilities.h>
 
-#include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 #include <libsolutil/Keccak256.h>
 
