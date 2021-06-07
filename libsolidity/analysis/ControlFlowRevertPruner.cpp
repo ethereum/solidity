@@ -54,58 +54,6 @@ void ControlFlowRevertPruner::run()
 	modifyFunctionFlows();
 }
 
-FunctionDefinition const* ControlFlowRevertPruner::resolveCall(FunctionCall const& _functionCall, ContractDefinition const* _contract)
-{
-	auto result = m_resolveCache.find({&_functionCall, _contract});
-	if (result != m_resolveCache.end())
-		return result->second;
-
-	auto const& functionType = dynamic_cast<FunctionType const&>(
-		*_functionCall.expression().annotation().type
-	);
-
-	if (!functionType.hasDeclaration())
-		return nullptr;
-
-	auto const& unresolvedFunctionDefinition =
-		dynamic_cast<FunctionDefinition const&>(functionType.declaration());
-
-	FunctionDefinition const* returnFunctionDef = &unresolvedFunctionDefinition;
-
-	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
-	{
-		if (*memberAccess->annotation().requiredLookup == VirtualLookup::Super)
-		{
-			if (auto const typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
-				if (auto const contractType = dynamic_cast<ContractType const*>(typeType->actualType()))
-				{
-					solAssert(contractType->isSuper(), "");
-					ContractDefinition const* superContract = contractType->contractDefinition().superContract(*_contract);
-
-					returnFunctionDef = &unresolvedFunctionDefinition.resolveVirtual(
-						*_contract,
-						superContract
-					);
-				}
-		}
-		else
-		{
-			solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Static, "");
-			returnFunctionDef = &unresolvedFunctionDefinition;
-		}
-	}
-	else if (auto const* identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
-	{
-		solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
-		returnFunctionDef = &unresolvedFunctionDefinition.resolveVirtual(*_contract);
-	}
-
-	if (returnFunctionDef && !returnFunctionDef->isImplemented())
-		returnFunctionDef = nullptr;
-
-	return m_resolveCache[{&_functionCall, _contract}] = returnFunctionDef;
-}
-
 void ControlFlowRevertPruner::findRevertStates()
 {
 	std::set<CFG::FunctionContractTuple> pendingFunctions = keys(m_functions);
@@ -130,9 +78,9 @@ void ControlFlowRevertPruner::findRevertStates()
 
 				for (auto const* functionCall: _node->functionCalls)
 				{
-					auto const* resolvedFunction = resolveCall(*functionCall, item.contract);
+					auto const* resolvedFunction = ASTNode::resolveFunctionCall(*functionCall, item.contract);
 
-					if (resolvedFunction == nullptr)
+					if (resolvedFunction == nullptr || !resolvedFunction->isImplemented())
 						continue;
 
 					switch (m_functions.at({findScopeContract(*resolvedFunction, item.contract), resolvedFunction}))
@@ -180,9 +128,9 @@ void ControlFlowRevertPruner::modifyFunctionFlows()
 			[&](CFGNode* _node, auto&& _addChild) {
 				for (auto const* functionCall: _node->functionCalls)
 				{
-					auto const* resolvedFunction = resolveCall(*functionCall, item.first.contract);
+					auto const* resolvedFunction = ASTNode::resolveFunctionCall(*functionCall, item.first.contract);
 
-					if (resolvedFunction == nullptr)
+					if (resolvedFunction == nullptr || !resolvedFunction->isImplemented())
 						continue;
 
 					switch (m_functions.at({findScopeContract(*resolvedFunction, item.first.contract), resolvedFunction}))
@@ -223,7 +171,11 @@ void ControlFlowRevertPruner::collectCalls(FunctionDefinition const& _function, 
 	solidity::util::BreadthFirstSearch<CFGNode*>{{functionFlow.entry}}.run(
 		[&](CFGNode* _node, auto&& _addChild) {
 			for (auto const* functionCall: _node->functionCalls)
-				m_calledBy[resolveCall(*functionCall, _mostDerivedContract)].insert(pair);
+			{
+				auto const* funcDef = ASTNode::resolveFunctionCall(*functionCall, _mostDerivedContract);
+				if (funcDef && funcDef->isImplemented())
+					m_calledBy[funcDef].insert(pair);
+			}
 
 			for (CFGNode* exit: _node->exits)
 				_addChild(exit);

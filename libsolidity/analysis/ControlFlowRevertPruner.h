@@ -45,15 +45,6 @@ private:
 		Unknown,
 	};
 
-	/// Simple attempt at resolving a function call
-	/// Does not aim to be able to resolve all calls, only used for variable
-	/// assignment tracking and revert behavior.
-	/// @param _functionCall the function call to analyse
-	/// @param _mostDerivedContract most derived contract
-	/// @returns function definition to which the call resolved or nullptr if no
-	///          definition was found.
-	FunctionDefinition const* resolveCall(FunctionCall const& _functionCall, ContractDefinition const* _mostDerivedContract);
-
 	/// Identify revert states of all function flows
 	void findRevertStates();
 
