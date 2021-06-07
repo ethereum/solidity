@@ -504,6 +504,13 @@ struct ContractState
 	std::string name;
 };
 
+struct LoopState
+{
+	explicit LoopState(bool _inLoop, bool _wasLoop): inLoop(_inLoop), wasLoop(_wasLoop) {}
+	bool inLoop;
+	bool wasLoop;
+};
+
 struct TestState
 {
 	explicit TestState(std::shared_ptr<UniformRandomDistribution>& _urd):
@@ -517,7 +524,8 @@ struct TestState
 		numContracts(0),
 		numFunctions(0),
 		indentationLevel(0),
-		insideContract(false)
+		insideContract(false),
+		loopState(false, false)
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -642,6 +650,19 @@ struct TestState
 	{
 		insideContract = false;
 	}
+	void enterLoop()
+	{
+		loopState.wasLoop = loopState.inLoop;
+		loopState.inLoop = true;
+	}
+	void exitLoop()
+	{
+		loopState.inLoop = loopState.wasLoop;
+	}
+	bool inLoop()
+	{
+		return loopState.inLoop;
+	}
 	~TestState()
 	{
 		sourceUnitState.clear();
@@ -681,6 +702,8 @@ struct TestState
 	unsigned indentationLevel;
 	/// Contract scope
 	bool insideContract;
+	/// Loop state
+	LoopState loopState;
 	/// Source name prefix
 	std::string const sourceUnitNamePrefix = "su";
 	/// Contract name prefix
@@ -1094,6 +1117,38 @@ public:
 private:
 	std::string conditionalStmt(Condition _cond);
 	static constexpr size_t s_maxConditionalStmts = 5;
+};
+
+class BreakStmtGenerator: public GeneratorBase
+{
+public:
+	explicit BreakStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override
+	{
+		if (state->inLoop())
+			return indentation() + "break;\n";
+		else
+			return "\n";
+	}
+	std::string name() override { return "Break statement generator"; }
+};
+
+class ContinueStmtGenerator: public GeneratorBase
+{
+public:
+	explicit ContinueStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override
+	{
+		if (state->inLoop())
+			return indentation() + "continue;\n";
+		else
+			return "\n";
+	}
+	std::string name() override { return "Continue statement generator"; }
 };
 
 class WhileStmtGenerator: public GeneratorBase

@@ -511,6 +511,8 @@ void WhileStmtGenerator::setup()
 string WhileStmtGenerator::visit()
 {
 	ostringstream whileStmt;
+	state->enterLoop();
+	ScopeGuard exitLoop([&]() { state->exitLoop(); });
 	ExpressionGenerator exprGen{state};
 	auto boolType = make_shared<BoolType>();
 	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
@@ -538,7 +540,9 @@ void StatementGenerator::setup()
 		{mutator->generator<FunctionCallGenerator>(), 1},
 		{mutator->generator<ExpressionStmtGenerator>(), 1},
 		{mutator->generator<IfStmtGenerator>(), 2},
-		{mutator->generator<WhileStmtGenerator>(), 1}
+		{mutator->generator<WhileStmtGenerator>(), 1},
+		{mutator->generator<BreakStmtGenerator>(), 1},
+		{mutator->generator<ContinueStmtGenerator>(), 1}
 	};
 	addGenerators(std::move(dependsOn));
 }
@@ -553,25 +557,21 @@ string StatementGenerator::visit()
 		mutator->generator<BlockStmtGenerator>()->unchecked(true);
 
 	ostringstream os;
-	// Randomise visit order
-	vector<std::pair<GeneratorPtr, unsigned>> randomisedChildren;
-	for (auto const& child: generators)
-		randomisedChildren.push_back(child);
-	shuffle(randomisedChildren.begin(), randomisedChildren.end(), *uRandDist()->randomEngine);
-	for (auto const& child: randomisedChildren)
-		if (uRandDist()->likely(child.second + 1))
-		{
-			os << std::visit(GenericVisitor{
-				[](auto const& _item) { return _item->generate(); }
-			}, child.first);
-			if (holds_alternative<shared_ptr<BlockStmtGenerator>>(child.first) &&
-				generateUncheckedBlock
-			)
-			{
-				get<shared_ptr<BlockStmtGenerator>>(child.first)->unchecked(false);
-				get<shared_ptr<BlockStmtGenerator>>(child.first)->resetInUnchecked();
-			}
-		}
+	// Choose random statement type
+	auto genIterator = generators.begin();
+	auto advanceBy = uRandDist()->distributionOneToN(generators.size()) - 1;
+	std::advance(genIterator, advanceBy);
+	auto child = *genIterator;
+	os << std::visit(GenericVisitor{
+		[](auto const& _item) { return _item->generate(); }
+	}, child.first);
+	if (holds_alternative<shared_ptr<BlockStmtGenerator>>(child.first) &&
+		generateUncheckedBlock
+	)
+	{
+		get<shared_ptr<BlockStmtGenerator>>(child.first)->unchecked(false);
+		get<shared_ptr<BlockStmtGenerator>>(child.first)->resetInUnchecked();
+	}
 	return os.str();
 }
 
