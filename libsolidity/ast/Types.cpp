@@ -471,6 +471,8 @@ MemberList::MemberMap AddressType::nativeMembers(ASTNode const*) const
 		{"balance", TypeProvider::uint256()},
 		{"code", TypeProvider::array(DataLocation::Memory)},
 		{"codehash",  TypeProvider::fixedBytes(32)},
+		{"infer", TypeProvider::function(strings{"address", "address"}, strings{"uint256"}, FunctionType::Kind::Infer)},
+		{"inferArray", TypeProvider::function(strings{"address","address"}, strings{"uint256"}, FunctionType::Kind::InferArray)},
 		{"call", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCall, false, StateMutability::Payable)},
 		{"callcode", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareCallCode, false, StateMutability::Payable)},
 		{"delegatecall", TypeProvider::function(strings{"bytes memory"}, strings{"bool", "bytes memory"}, FunctionType::Kind::BareDelegateCall, false, StateMutability::NonPayable)},
@@ -2878,6 +2880,8 @@ string FunctionType::richIdentifier() const
 	case Kind::Internal: id += "internal"; break;
 	case Kind::External: id += "external"; break;
 	case Kind::DelegateCall: id += "delegatecall"; break;
+	case Kind::Infer: id += "infer"; break;
+	case Kind::InferArray: id += "inferArray"; break;
 	case Kind::BareCall: id += "barecall"; break;
 	case Kind::BareCallCode: id += "barecallcode"; break;
 	case Kind::BareDelegateCall: id += "baredelegatecall"; break;
@@ -3403,6 +3407,8 @@ bool FunctionType::isBareCall() const
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:
 	case Kind::BareStaticCall:
+    case Kind::Infer:
+    case Kind::InferArray:
 	case Kind::ECRecover:
 	case Kind::SHA256:
 	case Kind::RIPEMD160:
@@ -3468,6 +3474,8 @@ bool FunctionType::isPure() const
 		m_kind == Kind::KECCAK256 ||
 		m_kind == Kind::ECRecover ||
 		m_kind == Kind::SHA256 ||
+		m_kind == Kind::Infer ||
+		m_kind == Kind::InferArray ||
 		m_kind == Kind::RIPEMD160 ||
 		m_kind == Kind::AddMod ||
 		m_kind == Kind::MulMod ||
@@ -3595,6 +3603,8 @@ bool FunctionType::padArguments() const
 	// No padding only for hash functions, low-level calls and the packed encoding function.
 	switch (m_kind)
 	{
+    case Kind::Infer:
+    case Kind::InferArray:
 	case Kind::BareCall:
 	case Kind::BareCallCode:
 	case Kind::BareDelegateCall:

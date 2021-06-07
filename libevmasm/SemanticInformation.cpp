@@ -210,6 +210,8 @@ bool SemanticInformation::movable(Instruction _instruction)
 	case Instruction::PC:
 	case Instruction::MSIZE:
 	case Instruction::GAS:
+    case Instruction::INFER:
+	case Instruction::INFERARRAY:
 		return false;
 	default:
 		return true;
