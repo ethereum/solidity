@@ -16,9 +16,7 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * @author Lefteris <lefteris@ethdev.com>
- * @date 2014
- * Solidity command line interface.
+ * Validates and parses command-line options into an internal representation.
  */
 #pragma once
 
@@ -32,111 +30,185 @@
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include <map>
 #include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <vector>
 
 namespace solidity::frontend
 {
 
-//forward declaration
-enum class DocumentationType: uint8_t;
+enum class InputMode
+{
+	Compiler,
+	CompilerWithASTImport,
+	StandardJson,
+	Linker,
+	Assembler,
+};
 
-class CommandLineInterface
+struct CompilerOutputs
+{
+	bool astCompactJson = false;
+	bool asm_ = false;
+	bool asmJson = false;
+	bool opcodes = false;
+	bool binary = false;
+	bool binaryRuntime = false;
+	bool abi = false;
+	bool ir = false;
+	bool irOptimized = false;
+	bool ewasm = false;
+	bool signatureHashes = false;
+	bool natspecUser = false;
+	bool natspecDev = false;
+	bool metadata = false;
+	bool storageLayout = false;
+};
+
+struct CombinedJsonRequests
+{
+	bool abi = false;
+	bool metadata = false;
+	bool binary = false;
+	bool binaryRuntime = false;
+	bool opcodes = false;
+	bool asm_ = false;
+	bool storageLayout = false;
+	bool generatedSources = false;
+	bool generatedSourcesRuntime = false;
+	bool srcMap = false;
+	bool srcMapRuntime = false;
+	bool funDebug = false;
+	bool funDebugRuntime = false;
+	bool signatureHashes = false;
+	bool natspecDev = false;
+	bool natspecUser = false;
+	bool ast = false;
+};
+
+struct CommandLineOptions
+{
+	struct
+	{
+		InputMode mode = InputMode::Compiler;
+		std::set<boost::filesystem::path> paths;
+		std::string standardJsonFile;
+		std::vector<ImportRemapper::Remapping> remappings;
+		bool addStdin = false;
+		boost::filesystem::path basePath = "";
+		FileReader::FileSystemPathSet allowedDirectories;
+		bool ignoreMissingFiles = false;
+		bool errorRecovery = false;
+	} input;
+
+	struct
+	{
+		boost::filesystem::path dir;
+		bool overwriteFiles = false;
+		langutil::EVMVersion evmVersion;
+		bool experimentalViaIR = false;
+		RevertStrings revertStrings = RevertStrings::Default;
+		CompilerStack::State stopAfter = CompilerStack::State::CompilationSuccessful;
+	} output;
+
+	struct
+	{
+		yul::AssemblyStack::Machine targetMachine = yul::AssemblyStack::Machine::EVM;
+		yul::AssemblyStack::Language inputLanguage = yul::AssemblyStack::Language::StrictAssembly;
+	} assembly;
+
+	struct
+	{
+		std::map<std::string, util::h160> libraries; // library name -> address
+	} linker;
+
+	struct
+	{
+		bool prettyJson = false;
+		std::optional<bool> coloredOutput;
+		bool withErrorIds = false;
+	} formatting;
+
+	struct
+	{
+		CompilerOutputs outputs;
+		bool estimateGas = false;
+		std::optional<CombinedJsonRequests> combinedJsonRequests;
+	} compiler;
+
+	struct
+	{
+		CompilerStack::MetadataHash hash = CompilerStack::MetadataHash::IPFS;
+		bool literalSources = false;
+	} metadata;
+
+	struct
+	{
+		bool enabled = false;
+		unsigned expectedExecutionsPerDeployment = 0;
+		bool noOptimizeYul = false;
+		std::optional<std::string> yulSteps;
+	} optimizer;
+
+	struct
+	{
+		bool initialize = false;
+		ModelCheckerSettings settings;
+	} modelChecker;
+};
+
+/// Parses the command-line arguments and produces a filled-out CommandLineOptions structure.
+/// Validates provided values and prints error messages in case of errors.
+///
+/// The class is also responsible for handling options that only result in printing informational
+/// text, without the need to invoke the compiler - printing usage banner, version or license.
+class CommandLineParser
 {
 public:
-	/// Parse command line arguments and return false if we should not continue
-	bool parseArguments(int _argc, char** _argv);
-	/// Parse the files and create source code objects
-	bool processInput();
-	/// Perform actions on the input depending on provided compiler arguments
-	/// @returns true on success.
-	bool actOnInput();
+	/// Parses the command-line arguments and fills out the internal CommandLineOptions structure.
+	/// Performs validation and prints error messages. If requested, prints usage banner, version
+	/// or license.
+	/// @param interactiveTerminal specifies whether the terminal is taking input from the user.
+	/// This is used to determine whether to provide more user-friendly output in some situations.
+	/// E.g. whether to print help text when no arguments are provided.
+	/// @return true if there were no validation errors when parsing options and the
+	/// CommandLineOptions structure has been fully initialized. false if there were errors - in
+	/// this case CommandLineOptions may be only partially filled out. May also return false if
+	/// there is not further processing necessary and the program should just exit.
+	bool parse(int _argc, char const* const* _argv, bool interactiveTerminal);
+
+	CommandLineOptions const& options() const { return m_options; }
+
+	/// Returns true if any parser instance has written anything to cout or cerr since the last
+	/// call to parse().
+	static bool hasOutput();
 
 private:
-	bool link();
-	void writeLinkedFiles();
-	/// @returns the ``// <identifier> -> name`` hint for library placeholders.
-	static std::string libraryPlaceholderHint(std::string const& _libraryName);
-	/// @returns the full object with library placeholder hints in hex.
-	static std::string objectWithLinkRefsHex(evmasm::LinkerObject const& _obj);
+	/// Parses the value supplied to --combined-json.
+	/// @return false if there are any validation errors, true otherwise.
+	bool parseCombinedJsonOption();
 
-	bool assemble(
-		yul::AssemblyStack::Language _language,
-		yul::AssemblyStack::Machine _targetMachine,
-		bool _optimize,
-		std::optional<std::string> _yulOptimiserSteps = std::nullopt
-	);
+	/// Parses the names of the input files, remappings for all modes except for Standard JSON.
+	/// Does not check if files actually exist.
+	/// @return false if there are any validation errors, true otherwise.
+	bool parseInputPathsAndRemappings();
 
-	void outputCompilationResults();
-
-	void handleCombinedJSON();
-	void handleAst();
-	void handleBinary(std::string const& _contract);
-	void handleOpcode(std::string const& _contract);
-	void handleIR(std::string const& _contract);
-	void handleIROptimized(std::string const& _contract);
-	void handleEwasm(std::string const& _contract);
-	void handleBytecode(std::string const& _contract);
-	void handleSignatureHashes(std::string const& _contract);
-	void handleMetadata(std::string const& _contract);
-	void handleABI(std::string const& _contract);
-	void handleNatspec(bool _natspecDev, std::string const& _contract);
-	void handleGasEstimation(std::string const& _contract);
-	void handleStorageLayout(std::string const& _contract);
-
-	/// Fills @a m_sourceCodes initially and @a m_redirects.
-	bool readInputFilesAndConfigureRemappings();
-	/// Tries to read from the file @a _input or interprets _input literally if that fails.
-	/// It then tries to parse the contents and appends to m_libraries.
+	/// Tries to read from the file @a _input or interprets @a _input literally if that fails.
+	/// It then tries to parse the contents and appends to m_options.libraries.
+	/// @return false if there are any validation errors, true otherwise.
 	bool parseLibraryOption(std::string const& _input);
-
-	/// Tries to read @ m_sourceCodes as a JSONs holding ASTs
-	/// such that they can be imported into the compiler  (importASTs())
-	/// (produced by --combined-json ast,compact-format <file.sol>
-	/// or standard-json output
-	std::map<std::string, Json::Value> parseAstFromInput();
-
-	/// Create a file in the given directory
-	/// @arg _fileName the name of the file
-	/// @arg _data to be written
-	void createFile(std::string const& _fileName, std::string const& _data);
-
-	/// Create a json file in the given directory
-	/// @arg _fileName the name of the file (the extension will be replaced with .json)
-	/// @arg _json json string to be written
-	void createJson(std::string const& _fileName, std::string const& _json);
 
 	size_t countEnabledOptions(std::vector<std::string> const& _optionNames) const;
 	static std::string joinOptionNames(std::vector<std::string> const& _optionNames, std::string _separator = ", ");
 
-	bool m_error = false; ///< If true, some error occurred.
+	CommandLineOptions m_options;
 
-	bool m_onlyAssemble = false;
-
-	bool m_onlyLink = false;
-
-	FileReader m_fileReader;
-
-	/// Compiler arguments variable map
+	/// Map of command-line arguments produced by boost::program_options.
+	/// Serves as input for filling out m_options.
 	boost::program_options::variables_map m_args;
-	/// list of remappings
-	std::vector<ImportRemapper::Remapping> m_remappings;
-	/// map of library names to addresses
-	std::map<std::string, util::h160> m_libraries;
-	/// Solidity compiler stack
-	std::unique_ptr<frontend::CompilerStack> m_compiler;
-	CompilerStack::State m_stopAfter = CompilerStack::State::CompilationSuccessful;
-	/// EVM version to use
-	langutil::EVMVersion m_evmVersion;
-	/// How to handle revert strings
-	RevertStrings m_revertStrings = RevertStrings::Default;
-	/// Chosen hash method for the bytecode metadata.
-	CompilerStack::MetadataHash m_metadataHash = CompilerStack::MetadataHash::IPFS;
-	/// Model checker settings.
-	ModelCheckerSettings m_modelCheckerSettings;
-	/// Whether or not to colorize diagnostics output.
-	bool m_coloredOutput = true;
-	/// Whether or not to output error IDs.
-	bool m_withErrorIds = false;
 };
 
 }
