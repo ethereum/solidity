@@ -38,6 +38,11 @@
 
 #include <functional>
 
+namespace solidity::frontend::test
+{
+	struct LogRecord;
+} // namespace solidity::frontend::test
+
 namespace solidity::test
 {
 using rational = boost::rational<bigint>;
