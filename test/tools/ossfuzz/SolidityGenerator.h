@@ -82,7 +82,7 @@ struct UniformRandomDistribution
 	/// uniformly at random.
 	[[nodiscard]] size_t distributionOneToN(size_t _n) const
 	{
-		solAssert(_n > 0, "");
+		solAssert(_n >= 1, "");
 		return Distribution(1, _n)(*randomEngine);
 	}
 	/// @returns true with a probability of 1/(@param _n), false otherwise.
@@ -1094,7 +1094,17 @@ public:
 private:
 	std::string conditionalStmt(Condition _cond);
 	static constexpr size_t s_maxConditionalStmts = 5;
+};
 
+class WhileStmtGenerator: public GeneratorBase
+{
+public:
+	explicit WhileStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	void setup() override;
+	std::string visit() override;
+	std::string name() override { return "While statement generator"; }
 };
 
 class AssignmentStmtGenerator: public GeneratorBase
@@ -1175,7 +1185,7 @@ private:
 	bool m_unchecked;
 	bool m_inUnchecked;
 	static constexpr unsigned s_maxStatements = 4;
-	static constexpr unsigned s_maxNestingDepth = 10;
+	static constexpr unsigned s_maxNestingDepth = 4;
 	static constexpr size_t s_uncheckedInvProb = 13;
 };
 

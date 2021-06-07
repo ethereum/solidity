@@ -500,6 +500,36 @@ string IfStmtGenerator::visit()
 	return ifStmt.str();
 }
 
+void WhileStmtGenerator::setup()
+{
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {
+		{mutator->generator<BlockStmtGenerator>(), 1},
+	};
+	addGenerators(std::move(dependsOn));
+}
+
+string WhileStmtGenerator::visit()
+{
+	ostringstream whileStmt;
+	ExpressionGenerator exprGen{state};
+	auto boolType = make_shared<BoolType>();
+	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
+	auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+	solAssert(expression.has_value(), "");
+	whileStmt << indentation()
+		         << "while ("
+		         << expression.value().second
+		         << ")\n";
+	// Make sure block stmt generator does not output an unchecked block
+	mutator->generator<BlockStmtGenerator>()->unchecked(false);
+	ostringstream whileBlock;
+	whileBlock << visitChildren();
+	if (whileBlock.str().empty())
+		whileBlock << indentation() << "{ }\n";
+	whileStmt << whileBlock.str();
+	return whileStmt.str();
+}
+
 void StatementGenerator::setup()
 {
 	set<pair<GeneratorPtr, unsigned>> dependsOn = {
@@ -508,6 +538,7 @@ void StatementGenerator::setup()
 		{mutator->generator<FunctionCallGenerator>(), 1},
 		{mutator->generator<ExpressionStmtGenerator>(), 1},
 		{mutator->generator<IfStmtGenerator>(), 2},
+		{mutator->generator<WhileStmtGenerator>(), 1}
 	};
 	addGenerators(std::move(dependsOn));
 }
