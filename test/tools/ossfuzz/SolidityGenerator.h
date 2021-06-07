@@ -173,7 +173,7 @@ public:
 	bool operator>=(IntegerType const& _rhs)
 	{
 		return this->signedType == _rhs.signedType &&
-			this->numBits >= _rhs.numBits;
+			this->numBits == _rhs.numBits;
 	}
 	std::string toString() override
 	{
@@ -823,6 +823,10 @@ struct ExpressionGenerator
 	{
 		nestingDepth++;
 	}
+	void decrementNestingDepth()
+	{
+		nestingDepth--;
+	}
 	void resetNestingDepth()
 	{
 		nestingDepth = 0;
@@ -1074,12 +1078,23 @@ public:
 class IfStmtGenerator: public GeneratorBase
 {
 public:
+	enum class Condition
+	{
+		IF,
+		ELSEIF,
+		ELSE
+	};
+
 	explicit IfStmtGenerator(SolidityGenerator* _mutator):
 		GeneratorBase(std::move(_mutator))
 	{}
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "If statement generator"; }
+private:
+	std::string conditionalStmt(Condition _cond);
+	static constexpr size_t s_maxConditionalStmts = 5;
+
 };
 
 class AssignmentStmtGenerator: public GeneratorBase
@@ -1160,7 +1175,7 @@ private:
 	bool m_unchecked;
 	bool m_inUnchecked;
 	static constexpr unsigned s_maxStatements = 4;
-	static constexpr unsigned s_maxNestingDepth = 1;
+	static constexpr unsigned s_maxNestingDepth = 10;
 	static constexpr size_t s_uncheckedInvProb = 13;
 };
 

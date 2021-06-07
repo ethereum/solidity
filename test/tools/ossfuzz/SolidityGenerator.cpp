@@ -445,27 +445,58 @@ void IfStmtGenerator::setup()
 	addGenerators(std::move(dependsOn));
 }
 
-string IfStmtGenerator::visit()
+string IfStmtGenerator::conditionalStmt(Condition _cond)
 {
-	ostringstream ifStmt;
+	ostringstream condStmt;
 	ExpressionGenerator exprGen{state};
 	auto boolType = make_shared<BoolType>();
 	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 	auto expression = exprGen.rLValueOrLiteral(boolTypeName);
-	if (expression.has_value())
-		ifStmt << indentation()
-		       << "if ("
-		       << expression.value().second
-		       << ")\n";
+	solAssert(expression.has_value(), "");
+	if (_cond == Condition::IF)
+		condStmt << indentation()
+		         << "if ("
+		         << expression.value().second
+		         << ")\n";
+	else if (_cond == Condition::ELSEIF)
+		condStmt << indentation()
+		         << "else if ("
+		         << expression.value().second
+		         << ")\n";
 	else
-		return "\n";
+		condStmt << indentation()
+		         << "else"
+		         << "\n";
 	// Make sure block stmt generator does not output an unchecked block
 	mutator->generator<BlockStmtGenerator>()->unchecked(false);
-	ostringstream ifBlock;
-	ifBlock << visitChildren();
-	if (ifBlock.str().empty())
-		ifBlock << indentation() << "{ }\n";
-	ifStmt << ifBlock.str();
+	ostringstream condBlock;
+	condBlock << visitChildren();
+	if (condBlock.str().empty())
+		condBlock << indentation() << "{ }\n";
+	condStmt << condBlock.str();
+	return condStmt.str();
+}
+
+string IfStmtGenerator::visit()
+{
+	ostringstream ifStmt;
+	auto numConditionStmts = uRandDist()->distributionOneToN(s_maxConditionalStmts);
+	ifStmt << conditionalStmt(Condition::IF);
+	numConditionStmts--;
+	solAssert(numConditionStmts >= 0, "");
+	while (numConditionStmts > 0)
+	{
+		if (numConditionStmts == 1)
+		{
+			if (uRandDist()->probable(2))
+				ifStmt << conditionalStmt(Condition::ELSEIF);
+			else
+				ifStmt << conditionalStmt(Condition::ELSE);
+		}
+		else
+			ifStmt << conditionalStmt(Condition::ELSEIF);
+		numConditionStmts--;
+	}
 	return ifStmt.str();
 }
 
@@ -523,6 +554,7 @@ string BlockStmtGenerator::visit()
 {
 	if (nestingTooDeep())
 		return indentation() + "{ }\n";
+	ScopeGuard decDepth([&]() { decrementNestingDepth(); });
 	incrementNestingDepth();
 	ostringstream block;
 	if (unchecked() && !m_inUnchecked)
