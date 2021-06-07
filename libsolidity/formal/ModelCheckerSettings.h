@@ -44,6 +44,9 @@ struct ModelCheckerContracts
 		return has(_source) && contracts.at(_source).count(_contract);
 	}
 
+	bool operator!=(ModelCheckerContracts const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(ModelCheckerContracts const& _other) const noexcept { return contracts == _other.contracts; }
+
 	/// Represents which contracts should be analyzed by the SMTChecker
 	/// as the most derived.
 	/// The key is the source file. If the map is empty, all sources must be analyzed.
@@ -79,6 +82,9 @@ struct ModelCheckerEngine
 			return engineMap.at(_engine);
 		return {};
 	}
+
+	bool operator!=(ModelCheckerEngine const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(ModelCheckerEngine const& _other) const noexcept { return bmc == _other.bmc && chc == _other.chc; }
 };
 
 enum class VerificationTargetType { ConstantCondition, Underflow, Overflow, UnderOverflow, DivByZero, Balance, Assert, PopEmptyArray, OutOfBounds };
@@ -97,6 +103,9 @@ struct ModelCheckerTargets
 
 	static std::map<std::string, VerificationTargetType> const targetStrings;
 
+	bool operator!=(ModelCheckerTargets const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(ModelCheckerTargets const& _other) const noexcept { return targets == _other.targets; }
+
 	std::set<VerificationTargetType> targets;
 };
 
@@ -106,6 +115,16 @@ struct ModelCheckerSettings
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
 	ModelCheckerTargets targets = ModelCheckerTargets::Default();
 	std::optional<unsigned> timeout;
+
+	bool operator!=(ModelCheckerSettings const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(ModelCheckerSettings const& _other) const noexcept
+	{
+		return
+			contracts == _other.contracts &&
+			engine == _other.engine &&
+			targets == _other.targets &&
+			timeout == _other.timeout;
+	}
 };
 
 }
