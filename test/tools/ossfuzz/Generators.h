@@ -52,4 +52,5 @@
 	MACRO(PragmaGenerator) SEP \
 	MACRO(SourceUnitGenerator) SEP \
 	MACRO(StatementGenerator) SEP \
-	MACRO(TestCaseGenerator) ENDSEP
+	MACRO(TestCaseGenerator) SEP \
+	MACRO(WhileStmtGenerator) ENDSEP
