@@ -61,6 +61,8 @@ int magicVariableToID(std::string const& _name)
 	else if (_name == "tx") return -26;
 	else if (_name == "type") return -27;
 	else if (_name == "this") return -28;
+	else if (_name == "infer") return -29;
+	else if (_name == "inferArray") return -30;
 	else
 		solAssert(false, "Unknown magic variable: \"" + _name + "\".");
 }
