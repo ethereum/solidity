@@ -51,7 +51,7 @@ code that manages the database. In this example, the contract defines the
 functions ``set`` and ``get`` that can be used to modify
 or retrieve the value of the variable.
 
-To access a state variable, you do not need the prefix ``this.`` as is common in
+To access a state variable, you can not prefix with ``this.`` as is common in
 other languages.
 
 This contract does not do much yet apart from (due to the infrastructure
