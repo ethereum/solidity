@@ -62,6 +62,7 @@ object \"C_3\" {
 
         }
 
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 
 }
@@ -250,10 +251,12 @@ object \"D_16\" {
 
                 }
 
+                data \".metadata\" hex\"<BYTECODE REMOVED>\"
             }
 
         }
 
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 
 }

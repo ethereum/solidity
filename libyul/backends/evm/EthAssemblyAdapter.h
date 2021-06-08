@@ -58,6 +58,8 @@ public:
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
 
+	void appendToAuxiliaryData(bytes const& _data) override;
+
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;
 

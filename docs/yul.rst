@@ -1076,6 +1076,23 @@ regular strings in native encoding. For code,
 
 Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the previous chapter.
 
+.. note::
+
+    Data objects or sub-objects whose names contain a ``.`` can be defined
+    but it is not possible to access them through ``datasize``,
+    ``dataoffset`` or ``datacopy`` because ``.`` is used as a separator
+    to access objects inside another object.
+
+.. note::
+
+    The data object called ``".metadata"`` has a special meaning:
+    It cannot be accessed from code and is always appended to the very end of the
+    bytecode, regardless of its position in the object.
+
+    Other data objects with special significance might be added in the
+    future, but their names will always start with a ``.``.
+
+
 An example Yul Object is shown below:
 
 .. code-block:: yul

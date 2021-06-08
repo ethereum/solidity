@@ -23,6 +23,7 @@ object "C_3" {
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
 
@@ -93,7 +94,9 @@ object "D_16" {
                         revert(0, 0)
                     }
                 }
+                data ".metadata" hex"<BYTECODE REMOVED>"
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
