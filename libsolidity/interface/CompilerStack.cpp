@@ -480,13 +480,6 @@ bool CompilerStack::analyze()
 			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
 				noErrors = false;
 
-		// Create & assign callgraphs and check for contract dependency cycles
-		if (noErrors)
-		{
-			createAndAssignCallGraphs();
-			findAndReportCyclicContractDependencies();
-		}
-
 		if (noErrors)
 		{
 			// Checks that can only be done when all types of all AST nodes are known.
@@ -496,6 +489,13 @@ bool CompilerStack::analyze()
 					noErrors = false;
 			if (!postTypeChecker.finalize())
 				noErrors = false;
+		}
+
+		// Create & assign callgraphs and check for contract dependency cycles
+		if (noErrors)
+		{
+			createAndAssignCallGraphs();
+			findAndReportCyclicContractDependencies();
 		}
 
 		if (noErrors)
