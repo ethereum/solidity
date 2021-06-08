@@ -30,6 +30,7 @@
 #include <memory>
 #include <random>
 #include <set>
+#include <stack>
 #include <variant>
 
 #include <range/v3/algorithm/all_of.hpp>
@@ -525,7 +526,7 @@ struct TestState
 		numFunctions(0),
 		indentationLevel(0),
 		insideContract(false),
-		loopState(false, false)
+		loopState({false})
 	{}
 	/// Adds @param _path to @name sourceUnitPaths updates
 	/// @name currentSourceUnitPath.
@@ -652,16 +653,15 @@ struct TestState
 	}
 	void enterLoop()
 	{
-		loopState.wasLoop = loopState.inLoop;
-		loopState.inLoop = true;
+		loopState.push(true);
 	}
 	void exitLoop()
 	{
-		loopState.inLoop = loopState.wasLoop;
+		loopState.pop();
 	}
 	bool inLoop()
 	{
-		return loopState.inLoop;
+		return loopState.top();
 	}
 	~TestState()
 	{
@@ -703,7 +703,7 @@ struct TestState
 	/// Contract scope
 	bool insideContract;
 	/// Loop state
-	LoopState loopState;
+	std::stack<bool> loopState;
 	/// Source name prefix
 	std::string const sourceUnitNamePrefix = "su";
 	/// Contract name prefix

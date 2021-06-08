@@ -518,10 +518,15 @@ string WhileStmtGenerator::visit()
 	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 	auto expression = exprGen.rLValueOrLiteral(boolTypeName);
 	solAssert(expression.has_value(), "");
-	whileStmt << indentation()
-		         << "while ("
-		         << expression.value().second
-		         << ")\n";
+	bool doWhile = uRandDist()->probable(2);
+	if (doWhile)
+		whileStmt << indentation()
+			<< "do\n";
+	else
+		whileStmt << indentation()
+			<< "while ("
+			<< expression.value().second
+			<< ")\n";
 	// Make sure block stmt generator does not output an unchecked block
 	mutator->generator<BlockStmtGenerator>()->unchecked(false);
 	ostringstream whileBlock;
@@ -529,6 +534,11 @@ string WhileStmtGenerator::visit()
 	if (whileBlock.str().empty())
 		whileBlock << indentation() << "{ }\n";
 	whileStmt << whileBlock.str();
+	if (doWhile)
+		whileStmt << indentation()
+			<< "while ("
+			<< expression.value().second
+			<< ")\n";
 	return whileStmt.str();
 }
 
