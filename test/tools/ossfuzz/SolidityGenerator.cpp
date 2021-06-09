@@ -416,11 +416,11 @@ string AssignmentStmtGenerator::visit()
 	auto lhs = exprGen.randomLValueExpression();
 	exprGen.resetNestingDepth();
 	if (!lhs.has_value())
-		return "\n";
+		return {};
 	auto rhs = exprGen.rLValueOrLiteral(lhs.value());
 	exprGen.resetNestingDepth();
 	if (!rhs.has_value())
-		return "\n";
+		return {};
 	auto operation = assignOp(lhs.value().first);
 	return indentation() + lhs.value().second + assignOp(operation) + rhs.value().second + ";\n";
 }
@@ -434,7 +434,30 @@ string ExpressionStmtGenerator::visit()
 	if (expression.has_value())
 		return indentation() + expression.value().second + ";\n";
 	else
-		return "\n";
+		return {};
+}
+
+string VarDeclStmtGenerator::visit()
+{
+	ExpressionGenerator exprGen{state};
+	auto randomType = TypeProvider{state}.type();
+	pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
+	auto expression = exprGen.rLValueOrLiteral(randomTypeName);
+	string varName = state->currentFunctionState()->addLocal(randomTypeName.first);
+	string varDeclStmt = indentation() +
+		std::visit(
+			GenericVisitor{[](auto const& _it) { return _it->toString(); }},
+			randomTypeName.first
+		) +
+		" " +
+		varName;
+	if (expression.has_value())
+		varDeclStmt += " = " +
+			expression.value().second +
+			";\n";
+	else
+		varDeclStmt += ";\n";
+	return varDeclStmt;
 }
 
 void IfStmtGenerator::setup()
@@ -538,8 +561,89 @@ string WhileStmtGenerator::visit()
 		whileStmt << indentation()
 			<< "while ("
 			<< expression.value().second
-			<< ")\n";
+			<< ");\n";
 	return whileStmt.str();
+}
+
+void ForStmtGenerator::setup()
+{
+	set<pair<GeneratorPtr, unsigned>> dependsOn = {
+		{mutator->generator<BlockStmtGenerator>(), 1},
+		{mutator->generator<ExpressionStmtGenerator>(), 1},
+		{mutator->generator<VarDeclStmtGenerator>(), 1}
+	};
+	addGenerators(std::move(dependsOn));
+}
+
+string ForStmtGenerator::visit()
+{
+	state->enterLoop();
+	ScopeGuard exitLoop([&]() { state->exitLoop(); });
+	size_t preStmtChoice = uRandDist()->distributionOneToN(3);
+	string simpleStmt;
+	bool forInitIsVarDecl = false;
+	switch (preStmtChoice)
+	{
+	case 1:
+		simpleStmt = mutator->generator<ExpressionStmtGenerator>()->generate();
+		if (simpleStmt.empty())
+		{
+			forInitIsVarDecl = true;
+			simpleStmt = mutator->generator<VarDeclStmtGenerator>()->generate();
+		}
+		break;
+	case 2:
+		simpleStmt = mutator->generator<VarDeclStmtGenerator>()->generate();
+		forInitIsVarDecl = true;
+		break;
+	case 3:
+		simpleStmt = ";\n";
+		break;
+	}
+	string forCondition;
+	bool hasCondition = uRandDist()->probable(2);
+	if (hasCondition)
+	{
+		ExpressionGenerator exprGen{state};
+		auto boolType = make_shared<BoolType>();
+		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
+		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+		if (expression.has_value())
+			forCondition = expression.value().second + ";\n";
+		else
+			forCondition = ";\n";
+	}
+	else
+		forCondition = ";\n";
+	string postStmt;
+	bool hasPostStmt = uRandDist()->probable(2);
+	if (hasPostStmt)
+	{
+		ExpressionGenerator exprGen{state};
+		auto randomType = TypeProvider{state}.type();
+		pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
+		auto expression = exprGen.rLValueOrLiteral(randomTypeName);
+		if (expression.has_value())
+			postStmt = expression.value().second;
+	}
+	// Make sure block stmt generator does not output an unchecked block
+	mutator->generator<BlockStmtGenerator>()->unchecked(false);
+	ostringstream forBlock;
+	forBlock << mutator->generator<BlockStmtGenerator>()->generate();
+	if (forBlock.str().empty())
+		forBlock << indentation() << "{ }\n";
+	string forStmt;
+	forStmt = indentation() +
+		"for(" +
+		simpleStmt +
+		forCondition +
+		postStmt +
+		")\n" +
+		forBlock.str();
+	// Manually out of scope variable declaration in for init stmt.
+	if (forInitIsVarDecl)
+		state->currentFunctionState()->scopes.back()->variables.pop_back();
+	return forStmt;
 }
 
 void StatementGenerator::setup()
@@ -552,7 +656,9 @@ void StatementGenerator::setup()
 		{mutator->generator<IfStmtGenerator>(), 2},
 		{mutator->generator<WhileStmtGenerator>(), 1},
 		{mutator->generator<BreakStmtGenerator>(), 1},
-		{mutator->generator<ContinueStmtGenerator>(), 1}
+		{mutator->generator<ContinueStmtGenerator>(), 1},
+		{mutator->generator<VarDeclStmtGenerator>(), 1},
+		{mutator->generator<ForStmtGenerator>(), 1}
 	};
 	addGenerators(std::move(dependsOn));
 }
@@ -1371,8 +1477,7 @@ string FunctionCallGenerator::lhs(vector<pair<SolidityTypePtr, string>>& _functi
 	{
 		auto newVars = _functionReturnTypeNames |
 			ranges::views::transform([&](auto const& _item) -> string {
-				state->currentFunctionState()->addLocal(_item.first);
-				string varName = state->currentFunctionState()->scopes.back()->variables.back().second;
+				string varName = state->currentFunctionState()->addLocal(_item.first);
 				return std::visit(
 						GenericVisitor{[](auto const& _it) { return _it->toString(); }},
 						_item.first
@@ -1474,7 +1579,7 @@ string FunctionCallGenerator::visit()
 	if (state->insideContract)
 		availableFunctions += state->currentContractState()->functions;
 	if (availableFunctions.empty())
-		return "\n";
+		return {};
 
 	shared_ptr<FunctionState> callee;
 	if (availableFunctions.size() > 1)
@@ -1489,7 +1594,7 @@ string FunctionCallGenerator::visit()
 	if (callee)
 		return callStmt(callee);
 	else
-		return "\n";
+		return {};
 }
 
 template <typename T>
