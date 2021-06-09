@@ -1567,13 +1567,36 @@ string FunctionCallGenerator::callStmt(shared_ptr<FunctionState> _callee)
 	return callStmtStream.str();
 }
 
+string FunctionCallGenerator::generateTryCatchCall()
+{
+	set<shared_ptr<FunctionState>> availableFunctions;
+	if (state->insideContract)
+		availableFunctions = state->currentContractState()->functions;
+	if (availableFunctions.empty())
+		return {};
+
+	shared_ptr<FunctionState> callee;
+	if (availableFunctions.size() > 1)
+	{
+		for (auto const& i: availableFunctions)
+			if (uRandDist()->probable(availableFunctions.size()))
+				callee = i;
+	}
+	else
+		callee = *availableFunctions.begin();
+
+	if (callee)
+	{
+		ostringstream tryCatchCall;
+		// TODO: Implement try-catch stmt
+		return tryCatchCall.str();
+	}
+	else
+		return {};
+}
+
 string FunctionCallGenerator::visit()
 {
-//	// TODO: Generalise call to varargs function
-//	for (auto const& f: state->currentFunctionState()->inputs)
-//		if (holds_alternative<shared_ptr<FunctionType>>(f.first))
-//			return indentation() + f.second + "();\n";
-
 	// Consolidate available functions
 	auto availableFunctions = state->currentSourceState()->freeFunctions;
 	if (state->insideContract)
@@ -1595,6 +1618,25 @@ string FunctionCallGenerator::visit()
 		return callStmt(callee);
 	else
 		return {};
+}
+
+string TryCatchStmtGenerator::visit()
+{
+	auto availableFunctions = state->currentSourceState()->freeFunctions;
+	if (state->insideContract)
+		availableFunctions += state->currentContractState()->functions;
+	if (availableFunctions.empty())
+		return {};
+
+	shared_ptr<FunctionState> callee;
+	if (availableFunctions.size() > 1)
+	{
+		for (auto const& i: availableFunctions)
+			if (uRandDist()->probable(availableFunctions.size()))
+				callee = i;
+	}
+	else
+		callee = *availableFunctions.begin();
 }
 
 template <typename T>

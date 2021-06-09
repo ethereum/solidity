@@ -1281,9 +1281,23 @@ public:
 	{
 		return "Function call generator";
 	}
+	std::string generateTryCatchCall();
 private:
 	std::string lhs(std::vector<std::pair<SolidityTypePtr, std::string>>& _functionReturnTypeNames);
 	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>>& _functionInputTypeNames);
 	std::string callStmt(std::shared_ptr<FunctionState> _callee);
+};
+
+class TryCatchStmtGenerator: public GeneratorBase
+{
+public:
+	TryCatchStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override
+	{
+		return "Try/Catch statement generator";
+	}
 };
 }

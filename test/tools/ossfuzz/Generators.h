@@ -56,5 +56,6 @@
 	MACRO(SourceUnitGenerator) SEP \
 	MACRO(StatementGenerator) SEP \
 	MACRO(TestCaseGenerator) SEP \
+	MACRO(TryCatchStmtGenerator) SEP \
 	MACRO(VarDeclStmtGenerator) SEP \
 	MACRO(WhileStmtGenerator) ENDSEP
