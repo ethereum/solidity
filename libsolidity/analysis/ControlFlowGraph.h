@@ -141,11 +141,9 @@ public:
 		// containers using this struct
 		bool operator<(FunctionContractTuple const& _other) const
 		{
-			if (contract && _other.contract)
-				if (contract->id() != _other.contract->id())
-					return contract->id() < _other.contract->id();
-
-			return function->id() < _other.function->id();
+			return
+				std::make_pair(contract ? contract->id() : -1, function->id()) <
+				std::make_pair(_other.contract ? _other.contract->id() : -1, _other.function->id());
 		}
 	};
 	explicit CFG(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
