@@ -1,4 +1,4 @@
-### 0.8.5 (unreleased)
+### 0.8.5 (2021-06-10)
 
 Language Features:
  * Allowing conversion from ``bytes`` and ``bytes`` slices to ``bytes1``/.../``bytes32``.
@@ -6,8 +6,7 @@ Language Features:
 
 
 Compiler Features:
- * Code Generator: Insert helper functions for panic codes instead of inlining unconditionally. This can reduce costs if many panics (checks) are inserted,
-   but can increase costs where few panics are used.
+ * Code Generator: Insert helper functions for panic codes instead of inlining unconditionally. This can reduce costs if many panics (checks) are inserted, but can increase costs where few panics are used.
  * EVM: Set the default EVM version to "Berlin".
  * SMTChecker: Function definitions can be annotated with the custom Natspec tag ``custom:smtchecker abstract-function-nondet`` to be abstracted by a nondeterministic value when called.
  * Standard JSON / combined JSON: New artifact "functionDebugData" that contains bytecode offsets of entry points of functions and potentially more information in the future.
@@ -18,20 +17,20 @@ Bugfixes:
  * AST: Do not output value of Yul literal if it is not a valid UTF-8 string.
  * Code Generator: Fix internal error when function arrays are assigned to storage variables and the function types can be implicitly converted but are not identical.
  * Code Generator: Fix internal error when super would have to skip an unimplemented function in the virtual resolution order.
- * Control Flow Graph: Take internal calls to functions that always revert into account for reporting unused or unassigned variables.
  * Control Flow Graph: Assume unimplemented modifiers use a placeholder.
+ * Control Flow Graph: Take internal calls to functions that always revert into account for reporting unused or unassigned variables.
  * Function Call Graph: Fix internal error connected with circular constant references.
  * Name Resolver: Do not issue shadowing warning if the shadowing name is not directly accessible.
  * Natspec: Allow multiple ``@return`` tags on public state variable documentation.
- * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
- * SMTChecker: Fix internal error on external calls from the constructor.
  * SMTChecker: Fix internal error on conversion from ``bytes`` to ``fixed bytes``.
+ * SMTChecker: Fix internal error on external calls from the constructor.
+ * SMTChecker: Fix internal error on struct constructor with fixed bytes member initialized with string literal.
  * Source Locations: Properly set source location of scoped blocks.
  * Standard JSON: Properly allow the ``inliner`` setting under ``settings.optimizer.details``.
  * Type Checker: Fix internal compiler error related to having mapping types in constructor parameter for abstract contracts.
  * Type Checker: Fix internal compiler error when attempting to use an invalid external function type on pre-byzantium EVMs.
- * Type Checker: Make errors about (nested) mapping type in event or error parameter into fatal type errors.
  * Type Checker: Fix internal compiler error when overriding receive ether function with one having different parameters during inheritance.
+ * Type Checker: Make errors about (nested) mapping type in event or error parameter into fatal type errors.
  * Type Checker: Fix internal compiler error when overriding an implemented modifier with an unimplemented one.
 
 
