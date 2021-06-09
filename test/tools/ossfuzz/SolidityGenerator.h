@@ -466,9 +466,11 @@ struct FunctionState
 		type->addOutput(_output);
 		outputs.emplace_back(std::move(_output), "o" + std::to_string(numOutpus++));
 	}
-	void addLocal(SolidityTypePtr _local)
+	std::string addLocal(SolidityTypePtr _local)
 	{
-		scopes.back()->variables.emplace_back(std::move(_local), "l" + std::to_string(numLocals++));
+		std::string varName = "l" + std::to_string(numLocals++);
+		scopes.back()->variables.emplace_back(std::move(_local), varName);
+		return varName;
 	}
 	std::string params(Params _p);
 
@@ -1098,6 +1100,19 @@ public:
 	}
 };
 
+class VarDeclStmtGenerator: public GeneratorBase
+{
+public:
+	explicit VarDeclStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override
+	{
+		return "VarDecl statement generator";
+	}
+};
+
 class IfStmtGenerator: public GeneratorBase
 {
 public:
@@ -1160,6 +1175,17 @@ public:
 	void setup() override;
 	std::string visit() override;
 	std::string name() override { return "While statement generator"; }
+};
+
+class ForStmtGenerator: public GeneratorBase
+{
+public:
+	explicit ForStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	void setup() override;
+	std::string visit() override;
+	std::string name() override { return "For statement generator"; }
 };
 
 class AssignmentStmtGenerator: public GeneratorBase

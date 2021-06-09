@@ -47,6 +47,7 @@
 	MACRO(ContinueStmtGenerator) SEP \
 	MACRO(ContractGenerator) SEP \
 	MACRO(ExpressionStmtGenerator) SEP \
+	MACRO(ForStmtGenerator) SEP \
 	MACRO(FunctionCallGenerator) SEP \
 	MACRO(FunctionGenerator) SEP \
 	MACRO(IfStmtGenerator) SEP \
@@ -55,4 +56,5 @@
 	MACRO(SourceUnitGenerator) SEP \
 	MACRO(StatementGenerator) SEP \
 	MACRO(TestCaseGenerator) SEP \
+	MACRO(VarDeclStmtGenerator) SEP \
 	MACRO(WhileStmtGenerator) ENDSEP
