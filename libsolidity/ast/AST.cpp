@@ -606,6 +606,18 @@ bool Declaration::isEventOrErrorParameter() const
 	return dynamic_cast<EventDefinition const*>(scope()) || dynamic_cast<ErrorDefinition const*>(scope());
 }
 
+bool Declaration::isVisibleAsUnqualifiedName() const
+{
+	if (!scope())
+		return true;
+	if (isStructMember() || isEnumValue() || isEventOrErrorParameter())
+		return false;
+	if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(scope()))
+		if (!functionDefinition->isImplemented())
+			return false; // parameter of a function without body
+	return true;
+}
+
 DeclarationAnnotation& Declaration::annotation() const
 {
 	return initAnnotation<DeclarationAnnotation>();

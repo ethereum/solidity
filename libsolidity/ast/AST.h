@@ -265,6 +265,12 @@ public:
 	/// @returns true if this is a declaration of a parameter of an event.
 	bool isEventOrErrorParameter() const;
 
+	/// @returns false if the declaration can never be referenced without being qualified with a scope.
+	/// Usually the name alone can be used to refer to the corresponding entity.
+	/// But, for example, struct member names or enum member names always require a prefix.
+	/// Another example is event parameter names, which do not participate in any proper scope.
+	bool isVisibleAsUnqualifiedName() const;
+
 	/// @returns the type of expressions referencing this declaration.
 	/// This can only be called once types of variable declarations have already been resolved.
 	virtual Type const* type() const = 0;
