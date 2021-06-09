@@ -25,7 +25,6 @@
 #include <libyul/AST.h>
 
 #include <libevmasm/SemanticInformation.h>
-#include <libevmasm/AssemblyItem.h>
 
 #include <algorithm>
 

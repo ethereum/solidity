@@ -277,7 +277,7 @@ contract Test {
 		input[7] = 9643208548031422463313148630985736896287522941726746581856185889848792022807;
 		input[8] = 18066496933330839731877828156604;
 		if (verify(input, proof) == 0) {
-			emit Verified("Transaction successfully verified.");
+			emit Verified("Successfully verified.");
 			return true;
 		} else {
 			return false;
@@ -296,6 +296,7 @@ contract Test {
 // g() -> true
 // pair() -> true
 // verifyTx() -> true
-// gas irOptimized: 127916
-// gas legacy: 130571
-// gas legacyOptimized: 100147
+// ~ emit Verified(string): 0x20, 0x16, "Successfully verified."
+// gas irOptimized: 111439
+// gas legacy: 114094
+// gas legacyOptimized: 83670

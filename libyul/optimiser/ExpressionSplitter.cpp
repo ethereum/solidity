@@ -22,7 +22,6 @@
 
 #include <libyul/optimiser/ExpressionSplitter.h>
 
-#include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/TypeInfo.h>
 
@@ -30,7 +29,6 @@
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;

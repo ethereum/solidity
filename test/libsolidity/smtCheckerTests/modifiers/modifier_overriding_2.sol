@@ -23,5 +23,4 @@ contract C is B {
 // ====
 // SMTEngine: all
 // ----
-// Warning 5740: (62-111): Unreachable code.
 // Warning 6328: (66-75): CHC: Assertion violation happens here.\nCounterexample:\ns = false\n\nTransaction trace:\nB.constructor()\nState: s = false\nA.f()

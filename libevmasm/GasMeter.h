@@ -18,6 +18,11 @@
 /** @file GasMeter.cpp
  * @author Christian <c@ethdev.com>
  * @date 2015
+ *
+ * Utilities for tracking gas costs.
+ *
+ * With respect to EIP-2929, we do not track warm accounts or storage slots and they are always
+ * charged the worst-case, i.e., cold-access.
  */
 
 #pragma once
@@ -47,19 +52,6 @@ namespace GasCosts
 	static unsigned const tier5Gas = 10;
 	static unsigned const tier6Gas = 20;
 	static unsigned const tier7Gas = 0;
-	inline unsigned extCodeGas(langutil::EVMVersion _evmVersion)
-	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 700 : 20;
-	}
-	inline unsigned balanceGas(langutil::EVMVersion _evmVersion)
-	{
-		if (_evmVersion >= langutil::EVMVersion::istanbul())
-			return 700;
-		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
-			return 400;
-		else
-			return 20;
-	}
 	static unsigned const expGas = 10;
 	inline unsigned expByteGas(langutil::EVMVersion _evmVersion)
 	{
@@ -67,18 +59,65 @@ namespace GasCosts
 	}
 	static unsigned const keccak256Gas = 30;
 	static unsigned const keccak256WordGas = 6;
+	/// Corresponds to COLD_SLOAD_COST from EIP-2929
+	static unsigned const coldSloadCost = 2100;
+	/// Corresponds to COLD_ACCOUNT_ACCESS_COST from EIP-2929
+	static unsigned const coldAccountAccessCost = 2600;
+	/// Corresponds to WARM_STORAGE_READ_COST from EIP-2929
+	static unsigned const warmStorageReadCost = 100;
 	inline unsigned sloadGas(langutil::EVMVersion _evmVersion)
 	{
-		if (_evmVersion >= langutil::EVMVersion::istanbul())
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return coldSloadCost;
+		else if (_evmVersion >= langutil::EVMVersion::istanbul())
 			return 800;
 		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
 			return 200;
 		else
 			return 50;
 	}
+	/// Corresponds to SSTORE_SET_GAS
 	static unsigned const sstoreSetGas = 20000;
-	static unsigned const sstoreResetGas = 5000;
+	/// Corresponds to SSTORE_RESET_GAS from EIP-2929
+	static unsigned const sstoreResetGas = 5000 - coldSloadCost;
 	static unsigned const sstoreRefundGas = 15000;
+	inline static unsigned totalSstoreSetGas(langutil::EVMVersion _evmVersion)
+	{
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return sstoreSetGas + coldSloadCost;
+		else
+			return sstoreSetGas;
+	}
+	/// Corresponds to SSTORE_RESET_GAS from EIP-2929
+	/// For Berlin, the maximum is SSTORE_RESET_GAS + COLD_SLOAD_COST = 5000
+	/// For previous versions, it's a fixed 5000
+	inline unsigned totalSstoreResetGas(langutil::EVMVersion _evmVersion)
+	{
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return sstoreResetGas + coldSloadCost;
+		else
+			return 5000;
+	}
+	inline unsigned extCodeGas(langutil::EVMVersion _evmVersion)
+	{
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return coldAccountAccessCost;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 700;
+		else
+			return 20;
+	}
+	inline unsigned balanceGas(langutil::EVMVersion _evmVersion)
+	{
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return coldAccountAccessCost;
+		else if (_evmVersion >= langutil::EVMVersion::istanbul())
+			return 700;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 400;
+		else
+			return 20;
+	}
 	static unsigned const jumpdestGas = 1;
 	static unsigned const logGas = 375;
 	static unsigned const logDataGas = 8;
@@ -86,14 +125,24 @@ namespace GasCosts
 	static unsigned const createGas = 32000;
 	inline unsigned callGas(langutil::EVMVersion _evmVersion)
 	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 700 : 40;
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return coldAccountAccessCost;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 700;
+		else
+			return 40;
 	}
 	static unsigned const callStipend = 2300;
 	static unsigned const callValueTransferGas = 9000;
 	static unsigned const callNewAccountGas = 25000;
 	inline unsigned selfdestructGas(langutil::EVMVersion _evmVersion)
 	{
-		return _evmVersion >= langutil::EVMVersion::tangerineWhistle() ? 5000 : 0;
+		if (_evmVersion >= langutil::EVMVersion::berlin())
+			return coldAccountAccessCost;
+		else if (_evmVersion >= langutil::EVMVersion::tangerineWhistle())
+			return 5000;
+		else
+			return 0;
 	}
 	static unsigned const selfdestructRefundGas = 24000;
 	static unsigned const memoryGas = 3;

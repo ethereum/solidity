@@ -3,5 +3,4 @@ contract SmokeTest {
 // ====
 // compileViaYul: also
 // ----
-// constructor()
-// smokeTest -> 0x1234
+// isoltest_builtin_test -> 0x1234

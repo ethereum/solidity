@@ -20,8 +20,6 @@
 
 #include <libyul/Dialect.h>
 
-#include <liblangutil/SourceLocation.h>
-
 #include <libsolutil/CommonData.h>
 
 using namespace solidity;

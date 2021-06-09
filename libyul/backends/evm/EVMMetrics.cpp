@@ -29,7 +29,6 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/GasMeter.h>
 
-#include <libsolutil/Visitor.h>
 #include <libsolutil/CommonData.h>
 
 using namespace std;

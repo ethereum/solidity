@@ -25,7 +25,6 @@
 #include <libyul/Utilities.h>
 #include <libyul/optimiser/SimplificationRules.h>
 #include <libyul/optimiser/DataFlowAnalyzer.h>
-#include <libyul/optimiser/Semantics.h>
 
 #include <libsolutil/CommonData.h>
 

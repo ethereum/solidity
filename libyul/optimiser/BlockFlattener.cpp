@@ -19,7 +19,6 @@
 #include <libyul/optimiser/BlockFlattener.h>
 #include <libyul/AST.h>
 
-#include <libsolutil/Visitor.h>
 #include <libsolutil/CommonData.h>
 
 #include <functional>

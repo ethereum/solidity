@@ -17,3 +17,5 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 5740: (137-157): Unreachable code.
+// Warning 5740: (199-237): Unreachable code.

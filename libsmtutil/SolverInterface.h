@@ -64,8 +64,20 @@ public:
 		name(std::move(_name)), arguments(std::move(_arguments)), sort(std::move(_sort)) {}
 	Expression(size_t _number): Expression(std::to_string(_number), {}, SortProvider::sintSort) {}
 	Expression(u256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
-	Expression(s256 const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
-	Expression(bigint const& _number): Expression(_number.str(), {}, SortProvider::sintSort) {}
+	Expression(s256 const& _number): Expression(
+		_number >= 0 ? _number.str() : "-",
+		_number >= 0 ?
+			std::vector<Expression>{} :
+			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+		SortProvider::sintSort
+	) {}
+	Expression(bigint const& _number): Expression(
+		_number >= 0 ? _number.str() : "-",
+		_number >= 0 ?
+			std::vector<Expression>{} :
+			std::vector<Expression>{Expression(size_t(0)), bigint(-_number)},
+		SortProvider::sintSort
+	) {}
 
 	Expression(Expression const&) = default;
 	Expression(Expression&&) = default;
@@ -86,7 +98,7 @@ public:
 			{"not", 1},
 			{"and", 2},
 			{"or", 2},
-			{"implies", 2},
+			{"=>", 2},
 			{"=", 2},
 			{"<", 2},
 			{"<=", 2},
@@ -95,7 +107,7 @@ public:
 			{"+", 2},
 			{"-", 2},
 			{"*", 2},
-			{"/", 2},
+			{"div", 2},
 			{"mod", 2},
 			{"bvnot", 1},
 			{"bvand", 2},
@@ -126,7 +138,7 @@ public:
 	static Expression implies(Expression _a, Expression _b)
 	{
 		return Expression(
-			"implies",
+			"=>",
 			std::move(_a),
 			std::move(_b),
 			Kind::Bool
@@ -300,7 +312,7 @@ public:
 	friend Expression operator/(Expression _a, Expression _b)
 	{
 		auto intSort = _a.sort;
-		return Expression("/", {std::move(_a), std::move(_b)}, intSort);
+		return Expression("div", {std::move(_a), std::move(_b)}, intSort);
 	}
 	friend Expression operator%(Expression _a, Expression _b)
 	{

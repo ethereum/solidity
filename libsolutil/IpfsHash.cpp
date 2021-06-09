@@ -18,7 +18,6 @@
 
 #include <libsolutil/IpfsHash.h>
 
-#include <libsolutil/Assertions.h>
 #include <libsolutil/Exceptions.h>
 #include <libsolutil/picosha2.h>
 #include <libsolutil/CommonData.h>

@@ -42,7 +42,7 @@ using Token = soltest::Token;
 
 char TestFileParser::Scanner::peek() const noexcept
 {
-	if (std::distance(m_char, m_line.end()) < 2)
+	if (std::distance(m_char, m_source.end()) < 2)
 		return '\0';
 
 	auto next = m_char;
@@ -97,7 +97,6 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 					else
 					{
 						FunctionCall call;
-
 						if (accept(Token::Library, true))
 						{
 							expect(Token::Colon);
@@ -154,7 +153,10 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 								call.kind = FunctionCall::Kind::Constructor;
 						}
 
-						calls.emplace_back(std::move(call));
+						accept(Token::Newline, true);
+						call.expectedSideEffects = parseFunctionCallSideEffects();
+
+						calls.emplace_back(move(call));
 					}
 				}
 				catch (TestParserError const& _e)
@@ -167,6 +169,22 @@ vector<solidity::frontend::test::FunctionCall> TestFileParser::parseFunctionCall
 		}
 	}
 	return calls;
+}
+
+vector<string> TestFileParser::parseFunctionCallSideEffects()
+{
+	vector<string> result;
+	while (accept(Token::Tilde, false))
+	{
+		string effect = m_scanner.currentLiteral();
+		result.emplace_back(effect);
+		soltestAssert(m_scanner.currentToken() == Token::Tilde, "");
+		m_scanner.scanNextToken();
+		if (m_scanner.currentToken() == Token::Newline)
+			m_scanner.scanNextToken();
+	}
+
+	return result;
 }
 
 bool TestFileParser::accept(Token _token, bool const _expect)
@@ -492,9 +510,10 @@ string TestFileParser::parseString()
 void TestFileParser::Scanner::readStream(istream& _stream)
 {
 	std::string line;
+	// TODO: std::getline(..) removes newlines '\n', if present. This could be improved.
 	while (std::getline(_stream, line))
-		m_line += line;
-	m_char = m_line.begin();
+		m_source += line;
+	m_char = m_source.begin();
 }
 
 void TestFileParser::Scanner::scanNextToken()
@@ -512,7 +531,6 @@ void TestFileParser::Scanner::scanNextToken()
 		if (_literal == "right") return {Token::Right, ""};
 		if (_literal == "hex") return {Token::Hex, ""};
 		if (_literal == "FAILURE") return {Token::Failure, ""};
-		if (_literal == "storage") return {Token::Storage, ""};
 		if (_literal == "gas") return {Token::Gas, ""};
 		return {Token::Identifier, _literal};
 	};
@@ -544,6 +562,10 @@ void TestFileParser::Scanner::scanNextToken()
 			}
 			else
 				selectToken(Token::Sub);
+			break;
+		case '~':
+			advance();
+			selectToken(Token::Tilde, readLine());
 			break;
 		case ':':
 			selectToken(Token::Colon);
@@ -588,7 +610,7 @@ void TestFileParser::Scanner::scanNextToken()
 			}
 			else if (langutil::isWhiteSpace(current()))
 				selectToken(Token::Whitespace);
-			else if (isEndOfLine())
+			else if (isEndOfFile())
 			{
 				m_currentToken = Token::EOS;
 				m_currentLiteral = "";
@@ -599,6 +621,21 @@ void TestFileParser::Scanner::scanNextToken()
 		}
 	}
 	while (m_currentToken == Token::Whitespace);
+}
+
+string TestFileParser::Scanner::readLine()
+{
+	string line;
+	// Right now the scanner discards all (real) new-lines '\n' in TestFileParser::Scanner::readStream(..).
+	// Token::NewLine is defined as `//`, and NOT '\n'. We are just searching here for the next `/`.
+	// Note that `/` anywhere else than at the beginning of a line is currently forbidden (TODO: until we fix newline handling).
+	// Once the end of the file would be reached (or beyond), peek() will return '\0'.
+	while (peek() != '\0' && peek() != '/')
+	{
+		advance();
+		line += current();
+	}
+	return line;
 }
 
 string TestFileParser::Scanner::scanComment()

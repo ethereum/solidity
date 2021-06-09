@@ -26,7 +26,6 @@
 
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/Assembly.h>
-#include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/RuleList.h>
 #include <libsolutil/Assertions.h>
 

@@ -25,7 +25,6 @@
 
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmPrinter.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
 #include <libyul/backends/evm/EVMAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
@@ -35,7 +34,6 @@
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/WasmObjectCompiler.h>
 #include <libyul/backends/wasm/EVMToEwasmTranslator.h>
-#include <libyul/optimiser/Metrics.h>
 #include <libyul/ObjectParser.h>
 #include <libyul/optimiser/Suite.h>
 

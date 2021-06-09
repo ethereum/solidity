@@ -53,6 +53,12 @@ public:
 	SMTLib2Interface* smtlib2Interface() const { return m_smtlib2.get(); }
 
 private:
+	std::string toSmtLibSort(Sort const& _sort);
+	std::string toSmtLibSort(std::vector<SortPointer> const& _sort);
+
+	void writeHeader();
+	std::string forall();
+
 	void declareFunction(std::string const& _name, SortPointer const& _sort);
 
 	void write(std::string _data);
@@ -70,6 +76,8 @@ private:
 	std::vector<std::string> m_unhandledQueries;
 
 	frontend::ReadCallback::Callback m_smtCallback;
+
+	std::map<Sort const*, std::string> m_sortNames;
 };
 
 }

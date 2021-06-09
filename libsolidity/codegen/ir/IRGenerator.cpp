@@ -656,7 +656,6 @@ pair<string, map<ContractDefinition const*, vector<string>>> IRGenerator::evalua
 
 	map<ContractDefinition const*, std::vector<ASTPointer<Expression>>const *, InheritanceOrder>
 		baseConstructorArguments(inheritanceOrder);
-																											;
 
 	for (ASTPointer<InheritanceSpecifier> const& base: _contract.baseContracts())
 		if (FunctionDefinition const* baseConstructor = dynamic_cast<ContractDefinition const*>(

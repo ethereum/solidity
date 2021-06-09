@@ -98,7 +98,10 @@ contract ERC20 {
 // ----
 // totalSupply() -> 20
 // transfer(address,uint256): 2, 5 -> true
+// ~ emit Transfer(address,address,uint256): #0x1212121212121212121212121212120000000012, #0x02, 0x05
 // decreaseAllowance(address,uint256): 2, 0 -> true
+// ~ emit Approval(address,address,uint256): #0x1212121212121212121212121212120000000012, #0x02, 0x00
 // decreaseAllowance(address,uint256): 2, 1 -> FAILURE, hex"4e487b71", 0x11
 // transfer(address,uint256): 2, 14 -> true
+// ~ emit Transfer(address,address,uint256): #0x1212121212121212121212121212120000000012, #0x02, 0x0e
 // transfer(address,uint256): 2, 2 -> FAILURE, hex"4e487b71", 0x11

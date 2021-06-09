@@ -19,6 +19,8 @@
 
 #include <test/ExecutionFramework.h>
 
+#include <utility>
+
 namespace solidity::frontend::test
 {
 
@@ -38,6 +40,7 @@ namespace solidity::frontend::test
 	T(LBrace, "{", 0)                  \
 	T(RBrace, "}", 0)                  \
 	T(Sub,    "-", 0)                  \
+	T(Tilde,  "~", 0)                  \
 	T(Colon,  ":", 0)                  \
 	T(Comma,  ",", 0)                  \
 	T(Period, ".", 0)                  \
@@ -59,7 +62,6 @@ namespace solidity::frontend::test
 	K(Library, "library", 0)           \
 	K(Right, "right", 0)               \
 	K(Failure, "FAILURE", 0)           \
-	K(Storage, "storage", 0)           \
 	K(Gas, "gas", 0)                   \
 
 namespace soltest
@@ -302,8 +304,33 @@ struct FunctionCall
 	/// Marks this function call as "short-handed", meaning
 	/// no `->` declared.
 	bool omitsArrow = true;
+	/// A textual representation of the expected side-effect of the function call.
+	std::vector<std::string> expectedSideEffects{};
+	/// A textual representation of the actual side-effect of the function call.
+	std::vector<std::string> actualSideEffects{};
 };
 
 using Builtin = std::function<std::optional<bytes>(FunctionCall const&)>;
+using SideEffectHook = std::function<std::vector<std::string>(FunctionCall const&)>;
+
+struct LogRecord
+{
+	util::h160 creator;
+	bytes data;
+	std::vector<util::h256> topics;
+
+	LogRecord(util::h160 _creator, bytes _data, std::vector<util::h256> _topics):
+		creator(std::move(_creator)), data(std::move(_data)), topics(std::move(_topics)) {}
+
+	bool operator==(LogRecord const& other) const noexcept
+	{
+		return creator == other.creator && data == other.data && topics == other.topics;
+	}
+
+	bool operator!=(LogRecord const& other) const noexcept
+	{
+		return !operator==(other);
+	}
+};
 
 }

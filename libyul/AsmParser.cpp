@@ -31,7 +31,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <cctype>
 #include <algorithm>
 
 using namespace std;
@@ -40,7 +39,8 @@ using namespace solidity::util;
 using namespace solidity::langutil;
 using namespace solidity::yul;
 
-namespace {
+namespace
+{
 
 [[nodiscard]]
 shared_ptr<DebugData const> updateLocationEndFrom(

@@ -63,6 +63,7 @@ private:
 	/// arguments and that there is at most one constructor.
 	void checkDuplicateFunctions(ContractDefinition const& _contract);
 	void checkDuplicateEvents(ContractDefinition const& _contract);
+	void checkReceiveFunction(ContractDefinition const& _contract);
 	template <class T>
 	void findDuplicateDefinitions(std::map<std::string, std::vector<T>> const& _definitions);
 	/// Checks for unimplemented functions and modifiers.

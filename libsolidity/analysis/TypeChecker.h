@@ -96,7 +96,6 @@ private:
 	);
 
 	void typeCheckFallbackFunction(FunctionDefinition const& _function);
-	void typeCheckReceiveFunction(FunctionDefinition const& _function);
 	void typeCheckConstructor(FunctionDefinition const& _function);
 
 	/// Performs general number and type checks of arguments against function call and struct ctor FunctionCall node parameters.

@@ -19,7 +19,6 @@
 #include <libsolidity/analysis/ControlFlowGraph.h>
 
 #include <libsolidity/analysis/ControlFlowBuilder.h>
-#include <algorithm>
 
 using namespace std;
 using namespace solidity::langutil;
@@ -34,15 +33,25 @@ bool CFG::constructFlow(ASTNode const& _astRoot)
 
 bool CFG::visit(FunctionDefinition const& _function)
 {
-	if (_function.isImplemented())
-		m_functionControlFlow[&_function] = ControlFlowBuilder::createFunctionFlow(m_nodeContainer, _function);
+	if (_function.isImplemented() && _function.isFree())
+		m_functionControlFlow[{nullptr, &_function}] = ControlFlowBuilder::createFunctionFlow(m_nodeContainer, _function);
 	return false;
 }
 
-FunctionFlow const& CFG::functionFlow(FunctionDefinition const& _function) const
+bool CFG::visit(ContractDefinition const& _contract)
 {
-	solAssert(m_functionControlFlow.count(&_function), "");
-	return *m_functionControlFlow.find(&_function)->second;
+	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
+		for (FunctionDefinition const* function: contract->definedFunctions())
+			if (function->isImplemented())
+				m_functionControlFlow[{&_contract, function}] =
+					ControlFlowBuilder::createFunctionFlow(m_nodeContainer, *function);
+
+	return true;
+}
+
+FunctionFlow const& CFG::functionFlow(FunctionDefinition const& _function, ContractDefinition const* _contract) const
+{
+	return *m_functionControlFlow.at({_contract, &_function});
 }
 
 CFGNode* CFG::NodeContainer::newNode()

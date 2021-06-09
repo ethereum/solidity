@@ -23,8 +23,6 @@
 
 #include <libyul/backends/wasm/WasmDialect.h>
 
-#include <libyul/optimiser/NameCollector.h>
-
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Utilities.h>

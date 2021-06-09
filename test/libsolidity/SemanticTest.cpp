@@ -58,6 +58,7 @@ SemanticTest::SemanticTest(
 	m_sources(m_reader.sources()),
 	m_lineOffset(m_reader.lineNumber()),
 	m_builtins(makeBuiltins()),
+	m_sideEffectHooks(makeSideEffectHooks()),
 	m_enforceViaYul(_enforceViaYul),
 	m_enforceCompileToEwasm(_enforceCompileToEwasm),
 	m_enforceGasCost(_enforceGasCost),
@@ -127,10 +128,20 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 {
 	return {
 		{
-			"smokeTest",
+			"isoltest_builtin_test",
 			[](FunctionCall const&) -> optional<bytes>
 			{
 				return util::toBigEndian(u256(0x1234));
+			}
+		},
+		{
+			"isoltest_side_effects_test",
+			[](FunctionCall const& _call) -> optional<bytes>
+			{
+				if (_call.arguments.parameters.empty())
+					return util::toBigEndian(0);
+				else
+					return _call.arguments.rawBytes();
 			}
 		},
 		{
@@ -165,6 +176,127 @@ map<string, Builtin> SemanticTest::makeBuiltins()
 			}
 		},
 	};
+}
+
+vector<SideEffectHook> SemanticTest::makeSideEffectHooks() const
+{
+	using namespace std::placeholders;
+	return {
+		[](FunctionCall const& _call) -> vector<string>
+		{
+			if (_call.signature == "isoltest_side_effects_test")
+			{
+				vector<string> result;
+				for (auto const& argument: _call.arguments.parameters)
+					result.emplace_back(toHex(argument.rawBytes));
+				return result;
+			}
+			return {};
+		},
+		bind(&SemanticTest::eventSideEffectHook, this, _1)
+	};
+}
+
+string SemanticTest::formatEventParameter(optional<AnnotatedEventSignature> _signature, bool _indexed, size_t _index, bytes const& _data)
+{
+	auto isPrintableASCII = [](bytes const& s)
+	{
+		bool zeroes = true;
+		for (auto c: s)
+		{
+			if (static_cast<unsigned>(c) != 0x00)
+			{
+				zeroes = false;
+				if (static_cast<unsigned>(c) <= 0x1f || static_cast<unsigned>(c) >= 0x7f)
+					return false;
+			} else
+				break;
+		}
+		return !zeroes;
+	};
+
+	ABIType abiType(ABIType::Type::Hex);
+	if (isPrintableASCII(_data))
+		abiType = ABIType(ABIType::Type::String);
+	if (_signature.has_value())
+	{
+		vector<string> const& types = _indexed ? _signature->indexedTypes : _signature->nonIndexedTypes;
+		if (_index < types.size())
+		{
+			if (types.at(_index) == "bool")
+				abiType = ABIType(ABIType::Type::Boolean);
+		}
+	}
+	return BytesUtils::formatBytes(_data, abiType);
+}
+
+vector<string> SemanticTest::eventSideEffectHook(FunctionCall const&) const
+{
+	vector<string> sideEffects;
+	vector<LogRecord> recordedLogs = ExecutionFramework::recordedLogs();
+	for (LogRecord const& log: recordedLogs)
+	{
+		optional<AnnotatedEventSignature> eventSignature;
+		if (!log.topics.empty())
+			eventSignature = matchEvent(log.topics[0]);
+		stringstream sideEffect;
+		sideEffect << "emit ";
+		if (eventSignature.has_value())
+			sideEffect << eventSignature.value().signature;
+		else
+			sideEffect << "<anonymous>";
+
+		if (m_contractAddress != log.creator)
+			sideEffect << " from 0x" << log.creator;
+
+		vector<string> eventStrings;
+		size_t index{0};
+		for (h256 const& topic: log.topics)
+		{
+			if (!eventSignature.has_value() || index != 0)
+				eventStrings.push_back("#" + formatEventParameter(eventSignature, true, index, topic.asBytes()));
+			++index;
+		}
+
+		soltestAssert(log.data.size() % 32 == 0, "");
+		for (size_t index = 0; index < log.data.size() / 32; ++index)
+		{
+			auto begin = log.data.begin() + static_cast<long>(index * 32);
+			bytes const& data = bytes{begin, begin + 32};
+			eventStrings.emplace_back(formatEventParameter(eventSignature, false, index, data));
+		}
+
+		if (!eventStrings.empty())
+			sideEffect << ": ";
+		sideEffect << joinHumanReadable(eventStrings);
+		sideEffects.emplace_back(sideEffect.str());
+	}
+	return sideEffects;
+}
+
+optional<AnnotatedEventSignature> SemanticTest::matchEvent(util::h256 const& hash) const
+{
+	optional<AnnotatedEventSignature> result;
+	for (string& contractName: m_compiler.contractNames())
+	{
+		ContractDefinition const& contract = m_compiler.contractDefinition(contractName);
+		for (EventDefinition const* event: contract.events())
+		{
+			FunctionTypePointer eventFunctionType = event->functionType(true);
+			if (!event->isAnonymous() && keccak256(eventFunctionType->externalSignature()) == hash)
+			{
+				AnnotatedEventSignature eventInfo;
+				eventInfo.signature = eventFunctionType->externalSignature();
+				for (auto const& param: event->parameters())
+					if (param->isIndexed())
+						eventInfo.indexedTypes.emplace_back(param->type()->toString(true));
+					else
+						eventInfo.nonIndexedTypes.emplace_back(param->type()->toString(true));
+				result = eventInfo;
+			}
+		}
+	}
+	return result;
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
@@ -322,6 +454,13 @@ TestCase::TestResult SemanticTest::runTest(
 			test.setRawBytes(move(output));
 			test.setContractABI(m_compiler.contractABI(m_compiler.lastContractName(m_sources.mainSourceFile)));
 		}
+
+		vector<string> effects;
+		for (SideEffectHook const& hook: m_sideEffectHooks)
+			effects += hook(test.call());
+		test.setSideEffects(move(effects));
+
+		success &= test.call().expectedSideEffects == test.call().actualSideEffects;
 	}
 
 	if (!m_testCaseWantsYulRun && _isYulRun)
@@ -538,8 +677,7 @@ void SemanticTest::printUpdatedSettings(ostream& _stream, string const& _linePre
 
 void SemanticTest::parseExpectations(istream& _stream)
 {
-	TestFileParser parser{_stream, m_builtins};
-	m_tests += parser.parseFunctionCalls(m_lineOffset);
+	m_tests += TestFileParser{_stream, m_builtins}.parseFunctionCalls(m_lineOffset);
 }
 
 bool SemanticTest::deploy(

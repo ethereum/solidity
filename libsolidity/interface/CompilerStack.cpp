@@ -28,6 +28,7 @@
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
+#include <libsolidity/analysis/ControlFlowRevertPruner.h>
 #include <libsolidity/analysis/ContractLevelChecker.h>
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
@@ -415,11 +416,6 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		DocStringTagParser docStringTagParser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
-				noErrors = false;
-
 		m_globalContext = make_shared<GlobalContext>();
 		// We need to keep the same resolver during the whole process.
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
@@ -436,6 +432,12 @@ bool CompilerStack::analyze()
 
 		resolver.warnHomonymDeclarations();
 
+		DocStringTagParser docStringTagParser(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
+				noErrors = false;
+
+		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.resolveNamesAndTypes(*source->ast))
 				return false;
@@ -444,6 +446,11 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !declarationTypeChecker.check(*source->ast))
 				return false;
+
+		// Requires DeclarationTypeChecker to have run
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !docStringTagParser.validateDocStringsUsingTypes(*source->ast))
+				noErrors = false;
 
 		// Next, we check inheritance, overrides, function collisions and other things at
 		// contract or function level.
@@ -516,10 +523,12 @@ bool CompilerStack::analyze()
 
 			if (noErrors)
 			{
+				ControlFlowRevertPruner pruner(cfg);
+				pruner.run();
+
 				ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
-				for (Source const* source: m_sourceOrder)
-					if (source->ast && !controlFlowAnalyzer.analyze(*source->ast))
-						noErrors = false;
+				if (!controlFlowAnalyzer.run())
+					noErrors = false;
 			}
 		}
 

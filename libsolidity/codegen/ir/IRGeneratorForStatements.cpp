@@ -884,8 +884,6 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		return;
 	}
 
-	auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression());
-
 	switch (functionType->kind())
 	{
 	case FunctionType::Kind::Declaration:
@@ -893,39 +891,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 		break;
 	case FunctionType::Kind::Internal:
 	{
-		auto identifier = dynamic_cast<Identifier const*>(&_functionCall.expression());
-		auto const* functionDef = dynamic_cast<FunctionDefinition const*>(
-			ASTNode::referencedDeclaration(_functionCall.expression())
-		);
-
-		if (functionDef)
-		{
-			solAssert(memberAccess || identifier, "");
-			solAssert(functionType->declaration() == *functionDef, "");
-
-			if (identifier)
-			{
-				solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
-				functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract());
-			}
-			else if (auto typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
-				if (
-					auto contractType = dynamic_cast<ContractType const*>(typeType->actualType());
-					contractType->isSuper()
-				)
-				{
-					ContractDefinition const* super = contractType->contractDefinition().superContract(m_context.mostDerivedContract());
-					solAssert(super, "Super contract not available.");
-					solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Super, "");
-					functionDef = &functionDef->resolveVirtual(m_context.mostDerivedContract(), super);
-				}
-
-			solAssert(functionDef && functionDef->isImplemented(), "");
-			solAssert(
-				functionDef->parameters().size() == arguments.size() + (functionType->bound() ? 1 : 0),
-				""
-			);
-		}
+		FunctionDefinition const* functionDef = ASTNode::resolveFunctionCall(_functionCall, &m_context.mostDerivedContract());
 
 		solAssert(!functionType->takesArbitraryParameters(), "");
 
@@ -937,11 +903,15 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 			args += convert(*arguments[i], *parameterTypes[i]).stackSlots();
 
 		if (functionDef)
+		{
+			solAssert(functionDef->isImplemented(), "");
+
 			define(_functionCall) <<
 				m_context.enqueueFunctionForCodeGeneration(*functionDef) <<
 				"(" <<
 				joinHumanReadable(args) <<
 				")\n";
+		}
 		else
 		{
 			YulArity arity = YulArity::fromType(*functionType);
@@ -1576,19 +1546,6 @@ void IRGeneratorForStatements::endVisit(MemberAccess const& _memberAccess)
 
 	if (memberFunctionType && memberFunctionType->bound())
 	{
-		solAssert((set<Type::Category>{
-			Type::Category::Contract,
-			Type::Category::Bool,
-			Type::Category::Integer,
-			Type::Category::Address,
-			Type::Category::Function,
-			Type::Category::Struct,
-			Type::Category::Enum,
-			Type::Category::Mapping,
-			Type::Category::Array,
-			Type::Category::FixedBytes,
-		}).count(objectCategory) > 0, "");
-
 		define(IRVariable(_memberAccess).part("self"), _memberAccess.expression());
 		solAssert(*_memberAccess.annotation().requiredLookup == VirtualLookup::Static, "");
 		if (memberFunctionType->kind() == FunctionType::Kind::Internal)
@@ -2718,7 +2675,8 @@ string IRGeneratorForStatements::binaryOperation(
 		solAssert(
 			_type.category() == Type::Category::Integer ||
 			_type.category() == Type::Category::FixedBytes,
-		"");
+			""
+		);
 		switch (_operator)
 		{
 		case Token::BitOr: fun = "or"; break;
@@ -2729,6 +2687,10 @@ string IRGeneratorForStatements::binaryOperation(
 	}
 	else if (TokenTraits::isArithmeticOp(_operator))
 	{
+		solUnimplementedAssert(
+			_type.category() != Type::Category::FixedPoint,
+			"Not yet implemented - FixedPointType."
+		);
 		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
 		solAssert(type, "");
 		bool checked = m_context.arithmetic() == Arithmetic::Checked;
@@ -2765,7 +2727,8 @@ std::string IRGeneratorForStatements::shiftOperation(
 )
 {
 	solUnimplementedAssert(
-		_amountToShift.type().category() != Type::Category::FixedPoint,
+		_amountToShift.type().category() != Type::Category::FixedPoint &&
+		_value.type().category() != Type::Category::FixedPoint,
 		"Not yet implemented - FixedPointType."
 	);
 	IntegerType const* amountType = dynamic_cast<IntegerType const*>(&_amountToShift.type());

@@ -260,6 +260,7 @@ bool ControlFlowBuilder::visit(PlaceholderStatement const&)
 
 bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 {
+	solAssert(!!m_revertNode, "");
 	solAssert(!!m_currentNode, "");
 	solAssert(!!_functionCall.expression().annotation().type, "");
 
@@ -267,24 +268,42 @@ bool ControlFlowBuilder::visit(FunctionCall const& _functionCall)
 		switch (functionType->kind())
 		{
 			case FunctionType::Kind::Revert:
-				solAssert(!!m_revertNode, "");
 				visitNode(_functionCall);
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
+
 				connect(m_currentNode, m_revertNode);
+
 				m_currentNode = newLabel();
 				return false;
 			case FunctionType::Kind::Require:
 			case FunctionType::Kind::Assert:
 			{
-				solAssert(!!m_revertNode, "");
 				visitNode(_functionCall);
 				_functionCall.expression().accept(*this);
 				ASTNode::listAccept(_functionCall.arguments(), *this);
+
 				connect(m_currentNode, m_revertNode);
+
 				auto nextNode = newLabel();
+
 				connect(m_currentNode, nextNode);
 				m_currentNode = nextNode;
+				return false;
+			}
+			case FunctionType::Kind::Internal:
+			{
+				visitNode(_functionCall);
+				_functionCall.expression().accept(*this);
+				ASTNode::listAccept(_functionCall.arguments(), *this);
+
+				m_currentNode->functionCalls.emplace_back(&_functionCall);
+
+				auto nextNode = newLabel();
+
+				connect(m_currentNode, nextNode);
+				m_currentNode = nextNode;
+
 				return false;
 			}
 			default:
@@ -303,7 +322,7 @@ bool ControlFlowBuilder::visit(ModifierInvocation const& _modifierInvocation)
 		_modifierInvocation.name().annotation().referencedDeclaration
 	);
 	if (!modifierDefinition) return false;
-	solAssert(!!modifierDefinition, "");
+	if (!modifierDefinition->isImplemented()) return false;
 	solAssert(!!m_returnNode, "");
 
 	m_placeholderEntry = newLabel();
