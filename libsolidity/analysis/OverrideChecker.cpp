@@ -573,6 +573,19 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 			);
 	}
 
+	if (_overriding.unimplemented() && !_super.unimplemented())
+	{
+		solAssert(!_overriding.isVariable() || !_overriding.unimplemented(), "");
+		overrideError(
+			_overriding,
+			_super,
+			4593_error,
+			"Overriding an implemented " + _super.astNodeName() +
+			" with an unimplemented " + _overriding.astNodeName() +
+			" is not allowed."
+		);
+	}
+
 	if (_super.isFunction())
 	{
 		FunctionType const* functionType = _overriding.functionType();
@@ -612,14 +625,6 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 				"\" to \"" +
 				stateMutabilityToString(_overriding.stateMutability()) +
 				"\"."
-			);
-
-		if (_overriding.unimplemented() && !_super.unimplemented())
-			overrideError(
-				_overriding,
-				_super,
-				4593_error,
-				"Overriding an implemented function with an unimplemented function is not allowed."
 			);
 	}
 }

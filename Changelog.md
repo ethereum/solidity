@@ -32,6 +32,7 @@ Bugfixes:
  * Type Checker: Fix internal compiler error when attempting to use an invalid external function type on pre-byzantium EVMs.
  * Type Checker: Make errors about (nested) mapping type in event or error parameter into fatal type errors.
  * Type Checker: Fix internal compiler error when overriding receive ether function with one having different parameters during inheritance.
+ * Type Checker: Fix internal compiler error when overriding an implemented modifier with an unimplemented one.
 
 
 AST Changes:
