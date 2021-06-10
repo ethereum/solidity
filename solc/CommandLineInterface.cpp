@@ -497,11 +497,11 @@ void CommandLineInterface::createJson(string const& _fileName, string const& _js
 
 bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 {
-	CommandLineParser parser;
+	CommandLineParser parser(sout(false), serr(false));
 	bool success = parser.parse(_argc, _argv, isatty(fileno(stdin)));
 	if (!success)
 		return false;
-	g_hasOutput = g_hasOutput || CommandLineParser::hasOutput();
+	g_hasOutput = g_hasOutput || parser.hasOutput();
 	m_options = parser.options();
 
 	return true;

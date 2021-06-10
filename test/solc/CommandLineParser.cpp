@@ -46,7 +46,7 @@ using namespace solidity::yul;
 namespace
 {
 
-optional<CommandLineOptions> parseCommandLine(vector<string> const& commandLine)
+optional<CommandLineOptions> parseCommandLine(vector<string> const& commandLine, ostream& _stdout, ostream& _stderr)
 {
 	size_t argc = commandLine.size();
 	vector<char const*> argv(argc + 1);
@@ -57,7 +57,7 @@ optional<CommandLineOptions> parseCommandLine(vector<string> const& commandLine)
 	for (size_t i = 0; i < argc; ++i)
 		argv[i] = commandLine[i].c_str();
 
-	CommandLineParser cliParser;
+	CommandLineParser cliParser(_stdout, _stderr);
 	bool success = cliParser.parse(
 		static_cast<int>(argc),
 		argv.data(),
@@ -93,8 +93,11 @@ BOOST_AUTO_TEST_CASE(no_options)
 		nullopt,
 	};
 
-	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine);
+	stringstream sout, serr;
+	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
 
+	BOOST_TEST(sout.str() == "");
+	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
 	BOOST_TEST((parsedOptions.value() == expectedOptions));
 }
@@ -202,8 +205,11 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			5,
 		};
 
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine);
+		stringstream sout, serr;
+		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
 
+		BOOST_TEST(sout.str() == "");
+		BOOST_TEST(serr.str() == "");
 		BOOST_REQUIRE(parsedOptions.has_value());
 		BOOST_TEST((parsedOptions.value() == expectedOptions));
 	}
@@ -316,8 +322,11 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			expectedOptions.optimizer.yulSteps = "agf";
 		}
 
-		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine);
+		stringstream sout, serr;
+		optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
 
+		BOOST_TEST(sout.str() == "");
+		BOOST_TEST(serr.str() == "Warning: Yul is still experimental. Please use the output with care.\n");
 		BOOST_REQUIRE(parsedOptions.has_value());
 
 		BOOST_TEST((parsedOptions.value() == expectedOptions));
@@ -388,8 +397,11 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.compiler.combinedJsonRequests->abi = true;
 	expectedOptions.compiler.combinedJsonRequests->binary = true;
 
-	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine);
+	stringstream sout, serr;
+	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
 
+	BOOST_TEST(sout.str() == "");
+	BOOST_TEST(serr.str() == "");
 	BOOST_REQUIRE(parsedOptions.has_value());
 	BOOST_TEST((parsedOptions.value() == expectedOptions));
 }
