@@ -167,18 +167,11 @@ private:
 		std::string const& _message2
 	);
 	void overrideError(
-		Declaration const& _overriding,
-		Declaration const& _super,
-		langutil::ErrorId _error,
-		std::string const& _message,
-		std::string const& _secondaryMsg = "Overridden function is here:"
-	);
-	void overrideError(
 		OverrideProxy const& _overriding,
 		OverrideProxy const& _super,
 		langutil::ErrorId _error,
 		std::string const& _message,
-		std::string const& _secondaryMsg = "Overridden function is here:"
+		std::optional<std::string> const& _secondaryMsg = {}
 	);
 	/// Checks for functions in different base contracts which conflict with each
 	/// other and thus need to be overridden explicitly.
