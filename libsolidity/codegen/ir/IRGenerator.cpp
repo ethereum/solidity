@@ -299,7 +299,7 @@ InternalDispatchMap IRGenerator::generateInternalDispatchFunctions(ContractDefin
 				solAssert(m_context.functionCollector().contains(IRNames::function(*function)), "");
 
 				cases.emplace_back(map<string, string>{
-					{"funID", to_string(function->id())},
+					{"funID", to_string(m_context.internalFunctionID(*function, true))},
 					{"name", IRNames::function(*function)}
 				});
 			}
@@ -1013,7 +1013,9 @@ void IRGenerator::resetContext(ContractDefinition const& _contract)
 		m_context.internalDispatchClean(),
 		"Reset internal dispatch map without consuming it."
 	);
-	m_context = IRGenerationContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings, m_context.sourceIndices());
+	IRGenerationContext newContext(m_evmVersion, m_context.revertStrings(), m_optimiserSettings, m_context.sourceIndices());
+	newContext.copyFunctionIDsFrom(m_context);
+	m_context = move(newContext);
 
 	m_context.setMostDerivedContract(_contract);
 	for (auto const& var: ContractType(_contract).stateVariables())

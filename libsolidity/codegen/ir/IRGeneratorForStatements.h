@@ -153,6 +153,14 @@ private:
 		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
 
+	/// Requests and assigns the internal ID of the referenced function to the referencing
+	/// expression and adds the function to the internal dispatch.
+	/// If the function is called right away, it does nothing.
+	void assignInternalFunctionIDIfNotCalledDirectly(
+		Expression const& _expression,
+		FunctionDefinition const& _referencedFunction
+	);
+
 	/// Generates the required conversion code and @returns an IRVariable referring to the value of @a _variable
 	/// converted to type @a _to.
 	IRVariable convert(IRVariable const& _variable, Type const& _to);
