@@ -29,6 +29,7 @@
 #include <libsolidity/interface/FileReader.h>
 #include <libyul/AssemblyStack.h>
 
+#include <iostream>
 #include <memory>
 #include <string>
 
@@ -38,7 +39,13 @@ namespace solidity::frontend
 class CommandLineInterface
 {
 public:
-	explicit CommandLineInterface(CommandLineOptions const& _options = CommandLineOptions{}):
+	explicit CommandLineInterface(
+		std::ostream& _sout,
+		std::ostream& _serr,
+		CommandLineOptions const& _options = CommandLineOptions{}
+	):
+		m_sout(_sout),
+		m_serr(_serr),
 		m_options(_options)
 	{}
 
@@ -106,6 +113,17 @@ private:
 	/// @arg _json json string to be written
 	void createJson(std::string const& _fileName, std::string const& _json);
 
+	/// Returns the stream that should receive normal output. Sets m_hasOutput to true if the
+	/// stream has ever been used unless @arg _markAsUsed is set to false.
+	std::ostream& sout(bool _markAsUsed = true);
+
+	/// Returns the stream that should receive error output. Sets m_hasOutput to true if the
+	/// stream has ever been used unless @arg _markAsUsed is set to false.
+	std::ostream& serr(bool _markAsUsed = true);
+
+	std::ostream& m_sout;
+	std::ostream& m_serr;
+	bool m_hasOutput = false;
 	bool m_error = false; ///< If true, some error occurred.
 	FileReader m_fileReader;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
