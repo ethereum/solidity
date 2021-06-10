@@ -270,6 +270,95 @@ bool checkMutuallyExclusive(boost::program_options::variables_map const& args, s
 
 }
 
+bool CompilerOutputs::operator==(CompilerOutputs const& _other) const noexcept
+{
+	static_assert(
+		sizeof(*this) == 15 * sizeof(bool),
+		"Remember to update code below if you add/remove fields."
+	);
+
+	return
+		astCompactJson == _other.astCompactJson &&
+		asm_ == _other.asm_ &&
+		asmJson == _other.asmJson &&
+		opcodes == _other.opcodes &&
+		binary == _other.binary &&
+		binaryRuntime == _other.binaryRuntime &&
+		abi == _other.abi &&
+		ir == _other.ir &&
+		irOptimized == _other.irOptimized &&
+		ewasm == _other.ewasm &&
+		signatureHashes == _other.signatureHashes &&
+		natspecUser == _other.natspecUser &&
+		natspecDev == _other.natspecDev &&
+		metadata == _other.metadata &&
+		storageLayout == _other.storageLayout;
+}
+
+bool CombinedJsonRequests::operator==(CombinedJsonRequests const& _other) const noexcept
+{
+	static_assert(
+		sizeof(*this) == 17 * sizeof(bool),
+		"Remember to update code below if you add/remove fields."
+	);
+
+	return
+		abi == _other.abi &&
+		metadata == _other.metadata &&
+		binary == _other.binary &&
+		binaryRuntime == _other.binaryRuntime &&
+		opcodes == _other.opcodes &&
+		asm_ == _other.asm_ &&
+		storageLayout == _other.storageLayout &&
+		generatedSources == _other.generatedSources &&
+		generatedSourcesRuntime == _other.generatedSourcesRuntime &&
+		srcMap == _other.srcMap &&
+		srcMapRuntime == _other.srcMapRuntime &&
+		funDebug == _other.funDebug &&
+		funDebugRuntime == _other.funDebugRuntime &&
+		signatureHashes == _other.signatureHashes &&
+		natspecDev == _other.natspecDev &&
+		natspecUser == _other.natspecUser &&
+		ast == _other.ast;
+}
+
+bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noexcept
+{
+	return
+		input.paths == _other.input.paths &&
+		input.standardJsonFile == _other.input.standardJsonFile &&
+		input.remappings == _other.input.remappings &&
+		input.addStdin == _other.input.addStdin &&
+		input.basePath == _other.input.basePath &&
+		input.allowedDirectories == _other.input.allowedDirectories &&
+		input.ignoreMissingFiles == _other.input.ignoreMissingFiles &&
+		input.errorRecovery == _other.input.errorRecovery &&
+		output.dir == _other.output.dir &&
+		output.overwriteFiles == _other.output.overwriteFiles &&
+		output.evmVersion == _other.output.evmVersion &&
+		output.experimentalViaIR == _other.output.experimentalViaIR &&
+		output.revertStrings == _other.output.revertStrings &&
+		output.stopAfter == _other.output.stopAfter &&
+		input.mode == _other.input.mode &&
+		assembly.targetMachine == _other.assembly.targetMachine &&
+		assembly.inputLanguage == _other.assembly.inputLanguage &&
+		linker.libraries == _other.linker.libraries &&
+		formatting.prettyJson == _other.formatting.prettyJson &&
+		formatting.coloredOutput == _other.formatting.coloredOutput &&
+		formatting.withErrorIds == _other.formatting.withErrorIds &&
+		compiler.outputs == _other.compiler.outputs &&
+		compiler.estimateGas == _other.compiler.estimateGas &&
+		compiler.combinedJsonRequests == _other.compiler.combinedJsonRequests &&
+		metadata.hash == _other.metadata.hash &&
+		metadata.literalSources == _other.metadata.literalSources &&
+		optimizer.enabled == _other.optimizer.enabled &&
+		optimizer.expectedExecutionsPerDeployment == _other.optimizer.expectedExecutionsPerDeployment &&
+		optimizer.noOptimizeYul == _other.optimizer.noOptimizeYul &&
+		optimizer.yulSteps == _other.optimizer.yulSteps &&
+		modelChecker.initialize == _other.modelChecker.initialize &&
+		modelChecker.settings == _other.modelChecker.settings;
+}
+
 bool CommandLineParser::parseInputPathsAndRemappings()
 {
 	m_options.input.ignoreMissingFiles = (m_args.count(g_argIgnoreMissingFiles) > 0);
@@ -768,7 +857,7 @@ General Information)").c_str(),
 	m_options.formatting.prettyJson = (m_args.count(g_argPrettyJson) > 0);
 
 	static_assert(
-		sizeof(m_options.compiler.selectedOutputs) == 15 * sizeof(bool),
+		sizeof(m_options.compiler.outputs) == 15 * sizeof(bool),
 		"Remember to update code below if you add/remove fields."
 	);
 	m_options.compiler.outputs.astCompactJson = (m_args.count(g_argAstCompactJson) > 0);

@@ -51,6 +51,9 @@ enum class InputMode
 
 struct CompilerOutputs
 {
+	bool operator!=(CompilerOutputs const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(CompilerOutputs const& _other) const noexcept;
+
 	bool astCompactJson = false;
 	bool asm_ = false;
 	bool asmJson = false;
@@ -70,6 +73,9 @@ struct CompilerOutputs
 
 struct CombinedJsonRequests
 {
+	bool operator!=(CombinedJsonRequests const& _other) const noexcept { return !(*this == _other); }
+	bool operator==(CombinedJsonRequests const& _other) const noexcept;
+
 	bool abi = false;
 	bool metadata = false;
 	bool binary = false;
@@ -91,6 +97,9 @@ struct CombinedJsonRequests
 
 struct CommandLineOptions
 {
+	bool operator==(CommandLineOptions const& _other) const noexcept;
+	bool operator!=(CommandLineOptions const& _other) const noexcept { return !(*this == _other); }
+
 	struct
 	{
 		InputMode mode = InputMode::Compiler;
