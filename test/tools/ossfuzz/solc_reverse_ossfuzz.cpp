@@ -169,12 +169,12 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			deployResult.create_address
 		);
 
-		if (callResult.status_code != EVMC_SUCCESS) {
-			cout << "New code gen call failed with status code: "
-			     << callResult.status_code
-			     << endl;
-			return 0;
-		}
+//		if (callResult.status_code != EVMC_SUCCESS) {
+//			cout << "New code gen call failed with status code: "
+//			     << callResult.status_code
+//			     << endl;
+//			return 0;
+//		}
 
 		solidity::bytes result;
 		for (size_t i = 0; i < callResult.output_size; i++)
@@ -241,8 +241,8 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* _data, size_t _size)
 			deployResultOpt.create_address
 		);
 		solAssert(
-			callResultOpt.status_code == EVMC_SUCCESS,
-			"Old code gen contract call failed."
+			callResultOpt.status_code == callResult.status_code,
+			"Old code gen contract call failed with a different status code."
 		);
 
 		solidity::bytes resultOpt;
