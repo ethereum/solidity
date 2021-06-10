@@ -658,7 +658,8 @@ void StatementGenerator::setup()
 		{mutator->generator<BreakStmtGenerator>(), 1},
 		{mutator->generator<ContinueStmtGenerator>(), 1},
 		{mutator->generator<VarDeclStmtGenerator>(), 1},
-		{mutator->generator<ForStmtGenerator>(), 1}
+		{mutator->generator<ForStmtGenerator>(), 1},
+		{mutator->generator<MagicStmtGenerator>(), 1}
 	};
 	addGenerators(std::move(dependsOn));
 }
@@ -1595,6 +1596,40 @@ string FunctionCallGenerator::visit()
 		return callStmt(callee);
 	else
 		return {};
+}
+
+string MagicStmtGenerator::visit()
+{
+	MagicId m = static_cast<MagicId>(uRandDist()->distributionOneToN(static_cast<size_t>(MagicId::MAGICMAX) - 1));
+	switch (m)
+	{
+	case MagicId::ASSERT:
+	{
+		ExpressionGenerator exprGen{state};
+		auto boolType = make_shared<BoolType>();
+		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
+		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+		solAssert(expression.has_value(), "");
+		return indentation() +
+			"assert(" +
+			expression.value().second +
+			");\n";
+	}
+	case MagicId::REQUIRE:
+	{
+		ExpressionGenerator exprGen{state};
+		auto boolType = make_shared<BoolType>();
+		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
+		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+		solAssert(expression.has_value(), "");
+		return indentation() +
+		       "require(" +
+		       expression.value().second +
+		       ");\n";
+	}
+	default:
+		solAssert(false, "");
+	}
 }
 
 template <typename T>

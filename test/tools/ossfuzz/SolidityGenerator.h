@@ -1286,4 +1286,23 @@ private:
 	std::optional<std::string> rhs(std::vector<std::pair<SolidityTypePtr, std::string>>& _functionInputTypeNames);
 	std::string callStmt(std::shared_ptr<FunctionState> _callee);
 };
+
+class MagicStmtGenerator: public GeneratorBase
+{
+public:
+	enum class MagicId: size_t
+	{
+		ASSERT = 1,
+		REQUIRE,
+		MAGICMAX
+	};
+	MagicStmtGenerator(SolidityGenerator* _mutator):
+		GeneratorBase(std::move(_mutator))
+	{}
+	std::string visit() override;
+	std::string name() override
+	{
+		return "Magic statement generator";
+	}
+};
 }

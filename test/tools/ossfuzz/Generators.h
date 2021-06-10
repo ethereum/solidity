@@ -52,6 +52,7 @@
 	MACRO(FunctionGenerator) SEP \
 	MACRO(IfStmtGenerator) SEP \
 	MACRO(ImportGenerator) SEP \
+	MACRO(MagicStmtGenerator) SEP \
 	MACRO(PragmaGenerator) SEP \
 	MACRO(SourceUnitGenerator) SEP \
 	MACRO(StatementGenerator) SEP \
