@@ -49,7 +49,10 @@ if (OSSFUZZ)
             ../../EVMHost.cpp
             SolidityEvmoneInterface.cpp
             ../../libsolidity/util/ContractABIUtils.cpp
-            )
+            LiteralGeneratorUtil.cpp
+            SolidityGenerator.cpp
+            SolidityCustomMutatorInterface.cpp
+    )
     target_link_libraries(solc_reverse_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone abicoder gmp.a)
     set_target_properties(solc_reverse_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
@@ -61,7 +64,10 @@ if (OSSFUZZ)
             ../../EVMHost.cpp
             SolidityEvmoneInterface.cpp
             ../../libsolidity/util/ContractABIUtils.cpp
-            )
+            LiteralGeneratorUtil.cpp
+            SolidityGenerator.cpp
+            SolidityCustomMutatorInterface.cpp
+    )
     target_link_libraries(bytecode_optimizer_ossfuzz PRIVATE libsolc evmasm evmc evmone-standalone abicoder gmp.a)
     set_target_properties(bytecode_optimizer_ossfuzz PROPERTIES LINK_FLAGS ${LIB_FUZZING_ENGINE})
 
