@@ -55,6 +55,7 @@ struct CompilerOutputs
 {
 	bool operator!=(CompilerOutputs const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(CompilerOutputs const& _other) const noexcept;
+	friend std::ostream& operator<<(std::ostream& _out, CompilerOutputs const& _requests);
 
 	static std::string const& componentName(bool CompilerOutputs::* _component);
 	static auto const& componentMap()
@@ -100,6 +101,7 @@ struct CombinedJsonRequests
 {
 	bool operator!=(CombinedJsonRequests const& _other) const noexcept { return !(*this == _other); }
 	bool operator==(CombinedJsonRequests const& _other) const noexcept;
+	friend std::ostream& operator<<(std::ostream& _out, CombinedJsonRequests const& _requests);
 
 	static std::string const& componentName(bool CombinedJsonRequests::* _component);
 	static auto const& componentMap()

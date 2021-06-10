@@ -176,6 +176,16 @@ bool CompilerOutputs::operator==(CompilerOutputs const& _other) const noexcept
 	return true;
 }
 
+ostream& operator<<(ostream& _out, CompilerOutputs const& _selection)
+{
+	vector<string> serializedSelection;
+	for (auto&& [componentName, component]: CompilerOutputs::componentMap())
+		if (_selection.*component)
+			serializedSelection.push_back(CompilerOutputs::componentName(component));
+
+	return _out << joinHumanReadable(serializedSelection, ",");
+}
+
 string const& CompilerOutputs::componentName(bool CompilerOutputs::* _component)
 {
 	solAssert(_component, "");
@@ -194,6 +204,17 @@ bool CombinedJsonRequests::operator==(CombinedJsonRequests const& _other) const 
 		if (this->*member != _other.*member)
 			return false;
 	return true;
+}
+
+
+ostream& operator<<(ostream& _out, CombinedJsonRequests const& _requests)
+{
+	vector<string> serializedRequests;
+	for (auto&& [componentName, component]: CombinedJsonRequests::componentMap())
+		if (_requests.*component)
+			serializedRequests.push_back(CombinedJsonRequests::componentName(component));
+
+	return _out << joinHumanReadable(serializedRequests, ",");
 }
 
 string const& CombinedJsonRequests::componentName(bool CombinedJsonRequests::* _component)
