@@ -341,6 +341,506 @@ BOOST_AUTO_TEST_CASE(standard_json_remapping)
 	BOOST_TEST(result.stderrContent == expectedMessage);
 }
 
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_no_base_path)
+{
+	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
+	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	soltestAssert(tempDirCurrent.path().is_absolute(), "");
+	soltestAssert(tempDirOther.path().is_absolute(), "");
+
+	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
+	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+
+	vector<string> commandLine = {
+		"solc",
+		"contract1.sol",                                   // Relative path
+		"c/d/contract2.sol",                               // Relative path with subdirectories
+		currentDirNoSymlinks.string() + "/contract3.sol",  // Absolute path inside working dir
+		otherDirNoSymlinks.string() + "/contract4.sol",    // Absolute path outside of working dir
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+		"contract1.sol",
+		"c/d/contract2.sol",
+		currentDirNoSymlinks / "contract3.sol",
+		otherDirNoSymlinks / "contract4.sol",
+	};
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"contract1.sol", ""},
+		{"c/d/contract2.sol", ""},
+		{currentDirNoSymlinks.generic_string() + "/contract3.sol", ""},
+		{otherDirNoSymlinks.generic_string() + "/contract4.sol", ""},
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+		currentDirNoSymlinks / "c/d",
+		currentDirNoSymlinks,
+		otherDirNoSymlinks,
+	};
+
+	createFilesWithParentDirs(expectedOptions.input.paths);
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == "");
+}
+
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_same_as_work_dir)
+{
+	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
+	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	soltestAssert(tempDirCurrent.path().is_absolute(), "");
+	soltestAssert(tempDirOther.path().is_absolute(), "");
+
+	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
+	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+
+	vector<string> commandLine = {
+		"solc",
+		"--base-path=" + currentDirNoSymlinks.string(),
+		"contract1.sol",                                   // Relative path
+		"c/d/contract2.sol",                               // Relative path with subdirectories
+		currentDirNoSymlinks.string() + "/contract3.sol",  // Absolute path inside working dir
+		otherDirNoSymlinks.string() + "/contract4.sol",    // Absolute path outside of working dir
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+		"contract1.sol",
+		"c/d/contract2.sol",
+		currentDirNoSymlinks / "contract3.sol",
+		otherDirNoSymlinks / "contract4.sol",
+	};
+	expectedOptions.input.basePath = currentDirNoSymlinks;
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"contract1.sol", ""},
+		{"c/d/contract2.sol", ""},
+		{currentDirNoSymlinks.generic_string() + "/contract3.sol", ""},
+		{otherDirNoSymlinks.generic_string() + "/contract4.sol", ""},
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+		currentDirNoSymlinks / "c/d",
+		currentDirNoSymlinks,
+		otherDirNoSymlinks,
+	};
+
+	createFilesWithParentDirs(expectedOptions.input.paths);
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedOptions.input.basePath);
+}
+
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_different_from_work_dir)
+{
+	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
+	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
+	TemporaryDirectory tempDirBase(TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	soltestAssert(tempDirCurrent.path().is_absolute(), "");
+	soltestAssert(tempDirOther.path().is_absolute(), "");
+	soltestAssert(tempDirBase.path().is_absolute(), "");
+
+	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
+	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+	boost::filesystem::path baseDirNoSymlinks = boost::filesystem::canonical(tempDirBase.path());
+
+	vector<string> commandLine = {
+		"solc",
+		"--base-path=" + baseDirNoSymlinks.string(),
+		"contract1.sol",                                   // Relative path
+		"c/d/contract2.sol",                               // Relative path with subdirectories
+		currentDirNoSymlinks.string() + "/contract3.sol",  // Absolute path inside working dir
+		otherDirNoSymlinks.string() + "/contract4.sol",    // Absolute path outside of working dir
+		baseDirNoSymlinks.string() + "/contract5.sol",     // Absolute path inside base path
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+		"contract1.sol",
+		"c/d/contract2.sol",
+		currentDirNoSymlinks / "contract3.sol",
+		otherDirNoSymlinks / "contract4.sol",
+		baseDirNoSymlinks / "contract5.sol",
+	};
+	expectedOptions.input.basePath = baseDirNoSymlinks;
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"contract1.sol", ""},
+		{"c/d/contract2.sol", ""},
+		{currentDirNoSymlinks.generic_string() + "/contract3.sol", ""},
+		{otherDirNoSymlinks.generic_string() + "/contract4.sol", ""},
+		{baseDirNoSymlinks.generic_string() + "/contract5.sol", ""},
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+		currentDirNoSymlinks / "c/d",
+		currentDirNoSymlinks,
+		otherDirNoSymlinks,
+		baseDirNoSymlinks,
+	};
+
+	createFilesWithParentDirs(expectedOptions.input.paths);
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedOptions.input.basePath);
+}
+
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_relative_base_path)
+{
+	TemporaryDirectory tempDirCurrent(TEST_CASE_NAME);
+	TemporaryDirectory tempDirOther(TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDirCurrent.path());
+	soltestAssert(tempDirCurrent.path().is_absolute(), "");
+	soltestAssert(tempDirOther.path().is_absolute(), "");
+
+	// NOTE: On macOS the path usually contains symlinks which prevents base path from being stripped.
+	// Use canonical() to resolve symnlinks and get consistent results on all platforms.
+	boost::filesystem::path currentDirNoSymlinks = boost::filesystem::canonical(tempDirCurrent.path());
+	boost::filesystem::path otherDirNoSymlinks = boost::filesystem::canonical(tempDirOther.path());
+
+	vector<string> commandLine = {
+		"solc",
+		"--base-path=base",
+		"contract1.sol",                                       // Relative path outside of base path
+		"base/contract2.sol",                                  // Relative path inside base path
+		currentDirNoSymlinks.string() + "/contract3.sol",      // Absolute path inside working dir
+		currentDirNoSymlinks.string() + "/base/contract4.sol", // Absolute path inside base path
+		otherDirNoSymlinks.string() + "/contract5.sol",        // Absolute path outside of working dir
+		otherDirNoSymlinks.string() + "/base/contract6.sol",   // Absolute path outside of working dir
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+		"contract1.sol",
+		"base/contract2.sol",
+		currentDirNoSymlinks / "contract3.sol",
+		currentDirNoSymlinks / "base/contract4.sol",
+		otherDirNoSymlinks / "contract5.sol",
+		otherDirNoSymlinks / "base/contract6.sol",
+	};
+	expectedOptions.input.basePath = "base";
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"contract1.sol", ""},
+		{"base/contract2.sol", ""},
+		{currentDirNoSymlinks.generic_string() + "/contract3.sol", ""},
+		{currentDirNoSymlinks.generic_string() + "/base/contract4.sol", ""},
+		{otherDirNoSymlinks.generic_string() + "/contract5.sol", ""},
+		{otherDirNoSymlinks.generic_string() + "/base/contract6.sol", ""},
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+		currentDirNoSymlinks / "base",
+		currentDirNoSymlinks,
+		otherDirNoSymlinks,
+		otherDirNoSymlinks / "base",
+	};
+
+	createFilesWithParentDirs(expectedOptions.input.paths);
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedOptions.input.basePath);
+}
+
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_normalization_and_weird_names)
+{
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	boost::filesystem::create_directories(tempDir.path() / "x/y/z");
+	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "x/y/z");
+	soltestAssert(tempDir.path().is_absolute(), "");
+
+	string uncPath = "//" + tempDir.path().relative_path().generic_string();
+	soltestAssert(uncPath[0] == '/' && uncPath[1] == '/', "");
+	soltestAssert(uncPath[2] != '/', "");
+
+	boost::filesystem::path tempDirNoSymlinks = boost::filesystem::canonical(tempDir.path());
+
+	vector<string> commandLine = {
+		"solc",
+
+#if !defined(_WIN32)
+		// URLs. We interpret them as local paths.
+		// Note that : is not allowed in file names on Windows.
+		"file://c/d/contract1.sol",
+		"file:///c/d/contract2.sol",
+		"https://example.com/contract3.sol",
+#endif
+
+		// Redundant slashes
+		"a/b//contract4.sol",
+		"a/b///contract5.sol",
+		"a/b////contract6.sol",
+
+		// Dot segments
+		"./a/b/contract7.sol",
+		"././a/b/contract8.sol",
+		"a/./b/contract9.sol",
+		"a/././b/contract10.sol",
+
+		// Dot dot segments
+		"../a/b/contract11.sol",
+		"../../a/b/contract12.sol",
+		"a/../b/contract13.sol",
+		"a/b/../../contract14.sol",
+		tempDirNoSymlinks.string() + "/x/y/z/a/../b/contract15.sol",
+		tempDirNoSymlinks.string() + "/x/y/z/a/b/../../contract16.sol",
+
+		// Dot dot segments going beyond filesystem root
+		"/../" + tempDir.path().relative_path().generic_string() + "/contract17.sol",
+		"/../../" + tempDir.path().relative_path().generic_string() + "/contract18.sol",
+
+#if !defined(_WIN32)
+		// Name conflict with source unit name of stdin.
+		// Note that < and > are not allowed in file names on Windows.
+		"<stdin>",
+
+		// UNC paths on UNIX just resolve into normal paths. On Windows this would be an network
+		// share (and an error unless the share actually exists so I can't test it here).
+		uncPath + "/contract19.sol",
+
+		// Windows paths on non-Windows systems.
+		// Note that on Windows we tested them already just by using absolute paths.
+		"a\\b\\contract20.sol",
+		"C:\\a\\b\\contract21.sol",
+#endif
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+#if !defined(_WIN32)
+		"file://c/d/contract1.sol",
+		"file:///c/d/contract2.sol",
+		"https://example.com/contract3.sol",
+#endif
+
+		"a/b//contract4.sol",
+		"a/b///contract5.sol",
+		"a/b////contract6.sol",
+
+		"./a/b/contract7.sol",
+		"././a/b/contract8.sol",
+		"a/./b/contract9.sol",
+		"a/././b/contract10.sol",
+
+		"../a/b/contract11.sol",
+		"../../a/b/contract12.sol",
+		"a/../b/contract13.sol",
+		"a/b/../../contract14.sol",
+		tempDirNoSymlinks.string() + "/x/y/z/a/../b/contract15.sol",
+		tempDirNoSymlinks.string() + "/x/y/z/a/b/../../contract16.sol",
+
+		"/../" + tempDir.path().relative_path().string() + "/contract17.sol",
+		"/../../" + tempDir.path().relative_path().string() + "/contract18.sol",
+
+#if !defined(_WIN32)
+		"<stdin>",
+
+		uncPath + "/contract19.sol",
+
+		"a\\b\\contract20.sol",
+		"C:\\a\\b\\contract21.sol",
+#endif
+	};
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+#if !defined(_WIN32)
+		{"file://c/d/contract1.sol", ""},
+		{"file:///c/d/contract2.sol", ""},
+		{"https://example.com/contract3.sol", ""},
+#endif
+
+		{"a/b//contract4.sol", ""},
+		{"a/b///contract5.sol", ""},
+		{"a/b////contract6.sol", ""},
+
+		{"./a/b/contract7.sol", ""},
+		{"././a/b/contract8.sol", ""},
+		{"a/./b/contract9.sol", ""},
+		{"a/././b/contract10.sol", ""},
+
+		{"../a/b/contract11.sol", ""},
+		{"../../a/b/contract12.sol", ""},
+		{"a/../b/contract13.sol", ""},
+		{"a/b/../../contract14.sol", ""},
+		{tempDirNoSymlinks.string() + "/x/y/z/a/../b/contract15.sol", ""},
+		{tempDirNoSymlinks.string() + "/x/y/z/a/b/../../contract16.sol", ""},
+
+		{"/../" + tempDir.path().relative_path().generic_string() + "/contract17.sol", ""},
+		{"/../../" + tempDir.path().relative_path().generic_string() + "/contract18.sol", ""},
+
+
+#if !defined(_WIN32)
+		{"<stdin>", ""},
+
+		{uncPath + "/contract19.sol", ""},
+
+		{"a\\b\\contract20.sol", ""},
+		{"C:\\a\\b\\contract21.sol", ""},
+#endif
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+#if !defined(_WIN32)
+		tempDirNoSymlinks / "x/y/z/file:/c/d",
+		tempDirNoSymlinks / "x/y/z/https:/example.com",
+#endif
+		tempDirNoSymlinks / "x/y/z/a/b",
+		tempDirNoSymlinks / "x/y/z",
+		tempDirNoSymlinks / "x/y/z/b",
+		tempDirNoSymlinks / "x/y/a/b",
+		tempDirNoSymlinks / "x/a/b",
+		tempDirNoSymlinks,
+#if !defined(_WIN32)
+		boost::filesystem::canonical(uncPath),
+#endif
+	};
+
+	createFilesWithParentDirs(expectedOptions.input.paths);
+
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedOptions.input.basePath);
+}
+
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_symlinks)
+{
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	createFilesWithParentDirs({tempDir.path() / "x/y/z/contract.sol"});
+	boost::filesystem::create_directories(tempDir.path() / "r");
+	TemporaryWorkingDirectory tempWorkDir(tempDir.path() / "r");
+
+	if (
+#if !defined(_WIN32)
+		!createSymlinkIfSupportedByFilesystem("../x/y", tempDir.path() / "r/sym", true) ||
+#else
+		// NOTE: On Windows / works as a separator in a symlink target only if the target is absolute
+		!createSymlinkIfSupportedByFilesystem("..\\x\\y", tempDir.path() / "r/sym", true) ||
+#endif
+		!createSymlinkIfSupportedByFilesystem("contract.sol", tempDir.path() / "x/y/z/contract_symlink.sol", false)
+	)
+		return;
+
+
+	vector<string> commandLine = {
+		"solc",
+
+		"--base-path=../r/sym/z/",
+		"sym/z/contract.sol",            // File accessed directly + same dir symlink as base path
+		"../x/y/z/contract.sol",         // File accessed directly + different dir symlink than base path
+		"sym/z/contract_symlink.sol",    // File accessed via symlink + same dir symlink as base path
+		"../x/y/z/contract_symlink.sol", // File accessed via symlink + different dir symlink than base path
+	};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.paths = {
+		"sym/z/contract.sol",
+		"../x/y/z/contract.sol",
+		"sym/z/contract_symlink.sol",
+		"../x/y/z/contract_symlink.sol",
+	};
+	expectedOptions.input.basePath = "../r/sym/z/";
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"sym/z/contract.sol", ""},
+		{"../x/y/z/contract.sol", ""},
+		{"sym/z/contract_symlink.sol", ""},
+		{"../x/y/z/contract_symlink.sol", ""},
+	};
+
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {
+		boost::filesystem::canonical(tempDir.path()) / "x/y/z",
+	};
+
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == expectedOptions.input.basePath);
+}
+
+BOOST_AUTO_TEST_CASE(cli_paths_to_source_unit_names_base_path_and_stdin)
+{
+	TemporaryDirectory tempDir(TEST_CASE_NAME);
+	TemporaryWorkingDirectory tempWorkDir(tempDir.path());
+	boost::filesystem::create_directories(tempDir.path() / "base");
+
+	boost::filesystem::path expectedWorkDir = "/" / boost::filesystem::current_path().relative_path();
+
+	vector<string> commandLine = {"solc", "--base-path=base", "-"};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.addStdin = true;
+	expectedOptions.input.basePath = "base";
+	expectedOptions.modelChecker.initialize = true;
+
+	map<string, string> expectedSources = {
+		{"<stdin>", "\n"},
+	};
+	FileReader::FileSystemPathSet expectedAllowedDirectories = {};
+
+	createFilesWithParentDirs(expectedOptions.input.paths);
+	OptionsReaderAndMessages result = parseCommandLineAndReadInputFiles(commandLine);
+
+	BOOST_TEST(result.stderrContent == "");
+	BOOST_TEST(result.stdoutContent == "");
+	BOOST_REQUIRE(result.success);
+	BOOST_TEST(result.options == expectedOptions);
+	BOOST_TEST(result.reader.sourceCodes() == expectedSources);
+	BOOST_TEST(result.reader.allowedDirectories() == expectedAllowedDirectories);
+	BOOST_TEST(result.reader.basePath() == "base");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::frontend::test
