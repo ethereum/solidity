@@ -25,6 +25,7 @@
 #include <test/libsolidity/SyntaxTest.h>
 #include <test/libsolidity/SemanticTest.h>
 #include <test/libsolidity/SMTCheckerTest.h>
+#include <test/libyul/ControlFlowGraphTest.h>
 #include <test/libyul/EVMCodeTransformTest.h>
 #include <test/libyul/EwasmTranslationTest.h>
 #include <test/libyul/YulOptimizerTest.h>
@@ -55,20 +56,21 @@ struct Testsuite
 Testsuite const g_interactiveTestsuites[] = {
 /*
 	Title                   Path           Subpath                SMT   NeedsVM Creator function */
-	{"Ewasm Translation",   "libyul",      "ewasmTranslationTests",false,false, &yul::test::EwasmTranslationTest::create},
-	{"Yul Optimizer",       "libyul",      "yulOptimizerTests",   false, false, &yul::test::YulOptimizerTest::create},
-	{"Yul Interpreter",     "libyul",      "yulInterpreterTests", false, false, &yul::test::YulInterpreterTest::create},
-	{"Yul Object Compiler", "libyul",      "objectCompiler",      false, false, &yul::test::ObjectCompilerTest::create},
-	{"Function Side Effects","libyul",     "functionSideEffects", false, false, &yul::test::FunctionSideEffects::create},
-	{"Yul Syntax",          "libyul",      "yulSyntaxTests",      false, false, &yul::test::SyntaxTest::create},
-	{"EVM Code Transform",  "libyul",      "evmCodeTransform",    false, false, &yul::test::EVMCodeTransformTest::create, {"nooptions"}},
-	{"Syntax",              "libsolidity", "syntaxTests",         false, false, &SyntaxTest::create},
-	{"Error Recovery",      "libsolidity", "errorRecoveryTests",  false, false, &SyntaxTest::createErrorRecovery},
-	{"Semantic",            "libsolidity", "semanticTests",       false, true,  &SemanticTest::create},
-	{"JSON AST",            "libsolidity", "ASTJSON",             false, false, &ASTJSONTest::create},
-	{"JSON ABI",            "libsolidity", "ABIJson",             false, false, &ABIJsonTest::create},
-	{"SMT Checker",         "libsolidity", "smtCheckerTests",     true,  false, &SMTCheckerTest::create},
-	{"Gas Estimates",       "libsolidity", "gasTests",            false, false, &GasTest::create}
+	{"Ewasm Translation",      "libyul",      "ewasmTranslationTests", false, false, &yul::test::EwasmTranslationTest::create},
+	{"Yul Optimizer",          "libyul",      "yulOptimizerTests",     false, false, &yul::test::YulOptimizerTest::create},
+	{"Yul Interpreter",        "libyul",      "yulInterpreterTests",   false, false, &yul::test::YulInterpreterTest::create},
+	{"Yul Object Compiler",    "libyul",      "objectCompiler",        false, false, &yul::test::ObjectCompilerTest::create},
+	{"Yul Control Flow Graph", "libyul",      "yulControlFlowGraph",   false, false, &yul::test::ControlFlowGraphTest::create},
+	{"Function Side Effects",  "libyul",      "functionSideEffects",   false, false, &yul::test::FunctionSideEffects::create},
+	{"Yul Syntax",             "libyul",      "yulSyntaxTests",        false, false, &yul::test::SyntaxTest::create},
+	{"EVM Code Transform",     "libyul",      "evmCodeTransform",      false, false, &yul::test::EVMCodeTransformTest::create, {"nooptions"}},
+	{"Syntax",                 "libsolidity", "syntaxTests",           false, false, &SyntaxTest::create},
+	{"Error Recovery",         "libsolidity", "errorRecoveryTests",    false, false, &SyntaxTest::createErrorRecovery},
+	{"Semantic",               "libsolidity", "semanticTests",         false, true,  &SemanticTest::create},
+	{"JSON AST",               "libsolidity", "ASTJSON",               false, false, &ASTJSONTest::create},
+	{"JSON ABI",               "libsolidity", "ABIJson",               false, false, &ABIJsonTest::create},
+	{"SMT Checker",            "libsolidity", "smtCheckerTests",       true,  false, &SMTCheckerTest::create},
+	{"Gas Estimates",          "libsolidity", "gasTests",              false, false, &GasTest::create}
 };
 
 }
