@@ -113,6 +113,8 @@ void ControlFlowRevertPruner::findRevertStates()
 				if (
 					item.contract == nullptr ||
 					nextItem.contract == nullptr ||
+					item.contract->isLibrary() ||
+					nextItem.contract->isLibrary() ||
 					nextItem.contract == item.contract
 				)
 					pendingFunctions.insert(nextItem);
