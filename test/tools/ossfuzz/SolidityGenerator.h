@@ -811,6 +811,7 @@ struct ExpressionGenerator
 		AND,
 		OR,
 		LIT,
+		MEMBERACCESS,
 		RLMAX
 	};
 
@@ -840,6 +841,9 @@ struct ExpressionGenerator
 		bool _prefixOp
 	);
 	std::optional<std::pair<SolidityTypePtr, std::string>> rLValueOrLiteral(
+		std::pair<SolidityTypePtr, std::string>& _typeName
+	);
+	std::optional<std::pair<SolidityTypePtr, std::string>> memberAccessExpr(
 		std::pair<SolidityTypePtr, std::string>& _typeName
 	);
 	RLValueExpr expressionType(SolidityTypePtr& _typePtr);

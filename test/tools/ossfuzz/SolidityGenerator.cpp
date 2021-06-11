@@ -431,6 +431,7 @@ string ExpressionStmtGenerator::visit()
 	auto randomType = TypeProvider{state}.type();
 	pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
 	auto expression = exprGen.rLValueOrLiteral(randomTypeName);
+	exprGen.resetNestingDepth();
 	if (expression.has_value())
 		return indentation() + expression.value().second + ";\n";
 	else
@@ -443,6 +444,7 @@ string VarDeclStmtGenerator::visit()
 	auto randomType = TypeProvider{state}.type();
 	pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
 	auto expression = exprGen.rLValueOrLiteral(randomTypeName);
+	exprGen.resetNestingDepth();
 	string varName = state->currentFunctionState()->addLocal(randomTypeName.first);
 	string varDeclStmt = indentation() +
 		std::visit(
@@ -475,6 +477,7 @@ string IfStmtGenerator::conditionalStmt(Condition _cond)
 	auto boolType = make_shared<BoolType>();
 	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 	auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+	exprGen.resetNestingDepth();
 	solAssert(expression.has_value(), "");
 	if (_cond == Condition::IF)
 		condStmt << indentation()
@@ -540,6 +543,7 @@ string WhileStmtGenerator::visit()
 	auto boolType = make_shared<BoolType>();
 	pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 	auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+	exprGen.resetNestingDepth();
 	solAssert(expression.has_value(), "");
 	bool doWhile = uRandDist()->probable(2);
 	if (doWhile)
@@ -608,6 +612,7 @@ string ForStmtGenerator::visit()
 		auto boolType = make_shared<BoolType>();
 		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+		exprGen.resetNestingDepth();
 		if (expression.has_value())
 			forCondition = expression.value().second + ";\n";
 		else
@@ -623,6 +628,7 @@ string ForStmtGenerator::visit()
 		auto randomType = TypeProvider{state}.type();
 		pair<SolidityTypePtr, string> randomTypeName = {randomType, {}};
 		auto expression = exprGen.rLValueOrLiteral(randomTypeName);
+		exprGen.resetNestingDepth();
 		if (expression.has_value())
 			postStmt = expression.value().second;
 	}
@@ -936,6 +942,32 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::incDecOperation(
 	return lResult;
 }
 
+optional<pair<SolidityTypePtr, string>> ExpressionGenerator::memberAccessExpr(
+	pair<SolidityTypePtr, string>& _typeName
+)
+{
+	solAssert(
+		holds_alternative<shared_ptr<IntegerType>>(_typeName.first) ||
+		holds_alternative<shared_ptr<BytesType>>(_typeName.first) ||
+		holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first),
+		""
+	);
+	ExpressionGenerator exprGen{state};
+	auto addressType = make_shared<AddressType>();
+	pair<SolidityTypePtr, string> addressTypeName = {addressType, {}};
+	auto expression = exprGen.rLValueOrLiteral(addressTypeName);
+	exprGen.resetNestingDepth();
+	solAssert(expression.has_value(), "");
+	// TODO: Clean this up
+	if (holds_alternative<shared_ptr<IntegerType>>(_typeName.first))
+		expression.value().second += ".balance";
+	else if (holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first))
+		expression.value().second += ".codehash";
+	else
+		expression.value().second += ".code";
+	return expression;
+}
+
 ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTypePtr& _typePtr)
 {
 	vector<RLValueExpr> permittedTypes;
@@ -965,10 +997,14 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 			RLValueExpr::BITXOR,
 			RLValueExpr::BITOR,
 		};
+		auto bytesType = get<shared_ptr<FixedBytesType>>(_typePtr);
+		if (bytesType->numBytes == 32)
+			permittedTypes.emplace_back(RLValueExpr::MEMBERACCESS);
 	}
 	else if (holds_alternative<shared_ptr<IntegerType>>(_typePtr))
 	{
-		bool signedType = get<shared_ptr<IntegerType>>(_typePtr)->signedType;
+		auto integerType = get<shared_ptr<IntegerType>>(_typePtr);
+		bool signedType = integerType->signedType;
 		if (signedType)
 			permittedTypes = {
 				RLValueExpr::VARREF,
@@ -989,6 +1025,7 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 				RLValueExpr::BITOR
 			};
 		else
+		{
 			permittedTypes = {
 				RLValueExpr::VARREF,
 				RLValueExpr::LIT,
@@ -1009,6 +1046,17 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 				RLValueExpr::BITXOR,
 				RLValueExpr::BITOR
 			};
+			if (integerType->numBits == 256)
+				permittedTypes.emplace_back(RLValueExpr::MEMBERACCESS);
+		}
+	}
+	else if (holds_alternative<shared_ptr<BytesType>>(_typePtr))
+	{
+		permittedTypes = {
+			RLValueExpr::VARREF,
+			RLValueExpr::LIT,
+			RLValueExpr::MEMBERACCESS
+		};
 	}
 	else
 	{
@@ -1320,6 +1368,8 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	}
 	case RLValueExpr::LIT:
 		return literal(_typeName.first);
+	case RLValueExpr::MEMBERACCESS:
+		return memberAccessExpr(_typeName);
 	default:
 		solAssert(false, "");
 	}
@@ -1609,6 +1659,7 @@ string MagicStmtGenerator::visit()
 		auto boolType = make_shared<BoolType>();
 		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+		exprGen.resetNestingDepth();
 		solAssert(expression.has_value(), "");
 		return indentation() +
 			"assert(" +
@@ -1621,6 +1672,7 @@ string MagicStmtGenerator::visit()
 		auto boolType = make_shared<BoolType>();
 		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
+		exprGen.resetNestingDepth();
 		solAssert(expression.has_value(), "");
 		return indentation() +
 		       "require(" +
