@@ -20,44 +20,24 @@
 
 #include <test/TestCase.h>
 
-namespace solidity::langutil
-{
-class Error;
-using ErrorList = std::vector<std::shared_ptr<Error const>>;
-}
-
 namespace solidity::yul
 {
-struct AsmAnalysisInfo;
-struct Object;
 struct Dialect;
-}
 
-namespace solidity::yul::test
+namespace test
 {
 
-class YulOptimizerTest: public solidity::frontend::test::EVMVersionRestrictedTestCase
+class ControlFlowGraphTest: public solidity::frontend::test::TestCase
 {
 public:
 	static std::unique_ptr<TestCase> create(Config const& _config)
 	{
-		return std::make_unique<YulOptimizerTest>(_config.filename);
+		return std::make_unique<ControlFlowGraphTest>(_config.filename);
 	}
-
-	explicit YulOptimizerTest(std::string const& _filename);
-
+	explicit ControlFlowGraphTest(std::string const& _filename);
 	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 private:
-	std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> parse(
-		std::ostream& _stream, std::string const& _linePrefix, bool const _formatted, std::string const& _source
-	);
-
-	std::string m_optimizerStep;
-
 	Dialect const* m_dialect = nullptr;
-
-	std::shared_ptr<Object> m_object;
-	std::shared_ptr<AsmAnalysisInfo> m_analysisInfo;
 };
-
+}
 }
