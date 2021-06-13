@@ -198,14 +198,14 @@ void CommandLineParser::printLicenseAndExit()
 }
 
 
-bool CommandLineParser::checkMutuallyExclusive(boost::program_options::variables_map const& args, string const& _optionA, string const& _optionB)
+bool CommandLineParser::checkMutuallyExclusive(vector<string> const& _optionNames)
 {
-	if (args.count(_optionA) && args.count(_optionB))
+	if (countEnabledOptions(_optionNames) > 1)
 	{
-		serr() << "Option " << _optionA << " and " << _optionB << " are mutually exclusive." << endl;
+		serr() << "The following options are mutually exclusive: " << joinOptionNames(_optionNames) << ". ";
+		serr() << "Select at most one." << endl;
 		return false;
 	}
-
 	return true;
 }
 
@@ -735,7 +735,7 @@ General Information)").c_str(),
 		return false;
 	}
 
-	if (!checkMutuallyExclusive(m_args, g_strColor, g_strNoColor))
+	if (!checkMutuallyExclusive({g_strColor, g_strNoColor}))
 		return false;
 
 	array<string, 8> const conflictingWithStopAfter{
@@ -750,7 +750,7 @@ General Information)").c_str(),
 	};
 
 	for (auto& option: conflictingWithStopAfter)
-		if (!checkMutuallyExclusive(m_args, g_strStopAfter, option))
+		if (!checkMutuallyExclusive({g_strStopAfter, option}))
 			return false;
 
 	if (m_args.count(g_strColor) > 0)
@@ -861,20 +861,15 @@ General Information)").c_str(),
 			m_options.output.stopAfter = CompilerStack::State::Parsed;
 	}
 
-	vector<string> const exclusiveModes = {
+	if (!checkMutuallyExclusive({
 		g_strStandardJSON,
 		g_strLink,
 		g_strAssemble,
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
-	};
-	if (countEnabledOptions(exclusiveModes) > 1)
-	{
-		serr() << "The following options are mutually exclusive: " << joinOptionNames(exclusiveModes) << ". ";
-		serr() << "Select at most one." << endl;
+	}))
 		return false;
-	}
 
 	if (m_args.count(g_strStandardJSON))
 	{
