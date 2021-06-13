@@ -377,8 +377,18 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-bool CommandLineInterface::readInputFilesAndConfigureFileReader()
+bool CommandLineInterface::readInputFiles()
 {
+	solAssert(!m_standardJsonInput.has_value(), "");
+
+	m_fileReader.setBasePath(m_options.input.basePath);
+
+	if (m_fileReader.basePath() != "" && !boost::filesystem::is_directory(m_fileReader.basePath()))
+	{
+		serr() << "Base path must be a directory: " << m_fileReader.basePath() << endl;
+		return false;
+	}
+
 	for (boost::filesystem::path const& allowedDirectory: m_options.input.allowedDirectories)
 		m_fileReader.allowDirectory(allowedDirectory);
 
@@ -411,16 +421,33 @@ bool CommandLineInterface::readInputFilesAndConfigureFileReader()
 		}
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		m_fileReader.setSource(infile, readFileAsString(infile.string()));
-		m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(infile).string()).remove_filename());
+		string fileContent = readFileAsString(infile.string());
+		if (m_options.input.mode == InputMode::StandardJson)
+		{
+			solAssert(!m_standardJsonInput.has_value(), "");
+			m_standardJsonInput = move(fileContent);
+		}
+		else
+		{
+			m_fileReader.setSource(infile, move(fileContent));
+			m_fileReader.allowDirectory(boost::filesystem::canonical(infile).remove_filename());
+		}
 	}
 
 	if (m_options.input.addStdin)
-		m_fileReader.setSource(g_stdinFileName, readUntilEnd(m_sin));
-
-	if (m_fileReader.sourceCodes().size() == 0)
 	{
-		serr() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		if (m_options.input.mode == InputMode::StandardJson)
+		{
+			solAssert(!m_standardJsonInput.has_value(), "");
+			m_standardJsonInput = readUntilEnd(m_sin);
+		}
+		else
+			m_fileReader.setSource(g_stdinFileName, readUntilEnd(m_sin));
+	}
+
+	if (m_fileReader.sourceCodes().empty() && !m_standardJsonInput.has_value())
+	{
+		serr() << "All specified input files either do not exist or are not regular files." << endl;
 		return false;
 	}
 
@@ -502,57 +529,35 @@ bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 
 bool CommandLineInterface::processInput()
 {
-	m_fileReader.setBasePath(m_options.input.basePath);
-
-	if (m_options.input.basePath != "" && !boost::filesystem::is_directory(m_options.input.basePath))
+	switch (m_options.input.mode)
 	{
-		serr() << "Base path must be a directory: \"" << m_options.input.basePath << "\"\n";
-		return false;
-	}
-
-	if (m_options.input.mode == InputMode::StandardJson)
+	case InputMode::StandardJson:
 	{
-		string input;
-		if (m_options.input.standardJsonFile.empty())
-			input = readUntilEnd(m_sin);
-		else
-		{
-			try
-			{
-				input = readFileAsString(m_options.input.standardJsonFile);
-			}
-			catch (FileNotFound const&)
-			{
-				serr() << "File not found: " << m_options.input.standardJsonFile << endl;
-				return false;
-			}
-			catch (NotAFile const&)
-			{
-				serr() << "Not a regular file: " << m_options.input.standardJsonFile << endl;
-				return false;
-			}
-		}
+		solAssert(m_standardJsonInput.has_value(), "");
+
 		StandardCompiler compiler(m_fileReader.reader(), m_options.formatting.json);
-		sout() << compiler.compile(std::move(input)) << endl;
+		sout() << compiler.compile(move(m_standardJsonInput.value())) << endl;
+		m_standardJsonInput.reset();
 		return true;
 	}
-
-	if (!readInputFilesAndConfigureFileReader())
-		return false;
-
-	if (m_options.input.mode == InputMode::Assembler)
+	case InputMode::Assembler:
+	{
 		return assemble(
 			m_options.assembly.inputLanguage,
 			m_options.assembly.targetMachine,
 			m_options.optimizer.enabled,
 			m_options.optimizer.yulSteps
 		);
-
-	if (m_options.input.mode == InputMode::Linker)
+	}
+	case InputMode::Linker:
 		return link();
+	case InputMode::Compiler:
+	case InputMode::CompilerWithASTImport:
+		return compile();
+	}
 
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport, "");
-	return compile();
+	solAssert(false, "");
+	return false;
 }
 
 bool CommandLineInterface::compile()

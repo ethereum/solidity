@@ -53,6 +53,8 @@ public:
 
 	/// Parse command line arguments and return false if we should not continue
 	bool parseArguments(int _argc, char const* const* _argv);
+	/// Read the content of all input files and initialize the file reader.
+	bool readInputFiles();
 	/// Parse the files and create source code objects
 	bool processInput();
 	/// Perform actions on the input depending on provided compiler arguments
@@ -61,6 +63,7 @@ public:
 
 	CommandLineOptions const& options() const { return m_options; }
 	FileReader const& fileReader() const { return m_fileReader; }
+	std::optional<std::string> const& standardJsonInput() const { return m_standardJsonInput; }
 
 private:
 	bool compile();
@@ -95,10 +98,6 @@ private:
 	void handleGasEstimation(std::string const& _contract);
 	void handleStorageLayout(std::string const& _contract);
 
-	/// Reads the content of input files specified on the command line and passes them to FileReader.
-	/// @return false if there are no input files or input files cannot be read.
-	bool readInputFilesAndConfigureFileReader();
-
 	/// Tries to read @ m_sourceCodes as a JSONs holding ASTs
 	/// such that they can be imported into the compiler  (importASTs())
 	/// (produced by --combined-json ast,compact-format <file.sol>
@@ -129,6 +128,7 @@ private:
 	bool m_hasOutput = false;
 	bool m_error = false; ///< If true, some error occurred.
 	FileReader m_fileReader;
+	std::optional<std::string> m_standardJsonInput;
 	std::unique_ptr<frontend::CompilerStack> m_compiler;
 	CommandLineOptions m_options;
 };
