@@ -661,23 +661,21 @@ void OverrideChecker::overrideListError(
 	);
 }
 
-void OverrideChecker::overrideError(Declaration const& _overriding, Declaration const& _super, ErrorId _error, string const& _message, string const& _secondaryMsg)
+void OverrideChecker::overrideError(
+	OverrideProxy const& _overriding,
+	OverrideProxy const& _super,
+	ErrorId _error,
+	string const& _message,
+	optional<string> const& _secondaryMsg
+)
 {
 	m_errorReporter.typeError(
 		_error,
 		_overriding.location(),
-		SecondarySourceLocation().append(_secondaryMsg, _super.location()),
-		_message
-	);
-}
-
-
-void OverrideChecker::overrideError(OverrideProxy const& _overriding, OverrideProxy const& _super, ErrorId _error, string const& _message, string const& _secondaryMsg)
-{
-	m_errorReporter.typeError(
-		_error,
-		_overriding.location(),
-		SecondarySourceLocation().append(_secondaryMsg, _super.location()),
+		SecondarySourceLocation().append(
+			_secondaryMsg.value_or("Overridden " + _super.astNodeName() + " is here:"),
+			_super.location()
+		),
 		_message
 	);
 }
