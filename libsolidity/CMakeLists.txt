@@ -108,6 +108,8 @@ set(sources
 	formal/CHC.h
 	formal/EncodingContext.cpp
 	formal/EncodingContext.h
+	formal/Invariants.cpp
+	formal/Invariants.h
 	formal/ModelChecker.cpp
 	formal/ModelChecker.h
 	formal/ModelCheckerSettings.cpp

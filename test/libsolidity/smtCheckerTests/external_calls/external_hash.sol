@@ -28,3 +28,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (390-412): CHC: Assertion violation happens here.
+// Warning 0: (95-418): Contract invariants for :C:\n!(<errorCode> = 1)\n

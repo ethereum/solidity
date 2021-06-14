@@ -33,3 +33,7 @@ contract E is C,D {
 // SMTEngine: all
 // ----
 // Warning 6328: (379-394): CHC: Assertion violation happens here.\nCounterexample:\nx = 111\n\nTransaction trace:\nE.constructor()\nState: x = 0\nE.f()\n    C.f() -- internal call\n        B.f() -- internal call\n            A.f() -- internal call
+// Warning 0: (74-161): Contract invariants for :B:\n((x = 0) || (x = 101))\n
+// Warning 0: (163-249): Contract invariants for :C:\n((x = 0) || (x = 111))\n
+// Warning 0: (251-270): Contract invariants for :D:\n((x = 0) || (x = 101))\n
+// Warning 0: (272-415): Contract invariants for :E:\n((x = 0) || (x = 111))\n

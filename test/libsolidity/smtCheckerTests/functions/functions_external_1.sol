@@ -17,3 +17,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (61-244): Contract invariants for :C:\n!(<errorCode> = 1)\n((!(x <= 0) || !(<errorCode> >= 2)) && (!(x <= 0) || (x' <= 0)))\n(x <= 0)\n

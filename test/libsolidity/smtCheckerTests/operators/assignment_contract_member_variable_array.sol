@@ -13,3 +13,4 @@ contract A {
 // SMTEngine: all
 // ----
 // Warning 6328: (124-146): CHC: Assertion violation happens here.\nCounterexample:\na = []\n\nTransaction trace:\nA.constructor()\nState: a = []\nA.f()
+// Warning 0: (0-179): Contract invariants for :A:\n(a.length <= 0)\n

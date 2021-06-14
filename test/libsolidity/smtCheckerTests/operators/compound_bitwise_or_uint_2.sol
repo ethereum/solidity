@@ -19,3 +19,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-294): Contract invariants for :C:\n!(s.x.length <= 2)\n

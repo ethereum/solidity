@@ -18,3 +18,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-234): Contract invariants for :C:\n!(data.length <= 1)\n!(data[1].d.length <= 3)\n

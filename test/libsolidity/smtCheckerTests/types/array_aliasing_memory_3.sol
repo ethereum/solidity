@@ -28,3 +28,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (35-710): Contract invariants for :C:\n!(array.length <= 0)\n

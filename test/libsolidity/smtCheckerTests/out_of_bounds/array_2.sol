@@ -21,3 +21,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-341): Contract invariants for :C:\n((l + ((- 1) * a.length)) <= 0)\n

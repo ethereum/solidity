@@ -25,3 +25,4 @@ contract C {
 // Warning 6328: (185-199): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\nx = 1\nc = false\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()\n    d.d() -- untrusted external call
 // Warning 6328: (273-283): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\nx = 1\nc = true\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()\n    d.d() -- untrusted external call
 // Warning 6328: (393-407): CHC: Assertion violation happens here.\nCounterexample:\nx = 0, d = 0\n\nTransaction trace:\nC.constructor()\nState: x = 0, d = 0\nC.f()
+// Warning 0: (82-432): Contract invariants for :C:\n!(<errorCode> = 3)\n

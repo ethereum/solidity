@@ -35,3 +35,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 6328: (540-554): CHC: Assertion violation happens here.\nCounterexample:\nx = 1, owner = 0\ny = 1\n\nTransaction trace:\nC.constructor()\nState: x = 0, owner = 0\nC.g(1)
+// Warning 0: (0-560): Contract invariants for :C:\n(owner <= 0)\n

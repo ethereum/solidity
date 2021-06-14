@@ -30,3 +30,4 @@ contract A {
 // Warning 6328: (311-328): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
 // Warning 6368: (422-426): CHC: Out of bounds access happens here.\nCounterexample:\na = [0, 0]\nu = []\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
 // Warning 6328: (415-432): CHC: Assertion violation happens here.\nCounterexample:\na = [0, 0]\nb = [0, 0]\n\nTransaction trace:\nA.constructor()\nState: a = [1]\nA.f()
+// Warning 0: (0-503): Contract invariants for :A:\n!(a.length <= 0)\n

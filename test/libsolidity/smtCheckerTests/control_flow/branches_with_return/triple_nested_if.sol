@@ -18,3 +18,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-203): Contract invariants for :C:\n((a <= 0) && (b <= 0) && (c <= 0))\n

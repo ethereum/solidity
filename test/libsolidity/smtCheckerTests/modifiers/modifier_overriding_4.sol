@@ -39,3 +39,6 @@ contract D is B,C {
 // Warning 6328: (160-174): CHC: Assertion violation happens here.\nCounterexample:\nx = 1\n\nTransaction trace:\nB.constructor()\nState: x = 0\nA.f()
 // Warning 6328: (193-207): CHC: Assertion violation happens here.\nCounterexample:\nx = 2\n\nTransaction trace:\nC.constructor()\nState: x = 0\nA.f()
 // Warning 6328: (226-240): CHC: Assertion violation happens here.\nCounterexample:\nx = 3\n\nTransaction trace:\nD.constructor()\nState: x = 0\nA.f()
+// Warning 0: (298-369): Contract invariants for :B:\n((x = 0) || (x = 1))\n
+// Warning 0: (371-442): Contract invariants for :C:\n((x = 0) || (x = 2))\n
+// Warning 0: (444-522): Contract invariants for :D:\n((x = 0) || (x = 3))\n

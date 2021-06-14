@@ -15,3 +15,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-123): Contract invariants for :C:\n(x <= 0)\n

@@ -24,3 +24,4 @@ contract C {
 // SMTEngine: all
 // ----
 // Warning 2072: (255-261): Unused local variable.
+// Warning 0: (59-367): Contract invariants for :C:\n((!(x' <= 0) || !(x >= 2)) && (<errorCode> <= 0) && (!(x <= 2) || !(x' >= 3)))\n((!(x' <= 0) || ((x' + ((- 1) * x)) = 0)) && (<errorCode> <= 0) && (!(x <= 2) || !(x' >= 3)))\n

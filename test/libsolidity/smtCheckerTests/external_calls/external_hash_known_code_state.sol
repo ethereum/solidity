@@ -36,3 +36,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (495-532): CHC: Assertion violation happens here.
+// Warning 0: (155-538): Contract invariants for :C:\n(((owner + ((- 1) * owner')) >= 0) && !(<errorCode> = 1) && ((owner + ((- 1) * owner')) <= 0))\n

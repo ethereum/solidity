@@ -54,8 +54,8 @@ public:
 	};
 
 	/// Takes a function application _expr and checks for reachability.
-	/// @returns solving result and a counterexample graph, if possible.
-	virtual std::pair<CheckResult, CexGraph> query(
+	/// @returns solving result, an invariant, and counterexample graph, if possible.
+	virtual std::tuple<CheckResult, Expression, CexGraph> query(
 		Expression const& _expr
 	) = 0;
 

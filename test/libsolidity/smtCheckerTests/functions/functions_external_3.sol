@@ -18,3 +18,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (61-352): Contract invariants for :C:\n!(<errorCode> >= 2)\n(<errorCode> <= 0)\n

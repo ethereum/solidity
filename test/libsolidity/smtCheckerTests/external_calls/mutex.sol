@@ -27,3 +27,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (57-300): Contract invariants for :C:\n((!lock || ((x' + ((- 1) * x)) = 0)) && (<errorCode> <= 0) && (lock' || !lock))\n

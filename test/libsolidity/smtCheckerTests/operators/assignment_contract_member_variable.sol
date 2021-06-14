@@ -29,3 +29,4 @@ contract A {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (392-408): CHC: Assertion violation happens here.
+// Warning 0: (0-476): Contract invariants for :A:\n(((x = 0) && (y = 0)) || ((x = (- 2)) && (y = (- 2))))\n

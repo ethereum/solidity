@@ -22,6 +22,9 @@
 #include <libsmtutil/Sorts.h>
 
 #include <libsolutil/Common.h>
+#include <libsolutil/CommonData.h>
+
+#include <boost/algorithm/string/join.hpp>
 
 #include <cstdio>
 #include <map>
@@ -363,6 +366,15 @@ public:
 		auto fSort = dynamic_cast<FunctionSort const*>(sort.get());
 		smtAssert(fSort, "");
 		return Expression(name, std::move(_arguments), fSort->codomain);
+	}
+
+	std::string toString() const
+	{
+		if (arguments.empty())
+			return name;
+
+		auto strArgs = solidity::util::applyMap(arguments, [](auto&& arg) { return arg.toString(); });
+		return name + '(' + boost::algorithm::join(strArgs, ",") + ')';
 	}
 
 	std::string name;

@@ -27,3 +27,4 @@ contract C {
 // ----
 // Warning 6328: (178-192): CHC: Assertion violation happens here.
 // Warning 6328: (318-332): CHC: Assertion violation happens here.
+// Warning 0: (57-357): Contract invariants for :C:\n!(<errorCode> = 2)\n

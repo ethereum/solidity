@@ -9,3 +9,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-121): Contract invariants for :C:\n(!((x[x.length] := 23)[0] >= 43) && !((x[x.length] := 23)[0] <= 41))\n

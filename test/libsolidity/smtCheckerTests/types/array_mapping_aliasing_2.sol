@@ -43,3 +43,4 @@ contract C
 // Warning 6368: (850-869): CHC: Out of bounds access happens here.
 // Warning 6328: (936-956): CHC: Assertion violation happens here.
 // Warning 6368: (1029-1043): CHC: Out of bounds access might happen here.
+// Warning 0: (0-1050): Contract invariants for :C:\n!(severalMaps8.length <= 0)\n

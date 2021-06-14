@@ -23,3 +23,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-213): Contract invariants for :C:\n(a <= 0)\n

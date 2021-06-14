@@ -20,4 +20,5 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-218): Contract invariants for :C:\n!(a.length <= 2)\n
 // Warning 6838: (154-155): BMC: Condition is always false.

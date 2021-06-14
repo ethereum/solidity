@@ -21,3 +21,4 @@ contract C{
 // SMTEngine: all
 // ----
 // Warning 5667: (37-43): Unused function parameter. Remove or comment out the variable name to silence this warning.
+// Warning 0: (0-210): Contract invariants for :C:\n!(x <= 0)\n!(x >= 2)\n(!(x <= 0) && !(x >= 2))\n

@@ -32,3 +32,4 @@ contract C {
 // SMTEngine: all
 // SMTSolvers: z3
 // ----
+// Warning 0: (0-425): Contract invariants for :C:\n!(x >= 3)\n

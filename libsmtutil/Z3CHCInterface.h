@@ -43,7 +43,7 @@ public:
 
 	void addRule(Expression const& _expr, std::string const& _name) override;
 
-	std::pair<CheckResult, CexGraph> query(Expression const& _expr) override;
+	std::tuple<CheckResult, Expression, CexGraph> query(Expression const& _expr) override;
 
 	Z3Interface* z3Interface() const { return m_z3Interface.get(); }
 

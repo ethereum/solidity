@@ -41,3 +41,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (97-581): Contract invariants for :C:\n!(<errorCode> >= 2)\n(!(z' <= 0) || (<errorCode> <= 0))\n((z <= 0) && !insidef && (y <= 0))\n

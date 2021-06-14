@@ -138,6 +138,9 @@ public:
 	/// @returns true if this predicate represents an interface.
 	bool isInterface() const;
 
+	/// @returns true if this predicate represents a nondeterministic interface.
+	bool isNondetInterface() const;
+
 	PredicateType type() const { return m_type; }
 
 	/// @returns a formatted string representing a call to this predicate

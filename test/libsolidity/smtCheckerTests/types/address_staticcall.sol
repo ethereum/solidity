@@ -20,3 +20,4 @@ contract C
 // ----
 // Warning 2072: (191-207): Unused local variable.
 // Warning 6328: (233-248): CHC: Assertion violation happens here.
+// Warning 0: (0-323): Contract invariants for :C:\n(x = 0)\n

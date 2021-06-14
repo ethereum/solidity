@@ -44,7 +44,7 @@ public:
 
 	void addRule(Expression const& _expr, std::string const& _name) override;
 
-	std::pair<CheckResult, CexGraph> query(Expression const& _expr) override;
+	std::tuple<CheckResult, Expression, CexGraph> query(Expression const& _expr) override;
 
 	void declareVariable(std::string const& _name, SortPointer const& _sort) override;
 

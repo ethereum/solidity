@@ -24,3 +24,4 @@ contract C {
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (333-347): CHC: Assertion violation happens here.
+// Warning 0: (0-356): Contract invariants for :C:\n((x = 0) || (x = 7))\n

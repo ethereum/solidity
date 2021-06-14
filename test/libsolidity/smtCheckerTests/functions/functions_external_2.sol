@@ -24,3 +24,4 @@ contract C
 // SMTIgnoreCex: yes
 // ----
 // Warning 6328: (234-253): CHC: Assertion violation happens here.
+// Warning 0: (61-337): Contract invariants for :C:\n!(<errorCode> = 1)\n((!((map[1] + ((- 1) * map[0])) <= 0) || ((map'[1] + ((- 1) * map'[0])) <= 0)) && !(<errorCode> = 2) && (!((map[1] + ((- 1) * map[0])) >= 0) || ((map'[0] + ((- 1) * map'[1])) <= 0)))\n

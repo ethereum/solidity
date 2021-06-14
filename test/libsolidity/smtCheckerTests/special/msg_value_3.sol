@@ -13,3 +13,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-183): Contract invariants for :C:\nlock\n

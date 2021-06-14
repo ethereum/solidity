@@ -17,3 +17,4 @@ contract C
 // ====
 // SMTEngine: all
 // ----
+// Warning 0: (0-226): Contract invariants for :C:\n(true && !(a.length <= 2))\n(true && !(a[2].length <= 3))\n
