@@ -246,7 +246,10 @@ Input Description
         "remappings": [ ":g=/dir" ],
         // Optional: Optimizer settings
         "optimizer": {
-          // disabled by default
+          // Disabled by default.
+          // NOTE: enabled=false still leaves some optimizations on. See comments below.
+          // WARNING: Before version 0.8.6 omitting the 'enabled' key was not equivalent to setting
+          // it to false and would actually disable all the optimizations.
           "enabled": true,
           // Optimize for how many times you intend to run the code.
           // Lower values will optimize more for initial deployment cost, higher
