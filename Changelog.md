@@ -8,6 +8,7 @@ Compiler Features:
 
 Bugfixes:
  * Control Flow Graph: Fix incorrectly reported unreachable code.
+ * Solc-Js: Use the same optimizer settings as ``solc`` when the ``--optimize`` flag is not specified.
 
 
 
