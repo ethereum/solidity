@@ -118,3 +118,31 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 	}
 	return tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
+
+// @p _line and @p _column should be 1-based, because it's not an index but a line/column number.
+optional<int> CharStream::translateLineColumnToPosition(int _line, int _column) const
+{
+	return translateLineColumnToPosition(m_source, _line, _column);
+}
+
+optional<int> CharStream::translateLineColumnToPosition(std::string const& _text, int _line, int _column)
+{
+	size_t offset = 0;
+
+	while (_line > 0)
+	{
+		if (auto const found = _text.find('\n', offset); found != _text.npos)
+		{
+			offset = found + 1;
+			_line--;
+		}
+		else
+			return nullopt;
+	}
+
+	if (offset + size_t(_column) >= _text.size())
+		return nullopt;
+
+	return int(offset) + _column;
+}
+

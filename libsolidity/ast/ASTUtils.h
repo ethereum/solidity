@@ -21,9 +21,11 @@
 namespace solidity::frontend
 {
 
-class VariableDeclaration;
+class ASTNode;
 class Declaration;
 class Expression;
+class SourceUnit;
+class VariableDeclaration;
 
 /// Find the topmost referenced constant variable declaration when the given variable
 /// declaration value is an identifier. Works only for constant variable declarations.
@@ -32,5 +34,8 @@ VariableDeclaration const* rootConstVariableDeclaration(VariableDeclaration cons
 
 /// Returns true if the constant variable declaration is recursive.
 bool isConstantVariableRecursive(VariableDeclaration const& _varDecl);
+
+/// Locates closest AST node match within a SourceUnit given its absolute file offset or nullptr if none matched.
+ASTNode const* locateASTNode(int _pos, SourceUnit const& _sourceUnit);
 
 }

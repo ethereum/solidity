@@ -17,12 +17,44 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/ASTUtils.h>
 
 #include <libsolutil/Algorithms.h>
 
 namespace solidity::frontend
 {
+
+namespace
+{
+
+class ASTNodeLocator: public ASTConstVisitor
+{
+public:
+	bool visitNode(ASTNode const& _node) override
+	{
+		if (_node.location().contains(m_pos))
+		{
+			m_closestMatch = &_node;
+			return true;
+		}
+		return false;
+	}
+
+	explicit ASTNodeLocator(int _pos): m_pos{_pos}, m_closestMatch{nullptr} {};
+
+	int const m_pos;
+	ASTNode const* m_closestMatch;
+};
+
+}
+
+ASTNode const* locateASTNode(int _pos, SourceUnit const& _sourceUnit)
+{
+	ASTNodeLocator locator{_pos};
+	_sourceUnit.accept(locator);
+	return locator.m_closestMatch;
+}
 
 bool isConstantVariableRecursive(VariableDeclaration const& _varDecl)
 {

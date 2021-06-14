@@ -23,6 +23,10 @@
  */
 #include <solc/CommandLineInterface.h>
 
+#if defined(SOLC_LSP_TCP)
+#include <solc/LSPTCPTransport.h>
+#endif
+
 #include "solidity/BuildInfo.h"
 #include "license.h"
 
@@ -38,6 +42,8 @@
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libsolidity/interface/StorageLayout.h>
+#include <libsolidity/lsp/LanguageServer.h>
+#include <libsolidity/lsp/Transport.h>
 
 #include <libyul/AssemblyStack.h>
 #include <libyul/optimiser/Suite.h>
@@ -56,6 +62,8 @@
 #include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/JSON.h>
+
+#include <range/v3/all.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -930,6 +938,23 @@ General Information)").c_str(),
 			"Supported Inputs is the output of the --" + g_argStandardJSON + " or the one produced by "
 			"--" + g_argCombinedJson + " " + g_strAst + "," + g_strCompactJSON).c_str()
 		)
+		(
+			"lsp",
+			"Enables Language Server (LSP) mode. "
+			"This won't compile input but serves as language server to to clients."
+		)
+#if defined(SOLC_LSP_TCP)
+		(
+			"lsp-port",
+			po::value<unsigned>()->value_name("PORT")->default_value(4040),
+			"TCP listening port an LCP client can connect to instead of using stdio."
+		)
+#endif
+		(
+			"lsp-trace",
+			po::value<string>()->value_name("path"),
+			"Writes a trace log file when running in LSP mode. Only useful when debugging solc LSP."
+		)
 	;
 	desc.add(alternativeInputModes);
 
@@ -1112,6 +1137,30 @@ General Information)").c_str(),
 	if (!checkMutuallyExclusive(m_args, g_argColor, g_argNoColor))
 		return false;
 
+	static vector<string> const allowedWithLSP{
+		// LSP related arguments.
+		"lsp",
+		"lsp-trace",
+#if defined(SOLC_LSP_TCP)
+		"lsp-port",
+#endif
+		// Defaulted arguments must be listed.
+		g_argModelCheckerEngine,
+		g_argModelCheckerTargets,
+		g_strModelCheckerContracts,
+		g_argOptimizeRuns
+	};
+
+	if (m_args.count("lsp"))
+		for (auto const& arg: m_args)
+		{
+			if (ranges::none_of(allowedWithLSP, [&](auto const& a) -> bool { return a == arg.first; }))
+			{
+				serr() << "Option " << arg.first << " and " << "lsp" << " are mutually exclusive." << endl;
+				return false;
+			}
+		}
+
 	static vector<string> const conflictingWithStopAfter{
 		g_argBinary,
 		g_argIR,
@@ -1183,6 +1232,10 @@ General Information)").c_str(),
 
 bool CommandLineInterface::processInput()
 {
+	if (m_args.count("lsp"))
+		// Input is coming in interactively in LSP mode.
+		return true;
+
 	if (m_args.count(g_argBasePath))
 	{
 		boost::filesystem::path const fspath{m_args[g_argBasePath].as<string>()};
@@ -1755,8 +1808,44 @@ void CommandLineInterface::handleAst()
 	}
 }
 
+bool CommandLineInterface::serveLSP()
+{
+	std::unique_ptr<ofstream> traceLog;
+	if (m_args.count("lsp-trace"))
+		traceLog = make_unique<ofstream>(m_args.at("lsp-trace").as<string>(), std::ios::app);
+	else
+		traceLog = make_unique<ofstream>("/tmp/solc.lsp.log", std::ios::app);
+
+	auto const traceLevel = lsp::Trace::Messages;
+
+	auto const traceLogger = [&traceLog](string_view _msg)
+	{
+		solAssert(traceLog, "");
+		*traceLog << _msg << endl;
+	};
+
+	std::unique_ptr<lsp::Transport> transport = make_unique<lsp::JSONTransport>(traceLevel, traceLogger);
+#if defined(SOLC_LSP_TCP)
+	if (m_args.count("lsp-port"))
+	{
+		unsigned const port = m_args.at("lsp-port").as<unsigned>();
+		if (port > 0xFFFF)
+		{
+			sout() << "LSP port number not in valid port range. " << endl;
+			return false;
+		}
+		transport = make_unique<lsp::LSPTCPTransport>(static_cast<unsigned short>(port), traceLevel, traceLogger);
+	}
+#endif
+
+	lsp::LanguageServer languageServer(traceLogger, move(transport));
+	return languageServer.run();
+}
+
 bool CommandLineInterface::actOnInput()
 {
+	if (m_args.count("lsp"))
+		serveLSP();
 	if (m_args.count(g_argStandardJSON) || m_onlyAssemble)
 		// Already done in "processInput" phase.
 		return true;

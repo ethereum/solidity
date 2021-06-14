@@ -63,6 +63,13 @@ struct SourceLocation
 		return start <= _other.start && _other.end <= end;
 	}
 
+	inline bool contains(int _pos) const
+	{
+		if (!source)
+			return false;
+		return start <= _pos && _pos < end;
+	}
+
 	inline bool intersects(SourceLocation const& _other) const
 	{
 		if (!hasText() || !_other.hasText() || source.get() != _other.source.get())
