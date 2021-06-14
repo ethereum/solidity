@@ -51,9 +51,10 @@ code that manages the database. In this example, the contract defines the
 functions ``set`` and ``get`` that can be used to modify
 or retrieve the value of the variable.
 
-To access a state variable, you do not typically add the ``this.`` prefix.
+To access a member (like a state variable) of the current contract, you do not typically add the ``this.`` prefix,
+you just access it directly via its name.
 Unlike in some other languages, omitting it is not just a matter of style,
-it results in a completely different operation.
+it results in a completely different way to access the member, but more on this later.
 
 This contract does not do much yet apart from (due to the infrastructure
 built by Ethereum) allowing anyone to store a single number that is accessible by
