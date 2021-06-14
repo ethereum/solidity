@@ -158,6 +158,12 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 			{},
 			move(_functionDefinition.body)
 		});
+		// Generate new names for the arguments to maintain disambiguation.
+		std::map<YulString, YulString> newArgumentNames;
+		for (TypedName const& _var: stackParameters)
+			newArgumentNames[_var.name] = m_context.dispenser.newName(_var.name);
+		for (auto& parameter: _functionDefinition.parameters)
+			parameter.name = util::valueOrDefault(newArgumentNames, parameter.name, parameter.name);
 		// Replace original function by a call to the new function and an assignment to the return variable from memory.
 		_functionDefinition.body = Block{_functionDefinition.debugData, move(memoryVariableInits)};
 		_functionDefinition.body.statements.emplace_back(ExpressionStatement{
@@ -166,7 +172,7 @@ void StackToMemoryMover::operator()(FunctionDefinition& _functionDefinition)
 				_functionDefinition.debugData,
 				Identifier{_functionDefinition.debugData, newFunctionName},
 				stackParameters | ranges::views::transform([&](TypedName const& _arg) {
-					return Expression{Identifier{_arg.debugData, _arg.name}};
+					return Expression{Identifier{_arg.debugData, newArgumentNames.at(_arg.name)}};
 				}) | ranges::to<vector<Expression>>
 			}
 		});
