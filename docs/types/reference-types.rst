@@ -114,7 +114,7 @@ Indices are zero-based, and access is in the opposite direction of the
 declaration.
 
 For example, if you have a variable ``uint[][5] memory x``, you access the
-second ``uint`` in the third dynamic array using ``x[2][1]``, and to access the
+seventh ``uint`` in the third dynamic array using ``x[2][6]``, and to access the
 third dynamic array, use ``x[2]``. Again,
 if you have an array ``T[5] a`` for a type ``T`` that can also be an array,
 then ``a[2]`` always has type ``T``.
