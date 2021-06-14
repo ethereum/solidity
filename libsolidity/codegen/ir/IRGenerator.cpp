@@ -137,7 +137,7 @@ string IRGenerator::generate(
 				<?library>
 				<!library>
 				<?constructorHasParams> let <constructorParams> := <copyConstructorArguments>() </constructorHasParams>
-				<implicitConstructor>(<constructorParams>)
+				<constructor>(<constructorParams>)
 				</library>
 				<deploy>
 				<functions>
@@ -178,10 +178,10 @@ string IRGenerator::generate(
 	}
 	t("constructorParams", joinHumanReadable(constructorParams));
 	t("constructorHasParams", !constructorParams.empty());
-	t("implicitConstructor", IRNames::implicitConstructor(_contract));
+	t("constructor", IRNames::constructor(_contract));
 
 	t("deploy", deployCode(_contract));
-	generateImplicitConstructors(_contract);
+	generateConstructors(_contract);
 	set<FunctionDefinition const*> creationFunctionList = generateQueuedFunctions();
 	InternalDispatchMap internalDispatchMap = generateInternalDispatchFunctions();
 
@@ -710,17 +710,17 @@ string IRGenerator::initStateVariables(ContractDefinition const& _contract)
 }
 
 
-void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contract)
+void IRGenerator::generateConstructors(ContractDefinition const& _contract)
 {
-	auto listAllParams = [&](
-		map<ContractDefinition const*, vector<string>> const& baseParams) -> vector<string>
-	{
-		vector<string> params;
-		for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
-			if (baseParams.count(contract))
-				params += baseParams.at(contract);
-		return params;
-	};
+	auto listAllParams =
+		[&](map<ContractDefinition const*, vector<string>> const& baseParams) -> vector<string>
+		{
+			vector<string> params;
+			for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
+				if (baseParams.count(contract))
+					params += baseParams.at(contract);
+			return params;
+		};
 
 	map<ContractDefinition const*, vector<string>> baseConstructorParams;
 	for (size_t i = 0; i < _contract.annotation().linearizedBaseContracts.size(); ++i)
@@ -729,7 +729,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 		baseConstructorParams.erase(contract);
 
 		m_context.resetLocalVariables();
-		m_context.functionCollector().createFunction(IRNames::implicitConstructor(*contract), [&]() {
+		m_context.functionCollector().createFunction(IRNames::constructor(*contract), [&]() {
 			Whiskers t(R"(
 				function <functionName>(<params><comma><baseParams>) {
 					<evalBaseArguments>
@@ -746,7 +746,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			vector<string> baseParams = listAllParams(baseConstructorParams);
 			t("baseParams", joinHumanReadable(baseParams));
 			t("comma", !params.empty() && !baseParams.empty() ? ", " : "");
-			t("functionName", IRNames::implicitConstructor(*contract));
+			t("functionName", IRNames::constructor(*contract));
 			pair<string, map<ContractDefinition const*, vector<string>>> evaluatedArgs = evaluateConstructorArguments(*contract);
 			baseConstructorParams.insert(evaluatedArgs.second.begin(), evaluatedArgs.second.end());
 			t("evalBaseArguments", evaluatedArgs.first);
@@ -754,7 +754,7 @@ void IRGenerator::generateImplicitConstructors(ContractDefinition const& _contra
 			{
 				t("hasNextConstructor", true);
 				ContractDefinition const* nextContract = _contract.annotation().linearizedBaseContracts[i + 1];
-				t("nextConstructor", IRNames::implicitConstructor(*nextContract));
+				t("nextConstructor", IRNames::constructor(*nextContract));
 				t("nextParams", joinHumanReadable(listAllParams(baseConstructorParams)));
 			}
 			else

@@ -87,10 +87,10 @@ private:
 	/// Generates code that assigns the initial value of the respective type.
 	std::string generateInitialAssignment(VariableDeclaration const& _varDecl);
 
-	/// Generates implicit constructors for all contracts in the inheritance hierarchy of
+	/// Generates constructors for all contracts in the inheritance hierarchy of
 	/// @a _contract
-	/// If there are user defined constructors, their body will be included in implicit constructors body.
-	void generateImplicitConstructors(ContractDefinition const& _contract);
+	/// If there are user defined constructors, their body will be included in the implicit constructor's body.
+	void generateConstructors(ContractDefinition const& _contract);
 
 	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers) of
 	/// @a _contract

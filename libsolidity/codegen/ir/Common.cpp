@@ -36,7 +36,7 @@ YulArity YulArity::fromType(FunctionType const& _functionType)
 string IRNames::function(FunctionDefinition const& _function)
 {
 	if (_function.isConstructor())
-		return implicitConstructor(*_function.annotation().contract);
+		return constructor(*_function.annotation().contract);
 
 	return "fun_" + _function.name() + "_" + to_string(_function.id());
 }
@@ -78,7 +78,7 @@ string IRNames::internalDispatch(YulArity const& _arity)
 		"_out_" + to_string(_arity.out);
 }
 
-string IRNames::implicitConstructor(ContractDefinition const& _contract)
+string IRNames::constructor(ContractDefinition const& _contract)
 {
 	return "constructor_" + _contract.name() + "_" + to_string(_contract.id());
 }
