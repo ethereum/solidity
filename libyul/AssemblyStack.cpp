@@ -26,7 +26,6 @@
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/backends/evm/EthAssemblyAdapter.h>
-#include <libyul/backends/evm/EVMAssembly.h>
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/EVMObjectCompiler.h>

@@ -55,8 +55,6 @@ add_library(yul
 	backends/evm/ConstantOptimiser.h
 	backends/evm/EthAssemblyAdapter.cpp
 	backends/evm/EthAssemblyAdapter.h
-	backends/evm/EVMAssembly.cpp
-	backends/evm/EVMAssembly.h
 	backends/evm/EVMCodeTransform.cpp
 	backends/evm/EVMCodeTransform.h
 	backends/evm/EVMDialect.cpp

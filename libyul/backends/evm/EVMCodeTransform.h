@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <libyul/backends/evm/EVMAssembly.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/VariableReferenceCounter.h>
 #include <libyul/optimiser/ASTWalker.h>
@@ -41,7 +39,6 @@ namespace solidity::yul
 {
 
 struct AsmAnalysisInfo;
-class EVMAssembly;
 
 struct CodeTransformContext
 {

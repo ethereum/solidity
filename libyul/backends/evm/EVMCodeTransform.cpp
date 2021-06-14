@@ -236,7 +236,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 	else
 	{
 		m_assembly.setSourceLocation(extractSourceLocationFromDebugData(_call.debugData));
-		EVMAssembly::LabelID returnLabel(numeric_limits<EVMAssembly::LabelID>::max()); // only used for evm 1.0
+		AbstractAssembly::LabelID returnLabel(numeric_limits<AbstractAssembly::LabelID>::max()); // only used for evm 1.0
 
 		returnLabel = m_assembly.newLabelId();
 		m_assembly.appendLabelReference(returnLabel);
