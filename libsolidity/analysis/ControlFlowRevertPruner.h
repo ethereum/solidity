@@ -51,23 +51,11 @@ private:
 	/// Modify function flows so that edges with reverting function calls are removed
 	void modifyFunctionFlows();
 
-
-	/// Collect all function calls made by `_function` for later analysis
-	/// @param _function function to analyse
-	/// @param _mostDerivedContract most derived contract used in the calls
-	void collectCalls(FunctionDefinition const& _function, ContractDefinition const* _mostDerivedContract);
-
 	/// Control Flow Graph object.
 	CFG& m_cfg;
 
 	/// function/contract pairs mapped to their according revert state
 	std::map<CFG::FunctionContractTuple, RevertState> m_functions;
-
-	/// Called function mapped to the set of function/contract pairs calling them
-	std::map<
-		FunctionDefinition const*,
-		std::set<CFG::FunctionContractTuple>
-	> m_calledBy;
 
 	std::map<
 		std::tuple<FunctionCall const*, ContractDefinition const*>,

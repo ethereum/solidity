@@ -29,7 +29,9 @@ namespace solidity::frontend
 namespace
 {
 
-/// Find the right scope for the called function: When calling a base function, we keep the most derived, but we use the called contract in case it is a library function or nullptr for a free function
+/// Find the right scope for the called function: When calling a base function,
+/// we keep the most derived, but we use the called contract in case it is a
+/// library function or nullptr for a free function.
 ContractDefinition const* findScopeContract(FunctionDefinition const& _function, ContractDefinition const* _callingContract)
 {
 	if (auto const* functionContract = _function.annotation().contract)
@@ -46,9 +48,8 @@ ContractDefinition const* findScopeContract(FunctionDefinition const& _function,
 
 void ControlFlowRevertPruner::run()
 {
-	// build a lookup table for function calls / callers
 	for (auto& [pair, flow]: m_cfg.allFunctionFlows())
-		collectCalls(*pair.function, pair.contract);
+		m_functions[pair] = RevertState::Unknown;
 
 	findRevertStates();
 	modifyFunctionFlows();
@@ -57,6 +58,10 @@ void ControlFlowRevertPruner::run()
 void ControlFlowRevertPruner::findRevertStates()
 {
 	std::set<CFG::FunctionContractTuple> pendingFunctions = keys(m_functions);
+	// We interrupt the search whenever we encounter a call to a function with (yet) unknown
+	// revert behaviour. The ``wakeUp`` data structure contains information about which
+	// searches to restart once we know about the behaviour.
+	std::map<CFG::FunctionContractTuple, std::set<CFG::FunctionContractTuple>> wakeUp;
 
 	while (!pendingFunctions.empty())
 	{
@@ -83,21 +88,27 @@ void ControlFlowRevertPruner::findRevertStates()
 					if (resolvedFunction == nullptr || !resolvedFunction->isImplemented())
 						continue;
 
-					switch (m_functions.at({findScopeContract(*resolvedFunction, item.contract), resolvedFunction}))
+					CFG::FunctionContractTuple calledFunctionTuple{
+						findScopeContract(*resolvedFunction, item.contract),
+						resolvedFunction
+					};
+					switch (m_functions.at(calledFunctionTuple))
 					{
 						case RevertState::Unknown:
+							wakeUp[calledFunctionTuple].insert(item);
 							foundUnknown = true;
 							return;
 						case RevertState::AllPathsRevert:
 							return;
-						default:
+						case RevertState::HasNonRevertingPath:
 							break;
 					}
 				}
 
 				for (CFGNode* exit: _node->exits)
 					_addChild(exit);
-		});
+			}
+		);
 
 		auto& revertState = m_functions[item];
 
@@ -106,16 +117,14 @@ void ControlFlowRevertPruner::findRevertStates()
 		else if (!foundUnknown)
 			revertState = RevertState::AllPathsRevert;
 
-		// Mark all functions depending on this one as modified again
-		if (revertState != RevertState::Unknown)
-			for (auto& nextItem: m_calledBy[item.function])
-				// Ignore different most derived contracts in dependent callees
-				if (
-					item.contract == nullptr ||
-					nextItem.contract == nullptr ||
-					nextItem.contract == item.contract
-				)
+		if (revertState != RevertState::Unknown && wakeUp.count(item))
+		{
+			// Restart all searches blocked by this function.
+			for (CFG::FunctionContractTuple const& nextItem: wakeUp[item])
+				if (m_functions.at(nextItem) == RevertState::Unknown)
 					pendingFunctions.insert(nextItem);
+			wakeUp.erase(item);
+		}
 	}
 }
 
@@ -157,29 +166,6 @@ void ControlFlowRevertPruner::modifyFunctionFlows()
 					_addChild(exit);
 		});
 	}
-}
-
-void ControlFlowRevertPruner::collectCalls(FunctionDefinition const& _function, ContractDefinition const* _mostDerivedContract)
-{
-	FunctionFlow const& functionFlow = m_cfg.functionFlow(_function, _mostDerivedContract);
-
-	CFG::FunctionContractTuple pair{_mostDerivedContract, &_function};
-
-	solAssert(m_functions.count(pair) == 0, "");
-	m_functions[pair] = RevertState::Unknown;
-
-	solidity::util::BreadthFirstSearch<CFGNode*>{{functionFlow.entry}}.run(
-		[&](CFGNode* _node, auto&& _addChild) {
-			for (auto const* functionCall: _node->functionCalls)
-			{
-				auto const* funcDef = ASTNode::resolveFunctionCall(*functionCall, _mostDerivedContract);
-				if (funcDef && funcDef->isImplemented())
-					m_calledBy[funcDef].insert(pair);
-			}
-
-			for (CFGNode* exit: _node->exits)
-				_addChild(exit);
-	});
 }
 
 }
