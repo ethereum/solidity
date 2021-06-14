@@ -54,7 +54,7 @@ struct IRNames
 	static std::string creationObject(ContractDefinition const& _contract);
 	static std::string deployedObject(ContractDefinition const& _contract);
 	static std::string internalDispatch(YulArity const& _arity);
-	static std::string implicitConstructor(ContractDefinition const& _contract);
+	static std::string constructor(ContractDefinition const& _contract);
 	static std::string libraryAddressImmutable();
 	static std::string constantValueFunction(VariableDeclaration const& _constant);
 	static std::string localVariable(VariableDeclaration const& _declaration);
