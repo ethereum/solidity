@@ -942,30 +942,126 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::incDecOperation(
 	return lResult;
 }
 
-optional<pair<SolidityTypePtr, string>> ExpressionGenerator::memberAccessExpr(
-	pair<SolidityTypePtr, string>& _typeName
-)
+pair<SolidityTypePtr, string> ExpressionGenerator::memberAccessExpr(SolidityTypePtr& _type)
 {
 	solAssert(
-		holds_alternative<shared_ptr<IntegerType>>(_typeName.first) ||
-		holds_alternative<shared_ptr<BytesType>>(_typeName.first) ||
-		holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first),
+		holds_alternative<shared_ptr<IntegerType>>(_type) ||
+		holds_alternative<shared_ptr<BytesType>>(_type) ||
+		holds_alternative<shared_ptr<FixedBytesType>>(_type),
 		""
 	);
-	ExpressionGenerator exprGen{state};
 	auto addressType = make_shared<AddressType>();
 	pair<SolidityTypePtr, string> addressTypeName = {addressType, {}};
-	auto expression = exprGen.rLValueOrLiteral(addressTypeName);
-	exprGen.resetNestingDepth();
+	auto expression = rLValueOrLiteral(addressTypeName);
 	solAssert(expression.has_value(), "");
 	// TODO: Clean this up
-	if (holds_alternative<shared_ptr<IntegerType>>(_typeName.first))
+	if (holds_alternative<shared_ptr<IntegerType>>(_type))
 		expression.value().second += ".balance";
-	else if (holds_alternative<shared_ptr<FixedBytesType>>(_typeName.first))
+	else if (holds_alternative<shared_ptr<BytesType>>(_type))
 		expression.value().second += ".codehash";
 	else
 		expression.value().second += ".code";
-	return expression;
+	return expression.value();
+}
+
+pair<SolidityTypePtr, string> ExpressionGenerator::magicExpr(SolidityTypePtr& _type)
+{
+	solAssert(
+		holds_alternative<shared_ptr<IntegerType>>(_type) ||
+		holds_alternative<shared_ptr<AddressType>>(_type) ||
+		holds_alternative<shared_ptr<FixedBytesType>>(_type),
+		""
+	);
+	if (holds_alternative<shared_ptr<IntegerType>>(_type))
+	{
+		auto integerType = get<shared_ptr<IntegerType>>(_type);
+		solAssert(!integerType->signedType && integerType->numBits == 256, "");
+		auto paramIntType = make_shared<IntegerType>(IntegerType::Bits::B256, false);
+		pair<SolidityTypePtr, string> paramIntTypeName = {paramIntType, {}};
+		auto x = rLValueOrLiteral(paramIntTypeName);
+		auto y = rLValueOrLiteral(paramIntTypeName);
+		auto k = rLValueOrLiteral(paramIntTypeName);
+		solAssert(x.has_value() && y.has_value() && k.has_value(), "");
+		string builtin;
+		if (state->uRandDist->probable(2))
+			builtin = "addmod";
+		else
+			builtin = "mulmod";
+		auto builtinExpr = builtin +
+			"(" +
+			x.value().second +
+			", " +
+			y.value().second +
+			", " +
+			k.value().second +
+			")";
+		return pair<SolidityTypePtr, string>(paramIntType, builtinExpr);
+	}
+	else if (holds_alternative<shared_ptr<AddressType>>(_type))
+	{
+		// ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s)
+		auto bytes32Type = make_shared<FixedBytesType>(FixedBytesType::Bytes::W32);
+		auto uint8Type = make_shared<IntegerType>(IntegerType::Bits::B8, false);
+		pair<SolidityTypePtr, string> paramBytes32TypeName = {bytes32Type, {}};
+		pair<SolidityTypePtr, string> paramUint8TypeName = {uint8Type, {}};
+		auto hash = rLValueOrLiteral(paramBytes32TypeName);
+		auto r = rLValueOrLiteral(paramBytes32TypeName);
+		auto s = rLValueOrLiteral(paramBytes32TypeName);
+		auto v = rLValueOrLiteral(paramUint8TypeName);
+		solAssert(hash.has_value() && r.has_value() && s.has_value() && v.has_value(), "");
+		string builtinExpr = string("ecrecover") +
+			"(" +
+			hash.value().second +
+			", " +
+			v.value().second +
+			", " +
+			r.value().second +
+			", " +
+			s.value().second +
+			")";
+		auto addressType = make_shared<AddressType>();
+		return pair<SolidityTypePtr, string>(addressType, builtinExpr);
+	}
+	else if (holds_alternative<shared_ptr<FixedBytesType>>(_type))
+	{
+		auto fixedBytesType = get<shared_ptr<FixedBytesType>>(_type);
+		if (fixedBytesType->numBytes == 20)
+		{
+			// ripemd160(bytes memory) returns (bytes20)
+			auto bytes20Type = make_shared<FixedBytesType>(FixedBytesType::Bytes::W20);
+			auto bytesType = make_shared<BytesType>();
+			pair<SolidityTypePtr, string> paramBytesTypeName = {bytesType, {}};
+			auto mem = rLValueOrLiteral(paramBytesTypeName);
+			solAssert(mem.has_value(), "");
+			string ripemdExpr = string("ripemd160") +
+				"(" +
+				mem.value().second +
+				")";
+			return pair<SolidityTypePtr, string>(bytes20Type, ripemdExpr);
+		}
+		else
+		{
+			solAssert(fixedBytesType->numBytes == 32, "");
+			auto bytes32Type = make_shared<FixedBytesType>(FixedBytesType::Bytes::W32);
+			auto bytesType = make_shared<BytesType>();
+			pair<SolidityTypePtr, string> paramBytesTypeName = {bytesType, {}};
+			auto mem = rLValueOrLiteral(paramBytesTypeName);
+			solAssert(mem.has_value(), "");
+			// sha256(bytes memory) returns (bytes32)
+			// keccak256(bytes memory) returns (bytes32)
+			string builtin;
+			if (state->uRandDist->probable(2))
+				builtin = "sha256";
+			else
+				builtin = "keccak256";
+			string builtinExpr = builtin +
+			                    "(" +
+			                    mem.value().second +
+			                    ")";
+			return pair<SolidityTypePtr, string>(bytes32Type, builtinExpr);
+		}
+	}
+	solAssert(false, "");
 }
 
 ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTypePtr& _typePtr)
@@ -973,7 +1069,6 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 	vector<RLValueExpr> permittedTypes;
 
 	if (holds_alternative<shared_ptr<BoolType>>(_typePtr))
-	{
 		permittedTypes = {
 			RLValueExpr::VARREF,
 			RLValueExpr::LIT,
@@ -987,7 +1082,6 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 			RLValueExpr::AND,
 			RLValueExpr::OR
 		};
-	}
 	else if (holds_alternative<shared_ptr<FixedBytesType>>(_typePtr))
 	{
 		permittedTypes = {
@@ -999,7 +1093,12 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 		};
 		auto bytesType = get<shared_ptr<FixedBytesType>>(_typePtr);
 		if (bytesType->numBytes == 32)
+		{
 			permittedTypes.emplace_back(RLValueExpr::MEMBERACCESS);
+			permittedTypes.emplace_back(RLValueExpr::MAGICEXPR);
+		}
+		else if (bytesType->numBytes == 20)
+			permittedTypes.emplace_back(RLValueExpr::MAGICEXPR);
 	}
 	else if (holds_alternative<shared_ptr<IntegerType>>(_typePtr))
 	{
@@ -1047,21 +1146,22 @@ ExpressionGenerator::RLValueExpr ExpressionGenerator::expressionType(SolidityTyp
 				RLValueExpr::BITOR
 			};
 			if (integerType->numBits == 256)
+			{
 				permittedTypes.emplace_back(RLValueExpr::MEMBERACCESS);
+				permittedTypes.emplace_back(RLValueExpr::MAGICEXPR);
+			}
 		}
 	}
 	else if (holds_alternative<shared_ptr<BytesType>>(_typePtr))
-	{
 		permittedTypes = {
 			RLValueExpr::VARREF,
 			RLValueExpr::LIT,
 			RLValueExpr::MEMBERACCESS
 		};
-	}
+	else if (holds_alternative<shared_ptr<AddressType>>(_typePtr))
+		permittedTypes = {RLValueExpr::VARREF, RLValueExpr::LIT, RLValueExpr::MAGICEXPR};
 	else
-	{
 		permittedTypes = {RLValueExpr::VARREF, RLValueExpr::LIT};
-	}
 	return permittedTypes[state->uRandDist->distributionOneToN(permittedTypes.size()) - 1];
 }
 
@@ -1369,7 +1469,9 @@ optional<pair<SolidityTypePtr, string>> ExpressionGenerator::rOrLValueExpression
 	case RLValueExpr::LIT:
 		return literal(_typeName.first);
 	case RLValueExpr::MEMBERACCESS:
-		return memberAccessExpr(_typeName);
+		return memberAccessExpr(_typeName.first);
+	case RLValueExpr::MAGICEXPR:
+		return magicExpr(_typeName.first);
 	default:
 		solAssert(false, "");
 	}
@@ -1459,20 +1561,120 @@ SolidityTypePtr TypeProvider::type()
 {
 	switch (randomTypeCategory())
 	{
-	case Type::INTEGER:
+	case Type::UINT8:
+	case Type::UINT16:
+	case Type::UINT24:
+	case Type::UINT32:
+	case Type::UINT40:
+	case Type::UINT48:
+	case Type::UINT56:
+	case Type::UINT64:
+	case Type::UINT72:
+	case Type::UINT80:
+	case Type::UINT88:
+	case Type::UINT96:
+	case Type::UINT104:
+	case Type::UINT112:
+	case Type::UINT120:
+	case Type::UINT128:
+	case Type::UINT136:
+	case Type::UINT144:
+	case Type::UINT152:
+	case Type::UINT160:
+	case Type::UINT168:
+	case Type::UINT176:
+	case Type::UINT184:
+	case Type::UINT192:
+	case Type::UINT200:
+	case Type::UINT208:
+	case Type::UINT216:
+	case Type::UINT224:
+	case Type::UINT232:
+	case Type::UINT240:
+	case Type::UINT248:
+	case Type::UINT256:
 	{
 		IntegerType::Bits b = static_cast<IntegerType::Bits>(
 			state->uRandDist->distributionOneToN(
 				static_cast<size_t>(IntegerType::Bits::B256)
 			)
 		);
-		// Choose signed/unsigned type with probability of 1/2 = 0.5
-		bool signedType = state->uRandDist->probable(2);
-		return make_shared<IntegerType>(b, signedType);
+		return make_shared<IntegerType>(b, false);
+	}
+	case Type::INT8:
+	case Type::INT16:
+	case Type::INT24:
+	case Type::INT32:
+	case Type::INT40:
+	case Type::INT48:
+	case Type::INT56:
+	case Type::INT64:
+	case Type::INT72:
+	case Type::INT80:
+	case Type::INT88:
+	case Type::INT96:
+	case Type::INT104:
+	case Type::INT112:
+	case Type::INT120:
+	case Type::INT128:
+	case Type::INT136:
+	case Type::INT144:
+	case Type::INT152:
+	case Type::INT160:
+	case Type::INT168:
+	case Type::INT176:
+	case Type::INT184:
+	case Type::INT192:
+	case Type::INT200:
+	case Type::INT208:
+	case Type::INT216:
+	case Type::INT224:
+	case Type::INT232:
+	case Type::INT240:
+	case Type::INT248:
+	case Type::INT256:
+	{
+		IntegerType::Bits b = static_cast<IntegerType::Bits>(
+			state->uRandDist->distributionOneToN(
+				static_cast<size_t>(IntegerType::Bits::B256)
+			)
+		);
+		return make_shared<IntegerType>(b, true);
 	}
 	case Type::BOOL:
 		return make_shared<BoolType>();
-	case Type::FIXEDBYTES:
+	case Type::FIXEDBYTES1:
+	case Type::FIXEDBYTES2:
+	case Type::FIXEDBYTES3:
+	case Type::FIXEDBYTES4:
+	case Type::FIXEDBYTES5:
+	case Type::FIXEDBYTES6:
+	case Type::FIXEDBYTES7:
+	case Type::FIXEDBYTES8:
+	case Type::FIXEDBYTES9:
+	case Type::FIXEDBYTES10:
+	case Type::FIXEDBYTES11:
+	case Type::FIXEDBYTES12:
+	case Type::FIXEDBYTES13:
+	case Type::FIXEDBYTES14:
+	case Type::FIXEDBYTES15:
+	case Type::FIXEDBYTES16:
+	case Type::FIXEDBYTES17:
+	case Type::FIXEDBYTES18:
+	case Type::FIXEDBYTES19:
+	case Type::FIXEDBYTES20:
+	case Type::FIXEDBYTES21:
+	case Type::FIXEDBYTES22:
+	case Type::FIXEDBYTES23:
+	case Type::FIXEDBYTES24:
+	case Type::FIXEDBYTES25:
+	case Type::FIXEDBYTES26:
+	case Type::FIXEDBYTES27:
+	case Type::FIXEDBYTES28:
+	case Type::FIXEDBYTES29:
+	case Type::FIXEDBYTES30:
+	case Type::FIXEDBYTES31:
+	case Type::FIXEDBYTES32:
 	{
 		FixedBytesType::Bytes w = static_cast<FixedBytesType::Bytes>(
 			state->uRandDist->distributionOneToN(
@@ -1651,11 +1853,11 @@ string FunctionCallGenerator::visit()
 string MagicStmtGenerator::visit()
 {
 	MagicId m = static_cast<MagicId>(uRandDist()->distributionOneToN(static_cast<size_t>(MagicId::MAGICMAX) - 1));
+	ExpressionGenerator exprGen{state};
 	switch (m)
 	{
 	case MagicId::ASSERT:
 	{
-		ExpressionGenerator exprGen{state};
 		auto boolType = make_shared<BoolType>();
 		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
@@ -1668,7 +1870,6 @@ string MagicStmtGenerator::visit()
 	}
 	case MagicId::REQUIRE:
 	{
-		ExpressionGenerator exprGen{state};
 		auto boolType = make_shared<BoolType>();
 		pair<SolidityTypePtr, string> boolTypeName = {boolType, {}};
 		auto expression = exprGen.rLValueOrLiteral(boolTypeName);
