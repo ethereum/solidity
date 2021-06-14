@@ -24,7 +24,8 @@
 #include <libyul/AST.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/Dialect.h>
-#include <libyul/Scope.h>
+
+#include <libsolutil/Common.h>
 
 #include <functional>
 #include <list>
@@ -51,10 +52,10 @@ struct FunctionReturnLabelSlot
 /// A slot containing the current value of a particular variable.
 struct VariableSlot
 {
-	std::reference_wrapper<Scope::Variable const> variable;
+	YulString variable;
 	std::shared_ptr<DebugData const> debugData{};
-	bool operator==(VariableSlot const& _rhs) const { return &variable.get() == &_rhs.variable.get(); }
-	bool operator<(VariableSlot const& _rhs) const { return &variable.get() < &_rhs.variable.get(); }
+	bool operator==(VariableSlot const& _rhs) const { return variable == _rhs.variable; }
+	bool operator<(VariableSlot const& _rhs) const { return variable < _rhs.variable; }
 	static constexpr bool canBeFreelyGenerated = false;
 };
 /// A slot containing a literal value.
@@ -66,18 +67,6 @@ struct LiteralSlot
 	bool operator<(LiteralSlot const& _rhs) const { return value < _rhs.value; }
 	static constexpr bool canBeFreelyGenerated = true;
 };
-/// A slot containing the idx-th return value of a previous call.
-struct TemporarySlot
-{
-	/// The call that returned this slot.
-	std::reference_wrapper<yul::FunctionCall const> call;
-	/// Specifies to which of the values returned by the call this slot refers.
-	/// index == 0 refers to the slot deepest in the stack after the call.
-	size_t index = 0;
-	bool operator==(TemporarySlot const& _rhs) const { return &call.get() == &_rhs.call.get() && index == _rhs.index; }
-	bool operator<(TemporarySlot const& _rhs) const { return std::make_pair(&call.get(), index) < std::make_pair(&_rhs.call.get(), _rhs.index); }
-	static constexpr bool canBeFreelyGenerated = false;
-};
 /// A slot containing an arbitrary value that is always eventually popped and never used.
 /// Used to maintain stack balance on control flow joins.
 struct JunkSlot
@@ -86,7 +75,7 @@ struct JunkSlot
 	bool operator<(JunkSlot const&) const { return false; }
 	static constexpr bool canBeFreelyGenerated = true;
 };
-using StackSlot = std::variant<FunctionCallReturnLabelSlot, FunctionReturnLabelSlot, VariableSlot, LiteralSlot, TemporarySlot, JunkSlot>;
+using StackSlot = std::variant<FunctionCallReturnLabelSlot, FunctionReturnLabelSlot, VariableSlot, LiteralSlot, JunkSlot>;
 /// The stack top is usually the last element of the vector.
 using Stack = std::vector<StackSlot>;
 
@@ -116,15 +105,12 @@ struct CFG
 	struct FunctionCall
 	{
 		std::shared_ptr<DebugData const> debugData;
-		std::reference_wrapper<Scope::Function const> function;
 		std::reference_wrapper<yul::FunctionCall const> functionCall;
+		std::reference_wrapper<FunctionDefinition const> referencedFunction;
 	};
 	struct Assignment
 	{
 		std::shared_ptr<DebugData const> debugData;
-		/// The variables being assigned to also occur as ``output`` in the ``Operation`` containing
-		/// the assignment, but are also stored here for convenience.
-		std::vector<VariableSlot> variables;
 	};
 
 	struct Operation
@@ -164,25 +150,21 @@ struct CFG
 	struct FunctionInfo
 	{
 		std::shared_ptr<DebugData const> debugData;
-		Scope::Function const& function;
+		yul::FunctionDefinition const* function = nullptr;
 		BasicBlock* entry = nullptr;
-		std::vector<VariableSlot> parameters;
-		std::vector<VariableSlot> returnVariables;
 	};
 
 	/// The main entry point, i.e. the start of the outermost Yul block.
 	BasicBlock* entry = nullptr;
 	/// Subgraphs for functions.
-	std::map<Scope::Function const*, FunctionInfo> functionInfo;
+	std::map<YulString, FunctionInfo> functionInfo;
 	/// List of functions in order of declaration.
-	std::list<Scope::Function const*> functions;
+	std::list<YulString> functions;
 
 	/// Container for blocks for explicit ownership.
 	std::list<BasicBlock> blocks;
-	/// Container for creates variables for explicit ownership.
-	std::list<Scope::Variable> ghostVariables;
-	/// Container for creates calls for explicit ownership.
-	std::list<yul::FunctionCall> ghostCalls;
+	/// Container for created variables for explicit ownership.
+	std::list<yul::VariableDeclaration> ghostVariable;
 
 	BasicBlock& makeBlock()
 	{

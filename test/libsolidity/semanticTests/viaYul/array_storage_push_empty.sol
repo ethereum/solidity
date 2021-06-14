@@ -13,11 +13,11 @@ contract C {
 // compileViaYul: also
 // ----
 // pushEmpty(uint256): 128
-// gas irOptimized: 370475
+// gas irOptimized: 370859
 // gas legacy: 417287
 // gas legacyOptimized: 399048
 // pushEmpty(uint256): 256
-// gas irOptimized: 637295
+// gas irOptimized: 638063
 // gas legacy: 715083
 // gas legacyOptimized: 688908
 // pushEmpty(uint256): 48869 -> FAILURE # out-of-gas #

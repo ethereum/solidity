@@ -53,9 +53,8 @@ static std::string stackSlotToString(StackSlot const& _slot)
 	return std::visit(util::GenericVisitor{
 		[](FunctionCallReturnLabelSlot const& _ret) -> std::string { return "RET[" + _ret.call.get().functionName.name.str() + "]"; },
 		[](FunctionReturnLabelSlot const&) -> std::string { return "RET"; },
-		[](VariableSlot const& _var) { return _var.variable.get().name.str(); },
+		[](VariableSlot const& _var) { return _var.variable.str(); },
 		[](LiteralSlot const& _lit) { return util::toCompactHexWithPrefix(_lit.value); },
-		[](TemporarySlot const& _tmp) -> std::string { return "TMP[" + _tmp.call.get().functionName.name.str() + ", " + std::to_string(_tmp.index) + "]"; },
 		[](JunkSlot const&) -> std::string { return "JUNK"; }
 	}, _slot);
 }
@@ -67,10 +66,6 @@ static std::string stackToString(Stack const& _stack)
 		result += stackSlotToString(slot) + ' ';
 	result += ']';
 	return result;
-}
-static std::string variableSlotToString(VariableSlot const& _slot)
-{
-	return _slot.variable.get().name.str();
 }
 }
 
@@ -96,14 +91,14 @@ public:
 		CFG::FunctionInfo const& _info
 	)
 	{
-		m_stream << m_indent << "function " << _info.function.name.str() << "(";
-		m_stream << joinHumanReadable(_info.parameters | ranges::views::transform(variableSlotToString));
+		m_stream << m_indent << "function " << _info.function->name.str() << "(";
+		// TODO m_stream << joinHumanReadable(_info.parameters | ranges::views::transform(variableSlotToString));
 		m_stream << ")";
-		if (!_info.returnVariables.empty())
+		/* TODO if (!_info.returnVariables.empty())
 		{
 			m_stream << " -> ";
 			m_stream << joinHumanReadable(_info.returnVariables | ranges::views::transform(variableSlotToString));
-		}
+		}*/
 		m_stream << ":\n";
 		ScopedSaveAndRestore linePrefixRestore(m_indent, m_indent + "  ");
 		(*this)(*_info.entry);
@@ -128,16 +123,14 @@ private:
 			m_stream << m_indent;
 			std::visit(util::GenericVisitor{
 				[&](CFG::FunctionCall const& _call) {
-					m_stream << _call.function.get().name.str() << ": ";
+					m_stream << _call.functionCall.get().functionName.name.str() << ": ";
 				},
 				[&](CFG::BuiltinCall const& _call) {
 					m_stream << _call.functionCall.get().functionName.name.str() << ": ";
 
 				},
-				[&](CFG::Assignment const& _assignment) {
-					m_stream << "Assignment(";
-					m_stream << joinHumanReadable(_assignment.variables | ranges::views::transform(variableSlotToString));
-					m_stream << "): ";
+				[&](CFG::Assignment const&) {
+					m_stream << "Assignment: ";
 				}
 			}, operation.operation);
 			m_stream << stackToString(operation.input) << " => " << stackToString(operation.output) << "\n";
@@ -159,7 +152,7 @@ private:
 			},
 			[&](CFG::BasicBlock::FunctionReturn const& _return)
 			{
-				m_stream << m_indent << "FunctionReturn of " << _return.info->function.name.str() << "\n";
+				m_stream << m_indent << "FunctionReturn of " << _return.info->function->name.str() << "\n";
 			},
 			[&](CFG::BasicBlock::Terminated const&)
 			{

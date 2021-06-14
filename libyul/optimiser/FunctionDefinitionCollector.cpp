@@ -22,7 +22,7 @@ using namespace std;
 using namespace solidity;
 using namespace solidity::yul;
 
-map<YulString, FunctionDefinition const*> FunctionDefinitionCollector::run(Block& _block)
+map<YulString, FunctionDefinition const*> FunctionDefinitionCollector::run(Block const& _block)
 {
 	FunctionDefinitionCollector functionDefinitionCollector;
 	functionDefinitionCollector(_block);

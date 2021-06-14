@@ -60,7 +60,7 @@ private:
 		StackLayout const& _stackLayout
 	);
 
-	AbstractAssembly::LabelID getFunctionLabel(Scope::Function const& _function);
+	AbstractAssembly::LabelID getFunctionLabel(YulString _functionName);
 
 	/// Shuffles m_stack to the desired @a _targetStack while emitting the shuffling code to m_assembly.
 	void createStackLayout(Stack _targetStack);
@@ -100,7 +100,7 @@ private:
 	Stack m_stack;
 	std::map<yul::FunctionCall const*, AbstractAssembly::LabelID> m_returnLabels;
 	std::map<CFG::BasicBlock const*, AbstractAssembly::LabelID> m_blockLabels;
-	std::map<CFG::FunctionInfo const*, AbstractAssembly::LabelID> m_functionLabels;
+	std::map<YulString, AbstractAssembly::LabelID> m_functionLabels;
 	/// Set of blocks already generated. If any of the contained blocks is ever jumped to, m_blockLabels should
 	/// contain a jump label for it.
 	std::set<CFG::BasicBlock const*> m_generated;

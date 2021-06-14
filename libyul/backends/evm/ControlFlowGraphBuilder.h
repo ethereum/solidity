@@ -55,19 +55,19 @@ private:
 	ControlFlowGraphBuilder(
 		CFG& _graph,
 		AsmAnalysisInfo& _analysisInfo,
-		Dialect const& _dialect
+		Dialect const& _dialect,
+		std::map<YulString, FunctionDefinition const*> const& _functionDefinitions
 	);
-	CFG::Operation& visitFunctionCall(FunctionCall const&);
+	CFG::Operation& visitFunctionCall(FunctionCall const& _call, std::vector<VariableSlot> _outputs);
 
-	Scope::Variable const& lookupVariable(YulString _name) const;
 	std::pair<CFG::BasicBlock*, CFG::BasicBlock*> makeConditionalJump(StackSlot _condition);
 	void makeConditionalJump(StackSlot _condition, CFG::BasicBlock& _nonZero, CFG::BasicBlock& _zero);
 	void jump(CFG::BasicBlock& _target, bool _backwards = false);
 	CFG& m_graph;
 	AsmAnalysisInfo& m_info;
 	Dialect const& m_dialect;
+	std::map<YulString, FunctionDefinition const*> const& m_functionDefinitions;
 	CFG::BasicBlock* m_currentBlock = nullptr;
-	Scope* m_scope = nullptr;
 	struct ForLoopInfo
 	{
 		std::reference_wrapper<CFG::BasicBlock> afterLoop;

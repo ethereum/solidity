@@ -135,11 +135,9 @@ Stack StackLayoutGenerator::propagateStackThroughOperation(Stack _exitStack, CFG
 
 	stack = createIdealLayout(stack, layout);
 
-	if (auto const* assignment = get_if<CFG::Assignment>(&_operation.operation))
-		for (auto& stackSlot: stack)
-			if (auto const* varSlot = get_if<VariableSlot>(&stackSlot))
-				if (util::findOffset(assignment->variables, *varSlot))
-					stackSlot = JunkSlot{};
+	for (auto& stackSlot: stack)
+		if (util::findOffset(_operation.output, stackSlot))
+			stackSlot = JunkSlot{};
 
 	for (StackSlot const& input: _operation.input)
 		stack.emplace_back(input);
@@ -241,8 +239,8 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 				{
 					visited.emplace(block);
 					yulAssert(_functionReturn.info, "");
-					Stack stack = _functionReturn.info->returnVariables | ranges::views::transform([](auto const& _varSlot){
-						return StackSlot{_varSlot};
+					Stack stack = _functionReturn.info->function->returnVariables | ranges::views::transform([](auto const& _var){
+						return StackSlot{VariableSlot{_var.name, _var.debugData}};
 					}) | ranges::to<Stack>;
 					stack.emplace_back(FunctionReturnLabelSlot{});
 					return stack;
@@ -486,7 +484,7 @@ void StackLayoutGenerator::fixStackTooDeep(CFG::BasicBlock const& _block)
 				{
 					for (auto& slot: unreachable)
 						if (VariableSlot const* varSlot = get_if<VariableSlot>(&slot))
-							if (util::findOffset(assignment->variables, *varSlot))
+							if (util::findOffset(previousOperation.output, *varSlot))
 							{
 								// TODO: proper warning
 								std::cout << "Unreachable slot after assignment." << std::endl;

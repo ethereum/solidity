@@ -25,6 +25,8 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 
+#include <libyul/optimiser/Disambiguator.h>
+
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
 
@@ -41,7 +43,6 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 {
 	BuiltinContext context;
 	context.currentObject = &_object;
-
 
 	for (auto const& subNode: _object.subObjects)
 		if (auto* subObject = dynamic_cast<Object*>(subNode.get()))
