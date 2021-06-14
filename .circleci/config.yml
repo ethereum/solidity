@@ -721,7 +721,10 @@ jobs:
         TERM: xterm
         # For Archlinux we do not have prebuilt docker images and we would need to build evmone from source,
         # thus we forgo semantics tests to speed things up.
-        SOLTEST_FLAGS: --no-semantic-tests
+        # FIXME: Z3 4.8.11 prerelease is now in main Arch Linux repos but it makes some of our SMT
+        # tests hang. Disabling SMT tests until we get a proper release.
+        # See https://github.com/Z3Prover/z3/issues/5330 for more details.
+        SOLTEST_FLAGS: --no-semantic-tests --no-smt
       steps:
         - run:
             name: Install runtime dependencies
