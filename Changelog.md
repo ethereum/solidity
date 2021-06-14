@@ -7,6 +7,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Control Flow Graph: Fix incorrectly reported unreachable code.
 
 
 
