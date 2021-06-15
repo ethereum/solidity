@@ -83,8 +83,8 @@ contract C {
 	}
 }
 // ====
-// compileViaYul: true
 // compileToEwasm: also
+// compileViaYul: true
 // ----
 // preincr_s8(int8): 128 -> FAILURE
 // postincr_s8(int8): 128 -> FAILURE
@@ -106,16 +106,16 @@ contract C {
 // postincr_u8(uint8): 254 -> FAILURE, hex"4e487b71", 0x11
 // predecr_u8(uint8): 0 -> FAILURE, hex"4e487b71", 0x11
 // postdecr_u8(uint8): 0 -> FAILURE, hex"4e487b71", 0x11
-// predecr_u8(uint8): 1 -> 0
-// postdecr_u8(uint8): 1 -> 1
-// preincr_u8(uint8): 2 -> 6
-// postincr_u8(uint8): 2 -> 5
-// predecr_u8(uint8): 2 -> 2
-// postdecr_u8(uint8): 2 -> 3
-// preincr(uint256): 2 -> 6
-// postincr(uint256): 2 -> 5
-// predecr(uint256): 2 -> 2
-// postdecr(uint256): 2 -> 3
+// predecr_u8(uint8): 1 -> 1
+// postdecr_u8(uint8): 1 -> 2
+// preincr_u8(uint8): 2 -> 5
+// postincr_u8(uint8): 2 -> 4
+// predecr_u8(uint8): 2 -> 3
+// postdecr_u8(uint8): 2 -> 4
+// preincr(uint256): 2 -> 5
+// postincr(uint256): 2 -> 4
+// predecr(uint256): 2 -> 3
+// postdecr(uint256): 2 -> 4
 // not(bool): true -> false
 // not(bool): false -> true
 // bitnot(int256): 5 -> -6

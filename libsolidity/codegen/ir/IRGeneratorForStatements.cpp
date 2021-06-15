@@ -745,8 +745,8 @@ bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
 		return false; // skip sub-expressions
 	}
 
-	_binOp.leftExpression().accept(*this);
 	_binOp.rightExpression().accept(*this);
+	_binOp.leftExpression().accept(*this);
 	setLocation(_binOp);
 
 	if (TokenTraits::isCompareOp(op))
