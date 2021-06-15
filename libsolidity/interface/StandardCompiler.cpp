@@ -558,14 +558,15 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 	if (auto result = checkOptimizerKeys(_jsonInput))
 		return *result;
 
-	OptimiserSettings settings = OptimiserSettings::none();
+	OptimiserSettings settings = OptimiserSettings::minimal();
 
 	if (_jsonInput.isMember("enabled"))
 	{
 		if (!_jsonInput["enabled"].isBool())
 			return formatFatalError("JSONError", "The \"enabled\" setting must be a Boolean.");
 
-		settings = _jsonInput["enabled"].asBool() ? OptimiserSettings::standard() : OptimiserSettings::minimal();
+		if (_jsonInput["enabled"].asBool())
+			settings = OptimiserSettings::standard();
 	}
 
 	if (_jsonInput.isMember("runs"))
