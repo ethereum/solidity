@@ -451,7 +451,7 @@ bool CommandLineInterface::readInputFiles()
 			m_standardJsonInput = readUntilEnd(m_sin);
 		}
 		else
-			m_fileReader.setSource(g_stdinFileName, readUntilEnd(m_sin));
+			m_fileReader.setStdin(readUntilEnd(m_sin));
 	}
 
 	if (m_fileReader.sourceCodes().empty() && !m_standardJsonInput.has_value())

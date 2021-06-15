@@ -71,8 +71,10 @@ The initial content of the VFS depends on how you invoke the compiler:
 
        solc contract.sol /usr/local/dapp-bin/token.sol
 
-   The source unit name of a file loaded this way is simply the specified path after shell expansion
-   and with platform-specific separators converted to forward slashes.
+   The source unit name of a file loaded this way is constructed by converting its path to a
+   canonical form and making it relative to the base path if it is located inside.
+   See :ref:`Base Path Normalization and Stripping <base-path-normalization-and-stripping>` for
+   a detailed description of this process.
 
    .. index:: standard JSON
 
@@ -309,9 +311,67 @@ When the source unit name is a relative path, this results in the file being loo
 directory the compiler has been invoked from.
 It is also the only value that results in absolute paths in source unit names being actually
 interpreted as absolute paths on disk.
+If the base path itself is relative, it is interpreted as relative to the current working directory
+of the compiler.
 
-If the base path itself is relative, it is also interpreted as relative to the current working
-directory of the compiler.
+.. _base-path-normalization-and-stripping:
+
+Base Path Normalization and Stripping
+-------------------------------------
+
+On the command line the compiler behaves just as you would expect from any other program:
+it accepts paths in a format native to the platform and relative paths are relative to the current
+working directory.
+The source unit names assigned to files whose paths are specified on the command line, however,
+should not change just because the project is being compiled on a different platform or because the
+compiler happens to have been invoked from a different directory.
+To achieve this, paths to source files coming from the command line must be converted to a canonical
+form, and, if possible, made relative to the base path.
+
+The normalization rules are as follows:
+
+- If a path is relative, it is made absolute by prepending the current working directory to it.
+- Internal ``.`` and ``..`` segments are collapsed.
+- Platform-specific path separators are replaced with forward slashes.
+- Sequences of multiple consecutive path separators are squashed into a single separator (unless
+  they are the leading slashes of an `UNC path <https://en.wikipedia.org/wiki/Path_(computing)#UNC>`_).
+- If the path includes a root name (e.g. a drive letter on Windows) and the root is the same as the
+  root of the current working directory, the root is replaced with ``/``.
+- Symbolic links in the path are **not** resolved.
+
+  - The only exception is the path to the current working directory prepended to relative paths in
+    the process of making them absolute.
+    On some platforms the working directory is reported always with symbolic links resolved so for
+    consistency the compiler resolves them everywhere.
+
+- The original case of the path is preserved even if the filesystem is case-insensitive but
+  `case-preserving <https://en.wikipedia.org/wiki/Case_preservation>`_ and the actual case on
+  disk is different.
+
+.. note::
+
+    There are situations where paths cannot be made platform-independent.
+    For example on Windows the compiler can avoid using drive letters by referring to the root
+    directory of the current drive as ``/`` but drive letters are still necessary for paths leading
+    to other drives.
+    You can avoid such situations by ensuring that all the files are available within a single
+    directory tree on the same drive.
+
+Once canonicalized, the base path is stripped from all source file paths that start with it.
+If the base path is empty or not specified, it is treated as if it was equal to the path to the
+current working directory (with all symbolic links resolved).
+The result is accepted only if the normalized directory path is the exact prefix of the normalized
+file path.
+Otherwise the file path remains absolute.
+This makes the conversion unambiguous and ensures that the relative path does not start with ``../``.
+The resulting file path becomes the source unit name.
+
+.. note::
+
+    Prior to version 0.8.8, CLI path stripping was not performed and the only normalization applied
+    was the conversion of path separators.
+    When working with older versions of the compiler it is recommended to invoke the compiler from
+    the base path and to only use relative paths on the command line.
 
 .. index:: ! remapping; import, ! import; remapping, ! remapping; context, ! remapping; prefix, ! remapping; target
 .. _import-remapping:
@@ -414,7 +474,7 @@ Here are the detailed rules governing the behaviour of remappings:
 
      .. code-block:: bash
 
-         solc /project/=/contracts/ /project/contract.sol --base-path /project # source unit name: /project/contract.sol
+         solc /project/=/contracts/ /project/contract.sol --base-path /project # source unit name: contract.sol
 
      .. code-block:: solidity
          :caption: /project/contract.sol
