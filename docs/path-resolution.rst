@@ -71,8 +71,10 @@ The initial content of the VFS depends on how you invoke the compiler:
 
        solc contract.sol /usr/local/dapp-bin/token.sol
 
-   The source unit name of a file loaded this way is simply the specified path after shell expansion
-   and with platform-specific separators converted to forward slashes.
+   The source unit name of a file loaded this way is constructed by converting its path to a
+   canonical form and making it relative to the base path if it is located inside.
+   See :ref:`Base Path Normalization and Stripping <base-path-normalization-and-stripping>` for
+   a detailed description of this process.
 
    .. index:: standard JSON
 
@@ -313,6 +315,46 @@ interpreted as absolute paths on disk.
 If the base path itself is relative, it is also interpreted as relative to the current working
 directory of the compiler.
 
+.. _base-path-normalization-and-stripping:
+
+Base Path Normalization and Stripping
+-------------------------------------
+
+When source file paths are specified on the command line, the base path affects the source unit
+names assigned to them in the compiler's VFS.
+To compute the names, both base path and source file paths must first be converted to a canonical form.
+This ensures that the result is predictable and as platform-independent as possible:
+
+- If a path is relative, it is made absolute by prepending the current working directory to it.
+
+  - If the path to the working directory contains symbolic links, they are resolved into actual
+    directories.
+
+- Internal ``.`` and ``..`` segments are collapsed.
+- Platform-specific path separators are replaced with forward slashes.
+- Sequences of multiple consecutive path separators are squashed into a single separator (unless
+  they are the leading slashes of an `UNC path <https://en.wikipedia.org/wiki/Path_(computing)#UNC>`_).
+- If the path includes a root name (e.g. a drive letter on Windows) and the root is the same as the
+  root of the current working directory, the root is replaced with ``/``.
+- Symbolic links in the path itself are **not** resolved.
+- The original case of the path is preserved even if the filesystem is case-insensitive but
+  `case-preserving <https://en.wikipedia.org/wiki/Case_preservation>`_ and the actual case on
+  disk is different.
+
+.. note::
+
+    There are situations where paths cannot be made platform-independent.
+    For example on Windows the compiler can avoid using drive letters by referring to the root
+    directory of the current drive as ``/`` but drive letters are still necessary for paths leading
+    to other drives.
+    You can avoid such situations by ensuring that all the files are available within a single
+    directory tree on the same drive.
+
+Once canonicalized, the base path is stripped from all source file paths that start with it.
+If the base path is empty (e.g. if it is not explicitly provided), it is treated as if it was equal
+to the path to the current working directory with all symbolic links resolved.
+The result becomes the source unit name.
+
 .. index:: ! remapping; import, ! import; remapping, ! remapping; context, ! remapping; prefix, ! remapping; target
 .. _import-remapping:
 
@@ -414,7 +456,7 @@ Here are the detailed rules governing the behaviour of remappings:
 
      .. code-block:: bash
 
-         solc /project/=/contracts/ /project/contract.sol --base-path /project # source unit name: /project/contract.sol
+         solc /project/=/contracts/ /project/contract.sol --base-path /project # source unit name: contract.sol
 
      .. code-block:: solidity
          :caption: /project/contract.sol
