@@ -51,9 +51,9 @@ contract test {
 // compileViaYul: also
 // ----
 // constructor()
-// gas irOptimized: 912777
+// gas irOptimized: 910871
 // gas legacy: 1188228
-// gas legacyOptimized: 771634
+// gas legacyOptimized: 749336
 // toSlice(string): 0x20, 11, "hello world" -> 11, 0xa0
 // gas irOptimized: 22877
 // gas legacy: 23190
@@ -71,6 +71,6 @@ contract test {
 // gas legacy: 31621
 // gas legacyOptimized: 27914
 // benchmark(string,bytes32): 0x40, 0x0842021, 8, "solidity" -> 0x2020
-// gas irOptimized: 2903627
+// gas irOptimized: 2903614
 // gas legacy: 4381235
 // gas legacyOptimized: 2317529
