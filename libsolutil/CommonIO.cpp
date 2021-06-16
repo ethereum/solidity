@@ -25,7 +25,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include <iostream>
 #include <fstream>
 #if defined(_WIN32)
 #include <windows.h>
@@ -75,14 +74,14 @@ string solidity::util::readFileAsString(string const& _file)
 	return readFile<string>(_file);
 }
 
-string solidity::util::readStandardInput()
+string solidity::util::readUntilEnd(istream& _stdin)
 {
 	string ret;
-	while (!cin.eof())
+	while (!_stdin.eof())
 	{
 		string tmp;
 		// NOTE: this will read until EOF or NL
-		getline(cin, tmp);
+		getline(_stdin, tmp);
 		ret.append(tmp);
 		ret.append("\n");
 	}
