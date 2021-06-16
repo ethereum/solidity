@@ -40,10 +40,12 @@ class CommandLineInterface
 {
 public:
 	explicit CommandLineInterface(
+		std::istream& _sin,
 		std::ostream& _sout,
 		std::ostream& _serr,
 		CommandLineOptions const& _options = CommandLineOptions{}
 	):
+		m_sin(_sin),
 		m_sout(_sout),
 		m_serr(_serr),
 		m_options(_options)
@@ -121,6 +123,7 @@ private:
 	/// stream has ever been used unless @arg _markAsUsed is set to false.
 	std::ostream& serr(bool _markAsUsed = true);
 
+	std::istream& m_sin;
 	std::ostream& m_sout;
 	std::ostream& m_serr;
 	bool m_hasOutput = false;
