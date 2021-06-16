@@ -102,6 +102,17 @@ BOOST_AUTO_TEST_CASE(no_options)
 	BOOST_TEST((parsedOptions.value() == expectedOptions));
 }
 
+BOOST_AUTO_TEST_CASE(help)
+{
+	stringstream sout, serr;
+	optional<CommandLineOptions> parsedOptions = parseCommandLine({"solc", "--help"}, sout, serr);
+
+	BOOST_TEST(serr.str() == "");
+	BOOST_TEST(boost::starts_with(sout.str(), "solc, the Solidity commandline compiler."));
+	BOOST_TEST(sout.str().find("Usage: solc [options] [input_file...]") != string::npos);
+	BOOST_TEST(!parsedOptions.has_value());
+}
+
 BOOST_AUTO_TEST_CASE(cli_mode_options)
 {
 	for (InputMode inputMode: {InputMode::Compiler, InputMode::CompilerWithASTImport})
