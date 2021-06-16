@@ -80,7 +80,6 @@
 
 #include <utility>
 #include <map>
-#include <range/v3/view/concat.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -925,6 +924,19 @@ map<string, unsigned> CompilerStack::sourceIndices() const
 	solAssert(!indices.count(CompilerContext::yulUtilityFileName()), "");
 	indices[CompilerContext::yulUtilityFileName()] = index++;
 	return indices;
+}
+
+map<unsigned, shared_ptr<CharStream>> CompilerStack::indicesToCharStreams() const
+{
+	map<unsigned, shared_ptr<CharStream>> result;
+	unsigned index = 0;
+	for (auto const& s: m_sources)
+		result[index++] = s.second.scanner->charStream();
+
+	// NB: CompilerContext::yulUtilityFileName() does not have a source,
+	result[index++] = shared_ptr<CharStream>{};
+
+	return result;
 }
 
 Json::Value const& CompilerStack::contractABI(string const& _contractName) const

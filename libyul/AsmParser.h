@@ -46,6 +46,11 @@ public:
 		None, ForLoopPre, ForLoopPost, ForLoopBody
 	};
 
+	enum class UseSourceLocationFrom
+	{
+		Scanner, LocationOverride, Comments,
+	};
+
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
@@ -53,7 +58,25 @@ public:
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
-		m_locationOverride(std::move(_locationOverride))
+		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
+		m_useSourceLocationFrom{
+			_locationOverride ?
+			UseSourceLocationFrom::LocationOverride :
+			UseSourceLocationFrom::Scanner
+		}
+	{}
+
+	/// Constructs a Yul parser that is using the source locations
+	/// from the comments (via @src).
+	explicit Parser(
+		langutil::ErrorReporter& _errorReporter,
+		Dialect const& _dialect,
+		std::map<unsigned, std::shared_ptr<langutil::CharStream>> _charStreamMap
+	):
+		ParserBase(_errorReporter),
+		m_dialect(_dialect),
+		m_charStreamMap{std::move(_charStreamMap)},
+		m_useSourceLocationFrom{UseSourceLocationFrom::Comments}
 	{}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
@@ -64,8 +87,14 @@ public:
 protected:
 	langutil::SourceLocation currentLocation() const override
 	{
-		return m_locationOverride ? *m_locationOverride : ParserBase::currentLocation();
+		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
+			return ParserBase::currentLocation();
+		return m_locationOverride;
 	}
+
+	langutil::Token advance() override;
+
+	void fetchSourceLocationFromComment();
 
 	/// Creates an inline assembly node with the current source location.
 	template <class T> T createWithLocation() const
@@ -97,7 +126,10 @@ protected:
 
 private:
 	Dialect const& m_dialect;
-	std::optional<langutil::SourceLocation> m_locationOverride;
+
+	std::optional<std::map<unsigned, std::shared_ptr<langutil::CharStream>>> m_charStreamMap;
+	langutil::SourceLocation m_locationOverride;
+	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
 };
