@@ -346,7 +346,7 @@ Recommendations
 Take Warnings Seriously
 =======================
 
-If the compiler warns you about something, you should better change it.
+If the compiler warns you about something, you should change it.
 Even if you do not think that this particular warning has security
 implications, there might be another issue buried beneath it.
 Any compiler warning we issue can be silenced by slight changes to the
