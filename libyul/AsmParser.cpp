@@ -107,6 +107,7 @@ Statement Parser::parseStatement()
 		advance();
 		_if.condition = make_unique<Expression>(parseExpression());
 		_if.body = parseBlock();
+		_if.debugData = updateLocationEndFrom(_if.debugData, _if.body.debugData->location);
 		return Statement{move(_if)};
 	}
 	case Token::Switch:

@@ -18,6 +18,7 @@ Bugfixes:
  * Type Checker: Fix internal error and prevent static calls to unimplemented modifiers.
  * Yul Code Generator: Fix internal compiler error when using a long literal with bitwise negation.
  * Yul Code Generator: Fix source location references for calls to builtin functions.
+ * Yul Parser: Fix source location references for ``if`` statements.
 
 
 ### 0.8.6 (2021-06-22)

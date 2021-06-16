@@ -28,14 +28,14 @@ object "Contract" {
 // tag_5:
 //     /* "source":78:79   */
 //   dup1
-//     /* "source":75:77   */
+//     /* "source":75:89   */
 //   iszero
 //   tag_7
 //   jumpi
 //     /* "source":82:87   */
 //   pop
 //   jump(tag_6)
-//     /* "source":75:77   */
+//     /* "source":75:89   */
 // tag_7:
 //     /* "source":90:102   */
 //   tag_8
@@ -64,4 +64,4 @@ object "Contract" {
 // tag_9:
 // Bytecode: 6026565b600b6001600e565b5b565b8015601857506024565b602260028201600e565b505b565b602e6001600e565b
 // Opcodes: PUSH1 0x26 JUMP JUMPDEST PUSH1 0xB PUSH1 0x1 PUSH1 0xE JUMP JUMPDEST JUMPDEST JUMP JUMPDEST DUP1 ISZERO PUSH1 0x18 JUMPI POP PUSH1 0x24 JUMP JUMPDEST PUSH1 0x22 PUSH1 0x2 DUP3 ADD PUSH1 0xE JUMP JUMPDEST POP JUMPDEST JUMP JUMPDEST PUSH1 0x2E PUSH1 0x1 PUSH1 0xE JUMP JUMPDEST
-// SourceMappings: 33:21:0:-:0;;;48:4;50:1;48:4;:::i;:::-;33:21;:::o;59:45::-;78:1;75:2;;;82:5;;;75:2;90:12;99:1;96;92:9;90:12;:::i;:::-;59:45;;:::o;:::-;109:4;111:1;109:4;:::i;:::-
+// SourceMappings: 33:21:0:-:0;;;48:4;50:1;48:4;:::i;:::-;33:21;:::o;59:45::-;78:1;75:14;;;82:5;;;75:14;90:12;99:1;96;92:9;90:12;:::i;:::-;59:45;;:::o;:::-;109:4;111:1;109:4;:::i;:::-

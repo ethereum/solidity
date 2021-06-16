@@ -36,7 +36,7 @@ Text representation:
   mstore
     /* "strict_asm_optimizer_steps/input.yul":61:72   */
   callvalue
-    /* "strict_asm_optimizer_steps/input.yul":58:60   */
+    /* "strict_asm_optimizer_steps/input.yul":58:89   */
   iszero
   tag_1
   jumpi
@@ -46,7 +46,7 @@ Text representation:
   dup1
     /* "strict_asm_optimizer_steps/input.yul":75:87   */
   revert
-    /* "strict_asm_optimizer_steps/input.yul":58:60   */
+    /* "strict_asm_optimizer_steps/input.yul":58:89   */
 tag_1:
     /* "strict_asm_optimizer_steps/input.yul":138:162   */
   dataSize(sub_0)
