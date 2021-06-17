@@ -202,7 +202,7 @@ The Host Filesystem Loader will attempt to use it as a path and look up the file
 At this point the platform-specific normalization rules kick in and names that were considered
 different in the VFS may actually result in the same file being loaded.
 For example ``/project/lib/math.sol`` and ``/project/lib/../lib///math.sol`` are considered
-completely different in the VFS on disk refer to the same file.
+completely different in the VFS even though they refer to the same file on disk.
 
 .. note::
 
