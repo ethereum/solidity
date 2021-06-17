@@ -403,6 +403,14 @@ private:
 	/// @returns true if the contract is requested to be compiled.
 	bool isRequestedContract(ContractDefinition const& _contract) const;
 
+	/// Assembles the contract.
+	/// This function should only be internally called by compileContract and generateEVMFromIR.
+	void assemble(
+		ContractDefinition const& _contract,
+		std::shared_ptr<evmasm::Assembly> _assembly,
+		std::shared_ptr<evmasm::Assembly> _runtimeAssembly
+	);
+
 	/// Compile a single contract.
 	/// @param _otherCompilers provides access to compilers of other contracts, to get
 	///                        their bytecode if needed. Only filled after they have been compiled.
