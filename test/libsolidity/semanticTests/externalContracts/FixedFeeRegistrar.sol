@@ -77,14 +77,16 @@ contract FixedFeeRegistrar is Registrar {
 // ----
 // constructor()
 // gas irOptimized: 544916
-// gas legacy: 942808
-// gas legacyOptimized: 492291
+// gas legacy: 936897
+// gas legacyOptimized: 491019
 // reserve(string), 69 ether: 0x20, 3, "abc" ->
-// gas irOptimized: 45527
-// gas legacy: 46242
-// gas legacyOptimized: 45491
+// ~ emit Changed(string): #0x4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
+// gas irOptimized: 46127
+// gas legacy: 46842
+// gas legacyOptimized: 46091
 // owner(string): 0x20, 3, "abc" -> 0x1212121212121212121212121212120000000012
 // reserve(string), 70 ether: 0x20, 3, "def" ->
+// ~ emit Changed(string): #0x34607c9bbfeb9c23509680f04363f298fdb0b5f9abe327304ecd1daca08cda9c
 // owner(string): 0x20, 3, "def" -> 0x1212121212121212121212121212120000000012
 // reserve(string), 68 ether: 0x20, 3, "ghi" ->
 // owner(string): 0x20, 3, "ghi" -> 0
@@ -93,18 +95,25 @@ contract FixedFeeRegistrar is Registrar {
 // owner(string): 0x20, 3, "abc" -> 0x1212121212121212121212121212120000000012
 // account: 0 -> 0x1212121212121212121212121212120000000012
 // setContent(string,bytes32): 0x40, 0, 3, "abc" ->
+// ~ emit Changed(string): #0x4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
 // transfer(string,address): 0x40, 555, 3, "abc" ->
+// ~ emit Changed(string): #0x4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45
 // owner(string): 0x20, 3, "abc" -> 555
 // content(string): 0x20, 3, "abc" -> 0x00
 // setContent(string,bytes32): 0x40, 333, 3, "def" ->
+// ~ emit Changed(string): #0x34607c9bbfeb9c23509680f04363f298fdb0b5f9abe327304ecd1daca08cda9c
 // setAddr(string,address): 0x40, 124, 3, "def" ->
+// ~ emit Changed(string): #0x34607c9bbfeb9c23509680f04363f298fdb0b5f9abe327304ecd1daca08cda9c
 // setSubRegistrar(string,address): 0x40, 125, 3, "def" ->
+// ~ emit Changed(string): #0x34607c9bbfeb9c23509680f04363f298fdb0b5f9abe327304ecd1daca08cda9c
 // content(string): 0x20, 3, "def" -> 333
 // addr(string): 0x20, 3, "def" -> 124
 // subRegistrar(string): 0x20, 3, "def" -> 125
 // balance: 0x124 -> 0
 // disown(string,address): 0x40, 0x124, 3, "def" ->
+// ~ emit Changed(string): #0x34607c9bbfeb9c23509680f04363f298fdb0b5f9abe327304ecd1daca08cda9c
 // balance: 0x124 -> 0
+// ~ emit Changed(string): #0x34607c9bbfeb9c23509680f04363f298fdb0b5f9abe327304ecd1daca08cda9c
 // owner(string): 0x20, 3, "def" -> 0
 // content(string): 0x20, 3, "def" -> 0
 // addr(string): 0x20, 3, "def" -> 0

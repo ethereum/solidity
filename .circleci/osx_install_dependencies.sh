@@ -37,6 +37,8 @@ set -eu
 
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
+  git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+  git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask fetch --unshallow
   brew update
   brew unlink python
   brew install boost
