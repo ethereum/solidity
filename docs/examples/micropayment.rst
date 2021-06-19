@@ -452,7 +452,7 @@ The recipient should verify each message using the following process:
 
 We'll use the `ethereumjs-util <https://github.com/ethereumjs/ethereumjs-util>`_
 library to write this verification. The final step can be done a number of ways,
-and we use JavaScript. The following code borrows the ``constructMessage`` function from the signing **JavaScript code** above:
+and we use JavaScript. The following code borrows the ``constructPaymentMessage`` function from the signing **JavaScript code** above:
 
 ::
 
