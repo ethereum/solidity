@@ -29,6 +29,8 @@
 namespace solidity::frontend
 {
 
+class IRGenerationContext;
+
 /**
  * Structure that describes arity and co-arity of a Yul function, i.e. the number of its inputs and outputs.
  */
@@ -65,6 +67,14 @@ struct IRNames
 	static std::string tupleComponent(size_t _i);
 	static std::string zeroValue(Type const& _type, std::string const& _variableName);
 };
+
+
+/**
+ * @returns a source location comment in the form of
+ * `/// @src <sourceIndex>:<locationStart>:<locationEnd>`.
+ */
+std::string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext const& _context);
+std::string sourceLocationComment(ASTNode const& _node, IRGenerationContext const& _context);
 
 }
 

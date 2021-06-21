@@ -1,9 +1,9 @@
-{"contracts":{"A":{"C":{"irOptimized":"/*******************************************************
+{"contracts":{"A":{"C":{"irOptimized":"/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 object \"C_7\" {
     code {

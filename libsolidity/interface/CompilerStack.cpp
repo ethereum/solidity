@@ -1350,7 +1350,7 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
+	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices());
 	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
 		_contract,
 		createCBORMetadata(compiledContract),

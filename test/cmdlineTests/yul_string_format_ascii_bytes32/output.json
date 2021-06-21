@@ -1,13 +1,14 @@
-{"contracts":{"A":{"C":{"ir":"/*******************************************************
+{"contracts":{"A":{"C":{"ir":"/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 
 object \"C_11\" {
     code {
+        /// @src 0:78,158
         mstore(64, 128)
         if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
@@ -24,6 +25,8 @@ object \"C_11\" {
 
         function constructor_C_11() {
 
+            /// @src 0:78,158
+
         }
 
         function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
@@ -33,6 +36,7 @@ object \"C_11\" {
     }
     object \"C_11_deployed\" {
         code {
+            /// @src 0:78,158
             mstore(64, 128)
 
             if iszero(lt(calldatasize(), 4))
@@ -86,9 +90,12 @@ object \"C_11\" {
             }
 
             function fun_f_10() -> var__5 {
+                /// @src 0:91,156
+                /// @src 0:127,134
                 let zero_t_bytes32_1 := zero_value_for_split_t_bytes32()
                 var__5 := zero_t_bytes32_1
 
+                /// @src 0:138,153
                 var__5 := convert_t_stringliteral_9f0adad0a59b05d2e04a1373342b10b9eb16c57c164c8a3bfcbf46dccee39a21_to_t_bytes32()
                 leave
 

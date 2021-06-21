@@ -16,14 +16,18 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 
-#include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/ast/TypeProvider.h>
+#include <libsolidity/codegen/ir/Common.h>
+#include <libsolidity/codegen/ir/IRGenerationContext.h>
 
 #include <libsolutil/CommonIO.h>
 
 using namespace std;
 using namespace solidity::util;
 using namespace solidity::frontend;
+
+namespace solidity::frontend
+{
 
 YulArity YulArity::fromType(FunctionType const& _functionType)
 {
@@ -121,4 +125,21 @@ string IRNames::tupleComponent(size_t _i)
 string IRNames::zeroValue(Type const& _type, string const& _variableName)
 {
 	return "zero_" + _type.identifier() + _variableName;
+}
+
+string sourceLocationComment(langutil::SourceLocation const& _location, IRGenerationContext const& _context)
+{
+	return "/// @src "
+		+ to_string(_context.sourceIndices().at(_location.source->name()))
+		+ ":"
+		+ to_string(_location.start)
+		+ ","
+		+ to_string(_location.end);
+}
+
+string sourceLocationComment(ASTNode const& _node, IRGenerationContext const& _context)
+{
+	return sourceLocationComment(_node.location(), _context);
+}
+
 }
