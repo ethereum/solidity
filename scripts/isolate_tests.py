@@ -38,19 +38,34 @@ def extract_test_cases(path):
 # Look for `pragma solidity`, `contract`, `library` or `interface`
 # and abort a line not indented properly.
 def extract_docs_cases(path):
-    inside = False
+    insideBlock = False
+    insideBlockParameters = False
+    pastBlockParameters = False
     extractedLines = []
     tests = []
 
     # Collect all snippets of indented blocks
     for l in open(path, mode='r', errors='ignore', encoding='utf8', newline='').read().splitlines():
         if l != '':
-            if not inside and l.startswith(' '):
+            if not insideBlock and l.startswith(' '):
                 # start new test
                 extractedLines += ['']
-            inside = l.startswith(' ')
-        if inside:
-            extractedLines[-1] += l + '\n'
+                insideBlockParameters = False
+                pastBlockParameters = False
+            insideBlock = l.startswith(' ')
+        if insideBlock:
+            if not pastBlockParameters:
+                # NOTE: For simplicity this allows blank lines between block parameters even
+                # though Sphinx does not. This does not matter since the first non-empty line in
+                # a Solidity file cannot start with a colon anyway.
+                if not l.strip().startswith(':') and (l != '' or not insideBlockParameters):
+                    insideBlockParameters = False
+                    pastBlockParameters = True
+                else:
+                    insideBlockParameters = True
+
+            if not insideBlockParameters:
+                extractedLines[-1] += l + '\n'
 
     codeStart = "(// SPDX-License-Identifier:|pragma solidity|contract.*{|library.*{|interface.*{)"
 
