@@ -122,5 +122,6 @@ object "C_59" {
                 revert(0, 0x24)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

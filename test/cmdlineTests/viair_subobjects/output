@@ -1,9 +1,9 @@
 
 ======= viair_subobjects/input.sol:C =======
 Binary:
-60806040523415600f5760006000fd5b600a80601e608039806080f350fe608060405260006000fd
+<BYTECODE REMOVED>
 Binary of the runtime part:
-608060405260006000fd
+<BYTECODE REMOVED>
 Optimized IR:
 /*******************************************************
  *                       WARNING                       *
@@ -29,15 +29,16 @@ object "C_3" {
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
 
 
 ======= viair_subobjects/input.sol:D =======
 Binary:
-608060405234156100105760006000fd5b60ba80610020608039806080f350fe6080604052600436101515608b576000803560e01c6326121ff0141560895734156027578081fd5b80600319360112156036578081fd5b6028806080016080811067ffffffffffffffff82111715606457634e487b7160e01b83526041600452602483fd5b508061009260803980608083f015156082576040513d83823e3d81fd505b5080604051f35b505b60006000fdfe60806040523415600f5760006000fd5b600a80601e608039806080f350fe608060405260006000fd
+<BYTECODE REMOVED>
 Binary of the runtime part:
-6080604052600436101515608b576000803560e01c6326121ff0141560895734156027578081fd5b80600319360112156036578081fd5b6028806080016080811067ffffffffffffffff82111715606457634e487b7160e01b83526041600452602483fd5b508061009260803980608083f015156082576040513d83823e3d81fd505b5080604051f35b505b60006000fdfe60806040523415600f5760006000fd5b600a80601e608039806080f350fe608060405260006000fd
+<BYTECODE REMOVED>
 Optimized IR:
 /*******************************************************
  *                       WARNING                       *
@@ -105,7 +106,9 @@ object "D_16" {
                         revert(0, 0)
                     }
                 }
+                data ".metadata" hex"<BYTECODE REMOVED>"
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

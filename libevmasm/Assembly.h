@@ -92,7 +92,7 @@ public:
 	void pushSubroutineOffset(size_t _subRoutine) { append(AssemblyItem(PushSub, _subRoutine)); }
 
 	/// Appends @a _data literally to the very end of the bytecode.
-	void appendAuxiliaryDataToEnd(bytes const& _data) { m_auxiliaryData += _data; }
+	void appendToAuxiliaryData(bytes const& _data) { m_auxiliaryData += _data; }
 
 	/// Returns the assembly items.
 	AssemblyItems const& items() const { return m_items; }

@@ -1351,7 +1351,11 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
 	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
-	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
+	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
+		_contract,
+		createCBORMetadata(compiledContract),
+		otherYulSources
+	);
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
@@ -1374,8 +1378,6 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 	stack.optimize();
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
-
-	// TODO: support passing metadata
 
 	string deployedName = IRNames::deployedObject(_contract);
 	solAssert(!deployedName.empty(), "");

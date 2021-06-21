@@ -90,10 +90,11 @@ set<CallableDeclaration const*, ASTNode::CompareByID> collectReachableCallables(
 
 pair<string, string> IRGenerator::run(
 	ContractDefinition const& _contract,
+	bytes const& _cborMetadata,
 	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
-	string const ir = yul::reindent(generate(_contract, _otherYulSources));
+	string const ir = yul::reindent(generate(_contract, _cborMetadata, _otherYulSources));
 
 	yul::AssemblyStack asmStack(m_evmVersion, yul::AssemblyStack::Language::StrictAssembly, m_optimiserSettings);
 	if (!asmStack.parseAndAnalyze("", ir))
@@ -118,6 +119,7 @@ pair<string, string> IRGenerator::run(
 
 string IRGenerator::generate(
 	ContractDefinition const& _contract,
+	bytes const& _cborMetadata,
 	map<ContractDefinition const*, string_view const> const& _otherYulSources
 )
 {
@@ -152,6 +154,7 @@ string IRGenerator::generate(
 					<deployedFunctions>
 				}
 				<deployedSubObjects>
+				data "<metadataName>" hex"<cborMetadata>"
 			}
 			<subObjects>
 		}
@@ -207,6 +210,9 @@ string IRGenerator::generate(
 	generateInternalDispatchFunctions();
 	t("deployedFunctions", m_context.functionCollector().requestedFunctions());
 	t("deployedSubObjects", subObjectSources(m_context.subObjectsCreated()));
+	t("metadataName", yul::Object::metadataName());
+	t("cborMetadata", toHex(_cborMetadata));
+
 
 	// This has to be called only after all other code generation for the deployed object is complete.
 	bool deployedInvolvesAssembly = m_context.inlineAssemblySeen();

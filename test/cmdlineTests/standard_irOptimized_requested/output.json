@@ -67,6 +67,7 @@ object \"C_7\" {
             function shift_right_224_unsigned(value) -> newValue
             { newValue := shr(224, value) }
         }
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 }
 "}}},"sources":{"A":{"id":0}}}

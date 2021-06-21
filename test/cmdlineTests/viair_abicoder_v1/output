@@ -117,6 +117,7 @@ object "test_11" {
 
         }
 
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 
 }

@@ -26,5 +26,6 @@ object "C_7" {
                 stop()
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

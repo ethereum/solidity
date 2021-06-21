@@ -1,6 +1,7 @@
 ### 0.8.6 (unreleased)
 
 Language Features:
+ * Yul: Special meaning of ``".metadata"`` data object in Yul object.
 
 
 Compiler Features:

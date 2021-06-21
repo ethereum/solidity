@@ -96,6 +96,7 @@ object \"C_7\" {
 
         }
 
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 
 }
