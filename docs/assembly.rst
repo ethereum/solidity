@@ -141,7 +141,8 @@ Both expressions can also be assigned to.
 
 Local Solidity variables are available for assignments, for example:
 
-.. code::
+.. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
