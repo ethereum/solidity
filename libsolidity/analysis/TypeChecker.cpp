@@ -639,6 +639,15 @@ void TypeChecker::visitManually(
 						"Can only use modifiers defined in the current contract or in base contracts."
 					);
 			}
+		if (
+			*_modifier.name().annotation().requiredLookup == VirtualLookup::Static &&
+			!modifierDecl->isImplemented()
+		)
+			m_errorReporter.typeError(
+				1835_error,
+				_modifier.location(),
+				"Cannot call unimplemented modifier. The modifier has no implementation in the referenced contract. Refer to it by its unqualified name if you want to call the implementation from the most derived contract."
+			);
 	}
 	else
 		// check parameters for Base constructors
