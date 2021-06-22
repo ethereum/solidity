@@ -243,7 +243,7 @@ void CompilerStack::setLibraries(std::map<std::string, util::h160> const& _libra
 	m_libraries = _libraries;
 }
 
-void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
+void CompilerStack::setOptimiserSettings(bool _optimize, size_t _runs)
 {
 	OptimiserSettings settings = _optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	settings.expectedExecutionsPerDeployment = _runs;
