@@ -163,23 +163,6 @@ set(yul_phaser_sources
     yulPhaser/ProgramCache.cpp
     yulPhaser/Selections.cpp
     yulPhaser/SimulationRNG.cpp
-
-    # FIXME: yul-phaser is not a library so I can't just add it to target_link_libraries().
-    # My current workaround is just to include its source files here but this introduces
-    # unnecessary duplication. Create a library or find a way to reuse the list in both places.
-    ../tools/yulPhaser/AlgorithmRunner.cpp
-    ../tools/yulPhaser/Common.cpp
-    ../tools/yulPhaser/Chromosome.cpp
-    ../tools/yulPhaser/FitnessMetrics.cpp
-    ../tools/yulPhaser/GeneticAlgorithms.cpp
-    ../tools/yulPhaser/Mutations.cpp
-    ../tools/yulPhaser/PairSelections.cpp
-    ../tools/yulPhaser/Phaser.cpp
-    ../tools/yulPhaser/Population.cpp
-    ../tools/yulPhaser/Program.cpp
-    ../tools/yulPhaser/ProgramCache.cpp
-    ../tools/yulPhaser/Selections.cpp
-    ../tools/yulPhaser/SimulationRNG.cpp
 )
 detect_stray_source_files("${yul_phaser_sources}" "yulPhaser/")
 
@@ -193,7 +176,7 @@ add_executable(soltest ${sources}
     ${libsolidity_util_sources}
     ${yul_phaser_sources}
 )
-target_link_libraries(soltest PRIVATE libsolc yul solidity smtutil solutil Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
+target_link_libraries(soltest PRIVATE libsolc yul solidity smtutil solutil phaser Boost::boost yulInterpreter evmasm Boost::filesystem Boost::program_options Boost::unit_test_framework evmc)
 
 
 # Special compilation flag for Visual Studio (version 2019 at least affected)
