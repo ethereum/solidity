@@ -81,7 +81,7 @@ protected:
 	Token peekNextToken() const;
 	std::string tokenName(Token _token);
 	std::string currentLiteral() const;
-	Token advance();
+	virtual Token advance();
 	///@}
 
 	/// Increases the recursion depth and throws an exception if it is too deep.
