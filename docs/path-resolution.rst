@@ -104,6 +104,8 @@ The initial content of the VFS depends on how you invoke the compiler:
    The ``sources`` dictionary becomes the initial content of the virtual filesystem and its keys
    are used as source unit names.
 
+   .. _initial-vfs-content-standard-json-with-import-callback:
+
 #. **Standard JSON (via import callback)**
 
    With Standard JSON it is also possible to tell the compiler to use the import callback to obtain
