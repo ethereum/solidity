@@ -148,6 +148,11 @@ Allowed options)",
 					cerr << "File not found: " << path << endl;
 					return 1;
 				}
+				catch (NotAFile const&)
+				{
+					cerr << "Not a regular file: " << path << endl;
+					return 1;
+				}
 			}
 		else
 			input = readStandardInput();

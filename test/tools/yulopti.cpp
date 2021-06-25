@@ -282,6 +282,11 @@ Allowed options)",
 		cerr << "File not found:" << _exception.comment() << endl;
 		return 1;
 	}
+	catch (NotAFile const& _exception)
+	{
+		cerr << "Not a regular file:" << _exception.comment() << endl;
+		return 1;
+	}
 
 	if (arguments.count("input-file"))
 		YulOpti{}.runInteractive(input);

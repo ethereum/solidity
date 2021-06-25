@@ -33,6 +33,7 @@ namespace solidity::util
 
 /// Retrieve and returns the contents of the given file as a std::string.
 /// If the file doesn't exist, it will throw a FileNotFound exception.
+/// If the file exists but is not a regular file, it will throw NotAFile exception.
 /// If the file is empty, returns an empty string.
 std::string readFileAsString(std::string const& _file);
 
