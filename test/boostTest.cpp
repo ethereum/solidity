@@ -83,6 +83,10 @@ void runTestCase(TestCase::Config const& _config, TestCase::TestCaseCreator cons
 	{
 		BOOST_ERROR("Exception during extracted test: " << boost::diagnostic_information(_e));
 	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Exception during extracted test: " << boost::diagnostic_information(_e));
+	}
 }
 
 int registerTests(
