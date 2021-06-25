@@ -8,6 +8,8 @@ set(sources
     EVMHost.h
     ExecutionFramework.cpp
     ExecutionFramework.h
+    FilesystemUtils.cpp
+    FilesystemUtils.h
     InteractiveTests.h
     Metadata.cpp
     Metadata.h
