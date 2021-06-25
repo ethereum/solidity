@@ -1086,6 +1086,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					literalType && literalType->value().size() <= 32
 				)
 					targetTypes.emplace_back(TypeProvider::fixedBytes(static_cast<unsigned>(literalType->value().size())));
+				else if (auto const* literalType = dynamic_cast<RationalNumberType const*>(argument->annotation().type))
+				{
+					solAssert(literalType->value() == 0, "");
+					targetTypes.emplace_back(TypeProvider::fixedBytes(1));
+				}
 				else
 				{
 					solAssert(argument->annotation().type->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory()), "");
