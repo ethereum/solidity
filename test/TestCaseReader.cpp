@@ -159,7 +159,9 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 				soltestAssert(!externalSourceName.empty(), "");
 				fs::path externalSourceTarget(externalSourceString);
 				fs::path testCaseParentDir = m_fileName.parent_path();
-				if (!externalSourceTarget.is_relative())
+				if (!externalSourceTarget.is_relative() || !externalSourceTarget.root_path().empty())
+					// NOTE: UNC paths (ones starting with // or \\) are considered relative by Boost
+					// since they have an empty root directory (but non-empty root name).
 					BOOST_THROW_EXCEPTION(runtime_error("External Source paths need to be relative to the location of the test case."));
 				fs::path externalSourceFullPath = testCaseParentDir / externalSourceTarget;
 				string externalSourceContent;
