@@ -39,7 +39,7 @@ load it into a ``bytes`` variable. This is not possible with "plain Solidity" an
 idea is that reusable assembly libraries can enhance the Solidity language
 without a compiler change.
 
-.. code::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -65,7 +65,7 @@ without a compiler change.
 Inline assembly is also beneficial in cases where the optimizer fails to produce
 efficient code, for example:
 
-.. code::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -217,7 +217,9 @@ starting from where this pointer points at and update it.
 There is no guarantee that the memory has not been used before and thus
 you cannot assume that its contents are zero bytes.
 There is no built-in mechanism to release or free allocated memory.
-Here is an assembly snippet you can use for allocating memory that follows the process outlined above::
+Here is an assembly snippet you can use for allocating memory that follows the process outlined above
+
+.. code-block:: yul
 
     function allocate(length) -> pos {
       pos := mload(0x40)

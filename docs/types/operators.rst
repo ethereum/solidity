@@ -40,7 +40,7 @@ This distinction is visible when ``a`` is reference variable: It
 will only reset ``a`` itself, not the
 value it referred to previously.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;

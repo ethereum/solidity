@@ -98,7 +98,7 @@ for example, you have to add an offset corresponding to the struct member to rea
 
 As an example, consider the following contract:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -216,7 +216,7 @@ The following example shows a contract and its storage layout, containing
 value and reference types, types that are encoded packed, and nested types.
 
 
-.. code::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -238,7 +238,7 @@ value and reference types, types that are encoded packed, and nested types.
         bytes b1;
     }
 
-.. code::
+.. code:: json
 
     "storageLayout": {
       "storage": [

@@ -39,7 +39,9 @@ Internal Function Calls
 -----------------------
 
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
-this nonsensical example::
+this nonsensical example:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
@@ -82,7 +84,7 @@ Note that it is discouraged to specify gas values explicitly, since the gas cost
 of opcodes can change in the future. Any Wei you send to the contract is added
 to the total balance of that contract:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.2 <0.9.0;
@@ -144,7 +146,7 @@ if they are enclosed in ``{ }`` as can be seen in the following
 example. The argument list has to coincide by name with the list of
 parameters from the function declaration, but can be in arbitrary order.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -168,7 +170,7 @@ Omitted Function Parameter Names
 The names of unused parameters (especially return parameters) can be omitted.
 Those parameters will still be present on the stack, but they are inaccessible.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
@@ -192,7 +194,7 @@ A contract can create other contracts using the ``new`` keyword. The full
 code of the contract being created has to be known when the creating contract
 is compiled so recursive creation-dependencies are not possible.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
@@ -247,7 +249,7 @@ contracts creates other contracts in the meantime.
 The main use-case here is contracts that act as judges for off-chain interactions,
 which only need to be created if there is a dispute.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0 <0.9.0;
@@ -316,7 +318,7 @@ or to pre-existing variables (or LValues in general).
 Tuples are not proper types in Solidity, they can only be used to form syntactic
 groupings of expressions.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -362,7 +364,7 @@ In the example below the call to ``g(x)`` has no effect on ``x`` because it crea
 an independent copy of the storage value in memory. However, ``h(x)`` successfully modifies ``x``
 because only a reference and not a copy is passed.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
@@ -421,7 +423,7 @@ use state variables before they are declared and call functions recursively.
 As a consequence, the following examples will compile without warnings, since
 the two variables have the same name but disjoint scopes.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -443,7 +445,7 @@ As a special example of the C99 scoping rules, note that in the following,
 the first assignment to ``x`` will actually assign the outer and not the inner variable.
 In any case, you will get a warning about the outer variable being shadowed.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -465,7 +467,7 @@ In any case, you will get a warning about the outer variable being shadowed.
     for the entire function, regardless where it was declared. The following example shows a code snippet that used
     to compile but leads to an error starting from version 0.5.0.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -497,7 +499,7 @@ thus making the use of these libraries unnecessary.
 
 To obtain the previous behaviour, an ``unchecked`` block can be used:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.0;
@@ -657,7 +659,7 @@ You can optionally provide a message string for ``require``, but not for ``asser
 The following example shows how you can use ``require`` to check conditions on inputs
 and ``assert`` for internal error checking.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -721,7 +723,7 @@ any costs.
 The following example shows how to use an error string and a custom error instance
 together with ``revert`` and the equivalent ``require``:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -781,7 +783,7 @@ The provided message can be retrieved by the caller using ``try``/``catch`` as s
 
 A failure in an external call can be caught using a try/catch statement, as follows:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;

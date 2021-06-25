@@ -235,7 +235,7 @@ Examples
 
 Given the contract:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -510,7 +510,7 @@ call.
 As an example, let us consider the following contract whose ``transfer`` function always
 reverts with a custom error of "insufficient balance":
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -599,7 +599,7 @@ Errors look as follows:
 
 For example,
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -653,7 +653,7 @@ which is of array type and has the same structure as the top-level object except
 
 As an example, the code
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.7.4 <0.9.0;

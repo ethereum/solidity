@@ -22,7 +22,7 @@ raised, the previous highest bidder gets their money back.  After the end of
 the bidding period, the contract has to be called manually for the beneficiary
 to receive their money - contracts cannot activate themselves.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -191,7 +191,7 @@ transfers): Bidders can confuse competition by placing several high or low
 invalid bids.
 
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;

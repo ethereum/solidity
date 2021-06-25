@@ -15,7 +15,7 @@ everything right now, we will go into more detail later.
 Storage Example
 ===============
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -82,7 +82,7 @@ cryptocurrency. The contract allows only its creator to create new coins (differ
 Anyone can send coins to each other without a need for
 registering with a username and password, all you need is an Ethereum keypair.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;

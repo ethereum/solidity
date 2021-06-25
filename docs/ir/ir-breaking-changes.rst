@@ -14,7 +14,8 @@ hiding new and different behavior in existing code.
  * When storage structs are deleted, every storage slot that contains a member of the struct is set to zero entirely. Formally, padding space was left untouched.
 Consequently, if the padding space within a struct is used to store data (e.g. in the context of a contract upgrade), you have to be aware that ``delete`` will now also clear the added member (while it wouldn't have been cleared in the past).
 
-::
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.7.0;
 
@@ -42,7 +43,8 @@ We have the same behavior for implicit delete, for example when array of structs
    The new code generator implements modifiers using actual functions and passes function parameters on.
    This means that multiple executions of a function will get the same values for the parameters.
 
-::
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.0;
     contract C {
@@ -71,7 +73,9 @@ New order:
      2. Constructor, if present.
 
 This causes differences in some contracts, for example:
-::
+
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.7.0;
 
@@ -93,7 +97,9 @@ With the new rules, ``y`` will be set to 42. We first initialize ``x`` to 0, the
 
  * Copying ``bytes`` arrays from memory to storage is implemented in a different way. The old code generator always copies full words, while the new one cuts the byte array after its end. The old behaviour can lead to dirty data being copied after the end of the array (but still in the same storage slot).
 This causes differences in some contracts, for example:
-::
+
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;
 
@@ -123,7 +129,8 @@ Now it is returning ``0x64656164626565660000000000000000000000000000000000000000
 
 For example:
 
-::
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;
     contract C {
@@ -141,7 +148,8 @@ The function ``preincr_u8(1)`` returns the following values:
 On the other hand, function argument expressions are evaluated in the same order by both code generators.
 For example:
 
-::
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;
     contract C {
@@ -188,7 +196,9 @@ The old code generator only performs cleanup before an operation whose result co
 The new code generator performs cleanup after any operation that can result in dirty bits.
 
 For example:
-::
+
+.. code-block:: solidity
+
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.8.0;
     contract C {
