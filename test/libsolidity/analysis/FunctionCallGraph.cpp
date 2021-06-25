@@ -1114,7 +1114,6 @@ BOOST_AUTO_TEST_CASE(interfaces_and_abstract_contracts)
 	unique_ptr<CompilerStack> compilerStack = parseAndAnalyzeContracts(R"(
 		interface I {
 			event Ev(uint);
-			modifier m() virtual;
 
 			function ext1() external;
 			function ext2() external;
@@ -1126,6 +1125,8 @@ BOOST_AUTO_TEST_CASE(interfaces_and_abstract_contracts)
 		}
 
 		abstract contract C is J {
+			modifier m() virtual;
+
 			function ext3() external override virtual;
 			function ext4() external { inr2();}
 			function inr1() internal virtual;
@@ -1167,7 +1168,7 @@ BOOST_AUTO_TEST_CASE(interfaces_and_abstract_contracts)
 			{"Entry", "function C.ext4()"},
 			{"function C.ext4()", "function C.inr2()"},
 			{"function C.inr2()", "function C.inr1()"},
-			{"function C.inr2()", "modifier I.m"},
+			{"function C.inr2()", "modifier C.m"},
 		}},
 		{"D", {
 			{"Entry", "function D.ext1()"},

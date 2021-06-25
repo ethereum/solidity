@@ -314,14 +314,22 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 
 void TypeChecker::endVisit(ModifierDefinition const& _modifier)
 {
-	if (_modifier.virtualSemantics())
-		if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(_modifier.scope()))
-			if (contractDef->isLibrary())
-				m_errorReporter.typeError(
-					3275_error,
-					_modifier.location(),
-					"Modifiers in a library cannot be virtual."
-				);
+	if (auto const* contractDef = dynamic_cast<ContractDefinition const*>(_modifier.scope()))
+	{
+		if (_modifier.virtualSemantics() && contractDef->isLibrary())
+			m_errorReporter.typeError(
+				3275_error,
+				_modifier.location(),
+				"Modifiers in a library cannot be virtual."
+			);
+
+		if (contractDef->isInterface())
+			m_errorReporter.typeError(
+				6408_error,
+				_modifier.location(),
+				"Modifiers cannot be defined or declared in interfaces."
+			);
+	}
 
 	if (!_modifier.isImplemented() && !_modifier.virtualSemantics())
 		m_errorReporter.typeError(8063_error, _modifier.location(), "Modifiers without implementation must be marked virtual.");
