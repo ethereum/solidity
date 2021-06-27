@@ -77,6 +77,7 @@ string solidity::util::readUntilEnd(istream& _stdin)
 		ret.append(tmp);
 		ret.append("\n");
 	}
+	ret.pop_back();
 	return ret;
 }
 
