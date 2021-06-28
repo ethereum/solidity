@@ -60,6 +60,35 @@ void removeTestSuite(std::string const& _name)
 	master.remove(id);
 }
 
+void runTestCase(TestCase::Config const& _config, TestCase::TestCaseCreator const& _testCaseCreator)
+{
+	try
+	{
+		stringstream errorStream;
+		auto testCase = _testCaseCreator(_config);
+		if (testCase->shouldRun())
+			switch (testCase->run(errorStream))
+			{
+				case TestCase::TestResult::Success:
+					break;
+				case TestCase::TestResult::Failure:
+					BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
+					break;
+				case TestCase::TestResult::FatalError:
+					BOOST_ERROR("Fatal error during test.\n" + errorStream.str());
+					break;
+			}
+	}
+	catch (boost::exception const& _e)
+	{
+		BOOST_ERROR("Exception during extracted test: " << boost::diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Exception during extracted test: " << boost::diagnostic_information(_e));
+	}
+}
+
 int registerTests(
 	boost::unit_test::test_suite& _suite,
 	boost::filesystem::path const& _basepath,
@@ -114,28 +143,8 @@ int registerTests(
 			[config, _testCaseCreator]
 			{
 				BOOST_REQUIRE_NO_THROW({
-					try
-					{
-						stringstream errorStream;
-						auto testCase = _testCaseCreator(config);
-						if (testCase->shouldRun())
-							switch (testCase->run(errorStream))
-							{
-								case TestCase::TestResult::Success:
-									break;
-								case TestCase::TestResult::Failure:
-									BOOST_ERROR("Test expectation mismatch.\n" + errorStream.str());
-									break;
-								case TestCase::TestResult::FatalError:
-									BOOST_ERROR("Fatal error during test.\n" + errorStream.str());
-									break;
-							}
-					}
-					catch (boost::exception const& _e)
-					{
-						BOOST_ERROR("Exception during extracted test: " << boost::diagnostic_information(_e));
-					}
-			   });
+					runTestCase(config, _testCaseCreator);
+				});
 			},
 			_path.stem().string(),
 			*filenames.back(),
