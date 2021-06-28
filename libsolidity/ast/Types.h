@@ -593,7 +593,7 @@ public:
 private:
 	rational m_value;
 
-	/// Bytes type to which the rational can be explicitly converted.
+	/// Bytes type to which the rational can be implicitly converted.
 	/// Empty for all rationals that are not directly parsed from hex literals.
 	Type const* m_compatibleBytesType;
 
