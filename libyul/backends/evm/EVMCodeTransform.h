@@ -181,6 +181,10 @@ private:
 	{
 		return m_functionExitStackHeight.has_value();
 	}
+	bool isInsideFunction() const
+	{
+		return m_functionExitLabel.has_value();
+	}
 
 	AbstractAssembly& m_assembly;
 	AsmAnalysisInfo& m_info;

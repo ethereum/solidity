@@ -1,13 +1,12 @@
 {
     {
         mstore(0x40, memoryguard(128))
-        sstore(g(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), f())
+        sstore(g(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17), f())
     }
-    function g(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16) -> v {
-        // Should be, but cannot yet be escalated.
-        v := b16
+    function g(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17) -> v {
+        v := add(b16, b17)
     }
-    function f() -> v{
+    function f() -> v {
 	let a1 := calldataload(mul(1,4))
 	let a2 := calldataload(mul(2,4))
 	let a3 := calldataload(mul(3,4))
@@ -52,10 +51,10 @@
 // {
 //     {
 //         mstore(0x40, memoryguard(0xa0))
-//         sstore(g(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16), f())
+//         sstore(g(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17), f())
 //     }
-//     function g(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16) -> v
-//     { v := b16 }
+//     function g(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17) -> v
+//     { v := add(b16, b17) }
 //     function f() -> v_1
 //     {
 //         mstore(0x80, calldataload(mul(1, 4)))

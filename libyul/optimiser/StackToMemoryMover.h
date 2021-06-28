@@ -22,6 +22,9 @@
 
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
+#include <libyul/ASTForward.h>
+
+#include <liblangutil/SourceLocation.h>
 #include <libsolutil/Common.h>
 
 namespace solidity::yul
@@ -52,6 +55,16 @@ namespace solidity::yul
  *     let c := _3
  *     let a := _1
  *
+ * In case f has return parameters that are moved to memory, fewer variables are returned and the return values read
+ * from memory instead. Assume the third return parameter of f (i.e. c) has to be moved to memory:
+ *     let a, b, c, d := f()
+ *   then it is replaced by
+ *     let _1, _2, _4 := f()
+ *     mstore(<memory offset for d>, _4)
+ *     mstore(<memory offset for b>, _2)
+ *     let c := mload(<memory offset of third return parameter of f>)
+ *     let a := _1
+ *
  * Assignments to single variables are replaced by mstore's:
  *   If a is in the map, replace
  *     a := expr
@@ -70,8 +83,44 @@ namespace solidity::yul
  *
  * Replace all references to a variable ``a`` in the map by ``mload(<memory offset for a>)``.
  *
- * If a visited function has arguments or return parameters that are contained in the map,
- * the entire function is skipped (no local variables in the function will be moved at all).
+ * Function arguments are moved at the beginning of a function body:
+ *   If a1 is in the map, replace
+ *     function f(a1, a2, ..., a17)
+ *     {
+ *       ...
+ *       sstore(a1, a17)
+ *     }
+ *   by
+ *     function f(a1, a2, ..., a17)
+ *     {
+ *       mstore(<memory offset for a1>, a1)
+ *       ...
+ *       sstore(mload(<memory offset for a1>, a17)
+ *     }
+ * This relies on the code transform popping arguments that are no longer used, if they are on the stack top.
+ *
+ * Functions with only one return argument that has to be moved are encapsulated in a wrapper function as follows:
+ *   Suppose b and r need to be moved in:
+ *     function f(a, b) -> r
+ *     {
+ *       ...body of f...
+ *       r := b
+ *       ...body of f continued...
+ *     }
+ *   then replace by:
+ *     function f(a, b) -> r
+ *     {
+ *       mstore(<memory offset of b>, b)
+ *       mstore(<memory offset of r>, 0)
+ *       f_1(a)
+ *       r := mload(<memory offset of r>)
+ *     }
+ *     function f_1(a)
+ *     {
+ *       ...body of f...
+ *       mstore(<memory offset of r>, mload(<memory offset of b>))
+ *       ...body of f continued...
+ *     }
  *
  * Prerequisite: Disambiguator, ForLoopInitRewriter, FunctionHoister.
  */
@@ -98,6 +147,7 @@ public:
 
 	void operator()(FunctionDefinition& _functionDefinition) override;
 	void operator()(Block& _block) override;
+	using ASTModifier::visit;
 	void visit(Expression& _expression) override;
 private:
 	class VariableMemoryOffsetTracker
@@ -113,20 +163,36 @@ private:
 		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
 		/// or std::nullopt if the variable should not be moved.
 		std::optional<YulString> operator()(YulString _variable) const;
+		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
+		/// or std::nullopt if the variable should not be moved.
+		std::optional<YulString> operator()(TypedName const& _variable) const;
+		/// @returns a YulString containing the memory offset to be assigned to @a _variable as number literal
+		/// or std::nullopt if the variable should not be moved.
+		std::optional<YulString> operator()(Identifier const& _variable) const;
+
 	private:
 		u256 m_reservedMemory;
 		std::map<YulString, uint64_t> const& m_memorySlots;
 		uint64_t m_numRequiredSlots = 0;
 	};
+	struct FunctionMoveInfo
+	{
+		std::vector<std::optional<YulString>> returnVariableSlots;
+	};
 
 	StackToMemoryMover(
 		OptimiserStepContext& _context,
-		VariableMemoryOffsetTracker const& _memoryOffsetTracker
+		VariableMemoryOffsetTracker const& _memoryOffsetTracker,
+		std::map<YulString, std::vector<TypedName>> _functionReturnVariables
 	);
 
 	OptimiserStepContext& m_context;
 	VariableMemoryOffsetTracker const& m_memoryOffsetTracker;
 	NameDispenser& m_nameDispenser;
+	/// Map from function names to the return variables of the function with that name.
+	std::map<YulString, std::vector<TypedName>> m_functionReturnVariables;
+	/// List of functions generated while running this step that are to be appended to the code in the end.
+	std::list<Statement> m_newFunctionDefinitions;
 };
 
 }
