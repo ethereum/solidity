@@ -98,6 +98,8 @@ to receive their money - contracts cannot activate themselves.
             // it having received the money).
             if (msg.value <= highestBid)
                 revert BidNotHighEnough(highestBid);
+            highestBidder = msg.sender;
+            highestBid = msg.value;
 
             if (highestBid != 0) {
                 // Sending back the money by simply using
@@ -107,8 +109,6 @@ to receive their money - contracts cannot activate themselves.
                 // withdraw their money themselves.
                 pendingReturns[highestBidder] += highestBid;
             }
-            highestBidder = msg.sender;
-            highestBid = msg.value;
             emit HighestBidIncreased(msg.sender, msg.value);
         }
 
