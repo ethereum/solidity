@@ -50,7 +50,7 @@ The following example illustrates how to use libraries (but using a manual metho
 be sure to check out :ref:`using for <using-for>` for a
 more advanced example to implement a set).
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.9.0;
@@ -129,7 +129,7 @@ The following example shows how to use :ref:`types stored in memory <data-locati
 internal functions in libraries in order to implement
 custom types without the overhead of external function calls:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.8 <0.9.0;
@@ -238,7 +238,7 @@ The argument encoding is the same as for the regular contract ABI, except for st
 Similarly to the contract ABI, the selector consists of the first four bytes of the Keccak256-hash of the signature.
 Its value can be obtained from Solidity using the ``.selector`` member as follows:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.14 <0.9.0;

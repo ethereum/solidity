@@ -87,7 +87,7 @@ Certain optimizer steps symbolically track the storage and memory locations. For
 information is used to compute Keccak-256 hashes that can be evaluated during compile time. Consider
 the sequence:
 
-::
+.. code-block:: none
 
   PUSH 32
   PUSH 0
@@ -99,7 +99,7 @@ the sequence:
 
 or the equivalent Yul
 
-::
+.. code-block:: yul
 
   let x := calldataload(0)
   mstore(x, 100)
@@ -114,7 +114,7 @@ the instruction doesn't write to a certain location.
 
 For example,
 
-::
+.. code-block:: yul
 
   let x := calldataload(0)
   mstore(x, 100)
@@ -162,7 +162,7 @@ is used as replacement if it is smaller. If a basic block is split at a
 ``JUMPI`` and during the analysis, the condition evaluates to a constant,
 the ``JUMPI`` is replaced based on the value of the constant. Thus code like
 
-::
+.. code-block:: solidity
 
     uint x = 7;
     data[7] = 9;
@@ -173,7 +173,7 @@ the ``JUMPI`` is replaced based on the value of the constant. Thus code like
 
 simplifies to this:
 
-::
+.. code-block:: solidity
 
     data[7] = 9;
     return 1;
@@ -460,7 +460,7 @@ so that the following expressions still only need to reference SSA variables.
 
 An example transformation is the following:
 
-::
+.. code-block:: yul
 
     {
         let a := calldataload(0)
@@ -476,7 +476,7 @@ An example transformation is the following:
 When all the following transformation steps are applied, the program will look
 as follows:
 
-::
+.. code-block:: yul
 
     {
         let _1 := 0
@@ -526,7 +526,7 @@ as arguments.
 
 The above would be transformed into
 
-::
+.. code-block:: yul
 
     {
         let _1 := mload(y)
@@ -563,7 +563,7 @@ reassigned variables are replaced by the newly declared variables.
 
 Example:
 
-::
+.. code-block:: yul
 
     {
         let a := 1
@@ -573,7 +573,7 @@ Example:
 
 is transformed to
 
-::
+.. code-block:: yul
 
     {
         let a_1 := 1
@@ -618,7 +618,7 @@ RedundantAssignEliminator
 The SSA transform always generates an assignment of the form ``a := a_i``, even though
 these might be unnecessary in many cases, like the following example:
 
-::
+.. code-block:: yul
 
     {
         let a := 1
@@ -629,7 +629,7 @@ these might be unnecessary in many cases, like the following example:
 
 The SSA transform converts this snippet to the following:
 
-::
+.. code-block:: yul
 
     {
         let a_1 := 1
@@ -645,7 +645,7 @@ The Redundant Assign Eliminator removes all the three assignments to ``a``, beca
 the value of ``a`` is not used and thus turn this
 snippet into strict SSA form:
 
-::
+.. code-block:: yul
 
     {
         let a_1 := 1
@@ -974,7 +974,7 @@ BlockFlattener
 This stage eliminates nested blocks by inserting the statement in the
 inner block at the appropriate place in the outer block:
 
-::
+.. code-block:: yul
 
     {
         let x := 2
@@ -986,7 +986,7 @@ inner block at the appropriate place in the outer block:
 
 is transformed to
 
-::
+.. code-block:: yul
 
     {
         let x := 2
@@ -1026,7 +1026,7 @@ If a function, say, ``function f(a, b) { sstore (a, b) }``, is called with liter
 example, ``f(x, 5)``, where ``x`` is an identifier, it could be specialized by creating a new
 function ``f_1`` that takes only one argument, i.e.,
 
-::
+.. code-block:: yul
 
     function f_1(a_1) {
         let b_1 := 5
@@ -1051,7 +1051,7 @@ This step removes unused parameters in a function.
 If a parameter is unused, like ``c`` and ``y`` in, ``function f(a,b,c) -> x, y { x := div(a,b) }``, we
 remove the parameter and create a new "linking" function as follows:
 
-::
+.. code-block:: yul
 
   function f(a,b) -> x { x := div(a,b) }
   function f2(a,b,c) -> x, y { x := f(a,b) }
@@ -1184,14 +1184,14 @@ fresh variable declarations.
 
 The SSA transform rewrites
 
-::
+.. code-block:: yul
 
     a := E
     mstore(a, 1)
 
 to
 
-::
+.. code-block:: yul
 
     let a_1 := E
     a := a_1
@@ -1202,7 +1202,7 @@ whenever ``a`` was referenced. The SSA transform changes statements
 of this form by just swapping out the declaration and the assignment. The above
 snippet is turned into
 
-::
+.. code-block:: yul
 
     a := E
     let a_1 := a

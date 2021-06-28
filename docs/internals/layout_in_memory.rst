@@ -49,7 +49,7 @@ Example for Difference in Arrays
 The following array occupies 32 bytes (1 slot) in storage, but 128
 bytes (4 items with 32 bytes each) in memory.
 
-::
+.. code-block:: solidity
 
     uint8[4] a;
 
@@ -62,7 +62,7 @@ The following struct occupies 96 bytes (3 slots of 32 bytes) in storage,
 but 128 bytes (4 items with 32 bytes each) in memory.
 
 
-::
+.. code-block:: solidity
 
     struct S {
         uint a;

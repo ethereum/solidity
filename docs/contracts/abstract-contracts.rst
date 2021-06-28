@@ -11,7 +11,9 @@ Contracts may be marked as abstract even though all functions are implemented.
 
 This can be done by using the ``abstract`` keyword as shown in the following example. Note that this contract needs to be
 defined as abstract, because the function ``utterance()`` was defined, but no implementation was
-provided (no implementation body ``{ }`` was given).::
+provided (no implementation body ``{ }`` was given).
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.9.0;
@@ -21,7 +23,9 @@ provided (no implementation body ``{ }`` was given).::
     }
 
 Such abstract contracts can not be instantiated directly. This is also true, if an abstract contract itself does implement
-all defined functions. The usage of an abstract contract as a base class is shown in the following example::
+all defined functions. The usage of an abstract contract as a base class is shown in the following example:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.9.0;
@@ -40,11 +44,15 @@ functions by overriding, it needs to be marked as abstract as well.
 Note that a function without implementation is different from
 a :ref:`Function Type <function_types>` even though their syntax looks very similar.
 
-Example of function without implementation (a function declaration)::
+Example of function without implementation (a function declaration):
+
+.. code-block:: solidity
 
     function foo(address) external returns (address);
 
-Example of a declaration of a variable whose type is a function type::
+Example of a declaration of a variable whose type is a function type:
+
+.. code-block:: solidity
 
     function(address) external returns (address) foo;
 

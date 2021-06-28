@@ -666,7 +666,7 @@ the arguments.
 Using abstraction means loss of precise knowledge, but in many cases it does
 not mean loss of proving power.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;
@@ -713,7 +713,7 @@ location is erased.
 If the type is nested, the knowledge removal also includes all the prefix base
 types.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.0;

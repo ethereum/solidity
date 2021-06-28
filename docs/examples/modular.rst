@@ -17,7 +17,7 @@ provides an isolated component that properly tracks balances of accounts.
 It is easy to verify that the ``Balances`` library never produces negative balances or overflows
 and the sum of all balances is an invariant across the lifetime of the contract.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
