@@ -226,8 +226,8 @@ a failure can more easily be debugged or reacted upon.
 
 The ``send`` function can be used by anyone (who already
 has some of these coins) to send coins to anyone else. If the sender does not have
-enough coins to send, the ``require`` call fails and provides the
-sender with an appropriate error message string.
+enough coins to send, the ``if`` condition evaluates to true. As a result, the ``revert`` will cause the operation to fail
+while providing the sender with error details using the ``InsufficientBalance`` error.
 
 .. note::
     If you use
