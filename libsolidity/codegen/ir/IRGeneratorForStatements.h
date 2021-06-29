@@ -105,7 +105,7 @@ public:
 	bool visit(Continue const& _continueStatement) override;
 	bool visit(Break const& _breakStatement) override;
 	void endVisit(Return const& _return) override;
-	void endVisit(UnaryOperation const& _unaryOperation) override;
+	bool visit(UnaryOperation const& _unaryOperation) override;
 	bool visit(BinaryOperation const& _binOp) override;
 	void endVisit(FunctionCall const& _funCall) override;
 	void endVisit(FunctionCallOptions const& _funCallOptions) override;
