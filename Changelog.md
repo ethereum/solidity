@@ -14,6 +14,7 @@ Bugfixes:
  * Code Generator: Fix internal compiler error when calling functions bound to calldata structs and arrays.
  * Code Generator: Fix internal compiler error when passing a 32-byte hex literal or a zero literal to ``bytes.concat()`` by disallowing such literals.
  * Type Checker: Fix internal error and prevent static calls to unimplemented modifiers.
+ * Type Checker: Disallow modifier declarations and definitions in interfaces.
 
 
 ### 0.8.6 (2021-06-22)
