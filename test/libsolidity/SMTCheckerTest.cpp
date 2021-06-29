@@ -51,8 +51,24 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT engine choice."));
 
+	auto contract = m_reader.stringSetting("SMTContract", "");
+	if (!contract.empty())
+		m_modelCheckerSettings.contracts.contracts[""] = {contract};
+
+	auto extCallsMode = ModelCheckerExtCalls::fromString(m_reader.stringSetting("SMTExtCalls", "untrusted"));
+	if (extCallsMode)
+		m_modelCheckerSettings.externalCalls = *extCallsMode;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT external calls mode."));
+
 	if (m_enabledSolvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
+
+	auto targets = ModelCheckerTargets::fromString(m_reader.stringSetting("SMTTargets", "default"));
+	if (targets)
+		m_modelCheckerSettings.targets = *targets;
+	else
+		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT targets."));
 
 	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "no");
 	if (ignoreCex == "no")

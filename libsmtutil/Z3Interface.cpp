@@ -279,6 +279,13 @@ Expression Z3Interface::fromZ3Expr(z3::expr const& _expr)
 	if (_expr.is_const() || _expr.is_var())
 		return Expression(_expr.to_string(), {}, sort);
 
+	if (_expr.is_quantifier())
+	{
+		if (_expr.is_lambda())
+			return Expression("lambda", {}, sort);
+		return Expression("quantifier", {}, sort);
+	}
+
 	smtAssert(_expr.is_app(), "");
 	vector<Expression> arguments;
 	for (unsigned i = 0; i < _expr.num_args(); ++i)

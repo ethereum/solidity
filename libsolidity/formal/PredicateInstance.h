@@ -37,7 +37,7 @@ smtutil::Expression interface(Predicate const& _pred, ContractDefinition const& 
 smtutil::Expression nondetInterface(Predicate const& _pred, ContractDefinition const& _contract, EncodingContext& _context, unsigned _preIdx, unsigned _postIdx);
 
 smtutil::Expression constructor(Predicate const& _pred, EncodingContext& _context);
-smtutil::Expression constructorCall(Predicate const& _pred, EncodingContext& _context);
+smtutil::Expression constructorCall(Predicate const& _pred, EncodingContext& _context, bool _internal = true);
 
 smtutil::Expression function(
 	Predicate const& _pred,
@@ -77,7 +77,8 @@ std::vector<smtutil::Expression> currentFunctionVariablesForDefinition(
 std::vector<smtutil::Expression> currentFunctionVariablesForCall(
 	FunctionDefinition const& _function,
 	ContractDefinition const* _contract,
-	EncodingContext& _context
+	EncodingContext& _context,
+	bool _internal = true
 );
 
 std::vector<smtutil::Expression> currentBlockVariables(

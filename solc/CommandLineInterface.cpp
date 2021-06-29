@@ -158,6 +158,7 @@ static string const g_strMetadataHash = "metadata-hash";
 static string const g_strMetadataLiteral = "metadata-literal";
 static string const g_strModelCheckerContracts = "model-checker-contracts";
 static string const g_strModelCheckerEngine = "model-checker-engine";
+static string const g_strModelCheckerExtCalls = "model-checker-ext-calls";
 static string const g_strModelCheckerTargets = "model-checker-targets";
 static string const g_strModelCheckerTimeout = "model-checker-timeout";
 static string const g_strNatspecDev = "devdoc";
@@ -232,6 +233,7 @@ static string const g_argMetadataHash = g_strMetadataHash;
 static string const g_argMetadataLiteral = g_strMetadataLiteral;
 static string const g_argModelCheckerContracts = g_strModelCheckerContracts;
 static string const g_argModelCheckerEngine = g_strModelCheckerEngine;
+static string const g_argModelCheckerExtCalls = g_strModelCheckerExtCalls;
 static string const g_argModelCheckerTargets = g_strModelCheckerTargets;
 static string const g_argModelCheckerTimeout = g_strModelCheckerTimeout;
 static string const g_argNatspecDev = g_strNatspecDev;
@@ -1072,6 +1074,12 @@ General Information)").c_str(),
 			"Select model checker engine."
 		)
 		(
+			g_strModelCheckerExtCalls.c_str(),
+			po::value<string>()->value_name("untrusted,trusted")->default_value("untrusted"),
+			"Select whether external calls should be considered untrusted or trusted"
+			" if the called function's code is available."
+		)
+		(
 			g_strModelCheckerTargets.c_str(),
 			po::value<string>()->value_name("default,constantCondition,underflow,overflow,divByZero,balance,assert,popEmptyArray,outOfBounds")->default_value("default"),
 			"Select model checker verification targets. "
@@ -1452,6 +1460,18 @@ bool CommandLineInterface::processInput()
 			return false;
 		}
 		m_modelCheckerSettings.engine = *engine;
+	}
+
+	if (m_args.count(g_argModelCheckerExtCalls))
+	{
+		string mode = m_args[g_argModelCheckerExtCalls].as<string>();
+		optional<ModelCheckerExtCalls> extCallsMode = ModelCheckerExtCalls::fromString(mode);
+		if (!extCallsMode)
+		{
+			serr() << "Invalid option for --" << g_argModelCheckerExtCalls << ": " << mode << endl;
+			return false;
+		}
+		m_modelCheckerSettings.externalCalls = *extCallsMode;
 	}
 
 	if (m_args.count(g_argModelCheckerTargets))
