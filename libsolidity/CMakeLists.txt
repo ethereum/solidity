@@ -44,6 +44,8 @@ set(sources
 	analysis/SyntaxChecker.h
 	analysis/TypeChecker.cpp
 	analysis/TypeChecker.h
+	analysis/VariableCanBeImmutable.cpp
+	analysis/VariableCanBeImmutable.h
 	analysis/ViewPureChecker.cpp
 	analysis/ViewPureChecker.h
 	ast/AST.cpp

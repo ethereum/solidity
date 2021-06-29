@@ -36,6 +36,7 @@
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/PostTypeChecker.h>
+#include <libsolidity/analysis/VariableCanBeImmutable.h>
 #include <libsolidity/analysis/PostTypeContractLevelChecker.h>
 #include <libsolidity/analysis/StaticAnalyzer.h>
 #include <libsolidity/analysis/SyntaxChecker.h>
@@ -552,6 +553,16 @@ bool CompilerStack::analyze()
 
 			if (!ViewPureChecker(ast, m_errorReporter).check())
 				noErrors = false;
+		}
+
+		if (noErrors)
+		{
+			VariableCanBeImmutable v(m_errorReporter);
+			for (Source const* source: m_sourceOrder)
+				if (source->ast)
+				{
+					source->ast->accept(v);
+				}
 		}
 
 		if (noErrors)
