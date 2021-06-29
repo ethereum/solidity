@@ -50,7 +50,12 @@ class Parser::ASTNodeFactory
 {
 public:
 	explicit ASTNodeFactory(Parser& _parser):
-		m_parser(_parser), m_location{_parser.currentLocation().start, -1, _parser.currentLocation().source} {}
+		m_parser(_parser), m_location{
+			_parser.currentLocation().start,
+			-1,
+			_parser.currentLocation().sourceName
+		}
+	{}
 	ASTNodeFactory(Parser& _parser, ASTPointer<ASTNode> const& _childNode):
 		m_parser(_parser), m_location{_childNode->location()} {}
 
@@ -63,7 +68,7 @@ public:
 	template <class NodeType, typename... Args>
 	ASTPointer<NodeType> createNode(Args&& ... _args)
 	{
-		solAssert(m_location.source, "");
+		solAssert(m_location.sourceName, "");
 		if (m_location.end < 0)
 			markEndPosition();
 		return make_shared<NodeType>(m_parser.nextID(), m_location, std::forward<Args>(_args)...);
@@ -2084,7 +2089,7 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 	else if (matches.empty())
 		parserWarning(
 			1878_error,
-			{-1, -1, m_scanner->charStream()},
+			{-1, -1, m_scanner->currentLocation().sourceName},
 			"SPDX license identifier not provided in source file. "
 			"Before publishing, consider adding a comment containing "
 			"\"SPDX-License-Identifier: <SPDX-License>\" to each source file. "
@@ -2094,7 +2099,7 @@ optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> cons
 	else
 		parserError(
 			3716_error,
-			{-1, -1, m_scanner->charStream()},
+			{-1, -1, m_scanner->currentLocation().sourceName},
 			"Multiple SPDX license identifiers found in source file. "
 			"Use \"AND\" or \"OR\" to combine multiple licenses. "
 			"Please see https://spdx.org for more information."

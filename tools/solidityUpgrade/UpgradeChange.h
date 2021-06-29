@@ -19,6 +19,7 @@
 #include <libsolutil/AnsiColorized.h>
 
 #include <liblangutil/SourceLocation.h>
+#include <liblangutil/CharStreamProvider.h>
 
 #include <algorithm>
 #include <utility>
@@ -47,32 +48,27 @@ public:
 		Level _level,
 		langutil::SourceLocation _location,
 		std::string _patch
-	)
-	:
+	):
 		m_location(_location),
-		m_source(_location.source->source()),
 		m_patch(std::move(_patch)),
-		m_level(_level) {}
+		m_level(_level)
+	{}
 
 	~UpgradeChange() {}
 
-	langutil::SourceLocation const& location() { return m_location; }
-	std::string source() const { return m_source; }
-	std::string patch() { return m_patch; }
+	langutil::SourceLocation const& location() const { return m_location; }
+	std::string patch() const { return m_patch; }
 	Level level() const { return m_level; }
 
-	/// Does the actual replacement of code under at current source location.
-	/// The change is applied on the upgrade-specific copy of source code.
-	/// The altered code is then requested by the upgrade routine later on.
-	void apply();
-	/// Does a pretty-print of this upgrade change. It uses a source formatter
-	/// provided by the compiler in order to print affected code. Since the patch
+	/// Performs the actual replacement on the provided original source code
+	/// and returns the modified source code.
+	std::string apply(std::string _source) const;
+	/// Does a pretty-print of this upgrade change. Since the patch
 	/// can contain a lot of code lines, it can be shortened, which is signaled
 	/// by setting the flag.
-	void log(bool const _shorten = true) const;
+	void log(langutil::CharStreamProvider const& _charStreamProvider, bool const _shorten = true) const;
 private:
 	langutil::SourceLocation m_location;
-	std::string m_source;
 	std::string m_patch;
 	Level m_level;
 

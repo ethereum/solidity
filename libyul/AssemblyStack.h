@@ -24,6 +24,7 @@
 
 #include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
+#include <liblangutil/CharStreamProvider.h>
 
 #include <libyul/Object.h>
 #include <libyul/ObjectParser.h>
@@ -61,7 +62,7 @@ struct MachineAssemblyObject
  * Full assembly stack that can support EVM-assembly and Yul as input and EVM, EVM1.5 and
  * Ewasm as output.
  */
-class AssemblyStack
+class AssemblyStack: public langutil::CharStreamProvider
 {
 public:
 	enum class Language { Yul, Assembly, StrictAssembly, Ewasm };
@@ -77,8 +78,8 @@ public:
 		m_errorReporter(m_errors)
 	{}
 
-	/// @returns the scanner used during parsing
-	langutil::Scanner const& scanner() const;
+	/// @returns the char stream used during parsing
+	langutil::CharStream const& charStream(std::string const& _sourceName) const override;
 
 	/// Runs parsing and analysis steps, returns false if input cannot be assembled.
 	/// Multiple calls overwrite the previous state.
@@ -132,7 +133,7 @@ private:
 	langutil::EVMVersion m_evmVersion;
 	solidity::frontend::OptimiserSettings m_optimiserSettings;
 
-	std::shared_ptr<langutil::Scanner> m_scanner;
+	std::unique_ptr<langutil::CharStream> m_charStream;
 
 	bool m_analysisSuccessful = false;
 	std::shared_ptr<yul::Object> m_parserResult;

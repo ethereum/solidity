@@ -34,6 +34,7 @@ SourceLocation const parseSourceLocation(std::string const& _input, std::string 
 
 	boost::algorithm::split(pos, _input, boost::is_any_of(":"));
 
+	// TODO What to do with sourceIndex?
 	solAssert(pos.size() == 3, "SourceLocation string must have 3 colon separated numeric fields.");
 	auto const sourceIndex = stoi(pos[Index]);
 
@@ -45,12 +46,7 @@ SourceLocation const parseSourceLocation(std::string const& _input, std::string 
 	int start = stoi(pos[Start]);
 	int end = start + stoi(pos[Length]);
 
-	// ASSUMPTION: only the name of source is used from here on, the m_source of the CharStream-Object can be empty
-	std::shared_ptr<langutil::CharStream> source;
-	if (sourceIndex != -1)
-		source = std::make_shared<langutil::CharStream>("", _sourceName);
-
-	return SourceLocation{start, end, source};
+	return SourceLocation{start, end, std::make_shared<std::string>(_sourceName)};
 }
 
 }

@@ -83,9 +83,9 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 Json::Value formatSourceLocation(SourceLocation const* location)
 {
 	Json::Value sourceLocation;
-	if (location && location->source)
+	if (location && location->sourceName)
 	{
-		sourceLocation["file"] = location->source->name();
+		sourceLocation["file"] = *location->sourceName;
 		sourceLocation["start"] = location->start;
 		sourceLocation["end"] = location->end;
 	}
@@ -109,6 +109,7 @@ Json::Value formatSecondarySourceLocation(SecondarySourceLocation const* _second
 }
 
 Json::Value formatErrorWithException(
+	CharStreamProvider const& _charStreamProvider,
 	util::Exception const& _exception,
 	bool const& _warning,
 	string const& _type,
@@ -119,7 +120,11 @@ Json::Value formatErrorWithException(
 {
 	string message;
 	// TODO: consider enabling color
-	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(_exception, _type);
+	string formattedMessage = SourceReferenceFormatter::formatExceptionInformation(
+		_exception,
+		_type,
+		_charStreamProvider
+	);
 
 	if (string const* description = boost::get_error_info<util::errinfo_comment>(_exception))
 		message = ((_message.length() > 0) ? (_message + ":") : "") + *description;
@@ -1017,6 +1022,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			Error const& err = dynamic_cast<Error const&>(*error);
 
 			errors.append(formatErrorWithException(
+				compilerStack,
 				*error,
 				err.type() == Error::Type::Warning,
 				err.typeName(),
@@ -1030,6 +1036,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (Error const& _error)
 	{
 		errors.append(formatErrorWithException(
+			compilerStack,
 			_error,
 			false,
 			_error.typeName(),
@@ -1050,6 +1057,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (CompilerError const& _exception)
 	{
 		errors.append(formatErrorWithException(
+			compilerStack,
 			_exception,
 			false,
 			"CompilerError",
@@ -1060,6 +1068,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (InternalCompilerError const& _exception)
 	{
 		errors.append(formatErrorWithException(
+			compilerStack,
 			_exception,
 			false,
 			"InternalCompilerError",
@@ -1070,6 +1079,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (UnimplementedFeatureError const& _exception)
 	{
 		errors.append(formatErrorWithException(
+			compilerStack,
 			_exception,
 			false,
 			"UnimplementedFeatureError",
@@ -1080,6 +1090,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (yul::YulException const& _exception)
 	{
 		errors.append(formatErrorWithException(
+			compilerStack,
 			_exception,
 			false,
 			"YulException",
@@ -1090,6 +1101,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (smtutil::SMTLogicError const& _exception)
 	{
 		errors.append(formatErrorWithException(
+			compilerStack,
 			_exception,
 			false,
 			"SMTLogicException",
@@ -1297,6 +1309,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 			auto err = dynamic_pointer_cast<Error const>(error);
 
 			errors.append(formatErrorWithException(
+				stack,
 				*error,
 				err->type() == Error::Type::Warning,
 				err->typeName(),

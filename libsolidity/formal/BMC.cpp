@@ -650,7 +650,7 @@ pair<vector<smtutil::Expression>, vector<string>> BMC::modelExpressions()
 		if (uf->annotation().type->isValueType())
 		{
 			expressionsToEvaluate.emplace_back(expr(*uf));
-			expressionNames.push_back(uf->location().text());
+			// TODO expressionNames.push_back(uf->location().text());
 		}
 
 	return {expressionsToEvaluate, expressionNames};

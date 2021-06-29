@@ -20,6 +20,7 @@
 #include <tools/solidityUpgrade/UpgradeChange.h>
 
 #include <liblangutil/ErrorReporter.h>
+#include <liblangutil/CharStreamProvider.h>
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/analysis/OverrideChecker.h>
@@ -37,13 +38,17 @@ namespace solidity::tools
 class Upgrade
 {
 public:
-	Upgrade(std::vector<UpgradeChange>& _changes): m_changes(_changes) {}
+	Upgrade(
+		langutil::CharStreamProvider const& _charStreamProvider,
+		std::vector<UpgradeChange>& _changes
+	): m_changes(_changes), m_charStreamProvider(_charStreamProvider) {}
 
 protected:
 	/// A reference to a suite-specific set of changes.
 	/// It is passed to all upgrade modules and meant to collect
 	/// reported changes.
 	std::vector<UpgradeChange>& m_changes;
+	langutil::CharStreamProvider const& m_charStreamProvider;
 };
 
 /**
@@ -53,8 +58,11 @@ protected:
 class AnalysisUpgrade: public Upgrade, public frontend::ASTConstVisitor
 {
 public:
-	AnalysisUpgrade(std::vector<UpgradeChange>& _changes):
-		Upgrade(_changes),
+	AnalysisUpgrade(
+		langutil::CharStreamProvider const& _charStreamProvider,
+		std::vector<UpgradeChange>& _changes
+	):
+		Upgrade(_charStreamProvider, _changes),
 		m_errorReporter(m_errors),
 		m_overrideChecker(m_errorReporter)
 	{}

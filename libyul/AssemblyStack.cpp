@@ -88,18 +88,20 @@ evmasm::Assembly::OptimiserSettings translateOptimiserSettings(
 }
 
 
-Scanner const& AssemblyStack::scanner() const
+CharStream const& AssemblyStack::charStream(string const& _sourceName) const
 {
-	yulAssert(m_scanner, "");
-	return *m_scanner;
+	yulAssert(m_charStream, "");
+	yulAssert(m_charStream->name() == _sourceName, "");
+	return *m_charStream;
 }
 
 bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
 {
 	m_errors.clear();
 	m_analysisSuccessful = false;
-	m_scanner = make_shared<Scanner>(CharStream(_source, _sourceName));
-	m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(m_scanner, false);
+	m_charStream = make_unique<CharStream>(_source, _sourceName);
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(*m_charStream);
+	m_parserResult = ObjectParser(m_errorReporter, languageToDialect(m_language, m_evmVersion)).parse(scanner, false);
 	if (!m_errorReporter.errors().empty())
 		return false;
 	yulAssert(m_parserResult, "");
@@ -132,7 +134,8 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 	);
 
 	*m_parserResult = EVMToEwasmTranslator(
-		languageToDialect(m_language, m_evmVersion)
+		languageToDialect(m_language, m_evmVersion),
+		*this
 	).run(*parserResult());
 
 	m_language = _targetLanguage;
@@ -241,6 +244,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 {
 	auto [creationAssembly, deployedAssembly] = assembleEVMWithDeployed(_deployName);
 	yulAssert(creationAssembly, "");
+	yulAssert(m_charStream, "");
 
 	MachineAssemblyObject creationObject;
 	creationObject.bytecode = make_shared<evmasm::LinkerObject>(creationAssembly->assemble());
@@ -249,7 +253,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 	creationObject.sourceMappings = make_unique<string>(
 		evmasm::AssemblyItem::computeSourceMapping(
 			creationAssembly->items(),
-			{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+			{{m_charStream->name(), 0}}
 		)
 	);
 
@@ -261,7 +265,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 		deployedObject.sourceMappings = make_unique<string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				deployedAssembly->items(),
-				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+				{{m_charStream->name(), 0}}
 			)
 		);
 	}

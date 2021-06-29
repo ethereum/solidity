@@ -101,7 +101,10 @@ pair<string, string> IRGenerator::run(
 	{
 		string errorMessage;
 		for (auto const& error: asmStack.errors())
-			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(*error);
+			errorMessage += langutil::SourceReferenceFormatter::formatErrorInformation(
+				*error,
+				asmStack.charStream("")
+			);
 		solAssert(false, ir + "\n\nInvalid IR generated:\n" + errorMessage + "\n");
 	}
 	asmStack.optimize();

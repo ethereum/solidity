@@ -13,6 +13,7 @@ set(sources
 	ParserBase.h
 	Scanner.cpp
 	Scanner.h
+	CharStreamProvider.h
 	SemVerHandler.cpp
 	SemVerHandler.h
 	SourceLocation.h

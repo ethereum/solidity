@@ -28,6 +28,8 @@
 namespace solidity::langutil
 {
 
+class CharStreamProvider;
+
 struct LineColumn
 {
 	int line = {-1};
@@ -67,9 +69,9 @@ namespace SourceReferenceExtractor
 		std::optional<ErrorId> errorId;
 	};
 
-	Message extract(util::Exception const& _exception, std::string _category);
-	Message extract(Error const& _error);
-	SourceReference extract(SourceLocation const* _location, std::string message = "");
+	Message extract(CharStreamProvider const& _charStreamProvider, util::Exception const& _exception, std::string _category);
+	Message extract(CharStreamProvider const& _charStreamProvider, Error const& _error);
+	SourceReference extract(CharStreamProvider const& _charStreamProvider, SourceLocation const* _location, std::string message = "");
 }
 
 }

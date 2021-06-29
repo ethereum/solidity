@@ -200,8 +200,9 @@ string Predicate::formatSummaryCall(vector<smtutil::Expression> const& _args) co
 {
 	solAssert(isSummary(), "");
 
-	if (auto funCall = programFunctionCall())
-		return funCall->location().text();
+	//if (auto funCall = programFunctionCall())
+//		return funCall->location().text();
+	// TODO
 
 	/// The signature of a function summary predicate is: summary(error, this, abiFunctions, cryptoFunctions, txData, preBlockChainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars).
 	/// Here we are interested in preInputVars to format the function call,

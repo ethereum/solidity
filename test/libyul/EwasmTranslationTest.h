@@ -20,16 +20,12 @@
 
 #include <test/TestCase.h>
 
-namespace solidity::langutil
-{
-class Scanner;
-class Error;
-using ErrorList = std::vector<std::shared_ptr<Error const>>;
-}
+#include <libyul/AssemblyStack.h>
 
 namespace solidity::yul
 {
 struct Object;
+class AssemblyStack;
 }
 
 namespace solidity::yul::test
@@ -51,9 +47,8 @@ private:
 	bool parse(std::ostream& _stream, std::string const& _linePrefix, bool const _formatted);
 	std::string interpret();
 
-	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
-
 	std::shared_ptr<Object> m_object;
+	AssemblyStack m_stack;
 };
 
 }

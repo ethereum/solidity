@@ -29,75 +29,6 @@ using namespace solidity;
 using namespace solidity::frontend;
 using namespace solidity::tools;
 
-using Contracts = set<ContractDefinition const*, OverrideChecker::CompareByID>;
-
-namespace
-{
-
-inline string appendOverride(
-	FunctionDefinition const& _function,
-	Contracts const& _expectedContracts
-)
-{
-	auto location = _function.location();
-	string upgradedCode;
-	string overrideExpression = SourceGeneration::functionOverride(_expectedContracts);
-
-	if (SourceAnalysis::hasVirtualKeyword(location))
-		upgradedCode = SourceTransform::insertAfterKeyword(
-			location,
-			"virtual",
-			overrideExpression
-		);
-	else if (SourceAnalysis::hasMutabilityKeyword(location))
-		upgradedCode = SourceTransform::insertAfterKeyword(
-			location,
-			stateMutabilityToString(_function.stateMutability()),
-			overrideExpression
-		);
-	else if (SourceAnalysis::hasVisibilityKeyword(location))
-		upgradedCode = SourceTransform::insertAfterKeyword(
-			location,
-			Declaration::visibilityToString(_function.visibility()),
-			overrideExpression
-		);
-	else
-		upgradedCode = SourceTransform::insertAfterRightParenthesis(
-			location,
-			overrideExpression
-		);
-
-	return upgradedCode;
-}
-
-inline string appendVirtual(FunctionDefinition const& _function)
-{
-	auto location = _function.location();
-	string upgradedCode;
-
-	if (SourceAnalysis::hasMutabilityKeyword(location))
-		upgradedCode = SourceTransform::insertAfterKeyword(
-			location,
-			stateMutabilityToString(_function.stateMutability()),
-			"virtual"
-		);
-	else if (SourceAnalysis::hasVisibilityKeyword(location))
-		upgradedCode = SourceTransform::insertAfterKeyword(
-			location,
-			Declaration::visibilityToString(_function.visibility()),
-			"virtual"
-		);
-	else
-		upgradedCode = SourceTransform::insertAfterRightParenthesis(
-			_function.location(),
-			"virtual"
-		);
-
-	return upgradedCode;
-}
-
-}
-
 void AbstractContract::endVisit(ContractDefinition const& _contract)
 {
 	bool isFullyImplemented = _contract.annotation().unimplementedDeclarations->empty();
@@ -110,7 +41,7 @@ void AbstractContract::endVisit(ContractDefinition const& _contract)
 		m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_contract.location(),
-				SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
+				SourceTransform{m_charStreamProvider}.insertBeforeKeyword(_contract.location(), "contract", "abstract")
 		);
 }
 
@@ -159,6 +90,42 @@ void OverridingFunction::endVisit(ContractDefinition const& _contract)
 	}
 }
 
+string OverridingFunction::appendOverride(
+	FunctionDefinition const& _function,
+	Contracts const& _expectedContracts
+)
+{
+	auto location = _function.location();
+	string upgradedCode;
+	string overrideExpression = SourceGeneration::functionOverride(_expectedContracts);
+
+	if (SourceAnalysis{m_charStreamProvider}.hasVirtualKeyword(location))
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterKeyword(
+			location,
+			"virtual",
+			overrideExpression
+		);
+	else if (SourceAnalysis{m_charStreamProvider}.hasMutabilityKeyword(location))
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterKeyword(
+			location,
+			stateMutabilityToString(_function.stateMutability()),
+			overrideExpression
+		);
+	else if (SourceAnalysis{m_charStreamProvider}.hasVisibilityKeyword(location))
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterKeyword(
+			location,
+			Declaration::visibilityToString(_function.visibility()),
+			overrideExpression
+		);
+	else
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterRightParenthesis(
+			location,
+			overrideExpression
+		);
+
+	return upgradedCode;
+}
+
 void VirtualFunction::endVisit(ContractDefinition const& _contract)
 {
 	auto const& inheritedFunctions = m_overrideChecker.inheritedFunctions(_contract);
@@ -192,12 +159,39 @@ void VirtualFunction::endVisit(ContractDefinition const& _contract)
 				)
 				{
 					m_changes.emplace_back(
-							UpgradeChange::Level::Safe,
-							function->location(),
-							appendVirtual(*function)
+						UpgradeChange::Level::Safe,
+						function->location(),
+						appendVirtual(*function)
 					);
 				}
 			}
 		}
 	}
 }
+
+string VirtualFunction::appendVirtual(FunctionDefinition const& _function) const
+{
+	auto location = _function.location();
+	string upgradedCode;
+
+	if (SourceAnalysis{m_charStreamProvider}.hasMutabilityKeyword(location))
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterKeyword(
+			location,
+			stateMutabilityToString(_function.stateMutability()),
+			"virtual"
+		);
+	else if (SourceAnalysis{m_charStreamProvider}.hasVisibilityKeyword(location))
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterKeyword(
+			location,
+			Declaration::visibilityToString(_function.visibility()),
+			"virtual"
+		);
+	else
+		upgradedCode = SourceTransform{m_charStreamProvider}.insertAfterRightParenthesis(
+			_function.location(),
+			"virtual"
+		);
+
+	return upgradedCode;
+}
+

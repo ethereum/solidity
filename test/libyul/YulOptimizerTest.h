@@ -51,7 +51,6 @@ private:
 	std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> parse(
 		std::ostream& _stream, std::string const& _linePrefix, bool const _formatted, std::string const& _source
 	);
-	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
 	std::string m_optimizerStep;
 

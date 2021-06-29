@@ -17,6 +17,7 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <test/libsolidity/SyntaxTest.h>
+
 #include <test/Common.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -119,11 +120,13 @@ void SyntaxTest::filterObtainedErrors()
 		string sourceName;
 		if (auto location = boost::get_error_info<errinfo_sourceLocation>(*currentError))
 		{
-			solAssert(location->source, "");
-			sourceName = location->source->name();
-
+			solAssert(location->sourceName, "");
+			sourceName = *location->sourceName;
 			solAssert(m_sources.sources.count(sourceName) == 1, "");
-			int preambleSize = static_cast<int>(location->source->source().size()) - static_cast<int>(m_sources.sources[sourceName].size());
+
+			int preambleSize =
+				static_cast<int>(compiler().charStream(sourceName).size()) -
+				static_cast<int>(m_sources.sources[sourceName].size());
 			solAssert(preambleSize >= 0, "");
 
 			// ignore the version & license pragma inserted by the testing tool when calculating locations.
