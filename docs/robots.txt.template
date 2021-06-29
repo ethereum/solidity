@@ -1,5 +1,6 @@
 User-Agent: *
 Sitemap: http://docs.soliditylang.org/sitemap.xml
+Host: docs.soliditylang.org
 
 Allow: /en/latest/
 Allow: /en/v0.7.6/
