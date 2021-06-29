@@ -10,6 +10,7 @@ Compiler Features:
 
 
 Bugfixes:
+ * Code Generator: Fix crash when passing an empty string literal to ``bytes.concat()``.
  * Code Generator: Fix internal compiler error when calling functions bound to calldata structs and arrays.
  * Code Generator: Fix internal compiler error when passing zero to ``bytes.concat()``.
  * Type Checker: Fix internal error and prevent static calls to unimplemented modifiers.
