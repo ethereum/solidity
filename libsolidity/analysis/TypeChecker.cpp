@@ -2033,11 +2033,14 @@ void TypeChecker::typeCheckBytesConcatFunction(
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 
 	for (shared_ptr<Expression const> const& argument: _functionCall.arguments())
-		if (
-			Type const* argumentType = type(*argument);
+	{
+		Type const* argumentType = type(*argument);
+		bool notConvertibleToBytes =
 			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32)) &&
-			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory())
-		)
+			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory());
+		bool numberLiteral = (dynamic_cast<RationalNumberType const*>(argumentType) != nullptr);
+
+		if (notConvertibleToBytes || numberLiteral)
 			m_errorReporter.typeError(
 				8015_error,
 				argument->location(),
@@ -2045,6 +2048,7 @@ void TypeChecker::typeCheckBytesConcatFunction(
 				"bytes or fixed bytes type is required, but " +
 				argumentType->toString(true) + " provided."
 			);
+	}
 }
 
 void TypeChecker::typeCheckFunctionGeneralChecks(
