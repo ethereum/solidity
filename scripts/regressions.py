@@ -88,7 +88,8 @@ class regressor():
 
         ## Log may contain non ASCII characters, so we simply stringify them
         ## since they don't matter for regular expression matching
-        rawtext = str(open(logfile, 'rb').read())
+        with open(logfile, 'rb') as f:
+            rawtext = str(f.read())
         return not re.search(self._re_sanitizer_log, rawtext)
 
     def run(self):

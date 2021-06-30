@@ -8,7 +8,8 @@ from os.path import join, isfile
 
 
 def extract_test_cases(path):
-    lines = open(path, encoding="utf8", errors='ignore', mode='rb').read().splitlines()
+    with open(path, encoding="utf8", errors='ignore', mode='rb') as f:
+        lines = f.read().splitlines()
 
     inside = False
     delimiter = ''
@@ -32,7 +33,8 @@ def extract_test_cases(path):
 
 def extract_and_write(f, path):
     if f.endswith('.sol'):
-        cases = [open(path, 'r').read()]
+        with open(path, 'r') as _f:
+            cases = [_f.read()]
     else:
         cases = extract_test_cases(path)
     write_cases(f, cases)
@@ -41,7 +43,8 @@ def write_cases(f, tests):
     cleaned_filename = f.replace(".","_").replace("-","_").replace(" ","_").lower()
     for test in tests:
         remainder = re.sub(r'^ {4}', '', test, 0, re.MULTILINE)
-        open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'w').write(remainder)
+        with open('test_%s_%s.sol' % (hashlib.sha256(test).hexdigest(), cleaned_filename), 'w') as _f:
+            _f.write(remainder)
 
 
 if __name__ == '__main__':
