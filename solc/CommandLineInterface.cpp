@@ -668,6 +668,10 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 	{
 		// Should not happen if `fs::is_regular_file` is correct.
 	}
+	catch (NotAFile const&)
+	{
+		// Should not happen if `fs::is_regular_file` is correct.
+	}
 
 	vector<string> libraries;
 	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);
@@ -1261,6 +1265,11 @@ bool CommandLineInterface::processInput()
 			catch (FileNotFound const&)
 			{
 				serr() << "File not found: " << jsonFile << endl;
+				return false;
+			}
+			catch (NotAFile const&)
+			{
+				serr() << "Not a regular file: " << jsonFile << endl;
 				return false;
 			}
 		}

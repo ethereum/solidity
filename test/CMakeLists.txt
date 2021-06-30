@@ -8,6 +8,8 @@ set(sources
     EVMHost.h
     ExecutionFramework.cpp
     ExecutionFramework.h
+    FilesystemUtils.cpp
+    FilesystemUtils.h
     InteractiveTests.h
     Metadata.cpp
     Metadata.h
@@ -31,6 +33,7 @@ detect_stray_source_files("${contracts_sources}" "contracts/")
 set(libsolutil_sources
     libsolutil/Checksum.cpp
     libsolutil/CommonData.cpp
+    libsolutil/CommonIO.cpp
     libsolutil/FixedHash.cpp
     libsolutil/IndentedWriter.cpp
     libsolutil/IpfsHash.cpp
