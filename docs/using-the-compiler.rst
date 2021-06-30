@@ -437,7 +437,7 @@ Output Description
 .. code-block:: javascript
 
     {
-      // Optional: not present if no errors/warnings were encountered
+      // Optional: not present if no errors/warnings/infos were encountered
       "errors": [
         {
           // Optional: Location within the source file.
@@ -460,7 +460,7 @@ Output Description
           "type": "TypeError",
           // Mandatory: Component where the error originated, such as "general", "ewasm", etc.
           "component": "general",
-          // Mandatory ("error" or "warning")
+          // Mandatory ("error", "warning" or "info", but please note that this may be extended in the future)
           "severity": "error",
           // Optional: unique code for the cause of the error
           "errorCode": "3141",
@@ -604,6 +604,7 @@ Error Types
 11. ``CompilerError``: Invalid use of the compiler stack - this should be reported as an issue.
 12. ``FatalError``: Fatal error not processed correctly - this should be reported as an issue.
 13. ``Warning``: A warning, which didn't stop the compilation, but should be addressed if possible.
+14. ``Info``: Information that the compiler thinks the user might find useful, but is not dangerous and does not necessarily need to be addressed.
 
 
 .. _compiler-tools:

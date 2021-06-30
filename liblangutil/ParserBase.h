@@ -104,7 +104,7 @@ protected:
 	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
 	std::shared_ptr<Scanner> m_scanner;
-	/// The reference to the list of errors and warning to add errors/warnings during parsing
+	/// The reference to the list of errors, warnings and infos to add errors/warnings/infos during parsing
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth during parsing.
 	size_t m_recursionDepth = 0;

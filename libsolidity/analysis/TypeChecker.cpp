@@ -73,7 +73,7 @@ bool TypeChecker::checkTypeRequirements(SourceUnit const& _source)
 	m_currentSourceUnit = &_source;
 	_source.accept(*this);
 	m_currentSourceUnit = nullptr;
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return !Error::containsErrors(m_errorReporter.errors());
 }
 
 Type const* TypeChecker::type(Expression const& _expression) const

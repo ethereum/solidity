@@ -67,20 +67,20 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	GlobalContext globalContext;
 	NameAndTypeResolver resolver(globalContext, solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	DeclarationTypeChecker declarationTypeChecker(errorReporter, solidity::test::CommonOptions::get().evmVersion());
-	solAssert(Error::containsOnlyWarnings(errorReporter.errors()), "");
+	solAssert(!Error::containsErrors(errorReporter.errors()), "");
 	resolver.registerDeclarations(*sourceUnit);
 	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*sourceUnit));
-	if (!Error::containsOnlyWarnings(errorReporter.errors()))
+	if (Error::containsErrors(errorReporter.errors()))
 		return AssemblyItems();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 	{
 		BOOST_REQUIRE_NO_THROW(declarationTypeChecker.check(*node));
-		if (!Error::containsOnlyWarnings(errorReporter.errors()))
+		if (Error::containsErrors(errorReporter.errors()))
 			return AssemblyItems();
 	}
 	TypeChecker checker(solidity::test::CommonOptions::get().evmVersion(), errorReporter);
 	BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*sourceUnit));
-	if (!Error::containsOnlyWarnings(errorReporter.errors()))
+	if (Error::containsErrors(errorReporter.errors()))
 		return AssemblyItems();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

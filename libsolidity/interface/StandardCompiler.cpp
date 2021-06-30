@@ -50,7 +50,7 @@ namespace
 {
 
 Json::Value formatError(
-	bool _warning,
+	Error::Severity _severity,
 	string const& _type,
 	string const& _component,
 	string const& _message,
@@ -62,7 +62,7 @@ Json::Value formatError(
 	Json::Value error = Json::objectValue;
 	error["type"] = _type;
 	error["component"] = _component;
-	error["severity"] = _warning ? "warning" : "error";
+	error["severity"] = Error::formatErrorSeverityLowercase(_severity);
 	error["message"] = _message;
 	error["formattedMessage"] = (_formattedMessage.length() > 0) ? _formattedMessage : _message;
 	if (_sourceLocation.isObject())
@@ -76,7 +76,7 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 {
 	Json::Value output = Json::objectValue;
 	output["errors"] = Json::arrayValue;
-	output["errors"].append(formatError(false, _type, "general", _message));
+	output["errors"].append(formatError(Error::Severity::Error, _type, "general", _message));
 	return output;
 }
 
@@ -111,7 +111,7 @@ Json::Value formatSecondarySourceLocation(SecondarySourceLocation const* _second
 Json::Value formatErrorWithException(
 	CharStreamProvider const& _charStreamProvider,
 	util::Exception const& _exception,
-	bool const& _warning,
+	Error::Severity _severity,
 	string const& _type,
 	string const& _component,
 	string const& _message,
@@ -132,7 +132,7 @@ Json::Value formatErrorWithException(
 		message = _message;
 
 	Json::Value error = formatError(
-		_warning,
+		_severity,
 		_type,
 		_component,
 		message,
@@ -660,7 +660,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			string content = sources[sourceName]["content"].asString();
 			if (!hash.empty() && !hashMatchesContent(hash, content))
 				ret.errors.append(formatError(
-					false,
+					Error::Severity::Error,
 					"IOError",
 					"general",
 					"Mismatch between content and supplied hash for \"" + sourceName + "\""
@@ -685,7 +685,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 				{
 					if (!hash.empty() && !hashMatchesContent(hash, result.responseOrErrorMessage))
 						ret.errors.append(formatError(
-							false,
+							Error::Severity::Error,
 							"IOError",
 							"general",
 							"Mismatch between content and supplied hash for \"" + sourceName + "\" at \"" + url.asString() + "\""
@@ -705,7 +705,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			{
 				/// If the import succeeded, let mark all the others as warnings, otherwise all of them are errors.
 				ret.errors.append(formatError(
-					found ? true : false,
+					found ? Error::Severity::Warning : Error::Severity::Error,
 					"IOError",
 					"general",
 					failure
@@ -1058,7 +1058,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 			errors.append(formatErrorWithException(
 				compilerStack,
 				*error,
-				err.type() == Error::Type::Warning,
+				Error::errorSeverity(err.type()),
 				err.typeName(),
 				"general",
 				"",
@@ -1072,7 +1072,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		errors.append(formatErrorWithException(
 			compilerStack,
 			_error,
-			false,
+			Error::Severity::Error,
 			_error.typeName(),
 			"general",
 			"Uncaught error: "
@@ -1082,7 +1082,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (FatalError const& _exception)
 	{
 		errors.append(formatError(
-			false,
+			Error::Severity::Error,
 			"FatalError",
 			"general",
 			"Uncaught fatal error: " + boost::diagnostic_information(_exception)
@@ -1093,7 +1093,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		errors.append(formatErrorWithException(
 			compilerStack,
 			_exception,
-			false,
+			Error::Severity::Error,
 			"CompilerError",
 			"general",
 			"Compiler error (" + _exception.lineInfo() + ")"
@@ -1104,7 +1104,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		errors.append(formatErrorWithException(
 			compilerStack,
 			_exception,
-			false,
+			Error::Severity::Error,
 			"InternalCompilerError",
 			"general",
 			"Internal compiler error (" + _exception.lineInfo() + ")"
@@ -1115,7 +1115,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		errors.append(formatErrorWithException(
 			compilerStack,
 			_exception,
-			false,
+			Error::Severity::Error,
 			"UnimplementedFeatureError",
 			"general",
 			"Unimplemented feature (" + _exception.lineInfo() + ")"
@@ -1126,7 +1126,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		errors.append(formatErrorWithException(
 			compilerStack,
 			_exception,
-			false,
+			Error::Severity::Error,
 			"YulException",
 			"general",
 			"Yul exception"
@@ -1137,7 +1137,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 		errors.append(formatErrorWithException(
 			compilerStack,
 			_exception,
-			false,
+			Error::Severity::Error,
 			"SMTLogicException",
 			"general",
 			"SMT logic exception"
@@ -1146,7 +1146,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (util::Exception const& _exception)
 	{
 		errors.append(formatError(
-			false,
+			Error::Severity::Error,
 			"Exception",
 			"general",
 			"Exception during compilation: " + boost::diagnostic_information(_exception)
@@ -1155,7 +1155,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (std::exception const& _e)
 	{
 		errors.append(formatError(
-			false,
+			Error::Severity::Error,
 			"Exception",
 			"general",
 			"Unknown exception during compilation" + (_e.what() ? ": " + string(_e.what()) : ".")
@@ -1164,7 +1164,7 @@ Json::Value StandardCompiler::compileSolidity(StandardCompiler::InputsAndSetting
 	catch (...)
 	{
 		errors.append(formatError(
-			false,
+			Error::Severity::Error,
 			"Exception",
 			"general",
 			"Unknown exception during compilation."
@@ -1345,7 +1345,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 			errors.append(formatErrorWithException(
 				stack,
 				*error,
-				err->type() == Error::Type::Warning,
+				Error::errorSeverity(err->type()),
 				err->typeName(),
 				"general",
 				""
@@ -1357,7 +1357,7 @@ Json::Value StandardCompiler::compileYul(InputsAndSettings _inputsAndSettings)
 
 	// TODO: move this warning to AssemblyStack
 	output["errors"] = Json::arrayValue;
-	output["errors"].append(formatError(true, "Warning", "general", "Yul is still experimental. Please use the output with care."));
+	output["errors"].append(formatError(Error::Severity::Warning, "Warning", "general", "Yul is still experimental. Please use the output with care."));
 
 	string contractName = stack.parserResult()->name.str();
 

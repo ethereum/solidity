@@ -72,7 +72,7 @@ DEFINE_PROTO_FUZZER(Program const& _input)
 		!stack.parseAndAnalyze("source", yul_source) ||
 		!stack.parserResult()->code ||
 		!stack.parserResult()->analysisInfo ||
-		!Error::containsOnlyWarnings(stack.errors())
+		Error::containsErrors(stack.errors())
 	)
 		yulAssert(false, "Proto fuzzer generated malformed program");
 

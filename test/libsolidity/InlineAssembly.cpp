@@ -128,7 +128,7 @@ void parsePrintCompare(string const& _source, bool _canWarn = false)
 	AssemblyStack stack(solidity::test::CommonOptions::get().evmVersion(), AssemblyStack::Language::Assembly, OptimiserSettings::none());
 	BOOST_REQUIRE(stack.parseAndAnalyze("", _source));
 	if (_canWarn)
-		BOOST_REQUIRE(Error::containsOnlyWarnings(stack.errors()));
+		BOOST_REQUIRE(!Error::containsErrors(stack.errors()));
 	else
 		BOOST_REQUIRE(stack.errors().empty());
 	string expectation = "object \"object\" {\n    code " + boost::replace_all_copy(_source, "\n", "\n    ") + "\n}\n";

@@ -72,7 +72,7 @@ pair<bool, ErrorList> parse(string const& _source)
 	return {false, {}};
 }
 
-optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarnings = true)
+optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarningsAndInfos = true)
 {
 	bool success;
 	ErrorList errors;
@@ -85,11 +85,11 @@ optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarni
 	else
 	{
 		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(errors))
+		if (_allowWarningsAndInfos && !Error::containsErrors(errors))
 			return {};
 		else if (!errors.empty())
 		{
-			if (!_allowWarnings)
+			if (!_allowWarningsAndInfos)
 				BOOST_CHECK_EQUAL(errors.size(), 1);
 			return *errors.front();
 		}
@@ -97,15 +97,15 @@ optional<Error> parseAndReturnFirstError(string const& _source, bool _allowWarni
 	return {};
 }
 
-bool successParse(string const& _source, bool _allowWarnings = true)
+bool successParse(string const& _source, bool _allowWarningsAndInfos = true)
 {
-	return !parseAndReturnFirstError(_source, _allowWarnings);
+	return !parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 }
 
-Error expectError(string const& _source, bool _allowWarnings = false)
+Error expectError(string const& _source, bool _allowWarningsAndInfos = false)
 {
 
-	auto error = parseAndReturnFirstError(_source, _allowWarnings);
+	auto error = parseAndReturnFirstError(_source, _allowWarningsAndInfos);
 	BOOST_REQUIRE(error);
 	return *error;
 }

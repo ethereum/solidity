@@ -75,24 +75,24 @@ AnalysisFramework::parseAnalyseAndReturnError(
 	return make_pair(&compiler().ast(""), std::move(errors));
 }
 
-ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarnings) const
+ErrorList AnalysisFramework::filterErrors(ErrorList const& _errorList, bool _includeWarningsAndInfos) const
 {
 	ErrorList errors;
 	for (auto const& currentError: _errorList)
 	{
 		solAssert(currentError->comment(), "");
-		if (currentError->type() == Error::Type::Warning)
+		if (!Error::isError(currentError->type()))
 		{
-			if (!_includeWarnings)
+			if (!_includeWarningsAndInfos)
 				continue;
-			bool ignoreWarning = false;
+			bool ignoreWarningsAndInfos = false;
 			for (auto const& filter: m_warningsToFilter)
 				if (currentError->comment()->find(filter) == 0)
 				{
-					ignoreWarning = true;
+					ignoreWarningsAndInfos = true;
 					break;
 				}
-			if (ignoreWarning)
+			if (ignoreWarningsAndInfos)
 				continue;
 		}
 
