@@ -236,8 +236,6 @@ object "C_81" {
                 let expr_25 := checked_exp_t_rational_2_by_1_t_uint256(expr_24)
                 /// @src 0:187,200
                 let var_w_22 := expr_25
-                /// @src 0:214,215
-                let expr_29 := 0x02
                 /// @src 0:213,215
                 let expr_30 := 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe
                 /// @src 0:212,216
@@ -285,8 +283,6 @@ object "C_81" {
                 /// @src 0:303,313
                 var_w_22 := expr_56
                 let expr_57 := expr_56
-                /// @src 0:323,324
-                let expr_60 := 0x01
                 /// @src 0:322,324
                 let expr_61 := 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
                 /// @src 0:321,325

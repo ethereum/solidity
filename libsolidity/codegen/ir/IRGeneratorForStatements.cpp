@@ -658,11 +658,20 @@ void IRGeneratorForStatements::endVisit(Return const& _return)
 	appendCode() << "leave\n";
 }
 
-void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
+bool IRGeneratorForStatements::visit(UnaryOperation const& _unaryOperation)
 {
 	setLocation(_unaryOperation);
 	Type const& resultType = type(_unaryOperation);
 	Token const op = _unaryOperation.getOperator();
+
+	if (resultType.category() == Type::Category::RationalNumber)
+	{
+		define(_unaryOperation) << formatNumber(resultType.literalValue(nullptr)) << "\n";
+		return false;
+	}
+
+	_unaryOperation.subExpression().accept(*this);
+	setLocation(_unaryOperation);
 
 	if (op == Token::Delete)
 	{
@@ -689,8 +698,6 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 			m_currentLValue->kind
 		);
 	}
-	else if (resultType.category() == Type::Category::RationalNumber)
-		define(_unaryOperation) << formatNumber(resultType.literalValue(nullptr)) << "\n";
 	else if (resultType.category() == Type::Category::Integer)
 	{
 		solAssert(resultType == type(_unaryOperation.subExpression()), "Result type doesn't match!");
@@ -749,6 +756,8 @@ void IRGeneratorForStatements::endVisit(UnaryOperation const& _unaryOperation)
 	}
 	else
 		solUnimplementedAssert(false, "Unary operator not yet implemented");
+
+	return false;
 }
 
 bool IRGeneratorForStatements::visit(BinaryOperation const& _binOp)
