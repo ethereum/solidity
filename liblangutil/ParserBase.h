@@ -47,6 +47,8 @@ public:
 		m_parserErrorRecovery = _parserErrorRecovery;
 	}
 
+	virtual ~ParserBase() = default;
+
 	std::shared_ptr<CharStream> source() const { return m_scanner->charStream(); }
 
 protected:
