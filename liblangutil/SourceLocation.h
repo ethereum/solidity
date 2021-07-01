@@ -106,10 +106,9 @@ struct SourceLocation
 	std::shared_ptr<std::string const> sourceName;
 };
 
-SourceLocation const parseSourceLocation(
+SourceLocation parseSourceLocation(
 	std::string const& _input,
-	std::string const& _sourceName,
-	size_t _maxIndex = std::numeric_limits<size_t>::max()
+	std::vector<std::shared_ptr<std::string const>> const& _sourceNames
 );
 
 /// Stream output for Location (used e.g. in boost exceptions).

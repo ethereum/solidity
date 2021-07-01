@@ -152,13 +152,10 @@ private:
 	///@}
 
 	// =========== member variables ===============
-	/// Stores filepath as sourcenames to AST in JSON format
-	std::map<std::string, Json::Value> m_sourceList;
-	/// list of filepaths (used as sourcenames)
-	std::vector<std::shared_ptr<std::string const>> m_sourceLocations;
+	/// list of source names, order by source index
+	std::vector<std::shared_ptr<std::string const>> m_sourceNames;
 	/// filepath to AST
 	std::map<std::string, ASTPointer<SourceUnit>> m_sourceUnits;
-	std::string m_currentSourceName;
 	/// IDs already used by the nodes
 	std::set<int64_t> m_usedIDs;
 	/// Configured EVM version

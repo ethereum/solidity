@@ -38,7 +38,9 @@ namespace solidity::yul
 class AsmJsonImporter
 {
 public:
-	explicit AsmJsonImporter(std::string _sourceName) : m_sourceName(std::move(_sourceName)) {}
+	explicit AsmJsonImporter(std::vector<std::shared_ptr<std::string const>> const& _sourceNames):
+		m_sourceNames(_sourceNames)
+	{}
 	yul::Block createBlock(Json::Value const& _node);
 
 private:
@@ -70,8 +72,7 @@ private:
 	yul::Break createBreak(Json::Value const& _node);
 	yul::Continue createContinue(Json::Value const& _node);
 
-	std::string m_sourceName;
-
+	std::vector<std::shared_ptr<std::string const>> const& m_sourceNames;
 };
 
 }
