@@ -106,13 +106,18 @@ def extract_and_write(f, path):
     write_cases(f, cases)
 
 if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        print("Usage: " + sys.argv[0] + " path-to-file-or-folder-to-extract-code-from [docs]")
+        exit(1)
+
     path = sys.argv[1]
     docs = False
     if len(sys.argv) > 2 and sys.argv[2] == 'docs':
         docs = True
 
     if isfile(path):
-        extract_and_write(path, path)
+        _, tail = split(path)
+        extract_and_write(tail, path)
     else:
         for root, subdirs, files in os.walk(path):
             if '_build' in subdirs:
