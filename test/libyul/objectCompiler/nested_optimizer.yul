@@ -20,7 +20,7 @@ object "a" {
 // Assembly:
 //     /* "source":48:49   */
 //   0x00
-//   0x00
+//   dup1
 //     /* "source":35:50   */
 //   calldataload
 //     /* "source":107:127   */
@@ -30,12 +30,12 @@ object "a" {
 // sub_0: assembly {
 //         /* "source":188:189   */
 //       0x00
-//       0x00
+//       dup1
 //         /* "source":175:190   */
 //       calldataload
 //         /* "source":253:273   */
 //       sstore
 // }
-// Bytecode: 600060003555fe
-// Opcodes: PUSH1 0x0 PUSH1 0x0 CALLDATALOAD SSTORE INVALID
+// Bytecode: 6000803555fe
+// Opcodes: PUSH1 0x0 DUP1 CALLDATALOAD SSTORE INVALID
 // SourceMappings: 48:1:0:-:0;;35:15;107:20

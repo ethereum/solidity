@@ -23,7 +23,7 @@ object "MyContract" {
 
 
 Binary representation:
-33600055600b806012600039806000f350fe60005460005260206000f3
+33600055600b806011600039806000f3fe60005460005260206000f3
 
 Text representation:
     /* "object_compiler/input.yul":128:136   */
@@ -46,7 +46,6 @@ Text representation:
   0x00
     /* "object_compiler/input.yul":265:295   */
   return
-  pop
 stop
 
 sub_0: assembly {
