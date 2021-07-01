@@ -1,9 +1,18 @@
-{"errors":[{"component":"general","formattedMessage":"Internal exception in StandardCompiler::compile: /solidity/libyul/backends/evm/EVMObjectCompiler.cpp(70): Throw in function void solidity::yul::EVMObjectCompiler::run(solidity::yul::Object&, bool)
-Dynamic exception type: boost::wrapexcept<solidity::yul::StackTooDeepError>
-std::exception::what: Variable a1 is 17 slot(s) too deep inside the stack.
-[solidity::util::tag_comment*] = Variable a1 is 17 slot(s) too deep inside the stack.
-","message":"Internal exception in StandardCompiler::compile: /solidity/libyul/backends/evm/EVMObjectCompiler.cpp(70): Throw in function void solidity::yul::EVMObjectCompiler::run(solidity::yul::Object&, bool)
-Dynamic exception type: boost::wrapexcept<solidity::yul::StackTooDeepError>
-std::exception::what: Variable a1 is 17 slot(s) too deep inside the stack.
-[solidity::util::tag_comment*] = Variable a1 is 17 slot(s) too deep inside the stack.
-","severity":"error","type":"InternalCompilerError"}]}
+{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":16:17   */
+  0x01
+  dup1
+    /* \"A\":27:28   */
+  0x00
+    /* \"A\":20:32   */
+  sstore
+    /* \"A\":50:51   */
+  0x02
+  dup1
+    /* \"A\":61:63   */
+  0x20
+    /* \"A\":54:67   */
+  sstore
+    /* \"A\":0:72   */
+  pop
+  pop
+"}}}},"errors":[{"component":"general","formattedMessage":"Yul is still experimental. Please use the output with care.","message":"Yul is still experimental. Please use the output with care.","severity":"warning","type":"Warning"}]}
