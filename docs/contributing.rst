@@ -324,7 +324,7 @@ from the documentation or the other tests:
     # extract from tests:
     path/to/solidity/scripts/isolate_tests.py path/to/solidity/test/libsolidity/SolidityEndToEndTest.cpp
     # extract from documentation:
-    path/to/solidity/scripts/isolate_tests.py path/to/solidity/docs docs
+    path/to/solidity/scripts/isolate_tests.py path/to/solidity/docs
 
 The AFL documentation states that the corpus (the initial input files) should not be
 too large. The files themselves should not be larger than 1 kB and there should be
