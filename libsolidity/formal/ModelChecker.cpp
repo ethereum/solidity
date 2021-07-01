@@ -32,6 +32,7 @@ using namespace solidity::frontend;
 
 ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
+	langutil::CharStreamProvider const& _charStreamProvider,
 	map<h256, string> const& _smtlib2Responses,
 	ModelCheckerSettings _settings,
 	ReadCallback::Callback const& _smtCallback,
@@ -40,8 +41,8 @@ ModelChecker::ModelChecker(
 	m_errorReporter(_errorReporter),
 	m_settings(_settings),
 	m_context(),
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings)
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings, _charStreamProvider),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings, _charStreamProvider)
 {
 }
 

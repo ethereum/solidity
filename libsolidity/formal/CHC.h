@@ -57,7 +57,8 @@ public:
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
 		smtutil::SMTSolverChoice _enabledSolvers,
-		ModelCheckerSettings const& _settings
+		ModelCheckerSettings const& _settings,
+		langutil::CharStreamProvider const& _charStreamProvider
 	);
 
 	void analyze(SourceUnit const& _sources);

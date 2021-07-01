@@ -57,9 +57,10 @@ CHC::CHC(
 	[[maybe_unused]] map<util::h256, string> const& _smtlib2Responses,
 	[[maybe_unused]] ReadCallback::Callback const& _smtCallback,
 	SMTSolverChoice _enabledSolvers,
-	ModelCheckerSettings const& _settings
+	ModelCheckerSettings const& _settings,
+	CharStreamProvider const& _charStreamProvider
 ):
-	SMTEncoder(_context, _settings),
+	SMTEncoder(_context, _settings, _charStreamProvider),
 	m_outerErrorReporter(_errorReporter),
 	m_enabledSolvers(_enabledSolvers)
 {
@@ -1741,7 +1742,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 				path.emplace_back("State: " + modelMsg);
 		}
 
-		string txCex = summaryPredicate->formatSummaryCall(summaryArgs);
+		string txCex = summaryPredicate->formatSummaryCall(summaryArgs, m_charStreamProvider);
 
 		list<string> calls;
 		auto dfs = [&](unsigned parent, unsigned node, unsigned depth, auto&& _dfs) -> void {
@@ -1753,7 +1754,7 @@ optional<string> CHC::generateCounterexample(CHCSolverInterface::CexGraph const&
 			if (!pred->isConstructorSummary())
 				for (unsigned v: callGraph[node])
 					_dfs(node, v, depth + 1, _dfs);
-			calls.push_front(string(depth * 4, ' ') + pred->formatSummaryCall(nodeArgs(node)));
+			calls.push_front(string(depth * 4, ' ') + pred->formatSummaryCall(nodeArgs(node), m_charStreamProvider));
 			if (pred->isInternalCall())
 				calls.front() += " -- internal call";
 			else if (pred->isExternalCallTrusted())

@@ -27,6 +27,11 @@
 #include <optional>
 #include <vector>
 
+namespace solidity::langutil
+{
+class CharStreamProvider;
+}
+
 namespace solidity::frontend
 {
 
@@ -142,7 +147,10 @@ public:
 
 	/// @returns a formatted string representing a call to this predicate
 	/// with _args.
-	std::string formatSummaryCall(std::vector<smtutil::Expression> const& _args) const;
+	std::string formatSummaryCall(
+		std::vector<smtutil::Expression> const& _args,
+		langutil::CharStreamProvider const& _charStreamProvider
+	) const;
 
 	/// @returns the values of the state variables from _args at the point
 	/// where this summary was reached.
