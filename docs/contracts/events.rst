@@ -73,7 +73,7 @@ four indexed arguments rather than three.
     In particular, it is possible to "fake" the signature of another event
     using an anonymous event.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.21 <0.9.0;
