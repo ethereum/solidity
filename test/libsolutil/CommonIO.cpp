@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
 	TemporaryDirectory tempDir("common-io-test-");
 	createFileWithContent(tempDir.path() / "test.txt", "ABC\ndef\n");
 
-	if (!createSymlinkIfSupportedByFilesystem("test.txt", tempDir.path() / "symlink.txt"))
+	if (!createSymlinkIfSupportedByFilesystem("test.txt", tempDir.path() / "symlink.txt", false))
 		return;
 
 	BOOST_TEST(readFileAsString((tempDir.path() / "symlink.txt").string()) == "ABC\ndef\n");
