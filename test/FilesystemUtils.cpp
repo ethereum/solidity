@@ -39,7 +39,7 @@ void solidity::test::createFilesWithParentDirs(set<boost::filesystem::path> cons
 	}
 }
 
-void solidity::test::createFileWithContent(boost::filesystem::path const& _path, string const& content)
+void solidity::test::createFileWithContent(boost::filesystem::path const& _path, string const& _content)
 {
 	if (boost::filesystem::is_regular_file(_path))
 		BOOST_THROW_EXCEPTION(runtime_error("File already exists: \"" + _path.string() + "\".")); \
@@ -49,16 +49,21 @@ void solidity::test::createFileWithContent(boost::filesystem::path const& _path,
 	if (newFile.fail() || !boost::filesystem::is_regular_file(_path))
 		BOOST_THROW_EXCEPTION(runtime_error("Failed to create a file: \"" + _path.string() + "\".")); \
 
-	newFile << content;
+	newFile << _content;
 }
 
 bool solidity::test::createSymlinkIfSupportedByFilesystem(
 	boost::filesystem::path const& _targetPath,
-	boost::filesystem::path const& _linkName
+	boost::filesystem::path const& _linkName,
+	bool _directorySymlink
 )
 {
 	boost::system::error_code symlinkCreationError;
-	boost::filesystem::create_symlink(_targetPath, _linkName, symlinkCreationError);
+
+	if (_directorySymlink)
+		boost::filesystem::create_directory_symlink(_targetPath, _linkName, symlinkCreationError);
+	else
+		boost::filesystem::create_symlink(_targetPath, _linkName, symlinkCreationError);
 
 	if (!symlinkCreationError)
 		return true;
