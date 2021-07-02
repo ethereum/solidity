@@ -442,7 +442,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"contracts", "engine", "solvers", "targets", "timeout"};
+	static set<string> keys{"contracts", "engine", "showUnproved", "solvers", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -951,6 +951,14 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		ret.modelCheckerSettings.engine = *engine;
 	}
 
+	if (modelCheckerSettings.isMember("showUnproved"))
+	{
+		auto const& showUnproved = modelCheckerSettings["showUnproved"];
+		if (!showUnproved.isBool())
+			return formatFatalError("JSONError", "settings.modelChecker.showUnproved must be a Boolean value.");
+		ret.modelCheckerSettings.showUnproved = showUnproved.asBool();
+	}
+	
 	if (modelCheckerSettings.isMember("solvers"))
 	{
 		auto const& solversArray = modelCheckerSettings["solvers"];
