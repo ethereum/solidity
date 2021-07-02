@@ -113,6 +113,7 @@ struct ModelCheckerSettings
 {
 	ModelCheckerContracts contracts = ModelCheckerContracts::Default();
 	ModelCheckerEngine engine = ModelCheckerEngine::None();
+	bool showUnproved = false;
 	smtutil::SMTSolverChoice solvers = smtutil::SMTSolverChoice::All();
 	ModelCheckerTargets targets = ModelCheckerTargets::Default();
 	std::optional<unsigned> timeout;
@@ -123,6 +124,7 @@ struct ModelCheckerSettings
 		return
 			contracts == _other.contracts &&
 			engine == _other.engine &&
+			showUnproved == _other.showUnproved &&
 			solvers == _other.solvers &&
 			targets == _other.targets &&
 			timeout == _other.timeout;

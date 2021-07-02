@@ -933,6 +933,7 @@ void CHC::resetSourceAnalysis()
 {
 	m_safeTargets.clear();
 	m_unsafeTargets.clear();
+	m_unprovedTargets.clear();
 	m_functionTargetIds.clear();
 	m_verificationTargets.clear();
 	m_queryPlaceholders.clear();
@@ -1594,6 +1595,32 @@ void CHC::checkVerificationTargets()
 		checkedErrorIds.insert(target.errorId);
 	}
 
+	auto toReport = m_unsafeTargets;
+	if (m_settings.showUnproved)
+		for (auto const& [node, targets]: m_unprovedTargets)
+			for (auto const& [target, info]: targets)
+				toReport[node].emplace(target, info);
+
+	for (auto const& [node, targets]: toReport)
+		for (auto const& [target, info]: targets)
+			m_errorReporter.warning(
+				info.error,
+				info.location,
+				info.message
+			);
+
+	if (!m_settings.showUnproved && !m_unprovedTargets.empty())
+		m_errorReporter.warning(
+			5840_error,
+			{},
+			"CHC: " +
+			to_string(m_unprovedTargets.size()) +
+			" verification condition(s) could not be proved." +
+			" Enable the model checker option \"show unproved\" to see all of them." +
+			" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
+			" Consider increasing the timeout per query."
+		);
+
 	// There can be targets in internal functions that are not reachable from the external interface.
 	// These are safe by definition and are not even checked by the CHC engine, but this information
 	// must still be reported safe by the BMC engine.
@@ -1633,27 +1660,26 @@ void CHC::checkAndReportTarget(
 	else if (result == CheckResult::SATISFIABLE)
 	{
 		solAssert(!_satMsg.empty(), "");
-		m_unsafeTargets[_target.errorNode].insert(_target.type);
 		auto cex = generateCounterexample(model, error().name);
 		if (cex)
-			m_errorReporter.warning(
+			m_unsafeTargets[_target.errorNode][_target.type] = {
 				_errorReporterId,
 				location,
 				"CHC: " + _satMsg + "\nCounterexample:\n" + *cex
-			);
+			};
 		else
-			m_errorReporter.warning(
+			m_unsafeTargets[_target.errorNode][_target.type] = {
 				_errorReporterId,
 				location,
 				"CHC: " + _satMsg
-			);
+			};
 	}
 	else if (!_unknownMsg.empty())
-		m_errorReporter.warning(
+		m_unprovedTargets[_target.errorNode][_target.type] = {
 			_errorReporterId,
 			location,
 			"CHC: " + _unknownMsg
-		);
+		};
 }
 
 /**

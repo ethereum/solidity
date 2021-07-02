@@ -60,7 +60,7 @@ BMC::BMC(
 #endif
 }
 
-void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTargetType>> _solvedTargets)
+void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<VerificationTargetType>, smt::EncodingContext::IdCompare> _solvedTargets)
 {
 	if (m_interface->solvers() == 0)
 	{
@@ -84,8 +84,21 @@ void BMC::analyze(SourceUnit const& _source, map<ASTNode const*, set<Verificatio
 		m_context.setAssertionAccumulation(true);
 		m_variableUsage.setFunctionInlining(shouldInlineFunctionCall);
 		createFreeConstants(sourceDependencies(_source));
+		m_unprovedAmt = 0;
 
 		_source.accept(*this);
+
+		if (m_unprovedAmt > 0 && !m_settings.showUnproved)
+			m_errorReporter.warning(
+				2788_error,
+				{},
+				"BMC: " +
+				to_string(m_unprovedAmt) +
+				" verification condition(s) could not be proved." +
+				" Enable the model checker option \"show unproved\" to see all of them." +
+				" Consider choosing a specific contract to be verified in order to reduce the solving problems." +
+				" Consider increasing the timeout per query."
+			);
 	}
 
 	// If this check is true, Z3 and CVC4 are not available
@@ -961,8 +974,12 @@ void BMC::checkCondition(
 	case smtutil::CheckResult::UNSATISFIABLE:
 		break;
 	case smtutil::CheckResult::UNKNOWN:
-		m_errorReporter.warning(_errorMightHappen, _location, "BMC: " + _description + " might happen here.", secondaryLocation);
+	{
+		++m_unprovedAmt;
+		if (m_settings.showUnproved)
+			m_errorReporter.warning(_errorMightHappen, _location, "BMC: " + _description + " might happen here.", secondaryLocation);
 		break;
+	}
 	case smtutil::CheckResult::CONFLICTING:
 		m_errorReporter.warning(1584_error, _location, "BMC: At least two SMT solvers provided conflicting answers. Results might not be sound.");
 		break;

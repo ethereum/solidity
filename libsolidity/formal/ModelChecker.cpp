@@ -120,8 +120,8 @@ void ModelChecker::analyze(SourceUnit const& _source)
 		m_chc.analyze(_source);
 
 	auto solvedTargets = m_chc.safeTargets();
-	for (auto const& target: m_chc.unsafeTargets())
-		solvedTargets[target.first] += target.second;
+	for (auto const& [node, targets]: m_chc.unsafeTargets())
+		solvedTargets[node] += targets | ranges::views::keys;
 
 	if (m_settings.engine.bmc)
 		m_bmc.analyze(_source, solvedTargets);
