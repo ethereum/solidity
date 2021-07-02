@@ -82,6 +82,7 @@ BOOST_AUTO_TEST_CASE(no_options)
 	expectedOptions.modelChecker.settings = {
 		ModelCheckerContracts::Default(),
 		ModelCheckerEngine::None(),
+		false,
 		smtutil::SMTSolverChoice::All(),
 		ModelCheckerTargets::Default(),
 		nullopt,
@@ -151,6 +152,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--yul-optimizations=agf",
 			"--model-checker-contracts=contract1.yul:A,contract2.yul:B",
 			"--model-checker-engine=bmc",
+			"--model-checker-show-unproved=true",
 			"--model-checker-solvers=z3,smtlib2",
 			"--model-checker-targets=underflow,divByZero",
 			"--model-checker-timeout=5",
@@ -209,6 +211,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.modelChecker.settings = {
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			{true, false},
+			true,
 			{false, true, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
 			5,
@@ -279,6 +282,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 				"contract1.yul:A,"
 				"contract2.yul:B",
 			"--model-checker-engine=bmc",  // Ignored in assembly mode
+			"--model-checker-show-unproved=true", // Ignored in assembly mode
 			"--model-checker-solvers=z3,smtlib2", // Ignored in assembly mode
 			"--model-checker-targets="     // Ignored in assembly mode
 				"underflow,"
@@ -377,6 +381,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 			"contract1.yul:A,"
 			"contract2.yul:B",
 		"--model-checker-engine=bmc",      // Ignored in Standard JSON mode
+		"--model-checker-show-unproved=true",      // Ignored in Standard JSON mode
 		"--model-checker-solvers=z3,smtlib2", // Ignored in Standard JSON mode
 		"--model-checker-targets="         // Ignored in Standard JSON mode
 			"underflow,"

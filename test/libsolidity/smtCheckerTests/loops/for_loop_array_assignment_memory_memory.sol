@@ -24,5 +24,5 @@ contract LoopFor2 {
 // ----
 // Warning 2072: (202-217): Unused local variable.
 // Warning 6368: (354-358): CHC: Out of bounds access happens here.
-// Warning 6368: (378-382): CHC: Out of bounds access happens here.
 // Warning 6368: (371-375): CHC: Out of bounds access happens here.
+// Warning 6368: (378-382): CHC: Out of bounds access happens here.

@@ -958,7 +958,7 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 			return formatFatalError("JSONError", "settings.modelChecker.showUnproved must be a Boolean value.");
 		ret.modelCheckerSettings.showUnproved = showUnproved.asBool();
 	}
-	
+
 	if (modelCheckerSettings.isMember("solvers"))
 	{
 		auto const& solversArray = modelCheckerSettings["solvers"];

@@ -35,4 +35,3 @@ contract C {
 }
 // ====
 // SMTEngine: chc
-// ----
