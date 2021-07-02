@@ -341,11 +341,10 @@ expression:
 	expression LBrack index=expression? RBrack # IndexAccess
 	| expression LBrack start=expression? Colon end=expression? RBrack # IndexRangeAccess
 	| expression Period (identifier | Address) # MemberAccess
-	| expression LBrace (namedArgument (Comma namedArgument)*)? RBrace # FunctionCallOptions
-	| expression callArgumentList # FunctionCall
+	| expression functionCallOption? callArgumentList # FunctionCall
 	| Payable callArgumentList # PayableConversion
 	| Type LParen typeName RParen # MetaType
-	| (Inc | Dec | Not | BitNot | Delete | Sub) expression # UnaryPrefixOperation
+	| (Dec | Not | BitNot | Delete | Sub) expression # UnaryPrefixOperation
 	| expression (Inc | Dec) # UnarySuffixOperation
 	|<assoc=right> expression Exp expression # ExpOperation
 	| expression (Mul | Div | Mod) expression # MulDivModOperation
@@ -369,6 +368,8 @@ expression:
 		| elementaryTypeName[false]
 	  ) # PrimaryExpression
 ;
+
+functionCallOption : LBrace (namedArgument (Comma namedArgument)*)? RBrace;
 
 //@doc:inline
 assignOp: Assign | AssignBitOr | AssignBitXor | AssignBitAnd | AssignShl | AssignSar | AssignShr | AssignAdd | AssignSub | AssignMul | AssignDiv | AssignMod;
