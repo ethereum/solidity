@@ -64,6 +64,21 @@ BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
 	BOOST_TEST(readFileAsString((tempDir.path() / "symlink.txt").string()) == "ABC\ndef\n");
 }
 
+BOOST_AUTO_TEST_CASE(readUntilEnd_no_ending_newline)
+{
+	BOOST_TEST(readUntilEnd(istringstream("ABC\ndef")) == "ABC\ndef");
+}
+
+BOOST_AUTO_TEST_CASE(readUntilEnd_with_ending_newline)
+{
+	BOOST_TEST(readUntilEnd(istringstream("ABC\ndef\n")) == "ABC\ndef\n");
+}
+
+BOOST_AUTO_TEST_CASE(readUntilEnd_empty)
+{
+	BOOST_TEST(readUntilEnd(istringstream("")) == "");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace solidity::util::test
