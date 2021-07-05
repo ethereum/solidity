@@ -145,7 +145,7 @@ The function ``preincr_u8(1)`` returns the following values:
 
 .. index:: ! evaluation order; function arguments
 
-On the other hand, function argument expressions are evaluated in the same order by both code generators.
+On the other hand, function argument expressions are evaluated in the same order by both code generators with the exception of the global functions ``addmod`` and ``mulmod``.
 For example:
 
 .. code-block:: solidity
@@ -164,6 +164,27 @@ For example:
 The function ``g(1, 2)`` returns the following values:
 - Old code generator: ``10`` (``add(2 + 3, 2 + 3)``) but the return value is unspecified in general
 - New code generator: ``10`` but the return value is not guaranteed
+
+The arguments to the global functions ``addmod`` and ``mulmod`` are evaluated right-to-left by the old code generator
+and left-to-right by the new code generator.
+For example:
+
+::
+    // SPDX-License-Identifier: GPL-3.0
+    pragma solidity >0.8.0;
+    contract C {
+        function f() public pure returns (uint256 aMod, uint256 mMod) {
+            uint256 x = 3;
+            // Old code gen: add/mulmod(5, 4, 3)
+            // New code gen: add/mulmod(4, 5, 5)
+            aMod = addmod(++x, ++x, x);
+            mMod = mulmod(++x, ++x, x);
+        }
+    }
+
+The function ``f()`` returns the following values:
+- Old code generator: ``aMod = 0`` and ``mMod = 2``
+- New code generator: ``aMod = 4`` and ``mMod = 0``
 
 
 Internals
