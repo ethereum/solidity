@@ -1,6 +1,6 @@
 {"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */
   0x00
-  0x00
+  dup1
     /* \"A\":11:19   */
   mload
     /* \"A\":20:40   */
