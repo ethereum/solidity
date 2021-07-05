@@ -519,7 +519,7 @@ compact again at the end.
 ExpressionSplitter
 ^^^^^^^^^^^^^^^^^^
 
-The expression splitter turns expressions like ``add(mload(x), mul(mload(y), 0x20))``
+The expression splitter turns expressions like ``add(mload(0x123), mul(mload(0x456), 0x20))``
 into a sequence of declarations of unique variables that are assigned sub-expressions
 of that expression so that each function call has only variables or literals
 as arguments.
@@ -529,9 +529,9 @@ The above would be transformed into
 .. code-block:: yul
 
     {
-        let _1 := mload(y)
+        let _1 := mload(0x123)
         let _2 := mul(_1, 0x20)
-        let _3 := mload(x)
+        let _3 := mload(0x456)
         let z := add(_3, _2)
     }
 
@@ -633,7 +633,7 @@ The SSA transform converts this snippet to the following:
 
     {
         let a_1 := 1
-        a := a_1
+        let a := a_1
         let a_2 := mload(a_1)
         a := a_2
         let a_3 := sload(a_2)
@@ -1186,16 +1186,18 @@ The SSA transform rewrites
 
 .. code-block:: yul
 
-    a := E
+    let a := calldataload(0)
     mstore(a, 1)
 
 to
 
 .. code-block:: yul
 
-    let a_1 := E
-    a := a_1
+    let a_1 := calldataload(0)
+    let a := a_1
     mstore(a_1, 1)
+    let a_2 := calldataload(0x20)
+    a := a_2
 
 The problem is that instead of ``a``, the variable ``a_1`` is used
 whenever ``a`` was referenced. The SSA transform changes statements
@@ -1204,9 +1206,11 @@ snippet is turned into
 
 .. code-block:: yul
 
-    a := E
+    let a := calldataload(0)
     let a_1 := a
     mstore(a_1, 1)
+    a := calldataload(0x20)
+    let a_2 := a
 
 This is a very simple equivalence transform, but when we now run the
 Common Subexpression Eliminator, it will replace all occurrences of ``a_1``

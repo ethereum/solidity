@@ -20,3 +20,25 @@ Some text
     contract C {}
 
 More text.
+
+.. code-block:: yul
+
+    let x := add(1, 5)
+
+.. code-block:: yul
+
+    // Yul code wrapped in object
+    {
+        {
+            let y := mul(3, 5)
+        }
+    }
+
+.. code-block:: yul
+    // Yul code wrapped in named object
+    object "Test" {
+        {
+            let y := mul(6, 9)
+        }
+    }
+

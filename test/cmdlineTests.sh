@@ -364,7 +364,7 @@ SOLTMPDIR=$(mktemp -d)
     "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
     developmentVersion=$("$REPO_ROOT/scripts/get_version.sh")
 
-    for f in *.sol
+    for f in *.yul *.sol
     do
         # The contributors guide uses syntax tests, but we cannot
         # really handle them here.
