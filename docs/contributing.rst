@@ -86,12 +86,10 @@ Running the Compiler Tests
 Prerequisites
 -------------
 
-Some tests require the `evmone <https://github.com/ethereum/evmone/releases>`_
-library, others require `libz3 <https://github.com/Z3Prover/z3>`_. The test script
-tries to discover the location of the ``evmone`` library, which can be located
-in the current directory, installed on the system level, or the ``deps`` folder
-in the project top level. The required file is called ``libevmone.so`` on Linux
-systems, ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS.
+For running all compiler tests you may want to optionally install a few
+dependencies (`evmone <https://github.com/ethereum/evmone/releases>`_,
+`libz3 <https://github.com/Z3Prover/z3>`_, and
+`libhera <https://github.com/ewasm/hera>`_).
 
 On macOS some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
@@ -108,13 +106,29 @@ including those bundled into the `Boost C++ Test Framework <https://www.boost.or
 application ``soltest`` (or its wrapper ``scripts/soltest.sh``), as well as command line tests and
 compilation tests.
 
-The test system automatically tries to discover the location of the ``evmone`` library
-starting from the current directory. The required file is called ``libevmone.so`` on Linux systems,
-``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
-use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
-``libsolidity/SolidityEndToEndTest``, part of the soltest suite. To run all tests, download the library from
-`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.8.0>`_
-and place it in the project root path or inside the ``deps`` folder.
+The test system automatically tries to discover the location of
+the `evmone <https://github.com/ethereum/evmone/releases>`_ for running the semantic tests.
+
+The ``evmone`` library must be located in the ``deps`` or ``deps/lib`` directory relative to the
+current working directory or up to the project root. Alternatively an explicit location
+to the ``evmone`` shared object can be specified via the ``ETH_EVMONE`` environment variable.
+
+If running semantic tests is not required, the command line
+parameter ``--no-semantic-tests`` must be passed to ``./scripts/soltest.sh``.
+
+The tests that use ``evmone`` are ``libsolidity/semanticTests``, ``libsolidity/GasCosts``,
+``libsolidity/SolidityEndToEndTest``.
+
+Running Ewasm tests is disabled by default and can be explicitly enabled
+via ``./scripts/soltest.sh --ewasm`` and requires `hera <https://github.com/ewasm/hera>`_
+to be found by ``soltest``.
+The ``hera`` library can is using the same search path as described above for ``evmone``.
+
+The ``evmone`` and ``hera`` libraries should both end with the file name
+extension ``.so`` on Linux, ``.dll`` on Windows systems and ``.dylib`` on macOS.
+
+For running SMT tests, the ``libz3`` library must be installed and locatable
+by ``cmake`` during compiler configure stage.
 
 If the ``libz3`` library is not installed on your system, you should disable the
 SMT tests by exporting ``SMT_FLAGS=--no-smt`` before running ``./scripts/tests.sh`` or
