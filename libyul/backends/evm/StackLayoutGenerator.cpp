@@ -21,6 +21,7 @@
 
 #include <libyul/backends/evm/StackLayoutGenerator.h>
 
+#include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 #include <libyul/backends/evm/StackHelpers.h>
 
 #include <libsolutil/Algorithms.h>
@@ -31,12 +32,14 @@
 #include <range/v3/algorithm/any_of.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/all.hpp>
+#include <range/v3/view/concat.hpp>
 #include <range/v3/view/drop.hpp>
 #include <range/v3/view/drop_last.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/map.hpp>
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/take.hpp>
+#include <range/v3/view/take_last.hpp>
 #include <range/v3/view/transform.hpp>
 
 using namespace solidity;
@@ -447,9 +450,111 @@ void StackLayoutGenerator::stitchConditionalJumps(CFG::BasicBlock const& _block)
 	});
 }
 
-void StackLayoutGenerator::fixStackTooDeep(CFG::BasicBlock const&)
+void StackLayoutGenerator::fixStackTooDeep(CFG::BasicBlock const& _block)
 {
-	// TODO
+	// This is just an initial proof of concept. Doing this in a clever way and in all cases will take some doing.
+	// It might be enough to keep it at fixing inner-block issues and leave inter-block issues to the stack limit
+	// evader.
+	// TODO: make sure this really always terminates.
+	util::BreadthFirstSearch<CFG::BasicBlock const*> breadthFirstSearch{{&_block}};
+	breadthFirstSearch.run([&](CFG::BasicBlock const* _block, auto _addChild) {
+		Stack stack;
+		stack = m_layout.blockInfos.at(_block).entryLayout;
+
+		size_t cursor = 1;
+
+		while (cursor < _block->operations.size())
+		{
+			Stack& operationEntry = cursor < _block->operations.size() ?
+				m_layout.operationEntryLayout.at(&_block->operations.at(cursor)) :
+				m_layout.blockInfos.at(_block).exitLayout;
+
+			auto unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(stack, operationEntry);
+			if (unreachable.empty())
+			{
+				stack = operationEntry;
+				if (cursor < _block->operations.size())
+				{
+					CFG::Operation const& operation = _block->operations.at(cursor);
+					for (size_t i = 0; i < operation.input.size(); i++)
+						stack.pop_back();
+					stack += operation.output;
+				}
+				++cursor;
+			}
+			else
+			{
+				CFG::Operation const& previousOperation = _block->operations.at(cursor - 1);
+				if (auto const* assignment = get_if<CFG::Assignment>(&previousOperation.operation))
+				{
+					for (auto& slot: unreachable)
+						if (VariableSlot const* varSlot = get_if<VariableSlot>(&slot))
+							if (util::findOffset(assignment->variables, *varSlot))
+							{
+								// TODO: proper warning
+								std::cout << "Unreachable slot after assignment." << std::endl;
+								std::cout << "CANNOT FIX YET" << std::endl;
+								return;
+							}
+				}
+				Stack& previousEntry = m_layout.operationEntryLayout.at(&previousOperation);
+				Stack newStack = ranges::concat_view(
+					previousEntry | ranges::views::take(previousEntry.size() - previousOperation.input.size()),
+					unreachable,
+					previousEntry | ranges::views::take_last(previousOperation.input.size())
+				) | ranges::to<Stack>;
+				previousEntry = newStack;
+				--cursor;
+				if (cursor > 0)
+				{
+					CFG::Operation const& ancestorOperation = _block->operations.at(cursor - 1);
+					Stack& ancestorEntry = m_layout.operationEntryLayout.at(&ancestorOperation);
+					stack = ancestorEntry | ranges::views::take(ancestorEntry.size() - ancestorOperation.input.size()) | ranges::to<Stack>;
+					stack += ancestorOperation.output;
+				}
+				else
+					// Stop at block entry, hope for the best and continue downwards again.
+					++cursor;
+			}
+		}
+		stack = m_layout.blockInfos.at(_block).exitLayout;
+
+		std::visit(util::GenericVisitor{
+			[&](CFG::BasicBlock::MainExit const&) {},
+			[&](CFG::BasicBlock::Jump const& _jump)
+			{
+				auto unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(stack, m_layout.blockInfos.at(_jump.target).entryLayout);
+				if (!unreachable.empty())
+					// TODO: proper warning
+					std::cout << "UNREACHABLE SLOTS AT JUMP: " << stackToString(unreachable) << std::endl
+						<< "CANNOT FIX YET" << std::endl;
+
+				if (!_jump.backwards)
+					_addChild(_jump.target);
+			},
+			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+			{
+				auto unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(stack, m_layout.blockInfos.at(_conditionalJump.zero).entryLayout);
+				if (!unreachable.empty())
+					// TODO: proper warning
+					std::cout
+						<< "UNREACHABLE SLOTS AT CONDITIONAL JUMP: " << stackToString(unreachable) << std::endl
+						<< "CANNOT FIX YET" << std::endl;
+				unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(stack, m_layout.blockInfos.at(_conditionalJump.nonZero).entryLayout);
+				if (!unreachable.empty())
+					// TODO: proper warning
+					std::cout
+						<< "UNREACHABLE SLOTS AT CONDITIONAL JUMP: " << stackToString(unreachable) << std::endl
+						<< "CANNOT FIX YET" << std::endl;
+
+				_addChild(_conditionalJump.zero);
+				_addChild(_conditionalJump.nonZero);
+			},
+			[&](CFG::BasicBlock::FunctionReturn const&) {},
+			[&](CFG::BasicBlock::Terminated const&) { },
+		}, _block->exit);
+
+	});
 }
 
 StackLayout StackLayoutGenerator::run(CFG const& _dfg)

@@ -49,6 +49,21 @@ erase_if(std::unordered_map<Key, T, Hash, KeyEqual, Alloc>& _c, Pred _pred)
 	return old_size - _c.size();
 }
 
+// Taken from https://en.cppreference.com/w/cpp/container/set/erase_if
+template<class Key, class Compare, class Alloc, class Pred>
+typename std::set<Key,Compare,Alloc>::size_type
+erase_if(std::set<Key,Compare,Alloc>& c, Pred pred)
+{
+	auto old_size = c.size();
+	for (auto i = c.begin(), last = c.end(); i != last;)
+		if (pred(*i))
+			i = c.erase(i);
+		else
+			++i;
+	return static_cast<typename std::set<Key,Compare,Alloc>::size_type>(old_size - c.size());
+}
+
+
 // Taken from https://en.cppreference.com/w/cpp/container/vector/erase2
 template<class T, class Alloc, class Pred>
 constexpr typename std::vector<T, Alloc>::size_type
