@@ -32,6 +32,7 @@
 #include <test/libyul/YulInterpreterTest.h>
 #include <test/libyul/ObjectCompilerTest.h>
 #include <test/libyul/FunctionSideEffects.h>
+#include <test/libyul/StackLayoutGeneratorTest.h>
 #include <test/libyul/SyntaxTest.h>
 
 #include <boost/filesystem.hpp>
@@ -61,6 +62,7 @@ Testsuite const g_interactiveTestsuites[] = {
 	{"Yul Interpreter",        "libyul",      "yulInterpreterTests",   false, false, &yul::test::YulInterpreterTest::create},
 	{"Yul Object Compiler",    "libyul",      "objectCompiler",        false, false, &yul::test::ObjectCompilerTest::create},
 	{"Yul Control Flow Graph", "libyul",      "yulControlFlowGraph",   false, false, &yul::test::ControlFlowGraphTest::create},
+	{"Yul Stack Layout",       "libyul",      "yulStackLayout",        false, false, &yul::test::StackLayoutGeneratorTest::create},
 	{"Function Side Effects",  "libyul",      "functionSideEffects",   false, false, &yul::test::FunctionSideEffects::create},
 	{"Yul Syntax",             "libyul",      "yulSyntaxTests",        false, false, &yul::test::SyntaxTest::create},
 	{"EVM Code Transform",     "libyul",      "evmCodeTransform",      false, false, &yul::test::EVMCodeTransformTest::create, {"nooptions"}},
