@@ -62,12 +62,9 @@ std::unique_ptr<CFG> ControlFlowGraphBuilder::build(
 
 	// Determine which blocks are reachable from the entry.
 	util::BreadthFirstSearch<CFG::BasicBlock*> reachabilityCheck{{result->entry}};
-	ranges::actions::push_back(
-		reachabilityCheck.verticesToTraverse,
-		result->functionInfo | ranges::views::values | ranges::views::transform(
-			[](auto&& _function) { return _function.entry; }
-		)
-	);
+	for (auto const& functionInfo: result->functionInfo | ranges::views::values)
+		reachabilityCheck.verticesToTraverse.emplace_back(functionInfo.entry);
+
 	reachabilityCheck.run([&](CFG::BasicBlock* _node, auto&& _addChild) {
 		visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::Jump& _jump) {
@@ -100,9 +97,9 @@ ControlFlowGraphBuilder::ControlFlowGraphBuilder(
 	AsmAnalysisInfo& _analysisInfo,
 	Dialect const& _dialect
 ):
-m_graph(_graph),
-m_info(_analysisInfo),
-m_dialect(_dialect)
+	m_graph(_graph),
+	m_info(_analysisInfo),
+	m_dialect(_dialect)
 {
 }
 
@@ -121,58 +118,6 @@ StackSlot ControlFlowGraphBuilder::operator()(Expression const& _expression)
 	return std::visit(*this, _expression);
 }
 
-CFG::Operation& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
-{
-	yulAssert(m_scope, "");
-	yulAssert(m_currentBlock, "");
-
-	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
-	{
-		CFG::Operation& operation = m_currentBlock->operations.emplace_back(CFG::Operation{
-			// input
-			_call.arguments |
-			ranges::views::enumerate |
-			ranges::views::reverse |
-			ranges::views::filter(util::mapTuple([&](size_t idx, auto const&) {
-				return !builtin->literalArgument(idx).has_value();
-			})) |
-			ranges::views::values |
-			ranges::views::transform(std::ref(*this)) |
-			ranges::to<Stack>,
-			// output
-			ranges::views::iota(0u, builtin->returns.size()) | ranges::views::transform([&](size_t _i) {
-				return TemporarySlot{_call, _i};
-			}) | ranges::to<Stack>,
-			// operation
-			CFG::BuiltinCall{_call.debugData, *builtin, _call}
-		});
-		std::get<CFG::BuiltinCall>(operation.operation).arguments = operation.input.size();
-		return operation;
-	}
-	else
-	{
-		Scope::Function* function = nullptr;
-		yulAssert(m_scope->lookup(_call.functionName.name, util::GenericVisitor{
-			[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
-			[&](Scope::Function& _function) { function = &_function; }
-		}), "Function name not found.");
-		yulAssert(function, "");
-		return m_currentBlock->operations.emplace_back(CFG::Operation{
-			// input
-			ranges::concat_view(
-				ranges::views::single(StackSlot{FunctionCallReturnLabelSlot{_call}}),
-				_call.arguments | ranges::views::reverse | ranges::views::transform(std::ref(*this))
-			) | ranges::to<Stack>,
-			// output
-			ranges::views::iota(0u, function->returns.size()) | ranges::views::transform([&](size_t _i) {
-				return TemporarySlot{_call, _i};
-			}) | ranges::to<Stack>,
-			// operation
-			CFG::FunctionCall{_call.debugData, *function, _call}
-		});
-	}
-}
-
 StackSlot ControlFlowGraphBuilder::operator()(FunctionCall const& _call)
 {
 	CFG::Operation& operation = visitFunctionCall(_call);
@@ -188,17 +133,7 @@ void ControlFlowGraphBuilder::operator()(VariableDeclaration const& _varDecl)
 	}) | ranges::to<vector>;
 	Stack input;
 	if (_varDecl.value)
-		input = std::visit(util::GenericVisitor{
-			[&](FunctionCall const& _call) -> Stack {
-				CFG::Operation& operation = visitFunctionCall(_call);
-				yulAssert(declaredVariables.size() == operation.output.size(), "");
-				return operation.output;
-			},
-			[&](auto const& _identifierOrLiteral) -> Stack{
-				yulAssert(declaredVariables.size() == 1, "");
-				return {(*this)(_identifierOrLiteral)};
-			}
-		}, *_varDecl.value);
+		input = visitAssignmentRightHandSide(*_varDecl.value, declaredVariables.size());
 	else
 		input = ranges::views::iota(0u, _varDecl.variables.size()) | ranges::views::transform([&](size_t) {
 			return LiteralSlot{0, _varDecl.debugData};
@@ -218,17 +153,7 @@ void ControlFlowGraphBuilder::operator()(Assignment const& _assignment)
 	yulAssert(m_currentBlock, "");
 	m_currentBlock->operations.emplace_back(CFG::Operation{
 		// input
-		std::visit(util::GenericVisitor{
-			[&](FunctionCall const& _call) -> Stack {
-				CFG::Operation& operation = visitFunctionCall(_call);
-				yulAssert(assignedVariables.size() == operation.output.size(), "");
-				return operation.output;
-			},
-			[&](auto const& _identifierOrLiteral) -> Stack {
-				yulAssert(assignedVariables.size() == 1, "");
-				return {(*this)(_identifierOrLiteral)};
-			}
-		}, *_assignment.value),
+		visitAssignmentRightHandSide(*_assignment.value, assignedVariables.size()),
 		// output
 		assignedVariables | ranges::to<Stack>,
 		// operation
@@ -262,35 +187,6 @@ void ControlFlowGraphBuilder::operator()(Block const& _block)
 	ScopedSaveAndRestore saveScope(m_scope, m_info.scopes.at(&_block).get());
 	for (auto const& statement: _block.statements)
 		std::visit(*this, statement);
-}
-
-std::pair<CFG::BasicBlock*, CFG::BasicBlock*> ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition)
-{
-	CFG::BasicBlock& nonZero = m_graph.makeBlock();
-	CFG::BasicBlock& zero = m_graph.makeBlock();
-	makeConditionalJump(move(_condition), nonZero, zero);
-	return {&nonZero, &zero};
-}
-
-void ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition, CFG::BasicBlock& _nonZero, CFG::BasicBlock& _zero)
-{
-	yulAssert(m_currentBlock, "");
-	m_currentBlock->exit = CFG::BasicBlock::ConditionalJump{
-		move(_condition),
-		&_nonZero,
-		&_zero
-	};
-	_nonZero.entries.emplace_back(m_currentBlock);
-	_zero.entries.emplace_back(m_currentBlock);
-	m_currentBlock = nullptr;
-}
-
-void ControlFlowGraphBuilder::jump(CFG::BasicBlock& _target, bool backwards)
-{
-	yulAssert(m_currentBlock, "");
-	m_currentBlock->exit = CFG::BasicBlock::Jump{&_target, backwards};
-	_target.entries.emplace_back(m_currentBlock);
-	m_currentBlock = &_target;
 }
 
 void ControlFlowGraphBuilder::operator()(If const& _if)
@@ -365,12 +261,7 @@ void ControlFlowGraphBuilder::operator()(ForLoop const& _loop)
 
 	std::optional<bool> constantCondition;
 	if (auto const* literalCondition = get_if<yul::Literal>(_loop.condition.get()))
-	{
-		if (valueOfLiteral(*literalCondition) == 0)
-			constantCondition = false;
-		else
-			constantCondition = true;
-	}
+		constantCondition = valueOfLiteral(*literalCondition) != 0;
 
 	CFG::BasicBlock& loopCondition = m_graph.makeBlock();
 	CFG::BasicBlock& loopBody = m_graph.makeBlock();
@@ -465,10 +356,73 @@ void ControlFlowGraphBuilder::operator()(FunctionDefinition const& _function)
 	builder.m_currentBlock->exit = CFG::BasicBlock::FunctionReturn{&info};
 }
 
+
+CFG::Operation& ControlFlowGraphBuilder::visitFunctionCall(FunctionCall const& _call)
+{
+	yulAssert(m_scope, "");
+	yulAssert(m_currentBlock, "");
+
+	if (BuiltinFunction const* builtin = m_dialect.builtin(_call.functionName.name))
+	{
+		Stack inputs;
+		for (auto&& [idx, arg]: _call.arguments | ranges::views::enumerate | ranges::views::reverse)
+			if (!builtin->literalArgument(idx).has_value())
+				inputs.emplace_back(std::visit(*this, arg));
+		CFG::BuiltinCall builtinCall{_call.debugData, *builtin, _call, inputs.size()};
+		return m_currentBlock->operations.emplace_back(CFG::Operation{
+			// input
+			std::move(inputs),
+			// output
+			ranges::views::iota(0u, builtin->returns.size()) | ranges::views::transform([&](size_t _i) {
+				return TemporarySlot{_call, _i};
+			}) | ranges::to<Stack>,
+			// operation
+			std::move(builtinCall)
+		});
+	}
+	else
+	{
+		Scope::Function* function = nullptr;
+		yulAssert(m_scope->lookup(_call.functionName.name, util::GenericVisitor{
+			[](Scope::Variable&) { yulAssert(false, "Expected function name."); },
+			[&](Scope::Function& _function) { function = &_function; }
+		}), "Function name not found.");
+		yulAssert(function, "");
+		Stack inputs{FunctionCallReturnLabelSlot{_call}};
+		for (auto const& arg: _call.arguments | ranges::views::reverse)
+			inputs.emplace_back(std::visit(*this, arg));
+		return m_currentBlock->operations.emplace_back(CFG::Operation{
+			// input
+			std::move(inputs),
+			// output
+			ranges::views::iota(0u, function->returns.size()) | ranges::views::transform([&](size_t _i) {
+				return TemporarySlot{_call, _i};
+			}) | ranges::to<Stack>,
+			// operation
+			CFG::FunctionCall{_call.debugData, *function, _call}
+		});
+	}
+}
+
+Stack ControlFlowGraphBuilder::visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount)
+{
+	return std::visit(util::GenericVisitor{
+		[&](FunctionCall const& _call) -> Stack {
+			CFG::Operation& operation = visitFunctionCall(_call);
+			yulAssert(_expectedSlotCount == operation.output.size(), "");
+			return operation.output;
+		},
+		[&](auto const& _identifierOrLiteral) -> Stack{
+			yulAssert(_expectedSlotCount == 1, "");
+			return {(*this)(_identifierOrLiteral)};
+		}
+	}, _expression);
+}
+
 Scope::Variable const& ControlFlowGraphBuilder::lookupVariable(YulString _name) const
 {
 	yulAssert(m_scope, "");
-	Scope::Variable *var = nullptr;
+	Scope::Variable* var = nullptr;
 	if (m_scope->lookup(_name, util::GenericVisitor{
 		[&](Scope::Variable& _var) { var = &_var; },
 		[](Scope::Function&)
@@ -481,4 +435,33 @@ Scope::Variable const& ControlFlowGraphBuilder::lookupVariable(YulString _name) 
 		return *var;
 	};
 	yulAssert(false, "External identifier access unimplemented.");
+}
+
+std::pair<CFG::BasicBlock*, CFG::BasicBlock*> ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition)
+{
+	CFG::BasicBlock& nonZero = m_graph.makeBlock();
+	CFG::BasicBlock& zero = m_graph.makeBlock();
+	makeConditionalJump(move(_condition), nonZero, zero);
+	return {&nonZero, &zero};
+}
+
+void ControlFlowGraphBuilder::makeConditionalJump(StackSlot _condition, CFG::BasicBlock& _nonZero, CFG::BasicBlock& _zero)
+{
+	yulAssert(m_currentBlock, "");
+	m_currentBlock->exit = CFG::BasicBlock::ConditionalJump{
+		move(_condition),
+		&_nonZero,
+		&_zero
+	};
+	_nonZero.entries.emplace_back(m_currentBlock);
+	_zero.entries.emplace_back(m_currentBlock);
+	m_currentBlock = nullptr;
+}
+
+void ControlFlowGraphBuilder::jump(CFG::BasicBlock& _target, bool backwards)
+{
+	yulAssert(m_currentBlock, "");
+	m_currentBlock->exit = CFG::BasicBlock::Jump{&_target, backwards};
+	_target.entries.emplace_back(m_currentBlock);
+	m_currentBlock = &_target;
 }

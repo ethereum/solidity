@@ -96,7 +96,7 @@ inline bool canBeFreelyGenerated(StackSlot const& _slot)
 	return std::visit([](auto const& _typedSlot) { return std::decay_t<decltype(_typedSlot)>::canBeFreelyGenerated; }, _slot);
 }
 
-/// Control flow graph consisting of ``DFG::BasicBlock``s connected by control flow.
+/// Control flow graph consisting of ``CFG::BasicBlock``s connected by control flow.
 struct CFG
 {
 	explicit CFG() {}
@@ -111,6 +111,8 @@ struct CFG
 		std::reference_wrapper<BuiltinFunction const> builtin;
 		std::reference_wrapper<yul::FunctionCall const> functionCall;
 		/// Number of proper arguments with a position on the stack, excluding literal arguments.
+		/// Literal arguments (like the literal string in ``datasize``) do not have a location on the stack,
+		/// but are handled internally by the builtin's code generation function.
 		size_t arguments = 0;
 	};
 	struct FunctionCall
@@ -179,9 +181,13 @@ struct CFG
 
 	/// Container for blocks for explicit ownership.
 	std::list<BasicBlock> blocks;
-	/// Container for creates variables for explicit ownership.
+	/// Container for generated variables for explicit ownership.
+	/// Ghost variables are generated to store switch conditions when transforming the control flow
+	/// of a switch to a sequence of conditional jumps.
 	std::list<Scope::Variable> ghostVariables;
-	/// Container for creates calls for explicit ownership.
+	/// Container for generated calls for explicit ownership.
+	/// Ghost calls are used for the equality comparisons of the switch condition ghost variable with
+	/// the switch case literals when transforming the control flow of a switch to a sequence of conditional jumps.
 	std::list<yul::FunctionCall> ghostCalls;
 
 	BasicBlock& makeBlock()

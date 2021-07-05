@@ -58,6 +58,7 @@ private:
 		Dialect const& _dialect
 	);
 	CFG::Operation& visitFunctionCall(FunctionCall const&);
+	Stack visitAssignmentRightHandSide(Expression const& _expression, size_t _expectedSlotCount);
 
 	Scope::Variable const& lookupVariable(YulString _name) const;
 	std::pair<CFG::BasicBlock*, CFG::BasicBlock*> makeConditionalJump(StackSlot _condition);
