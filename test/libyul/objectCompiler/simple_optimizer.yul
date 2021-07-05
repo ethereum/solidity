@@ -15,6 +15,7 @@
 //   calldataload
 //     /* "source":79:99   */
 //   sstore
-// Bytecode: 6000803555
-// Opcodes: PUSH1 0x0 DUP1 CALLDATALOAD SSTORE
-// SourceMappings: 26:1:0:-:0;;13:15;79:20
+//   stop
+// Bytecode: 600080355500
+// Opcodes: PUSH1 0x0 DUP1 CALLDATALOAD SSTORE STOP
+// SourceMappings: 26:1:0:-:0;;13:15;79:20;
