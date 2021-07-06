@@ -15,7 +15,7 @@ Bugfixes:
  * Code Generator: Fix internal compiler error when passing a 32-byte hex literal or a zero literal to ``bytes.concat()`` by disallowing such literals.
  * Type Checker: Fix internal error and prevent static calls to unimplemented modifiers.
  * Yul Code Generator: Fix internal compiler error when using a long literal with bitwise negation.
- * Parser Grammar: Fix grammatical error where (1) function call option should be accepted only once and (2) unary + operator should be disallowed.
+ * Parser Grammar: Strengthen grammar to accept function call option only once
 
 
 ### 0.8.6 (2021-06-22)

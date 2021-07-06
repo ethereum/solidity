@@ -344,7 +344,7 @@ expression:
 	| expression functionCallOption? callArgumentList # FunctionCall
 	| Payable callArgumentList # PayableConversion
 	| Type LParen typeName RParen # MetaType
-	| (Dec | Not | BitNot | Delete | Sub) expression # UnaryPrefixOperation
+	| (Inc | Dec | Not | BitNot | Delete | Sub) expression # UnaryPrefixOperation
 	| expression (Inc | Dec) # UnarySuffixOperation
 	|<assoc=right> expression Exp expression # ExpOperation
 	| expression (Mul | Div | Mod) expression # MulDivModOperation
