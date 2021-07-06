@@ -28,6 +28,10 @@
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/Visitor.h>
 
+#ifdef ISOLTEST
+#include <boost/process.hpp>
+#endif
+
 using namespace solidity;
 using namespace solidity::util;
 using namespace solidity::langutil;
@@ -81,9 +85,13 @@ public:
 	m_stream(_stream)
 	{
 	}
-	void operator()(CFG::BasicBlock const& _block)
+	void operator()(CFG::BasicBlock const& _block, bool _isMainEntry = true)
 	{
-		getBlockId(_block);
+		if (_isMainEntry)
+		{
+			m_stream << "Entry [label=\"Entry\"];\n";
+			m_stream << "Entry -> Block" << getBlockId(_block) << ";\n";
+		}
 		while (!m_blocksToPrint.empty())
 		{
 			CFG::BasicBlock const* block = *m_blocksToPrint.begin();
@@ -96,7 +104,8 @@ public:
 		CFG::FunctionInfo const& _info
 	)
 	{
-		m_stream << m_indent << "function " << _info.function.name.str() << "(";
+		m_stream << "FunctionEntry_" << _info.function.name.str() << " [label=\"";
+		m_stream << "function " << _info.function.name.str() << "(";
 		m_stream << joinHumanReadable(_info.parameters | ranges::views::transform(variableSlotToString));
 		m_stream << ")";
 		if (!_info.returnVariables.empty())
@@ -104,28 +113,38 @@ public:
 			m_stream << " -> ";
 			m_stream << joinHumanReadable(_info.returnVariables | ranges::views::transform(variableSlotToString));
 		}
-		m_stream << ":\n";
-		ScopedSaveAndRestore linePrefixRestore(m_indent, m_indent + "  ");
-		(*this)(*_info.entry);
+		m_stream << "\"];\n";
+		m_stream << "FunctionEntry_" << _info.function.name.str() << " -> Block" << getBlockId(*_info.entry) << ";\n";
+		(*this)(*_info.entry, false);
 	}
 
 private:
 	void printBlock(CFG::BasicBlock const& _block)
 	{
-		m_stream << m_indent << "Block " << getBlockId(_block) << ":\n";
-		ScopedSaveAndRestore linePrefixRestore(m_indent, m_indent + "  ");
+		m_stream << "Block" << getBlockId(_block) << " [label=\"\\\n";
 
-		m_stream << m_indent << "Entries: ";
-		if (_block.entries.empty())
-			m_stream << "None\n";
-		else
-			m_stream << joinHumanReadable(_block.entries | ranges::views::transform([&](auto const* _entry) {
-				return to_string(getBlockId(*_entry));
-			})) << "\n";
+		// Verify that the entries of this block exit into this block.
+		for (auto const& entry: _block.entries)
+			std::visit(util::GenericVisitor{
+				[&](CFG::BasicBlock::Jump const& _jump)
+				{
+					soltestAssert(_jump.target == &_block, "Invalid control flow graph.");
+				},
+				[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
+				{
+					soltestAssert(
+						_conditionalJump.zero == &_block || _conditionalJump.nonZero == &_block,
+						"Invalid control flow graph."
+					);
+				},
+				[&](auto const&)
+				{
+					soltestAssert(false, "Invalid control flow graph.");
+				}
+			}, entry->exit);
 
 		for (auto const& operation: _block.operations)
 		{
-			m_stream << m_indent;
 			std::visit(util::GenericVisitor{
 				[&](CFG::FunctionCall const& _call) {
 					m_stream << _call.function.get().name.str() << ": ";
@@ -140,32 +159,47 @@ private:
 					m_stream << "): ";
 				}
 			}, operation.operation);
-			m_stream << stackToString(operation.input) << " => " << stackToString(operation.output) << "\n";
+			m_stream << stackToString(operation.input) << " => " << stackToString(operation.output) << "\\l\\\n";
 		}
+		m_stream << "\"];\n";
 		std::visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::MainExit const&)
 			{
-				m_stream << m_indent << "MainExit\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"MainExit\"];\n";
+				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 			},
 			[&](CFG::BasicBlock::Jump const& _jump)
 			{
-				m_stream << m_indent << "Jump" << (_jump.backwards ? " (backwards): " : ": ") << getBlockId(*_jump.target) << "\n";
+				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit [arrowhead=none];\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"";
+				if (_jump.backwards)
+					m_stream << "Backwards";
+				m_stream << "Jump\" shape=oval];\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit -> Block" << getBlockId(*_jump.target) << ";\n";
 			},
 			[&](CFG::BasicBlock::ConditionalJump const& _conditionalJump)
 			{
-				m_stream << m_indent << "ConditionalJump " << stackSlotToString(_conditionalJump.condition) << ":\n";
-				m_stream << m_indent << "  NonZero: " << getBlockId(*_conditionalJump.nonZero) << "\n";
-				m_stream << m_indent << "  Zero: " << getBlockId(*_conditionalJump.zero) << "\n";
+				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"{ ";
+				m_stream << stackSlotToString(_conditionalJump.condition);
+				m_stream << "| { <0> Zero | <1> NonZero }}\" shape=Mrecord];\n";
+				m_stream << "Block" << getBlockId(_block);
+				m_stream << "Exit:0 -> Block" << getBlockId(*_conditionalJump.zero) << ";\n";
+				m_stream << "Block" << getBlockId(_block);
+				m_stream << "Exit:1 -> Block" << getBlockId(*_conditionalJump.nonZero) << ";\n";
 			},
 			[&](CFG::BasicBlock::FunctionReturn const& _return)
 			{
-				m_stream << m_indent << "FunctionReturn of " << _return.info->function.name.str() << "\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"FunctionReturn[" << _return.info->function.name.str() << "]\"];\n";
+				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 			},
 			[&](CFG::BasicBlock::Terminated const&)
 			{
-				m_stream << m_indent << "Terminated\n";
+				m_stream << "Block" << getBlockId(_block) << "Exit [label=\"Terminated\"];\n";
+				m_stream << "Block" << getBlockId(_block) << " -> Block" << getBlockId(_block) << "Exit;\n";
 			}
 		}, _block.exit);
+		m_stream << "\n";
 	}
 	size_t getBlockId(CFG::BasicBlock const& _block)
 	{
@@ -176,7 +210,6 @@ private:
 		return id;
 	}
 	std::ostream& m_stream;
-	std::string m_indent;
 	std::map<CFG::BasicBlock const*, size_t> m_blockIds;
 	size_t m_blockCount = 0;
 	std::list<CFG::BasicBlock const*> m_blocksToPrint;
@@ -197,11 +230,41 @@ TestCase::TestResult ControlFlowGraphTest::run(ostream& _stream, string const& _
 
 	std::unique_ptr<CFG> cfg = ControlFlowGraphBuilder::build(*analysisInfo, *m_dialect, *object->code);
 
-	ControlFlowGraphPrinter{output}(*cfg->entry);
+	output << "digraph CFG {\nnodesep=0.7;\nnode[shape=box];\n\n";
+	ControlFlowGraphPrinter printer{output};
+	printer(*cfg->entry);
 	for (auto function: cfg->functions)
-		ControlFlowGraphPrinter{output}(cfg->functionInfo.at(function));
+		printer(cfg->functionInfo.at(function));
+	output << "}\n";
 
 	m_obtainedResult = output.str();
 
-	return checkResult(_stream, _linePrefix, _formatted);
+	auto result = checkResult(_stream, _linePrefix, _formatted);
+
+#ifdef ISOLTEST
+	char* graphDisplayer = nullptr;
+	if (result == TestResult::Failure)
+		graphDisplayer = getenv("ISOLTEST_DISPLAY_GRAPHS_FAILURE");
+	else if (result == TestResult::Success)
+		graphDisplayer = getenv("ISOLTEST_DISPLAY_GRAPHS_SUCCESS");
+
+	if (graphDisplayer)
+	{
+		if (result == TestResult::Success)
+			std::cout << std::endl << m_source << std::endl;
+		boost::process::opstream pipe;
+		boost::process::child child(graphDisplayer, boost::process::std_in < pipe);
+
+		pipe << output.str();
+		pipe.flush();
+		pipe.pipe().close();
+		if (result == TestResult::Success)
+			child.wait();
+		else
+			child.detach();
+	}
+#endif
+
+	return result;
+
 }

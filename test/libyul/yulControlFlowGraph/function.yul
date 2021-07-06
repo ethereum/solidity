@@ -19,36 +19,57 @@
     h(y)
 }
 // ----
-// Block 0:
-//   Entries: None
-//   i: [ RET[i] ] => [ TMP[i, 0] TMP[i, 1] ]
-//   Assignment(x, y): [ TMP[i, 0] TMP[i, 1] ] => [ x y ]
-//   h: [ RET[h] x ] => [ ]
-//   h: [ RET[h] y ] => [ ]
-//   MainExit
-// function f(a, b) -> r:
-//   Block 0:
-//     Entries: None
-//     add: [ b a ] => [ TMP[add, 0] ]
-//     Assignment(x): [ TMP[add, 0] ] => [ x ]
-//     sub: [ a x ] => [ TMP[sub, 0] ]
-//     Assignment(r): [ TMP[sub, 0] ] => [ r ]
-//     FunctionReturn of f
-// function g():
-//   Block 0:
-//     Entries: None
-//     sstore: [ 0x0101 0x01 ] => [ ]
-//     FunctionReturn of g
-// function h(x):
-//   Block 0:
-//     Entries: None
-//     f: [ RET[f] 0x00 x ] => [ TMP[f, 0] ]
-//     h: [ RET[h] TMP[f, 0] ] => [ ]
-//     g: [ RET[g] ] => [ ]
-//     FunctionReturn of h
-// function i() -> v, w:
-//   Block 0:
-//     Entries: None
-//     Assignment(v): [ 0x0202 ] => [ v ]
-//     Assignment(w): [ 0x0303 ] => [ w ]
-//     FunctionReturn of i
+// digraph CFG {
+// nodesep=0.7;
+// node[shape=box];
+//
+// Entry [label="Entry"];
+// Entry -> Block0;
+// Block0 [label="\
+// i: [ RET[i] ] => [ TMP[i, 0] TMP[i, 1] ]\l\
+// Assignment(x, y): [ TMP[i, 0] TMP[i, 1] ] => [ x y ]\l\
+// h: [ RET[h] x ] => [ ]\l\
+// h: [ RET[h] y ] => [ ]\l\
+// "];
+// Block0Exit [label="MainExit"];
+// Block0 -> Block0Exit;
+//
+// FunctionEntry_f [label="function f(a, b) -> r"];
+// FunctionEntry_f -> Block1;
+// Block1 [label="\
+// add: [ b a ] => [ TMP[add, 0] ]\l\
+// Assignment(x): [ TMP[add, 0] ] => [ x ]\l\
+// sub: [ a x ] => [ TMP[sub, 0] ]\l\
+// Assignment(r): [ TMP[sub, 0] ] => [ r ]\l\
+// "];
+// Block1Exit [label="FunctionReturn[f]"];
+// Block1 -> Block1Exit;
+//
+// FunctionEntry_g [label="function g()"];
+// FunctionEntry_g -> Block2;
+// Block2 [label="\
+// sstore: [ 0x0101 0x01 ] => [ ]\l\
+// "];
+// Block2Exit [label="FunctionReturn[g]"];
+// Block2 -> Block2Exit;
+//
+// FunctionEntry_h [label="function h(x)"];
+// FunctionEntry_h -> Block3;
+// Block3 [label="\
+// f: [ RET[f] 0x00 x ] => [ TMP[f, 0] ]\l\
+// h: [ RET[h] TMP[f, 0] ] => [ ]\l\
+// g: [ RET[g] ] => [ ]\l\
+// "];
+// Block3Exit [label="FunctionReturn[h]"];
+// Block3 -> Block3Exit;
+//
+// FunctionEntry_i [label="function i() -> v, w"];
+// FunctionEntry_i -> Block4;
+// Block4 [label="\
+// Assignment(v): [ 0x0202 ] => [ v ]\l\
+// Assignment(w): [ 0x0303 ] => [ w ]\l\
+// "];
+// Block4Exit [label="FunctionReturn[i]"];
+// Block4 -> Block4Exit;
+//
+// }

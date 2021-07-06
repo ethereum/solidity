@@ -6,18 +6,32 @@
     sstore(0x03, 0x003)
 }
 // ----
-// Block 0:
-//   Entries: None
-//   sstore: [ 0x0101 0x01 ] => [ ]
-//   calldataload: [ 0x00 ] => [ TMP[calldataload, 0] ]
-//   ConditionalJump TMP[calldataload, 0]:
-//     NonZero: 1
-//     Zero: 2
-// Block 1:
-//   Entries: 0
-//   sstore: [ 0x0202 0x02 ] => [ ]
-//   Jump: 2
-// Block 2:
-//   Entries: 0, 1
-//   sstore: [ 0x03 0x03 ] => [ ]
-//   MainExit
+// digraph CFG {
+// nodesep=0.7;
+// node[shape=box];
+//
+// Entry [label="Entry"];
+// Entry -> Block0;
+// Block0 [label="\
+// sstore: [ 0x0101 0x01 ] => [ ]\l\
+// calldataload: [ 0x00 ] => [ TMP[calldataload, 0] ]\l\
+// "];
+// Block0 -> Block0Exit;
+// Block0Exit [label="{ TMP[calldataload, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
+// Block0Exit:0 -> Block1;
+// Block0Exit:1 -> Block2;
+//
+// Block1 [label="\
+// sstore: [ 0x03 0x03 ] => [ ]\l\
+// "];
+// Block1Exit [label="MainExit"];
+// Block1 -> Block1Exit;
+//
+// Block2 [label="\
+// sstore: [ 0x0202 0x02 ] => [ ]\l\
+// "];
+// Block2 -> Block2Exit [arrowhead=none];
+// Block2Exit [label="Jump" shape=oval];
+// Block2Exit -> Block1;
+//
+// }
