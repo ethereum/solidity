@@ -15,8 +15,8 @@ difference between what you did (the specification) and how you did it
 is what you wanted and that you did not miss any unintended effects of it.
 
 Solidity implements a formal verification approach based on
-`SMT <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_ and
-`Horn <https://en.wikipedia.org/wiki/Horn-satisfiability>`_ solving.
+`SMT (Satisfiability Module Theories) <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_ and
+`Horn (Horn Satisfiability) <https://en.wikipedia.org/wiki/Horn-satisfiability>`_ solving.
 The SMTChecker module automatically tries to prove that the code satisfies the
 specification given by ``require`` and ``assert`` statements. That is, it considers
 ``require`` statements as assumptions and tries to prove that the conditions
