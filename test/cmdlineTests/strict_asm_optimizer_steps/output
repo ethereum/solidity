@@ -48,14 +48,15 @@ Text representation:
   revert
     /* "strict_asm_optimizer_steps/input.yul":58:60   */
 tag_1:
-    /* "strict_asm_optimizer_steps/input.yul":98:163   */
+    /* "strict_asm_optimizer_steps/input.yul":138:162   */
   dataSize(sub_0)
+    /* "strict_asm_optimizer_steps/input.yul":110:136   */
   dataOffset(sub_0)
     /* "strict_asm_optimizer_steps/input.yul":107:108   */
   0x00
     /* "strict_asm_optimizer_steps/input.yul":98:163   */
   codecopy
-    /* "strict_asm_optimizer_steps/input.yul":172:207   */
+    /* "strict_asm_optimizer_steps/input.yul":182:206   */
   dataSize(sub_0)
     /* "strict_asm_optimizer_steps/input.yul":179:180   */
   0x00
