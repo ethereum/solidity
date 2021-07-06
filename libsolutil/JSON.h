@@ -27,7 +27,8 @@
 
 #include <string>
 
-namespace solidity::util {
+namespace solidity::util
+{
 
 /// Removes members with null value recursively from (@a _json).
 Json::Value removeNullMembers(Json::Value _json);

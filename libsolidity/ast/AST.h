@@ -36,6 +36,9 @@
 
 #include <json/json.h>
 
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/map.hpp>
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -101,6 +104,8 @@ public:
 	/// Extracts the referenced declaration from all nodes whose annotations support
 	/// `referencedDeclaration`.
 	static Declaration const* referencedDeclaration(Expression const& _expression);
+	/// Performs potential super or virtual lookup for a function call based on the most derived contract.
+	static FunctionDefinition const* resolveFunctionCall(FunctionCall const& _functionCall, ContractDefinition const* _mostDerivedContract);
 
 	/// Returns the source code location of this node.
 	SourceLocation const& location() const { return m_location; }
@@ -259,6 +264,12 @@ public:
 	bool isStructMember() const;
 	/// @returns true if this is a declaration of a parameter of an event.
 	bool isEventOrErrorParameter() const;
+
+	/// @returns false if the declaration can never be referenced without being qualified with a scope.
+	/// Usually the name alone can be used to refer to the corresponding entity.
+	/// But, for example, struct member names or enum member names always require a prefix.
+	/// Another example is event parameter names, which do not participate in any proper scope.
+	bool isVisibleAsUnqualifiedName() const;
 
 	/// @returns the type of expressions referencing this declaration.
 	/// This can only be called once types of variable declarations have already been resolved.
@@ -497,6 +508,13 @@ public:
 	std::vector<VariableDeclaration const*> stateVariables() const { return filteredNodes<VariableDeclaration>(m_subNodes); }
 	std::vector<ModifierDefinition const*> functionModifiers() const { return filteredNodes<ModifierDefinition>(m_subNodes); }
 	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
+	/// @returns a view<FunctionDefinition const*> of all functions
+	/// defined in this contract of the given name (excluding inherited functions).
+	auto definedFunctions(std::string const& _name) const
+	{
+		auto&& [b, e] = definedFunctionsByName().equal_range(_name);
+		return ranges::subrange<decltype(b)>(b, e) | ranges::views::values;
+	}
 	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
 	/// @returns all errors defined in this contract or any base contract
@@ -546,6 +564,8 @@ public:
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _mostDerivedContract) const;
 
 private:
+	std::multimap<std::string, FunctionDefinition const*> const& definedFunctionsByName() const;
+
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<ASTNode>> m_subNodes;
 	ContractKind m_contractKind;
@@ -553,6 +573,7 @@ private:
 
 	util::LazyInit<std::vector<std::pair<util::FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList[2];
 	util::LazyInit<std::vector<EventDefinition const*>> m_interfaceEvents;
+	util::LazyInit<std::multimap<std::string, FunctionDefinition const*>> m_definedFunctionsByName;
 };
 
 /**

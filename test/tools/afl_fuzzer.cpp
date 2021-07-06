@@ -114,7 +114,7 @@ Allowed options)",
 	{
 		string input;
 		if (inputFile.size() == 0)
-			input = readStandardInput();
+			input = readUntilEnd(cin);
 		else
 			input = readFileAsString(inputFile);
 

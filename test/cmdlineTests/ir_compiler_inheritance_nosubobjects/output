@@ -1,10 +1,10 @@
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 object "C_7" {
     code {
@@ -12,8 +12,8 @@ object "C_7" {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("C_7_deployed")
-            codecopy(0, dataoffset("C_7_deployed"), _1)
-            return(0, _1)
+            codecopy(128, dataoffset("C_7_deployed"), _1)
+            return(128, _1)
         }
     }
     object "C_7_deployed" {
@@ -23,16 +23,17 @@ object "C_7" {
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
 
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 object "D_10" {
     code {
@@ -40,8 +41,8 @@ object "D_10" {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_10_deployed")
-            codecopy(0, dataoffset("D_10_deployed"), _1)
-            return(0, _1)
+            codecopy(128, dataoffset("D_10_deployed"), _1)
+            return(128, _1)
         }
     }
     object "D_10_deployed" {
@@ -51,5 +52,6 @@ object "D_10" {
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

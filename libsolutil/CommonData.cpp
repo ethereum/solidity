@@ -192,11 +192,13 @@ string solidity::util::formatAsStringOrNumber(string const& _value)
 		if (c <= 0x1f || c >= 0x7f || c == '"')
 			return "0x" + h256(_value, h256::AlignLeft).hex();
 
-	return escapeAndQuoteString(_value);
+	// The difference in escaping is only in characters below 0x1f and the string does not have them
+	// so this will work for Solidity strings too.
+	return escapeAndQuoteYulString(_value);
 }
 
 
-string solidity::util::escapeAndQuoteString(string const& _input)
+string solidity::util::escapeAndQuoteYulString(string const& _input)
 {
 	string out;
 
@@ -205,18 +207,12 @@ string solidity::util::escapeAndQuoteString(string const& _input)
 			out += "\\\\";
 		else if (c == '"')
 			out += "\\\"";
-		else if (c == '\b')
-			out += "\\b";
-		else if (c == '\f')
-			out += "\\f";
 		else if (c == '\n')
 			out += "\\n";
 		else if (c == '\r')
 			out += "\\r";
 		else if (c == '\t')
 			out += "\\t";
-		else if (c == '\v')
-			out += "\\v";
 		else if (!isprint(c, locale::classic()))
 		{
 			ostringstream o;

@@ -404,7 +404,8 @@ inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
 	return (prefix == HexPrefix::Add) ? "0x" + str : str;
 }
 
-inline std::string toCompactHexWithPrefix(u256 const& _value)
+template <class T>
+inline std::string toCompactHexWithPrefix(T _value)
 {
 	return toHex(toCompactBigEndian(_value, 1), HexPrefix::Add);
 }
@@ -553,7 +554,7 @@ std::string formatAsStringOrNumber(std::string const& _value);
 
 /// @returns a string with the usual backslash-escapes for non-ASCII
 /// characters and surrounded by '"'-characters.
-std::string escapeAndQuoteString(std::string const& _input);
+std::string escapeAndQuoteYulString(std::string const& _input);
 
 template<typename Container, typename Compare>
 bool containerEqual(Container const& _lhs, Container const& _rhs, Compare&& _compare)

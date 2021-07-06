@@ -89,7 +89,7 @@ void ParserBase::expectToken(Token _value, bool _advance)
 		_advance = false;
 	}
 	if (_advance)
-		m_scanner->next();
+		advance();
 }
 
 void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentNodeName, bool _advance)
@@ -102,7 +102,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 		SourceLocation errorLoc = currentLocation();
 		int startPosition = errorLoc.start;
 		while (m_scanner->currentToken() != _value && m_scanner->currentToken() != Token::EOS)
-			m_scanner->next();
+			advance();
 
 		string const expectedToken = ParserBase::tokenName(_value);
 		if (m_scanner->currentToken() == Token::EOS)
@@ -126,7 +126,7 @@ void ParserBase::expectTokenOrConsumeUntil(Token _value, string const& _currentN
 	}
 
 	if (_advance)
-		m_scanner->next();
+		advance();
 }
 
 void ParserBase::increaseRecursionDepth()

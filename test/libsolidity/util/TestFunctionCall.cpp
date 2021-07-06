@@ -61,23 +61,6 @@ string TestFunctionCall::format(
 			stream << _linePrefix << newline << ws << "library:" << ws << m_call.signature;
 			return;
 		}
-		else if (m_call.kind == FunctionCall::Kind::Storage)
-		{
-			stream << _linePrefix << newline << ws << "storage" << colon << ws;
-			soltestAssert(m_rawBytes.size() == 1, "");
-			soltestAssert(m_call.expectations.rawBytes().size() == 1, "");
-			bool isEmpty =
-				_renderMode == RenderMode::ActualValuesExpectedGas ?
-				m_rawBytes.front() == 0 :
-				m_call.expectations.rawBytes().front() == 0;
-			string output = isEmpty ? "empty" : "nonempty";
-			if (_renderMode == RenderMode::ActualValuesExpectedGas && !matchesExpectation())
-				AnsiColorized(stream, highlight, {util::formatting::RED_BACKGROUND}) << output;
-			else
-				stream << output;
-
-			return;
-		}
 
 		/// Formats the function signature. This is the same independent from the display-mode.
 		stream << _linePrefix << newline << ws << m_call.signature;
@@ -210,6 +193,23 @@ string TestFunctionCall::format(
 			{
 				stream << endl << _linePrefix << newline << ws;
 				stream << comment << m_call.expectations.comment << comment;
+			}
+		}
+
+		vector<string> sideEffects;
+		if (_renderMode == RenderMode::ExpectedValuesExpectedGas || _renderMode == RenderMode::ExpectedValuesActualGas)
+			sideEffects = m_call.expectedSideEffects;
+		else
+			sideEffects = m_call.actualSideEffects;
+
+		if (!sideEffects.empty())
+		{
+			stream << std::endl;
+			for (string const& effect: sideEffects)
+			{
+				stream << _linePrefix << "// ~ " << effect;
+				if (effect != *sideEffects.rbegin())
+					stream << std::endl;
 			}
 		}
 

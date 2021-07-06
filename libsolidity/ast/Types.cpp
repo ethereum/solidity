@@ -2613,23 +2613,6 @@ Type const* TupleType::mobileType() const
 	return TypeProvider::tuple(move(mobiles));
 }
 
-Type const* TupleType::closestTemporaryType(Type const* _targetType) const
-{
-	solAssert(!!_targetType, "");
-	TypePointers const& targetComponents = dynamic_cast<TupleType const&>(*_targetType).components();
-	solAssert(components().size() == targetComponents.size(), "");
-	TypePointers tempComponents(targetComponents.size());
-	for (size_t i = 0; i < targetComponents.size(); ++i)
-	{
-		if (components()[i] && targetComponents[i])
-		{
-			tempComponents[i] = components()[i]->closestTemporaryType(targetComponents[i]);
-			solAssert(tempComponents[i], "");
-		}
-	}
-	return TypeProvider::tuple(move(tempComponents));
-}
-
 FunctionType::FunctionType(FunctionDefinition const& _function, Kind _kind):
 	m_kind(_kind),
 	m_stateMutability(_function.stateMutability()),

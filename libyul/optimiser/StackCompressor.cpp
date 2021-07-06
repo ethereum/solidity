@@ -21,7 +21,6 @@
 
 #include <libyul/optimiser/StackCompressor.h>
 
-#include <libyul/optimiser/SSAValueTracker.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Rematerialiser.h>
 #include <libyul/optimiser/UnusedPruner.h>

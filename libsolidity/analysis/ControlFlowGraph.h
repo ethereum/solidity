@@ -98,6 +98,8 @@ struct CFGNode
 	std::vector<CFGNode*> entries;
 	/// Exit nodes. All CFG nodes to which control flow may continue after this node.
 	std::vector<CFGNode*> exits;
+	/// Function calls done by this node
+	std::vector<FunctionCall const*> functionCalls;
 
 	/// Variable occurrences in the node.
 	std::vector<VariableOccurrence> variableOccurrences;
@@ -118,7 +120,7 @@ struct FunctionFlow
 	/// (e.g. all return statements of the function).
 	CFGNode* exit = nullptr;
 	/// Revert node. Control flow of the function in case of revert.
-	/// This node is empty does not have any exits, but may have multiple entries
+	/// This node is empty and does not have any exits, but may have multiple entries
 	/// (e.g. all assert, require, revert and throw statements).
 	CFGNode* revert = nullptr;
 	/// Transaction return node. Destination node for inline assembly "return" calls.
@@ -130,13 +132,37 @@ struct FunctionFlow
 class CFG: private ASTConstVisitor
 {
 public:
+	struct FunctionContractTuple
+	{
+		ContractDefinition const* contract = nullptr;
+		FunctionDefinition const* function = nullptr;
+
+		// Use AST ids for comparison to keep a deterministic order in the
+		// containers using this struct
+		bool operator<(FunctionContractTuple const& _other) const
+		{
+			return
+				std::make_pair(contract ? contract->id() : -1, function->id()) <
+				std::make_pair(_other.contract ? _other.contract->id() : -1, _other.function->id());
+		}
+	};
 	explicit CFG(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 
 	bool constructFlow(ASTNode const& _astRoot);
 
 	bool visit(FunctionDefinition const& _function) override;
+	bool visit(ContractDefinition const& _contract) override;
 
-	FunctionFlow const& functionFlow(FunctionDefinition const& _function) const;
+	/// Get the function flow for the given function, using `_contract` as the
+	/// most derived contract
+	/// @param _function function to find the function flow for
+	/// @param _contract most derived contract or nullptr for free functions
+	FunctionFlow const& functionFlow(FunctionDefinition const& _function, ContractDefinition const* _contract = nullptr) const;
+
+	std::map<FunctionContractTuple, std::unique_ptr<FunctionFlow>> const& allFunctionFlows() const
+	{
+		return m_functionControlFlow;
+	}
 
 	class NodeContainer
 	{
@@ -153,7 +179,7 @@ private:
 	/// are owned by the CFG class and stored in this container.
 	NodeContainer m_nodeContainer;
 
-	std::map<FunctionDefinition const*, std::unique_ptr<FunctionFlow>> m_functionControlFlow;
+	std::map<FunctionContractTuple, std::unique_ptr<FunctionFlow>> m_functionControlFlow;
 };
 
 }

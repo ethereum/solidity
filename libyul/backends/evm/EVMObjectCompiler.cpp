@@ -26,7 +26,6 @@
 
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
-#include <libevmasm/Assembly.h>
 
 using namespace solidity::yul;
 using namespace std;
@@ -54,7 +53,11 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 		else
 		{
 			Data const& data = dynamic_cast<Data const&>(*subNode);
-			context.subIDs[data.name] = m_assembly.appendData(data.data);
+			// Special handling of metadata.
+			if (data.name.str() == Object::metadataName())
+				m_assembly.appendToAuxiliaryData(data.data);
+			else
+				context.subIDs[data.name] = m_assembly.appendData(data.data);
 		}
 
 	yulAssert(_object.analysisInfo, "No analysis info.");

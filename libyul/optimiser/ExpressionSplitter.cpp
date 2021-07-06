@@ -22,7 +22,6 @@
 
 #include <libyul/optimiser/ExpressionSplitter.h>
 
-#include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/optimiser/TypeInfo.h>
 
@@ -30,7 +29,6 @@
 #include <libyul/Dialect.h>
 
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;
@@ -101,15 +99,15 @@ void ExpressionSplitter::outlineExpression(Expression& _expr)
 
 	visit(_expr);
 
-	SourceLocation location = locationOf(_expr);
+	shared_ptr<DebugData const> debugData = debugDataOf(_expr);
 	YulString var = m_nameDispenser.newName({});
 	YulString type = m_typeInfo.typeOf(_expr);
 	m_statementsToPrefix.emplace_back(VariableDeclaration{
-		location,
-		{{TypedName{location, var, type}}},
+		debugData,
+		{{TypedName{debugData, var, type}}},
 		make_unique<Expression>(std::move(_expr))
 	});
-	_expr = Identifier{location, var};
+	_expr = Identifier{debugData, var};
 	m_typeInfo.setVariableType(var, type);
 }
 

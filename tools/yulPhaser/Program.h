@@ -23,6 +23,7 @@
 
 #include <liblangutil/Exceptions.h>
 
+#include <cstddef>
 #include <optional>
 #include <ostream>
 #include <set>

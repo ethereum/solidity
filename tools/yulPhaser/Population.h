@@ -23,6 +23,7 @@
 #include <tools/yulPhaser/Mutations.h>
 #include <tools/yulPhaser/SimulationRNG.h>
 
+#include <cstddef>
 #include <optional>
 #include <ostream>
 #include <vector>

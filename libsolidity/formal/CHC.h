@@ -70,6 +70,11 @@ public:
 	/// the constructor.
 	std::vector<std::string> unhandledQueries() const;
 
+	enum class CHCNatspecOption
+	{
+		AbstractFunctionNondet
+	};
+
 private:
 	/// Visitor functions.
 	//@{
@@ -121,6 +126,19 @@ private:
 	void clearIndices(ContractDefinition const* _contract, FunctionDefinition const* _function = nullptr) override;
 	void setCurrentBlock(Predicate const& _block);
 	std::set<unsigned> transactionVerificationTargetsIds(ASTNode const* _txRoot);
+	//@}
+
+	/// SMT Natspec and abstraction helpers.
+	//@{
+	/// @returns a CHCNatspecOption enum if _option is a valid SMTChecker Natspec value
+	/// or nullopt otherwise.
+	static std::optional<CHCNatspecOption> natspecOptionFromString(std::string const& _option);
+	/// @returns which SMTChecker options are enabled by @a _function's Natspec via
+	/// `@custom:smtchecker <option>` or nullopt if none is used.
+	std::set<CHCNatspecOption> smtNatspecTags(FunctionDefinition const& _function);
+	/// @returns true if _function is Natspec annotated to be abstracted by
+	/// nondeterministic values.
+	bool abstractAsNondet(FunctionDefinition const& _function);
 	//@}
 
 	/// Sort helpers.
@@ -182,6 +200,9 @@ private:
 	/// @returns the current symbolic values of the current state variables.
 	std::vector<smtutil::Expression> currentStateVariables();
 	std::vector<smtutil::Expression> currentStateVariables(ContractDefinition const& _contract);
+
+	/// @returns \bigwedge currentValue(_vars[i]) == initialState(_var[i])
+	smtutil::Expression currentEqualInitialVarsConstraints(std::vector<VariableDeclaration const*> const& _vars) const;
 
 	/// @returns the predicate name for a given node.
 	std::string predicateName(ASTNode const* _node, ContractDefinition const* _contract = nullptr);

@@ -26,7 +26,6 @@
 #include <liblangutil/SourceReferenceFormatter.h>
 
 #include <libyul/optimiser/Disambiguator.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AssemblyStack.h>

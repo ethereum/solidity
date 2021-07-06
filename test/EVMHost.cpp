@@ -69,7 +69,7 @@ evmc::VM& EVMHost::getVM(string const& _path)
 	return NullVM;
 }
 
-bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
+std::tuple<bool, bool> EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 {
 	bool evmVmFound = false;
 	bool ewasmVmFound = false;
@@ -77,7 +77,7 @@ bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 	{
 		evmc::VM& vm = EVMHost::getVM(path.string());
 		if (!vm)
-			return false;
+			continue;
 
 		if (vm.has_capability(EVMC_CAPABILITY_EVM1))
 		{
@@ -93,7 +93,7 @@ bool EVMHost::checkVmPaths(vector<boost::filesystem::path> const& _vmPaths)
 			ewasmVmFound = true;
 		}
 	}
-	return evmVmFound;
+	return {evmVmFound, ewasmVmFound};
 }
 
 EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
@@ -148,6 +148,8 @@ void EVMHost::reset()
 	recorded_selfdestructs.clear();
 	// Clear call records
 	recorded_calls.clear();
+	// Clear EIP-2929 account access indicator
+	recorded_account_accesses.clear();
 
 	// Mark all precompiled contracts as existing. Existing here means to have a balance (as per EIP-161).
 	// NOTE: keep this in sync with `EVMHost::call` below.
@@ -166,12 +168,29 @@ void EVMHost::reset()
 	}
 }
 
+void EVMHost::resetWarmAccess()
+{
+	// Clear EIP-2929 account access indicator
+	recorded_account_accesses.clear();
+	// Clear EIP-2929 storage access indicator
+	for (auto& [address, account]: accounts)
+		for (auto& [slot, value]: account.storage)
+			value.access_status = EVMC_ACCESS_COLD;
+}
+
+void EVMHost::transfer(evmc::MockedAccount& _sender, evmc::MockedAccount& _recipient, u256 const& _value) noexcept
+{
+	assertThrow(u256(convertFromEVMC(_sender.balance)) >= _value, Exception, "Insufficient balance for transfer");
+	_sender.balance = convertToEVMC(u256(convertFromEVMC(_sender.balance)) - _value);
+	_recipient.balance = convertToEVMC(u256(convertFromEVMC(_recipient.balance)) + _value);
+}
+
 void EVMHost::selfdestruct(const evmc::address& _addr, const evmc::address& _beneficiary) noexcept
 {
 	// TODO actual selfdestruct is even more complicated.
-	evmc::uint256be balance = accounts[_addr].balance;
+
+	transfer(accounts[_addr], accounts[_beneficiary], convertFromEVMC(accounts[_addr].balance));
 	accounts.erase(_addr);
-	accounts[_beneficiary].balance = balance;
 	// Record self destructs
 	recorded_selfdestructs.push_back({_addr, _beneficiary});
 }
@@ -269,10 +288,24 @@ evmc::result EVMHost::call(evmc_message const& _message) noexcept
 
 	if (value != 0 && message.kind != EVMC_DELEGATECALL && message.kind != EVMC_CALLCODE)
 	{
-		sender.balance = convertToEVMC(u256(convertFromEVMC(sender.balance)) - value);
-		destination.balance = convertToEVMC(u256(convertFromEVMC(destination.balance)) + value);
+		if (value > convertFromEVMC(sender.balance))
+		{
+			evmc::result result({});
+			result.status_code = EVMC_INSUFFICIENT_BALANCE;
+			accounts = stateBackup;
+			return result;
+		}
+		transfer(sender, destination, value);
 	}
 
+	// Populate the access access list.
+	// Note, this will also properly touch the created address.
+	// TODO: support a user supplied access list too
+	if (m_evmRevision >= EVMC_BERLIN)
+	{
+		access_account(message.sender);
+		access_account(message.destination);
+	}
 	evmc::address currentAddress = m_currentAddress;
 	m_currentAddress = message.destination;
 	evmc::result result = m_vm.execute(*this, m_evmRevision, message, code.data(), code.size());

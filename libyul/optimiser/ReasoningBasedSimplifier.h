@@ -16,6 +16,7 @@
 */
 #pragma once
 
+#include <libyul/optimiser/SMTSolver.h>
 #include <libyul/optimiser/ASTWalker.h>
 #include <libyul/optimiser/OptimiserStep.h>
 #include <libyul/Dialect.h>
@@ -46,7 +47,7 @@ namespace solidity::yul
  *
  * Prerequisite: Disambiguator, SSATransform.
  */
-class ReasoningBasedSimplifier: public ASTModifier
+class ReasoningBasedSimplifier: public ASTModifier, SMTSolver
 {
 public:
 	static constexpr char const* name{"ReasoningBasedSimplifier"};
@@ -63,36 +64,12 @@ private:
 		std::set<YulString> const& _ssaVariables
 	);
 
-	smtutil::Expression encodeExpression(
-		Expression const& _expression
-	);
-
-	virtual smtutil::Expression encodeEVMBuiltin(
+	smtutil::Expression encodeEVMBuiltin(
 		evmasm::Instruction _instruction,
 		std::vector<Expression> const& _arguments
-	);
-
-	smtutil::Expression int2bv(smtutil::Expression _arg) const;
-	smtutil::Expression bv2int(smtutil::Expression _arg) const;
-
-	smtutil::Expression newVariable();
-	virtual smtutil::Expression newRestrictedVariable();
-	std::string uniqueName();
-
-	virtual std::shared_ptr<smtutil::Sort> defaultSort() const;
-	virtual smtutil::Expression booleanValue(smtutil::Expression _value) const;
-	virtual smtutil::Expression constantValue(size_t _value) const;
-	virtual smtutil::Expression literalValue(Literal const& _literal) const;
-	virtual smtutil::Expression unsignedToSigned(smtutil::Expression _value);
-	virtual smtutil::Expression signedToUnsigned(smtutil::Expression _value);
-	virtual smtutil::Expression wrap(smtutil::Expression _value);
+	) override;
 
 	Dialect const& m_dialect;
-	std::set<YulString> const& m_ssaVariables;
-	std::unique_ptr<smtutil::SolverInterface> m_solver;
-	std::map<YulString, smtutil::Expression> m_variables;
-
-	size_t m_varCounter = 0;
 };
 
 }

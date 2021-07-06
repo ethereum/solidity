@@ -1,3 +1,4 @@
+pragma abicoder v1;
 contract C {
     function f1() public returns (bytes memory) {
         return abi.encode("");

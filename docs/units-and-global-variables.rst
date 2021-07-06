@@ -9,7 +9,7 @@ Ether Units
 
 A literal number can take a suffix of ``wei``, ``gwei`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
 
-::
+.. code-block:: solidity
 
     assert(1 wei == 1);
     assert(1 gwei == 1e9);
@@ -45,7 +45,9 @@ library has to be updated by an external oracle.
     The suffix ``years`` has been removed in version 0.5.0 due to the reasons above.
 
 These suffixes cannot be applied to variables. For example, if you want to
-interpret a function parameter in days, you can in the following way::
+interpret a function parameter in days, you can in the following way:
+
+.. code-block:: solidity
 
     function f(uint start, uint daysAfter) public {
         if (block.timestamp >= start + daysAfter * 1 days) {
@@ -68,7 +70,7 @@ or are general-use utility functions.
 Block and Transaction Properties
 --------------------------------
 
-- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent, excluding current, blocks
+- ``blockhash(uint blockNumber) returns (bytes32)``: hash of the given block when ``blocknumber`` is one of the 256 most recent blocks; otherwise returns zero
 - ``block.chainid`` (``uint``): current chain id
 - ``block.coinbase`` (``address payable``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty

@@ -25,7 +25,6 @@
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/wasm/WasmDialect.h>
 #include <libyul/backends/wasm/EVMToEwasmTranslator.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AssemblyStack.h>
 #include <libyul/AsmAnalysisInfo.h>
 #include <libyul/AST.h>

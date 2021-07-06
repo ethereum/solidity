@@ -26,8 +26,6 @@
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
 
-#include <liblangutil/EVMVersion.h>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;

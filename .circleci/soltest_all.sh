@@ -28,7 +28,9 @@ set -e
 
 REPODIR="$(realpath "$(dirname "$0")"/..)"
 
-EVM_VALUES=(homestead byzantium constantinople petersburg istanbul)
+EVM_VALUES=(homestead byzantium constantinople petersburg istanbul berlin)
+DEFAULT_EVM=berlin
+[[ " ${EVM_VALUES[*]} " =~ $DEFAULT_EVM ]]
 OPTIMIZE_VALUES=(0 1)
 STEPS=$(( 1 + ${#EVM_VALUES[@]} * ${#OPTIMIZE_VALUES[@]} ))
 
@@ -45,7 +47,7 @@ STEP=1
 
 
 # Run for ABI encoder v1, without SMTChecker tests.
-[[ " $RUN_STEPS " == *" $STEP "* ]] && EVM=istanbul OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
+[[ " $RUN_STEPS " == *" $STEP "* ]] && EVM="${DEFAULT_EVM}" OPTIMIZE=1 ABI_ENCODER_V1=1 BOOST_TEST_ARGS="-t !smtCheckerTests" "${REPODIR}/.circleci/soltest.sh"
 STEP=$((STEP + 1))
 
 for OPTIMIZE in "${OPTIMIZE_VALUES[@]}"
@@ -56,7 +58,7 @@ do
         EWASM_ARGS=""
         [ "${EVM}" = "byzantium" ] && [ "${OPTIMIZE}" = "0" ] && EWASM_ARGS="--ewasm"
         ENFORCE_GAS_ARGS=""
-        [ "${EVM}" = "istanbul" ] && ENFORCE_GAS_ARGS="--enforce-gas-cost"
+        [ "${EVM}" = "${DEFAULT_EVM}" ] && ENFORCE_GAS_ARGS="--enforce-gas-cost"
         # Run SMTChecker tests only when OPTIMIZE == 0
         DISABLE_SMTCHECKER=""
         [ "${OPTIMIZE}" != "0" ] && DISABLE_SMTCHECKER="-t !smtCheckerTests"

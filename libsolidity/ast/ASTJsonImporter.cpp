@@ -24,12 +24,10 @@
 #include <libsolidity/ast/ASTJsonImporter.h>
 
 #include <libyul/AsmJsonImporter.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
-#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/Exceptions.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceLocation.h>

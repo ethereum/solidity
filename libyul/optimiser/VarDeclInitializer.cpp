@@ -47,11 +47,10 @@ void VarDeclInitializer::operator()(Block& _block)
 			else
 			{
 				OptionalStatements ret{vector<Statement>{}};
-				langutil::SourceLocation loc{std::move(_varDecl.location)};
 				for (auto& var: _varDecl.variables)
 				{
 					unique_ptr<Expression> expr = make_unique<Expression >(m_dialect.zeroLiteralForType(var.type));
-					ret->emplace_back(VariableDeclaration{loc, {std::move(var)}, std::move(expr)});
+					ret->emplace_back(VariableDeclaration{std::move(_varDecl.debugData), {std::move(var)}, std::move(expr)});
 				}
 				return ret;
 			}

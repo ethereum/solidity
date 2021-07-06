@@ -328,6 +328,73 @@ BOOST_AUTO_TEST_CASE(public_state_variable)
 	checkNatspec(sourceCode, "test", userDoc, true);
 }
 
+BOOST_AUTO_TEST_CASE(public_state_variable_struct)
+{
+	char const* sourceCode = R"(
+		contract Bank {
+			struct Coin {
+				string observeGraphicURL;
+				string reverseGraphicURL;
+			}
+
+			/// @notice Get the n-th coin I own
+			/// @return observeGraphicURL Front pic
+			/// @return reverseGraphicURL Back pic
+			Coin[] public coinStack;
+		}
+	)";
+
+	char const* devDoc = R"R(
+	{
+		"methods" : {},
+		"stateVariables" :
+		{
+			"coinStack" :
+			{
+				"returns" :
+				{
+					"observeGraphicURL" : "Front pic",
+					"reverseGraphicURL" : "Back pic"
+				}
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "Bank", devDoc, false);
+
+	char const* userDoc = R"R(
+	{
+		"methods" :
+		{
+			"coinStack(uint256)" :
+			{
+				"notice": "Get the n-th coin I own"
+			}
+		}
+	}
+	)R";
+	checkNatspec(sourceCode, "Bank", userDoc, true);
+}
+
+BOOST_AUTO_TEST_CASE(public_state_variable_struct_repeated)
+{
+	char const* sourceCode = R"(
+		contract Bank {
+			struct Coin {
+				string obverseGraphicURL;
+				string reverseGraphicURL;
+			}
+
+			/// @notice Get the n-th coin I own
+			/// @return obverseGraphicURL Front pic
+			/// @return obverseGraphicURL Front pic
+			Coin[] public coinStack;
+		}
+	)";
+
+	expectNatspecError(sourceCode);
+}
+
 BOOST_AUTO_TEST_CASE(private_state_variable)
 {
 	char const* sourceCode = R"(
@@ -1274,7 +1341,7 @@ BOOST_AUTO_TEST_CASE(dev_default_inherit_variable)
 
 	char const *natspec1 = R"ABCDEF({
 		"methods" : {},
-			"stateVariables" :
+		"stateVariables" :
 		{
 			"x" :
 			{
@@ -1340,7 +1407,7 @@ BOOST_AUTO_TEST_CASE(dev_explicit_inherit_variable)
 
 	char const *natspec1 = R"ABCDEF({
 		"methods" : {},
-			"stateVariables" :
+		"stateVariables" :
 		{
 			"x" :
 			{

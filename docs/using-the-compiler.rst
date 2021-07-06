@@ -2,7 +2,7 @@
 Using the Compiler
 ******************
 
-.. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
+.. index:: ! commandline compiler, compiler;commandline, ! solc
 
 .. _commandline-compiler:
 
@@ -33,11 +33,13 @@ This parameter has effects on the following (this might change in the future):
  - the size of the binary search in the function dispatch routine
  - the way constants like large numbers or strings are stored
 
-Path Remapping
---------------
+.. index:: allowed paths, --allow-paths, base path, --base-path
+
+Base Path and Import Remapping
+------------------------------
 
 The commandline compiler will automatically read imported files from the filesystem, but
-it is also possible to provide path redirects using ``prefix=path`` in the following way:
+it is also possible to provide :ref:`path redirects <import-remapping>` using ``prefix=path`` in the following way:
 
 ::
 
@@ -49,19 +51,24 @@ This essentially instructs the compiler to search for anything starting with
 the remapping targets and outside of the directories where explicitly specified source
 files reside, so things like ``import "/etc/passwd";`` only work if you add ``/=/`` as a remapping.
 
-An empty remapping prefix is not allowed.
+When accessing the filesystem to search for imports, :ref:`paths that do not start with ./
+or ../ <relative-imports>` are treated as relative to the directory specified using
+``--base-path`` option (or the current working directory if base path is not specified).
+Furthermore, the part added via ``--base-path`` will not appear in the contract metadata.
 
-If there are multiple matches due to remappings, the one with the longest common prefix is selected.
-
-When accessing the filesystem to search for imports, all paths are treated as if they were fully qualified paths.
-This behaviour can be customized by adding the command line option ``--base-path`` with a path to be prepended
-before each filesystem access for imports is performed. Furthermore, the part added via ``--base-path``
-will not appear in the contract metadata.
-
-For security reasons the compiler has restrictions what directories it can access. Paths (and their subdirectories) of source files specified on the commandline and paths defined by remappings are allowed for import statements, but everything else is rejected. Additional paths (and their subdirectories) can be allowed via the ``--allow-paths /sample/path,/another/sample/path`` switch.
-
+For security reasons the compiler has restrictions on what directories it can access.
+Directories of source files specified on the command line and target paths of
+remappings are automatically allowed to be accessed by the file reader, but everything
+else is rejected by default.
+Additional paths (and their subdirectories) can be allowed via the
+``--allow-paths /sample/path,/another/sample/path`` switch.
 Everything inside the path specified via ``--base-path`` is always allowed.
 
+The above is only a simplification of how the compiler handles import paths.
+For a detailed explanation with examples and discussion of corner cases please refer to the section on
+:ref:`path resolution <path-resolution>`.
+
+.. index:: ! linker, ! --link, ! --libraries
 .. _library-linking:
 
 Library Linking
@@ -78,6 +85,8 @@ Either add ``--libraries "file.sol:Math=0x12345678901234567890123456789012345678
 
 .. note::
     Starting Solidity 0.8.1 accepts ``=`` as separator between library and address, and ``:`` as a separator is deprecated. It will be removed in the future. Currently ``--libraries "file.sol:Math:0x1234567890123456789012345678901234567890 file.sol:Heap:0xabCD567890123456789012345678901234567890"`` will work too.
+
+.. index:: --standard-json, --base-path
 
 If ``solc`` is called with the option ``--standard-json``, it will expect a JSON input (as explained below) on the standard input, and return a JSON output on the standard output. This is the recommended interface for more complex and especially automated uses. The process will always terminate in a "success" state and report any errors via the JSON output.
 The option ``--base-path`` is also processed in standard-json mode.
@@ -158,11 +167,15 @@ at each version. Backward compatibility is not guaranteed between each version.
    - Shifting operators use shifting opcodes and thus need less gas.
 - ``petersburg``
    - The compiler behaves the same way as with constantinople.
-- ``istanbul`` (**default**)
+- ``istanbul``
    - Opcodes ``chainid`` and ``selfbalance`` are available in assembly.
-- ``berlin`` (**experimental**)
+- ``berlin`` (**default**)
+   - Gas costs for ``SLOAD``, ``*CALL``, ``BALANCE``, ``EXT*`` and ``SELFDESTRUCT`` increased. The
+     compiler assumes cold gas costs for such operations. This is relevant for gas estimation and
+     the optimizer.
 
 
+.. index:: ! standard JSON, ! --standard-json
 .. _compiler-api:
 
 Compiler Input and Output JSON Description
@@ -233,7 +246,10 @@ Input Description
         "remappings": [ ":g=/dir" ],
         // Optional: Optimizer settings
         "optimizer": {
-          // disabled by default
+          // Disabled by default.
+          // NOTE: enabled=false still leaves some optimizations on. See comments below.
+          // WARNING: Before version 0.8.6 omitting the 'enabled' key was not equivalent to setting
+          // it to false and would actually disable all the optimizations.
           "enabled": true,
           // Optimize for how many times you intend to run the code.
           // Lower values will optimize more for initial deployment cost, higher
@@ -344,6 +360,7 @@ Input Description
         //   storageLayout - Slots, offsets and types of the contract's state variables.
         //   evm.assembly - New assembly format
         //   evm.legacyAssembly - Old-style assembly format in JSON
+        //   evm.bytecode.functionDebugData - Debugging information at function level
         //   evm.bytecode.object - Bytecode object
         //   evm.bytecode.opcodes - Opcodes list
         //   evm.bytecode.sourceMap - Source mapping (useful for debugging)
@@ -476,6 +493,17 @@ Output Description
               "legacyAssembly": {},
               // Bytecode and related details.
               "bytecode": {
+                // Debugging data at the level of functions.
+                "functionDebugData": {
+                  // Now follows a set of functions including compiler-internal and
+                  // user-defined function. The set does not have to be complete.
+                  "@mint_13": { // Internal name of the function
+                    "entryPoint": 128, // Byte offset into the bytecode where the function starts (optional)
+                    "id": 13, // AST ID of the function definition or null for compiler-internal functions (optional)
+                    "parameterSlots": 2, // Number of EVM stack slots for the function parameters (optional)
+                    "returnSlots": 1 // Number of EVM stack slots for the return values (optional)
+                  }
+                },
                 // The bytecode as a hex string.
                 "object": "00fe",
                 // Opcodes list (string)

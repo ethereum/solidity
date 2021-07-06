@@ -26,10 +26,10 @@ from pygments_lexer_solidity import SolidityLexer, YulLexer
 def setup(sphinx):
     thisdir = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, thisdir + '/utils')
-    sphinx.add_lexer('Solidity', SolidityLexer())
-    sphinx.add_lexer('Yul', YulLexer())
+    sphinx.add_lexer('Solidity', SolidityLexer)
+    sphinx.add_lexer('Yul', YulLexer)
 
-    sphinx.add_stylesheet('css/custom.css')
+    sphinx.add_css_file('css/custom.css')
 
 # -- General configuration ------------------------------------------------
 

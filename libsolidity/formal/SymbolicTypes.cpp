@@ -118,7 +118,7 @@ SortPointer smtSort(frontend::Type const& _type)
 			else
 				tupleName = arrayType->baseType()->toString(true);
 
-			tupleName += "[]";
+			tupleName += "_array";
 		}
 		else
 			tupleName = _type.toString(true);

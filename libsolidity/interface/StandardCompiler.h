@@ -58,6 +58,10 @@ public:
 	/// output. Parsing errors are returned as regular errors.
 	std::string compile(std::string const& _input) noexcept;
 
+	static Json::Value formatFunctionDebugData(
+		std::map<std::string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
+	);
+
 private:
 	struct InputsAndSettings
 	{

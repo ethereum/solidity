@@ -489,8 +489,6 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 
 	if (_function.isFallback())
 		typeCheckFallbackFunction(_function);
-	else if (_function.isReceive())
-		typeCheckReceiveFunction(_function);
 	else if (_function.isConstructor())
 		typeCheckConstructor(_function);
 
@@ -588,7 +586,12 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 		if (result)
 		{
 			bool isLibraryStorageParameter = (_variable.isLibraryFunctionParameter() && referenceType->location() == DataLocation::Storage);
-			bool callDataCheckRequired = ((_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) && !isLibraryStorageParameter);
+			// We skip the calldata check for abstract contract constructors.
+			bool isAbstractConstructorParam = _variable.isConstructorParameter() && m_currentContract && m_currentContract->abstract();
+			bool callDataCheckRequired =
+				!isAbstractConstructorParam &&
+				(_variable.isConstructorParameter() || _variable.isPublicCallableParameter()) &&
+				!isLibraryStorageParameter;
 			if (callDataCheckRequired)
 			{
 				if (!referenceType->interfaceType(false))
@@ -636,6 +639,15 @@ void TypeChecker::visitManually(
 						"Can only use modifiers defined in the current contract or in base contracts."
 					);
 			}
+		if (
+			*_modifier.name().annotation().requiredLookup == VirtualLookup::Static &&
+			!modifierDecl->isImplemented()
+		)
+			m_errorReporter.typeError(
+				1835_error,
+				_modifier.location(),
+				"Cannot call unimplemented modifier. The modifier has no implementation in the referenced contract. Refer to it by its unqualified name if you want to call the implementation from the most derived contract."
+			);
 	}
 	else
 		// check parameters for Base constructors
@@ -716,7 +728,7 @@ void TypeChecker::endVisit(FunctionTypeName const& _funType)
 		{
 			solAssert(t->annotation().type, "Type not set for parameter.");
 			if (!t->annotation().type->interfaceType(false).get())
-				m_errorReporter.typeError(2582_error, t->location(), "Internal type cannot be used for external function type.");
+				m_errorReporter.fatalTypeError(2582_error, t->location(), "Internal type cannot be used for external function type.");
 		}
 		solAssert(fun.interfaceType(false), "External function type uses internal types.");
 	}
@@ -743,7 +755,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(var->type(), "Expected variable type!");
 			if (var->immutable())
 			{
-				m_errorReporter.typeError(3773_error, _identifier.location, "Assembly access to immutable variables is not supported.");
+				m_errorReporter.typeError(3773_error, _identifier.debugData->location, "Assembly access to immutable variables is not supported.");
 				return false;
 			}
 			if (var->isConstant())
@@ -752,7 +764,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				{
 					m_errorReporter.typeError(
 						3558_error,
-						_identifier.location,
+						_identifier.debugData->location,
 						"Constant variable is circular."
 					);
 					return false;
@@ -762,24 +774,24 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 
 				if (var && !var->value())
 				{
-					m_errorReporter.typeError(3224_error, _identifier.location, "Constant has no value.");
+					m_errorReporter.typeError(3224_error, _identifier.debugData->location, "Constant has no value.");
 					return false;
 				}
 				else if (_context == yul::IdentifierContext::LValue)
 				{
-					m_errorReporter.typeError(6252_error, _identifier.location, "Constant variables cannot be assigned to.");
+					m_errorReporter.typeError(6252_error, _identifier.debugData->location, "Constant variables cannot be assigned to.");
 					return false;
 				}
 				else if (!identifierInfo.suffix.empty())
 				{
-					m_errorReporter.typeError(6617_error, _identifier.location, "The suffixes .offset and .slot can only be used on non-constant storage variables.");
+					m_errorReporter.typeError(6617_error, _identifier.debugData->location, "The suffixes .offset and .slot can only be used on non-constant storage variables.");
 					return false;
 				}
 				else if (var && var->value() && !var->value()->annotation().type && !dynamic_cast<Literal const*>(var->value().get()))
 				{
 					m_errorReporter.typeError(
 						2249_error,
-						_identifier.location,
+						_identifier.debugData->location,
 						"Constant variables with non-literal values cannot be forward referenced from inline assembly."
 					);
 					return false;
@@ -789,7 +801,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					type(*var->value())->category() != Type::Category::RationalNumber
 				))
 				{
-					m_errorReporter.typeError(7615_error, _identifier.location, "Only direct number constants and references to such constants are supported by inline assembly.");
+					m_errorReporter.typeError(7615_error, _identifier.debugData->location, "Only direct number constants and references to such constants are supported by inline assembly.");
 					return false;
 				}
 			}
@@ -804,19 +816,19 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				{
 					if (suffix != "slot" && suffix != "offset")
 					{
-						m_errorReporter.typeError(4656_error, _identifier.location, "State variables only support \".slot\" and \".offset\".");
+						m_errorReporter.typeError(4656_error, _identifier.debugData->location, "State variables only support \".slot\" and \".offset\".");
 						return false;
 					}
 					else if (_context == yul::IdentifierContext::LValue)
 					{
 						if (var->isStateVariable())
 						{
-							m_errorReporter.typeError(4713_error, _identifier.location, "State variables cannot be assigned to - you have to use \"sstore()\".");
+							m_errorReporter.typeError(4713_error, _identifier.debugData->location, "State variables cannot be assigned to - you have to use \"sstore()\".");
 							return false;
 						}
 						else if (suffix != "slot")
 						{
-							m_errorReporter.typeError(9739_error, _identifier.location, "Only .slot can be assigned to.");
+							m_errorReporter.typeError(9739_error, _identifier.debugData->location, "Only .slot can be assigned to.");
 							return false;
 						}
 					}
@@ -828,13 +840,13 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				{
 					if (suffix != "offset" && suffix != "length")
 					{
-						m_errorReporter.typeError(1536_error, _identifier.location, "Calldata variables only support \".offset\" and \".length\".");
+						m_errorReporter.typeError(1536_error, _identifier.debugData->location, "Calldata variables only support \".offset\" and \".length\".");
 						return false;
 					}
 				}
 				else
 				{
-					m_errorReporter.typeError(3622_error, _identifier.location, "The suffix \"." + suffix + "\" is not supported by this variable or type.");
+					m_errorReporter.typeError(3622_error, _identifier.debugData->location, "The suffix \"." + suffix + "\" is not supported by this variable or type.");
 					return false;
 				}
 			}
@@ -842,14 +854,14 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			{
 				m_errorReporter.typeError(
 					1408_error,
-					_identifier.location,
+					_identifier.debugData->location,
 					"Only local variables are supported. To access storage variables, use the \".slot\" and \".offset\" suffixes."
 				);
 				return false;
 			}
 			else if (var->type()->dataStoredIn(DataLocation::Storage))
 			{
-				m_errorReporter.typeError(9068_error, _identifier.location, "You have to use the \".slot\" or \".offset\" suffix to access storage reference variables.");
+				m_errorReporter.typeError(9068_error, _identifier.debugData->location, "You have to use the \".slot\" or \".offset\" suffix to access storage reference variables.");
 				return false;
 			}
 			else if (var->type()->sizeOnStack() != 1)
@@ -858,18 +870,18 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 					auto const* arrayType = dynamic_cast<ArrayType const*>(var->type());
 					arrayType && arrayType->isDynamicallySized() && arrayType->dataStoredIn(DataLocation::CallData)
 				)
-					m_errorReporter.typeError(1397_error, _identifier.location, "Call data elements cannot be accessed directly. Use \".offset\" and \".length\" to access the calldata offset and length of this array and then use \"calldatacopy\".");
+					m_errorReporter.typeError(1397_error, _identifier.debugData->location, "Call data elements cannot be accessed directly. Use \".offset\" and \".length\" to access the calldata offset and length of this array and then use \"calldatacopy\".");
 				else
 				{
 					solAssert(!var->type()->dataStoredIn(DataLocation::CallData), "");
-					m_errorReporter.typeError(9857_error, _identifier.location, "Only types that use one stack slot are supported.");
+					m_errorReporter.typeError(9857_error, _identifier.debugData->location, "Only types that use one stack slot are supported.");
 				}
 				return false;
 			}
 		}
 		else if (!identifierInfo.suffix.empty())
 		{
-			m_errorReporter.typeError(7944_error, _identifier.location, "The suffixes \".offset\", \".slot\" and \".length\" can only be used with variables.");
+			m_errorReporter.typeError(7944_error, _identifier.debugData->location, "The suffixes \".offset\", \".slot\" and \".length\" can only be used with variables.");
 			return false;
 		}
 		else if (_context == yul::IdentifierContext::LValue)
@@ -877,7 +889,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			if (dynamic_cast<MagicVariableDeclaration const*>(declaration))
 				return false;
 
-			m_errorReporter.typeError(1990_error, _identifier.location, "Only local variables can be assigned to in inline assembly.");
+			m_errorReporter.typeError(1990_error, _identifier.debugData->location, "Only local variables can be assigned to in inline assembly.");
 			return false;
 		}
 
@@ -886,7 +898,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			solAssert(!!declaration->type(), "Type of declaration required but not yet determined.");
 			if (dynamic_cast<FunctionDefinition const*>(declaration))
 			{
-				m_errorReporter.declarationError(2025_error, _identifier.location, "Access to functions is not allowed in inline assembly.");
+				m_errorReporter.declarationError(2025_error, _identifier.debugData->location, "Access to functions is not allowed in inline assembly.");
 				return false;
 			}
 			else if (dynamic_cast<VariableDeclaration const*>(declaration))
@@ -896,7 +908,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 			{
 				if (!contract->isLibrary())
 				{
-					m_errorReporter.typeError(4977_error, _identifier.location, "Expected a library.");
+					m_errorReporter.typeError(4977_error, _identifier.debugData->location, "Expected a library.");
 					return false;
 				}
 			}
@@ -1876,30 +1888,6 @@ void TypeChecker::typeCheckFallbackFunction(FunctionDefinition const& _function)
 	}
 }
 
-void TypeChecker::typeCheckReceiveFunction(FunctionDefinition const& _function)
-{
-	solAssert(_function.isReceive(), "");
-
-	if (_function.libraryFunction())
-		m_errorReporter.typeError(4549_error, _function.location(), "Libraries cannot have receive ether functions.");
-
-	if (_function.stateMutability() != StateMutability::Payable)
-		m_errorReporter.typeError(
-			7793_error,
-			_function.location(),
-			"Receive ether function must be payable, but is \"" +
-			stateMutabilityToString(_function.stateMutability()) +
-			"\"."
-		);
-	if (_function.visibility() != Visibility::External)
-		m_errorReporter.typeError(4095_error, _function.location(), "Receive ether function must be defined as \"external\".");
-	if (!_function.returnParameters().empty())
-		m_errorReporter.typeError(6899_error, _function.returnParameterList()->location(), "Receive ether function cannot return values.");
-	if (!_function.parameters().empty())
-		m_errorReporter.typeError(6857_error, _function.parameterList().location(), "Receive ether function cannot take parameters.");
-}
-
-
 void TypeChecker::typeCheckConstructor(FunctionDefinition const& _function)
 {
 	solAssert(_function.isConstructor(), "");
@@ -2045,11 +2033,14 @@ void TypeChecker::typeCheckBytesConcatFunction(
 	typeCheckFunctionGeneralChecks(_functionCall, _functionType);
 
 	for (shared_ptr<Expression const> const& argument: _functionCall.arguments())
-		if (
-			Type const* argumentType = type(*argument);
+	{
+		Type const* argumentType = type(*argument);
+		bool notConvertibleToBytes =
 			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::fixedBytes(32)) &&
-			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory())
-		)
+			!argumentType->isImplicitlyConvertibleTo(*TypeProvider::bytesMemory());
+		bool numberLiteral = (dynamic_cast<RationalNumberType const*>(argumentType) != nullptr);
+
+		if (notConvertibleToBytes || numberLiteral)
 			m_errorReporter.typeError(
 				8015_error,
 				argument->location(),
@@ -2057,6 +2048,7 @@ void TypeChecker::typeCheckBytesConcatFunction(
 				"bytes or fixed bytes type is required, but " +
 				argumentType->toString(true) + " provided."
 			);
+	}
 }
 
 void TypeChecker::typeCheckFunctionGeneralChecks(
@@ -3406,7 +3398,7 @@ void TypeChecker::checkErrorAndEventParameters(CallableDeclaration const& _calla
 	for (ASTPointer<VariableDeclaration> const& var: _callable.parameters())
 	{
 		if (type(*var)->containsNestedMapping())
-			m_errorReporter.typeError(
+			m_errorReporter.fatalTypeError(
 				3448_error,
 				var->location(),
 				"Type containing a (nested) mapping is not allowed as " + kind + " parameter type."

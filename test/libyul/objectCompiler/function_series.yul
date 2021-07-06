@@ -6,6 +6,8 @@ object "Contract" {
   }
 }
 
+// ====
+// optimizationPreset: none
 // ----
 // Assembly:
 //     /* "source":33:48   */

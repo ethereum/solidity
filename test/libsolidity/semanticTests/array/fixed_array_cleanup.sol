@@ -11,11 +11,11 @@ contract c {
 // compileToEwasm: also
 // compileViaYul: also
 // ----
-// storage: empty
+// storageEmpty -> 1
 // fill() ->
-// gas irOptimized: 423878
-// gas legacy: 429460
-// gas legacyOptimized: 425520
-// storage: nonempty
+// gas irOptimized: 465690
+// gas legacy: 471460
+// gas legacyOptimized: 467520
+// storageEmpty -> 0
 // clear() ->
-// storage: empty
+// storageEmpty -> 1

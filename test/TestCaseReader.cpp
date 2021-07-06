@@ -18,18 +18,12 @@
 
 #include <test/TestCaseReader.h>
 
-#include <libsolidity/parsing/Parser.h>
-#include <libsolutil/StringUtils.h>
 #include <libsolutil/CommonIO.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
 
-#include <range/v3/view/map.hpp>
-
 using namespace std;
-using namespace solidity::langutil;
 using namespace solidity::frontend::test;
 
 namespace fs = boost::filesystem;
@@ -162,10 +156,12 @@ pair<SourceMap, size_t> TestCaseReader::parseSourcesAndSettingsWithLineNumber(is
 				else
 					externalSourceName = externalSourceString;
 
-				solAssert(!externalSourceName.empty(), "");
+				soltestAssert(!externalSourceName.empty(), "");
 				fs::path externalSourceTarget(externalSourceString);
 				fs::path testCaseParentDir = m_fileName.parent_path();
-				if (!externalSourceTarget.is_relative())
+				if (!externalSourceTarget.is_relative() || !externalSourceTarget.root_path().empty())
+					// NOTE: UNC paths (ones starting with // or \\) are considered relative by Boost
+					// since they have an empty root directory (but non-empty root name).
 					BOOST_THROW_EXCEPTION(runtime_error("External Source paths need to be relative to the location of the test case."));
 				fs::path externalSourceFullPath = testCaseParentDir / externalSourceTarget;
 				string externalSourceContent;

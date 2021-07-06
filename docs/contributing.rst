@@ -112,7 +112,7 @@ starting from the current directory. The required file is called ``libevmone.so`
 ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS. If it is not found, tests that
 use it are skipped. These tests are ``libsolididty/semanticTests``, ``libsolidity/GasCosts``,
 ``libsolidity/SolidityEndToEndTest``, part of the soltest suite. To run all tests, download the library from
-`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.4.1>`_
+`GitHub <https://github.com/ethereum/evmone/releases/tag/v0.7.0>`_
 and place it in the project root path or inside the ``deps`` folder.
 
 If the ``libz3`` library is not installed on your system, you should disable the
@@ -149,7 +149,7 @@ See especially:
 
 If you want to debug using GDB, make sure you build differently than the "usual".
 For example, you could run the following command in your ``build`` folder:
-::
+.. code-block:: bash
 
    cmake -DCMAKE_BUILD_TYPE=Debug ..
    make
@@ -171,7 +171,7 @@ The test suite compiles and checks them against the given expectations.
 
 For example: ``./test/libsolidity/syntaxTests/double_stateVariable_declaration.sol``
 
-::
+.. code-block:: solidity
 
     contract test {
         uint256 variable;
@@ -190,7 +190,7 @@ In the above example, the state variable ``variable`` was declared twice, which 
 The ``isoltest`` tool is used for these tests and you can find it under ``./build/test/tools/``. It is an interactive tool which allows
 editing of failing contracts using your preferred text editor. Let's try to break this test by removing the second declaration of ``variable``:
 
-::
+.. code-block:: solidity
 
     contract test {
         uint256 variable;
@@ -200,7 +200,7 @@ editing of failing contracts using your preferred text editor. Let's try to brea
 
 Running ``./build/test/isoltest`` again results in a test failure:
 
-::
+.. code-block:: text
 
     syntaxTests/double_stateVariable_declaration.sol: FAIL
         Contract:
@@ -228,7 +228,7 @@ All of these options apply to the current contract, expect ``quit`` which stops 
 
 Automatically updating the test above changes it to
 
-::
+.. code-block:: solidity
 
     contract test {
         uint256 variable;
@@ -237,7 +237,7 @@ Automatically updating the test above changes it to
 
 and re-run the test. It now passes again:
 
-::
+.. code-block:: text
 
     Re-running test case...
     syntaxTests/double_stateVariable_declaration.sol: OK
@@ -263,7 +263,7 @@ We mainly use `AFL <https://lcamtuf.coredump.cx/afl/>`_ for fuzzing. You need to
 install the AFL packages from your repositories (afl, afl-clang) or build them manually.
 Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compiler:
 
-::
+.. code-block:: bash
 
     cd build
     # if needed
@@ -273,7 +273,7 @@ Next, build Solidity (or just the ``solfuzzer`` binary) with AFL as your compile
 
 At this stage you should be able to see a message similar to the following:
 
-::
+.. code-block:: text
 
     Scanning dependencies of target solfuzzer
     [ 98%] Building CXX object test/tools/CMakeFiles/solfuzzer.dir/fuzzer.cpp.o
@@ -284,7 +284,7 @@ At this stage you should be able to see a message similar to the following:
 
 If the instrumentation messages did not appear, try switching the cmake flags pointing to AFL's clang binaries:
 
-::
+.. code-block:: bash
 
     # if previously failed
     make clean
@@ -293,7 +293,7 @@ If the instrumentation messages did not appear, try switching the cmake flags po
 
 Otherwise, upon execution the fuzzer halts with an error saying binary is not instrumented:
 
-::
+.. code-block:: text
 
     afl-fuzz 2.52b by <lcamtuf@google.com>
     ... (truncated messages)
@@ -317,7 +317,7 @@ Next, you need some example source files. This makes it much easier for the fuzz
 to find errors. You can either copy some files from the syntax tests or extract test files
 from the documentation or the other tests:
 
-::
+.. code-block:: bash
 
     mkdir /tmp/test_cases
     cd /tmp/test_cases
@@ -334,7 +334,7 @@ that result in similar behaviour of the binary.
 
 Now run the fuzzer (the ``-m`` extends the size of memory to 60 MB):
 
-::
+.. code-block:: bash
 
     afl-fuzz -m 60 -i /tmp/test_cases -o /tmp/fuzzer_reports -- /path/to/solfuzzer
 
@@ -388,7 +388,8 @@ local slang and references, making your language as clear to all readers as poss
 .. note::
 
     While the official Solidity documentation is written in English, there are community contributed :ref:`translations`
-    in other languages available.
+    in other languages available. Please refer to the `translation guide <https://github.com/solidity-docs/translation-guide>`_
+    for information on how to contribute to the community translations.
 
 Title Case for Headings
 -----------------------

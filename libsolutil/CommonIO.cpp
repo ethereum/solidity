@@ -25,8 +25,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include <iostream>
-#include <cstdlib>
 #include <fstream>
 #if defined(_WIN32)
 #include <windows.h>
@@ -44,9 +42,17 @@ namespace
 template <typename T>
 inline T readFile(std::string const& _file)
 {
+	assertThrow(boost::filesystem::exists(_file), FileNotFound, _file);
+
+	// ifstream does not always fail when the path leads to a directory. Instead it might succeed
+	// with tellg() returning a nonsensical value so that std::length_error gets raised in resize().
+	assertThrow(boost::filesystem::is_regular_file(_file), NotAFile, _file);
+
 	T ret;
 	size_t const c_elementSize = sizeof(typename T::value_type);
 	std::ifstream is(_file, std::ifstream::binary);
+
+	// Technically, this can still fail even though we checked above because FS content can change at any time.
 	assertThrow(is, FileNotFound, _file);
 
 	// get length of file:
@@ -68,14 +74,14 @@ string solidity::util::readFileAsString(string const& _file)
 	return readFile<string>(_file);
 }
 
-string solidity::util::readStandardInput()
+string solidity::util::readUntilEnd(istream& _stdin)
 {
 	string ret;
-	while (!cin.eof())
+	while (!_stdin.eof())
 	{
 		string tmp;
 		// NOTE: this will read until EOF or NL
-		getline(cin, tmp);
+		getline(_stdin, tmp);
 		ret.append(tmp);
 		ret.append("\n");
 	}

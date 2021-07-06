@@ -46,6 +46,7 @@
 #include <libevmasm/GasMeter.h>
 
 #include <liblangutil/Exceptions.h>
+#include <liblangutil/EVMVersion.h>
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SourceReferenceFormatter.h>
 
@@ -189,6 +190,8 @@ static string const g_strSources = "sources";
 static string const g_strSourceList = "sourceList";
 static string const g_strSrcMap = "srcmap";
 static string const g_strSrcMapRuntime = "srcmap-runtime";
+static string const g_strFunDebug = "function-debug";
+static string const g_strFunDebugRuntime = "function-debug-runtime";
 static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
@@ -257,6 +260,8 @@ static set<string> const g_combinedJsonArgs
 	g_strBinary,
 	g_strBinaryRuntime,
 	g_strCompactJSON,
+	g_strFunDebug,
+	g_strFunDebugRuntime,
 	g_strGeneratedSources,
 	g_strGeneratedSourcesRuntime,
 	g_strInterface,
@@ -635,7 +640,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 
 	if (addStdin)
-		m_fileReader.setSource(g_stdinFileName, readStandardInput());
+		m_fileReader.setSource(g_stdinFileName, readUntilEnd(cin));
 
 	if (m_fileReader.sourceCodes().size() == 0)
 	{
@@ -660,6 +665,10 @@ bool CommandLineInterface::parseLibraryOption(string const& _input)
 		// Thrown e.g. if path is too long.
 	}
 	catch (FileNotFound const&)
+	{
+		// Should not happen if `fs::is_regular_file` is correct.
+	}
+	catch (NotAFile const&)
 	{
 		// Should not happen if `fs::is_regular_file` is correct.
 	}
@@ -868,9 +877,9 @@ General Information)").c_str(),
 		)
 		(
 			g_strEVMVersion.c_str(),
-			po::value<string>()->value_name("version"),
+			po::value<string>()->value_name("version")->default_value(EVMVersion{}.name()),
 			"Select desired EVM version. Either homestead, tangerineWhistle, spuriousDragon, "
-			"byzantium, constantinople, petersburg, istanbul (default) or berlin."
+			"byzantium, constantinople, petersburg, istanbul or berlin."
 		)
 		(
 			g_strExperimentalViaIR.c_str(),
@@ -1032,7 +1041,9 @@ General Information)").c_str(),
 		)
 		(
 			g_argOptimizeRuns.c_str(),
-			po::value<unsigned>()->value_name("n")->default_value(200),
+			// TODO: The type in OptimiserSettings is size_t but we only accept values up to 2**32-1
+			// on the CLI and in Standard JSON. We should just switch to uint32_t everywhere.
+			po::value<unsigned>()->value_name("n")->default_value(static_cast<unsigned>(OptimiserSettings{}.expectedExecutionsPerDeployment)),
 			"Set for how many contract runs to optimize. "
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)
@@ -1246,7 +1257,7 @@ bool CommandLineInterface::processInput()
 		}
 		string input;
 		if (jsonFile.empty())
-			input = readStandardInput();
+			input = readUntilEnd(cin);
 		else
 		{
 			try
@@ -1256,6 +1267,11 @@ bool CommandLineInterface::processInput()
 			catch (FileNotFound const&)
 			{
 				serr() << "File not found: " << jsonFile << endl;
+				return false;
+			}
+			catch (NotAFile const&)
+			{
+				serr() << "Not a regular file: " << jsonFile << endl;
 				return false;
 			}
 		}
@@ -1672,6 +1688,14 @@ void CommandLineInterface::handleCombinedJSON()
 			auto map = m_compiler->runtimeSourceMapping(contractName);
 			contractData[g_strSrcMapRuntime] = map ? *map : "";
 		}
+		if (requests.count(g_strFunDebug) && m_compiler->compilationSuccessful())
+			contractData[g_strFunDebug] = StandardCompiler::formatFunctionDebugData(
+				m_compiler->object(contractName).functionDebugData
+			);
+		if (requests.count(g_strFunDebugRuntime) && m_compiler->compilationSuccessful())
+			contractData[g_strFunDebugRuntime] = StandardCompiler::formatFunctionDebugData(
+				m_compiler->runtimeObject(contractName).functionDebugData
+			);
 		if (requests.count(g_strSignatureHashes))
 			contractData[g_strSignatureHashes] = m_compiler->methodIdentifiers(contractName);
 		if (requests.count(g_strNatspecDev))

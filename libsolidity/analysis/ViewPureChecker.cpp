@@ -69,7 +69,7 @@ public:
 		if (yul::EVMDialect const* dialect = dynamic_cast<decltype(dialect)>(&m_dialect))
 			if (yul::BuiltinFunctionForEVM const* fun = dialect->builtin(_funCall.functionName.name))
 				if (fun->instruction)
-					checkInstruction(_funCall.location, *fun->instruction);
+					checkInstruction(_funCall.debugData->location, *fun->instruction);
 
 		for (auto const& arg: _funCall.arguments)
 			std::visit(*this, arg);

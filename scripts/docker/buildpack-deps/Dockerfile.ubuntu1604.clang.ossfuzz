@@ -22,7 +22,7 @@
 # (c) 2016-2019 solidity contributors.
 #------------------------------------------------------------------------------
 FROM gcr.io/oss-fuzz-base/base-clang as base
-LABEL version="8"
+LABEL version="9"
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -45,7 +45,7 @@ FROM base AS libraries
 # Boost
 RUN set -ex; \
     cd /usr/src; \
-    wget -q 'https://dl.bintray.com/boostorg/release/1.73.0/source/boost_1_73_0.tar.bz2' -O boost.tar.bz2; \
+    wget -q 'https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.bz2' -O boost.tar.bz2; \
     test "$(sha256sum boost.tar.bz2)" = "4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402  boost.tar.bz2"; \
     tar -xf boost.tar.bz2; \
     rm boost.tar.bz2; \
@@ -92,7 +92,7 @@ RUN set -ex; \
 # EVMONE
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.4.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
+	git clone --branch="v0.7.0" --recurse-submodules https://github.com/ethereum/evmone.git; \
 	cd evmone; \
 	mkdir build; \
 	cd build; \
@@ -104,7 +104,7 @@ RUN set -ex; \
 # HERA
 RUN set -ex; \
 	cd /usr/src; \
-	git clone --branch="v0.3.2" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
+	git clone --branch="v0.3.2-evmc8" --depth 1 --recurse-submodules https://github.com/ewasm/hera.git; \
 	cd hera; \
 	mkdir build; \
 	cd build; \

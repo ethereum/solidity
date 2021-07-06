@@ -37,6 +37,8 @@ set -eu
 
 if [ ! -f /usr/local/lib/libz3.a ] # if this file does not exists (cache was not restored), rebuild dependencies
 then
+  git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+  git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-cask fetch --unshallow
   brew update
   brew unlink python
   brew install boost
@@ -55,12 +57,12 @@ then
   rm -rf z3-4.8.10-x64-osx-10.15.7
 
   # evmone
-  wget https://github.com/ethereum/evmone/releases/download/v0.4.0/evmone-0.4.0-darwin-x86_64.tar.gz
-  tar xzpf evmone-0.4.0-darwin-x86_64.tar.gz -C /usr/local
-  rm -f evmone-0.4.0-darwin-x86_64.tar.gz
+  wget https://github.com/ethereum/evmone/releases/download/v0.7.0/evmone-0.7.0-darwin-x86_64.tar.gz
+  tar xzpf evmone-0.7.0-darwin-x86_64.tar.gz -C /usr/local
+  rm -f evmone-0.7.0-darwin-x86_64.tar.gz
 
   # hera
-  wget https://github.com/ewasm/hera/releases/download/v0.3.2/hera-0.3.2-darwin-x86_64.tar.gz
-  tar xzpf hera-0.3.2-darwin-x86_64.tar.gz -C /usr/local
-  rm -f hera-0.3.2-darwin-x86_64.tar.gz
+  wget https://github.com/ewasm/hera/releases/download/v0.3.2-evmc8/hera-0.3.2+commit.dc886eb7-darwin-x86_64.tar.gz
+  tar xzpf hera-0.3.2+commit.dc886eb7-darwin-x86_64.tar.gz -C /usr/local
+  rm -f hera-0.3.2+commit.dc886eb7-darwin-x86_64.tar.gz
 fi

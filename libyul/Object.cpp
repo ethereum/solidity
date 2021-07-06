@@ -65,10 +65,15 @@ string Object::toString(Dialect const* _dialect) const
 
 set<YulString> Object::qualifiedDataNames() const
 {
-	set<YulString> qualifiedNames = name.empty() ? set<YulString>{} : set<YulString>{name};
+	set<YulString> qualifiedNames =
+		name.empty() || contains(name.str(), '.') ?
+		set<YulString>{} :
+		set<YulString>{name};
 	for (shared_ptr<ObjectNode> const& subObjectNode: subObjects)
 	{
 		yulAssert(qualifiedNames.count(subObjectNode->name) == 0, "");
+		if (contains(subObjectNode->name.str(), '.'))
+			continue;
 		qualifiedNames.insert(subObjectNode->name);
 		if (auto const* subObject = dynamic_cast<Object const*>(subObjectNode.get()))
 			for (YulString const& subSubObj: subObject->qualifiedDataNames())

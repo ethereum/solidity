@@ -245,6 +245,11 @@ protected:
 		std::vector<smtutil::Expression> const& _elementValues
 	);
 
+	void bytesToFixedBytesAssertions(
+		smt::SymbolicArrayVariable& _symArray,
+		Expression const& _fixedBytes
+	);
+
 	/// @returns a pair of expressions representing _left / _right and _left mod _right, respectively.
 	/// Uses slack variables and additional constraints to express the results using only operations
 	/// more friendly to the SMT solver (multiplication, addition, subtraction and comparison).
@@ -314,10 +319,10 @@ protected:
 
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the current point.
-	smtutil::Expression currentValue(VariableDeclaration const& _decl);
+	smtutil::Expression currentValue(VariableDeclaration const& _decl) const;
 	/// @returns an expression denoting the value of the variable declared in @a _decl
 	/// at the given index. Does not ensure that this index exists.
-	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, unsigned _index);
+	smtutil::Expression valueAtIndex(VariableDeclaration const& _decl, unsigned _index) const;
 	/// Returns the expression corresponding to the AST node.
 	/// If _targetType is not null apply conversion.
 	/// Throws if the expression does not exist.

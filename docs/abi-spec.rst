@@ -235,7 +235,7 @@ Examples
 
 Given the contract:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -465,17 +465,20 @@ address, a series of up to four topics and some arbitrary length binary data. Ev
 ABI in order to interpret this (together with an interface spec) as a properly typed structure.
 
 Given an event name and series of event parameters, we split them into two sub-series: those which are indexed and
-those which are not. Those which are indexed, which may number up to 3, are used alongside the Keccak hash of the
-event signature to form the topics of the log entry. Those which are not indexed form the byte array of the event.
+those which are not.
+Those which are indexed, which may number up to 3 (for non-anonymous events) or 4 (for anonymous ones), are used
+alongside the Keccak hash of the event signature to form the topics of the log entry.
+Those which are not indexed form the byte array of the event.
 
 In effect, a log entry using this ABI is described as:
 
 - ``address``: the address of the contract (intrinsically provided by Ethereum);
 - ``topics[0]``: ``keccak(EVENT_NAME+"("+EVENT_ARGS.map(canonical_type_of).join(",")+")")`` (``canonical_type_of``
   is a function that simply returns the canonical type of a given argument, e.g. for ``uint indexed foo``, it would
-  return ``uint256``). If the event is declared as ``anonymous`` the ``topics[0]`` is not generated;
-- ``topics[n]``: ``abi_encode(EVENT_INDEXED_ARGS[n - 1])`` (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS``
-  that are indexed);
+  return ``uint256``). This value is only present in ``topics[0]`` if the event is not declared as ``anonymous``;
+- ``topics[n]``: ``abi_encode(EVENT_INDEXED_ARGS[n - 1])`` if the event is not declared as ``anonymous``
+  or ``abi_encode(EVENT_INDEXED_ARGS[n])`` if it is (``EVENT_INDEXED_ARGS`` is the series of ``EVENT_ARGS`` that
+  are indexed);
 - ``data``: ABI encoding of ``EVENT_NON_INDEXED_ARGS`` (``EVENT_NON_INDEXED_ARGS`` is the series of ``EVENT_ARGS``
   that are not indexed, ``abi_encode`` is the ABI encoding function used for returning a series of typed values
   from a function, as described above).
@@ -507,7 +510,7 @@ call.
 As an example, let us consider the following contract whose ``transfer`` function always
 reverts with a custom error of "insufficient balance":
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -596,7 +599,7 @@ Errors look as follows:
 
 For example,
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -650,7 +653,7 @@ which is of array type and has the same structure as the top-level object except
 
 As an example, the code
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.7.4 <0.9.0;

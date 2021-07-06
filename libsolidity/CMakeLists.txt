@@ -10,6 +10,8 @@ set(sources
 	analysis/ControlFlowBuilder.h
 	analysis/ControlFlowGraph.cpp
 	analysis/ControlFlowGraph.h
+	analysis/ControlFlowRevertPruner.cpp
+	analysis/ControlFlowRevertPruner.h
 	analysis/DeclarationContainer.cpp
 	analysis/DeclarationContainer.h
 	analysis/DeclarationTypeChecker.cpp

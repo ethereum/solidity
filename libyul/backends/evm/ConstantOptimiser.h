@@ -74,12 +74,12 @@ public:
 	RepresentationFinder(
 		EVMDialect const& _dialect,
 		GasMeter const& _meter,
-		langutil::SourceLocation _location,
+		std::shared_ptr<DebugData const> _debugData,
 		std::map<u256, Representation>& _cache
 	):
 		m_dialect(_dialect),
 		m_meter(_meter),
-		m_location(std::move(_location)),
+		m_debugData(std::move(_debugData)),
 		m_cache(_cache)
 	{}
 
@@ -100,7 +100,7 @@ private:
 
 	EVMDialect const& m_dialect;
 	GasMeter const& m_meter;
-	langutil::SourceLocation m_location;
+	std::shared_ptr<DebugData const> m_debugData;
 	/// Counter for the complexity of optimization, will stop when it reaches zero.
 	size_t m_maxSteps = 10000;
 	std::map<u256, Representation>& m_cache;

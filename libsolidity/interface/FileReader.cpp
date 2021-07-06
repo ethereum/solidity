@@ -19,7 +19,6 @@
 
 #include <liblangutil/Exceptions.h>
 
-#include <libsolutil/CommonData.h>
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Exceptions.h>
 

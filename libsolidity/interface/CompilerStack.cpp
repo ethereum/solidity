@@ -28,6 +28,7 @@
 
 #include <libsolidity/analysis/ControlFlowAnalyzer.h>
 #include <libsolidity/analysis/ControlFlowGraph.h>
+#include <libsolidity/analysis/ControlFlowRevertPruner.h>
 #include <libsolidity/analysis/ContractLevelChecker.h>
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
@@ -55,14 +56,15 @@
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Parser.h>
 
+#include <libsolidity/codegen/ir/Common.h>
 #include <libsolidity/codegen/ir/IRGenerator.h>
 
 #include <libyul/YulString.h>
 #include <libyul/AsmPrinter.h>
 #include <libyul/AsmJsonConverter.h>
 #include <libyul/AssemblyStack.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AST.h>
+#include <libyul/AsmParser.h>
 
 #include <liblangutil/Scanner.h>
 #include <liblangutil/SemVerHandler.h>
@@ -241,7 +243,7 @@ void CompilerStack::setLibraries(std::map<std::string, util::h160> const& _libra
 	m_libraries = _libraries;
 }
 
-void CompilerStack::setOptimiserSettings(bool _optimize, unsigned _runs)
+void CompilerStack::setOptimiserSettings(bool _optimize, size_t _runs)
 {
 	OptimiserSettings settings = _optimize ? OptimiserSettings::standard() : OptimiserSettings::minimal();
 	settings.expectedExecutionsPerDeployment = _runs;
@@ -415,11 +417,6 @@ bool CompilerStack::analyze()
 			if (source->ast && !syntaxChecker.checkSyntax(*source->ast))
 				noErrors = false;
 
-		DocStringTagParser docStringTagParser(m_errorReporter);
-		for (Source const* source: m_sourceOrder)
-			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
-				noErrors = false;
-
 		m_globalContext = make_shared<GlobalContext>();
 		// We need to keep the same resolver during the whole process.
 		NameAndTypeResolver resolver(*m_globalContext, m_evmVersion, m_errorReporter);
@@ -436,6 +433,12 @@ bool CompilerStack::analyze()
 
 		resolver.warnHomonymDeclarations();
 
+		DocStringTagParser docStringTagParser(m_errorReporter);
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !docStringTagParser.parseDocStrings(*source->ast))
+				noErrors = false;
+
+		// Requires DocStringTagParser
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !resolver.resolveNamesAndTypes(*source->ast))
 				return false;
@@ -444,6 +447,11 @@ bool CompilerStack::analyze()
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !declarationTypeChecker.check(*source->ast))
 				return false;
+
+		// Requires DeclarationTypeChecker to have run
+		for (Source const* source: m_sourceOrder)
+			if (source->ast && !docStringTagParser.validateDocStringsUsingTypes(*source->ast))
+				noErrors = false;
 
 		// Next, we check inheritance, overrides, function collisions and other things at
 		// contract or function level.
@@ -473,13 +481,6 @@ bool CompilerStack::analyze()
 			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
 				noErrors = false;
 
-		// Create & assign callgraphs and check for contract dependency cycles
-		if (noErrors)
-		{
-			createAndAssignCallGraphs();
-			findAndReportCyclicContractDependencies();
-		}
-
 		if (noErrors)
 		{
 			// Checks that can only be done when all types of all AST nodes are known.
@@ -489,6 +490,13 @@ bool CompilerStack::analyze()
 					noErrors = false;
 			if (!postTypeChecker.finalize())
 				noErrors = false;
+		}
+
+		// Create & assign callgraphs and check for contract dependency cycles
+		if (noErrors)
+		{
+			createAndAssignCallGraphs();
+			findAndReportCyclicContractDependencies();
 		}
 
 		if (noErrors)
@@ -516,10 +524,12 @@ bool CompilerStack::analyze()
 
 			if (noErrors)
 			{
+				ControlFlowRevertPruner pruner(cfg);
+				pruner.run();
+
 				ControlFlowAnalyzer controlFlowAnalyzer(cfg, m_errorReporter);
-				for (Source const* source: m_sourceOrder)
-					if (source->ast && !controlFlowAnalyzer.analyze(*source->ast))
-						noErrors = false;
+				if (!controlFlowAnalyzer.run())
+					noErrors = false;
 			}
 		}
 
@@ -1218,6 +1228,59 @@ bool onlySafeExperimentalFeaturesActivated(set<ExperimentalFeature> const& featu
 }
 }
 
+void CompilerStack::assemble(
+	ContractDefinition const& _contract,
+	std::shared_ptr<evmasm::Assembly> _assembly,
+	std::shared_ptr<evmasm::Assembly> _runtimeAssembly
+)
+{
+	solAssert(m_stackState >= AnalysisPerformed, "");
+	solAssert(!m_hasError, "");
+
+	Contract& compiledContract = m_contracts.at(_contract.fullyQualifiedName());
+
+	compiledContract.evmAssembly = _assembly;
+	solAssert(compiledContract.evmAssembly, "");
+	try
+	{
+		// Assemble deployment (incl. runtime)  object.
+		compiledContract.object = compiledContract.evmAssembly->assemble();
+	}
+	catch (evmasm::AssemblyException const&)
+	{
+		solAssert(false, "Assembly exception for bytecode");
+	}
+	solAssert(compiledContract.object.immutableReferences.empty(), "Leftover immutables.");
+
+	compiledContract.evmRuntimeAssembly = _runtimeAssembly;
+	solAssert(compiledContract.evmRuntimeAssembly, "");
+	try
+	{
+		// Assemble runtime object.
+		compiledContract.runtimeObject = compiledContract.evmRuntimeAssembly->assemble();
+	}
+	catch (evmasm::AssemblyException const&)
+	{
+		solAssert(false, "Assembly exception for deployed bytecode");
+	}
+
+	// Throw a warning if EIP-170 limits are exceeded:
+	//   If contract creation returns data with length greater than 0x6000 (214 + 213) bytes,
+	//   contract creation fails with an out of gas error.
+	if (
+		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
+		compiledContract.runtimeObject.bytecode.size() > 0x6000
+	)
+		m_errorReporter.warning(
+			5574_error,
+			_contract.location(),
+			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
+			"This contract may not be deployable on mainnet. "
+			"Consider enabling the optimizer (with a low \"runs\" value!), "
+			"turning off revert strings, or using libraries."
+		);
+}
+
 void CompilerStack::compileContract(
 	ContractDefinition const& _contract,
 	map<ContractDefinition const*, shared_ptr<Compiler const>>& _otherCompilers
@@ -1253,48 +1316,9 @@ void CompilerStack::compileContract(
 		solAssert(false, "Optimizer exception during compilation");
 	}
 
-	compiledContract.evmAssembly = compiler->assemblyPtr();
-	solAssert(compiledContract.evmAssembly, "");
-	try
-	{
-		// Assemble deployment (incl. runtime)  object.
-		compiledContract.object = compiledContract.evmAssembly->assemble();
-	}
-	catch(evmasm::AssemblyException const&)
-	{
-		solAssert(false, "Assembly exception for bytecode");
-	}
-	solAssert(compiledContract.object.immutableReferences.empty(), "Leftover immutables.");
-
-	compiledContract.evmRuntimeAssembly = compiler->runtimeAssemblyPtr();
-	solAssert(compiledContract.evmRuntimeAssembly, "");
-	try
-	{
-		// Assemble runtime object.
-		compiledContract.runtimeObject = compiledContract.evmRuntimeAssembly->assemble();
-	}
-	catch(evmasm::AssemblyException const&)
-	{
-		solAssert(false, "Assembly exception for deployed bytecode");
-	}
-
-	// Throw a warning if EIP-170 limits are exceeded:
-	//   If contract creation returns data with length greater than 0x6000 (214 + 213) bytes,
-	//   contract creation fails with an out of gas error.
-	if (
-		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
-		compiledContract.runtimeObject.bytecode.size() > 0x6000
-	)
-		m_errorReporter.warning(
-			5574_error,
-			_contract.location(),
-			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
-			"This contract may not be deployable on mainnet. "
-			"Consider enabling the optimizer (with a low \"runs\" value!), "
-			"turning off revert strings, or using libraries."
-		);
-
 	_otherCompilers[compiledContract.contract] = compiler;
+
+	assemble(_contract, compiler->assemblyPtr(), compiler->runtimeAssemblyPtr());
 }
 
 void CompilerStack::generateIR(ContractDefinition const& _contract)
@@ -1326,8 +1350,12 @@ void CompilerStack::generateIR(ContractDefinition const& _contract)
 	for (auto const& pair: m_contracts)
 		otherYulSources.emplace(pair.second.contract, pair.second.yulIR);
 
-	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings);
-	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(_contract, otherYulSources);
+	IRGenerator generator(m_evmVersion, m_revertStrings, m_optimiserSettings, sourceIndices());
+	tie(compiledContract.yulIR, compiledContract.yulIROptimized) = generator.run(
+		_contract,
+		createCBORMetadata(compiledContract),
+		otherYulSources
+	);
 }
 
 void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
@@ -1351,31 +1379,10 @@ void CompilerStack::generateEVMFromIR(ContractDefinition const& _contract)
 
 	//cout << yul::AsmPrinter{}(*stack.parserResult()->code) << endl;
 
-	// TODO: support passing metadata
-	// TODO: use stack.assemble here!
-	yul::MachineAssemblyObject init;
-	yul::MachineAssemblyObject runtime;
-	std::tie(init, runtime) = stack.assembleWithDeployed(IRNames::deployedObject(_contract));
-	compiledContract.object = std::move(*init.bytecode);
-	compiledContract.runtimeObject = std::move(*runtime.bytecode);
-	// TODO: refactor assemblyItems, runtimeAssemblyItems, generatedSources,
-	//       assemblyString, assemblyJSON, and functionEntryPoints to work with this code path
-
-	// Throw a warning if EIP-170 limits are exceeded:
-	//   If contract creation returns data with length greater than 0x6000 (214 + 213) bytes,
-	//   contract creation fails with an out of gas error.
-	if (
-		m_evmVersion >= langutil::EVMVersion::spuriousDragon() &&
-		compiledContract.runtimeObject.bytecode.size() > 0x6000
-	)
-		m_errorReporter.warning(
-			9609_error,
-			_contract.location(),
-			"Contract code size exceeds 24576 bytes (a limit introduced in Spurious Dragon). "
-			"This contract may not be deployable on mainnet. "
-			"Consider enabling the optimizer (with a low \"runs\" value!), "
-			"turning off revert strings, or using libraries."
-		);
+	string deployedName = IRNames::deployedObject(_contract);
+	solAssert(!deployedName.empty(), "");
+	tie(compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly) = stack.assembleEVMWithDeployed(deployedName);
+	assemble(_contract, compiledContract.evmAssembly, compiledContract.evmRuntimeAssembly);
 }
 
 void CompilerStack::generateEwasm(ContractDefinition const& _contract)

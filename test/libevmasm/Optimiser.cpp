@@ -93,6 +93,45 @@ namespace
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
+	/// In contrast to the function `CSE`, this function doesn't finish the CSE optimization on an
+	/// instruction that breaks CSE Analysis block. Copied from Assembly.cpp
+	AssemblyItems fullCSE(AssemblyItems const& _input)
+	{
+		AssemblyItems optimisedItems;
+
+		bool usesMSize = ranges::any_of(_input, [](AssemblyItem const& _i) {
+			return _i == AssemblyItem{Instruction::MSIZE} || _i.type() == VerbatimBytecode;
+		});
+
+		auto iter = _input.begin();
+		while (iter != _input.end())
+		{
+			KnownState emptyState;
+			CommonSubexpressionEliminator eliminator{emptyState};
+			auto orig = iter;
+			iter = eliminator.feedItems(iter, _input.end(), usesMSize);
+			bool shouldReplace = false;
+			AssemblyItems optimisedChunk;
+			optimisedChunk = eliminator.getOptimizedItems();
+			shouldReplace = (optimisedChunk.size() < static_cast<size_t>(iter - orig));
+			if (shouldReplace)
+				optimisedItems += optimisedChunk;
+			else
+				copy(orig, iter, back_inserter(optimisedItems));
+		}
+
+		return optimisedItems;
+	}
+
+	void checkFullCSE(
+		AssemblyItems const& _input,
+		AssemblyItems const& _expectation
+	)
+	{
+		AssemblyItems output = fullCSE(_input);
+		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
+	}
+
 	AssemblyItems CFG(AssemblyItems const& _input)
 	{
 		AssemblyItems output = _input;
@@ -1247,7 +1286,8 @@ BOOST_AUTO_TEST_CASE(jumpdest_removal_subassemblies)
 	settings.runCSE = true;
 	settings.runConstantOptimiser = true;
 	settings.evmVersion = solidity::test::CommonOptions::get().evmVersion();
-	settings.expectedExecutionsPerDeployment = 200;
+	settings.expectedExecutionsPerDeployment = OptimiserSettings{}.expectedExecutionsPerDeployment;
+;
 	main.optimise(settings);
 
 	AssemblyItems expectationMain{
@@ -1290,6 +1330,135 @@ BOOST_AUTO_TEST_CASE(cse_sub_zero)
 		Instruction::SWAP1,
 		Instruction::SUB
 	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_simple_verbatim)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{verbatim};
+	checkCSE(input, input);
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_mload_pop)
+{
+	AssemblyItems input{
+		u256(1000),
+		Instruction::MLOAD,
+		Instruction::POP,
+	};
+
+	AssemblyItems output{
+	};
+
+	checkCSE(input, output);
+	checkFullCSE(input, output);
+}
+
+BOOST_AUTO_TEST_CASE(cse_verbatim_mload)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(1000),
+		Instruction::MLOAD,	// Should not be removed
+		Instruction::POP,
+		verbatim,
+		u256(1000),
+		Instruction::MLOAD,	// Should not be removed
+		Instruction::POP,
+	};
+
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_sload_verbatim_dup)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		u256(0),
+		Instruction::SLOAD,
+		verbatim
+	};
+
+	AssemblyItems output{
+		u256(0),
+		Instruction::SLOAD,
+		Instruction::DUP1,
+		verbatim
+	};
+
+	checkCSE(input, output);
+	checkFullCSE(input, output);
+}
+
+BOOST_AUTO_TEST_CASE(cse_verbatim_sload_sideeffect)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		verbatim,
+		u256(0),
+		Instruction::SLOAD,
+	};
+
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_verbatim_eq)
+{
+	auto verbatim = AssemblyItem{bytes{1, 2, 3, 4, 5}, 0, 0};
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		verbatim,
+		Instruction::DUP1,
+		Instruction::EQ
+	};
+
+	checkFullCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(verbatim_knownstate)
+{
+	KnownState state = createInitialState(AssemblyItems{
+			Instruction::DUP1,
+			Instruction::DUP2,
+			Instruction::DUP3,
+			Instruction::DUP4
+		});
+	map<int, unsigned> const& stackElements = state.stackElements();
+
+	BOOST_CHECK(state.stackHeight() == 4);
+	// One more than stack height because of the initial unknown element.
+	BOOST_CHECK(stackElements.size() == 5);
+	BOOST_CHECK(stackElements.count(0));
+	unsigned initialElement = stackElements.at(0);
+	// Check if all the DUPs were correctly matched to the same class.
+	for (auto const& height: {1, 2, 3, 4})
+		BOOST_CHECK(stackElements.at(height) == initialElement);
+
+	auto verbatim2i5o = AssemblyItem{bytes{1, 2, 3, 4, 5}, 2, 5};
+	state.feedItem(verbatim2i5o);
+
+	BOOST_CHECK(state.stackHeight() == 7);
+	// Stack elements
+	// Before verbatim: {{0, x}, {1, x}, {2, x}, {3, x}, {4, x}}
+	// After verbatim: {{0, x}, {1, x}, {2, x}, {3, a}, {4, b}, {5, c}, {6, d}, {7, e}}
+	BOOST_CHECK(stackElements.size() == 8);
+
+	for (auto const& height: {1, 2})
+		BOOST_CHECK(stackElements.at(height) == initialElement);
+
+	for (auto const& height: {3, 4, 5, 6, 7})
+		BOOST_CHECK(stackElements.at(height) != initialElement);
+
+	for (auto const& height1: {3, 4, 5, 6, 7})
+		for (auto const& height2: {3, 4, 5, 6, 7})
+			if (height1 < height2)
+				BOOST_CHECK(stackElements.at(height1) != stackElements.at(height2));
 }
 
 BOOST_AUTO_TEST_CASE(cse_remove_redundant_shift_masking)
@@ -1511,7 +1680,7 @@ BOOST_AUTO_TEST_CASE(inliner)
 		Instruction::SWAP1,
 		jumpOutOf,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1533,7 +1702,7 @@ BOOST_AUTO_TEST_CASE(inliner_no_inline_type)
 		Instruction::SWAP1,
 		Instruction::JUMP,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		items.begin(), items.end()
@@ -1558,7 +1727,7 @@ BOOST_AUTO_TEST_CASE(inliner_no_inline)
 		Instruction::JUMPI,
 		Instruction::JUMP,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1589,7 +1758,7 @@ BOOST_AUTO_TEST_CASE(inliner_single_jump)
 		AssemblyItem(Tag, 2),
 		jumpOutOf,
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1609,7 +1778,7 @@ BOOST_AUTO_TEST_CASE(inliner_end_of_bytecode)
 		Instruction::STOP,
 		AssemblyItem(Tag, 2),
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		items.begin(), items.end()
@@ -1634,7 +1803,7 @@ BOOST_AUTO_TEST_CASE(inliner_cse_break)
 		Instruction::STOP, // CSE breaking instruction
 		jumpOutOf
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		items.begin(), items.end()
@@ -1654,7 +1823,7 @@ BOOST_AUTO_TEST_CASE(inliner_stop)
 		AssemblyItem(Tag, 1),
 		Instruction::STOP
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1672,7 +1841,7 @@ BOOST_AUTO_TEST_CASE(inliner_stop_jumpi)
 		Instruction::STOP
 	};
 	AssemblyItems expectation = items;
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1699,7 +1868,7 @@ BOOST_AUTO_TEST_CASE(inliner_revert)
 		Instruction::REVERT
 	};
 
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1719,7 +1888,7 @@ BOOST_AUTO_TEST_CASE(inliner_revert_increased_datagas)
 	};
 
 	AssemblyItems expectation = items;
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()
@@ -1740,7 +1909,7 @@ BOOST_AUTO_TEST_CASE(inliner_invalid)
 		AssemblyItem(Tag, 1),
 		Instruction::INVALID
 	};
-	Inliner{items, {}, 200, false, {}}.optimise();
+	Inliner{items, {}, Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment, false, {}}.optimise();
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		items.begin(), items.end(),
 		expectation.begin(), expectation.end()

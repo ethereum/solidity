@@ -86,7 +86,7 @@ EVM_VERSIONS="homestead byzantium"
 
 if [ -z "$CI" ]
 then
-    EVM_VERSIONS+=" constantinople petersburg istanbul"
+    EVM_VERSIONS+=" constantinople petersburg istanbul berlin"
 fi
 
 # And then run the Solidity unit-tests in the matrix combination of optimizer / no optimizer
@@ -96,9 +96,9 @@ do
     for vm in $EVM_VERSIONS
     do
         FORCE_ABIV1_RUNS="no"
-        if [[ "$vm" == "istanbul" ]]
+        if [[ "$vm" == "berlin" ]]
         then
-            FORCE_ABIV1_RUNS="no yes" # run both in istanbul
+            FORCE_ABIV1_RUNS="no yes" # run both in berlin
         fi
         for abiv1 in $FORCE_ABIV1_RUNS
         do

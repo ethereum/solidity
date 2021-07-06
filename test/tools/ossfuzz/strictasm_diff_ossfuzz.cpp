@@ -17,14 +17,12 @@
 // SPDX-License-Identifier: GPL-3.0
 
 #include <libyul/AsmAnalysisInfo.h>
-#include <libyul/AsmParser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/Dialect.h>
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/AssemblyStack.h>
 
 #include <liblangutil/Exceptions.h>
-#include <liblangutil/ErrorReporter.h>
 #include <liblangutil/EVMVersion.h>
 
 #include <libsolutil/CommonIO.h>

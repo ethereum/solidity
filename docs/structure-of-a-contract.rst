@@ -24,7 +24,7 @@ State Variables
 State variables are variables whose values are permanently stored in contract
 storage.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -47,7 +47,7 @@ Functions are the executable units of code. Functions are usually
 defined inside a contract, but they can also be defined outside of
 contracts.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.7.0 <0.9.0;
@@ -81,7 +81,7 @@ is not possible.
 
 Like functions, modifiers can be :ref:`overridden <modifier-overriding>`.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
@@ -109,7 +109,7 @@ Events
 
 Events are convenience interfaces with the EVM logging facilities.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.21 <0.9.0;
@@ -137,7 +137,7 @@ In comparison to string descriptions, errors are much cheaper and allow you
 to encode additional data. You can use NatSpec to describe the error to
 the user.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -168,7 +168,7 @@ Struct Types
 Structs are custom defined types that can group several variables (see
 :ref:`structs` in types section).
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -190,7 +190,7 @@ Enum Types
 Enums can be used to create custom types with a finite set of 'constant values' (see
 :ref:`enums` in types section).
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <tuple>
 #include <vector>
 

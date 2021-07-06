@@ -29,7 +29,6 @@
 
 #include <functional>
 #include <tuple>
-#include <utility>
 
 using namespace std;
 using namespace solidity;

@@ -21,8 +21,6 @@
 
 #include <libyul/Scope.h>
 
-#include <libsolutil/Visitor.h>
-
 using namespace std;
 using namespace solidity;
 using namespace solidity::yul;

@@ -42,11 +42,12 @@ public:
 	IRGenerator(
 		langutil::EVMVersion _evmVersion,
 		RevertStrings _revertStrings,
-		OptimiserSettings _optimiserSettings
+		OptimiserSettings _optimiserSettings,
+		std::map<std::string, unsigned> _sourceIndices
 	):
 		m_evmVersion(_evmVersion),
 		m_optimiserSettings(_optimiserSettings),
-		m_context(_evmVersion, _revertStrings, std::move(_optimiserSettings)),
+		m_context(_evmVersion, _revertStrings, std::move(_optimiserSettings), std::move(_sourceIndices)),
 		m_utils(_evmVersion, m_context.revertStrings(), m_context.functionCollector())
 	{}
 
@@ -54,12 +55,14 @@ public:
 	/// (or just pretty-printed, depending on the optimizer settings).
 	std::pair<std::string, std::string> run(
 		ContractDefinition const& _contract,
+		bytes const& _cborMetadata,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 
 private:
 	std::string generate(
 		ContractDefinition const& _contract,
+		bytes const& _cborMetadata,
 		std::map<ContractDefinition const*, std::string_view const> const& _otherYulSources
 	);
 	std::string generate(Block const& _block);
@@ -72,7 +75,7 @@ private:
 	/// possibly be called via a pointer.
 	/// @return The content of the dispatch for reuse in runtime code. Reuse is necessary because
 	/// pointers to functions can be passed from the creation code in storage variables.
-	InternalDispatchMap generateInternalDispatchFunctions();
+	InternalDispatchMap generateInternalDispatchFunctions(ContractDefinition const& _contract);
 	/// Generates code for and returns the name of the function.
 	std::string generateFunction(FunctionDefinition const& _function);
 	std::string generateModifier(
@@ -87,10 +90,10 @@ private:
 	/// Generates code that assigns the initial value of the respective type.
 	std::string generateInitialAssignment(VariableDeclaration const& _varDecl);
 
-	/// Generates implicit constructors for all contracts in the inheritance hierarchy of
+	/// Generates constructors for all contracts in the inheritance hierarchy of
 	/// @a _contract
-	/// If there are user defined constructors, their body will be included in implicit constructors body.
-	void generateImplicitConstructors(ContractDefinition const& _contract);
+	/// If there are user defined constructors, their body will be included in the implicit constructor's body.
+	void generateConstructors(ContractDefinition const& _contract);
 
 	/// Evaluates constructor's arguments for all base contracts (listed in inheritance specifiers) of
 	/// @a _contract

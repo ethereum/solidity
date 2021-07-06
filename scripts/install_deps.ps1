@@ -10,7 +10,7 @@ if ( -not (Test-Path "$PSScriptRoot\..\deps\boost") ) {
   tar -xf cmake.zip
   mv cmake-3.18.2-win64-x64 "$PSScriptRoot\..\deps\cmake"
 
-  Invoke-WebRequest -URI "https://dl.bintray.com/boostorg/release/1.74.0/source/boost_1_74_0.zip" -OutFile boost.zip
+  Invoke-WebRequest -URI "https://boostorg.jfrog.io/artifactory/main/release/1.74.0/source/boost_1_74_0.zip" -OutFile boost.zip
   tar -xf boost.zip
   cd boost_1_74_0
   .\bootstrap.bat

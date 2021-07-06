@@ -300,16 +300,26 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref cleared_value multiplier
 			utils.copyToStackTop(3 + m_dataType->sizeOnStack(), m_dataType->sizeOnStack());
 			// stack: value storage_ref cleared_value multiplier value
-			if (FunctionType const* fun = dynamic_cast<decltype(fun)>(m_dataType))
+			if (auto const* fun = dynamic_cast<FunctionType const*>(m_dataType))
 			{
-				solAssert(_sourceType == *m_dataType, "function item stored but target is not equal to source");
+				solAssert(
+					_sourceType.isImplicitlyConvertibleTo(*m_dataType),
+					"function item stored but target is not implicitly convertible to source"
+				);
+				solAssert(!fun->bound(), "");
 				if (fun->kind() == FunctionType::Kind::External)
+				{
+					solAssert(fun->sizeOnStack() == 2, "");
 					// Combine the two-item function type into a single stack slot.
 					utils.combineExternalFunctionType(false);
+				}
 				else
+				{
+					solAssert(fun->sizeOnStack() == 1, "");
 					m_context <<
 						((u256(1) << (8 * m_dataType->storageBytes())) - 1) <<
 						Instruction::AND;
+				}
 			}
 			else if (m_dataType->category() == Type::Category::FixedBytes)
 			{

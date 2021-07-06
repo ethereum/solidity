@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 	_assembly.appendImmutableAssignment("someImmutable");
 	// Operation
 	_assembly.append(Instruction::STOP);
-	_assembly.appendAuxiliaryDataToEnd(bytes{0x42, 0x66});
-	_assembly.appendAuxiliaryDataToEnd(bytes{0xee, 0xaa});
+	_assembly.appendToAuxiliaryData(bytes{0x42, 0x66});
+	_assembly.appendToAuxiliaryData(bytes{0xee, 0xaa});
 
 	checkCompilation(_assembly);
 

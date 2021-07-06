@@ -71,6 +71,7 @@ public:
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
+	/// Handles all names containing dots as reserved identifiers, not accessible as data.
 	std::set<YulString> qualifiedDataNames() const;
 
 	/// @returns vector of subIDs if possible to reach subobject with @a _qualifiedName, throws otherwise
@@ -92,6 +93,9 @@ public:
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
 	std::map<YulString, size_t> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
+
+	/// @returns the name of the special metadata data object.
+	static std::string metadataName() { return ".metadata"; }
 };
 
 }

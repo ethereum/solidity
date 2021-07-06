@@ -39,11 +39,10 @@ class DeclarationContainer
 public:
 	using Homonyms = std::vector<std::pair<langutil::SourceLocation const*, std::vector<Declaration const*>>>;
 
-	explicit DeclarationContainer(
-		ASTNode const* _enclosingNode = nullptr,
-		DeclarationContainer* _enclosingContainer = nullptr
-	):
-		m_enclosingNode(_enclosingNode), m_enclosingContainer(_enclosingContainer)
+	DeclarationContainer() = default;
+	explicit DeclarationContainer(ASTNode const* _enclosingNode, DeclarationContainer* _enclosingContainer):
+		m_enclosingNode(_enclosingNode),
+		m_enclosingContainer(_enclosingContainer)
 	{
 		if (_enclosingContainer)
 			_enclosingContainer->m_innerContainers.emplace_back(this);
@@ -57,7 +56,20 @@ public:
 	bool registerDeclaration(Declaration const& _declaration, ASTString const* _name, langutil::SourceLocation const* _location, bool _invisible, bool _update);
 	bool registerDeclaration(Declaration const& _declaration, bool _invisible, bool _update);
 
-	std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false, bool _alsoInvisible = false) const;
+	/// Finds all declarations that in the current scope can be referred to using specified name.
+	/// @param _name the name to look for.
+	/// @param _recursive if true and there are no matching declarations in the current container,
+	///        recursively searches the enclosing containers as well.
+	/// @param _alsoInvisible if true, include invisible declaration in the results.
+	/// @param _onlyVisibleAsUnqualifiedNames if true, do not include declarations which can never
+	///        actually be referenced using their name alone (without being qualified with the name
+	///        of scope in which they are declared).
+	std::vector<Declaration const*> resolveName(
+		ASTString const& _name,
+		bool _recursive = false,
+		bool _alsoInvisible = false,
+		bool _onlyVisibleAsUnqualifiedNames = false
+	) const;
 	ASTNode const* enclosingNode() const { return m_enclosingNode; }
 	DeclarationContainer const* enclosingContainer() const { return m_enclosingContainer; }
 	std::map<ASTString, std::vector<Declaration const*>> const& declarations() const { return m_declarations; }
@@ -80,8 +92,8 @@ public:
 	void populateHomonyms(std::back_insert_iterator<Homonyms> _it) const;
 
 private:
-	ASTNode const* m_enclosingNode;
-	DeclarationContainer const* m_enclosingContainer;
+	ASTNode const* m_enclosingNode = nullptr;
+	DeclarationContainer const* m_enclosingContainer = nullptr;
 	std::vector<DeclarationContainer const*> m_innerContainers;
 	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
 	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;

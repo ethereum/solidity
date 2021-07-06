@@ -2,7 +2,7 @@
     /* \"A\":80:81   */
   0x00
     /* \"A\":76:77   */
-  0x00
+  dup1
     /* \"A\":73:74   */
   dup3
     /* \"A\":69:78   */
@@ -18,11 +18,11 @@ sub_0: assembly {
         /* \"A\":147:148   */
       0x00
         /* \"A\":144:145   */
-      0x00
+      dup1
         /* \"A\":137:149   */
       revert
 }
-","bytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"},"deployedBytecode":{"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"NamedObject\" {
+","bytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"},"deployedBytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"NamedObject\" {
     code {
         let x := dataoffset(\"DataName\")
         sstore(add(x, 0), 0)
