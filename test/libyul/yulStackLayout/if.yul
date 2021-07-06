@@ -6,24 +6,46 @@
     sstore(0x03, 0x003)
 }
 // ----
-// Block 0:
-//   Entries: None
-//   Entry Layout: [ ]
-//   [ 0x0101 0x01 ] >> sstore
-//   [ 0x00 ] >> calldataload
-//   Exit Layout: [ TMP[calldataload, 0] ]
-//   ConditionalJump TMP[calldataload, 0]:
-//     NonZero: 1 (Entry Layout: [ ])
-//     Zero: 2 (Entry Layout: [ ])
-// Block 1:
-//   Entries: 0
-//   Entry Layout: [ ]
-//   [ 0x0202 0x02 ] >> sstore
-//   Exit Layout: [ ]
-//   Jump: 2 (Entry Layout: [ ])
-// Block 2:
-//   Entries: 0, 1
-//   Entry Layout: [ ]
-//   [ 0x03 0x03 ] >> sstore
-//   Exit Layout: [ ]
-//   MainExit
+// digraph CFG {
+// nodesep=0.7;
+// node[shape=box];
+//
+// Entry [label="Entry"];
+// Entry -> Block0;
+// Block0 [label="\
+// [ ]\l\
+// [ 0x0101 0x01 ]\l\
+// sstore\l\
+// [ ]\l\
+// [ 0x00 ]\l\
+// calldataload\l\
+// [ TMP[calldataload, 0] ]\l\
+// [ TMP[calldataload, 0] ]\l\
+// "];
+// Block0 -> Block0Exit;
+// Block0Exit [label="{ TMP[calldataload, 0]| { <0> Zero | <1> NonZero }}" shape=Mrecord];
+// Block0Exit:0 -> Block1;
+// Block0Exit:1 -> Block2;
+//
+// Block1 [label="\
+// [ ]\l\
+// [ 0x03 0x03 ]\l\
+// sstore\l\
+// [ ]\l\
+// [ ]\l\
+// "];
+// Block1Exit [label="MainExit"];
+// Block1 -> Block1Exit;
+//
+// Block2 [label="\
+// [ ]\l\
+// [ 0x0202 0x02 ]\l\
+// sstore\l\
+// [ ]\l\
+// [ ]\l\
+// "];
+// Block2 -> Block2Exit [arrowhead=none];
+// Block2Exit [label="Jump" shape=oval];
+// Block2Exit -> Block1;
+//
+// }

@@ -19,46 +19,99 @@
     h(y)
 }
 // ----
-// Block 0:
-//   Entries: None
-//   Entry Layout: [ ]
-//   [ RET[h] RET[h] RET[i] ] >> i
-//   [ RET[h] RET[h] TMP[i, 0] TMP[i, 1] ] >> Assignment(x, y)
-//   [ RET[h] y RET[h] x ] >> h
-//   [ RET[h] y ] >> h
-//   Exit Layout: [ ]
-//   MainExit
-// function f(a, b) -> r:
-//   Block 0:
-//     Entries: None
-//     Entry Layout: [ RET a b ]
-//     [ RET a b a ] >> add
-//     [ RET a TMP[add, 0] ] >> Assignment(x)
-//     [ RET a x ] >> sub
-//     [ RET TMP[sub, 0] ] >> Assignment(r)
-//     Exit Layout: [ r RET ]
-//     FunctionReturn of f
-// function g():
-//   Block 0:
-//     Entries: None
-//     Entry Layout: [ RET ]
-//     [ RET 0x0101 0x01 ] >> sstore
-//     Exit Layout: [ RET ]
-//     FunctionReturn of g
-// function h(x):
-//   Block 0:
-//     Entries: None
-//     Entry Layout: [ RET RET[h] RET[f] 0x00 x ]
-//     [ RET RET[h] RET[f] 0x00 x ] >> f
-//     [ RET RET[h] TMP[f, 0] ] >> h
-//     [ RET RET[g] ] >> g
-//     Exit Layout: [ RET ]
-//     FunctionReturn of h
-// function i() -> v, w:
-//   Block 0:
-//     Entries: None
-//     Entry Layout: [ RET ]
-//     [ RET 0x0202 ] >> Assignment(v)
-//     [ v RET 0x0303 ] >> Assignment(w)
-//     Exit Layout: [ v w RET ]
-//     FunctionReturn of i
+// digraph CFG {
+// nodesep=0.7;
+// node[shape=box];
+//
+// Entry [label="Entry"];
+// Entry -> Block0;
+// Block0 [label="\
+// [ ]\l\
+// [ RET[h] RET[h] RET[i] ]\l\
+// i\l\
+// [ RET[h] RET[h] TMP[i, 0] TMP[i, 1] ]\l\
+// [ RET[h] RET[h] TMP[i, 0] TMP[i, 1] ]\l\
+// Assignment(x, y)\l\
+// [ RET[h] RET[h] x y ]\l\
+// [ RET[h] y RET[h] x ]\l\
+// h\l\
+// [ RET[h] y ]\l\
+// [ RET[h] y ]\l\
+// h\l\
+// [ ]\l\
+// [ ]\l\
+// "];
+// Block0Exit [label="MainExit"];
+// Block0 -> Block0Exit;
+//
+// FunctionEntry_f [label="function f(a, b) -> r\l\
+// [ RET b a ]"];
+// FunctionEntry_f -> Block1;
+// Block1 [label="\
+// [ RET a b ]\l\
+// [ RET a b a ]\l\
+// add\l\
+// [ RET a TMP[add, 0] ]\l\
+// [ RET a TMP[add, 0] ]\l\
+// Assignment(x)\l\
+// [ RET a x ]\l\
+// [ RET a x ]\l\
+// sub\l\
+// [ RET TMP[sub, 0] ]\l\
+// [ RET TMP[sub, 0] ]\l\
+// Assignment(r)\l\
+// [ RET r ]\l\
+// [ r RET ]\l\
+// "];
+// Block1Exit [label="FunctionReturn[f]"];
+// Block1 -> Block1Exit;
+//
+// FunctionEntry_g [label="function g()\l\
+// [ RET ]"];
+// FunctionEntry_g -> Block2;
+// Block2 [label="\
+// [ RET ]\l\
+// [ RET 0x0101 0x01 ]\l\
+// sstore\l\
+// [ RET ]\l\
+// [ RET ]\l\
+// "];
+// Block2Exit [label="FunctionReturn[g]"];
+// Block2 -> Block2Exit;
+//
+// FunctionEntry_h [label="function h(x)\l\
+// [ RET x ]"];
+// FunctionEntry_h -> Block3;
+// Block3 [label="\
+// [ RET RET[h] RET[f] 0x00 x ]\l\
+// [ RET RET[h] RET[f] 0x00 x ]\l\
+// f\l\
+// [ RET RET[h] TMP[f, 0] ]\l\
+// [ RET RET[h] TMP[f, 0] ]\l\
+// h\l\
+// [ RET ]\l\
+// [ RET RET[g] ]\l\
+// g\l\
+// [ RET ]\l\
+// [ RET ]\l\
+// "];
+// Block3Exit [label="FunctionReturn[h]"];
+// Block3 -> Block3Exit;
+//
+// FunctionEntry_i [label="function i() -> v, w\l\
+// [ RET ]"];
+// FunctionEntry_i -> Block4;
+// Block4 [label="\
+// [ RET ]\l\
+// [ RET 0x0202 ]\l\
+// Assignment(v)\l\
+// [ RET v ]\l\
+// [ v RET 0x0303 ]\l\
+// Assignment(w)\l\
+// [ v RET w ]\l\
+// [ v w RET ]\l\
+// "];
+// Block4Exit [label="FunctionReturn[i]"];
+// Block4 -> Block4Exit;
+//
+// }

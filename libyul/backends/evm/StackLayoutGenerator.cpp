@@ -283,6 +283,9 @@ void StackLayoutGenerator::processEntryPoint(CFG::BasicBlock const& _entry)
 				// In particular we can visit backwards starting from ``block`` and mark all entries to-be-visited-
 				// again until we hit ``target``.
 				toVisit.emplace_front(block);
+				// Since we are likely to change the entry layout of ``target``, we also visit its entries again.
+				for (CFG::BasicBlock const* entry: target->entries)
+					visited.erase(entry);
 				util::BreadthFirstSearch<CFG::BasicBlock const*>{{block}}.run(
 					[&visited, target = target](CFG::BasicBlock const* _block, auto _addChild) {
 						visited.erase(_block);

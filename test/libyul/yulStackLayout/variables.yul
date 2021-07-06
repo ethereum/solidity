@@ -8,17 +8,44 @@
     sstore(x,y)
 }
 // ----
-// Block 0:
-//   Entries: None
-//   Entry Layout: [ ]
-//   [ 0x00 ] >> calldataload
-//   [ TMP[calldataload, 0] ] >> Assignment(x)
-//   [ 0x02 ] >> calldataload
-//   [ TMP[calldataload, 0] ] >> Assignment(y)
-//   [ 0x03 ] >> calldataload
-//   [ TMP[calldataload, 0] ] >> Assignment(x)
-//   [ x 0x04 ] >> calldataload
-//   [ x TMP[calldataload, 0] ] >> Assignment(y)
-//   [ y x ] >> sstore
-//   Exit Layout: [ ]
-//   MainExit
+// digraph CFG {
+// nodesep=0.7;
+// node[shape=box];
+//
+// Entry [label="Entry"];
+// Entry -> Block0;
+// Block0 [label="\
+// [ ]\l\
+// [ 0x00 ]\l\
+// calldataload\l\
+// [ TMP[calldataload, 0] ]\l\
+// [ TMP[calldataload, 0] ]\l\
+// Assignment(x)\l\
+// [ x ]\l\
+// [ 0x02 ]\l\
+// calldataload\l\
+// [ TMP[calldataload, 0] ]\l\
+// [ TMP[calldataload, 0] ]\l\
+// Assignment(y)\l\
+// [ y ]\l\
+// [ 0x03 ]\l\
+// calldataload\l\
+// [ TMP[calldataload, 0] ]\l\
+// [ TMP[calldataload, 0] ]\l\
+// Assignment(x)\l\
+// [ x ]\l\
+// [ x 0x04 ]\l\
+// calldataload\l\
+// [ x TMP[calldataload, 0] ]\l\
+// [ x TMP[calldataload, 0] ]\l\
+// Assignment(y)\l\
+// [ x y ]\l\
+// [ y x ]\l\
+// sstore\l\
+// [ ]\l\
+// [ ]\l\
+// "];
+// Block0Exit [label="MainExit"];
+// Block0 -> Block0Exit;
+//
+// }
