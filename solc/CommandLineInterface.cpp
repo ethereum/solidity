@@ -1041,7 +1041,9 @@ General Information)").c_str(),
 		)
 		(
 			g_argOptimizeRuns.c_str(),
-			po::value<unsigned>()->value_name("n")->default_value(200),
+			// TODO: The type in OptimiserSettings is size_t but we only accept values up to 2**32-1
+			// on the CLI and in Standard JSON. We should just switch to uint32_t everywhere.
+			po::value<unsigned>()->value_name("n")->default_value(static_cast<unsigned>(OptimiserSettings{}.expectedExecutionsPerDeployment)),
 			"Set for how many contract runs to optimize. "
 			"Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage."
 		)

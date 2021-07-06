@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libsolutil/Common.h>
+#include <libevmasm/Assembly.h>
 #include <libevmasm/AssemblyItem.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -75,7 +76,7 @@ private:
 
 	AssemblyItems& m_items;
 	std::set<size_t> const& m_tagsReferencedFromOutside;
-	size_t const m_runs = 200;
+	size_t const m_runs = Assembly::OptimiserSettings{}.expectedExecutionsPerDeployment;
 	bool const m_isCreation = false;
 	langutil::EVMVersion const m_evmVersion;
 };

@@ -30,6 +30,8 @@
 #include <libsolutil/Assertions.h>
 #include <libsolutil/Keccak256.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 #include <json/json.h>
 
 #include <iostream>
@@ -124,7 +126,7 @@ public:
 		langutil::EVMVersion evmVersion;
 		/// This specifies an estimate on how often each opcode in this assembly will be executed,
 		/// i.e. use a small value to optimise for size and a large value to optimise for runtime gas usage.
-		size_t expectedExecutionsPerDeployment = 200;
+		size_t expectedExecutionsPerDeployment = frontend::OptimiserSettings{}.expectedExecutionsPerDeployment;
 	};
 
 	/// Modify and return the current assembly such that creation and execution gas usage

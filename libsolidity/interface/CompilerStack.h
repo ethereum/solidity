@@ -146,7 +146,7 @@ public:
 
 	/// Changes the optimiser settings.
 	/// Must be set before parsing.
-	void setOptimiserSettings(bool _optimize, unsigned _runs = 200);
+	void setOptimiserSettings(bool _optimize, size_t _runs = OptimiserSettings{}.expectedExecutionsPerDeployment);
 
 	/// Changes the optimiser settings.
 	/// Must be set before parsing.
