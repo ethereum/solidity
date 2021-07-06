@@ -63,7 +63,8 @@ if __name__ == '__main__':
 
     try:
         # decide if file has multiple sources
-        lines = open(filePath, mode='r', encoding='utf8', newline='').read().splitlines()
+        with open(filePath, mode='r', encoding='utf8', newline='') as f:
+            lines = f.read().splitlines()
         if lines[0][:12] == "==== Source:":
             hasMultipleSources = True
             writeSourceToFile(lines)

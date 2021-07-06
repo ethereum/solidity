@@ -72,7 +72,7 @@ void UnusedPruner::operator()(Block& _block)
 			if (!used(funDef.name))
 			{
 				subtractReferences(ReferencesCounter::countReferences(funDef.body));
-				statement = Block{std::move(funDef.location), {}};
+				statement = Block{std::move(funDef.debugData), {}};
 			}
 		}
 		else if (holds_alternative<VariableDeclaration>(statement))
@@ -90,19 +90,19 @@ void UnusedPruner::operator()(Block& _block)
 			))
 			{
 				if (!varDecl.value)
-					statement = Block{std::move(varDecl.location), {}};
+					statement = Block{std::move(varDecl.debugData), {}};
 				else if (
 					SideEffectsCollector(m_dialect, *varDecl.value, m_functionSideEffects).
 					canBeRemoved(m_allowMSizeOptimization)
 				)
 				{
 					subtractReferences(ReferencesCounter::countReferences(*varDecl.value));
-					statement = Block{std::move(varDecl.location), {}};
+					statement = Block{std::move(varDecl.debugData), {}};
 				}
 				else if (varDecl.variables.size() == 1 && m_dialect.discardFunction(varDecl.variables.front().type))
-					statement = ExpressionStatement{varDecl.location, FunctionCall{
-						varDecl.location,
-						{varDecl.location, m_dialect.discardFunction(varDecl.variables.front().type)->name},
+					statement = ExpressionStatement{varDecl.debugData, FunctionCall{
+						varDecl.debugData,
+						{varDecl.debugData, m_dialect.discardFunction(varDecl.variables.front().type)->name},
 						{*std::move(varDecl.value)}
 					}};
 			}
@@ -116,7 +116,7 @@ void UnusedPruner::operator()(Block& _block)
 			)
 			{
 				subtractReferences(ReferencesCounter::countReferences(exprStmt.expression));
-				statement = Block{std::move(exprStmt.location), {}};
+				statement = Block{std::move(exprStmt.debugData), {}};
 			}
 		}
 

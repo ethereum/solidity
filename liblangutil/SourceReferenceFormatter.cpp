@@ -20,7 +20,6 @@
  */
 
 #include <liblangutil/SourceReferenceFormatter.h>
-#include <liblangutil/Scanner.h>
 #include <liblangutil/Exceptions.h>
 #include <libsolutil/UTF8.h>
 #include <iomanip>

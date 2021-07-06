@@ -57,7 +57,7 @@ string AsmPrinter::operator()(Literal const& _literal) const
 		break;
 	}
 
-	return escapeAndQuoteString(_literal.value.str()) + appendTypeName(_literal.type);
+	return escapeAndQuoteYulString(_literal.value.str()) + appendTypeName(_literal.type);
 }
 
 string AsmPrinter::operator()(Identifier const& _identifier) const

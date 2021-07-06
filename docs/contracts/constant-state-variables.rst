@@ -27,7 +27,7 @@ can sometimes be cheaper than immutable values.
 Not all types for constants and immutables are implemented at this time. The only supported types are
 :ref:`strings <strings>` (only for constants) and :ref:`value types <value-types>`.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.7.4;

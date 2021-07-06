@@ -23,11 +23,21 @@
 
 #pragma once
 
+#include <liblangutil/Exceptions.h>
+
 #include <cstddef>
 #include <string>
 
 namespace solidity::frontend
 {
+
+enum class OptimisationPreset
+{
+	None,
+	Minimal,
+	Standard,
+	Full,
+};
 
 struct OptimiserSettings
 {
@@ -75,13 +85,24 @@ struct OptimiserSettings
 		s.runConstantOptimiser = true;
 		s.runYulOptimiser = true;
 		s.optimizeStackAllocation = true;
-		s.expectedExecutionsPerDeployment = 200;
 		return s;
 	}
 	/// Full optimisations. Currently an alias for standard optimisations.
 	static OptimiserSettings full()
 	{
 		return standard();
+	}
+
+	static OptimiserSettings preset(OptimisationPreset _preset)
+	{
+		switch (_preset)
+		{
+			case OptimisationPreset::None: return none();
+			case OptimisationPreset::Minimal: return minimal();
+			case OptimisationPreset::Standard: return standard();
+			case OptimisationPreset::Full: return full();
+			default: solAssert(false, "");
+		}
 	}
 
 	bool operator==(OptimiserSettings const& _other) const

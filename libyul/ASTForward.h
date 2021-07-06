@@ -28,6 +28,7 @@
 namespace solidity::yul
 {
 
+struct DebugData;
 enum class LiteralKind;
 struct Literal;
 struct Label;

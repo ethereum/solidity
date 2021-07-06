@@ -20,6 +20,8 @@
 
 #include <test/TestCase.h>
 
+#include <libsolidity/interface/OptimiserSettings.h>
+
 namespace solidity::langutil
 {
 class Scanner;
@@ -54,7 +56,7 @@ private:
 
 	static void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 
-	bool m_optimize = false;
+	frontend::OptimisationPreset m_optimisationPreset;
 	bool m_wasm = false;
 };
 

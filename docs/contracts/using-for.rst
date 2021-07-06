@@ -27,7 +27,9 @@ outside of the contract in which it is used. The directive
 may only be used inside a contract, not inside any of its functions.
 
 Let us rewrite the set example from the
-:ref:`libraries` in this way::
+:ref:`libraries` in this way:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.9.0;
@@ -80,7 +82,9 @@ Let us rewrite the set example from the
         }
     }
 
-It is also possible to extend elementary types in that way::
+It is also possible to extend elementary types in that way:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.8 <0.9.0;

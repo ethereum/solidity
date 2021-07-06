@@ -24,9 +24,10 @@ because the contract can only see the last 256 block hashes.
 
 You can add the attribute ``indexed`` to up to three parameters which adds them
 to a special data structure known as :ref:`"topics" <abi_events>` instead of
-the data part of the log. If you use arrays (including ``string`` and ``bytes``)
-as indexed arguments, its Keccak-256 hash is stored as a topic instead, this is
-because a topic can only hold a single word (32 bytes).
+the data part of the log.
+A topic can only hold a single word (32 bytes) so if you use a :ref:`reference type
+<reference-types>` for an indexed argument, the Keccak-256 hash of the value is stored
+as a topic instead.
 
 All parameters without the ``indexed`` attribute are :ref:`ABI-encoded <ABI>`
 into the data part of the log.
@@ -61,7 +62,16 @@ The hash of the signature of the event is one of the topics, except if you
 declared the event with the ``anonymous`` specifier. This means that it is
 not possible to filter for specific anonymous events by name, you can
 only filter by the contract address. The advantage of anonymous events
-is that they are cheaper to deploy and call.
+is that they are cheaper to deploy and call. It also allows you to declare
+four indexed arguments rather than three.
+
+.. note::
+    Since the transaction log only stores the event data and not the type,
+    you have to know the type of the event, including which parameter is
+    indexed and if the event is anonymous in order to correctly interpret
+    the data.
+    In particular, it is possible to "fake" the signature of another event
+    using an anonymous event.
 
 ::
 

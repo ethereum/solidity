@@ -24,7 +24,6 @@
 
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonIO.h>
-#include <algorithm>
 #include <functional>
 
 using namespace std;

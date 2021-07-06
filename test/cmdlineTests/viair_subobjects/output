@@ -1,16 +1,16 @@
 
 ======= viair_subobjects/input.sol:C =======
 Binary:
-60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+<BYTECODE REMOVED>
 Binary of the runtime part:
-608060405260006000fd
+<BYTECODE REMOVED>
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 object "C_3" {
     code {
@@ -18,8 +18,8 @@ object "C_3" {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("C_3_deployed")
-            codecopy(0, dataoffset("C_3_deployed"), _1)
-            return(0, _1)
+            codecopy(128, dataoffset("C_3_deployed"), _1)
+            return(128, _1)
         }
     }
     object "C_3_deployed" {
@@ -29,22 +29,23 @@ object "C_3" {
                 revert(0, 0)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }
 
 
 ======= viair_subobjects/input.sol:D =======
 Binary:
-608060405234156100105760006000fd5b60b680610020600039806000f350fe60806040526004361015156087576000803560e01c6326121ff0141560855734156027578081fd5b80600319360112156036578081fd5b6028806080016080811067ffffffffffffffff82111715606457634e487b7160e01b83526041600452602483fd5b508061008e60803980608083f01515607e573d82833e3d82fd5b5080604051f35b505b60006000fdfe60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+<BYTECODE REMOVED>
 Binary of the runtime part:
-60806040526004361015156087576000803560e01c6326121ff0141560855734156027578081fd5b80600319360112156036578081fd5b6028806080016080811067ffffffffffffffff82111715606457634e487b7160e01b83526041600452602483fd5b508061008e60803980608083f01515607e573d82833e3d82fd5b5080604051f35b505b60006000fdfe60806040523415600f5760006000fd5b600a80601e600039806000f350fe608060405260006000fd
+<BYTECODE REMOVED>
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 object "D_16" {
     code {
@@ -52,8 +53,8 @@ object "D_16" {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("D_16_deployed")
-            codecopy(0, dataoffset("D_16_deployed"), _1)
-            return(0, _1)
+            codecopy(128, dataoffset("D_16_deployed"), _1)
+            return(128, _1)
         }
     }
     object "D_16_deployed" {
@@ -78,8 +79,9 @@ object "D_16" {
                         datacopy(128, dataoffset("C_3"), _2)
                         if iszero(create(_1, 128, _2))
                         {
-                            returndatacopy(_1, _1, returndatasize())
-                            revert(_1, returndatasize())
+                            let pos := mload(64)
+                            returndatacopy(pos, _1, returndatasize())
+                            revert(pos, returndatasize())
                         }
                         return(mload(64), _1)
                     }
@@ -93,8 +95,8 @@ object "D_16" {
                     mstore(64, 128)
                     if callvalue() { revert(0, 0) }
                     let _1 := datasize("C_3_deployed")
-                    codecopy(0, dataoffset("C_3_deployed"), _1)
-                    return(0, _1)
+                    codecopy(128, dataoffset("C_3_deployed"), _1)
+                    return(128, _1)
                 }
             }
             object "C_3_deployed" {
@@ -104,7 +106,9 @@ object "D_16" {
                         revert(0, 0)
                     }
                 }
+                data ".metadata" hex"<BYTECODE REMOVED>"
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

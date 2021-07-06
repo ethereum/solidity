@@ -1076,6 +1076,23 @@ regular strings in native encoding. For code,
 
 Above, ``Block`` refers to ``Block`` in the Yul code grammar explained in the previous chapter.
 
+.. note::
+
+    Data objects or sub-objects whose names contain a ``.`` can be defined
+    but it is not possible to access them through ``datasize``,
+    ``dataoffset`` or ``datacopy`` because ``.`` is used as a separator
+    to access objects inside another object.
+
+.. note::
+
+    The data object called ``".metadata"`` has a special meaning:
+    It cannot be accessed from code and is always appended to the very end of the
+    bytecode, regardless of its position in the object.
+
+    Other data objects with special significance might be added in the
+    future, but their names will always start with a ``.``.
+
+
 An example Yul Object is shown below:
 
 .. code-block:: yul
@@ -1155,9 +1172,8 @@ Yul Optimizer
 The Yul optimizer operates on Yul code and uses the same language for input, output and
 intermediate states. This allows for easy debugging and verification of the optimizer.
 
-Please see the
-`documentation in the source code <https://github.com/ethereum/solidity/blob/develop/libyul/optimiser/README.md>`_
-for more details about its internals.
+Please refer to the general :ref:`optimizer documentation <optimizer>`
+for more details about the different optimization stages and how to use the optimizer.
 
 If you want to use Solidity in stand-alone Yul mode, you activate the optimizer using ``--optimize``:
 
@@ -1167,7 +1183,7 @@ If you want to use Solidity in stand-alone Yul mode, you activate the optimizer 
 
 In Solidity mode, the Yul optimizer is activated together with the regular optimizer.
 
-Optimization step sequence
+Optimization Step Sequence
 --------------------------
 
 By default the Yul optimizer applies its predefined sequence of optimization steps to the generated assembly.

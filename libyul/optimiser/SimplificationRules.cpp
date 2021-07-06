@@ -234,27 +234,26 @@ evmasm::Instruction Pattern::instruction() const
 	return m_instruction;
 }
 
-Expression Pattern::toExpression(SourceLocation const& _location) const
+Expression Pattern::toExpression(shared_ptr<DebugData const> const& _debugData) const
 {
 	if (matchGroup())
 		return ASTCopier().translate(matchGroupValue());
 	if (m_kind == PatternKind::Constant)
 	{
 		assertThrow(m_data, OptimizerException, "No match group and no constant value given.");
-		return Literal{_location, LiteralKind::Number, YulString{util::formatNumber(*m_data)}, {}};
+		return Literal{_debugData, LiteralKind::Number, YulString{util::formatNumber(*m_data)}, {}};
 	}
 	else if (m_kind == PatternKind::Operation)
 	{
 		vector<Expression> arguments;
 		for (auto const& arg: m_arguments)
-			arguments.emplace_back(arg.toExpression(_location));
+			arguments.emplace_back(arg.toExpression(_debugData));
 
 		string name = instructionInfo(m_instruction).name;
 		transform(begin(name), end(name), begin(name), [](auto _c) { return tolower(_c); });
 
-		return FunctionCall{
-			_location,
-			Identifier{_location, YulString{name}},
+		return FunctionCall{_debugData,
+			Identifier{_debugData, YulString{name}},
 			std::move(arguments)
 		};
 	}

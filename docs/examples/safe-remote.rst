@@ -23,7 +23,7 @@ This contract of course does not solve the problem, but gives an overview of how
 you can use state machine-like constructs inside a contract.
 
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;

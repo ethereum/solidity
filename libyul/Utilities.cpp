@@ -30,7 +30,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>
-#include <iterator>
 #include <sstream>
 #include <vector>
 

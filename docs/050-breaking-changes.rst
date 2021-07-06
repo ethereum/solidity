@@ -290,7 +290,7 @@ It is still possible to interface with contracts written for Solidity versions p
 v0.5.0 (or the other way around) by defining interfaces for them.
 Consider you have the following pre-0.5.0 contract already deployed:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.4.25;
@@ -308,7 +308,7 @@ Consider you have the following pre-0.5.0 contract already deployed:
 
 This will no longer compile with Solidity v0.5.0. However, you can define a compatible interface for it:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -326,7 +326,7 @@ the function will work with ``staticcall``.
 
 Given the interface defined above, you can now easily use the already deployed pre-0.5.0 contract:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -347,7 +347,7 @@ Similarly, pre-0.5.0 libraries can be used by defining the functions of the libr
 supplying the address of the pre-0.5.0 library during linking (see :ref:`commandline-compiler` for how to use the
 commandline compiler for linking):
 
-::
+.. code-block:: solidity
 
     // This will not compile after 0.6.0
     // SPDX-License-Identifier: GPL-3.0
@@ -372,7 +372,7 @@ v0.5.0 with some of the changes listed in this section.
 
 Old version:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.4.25;
@@ -435,7 +435,7 @@ Old version:
 
 New version:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.5.0;

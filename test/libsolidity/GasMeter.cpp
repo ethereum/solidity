@@ -192,7 +192,15 @@ BOOST_AUTO_TEST_CASE(function_calls)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	// In f, data2 is accessed twice, so there is a reduction of 2200 to 100 in actual costs.
+	// However, GasMeter always assumes cold costs.
+	testRunTimeGas(
+		"f(uint256)",
+		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		m_evmVersion < EVMVersion::berlin() ?
+		u256(0) :
+		u256(2100)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_external_functions)
@@ -213,7 +221,16 @@ BOOST_AUTO_TEST_CASE(multiple_external_functions)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
-	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	// In f, data2 is accessed twice, so there is a reduction of 2200 to 100 in actual costs.
+	// However, GasMeter always assumes cold costs.
+	testRunTimeGas(
+		"f(uint256)",
+		vector<bytes>{encodeArgs(2), encodeArgs(8)},
+		m_evmVersion < EVMVersion::berlin() ?
+		u256(0) :
+		u256(2100)
+	);
+
 	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 }
 

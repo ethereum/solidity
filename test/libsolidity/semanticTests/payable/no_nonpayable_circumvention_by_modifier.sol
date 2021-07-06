@@ -8,14 +8,10 @@ contract C {
     function msgvalue() internal returns (uint) {
         return msg.value;
     }
-    // TODO: remove this helper function once isoltest supports balance checking
-    function balance() external returns (uint) {
-        return address(this).balance;
-    }
 }
 // ====
 // compileViaYul: also
 // compileToEwasm: also
 // ----
 // f(), 27 wei -> FAILURE
-// balance() -> 0
+// balance -> 0

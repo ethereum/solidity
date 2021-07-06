@@ -38,7 +38,7 @@ void Compiler::compileContract(
 {
 	ContractCompiler runtimeCompiler(nullptr, m_runtimeContext, m_optimiserSettings);
 	runtimeCompiler.compileContract(_contract, _otherCompilers);
-	m_runtimeContext.appendAuxiliaryData(_metadata);
+	m_runtimeContext.appendToAuxiliaryData(_metadata);
 
 	// This might modify m_runtimeContext because it can access runtime functions at
 	// creation time.

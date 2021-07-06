@@ -237,15 +237,18 @@ size_t ContractCompiler::deployLibrary(ContractDefinition const& _contract)
 			codecopy(codepos, subOffset, subSize)
 			// Check that the first opcode is a PUSH20
 			if iszero(eq(0x73, byte(0, mload(codepos)))) {
-				mstore(0, <panicSig>)
-				mstore(4, 0)
+				mstore(0, <panicSelector>)
+				mstore(4, <panicCode>)
 				revert(0, 0x24)
 			}
 			mstore(0, address())
 			mstore8(codepos, 0x73)
 			return(codepos, subSize)
 		}
-		)")("panicSig", util::selectorFromSignature("Panic(uint256)").str()).render(),
+		)")
+		("panicSelector", util::selectorFromSignature("Panic(uint256)").str())
+		("panicCode", "0")
+		.render(),
 		{"subSize", "subOffset"}
 	);
 
@@ -601,6 +604,8 @@ bool ContractCompiler::visit(VariableDeclaration const& _variableDeclaration)
 
 bool ContractCompiler::visit(FunctionDefinition const& _function)
 {
+	solAssert(_function.isImplemented(), "");
+
 	CompilerContext::LocationSetter locationSetter(m_context, _function);
 
 	m_context.startFunction(_function);
@@ -1351,6 +1356,7 @@ bool ContractCompiler::visit(PlaceholderStatement const& _placeholderStatement)
 
 bool ContractCompiler::visit(Block const& _block)
 {
+	m_context.pushVisitedNodes(&_block);
 	if (_block.unchecked())
 	{
 		solAssert(m_context.arithmetic() == Arithmetic::Checked, "");
@@ -1369,6 +1375,7 @@ void ContractCompiler::endVisit(Block const& _block)
 	}
 	// Frees local variables declared in the scope of this block.
 	popScopedVariables(&_block);
+	m_context.popVisitedNodes();
 }
 
 void ContractCompiler::appendMissingFunctions()

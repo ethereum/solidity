@@ -3,4 +3,4 @@ contract C {
   function f(function(S memory) external) public {}
 }
 // ----
-// TypeError 5172: (25-26): Name has to refer to a struct, enum or contract.
+// DeclarationError 7920: (25-26): Identifier not found or not unique.

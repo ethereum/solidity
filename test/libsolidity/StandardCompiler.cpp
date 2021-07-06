@@ -924,7 +924,7 @@ BOOST_AUTO_TEST_CASE(linking_yul)
 		},
 		"sources": {
 			"fileA": {
-				"content": "object \"a\" { code { let addr := linkersymbol(\"fileB:L\") } }"
+				"content": "object \"a\" { code { let addr := linkersymbol(\"fileB:L\") sstore(0, addr) } }"
 			}
 		}
 	}
@@ -956,7 +956,7 @@ BOOST_AUTO_TEST_CASE(linking_yul_empty_link_reference)
 		},
 		"sources": {
 			"fileA": {
-				"content": "object \"a\" { code { let addr := linkersymbol(\"\") } }"
+				"content": "object \"a\" { code { let addr := linkersymbol(\"\") sstore(0, addr) } }"
 			}
 		}
 	}
@@ -988,7 +988,7 @@ BOOST_AUTO_TEST_CASE(linking_yul_no_filename_in_link_reference)
 		},
 		"sources": {
 			"fileA": {
-				"content": "object \"a\" { code { let addr := linkersymbol(\"L\") } }"
+				"content": "object \"a\" { code { let addr := linkersymbol(\"L\") sstore(0, addr) } }"
 			}
 		}
 	}
@@ -1020,7 +1020,7 @@ BOOST_AUTO_TEST_CASE(linking_yul_same_library_name_different_files)
 		},
 		"sources": {
 			"fileA": {
-				"content": "object \"a\" { code { let addr := linkersymbol(\"fileC:L\") } }"
+				"content": "object \"a\" { code { let addr := linkersymbol(\"fileC:L\") sstore(0, addr) } }"
 			}
 		}
 	}
@@ -1065,9 +1065,11 @@ BOOST_AUTO_TEST_CASE(evm_version)
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"petersburg\"") != string::npos);
 	result = compile(inputForVersion("\"evmVersion\": \"istanbul\","));
 	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
+	result = compile(inputForVersion("\"evmVersion\": \"berlin\","));
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"berlin\"") != string::npos);
 	// test default
 	result = compile(inputForVersion(""));
-	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"istanbul\"") != string::npos);
+	BOOST_CHECK(result["contracts"]["fileA"]["A"]["metadata"].asString().find("\"evmVersion\":\"berlin\"") != string::npos);
 	// test invalid
 	result = compile(inputForVersion("\"evmVersion\": \"invalid\","));
 	BOOST_CHECK(result["errors"][0]["message"].asString() == "Invalid EVM version requested.");
@@ -1195,7 +1197,8 @@ BOOST_AUTO_TEST_CASE(optimizer_settings_details_different)
 				"jumpdestRemover" : true,
 				"orderLiterals" : false,
 				"peephole" : true,
-				"yul": true
+				"yul": true,
+				"inliner": true
 			} }
 		},
 		"sources": {
@@ -1753,6 +1756,43 @@ BOOST_AUTO_TEST_CASE(dependency_tracking_of_abstract_contract_yul)
 
 	BOOST_REQUIRE(result["sources"].isObject());
 	BOOST_REQUIRE(result["sources"].size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(source_location_of_bare_block)
+{
+	char const* input = R"(
+	{
+		"language": "Solidity",
+		"sources": {
+			"A.sol": {
+				"content": "contract A { constructor() { uint x = 2; { uint y = 3; } } }"
+			}
+		},
+		"settings": {
+			"outputSelection": {
+				"A.sol": {
+					"A": ["evm.bytecode.sourceMap"]
+				}
+			}
+		}
+	}
+	)";
+
+	Json::Value parsedInput;
+	BOOST_REQUIRE(util::jsonParseStrict(input, parsedInput));
+
+	solidity::frontend::StandardCompiler compiler;
+	Json::Value result = compiler.compile(parsedInput);
+
+	string sourceMap = result["contracts"]["A.sol"]["A"]["evm"]["bytecode"]["sourceMap"].asString();
+
+	// Check that the bare block's source location is referenced.
+	string sourceRef =
+		";" +
+		to_string(string{"contract A { constructor() { uint x = 2; "}.size()) +
+		":" +
+		to_string(string{"{ uint y = 3; }"}.size());
+	BOOST_REQUIRE(sourceMap.find(sourceRef) != string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

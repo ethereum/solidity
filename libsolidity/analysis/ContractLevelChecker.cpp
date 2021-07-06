@@ -86,6 +86,7 @@ bool ContractLevelChecker::check(ContractDefinition const& _contract)
 
 	checkDuplicateFunctions(_contract);
 	checkDuplicateEvents(_contract);
+	checkReceiveFunction(_contract);
 	m_overrideChecker.check(_contract);
 	checkBaseConstructorArguments(_contract);
 	checkAbstractDefinitions(_contract);
@@ -160,6 +161,35 @@ void ContractLevelChecker::checkDuplicateEvents(ContractDefinition const& _contr
 			events[event->name()].push_back(event);
 
 	findDuplicateDefinitions(events);
+}
+
+void ContractLevelChecker::checkReceiveFunction(ContractDefinition const& _contract)
+{
+	for (FunctionDefinition const* function: _contract.definedFunctions())
+	{
+		solAssert(function, "");
+		if (function->isReceive())
+		{
+			if (function->libraryFunction())
+				m_errorReporter.declarationError(4549_error, function->location(), "Libraries cannot have receive ether functions.");
+
+			if (function->stateMutability() != StateMutability::Payable)
+				m_errorReporter.declarationError(
+					7793_error,
+					function->location(),
+					"Receive ether function must be payable, but is \"" +
+					stateMutabilityToString(function->stateMutability()) +
+					"\"."
+				);
+			if (function->visibility() != Visibility::External)
+				m_errorReporter.declarationError(4095_error, function->location(), "Receive ether function must be defined as \"external\".");
+
+			if (!function->returnParameters().empty())
+				m_errorReporter.fatalDeclarationError(6899_error, function->returnParameterList()->location(), "Receive ether function cannot return values.");
+			if (!function->parameters().empty())
+				m_errorReporter.fatalDeclarationError(6857_error, function->parameterList().location(), "Receive ether function cannot take parameters.");
+		}
+	}
 }
 
 template <class T>

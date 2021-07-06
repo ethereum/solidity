@@ -18,10 +18,8 @@
 #include <libyul/optimiser/ConditionalSimplifier.h>
 #include <libyul/optimiser/Semantics.h>
 #include <libyul/AST.h>
-#include <libyul/Utilities.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;
@@ -44,8 +42,8 @@ void ConditionalSimplifier::operator()(Switch& _switch)
 			(*this)(*_case.value);
 			_case.body.statements.insert(_case.body.statements.begin(),
 				Assignment{
-					_case.body.location,
-					{Identifier{_case.body.location, expr}},
+					_case.body.debugData,
+					{Identifier{_case.body.debugData, expr}},
 					make_unique<Expression>(*_case.value)
 				}
 			);
@@ -72,12 +70,12 @@ void ConditionalSimplifier::operator()(Block& _block)
 				)
 				{
 					YulString condition = std::get<Identifier>(*_if.condition).name;
-					langutil::SourceLocation location = _if.location;
+					std::shared_ptr<DebugData const> debugData = _if.debugData;
 					return make_vector<Statement>(
 						std::move(_s),
 						Assignment{
-							location,
-							{Identifier{location, condition}},
+							debugData,
+							{Identifier{debugData, condition}},
 							make_unique<Expression>(m_dialect.zeroLiteralForType(m_dialect.boolType))
 						}
 					);

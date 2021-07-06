@@ -98,7 +98,7 @@ for example, you have to add an offset corresponding to the struct member to rea
 
 As an example, consider the following contract:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -216,7 +216,7 @@ The following example shows a contract and its storage layout, containing
 value and reference types, types that are encoded packed, and nested types.
 
 
-.. code::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.0 <0.9.0;
@@ -238,12 +238,12 @@ value and reference types, types that are encoded packed, and nested types.
         bytes b1;
     }
 
-.. code::
+.. code:: json
 
-    "storageLayout": {
+    {
       "storage": [
         {
-          "astId": 14,
+          "astId": 15,
           "contract": "fileA:A",
           "label": "x",
           "offset": 0,
@@ -251,7 +251,7 @@ value and reference types, types that are encoded packed, and nested types.
           "type": "t_uint256"
         },
         {
-          "astId": 16,
+          "astId": 17,
           "contract": "fileA:A",
           "label": "y",
           "offset": 0,
@@ -259,15 +259,15 @@ value and reference types, types that are encoded packed, and nested types.
           "type": "t_uint256"
         },
         {
-          "astId": 18,
+          "astId": 20,
           "contract": "fileA:A",
           "label": "s",
           "offset": 0,
           "slot": "2",
-          "type": "t_struct(S)12_storage"
+          "type": "t_struct(S)13_storage"
         },
         {
-          "astId": 20,
+          "astId": 22,
           "contract": "fileA:A",
           "label": "addr",
           "offset": 0,
@@ -275,7 +275,7 @@ value and reference types, types that are encoded packed, and nested types.
           "type": "t_address"
         },
         {
-          "astId": 26,
+          "astId": 28,
           "contract": "fileA:A",
           "label": "map",
           "offset": 0,
@@ -283,7 +283,7 @@ value and reference types, types that are encoded packed, and nested types.
           "type": "t_mapping(t_uint256,t_mapping(t_address,t_bool))"
         },
         {
-          "astId": 29,
+          "astId": 31,
           "contract": "fileA:A",
           "label": "array",
           "offset": 0,
@@ -291,7 +291,7 @@ value and reference types, types that are encoded packed, and nested types.
           "type": "t_array(t_uint256)dyn_storage"
         },
         {
-          "astId": 31,
+          "astId": 33,
           "contract": "fileA:A",
           "label": "s1",
           "offset": 0,
@@ -299,7 +299,7 @@ value and reference types, types that are encoded packed, and nested types.
           "type": "t_string_storage"
         },
         {
-          "astId": 33,
+          "astId": 35,
           "contract": "fileA:A",
           "label": "b1",
           "offset": 0,
@@ -354,12 +354,12 @@ value and reference types, types that are encoded packed, and nested types.
           "label": "string",
           "numberOfBytes": "32"
         },
-        "t_struct(S)12_storage": {
+        "t_struct(S)13_storage": {
           "encoding": "inplace",
           "label": "struct A.S",
           "members": [
             {
-              "astId": 2,
+              "astId": 3,
               "contract": "fileA:A",
               "label": "a",
               "offset": 0,
@@ -367,7 +367,7 @@ value and reference types, types that are encoded packed, and nested types.
               "type": "t_uint128"
             },
             {
-              "astId": 4,
+              "astId": 5,
               "contract": "fileA:A",
               "label": "b",
               "offset": 16,
@@ -375,7 +375,7 @@ value and reference types, types that are encoded packed, and nested types.
               "type": "t_uint128"
             },
             {
-              "astId": 8,
+              "astId": 9,
               "contract": "fileA:A",
               "label": "staticArray",
               "offset": 0,
@@ -383,7 +383,7 @@ value and reference types, types that are encoded packed, and nested types.
               "type": "t_array(t_uint256)2_storage"
             },
             {
-              "astId": 11,
+              "astId": 12,
               "contract": "fileA:A",
               "label": "dynArray",
               "offset": 0,

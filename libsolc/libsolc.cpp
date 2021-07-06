@@ -25,8 +25,6 @@
 #include <libsolidity/interface/StandardCompiler.h>
 #include <libsolidity/interface/Version.h>
 #include <libyul/YulString.h>
-#include <libsolutil/Common.h>
-#include <libsolutil/JSON.h>
 
 #include <cstdlib>
 #include <list>

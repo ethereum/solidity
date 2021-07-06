@@ -178,7 +178,16 @@ ABIFunctions IRGenerationContext::abiFunctions()
 	return ABIFunctions(m_evmVersion, m_revertStrings, m_functions);
 }
 
-std::string IRGenerationContext::revertReasonIfDebug(std::string const& _message)
+uint64_t IRGenerationContext::internalFunctionID(FunctionDefinition const& _function, bool _requirePresent)
 {
-	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
+	auto [iterator, inserted] = m_functionIDs.try_emplace(_function.id(), m_functionIDs.size() + 1);
+	if (_requirePresent)
+			solAssert(!inserted, "");
+	return iterator->second;
+}
+
+void IRGenerationContext::copyFunctionIDsFrom(IRGenerationContext const& _other)
+{
+	solAssert(m_functionIDs.empty(), "");
+	m_functionIDs = _other.m_functionIDs;
 }

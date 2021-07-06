@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <libyul/backends/evm/EVMAssembly.h>
-
 #include <libyul/backends/evm/EVMDialect.h>
 #include <libyul/backends/evm/VariableReferenceCounter.h>
 #include <libyul/optimiser/ASTWalker.h>
@@ -39,8 +37,8 @@ class ErrorReporter;
 
 namespace solidity::yul
 {
+
 struct AsmAnalysisInfo;
-class EVMAssembly;
 
 struct CodeTransformContext
 {
@@ -182,6 +180,10 @@ private:
 	bool returnVariablesAndFunctionExitAreSetup() const
 	{
 		return m_functionExitStackHeight.has_value();
+	}
+	bool isInsideFunction() const
+	{
+		return m_functionExitLabel.has_value();
 	}
 
 	AbstractAssembly& m_assembly;

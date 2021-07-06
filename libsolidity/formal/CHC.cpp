@@ -219,9 +219,20 @@ bool CHC::visit(FunctionDefinition const& _function)
 	if (!m_currentContract)
 		return false;
 
-	if (!_function.isImplemented())
+	if (
+		!_function.isImplemented() ||
+		abstractAsNondet(_function)
+	)
 	{
-		addRule(summary(_function), "summary_function_" + to_string(_function.id()));
+		smtutil::Expression conj(true);
+		if (
+			_function.stateMutability() == StateMutability::Pure ||
+			_function.stateMutability() == StateMutability::View
+		)
+			conj = conj && currentEqualInitialVarsConstraints(stateVariablesIncludingInheritedAndPrivate(_function));
+
+		conj = conj && errorFlag().currentValue() == 0;
+		addRule(smtutil::Expression::implies(conj, summary(_function)), "summary_function_" + to_string(_function.id()));
 		return false;
 	}
 
@@ -262,7 +273,10 @@ void CHC::endVisit(FunctionDefinition const& _function)
 	if (!m_currentContract)
 		return;
 
-	if (!_function.isImplemented())
+	if (
+		!_function.isImplemented() ||
+		abstractAsNondet(_function)
+	)
 		return;
 
 	solAssert(m_currentFunction && m_currentContract, "");
@@ -759,10 +773,10 @@ void CHC::externalFunctionCall(FunctionCall const& _funCall)
 	connectBlocks(m_currentBlock, predicate(*m_errorDest), errorFlag().currentValue() > 0);
 	// To capture the possibility of a reentrant call, we record in the call graph that the  current function
 	// can call any of the external methods of the current contract.
-	solAssert(m_currentContract && m_currentFunction, "");
-	for (auto const* definedFunction: contractFunctions(*m_currentContract))
-		if (!definedFunction->isConstructor() && definedFunction->isPublic())
-			m_callGraph[m_currentFunction].insert(definedFunction);
+	if (m_currentFunction)
+		for (auto const* definedFunction: contractFunctions(*m_currentContract))
+			if (!definedFunction->isConstructor() && definedFunction->isPublic())
+				m_callGraph[m_currentFunction].insert(definedFunction);
 
 	m_context.addAssertion(errorFlag().currentValue() == 0);
 }
@@ -774,7 +788,6 @@ void CHC::externalFunctionCallToTrustedCode(FunctionCall const& _funCall)
 	auto kind = funType.kind();
 	solAssert(kind == FunctionType::Kind::External || kind == FunctionType::Kind::BareStaticCall, "");
 
-	solAssert(m_currentContract, "");
 	auto function = functionCallToDefinition(_funCall, currentScopeContract(), m_currentContract);
 	if (!function)
 		return;
@@ -932,8 +945,8 @@ void CHC::resetSourceAnalysis()
 	if (!usesZ3)
 	{
 		auto smtlib2Interface = dynamic_cast<CHCSmtLib2Interface*>(m_interface.get());
-		smtlib2Interface->reset();
 		solAssert(smtlib2Interface, "");
+		smtlib2Interface->reset();
 		m_context.setSolver(smtlib2Interface->smtlib2Interface());
 	}
 
@@ -999,6 +1012,37 @@ set<unsigned> CHC::transactionVerificationTargetsIds(ASTNode const* _txRoot)
 			_addChild({{}, called});
 	});
 	return verificationTargetsIds;
+}
+
+optional<CHC::CHCNatspecOption> CHC::natspecOptionFromString(string const& _option)
+{
+	static map<string, CHCNatspecOption> options{
+		{"abstract-function-nondet", CHCNatspecOption::AbstractFunctionNondet}
+	};
+	if (options.count(_option))
+		return options.at(_option);
+	return {};
+}
+
+set<CHC::CHCNatspecOption> CHC::smtNatspecTags(FunctionDefinition const& _function)
+{
+	set<CHC::CHCNatspecOption> options;
+	string smtStr = "custom:smtchecker";
+	for (auto const& [tag, value]: _function.annotation().docTags)
+		if (tag == smtStr)
+		{
+			string const& content = value.content;
+			if (auto option = natspecOptionFromString(content))
+				options.insert(*option);
+			else
+				m_errorReporter.warning(3130_error, _function.location(), "Unknown option for \"" + smtStr + "\": \"" + content + "\"");
+		}
+	return options;
+}
+
+bool CHC::abstractAsNondet(FunctionDefinition const& _function)
+{
+	return smtNatspecTags(_function).count(CHCNatspecOption::AbstractFunctionNondet);
 }
 
 SortPointer CHC::sort(FunctionDefinition const& _function)
@@ -1213,13 +1257,11 @@ smtutil::Expression CHC::initialConstraints(ContractDefinition const& _contract,
 {
 	smtutil::Expression conj = state().state() == state().state(0);
 	conj = conj && errorFlag().currentValue() == 0;
-	for (auto var: stateVariablesIncludingInheritedAndPrivate(_contract))
-		conj = conj && m_context.variable(*var)->valueAtIndex(0) == currentValue(*var);
+	conj = conj && currentEqualInitialVarsConstraints(stateVariablesIncludingInheritedAndPrivate(_contract));
 
 	FunctionDefinition const* function = _function ? _function : _contract.constructor();
 	if (function)
-		for (auto var: function->parameters())
-			conj = conj && m_context.variable(*var)->valueAtIndex(0) == currentValue(*var);
+		conj = conj && currentEqualInitialVarsConstraints(applyMap(function->parameters(), [](auto&& _var) -> VariableDeclaration const* { return _var.get(); }));
 
 	return conj;
 }
@@ -1252,6 +1294,13 @@ vector<smtutil::Expression> CHC::currentStateVariables()
 vector<smtutil::Expression> CHC::currentStateVariables(ContractDefinition const& _contract)
 {
 	return applyMap(SMTEncoder::stateVariablesIncludingInheritedAndPrivate(_contract), [this](auto _var) { return currentValue(*_var); });
+}
+
+smtutil::Expression CHC::currentEqualInitialVarsConstraints(vector<VariableDeclaration const*> const& _vars) const
+{
+	return fold(_vars, smtutil::Expression(true), [this](auto&& _conj, auto _var) {
+		return move(_conj) && currentValue(*_var) == m_context.variable(*_var)->valueAtIndex(0);
+	});
 }
 
 string CHC::predicateName(ASTNode const* _node, ContractDefinition const* _contract)

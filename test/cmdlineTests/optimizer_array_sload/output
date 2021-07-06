@@ -1,10 +1,10 @@
 Optimized IR:
-/*******************************************************
+/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 object "Arraysum_34" {
     code {
@@ -12,8 +12,8 @@ object "Arraysum_34" {
             mstore(64, 128)
             if callvalue() { revert(0, 0) }
             let _1 := datasize("Arraysum_34_deployed")
-            codecopy(0, dataoffset("Arraysum_34_deployed"), _1)
-            return(0, _1)
+            codecopy(128, dataoffset("Arraysum_34_deployed"), _1)
+            return(128, _1)
         }
     }
     object "Arraysum_34_deployed" {
@@ -60,5 +60,6 @@ object "Arraysum_34" {
                 revert(0, 0x24)
             }
         }
+        data ".metadata" hex"<BYTECODE REMOVED>"
     }
 }

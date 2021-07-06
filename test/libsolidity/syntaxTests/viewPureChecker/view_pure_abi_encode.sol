@@ -7,3 +7,4 @@ contract C {
     }
 }
 // ----
+// Warning 5740: (142-237): Unreachable code.

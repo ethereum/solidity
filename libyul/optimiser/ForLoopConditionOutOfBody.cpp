@@ -55,7 +55,7 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		return;
 
 	YulString iszero = m_dialect.booleanNegationFunction()->name;
-	langutil::SourceLocation location = locationOf(*firstStatement.condition);
+	shared_ptr<DebugData const> debugData = debugDataOf(*firstStatement.condition);
 
 	if (
 		holds_alternative<FunctionCall>(*firstStatement.condition) &&
@@ -64,8 +64,8 @@ void ForLoopConditionOutOfBody::operator()(ForLoop& _forLoop)
 		_forLoop.condition = make_unique<Expression>(std::move(std::get<FunctionCall>(*firstStatement.condition).arguments.front()));
 	else
 		_forLoop.condition = make_unique<Expression>(FunctionCall{
-			location,
-			Identifier{location, iszero},
+			debugData,
+			Identifier{debugData, iszero},
 			util::make_vector<Expression>(
 				std::move(*firstStatement.condition)
 			)

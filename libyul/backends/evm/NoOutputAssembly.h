@@ -56,7 +56,7 @@ public:
 	void appendLabel(LabelID _labelId) override;
 	void appendLabelReference(LabelID _labelId) override;
 	LabelID newLabelId() override;
-	LabelID namedLabel(std::string const& _name) override;
+	LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) override;
 	void appendLinkerSymbol(std::string const& _name) override;
 	void appendVerbatim(bytes _data, size_t _arguments, size_t _returnVariables) override;
 
@@ -69,6 +69,8 @@ public:
 	void appendDataOffset(std::vector<SubID> const& _subPath) override;
 	void appendDataSize(std::vector<SubID> const& _subPath) override;
 	SubID appendData(bytes const& _data) override;
+
+	void appendToAuxiliaryData(bytes const&) override {}
 
 	void appendImmutable(std::string const& _identifier) override;
 	void appendImmutableAssignment(std::string const& _identifier) override;

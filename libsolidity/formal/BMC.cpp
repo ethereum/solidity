@@ -18,7 +18,6 @@
 
 #include <libsolidity/formal/BMC.h>
 
-#include <libsolidity/formal/SymbolicState.h>
 #include <libsolidity/formal/SymbolicTypes.h>
 
 #include <libsmtutil/SMTPortfolio.h>

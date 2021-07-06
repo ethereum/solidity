@@ -14,7 +14,6 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
-// Warning 1218: (134-140): CHC: Error trying to invoke SMT solver.
 // Warning 4984: (134-140): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 4984: (143-146): CHC: Overflow (resulting value larger than 2**256 - 1) might happen here.
 // Warning 2661: (134-140): BMC: Overflow (resulting value larger than 2**256 - 1) happens here.

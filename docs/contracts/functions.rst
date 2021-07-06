@@ -12,7 +12,7 @@ Functions outside of a contract, also called "free functions", always have impli
 :ref:`visibility<visibility-and-getters>`. Their code is included in all contracts
 that call them, similar to internal library functions.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >0.7.0 <0.9.0;
@@ -56,7 +56,9 @@ Function parameters are declared the same way as variables, and the name of
 unused parameters can be omitted.
 
 For example, if you want your contract to accept one kind of external call
-with two integers, you would use something like the following::
+with two integers, you would use something like the following:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -89,7 +91,9 @@ Function return variables are declared with the same syntax after the
 ``returns`` keyword.
 
 For example, suppose you want to return two results: the sum and the product of
-two integers passed as function parameters, then you use something like::
+two integers passed as function parameters, then you use something like:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -114,7 +118,9 @@ You can either explicitly assign to return variables and
 then leave the function as above,
 or you can provide return values
 (either a single or :ref:`multiple ones<multi-return>`) directly with the ``return``
-statement::
+statement:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -178,7 +184,7 @@ The following statements are considered modifying the state:
 #. Using low-level calls.
 #. Using inline assembly that contains certain opcodes.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -224,7 +230,7 @@ In addition to the list of state modifying statements explained above, the follo
 #. Calling any function not marked ``pure``.
 #. Using inline assembly that contains certain opcodes.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;
@@ -321,7 +327,7 @@ will consume more gas than the 2300 gas stipend:
 
 Below you can see an example of a Sink contract that uses function ``receive``.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.0 <0.9.0;
@@ -383,7 +389,7 @@ operations as long as there is enough gas passed on to it.
     proper functions should be used instead.
 
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.2 <0.9.0;
@@ -461,7 +467,7 @@ This process is called "overloading" and also applies to inherited functions.
 The following example shows overloading of the function
 ``f`` in the scope of contract ``A``.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -480,7 +486,7 @@ The following example shows overloading of the function
 Overloaded functions are also present in the external interface. It is an error if two
 externally visible functions differ by their Solidity types but not by their external types.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -514,7 +520,7 @@ candidate, resolution fails.
 .. note::
     Return parameters are not taken into account for overload resolution.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;

@@ -25,7 +25,7 @@ contract in order to become the "richest", inspired by
 In the following contract, if you are no longer the richest,
 you receive the funds of the person who is now the richest.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -63,7 +63,7 @@ you receive the funds of the person who is now the richest.
 
 This is as opposed to the more intuitive sending pattern:
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -129,7 +129,7 @@ functions and this is what this section is about.
 The use of **function modifiers** makes these
 restrictions highly readable.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;
@@ -292,7 +292,7 @@ function finishes.
     Starting with version 0.4.0, modifier code
     will run even if the function explicitly returns.
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity ^0.8.4;

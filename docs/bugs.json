@@ -1,8 +1,10 @@
 [
     {
+        "uid": "SOL-2021-2",
         "name": "ABIDecodeTwoDimensionalArrayMemory",
         "summary": "If used on memory byte arrays, result of the function ``abi.decode`` can depend on the contents of memory outside of the actual byte array that is decoded.",
         "description": "The ABI specification uses pointers to data areas for everything that is dynamically-sized. When decoding data from memory (instead of calldata), the ABI decoder did not properly validate some of these pointers. More specifically, it was possible to use large values for the pointers inside arrays such that computing the offset resulted in an undetected overflow. This could lead to these pointers targeting areas in memory outside of the actual area to be decoded. This way, it was possible for ``abi.decode`` to return different values for the same encoded byte array.",
+        "link": "https://blog.soliditylang.org/2021/04/21/decoding-from-memory-bug/",
         "introduced": "0.4.16",
         "fixed": "0.8.4",
         "conditions": {
@@ -11,6 +13,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2021-1",
         "name": "KeccakCaching",
         "summary": "The bytecode optimizer incorrectly re-used previously evaluated Keccak-256 hashes. You are unlikely to be affected if you do not compute Keccak-256 hashes in inline assembly.",
         "description": "Solidity's bytecode optimizer has a step that can compute Keccak-256 hashes, if the contents of the memory are known during compilation time. This step also has a mechanism to determine that two Keccak-256 hashes are equal even if the values in memory are not known during compile time. This mechanism had a bug where Keccak-256 of the same memory content, but different sizes were considered equal. More specifically, ``keccak256(mpos1, length1)`` and ``keccak256(mpos2, length2)`` in some cases were considered equal if ``length1`` and ``length2``, when rounded up to nearest multiple of 32 were the same, and when the memory contents at ``mpos1`` and ``mpos2`` can be deduced to be equal. You maybe affected if you compute multiple Keccak-256 hashes of the same content, but with different lengths inside inline assembly. You are unaffected if your code uses ``keccak256`` with a length that is not a compile-time constant or if it is always a multiple of 32.",
@@ -22,20 +25,25 @@
         "severity": "medium"
     },
     {
+        "uid": "SOL-2020-11",
         "name": "EmptyByteArrayCopy",
         "summary": "Copying an empty byte array (or string) from memory or calldata to storage can result in data corruption if the target array's length is increased subsequently without storing new data.",
         "description": "The routine that copies byte arrays from memory or calldata to storage stores unrelated data from after the source array in the storage slot if the source array is empty. If the storage array's length is subsequently increased either by using ``.push()`` or by assigning to its ``.length`` attribute (only before 0.6.0), the newly created byte array elements will not be zero-initialized, but contain the unrelated data. You are not affected if you do not assign to ``.length`` and do not use ``.push()`` on byte arrays, or only use ``.push(<arg>)`` or manually initialize the new elements.",
+        "link": "https://blog.soliditylang.org/2020/10/19/empty-byte-array-copy-bug/",
         "fixed": "0.7.4",
         "severity": "medium"
     },
     {
+        "uid": "SOL-2020-10",
         "name": "DynamicArrayCleanup",
         "summary": "When assigning a dynamically-sized array with types of size at most 16 bytes in storage causing the assigned array to shrink, some parts of deleted slots were not zeroed out.",
         "description": "Consider a dynamically-sized array in storage whose base-type is small enough such that multiple values can be packed into a single slot, such as `uint128[]`. Let us define its length to be `l`. When this array gets assigned from another array with a smaller length, say `m`, the slots between elements `m` and `l` have to be cleaned by zeroing them out. However, this cleaning was not performed properly. Specifically, after the slot corresponding to `m`, only the first packed value was cleaned up. If this array gets resized to a length larger than `m`, the indices corresponding to the unclean parts of the slot contained the original value, instead of 0. The resizing here is performed by assigning to the array `length`, by a `push()` or via inline assembly. You are not affected if you are only using `.push(<arg>)` or if you assign a value (even zero) to the new elements after increasing the length of the array.",
+        "link": "https://blog.soliditylang.org/2020/10/07/solidity-dynamic-array-cleanup-bug/",
         "fixed": "0.7.3",
         "severity": "medium"
     },
     {
+        "uid": "SOL-2020-9",
         "name": "FreeFunctionRedefinition",
         "summary": "The compiler does not flag an error when two or more free functions with the same name and parameter types are defined in a source unit or when an imported free function alias shadows another free function with a different name but identical parameter types.",
         "description": "In contrast to functions defined inside contracts, free functions with identical names and parameter types did not create an error. Both definition of free functions with identical name and parameter types and an imported free function with an alias that shadows another function with a different name but identical parameter types were permitted due to which a call to either the multiply defined free function or the imported free function alias within a contract led to the execution of that free function which was defined first within the source unit. Subsequently defined identical free function definitions were silently ignored and their code generation was skipped.",
@@ -44,6 +52,7 @@
         "severity": "low"
     },
     {
+        "uid": "SOL-2020-8",
         "name": "UsingForCalldata",
         "summary": "Function calls to internal library functions with calldata parameters called via ``using for`` can result in invalid data being read.",
         "description": "Function calls to internal library functions using the ``using for`` mechanism copied all calldata parameters to memory first and passed them on like that, regardless of whether it was an internal or an external call. Due to that, the called function would receive a memory pointer that is interpreted as a calldata pointer. Since dynamically sized arrays are passed using two stack slots for calldata, but only one for memory, this can lead to stack corruption. An affected library call will consider the JUMPDEST to which it is supposed to return as part of its arguments and will instead jump out to whatever was on the stack before the call.",
@@ -52,6 +61,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2020-7",
         "name": "MissingEscapingInFormatting",
         "summary": "String literals containing double backslash characters passed directly to external or encoding function calls can lead to a different string being used when ABIEncoderV2 is enabled.",
         "description": "When ABIEncoderV2 is enabled, string literals passed directly to encoding functions or external function calls are stored as strings in the intemediate code. Characters outside the printable range are handled correctly, but backslashes are not escaped in this procedure. This leads to double backslashes being reduced to single backslashes and consequently re-interpreted as escapes potentially resulting in a different string being encoded.",
@@ -63,6 +73,7 @@
         }
     },
     {
+        "uid": "SOL-2020-6",
         "name": "ArraySliceDynamicallyEncodedBaseType",
         "summary": "Accessing array slices of arrays with dynamically encoded base types (e.g. multi-dimensional arrays) can result in invalid data being read.",
         "description": "For arrays with dynamically sized base types, index range accesses that use a start expression that is non-zero will result in invalid array slices. Any index access to such array slices will result in data being read from incorrect calldata offsets. Array slices are only supported for dynamic calldata types and all problematic type require ABIEncoderV2 to be enabled.",
@@ -74,6 +85,7 @@
         }
     },
     {
+        "uid": "SOL-2020-5",
         "name": "ImplicitConstructorCallvalueCheck",
         "summary": "The creation code of a contract that does not define a constructor but has a base that does define a constructor did not revert for calls with non-zero value.",
         "description": "Starting from Solidity 0.4.5 the creation code of contracts without explicit payable constructor is supposed to contain a callvalue check that results in contract creation reverting, if non-zero value is passed. However, this check was missing in case no explicit constructor was defined in a contract at all, but the contract has a base that does define a constructor. In these cases it is possible to send value in a contract creation transaction or using inline assembly without revert, even though the creation code is supposed to be non-payable.",
@@ -82,6 +94,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2020-4",
         "name": "TupleAssignmentMultiStackSlotComponents",
         "summary": "Tuple assignments with components that occupy several stack slots, i.e. nested tuples, pointers to external functions or references to dynamically sized calldata arrays, can result in invalid values.",
         "description": "Tuple assignments did not correctly account for tuple components that occupy multiple stack slots in case the number of stack slots differs between left-hand-side and right-hand-side. This can either happen in the presence of nested tuples or if the right-hand-side contains external function pointers or references to dynamic calldata arrays, while the left-hand-side contains an omission.",
@@ -90,15 +103,17 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2020-3",
         "name": "MemoryArrayCreationOverflow",
         "summary": "The creation of very large memory arrays can result in overlapping memory regions and thus memory corruption.",
         "description": "No runtime overflow checks were performed for the length of memory arrays during creation. In cases for which the memory size of an array in bytes, i.e. the array length times 32, is larger than 2^256-1, the memory allocation will overflow, potentially resulting in overlapping memory areas. The length of the array is still stored correctly, so copying or iterating over such an array will result in out-of-gas.",
-        "link": "https://solidity.ethereum.org/2020/04/06/memory-creation-overflow-bug/",
+        "link": "https://blog.soliditylang.org/2020/04/06/memory-creation-overflow-bug/",
         "introduced": "0.2.0",
         "fixed": "0.6.5",
         "severity": "low"
     },
     {
+        "uid": "SOL-2020-1",
         "name": "YulOptimizerRedundantAssignmentBreakContinue",
         "summary": "The Yul optimizer can remove essential assignments to variables declared inside for loops when Yul's continue or break statement is used. You are unlikely to be affected if you do not use inline assembly with for loops and continue and break statements.",
         "description": "The Yul optimizer has a stage that removes assignments to variables that are overwritten again or are not used in all following control-flow branches. This logic incorrectly removes such assignments to variables declared inside a for loop if they can be removed in a control-flow branch that ends with ``break`` or ``continue`` even though they cannot be removed in other control-flow branches. Variables declared outside of the respective for loop are not affected.",
@@ -110,6 +125,7 @@
         }
     },
     {
+        "uid": "SOL-2020-2",
         "name": "privateCanBeOverridden",
         "summary": "Private methods can be overridden by inheriting contracts.",
         "description": "While private methods of base contracts are not visible and cannot be called directly from the derived contract, it is still possible to declare a function of the same name and type and thus change the behaviour of the base contract's function.",
@@ -118,6 +134,7 @@
         "severity": "low"
     },
     {
+        "uid": "SOL-2020-1",
         "name": "YulOptimizerRedundantAssignmentBreakContinue0.5",
         "summary": "The Yul optimizer can remove essential assignments to variables declared inside for loops when Yul's continue or break statement is used. You are unlikely to be affected if you do not use inline assembly with for loops and continue and break statements.",
         "description": "The Yul optimizer has a stage that removes assignments to variables that are overwritten again or are not used in all following control-flow branches. This logic incorrectly removes such assignments to variables declared inside a for loop if they can be removed in a control-flow branch that ends with ``break`` or ``continue`` even though they cannot be removed in other control-flow branches. Variables declared outside of the respective for loop are not affected.",
@@ -129,6 +146,7 @@
         }
     },
     {
+        "uid": "SOL-2019-10",
         "name": "ABIEncoderV2LoopYulOptimizer",
         "summary": "If both the experimental ABIEncoderV2 and the experimental Yul optimizer are activated, one component of the Yul optimizer may reuse data in memory that has been changed in the meantime.",
         "description": "The Yul optimizer incorrectly replaces ``mload`` and ``sload`` calls with values that have been previously written to the load location (and potentially changed in the meantime) if all of the following conditions are met: (1) there is a matching ``mstore`` or ``sstore`` call before; (2) the contents of memory or storage is only changed in a function that is called (directly or indirectly) in between the first store and the load call; (3) called function contains a for loop where the same memory location is changed in the condition or the post or body block. When used in Solidity mode, this can only happen if the experimental ABIEncoderV2 is activated and the experimental Yul optimizer has been activated manually in addition to the regular optimizer in the compiler settings.",
@@ -142,6 +160,7 @@
         }
     },
     {
+        "uid": "SOL-2019-9",
         "name": "ABIEncoderV2CalldataStructsWithStaticallySizedAndDynamicallyEncodedMembers",
         "summary": "Reading from calldata structs that contain dynamically encoded, but statically-sized members can result in incorrect values.",
         "description": "When a calldata struct contains a dynamically encoded, but statically-sized member, the offsets for all subsequent struct members are calculated incorrectly. All reads from such members will result in invalid values. Only calldata structs are affected, i.e. this occurs in external functions with such structs as argument. Using affected structs in storage or memory or as arguments to public functions on the other hand works correctly.",
@@ -153,19 +172,21 @@
         }
     },
     {
+        "uid": "SOL-2019-8",
         "name": "SignedArrayStorageCopy",
         "summary": "Assigning an array of signed integers to a storage array of different type can lead to data corruption in that array.",
         "description": "In two's complement, negative integers have their higher order bits set. In order to fit into a shared storage slot, these have to be set to zero. When a conversion is done at the same time, the bits to set to zero were incorrectly determined from the source and not the target type. This means that such copy operations can lead to incorrect values being stored.",
-        "link": "https://blog.ethereum.org/2019/06/25/solidity-storage-array-bugs/",
+        "link": "https://blog.soliditylang.org/2019/06/25/solidity-storage-array-bugs/",
         "introduced": "0.4.7",
         "fixed": "0.5.10",
         "severity": "low/medium"
     },
     {
+        "uid": "SOL-2019-7",
         "name": "ABIEncoderV2StorageArrayWithMultiSlotElement",
         "summary": "Storage arrays containing structs or other statically-sized arrays are not read properly when directly encoded in external function calls or in abi.encode*.",
         "description": "When storage arrays whose elements occupy more than a single storage slot are directly encoded in external function calls or using abi.encode*, their elements are read in an overlapping manner, i.e. the element pointer is not properly advanced between reads. This is not a problem when the storage data is first copied to a memory variable or if the storage array only contains value types or dynamically-sized arrays.",
-        "link": "https://blog.ethereum.org/2019/06/25/solidity-storage-array-bugs/",
+        "link": "https://blog.soliditylang.org/2019/06/25/solidity-storage-array-bugs/",
         "introduced": "0.4.16",
         "fixed": "0.5.10",
         "severity": "low",
@@ -174,6 +195,7 @@
         }
     },
     {
+        "uid": "SOL-2019-6",
         "name": "DynamicConstructorArgumentsClippedABIV2",
         "summary": "A contract's constructor that takes structs or arrays that contain dynamically-sized arrays reverts or decodes to invalid data.",
         "description": "During construction of a contract, constructor parameters are copied from the code section to memory for decoding. The amount of bytes to copy was calculated incorrectly in case all parameters are statically-sized but contain dynamically-sized arrays as struct members or inner arrays. Such types are only available if ABIEncoderV2 is activated.",
@@ -185,6 +207,7 @@
         }
     },
     {
+        "uid": "SOL-2019-5",
         "name": "UninitializedFunctionPointerInConstructor",
         "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
         "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
@@ -193,6 +216,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2019-5",
         "name": "UninitializedFunctionPointerInConstructor_0.4.x",
         "summary": "Calling uninitialized internal function pointers created in the constructor does not always revert and can cause unexpected behaviour.",
         "description": "Uninitialized internal function pointers point to a special piece of code that causes a revert when called. Jump target positions are different during construction and after deployment, but the code for setting this special jump target only considered the situation after deployment.",
@@ -201,6 +225,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2019-4",
         "name": "IncorrectEventSignatureInLibraries",
         "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
         "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
@@ -209,6 +234,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2019-4",
         "name": "IncorrectEventSignatureInLibraries_0.4.x",
         "summary": "Contract types used in events in libraries cause an incorrect event signature hash",
         "description": "Instead of using the type `address` in the hashed signature, the actual contract name was used, leading to a wrong hash in the logs.",
@@ -217,10 +243,11 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2019-3",
         "name": "ABIEncoderV2PackedStorage",
         "summary": "Storage structs and arrays with types shorter than 32 bytes can cause data corruption if encoded directly from storage using the experimental ABIEncoderV2.",
         "description": "Elements of structs and arrays that are shorter than 32 bytes are not properly decoded from storage when encoded directly (i.e. not via a memory type) using ABIEncoderV2. This can cause corruption in the values themselves but can also overwrite other parts of the encoded data.",
-        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "link": "https://blog.soliditylang.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
         "introduced": "0.5.0",
         "fixed": "0.5.7",
         "severity": "low",
@@ -229,10 +256,11 @@
         }
     },
     {
+        "uid": "SOL-2019-3",
         "name": "ABIEncoderV2PackedStorage_0.4.x",
         "summary": "Storage structs and arrays with types shorter than 32 bytes can cause data corruption if encoded directly from storage using the experimental ABIEncoderV2.",
         "description": "Elements of structs and arrays that are shorter than 32 bytes are not properly decoded from storage when encoded directly (i.e. not via a memory type) using ABIEncoderV2. This can cause corruption in the values themselves but can also overwrite other parts of the encoded data.",
-        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "link": "https://blog.soliditylang.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
         "introduced": "0.4.19",
         "fixed": "0.4.26",
         "severity": "low",
@@ -241,10 +269,11 @@
         }
     },
     {
+        "uid": "SOL-2019-2",
         "name": "IncorrectByteInstructionOptimization",
         "summary": "The optimizer incorrectly handles byte opcodes whose second argument is 31 or a constant expression that evaluates to 31. This can result in unexpected values.",
         "description": "The optimizer incorrectly handles byte opcodes that use the constant 31 as second argument. This can happen when performing index access on bytesNN types with a compile-time constant value (not index) of 31 or when using the byte opcode in inline assembly.",
-        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "link": "https://blog.soliditylang.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
         "introduced": "0.5.5",
         "fixed": "0.5.7",
         "severity": "very low",
@@ -253,10 +282,11 @@
         }
     },
     {
+        "uid": "SOL-2019-1",
         "name": "DoubleShiftSizeOverflow",
         "summary": "Double bitwise shifts by large constants whose sum overflows 256 bits can result in unexpected values.",
         "description": "Nested logical shift operations whose total shift size is 2**256 or more are incorrectly optimized. This only applies to shifts by numbers of bits that are compile-time constant expressions.",
-        "link": "https://blog.ethereum.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
+        "link": "https://blog.soliditylang.org/2019/03/26/solidity-optimizer-and-abiencoderv2-bug/",
         "introduced": "0.5.5",
         "fixed": "0.5.6",
         "severity": "low",
@@ -266,35 +296,39 @@
         }
     },
     {
+        "uid": "SOL-2018-4",
         "name": "ExpExponentCleanup",
         "summary": "Using the ** operator with an exponent of type shorter than 256 bits can result in unexpected values.",
         "description": "Higher order bits in the exponent are not properly cleaned before the EXP opcode is applied if the type of the exponent expression is smaller than 256 bits and not smaller than the type of the base. In that case, the result might be larger than expected if the exponent is assumed to lie within the value range of the type. Literal numbers as exponents are unaffected as are exponents or bases of type uint256.",
-        "link": "https://blog.ethereum.org/2018/09/13/solidity-bugfix-release/",
+        "link": "https://blog.soliditylang.org/2018/09/13/solidity-bugfix-release/",
         "fixed": "0.4.25",
         "severity": "medium/high",
         "check": {"regex-source": "[^/]\\*\\* *[^/0-9 ]"}
     },
     {
+        "uid": "SOL-2018-3",
         "name": "EventStructWrongData",
         "summary": "Using structs in events logged wrong data.",
         "description": "If a struct is used in an event, the address of the struct is logged instead of the actual data.",
-        "link": "https://blog.ethereum.org/2018/09/13/solidity-bugfix-release/",
+        "link": "https://blog.soliditylang.org/2018/09/13/solidity-bugfix-release/",
         "introduced": "0.4.17",
         "fixed": "0.4.25",
         "severity": "very low",
         "check": {"ast-compact-json-path": "$..[?(@.nodeType === 'EventDefinition')]..[?(@.nodeType === 'UserDefinedTypeName' && @.typeDescriptions.typeString.startsWith('struct'))]"}
     },
     {
+        "uid": "SOL-2018-2",
         "name": "NestedArrayFunctionCallDecoder",
         "summary": "Calling functions that return multi-dimensional fixed-size arrays can result in memory corruption.",
         "description": "If Solidity code calls a function that returns a multi-dimensional fixed-size array, array elements are incorrectly interpreted as memory pointers and thus can cause memory corruption if the return values are accessed. Calling functions with multi-dimensional fixed-size arrays is unaffected as is returning fixed-size arrays from function calls. The regular expression only checks if such functions are present, not if they are called, which is required for the contract to be affected.",
-        "link": "https://blog.ethereum.org/2018/09/13/solidity-bugfix-release/",
+        "link": "https://blog.soliditylang.org/2018/09/13/solidity-bugfix-release/",
         "introduced": "0.1.4",
         "fixed": "0.4.22",
         "severity": "medium",
         "check": {"regex-source": "returns[^;{]*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\]\\s*\\[\\s*[^\\] \\t\\r\\n\\v\\f][^\\]]*\\][^{;]*[;{]"}
     },
     {
+        "uid": "SOL-2018-1",
         "name": "OneOfTwoConstructorsSkipped",
         "summary": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored.",
         "description": "If a contract has both a new-style constructor (using the constructor keyword) and an old-style constructor (a function with the same name as the contract) at the same time, one of them will be ignored. There will be a compiler warning about the old-style constructor, so contracts only using new-style constructors are fine.",
@@ -303,6 +337,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2017-5",
         "name": "ZeroFunctionSelector",
         "summary": "It is possible to craft the name of a function such that it is executed instead of the fallback function in very specific circumstances.",
         "description": "If a function has a selector consisting only of zeros, is payable and part of a contract that does not have a fallback function and at most five external functions in total, this function is called instead of the fallback function if Ether is sent to the contract without data.",
@@ -310,6 +345,7 @@
         "severity": "very low"
     },
     {
+        "uid": "SOL-2017-4",
         "name": "DelegateCallReturnValue",
         "summary": "The low-level .delegatecall() does not return the execution outcome, but converts the value returned by the functioned called to a boolean instead.",
         "description": "The return value of the low-level .delegatecall() function is taken from a position in memory, where the call data or the return data resides. This value is interpreted as a boolean and put onto the stack. This means if the called function returns at least 32 zero bytes, .delegatecall() returns false even if the call was successful.",
@@ -318,6 +354,7 @@
         "severity": "low"
     },
     {
+        "uid": "SOL-2017-3",
         "name": "ECRecoverMalformedInput",
         "summary": "The ecrecover() builtin can return garbage for malformed input.",
         "description": "The ecrecover precompile does not properly signal failure for malformed input (especially in the 'v' argument) and thus the Solidity function can return data that was previously present in the return area in memory.",
@@ -325,6 +362,7 @@
         "severity": "medium"
     },
     {
+        "uid": "SOL-2017-2",
         "name": "SkipEmptyStringLiteral",
         "summary": "If \"\" is used in a function call, the following function arguments will not be correctly passed to the function.",
         "description": "If the empty string literal \"\" is used as an argument in a function call, it is skipped by the encoder. This has the effect that the encoding of all arguments following this is shifted left by 32 bytes and thus the function call data is corrupted.",
@@ -332,10 +370,11 @@
         "severity": "low"
     },
     {
+        "uid": "SOL-2017-1",
         "name": "ConstantOptimizerSubtraction",
         "summary": "In some situations, the optimizer replaces certain numbers in the code with routines that compute different numbers.",
         "description": "The optimizer tries to represent any number in the bytecode by routines that compute them with less gas. For some special numbers, an incorrect routine is generated. This could allow an attacker to e.g. trick victims about a specific amount of ether, or function calls to call different functions (or none at all).",
-        "link": "https://blog.ethereum.org/2017/05/03/solidity-optimizer-bug/",
+        "link": "https://blog.soliditylang.org/2017/05/03/solidity-optimizer-bug/",
         "fixed": "0.4.11",
         "severity": "low",
         "conditions": {
@@ -343,6 +382,7 @@
         }
     },
     {
+        "uid": "SOL-2016-11",
         "name": "IdentityPrecompileReturnIgnored",
         "summary": "Failure of the identity precompile was ignored.",
         "description": "Calls to the identity contract, which is used for copying memory, ignored its return value. On the public chain, calls to the identity precompile can be made in a way that they never fail, but this might be different on private chains.",
@@ -350,6 +390,7 @@
         "fixed": "0.4.7"
     },
     {
+        "uid": "SOL-2016-10",
         "name": "OptimizerStateKnowledgeNotResetForJumpdest",
         "summary": "The optimizer did not properly reset its internal state at jump destinations, which could lead to data corruption.",
         "description": "The optimizer performs symbolic execution at certain stages. At jump destinations, multiple code paths join and thus it has to compute a common state from the incoming edges. Computing this common state was simplified to just use the empty state, but this implementation was not done properly. This bug can cause data corruption.",
@@ -361,15 +402,17 @@
         }
     },
     {
+        "uid": "SOL-2016-9",
         "name": "HighOrderByteCleanStorage",
         "summary": "For short types, the high order bytes were not cleaned properly and could overwrite existing data.",
         "description": "Types shorter than 32 bytes are packed together into the same 32 byte storage slot, but storage writes always write 32 bytes. For some types, the higher order bytes were not cleaned properly, which made it sometimes possible to overwrite a variable in storage when writing to another one.",
-        "link": "https://blog.ethereum.org/2016/11/01/security-alert-solidity-variables-can-overwritten-storage/",
+        "link": "https://blog.soliditylang.org/2016/11/01/security-alert-solidity-variables-can-overwritten-storage/",
         "severity": "high",
         "introduced": "0.1.6",
         "fixed": "0.4.4"
     },
     {
+        "uid": "SOL-2016-8",
         "name": "OptimizerStaleKnowledgeAboutSHA3",
         "summary": "The optimizer did not properly reset its knowledge about SHA3 operations resulting in some hashes (also used for storage variable positions) not being calculated correctly.",
         "description": "The optimizer performs symbolic execution in order to save re-evaluating expressions whose value is already known. This knowledge was not properly reset across control flow paths and thus the optimizer sometimes thought that the result of a SHA3 operation is already present on the stack. This could result in data corruption by accessing the wrong storage slot.",
@@ -380,6 +423,7 @@
         }
     },
     {
+        "uid": "SOL-2016-7",
         "name": "LibrariesNotCallableFromPayableFunctions",
         "summary": "Library functions threw an exception when called from a call that received Ether.",
         "description": "Library functions are protected against sending them Ether through a call. Since the DELEGATECALL opcode forwards the information about how much Ether was sent with a call, the library function incorrectly assumed that Ether was sent to the library and threw an exception.",
@@ -388,6 +432,7 @@
         "fixed": "0.4.2"
     },
     {
+        "uid": "SOL-2016-6",
         "name": "SendFailsForZeroEther",
         "summary": "The send function did not provide enough gas to the recipient if no Ether was sent with it.",
         "description": "The recipient of an Ether transfer automatically receives a certain amount of gas from the EVM to handle the transfer. In the case of a zero-transfer, this gas is not provided which causes the recipient to throw an exception.",
@@ -395,6 +440,7 @@
         "fixed": "0.4.0"
     },
     {
+        "uid": "SOL-2016-5",
         "name": "DynamicAllocationInfiniteLoop",
         "summary": "Dynamic allocation of an empty memory array caused an infinite loop and thus an exception.",
         "description": "Memory arrays can be created provided a length. If this length is zero, code was generated that did not terminate and thus consumed all gas.",
@@ -402,6 +448,7 @@
         "fixed": "0.3.6"
     },
     {
+        "uid": "SOL-2016-4",
         "name": "OptimizerClearStateOnCodePathJoin",
         "summary": "The optimizer did not properly reset its internal state at jump destinations, which could lead to data corruption.",
         "description": "The optimizer performs symbolic execution at certain stages. At jump destinations, multiple code paths join and thus it has to compute a common state from the incoming edges. Computing this common state was not done correctly. This bug can cause data corruption, but it is probably quite hard to use for targeted attacks.",
@@ -412,6 +459,7 @@
         }
     },
     {
+        "uid": "SOL-2016-3",
         "name": "CleanBytesHigherOrderBits",
         "summary": "The higher order bits of short bytesNN types were not cleaned before comparison.",
         "description": "Two variables of type bytesNN were considered different if their higher order bits, which are not part of the actual value, were different. An attacker might use this to reach seemingly unreachable code paths by providing incorrectly formatted input data.",
@@ -419,6 +467,7 @@
         "fixed": "0.3.3"
     },
     {
+        "uid": "SOL-2016-2",
         "name": "ArrayAccessCleanHigherOrderBits",
         "summary": "Access to array elements for arrays of types with less than 32 bytes did not correctly clean the higher order bits, causing corruption in other array elements.",
         "description": "Multiple elements of an array of values that are shorter than 17 bytes are packed into the same storage slot. Writing to a single element of such an array did not properly clean the higher order bytes and thus could lead to data corruption.",
@@ -426,6 +475,7 @@
         "fixed": "0.3.1"
     },
     {
+        "uid": "SOL-2016-1",
         "name": "AncientCompiler",
         "summary": "This compiler version is ancient and might contain several undocumented or undiscovered bugs.",
         "description": "The list of bugs is only kept for compiler versions starting from 0.3.0, so older versions might contain undocumented bugs.",

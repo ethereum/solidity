@@ -21,7 +21,6 @@
 #include <libyul/Utilities.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libsolutil/CommonData.h>
-#include <libsolutil/Visitor.h>
 
 using namespace std;
 using namespace solidity;

@@ -81,6 +81,10 @@ public:
 	/// signature: (memPtr) ->
 	std::string storeLiteralInMemoryFunction(std::string const& _literal);
 
+	/// @returns the name of a function that stores a string literal at a specific location in storage
+	/// signature: (slot) ->
+	std::string copyLiteralToStorageFunction(std::string const& _literal);
+
 	// @returns the name of a function that has the equivalent logic of an
 	// `assert` or `require` call.
 	std::string requireOrAssertFunction(bool _assert, Type const* _messageType = nullptr);
@@ -126,8 +130,15 @@ public:
 
 	/// @returns the name of a function that rounds its input to the next multiple
 	/// of 32 or the input if it is a multiple of 32.
+	/// Ignores overflow.
 	/// signature: (value) -> result
 	std::string roundUpFunction();
+
+	/// @returns the name of a function that divides by 32 and rounds up during the division.
+	/// In other words, on input x it returns the smallest y such that y * 32 >= x.
+	/// Ignores overflow.
+	/// signature: (x) -> y
+	std::string divide32CeilFunction();
 
 	/// signature: (x, y) -> sum
 	std::string overflowCheckedIntAddFunction(IntegerType const& _type);
@@ -206,6 +217,11 @@ public:
 	/// for statically sized arrays, it will just clean-up elements of array starting from newLen until the end
 	/// signature: (array, newLen)
 	std::string resizeArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that zeroes all storage array elements from `startIndex` to `len` (excluding).
+	/// Assumes that `len` is the array length. Does nothing if `startIndex >= len`. Does not modify the stored length.
+	/// signature: (array, len, startIndex)
+	std::string cleanUpStorageArrayEndFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that reduces the size of a storage array by one element
 	/// signature: (array)
@@ -453,12 +469,18 @@ public:
 	/// signature: (slot, offset) ->
 	std::string storageSetToZeroFunction(Type const& _type);
 
-	/// If revertStrings is debug, @returns inline assembly code that
+	/// If revertStrings is debug, @returns the name of a function that
 	/// stores @param _message in memory position 0 and reverts.
-	/// Otherwise returns "revert(0, 0)".
-	static std::string revertReasonIfDebug(RevertStrings revertStrings, std::string const& _message = "");
+	/// Otherwise returns the name of a function that uses "revert(0, 0)".
+	std::string revertReasonIfDebugFunction(std::string const& _message = "");
 
-	std::string revertReasonIfDebug(std::string const& _message = "");
+	/// @returns the function body of ``revertReasonIfDebug``.
+	/// Should only be used internally and by the old code generator.
+	static std::string revertReasonIfDebugBody(
+		RevertStrings _revertStrings,
+		std::string const& _allocation,
+		std::string const& _message
+	);
 
 	/// Reverts with ``Panic(uint256)`` and the given code.
 	std::string panicFunction(util::PanicCode _code);
@@ -536,6 +558,14 @@ private:
 	/// @returns the name of a function that resizes a storage byte array
 	/// signature: (array, newLen)
 	std::string resizeDynamicByteArrayFunction(ArrayType const& _type);
+
+	/// @returns the name of a function that cleans up elements of a storage byte array starting from startIndex.
+	/// It will not copy elements in case of transformation to short byte array, and will not change array length.
+	/// In case of startIndex is greater than len, doesn't do anything.
+	/// In case of short byte array (< 32 bytes) doesn't do anything.
+	/// If the first slot to be cleaned up is partially occupied, does not touch it. Cleans up only completely unused slots.
+	/// signature: (array, len, startIndex)
+	std::string cleanUpDynamicByteArrayEndSlotsFunction(ArrayType const& _type);
 
 	/// @returns the name of a function that increases size of byte array
 	/// when we resize byte array frextractUsedSetLenom < 32 elements to >= 32 elements or we push to byte array of size 31 copying of data will  occur

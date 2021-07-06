@@ -47,7 +47,6 @@
 #include <vector>
 
 using namespace std;
-using namespace ranges;
 using namespace solidity::langutil;
 using namespace solidity::frontend;
 
@@ -134,18 +133,18 @@ void checkCallGraphExpectations(
 	auto notEmpty = [](set<string> const& _set){ return !_set.empty(); };
 
 	soltestAssert(
-		(_expectedCreatedContractSets | views::values | views::remove_if(notEmpty)).empty(),
+		(_expectedCreatedContractSets | ranges::views::values | ranges::views::remove_if(notEmpty)).empty(),
 		"Contracts that are not expected to create other contracts should not be included in _expectedCreatedContractSets."
 	);
 	soltestAssert(
-		(_expectedEdges | views::keys | to<set>()) == (_callGraphs | views::keys | to<set>()) &&
-		(ranges::views::set_difference(_expectedCreatedContractSets | views::keys, _expectedEdges | views::keys)).empty(),
+		(_expectedEdges | ranges::views::keys | ranges::to<set>()) == (_callGraphs | ranges::views::keys | ranges::to<set>()) &&
+		(ranges::views::set_difference(_expectedCreatedContractSets | ranges::views::keys, _expectedEdges | ranges::views::keys)).empty(),
 		"Contracts listed in expectations do not match contracts actually found in the source file or in other expectations."
 	);
-	for (string const& contractName: _expectedEdges | views::keys)
+	for (string const& contractName: _expectedEdges | ranges::views::keys)
 	{
 		soltestAssert(
-			(ranges::views::set_difference(valueOrDefault(_expectedCreatedContractSets, contractName, {}), _expectedEdges | views::keys)).empty(),
+			(ranges::views::set_difference(valueOrDefault(_expectedCreatedContractSets, contractName, {}), _expectedEdges | ranges::views::keys)).empty(),
 			"Inconsistent expectations: contract expected to be created but not to be present in the source file."
 		);
 	}
@@ -153,16 +152,21 @@ void checkCallGraphExpectations(
 	map<string, EdgeNames> edges;
 	map<string, set<string>> createdContractSets;
 	map<string, set<string>> emittedEventSets;
-	for (string const& contractName: _expectedEdges | views::keys)
+	for (string const& contractName: _expectedEdges | ranges::views::keys)
 	{
 		soltestAssert(_callGraphs.at(contractName) != nullptr, "");
 		CallGraph const& callGraph = *_callGraphs.at(contractName);
 
 		edges[contractName] = edgeNames(callGraph.edges);
 		if (!callGraph.bytecodeDependency.empty())
-			createdContractSets[contractName] = callGraph.bytecodeDependency | views::keys | views::transform(getContractName) | to<set<string>>();
+			createdContractSets[contractName] = callGraph.bytecodeDependency |
+				ranges::views::keys |
+				ranges::views::transform(getContractName) |
+				ranges::to<set<string>>();
 		if (!callGraph.emittedEvents.empty())
-			emittedEventSets[contractName] = callGraph.emittedEvents | views::transform(eventToString) | to<set<string>>();
+			emittedEventSets[contractName] = callGraph.emittedEvents |
+				 ranges::views::transform(eventToString) |
+				 ranges::to<set<string>>();
 	}
 
 	BOOST_CHECK_EQUAL(edges, _expectedEdges);
@@ -179,7 +183,7 @@ ostream& operator<<(ostream& _out, EdgeNames const& _edgeNames)
 
 ostream& operator<<(ostream& _out, set<string> const& _set)
 {
-	_out << "{" << (_set | views::join(", ") | to<string>()) << "}";
+	_out << "{" << (_set | ranges::views::join(", ") | ranges::to<string>()) << "}";
 	return _out;
 }
 

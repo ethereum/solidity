@@ -27,6 +27,7 @@
 
 #include <boost/program_options.hpp>
 
+#include <cstddef>
 #include <istream>
 #include <memory>
 #include <optional>

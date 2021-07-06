@@ -25,21 +25,23 @@
 #pragma once
 
 #include <libsolutil/Common.h>
+#include <iostream>
 #include <sstream>
 #include <string>
 
 namespace solidity::util
 {
 
-/// Retrieve and returns the contents of the given file as a std::string.
+/// Retrieves and returns the contents of the given file as a std::string.
 /// If the file doesn't exist, it will throw a FileNotFound exception.
+/// If the file exists but is not a regular file, it will throw NotAFile exception.
 /// If the file is empty, returns an empty string.
 std::string readFileAsString(std::string const& _file);
 
-/// Retrieve and returns the contents of standard input (until EOF).
-std::string readStandardInput();
+/// Retrieves and returns the whole content of the specified input stream (until EOF).
+std::string readUntilEnd(std::istream& _stdin);
 
-/// Retrieve and returns a character from standard input (without waiting for EOL).
+/// Retrieves and returns a character from standard input (without waiting for EOL).
 int readStandardInputChar();
 
 /// Converts arbitrary value to string representation using std::stringstream.

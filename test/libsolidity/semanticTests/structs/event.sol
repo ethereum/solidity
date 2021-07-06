@@ -15,3 +15,4 @@ contract C {
 // ----
 // library: L
 // f() ->
+// ~ emit Ev((uint256)): 0x01

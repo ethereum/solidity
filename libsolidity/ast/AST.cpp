@@ -31,7 +31,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <algorithm>
 #include <functional>
 #include <utility>
 
@@ -55,6 +54,50 @@ Declaration const* ASTNode::referencedDeclaration(Expression const& _expression)
 		return identifier->annotation().referencedDeclaration;
 	else
 		return nullptr;
+}
+
+FunctionDefinition const* ASTNode::resolveFunctionCall(FunctionCall const& _functionCall, ContractDefinition const* _mostDerivedContract)
+{
+	auto const* functionDef = dynamic_cast<FunctionDefinition const*>(
+		ASTNode::referencedDeclaration(_functionCall.expression())
+	);
+
+	if (!functionDef)
+		return nullptr;
+
+	if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&_functionCall.expression()))
+	{
+		if (*memberAccess->annotation().requiredLookup == VirtualLookup::Super)
+		{
+			if (auto const typeType = dynamic_cast<TypeType const*>(memberAccess->expression().annotation().type))
+				if (auto const contractType = dynamic_cast<ContractType const*>(typeType->actualType()))
+				{
+					solAssert(_mostDerivedContract, "");
+					solAssert(contractType->isSuper(), "");
+					ContractDefinition const* superContract = contractType->contractDefinition().superContract(*_mostDerivedContract);
+
+					return &functionDef->resolveVirtual(
+						*_mostDerivedContract,
+						superContract
+					);
+				}
+		}
+		else
+			solAssert(*memberAccess->annotation().requiredLookup == VirtualLookup::Static, "");
+	}
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(&_functionCall.expression()))
+	{
+		solAssert(*identifier->annotation().requiredLookup == VirtualLookup::Virtual, "");
+		if (functionDef->virtualSemantics())
+		{
+			solAssert(_mostDerivedContract, "");
+			return &functionDef->resolveVirtual(*_mostDerivedContract);
+		}
+	}
+	else
+		solAssert(false, "");
+
+	return functionDef;
 }
 
 ASTAnnotation& ASTNode::annotation() const
@@ -276,6 +319,17 @@ FunctionDefinition const* ContractDefinition::nextConstructor(ContractDefinition
 	return nullptr;
 }
 
+multimap<std::string, FunctionDefinition const*> const& ContractDefinition::definedFunctionsByName() const
+{
+	return m_definedFunctionsByName.init([&]{
+		std::multimap<std::string, FunctionDefinition const*> result;
+		for (FunctionDefinition const* fun: filteredNodes<FunctionDefinition>(m_subNodes))
+			result.insert({fun->name(), fun});
+		return result;
+	});
+}
+
+
 TypeNameAnnotation& TypeName::annotation() const
 {
 	return initAnnotation<TypeNameAnnotation>();
@@ -397,6 +451,8 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 ) const
 {
 	solAssert(!isConstructor(), "");
+	solAssert(!name().empty(), "");
+
 	// If we are not doing super-lookup and the function is not virtual, we can stop here.
 	if (_searchStart == nullptr && !virtualSemantics())
 		return *this;
@@ -407,19 +463,24 @@ FunctionDefinition const& FunctionDefinition::resolveVirtual(
 
 	FunctionType const* functionType = TypeProvider::function(*this)->asExternallyCallableFunction(false);
 
+	bool foundSearchStart = (_searchStart == nullptr);
 	for (ContractDefinition const* c: _mostDerivedContract.annotation().linearizedBaseContracts)
 	{
-		if (_searchStart != nullptr && c != _searchStart)
+		if (!foundSearchStart && c != _searchStart)
 			continue;
-		_searchStart = nullptr;
-		for (FunctionDefinition const* function: c->definedFunctions())
+		else
+			foundSearchStart = true;
+
+		for (FunctionDefinition const* function: c->definedFunctions(name()))
 			if (
-				function->name() == name() &&
-				!function->isConstructor() &&
+				// With super lookup analysis guarantees that there is an implemented function in the chain.
+				// With virtual lookup there are valid cases where returning an unimplemented one is fine.
+				(function->isImplemented() || _searchStart == nullptr) &&
 				FunctionType(*function).asExternallyCallableFunction(false)->hasEqualParameterTypes(*functionType)
 			)
 				return *function;
 	}
+
 	solAssert(false, "Virtual function " + name() + " not found.");
 	return *this; // not reached
 }
@@ -543,6 +604,18 @@ bool Declaration::isEventOrErrorParameter() const
 {
 	solAssert(scope(), "");
 	return dynamic_cast<EventDefinition const*>(scope()) || dynamic_cast<ErrorDefinition const*>(scope());
+}
+
+bool Declaration::isVisibleAsUnqualifiedName() const
+{
+	if (!scope())
+		return true;
+	if (isStructMember() || isEnumValue() || isEventOrErrorParameter())
+		return false;
+	if (auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(scope()))
+		if (!functionDefinition->isImplemented())
+			return false; // parameter of a function without body
+	return true;
 }
 
 DeclarationAnnotation& Declaration::annotation() const
@@ -696,8 +769,7 @@ set<VariableDeclaration::Location> VariableDeclaration::allowedDataLocations() c
 		if (
 			isConstructorParameter() ||
 			isInternalCallableParameter() ||
-			isLibraryFunctionParameter() ||
-			isTryCatchParameter()
+			isLibraryFunctionParameter()
 		)
 			locations.insert(Location::Storage);
 		if (!isTryCatchParameter() && !isConstructorParameter())

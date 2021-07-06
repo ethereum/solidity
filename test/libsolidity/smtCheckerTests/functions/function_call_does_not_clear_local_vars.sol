@@ -10,3 +10,4 @@ contract C {
 // ====
 // SMTEngine: all
 // ----
+// Warning 5740: (122-136): Unreachable code.

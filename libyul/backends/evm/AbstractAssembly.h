@@ -23,11 +23,14 @@
 
 #pragma once
 
+#include <libyul/ASTForward.h>
+
 #include <libsolutil/Common.h>
 #include <libsolutil/CommonData.h>
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 namespace solidity::langutil
 {
@@ -72,7 +75,7 @@ public:
 	/// Generate a new unique label.
 	virtual LabelID newLabelId() = 0;
 	/// Returns a label identified by the given name. Creates it if it does not yet exist.
-	virtual LabelID namedLabel(std::string const& _name) = 0;
+	virtual LabelID namedLabel(std::string const& _name, size_t _params, size_t _returns, std::optional<size_t> _sourceID) = 0;
 	/// Append a reference to a to-be-linked symbol.
 	/// Currently, we assume that the value is always a 20 byte number.
 	virtual void appendLinkerSymbol(std::string const& _name) = 0;
@@ -106,6 +109,9 @@ public:
 	virtual void appendImmutable(std::string const& _identifier) = 0;
 	/// Appends an assignment to an immutable variable.
 	virtual void appendImmutableAssignment(std::string const& _identifier) = 0;
+
+	/// Appends data to the very end of the bytecode. Repeated calls concatenate.
+	virtual void appendToAuxiliaryData(bytes const& _data) = 0;
 
 	/// Mark this assembly as invalid. Any attempt to request bytecode from it should throw.
 	virtual void markAsInvalid() = 0;

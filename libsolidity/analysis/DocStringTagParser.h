@@ -37,6 +37,9 @@ class DocStringTagParser: private ASTConstVisitor
 public:
 	explicit DocStringTagParser(langutil::ErrorReporter& _errorReporter): m_errorReporter(_errorReporter) {}
 	bool parseDocStrings(SourceUnit const& _sourceUnit);
+	/// Validate the parsed doc strings, requires parseDocStrings() and the
+	/// DeclarationTypeChecker to have run.
+	bool validateDocStringsUsingTypes(SourceUnit const& _sourceUnit);
 
 private:
 	bool visit(ContractDefinition const& _contract) override;

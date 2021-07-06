@@ -59,7 +59,7 @@ NoOutputAssembly::LabelID NoOutputAssembly::newLabelId()
 	return 1;
 }
 
-AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&)
+AbstractAssembly::LabelID NoOutputAssembly::namedLabel(string const&, size_t, size_t, optional<size_t>)
 {
 	return 1;
 }

@@ -24,8 +24,8 @@ namespace solidity::util
 
 enum class PanicCode
 {
-	Generic = 0x00, // generic / unspecified error.
-	Assert = 0x01, // generic / unspecified error. Used by assert().
+	Generic = 0x00, // generic / unspecified error
+	Assert = 0x01, // used by the assert() builtin
 	UnderOverflow = 0x11, // arithmetic underflow or overflow
 	DivisionByZero = 0x12, // division or modulo by zero
 	EnumConversionError = 0x21, // enum conversion error

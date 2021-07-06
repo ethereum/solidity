@@ -1,29 +1,42 @@
-{"contracts":{"A":{"C":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":"<BYTECODE REMOVED>"}},"ir":"/*******************************************************
+{"contracts":{"A":{"C":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":"<BYTECODE REMOVED>"}},"ir":"/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 
 object \"C_3\" {
     code {
+        /// @src 0:79,92
         mstore(64, 128)
-        if callvalue() { revert(0, 0) }
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_C_3()
 
-        codecopy(0, dataoffset(\"C_3_deployed\"), datasize(\"C_3_deployed\"))
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"C_3_deployed\"), datasize(\"C_3_deployed\"))
 
-        return(0, datasize(\"C_3_deployed\"))
+        return(_1, datasize(\"C_3_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
 
         function constructor_C_3() {
 
+            /// @src 0:79,92
+
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
         }
 
     }
     object \"C_3_deployed\" {
         code {
+            /// @src 0:79,92
             mstore(64, 128)
 
             if iszero(lt(calldatasize(), 4))
@@ -34,7 +47,15 @@ object \"C_3\" {
                 default {}
             }
             if iszero(calldatasize()) {  }
-            revert(0, 0)
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+            function allocate_unbounded() -> memPtr {
+                memPtr := mload(64)
+            }
+
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
 
             function shift_right_224_unsigned(value) -> newValue {
                 newValue :=
@@ -45,36 +66,50 @@ object \"C_3\" {
 
         }
 
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 
 }
 
-"},"D":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":"<BYTECODE REMOVED>"}},"ir":"/*******************************************************
+"},"D":{"evm":{"bytecode":{"generatedSources":[],"object":"<BYTECODE REMOVED>"},"deployedBytecode":{"object":"<BYTECODE REMOVED>"}},"ir":"/*=====================================================*
  *                       WARNING                       *
  *  Solidity to Yul compilation is still EXPERIMENTAL  *
  *       It can result in LOSS OF FUNDS or worse       *
  *                !USE AT YOUR OWN RISK!               *
- *******************************************************/
+ *=====================================================*/
 
 
 object \"D_16\" {
     code {
+        /// @src 0:93,146
         mstore(64, 128)
-        if callvalue() { revert(0, 0) }
+        if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
         constructor_D_16()
 
-        codecopy(0, dataoffset(\"D_16_deployed\"), datasize(\"D_16_deployed\"))
+        let _1 := allocate_unbounded()
+        codecopy(_1, dataoffset(\"D_16_deployed\"), datasize(\"D_16_deployed\"))
 
-        return(0, datasize(\"D_16_deployed\"))
+        return(_1, datasize(\"D_16_deployed\"))
+
+        function allocate_unbounded() -> memPtr {
+            memPtr := mload(64)
+        }
 
         function constructor_D_16() {
 
+            /// @src 0:93,146
+
+        }
+
+        function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+            revert(0, 0)
         }
 
     }
     object \"D_16_deployed\" {
         code {
+            /// @src 0:93,146
             mstore(64, 128)
 
             if iszero(lt(calldatasize(), 4))
@@ -86,7 +121,7 @@ object \"D_16\" {
                 {
                     // f()
 
-                    if callvalue() { revert(0, 0) }
+                    if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
                     abi_decode_tuple_(4, calldatasize())
                     fun_f_15()
                     let memPos := allocate_unbounded()
@@ -97,10 +132,10 @@ object \"D_16\" {
                 default {}
             }
             if iszero(calldatasize()) {  }
-            revert(0, 0)
+            revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
 
             function abi_decode_tuple_(headStart, dataEnd)   {
-                if slt(sub(dataEnd, headStart), 0) { revert(0, 0) }
+                if slt(sub(dataEnd, headStart), 0) { revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() }
 
             }
 
@@ -114,7 +149,9 @@ object \"D_16\" {
             }
 
             function fun_f_15() {
+                /// @src 0:106,144
 
+                /// @src 0:134,141
                 let _1 := allocate_unbounded()
                 let _2 := add(_1, datasize(\"C_3\"))
                 if or(gt(_2, 0xffffffffffffffff), lt(_2, _1)) { panic_error_0x41() }
@@ -125,6 +162,7 @@ object \"D_16\" {
 
                 if iszero(expr_12_address) { revert_forward_1() }
 
+                /// @src 0:128,141
                 let var_c_8_address := expr_12_address
 
             }
@@ -135,9 +173,22 @@ object \"D_16\" {
                 revert(0, 0x24)
             }
 
+            function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                revert(0, 0)
+            }
+
+            function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                revert(0, 0)
+            }
+
+            function revert_error_dbdddcbe895c83990c08b3492a0e83918d802a52331272ac6fdb6a7c4aea3b1b() {
+                revert(0, 0)
+            }
+
             function revert_forward_1() {
-                returndatacopy(0, 0, returndatasize())
-                revert(0, returndatasize())
+                let pos := allocate_unbounded()
+                returndatacopy(pos, 0, returndatasize())
+                revert(pos, returndatasize())
             }
 
             function shift_right_224_unsigned(value) -> newValue {
@@ -148,31 +199,44 @@ object \"D_16\" {
             }
 
         }
-        /*******************************************************
+        /*=====================================================*
         *                       WARNING                       *
         *  Solidity to Yul compilation is still EXPERIMENTAL  *
         *       It can result in LOSS OF FUNDS or worse       *
         *                !USE AT YOUR OWN RISK!               *
-        *******************************************************/
+        *=====================================================*/
 
         object \"C_3\" {
             code {
+                /// @src 0:79,92
                 mstore(64, 128)
-                if callvalue() { revert(0, 0) }
+                if callvalue() { revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() }
 
                 constructor_C_3()
 
-                codecopy(0, dataoffset(\"C_3_deployed\"), datasize(\"C_3_deployed\"))
+                let _1 := allocate_unbounded()
+                codecopy(_1, dataoffset(\"C_3_deployed\"), datasize(\"C_3_deployed\"))
 
-                return(0, datasize(\"C_3_deployed\"))
+                return(_1, datasize(\"C_3_deployed\"))
+
+                function allocate_unbounded() -> memPtr {
+                    memPtr := mload(64)
+                }
 
                 function constructor_C_3() {
 
+                    /// @src 0:79,92
+
+                }
+
+                function revert_error_ca66f745a3ce8ff40e2ccaf1ad45db7774001b90d25810abd9040049be7bf4bb() {
+                    revert(0, 0)
                 }
 
             }
             object \"C_3_deployed\" {
                 code {
+                    /// @src 0:79,92
                     mstore(64, 128)
 
                     if iszero(lt(calldatasize(), 4))
@@ -183,7 +247,15 @@ object \"D_16\" {
                         default {}
                     }
                     if iszero(calldatasize()) {  }
-                    revert(0, 0)
+                    revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74()
+
+                    function allocate_unbounded() -> memPtr {
+                        memPtr := mload(64)
+                    }
+
+                    function revert_error_42b3090547df1d2001c96683413b8cf91c1b902ef5e3cb8d9f6f304cf7446f74() {
+                        revert(0, 0)
+                    }
 
                     function shift_right_224_unsigned(value) -> newValue {
                         newValue :=
@@ -194,10 +266,12 @@ object \"D_16\" {
 
                 }
 
+                data \".metadata\" hex\"<BYTECODE REMOVED>\"
             }
 
         }
 
+        data \".metadata\" hex\"<BYTECODE REMOVED>\"
     }
 
 }

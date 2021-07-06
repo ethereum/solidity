@@ -150,9 +150,11 @@ sub_0: assembly {
         /* "optimizer_inliner_dynamic_reference_constructor/input.sol":304:359  function f() internal pure returns (uint) { return 6; } */
       jump	// out
     tag_17:
-      mstore(0x00, shl(0xe0, 0x4e487b71))
-      mstore(0x04, 0x51)
-      revert(0x00, 0x24)
+      tag_21
+      tag_22
+      jump	// in
+    tag_21:
+      jump	// out
         /* "#utility.yul":196:421   */
     tag_19:
         /* "#utility.yul":236:239   */
@@ -167,7 +169,7 @@ sub_0: assembly {
       gt
         /* "#utility.yul":254:256   */
       iszero
-      tag_24
+      tag_26
       jumpi
         /* "#utility.yul":312:322   */
       0x4e487b71
@@ -192,13 +194,37 @@ sub_0: assembly {
         /* "#utility.yul":365:380   */
       revert
         /* "#utility.yul":254:256   */
-    tag_24:
+    tag_26:
       pop
         /* "#utility.yul":406:415   */
       add
       swap1
         /* "#utility.yul":244:421   */
       jump	// out
+        /* "#utility.yul":426:553   */
+    tag_22:
+        /* "#utility.yul":487:497   */
+      0x4e487b71
+        /* "#utility.yul":482:485   */
+      0xe0
+        /* "#utility.yul":478:498   */
+      shl
+        /* "#utility.yul":475:476   */
+      0x00
+        /* "#utility.yul":468:499   */
+      mstore
+        /* "#utility.yul":518:522   */
+      0x51
+        /* "#utility.yul":515:516   */
+      0x04
+        /* "#utility.yul":508:523   */
+      mstore
+        /* "#utility.yul":542:546   */
+      0x24
+        /* "#utility.yul":539:540   */
+      0x00
+        /* "#utility.yul":532:547   */
+      revert
 
     auxdata: <AUXDATA REMOVED>
 }

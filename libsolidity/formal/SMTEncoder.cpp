@@ -797,7 +797,7 @@ void SMTEncoder::visitCryptoFunction(FunctionCall const& _funCall)
 
 void SMTEncoder::visitGasLeft(FunctionCall const& _funCall)
 {
-	string gasLeft = "gasleft()";
+	string gasLeft = "gasleft";
 	// We increase the variable index since gasleft changes
 	// inside a tx.
 	defineGlobalVariable(gasLeft, _funCall, true);
@@ -1022,6 +1022,17 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 		return;
 	}
 
+	ArrayType const* arrayType = dynamic_cast<ArrayType const*>(argType);
+	if (auto sliceType = dynamic_cast<ArraySliceType const*>(argType))
+		arrayType = &sliceType->arrayType();
+
+	if (arrayType && arrayType->isByteArray() && smt::isFixedBytes(*funCallType))
+	{
+		auto array = dynamic_pointer_cast<smt::SymbolicArrayVariable>(m_context.expression(*argument));
+		bytesToFixedBytesAssertions(*array, _funCall);
+		return;
+	}
+
 	// TODO Simplify this whole thing for 0.8.0 where weird casts are disallowed.
 
 	unsigned argSize = argType->storageBytes();
@@ -1113,6 +1124,14 @@ void SMTEncoder::visitTypeConversion(FunctionCall const& _funCall)
 	{
 		solAssert(smt::isNumber(*funCallType), "");
 
+		RationalNumberType const* rationalType = isConstant(*argument);
+		if (rationalType)
+		{
+			// The TypeChecker guarantees that a constant fits in the cast size.
+			defineExpr(_funCall, symbArg);
+			return;
+		}
+
 		auto const* fixedCast = dynamic_cast<FixedBytesType const*>(funCallType);
 		auto const* fixedArg = dynamic_cast<FixedBytesType const*>(argType);
 		if (fixedCast && fixedArg)
@@ -1150,7 +1169,15 @@ void SMTEncoder::visitStructConstructorCall(FunctionCall const& _funCall)
 	if (smt::isNonRecursiveStruct(*_funCall.annotation().type))
 	{
 		auto& structSymbolicVar = dynamic_cast<smt::SymbolicStructVariable&>(*m_context.expression(_funCall));
-		structSymbolicVar.assignAllMembers(applyMap(_funCall.sortedArguments(), [this](auto const& arg) { return expr(*arg); }));
+		auto structType = dynamic_cast<StructType const*>(structSymbolicVar.type());
+		solAssert(structType, "");
+		auto const& structMembers = structType->structDefinition().members();
+		solAssert(structMembers.size() == _funCall.sortedArguments().size(), "");
+		auto args = _funCall.sortedArguments();
+		structSymbolicVar.assignAllMembers(applyMap(
+			ranges::views::zip(args, structMembers),
+			[this] (auto const& argMemberPair) { return expr(*argMemberPair.first, argMemberPair.second->type()); }
+		));
 	}
 
 }
@@ -1188,6 +1215,25 @@ void SMTEncoder::addArrayLiteralAssertions(
 	m_context.addAssertion(_symArray.length() == _elementValues.size());
 	for (size_t i = 0; i < _elementValues.size(); i++)
 		m_context.addAssertion(smtutil::Expression::select(_symArray.elements(), i) == _elementValues[i]);
+}
+
+void SMTEncoder::bytesToFixedBytesAssertions(
+	smt::SymbolicArrayVariable& _symArray,
+	Expression const& _fixedBytes
+)
+{
+	auto const& fixed = dynamic_cast<FixedBytesType const&>(*_fixedBytes.annotation().type);
+	auto intType = TypeProvider::uint256();
+	string suffix = to_string(_fixedBytes.id()) + "_" + to_string(m_context.newUniqueId());
+	smt::SymbolicIntVariable k(intType, intType, "k_" + suffix, m_context);
+	m_context.addAssertion(k.currentValue() == 0);
+	size_t n = fixed.numBytes();
+	for (size_t i = 0; i < n; i++)
+	{
+		auto kPrev = k.currentValue();
+		m_context.addAssertion((smtutil::Expression::select(_symArray.elements(), i) * (u256(1) << ((n - i - 1) * 8))) + kPrev == k.increaseIndex());
+	}
+	m_context.addAssertion(expr(_fixedBytes) == k.currentValue());
 }
 
 void SMTEncoder::endVisit(Return const& _return)
@@ -2299,13 +2345,13 @@ void SMTEncoder::mergeVariables(smtutil::Expression const& _condition, VariableI
 	}
 }
 
-smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl)
+smtutil::Expression SMTEncoder::currentValue(VariableDeclaration const& _decl) const
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->currentValue();
 }
 
-smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, unsigned _index)
+smtutil::Expression SMTEncoder::valueAtIndex(VariableDeclaration const& _decl, unsigned _index) const
 {
 	solAssert(m_context.knownVariable(_decl), "");
 	return m_context.variable(_decl)->valueAtIndex(_index);
@@ -2960,9 +3006,6 @@ vector<smtutil::Expression> SMTEncoder::symbolicArguments(FunctionCall const& _f
 
 void SMTEncoder::collectFreeFunctions(set<SourceUnit const*, ASTNode::CompareByID> const& _sources)
 {
-	if (!m_freeFunctions.empty())
-		return;
-
 	for (auto source: _sources)
 		for (auto node: source->nodes())
 			if (auto function = dynamic_cast<FunctionDefinition const*>(node.get()))

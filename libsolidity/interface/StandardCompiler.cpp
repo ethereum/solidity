@@ -241,7 +241,7 @@ bool isArtifactRequested(Json::Value const& _outputSelection, string const& _fil
 vector<string> evmObjectComponents(string const& _objectKind)
 {
 	solAssert(_objectKind == "bytecode" || _objectKind == "deployedBytecode", "");
-	vector<string> components{"", ".object", ".opcodes", ".sourceMap", ".generatedSources", ".linkReferences"};
+	vector<string> components{"", ".object", ".opcodes", ".sourceMap", ".functionDebugData", ".generatedSources", ".linkReferences"};
 	if (_objectKind == "deployedBytecode")
 		components.push_back(".immutableReferences");
 	return util::applyMap(components, [&](auto const& _s) { return "evm." + _objectKind + _s; });
@@ -388,6 +388,8 @@ Json::Value collectEVMObject(
 		output["opcodes"] = evmasm::disassemble(_object.bytecode);
 	if (_artifactRequested("sourceMap"))
 		output["sourceMap"] = _sourceMap ? *_sourceMap : "";
+	if (_artifactRequested("functionDebugData"))
+		output["functionDebugData"] = StandardCompiler::formatFunctionDebugData(_object.functionDebugData);
 	if (_artifactRequested("linkReferences"))
 		output["linkReferences"] = formatLinkReferences(_object.linkReferences);
 	if (_runtimeObject && _artifactRequested("immutableReferences"))
@@ -447,7 +449,7 @@ std::optional<Json::Value> checkOptimizerKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkOptimizerDetailsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"peephole", "jumpdestRemover", "orderLiterals", "deduplicate", "cse", "constantOptimizer", "yul", "yulDetails"};
+	static set<string> keys{"peephole", "inliner", "jumpdestRemover", "orderLiterals", "deduplicate", "cse", "constantOptimizer", "yul", "yulDetails"};
 	return checkKeys(_input, keys, "settings.optimizer.details");
 }
 
@@ -556,14 +558,15 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 	if (auto result = checkOptimizerKeys(_jsonInput))
 		return *result;
 
-	OptimiserSettings settings = OptimiserSettings::none();
+	OptimiserSettings settings = OptimiserSettings::minimal();
 
 	if (_jsonInput.isMember("enabled"))
 	{
 		if (!_jsonInput["enabled"].isBool())
 			return formatFatalError("JSONError", "The \"enabled\" setting must be a Boolean.");
 
-		settings = _jsonInput["enabled"].asBool() ? OptimiserSettings::standard() : OptimiserSettings::minimal();
+		if (_jsonInput["enabled"].asBool())
+			settings = OptimiserSettings::standard();
 	}
 
 	if (_jsonInput.isMember("runs"))
@@ -613,6 +616,7 @@ std::variant<OptimiserSettings, Json::Value> parseOptimizerSettings(Json::Value 
 }
 
 }
+
 
 std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler::parseInput(Json::Value const& _input)
 {
@@ -1422,4 +1426,28 @@ string StandardCompiler::compile(string const& _input) noexcept
 	{
 		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}
+}
+
+Json::Value StandardCompiler::formatFunctionDebugData(
+	map<string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
+)
+{
+	Json::Value ret(Json::objectValue);
+	for (auto const& [name, info]: _debugInfo)
+	{
+		Json::Value fun;
+		if (info.sourceID)
+			fun["id"] = Json::UInt64(*info.sourceID);
+		else
+			fun["id"] = Json::nullValue;
+		if (info.bytecodeOffset)
+			fun["entryPoint"] = Json::UInt64(*info.bytecodeOffset);
+		else
+			fun["entryPoint"] = Json::nullValue;
+		fun["parameterSlots"] = Json::UInt64(info.params);
+		fun["returnSlots"] = Json::UInt64(info.returns);
+		ret[name] = move(fun);
+	}
+
+	return ret;
 }

@@ -31,7 +31,8 @@
 #include <functional>
 #include <ostream>
 
-namespace solidity::frontend {
+namespace solidity::frontend
+{
 
 class Compiler
 {

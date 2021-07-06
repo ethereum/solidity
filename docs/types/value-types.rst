@@ -66,15 +66,22 @@ Shifts
 ^^^^^^
 
 The result of a shift operation has the type of the left operand, truncating the result to match the type.
-Right operand must be unsigned type. Trying to shift by signed type will produce a compilation error.
+The right operand must be of unsigned type, trying to shift by an signed type will produce a compilation error.
 
-- For positive and negative ``x`` values, ``x << y`` is equivalent to ``x * 2**y``.
-- For positive ``x`` values,  ``x >> y`` is equivalent to ``x / 2**y``.
-- For negative ``x`` values, ``x >> y`` is equivalent to ``(x + 1) / 2**y - 1`` (which is the same as dividing ``x`` by ``2**y`` while rounding down towards negative infinity).
+Shifts can be "simulated" using multiplication by powers of two in the following way. Note that the truncation
+to the type of the left operand is always performed at the end, but not mentioned explicitly.
+
+- ``x << y`` is equivalent to the mathematical expression ``x * 2**y``.
+- ``x >> y`` is equivalent to the mathematical expression ``x / 2**y``, rounded towards negative infinity.
 
 .. warning::
-    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to ``x / 2**y``,
+    Before version ``0.5.0`` a right shift ``x >> y`` for negative ``x`` was equivalent to
+    the mathematical expression ``x / 2**y`` rounded towards zero,
     i.e., right shifts used rounding up (towards zero) instead of rounding down (towards negative infinity).
+
+.. note::
+    Overflow checks are never performed for shift operations as they are done for arithmetic operations.
+    Instead, the result is always truncated.
 
 Addition, Subtraction and Multiplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -231,7 +238,7 @@ For a quick reference of all members of address, see :ref:`address_related`.
 It is possible to query the balance of an address using the property ``balance``
 and to send Ether (in units of wei) to a payable address using the ``transfer`` function:
 
-::
+.. code-block:: solidity
 
     address payable x = address(0x123);
     address myAddress = address(this);
@@ -265,7 +272,9 @@ return the success condition (as a ``bool``) and the returned data
 The functions ``abi.encode``, ``abi.encodePacked``, ``abi.encodeWithSelector``
 and ``abi.encodeWithSignature`` can be used to encode structured data.
 
-Example::
+Example:
+
+.. code-block:: solidity
 
     bytes memory payload = abi.encodeWithSignature("register(string)", "MyName");
     (bool success, bytes memory returnData) = address(nameReg).call(payload);
@@ -284,15 +293,21 @@ Example::
     arbitrary arguments and would also handle a first argument of type
     ``bytes4`` differently. These edge cases were removed in version 0.5.0.
 
-It is possible to adjust the supplied gas with the ``gas`` modifier::
+It is possible to adjust the supplied gas with the ``gas`` modifier:
+
+.. code-block:: solidity
 
     address(nameReg).call{gas: 1000000}(abi.encodeWithSignature("register(string)", "MyName"));
 
-Similarly, the supplied Ether value can be controlled too::
+Similarly, the supplied Ether value can be controlled too:
+
+.. code-block:: solidity
 
     address(nameReg).call{value: 1 ether}(abi.encodeWithSignature("register(string)", "MyName"));
 
-Lastly, these modifiers can be combined. Their order does not matter::
+Lastly, these modifiers can be combined. Their order does not matter:
+
+.. code-block:: solidity
 
     address(nameReg).call{gas: 1000000, value: 1 ether}(abi.encodeWithSignature("register(string)", "MyName"));
 
@@ -305,8 +320,8 @@ Since byzantium ``staticcall`` can be used as well. This is basically the same a
 
 All three functions ``call``, ``delegatecall`` and ``staticcall`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
-The ``gas`` option is available on all three methods, while the ``value`` option is not
-supported for ``delegatecall``.
+The ``gas`` option is available on all three methods, while the ``value`` option is only available
+on ``call``.
 
 .. note::
     It is best to avoid relying on hardcoded gas values in your smart contract code,
@@ -476,7 +491,7 @@ regardless of the type of the right (exponent) operand.
     for the type of ``2.5`` and ``uint128``, the Solidity compiler does not accept
     this code.
 
-::
+.. code-block:: solidity
 
     uint128 a = 1;
     uint128 b = 2.5 + a + 0.5;
@@ -529,7 +544,7 @@ Unicode Literals
 While regular string literals can only contain ASCII, Unicode literals – prefixed with the keyword ``unicode`` – can contain any valid UTF-8 sequence.
 They also support the very same escape sequences as regular string literals.
 
-::
+.. code-block:: solidity
 
     string memory a = unicode"Hello 😃";
 
@@ -567,7 +582,7 @@ The data representation is the same as for enums in C: The options are represent
 subsequent unsigned integer values starting from ``0``.
 
 
-::
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -619,7 +634,9 @@ contract internally.
 External functions consist of an address and a function signature and they can
 be passed via and returned from external function calls.
 
-Function types are notated as follows::
+Function types are notated as follows:
+
+.. code-block:: solidity
 
     function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
 
@@ -688,7 +705,9 @@ External (or public) functions have the following members:
   respectively. See :ref:`External Function Calls <external-function-calls>` for
   more information.
 
-Example that shows how to use the members::
+Example that shows how to use the members:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.4 <0.9.0;
@@ -704,7 +723,9 @@ Example that shows how to use the members::
         }
     }
 
-Example that shows how to use internal function types::
+Example that shows how to use internal function types:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.16 <0.9.0;
@@ -762,7 +783,9 @@ Example that shows how to use internal function types::
         }
     }
 
-Another example that uses external function types::
+Another example that uses external function types:
+
+.. code-block:: solidity
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.4.22 <0.9.0;
