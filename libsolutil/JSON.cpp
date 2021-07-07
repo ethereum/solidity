@@ -115,18 +115,29 @@ Json::Value removeNullMembers(Json::Value _json)
 
 string jsonPrettyPrint(Json::Value const& _input)
 {
-	static map<string, Json::Value> settings{{"indentation", "  "}, {"enableYAMLCompatibility", true}};
-	static StreamWriterBuilder writerBuilder(settings);
-	string result = print(_input, writerBuilder);
-	boost::replace_all(result, " \n", "\n");
-	return result;
+	return jsonPrint(_input, JsonFormat{ JsonFormat::Pretty });
 }
 
 string jsonCompactPrint(Json::Value const& _input)
 {
-	static map<string, Json::Value> settings{{"indentation", ""}};
-	static StreamWriterBuilder writerBuilder(settings);
-	return print(_input, writerBuilder);
+	return jsonPrint(_input, JsonFormat{ JsonFormat::Compact });
+}
+
+string jsonPrint(Json::Value const& _input, JsonFormat const& _format)
+{
+	map<string, Json::Value> settings;
+	if (_format.format == JsonFormat::Pretty)
+	{
+		settings["indentation"] = string(_format.indent, ' ');
+		settings["enableYAMLCompatibility"] = true;
+	}
+	else
+		settings["indentation"] = "";
+	StreamWriterBuilder writerBuilder(settings);
+	string result = print(_input, writerBuilder);
+	if (_format.format == JsonFormat::Pretty)
+		boost::replace_all(result, " \n", "\n");
+	return result;
 }
 
 bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* = nullptr */)

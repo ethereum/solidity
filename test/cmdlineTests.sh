@@ -141,9 +141,16 @@ function test_solc_behaviour()
 
     if [[ " ${solc_args[*]} " == *" --standard-json "* ]]
     then
-        sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
+        python3 - <<EOF
+import re, sys
+json = open("$stdout_path", "r").read()
+json = re.sub(r"{[^{}]*Warning: This is a pre-release compiler version[^{}]*},?", "", json)
+json = re.sub(r"},\s*]", "}]", json)                  # },] -> }]
+json = re.sub(r"\"errors\":\s*\[\s*\],?\s*","",json)  # Remove "errors" array if it's not empty
+json = re.sub("\n\\s+\n", "\n\n", json)               # Remove any leftover trailing whitespace
+open("$stdout_path", "w").write(json)
+EOF
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
-        sed -i.bak -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"<OPCODES REMOVED>\"/g' "$stdout_path"
         sed -i.bak -E -e 's/\"sourceMap\":\"[0-9:;-]+\"/\"sourceMap\":\"<SOURCEMAP REMOVED>\"/g' "$stdout_path"
 

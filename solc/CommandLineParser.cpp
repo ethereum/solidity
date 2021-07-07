@@ -125,6 +125,7 @@ static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
 static string const g_strPrettyJson = "pretty-json";
+static string const g_strJsonIndent = "json-indent";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
@@ -281,7 +282,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		assembly.targetMachine == _other.assembly.targetMachine &&
 		assembly.inputLanguage == _other.assembly.inputLanguage &&
 		linker.libraries == _other.linker.libraries &&
-		formatting.prettyJson == _other.formatting.prettyJson &&
+		formatting.json == _other.formatting.json &&
 		formatting.coloredOutput == _other.formatting.coloredOutput &&
 		formatting.withErrorIds == _other.formatting.withErrorIds &&
 		compiler.outputs == _other.compiler.outputs &&
@@ -582,7 +583,12 @@ General Information)").c_str(),
 	outputFormatting.add_options()
 		(
 			g_strPrettyJson.c_str(),
-			"Output JSON in pretty format. Currently it only works with the combined JSON output."
+			"Output JSON in pretty format."
+		)
+		(
+			g_strJsonIndent.c_str(),
+			po::value<uint32_t>()->value_name("N")->default_value(util::JsonFormat::defaultIndent),
+			"Indent pretty-printed JSON with N spaces. Enables '--pretty-json' automatically."
 		)
 		(
 			g_strColor.c_str(),
@@ -790,7 +796,16 @@ General Information)").c_str(),
 		m_options.output.dir = m_args.at(g_strOutputDir).as<string>();
 
 	m_options.output.overwriteFiles = (m_args.count(g_strOverwrite) > 0);
-	m_options.formatting.prettyJson = (m_args.count(g_strPrettyJson) > 0);
+
+	if (m_args.count(g_strPrettyJson) > 0)
+	{
+		m_options.formatting.json.format = JsonFormat::Pretty;
+	}
+	if (!m_args[g_strJsonIndent].defaulted())
+	{
+		m_options.formatting.json.format = JsonFormat::Pretty;
+		m_options.formatting.json.indent = m_args[g_strJsonIndent].as<uint32_t>();
+	}
 
 	static_assert(
 		sizeof(m_options.compiler.outputs) == 15 * sizeof(bool),

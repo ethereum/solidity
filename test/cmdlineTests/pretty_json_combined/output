@@ -1,0 +1,10 @@
+{
+   "contracts":
+   {
+      "pretty_json_combined/input.sol:C":
+      {
+         "abi": []
+      }
+   },
+   "version": "<VERSION REMOVED>"
+}

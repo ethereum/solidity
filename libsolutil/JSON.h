@@ -33,11 +33,32 @@ namespace solidity::util
 /// Removes members with null value recursively from (@a _json).
 Json::Value removeNullMembers(Json::Value _json);
 
+/// JSON printing format.
+struct JsonFormat
+{
+	enum Format
+	{
+		Compact,
+		Pretty
+	};
+
+	static constexpr uint32_t defaultIndent = 2;
+
+	bool operator==(JsonFormat const& _other) const noexcept { return (format == _other.format) && (indent == _other.indent); }
+	bool operator!=(JsonFormat const& _other) const noexcept { return !(*this == _other); }
+
+	Format format = Compact;
+	uint32_t indent = defaultIndent;
+};
+
 /// Serialise the JSON object (@a _input) with indentation
 std::string jsonPrettyPrint(Json::Value const& _input);
 
 /// Serialise the JSON object (@a _input) without indentation
 std::string jsonCompactPrint(Json::Value const& _input);
+
+/// Serialise the JSON object (@a _input) using specified format (@a _format)
+std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format);
 
 /// Parse a JSON string (@a _input) with enabled strict-mode and writes resulting JSON object to (@a _json)
 /// \param _input JSON input string
