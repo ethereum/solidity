@@ -40,9 +40,16 @@ map<string, TargetType> const ModelCheckerTargets::targetStrings{
 std::optional<ModelCheckerTargets> ModelCheckerTargets::fromString(string const& _targets)
 {
 	set<TargetType> chosenTargets;
-	if (_targets == "default")
+	if (_targets == "default" || _targets == "all")
+	{
+		bool all = _targets == "all";
 		for (auto&& v: targetStrings | ranges::views::values)
+		{
+			if (!all && (v == TargetType::Underflow || v == TargetType::Overflow))
+				continue;
 			chosenTargets.insert(v);
+		}
+	}
 	else
 		for (auto&& t: _targets | ranges::views::split(',') | ranges::to<vector<string>>())
 		{
