@@ -83,7 +83,7 @@ Json::Value formatFatalError(string const& _type, string const& _message)
 Json::Value formatSourceLocation(SourceLocation const* location)
 {
 	Json::Value sourceLocation;
-	if (location && location->source && !location->source->name().empty())
+	if (location && location->source)
 	{
 		sourceLocation["file"] = location->source->name();
 		sourceLocation["start"] = location->start;

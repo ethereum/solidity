@@ -14,6 +14,7 @@ Bugfixes:
  * Code Generator: Fix crash when passing an empty string literal to ``bytes.concat()``.
  * Code Generator: Fix internal compiler error when calling functions bound to calldata structs and arrays.
  * Code Generator: Fix internal compiler error when passing a 32-byte hex literal or a zero literal to ``bytes.concat()`` by disallowing such literals.
+ * Standard JSON: Include source location for errors in files with empty name.
  * Type Checker: Fix internal error and prevent static calls to unimplemented modifiers.
  * Yul Code Generator: Fix internal compiler error when using a long literal with bitwise negation.
  * Yul Code Generator: Fix source location references for calls to builtin functions.
