@@ -54,7 +54,7 @@ static void setDefaultOrCLocale()
 int main(int argc, char** argv)
 {
 	setDefaultOrCLocale();
-	solidity::frontend::CommandLineInterface cli;
+	solidity::frontend::CommandLineInterface cli(cin, cout, cerr);
 	if (!cli.parseArguments(argc, argv))
 		return 1;
 	if (!cli.processInput())

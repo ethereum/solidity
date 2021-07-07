@@ -70,7 +70,6 @@
 	#include <unistd.h>
 #endif
 
-#include <iostream>
 #include <fstream>
 
 #if !defined(STDERR_FILENO)
@@ -86,27 +85,21 @@ using namespace solidity::langutil;
 namespace solidity::frontend
 {
 
-namespace
+ostream& CommandLineInterface::sout(bool _markAsUsed)
 {
-
-static bool g_hasOutput = false;
-
-std::ostream& sout(bool _used = true)
-{
-	if (_used)
-		g_hasOutput = true;
-	return cout;
+	if (_markAsUsed)
+		m_hasOutput = true;
+	return m_sout;
 }
 
-std::ostream& serr(bool _used = true)
+ostream& CommandLineInterface::serr(bool _markAsUsed)
 {
-	if (_used)
-		g_hasOutput = true;
-	return cerr;
+	if (_markAsUsed)
+		m_hasOutput = true;
+	return m_serr;
 }
 
-}
-
+#define cin
 #define cout
 #define cerr
 
@@ -423,7 +416,7 @@ bool CommandLineInterface::readInputFilesAndConfigureFileReader()
 	}
 
 	if (m_options.input.addStdin)
-		m_fileReader.setSource(g_stdinFileName, readUntilEnd(cin));
+		m_fileReader.setSource(g_stdinFileName, readUntilEnd(m_sin));
 
 	if (m_fileReader.sourceCodes().size() == 0)
 	{
@@ -497,11 +490,11 @@ void CommandLineInterface::createJson(string const& _fileName, string const& _js
 
 bool CommandLineInterface::parseArguments(int _argc, char const* const* _argv)
 {
-	CommandLineParser parser;
+	CommandLineParser parser(sout(/* _markAsUsed */ false), serr(/* _markAsUsed */ false));
 	bool success = parser.parse(_argc, _argv, isatty(fileno(stdin)));
 	if (!success)
 		return false;
-	g_hasOutput = g_hasOutput || CommandLineParser::hasOutput();
+	m_hasOutput = m_hasOutput || parser.hasOutput();
 	m_options = parser.options();
 
 	return true;
@@ -521,7 +514,7 @@ bool CommandLineInterface::processInput()
 	{
 		string input;
 		if (m_options.input.standardJsonFile.empty())
-			input = readUntilEnd(cin);
+			input = readUntilEnd(m_sin);
 		else
 		{
 			try
@@ -626,7 +619,7 @@ bool CommandLineInterface::compile()
 
 		for (auto const& error: m_compiler->errors())
 		{
-			g_hasOutput = true;
+			m_hasOutput = true;
 			formatter.printErrorInformation(*error);
 		}
 
@@ -635,7 +628,7 @@ bool CommandLineInterface::compile()
 	}
 	catch (CompilerError const& _exception)
 	{
-		g_hasOutput = true;
+		m_hasOutput = true;
 		formatter.printExceptionInformation(_exception, "Compiler error");
 		return false;
 	}
@@ -669,7 +662,7 @@ bool CommandLineInterface::compile()
 			serr() << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
 		{
-			g_hasOutput = true;
+			m_hasOutput = true;
 			formatter.printExceptionInformation(_error, _error.typeName());
 		}
 
@@ -985,7 +978,7 @@ bool CommandLineInterface::assemble(
 
 		for (auto const& error: stack.errors())
 		{
-			g_hasOutput = true;
+			m_hasOutput = true;
 			formatter.printErrorInformation(*error);
 		}
 		if (!Error::containsOnlyWarnings(stack.errors()))
@@ -1134,7 +1127,7 @@ void CommandLineInterface::outputCompilationResults()
 		handleNatspec(false, contract);
 	} // end of contracts iteration
 
-	if (!g_hasOutput)
+	if (!m_hasOutput)
 	{
 		if (!m_options.output.dir.empty())
 			sout() << "Compiler run successful. Artifact(s) can be found in directory " << m_options.output.dir << "." << endl;
