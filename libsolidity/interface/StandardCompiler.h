@@ -24,6 +24,7 @@
 #pragma once
 
 #include <libsolidity/interface/CompilerStack.h>
+#include <libsolutil/JSON.h>
 
 #include <optional>
 #include <utility>
@@ -58,6 +59,9 @@ public:
 	/// output. Parsing errors are returned as regular errors.
 	std::string compile(std::string const& _input) noexcept;
 
+	/// Sets JSON printing format. Default is compact JSON with no indent.
+	void setJsonPrintingFormat(solidity::util::JsonPrintingFormat const& _format);
+
 	static Json::Value formatFunctionDebugData(
 		std::map<std::string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
 	);
@@ -91,6 +95,8 @@ private:
 	Json::Value compileYul(InputsAndSettings _inputsAndSettings);
 
 	ReadCallback::Callback m_readFile;
+
+	solidity::util::JsonPrintingFormat m_jsonPrintingFormat;
 };
 
 }

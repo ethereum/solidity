@@ -125,6 +125,7 @@ static string const g_strStandardJSON = "standard-json";
 static string const g_strStrictAssembly = "strict-assembly";
 static string const g_strSwarm = "swarm";
 static string const g_strPrettyJson = "pretty-json";
+static string const g_strPrettyJsonIndent = "pretty-json-indent";
 static string const g_strVersion = "version";
 static string const g_strIgnoreMissingFiles = "ignore-missing";
 static string const g_strColor = "color";
@@ -582,7 +583,12 @@ General Information)").c_str(),
 	outputFormatting.add_options()
 		(
 			g_strPrettyJson.c_str(),
-			"Output JSON in pretty format. Currently it only works with the combined JSON output."
+			"Output JSON in pretty format."
+		)
+		(
+			g_strPrettyJsonIndent.c_str(),
+			po::value<uint32_t>()->value_name("n")->default_value(solidity::util::JsonPrintingFormat::defaultIndent),
+			"JSON pretty print indent."
 		)
 		(
 			g_strColor.c_str(),
@@ -790,7 +796,16 @@ General Information)").c_str(),
 		m_options.output.dir = m_args.at(g_strOutputDir).as<string>();
 
 	m_options.output.overwriteFiles = (m_args.count(g_strOverwrite) > 0);
-	m_options.formatting.prettyJson = (m_args.count(g_strPrettyJson) > 0);
+
+	if (m_args.count(g_strPrettyJson) > 0)
+	{
+		m_options.formatting.prettyJson.format = JsonPrintingFormat::Format::Pretty;
+		if (m_args.count(g_strPrettyJsonIndent))
+		{
+			m_options.formatting.prettyJson.indent = m_args[g_strPrettyJsonIndent].as<uint32_t>();
+		}
+	}
+
 
 	static_assert(
 		sizeof(m_options.compiler.outputs) == 15 * sizeof(bool),

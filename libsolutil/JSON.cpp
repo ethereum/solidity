@@ -115,18 +115,34 @@ Json::Value removeNullMembers(Json::Value _json)
 
 string jsonPrettyPrint(Json::Value const& _input)
 {
-	static map<string, Json::Value> settings{{"indentation", "  "}, {"enableYAMLCompatibility", true}};
-	static StreamWriterBuilder writerBuilder(settings);
-	string result = print(_input, writerBuilder);
-	boost::replace_all(result, " \n", "\n");
-	return result;
+	return jsonPrint(_input, JsonPrintingFormat{ JsonPrintingFormat::Format::Pretty});
 }
 
 string jsonCompactPrint(Json::Value const& _input)
 {
-	static map<string, Json::Value> settings{{"indentation", ""}};
-	static StreamWriterBuilder writerBuilder(settings);
-	return print(_input, writerBuilder);
+	return jsonPrint(_input, JsonPrintingFormat{ JsonPrintingFormat::Format::Compact });
+}
+
+/// Serialise the JSON object (@a _input) using specified format (@a _format)
+string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format)
+{
+	static map<string, Json::Value> settings;
+	if (_format.format == JsonPrintingFormat::Format::Pretty)
+	{
+		settings["indentation"]= string(_format.indent, ' ');
+		settings["enableYAMLCompatibility"] = true;
+	}
+	else
+	{
+		settings["indentation"]= "";
+	}
+	StreamWriterBuilder writerBuilder(settings);
+	string result = print(_input, writerBuilder);
+	if (_format.format == JsonPrintingFormat::Format::Pretty)
+	{
+		boost::replace_all(result, " \n", "\n");
+	}
+	return result;
 }
 
 bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* = nullptr */)
@@ -134,5 +150,11 @@ bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* 
 	static StrictModeCharReaderBuilder readerBuilder;
 	return parse(readerBuilder, _input, _json, _errs);
 }
+
+bool JsonPrintingFormat::operator==(JsonPrintingFormat const& _other) const noexcept
+{
+	return (format == _other.format) && (indent == _other.indent);
+}
+
 
 } // namespace solidity::util

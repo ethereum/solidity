@@ -1407,7 +1407,7 @@ string StandardCompiler::compile(string const& _input) noexcept
 	try
 	{
 		if (!util::jsonParseStrict(_input, input, &errors))
-			return util::jsonCompactPrint(formatFatalError("JSONError", errors));
+			return util::jsonPrint(formatFatalError("JSONError", errors), m_jsonPrintingFormat);
 	}
 	catch (...)
 	{
@@ -1420,12 +1420,17 @@ string StandardCompiler::compile(string const& _input) noexcept
 
 	try
 	{
-		return util::jsonCompactPrint(output);
+		return util::jsonPrint(output, m_jsonPrintingFormat);
 	}
 	catch (...)
 	{
 		return "{\"errors\":[{\"type\":\"JSONError\",\"component\":\"general\",\"severity\":\"error\",\"message\":\"Error writing output JSON.\"}]}";
 	}
+}
+
+void StandardCompiler::setJsonPrintingFormat(solidity::util::JsonPrintingFormat const& _format)
+{
+	m_jsonPrintingFormat = _format;
 }
 
 Json::Value StandardCompiler::formatFunctionDebugData(

@@ -533,6 +533,7 @@ bool CommandLineInterface::processInput()
 			}
 		}
 		StandardCompiler compiler(m_fileReader.reader());
+		compiler.setJsonPrintingFormat(m_options.formatting.prettyJson);
 		sout() << compiler.compile(std::move(input)) << endl;
 		return true;
 	}
@@ -772,9 +773,7 @@ void CommandLineInterface::handleCombinedJSON()
 		}
 	}
 
-	string json = m_options.formatting.prettyJson ? jsonPrettyPrint(removeNullMembers(std::move(output))) :
-		jsonCompactPrint(removeNullMembers(std::move(output)));
-
+	string json = jsonPrint(removeNullMembers(std::move(output)), m_options.formatting.prettyJson);
 	if (!m_options.output.dir.empty())
 		createJson("combined", json);
 	else
