@@ -303,6 +303,13 @@ contracts can no longer change the behaviour of that function.
   outside of interfaces. In interfaces, all functions are
   automatically considered ``virtual``.
 
+.. note::
+
+  Starting from Solidity 0.8.8, the ``override`` keyword is not
+  required when overriding an interface function, except for the
+  case where the function is defined in multiple bases.
+
+
 Public state variables can override external functions if the
 parameter and return types of the function matches the getter function
 of the variable:

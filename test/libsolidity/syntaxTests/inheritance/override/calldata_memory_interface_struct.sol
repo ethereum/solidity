@@ -9,8 +9,8 @@ interface I {
 contract C is I {
     uint dummy;
     function f(S memory) public override pure {}
-    function g(S memory) public override view { dummy; }
+    function g(S memory) public view { dummy; }
     function h(S memory) public override { dummy = 42; }
-    function i(S memory) public override payable {}
+    function i(S memory) public payable {}
 }
 // ----
