@@ -4029,7 +4029,7 @@ string YulUtilFunctions::negateNumberWrappingFunction(Type const& _type)
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	solAssert(type.isSigned(), "Expected signed type!");
 
-	string const functionName = "negate_" + _type.identifier();
+	string const functionName = "negate_wrapping_" + _type.identifier();
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(value) -> ret {
