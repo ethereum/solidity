@@ -556,6 +556,28 @@ BOOST_AUTO_TEST_CASE(customSourceLocations_ensure_last_match)
 	CHECK_LOCATION(varDecl.debugData->location, sourceText, 30, 40);
 }
 
+BOOST_AUTO_TEST_CASE(customSourceLocations_reference_original_sloc)
+{
+	ErrorList errorList;
+	ErrorReporter reporter(errorList);
+	auto const sourceText = R"(
+		/// @src 1:2:3
+		{
+			/// @src -1:10:20
+			let x:bool := true
+		}
+	)";
+	EVMDialectTyped const& dialect = EVMDialectTyped::instance(EVMVersion{});
+	shared_ptr<Block> result = parse(sourceText, dialect, reporter);
+	BOOST_REQUIRE(!!result);
+	BOOST_REQUIRE(holds_alternative<VariableDeclaration>(result->statements.at(0)));
+	VariableDeclaration const& varDecl = get<VariableDeclaration>(result->statements.at(0));
+
+	// -1 points to original source code, which in this case is `sourceText` (which is also
+	// available via `0`, that's why the first @src is set to `1` instead.)
+	CHECK_LOCATION(varDecl.debugData->location, sourceText, 10, 20);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // end namespaces
