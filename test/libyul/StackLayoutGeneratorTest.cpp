@@ -22,6 +22,7 @@
 
 #include <libyul/backends/evm/ControlFlowGraph.h>
 #include <libyul/backends/evm/ControlFlowGraphBuilder.h>
+#include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 #include <libyul/backends/evm/StackLayoutGenerator.h>
 #include <libyul/Object.h>
 #include <liblangutil/SourceReferenceFormatter.h>
@@ -29,7 +30,9 @@
 #include <libsolutil/AnsiColorized.h>
 #include <libsolutil/Visitor.h>
 
+#include <range/v3/view/drop.hpp>
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/view/zip.hpp>
 
 #ifdef ISOLTEST
 #include <boost/process.hpp>
@@ -151,7 +154,23 @@ private:
 
 		auto const& blockInfo = m_stackLayout.blockInfos.at(&_block);
 		m_stream << stackToString(blockInfo.entryLayout) << "\\l\\\n";
-		for (auto const& operation: _block.operations)
+		vector<Stack> nextLayouts;
+		for (auto const& operation: _block.operations | ranges::views::drop(1))
+			nextLayouts.emplace_back(m_stackLayout.operationEntryLayout.at(&operation));
+		nextLayouts.emplace_back(blockInfo.exitLayout);
+		bool hasUnreachable = false;
+		if (!_block.operations.empty())
+		{
+			Stack firstLayout = m_stackLayout.operationEntryLayout.at(&_block.operations.front());
+			auto unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(blockInfo.entryLayout, firstLayout);
+			if (!unreachable.empty())
+			{
+				m_stream << "UNREACHABLE: " << stackToString(unreachable) << "\\l\\\n";
+				hasUnreachable = true;
+			}
+
+		}
+		for (auto&& [operation, nextLayout]: ranges::zip_view(_block.operations, nextLayouts))
 		{
 			auto entryLayout = m_stackLayout.operationEntryLayout.at(&operation);
 			m_stream << stackToString(m_stackLayout.operationEntryLayout.at(&operation)) << "\\l\\\n";
@@ -171,13 +190,24 @@ private:
 			}, operation.operation);
 			m_stream << "\\l\\\n";
 			soltestAssert(operation.input.size() <= entryLayout.size(), "Invalid Stack Layout.");
+			Stack exitLayout = entryLayout;
 			for (size_t i = 0; i < operation.input.size(); ++i)
-				entryLayout.pop_back();
-			entryLayout += operation.output;
-			m_stream << stackToString(entryLayout) << "\\l\\\n";
+				exitLayout.pop_back();
+			exitLayout += operation.output;
+			m_stream << stackToString(exitLayout);
+			auto unreachable = OptimizedEVMCodeTransform::tryCreateStackLayout(exitLayout, nextLayout);
+			if (!unreachable.empty())
+			{
+				m_stream << " UNREACHABLE: " << stackToString(unreachable);
+				hasUnreachable = true;
+			}
+			m_stream << "\\l\\\n";
 		}
 		m_stream << stackToString(blockInfo.exitLayout) << "\\l\\\n";
-		m_stream << "\"];\n";
+		if (hasUnreachable)
+			m_stream << "\" color=red fontcolor=red];\n";
+		else
+			m_stream << "\"];\n";
 		std::visit(util::GenericVisitor{
 			[&](CFG::BasicBlock::MainExit const&)
 			{
