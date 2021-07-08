@@ -128,21 +128,20 @@ void Parser::fetchSourceLocationFromComment()
 		auto const end = toInt(matchResult[4].str());
 
 		auto const commentLocation = m_scanner->currentCommentLocation();
-		m_locationOverride = SourceLocation{};
+		m_debugDataOverride = DebugData::create();
 		if (!sourceIndex || !start || !end)
 			m_errorReporter.syntaxError(6367_error, commentLocation, "Invalid value in source location mapping. Could not parse location specification.");
 		else if (!((*start < 0 && *end < 0) || (*start >= 0 && *start <= *end)))
 			m_errorReporter.syntaxError(5798_error, commentLocation, "Invalid value in source location mapping. Start offset larger than end offset.");
 		else if (sourceIndex == -1 && (0 <= *start && *start <= *end)) // Use source index -1 to indicate original source.
-			m_locationOverride = SourceLocation{*start, *end, ParserBase::currentLocation().source};
+			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, ParserBase::currentLocation().source});
 		else if (!(sourceIndex >= 0 && m_charStreamMap->count(static_cast<unsigned>(*sourceIndex))))
 			m_errorReporter.syntaxError(2674_error, commentLocation, "Invalid source mapping. Source index not defined via @use-src.");
 		else
 		{
 			shared_ptr<CharStream> charStream = m_charStreamMap->at(static_cast<unsigned>(*sourceIndex));
 			solAssert(charStream, "");
-
-			m_locationOverride = SourceLocation{*start, *end, charStream};
+			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, charStream});
 		}
 	}
 }
@@ -371,7 +370,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 	{
 	case Token::Identifier:
 	{
-		Identifier identifier{DebugData::create(currentLocation()), YulString{currentLiteral()}};
+		Identifier identifier{createDebugData(), YulString{currentLiteral()}};
 		advance();
 		return identifier;
 	}
@@ -402,7 +401,7 @@ variant<Literal, Identifier> Parser::parseLiteralOrIdentifier()
 		}
 
 		Literal literal{
-			DebugData::create(currentLocation()),
+			createDebugData(),
 			kind,
 			YulString{currentLiteral()},
 			kind == LiteralKind::Boolean ? m_dialect.boolType : m_dialect.defaultType

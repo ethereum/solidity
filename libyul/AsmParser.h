@@ -59,6 +59,7 @@ public:
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
+		m_debugDataOverride{},
 		m_useSourceLocationFrom{
 			_locationOverride ?
 			UseSourceLocationFrom::LocationOverride :
@@ -76,6 +77,7 @@ public:
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
 		m_charStreamMap{std::move(_charStreamMap)},
+		m_debugDataOverride{DebugData::create()},
 		m_useSourceLocationFrom{UseSourceLocationFrom::Comments}
 	{}
 
@@ -96,11 +98,26 @@ protected:
 
 	void fetchSourceLocationFromComment();
 
+	/// Creates a DebugData object with the correct source location set.
+	std::shared_ptr<DebugData const> createDebugData() const
+	{
+		switch (m_useSourceLocationFrom)
+		{
+			case UseSourceLocationFrom::Scanner:
+				return DebugData::create(ParserBase::currentLocation());
+			case UseSourceLocationFrom::LocationOverride:
+				return DebugData::create(m_locationOverride);
+			case UseSourceLocationFrom::Comments:
+				return m_debugDataOverride;
+		}
+		solAssert(false, "");
+	}
+
 	/// Creates an inline assembly node with the current source location.
 	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.debugData = DebugData::create(currentLocation());
+		r.debugData = createDebugData();
 		return r;
 	}
 
@@ -129,6 +146,7 @@ private:
 
 	std::optional<std::map<unsigned, std::shared_ptr<langutil::CharStream>>> m_charStreamMap;
 	langutil::SourceLocation m_locationOverride;
+	std::shared_ptr<DebugData const> m_debugDataOverride;
 	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
