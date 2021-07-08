@@ -19,6 +19,7 @@
 # (c) 2016-2019 solidity contributors.
 # ------------------------------------------------------------------------------
 
+YULARGS=(--strict-assembly)
 FULLARGS=(--optimize --ignore-missing --combined-json "abi,asm,ast,bin,bin-runtime,compact-format,devdoc,hashes,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
 OLDARGS=(--optimize --combined-json "abi,asm,ast,bin,bin-runtime,devdoc,interface,metadata,opcodes,srcmap,srcmap-runtime,userdoc")
 function compileFull()
@@ -53,10 +54,18 @@ function compileFull()
 
     local stderr_path; stderr_path=$(mktemp)
 
+    if [ "${files: -4}" == ".yul" ]
+    then
+        args=("${YULARGS[@]}")
+    fi
+
     set +e
     "$SOLC" "${args[@]}" "${files[@]}" >/dev/null 2>"$stderr_path"
     local exit_code=$?
-    local errors; errors=$(grep -v -E 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\|' < "$stderr_path")
+    local errors; errors=$(grep -v -E \
+        -e 'Warning: This is a pre-release compiler version|Warning: Experimental features are turned on|pragma experimental ABIEncoderV2|^ +--> |^ +\||^[0-9]+ +\| ' \
+        -e 'Warning: Yul is still experimental. Please use the output with care.' < "$stderr_path")
+
     set -e
     rm "$stderr_path"
 
