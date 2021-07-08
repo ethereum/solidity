@@ -349,7 +349,7 @@ bool CompilerStack::parse()
 		source.scanner->reset();
 		source.ast = parser.parse(source.scanner);
 		if (!source.ast)
-			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
+			solAssert(!Error::containsAtWorseWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
 		{
 			source.ast->annotation().path = path;
@@ -368,7 +368,7 @@ bool CompilerStack::parse()
 		m_stackState = Parsed;
 	else
 		m_stackState = ParsedAndImported;
-	if (!Error::containsOnlyWarnings(m_errorReporter.errors()))
+	if (!Error::containsAtWorseWarnings(m_errorReporter.errors()))
 		m_hasError = true;
 
 	storeContractDefinitions();

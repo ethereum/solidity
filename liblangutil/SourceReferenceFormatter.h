@@ -64,7 +64,7 @@ public:
 	{
 		return formatExceptionInformation(
 			_error,
-			(_error.type() == Error::Type::Warning) ? "Warning" : "Error"
+			Error::formatErrorCategory(_error.type())
 		);
 	}
 

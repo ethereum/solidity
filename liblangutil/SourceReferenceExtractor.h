@@ -39,7 +39,7 @@ struct LineColumn
 
 struct SourceReference
 {
-	std::string message;      ///< A message that relates to this source reference (such as a warning or an error message).
+	std::string message;      ///< A message that relates to this source reference (such as a warning, notice or an error message).
 	std::string sourceName;   ///< Underlying source name (for example the filename).
 	LineColumn position;      ///< Actual (error) position this source reference is surrounding.
 	bool multiline = {false}; ///< Indicates whether the actual SourceReference is truncated to one line.
@@ -62,7 +62,7 @@ namespace SourceReferenceExtractor
 	struct Message
 	{
 		SourceReference primary;
-		std::string category; // "Error", "Warning", ...
+		std::string category; // "Error", "Warning", "Notice", ...
 		std::vector<SourceReference> secondary;
 		std::optional<ErrorId> errorId;
 	};

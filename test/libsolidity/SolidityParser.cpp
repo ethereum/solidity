@@ -73,7 +73,7 @@ bool successParse(std::string const& _source)
 	if (Error::containsErrorOfType(errors, Error::Type::ParserError))
 		return false;
 
-	BOOST_CHECK(Error::containsOnlyWarnings(errors));
+	BOOST_CHECK(Error::containsAtWorseWarnings(errors));
 	return true;
 }
 

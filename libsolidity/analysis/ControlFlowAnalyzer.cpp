@@ -35,7 +35,7 @@ bool ControlFlowAnalyzer::run()
 	for (auto& [pair, flow]: m_cfg.allFunctionFlows())
 		analyze(*pair.function, pair.contract, *flow);
 
-	return Error::containsOnlyWarnings(m_errorReporter.errors());
+	return Error::containsAtWorseWarnings(m_errorReporter.errors());
 }
 
 void ControlFlowAnalyzer::analyze(FunctionDefinition const& _function, ContractDefinition const* _contract, FunctionFlow const& _flow)

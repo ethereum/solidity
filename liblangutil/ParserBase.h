@@ -103,8 +103,12 @@ protected:
 	void fatalParserError(ErrorId _error, std::string const& _description);
 	void fatalParserError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
+	/// Creates a @ref ParserNotice and annotates it with the current position and the
+	/// given @a _description.
+	void parserNotice(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+
 	std::shared_ptr<Scanner> m_scanner;
-	/// The reference to the list of errors and warning to add errors/warnings during parsing
+	/// The reference to the list of errors, warning and notices to add errors/warnings/notices during parsing
 	ErrorReporter& m_errorReporter;
 	/// Current recursion depth during parsing.
 	size_t m_recursionDepth = 0;

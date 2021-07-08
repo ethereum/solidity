@@ -171,3 +171,8 @@ void ParserBase::fatalParserError(ErrorId _error, SourceLocation const& _locatio
 {
 	m_errorReporter.fatalParserError(_error, _location, _description);
 }
+
+void ParserBase::parserNotice(ErrorId _error, SourceLocation const& _location, string const& _description)
+{
+	m_errorReporter.notice(_error, _location, _description);
+}

@@ -94,6 +94,16 @@ bool ErrorReporter::checkForExcessiveErrors(Error::Type _type)
 		if (m_warningCount >= c_maxWarningsAllowed)
 			return true;
 	}
+	else if (_type == Error::Type::Notice)
+	{
+		m_noticeCount++;
+
+		if (m_noticeCount == c_maxNoticesAllowed)
+			m_errorList.push_back(make_shared<Error>(0000_error, Error::Type::Warning, "There are more than 256 notices. Ignoring the rest."));
+
+		if (m_noticeCount >= c_maxNoticesAllowed)
+			return true;
+	}
 	else
 	{
 		m_errorCount++;
@@ -241,4 +251,13 @@ void ErrorReporter::docstringParsingError(ErrorId _error, SourceLocation const& 
 		_location,
 		_description
 	);
+}
+
+void ErrorReporter::notice(
+	ErrorId _error,
+	SourceLocation const& _location,
+	string const& _description
+)
+{
+	error(_error, Error::Type::Notice, _location, _description);
 }

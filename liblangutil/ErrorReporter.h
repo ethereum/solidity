@@ -114,17 +114,19 @@ public:
 
 	void docstringParsingError(ErrorId _error, SourceLocation const& _location, std::string const& _description);
 
+	void notice(ErrorId _error, SourceLocation const& _location, std::string const& _description);
+
 	ErrorList const& errors() const;
 
 	void clear();
 
-	/// @returns true iff there is any error (ignores warnings).
+	/// @returns true iff there is any error (ignores warnings and notices).
 	bool hasErrors() const
 	{
 		return m_errorCount > 0;
 	}
 
-	/// @returns the number of errors (ignores warnings).
+	/// @returns the number of errors (ignores warnings and notices).
 	unsigned errorCount() const
 	{
 		return m_errorCount;
@@ -183,9 +185,11 @@ private:
 
 	unsigned m_errorCount = 0;
 	unsigned m_warningCount = 0;
+	unsigned m_noticeCount = 0;
 
 	unsigned const c_maxWarningsAllowed = 256;
 	unsigned const c_maxErrorsAllowed = 256;
+	unsigned const c_maxNoticesAllowed = 256;
 };
 
 }

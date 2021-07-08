@@ -76,7 +76,7 @@ std::optional<Error> parseAndReturnFirstError(string const& _source, bool _allow
 	else
 	{
 		// If success is true, there might still be an error in the assembly stage.
-		if (_allowWarnings && Error::containsOnlyWarnings(errors))
+		if (_allowWarnings && Error::containsAtWorseWarnings(errors))
 			return {};
 		else if (!errors.empty())
 		{
