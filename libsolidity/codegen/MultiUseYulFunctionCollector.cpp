@@ -47,7 +47,11 @@ string MultiUseYulFunctionCollector::requestedFunctions()
 string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)
 {
 	if (string* existingFunction = valueOrNullptr(m_requestedFunctions, _name))
-		solAssert(*existingFunction == _creator(), "");
+	{
+		string newlyGenerated = _creator();
+		solAssert(*existingFunction == newlyGenerated, "Non-matching code generated for: " + _name + "\n" + newlyGenerated + "\n" + *existingFunction);
+
+	}
 	else
 	{
 		m_requestedFunctions[_name] = "<<STUB<<";
@@ -84,7 +88,10 @@ string MultiUseYulFunctionCollector::createFunction(
 	};
 	solAssert(!_name.empty(), "");
 	if (string* existingFunction = valueOrNullptr(m_requestedFunctions, _name))
-		solAssert(generateFunction() == *existingFunction, "");
+	{
+		string newlyGenerated = generateFunction();
+		solAssert(*existingFunction == newlyGenerated, "Non-matching code generated for: " + _name + "\n" + newlyGenerated + "\n" + *existingFunction);
+	}
 	else
 	{
 		m_requestedFunctions[_name] = "<<STUB<<";
