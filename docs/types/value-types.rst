@@ -398,7 +398,7 @@ Members:
 * ``.length`` yields the fixed length of the byte array (read-only).
 
 .. note::
-    The type ``byte[]`` is an array of bytes, but due to padding rules, it wastes
+    The type ``bytes1[]`` is an array of bytes, but due to padding rules, it wastes
     31 bytes of space for each element (except in storage). It is better to use the ``bytes``
     type instead.
 
