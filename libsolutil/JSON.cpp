@@ -126,7 +126,7 @@ string jsonCompactPrint(Json::Value const& _input)
 /// Serialise the JSON object (@a _input) using specified format (@a _format)
 string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format)
 {
-	static map<string, Json::Value> settings;
+	map<string, Json::Value> settings;
 	if (_format.format == JsonPrintingFormat::Format::Pretty)
 	{
 		settings["indentation"]= string(_format.indent, ' ');
