@@ -139,7 +139,7 @@ a reference to it.
 ``bytes`` and ``string`` as Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
+Variables of type ``bytes`` and ``string`` are special arrays. The ``bytes`` type is similar to ``bytes1[]``,
 but it is packed tightly in calldata and memory. ``string`` is equal to ``bytes`` but does not allow
 length or index access.
 
@@ -148,8 +148,8 @@ third-party string libraries. You can also compare two strings by their keccak25
 ``keccak256(abi.encodePacked(s1)) == keccak256(abi.encodePacked(s2))`` and
 concatenate two strings using ``bytes.concat(bytes(s1), bytes(s2))``.
 
-You should use ``bytes`` over ``byte[]`` because it is cheaper,
-since ``byte[]`` adds 31 padding bytes between the elements. As a general rule,
+You should use ``bytes`` over ``bytes1[]`` because it is cheaper,
+since ``bytes1[]`` adds 31 padding bytes between the elements. As a general rule,
 use ``bytes`` for arbitrary-length raw byte data and ``string`` for arbitrary-length
 string (UTF-8) data. If you can limit the length to a certain number of bytes,
 always use one of the value types ``bytes1`` to ``bytes32`` because they are much cheaper.

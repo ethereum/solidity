@@ -19,7 +19,7 @@ Solidity always places new objects at the free memory pointer and
 memory is never freed (this might change in the future).
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (this
-is even true for ``byte[]``, but not for ``bytes`` and ``string``).
+is even true for ``bytes1[]``, but not for ``bytes`` and ``string``).
 Multi-dimensional memory arrays are pointers to memory arrays. The length of a
 dynamic array is stored at the first slot of the array and followed by the array
 elements.
