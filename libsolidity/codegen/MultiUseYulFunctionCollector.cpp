@@ -46,7 +46,9 @@ string MultiUseYulFunctionCollector::requestedFunctions()
 
 string MultiUseYulFunctionCollector::createFunction(string const& _name, function<string ()> const& _creator)
 {
-	if (!m_requestedFunctions.count(_name))
+	if (string* existingFunction = valueOrNullptr(m_requestedFunctions, _name))
+		solAssert(*existingFunction == _creator(), "");
+	else
 	{
 		m_requestedFunctions[_name] = "<<STUB<<";
 		string fun = _creator();
@@ -62,16 +64,13 @@ string MultiUseYulFunctionCollector::createFunction(
 	function<string(vector<string>&, vector<string>&)> const& _creator
 )
 {
-	solAssert(!_name.empty(), "");
-	if (!m_requestedFunctions.count(_name))
-	{
-		m_requestedFunctions[_name] = "<<STUB<<";
+	auto generateFunction = [&]() {
 		vector<string> arguments;
 		vector<string> returnParameters;
 		string body = _creator(arguments, returnParameters);
 		solAssert(!body.empty(), "");
 
-		m_requestedFunctions[_name] = Whiskers(R"(
+		return Whiskers(R"(
 			function <functionName>(<args>)<?+retParams> -> <retParams></+retParams> {
 				<body>
 			}
@@ -80,7 +79,16 @@ string MultiUseYulFunctionCollector::createFunction(
 		("args", joinHumanReadable(arguments))
 		("retParams", joinHumanReadable(returnParameters))
 		("body", body)
-		.render();;
+		.render();
+
+	};
+	solAssert(!_name.empty(), "");
+	if (string* existingFunction = valueOrNullptr(m_requestedFunctions, _name))
+		solAssert(generateFunction() == *existingFunction, "");
+	else
+	{
+		m_requestedFunctions[_name] = "<<STUB<<";
+		m_requestedFunctions[_name] = generateFunction();
 	}
 	return _name;
 }
