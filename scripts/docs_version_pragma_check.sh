@@ -136,7 +136,7 @@ SOLTMPDIR=$(mktemp -d)
 (
     set -e
     cd "$SOLTMPDIR"
-    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/ docs
+    "$REPO_ROOT"/scripts/isolate_tests.py "$REPO_ROOT"/docs/
 
     getAllAvailableVersions
 
