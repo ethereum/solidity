@@ -51,8 +51,7 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<solidity::util::h256, std::string> const& _smtlib2Responses,
 		ModelCheckerSettings _settings = ModelCheckerSettings{},
-		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback(),
-		smtutil::SMTSolverChoice _enabledSolvers = smtutil::SMTSolverChoice::All()
+		ReadCallback::Callback const& _smtCallback = ReadCallback::Callback()
 	);
 
 	// TODO This should be removed for 0.9.0.

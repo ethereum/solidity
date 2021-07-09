@@ -25,6 +25,7 @@
 
 #include <libsolutil/CommonData.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsmtutil/SolverInterface.h>
 #include <libsolidity/interface/Version.h>
 
 #include <boost/algorithm/string.hpp>
@@ -89,6 +90,7 @@ BOOST_AUTO_TEST_CASE(no_options)
 	expectedOptions.modelChecker.settings = {
 		ModelCheckerContracts::Default(),
 		ModelCheckerEngine::None(),
+		smtutil::SMTSolverChoice::All(),
 		ModelCheckerTargets::Default(),
 		nullopt,
 	};
@@ -156,6 +158,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 			"--yul-optimizations=agf",
 			"--model-checker-contracts=contract1.yul:A,contract2.yul:B",
 			"--model-checker-engine=bmc",
+			"--model-checker-solvers=z3,smtlib2",
 			"--model-checker-targets=underflow,divByZero",
 			"--model-checker-timeout=5",
 		};
@@ -212,6 +215,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.modelChecker.settings = {
 			{{{"contract1.yul", {"A"}}, {"contract2.yul", {"B"}}}},
 			{true, false},
+			{false, true, true},
 			{{VerificationTargetType::Underflow, VerificationTargetType::DivByZero}},
 			5,
 		};

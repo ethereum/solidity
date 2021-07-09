@@ -29,21 +29,25 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 {
 	auto const& choice = m_reader.stringSetting("SMTSolvers", "any");
 	if (choice == "any")
-		m_enabledSolvers = smtutil::SMTSolverChoice::All();
+		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::All();
 	else if (choice == "z3")
-		m_enabledSolvers = smtutil::SMTSolverChoice::Z3();
+		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::Z3();
 	else if (choice == "cvc4")
-		m_enabledSolvers = smtutil::SMTSolverChoice::CVC4();
+		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::CVC4();
+	else if (choice == "smtlib2")
+		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::SMTLIB2();
 	else if (choice == "none")
-		m_enabledSolvers = smtutil::SMTSolverChoice::None();
+		m_modelCheckerSettings.solvers = smtutil::SMTSolverChoice::None();
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT solver choice."));
 
 	auto available = ModelChecker::availableSolvers();
 	if (!available.z3)
-		m_enabledSolvers.z3 = false;
+		m_modelCheckerSettings.solvers.z3 = false;
 	if (!available.cvc4)
-		m_enabledSolvers.cvc4 = false;
+		m_modelCheckerSettings.solvers.cvc4 = false;
+	if (!available.smtlib2)
+		m_modelCheckerSettings.solvers.smtlib2 = false;
 
 	auto engine = ModelCheckerEngine::fromString(m_reader.stringSetting("SMTEngine", "all"));
 	if (engine)
@@ -51,7 +55,7 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 	else
 		BOOST_THROW_EXCEPTION(runtime_error("Invalid SMT engine choice."));
 
-	if (m_enabledSolvers.none() || m_modelCheckerSettings.engine.none())
+	if (m_modelCheckerSettings.solvers.none() || m_modelCheckerSettings.engine.none())
 		m_shouldRun = false;
 
 	auto const& ignoreCex = m_reader.stringSetting("SMTIgnoreCex", "no");
@@ -66,7 +70,6 @@ SMTCheckerTest::SMTCheckerTest(string const& _filename): SyntaxTest(_filename, E
 TestCase::TestResult SMTCheckerTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
 {
 	setupCompiler();
-	compiler().setSMTSolverChoice(m_enabledSolvers);
 	compiler().setModelCheckerSettings(m_modelCheckerSettings);
 	parseAndAnalyze();
 	filterObtainedErrors();

@@ -62,7 +62,6 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers,
 		ModelCheckerSettings const& _settings
 	);
 

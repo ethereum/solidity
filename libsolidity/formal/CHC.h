@@ -56,7 +56,6 @@ public:
 		langutil::ErrorReporter& _errorReporter,
 		std::map<util::h256, std::string> const& _smtlib2Responses,
 		ReadCallback::Callback const& _smtCallback,
-		smtutil::SMTSolverChoice _enabledSolvers,
 		ModelCheckerSettings const& _settings
 	);
 
@@ -392,9 +391,6 @@ private:
 
 	/// ErrorReporter that comes from CompilerStack.
 	langutil::ErrorReporter& m_outerErrorReporter;
-
-	/// SMT solvers that are chosen at runtime.
-	smtutil::SMTSolverChoice m_enabledSolvers;
 };
 
 }

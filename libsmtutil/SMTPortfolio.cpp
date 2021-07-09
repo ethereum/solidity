@@ -40,7 +40,8 @@ SMTPortfolio::SMTPortfolio(
 ):
 	SolverInterface(_queryTimeout)
 {
-	m_solvers.emplace_back(make_unique<SMTLib2Interface>(move(_smtlib2Responses), move(_smtCallback), m_queryTimeout));
+	if (_enabledSolvers.smtlib2)
+		m_solvers.emplace_back(make_unique<SMTLib2Interface>(move(_smtlib2Responses), move(_smtCallback), m_queryTimeout));
 #ifdef HAVE_Z3
 	if (_enabledSolvers.z3 && Z3Interface::available())
 		m_solvers.emplace_back(make_unique<Z3Interface>(m_queryTimeout));
@@ -143,10 +144,11 @@ pair<CheckResult, vector<string>> SMTPortfolio::check(vector<Expression> const& 
 vector<string> SMTPortfolio::unhandledQueries()
 {
 	// This code assumes that the constructor guarantees that
-	// SmtLib2Interface is in position 0.
-	smtAssert(!m_solvers.empty(), "");
-	smtAssert(dynamic_cast<SMTLib2Interface*>(m_solvers.front().get()), "");
-	return m_solvers.front()->unhandledQueries();
+	// SmtLib2Interface is in position 0, if enabled.
+	if (!m_solvers.empty())
+		if (auto smtlib2 = dynamic_cast<SMTLib2Interface*>(m_solvers.front().get()))
+			return smtlib2->unhandledQueries();
+	return {};
 }
 
 bool SMTPortfolio::solverAnswered(CheckResult result)

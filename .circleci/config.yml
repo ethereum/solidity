@@ -9,8 +9,8 @@ version: 2.1
 parameters:
   ubuntu-2004-docker-image:
     type: string
-    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-6
-    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:da44d7f78e093f7f0415abf07f7c1fd1c2ed4fa65fefea428821a05186c42ec9"
+    # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004-7
+    default: "solbuildpackpusher/solidity-buildpack-deps@sha256:745495fecc29a087bcd361b632b90501e6e4226049284b874360308e84c8eb0f"
   ubuntu-2004-clang-docker-image:
     type: string
     # solbuildpackpusher/solidity-buildpack-deps:ubuntu2004.clang-6
@@ -581,7 +581,7 @@ jobs:
       - run:
           name: Install build dependencies
           command: |
-            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+            pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 git openssh tar
       - checkout
       - run: *run_build
       - store_artifacts: *artifacts_solc
@@ -729,7 +729,7 @@ jobs:
         - run:
             name: Install runtime dependencies
             command: |
-              pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 cvc4 git openssh tar
+              pacman --noconfirm -Syu --noprogressbar --needed base-devel boost cmake z3 git openssh tar
         - checkout
         - attach_workspace:
             at: build
@@ -811,7 +811,7 @@ jobs:
 
   t_ems_solcjs:
     docker:
-      - image: buildpack-deps:latest
+      - image: buildpack-deps:bullseye
     environment:
       TERM: xterm
     steps:
@@ -822,7 +822,7 @@ jobs:
           name: Install test dependencies
           command: |
             apt-get update
-            apt-get install -qqy --no-install-recommends nodejs npm cvc4
+            apt-get install -qqy --no-install-recommends nodejs npm z3
       - run:
           name: Test solcjs
           no_output_timeout: 30m

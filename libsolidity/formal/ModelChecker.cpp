@@ -34,14 +34,13 @@ ModelChecker::ModelChecker(
 	ErrorReporter& _errorReporter,
 	map<h256, string> const& _smtlib2Responses,
 	ModelCheckerSettings _settings,
-	ReadCallback::Callback const& _smtCallback,
-	smtutil::SMTSolverChoice _enabledSolvers
+	ReadCallback::Callback const& _smtCallback
 ):
 	m_errorReporter(_errorReporter),
-	m_settings(_settings),
+	m_settings(move(_settings)),
 	m_context(),
-	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings),
-	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, _enabledSolvers, m_settings)
+	m_bmc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, m_settings),
+	m_chc(m_context, _errorReporter, _smtlib2Responses, _smtCallback, m_settings)
 {
 }
 
@@ -134,7 +133,7 @@ vector<string> ModelChecker::unhandledQueries()
 
 solidity::smtutil::SMTSolverChoice ModelChecker::availableSolvers()
 {
-	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::None();
+	smtutil::SMTSolverChoice available = smtutil::SMTSolverChoice::SMTLIB2();
 #ifdef HAVE_Z3
 	available.z3 = solidity::smtutil::Z3Interface::available();
 #endif
