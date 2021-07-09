@@ -139,7 +139,7 @@ struct CommandLineOptions
 
 	struct
 	{
-		solidity::util::JsonPrintingFormat prettyJson { JsonPrintingFormat::Format::Compact };
+		util::JsonPrintingFormat json;
 		std::optional<bool> coloredOutput;
 		bool withErrorIds = false;
 	} formatting;
