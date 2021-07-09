@@ -139,9 +139,7 @@ string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format)
 	StreamWriterBuilder writerBuilder(settings);
 	string result = print(_input, writerBuilder);
 	if (_format.format == JsonPrintingFormat::Format::Pretty)
-	{
 		boost::replace_all(result, " \n", "\n");
-	}
 	return result;
 }
 
