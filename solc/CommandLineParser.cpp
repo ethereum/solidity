@@ -587,8 +587,8 @@ General Information)").c_str(),
 		)
 		(
 			g_strPrettyJsonIndent.c_str(),
-			po::value<uint32_t>()->value_name("n")->default_value(solidity::util::JsonPrintingFormat::defaultIndent),
-			"JSON pretty print indent."
+			po::value<uint32_t>()->value_name("N")->default_value(util::JsonPrintingFormat::defaultIndent),
+			"Indent pretty-printed JSON with N spaces. Only valid in combination with --pretty-json."
 		)
 		(
 			g_strColor.c_str(),
