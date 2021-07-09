@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.output.experimentalViaIR = true;
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
 		using solidity::util::JsonPrintingFormat;
-		expectedOptions.formatting.prettyJson = JsonPrintingFormat {JsonPrintingFormat::Format::Pretty, 7};
+		expectedOptions.formatting.prettyJson = JsonPrintingFormat{JsonPrintingFormat::Format::Pretty, 7};
 		expectedOptions.linker.libraries = {
 			{"dir1/file1.sol:L", h160("1234567890123456789012345678901234567890")},
 			{"dir2/file2.sol:L", h160("1111122222333334444455555666667777788888")},
