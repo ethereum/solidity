@@ -129,7 +129,7 @@ string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format)
 	map<string, Json::Value> settings;
 	if (_format.format == JsonPrintingFormat::Format::Pretty)
 	{
-		settings["indentation"]= string(_format.indent, ' ');
+		settings["indentation"] = string(_format.indent, ' ');
 		settings["enableYAMLCompatibility"] = true;
 	}
 	else
