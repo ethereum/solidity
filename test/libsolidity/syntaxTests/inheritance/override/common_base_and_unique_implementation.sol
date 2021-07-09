@@ -3,12 +3,12 @@ interface I {
     function g() external;
 }
 abstract contract A is I {
-    function f() external override {}
-    function g() external override virtual;
+    function f() external {}
+    function g() external virtual;
 }
 abstract contract B is I {
-    function g() external override {}
-    function f() external override virtual;
+    function g() external {}
+    function f() external virtual;
 }
 contract C is A, B {
 }

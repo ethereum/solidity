@@ -3,7 +3,7 @@ interface I {
 }
 abstract contract A is I
 {
-	uint public override f;
+	uint public f;
 }
 abstract contract B is I
 {

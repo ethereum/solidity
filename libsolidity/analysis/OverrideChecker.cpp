@@ -518,7 +518,7 @@ void OverrideChecker::checkOverride(OverrideProxy const& _overriding, OverridePr
 			"Override changes modifier signature."
 		);
 
-	if (!_overriding.overrides())
+	if (!_overriding.overrides() && !(_super.isFunction() && _super.contract().isInterface()))
 		overrideError(
 			_overriding,
 			_super,

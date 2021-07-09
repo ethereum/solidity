@@ -3,11 +3,11 @@ interface I {
 }
 contract A is I
 {
-	uint public override f;
+	uint public f;
 }
 abstract contract B is I
 {
-	function f() external virtual override returns (uint);
+	function f() external virtual returns (uint);
 }
 abstract contract C is A, B {}
 // ----

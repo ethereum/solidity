@@ -11,8 +11,8 @@ contract X is A, B {
     function goo() external virtual override(A, B) returns (uint) {}
 }
 abstract contract T is A {
-    function foo() external virtual override returns (uint);
-    function goo() external virtual override returns (uint);
+    function foo() external virtual returns (uint);
+    function goo() external virtual returns (uint);
 }
 contract Y is X, T {
 }
