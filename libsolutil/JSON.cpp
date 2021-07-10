@@ -115,19 +115,18 @@ Json::Value removeNullMembers(Json::Value _json)
 
 string jsonPrettyPrint(Json::Value const& _input)
 {
-	return jsonPrint(_input, JsonPrintingFormat{ JsonPrintingFormat::Format::Pretty});
+	return jsonPrint(_input, JsonFormat{ JsonFormat::Pretty });
 }
 
 string jsonCompactPrint(Json::Value const& _input)
 {
-	return jsonPrint(_input, JsonPrintingFormat{ JsonPrintingFormat::Format::Compact });
+	return jsonPrint(_input, JsonFormat{ JsonFormat::Compact });
 }
 
-/// Serialise the JSON object (@a _input) using specified format (@a _format)
-string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format)
+string jsonPrint(Json::Value const& _input, JsonFormat const& _format)
 {
 	map<string, Json::Value> settings;
-	if (_format.format == JsonPrintingFormat::Format::Pretty)
+	if (_format.format == JsonFormat::Pretty)
 	{
 		settings["indentation"] = string(_format.indent, ' ');
 		settings["enableYAMLCompatibility"] = true;
@@ -138,7 +137,7 @@ string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format)
 	}
 	StreamWriterBuilder writerBuilder(settings);
 	string result = print(_input, writerBuilder);
-	if (_format.format == JsonPrintingFormat::Format::Pretty)
+	if (_format.format == JsonFormat::Pretty)
 		boost::replace_all(result, " \n", "\n");
 	return result;
 }
@@ -149,7 +148,7 @@ bool jsonParseStrict(string const& _input, Json::Value& _json, string* _errs /* 
 	return parse(readerBuilder, _input, _json, _errs);
 }
 
-bool JsonPrintingFormat::operator==(JsonPrintingFormat const& _other) const noexcept
+bool JsonFormat::operator==(JsonFormat const& _other) const noexcept
 {
 	return (format == _other.format) && (indent == _other.indent);
 }

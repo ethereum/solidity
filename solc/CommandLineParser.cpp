@@ -282,7 +282,7 @@ bool CommandLineOptions::operator==(CommandLineOptions const& _other) const noex
 		assembly.targetMachine == _other.assembly.targetMachine &&
 		assembly.inputLanguage == _other.assembly.inputLanguage &&
 		linker.libraries == _other.linker.libraries &&
-		formatting.prettyJson == _other.formatting.prettyJson &&
+		formatting.json == _other.formatting.json &&
 		formatting.coloredOutput == _other.formatting.coloredOutput &&
 		formatting.withErrorIds == _other.formatting.withErrorIds &&
 		compiler.outputs == _other.compiler.outputs &&
@@ -587,7 +587,7 @@ General Information)").c_str(),
 		)
 		(
 			g_strPrettyJsonIndent.c_str(),
-			po::value<uint32_t>()->value_name("N")->default_value(util::JsonPrintingFormat::defaultIndent),
+			po::value<uint32_t>()->value_name("N")->default_value(util::JsonFormat::defaultIndent),
 			"Indent pretty-printed JSON with N spaces. Only valid in combination with --pretty-json."
 		)
 		(
@@ -799,10 +799,16 @@ General Information)").c_str(),
 
 	if (m_args.count(g_strPrettyJson) > 0)
 	{
-		m_options.formatting.prettyJson.format = JsonPrintingFormat::Format::Pretty;
+		m_options.formatting.json.format = JsonFormat::Pretty;
 		if (m_args.count(g_strPrettyJsonIndent))
+			m_options.formatting.json.indent = m_args[g_strPrettyJsonIndent].as<uint32_t>();
+	}
+	else
+	{
+		if (!m_args[g_strPrettyJsonIndent].defaulted())
 		{
-			m_options.formatting.prettyJson.indent = m_args[g_strPrettyJsonIndent].as<uint32_t>();
+			serr() << "\"" << g_strPrettyJsonIndent << "\" cannot be used without \"" <<  g_strPrettyJson << "\"." << endl;
+			return false;
 		}
 	}
 

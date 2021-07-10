@@ -139,7 +139,7 @@ struct CommandLineOptions
 
 	struct
 	{
-		util::JsonPrintingFormat json;
+		util::JsonFormat json;
 		std::optional<bool> coloredOutput;
 		bool withErrorIds = false;
 	} formatting;

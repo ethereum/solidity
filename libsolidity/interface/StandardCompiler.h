@@ -47,8 +47,10 @@ public:
 	/// Creates a new StandardCompiler.
 	/// @param _readFile callback used to read files for import statements. Must return
 	/// and must not emit exceptions.
-	explicit StandardCompiler(ReadCallback::Callback _readFile = ReadCallback::Callback()):
-		m_readFile(std::move(_readFile))
+	explicit StandardCompiler(ReadCallback::Callback _readFile = ReadCallback::Callback(),
+		util::JsonFormat const& _format = {}):
+		m_readFile(std::move(_readFile)),
+		m_jsonPrintingFormat(std::move(_format))
 	{
 	}
 
@@ -58,9 +60,6 @@ public:
 	/// Parses input as JSON and peforms the above processing steps, returning a serialized JSON
 	/// output. Parsing errors are returned as regular errors.
 	std::string compile(std::string const& _input) noexcept;
-
-	/// Sets JSON printing format. Default is compact JSON with no indent.
-	void setJsonPrintingFormat(solidity::util::JsonPrintingFormat const& _format);
 
 	static Json::Value formatFunctionDebugData(
 		std::map<std::string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
@@ -96,7 +95,7 @@ private:
 
 	ReadCallback::Callback m_readFile;
 
-	solidity::util::JsonPrintingFormat m_jsonPrintingFormat;
+	util::JsonFormat m_jsonPrintingFormat;
 };
 
 }

@@ -185,8 +185,8 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.experimentalViaIR = true;
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
-		using solidity::util::JsonPrintingFormat;
-		expectedOptions.formatting.prettyJson = JsonPrintingFormat{JsonPrintingFormat::Format::Pretty, 7};
+		using util::JsonFormat;
+		expectedOptions.formatting.json = JsonFormat{JsonFormat::Pretty, 7};
 		expectedOptions.linker.libraries = {
 			{"dir1/file1.sol:L", h160("1234567890123456789012345678901234567890")},
 			{"dir2/file2.sol:L", h160("1111122222333334444455555666667777788888")},
@@ -271,6 +271,7 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 			"--evm-version=spuriousDragon",
 			"--experimental-via-ir",       // Ignored in assembly mode
 			"--revert-strings=strip",      // Accepted but has no effect in assembly mode
+			"--pretty-json",
 			"--no-color",
 			"--error-codes",
 			"--libraries="
@@ -315,8 +316,8 @@ BOOST_AUTO_TEST_CASE(assembly_mode_options)
 		expectedOptions.output.overwriteFiles = true;
 		expectedOptions.output.evmVersion = EVMVersion::spuriousDragon();
 		expectedOptions.output.revertStrings = RevertStrings::Strip;
-		using solidity::util::JsonPrintingFormat;
-		expectedOptions.formatting.prettyJson = JsonPrintingFormat {JsonPrintingFormat::Format::Compact };
+		using util::JsonFormat;
+		expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty };
 		expectedOptions.assembly.targetMachine = expectedMachine;
 		expectedOptions.assembly.inputLanguage = expectedLanguage;
 		expectedOptions.linker.libraries = {
@@ -399,8 +400,8 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 	expectedOptions.output.dir = "/tmp/out";
 	expectedOptions.output.overwriteFiles = true;
 	expectedOptions.output.revertStrings = RevertStrings::Strip;
-	using solidity::util::JsonPrintingFormat;
-	expectedOptions.formatting.prettyJson = JsonPrintingFormat {JsonPrintingFormat::Format::Pretty, 2};
+	using util::JsonFormat;
+	expectedOptions.formatting.json = JsonFormat {JsonFormat::Pretty, 2};
 	expectedOptions.formatting.coloredOutput = false;
 	expectedOptions.formatting.withErrorIds = true;
 	expectedOptions.compiler.outputs = {

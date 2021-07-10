@@ -1428,11 +1428,6 @@ string StandardCompiler::compile(string const& _input) noexcept
 	}
 }
 
-void StandardCompiler::setJsonPrintingFormat(solidity::util::JsonPrintingFormat const& _format)
-{
-	m_jsonPrintingFormat = _format;
-}
-
 Json::Value StandardCompiler::formatFunctionDebugData(
 	map<string, evmasm::LinkerObject::FunctionDebugData> const& _debugInfo
 )

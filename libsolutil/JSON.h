@@ -34,19 +34,21 @@ namespace solidity::util
 Json::Value removeNullMembers(Json::Value _json);
 
 /// JSON printing format.
-struct JsonPrintingFormat
+struct JsonFormat
 {
-	/// JSON format.
-	enum class Format { Compact, Pretty } format = Format::Compact;
+	enum Format
+	{
+		Compact,
+		Pretty
+	};
 
-	/// Default indent level.
 	static constexpr uint32_t defaultIndent = 2;
 
-	/// Indent level when Format::Pretty is used.
-	uint32_t indent = defaultIndent;
+	bool operator==(JsonFormat const& _other) const noexcept;
+	bool operator!=(JsonFormat const& _other) const noexcept { return !(*this == _other); }
 
-	bool operator==(JsonPrintingFormat const& _other) const noexcept;
-	bool operator!=(JsonPrintingFormat const& _other) const noexcept { return !(*this == _other); }
+	Format format = Compact;
+	uint32_t indent = defaultIndent;
 };
 
 /// Serialise the JSON object (@a _input) with indentation
@@ -56,7 +58,7 @@ std::string jsonPrettyPrint(Json::Value const& _input);
 std::string jsonCompactPrint(Json::Value const& _input);
 
 /// Serialise the JSON object (@a _input) using specified format (@a _format)
-std::string jsonPrint(Json::Value const& _input, JsonPrintingFormat const& _format);
+std::string jsonPrint(Json::Value const& _input, JsonFormat const& _format);
 
 /// Parse a JSON string (@a _input) with enabled strict-mode and writes resulting JSON object to (@a _json)
 /// \param _input JSON input string
