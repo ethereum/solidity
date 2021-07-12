@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <libyul/AST.h>
 #include <libyul/ASTForward.h>
 #include <libyul/Dialect.h>
 
@@ -45,6 +46,11 @@ public:
 		None, ForLoopPre, ForLoopPost, ForLoopBody
 	};
 
+	enum class UseSourceLocationFrom
+	{
+		Scanner, LocationOverride, Comments,
+	};
+
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
@@ -52,7 +58,27 @@ public:
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
-		m_locationOverride(std::move(_locationOverride))
+		m_locationOverride{_locationOverride ? *_locationOverride : langutil::SourceLocation{}},
+		m_debugDataOverride{},
+		m_useSourceLocationFrom{
+			_locationOverride ?
+			UseSourceLocationFrom::LocationOverride :
+			UseSourceLocationFrom::Scanner
+		}
+	{}
+
+	/// Constructs a Yul parser that is using the source locations
+	/// from the comments (via @src).
+	explicit Parser(
+		langutil::ErrorReporter& _errorReporter,
+		Dialect const& _dialect,
+		std::map<unsigned, std::shared_ptr<langutil::CharStream>> _charStreamMap
+	):
+		ParserBase(_errorReporter),
+		m_dialect(_dialect),
+		m_charStreamMap{std::move(_charStreamMap)},
+		m_debugDataOverride{DebugData::create()},
+		m_useSourceLocationFrom{UseSourceLocationFrom::Comments}
 	{}
 
 	/// Parses an inline assembly block starting with `{` and ending with `}`.
@@ -63,14 +89,35 @@ public:
 protected:
 	langutil::SourceLocation currentLocation() const override
 	{
-		return m_locationOverride ? *m_locationOverride : ParserBase::currentLocation();
+		if (m_useSourceLocationFrom == UseSourceLocationFrom::Scanner)
+			return ParserBase::currentLocation();
+		return m_locationOverride;
+	}
+
+	langutil::Token advance() override;
+
+	void fetchSourceLocationFromComment();
+
+	/// Creates a DebugData object with the correct source location set.
+	std::shared_ptr<DebugData const> createDebugData() const
+	{
+		switch (m_useSourceLocationFrom)
+		{
+			case UseSourceLocationFrom::Scanner:
+				return DebugData::create(ParserBase::currentLocation());
+			case UseSourceLocationFrom::LocationOverride:
+				return DebugData::create(m_locationOverride);
+			case UseSourceLocationFrom::Comments:
+				return m_debugDataOverride;
+		}
+		solAssert(false, "");
 	}
 
 	/// Creates an inline assembly node with the current source location.
 	template <class T> T createWithLocation() const
 	{
 		T r;
-		r.debugData = DebugData::create(currentLocation());
+		r.debugData = createDebugData();
 		return r;
 	}
 
@@ -96,7 +143,11 @@ protected:
 
 private:
 	Dialect const& m_dialect;
-	std::optional<langutil::SourceLocation> m_locationOverride;
+
+	std::optional<std::map<unsigned, std::shared_ptr<langutil::CharStream>>> m_charStreamMap;
+	langutil::SourceLocation m_locationOverride;
+	std::shared_ptr<DebugData const> m_debugDataOverride;
+	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;
 	ForLoopComponent m_currentForLoopComponent = ForLoopComponent::None;
 	bool m_insideFunction = false;
 };
