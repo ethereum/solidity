@@ -26,19 +26,23 @@ function compileFull()
 {
     local expected_exit_code=0
     local expect_output=0
-    if [[ $1 = '-e' ]]; then
-        expected_exit_code=1
-        expect_output=1
-        shift;
-    fi
-    if [[ $1 = '-w' ]]; then
-        expect_output=1
-        shift;
-    fi
-    if [[ $1 = '-o' ]]; then
-        expect_output=2
-        shift;
-    fi
+
+    case "$1" in
+        '-e')
+            expected_exit_code=1
+            expect_output=1
+            shift;
+            ;;
+        '-w')
+            expect_output=1
+            shift;
+            ;;
+        '-o')
+            expect_output=2
+            shift;
+            ;;
+    esac
+
     local args=("${FULLARGS[@]}")
     if [[ $1 = '-v' ]]; then
         if (echo "$2" | grep -Po '(?<=0.4.)\d+' >/dev/null); then
@@ -74,17 +78,37 @@ function compileFull()
     if [[ \
         ("$exit_code" -ne "$expected_exit_code" || \
             ( $expect_output -eq 0 && -n "$errors" ) || \
-            ( $expect_output -ne 0 && $expected_exit_code -eq 0 && $expect_output -ne 2 && -z "$errors" ))
+            ( $expect_output -ne 0 && $expected_exit_code -eq 0 && \
+              $expect_output -ne 2 && -z "$errors" )
+        )
     ]]
     then
-        printError "Unexpected compilation result:"
-        printError "Expected failure: $expected_exit_code - Expected warning / error output: $expect_output"
-        printError "Was failure: $exit_code"
-        echo "$errors"
+        printError "Test failure:"
+        printError "Exit code: $exit_code"
+        printError "Expected:  $expected_exit_code"
+        printError "==== Output ===="
+        echo $errors
+        printError "== Output end =="
+        printError ""
+        case "$expect_output" in
+            0)
+                printError "No output was expected."
+                ;;
+            1)
+                printError "Expected warnings or errors."
+                ;;
+            2)
+                printError "Expected possible warnings."
+                ;;
+        esac
+
+        printError ""
         printError "While calling:"
         echo "\"$SOLC\" ${args[*]} ${files[*]}"
         printError "Inside directory:"
         pwd
+        printError "Input was:"
+        cat ${files[@]}
         false
     fi
 }
