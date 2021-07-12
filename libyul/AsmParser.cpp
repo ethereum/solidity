@@ -131,10 +131,8 @@ void Parser::fetchSourceLocationFromComment()
 		m_debugDataOverride = DebugData::create();
 		if (!sourceIndex || !start || !end)
 			m_errorReporter.syntaxError(6367_error, commentLocation, "Invalid value in source location mapping. Could not parse location specification.");
-		else if (!((*start < 0 && *end < 0) || (*start >= 0 && *start <= *end)))
-			m_errorReporter.syntaxError(5798_error, commentLocation, "Invalid value in source location mapping. Start offset larger than end offset.");
-		else if (sourceIndex == -1 && (0 <= *start && *start <= *end)) // Use source index -1 to indicate original source.
-			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, ParserBase::currentLocation().source});
+		else if (sourceIndex == -1)
+			m_debugDataOverride = DebugData::create(SourceLocation{*start, *end, nullptr});
 		else if (!(sourceIndex >= 0 && m_charStreamMap->count(static_cast<unsigned>(*sourceIndex))))
 			m_errorReporter.syntaxError(2674_error, commentLocation, "Invalid source mapping. Source index not defined via @use-src.");
 		else
