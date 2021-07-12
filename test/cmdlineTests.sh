@@ -141,7 +141,11 @@ function test_solc_behaviour()
 
     if [[ " ${solc_args[*]} " == *" --standard-json "* ]]
     then
-        sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
+	if [[ " ${solc_args[*]} " == *" --pretty-json "* ]]
+	then
+	    sed -i.bak -e "/errors/,/]/ d" "$stdout_path"
+	fi
+	sed -i.bak -e 's/{[^{]*Warning: This is a pre-release compiler version[^}]*},\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/ Consider adding \\"pragma solidity \^[0-9.]*;\\"//g' "$stdout_path"
         sed -i.bak -e 's/"errors":\[\],\{0,1\}//' "$stdout_path"
         sed -i.bak -E -e 's/\"opcodes\":\"[^"]+\"/\"opcodes\":\"<OPCODES REMOVED>\"/g' "$stdout_path"

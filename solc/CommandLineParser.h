@@ -26,6 +26,7 @@
 #include <libsolidity/interface/ImportRemapper.h>
 #include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
+#include <libsolutil/JSON.h>
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
@@ -101,6 +102,7 @@ struct CommandLineOptions
 	bool operator==(CommandLineOptions const& _other) const noexcept;
 	bool operator!=(CommandLineOptions const& _other) const noexcept { return !(*this == _other); }
 
+
 	struct
 	{
 		InputMode mode = InputMode::Compiler;
@@ -137,7 +139,7 @@ struct CommandLineOptions
 
 	struct
 	{
-		bool prettyJson = false;
+		util::JsonFormat json;
 		std::optional<bool> coloredOutput;
 		bool withErrorIds = false;
 	} formatting;
@@ -168,6 +170,7 @@ struct CommandLineOptions
 		bool initialize = false;
 		ModelCheckerSettings settings;
 	} modelChecker;
+
 };
 
 /// Parses the command-line arguments and produces a filled-out CommandLineOptions structure.
