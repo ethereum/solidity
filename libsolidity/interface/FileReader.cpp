@@ -78,7 +78,7 @@ ReadCallback::Result FileReader::readFile(string const& _kind, string const& _so
 			return ReadCallback::Result{false, "Not a valid file."};
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		auto contents = readFileAsString(canonicalPath.string());
+		auto contents = readFileAsString(canonicalPath);
 		m_sourceCodes[_sourceUnitName] = contents;
 		return ReadCallback::Result{true, contents};
 	}
