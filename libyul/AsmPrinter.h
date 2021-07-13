@@ -24,8 +24,13 @@
 #pragma once
 
 #include <libyul/ASTForward.h>
-
 #include <libyul/YulString.h>
+
+#include <libsolutil/CommonData.h>
+
+#include <liblangutil/SourceLocation.h>
+
+#include <map>
 
 namespace solidity::yul
 {
@@ -39,29 +44,52 @@ struct Dialect;
 class AsmPrinter
 {
 public:
-	AsmPrinter() {}
-	explicit AsmPrinter(Dialect const& _dialect): m_dialect(&_dialect) {}
+	explicit AsmPrinter(
+		Dialect const* _dialect = nullptr,
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
+	):
+		m_dialect(_dialect)
+	{
+		if (_sourceIndexToName)
+			for (auto&& [index, name]: *_sourceIndexToName)
+				m_nameToSourceIndex[*name] = index;
+	}
 
-	std::string operator()(Literal const& _literal) const;
-	std::string operator()(Identifier const& _identifier) const;
-	std::string operator()(ExpressionStatement const& _expr) const;
-	std::string operator()(Assignment const& _assignment) const;
-	std::string operator()(VariableDeclaration const& _variableDeclaration) const;
-	std::string operator()(FunctionDefinition const& _functionDefinition) const;
-	std::string operator()(FunctionCall const& _functionCall) const;
-	std::string operator()(If const& _if) const;
-	std::string operator()(Switch const& _switch) const;
-	std::string operator()(ForLoop const& _forLoop) const;
-	std::string operator()(Break const& _break) const;
-	std::string operator()(Continue const& _continue) const;
-	std::string operator()(Leave const& _continue) const;
-	std::string operator()(Block const& _block) const;
+
+	explicit AsmPrinter(
+		Dialect const& _dialect,
+		std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> _sourceIndexToName = {}
+	): AsmPrinter(&_dialect, _sourceIndexToName) {}
+
+	std::string operator()(Literal const& _literal);
+	std::string operator()(Identifier const& _identifier);
+	std::string operator()(ExpressionStatement const& _expr);
+	std::string operator()(Assignment const& _assignment);
+	std::string operator()(VariableDeclaration const& _variableDeclaration);
+	std::string operator()(FunctionDefinition const& _functionDefinition);
+	std::string operator()(FunctionCall const& _functionCall);
+	std::string operator()(If const& _if);
+	std::string operator()(Switch const& _switch);
+	std::string operator()(ForLoop const& _forLoop);
+	std::string operator()(Break const& _break);
+	std::string operator()(Continue const& _continue);
+	std::string operator()(Leave const& _continue);
+	std::string operator()(Block const& _block);
 
 private:
-	std::string formatTypedName(TypedName _variable) const;
+	std::string formatTypedName(TypedName _variable);
 	std::string appendTypeName(YulString _type, bool _isBoolLiteral = false) const;
+	std::string formatSourceLocationComment(std::shared_ptr<DebugData const> const& _debugData, bool _statement);
+	template <class T>
+	std::string formatSourceLocationComment(T const& _node)
+	{
+		bool isExpression = std::is_constructible<Expression, T>::value;
+		return formatSourceLocationComment(_node.debugData, !isExpression);
+	}
 
-	Dialect const* m_dialect = nullptr;
+	Dialect const* const m_dialect = nullptr;
+	std::map<std::string const, unsigned> m_nameToSourceIndex;
+	langutil::SourceLocation m_lastLocation = {};
 };
 
 }

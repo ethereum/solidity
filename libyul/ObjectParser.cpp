@@ -58,8 +58,9 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 		}
 		else
 			object = parseObject();
-		if (object && !_reuseScanner)
+		if (!_reuseScanner)
 			expectToken(Token::EOS);
+		object->debugData = make_shared<ObjectDebugData>(ObjectDebugData{m_sourceNameMapping});
 		return object;
 	}
 	catch (FatalError const&)
@@ -111,7 +112,7 @@ shared_ptr<Block> ObjectParser::parseCode()
 	return parseBlock();
 }
 
-optional<ObjectParser::SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
+optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 {
 	// @use-src 0:"abc.sol", 1:"foo.sol", 2:"bar.sol"
 	//

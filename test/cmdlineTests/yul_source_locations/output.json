@@ -53,6 +53,7 @@ object \"C_54\" {
             cleaned := value
         }
 
+        /// @src 0:175:223
         function constructor_C_54(var__init_12) {
 
             /// @src 0:175:223
@@ -70,6 +71,7 @@ object \"C_54\" {
             let expr_17 := expr_16
 
         }
+        /// @src 0:79:428
 
         function convert_t_int256_to_t_int256(value) -> converted {
             converted := cleanup_t_int256(value)
@@ -303,17 +305,18 @@ object \"C_54\" {
                 mstore(64, newFreePtr)
             }
 
+            /// @src 0:343:426
             function fun_f2_53() -> var__42 {
-                /// @src 0:343:426
                 /// @src 0:375:378
                 let zero_t_int256_4 := zero_value_for_split_t_int256()
                 var__42 := zero_t_int256_4
 
                 var__42 := modifier_m_40(var__42)
             }
+            /// @src 0:79:428
 
+            /// @src 0:343:426
             function fun_f2_53_inner(_8) -> var__42 {
-                /// @src 0:343:426
                 var__42 := _8
 
                 /// @src 0:392:400
@@ -359,9 +362,10 @@ object \"C_54\" {
                 leave
 
             }
+            /// @src 0:79:428
 
+            /// @src 0:226:302
             function fun_f_30() -> var__23 {
-                /// @src 0:226:302
                 /// @src 0:262:265
                 let zero_t_int256_1 := zero_value_for_split_t_int256()
                 var__23 := zero_t_int256_1
@@ -379,9 +383,10 @@ object \"C_54\" {
                 leave
 
             }
+            /// @src 0:79:428
 
+            /// @src 0:152:171
             function getter_fun_stateVar_10() -> ret {
-                /// @src 0:152:171
 
                 let slot := 0
                 let offset := 0
@@ -389,6 +394,7 @@ object \"C_54\" {
                 ret := read_from_storage_split_dynamic_t_int256(slot, offset)
 
             }
+            /// @src 0:79:428
 
             function increment_t_int256(value) -> ret {
                 value := cleanup_t_int256(value)
@@ -396,8 +402,8 @@ object \"C_54\" {
                 ret := add(value, 1)
             }
 
+            /// @src 0:304:341
             function modifier_m_40(var__42) -> _5 {
-                /// @src 0:304:341
                 _5 := var__42
 
                 /// @src 0:322:332
@@ -409,6 +415,7 @@ object \"C_54\" {
                 _5 := fun_f2_53_inner(var__42)
 
             }
+            /// @src 0:79:428
 
             function panic_error_0x11() {
                 mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)
@@ -599,6 +606,7 @@ object \"D_72\" {
             cleaned := value
         }
 
+        /// @src 0:175:223
         function constructor_C_54(var__init_12) {
 
             /// @src 0:175:223
@@ -616,7 +624,9 @@ object \"D_72\" {
             let expr_17 := expr_16
 
         }
+        /// @src 1:91:166
 
+        /// @src 1:113:164
         function constructor_D_72(var__init2_63) {
             /// @src 1:107:108
             let expr_60 := 0x03
@@ -635,6 +645,7 @@ object \"D_72\" {
             update_storage_value_offset_0t_int256_to_t_int256(0x00, expr_68)
 
         }
+        /// @src 1:91:166
 
         function convert_t_int256_to_t_int256(value) -> converted {
             converted := cleanup_t_int256(value)
@@ -894,17 +905,18 @@ object \"D_72\" {
                 mstore(64, newFreePtr)
             }
 
+            /// @src 0:343:426
             function fun_f2_53() -> var__42 {
-                /// @src 0:343:426
                 /// @src 0:375:378
                 let zero_t_int256_4 := zero_value_for_split_t_int256()
                 var__42 := zero_t_int256_4
 
                 var__42 := modifier_m_40(var__42)
             }
+            /// @src 1:91:166
 
+            /// @src 0:343:426
             function fun_f2_53_inner(_8) -> var__42 {
-                /// @src 0:343:426
                 var__42 := _8
 
                 /// @src 0:392:400
@@ -950,9 +962,10 @@ object \"D_72\" {
                 leave
 
             }
+            /// @src 1:91:166
 
+            /// @src 0:226:302
             function fun_f_30() -> var__23 {
-                /// @src 0:226:302
                 /// @src 0:262:265
                 let zero_t_int256_1 := zero_value_for_split_t_int256()
                 var__23 := zero_t_int256_1
@@ -970,9 +983,10 @@ object \"D_72\" {
                 leave
 
             }
+            /// @src 1:91:166
 
+            /// @src 0:152:171
             function getter_fun_stateVar_10() -> ret {
-                /// @src 0:152:171
 
                 let slot := 0
                 let offset := 0
@@ -980,6 +994,7 @@ object \"D_72\" {
                 ret := read_from_storage_split_dynamic_t_int256(slot, offset)
 
             }
+            /// @src 1:91:166
 
             function increment_t_int256(value) -> ret {
                 value := cleanup_t_int256(value)
@@ -987,8 +1002,8 @@ object \"D_72\" {
                 ret := add(value, 1)
             }
 
+            /// @src 0:304:341
             function modifier_m_40(var__42) -> _5 {
-                /// @src 0:304:341
                 _5 := var__42
 
                 /// @src 0:322:332
@@ -1000,6 +1015,7 @@ object \"D_72\" {
                 _5 := fun_f2_53_inner(var__42)
 
             }
+            /// @src 1:91:166
 
             function panic_error_0x11() {
                 mstore(0, 35408467139433450592217433187231851964531694900788300625387963629091585785856)

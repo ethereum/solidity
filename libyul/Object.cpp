@@ -25,10 +25,13 @@
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -47,18 +50,36 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*) const
+string Data::toString(Dialect const*, optional<SourceNameMap>) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
 string Object::toString(Dialect const* _dialect) const
 {
+	string useSrcComment;
+
+	if (debugData && debugData->sourceNames)
+		useSrcComment =
+			"/// @use-src " +
+			joinHumanReadable(ranges::views::transform(*debugData->sourceNames, [](auto&& _pair) {
+				return to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
+			})) +
+			"\n";
+	return useSrcComment + toString(_dialect, debugData ? debugData->sourceNames : optional<SourceNameMap>{});
+}
+
+string Object::toString(Dialect const* _dialect, std::optional<SourceNameMap> _sourceNames) const
+{
 	yulAssert(code, "No code");
-	string inner = "code " + (_dialect ? AsmPrinter{*_dialect} : AsmPrinter{})(*code);
+	string inner = "code " + AsmPrinter{_dialect, _sourceNames}(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect);
+	{
+		if (auto const* o = dynamic_cast<Object const*>(obj.get()))
+			yulAssert(!o->debugData || !o->debugData->sourceNames, "");
+		inner += "\n" + obj->toString(_dialect, _sourceNames);
+	}
 
 	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
