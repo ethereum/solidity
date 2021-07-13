@@ -39,7 +39,7 @@ namespace solidity::util
 std::string readFileAsString(std::string const& _file);
 
 /// Retrieves and returns the whole content of the specified input stream (until EOF).
-std::string readUntilEnd(std::istream& _stdin);
+std::string readUntilEnd(std::istream const& _stdin);
 
 /// Retrieves and returns a character from standard input (without waiting for EOL).
 int readStandardInputChar();
