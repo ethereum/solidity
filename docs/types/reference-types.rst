@@ -559,7 +559,7 @@ shown in the following example:
         function newCampaign(address payable beneficiary, uint goal) public returns (uint campaignID) {
             campaignID = numCampaigns++; // campaignID is return variable
             // We cannot use "campaigns[campaignID] = Campaign(beneficiary, goal, 0, 0)"
-            // because the RHS creates a memory-struct "Campaign" that contains a mapping.
+            // because the right hand side creates a memory-struct "Campaign" that contains a mapping.
             Campaign storage c = campaigns[campaignID];
             c.beneficiary = beneficiary;
             c.fundingGoal = goal;
