@@ -33,14 +33,12 @@
 #include <libyul/AssemblyStack.h>
 #include <libyul/Utilities.h>
 
-#include <libsolutil/CommonData.h>
-#include <libsolutil/Whiskers.h>
-#include <libsolutil/StringUtils.h>
 #include <libsolutil/Algorithms.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
+#include <libsolutil/Whiskers.h>
 
 #include <liblangutil/SourceReferenceFormatter.h>
-
-#include <range/v3/view/map.hpp>
 
 #include <sstream>
 #include <variant>
@@ -135,6 +133,7 @@ string IRGenerator::generate(
 	};
 
 	Whiskers t(R"(
+		/// @use-src <useSrcMap>
 		object "<CreationObject>" {
 			code {
 				<sourceLocationComment>
@@ -169,6 +168,16 @@ string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
+	auto invertedSourceIndicies = invertMap(m_context.sourceIndices());
+
+	string useSrcMap = joinHumanReadable(
+		ranges::views::transform(invertedSourceIndicies, [](auto&& _pair) {
+			return to_string(_pair.first) + ":" + escapeAndQuoteString(_pair.second);
+		}),
+		", "
+	);
+
+	t("useSrcMap", useSrcMap);
 	t("sourceLocationComment", sourceLocationComment(_contract, m_context));
 
 	t("CreationObject", IRNames::creationObject(_contract));
