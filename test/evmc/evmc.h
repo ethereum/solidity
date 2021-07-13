@@ -44,7 +44,7 @@ enum
      *
      * @see @ref versioning
      */
-    EVMC_ABI_VERSION = 8
+    EVMC_ABI_VERSION = 9
 };
 
 
@@ -154,6 +154,7 @@ struct evmc_tx_context
     int64_t block_gas_limit;         /**< The block gas limit. */
     evmc_uint256be block_difficulty; /**< The block difficulty. */
     evmc_uint256be chain_id;         /**< The blockchain's ChainID. */
+    evmc_uint256be block_base_fee;   /**< The block base fee per gas (EIP-1559, EIP-3198). */
 };
 
 /**
@@ -813,19 +814,40 @@ enum evmc_revision
     /**
      * The Istanbul revision.
      *
-     * The spec draft: https://eips.ethereum.org/EIPS/eip-1679.
+     * https://eips.ethereum.org/EIPS/eip-1679
      */
     EVMC_ISTANBUL = 7,
 
     /**
      * The Berlin revision.
      *
-     * The spec draft: https://eips.ethereum.org/EIPS/eip-2070.
+     * https://github.com/ethereum/eth1.0-specs/blob/master/network-upgrades/mainnet-upgrades/berlin.md
      */
     EVMC_BERLIN = 8,
 
+    /**
+     * The London revision.
+     *
+     * https://github.com/ethereum/eth1.0-specs/blob/master/network-upgrades/mainnet-upgrades/london.md
+     */
+    EVMC_LONDON = 9,
+
+    /**
+     * The Shanghai revision.
+     *
+     * https://github.com/ethereum/eth1.0-specs/blob/master/network-upgrades/mainnet-upgrades/shanghai.md
+     */
+    EVMC_SHANGHAI = 10,
+
     /** The maximum EVM revision supported. */
-    EVMC_MAX_REVISION = EVMC_BERLIN
+    EVMC_MAX_REVISION = EVMC_SHANGHAI,
+
+    /**
+     * The latest known EVM revision with finalized specification.
+     *
+     * This is handy for EVM tools to always use the latest revision available.
+     */
+    EVMC_LATEST_STABLE_REVISION = EVMC_LONDON
 };
 
 
