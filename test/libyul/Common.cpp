@@ -53,12 +53,17 @@ Dialect const& defaultDialect(bool _yul)
 }
 }
 
-void yul::test::printErrors(ErrorList const& _errors)
+void yul::test::printErrors(ostream& _stream, ErrorList const& _errors)
 {
-	SourceReferenceFormatter formatter(cout, true, false);
+	SourceReferenceFormatter formatter(_stream, true, false);
 
 	for (auto const& error: _errors)
 		formatter.printErrorInformation(*error);
+}
+
+void yul::test::printErrors(ErrorList const& _errors)
+{
+	printErrors(cout, _errors);
 }
 
 

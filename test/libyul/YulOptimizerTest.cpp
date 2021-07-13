@@ -120,11 +120,3 @@ std::pair<std::shared_ptr<Object>, std::shared_ptr<AsmAnalysisInfo>> YulOptimize
 	}
 	return {std::move(object), std::move(analysisInfo)};
 }
-
-void YulOptimizerTest::printErrors(ostream& _stream, ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(_stream, true, false);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
-}

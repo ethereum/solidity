@@ -44,6 +44,7 @@ struct Dialect;
 namespace solidity::yul::test
 {
 
+void printErrors(std::ostream& _stream, langutil::ErrorList const& _errors);
 void printErrors(langutil::ErrorList const& _errors);
 
 std::pair<std::shared_ptr<Block>, std::shared_ptr<AsmAnalysisInfo>>
