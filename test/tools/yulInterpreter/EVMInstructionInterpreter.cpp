@@ -220,6 +220,8 @@ u256 EVMInstructionInterpreter::eval(
 		return m_state.gasprice;
 	case Instruction::CHAINID:
 		return m_state.chainid;
+	case Instruction::BASEFEE:
+		return m_state.basefee;
 	case Instruction::EXTCODESIZE:
 		return u256(keccak256(h256(arg[0]))) & 0xffffff;
 	case Instruction::EXTCODEHASH:

@@ -122,6 +122,8 @@ EVMHost::EVMHost(langutil::EVMVersion _evmVersion, evmc::VM& _vm):
 		m_evmRevision = EVMC_ISTANBUL;
 	else if (_evmVersion == langutil::EVMVersion::berlin())
 		m_evmRevision = EVMC_BERLIN;
+	else if (_evmVersion == langutil::EVMVersion::london())
+		m_evmRevision = EVMC_BERLIN;
 	else
 		assertThrow(false, Exception, "Unsupported EVM version");
 

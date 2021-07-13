@@ -2947,6 +2947,12 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 				_memberAccess.location(),
 				"\"chainid\" is not supported by the VM version."
 			);
+		else if (magicType->kind() == MagicType::Kind::Block && memberName == "basefee" && !m_evmVersion.hasBaseFee())
+			m_errorReporter.typeError(
+				5921_error,
+				_memberAccess.location(),
+				"\"basefee\" is not supported by the VM version."
+			);
 	}
 
 	if (

@@ -1731,6 +1731,8 @@ bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 			m_context << Instruction::GASPRICE;
 		else if (member == "chainid")
 			m_context << Instruction::CHAINID;
+		else if (member == "basefee")
+			m_context << Instruction::BASEFEE;
 		else if (member == "data")
 			m_context << u256(0) << Instruction::CALLDATASIZE;
 		else if (member == "sig")
