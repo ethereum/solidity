@@ -191,6 +191,8 @@ def examine_id_coverage(top_dir, source_id_to_file_names, new_ids_only=False):
 
     # white list of ids which are not covered by tests
     white_ids = {
+        "1619", # Tested in C++ code.
+        "9804", # Tested in C++ code.
         "6367", # these three are temporarily whitelisted until both PRs are merged.
         "5798",
         "2674",

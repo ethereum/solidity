@@ -30,10 +30,14 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <range/v3/view/iota.hpp>
+
 #include <memory>
 #include <optional>
 #include <string>
+#include <sstream>
 
+using namespace ranges;
 using namespace std;
 using namespace solidity::frontend;
 using namespace solidity::langutil;
@@ -160,6 +164,113 @@ BOOST_AUTO_TEST_CASE(to_string)
 	);
 	BOOST_REQUIRE(asmStack.parseAndAnalyze("source", code));
 	BOOST_CHECK_EQUAL(asmStack.print(), expectation);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_empty)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping("", location, reporter);
+	BOOST_REQUIRE(!mapping);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_simple)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+	string const text = R"(@use-src 0:"contract.sol")";
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping(text, location, reporter);
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 1);
+	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");
+}
+
+BOOST_AUTO_TEST_CASE(use_src_multiple)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping(
+		R"(@use-src 0:"contract.sol", 1:"misc.yul")",
+		location,
+		reporter
+	);
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 2);
+	BOOST_REQUIRE_EQUAL(*mapping->at(0), "contract.sol");
+	BOOST_REQUIRE_EQUAL(*mapping->at(1), "misc.yul");
+}
+
+BOOST_AUTO_TEST_CASE(use_src_escaped_filenames)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping(
+		R"(@use-src 42:"con\"tract@\".sol")",
+		location,
+		reporter
+	);
+	BOOST_REQUIRE(mapping);
+	BOOST_REQUIRE_EQUAL(mapping->size(), 1);
+	BOOST_REQUIRE(mapping->count(42));
+	BOOST_REQUIRE_EQUAL(*mapping->at(42), "con\\\"tract@\\\".sol");
+}
+
+BOOST_AUTO_TEST_CASE(use_src_invalid_syntax_malformed_param_1)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+
+	// open quote arg, missing closing quote
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping(
+		R"(@use-src 42_"con")",
+		location,
+		reporter
+	);
+
+	BOOST_REQUIRE(reporter.hasErrors());
+	BOOST_CHECK_EQUAL(errors.size(), 1);
+	BOOST_CHECK_EQUAL(errors.front()->errorId().error, 9804);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_invalid_syntax_malformed_param_2)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+
+	// open quote arg, missing closing quote
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping(
+		R"(@use-src 42:"con)",
+		location,
+		reporter
+	);
+
+	BOOST_REQUIRE(reporter.hasErrors());
+	BOOST_CHECK_EQUAL(errors.size(), 1);
+	BOOST_CHECK_EQUAL(errors.front()->errorId().error, 9804);
+}
+
+BOOST_AUTO_TEST_CASE(use_src_invalid_syntax_invalid_index)
+{
+	ErrorList errors;
+	SourceLocation location;
+	ErrorReporter reporter(errors);
+
+	// too large valid number (it's uint64 max plus one)
+	auto const mapping = ObjectParser::tryGetSourceLocationMapping(
+		R"(@use-src 18446744073709551616:"file.sol")",
+		location,
+		reporter
+	);
+
+	BOOST_REQUIRE(reporter.hasErrors());
+	BOOST_CHECK_EQUAL(errors.size(), 1);
+	BOOST_CHECK_EQUAL(errors.front()->errorId().error, 1619);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

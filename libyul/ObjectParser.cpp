@@ -26,6 +26,11 @@
 #include <libyul/Exceptions.h>
 
 #include <liblangutil/Token.h>
+#include <liblangutil/Scanner.h>
+
+#include <libsolutil/StringUtils.h>
+
+#include <regex>
 
 using namespace std;
 using namespace solidity;
@@ -40,6 +45,8 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 	{
 		shared_ptr<Object> object;
 		m_scanner = _scanner;
+		m_sourceIndexToNameOverrides = tryGetSourceLocationMapping();
+
 		if (currentToken() == Token::LBrace)
 		{
 			// Special case: Code-only form.
@@ -104,9 +111,64 @@ shared_ptr<Block> ObjectParser::parseCode()
 	return parseBlock();
 }
 
+optional<ObjectParser::ReverseSourceNameMap> ObjectParser::tryGetSourceLocationMapping() const
+{
+	return tryGetSourceLocationMapping(
+		m_scanner->currentCommentLiteral(),
+		m_scanner->currentCommentLocation(),
+		m_errorReporter
+	);
+}
+
+optional<ObjectParser::ReverseSourceNameMap> ObjectParser::tryGetSourceLocationMapping(
+	std::string const& _text,
+	SourceLocation const& _location,
+	ErrorReporter& _errorReporter
+)
+{
+	// @use-src 0:"abc.sol", 1:"foo.sol", 2:"bar.sol"
+	//
+	// UseSrcList := UseSrc (',' UseSrc)*
+	// UseSrc     := [0-9]+ ':' FileName
+	// FileName   := "(([^\"]|\.)*)"
+
+	// Matches some "@use-src TEXT".
+	static std::regex const lineRE = std::regex(
+		R"~~~((^|\s+)@use-src\s+(.*)$)~~~",
+		std::regex_constants::ECMAScript | std::regex_constants::optimize
+	);
+	std::smatch sm;
+	if (!std::regex_search(_text, sm, lineRE))
+		return nullopt;
+	solAssert(sm.size() == 3, "");
+
+	Scanner scanner(make_shared<CharStream>(sm[2].str(), ""));
+	ObjectParser::ReverseSourceNameMap sourceNames;
+
+	while (true)
+	{
+		if (scanner.currentToken() != Token::Number)
+			break;
+		auto sourceIndex = toUnsignedInt(scanner.currentLiteral());
+		if (!sourceIndex)
+			break;
+		if (scanner.next() != Token::Colon)
+			break;
+		if (scanner.next() != Token::StringLiteral)
+			break;
+		sourceNames[*sourceIndex] = make_shared<string const>(scanner.currentLiteral());
+		if (scanner.next() != Token::Comma)
+			return {move(sourceNames)};
+		scanner.next();
+	}
+
+	_errorReporter.syntaxError(9804_error, _location, "Error parsing arguments to @use-src. Expected: <number> \":\" \"<filename>\", ...");
+	return nullopt;
+}
+
 shared_ptr<Block> ObjectParser::parseBlock()
 {
-	Parser parser(m_errorReporter, m_dialect);
+	Parser parser(m_errorReporter, m_dialect, m_sourceIndexToNameOverrides);
 	shared_ptr<Block> block = parser.parse(m_scanner, true);
 	yulAssert(block || m_errorReporter.hasErrors(), "Invalid block but no error!");
 	return block;
