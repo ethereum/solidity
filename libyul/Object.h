@@ -41,7 +41,7 @@ struct AsmAnalysisInfo;
 struct ObjectNode
 {
 	virtual ~ObjectNode() = default;
-	virtual std::string toString(Dialect const* _dialect) const = 0;
+	virtual std::string toString(Dialect const* _dialect, bool printUseSrc = true) const = 0;
 	std::string toString() { return toString(nullptr); }
 
 	/// Name of the object.
@@ -55,10 +55,12 @@ struct ObjectNode
 struct Data: ObjectNode
 {
 	Data(YulString _name, bytes _data): data(std::move(_data)) { name = _name; }
-	std::string toString(Dialect const* _dialect) const override;
+	std::string toString(Dialect const* _dialect, bool printUseSrc = true) const override;
 
 	bytes data;
 };
+
+using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
 
 /**
  * Yul code and data object container.
@@ -67,7 +69,7 @@ struct Object: ObjectNode
 {
 public:
 	/// @returns a (parseable) string representation. Includes types if @a _yul is set.
-	std::string toString(Dialect const* _dialect) const override;
+	std::string toString(Dialect const* _dialect, bool printUseSrc = true) const override;
 
 	/// @returns the set of names of data objects accessible from within the code of
 	/// this object, including the name of object itself
@@ -93,6 +95,8 @@ public:
 	std::vector<std::shared_ptr<ObjectNode>> subObjects;
 	std::map<YulString, size_t> subIndexByName;
 	std::shared_ptr<yul::AsmAnalysisInfo> analysisInfo;
+
+	std::optional<SourceNameMap> sourceIndexToName;
 
 	/// @returns the name of the special metadata data object.
 	static std::string metadataName() { return ".metadata"; }

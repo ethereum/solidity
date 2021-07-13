@@ -6,13 +6,20 @@ Optimized IR:
  *                !USE AT YOUR OWN RISK!               *
  *=====================================================*/
 
+/// @use-src 0:"keccak_optimization_deploy_code/input.sol", 1:"#utility.yul"
 object "C_12" {
     code {
         {
+            /// @src 0:62:463
             mstore(64, 128)
-            if callvalue() { revert(0, 0) }
+            if callvalue()
+            {
+                /// @src 0:103:275
+                revert(0, 0)
+            }
             mstore(0, 100)
             sstore(0, keccak256(0, 32))
+            /// @src 0:62:463
             let _1 := datasize("C_12_deployed")
             codecopy(128, dataoffset("C_12_deployed"), _1)
             return(128, _1)
@@ -21,10 +28,16 @@ object "C_12" {
     object "C_12_deployed" {
         code {
             {
+                /// @src 0:62:463
                 mstore(64, 128)
-                if callvalue() { revert(0, 0) }
+                if callvalue()
+                {
+                    /// @src 0:317:454
+                    revert(0, 0)
+                }
                 mstore(0, 100)
                 sstore(0, 17385872270140913825666367956517731270094621555228275961425792378517567244498)
+                /// @src 0:62:463
                 stop()
             }
         }

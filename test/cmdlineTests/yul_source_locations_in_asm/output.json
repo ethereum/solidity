@@ -1,0 +1,2805 @@
+{"contracts":{"C":{"C":{"evm":{"assembly":"    /* \"C\":79:428  contract C... */
+  mstore(0x40, 0xa0)
+  jumpi(tag_1, iszero(callvalue))
+  tag_2
+  tag_3
+  jump\t// in
+tag_2:
+tag_1:
+  tag_4
+  tag_5
+  jump\t// in
+tag_4:
+  tag_6
+  dup2
+  tag_7
+  jump\t// in
+tag_6:
+  tag_8
+  tag_9
+  jump\t// in
+tag_8:
+  dataSize(sub_0)
+  dataOffset(sub_0)
+  dup3
+  codecopy
+  mload(0x80)
+  dup2
+  assignImmutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
+  dataSize(sub_0)
+  dup2
+  return
+tag_11:
+  0x00
+  dup2
+  mload
+  swap1
+  pop
+  tag_13
+  dup2
+  tag_14
+  jump\t// in
+tag_13:
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_15:
+  0x00
+  0x20
+  dup3
+  dup5
+  sub
+  slt
+  iszero
+  tag_17
+  jumpi
+  tag_18
+  tag_19
+  jump\t// in
+tag_18:
+tag_17:
+  0x00
+  tag_20
+  dup5
+  dup3
+  dup6
+  add
+  tag_11
+  jump\t// in
+tag_20:
+  swap2
+  pop
+  pop
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_21:
+  0x00
+  tag_23
+  tag_9
+  jump\t// in
+tag_23:
+  swap1
+  pop
+  tag_24
+  dup3
+  dup3
+  tag_25
+  jump\t// in
+tag_24:
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_9:
+  0x00
+  mload(0x40)
+  swap1
+  pop
+  swap1
+  jump\t// out
+tag_27:
+  0x00
+  dup2
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_7:
+    /* \"C\":147:149  42 */
+  0x2a
+  tag_30
+  dup2
+  tag_31
+  jump\t// in
+tag_30:
+  dup1
+  0x80
+  mstore
+    /* \"C\":214:219  _init */
+  dup3
+  dup1
+    /* \"C\":203:219  stateVar = _init */
+  tag_32
+  dup2
+  0x00
+  tag_33
+  jump\t// in
+tag_32:
+    /* \"C\":79:428  contract C... */
+  pop
+  pop
+  pop
+  pop
+  pop
+  jump\t// out
+    /* \"C\":203:219  stateVar = _init */
+tag_34:
+  0x00
+  tag_36
+  dup3
+  tag_27
+  jump\t// in
+tag_36:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_31:
+  0x00
+  tag_38
+  dup3
+  tag_27
+  jump\t// in
+tag_38:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_5:
+  0x00
+  bytecodeSize
+  dup1
+  codesize
+  sub
+  tag_40
+  dup2
+  tag_21
+  jump\t// in
+tag_40:
+  dup2
+  dup4
+  dup3
+  codecopy
+  tag_41
+  dup3
+  dup3
+  add
+  dup3
+  tag_15
+  jump\t// in
+tag_41:
+  swap4
+  pop
+  pop
+  pop
+  pop
+  swap1
+  jump\t// out
+tag_25:
+  tag_43
+  dup3
+  tag_44
+  jump\t// in
+tag_43:
+  dup2
+  add
+  dup2
+  dup2
+  lt
+  0xffffffffffffffff
+  dup3
+  gt
+  or
+  iszero
+  tag_45
+  jumpi
+  tag_46
+  tag_47
+  jump\t// in
+tag_46:
+tag_45:
+  dup1
+  0x40
+  mstore
+  pop
+  pop
+  pop
+  jump\t// out
+tag_47:
+  mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+  mstore(0x04, 0x41)
+  revert(0x00, 0x24)
+tag_49:
+  0x00
+  dup2
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_3:
+  0x00
+  dup1
+  revert
+tag_19:
+  0x00
+  dup1
+  revert
+tag_44:
+  0x00
+  not(0x1f)
+  0x1f
+  dup4
+  add
+  and
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_56:
+  0x00
+  dup2
+  0x00
+  shl
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_58:
+  0x00
+  0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  tag_60
+  dup5
+  tag_56
+  jump\t// in
+tag_60:
+  swap4
+  pop
+  dup1
+  not
+  dup4
+  and
+  swap3
+  pop
+  dup1
+  dup5
+  and
+  dup4
+  or
+  swap2
+  pop
+  pop
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_33:
+  tag_62
+  dup3
+  tag_34
+  jump\t// in
+tag_62:
+  tag_63
+  tag_64
+  dup3
+  tag_49
+  jump\t// in
+tag_64:
+  dup4
+  sload
+  tag_58
+  jump\t// in
+tag_63:
+  dup3
+  sstore
+  pop
+  pop
+  pop
+  jump\t// out
+tag_14:
+  tag_66
+  dup2
+  tag_27
+  jump\t// in
+tag_66:
+  dup2
+  eq
+  tag_67
+  jumpi
+  0x00
+  dup1
+  revert
+tag_67:
+  pop
+  jump\t// out
+stop
+
+sub_0: assembly {
+        /* \"C\":79:428  contract C... */
+      mstore(0x40, 0x80)
+      jumpi(tag_1, lt(calldatasize, 0x04))
+      tag_2
+      calldataload(0x00)
+      tag_3
+      jump\t// in
+    tag_2:
+      dup1
+      0x26121ff0
+      dup2
+      eq
+      tag_5
+      jumpi
+      0x793816ec
+      dup2
+      eq
+      tag_6
+      jumpi
+      0x9942ec6f
+      dup2
+      eq
+      tag_7
+      jumpi
+      jump(tag_4)
+    tag_5:
+      jumpi(tag_8, iszero(callvalue))
+      tag_9
+      tag_10
+      jump\t// in
+    tag_9:
+    tag_8:
+      tag_11
+      calldatasize
+      0x04
+      tag_12
+      jump\t// in
+    tag_11:
+      tag_13
+      tag_14
+      jump\t// in
+    tag_13:
+      tag_15
+      tag_16
+      jump\t// in
+    tag_15:
+      tag_17
+      dup3
+      dup3
+      tag_18
+      jump\t// in
+    tag_17:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_6:
+      jumpi(tag_19, iszero(callvalue))
+      tag_20
+      tag_10
+      jump\t// in
+    tag_20:
+    tag_19:
+      tag_21
+      calldatasize
+      0x04
+      tag_12
+      jump\t// in
+    tag_21:
+      tag_22
+      tag_23
+      jump\t// in
+    tag_22:
+      tag_24
+      tag_16
+      jump\t// in
+    tag_24:
+      tag_25
+      dup3
+      dup3
+      tag_18
+      jump\t// in
+    tag_25:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_7:
+      jumpi(tag_26, iszero(callvalue))
+      tag_27
+      tag_10
+      jump\t// in
+    tag_27:
+    tag_26:
+      tag_28
+      calldatasize
+      0x04
+      tag_12
+      jump\t// in
+    tag_28:
+      tag_29
+      tag_30
+      jump\t// in
+    tag_29:
+      tag_31
+      tag_16
+      jump\t// in
+    tag_31:
+      tag_32
+      dup3
+      dup3
+      tag_18
+      jump\t// in
+    tag_32:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_4:
+      pop
+      pop
+    tag_1:
+      tag_34
+      tag_35
+      jump\t// in
+    tag_34:
+      jump(tag_36)
+    tag_37:
+      0x00
+      dup2
+      mload
+      swap1
+      pop
+      tag_39
+      dup2
+      tag_40
+      jump\t// in
+    tag_39:
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_12:
+      0x00
+      dup2
+      dup4
+      sub
+      slt
+      iszero
+      tag_42
+      jumpi
+      tag_43
+      tag_44
+      jump\t// in
+    tag_43:
+    tag_42:
+      pop
+      pop
+      jump\t// out
+    tag_45:
+      0x00
+      0x20
+      dup3
+      dup5
+      sub
+      slt
+      iszero
+      tag_47
+      jumpi
+      tag_48
+      tag_44
+      jump\t// in
+    tag_48:
+    tag_47:
+      0x00
+      tag_49
+      dup5
+      dup3
+      dup6
+      add
+      tag_37
+      jump\t// in
+    tag_49:
+      swap2
+      pop
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_50:
+      tag_52
+      dup2
+      tag_53
+      jump\t// in
+    tag_52:
+      dup3
+      mstore
+      pop
+      pop
+      jump\t// out
+    tag_54:
+      0x00
+      dup1
+      dup3
+      add
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_18:
+      0x00
+      0x20
+      dup3
+      add
+      swap1
+      pop
+      tag_57
+      0x00
+      dup4
+      add
+      dup5
+      tag_50
+      jump\t// in
+    tag_57:
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_16:
+      0x00
+      mload(0x40)
+      swap1
+      pop
+      swap1
+      jump\t// out
+    tag_59:
+      0x00
+      tag_61
+      dup3
+      tag_53
+      jump\t// in
+    tag_61:
+      swap2
+      pop
+      tag_62
+      dup4
+      tag_53
+      jump\t// in
+    tag_62:
+      swap3
+      pop
+      dup2
+      0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      sub
+      dup4
+      sgt
+      0x00
+      dup4
+      slt
+      iszero
+      and
+      iszero
+      tag_63
+      jumpi
+      tag_64
+      tag_65
+      jump\t// in
+    tag_64:
+    tag_63:
+      dup2
+      0x8000000000000000000000000000000000000000000000000000000000000000
+      sub
+      dup4
+      slt
+      0x00
+      dup4
+      slt
+      and
+      iszero
+      tag_66
+      jumpi
+      tag_67
+      tag_65
+      jump\t// in
+    tag_67:
+    tag_66:
+      dup3
+      dup3
+      add
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_68:
+      0x00
+      dup2
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_53:
+      0x00
+      dup2
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_71:
+      0x00
+      0xffffffffffffffffffffffffffffffffffffffff
+      dup3
+      and
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+        /* \"C\":93:119  int constant constVar = 41 */
+    tag_73:
+      0x00
+        /* \"C\":117:119  41 */
+      0x29
+      tag_75
+      dup2
+      tag_76
+      jump\t// in
+    tag_75:
+      dup1
+      swap3
+      pop
+        /* \"C\":93:119  int constant constVar = 41 */
+      pop
+      pop
+      swap1
+      jump\t// out
+        /* \"C\":117:119  41 */
+    tag_77:
+      0x00
+      tag_79
+      dup3
+      tag_80
+      jump\t// in
+    tag_79:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_80:
+      0x00
+      tag_82
+      dup3
+      tag_71
+      jump\t// in
+    tag_82:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_83:
+      0x00
+      tag_85
+      dup3
+      tag_53
+      jump\t// in
+    tag_85:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_76:
+      0x00
+      tag_87
+      dup3
+      tag_53
+      jump\t// in
+    tag_87:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_88:
+      0x00
+      tag_90
+      tag_91
+      dup4
+      0x08
+      dup7
+      mul
+      tag_92
+      jump\t// in
+    tag_91:
+      tag_68
+      jump\t// in
+    tag_90:
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_93:
+      0x00
+      tag_95
+      tag_96
+      dup4
+      tag_97
+      jump\t// in
+    tag_96:
+      tag_68
+      jump\t// in
+    tag_95:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_98:
+      tag_100
+      dup3
+      tag_101
+      jump\t// in
+    tag_100:
+      dup2
+      add
+      dup2
+      dup2
+      lt
+      0xffffffffffffffff
+      dup3
+      gt
+      or
+      iszero
+      tag_102
+      jumpi
+      tag_103
+      tag_104
+      jump\t// in
+    tag_103:
+    tag_102:
+      dup1
+      0x40
+      mstore
+      pop
+      pop
+      pop
+      jump\t// out
+    tag_30:
+      0x00
+        /* \"C\":375:378  int */
+      tag_106
+      tag_107
+      jump\t// in
+    tag_106:
+      dup1
+      swap2
+      pop
+      tag_108
+      dup3
+      tag_109
+      jump\t// in
+    tag_108:
+      swap2
+      pop
+        /* \"C\":117:119  41 */
+      pop
+      swap1
+      jump\t// out
+        /* \"C\":375:378  int */
+    tag_110:
+      0x00
+        /* \"C\":343:426  function f2() m public returns (int)... */
+      dup2
+      swap1
+      pop
+        /* \"C\":392:400  stateVar */
+      tag_112
+      0x00
+      tag_113
+      jump\t// in
+    tag_112:
+      dup1
+        /* \"C\":403:407  this */
+      address
+        /* \"C\":403:409  this.f */
+      tag_114
+      dup2
+      tag_77
+      jump\t// in
+    tag_114:
+      0x26121ff0
+        /* \"C\":403:411  this.f() */
+      dup2
+      extcodesize
+      tag_115
+      jumpi
+      tag_116
+      tag_117
+      jump\t// in
+    tag_116:
+    tag_115:
+      tag_118
+      tag_16
+      jump\t// in
+    tag_118:
+      tag_119
+      dup3
+      tag_120
+      jump\t// in
+    tag_119:
+      dup2
+      mstore
+      tag_121
+      0x04
+      dup3
+      add
+      tag_54
+      jump\t// in
+    tag_121:
+      0x20
+      dup3
+      dup4
+      dup4
+      sub
+      dup5
+      dup8
+      gas
+      staticcall
+      dup1
+      tag_122
+      jumpi
+      tag_123
+      tag_124
+      jump\t// in
+    tag_123:
+    tag_122:
+      0x00
+      dup2
+      iszero
+      tag_125
+      jumpi
+      tag_126
+      returndatasize
+      dup6
+      tag_98
+      jump\t// in
+    tag_126:
+      tag_127
+      returndatasize
+      dup6
+      add
+      dup6
+      tag_45
+      jump\t// in
+    tag_127:
+      swap1
+      pop
+    tag_125:
+        /* \"C\":392:411  stateVar + this.f() */
+      tag_128
+      dup2
+      dup10
+      tag_59
+      jump\t// in
+    tag_128:
+        /* \"C\":414:422  immutVar */
+      immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
+      dup1
+        /* \"C\":392:422  stateVar + this.f() + immutVar */
+      tag_129
+      dup2
+      dup5
+      tag_59
+      jump\t// in
+    tag_129:
+        /* \"C\":385:422  return stateVar + this.f() + immutVar */
+      dup1
+      swap14
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+        /* \"C\":375:378  int */
+      swap2
+      swap1
+      pop
+      jump\t// out
+        /* \"C\":385:422  return stateVar + this.f() + immutVar */
+    tag_14:
+      0x00
+        /* \"C\":262:265  int */
+      tag_131
+      tag_107
+      jump\t// in
+    tag_131:
+      dup1
+      swap2
+      pop
+        /* \"C\":279:287  constVar */
+      tag_132
+      tag_73
+      jump\t// in
+    tag_132:
+        /* \"C\":290:298  immutVar */
+      immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
+      dup1
+        /* \"C\":279:298  constVar + immutVar */
+      tag_133
+      dup2
+      dup5
+      tag_59
+      jump\t// in
+    tag_133:
+        /* \"C\":272:298  return constVar + immutVar */
+      dup1
+      swap6
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+        /* \"C\":385:422  return stateVar + this.f() + immutVar */
+      swap1
+      jump\t// out
+        /* \"C\":272:298  return constVar + immutVar */
+    tag_23:
+      0x00
+        /* \"C\":152:171  int public stateVar */
+      dup1
+      0x00
+      tag_135
+      dup2
+      dup4
+      tag_136
+      jump\t// in
+    tag_135:
+      swap3
+      pop
+        /* \"C\":272:298  return constVar + immutVar */
+      pop
+      pop
+      swap1
+      jump\t// out
+        /* \"C\":152:171  int public stateVar */
+    tag_137:
+      0x00
+      tag_139
+      dup3
+      tag_53
+      jump\t// in
+    tag_139:
+      swap2
+      pop
+      0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      dup3
+      eq
+      iszero
+      tag_140
+      jumpi
+      tag_141
+      tag_65
+      jump\t// in
+    tag_141:
+    tag_140:
+      0x01
+      dup3
+      add
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_109:
+      0x00
+        /* \"C\":304:341  modifier m()... */
+      dup2
+      swap1
+      pop
+        /* \"C\":322:332  stateVar++ */
+      tag_143
+      0x00
+      tag_113
+      jump\t// in
+    tag_143:
+      tag_144
+      dup2
+      tag_137
+      jump\t// in
+    tag_144:
+      tag_145
+      dup2
+      0x00
+      tag_146
+      jump\t// in
+    tag_145:
+      dup2
+        /* \"C\":336:337  _ */
+      tag_147
+      dup6
+      tag_110
+      jump\t// in
+    tag_147:
+      swap4
+      pop
+        /* \"C\":152:171  int public stateVar */
+      pop
+      pop
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+        /* \"C\":336:337  _ */
+    tag_65:
+      mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+      mstore(0x04, 0x11)
+      revert(0x00, 0x24)
+    tag_104:
+      mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+      mstore(0x04, 0x41)
+      revert(0x00, 0x24)
+    tag_150:
+      0x00
+      dup2
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_136:
+      0x00
+      tag_153
+      dup4
+      dup4
+      sload
+      tag_88
+      jump\t// in
+    tag_153:
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_113:
+      0x00
+      tag_155
+      dup3
+      sload
+      tag_93
+      jump\t// in
+    tag_155:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_117:
+      0x00
+      dup1
+      revert
+    tag_35:
+      0x00
+      dup1
+      revert
+    tag_10:
+      0x00
+      dup1
+      revert
+    tag_44:
+      0x00
+      dup1
+      revert
+    tag_124:
+      tag_163
+      tag_16
+      jump\t// in
+    tag_163:
+      returndatasize
+      0x00
+      dup3
+      returndatacopy
+      returndatasize
+      dup2
+      revert
+    tag_101:
+      0x00
+      not(0x1f)
+      0x1f
+      dup4
+      add
+      and
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_165:
+      0x00
+      dup2
+      0x00
+      shl
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_120:
+      0x00
+      dup2
+      0xe0
+      shl
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_97:
+      0x00
+      dup2
+      0x00
+      shr
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_3:
+      0x00
+      dup2
+      0xe0
+      shr
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_92:
+      0x00
+      dup3
+      dup3
+      shr
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_171:
+      0x00
+      0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      tag_173
+      dup5
+      tag_165
+      jump\t// in
+    tag_173:
+      swap4
+      pop
+      dup1
+      not
+      dup4
+      and
+      swap3
+      pop
+      dup1
+      dup5
+      and
+      dup4
+      or
+      swap2
+      pop
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_146:
+      tag_175
+      dup3
+      tag_83
+      jump\t// in
+    tag_175:
+      tag_176
+      tag_177
+      dup3
+      tag_150
+      jump\t// in
+    tag_177:
+      dup4
+      sload
+      tag_171
+      jump\t// in
+    tag_176:
+      dup3
+      sstore
+      pop
+      pop
+      pop
+      jump\t// out
+    tag_40:
+      tag_179
+      dup2
+      tag_53
+      jump\t// in
+    tag_179:
+      dup2
+      eq
+      tag_180
+      jumpi
+      0x00
+      dup1
+      revert
+    tag_180:
+      pop
+      jump\t// out
+    tag_107:
+      0x00
+      swap1
+      jump\t// out
+    tag_36:
+
+    auxdata: <AUXDATA REMOVED>
+}
+"}}},"D":{"D":{"evm":{"assembly":"    /* \"D\":91:166  contract D is C(3)... */
+  mstore(0x40, 0xa0)
+  jumpi(tag_1, iszero(callvalue))
+  tag_2
+  tag_3
+  jump\t// in
+tag_2:
+tag_1:
+  tag_4
+  tag_5
+  jump\t// in
+tag_4:
+  tag_6
+  dup2
+  tag_7
+  jump\t// in
+tag_6:
+  tag_8
+  tag_9
+  jump\t// in
+tag_8:
+  dataSize(sub_0)
+  dataOffset(sub_0)
+  dup3
+  codecopy
+  mload(0x80)
+  dup2
+  assignImmutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
+  dataSize(sub_0)
+  dup2
+  return
+tag_11:
+  0x00
+  dup2
+  mload
+  swap1
+  pop
+  tag_13
+  dup2
+  tag_14
+  jump\t// in
+tag_13:
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_15:
+  0x00
+  0x20
+  dup3
+  dup5
+  sub
+  slt
+  iszero
+  tag_17
+  jumpi
+  tag_18
+  tag_19
+  jump\t// in
+tag_18:
+tag_17:
+  0x00
+  tag_20
+  dup5
+  dup3
+  dup6
+  add
+  tag_11
+  jump\t// in
+tag_20:
+  swap2
+  pop
+  pop
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_21:
+  0x00
+  tag_23
+  tag_9
+  jump\t// in
+tag_23:
+  swap1
+  pop
+  tag_24
+  dup3
+  dup3
+  tag_25
+  jump\t// in
+tag_24:
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_9:
+  0x00
+  mload(0x40)
+  swap1
+  pop
+  swap1
+  jump\t// out
+tag_27:
+  0x00
+  tag_29
+  dup3
+  tag_30
+  jump\t// in
+tag_29:
+  swap2
+  pop
+  tag_31
+  dup4
+  tag_30
+  jump\t// in
+tag_31:
+  swap3
+  pop
+  dup2
+  0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  sub
+  dup4
+  sgt
+  0x00
+  dup4
+  slt
+  iszero
+  and
+  iszero
+  tag_32
+  jumpi
+  tag_33
+  tag_34
+  jump\t// in
+tag_33:
+tag_32:
+  dup2
+  0x8000000000000000000000000000000000000000000000000000000000000000
+  sub
+  dup4
+  slt
+  0x00
+  dup4
+  slt
+  and
+  iszero
+  tag_35
+  jumpi
+  tag_36
+  tag_34
+  jump\t// in
+tag_36:
+tag_35:
+  dup3
+  dup3
+  add
+  swap1
+  pop
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_37:
+  0x00
+  dup2
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_30:
+  0x00
+  dup2
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_40:
+    /* \"C\":147:149  42 */
+  0x2a
+  tag_42
+  dup2
+  tag_43
+  jump\t// in
+tag_42:
+  dup1
+  0x80
+  mstore
+    /* \"C\":214:219  _init */
+  dup3
+  dup1
+    /* \"C\":203:219  stateVar = _init */
+  tag_44
+  dup2
+  0x00
+  tag_45
+  jump\t// in
+tag_44:
+    /* \"D\":91:166  contract D is C(3)... */
+  pop
+  pop
+  pop
+  pop
+  pop
+  jump\t// out
+    /* \"C\":203:219  stateVar = _init */
+tag_7:
+    /* \"D\":107:108  3 */
+  0x03
+  tag_47
+  dup2
+  tag_48
+  jump\t// in
+tag_47:
+    /* \"D\":113:164  constructor(int _init2)... */
+  tag_49
+  dup2
+  tag_40
+  jump\t// in
+tag_49:
+    /* \"D\":154:160  _init2 */
+  dup3
+  dup1
+    /* \"D\":142:160  stateVar += _init2 */
+  tag_50
+  0x00
+  tag_51
+  jump\t// in
+tag_50:
+  tag_52
+  dup3
+  dup3
+  tag_27
+  jump\t// in
+tag_52:
+  tag_53
+  dup2
+  0x00
+  tag_45
+  jump\t// in
+tag_53:
+    /* \"C\":203:219  stateVar = _init */
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  pop
+  jump\t// out
+    /* \"D\":142:160  stateVar += _init2 */
+tag_54:
+  0x00
+  tag_56
+  dup3
+  tag_30
+  jump\t// in
+tag_56:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_48:
+  0x00
+  tag_58
+  dup3
+  tag_30
+  jump\t// in
+tag_58:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_43:
+  0x00
+  tag_60
+  dup3
+  tag_30
+  jump\t// in
+tag_60:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_5:
+  0x00
+  bytecodeSize
+  dup1
+  codesize
+  sub
+  tag_62
+  dup2
+  tag_21
+  jump\t// in
+tag_62:
+  dup2
+  dup4
+  dup3
+  codecopy
+  tag_63
+  dup3
+  dup3
+  add
+  dup3
+  tag_15
+  jump\t// in
+tag_63:
+  swap4
+  pop
+  pop
+  pop
+  pop
+  swap1
+  jump\t// out
+tag_64:
+  0x00
+  tag_66
+  tag_67
+  dup4
+  tag_68
+  jump\t// in
+tag_67:
+  tag_37
+  jump\t// in
+tag_66:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_25:
+  tag_70
+  dup3
+  tag_71
+  jump\t// in
+tag_70:
+  dup2
+  add
+  dup2
+  dup2
+  lt
+  0xffffffffffffffff
+  dup3
+  gt
+  or
+  iszero
+  tag_72
+  jumpi
+  tag_73
+  tag_74
+  jump\t// in
+tag_73:
+tag_72:
+  dup1
+  0x40
+  mstore
+  pop
+  pop
+  pop
+  jump\t// out
+tag_34:
+  mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+  mstore(0x04, 0x11)
+  revert(0x00, 0x24)
+tag_74:
+  mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+  mstore(0x04, 0x41)
+  revert(0x00, 0x24)
+tag_77:
+  0x00
+  dup2
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_51:
+  0x00
+  tag_80
+  dup3
+  sload
+  tag_64
+  jump\t// in
+tag_80:
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_3:
+  0x00
+  dup1
+  revert
+tag_19:
+  0x00
+  dup1
+  revert
+tag_71:
+  0x00
+  not(0x1f)
+  0x1f
+  dup4
+  add
+  and
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_86:
+  0x00
+  dup2
+  0x00
+  shl
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_68:
+  0x00
+  dup2
+  0x00
+  shr
+  swap1
+  pop
+  swap2
+  swap1
+  pop
+  jump\t// out
+tag_89:
+  0x00
+  0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  tag_91
+  dup5
+  tag_86
+  jump\t// in
+tag_91:
+  swap4
+  pop
+  dup1
+  not
+  dup4
+  and
+  swap3
+  pop
+  dup1
+  dup5
+  and
+  dup4
+  or
+  swap2
+  pop
+  pop
+  swap3
+  swap2
+  pop
+  pop
+  jump\t// out
+tag_45:
+  tag_93
+  dup3
+  tag_54
+  jump\t// in
+tag_93:
+  tag_94
+  tag_95
+  dup3
+  tag_77
+  jump\t// in
+tag_95:
+  dup4
+  sload
+  tag_89
+  jump\t// in
+tag_94:
+  dup3
+  sstore
+  pop
+  pop
+  pop
+  jump\t// out
+tag_14:
+  tag_97
+  dup2
+  tag_30
+  jump\t// in
+tag_97:
+  dup2
+  eq
+  tag_98
+  jumpi
+  0x00
+  dup1
+  revert
+tag_98:
+  pop
+  jump\t// out
+stop
+
+sub_0: assembly {
+        /* \"D\":91:166  contract D is C(3)... */
+      mstore(0x40, 0x80)
+      jumpi(tag_1, lt(calldatasize, 0x04))
+      tag_2
+      calldataload(0x00)
+      tag_3
+      jump\t// in
+    tag_2:
+      dup1
+      0x26121ff0
+      dup2
+      eq
+      tag_5
+      jumpi
+      0x793816ec
+      dup2
+      eq
+      tag_6
+      jumpi
+      0x9942ec6f
+      dup2
+      eq
+      tag_7
+      jumpi
+      jump(tag_4)
+    tag_5:
+      jumpi(tag_8, iszero(callvalue))
+      tag_9
+      tag_10
+      jump\t// in
+    tag_9:
+    tag_8:
+      tag_11
+      calldatasize
+      0x04
+      tag_12
+      jump\t// in
+    tag_11:
+      tag_13
+      tag_14
+      jump\t// in
+    tag_13:
+      tag_15
+      tag_16
+      jump\t// in
+    tag_15:
+      tag_17
+      dup3
+      dup3
+      tag_18
+      jump\t// in
+    tag_17:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_6:
+      jumpi(tag_19, iszero(callvalue))
+      tag_20
+      tag_10
+      jump\t// in
+    tag_20:
+    tag_19:
+      tag_21
+      calldatasize
+      0x04
+      tag_12
+      jump\t// in
+    tag_21:
+      tag_22
+      tag_23
+      jump\t// in
+    tag_22:
+      tag_24
+      tag_16
+      jump\t// in
+    tag_24:
+      tag_25
+      dup3
+      dup3
+      tag_18
+      jump\t// in
+    tag_25:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_7:
+      jumpi(tag_26, iszero(callvalue))
+      tag_27
+      tag_10
+      jump\t// in
+    tag_27:
+    tag_26:
+      tag_28
+      calldatasize
+      0x04
+      tag_12
+      jump\t// in
+    tag_28:
+      tag_29
+      tag_30
+      jump\t// in
+    tag_29:
+      tag_31
+      tag_16
+      jump\t// in
+    tag_31:
+      tag_32
+      dup3
+      dup3
+      tag_18
+      jump\t// in
+    tag_32:
+      dup2
+      dup2
+      sub
+      dup3
+      return
+    tag_4:
+      pop
+      pop
+    tag_1:
+      tag_34
+      tag_35
+      jump\t// in
+    tag_34:
+      jump(tag_36)
+    tag_37:
+      0x00
+      dup2
+      mload
+      swap1
+      pop
+      tag_39
+      dup2
+      tag_40
+      jump\t// in
+    tag_39:
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_12:
+      0x00
+      dup2
+      dup4
+      sub
+      slt
+      iszero
+      tag_42
+      jumpi
+      tag_43
+      tag_44
+      jump\t// in
+    tag_43:
+    tag_42:
+      pop
+      pop
+      jump\t// out
+    tag_45:
+      0x00
+      0x20
+      dup3
+      dup5
+      sub
+      slt
+      iszero
+      tag_47
+      jumpi
+      tag_48
+      tag_44
+      jump\t// in
+    tag_48:
+    tag_47:
+      0x00
+      tag_49
+      dup5
+      dup3
+      dup6
+      add
+      tag_37
+      jump\t// in
+    tag_49:
+      swap2
+      pop
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_50:
+      tag_52
+      dup2
+      tag_53
+      jump\t// in
+    tag_52:
+      dup3
+      mstore
+      pop
+      pop
+      jump\t// out
+    tag_54:
+      0x00
+      dup1
+      dup3
+      add
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_18:
+      0x00
+      0x20
+      dup3
+      add
+      swap1
+      pop
+      tag_57
+      0x00
+      dup4
+      add
+      dup5
+      tag_50
+      jump\t// in
+    tag_57:
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_16:
+      0x00
+      mload(0x40)
+      swap1
+      pop
+      swap1
+      jump\t// out
+    tag_59:
+      0x00
+      tag_61
+      dup3
+      tag_53
+      jump\t// in
+    tag_61:
+      swap2
+      pop
+      tag_62
+      dup4
+      tag_53
+      jump\t// in
+    tag_62:
+      swap3
+      pop
+      dup2
+      0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      sub
+      dup4
+      sgt
+      0x00
+      dup4
+      slt
+      iszero
+      and
+      iszero
+      tag_63
+      jumpi
+      tag_64
+      tag_65
+      jump\t// in
+    tag_64:
+    tag_63:
+      dup2
+      0x8000000000000000000000000000000000000000000000000000000000000000
+      sub
+      dup4
+      slt
+      0x00
+      dup4
+      slt
+      and
+      iszero
+      tag_66
+      jumpi
+      tag_67
+      tag_65
+      jump\t// in
+    tag_67:
+    tag_66:
+      dup3
+      dup3
+      add
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_68:
+      0x00
+      dup2
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_53:
+      0x00
+      dup2
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_71:
+      0x00
+      0xffffffffffffffffffffffffffffffffffffffff
+      dup3
+      and
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+        /* \"C\":93:119  int constant constVar = 41 */
+    tag_73:
+      0x00
+        /* \"C\":117:119  41 */
+      0x29
+      tag_75
+      dup2
+      tag_76
+      jump\t// in
+    tag_75:
+      dup1
+      swap3
+      pop
+        /* \"C\":93:119  int constant constVar = 41 */
+      pop
+      pop
+      swap1
+      jump\t// out
+        /* \"C\":117:119  41 */
+    tag_77:
+      0x00
+      tag_79
+      dup3
+      tag_80
+      jump\t// in
+    tag_79:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_80:
+      0x00
+      tag_82
+      dup3
+      tag_71
+      jump\t// in
+    tag_82:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_83:
+      0x00
+      tag_85
+      dup3
+      tag_53
+      jump\t// in
+    tag_85:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_76:
+      0x00
+      tag_87
+      dup3
+      tag_53
+      jump\t// in
+    tag_87:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_88:
+      0x00
+      tag_90
+      tag_91
+      dup4
+      0x08
+      dup7
+      mul
+      tag_92
+      jump\t// in
+    tag_91:
+      tag_68
+      jump\t// in
+    tag_90:
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_93:
+      0x00
+      tag_95
+      tag_96
+      dup4
+      tag_97
+      jump\t// in
+    tag_96:
+      tag_68
+      jump\t// in
+    tag_95:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_98:
+      tag_100
+      dup3
+      tag_101
+      jump\t// in
+    tag_100:
+      dup2
+      add
+      dup2
+      dup2
+      lt
+      0xffffffffffffffff
+      dup3
+      gt
+      or
+      iszero
+      tag_102
+      jumpi
+      tag_103
+      tag_104
+      jump\t// in
+    tag_103:
+    tag_102:
+      dup1
+      0x40
+      mstore
+      pop
+      pop
+      pop
+      jump\t// out
+    tag_30:
+      0x00
+        /* \"C\":375:378  int */
+      tag_106
+      tag_107
+      jump\t// in
+    tag_106:
+      dup1
+      swap2
+      pop
+      tag_108
+      dup3
+      tag_109
+      jump\t// in
+    tag_108:
+      swap2
+      pop
+        /* \"C\":117:119  41 */
+      pop
+      swap1
+      jump\t// out
+        /* \"C\":375:378  int */
+    tag_110:
+      0x00
+        /* \"C\":343:426  function f2() m public returns (int)... */
+      dup2
+      swap1
+      pop
+        /* \"C\":392:400  stateVar */
+      tag_112
+      0x00
+      tag_113
+      jump\t// in
+    tag_112:
+      dup1
+        /* \"C\":403:407  this */
+      address
+        /* \"C\":403:409  this.f */
+      tag_114
+      dup2
+      tag_77
+      jump\t// in
+    tag_114:
+      0x26121ff0
+        /* \"C\":403:411  this.f() */
+      dup2
+      extcodesize
+      tag_115
+      jumpi
+      tag_116
+      tag_117
+      jump\t// in
+    tag_116:
+    tag_115:
+      tag_118
+      tag_16
+      jump\t// in
+    tag_118:
+      tag_119
+      dup3
+      tag_120
+      jump\t// in
+    tag_119:
+      dup2
+      mstore
+      tag_121
+      0x04
+      dup3
+      add
+      tag_54
+      jump\t// in
+    tag_121:
+      0x20
+      dup3
+      dup4
+      dup4
+      sub
+      dup5
+      dup8
+      gas
+      staticcall
+      dup1
+      tag_122
+      jumpi
+      tag_123
+      tag_124
+      jump\t// in
+    tag_123:
+    tag_122:
+      0x00
+      dup2
+      iszero
+      tag_125
+      jumpi
+      tag_126
+      returndatasize
+      dup6
+      tag_98
+      jump\t// in
+    tag_126:
+      tag_127
+      returndatasize
+      dup6
+      add
+      dup6
+      tag_45
+      jump\t// in
+    tag_127:
+      swap1
+      pop
+    tag_125:
+        /* \"C\":392:411  stateVar + this.f() */
+      tag_128
+      dup2
+      dup10
+      tag_59
+      jump\t// in
+    tag_128:
+        /* \"C\":414:422  immutVar */
+      immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
+      dup1
+        /* \"C\":392:422  stateVar + this.f() + immutVar */
+      tag_129
+      dup2
+      dup5
+      tag_59
+      jump\t// in
+    tag_129:
+        /* \"C\":385:422  return stateVar + this.f() + immutVar */
+      dup1
+      swap14
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+        /* \"C\":375:378  int */
+      swap2
+      swap1
+      pop
+      jump\t// out
+        /* \"C\":385:422  return stateVar + this.f() + immutVar */
+    tag_14:
+      0x00
+        /* \"C\":262:265  int */
+      tag_131
+      tag_107
+      jump\t// in
+    tag_131:
+      dup1
+      swap2
+      pop
+        /* \"C\":279:287  constVar */
+      tag_132
+      tag_73
+      jump\t// in
+    tag_132:
+        /* \"C\":290:298  immutVar */
+      immutable(\"0xe4b1702d9298fee62dfeccc57d322a463ad55ca201256d01f62b45b2e1c21c10\")
+      dup1
+        /* \"C\":279:298  constVar + immutVar */
+      tag_133
+      dup2
+      dup5
+      tag_59
+      jump\t// in
+    tag_133:
+        /* \"C\":272:298  return constVar + immutVar */
+      dup1
+      swap6
+      pop
+      pop
+      pop
+      pop
+      pop
+      pop
+        /* \"C\":385:422  return stateVar + this.f() + immutVar */
+      swap1
+      jump\t// out
+        /* \"C\":272:298  return constVar + immutVar */
+    tag_23:
+      0x00
+        /* \"C\":152:171  int public stateVar */
+      dup1
+      0x00
+      tag_135
+      dup2
+      dup4
+      tag_136
+      jump\t// in
+    tag_135:
+      swap3
+      pop
+        /* \"C\":272:298  return constVar + immutVar */
+      pop
+      pop
+      swap1
+      jump\t// out
+        /* \"C\":152:171  int public stateVar */
+    tag_137:
+      0x00
+      tag_139
+      dup3
+      tag_53
+      jump\t// in
+    tag_139:
+      swap2
+      pop
+      0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      dup3
+      eq
+      iszero
+      tag_140
+      jumpi
+      tag_141
+      tag_65
+      jump\t// in
+    tag_141:
+    tag_140:
+      0x01
+      dup3
+      add
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_109:
+      0x00
+        /* \"C\":304:341  modifier m()... */
+      dup2
+      swap1
+      pop
+        /* \"C\":322:332  stateVar++ */
+      tag_143
+      0x00
+      tag_113
+      jump\t// in
+    tag_143:
+      tag_144
+      dup2
+      tag_137
+      jump\t// in
+    tag_144:
+      tag_145
+      dup2
+      0x00
+      tag_146
+      jump\t// in
+    tag_145:
+      dup2
+        /* \"C\":336:337  _ */
+      tag_147
+      dup6
+      tag_110
+      jump\t// in
+    tag_147:
+      swap4
+      pop
+        /* \"C\":152:171  int public stateVar */
+      pop
+      pop
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+        /* \"C\":336:337  _ */
+    tag_65:
+      mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+      mstore(0x04, 0x11)
+      revert(0x00, 0x24)
+    tag_104:
+      mstore(0x00, 0x4e487b7100000000000000000000000000000000000000000000000000000000)
+      mstore(0x04, 0x41)
+      revert(0x00, 0x24)
+    tag_150:
+      0x00
+      dup2
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_136:
+      0x00
+      tag_153
+      dup4
+      dup4
+      sload
+      tag_88
+      jump\t// in
+    tag_153:
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_113:
+      0x00
+      tag_155
+      dup3
+      sload
+      tag_93
+      jump\t// in
+    tag_155:
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_117:
+      0x00
+      dup1
+      revert
+    tag_35:
+      0x00
+      dup1
+      revert
+    tag_10:
+      0x00
+      dup1
+      revert
+    tag_44:
+      0x00
+      dup1
+      revert
+    tag_124:
+      tag_163
+      tag_16
+      jump\t// in
+    tag_163:
+      returndatasize
+      0x00
+      dup3
+      returndatacopy
+      returndatasize
+      dup2
+      revert
+    tag_101:
+      0x00
+      not(0x1f)
+      0x1f
+      dup4
+      add
+      and
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_165:
+      0x00
+      dup2
+      0x00
+      shl
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_120:
+      0x00
+      dup2
+      0xe0
+      shl
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_97:
+      0x00
+      dup2
+      0x00
+      shr
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_3:
+      0x00
+      dup2
+      0xe0
+      shr
+      swap1
+      pop
+      swap2
+      swap1
+      pop
+      jump\t// out
+    tag_92:
+      0x00
+      dup3
+      dup3
+      shr
+      swap1
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_171:
+      0x00
+      0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+      tag_173
+      dup5
+      tag_165
+      jump\t// in
+    tag_173:
+      swap4
+      pop
+      dup1
+      not
+      dup4
+      and
+      swap3
+      pop
+      dup1
+      dup5
+      and
+      dup4
+      or
+      swap2
+      pop
+      pop
+      swap3
+      swap2
+      pop
+      pop
+      jump\t// out
+    tag_146:
+      tag_175
+      dup3
+      tag_83
+      jump\t// in
+    tag_175:
+      tag_176
+      tag_177
+      dup3
+      tag_150
+      jump\t// in
+    tag_177:
+      dup4
+      sload
+      tag_171
+      jump\t// in
+    tag_176:
+      dup3
+      sstore
+      pop
+      pop
+      pop
+      jump\t// out
+    tag_40:
+      tag_179
+      dup2
+      tag_53
+      jump\t// in
+    tag_179:
+      dup2
+      eq
+      tag_180
+      jumpi
+      0x00
+      dup1
+      revert
+    tag_180:
+      pop
+      jump\t// out
+    tag_107:
+      0x00
+      swap1
+      jump\t// out
+    tag_36:
+
+    auxdata: <AUXDATA REMOVED>
+}
+"}}}},"sources":{"C":{"id":0},"D":{"id":1}}}

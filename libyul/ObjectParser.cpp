@@ -53,6 +53,7 @@ shared_ptr<Object> ObjectParser::parse(shared_ptr<Scanner> const& _scanner, bool
 			object = make_shared<Object>();
 			object->name = "object"_yulstring;
 			object->code = parseBlock();
+			object->sourceIndexToName = m_sourceNameMapping;
 			if (!object->code)
 				return nullptr;
 		}
@@ -79,6 +80,7 @@ shared_ptr<Object> ObjectParser::parseObject(Object* _containingObject)
 	advance();
 
 	shared_ptr<Object> ret = make_shared<Object>();
+	ret->sourceIndexToName = m_sourceNameMapping;
 	ret->name = parseUniqueName(_containingObject);
 
 	expectToken(Token::LBrace);
@@ -111,7 +113,7 @@ shared_ptr<Block> ObjectParser::parseCode()
 	return parseBlock();
 }
 
-optional<ObjectParser::SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
+optional<SourceNameMap> ObjectParser::tryParseSourceNameMapping() const
 {
 	// @use-src 0:"abc.sol", 1:"foo.sol", 2:"bar.sol"
 	//

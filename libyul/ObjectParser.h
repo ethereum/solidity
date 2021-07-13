@@ -55,7 +55,6 @@ public:
 	/// @returns an empty shared pointer on error.
 	std::shared_ptr<Object> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
 
-	using SourceNameMap = std::map<unsigned, std::shared_ptr<std::string const>>;
 	std::optional<SourceNameMap> const& sourceNameMapping() const noexcept { return m_sourceNameMapping; }
 
 private:

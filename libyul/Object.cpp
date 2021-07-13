@@ -25,10 +25,13 @@
 #include <libyul/Exceptions.h>
 
 #include <libsolutil/CommonData.h>
+#include <libsolutil/StringUtils.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/replace.hpp>
+
+#include <range/v3/view/transform.hpp>
 
 using namespace std;
 using namespace solidity;
@@ -47,20 +50,34 @@ string indent(std::string const& _input)
 
 }
 
-string Data::toString(Dialect const*) const
+string Data::toString(Dialect const*, bool) const
 {
 	return "data \"" + name.str() + "\" hex\"" + util::toHex(data) + "\"";
 }
 
-string Object::toString(Dialect const* _dialect) const
+string Object::toString(Dialect const* _dialect, bool printUseSrc) const
 {
 	yulAssert(code, "No code");
-	string inner = "code " + (_dialect ? AsmPrinter{*_dialect} : AsmPrinter{})(*code);
+	string inner = "code " + (_dialect ? AsmPrinter{*_dialect, sourceIndexToName} : AsmPrinter{sourceIndexToName})(*code);
 
 	for (auto const& obj: subObjects)
-		inner += "\n" + obj->toString(_dialect);
+		inner += "\n" + obj->toString(_dialect, false);
 
-	return "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
+	string useSrcComment = "";
+
+	if (sourceIndexToName && printUseSrc)
+		useSrcComment =
+			"/// @use-src " +
+			joinHumanReadable(
+				ranges::views::transform(*sourceIndexToName, [](auto&& _pair) {
+					return to_string(_pair.first) + ":" + util::escapeAndQuoteString(*_pair.second);
+				}),
+				", "
+			) +
+			"\n";
+
+	return
+		useSrcComment + "object \"" + name.str() + "\" {\n" + indent(inner) + "\n}";
 }
 
 set<YulString> Object::qualifiedDataNames() const
