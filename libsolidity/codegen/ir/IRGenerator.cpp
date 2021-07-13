@@ -135,6 +135,7 @@ string IRGenerator::generate(
 	};
 
 	Whiskers t(R"(
+		/// @use-src <useSrcMap>
 		object "<CreationObject>" {
 			code {
 				<sourceLocationComment>
@@ -169,6 +170,16 @@ string IRGenerator::generate(
 	for (VariableDeclaration const* var: ContractType(_contract).immutableVariables())
 		m_context.registerImmutableVariable(*var);
 
+	string useSrcMap;
+	size_t i = 0;
+	for (auto&& [name, index]: m_context.sourceIndices())
+	{
+		useSrcMap += to_string(index) + ":\"" + name + "\"";
+		if (i++ + 1 != m_context.sourceIndices().size())
+			useSrcMap += ", ";
+	}
+
+	t("useSrcMap", useSrcMap);
 	t("sourceLocationComment", sourceLocationComment(_contract, m_context));
 
 	t("CreationObject", IRNames::creationObject(_contract));
