@@ -138,6 +138,7 @@ private:
 void Scanner::reset(CharStream _source)
 {
 	m_source = make_shared<CharStream>(std::move(_source));
+	m_sourceName = make_shared<string>(m_source->name());
 	reset();
 }
 
@@ -145,6 +146,7 @@ void Scanner::reset(shared_ptr<CharStream> _source)
 {
 	solAssert(_source.get() != nullptr, "You MUST provide a CharStream when resetting.");
 	m_source = std::move(_source);
+	m_sourceName = make_shared<string>(m_source->name());
 	reset();
 }
 
@@ -497,7 +499,7 @@ Token Scanner::scanSlash()
 				return skipSingleLineComment();
 			// doxygen style /// comment
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
-			m_skippedComments[NextNext].location.source = m_source;
+			m_skippedComments[NextNext].location.sourceName = m_sourceName;
 			m_skippedComments[NextNext].token = Token::CommentLiteral;
 			m_skippedComments[NextNext].location.end = static_cast<int>(scanSingleLineDocComment());
 			return Token::Whitespace;
@@ -526,7 +528,7 @@ Token Scanner::scanSlash()
 				return skipMultiLineComment();
 			// we actually have a multiline documentation comment
 			m_skippedComments[NextNext].location.start = firstSlashPosition;
-			m_skippedComments[NextNext].location.source = m_source;
+			m_skippedComments[NextNext].location.sourceName = m_sourceName;
 			Token comment = scanMultiLineDocComment();
 			m_skippedComments[NextNext].location.end = static_cast<int>(sourcePos());
 			m_skippedComments[NextNext].token = comment;
@@ -766,7 +768,7 @@ void Scanner::scanToken()
 	}
 	while (token == Token::Whitespace);
 	m_tokens[NextNext].location.end = static_cast<int>(sourcePos());
-	m_tokens[NextNext].location.source = m_source;
+	m_tokens[NextNext].location.sourceName = m_sourceName;
 	m_tokens[NextNext].token = token;
 	m_tokens[NextNext].extendedTokenInfo = make_tuple(m, n);
 }

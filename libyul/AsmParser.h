@@ -72,11 +72,11 @@ public:
 	explicit Parser(
 		langutil::ErrorReporter& _errorReporter,
 		Dialect const& _dialect,
-		std::map<unsigned, std::shared_ptr<langutil::CharStream>> _charStreamMap
+		std::map<unsigned, std::shared_ptr<std::string const>> _sourceNames
 	):
 		ParserBase(_errorReporter),
 		m_dialect(_dialect),
-		m_charStreamMap{std::move(_charStreamMap)},
+		m_sourceNames{std::move(_sourceNames)},
 		m_debugDataOverride{DebugData::create()},
 		m_useSourceLocationFrom{UseSourceLocationFrom::Comments}
 	{}
@@ -144,7 +144,7 @@ protected:
 private:
 	Dialect const& m_dialect;
 
-	std::optional<std::map<unsigned, std::shared_ptr<langutil::CharStream>>> m_charStreamMap;
+	std::optional<std::map<unsigned, std::shared_ptr<std::string const>>> m_sourceNames;
 	langutil::SourceLocation m_locationOverride;
 	std::shared_ptr<DebugData const> m_debugDataOverride;
 	UseSourceLocationFrom m_useSourceLocationFrom = UseSourceLocationFrom::Scanner;

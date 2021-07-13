@@ -53,15 +53,6 @@ Dialect const& defaultDialect(bool _yul)
 }
 }
 
-void yul::test::printErrors(ErrorList const& _errors)
-{
-	SourceReferenceFormatter formatter(cout, true, false);
-
-	for (auto const& error: _errors)
-		formatter.printErrorInformation(*error);
-}
-
-
 pair<shared_ptr<Block>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(string const& _source, bool _yul)
 {
 	AssemblyStack stack(

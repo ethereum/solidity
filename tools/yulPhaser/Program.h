@@ -35,6 +35,7 @@ namespace solidity::langutil
 {
 
 class CharStream;
+class Scanner;
 
 }
 
@@ -44,13 +45,6 @@ namespace solidity::yul
 struct AsmAnalysisInfo;
 struct Dialect;
 struct CodeWeights;
-
-}
-
-namespace std
-{
-
-std::ostream& operator<<(std::ostream& _outputStream, solidity::langutil::ErrorList const& _errors);
 
 }
 

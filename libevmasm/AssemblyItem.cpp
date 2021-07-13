@@ -350,8 +350,8 @@ std::string AssemblyItem::computeSourceMapping(
 		SourceLocation const& location = item.location();
 		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
 		int sourceIndex =
-			location.source && _sourceIndicesMap.count(location.source->name()) ?
-			static_cast<int>(_sourceIndicesMap.at(location.source->name())) :
+			(location.sourceName && _sourceIndicesMap.count(*location.sourceName)) ?
+			static_cast<int>(_sourceIndicesMap.at(*location.sourceName)) :
 			-1;
 		char jump = '-';
 		if (item.getJumpType() == evmasm::AssemblyItem::JumpType::IntoFunction)

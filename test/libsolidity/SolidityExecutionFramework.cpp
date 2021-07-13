@@ -65,10 +65,8 @@ bytes SolidityExecutionFramework::multiSourceCompileContract(
 			for (auto const& error: m_compiler.errors())
 				if (error->type() == langutil::Error::Type::CodeGenerationError)
 					BOOST_THROW_EXCEPTION(*error);
-		langutil::SourceReferenceFormatter formatter(std::cerr, true, false);
-
-		for (auto const& error: m_compiler.errors())
-			formatter.printErrorInformation(*error);
+		langutil::SourceReferenceFormatter{std::cerr, m_compiler, true, false}
+			.printErrorInformation(m_compiler.errors());
 		BOOST_ERROR("Compiling contract failed");
 	}
 	string contractName(_contractName.empty() ? m_compiler.lastContractName(_mainSourceName) : _contractName);

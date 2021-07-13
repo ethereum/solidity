@@ -88,10 +88,11 @@ evmasm::Assembly::OptimiserSettings translateOptimiserSettings(
 }
 
 
-Scanner const& AssemblyStack::scanner() const
+CharStream const& AssemblyStack::charStream(string const&) const
 {
 	yulAssert(m_scanner, "");
-	return *m_scanner;
+	yulAssert(m_scanner->charStream(), "");
+	return *m_scanner->charStream();
 }
 
 bool AssemblyStack::parseAndAnalyze(std::string const& _sourceName, std::string const& _source)
@@ -132,7 +133,8 @@ void AssemblyStack::translate(AssemblyStack::Language _targetLanguage)
 	);
 
 	*m_parserResult = EVMToEwasmTranslator(
-		languageToDialect(m_language, m_evmVersion)
+		languageToDialect(m_language, m_evmVersion),
+		*this
 	).run(*parserResult());
 
 	m_language = _targetLanguage;
@@ -249,7 +251,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 	creationObject.sourceMappings = make_unique<string>(
 		evmasm::AssemblyItem::computeSourceMapping(
 			creationAssembly->items(),
-			{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+			{{charStream().name(), 0}}
 		)
 	);
 
@@ -261,7 +263,7 @@ AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 		deployedObject.sourceMappings = make_unique<string>(
 			evmasm::AssemblyItem::computeSourceMapping(
 				deployedAssembly->items(),
-				{{scanner().charStream() ? scanner().charStream()->name() : "", 0}}
+				{{charStream().name(), 0}}
 			)
 		);
 	}

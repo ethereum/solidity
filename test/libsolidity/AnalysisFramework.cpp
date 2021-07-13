@@ -151,7 +151,7 @@ string AnalysisFramework::formatErrors() const
 
 string AnalysisFramework::formatError(Error const& _error) const
 {
-	return SourceReferenceFormatter::formatErrorInformation(_error);
+	return SourceReferenceFormatter::formatErrorInformation(_error, *m_compiler);
 }
 
 ContractDefinition const* AnalysisFramework::retrieveContractByName(SourceUnit const& _source, string const& _name)

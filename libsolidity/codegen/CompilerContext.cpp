@@ -455,7 +455,9 @@ void CompilerContext::appendInlineAssembly(
 			_assembly + "\n"
 			"------------------ Errors: ----------------\n";
 		for (auto const& error: errorReporter.errors())
-			message += SourceReferenceFormatter::formatErrorInformation(*error);
+			// TODO if we have "locationOverride", it will be the wrong char stream,
+			// but we do not have access to the solidity scanner.
+			message += SourceReferenceFormatter::formatErrorInformation(*error, *scanner->charStream());
 		message += "-------------------------------------------\n";
 
 		solAssert(false, message);

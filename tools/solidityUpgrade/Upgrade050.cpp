@@ -36,7 +36,7 @@ void ConstructorKeyword::endVisit(ContractDefinition const& _contract)
 			m_changes.emplace_back(
 					UpgradeChange::Level::Safe,
 					function->location(),
-					SourceTransform::replaceFunctionName(
+					SourceTransform{m_charStreamProvider}.replaceFunctionName(
 						function->location(),
 						function->name(),
 						"constructor"
@@ -50,6 +50,6 @@ void VisibilitySpecifier::endVisit(FunctionDefinition const& _function)
 		m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_function.location(),
-				SourceTransform::insertAfterRightParenthesis(_function.location(), "public")
+				SourceTransform{m_charStreamProvider}.insertAfterRightParenthesis(_function.location(), "public")
 		);
 }

@@ -29,14 +29,14 @@ void DotSyntax::endVisit(FunctionCall const& _functionCall)
 			m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_functionCall.location(),
-				SourceTransform::valueUpdate(_functionCall.location())
+				SourceTransform{m_charStreamProvider}.valueUpdate(_functionCall.location())
 			);
 
 		if (funcType->gasSet())
 			m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_functionCall.location(),
-				SourceTransform::gasUpdate(_functionCall.location())
+				SourceTransform{m_charStreamProvider}.gasUpdate(_functionCall.location())
 			);
 	}
 }
@@ -55,7 +55,7 @@ void NowKeyword::endVisit(Identifier const& _identifier)
 			m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				_identifier.location(),
-				SourceTransform::nowUpdate(_identifier.location())
+				SourceTransform{m_charStreamProvider}.nowUpdate(_identifier.location())
 			);
 		}
 }
@@ -72,7 +72,7 @@ void ConstructorVisibility::endVisit(ContractDefinition const& _contract)
 				m_changes.emplace_back(
 					UpgradeChange::Level::Safe,
 					_contract.location(),
-					SourceTransform::insertBeforeKeyword(_contract.location(), "contract", "abstract")
+					SourceTransform{m_charStreamProvider}.insertBeforeKeyword(_contract.location(), "contract", "abstract")
 				);
 
 	for (FunctionDefinition const* function: _contract.definedFunctions())
@@ -80,6 +80,6 @@ void ConstructorVisibility::endVisit(ContractDefinition const& _contract)
 			m_changes.emplace_back(
 				UpgradeChange::Level::Safe,
 				function->location(),
-				SourceTransform::removeVisibility(function->location())
+				SourceTransform{m_charStreamProvider}.removeVisibility(function->location())
 			);
 }

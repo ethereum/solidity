@@ -173,10 +173,16 @@ void SourceReferenceFormatter::printExceptionInformation(SourceReferenceExtracto
 
 void SourceReferenceFormatter::printExceptionInformation(util::Exception const& _exception, std::string const& _category)
 {
-	printExceptionInformation(SourceReferenceExtractor::extract(_exception, _category));
+	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _exception, _category));
+}
+
+void SourceReferenceFormatter::printErrorInformation(ErrorList const& _errors)
+{
+	for (auto const& error: _errors)
+		printErrorInformation(*error);
 }
 
 void SourceReferenceFormatter::printErrorInformation(Error const& _error)
 {
-	printExceptionInformation(SourceReferenceExtractor::extract(_error));
+	printExceptionInformation(SourceReferenceExtractor::extract(m_charStreamProvider, _error));
 }

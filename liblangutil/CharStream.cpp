@@ -118,3 +118,14 @@ tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 	}
 	return tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
+
+string_view CharStream::text(SourceLocation const& _location) const
+{
+	solAssert(_location.hasText(), "");
+	solAssert(_location.sourceName && *_location.sourceName == m_name, "");
+	solAssert(static_cast<size_t>(_location.end) <= m_source.size(), "");
+	return string_view{m_source}.substr(
+		static_cast<size_t>(_location.start),
+		static_cast<size_t>(_location.end - _location.start)
+	);
+}

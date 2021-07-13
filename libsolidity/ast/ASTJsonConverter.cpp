@@ -110,8 +110,8 @@ void ASTJsonConverter::setJsonNode(
 
 optional<size_t> ASTJsonConverter::sourceIndexFromLocation(SourceLocation const& _location) const
 {
-	if (_location.source && m_sourceIndices.count(_location.source->name()))
-		return m_sourceIndices.at(_location.source->name());
+	if (_location.sourceName && m_sourceIndices.count(*_location.sourceName))
+		return m_sourceIndices.at(*_location.sourceName);
 	else
 		return nullopt;
 }

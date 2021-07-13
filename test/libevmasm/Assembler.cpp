@@ -57,11 +57,11 @@ BOOST_AUTO_TEST_CASE(all_assembly_items)
 		{ "sub.asm", 1 }
 	};
 	Assembly _assembly;
-	auto root_asm = make_shared<CharStream>("lorem ipsum", "root.asm");
+	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
 	Assembly _subAsm;
-	auto sub_asm = make_shared<CharStream>("lorem ipsum", "sub.asm");
+	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 	// PushImmutable
 	_subAsm.appendImmutable("someImmutable");
@@ -172,11 +172,11 @@ BOOST_AUTO_TEST_CASE(immutable)
 		{ "sub.asm", 1 }
 	};
 	Assembly _assembly;
-	auto root_asm = make_shared<CharStream>("lorem ipsum", "root.asm");
+	auto root_asm = make_shared<string>("root.asm");
 	_assembly.setSourceLocation({1, 3, root_asm});
 
 	Assembly _subAsm;
-	auto sub_asm = make_shared<CharStream>("lorem ipsum", "sub.asm");
+	auto sub_asm = make_shared<string>("sub.asm");
 	_subAsm.setSourceLocation({6, 8, sub_asm});
 	_subAsm.appendImmutable("someImmutable");
 	_subAsm.appendImmutable("someOtherImmutable");

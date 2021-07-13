@@ -16,40 +16,40 @@
 */
 // SPDX-License-Identifier: GPL-3.0
 /**
- * Translates Yul code from EVM dialect to Ewasm dialect.
+ * Interface to retrieve the scanner by a source name.
  */
 
 #pragma once
 
-#include <libyul/ASTForward.h>
-#include <libyul/optimiser/ASTWalker.h>
-#include <libyul/Dialect.h>
+#include <string>
 
 namespace solidity::langutil
 {
-class CharStreamBySourceName;
-}
-namespace solidity::yul
-{
-struct Object;
 
-class EVMToEwasmTranslator: public ASTModifier
+class CharStream;
+
+/**
+ * Interface to retrieve a CharStream (source) from a source name.
+ * Used especially for printing error information.
+ */
+class CharStreamBySourceName
 {
 public:
-	EVMToEwasmTranslator(Dialect const& _evmDialect, langutil::CharStreamBySourceName const& _charStreamProvider):
-		m_dialect(_evmDialect),
-		m_charStreamProvider(_charStreamProvider)
-	{}
-	Object run(Object const& _object);
+	virtual ~CharStreamBySourceName() = default;
+	virtual CharStream const& charStream(std::string const& _sourceName) const = 0;
+};
 
+class SingletonCharStreamBySourceName: public CharStreamBySourceName
+{
+public:
+	SingletonCharStreamBySourceName(CharStream const& _charStream):
+		m_charStream(_charStream) {}
+	CharStream const& charStream(std::string const&) const override
+	{
+		return m_charStream;
+	}
 private:
-	void parsePolyfill();
-
-	Dialect const& m_dialect;
-	langutil::CharStreamBySourceName const& m_charStreamProvider;
-
-	std::shared_ptr<Block> m_polyfill;
-	std::set<YulString> m_polyfillFunctions;
+	CharStream const& m_charStream;
 };
 
 }

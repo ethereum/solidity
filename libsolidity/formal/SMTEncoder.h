@@ -43,6 +43,7 @@ namespace solidity::langutil
 {
 class ErrorReporter;
 struct SourceLocation;
+class CharStreamBySourceName;
 }
 
 namespace solidity::frontend
@@ -53,7 +54,8 @@ class SMTEncoder: public ASTConstVisitor
 public:
 	SMTEncoder(
 		smt::EncodingContext& _context,
-		ModelCheckerSettings const& _settings
+		ModelCheckerSettings const& _settings,
+		langutil::CharStreamBySourceName const& _charStreamProvider
 	);
 
 	/// @returns true if engine should proceed with analysis.
@@ -468,6 +470,10 @@ protected:
 	smt::EncodingContext& m_context;
 
 	ModelCheckerSettings const& m_settings;
+
+	/// Scanner for each source,
+	/// used for retrieving source text of expressions for e.g. counter-examples.
+	langutil::CharStreamBySourceName const& m_charStreamProvider;
 
 	smt::SymbolicState& state();
 };

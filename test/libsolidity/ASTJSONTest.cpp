@@ -141,9 +141,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 
 	if (!c.compile(CompilerStack::State::Parsed))
 	{
-		SourceReferenceFormatter formatter(_stream, _formatted, false);
-		for (auto const& error: c.errors())
-			formatter.printErrorInformation(*error);
+		SourceReferenceFormatter formatter(_stream, c, _formatted, false);
+		formatter.printErrorInformation(c.errors());
 		return TestResult::FatalError;
 	}
 
@@ -167,9 +166,8 @@ TestCase::TestResult ASTJSONTest::run(ostream& _stream, string const& _linePrefi
 		if (m_expectation.empty())
 			return resultsMatch ? TestResult::Success : TestResult::Failure;
 
-		SourceReferenceFormatter formatter(_stream, _formatted, false);
-		for (auto const& error: c.errors())
-			formatter.printErrorInformation(*error);
+		SourceReferenceFormatter{_stream, c, _formatted, false}
+			.printErrorInformation(c.errors());
 		return TestResult::FatalError;
 	}
 

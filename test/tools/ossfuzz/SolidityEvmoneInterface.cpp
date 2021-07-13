@@ -41,13 +41,11 @@ optional<CompilerOutput> SolidityCompilationFramework::compileContract()
 	{
 		if (m_compilerInput.debugFailure)
 		{
-			SourceReferenceFormatter formatter(cerr, false, false);
-
 			cerr << "Compiling contract failed" << endl;
 			for (auto const& error: m_compiler.errors())
-				formatter.printExceptionInformation(
+				cerr << SourceReferenceFormatter::formatErrorInformation(
 					*error,
-					formatter.formatErrorInformation(*error)
+					m_compiler
 				);
 		}
 		return {};

@@ -177,14 +177,6 @@ public:
 	Token peekNextNextToken() const { return m_tokens[NextNext].token; }
 	///@}
 
-	///@{
-	///@name Error printing helper functions
-	/// Functions that help pretty-printing parse errors
-	/// Do only use in error cases, they are quite expensive.
-	std::string lineAtPosition(int _position) const { return m_source->lineAtPosition(_position); }
-	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source->translatePositionToLineColumn(_position); }
-	///@}
-
 private:
 
 	inline Token setError(ScannerError _error) noexcept
@@ -270,6 +262,7 @@ private:
 	TokenDesc m_tokens[3] = {}; // desc for the current, next and nextnext token
 
 	std::shared_ptr<CharStream> m_source;
+	std::shared_ptr<std::string const> m_sourceName;
 
 	ScannerKind m_kind = ScannerKind::Solidity;
 
