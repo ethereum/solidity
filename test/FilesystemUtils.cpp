@@ -39,11 +39,16 @@ void solidity::test::createFileWithContent(boost::filesystem::path const& _path,
 
 bool solidity::test::createSymlinkIfSupportedByFilesystem(
 	boost::filesystem::path const& _targetPath,
-	boost::filesystem::path const& _linkName
+	boost::filesystem::path const& _linkName,
+	bool directorySymlink
 )
 {
 	boost::system::error_code symlinkCreationError;
-	boost::filesystem::create_symlink(_targetPath, _linkName, symlinkCreationError);
+
+	if (directorySymlink)
+		boost::filesystem::create_directory_symlink(_targetPath, _linkName, symlinkCreationError);
+	else
+		boost::filesystem::create_symlink(_targetPath, _linkName, symlinkCreationError);
 
 	if (!symlinkCreationError)
 		return true;
