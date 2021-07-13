@@ -2,22 +2,17 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x0
-// MLOAD
-// PUSH1 0x1
-// PUSH1 0x6
-// SWAP1
-// POP
-// DUP1
-// SWAP2
-// POP
-// POP
-// PUSH1 0x2
-// DUP1
-// SWAP2
-// POP
-// PUSH1 0x4
-// SWAP1
-// POP
-// POP
-// POP
+//     /* "":17:18   */
+//   0x00
+//     /* "":11:19   */
+//   mload
+//   pop
+//     /* "":31:32   */
+//   pop(0x01)
+//     /* "":38:39   */
+//   pop(0x06)
+//     /* "":60:61   */
+//   pop(0x02)
+//     /* "":74:75   */
+//   0x04
+//   stop

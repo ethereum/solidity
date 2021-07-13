@@ -16,10 +16,12 @@ object "t" {
 //   0x00
 //     /* "source":23:147   */
 //   sstore
+//   stop
 // stop
 //
 // sub_0: assembly {
+//       stop
 // }
-// Bytecode: 6000600055fe
-// Opcodes: PUSH1 0x0 PUSH1 0x0 SSTORE INVALID
-// SourceMappings: 33:113:0:-:0;30:1;23:124
+// Bytecode: 600160005500fe
+// Opcodes: PUSH1 0x1 PUSH1 0x0 SSTORE STOP INVALID
+// SourceMappings: 33:113:0:-:0;30:1;23:124;

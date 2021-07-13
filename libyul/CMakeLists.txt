@@ -68,9 +68,11 @@ add_library(yul
 	backends/evm/EVMMetrics.h
 	backends/evm/NoOutputAssembly.h
 	backends/evm/NoOutputAssembly.cpp
+	backends/evm/OptimizedEVMCodeTransform.cpp
+	backends/evm/OptimizedEVMCodeTransform.h
 	backends/evm/StackHelpers.h
-	backends/evm/StackLayoutGenerator.h
 	backends/evm/StackLayoutGenerator.cpp
+	backends/evm/StackLayoutGenerator.h
 	backends/evm/VariableReferenceCounter.h
 	backends/evm/VariableReferenceCounter.cpp
 	backends/wasm/EVMToEwasmTranslator.cpp

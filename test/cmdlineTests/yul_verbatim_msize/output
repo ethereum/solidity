@@ -14,7 +14,7 @@ object "object" {
 
 
 Binary representation:
-612000515061616002600055
+61200051506161600260005500
 
 Text representation:
     /* "yul_verbatim_msize/input.yul":125:131   */
@@ -30,3 +30,4 @@ Text representation:
   0x00
     /* "yul_verbatim_msize/input.yul":162:174   */
   sstore
+  stop

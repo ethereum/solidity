@@ -13,6 +13,6 @@ contract C {
 // ----
 // deposit() ->
 // ~ emit E(uint256,uint256,uint256,bytes): #0x02, 0x01, 0x03, 0x60, 0x03, "def"
-// gas irOptimized: 23685
+// gas irOptimized: 23676
 // gas legacy: 24170
 // gas legacyOptimized: 23753

@@ -17,7 +17,7 @@ contract c {
 // ----
 // setData1(uint256,uint256,uint256): 10, 5, 4 ->
 // copyStorageStorage() ->
-// gas irOptimized: 111487
+// gas irOptimized: 111426
 // gas legacy: 109278
 // gas legacyOptimized: 109268
 // getData2(uint256): 5 -> 10, 4

@@ -55,7 +55,7 @@ void visitArguments(
 	for (auto const& arg: _call.arguments | ranges::views::reverse)
 		_visitExpression(arg);
 
-	_assembly.setSourceLocation(_call.debugData->location);
+	_assembly.setSourceLocation(locationOf(_call));
 }
 
 

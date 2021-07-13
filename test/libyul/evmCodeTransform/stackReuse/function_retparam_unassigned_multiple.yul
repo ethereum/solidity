@@ -4,17 +4,16 @@
 // ====
 // stackOptimization: true
 // ----
-// PUSH1 0x11
-// JUMP
-// JUMPDEST
-// CALLVALUE
-// POP
-// PUSH1 0x0
-// PUSH1 0x0
-// PUSH1 0x0
-// JUMPDEST
-// SWAP1
-// SWAP2
-// SWAP3
-// JUMP
-// JUMPDEST
+//   stop
+//     /* "":6:50   */
+// tag_1:
+//   0x00
+//   0x00
+//   0x00
+//   swap3
+//     /* "":36:47   */
+//   callvalue
+//     /* "":32:48   */
+//   pop
+//     /* "":6:50   */
+//   jump	// out

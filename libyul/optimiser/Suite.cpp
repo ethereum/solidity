@@ -113,18 +113,19 @@ void OptimiserSuite::run(
 	suite.runSequence(_optimisationSequence, ast);
 
 	// This is a tuning parameter, but actually just prevents infinite loops.
-	size_t stackCompressorMaxIterations = 16;
 	suite.runSequence("g", ast);
 
 	// We ignore the return value because we will get a much better error
 	// message once we perform code generation.
+	suite.runSequence("fDnTOc g", ast);
+
+	size_t stackCompressorMaxIterations = 16;
 	StackCompressor::run(
 		_dialect,
 		_object,
 		_optimizeStackAllocation,
 		stackCompressorMaxIterations
 	);
-	suite.runSequence("fDnTOc g", ast);
 
 	if (EVMDialect const* dialect = dynamic_cast<EVMDialect const*>(&_dialect))
 	{

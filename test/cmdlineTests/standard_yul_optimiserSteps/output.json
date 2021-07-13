@@ -1,10 +1,11 @@
-{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":17:18   */
+{"contracts":{"A":{"object":{"evm":{"assembly":"    /* \"A\":38:39   */
   0x00
     /* \"A\":11:19   */
   dup1
   mload
     /* \"A\":20:40   */
   sstore
+  stop
 ","bytecode":{"functionDebugData":{},"generatedSources":[],"linkReferences":{},"object":"<BYTECODE REMOVED>","opcodes":"<OPCODES REMOVED>","sourceMap":"<SOURCEMAP REMOVED>"}},"ir":"object \"object\" {
     code {
         let x := mload(0)

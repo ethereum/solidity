@@ -25,6 +25,7 @@
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/NoOutputAssembly.h>
+#include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 
 using namespace std;
 using namespace solidity;
@@ -51,17 +52,31 @@ CompilabilityChecker::CompilabilityChecker(
 		for (auto const& subNode: _object.subObjects)
 			builtinContext.subIDs[subNode->name] = 1;
 		NoOutputAssembly assembly;
-		CodeTransform transform(
-			assembly,
-			analysisInfo,
-			*_object.code,
-			noOutputDialect,
-			builtinContext,
-			_optimizeStackAllocation
-		);
-		transform(*_object.code);
+		vector<StackTooDeepError> stackErrors;
+		if (_optimizeStackAllocation && evmDialect->providesObjectAccess() && evmDialect->evmVersion() > langutil::EVMVersion::homestead())
+			stackErrors = OptimizedEVMCodeTransform::run(
+				assembly,
+				analysisInfo,
+				*_object.code,
+				noOutputDialect,
+				builtinContext
+			);
+		else
+		{
+			CodeTransform transform(
+				assembly,
+				analysisInfo,
+				*_object.code,
+				noOutputDialect,
+				builtinContext,
+				_optimizeStackAllocation
+			);
+			transform(*_object.code);
+			stackErrors = transform.stackErrors();
+		}
 
-		for (StackTooDeepError const& error: transform.stackErrors())
+
+		for (StackTooDeepError const& error: stackErrors)
 		{
 			unreachableVariables[error.functionName].emplace(error.variable);
 			int& deficit = stackDeficit[error.functionName];

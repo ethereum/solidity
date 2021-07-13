@@ -23,6 +23,7 @@
 
 #include <libyul/backends/evm/EVMCodeTransform.h>
 #include <libyul/backends/evm/EVMDialect.h>
+#include <libyul/backends/evm/OptimizedEVMCodeTransform.h>
 
 #include <libyul/Object.h>
 #include <libyul/Exceptions.h>
@@ -62,10 +63,20 @@ void EVMObjectCompiler::run(Object& _object, bool _optimize)
 
 	yulAssert(_object.analysisInfo, "No analysis info.");
 	yulAssert(_object.code, "No code.");
-	// We do not catch and re-throw the stack too deep exception here because it is a YulException,
-	// which should be native to this part of the code.
-	CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context, _optimize};
-	transform(*_object.code);
-	if (!transform.stackErrors().empty())
-		BOOST_THROW_EXCEPTION(transform.stackErrors().front());
+	if (_optimize && m_dialect.evmVersion() > langutil::EVMVersion::homestead())
+	{
+
+		auto stackErrors = OptimizedEVMCodeTransform::run(m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context);
+		if (!stackErrors.empty())
+			BOOST_THROW_EXCEPTION(stackErrors.front());
+	}
+	else
+	{
+		// We do not catch and re-throw the stack too deep exception here because it is a YulException,
+		// which should be native to this part of the code.
+		CodeTransform transform{m_assembly, *_object.analysisInfo, *_object.code, m_dialect, context, _optimize};
+		transform(*_object.code);
+		if (!transform.stackErrors().empty())
+			BOOST_THROW_EXCEPTION(transform.stackErrors().front());
+	}
 }
