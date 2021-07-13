@@ -96,6 +96,24 @@ systems, ``evmone.dll`` on Windows systems and ``libevmone.dylib`` on macOS.
 On macOS some of the testing scripts expect GNU coreutils to be installed.
 This can be easiest accomplished using Homebrew: ``brew install coreutils``.
 
+Search paths
+------------
+
+The dependent libraries (such as ``evmone.so`` / ``evmone.dll``) will be loaded
+automatically if they are placed in one of the following locations:
+
+- ``$ETH_EVMONE``
+- ``$PROJECT_ROOT/deps``
+- ``$PROJECT_ROOT/deps/lib``
+- ``$PROJECT_ROOT/../deps``
+- ``$PROJECT_ROOT/../deps/lib``
+- ``$PROJECT_ROOT/../../deps``
+- ``$PROJECT_ROOT/../../deps/lib``
+- ``$PROJECT_ROOT/../../../deps/lib``
+
+Where ``$ETH_EVMONE`` is a user-supplied environment variable and
+``$PROJECT_ROOT`` the path to the Solidity source code's root directory.
+
 Running the Tests
 -----------------
 
