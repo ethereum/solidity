@@ -454,7 +454,7 @@ bool SourceUpgrade::readInputFiles()
 
 	if (m_sourceCodes.size() == 0)
 	{
-		warning() << "No input files given. If you wish to use the standard input please specify \"-\" explicitly." << endl;
+		warning() << "No input files given." << endl;
 		return false;
 	}
 
