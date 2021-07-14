@@ -43,7 +43,8 @@ namespace
 
 SemVerMatchExpression parseExpression(string const& _input)
 {
-	Scanner scanner{CharStream(_input, "")};
+	CharStream stream(_input, "");
+	Scanner scanner{stream};
 	vector<string> literals;
 	vector<Token> tokens;
 	while (scanner.currentToken() != Token::EOS)

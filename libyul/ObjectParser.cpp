@@ -130,7 +130,8 @@ optional<ObjectParser::SourceNameMap> ObjectParser::tryParseSourceNameMapping() 
 
 	solAssert(sm.size() == 2, "");
 	auto text = m_scanner->currentCommentLiteral().substr(static_cast<size_t>(sm.position() + sm.length()));
-	Scanner scanner(make_shared<CharStream>(text, ""));
+	CharStream charStream(text, "");
+	Scanner scanner(charStream);
 	if (scanner.currentToken() == Token::EOS)
 		return SourceNameMap{};
 	SourceNameMap sourceNames;

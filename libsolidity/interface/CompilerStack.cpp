@@ -313,7 +313,7 @@ void CompilerStack::setSources(StringMap _sources)
 	if (m_stackState != Empty)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Must set sources before parsing."));
 	for (auto source: _sources)
-		m_sources[source.first].scanner = make_shared<Scanner>(CharStream(/*content*/std::move(source.second), /*name*/source.first));
+		m_sources[source.first].charStream = make_unique<CharStream>(/*content*/std::move(source.second), /*name*/source.first);
 	m_stackState = SourcesSet;
 }
 
@@ -336,8 +336,7 @@ bool CompilerStack::parse()
 	{
 		string const& path = sourcesToParse[i];
 		Source& source = m_sources[path];
-		source.scanner->reset();
-		source.ast = parser.parse(source.scanner);
+		source.ast = parser.parse(*source.charStream);
 		if (!source.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errorReporter.errors()), "Parser returned null but did not report error.");
 		else
@@ -348,7 +347,7 @@ bool CompilerStack::parse()
 				{
 					string const& newPath = newSource.first;
 					string const& newContents = newSource.second;
-					m_sources[newPath].scanner = make_shared<Scanner>(CharStream(newContents, newPath));
+					m_sources[newPath].charStream = make_shared<CharStream>(newContents, newPath);
 					sourcesToParse.push_back(newPath);
 				}
 		}
@@ -377,10 +376,11 @@ void CompilerStack::importASTs(map<string, Json::Value> const& _sources)
 		string const& path = src.first;
 		Source source;
 		source.ast = src.second;
-		string srcString = util::jsonCompactPrint(m_sourceJsons[src.first]);
-		ASTPointer<Scanner> scanner = make_shared<Scanner>(langutil::CharStream(srcString, src.first));
-		source.scanner = scanner;
-		m_sources[path] = source;
+		source.charStream = make_shared<CharStream>(
+			util::jsonCompactPrint(m_sourceJsons[src.first]),
+			src.first
+		);
+		m_sources[path] = move(source);
 	}
 	m_stackState = ParsedAndImported;
 	m_importedSources = true;
@@ -754,7 +754,8 @@ Json::Value CompilerStack::generatedSources(string const& _contractName, bool _r
 				unsigned sourceIndex = sourceIndices()[sourceName];
 				ErrorList errors;
 				ErrorReporter errorReporter(errors);
-				auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(source, sourceName));
+				CharStream charStream(source, sourceName);
+				shared_ptr<Scanner> scanner = make_shared<Scanner>(charStream);
 				yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
 				shared_ptr<yul::Block> parserResult = yul::Parser{errorReporter, dialect}.parse(scanner, false);
 				solAssert(parserResult, "");
@@ -1031,10 +1032,9 @@ CharStream const& CompilerStack::charStream(string const& _sourceName) const
 	if (m_stackState < SourcesSet)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No sources set."));
 
-	solAssert(source(_sourceName).scanner, "");
-	solAssert(source(_sourceName).scanner->charStream(), "");
+	solAssert(source(_sourceName).charStream, "");
 
-	return *source(_sourceName).scanner->charStream();
+	return *source(_sourceName).charStream;
 }
 
 SourceUnit const& CompilerStack::ast(string const& _sourceName) const
@@ -1079,21 +1079,21 @@ size_t CompilerStack::functionEntryPoint(
 h256 const& CompilerStack::Source::keccak256() const
 {
 	if (keccak256HashCached == h256{})
-		keccak256HashCached = util::keccak256(scanner->source());
+		keccak256HashCached = util::keccak256(charStream->source());
 	return keccak256HashCached;
 }
 
 h256 const& CompilerStack::Source::swarmHash() const
 {
 	if (swarmHashCached == h256{})
-		swarmHashCached = util::bzzr1Hash(scanner->source());
+		swarmHashCached = util::bzzr1Hash(charStream->source());
 	return swarmHashCached;
 }
 
 string const& CompilerStack::Source::ipfsUrl() const
 {
 	if (ipfsUrlCached.empty())
-		ipfsUrlCached = "dweb:/ipfs/" + util::ipfsHashBase58(scanner->source());
+		ipfsUrlCached = "dweb:/ipfs/" + util::ipfsHashBase58(charStream->source());
 	return ipfsUrlCached;
 }
 
@@ -1454,12 +1454,12 @@ string CompilerStack::createMetadata(Contract const& _contract) const
 		if (!referencedSources.count(s.first))
 			continue;
 
-		solAssert(s.second.scanner, "Scanner not available");
+		solAssert(s.second.charStream, "Character stream not available");
 		meta["sources"][s.first]["keccak256"] = "0x" + toHex(s.second.keccak256().asBytes());
 		if (optional<string> licenseString = s.second.ast->licenseString())
 			meta["sources"][s.first]["license"] = *licenseString;
 		if (m_metadataLiteralSources)
-			meta["sources"][s.first]["content"] = s.second.scanner->source();
+			meta["sources"][s.first]["content"] = s.second.charStream->source();
 		else
 		{
 			meta["sources"][s.first]["urls"] = Json::arrayValue;

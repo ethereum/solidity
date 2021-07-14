@@ -81,13 +81,14 @@ private:
 	SourceLocation m_location;
 };
 
-ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
+ASTPointer<SourceUnit> Parser::parse(CharStream& _charStream)
 {
 	solAssert(!m_insideModifier, "");
 	try
 	{
 		m_recursionDepth = 0;
-		m_scanner = _scanner;
+		m_source = &_charStream;
+		m_scanner = make_shared<Scanner>(_charStream);
 		ASTNodeFactory nodeFactory(*this);
 
 		vector<ASTPointer<ASTNode>> nodes;
@@ -2056,14 +2057,16 @@ bool Parser::variableDeclarationStart()
 
 optional<string> Parser::findLicenseString(std::vector<ASTPointer<ASTNode>> const& _nodes)
 {
+	solAssert(!!m_source, "");
+
 	// We circumvent the scanner here, because it skips non-docstring comments.
 	static regex const licenseRegex("SPDX-License-Identifier:\\s*([a-zA-Z0-9 ()+.-]+)");
 
 	// Search inside all parts of the source not covered by parsed nodes.
 	// This will leave e.g. "global comments".
-	string const& source = m_scanner->source();
-	using iter = decltype(source.begin());
+	using iter = std::string::const_iterator;
 	vector<pair<iter, iter>> sequencesToSearch;
+	string const& source = m_source->source();
 	sequencesToSearch.emplace_back(source.begin(), source.end());
 	for (ASTPointer<ASTNode> const& node: _nodes)
 		if (node->location().hasText())

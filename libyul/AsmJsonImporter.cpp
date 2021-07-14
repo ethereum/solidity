@@ -166,7 +166,8 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 
 	if (kind == "number")
 	{
-		langutil::Scanner scanner{langutil::CharStream(lit.value.str(), "")};
+		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Number;
 		yulAssert(
 			scanner.currentToken() == Token::Number,
@@ -175,7 +176,8 @@ Literal AsmJsonImporter::createLiteral(Json::Value const& _node)
 	}
 	else if (kind == "bool")
 	{
-		langutil::Scanner scanner{langutil::CharStream(lit.value.str(), "")};
+		langutil::CharStream charStream(lit.value.str(), "");
+		langutil::Scanner scanner{charStream};
 		lit.kind = LiteralKind::Boolean;
 		yulAssert(
 			scanner.currentToken() == Token::TrueLiteral ||

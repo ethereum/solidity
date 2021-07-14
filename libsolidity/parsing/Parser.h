@@ -29,7 +29,7 @@
 
 namespace solidity::langutil
 {
-class Scanner;
+class CharStream;
 }
 
 namespace solidity::frontend
@@ -47,7 +47,7 @@ public:
 		m_evmVersion(_evmVersion)
 	{}
 
-	ASTPointer<SourceUnit> parse(std::shared_ptr<langutil::Scanner> const& _scanner);
+	ASTPointer<SourceUnit> parse(langutil::CharStream& _charStream);
 
 private:
 	class ASTNodeFactory;
@@ -211,6 +211,7 @@ private:
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();
 
+	langutil::CharStream* m_source = nullptr;
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
 	langutil::EVMVersion m_evmVersion;

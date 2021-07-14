@@ -23,6 +23,8 @@
 
 #include <test/libsolidity/ErrorCheck.h>
 
+#include <liblangutil/Scanner.h>
+
 #include <libyul/AssemblyStack.h>
 #include <libyul/backends/evm/EVMDialect.h>
 
@@ -118,7 +120,8 @@ tuple<optional<ObjectParser::SourceNameMap>, ErrorList> tryGetSourceLocationMapp
 	ErrorReporter reporter(errors);
 	Dialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(EVMVersion::berlin());
 	ObjectParser objectParser{reporter, dialect};
-	objectParser.parse(make_shared<Scanner>(CharStream(move(source), "")), false);
+	CharStream stream(move(source), "");
+	objectParser.parse(make_shared<Scanner>(stream), false);
 	return {objectParser.sourceNameMapping(), std::move(errors)};
 }
 

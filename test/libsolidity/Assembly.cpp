@@ -26,7 +26,8 @@
 #include <liblangutil/SourceLocation.h>
 #include <libevmasm/Assembly.h>
 
-#include <liblangutil/Scanner.h>
+#include <liblangutil/CharStream.h>
+
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/DeclarationTypeChecker.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
@@ -58,7 +59,7 @@ evmasm::AssemblyItems compileContract(std::shared_ptr<CharStream> _sourceCode)
 	ErrorReporter errorReporter(errors);
 	Parser parser(errorReporter, solidity::test::CommonOptions::get().evmVersion());
 	ASTPointer<SourceUnit> sourceUnit;
-	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(_sourceCode)));
+	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(*_sourceCode));
 	BOOST_CHECK(!!sourceUnit);
 
 	Scoper::assignScopes(*sourceUnit);

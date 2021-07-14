@@ -82,7 +82,7 @@ public:
 	{
 		SourceReferenceFormatter{
 			cerr,
-			SingletonCharStreamProvider(*m_scanner->charStream()),
+			SingletonCharStreamProvider(*m_charStream),
 			true,
 			false
 		}.printErrorInformation(m_errors);
@@ -91,7 +91,8 @@ public:
 	bool parse(string const& _input)
 	{
 		ErrorReporter errorReporter(m_errors);
-		m_scanner = make_shared<Scanner>(CharStream(_input, ""));
+		m_charStream = make_shared<CharStream>(_input, "");
+		m_scanner = make_shared<Scanner>(*m_charStream);
 		m_ast = yul::Parser(errorReporter, m_dialect).parse(m_scanner, false);
 		if (!m_ast || !errorReporter.errors().empty())
 		{
@@ -234,6 +235,7 @@ public:
 
 private:
 	ErrorList m_errors;
+	shared_ptr<CharStream> m_charStream;
 	shared_ptr<Scanner> m_scanner;
 	shared_ptr<yul::Block> m_ast;
 	Dialect const& m_dialect{EVMDialect::strictAssemblyForEVMObjects(EVMVersion{})};

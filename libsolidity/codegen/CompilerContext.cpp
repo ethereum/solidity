@@ -434,14 +434,14 @@ void CompilerContext::appendInlineAssembly(
 
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	auto scanner = make_shared<langutil::Scanner>(langutil::CharStream(_assembly, _sourceName));
+	langutil::CharStream charStream(_assembly, _sourceName);
 	yul::EVMDialect const& dialect = yul::EVMDialect::strictAssemblyForEVM(m_evmVersion);
 	optional<langutil::SourceLocation> locationOverride;
 	if (!_system)
 		locationOverride = m_asm->currentSourceLocation();
 	shared_ptr<yul::Block> parserResult =
 		yul::Parser(errorReporter, dialect, std::move(locationOverride))
-		.parse(scanner, false);
+		.parse(make_shared<langutil::Scanner>(charStream), false);
 #ifdef SOL_OUTPUT_ASM
 	cout << yul::AsmPrinter(&dialect)(*parserResult) << endl;
 #endif
@@ -457,7 +457,7 @@ void CompilerContext::appendInlineAssembly(
 		for (auto const& error: errorReporter.errors())
 			// TODO if we have "locationOverride", it will be the wrong char stream,
 			// but we do not have access to the solidity scanner.
-			message += SourceReferenceFormatter::formatErrorInformation(*error, *scanner->charStream());
+			message += SourceReferenceFormatter::formatErrorInformation(*error, charStream);
 		message += "-------------------------------------------\n";
 
 		solAssert(false, message);
@@ -491,8 +491,8 @@ void CompilerContext::appendInlineAssembly(
 			solAssert(m_generatedYulUtilityCode.empty(), "");
 			m_generatedYulUtilityCode = yul::AsmPrinter(dialect)(*obj.code);
 			string code = yul::AsmPrinter{dialect}(*obj.code);
-			scanner = make_shared<langutil::Scanner>(langutil::CharStream(m_generatedYulUtilityCode, _sourceName));
-			obj.code = yul::Parser(errorReporter, dialect).parse(scanner, false);
+			langutil::CharStream charStream(m_generatedYulUtilityCode, _sourceName);
+			obj.code = yul::Parser(errorReporter, dialect).parse(make_shared<Scanner>(charStream), false);
 			*obj.analysisInfo = yul::AsmAnalyzer::analyzeStrictAssertCorrect(dialect, obj);
 		}
 

@@ -55,7 +55,8 @@ shared_ptr<Block> parse(string const& _source, Dialect const& _dialect, ErrorRep
 {
 	try
 	{
-		auto scanner = make_shared<Scanner>(CharStream(_source, ""));
+		auto stream = CharStream(_source, "");
+		auto scanner = make_shared<Scanner>(stream);
 		map<unsigned, shared_ptr<string const>> indicesToSourceNames;
 		indicesToSourceNames[0] = make_shared<string const>("source0");
 		indicesToSourceNames[1] = make_shared<string const>("source1");

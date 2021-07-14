@@ -125,7 +125,7 @@ void EVMToEwasmTranslator::parsePolyfill()
 {
 	ErrorList errors;
 	ErrorReporter errorReporter(errors);
-	shared_ptr<Scanner> scanner{make_shared<Scanner>(CharStream(
+	CharStream charStream(
 		"{" +
 			string(solidity::yul::wasm::polyfill::Arithmetic) +
 			string(solidity::yul::wasm::polyfill::Bitwise) +
@@ -135,15 +135,18 @@ void EVMToEwasmTranslator::parsePolyfill()
 			string(solidity::yul::wasm::polyfill::Keccak) +
 			string(solidity::yul::wasm::polyfill::Logical) +
 			string(solidity::yul::wasm::polyfill::Memory) +
-		"}", ""))};
-	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(scanner, false);
+		"}", "");
+	m_polyfill = Parser(errorReporter, WasmDialect::instance()).parse(
+		make_shared<Scanner>(charStream),
+		false
+	);
 	if (!errors.empty())
 	{
 		string message;
 		for (auto const& err: errors)
 			message += langutil::SourceReferenceFormatter::formatErrorInformation(
 				*err,
-				SingletonCharStreamProvider(*scanner->charStream())
+				SingletonCharStreamProvider(charStream)
 			);
 		yulAssert(false, message);
 	}

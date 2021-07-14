@@ -90,6 +90,7 @@ public:
 	/// @param _reuseScanner if true, do check for end of input after the `}`.
 	/// @returns an empty shared pointer on error.
 	std::unique_ptr<Block> parse(std::shared_ptr<langutil::Scanner> const& _scanner, bool _reuseScanner);
+	// TODO: pass CharStream here instead ^^^^^^
 
 protected:
 	langutil::SourceLocation currentLocation() const override

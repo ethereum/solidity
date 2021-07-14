@@ -74,7 +74,8 @@ pair<shared_ptr<Object>, shared_ptr<yul::AsmAnalysisInfo>> yul::test::parse(
 )
 {
 	ErrorReporter errorReporter(_errors);
-	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_source, ""));
+	CharStream stream(_source, "");
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(stream);
 	shared_ptr<Object> parserResult = yul::ObjectParser(errorReporter, _dialect).parse(scanner, false);
 	if (!parserResult)
 		return {};
