@@ -30,8 +30,8 @@ set it to ``--optimize-runs=1``. If you expect many transactions and do not care
 output size, set ``--optimize-runs`` to a high number.
 This parameter has effects on the following (this might change in the future):
 
- - the size of the binary search in the function dispatch routine
- - the way constants like large numbers or strings are stored
+- the size of the binary search in the function dispatch routine
+- the way constants like large numbers or strings are stored
 
 .. index:: allowed paths, --allow-paths, base path, --base-path
 

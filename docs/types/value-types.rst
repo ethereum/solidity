@@ -128,10 +128,10 @@ The modulo operation ``a % n`` yields the remainder ``r`` after the division of 
 by the operand ``n``, where ``q = int(a / n)`` and ``r = a - (n * q)``. This means that modulo
 results in the same sign as its left operand (or zero) and ``a % n == -(-a % n)`` holds for negative ``a``:
 
- * ``int256(5) % int256(2) == int256(1)``
- * ``int256(5) % int256(-2) == int256(1)``
- * ``int256(-5) % int256(2) == int256(-1)``
- * ``int256(-5) % int256(-2) == int256(-1)``
+* ``int256(5) % int256(2) == int256(1)``
+* ``int256(5) % int256(-2) == int256(1)``
+* ``int256(-5) % int256(2) == int256(-1)``
+* ``int256(-5) % int256(-2) == int256(-1)``
 
 .. note::
   Modulo with zero causes a :ref:`Panic error<assert-and-require>`. This check can **not** be disabled through ``unchecked { ... }``.
@@ -184,8 +184,8 @@ Address
 
 The address type comes in two flavours, which are largely identical:
 
- - ``address``: Holds a 20 byte value (size of an Ethereum address).
- - ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
+- ``address``: Holds a 20 byte value (size of an Ethereum address).
+- ``address payable``: Same as ``address``, but with the additional members ``transfer`` and ``send``.
 
 The idea behind this distinction is that ``address payable`` is an address you can send Ether to,
 while a plain ``address`` cannot be sent Ether.
@@ -510,15 +510,15 @@ String literals can only contain printable ASCII characters, which means the cha
 
 Additionally, string literals also support the following escape characters:
 
- - ``\<newline>`` (escapes an actual newline)
- - ``\\`` (backslash)
- - ``\'`` (single quote)
- - ``\"`` (double quote)
- - ``\n`` (newline)
- - ``\r`` (carriage return)
- - ``\t`` (tab)
- - ``\xNN`` (hex escape, see below)
- - ``\uNNNN`` (unicode escape, see below)
+- ``\<newline>`` (escapes an actual newline)
+- ``\\`` (backslash)
+- ``\'`` (single quote)
+- ``\"`` (double quote)
+- ``\n`` (newline)
+- ``\r`` (carriage return)
+- ``\t`` (tab)
+- ``\xNN`` (hex escape, see below)
+- ``\uNNNN`` (unicode escape, see below)
 
 ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF-8 sequence.
 
@@ -660,9 +660,9 @@ their parameter types are identical, their return types are identical,
 their internal/external property is identical and the state mutability of ``A``
 is more restrictive than the state mutability of ``B``. In particular:
 
- - ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
- - ``view`` functions can be converted to ``non-payable`` functions
- - ``payable`` functions can be converted to ``non-payable`` functions
+- ``pure`` functions can be converted to ``view`` and ``non-payable`` functions
+- ``view`` functions can be converted to ``non-payable`` functions
+- ``payable`` functions can be converted to ``non-payable`` functions
 
 No other conversions between function types are possible.
 

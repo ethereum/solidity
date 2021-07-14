@@ -56,8 +56,8 @@ used in a single modifier.
 In order to compress these source mappings especially for bytecode, the
 following rules are used:
 
- - If a field is empty, the value of the preceding element is used.
- - If a ``:`` is missing, all following fields are considered empty.
+- If a field is empty, the value of the preceding element is used.
+- If a ``:`` is missing, all following fields are considered empty.
 
 This means the following source mappings represent the same information:
 

@@ -157,16 +157,16 @@ where an object is expected.
 Inside a code block, the following elements can be used
 (see the later sections for more details):
 
- - literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
- - calls to builtin functions, e.g. ``add(1, mload(0))``
- - variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
- - identifiers (variables), e.g. ``add(3, x)``
- - assignments, e.g. ``x := add(y, 3)``
- - blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
- - if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
- - switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
- - for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
- - function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
+- literals, i.e. ``0x123``, ``42`` or ``"abc"`` (strings up to 32 characters)
+- calls to builtin functions, e.g. ``add(1, mload(0))``
+- variable declarations, e.g. ``let x := 7``, ``let x := add(y, 3)`` or ``let x`` (initial value of 0 is assigned)
+- identifiers (variables), e.g. ``add(3, x)``
+- assignments, e.g. ``x := add(y, 3)``
+- blocks where local variables are scoped inside, e.g. ``{ let x := 3 { let y := add(x, 1) } }``
+- if statements, e.g. ``if lt(a, b) { sstore(0, 1) }``
+- switch statements, e.g. ``switch mload(0) case 0 { revert() } default { mstore(0, 1) }``
+- for loops, e.g. ``for { let i := 0} lt(i, 10) { i := add(i, 1) } { mstore(i, 7) }``
+- function definitions, e.g. ``function f(a, b) -> c { c := add(a, b) }```
 
 Multiple syntactical elements can follow each other simply separated by
 whitespace, i.e. there is no terminating ``;`` or newline required.
@@ -985,9 +985,10 @@ that are not known to the Yul compiler. It also allows you to create
 bytecode sequences that will not be modified by the optimizer.
 
 The functions are ``verbatim_<n>i_<m>o("<data>", ...)``, where
- - ``n`` is a decimal between 0 and 99 that specifies the number of input stack slots / variables
- - ``m`` is a decimal between 0 and 99 that specifies the number of output stack slots / variables
- - ``data`` is a string literal that contains the sequence of bytes
+
+- ``n`` is a decimal between 0 and 99 that specifies the number of input stack slots / variables
+- ``m`` is a decimal between 0 and 99 that specifies the number of output stack slots / variables
+- ``data`` is a string literal that contains the sequence of bytes
 
 If you for example want to define a function that multiplies the input
 by two, without the optimizer touching the constant two, you can use
@@ -1022,15 +1023,15 @@ verbatim bytecode that are not checked by
 the compiler. Violations of these restrictions can result in
 undefined behaviour.
 
- - Control-flow should not jump into or out of verbatim blocks,
-   but it can jump within the same verbatim block.
- - Stack contents apart from the input and output parameters
-   should not be accessed.
- - The stack height difference should be exactly ``m - n``
-   (output slots minus input slots).
- - Verbatim bytecode cannot make any assumptions about the
-   surrounding bytecode. All required parameters have to be
-   passed in as stack variables.
+- Control-flow should not jump into or out of verbatim blocks,
+  but it can jump within the same verbatim block.
+- Stack contents apart from the input and output parameters
+  should not be accessed.
+- The stack height difference should be exactly ``m - n``
+  (output slots minus input slots).
+- Verbatim bytecode cannot make any assumptions about the
+  surrounding bytecode. All required parameters have to be
+  passed in as stack variables.
 
 The optimizer does not analyze verbatim bytecode and always
 assumes that it modifies all aspects of state and thus can only

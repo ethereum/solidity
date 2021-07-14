@@ -269,11 +269,11 @@ backtracking.
 All components of the Yul-based optimizer module are explained below.
 The following transformation steps are the main components:
 
- - SSA Transform
- - Common Subexpression Eliminator
- - Expression Simplifier
- - Redundant Assign Eliminator
- - Full Function Inliner
+- SSA Transform
+- Common Subexpression Eliminator
+- Expression Simplifier
+- Redundant Assign Eliminator
+- Full Function Inliner
 
 Optimizer Steps
 ---------------
@@ -281,36 +281,36 @@ Optimizer Steps
 This is a list of all steps the Yul-based optimizer sorted alphabetically. You can find more information
 on the individual steps and their sequence below.
 
- - :ref:`block-flattener`.
- - :ref:`circular-reference-pruner`.
- - :ref:`common-subexpression-eliminator`.
- - :ref:`conditional-simplifier`.
- - :ref:`conditional-unsimplifier`.
- - :ref:`control-flow-simplifier`.
- - :ref:`dead-code-eliminator`.
- - :ref:`equivalent-function-combiner`.
- - :ref:`expression-joiner`.
- - :ref:`expression-simplifier`.
- - :ref:`expression-splitter`.
- - :ref:`for-loop-condition-into-body`.
- - :ref:`for-loop-condition-out-of-body`.
- - :ref:`for-loop-init-rewriter`.
- - :ref:`functional-inliner`.
- - :ref:`function-grouper`.
- - :ref:`function-hoister`.
- - :ref:`function-specializer`.
- - :ref:`literal-rematerialiser`.
- - :ref:`load-resolver`.
- - :ref:`loop-invariant-code-motion`.
- - :ref:`redundant-assign-eliminator`.
- - :ref:`reasoning-based-simplifier`.
- - :ref:`rematerialiser`.
- - :ref:`SSA-reverser`.
- - :ref:`SSA-transform`.
- - :ref:`structural-simplifier`.
- - :ref:`unused-function-parameter-pruner`.
- - :ref:`unused-pruner`.
- - :ref:`var-decl-initializer`.
+- :ref:`block-flattener`.
+- :ref:`circular-reference-pruner`.
+- :ref:`common-subexpression-eliminator`.
+- :ref:`conditional-simplifier`.
+- :ref:`conditional-unsimplifier`.
+- :ref:`control-flow-simplifier`.
+- :ref:`dead-code-eliminator`.
+- :ref:`equivalent-function-combiner`.
+- :ref:`expression-joiner`.
+- :ref:`expression-simplifier`.
+- :ref:`expression-splitter`.
+- :ref:`for-loop-condition-into-body`.
+- :ref:`for-loop-condition-out-of-body`.
+- :ref:`for-loop-init-rewriter`.
+- :ref:`functional-inliner`.
+- :ref:`function-grouper`.
+- :ref:`function-hoister`.
+- :ref:`function-specializer`.
+- :ref:`literal-rematerialiser`.
+- :ref:`load-resolver`.
+- :ref:`loop-invariant-code-motion`.
+- :ref:`redundant-assign-eliminator`.
+- :ref:`reasoning-based-simplifier`.
+- :ref:`rematerialiser`.
+- :ref:`SSA-reverser`.
+- :ref:`SSA-transform`.
+- :ref:`structural-simplifier`.
+- :ref:`unused-function-parameter-pruner`.
+- :ref:`unused-pruner`.
+- :ref:`var-decl-initializer`.
 
 Selecting Optimizations
 -----------------------
@@ -589,8 +589,8 @@ For any variable ``a`` that is assigned to somewhere in the code
 (variables that are declared with value and never re-assigned
 are not modified) perform the following transforms:
 
- - replace ``let a := v`` by ``let a_i := v   let a := a_i``
- - replace ``a := v`` by ``let a_i := v   a := a_i`` where ``i`` is a number such that ``a_i`` is yet unused.
+- replace ``let a := v`` by ``let a_i := v   let a := a_i``
+- replace ``a := v`` by ``let a_i := v   a := a_i`` where ``i`` is a number such that ``a_i`` is yet unused.
 
 Furthermore, always record the current value of ``i`` used for ``a`` and replace each
 reference to ``a`` by ``a_i``.
@@ -677,9 +677,9 @@ joins, the two mappings coming from the two branches are combined in the followi
 Statements that are only in one mapping or have the same state are used unchanged.
 Conflicting values are resolved in the following way:
 
- - "unused", "undecided" -> "undecided"
- - "unused", "used" -> "used"
- - "undecided, "used" -> "used"
+- "unused", "undecided" -> "undecided"
+- "unused", "used" -> "used"
+- "undecided, "used" -> "used"
 
 For for-loops, the condition, body and post-part are visited twice, taking
 the joining control-flow at the condition into account.
@@ -735,10 +735,10 @@ is side-effect free and its evaluation only depends on the values of variables
 and the call-constant state of the environment. Most expressions are movable.
 The following parts make an expression non-movable:
 
- - function calls (might be relaxed in the future if all statements in the function are movable)
- - opcodes that (can) have side-effects (like ``call`` or ``selfdestruct``)
- - opcodes that read or write memory, storage or external state information
- - opcodes that depend on the current PC, memory size or returndata size
+- function calls (might be relaxed in the future if all statements in the function are movable)
+- opcodes that (can) have side-effects (like ``call`` or ``selfdestruct``)
+- opcodes that read or write memory, storage or external state information
+- opcodes that depend on the current PC, memory size or returndata size
 
 DataflowAnalyzer
 ^^^^^^^^^^^^^^^^
@@ -836,8 +836,8 @@ ReasoningBasedSimplifier
 
 This optimizer uses SMT solvers to check whether ``if`` conditions are constant.
 
- - If ``constraints AND condition`` is UNSAT, the condition is never true and the whole body can be removed.
- - If ``constraints AND NOT condition`` is UNSAT, the condition is always true and can be replaced by ``1``.
+- If ``constraints AND condition`` is UNSAT, the condition is never true and the whole body can be removed.
+- If ``constraints AND NOT condition`` is UNSAT, the condition is always true and can be replaced by ``1``.
 
 The simplifications above can only be applied if the condition is movable.
 
@@ -872,13 +872,13 @@ we cannot assign a specific value.
 
 Current features:
 
- - switch cases: insert "<condition> := <caseLabel>"
- - after if statement with terminating control-flow, insert "<condition> := 0"
+- switch cases: insert "<condition> := <caseLabel>"
+- after if statement with terminating control-flow, insert "<condition> := 0"
 
 Future features:
 
- - allow replacements by "1"
- - take termination of user-defined functions into account
+- allow replacements by "1"
+- take termination of user-defined functions into account
 
 Works best with SSA form and if dead code removal has run before.
 
@@ -898,15 +898,15 @@ ControlFlowSimplifier
 
 Simplifies several control-flow structures:
 
- - replace if with empty body with pop(condition)
- - remove empty default switch case
- - remove empty switch case if no default case exists
- - replace switch with no cases with pop(expression)
- - turn switch with single case into if
- - replace switch with only default case with pop(expression) and body
- - replace switch with const expr with matching case body
- - replace ``for`` with terminating control flow and without other break/continue by ``if``
- - remove ``leave`` at the end of a function.
+- replace if with empty body with pop(condition)
+- remove empty default switch case
+- remove empty switch case if no default case exists
+- replace switch with no cases with pop(expression)
+- turn switch with single case into if
+- replace switch with only default case with pop(expression) and body
+- replace switch with const expr with matching case body
+- replace ``for`` with terminating control flow and without other break/continue by ``if``
+- remove ``leave`` at the end of a function.
 
 None of these operations depend on the data flow. The StructuralSimplifier
 performs similar tasks that do depend on data flow.
@@ -956,13 +956,13 @@ StructuralSimplifier
 This is a general step that performs various kinds of simplifications on
 a structural level:
 
- - replace if statement with empty body by ``pop(condition)``
- - replace if statement with true condition by its body
- - remove if statement with false condition
- - turn switch with single case into if
- - replace switch with only default case by ``pop(expression)`` and body
- - replace switch with literal expression by matching case body
- - replace for loop with false condition by its initialization part
+- replace if statement with empty body by ``pop(condition)``
+- replace if statement with true condition by its body
+- remove if statement with false condition
+- turn switch with single case into if
+- replace switch with only default case by ``pop(expression)`` and body
+- replace switch with literal expression by matching case body
+- replace for loop with false condition by its initialization part
 
 This component uses the Dataflow Analyzer.
 
@@ -1008,8 +1008,8 @@ declarations inside conditional branches will not be moved out of the loop.
 
 Requirements:
 
- - The Disambiguator, ForLoopInitRewriter and FunctionHoister must be run upfront.
- - Expression splitter and SSA transform should be run upfront to obtain better result.
+- The Disambiguator, ForLoopInitRewriter and FunctionHoister must be run upfront.
+- Expression splitter and SSA transform should be run upfront to obtain better result.
 
 
 Function-Level Optimizations
@@ -1089,15 +1089,15 @@ FunctionalInliner
 This component of the optimizer performs restricted function inlining by inlining functions that can be
 inlined inside functional expressions, i.e. functions that:
 
- - return a single value.
- - have a body like ``r := <functional expression>``.
- - neither reference themselves nor ``r`` in the right hand side.
+- return a single value.
+- have a body like ``r := <functional expression>``.
+- neither reference themselves nor ``r`` in the right hand side.
 
 Furthermore, for all parameters, all of the following need to be true:
 
- - The argument is movable.
- - The parameter is either referenced less than twice in the function body, or the argument is rather cheap
-   ("cost" of at most 1, like a constant up to 0xff).
+- The argument is movable.
+- The parameter is either referenced less than twice in the function body, or the argument is rather cheap
+  ("cost" of at most 1, like a constant up to 0xff).
 
 Example: The function to be inlined has the form of ``function f(...) -> r { r := E }`` where
 ``E`` is an expression that does not reference ``r`` and all arguments in the function call are movable expressions.

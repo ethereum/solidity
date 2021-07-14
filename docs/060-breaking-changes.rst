@@ -89,14 +89,14 @@ New Features
 This section lists things that were not possible prior to Solidity 0.6.0
 or were more difficult to achieve.
 
- * The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
- * ``struct`` and ``enum`` types can be declared at file level.
- * Array slices can be used for calldata arrays, for example ``abi.decode(msg.data[4:], (uint, uint))``
-   is a low-level way to decode the function call payload.
- * Natspec supports multiple return parameters in developer documentation, enforcing the same naming check as ``@param``.
- * Yul and Inline Assembly have a new statement called ``leave`` that exits the current function.
- * Conversions from ``address`` to ``address payable`` are now possible via ``payable(x)``, where
-   ``x`` must be of type ``address``.
+* The :ref:`try/catch statement <try-catch>` allows you to react on failed external calls.
+* ``struct`` and ``enum`` types can be declared at file level.
+* Array slices can be used for calldata arrays, for example ``abi.decode(msg.data[4:], (uint, uint))``
+  is a low-level way to decode the function call payload.
+* Natspec supports multiple return parameters in developer documentation, enforcing the same naming check as ``@param``.
+* Yul and Inline Assembly have a new statement called ``leave`` that exits the current function.
+* Conversions from ``address`` to ``address payable`` are now possible via ``payable(x)``, where
+  ``x`` must be of type ``address``.
 
 
 Interface Changes
