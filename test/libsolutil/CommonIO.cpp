@@ -44,13 +44,13 @@ BOOST_AUTO_TEST_CASE(readFileAsString_regular_file)
 	TemporaryDirectory tempDir("common-io-test-");
 	createFileWithContent(tempDir.path() / "test.txt", "ABC\ndef\n");
 
-	BOOST_TEST(readFileAsString((tempDir.path() / "test.txt").string()) == "ABC\ndef\n");
+	BOOST_TEST(readFileAsString(tempDir.path() / "test.txt") == "ABC\ndef\n");
 }
 
 BOOST_AUTO_TEST_CASE(readFileAsString_directory)
 {
 	TemporaryDirectory tempDir("common-io-test-");
-	BOOST_CHECK_THROW(readFileAsString(tempDir.path().string()), NotAFile);
+	BOOST_CHECK_THROW(readFileAsString(tempDir.path()), NotAFile);
 }
 
 BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(readFileAsString_symlink)
 	if (!createSymlinkIfSupportedByFilesystem("test.txt", tempDir.path() / "symlink.txt"))
 		return;
 
-	BOOST_TEST(readFileAsString((tempDir.path() / "symlink.txt").string()) == "ABC\ndef\n");
+	BOOST_TEST(readFileAsString(tempDir.path() / "symlink.txt") == "ABC\ndef\n");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

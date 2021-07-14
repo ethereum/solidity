@@ -411,8 +411,8 @@ bool CommandLineInterface::readInputFilesAndConfigureFileReader()
 		}
 
 		// NOTE: we ignore the FileNotFound exception as we manually check above
-		m_fileReader.setSource(infile, readFileAsString(infile.string()));
-		m_fileReader.allowDirectory(boost::filesystem::path(boost::filesystem::canonical(infile).string()).remove_filename());
+		m_fileReader.setSource(infile, readFileAsString(infile));
+		m_fileReader.allowDirectory(boost::filesystem::canonical(infile).remove_filename());
 	}
 
 	if (m_options.input.addStdin)

@@ -23,8 +23,6 @@
 #include <libsolutil/CommonIO.h>
 #include <libsolutil/Assertions.h>
 
-#include <boost/filesystem.hpp>
-
 #include <fstream>
 #if defined(_WIN32)
 #include <windows.h>
@@ -40,20 +38,20 @@ namespace
 {
 
 template <typename T>
-inline T readFile(std::string const& _file)
+inline T readFile(boost::filesystem::path const& _file)
 {
-	assertThrow(boost::filesystem::exists(_file), FileNotFound, _file);
+	assertThrow(boost::filesystem::exists(_file), FileNotFound, _file.string());
 
 	// ifstream does not always fail when the path leads to a directory. Instead it might succeed
 	// with tellg() returning a nonsensical value so that std::length_error gets raised in resize().
-	assertThrow(boost::filesystem::is_regular_file(_file), NotAFile, _file);
+	assertThrow(boost::filesystem::is_regular_file(_file), NotAFile, _file.string());
 
 	T ret;
 	size_t const c_elementSize = sizeof(typename T::value_type);
-	std::ifstream is(_file, std::ifstream::binary);
+	std::ifstream is(_file.string(), std::ifstream::binary);
 
 	// Technically, this can still fail even though we checked above because FS content can change at any time.
-	assertThrow(is, FileNotFound, _file);
+	assertThrow(is, FileNotFound, _file.string());
 
 	// get length of file:
 	is.seekg(0, is.end);
@@ -69,7 +67,7 @@ inline T readFile(std::string const& _file)
 
 }
 
-string solidity::util::readFileAsString(string const& _file)
+string solidity::util::readFileAsString(boost::filesystem::path const& _file)
 {
 	return readFile<string>(_file);
 }
