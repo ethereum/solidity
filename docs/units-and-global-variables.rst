@@ -10,6 +10,7 @@ Ether Units
 A literal number can take a suffix of ``wei``, ``gwei`` or ``ether`` to specify a subdenomination of Ether, where Ether numbers without a postfix are assumed to be Wei.
 
 .. code-block:: solidity
+    :force:
 
     assert(1 wei == 1);
     assert(1 gwei == 1e9);

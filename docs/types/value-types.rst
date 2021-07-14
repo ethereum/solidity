@@ -239,6 +239,7 @@ It is possible to query the balance of an address using the property ``balance``
 and to send Ether (in units of wei) to a payable address using the ``transfer`` function:
 
 .. code-block:: solidity
+    :force:
 
     address payable x = address(0x123);
     address myAddress = address(this);
@@ -535,6 +536,7 @@ quote a backslash character and then (without separator) the
 character sequence ``abcdef``.
 
 .. code-block:: solidity
+    :force:
 
     "\n\"\'\\abc\
     def"
@@ -641,6 +643,7 @@ be passed via and returned from external function calls.
 Function types are notated as follows:
 
 .. code-block:: solidity
+    :force:
 
     function (<parameter types>) {internal|external} [pure|view|payable] [returns (<return types>)]
 

@@ -122,6 +122,7 @@ top of them and iterate over that. For example, the code below implements an
 the ``sum`` function iterates over to sum all the values.
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.6.8 <0.9.0;

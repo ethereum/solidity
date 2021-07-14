@@ -660,6 +660,7 @@ The following example shows how you can use ``require`` to check conditions on i
 and ``assert`` for internal error checking.
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.5.0 <0.9.0;

@@ -226,6 +226,7 @@ The new code generator performs cleanup after any operation that can result in d
 For example:
 
 .. code-block:: solidity
+    :force:
 
     // SPDX-License-Identifier: GPL-3.0
     pragma solidity >=0.8.1;

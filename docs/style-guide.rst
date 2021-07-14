@@ -998,6 +998,7 @@ No:
 Yes:
 
 .. code-block:: solidity
+    :force:
 
     x = 3;
     x = 100 / 10;
@@ -1007,6 +1008,7 @@ Yes:
 No:
 
 .. code-block:: solidity
+    :force:
 
     x=3;
     x = 100/10;
