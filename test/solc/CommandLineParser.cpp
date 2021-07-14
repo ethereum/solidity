@@ -51,7 +51,7 @@ optional<CommandLineOptions> parseCommandLine(vector<string> const& commandLine,
 	size_t argc = commandLine.size();
 	vector<char const*> argv(argc + 1);
 
-	// argv[argc] typically contains NULL
+	// C++ standard mandates argv[argc] to be NULL
 	argv[argc] = nullptr;
 
 	for (size_t i = 0; i < argc; ++i)
@@ -352,7 +352,7 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 		"--standard-json",
 		"--base-path=/home/user/",
 		"--allow-paths=/tmp,/home,project,../contracts",
-		"--ignore-missing",                // Ignored in Standard JSON mode
+		"--ignore-missing",
 		"--error-recovery",                // Ignored in Standard JSON mode
 		"--output-dir=/tmp/out",           // Accepted but has no effect in Standard JSON mode
 		"--overwrite",                     // Accepted but has no effect in Standard JSON mode
@@ -388,10 +388,10 @@ BOOST_AUTO_TEST_CASE(standard_json_mode_options)
 
 	CommandLineOptions expectedOptions;
 	expectedOptions.input.mode = InputMode::StandardJson;
-	expectedOptions.input.paths = {};
-	expectedOptions.input.standardJsonFile = "input.json";
+	expectedOptions.input.paths = {"input.json"};
 	expectedOptions.input.basePath = "/home/user/";
 	expectedOptions.input.allowedDirectories = {"/tmp", "/home", "project", "../contracts"};
+	expectedOptions.input.ignoreMissingFiles = true;
 	expectedOptions.output.dir = "/tmp/out";
 	expectedOptions.output.overwriteFiles = true;
 	expectedOptions.output.revertStrings = RevertStrings::Strip;

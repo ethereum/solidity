@@ -150,6 +150,7 @@ set(libyul_sources
 detect_stray_source_files("${libyul_sources}" "libyul/")
 
 set(solcli_sources
+    solc/CommandLineInterface.cpp
     solc/CommandLineParser.cpp
 )
 detect_stray_source_files("${solcli_sources}" "solc/")

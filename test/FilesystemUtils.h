@@ -23,10 +23,15 @@
 
 #include <boost/filesystem.hpp>
 
+#include <set>
 #include <string>
 
 namespace solidity::test
 {
+
+/// Creates all the specified files without any content. Creates their parent directories if
+/// they do not exist. Throws an exception if any part of the operation does not succeed.
+void createEmptyFilesWithParentDirs(std::set<boost::filesystem::path> const& _paths);
 
 /// Creates a file with the exact content specified in the second argument.
 /// Throws an exception if the file already exists or if the parent directory of the file does not.
