@@ -338,12 +338,12 @@ dataLocation: Memory | Storage | Calldata;
  * a tuple, an inline array or a primary expression (i.e. an identifier, literal or type name).
  */
 expression:
-	expression LBrack index=expression? RBrack # IndexAccess
-	| expression LBrack start=expression? Colon end=expression? RBrack # IndexRangeAccess
-	| expression Period (identifier | Address) # MemberAccess
-	| expression functionCallOption? callArgumentList # FunctionCall
+	expression LBrack index=expression? RBrack functionCallOptions # IndexAccess
+	| expression LBrack start=expression? Colon end=expression? RBrack functionCallOptions # IndexRangeAccess
+	| expression Period (identifier | Address) functionCallOptions # MemberAccess
+	| expression callArgumentList # FunctionCall
 	| Payable callArgumentList # PayableConversion
-	| Type LParen typeName RParen # MetaType
+	| Type LParen typeName RParen functionCallOptions # MetaType
 	| (Inc | Dec | Not | BitNot | Delete | Sub) expression # UnaryPrefixOperation
 	| expression (Inc | Dec) # UnarySuffixOperation
 	|<assoc=right> expression Exp expression # ExpOperation
@@ -359,17 +359,16 @@ expression:
 	| expression Or expression # OrOperation
 	|<assoc=right> expression Conditional expression Colon expression # Conditional
 	|<assoc=right> expression assignOp expression # Assignment
-	| New typeName # NewExpression
-	| tupleExpression # Tuple
-	| inlineArrayExpression # InlineArray
- 	| (
+	| New typeName functionCallOptions # NewExpression
+	| tupleExpression functionCallOptions # Tuple
+	| inlineArrayExpression functionCallOptions # InlineArray
+	| (
 		identifier
 		| literal
 		| elementaryTypeName[false]
-	  ) # PrimaryExpression
+	  ) functionCallOptions? # PrimaryExpression
 ;
-
-functionCallOption : LBrace (namedArgument (Comma namedArgument)*)? RBrace;
+functionCallOptions : (LBrace (namedArgument (Comma namedArgument)*)? RBrace)? ;
 
 //@doc:inline
 assignOp: Assign | AssignBitOr | AssignBitXor | AssignBitAnd | AssignShl | AssignSar | AssignShr | AssignAdd | AssignSub | AssignMul | AssignDiv | AssignMod;
