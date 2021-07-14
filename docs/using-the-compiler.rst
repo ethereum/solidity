@@ -41,7 +41,7 @@ Base Path and Import Remapping
 The commandline compiler will automatically read imported files from the filesystem, but
 it is also possible to provide :ref:`path redirects <import-remapping>` using ``prefix=path`` in the following way:
 
-::
+.. code-block:: bash
 
     solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ file.sol
 

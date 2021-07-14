@@ -174,7 +174,7 @@ This causes differences in some contracts, for example:
   and left-to-right by the new code generator.
   For example:
 
-  ::
+  .. code-block:: solidity
 
       // SPDX-License-Identifier: GPL-3.0
       pragma solidity >0.8.0;

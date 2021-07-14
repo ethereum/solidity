@@ -534,7 +534,7 @@ It starts with a newline byte, followed by a double quote, a single
 quote a backslash character and then (without separator) the
 character sequence ``abcdef``.
 
-::
+.. code-block:: solidity
 
     "\n\"\'\\abc\
     def"

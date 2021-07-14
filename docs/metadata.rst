@@ -147,7 +147,9 @@ the mapping ``{"ipfs": <IPFS hash>, "solc": <compiler version>}`` is stored
 contain more keys (see below) and the beginning of that
 encoding is not easy to find, its length is added in a two-byte big-endian
 encoding. The current version of the Solidity compiler usually adds the following
-to the end of the deployed bytecode::
+to the end of the deployed bytecode
+
+.. code-block:: text
 
     0xa2
     0x64 'i' 'p' 'f' 's' 0x58 0x22 <34 bytes IPFS hash>

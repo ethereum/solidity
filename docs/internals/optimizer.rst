@@ -696,7 +696,7 @@ operation where ``unused = 0``, ``undecided = 1`` and ``used = 2``.
 
 The proper way would be to compute
 
-::
+.. code-block:: none
 
     max(s, f(s), f(f(s)), f(f(f(s))), ...)
 
@@ -705,7 +705,7 @@ iterating it has to reach a cycle after at most three iterations,
 and thus ``f(f(f(s)))`` has to equal one of ``s``, ``f(s)``, or ``f(f(s))``
 and thus
 
-::
+.. code-block:: none
 
     max(s, f(s), f(f(s))) = max(s, f(s), f(f(s)), f(f(f(s))), ...).
 
@@ -1263,7 +1263,7 @@ Reverses the transformation of ForLoopConditionIntoBody.
 
 For any movable ``c``, it turns
 
-::
+.. code-block:: none
 
     for { ... } 1 { ... } {
     if iszero(c) { break }
@@ -1272,7 +1272,7 @@ For any movable ``c``, it turns
 
 into
 
-::
+.. code-block:: none
 
     for { ... } c { ... } {
     ...
@@ -1280,7 +1280,7 @@ into
 
 and it turns
 
-::
+.. code-block:: none
 
     for { ... } 1 { ... } {
     if c { break }
@@ -1289,7 +1289,7 @@ and it turns
 
 into
 
-::
+.. code-block:: none
 
     for { ... } iszero(c) { ... } {
     ...

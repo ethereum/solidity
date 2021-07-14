@@ -410,7 +410,9 @@ No:
 
     spam( ham[ 1 ], Coin( { name: "ham" } ) );
 
-Exception::
+Exception:
+
+.. code-block:: solidity
 
     function singleLine() public { spam(); }
 
